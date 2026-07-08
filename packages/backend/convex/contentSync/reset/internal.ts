@@ -207,6 +207,8 @@ export const deleteTryoutAccessLinksBatch =
 export const deleteTryoutCountriesBatch =
   createBatchDeleteMutation("tryoutCountries");
 export const deleteTryoutExamsBatch = createBatchDeleteMutation("tryoutExams");
+export const deleteTryoutTracksBatch =
+  createBatchDeleteMutation("tryoutTracks");
 export const deleteTryoutSetsBatch = createBatchDeleteMutation("tryoutSets");
 export const deleteTryoutSectionsBatch =
   createBatchDeleteMutation("tryoutSections");

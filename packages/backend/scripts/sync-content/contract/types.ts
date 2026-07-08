@@ -91,4 +91,5 @@ export interface FilesystemSlugs {
   tryoutExamPaths: string[];
   tryoutSectionPaths: string[];
   tryoutSetPaths: string[];
+  tryoutTrackPaths: string[];
 }

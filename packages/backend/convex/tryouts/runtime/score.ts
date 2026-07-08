@@ -109,6 +109,7 @@ export async function finalizeAttemptScore(
         theta: score.theta,
         total_correct: score.totalCorrect,
         total_questions: score.totalQuestions,
+        track_key: set.trackKey,
       },
     },
     timestamp: new Date(args.now),

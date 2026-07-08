@@ -78,9 +78,15 @@ const collectTryoutPaths = Effect.fn("sync.collectTryoutPaths")(function* () {
     tryoutExamPaths: routes
       .filter((route) => route.kind === "tryout-exam")
       .map((route) => route.publicPath),
-    tryoutSectionPaths: routes
-      .filter((route) => route.kind === "tryout-section")
+    tryoutTrackPaths: routes
+      .filter((route) => route.kind === "tryout-track")
       .map((route) => route.publicPath),
+    tryoutSectionPaths: [
+      ...routes
+        .filter((route) => route.kind === "tryout-section")
+        .map((route) => route.publicPath),
+      ...listActiveInternalTryoutSectionPaths(),
+    ],
     tryoutSetPaths: routes
       .filter((route) => route.kind === "tryout-set")
       .map((route) => route.publicPath),
@@ -122,8 +128,10 @@ function getQuestionSourceKey(locale: string, sourcePath: string) {
 /** Lists source-owned try-out question-set folders that should exist in Convex. */
 function listActiveTryoutQuestionSetPaths() {
   return TRYOUT_SOURCES.flatMap((source) =>
-    source.sets.flatMap((set) =>
-      set.sections.map((section) => section.questionSourcePath)
+    source.tracks.flatMap((track) =>
+      track.sets.flatMap((set) =>
+        set.sections.map((section) => section.questionSourcePath)
+      )
     )
   );
 }
@@ -131,11 +139,28 @@ function listActiveTryoutQuestionSetPaths() {
 /** Lists exact source-owned try-out question files that should exist in Convex. */
 function listActiveTryoutQuestionPaths() {
   return TRYOUT_SOURCES.flatMap((source) =>
-    source.sets.flatMap((set) =>
-      set.sections.flatMap((section) =>
-        Array.from(
-          { length: section.questionCount },
-          (_, index) => `${section.questionSourcePath}/question-${index + 1}`
+    source.tracks.flatMap((track) =>
+      track.sets.flatMap((set) =>
+        set.sections.flatMap((section) =>
+          Array.from(
+            { length: section.questionCount },
+            (_, index) => `${section.questionSourcePath}/question-${index + 1}`
+          )
+        )
+      )
+    )
+  );
+}
+
+/** Lists internal try-out sections by source path because they have no public route. */
+function listActiveInternalTryoutSectionPaths() {
+  return TRYOUT_SOURCES.flatMap((source) =>
+    source.tracks.flatMap((track) =>
+      track.sets.flatMap((set) =>
+        set.sections.flatMap((section) =>
+          section.visibility === "internal-entry"
+            ? [section.questionSourcePath]
+            : []
         )
       )
     )

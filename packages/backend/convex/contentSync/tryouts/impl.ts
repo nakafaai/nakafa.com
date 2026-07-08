@@ -19,6 +19,7 @@ import type {
   SyncedTryoutRoute,
   SyncedTryoutSection,
   SyncedTryoutSet,
+  SyncedTryoutTrack,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
@@ -39,6 +40,7 @@ export interface BulkSyncTryoutsArgs {
   routes: SyncedTryoutRoute[];
   sections: SyncedTryoutSection[];
   sets: SyncedTryoutSet[];
+  tracks: SyncedTryoutTrack[];
 }
 
 /** Upserts one bounded try-out catalog and question-bank batch. */
@@ -59,6 +61,9 @@ export async function bulkSyncTryoutsImpl(
   }
   for (const exam of args.exams) {
     addOutcome(totals, await syncExam(ctx, exam, now));
+  }
+  for (const track of args.tracks) {
+    addOutcome(totals, await syncTrack(ctx, track, now));
   }
   for (const set of args.sets) {
     addOutcome(totals, await syncSet(ctx, set, now));
@@ -94,6 +99,7 @@ function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
     received:
       args.countries.length +
       args.exams.length +
+      args.tracks.length +
       args.sets.length +
       args.sections.length,
     unit: "try-out catalog rows",
@@ -186,12 +192,15 @@ async function syncSet(
 ): Promise<SyncOutcome> {
   const existing = await ctx.db
     .query("tryoutSets")
-    .withIndex("by_countryKey_and_examKey_and_setKey_and_locale", (q) =>
-      q
-        .eq("countryKey", set.countryKey)
-        .eq("examKey", set.examKey)
-        .eq("setKey", set.setKey)
-        .eq("locale", set.locale)
+    .withIndex(
+      "by_countryKey_and_examKey_and_trackKey_and_setKey_and_locale",
+      (q) =>
+        q
+          .eq("countryKey", set.countryKey)
+          .eq("examKey", set.examKey)
+          .eq("trackKey", set.trackKey)
+          .eq("setKey", set.setKey)
+          .eq("locale", set.locale)
     )
     .unique();
 
@@ -207,6 +216,37 @@ async function syncSet(
   }
 
   await ctx.db.insert("tryoutSets", nextValues);
+  return "created";
+}
+
+async function syncTrack(
+  ctx: MutationCtx,
+  track: SyncedTryoutTrack,
+  syncedAt: number
+): Promise<SyncOutcome> {
+  const existing = await ctx.db
+    .query("tryoutTracks")
+    .withIndex("by_countryKey_and_examKey_and_trackKey_and_locale", (q) =>
+      q
+        .eq("countryKey", track.countryKey)
+        .eq("examKey", track.examKey)
+        .eq("trackKey", track.trackKey)
+        .eq("locale", track.locale)
+    )
+    .unique();
+
+  if (hasSameSyncValues(track, existing)) {
+    return "unchanged";
+  }
+
+  const nextValues = { ...track, syncedAt };
+
+  if (existing) {
+    await ctx.db.patch("tryoutTracks", existing._id, nextValues);
+    return "updated";
+  }
+
+  await ctx.db.insert("tryoutTracks", nextValues);
   return "created";
 }
 
@@ -381,24 +421,27 @@ async function getTryoutSet(
   ctx: MutationCtx,
   section: Pick<
     SyncedTryoutSection,
-    "countryKey" | "examKey" | "locale" | "setKey"
+    "countryKey" | "examKey" | "locale" | "setKey" | "trackKey"
   >
 ) {
   const tryoutSet = await ctx.db
     .query("tryoutSets")
-    .withIndex("by_countryKey_and_examKey_and_setKey_and_locale", (q) =>
-      q
-        .eq("countryKey", section.countryKey)
-        .eq("examKey", section.examKey)
-        .eq("setKey", section.setKey)
-        .eq("locale", section.locale)
+    .withIndex(
+      "by_countryKey_and_examKey_and_trackKey_and_setKey_and_locale",
+      (q) =>
+        q
+          .eq("countryKey", section.countryKey)
+          .eq("examKey", section.examKey)
+          .eq("trackKey", section.trackKey)
+          .eq("setKey", section.setKey)
+          .eq("locale", section.locale)
     )
     .unique();
 
   if (!tryoutSet) {
     throw new ConvexError({
       code: "TRYOUT_SYNC_SET_NOT_FOUND",
-      message: `Missing try-out set ${section.countryKey}/${section.examKey}/${section.setKey}/${section.locale}.`,
+      message: `Missing try-out set ${section.countryKey}/${section.examKey}/${section.trackKey}/${section.setKey}/${section.locale}.`,
     });
   }
 

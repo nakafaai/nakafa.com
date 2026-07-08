@@ -6,9 +6,11 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
+const TRACK_KEY = "2027";
 const SECTION_KEY = "pengetahuan-kuantitatif";
-const SECTION_SOURCE = `question-bank/tryout/indonesia/snbt/set-1/${SECTION_KEY}`;
-const SECTION_ROUTE = `try-out/indonesia/snbt/set-1/${SECTION_KEY}`;
+const SECTION_SOURCE = `question-bank/tryout/indonesia/snbt/${TRACK_KEY}/set-1/${SECTION_KEY}`;
+const SET_ROUTE = `try-out/indonesia/snbt/${TRACK_KEY}/set-1`;
+const SECTION_ROUTE = `${SET_ROUTE}/${SECTION_KEY}`;
 
 describe("tryouts/runtime/score", () => {
   it("scores with the attempt strategy snapshot instead of the live set strategy", async () => {
@@ -54,16 +56,21 @@ describe("tryouts/runtime/score", () => {
         countryKey: "indonesia",
         examKey: "snbt",
         isActive: true,
+        isReady: true,
         locale: "id",
         order: 1,
-        publicPath: "try-out/indonesia/snbt/set-1",
+        publicPath: SET_ROUTE,
+        readyQuestionCount: 1,
+        readyVisibleSectionCount: 1,
         scoringStrategy: "raw",
         sectionCount: 1,
         setKey: "set-1",
         sourceRevision: "2026",
         syncedAt: NOW,
         title: "Set 1",
+        trackKey: TRACK_KEY,
         totalQuestionCount: 1,
+        visibleSectionCount: 1,
       });
       const sectionId = await ctx.db.insert("tryoutSections", {
         countryKey: "indonesia",
@@ -80,7 +87,9 @@ describe("tryouts/runtime/score", () => {
         syncedAt: NOW,
         timeLimitSeconds: 1800,
         title: "Pengetahuan Kuantitatif",
+        trackKey: TRACK_KEY,
         tryoutSetId,
+        visibility: "visible",
       });
       const attemptId = await ctx.db.insert("tryoutAttempts", {
         attemptNumber: 1,

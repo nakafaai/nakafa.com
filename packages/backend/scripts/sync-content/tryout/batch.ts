@@ -7,6 +7,7 @@ import type {
   SyncedTryoutRoute,
   SyncedTryoutSection,
   SyncedTryoutSet,
+  SyncedTryoutTrack,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
 
 /** Carries one Convex try-out sync mutation payload across all related tables. */
@@ -18,6 +19,7 @@ export interface TryoutSyncArgs {
   routes: SyncedTryoutRoute[];
   sections: SyncedTryoutSection[];
   sets: SyncedTryoutSet[];
+  tracks: SyncedTryoutTrack[];
 }
 
 /** Groups try-out sync rows so Convex receives parents before dependents. */
@@ -53,16 +55,18 @@ function chunkRoutes(routes: SyncedTryoutRoute[]) {
 }
 
 function chunkCatalogRows(
-  rows: Pick<TryoutSyncArgs, "countries" | "exams" | "sets">
+  rows: Pick<TryoutSyncArgs, "countries" | "exams" | "sets" | "tracks">
 ) {
   const batches: TryoutSyncArgs[] = [];
   let countryIndex = 0;
   let examIndex = 0;
   let setIndex = 0;
+  let trackIndex = 0;
 
   while (
     countryIndex < rows.countries.length ||
     examIndex < rows.exams.length ||
+    trackIndex < rows.tracks.length ||
     setIndex < rows.sets.length
   ) {
     const batch = createBatch({});
@@ -80,6 +84,11 @@ function chunkCatalogRows(
     batch.exams.push(...exams);
     examIndex += exams.length;
     remaining -= exams.length;
+
+    const tracks = rows.tracks.slice(trackIndex, trackIndex + remaining);
+    batch.tracks.push(...tracks);
+    trackIndex += tracks.length;
+    remaining -= tracks.length;
 
     const sets = rows.sets.slice(setIndex, setIndex + remaining);
     batch.sets.push(...sets);
@@ -163,5 +172,6 @@ function createBatch(values: Partial<TryoutSyncArgs>): TryoutSyncArgs {
     routes: values.routes ?? [],
     sections: values.sections ?? [],
     sets: values.sets ?? [],
+    tracks: values.tracks ?? [],
   };
 }

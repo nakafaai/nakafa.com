@@ -1,63 +1,29 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
+import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
-  tryoutRouteKeyValidator,
-  tryoutScoringStrategyValidator,
-} from "@repo/backend/convex/tryouts/schema";
-import { readTryoutCountryCode } from "@repo/contents/_types/tryout/countries";
-import { ConvexError, v } from "convex/values";
+  loadQuestionContentRows,
+  loadReadySections,
+  publicTryoutCountryValidator,
+  publicTryoutCountryWithExamCountValidator,
+  publicTryoutExamValidator,
+  publicTryoutQuestionContentValidator,
+  publicTryoutSectionValidator,
+  publicTryoutSetValidator,
+  publicTryoutTrackValidator,
+  toPublicTryoutCountry,
+  toPublicTryoutExam,
+  toPublicTryoutSection,
+  toPublicTryoutSet,
+  toPublicTryoutTrack,
+} from "@repo/backend/convex/tryouts/queries/catalogModel";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
+import { v } from "convex/values";
 
 const CATALOG_PAGE_LIMIT = 100;
-
-const publicTryoutCountryValidator = v.object({
-  countryCode: v.string(),
-  countryKey: tryoutRouteKeyValidator,
-  description: v.optional(v.string()),
-  publicPath: v.string(),
-  title: v.string(),
-});
-
-const publicTryoutCountryWithExamCountValidator = v.object({
-  ...publicTryoutCountryValidator.fields,
-  examCount: v.number(),
-});
-
-const publicTryoutExamValidator = v.object({
-  description: v.optional(v.string()),
-  examKey: tryoutRouteKeyValidator,
-  publicPath: v.string(),
-  scoringStrategy: tryoutScoringStrategyValidator,
-  title: v.string(),
-});
-
-const publicTryoutSetValidator = v.object({
-  countryKey: tryoutRouteKeyValidator,
-  description: v.optional(v.string()),
-  examKey: tryoutRouteKeyValidator,
-  publicPath: v.string(),
-  scoringStrategy: tryoutScoringStrategyValidator,
-  sectionCount: v.number(),
-  setKey: tryoutRouteKeyValidator,
-  title: v.string(),
-  totalQuestionCount: v.number(),
-});
-
-const publicTryoutSectionValidator = v.object({
-  description: v.optional(v.string()),
-  publicPath: v.string(),
-  questionCount: v.number(),
-  sectionKey: tryoutRouteKeyValidator,
-  timeLimitSeconds: v.number(),
-  title: v.string(),
-});
-
-const publicTryoutQuestionContentValidator = v.object({
-  contentHash: v.string(),
-  questionOrder: v.number(),
-  sourcePath: v.string(),
-  sourceRevision: v.string(),
-});
 
 /** Reads the localized country-first try-out hub page model. */
 export const getHubPage = query({
@@ -88,12 +54,8 @@ export const getHubPage = query({
           .take(CATALOG_PAGE_LIMIT);
 
         return {
-          countryCode: readSourceCountryCode(country.countryKey),
-          countryKey: country.countryKey,
-          description: country.description,
           examCount: exams.length,
-          publicPath: country.publicPath,
-          title: country.title,
+          ...toPublicTryoutCountry(country),
         };
       })
     );
@@ -138,25 +100,13 @@ export const getCountryPage = query({
       .take(CATALOG_PAGE_LIMIT);
 
     return {
-      country: {
-        countryCode: readSourceCountryCode(country.countryKey),
-        countryKey: country.countryKey,
-        description: country.description,
-        publicPath: country.publicPath,
-        title: country.title,
-      },
-      exams: exams.map((exam) => ({
-        description: exam.description,
-        examKey: exam.examKey,
-        publicPath: exam.publicPath,
-        scoringStrategy: exam.scoringStrategy,
-        title: exam.title,
-      })),
+      country: toPublicTryoutCountry(country),
+      exams: exams.map(toPublicTryoutExam),
     };
   },
 });
 
-/** Reads one active exam page with its active try-out set rows. */
+/** Reads one active exam page with its active track rows. */
 export const getExamPage = query({
   args: {
     locale: localeValidator,
@@ -167,7 +117,7 @@ export const getExamPage = query({
     v.object({
       country: publicTryoutCountryValidator,
       exam: publicTryoutExamValidator,
-      sets: v.array(publicTryoutSetValidator),
+      tracks: v.array(publicTryoutTrackValidator),
     })
   ),
   handler: async (ctx, args) => {
@@ -182,7 +132,7 @@ export const getExamPage = query({
       return null;
     }
 
-    const [country, sets] = await Promise.all([
+    const [country, tracks] = await Promise.all([
       ctx.db
         .query("tryoutCountries")
         .withIndex("by_countryKey_and_locale", (q) =>
@@ -190,7 +140,7 @@ export const getExamPage = query({
         )
         .unique(),
       ctx.db
-        .query("tryoutSets")
+        .query("tryoutTracks")
         .withIndex(
           "by_countryKey_and_examKey_and_locale_and_isActive_and_order",
           (q) =>
@@ -207,118 +157,102 @@ export const getExamPage = query({
       return null;
     }
 
-    const readySetRows = await Promise.all(
-      sets.map(async (set) => ({
-        readySections: await loadReadySections(ctx, set),
-        set,
-      }))
-    );
-    const readySets = readySetRows
-      .filter((row) => row.readySections !== null)
-      .map((row) => row.set);
+    const readyTracks = tracks.filter((track) => track.isReady);
 
     return {
-      country: {
-        countryCode: readSourceCountryCode(country.countryKey),
-        countryKey: country.countryKey,
-        description: country.description,
-        publicPath: country.publicPath,
-        title: country.title,
-      },
-      exam: {
-        description: exam.description,
-        examKey: exam.examKey,
-        publicPath: exam.publicPath,
-        scoringStrategy: exam.scoringStrategy,
-        title: exam.title,
-      },
-      sets: readySets.map((set) => ({
-        countryKey: set.countryKey,
-        description: set.description,
-        examKey: set.examKey,
-        publicPath: set.publicPath,
-        scoringStrategy: set.scoringStrategy,
-        sectionCount: set.sectionCount,
-        setKey: set.setKey,
-        title: set.title,
-        totalQuestionCount: set.totalQuestionCount,
-      })),
+      country: toPublicTryoutCountry(country),
+      exam: toPublicTryoutExam(exam),
+      tracks: readyTracks.map(toPublicTryoutTrack),
     };
   },
 });
 
-function readSourceCountryCode(countryKey: string) {
-  const countryCode = readTryoutCountryCode(countryKey);
+/** Reads one active track page shell for paginated set discovery. */
+export const getTrackPage = query({
+  args: {
+    locale: localeValidator,
+    publicPath: v.string(),
+  },
+  returns: v.union(
+    v.null(),
+    v.object({
+      country: publicTryoutCountryValidator,
+      exam: publicTryoutExamValidator,
+      track: publicTryoutTrackValidator,
+    })
+  ),
+  handler: async (ctx, args) => {
+    const track = await ctx.db
+      .query("tryoutTracks")
+      .withIndex("by_locale_and_publicPath", (q) =>
+        q.eq("locale", args.locale).eq("publicPath", args.publicPath)
+      )
+      .unique();
 
-  if (!countryCode) {
-    throw new ConvexError({
-      code: "TRYOUT_COUNTRY_SOURCE_NOT_FOUND",
-      message: "Try-out country source not found.",
-    });
-  }
+    if (!(track?.isActive && track.isReady)) {
+      return null;
+    }
 
-  return countryCode;
-}
+    const [country, exam] = await Promise.all([
+      ctx.db
+        .query("tryoutCountries")
+        .withIndex("by_countryKey_and_locale", (q) =>
+          q.eq("countryKey", track.countryKey).eq("locale", args.locale)
+        )
+        .unique(),
+      ctx.db
+        .query("tryoutExams")
+        .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
+          q
+            .eq("countryKey", track.countryKey)
+            .eq("examKey", track.examKey)
+            .eq("locale", args.locale)
+        )
+        .unique(),
+    ]);
 
-/** Loads bounded public question content keys for server-side MDX rendering. */
-async function loadQuestionContentRows(
-  ctx: QueryCtx,
-  section: Doc<"tryoutSections">
-) {
-  const questions = await ctx.db
-    .query("questions")
-    .withIndex("by_questionSetId_and_number", (q) =>
-      q.eq("questionSetId", section.questionSetId)
-    )
-    .take(section.questionCount + 1);
+    if (!(country?.isActive && exam?.isActive)) {
+      return null;
+    }
 
-  if (questions.length !== section.questionCount) {
-    throw new ConvexError({
-      code: "TRYOUT_QUESTION_COUNT_MISMATCH",
-      message: "Try-out section question count is not synced.",
-    });
-  }
+    return {
+      country: toPublicTryoutCountry(country),
+      exam: toPublicTryoutExam(exam),
+      track: toPublicTryoutTrack(track),
+    };
+  },
+});
 
-  return questions.map((question) => ({
-    contentHash: question.contentHash,
-    questionOrder: question.number,
-    sourcePath: question.sourcePath,
-    sourceRevision: question.sourceRevision,
-  }));
-}
+/** Lists ready sets for one active track using Convex pagination. */
+export const listTrackSets = query({
+  args: {
+    countryKey: tryoutRouteKeyValidator,
+    examKey: tryoutRouteKeyValidator,
+    locale: localeValidator,
+    paginationOpts: paginationOptsValidator,
+    trackKey: tryoutRouteKeyValidator,
+  },
+  returns: paginationResultValidator(publicTryoutSetValidator),
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("tryoutSets")
+      .withIndex("by_track_locale_active_ready_order", (q) =>
+        q
+          .eq("countryKey", args.countryKey)
+          .eq("examKey", args.examKey)
+          .eq("trackKey", args.trackKey)
+          .eq("locale", args.locale)
+          .eq("isActive", true)
+          .eq("isReady", true)
+      )
+      .paginate(args.paginationOpts);
 
-/** Returns ordered section rows only when they match the set snapshot. */
-async function loadReadySections(ctx: QueryCtx, set: Doc<"tryoutSets">) {
-  const sections = await ctx.db
-    .query("tryoutSections")
-    .withIndex("by_tryoutSetId_and_order", (q) => q.eq("tryoutSetId", set._id))
-    .take(set.sectionCount + 1);
-
-  if (sections.length > set.sectionCount) {
-    throw new ConvexError({
-      code: "TRYOUT_SECTION_COUNT_EXCEEDED",
-      message: "Try-out set has more sections than its snapshot count.",
-    });
-  }
-
-  if (sections.length < set.sectionCount) {
-    return null;
-  }
-
-  const totalQuestionCount = sections.reduce(
-    (total, section) => total + section.questionCount,
-    0
-  );
-  const hasMixedRevision = sections.some(
-    (section) => section.sourceRevision !== set.sourceRevision
-  );
-
-  if (totalQuestionCount !== set.totalQuestionCount || hasMixedRevision) {
-    return null;
-  }
-
-  return sections;
-}
+    return {
+      ...page,
+      page: page.page.map(toPublicTryoutSet),
+    };
+  },
+});
 
 /** Reads one try-out set and its ordered sections. */
 export const getSetPage = query({
@@ -330,8 +264,11 @@ export const getSetPage = query({
     v.null(),
     v.object({
       exam: publicTryoutExamValidator,
+      entryQuestions: v.array(publicTryoutQuestionContentValidator),
+      entrySection: v.union(publicTryoutSectionValidator, v.null()),
       set: publicTryoutSetValidator,
       sections: v.array(publicTryoutSectionValidator),
+      track: publicTryoutTrackValidator,
     })
   ),
   handler: async (ctx, args) => {
@@ -342,11 +279,11 @@ export const getSetPage = query({
       )
       .unique();
 
-    if (!set?.isActive) {
+    if (!(set?.isActive && set.isReady)) {
       return null;
     }
 
-    const [exam, readySections] = await Promise.all([
+    const [exam, track, readySections] = await Promise.all([
       ctx.db
         .query("tryoutExams")
         .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
@@ -356,10 +293,20 @@ export const getSetPage = query({
             .eq("locale", args.locale)
         )
         .unique(),
+      ctx.db
+        .query("tryoutTracks")
+        .withIndex("by_countryKey_and_examKey_and_trackKey_and_locale", (q) =>
+          q
+            .eq("countryKey", set.countryKey)
+            .eq("examKey", set.examKey)
+            .eq("trackKey", set.trackKey)
+            .eq("locale", args.locale)
+        )
+        .unique(),
       loadReadySections(ctx, set),
     ]);
 
-    if (!exam?.isActive) {
+    if (!(exam?.isActive && track?.isActive && track.isReady)) {
       return null;
     }
 
@@ -367,33 +314,26 @@ export const getSetPage = query({
       return null;
     }
 
+    const visibleSections = readySections.filter(
+      (section) => section.visibility === "visible" && section.publicPath
+    );
+    const entrySection =
+      readySections.find(
+        (section) => section.sectionKey === set.internalEntrySectionKey
+      ) ??
+      visibleSections[0] ??
+      null;
+    const entryQuestions = entrySection
+      ? await loadQuestionContentRows(ctx, entrySection)
+      : [];
+
     return {
-      exam: {
-        description: exam.description,
-        examKey: exam.examKey,
-        publicPath: exam.publicPath,
-        scoringStrategy: exam.scoringStrategy,
-        title: exam.title,
-      },
-      set: {
-        countryKey: set.countryKey,
-        description: set.description,
-        examKey: set.examKey,
-        publicPath: set.publicPath,
-        scoringStrategy: set.scoringStrategy,
-        sectionCount: set.sectionCount,
-        setKey: set.setKey,
-        title: set.title,
-        totalQuestionCount: set.totalQuestionCount,
-      },
-      sections: readySections.map((section) => ({
-        description: section.description,
-        publicPath: section.publicPath,
-        questionCount: section.questionCount,
-        sectionKey: section.sectionKey,
-        timeLimitSeconds: section.timeLimitSeconds,
-        title: section.title,
-      })),
+      exam: toPublicTryoutExam(exam),
+      entryQuestions,
+      entrySection: entrySection ? toPublicTryoutSection(entrySection) : null,
+      set: toPublicTryoutSet(set),
+      sections: visibleSections.map(toPublicTryoutSection),
+      track: toPublicTryoutTrack(track),
     };
   },
 });
@@ -411,6 +351,7 @@ export const getSectionPage = query({
       questions: v.array(publicTryoutQuestionContentValidator),
       section: publicTryoutSectionValidator,
       set: publicTryoutSetValidator,
+      track: publicTryoutTrackValidator,
     })
   ),
   handler: async (ctx, args) => {
@@ -421,17 +362,17 @@ export const getSectionPage = query({
       )
       .unique();
 
-    if (!section) {
+    if (!(section?.visibility === "visible" && section.publicPath)) {
       return null;
     }
 
     const set = await ctx.db.get(section.tryoutSetId);
 
-    if (!set?.isActive) {
+    if (!(set?.isActive && set.isReady)) {
       return null;
     }
 
-    const [exam, readySections] = await Promise.all([
+    const [exam, track, readySections] = await Promise.all([
       ctx.db
         .query("tryoutExams")
         .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
@@ -441,10 +382,20 @@ export const getSectionPage = query({
             .eq("locale", args.locale)
         )
         .unique(),
+      ctx.db
+        .query("tryoutTracks")
+        .withIndex("by_countryKey_and_examKey_and_trackKey_and_locale", (q) =>
+          q
+            .eq("countryKey", set.countryKey)
+            .eq("examKey", set.examKey)
+            .eq("trackKey", set.trackKey)
+            .eq("locale", args.locale)
+        )
+        .unique(),
       loadReadySections(ctx, set),
     ]);
 
-    if (!exam?.isActive) {
+    if (!(exam?.isActive && track?.isActive && track.isReady)) {
       return null;
     }
 
@@ -459,33 +410,11 @@ export const getSectionPage = query({
     const questions = await loadQuestionContentRows(ctx, readySection);
 
     return {
-      exam: {
-        description: exam.description,
-        examKey: exam.examKey,
-        publicPath: exam.publicPath,
-        scoringStrategy: exam.scoringStrategy,
-        title: exam.title,
-      },
+      exam: toPublicTryoutExam(exam),
       questions,
-      section: {
-        description: section.description,
-        publicPath: section.publicPath,
-        questionCount: section.questionCount,
-        sectionKey: section.sectionKey,
-        timeLimitSeconds: section.timeLimitSeconds,
-        title: section.title,
-      },
-      set: {
-        countryKey: set.countryKey,
-        description: set.description,
-        examKey: set.examKey,
-        publicPath: set.publicPath,
-        scoringStrategy: set.scoringStrategy,
-        sectionCount: set.sectionCount,
-        setKey: set.setKey,
-        title: set.title,
-        totalQuestionCount: set.totalQuestionCount,
-      },
+      section: toPublicTryoutSection(section),
+      set: toPublicTryoutSet(set),
+      track: toPublicTryoutTrack(track),
     };
   },
 });

@@ -15,6 +15,7 @@ const staleContentTableNameValidator = literals(
   "questions",
   "tryoutCountries",
   "tryoutExams",
+  "tryoutTracks",
   "tryoutSets",
   "tryoutSections"
 );
@@ -27,6 +28,7 @@ const staleContentIdValidator = v.union(
   v.id("questions"),
   v.id("tryoutCountries"),
   v.id("tryoutExams"),
+  v.id("tryoutTracks"),
   v.id("tryoutSets"),
   v.id("tryoutSections")
 );
@@ -63,6 +65,7 @@ export const listStaleContentPage = internalQuery({
 /** Returns the source identity used for stale content comparison. */
 function getStaleSourcePath(item: {
   publicPath?: string;
+  questionSourcePath?: string;
   slug?: string;
   sourcePath?: string;
 }) {
@@ -72,6 +75,10 @@ function getStaleSourcePath(item: {
 
   if (item.publicPath) {
     return item.publicPath;
+  }
+
+  if (item.questionSourcePath) {
+    return item.questionSourcePath;
   }
 
   return item.slug ?? "";

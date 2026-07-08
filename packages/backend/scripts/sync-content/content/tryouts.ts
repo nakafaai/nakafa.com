@@ -89,6 +89,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
   const sections: TryoutSyncArgs["sections"] = [];
   const questionSets: TryoutSyncArgs["questionSets"] = [];
   const questions: TryoutSyncArgs["questions"] = [];
+  const tracks: TryoutSyncArgs["tracks"] = [];
 
   for (const source of TRYOUT_SOURCES) {
     for (const locale of selectedLocales) {
@@ -133,97 +134,163 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
         kind: "tryout-exam",
       });
 
-      for (const set of source.sets) {
-        const setSlug = set.routeSlugs[locale];
-        const setTranslation = set.translations[locale];
-        const setPublicPath = `${examPublicPath}/${setSlug}`;
+      for (const track of source.tracks) {
+        const trackSlug = track.routeSlugs[locale];
+        const trackTranslation = track.translations[locale];
+        const trackPublicPath = `${examPublicPath}/${trackSlug}`;
+        const trackSets: TryoutSyncArgs["sets"] = [];
 
-        const setRow = {
-          countryKey: source.countryKey,
-          description: setTranslation.description,
-          examKey: source.examKey,
-          isActive: true,
-          locale,
-          order: set.order,
-          publicPath: setPublicPath,
-          scoringStrategy: source.scoringStrategy,
-          sectionCount: set.sections.length,
-          setKey: set.key,
-          sourceRevision: source.sourceRevision,
-          title: setTranslation.title,
-          totalQuestionCount: set.sections.reduce(
-            (total, section) => total + section.questionCount,
-            0
-          ),
-        };
-        sets.push(setRow);
         addTryoutRoute(routes, {
-          ...setRow,
-          kind: "tryout-set",
+          description: trackTranslation.description,
+          kind: "tryout-track",
+          locale,
+          publicPath: trackPublicPath,
+          sourceRevision: source.sourceRevision,
+          title: trackTranslation.title,
         });
 
-        for (const section of set.sections) {
-          const sectionSlug = section.routeSlugs[locale];
-          const sectionTranslation = section.translations[locale];
-          const publicPath = `${setPublicPath}/${sectionSlug}`;
+        for (const set of track.sets) {
+          const setSlug = set.routeSlugs[locale];
+          const setTranslation = set.translations[locale];
+          const setPublicPath = `${trackPublicPath}/${setSlug}`;
+          const visibleSections = set.sections.filter(
+            (section) => section.visibility === "visible"
+          );
+          const internalEntrySections = set.sections.filter(
+            (section) => section.visibility === "internal-entry"
+          );
+          const totalQuestionCount = set.sections.reduce(
+            (total, section) => total + section.questionCount,
+            0
+          );
+          const internalEntrySectionKey =
+            internalEntrySections.length === 1 && visibleSections.length === 0
+              ? internalEntrySections[0]?.key
+              : undefined;
 
-          questionSets.push({
-            contentHash: computeHash(
-              JSON.stringify({
-                locale,
-                questionCount: section.questionCount,
-                sourcePath: section.questionSourcePath,
-                sourceRevision: source.sourceRevision,
-                title: sectionTranslation.title,
-              })
-            ),
+          const setRow = {
             countryKey: source.countryKey,
-            description: sectionTranslation.description,
+            description: setTranslation.description,
             examKey: source.examKey,
+            internalEntrySectionKey,
+            isActive: true,
+            isReady: totalQuestionCount > 0,
             locale,
-            questionCount: section.questionCount,
-            sectionKey: section.key,
-            setKey: set.key,
-            sourcePath: section.questionSourcePath,
-            sourceRevision: source.sourceRevision,
-            title: sectionTranslation.title,
-          });
-          sections.push({
-            countryKey: source.countryKey,
-            description: sectionTranslation.description,
-            examKey: source.examKey,
-            locale,
-            order: section.order,
-            publicPath,
-            questionCount: section.questionCount,
-            questionSourcePath: section.questionSourcePath,
-            sectionKey: section.key,
+            order: set.order,
+            publicPath: setPublicPath,
+            readyQuestionCount: totalQuestionCount,
+            readyVisibleSectionCount: visibleSections.length,
+            scoringStrategy: source.scoringStrategy,
+            sectionCount: set.sections.length,
             setKey: set.key,
             sourceRevision: source.sourceRevision,
-            timeLimitSeconds: section.timeLimitSeconds,
-            title: sectionTranslation.title,
-          });
+            title: setTranslation.title,
+            totalQuestionCount,
+            trackKey: track.key,
+            visibleSectionCount: visibleSections.length,
+          };
+          sets.push(setRow);
+          trackSets.push(setRow);
           addTryoutRoute(routes, {
-            description: sectionTranslation.description,
-            kind: "tryout-section",
-            locale,
-            publicPath,
-            sourceRevision: source.sourceRevision,
-            title: sectionTranslation.title,
+            ...setRow,
+            kind: "tryout-set",
           });
-          questions.push(
-            ...(yield* readSectionQuestions({
+
+          for (const section of set.sections) {
+            const sectionTranslation = section.translations[locale];
+            const publicPath =
+              section.visibility === "visible"
+                ? `${setPublicPath}/${section.routeSlugs[locale]}`
+                : undefined;
+
+            questionSets.push({
+              contentHash: computeHash(
+                JSON.stringify({
+                  locale,
+                  questionCount: section.questionCount,
+                  sourcePath: section.questionSourcePath,
+                  sourceRevision: source.sourceRevision,
+                  title: sectionTranslation.title,
+                })
+              ),
               countryKey: source.countryKey,
+              description: sectionTranslation.description,
               examKey: source.examKey,
               locale,
+              questionCount: section.questionCount,
+              sectionKey: section.key,
+              setKey: set.key,
+              sourcePath: section.questionSourcePath,
+              sourceRevision: source.sourceRevision,
+              title: sectionTranslation.title,
+            });
+            sections.push({
+              countryKey: source.countryKey,
+              description: sectionTranslation.description,
+              examKey: source.examKey,
+              locale,
+              order: section.order,
+              publicPath,
               questionCount: section.questionCount,
               questionSourcePath: section.questionSourcePath,
               sectionKey: section.key,
               setKey: set.key,
               sourceRevision: source.sourceRevision,
-            }))
-          );
+              timeLimitSeconds: section.timeLimitSeconds,
+              title: sectionTranslation.title,
+              trackKey: track.key,
+              visibility: section.visibility,
+            });
+            if (publicPath) {
+              addTryoutRoute(routes, {
+                description: sectionTranslation.description,
+                kind: "tryout-section",
+                locale,
+                publicPath,
+                sourceRevision: source.sourceRevision,
+                title: sectionTranslation.title,
+              });
+            }
+            questions.push(
+              ...(yield* readSectionQuestions({
+                countryKey: source.countryKey,
+                examKey: source.examKey,
+                locale,
+                questionCount: section.questionCount,
+                questionSourcePath: section.questionSourcePath,
+                sectionKey: section.key,
+                setKey: set.key,
+                sourceRevision: source.sourceRevision,
+                trackKey: track.key,
+              }))
+            );
+          }
         }
+
+        tracks.push({
+          countryKey: source.countryKey,
+          description: trackTranslation.description,
+          authoredSetCount: track.sets.length,
+          examKey: source.examKey,
+          isActive: true,
+          isReady: trackSets.some((set) => set.isReady),
+          locale,
+          order: track.order,
+          publicPath: trackPublicPath,
+          readyQuestionCount: trackSets.reduce(
+            (total, set) => total + set.readyQuestionCount,
+            0
+          ),
+          readySetCount: trackSets.filter((set) => set.isReady).length,
+          readyVisibleSectionCount: trackSets.reduce(
+            (total, set) => total + set.readyVisibleSectionCount,
+            0
+          ),
+          sourceRevision: source.sourceRevision,
+          title: trackTranslation.title,
+          trackKey: track.key,
+          trackKind: track.kind,
+        });
       }
     }
   }
@@ -236,6 +303,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
     questionSets,
     questions,
     sections,
+    tracks,
   };
 });
 
@@ -296,6 +364,7 @@ const readSectionQuestions = Effect.fn("sync.readSectionQuestions")(
     sectionKey: string;
     setKey: string;
     sourceRevision: string;
+    trackKey: string;
   }) {
     const questions: TryoutQuestionPayload[] = [];
     const errors: string[] = [];
@@ -342,6 +411,7 @@ const readQuestion = Effect.fn("sync.readQuestion")(function* (
     sectionKey: string;
     setKey: string;
     sourceRevision: string;
+    trackKey: string;
   },
   number: number
 ) {
@@ -397,6 +467,7 @@ const readQuestion = Effect.fn("sync.readQuestion")(function* (
       "tryout",
       source.countryKey,
       source.examKey,
+      source.trackKey,
       source.setKey,
       source.sectionKey,
       `question-${number}`,

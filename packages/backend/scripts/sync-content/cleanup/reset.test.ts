@@ -95,6 +95,7 @@ const emptyCounts = {
   tryoutLeaderboardUserStats: 0,
   tryoutCountries: 0,
   tryoutExams: 0,
+  tryoutTracks: 0,
   tryoutResponses: 0,
   tryoutScores: 0,
   tryoutSectionAttempts: 0,

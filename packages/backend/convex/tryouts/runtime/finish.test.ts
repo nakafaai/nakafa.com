@@ -9,6 +9,8 @@ import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const EXPIRED_AT = NOW - 1000;
+const TRACK_KEY = "2027";
+const SET_PATH = "try-out/indonesia/snbt/2027/set-1";
 
 /** Inserts one question set with one question and two choices. */
 async function insertSectionSource(
@@ -19,7 +21,7 @@ async function insertSectionSource(
     title: string;
   }
 ) {
-  const sourcePath = `question-bank/tryout/indonesia/snbt/set-1/${args.sectionKey}`;
+  const sourcePath = `question-bank/tryout/indonesia/snbt/${TRACK_KEY}/set-1/${args.sectionKey}`;
   const questionSetId = await ctx.db.insert("questionSets", {
     contentHash: `${args.sectionKey}:set-hash`,
     countryKey: "indonesia",
@@ -89,7 +91,7 @@ async function insertTryoutSection(
     examKey: "snbt",
     locale: "id",
     order: args.order,
-    publicPath: `try-out/indonesia/snbt/set-1/${args.sectionKey}`,
+    publicPath: `${SET_PATH}/${args.sectionKey}`,
     questionCount: 1,
     questionSetId: args.questionSetId,
     questionSourcePath: args.sourcePath,
@@ -99,7 +101,9 @@ async function insertTryoutSection(
     syncedAt: NOW,
     timeLimitSeconds: 1800,
     title: args.title,
+    trackKey: TRACK_KEY,
     tryoutSetId: args.tryoutSetId,
+    visibility: "visible",
   });
 }
 
@@ -170,16 +174,21 @@ describe("tryouts/runtime/finish", () => {
         countryKey: "indonesia",
         examKey: "snbt",
         isActive: true,
+        isReady: true,
         locale: "id",
         order: 1,
-        publicPath: "try-out/indonesia/snbt/set-1",
+        publicPath: SET_PATH,
+        readyQuestionCount: 2,
+        readyVisibleSectionCount: 2,
         scoringStrategy: "irt",
         sectionCount: 2,
         setKey: "set-1",
         sourceRevision: "2026",
         syncedAt: NOW,
         title: "Set 1",
+        trackKey: TRACK_KEY,
         totalQuestionCount: 2,
+        visibleSectionCount: 2,
       });
       const firstSectionId = await insertTryoutSection(ctx, {
         order: 1,
@@ -232,7 +241,7 @@ describe("tryouts/runtime/finish", () => {
         scoringStrategy: "irt",
         sectionSnapshots: [
           {
-            publicPath: "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif",
+            publicPath: `${SET_PATH}/pengetahuan-kuantitatif`,
             questionCount: 1,
             questionSetId: firstSource.questionSetId,
             questionSourcePath: firstSource.sourcePath,
@@ -242,7 +251,7 @@ describe("tryouts/runtime/finish", () => {
             tryoutSectionId: firstSectionId,
           },
           {
-            publicPath: "try-out/indonesia/snbt/set-1/penalaran-matematika",
+            publicPath: `${SET_PATH}/penalaran-matematika`,
             questionCount: 1,
             questionSetId: secondSource.questionSetId,
             questionSourcePath: secondSource.sourcePath,

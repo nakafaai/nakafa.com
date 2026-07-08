@@ -69,6 +69,7 @@ describe("analytics/capture", () => {
           locale: "id",
           score_status: "official",
           set_key: "set-1",
+          track_key: "2027",
         },
       })
     ).toBe(true);
@@ -86,6 +87,7 @@ describe("analytics/capture", () => {
           theta: 0.4,
           total_correct: 15,
           total_questions: 20,
+          track_key: "2027",
         },
       })
     ).toBe(true);

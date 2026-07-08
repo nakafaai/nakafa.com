@@ -35,8 +35,19 @@ export type TryoutPublicResultStatus = Infer<
 export const tryoutRouteKeyValidator = v.string();
 export type TryoutRouteKey = Infer<typeof tryoutRouteKeyValidator>;
 
+export const tryoutTrackKindValidator = literals("subject", "year");
+export type TryoutTrackKind = Infer<typeof tryoutTrackKindValidator>;
+
+export const tryoutSectionVisibilityValidator = literals(
+  "internal-entry",
+  "visible"
+);
+export type TryoutSectionVisibility = Infer<
+  typeof tryoutSectionVisibilityValidator
+>;
+
 export const tryoutSectionSnapshotValidator = v.object({
-  publicPath: v.string(),
+  publicPath: v.optional(v.string()),
   questionCount: v.number(),
   questionSetId: v.id("questionSets"),
   questionSourcePath: v.string(),
@@ -99,19 +110,22 @@ const tables = {
       "locale",
     ]),
 
-  tryoutSets: defineTable({
+  tryoutTracks: defineTable({
     countryKey: tryoutRouteKeyValidator,
     examKey: tryoutRouteKeyValidator,
-    setKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
+    trackKind: tryoutTrackKindValidator,
     locale: localeValidator,
     publicPath: v.string(),
     title: v.string(),
     description: v.optional(v.string()),
-    scoringStrategy: tryoutScoringStrategyValidator,
-    sectionCount: v.number(),
-    totalQuestionCount: v.number(),
+    authoredSetCount: v.number(),
+    readyQuestionCount: v.number(),
+    readySetCount: v.number(),
+    readyVisibleSectionCount: v.number(),
     order: v.number(),
     isActive: v.boolean(),
+    isReady: v.boolean(),
     sourceRevision: v.string(),
     syncedAt: v.number(),
   })
@@ -123,9 +137,49 @@ const tables = {
       "isActive",
       "order",
     ])
-    .index("by_countryKey_and_examKey_and_setKey_and_locale", [
+    .index("by_countryKey_and_examKey_and_trackKey_and_locale", [
       "countryKey",
       "examKey",
+      "trackKey",
+      "locale",
+    ]),
+
+  tryoutSets: defineTable({
+    countryKey: tryoutRouteKeyValidator,
+    examKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
+    setKey: tryoutRouteKeyValidator,
+    locale: localeValidator,
+    publicPath: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    scoringStrategy: tryoutScoringStrategyValidator,
+    internalEntrySectionKey: v.optional(tryoutRouteKeyValidator),
+    readyQuestionCount: v.number(),
+    readyVisibleSectionCount: v.number(),
+    sectionCount: v.number(),
+    totalQuestionCount: v.number(),
+    visibleSectionCount: v.number(),
+    order: v.number(),
+    isActive: v.boolean(),
+    isReady: v.boolean(),
+    sourceRevision: v.string(),
+    syncedAt: v.number(),
+  })
+    .index("by_locale_and_publicPath", ["locale", "publicPath"])
+    .index("by_track_locale_active_ready_order", [
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "locale",
+      "isActive",
+      "isReady",
+      "order",
+    ])
+    .index("by_countryKey_and_examKey_and_trackKey_and_setKey_and_locale", [
+      "countryKey",
+      "examKey",
+      "trackKey",
       "setKey",
       "locale",
     ]),
@@ -135,10 +189,11 @@ const tables = {
     questionSetId: v.id("questionSets"),
     countryKey: tryoutRouteKeyValidator,
     examKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
     sectionKey: tryoutRouteKeyValidator,
     locale: localeValidator,
-    publicPath: v.string(),
+    publicPath: v.optional(v.string()),
     questionSourcePath: v.string(),
     title: v.string(),
     description: v.optional(v.string()),
@@ -147,6 +202,7 @@ const tables = {
     sourceRevision: v.string(),
     timeLimitSeconds: v.number(),
     syncedAt: v.number(),
+    visibility: tryoutSectionVisibilityValidator,
   })
     .index("by_locale_and_publicPath", ["locale", "publicPath"])
     .index("by_tryoutSetId_and_order", ["tryoutSetId", "order"])

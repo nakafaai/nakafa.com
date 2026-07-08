@@ -124,6 +124,7 @@ export const startAttempt = mutation({
     examKey: tryoutRouteKeyValidator,
     locale: localeValidator,
     setKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
   },
   returns: v.object({
     attemptId: v.id("tryoutAttempts"),
@@ -261,6 +262,7 @@ async function trackAttemptStarted(
         locale: args.set.locale,
         score_status: "provisional",
         set_key: args.set.setKey,
+        track_key: args.set.trackKey,
       },
     },
     timestamp: new Date(args.now),

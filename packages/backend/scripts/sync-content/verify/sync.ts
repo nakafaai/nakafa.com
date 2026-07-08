@@ -1,4 +1,3 @@
-import path from "node:path";
 import {
   getUnknownMessage,
   ScriptFailureError,
@@ -18,9 +17,9 @@ import {
   getGraphIdentityIntegrity,
 } from "@repo/backend/scripts/sync-content/convex/inspection";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
-import { CONTENTS_DIR } from "@repo/backend/scripts/sync-content/runtime/paths";
 import { verifyQuranRuntime } from "@repo/backend/scripts/sync-content/verify/quran";
 import { logVerifySuccess } from "@repo/backend/scripts/sync-content/verify/summary";
+import { getTryoutFileCounts } from "@repo/backend/scripts/sync-content/verify/tryouts";
 import { getAllSurah } from "@repo/contents/_lib/quran";
 import {
   listLessonMaterialSources,
@@ -111,92 +110,6 @@ function getExpectedLessonMaterialLocales(options: SyncOptions) {
 /** Counts the locales a verify run should expect after optional locale scoping. */
 function getExpectedLocaleCount(options: SyncOptions) {
   return options.locale ? 1 : locales.length;
-}
-
-interface TryoutFileCounts {
-  activeAnswerFiles: number;
-  activeChoicesFiles: number;
-  activeQuestionFiles: number;
-  localizedQuestionFiles: number;
-  localizedQuestionSets: number;
-  questionSourceDirectories: number;
-}
-
-/** Builds try-out file counts from active source placements. */
-function getTryoutFileCounts({
-  answerFiles,
-  choicesFiles,
-  options,
-  questionFiles,
-}: {
-  answerFiles: readonly string[];
-  choicesFiles: readonly string[];
-  options: SyncOptions;
-  questionFiles: readonly string[];
-}): TryoutFileCounts {
-  const selectedLocales = getSelectedLocales(options);
-  const answerFileSet = new Set(answerFiles);
-  const choicesFileSet = new Set(choicesFiles);
-  const questionFileSet = new Set(questionFiles);
-  let activeAnswerFiles = 0;
-  let activeChoicesFiles = 0;
-  let activeQuestionFiles = 0;
-  let questionSourceDirectories = 0;
-  let questionSetPlacements = 0;
-
-  for (const source of TRYOUT_SOURCES) {
-    for (const set of source.sets) {
-      for (const section of set.sections) {
-        questionSetPlacements += 1;
-
-        for (let number = 1; number <= section.questionCount; number++) {
-          const questionDir = path.join(
-            CONTENTS_DIR,
-            section.questionSourcePath,
-            `question-${number}`
-          );
-
-          questionSourceDirectories += 1;
-
-          if (choicesFileSet.has(path.join(questionDir, "choices.ts"))) {
-            activeChoicesFiles += 1;
-          }
-
-          for (const locale of selectedLocales) {
-            if (
-              questionFileSet.has(
-                path.join(questionDir, `question.${locale}.mdx`)
-              )
-            ) {
-              activeQuestionFiles += 1;
-            }
-            if (
-              answerFileSet.has(path.join(questionDir, `answer.${locale}.mdx`))
-            ) {
-              activeAnswerFiles += 1;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  const localizedQuestionFiles =
-    questionSourceDirectories * selectedLocales.length;
-
-  return {
-    activeAnswerFiles,
-    activeChoicesFiles,
-    activeQuestionFiles,
-    localizedQuestionFiles,
-    localizedQuestionSets: questionSetPlacements * selectedLocales.length,
-    questionSourceDirectories,
-  };
-}
-
-/** Returns the exact locale list that this verifier invocation should inspect. */
-function getSelectedLocales(options: SyncOptions) {
-  return options.locale ? [options.locale] : locales;
 }
 
 /** Result shape returned by the persisted graph identity integrity check. */
@@ -387,6 +300,7 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`  quranVerses:         ${counts.quranVerses}`);
   log(`  tryoutCountries:     ${counts.tryoutCountries}`);
   log(`  tryoutExams:         ${counts.tryoutExams}`);
+  log(`  tryoutTracks:        ${counts.tryoutTracks}`);
   log(`  tryoutSets:          ${counts.tryoutSets}`);
   log(`  tryoutSections:      ${counts.tryoutSections}`);
 

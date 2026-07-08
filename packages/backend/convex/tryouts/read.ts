@@ -14,6 +14,7 @@ interface TryoutSetIdentity {
   examKey: string;
   locale: TryoutLocale;
   setKey: string;
+  trackKey: string;
 }
 
 /** Finds one active try-out set by the public source identity. */
@@ -23,12 +24,15 @@ export async function getActiveTryoutSet(
 ): Promise<TryoutSet | null> {
   const set = await ctx.db
     .query("tryoutSets")
-    .withIndex("by_countryKey_and_examKey_and_setKey_and_locale", (q) =>
-      q
-        .eq("countryKey", args.countryKey)
-        .eq("examKey", args.examKey)
-        .eq("setKey", args.setKey)
-        .eq("locale", args.locale)
+    .withIndex(
+      "by_countryKey_and_examKey_and_trackKey_and_setKey_and_locale",
+      (q) =>
+        q
+          .eq("countryKey", args.countryKey)
+          .eq("examKey", args.examKey)
+          .eq("trackKey", args.trackKey)
+          .eq("setKey", args.setKey)
+          .eq("locale", args.locale)
     )
     .unique();
 

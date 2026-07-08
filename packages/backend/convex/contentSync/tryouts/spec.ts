@@ -21,6 +21,16 @@ const tryoutScoringStrategyValidator = v.union(
   v.literal("weighted")
 );
 
+const tryoutTrackKindValidator = v.union(
+  v.literal("subject"),
+  v.literal("year")
+);
+
+const tryoutSectionVisibilityValidator = v.union(
+  v.literal("internal-entry"),
+  v.literal("visible")
+);
+
 export const syncedTryoutCountryValidator = tryoutCatalogRowValidator;
 
 export const syncedTryoutExamValidator = v.object({
@@ -29,11 +39,29 @@ export const syncedTryoutExamValidator = v.object({
   scoringStrategy: tryoutScoringStrategyValidator,
 });
 
+export const syncedTryoutTrackValidator = v.object({
+  ...tryoutCatalogRowValidator.fields,
+  authoredSetCount: v.number(),
+  examKey: v.string(),
+  isReady: v.boolean(),
+  readyQuestionCount: v.number(),
+  readySetCount: v.number(),
+  readyVisibleSectionCount: v.number(),
+  trackKey: v.string(),
+  trackKind: tryoutTrackKindValidator,
+});
+
 export const syncedTryoutSetValidator = v.object({
   ...syncedTryoutExamValidator.fields,
+  internalEntrySectionKey: v.optional(v.string()),
+  isReady: v.boolean(),
+  readyQuestionCount: v.number(),
+  readyVisibleSectionCount: v.number(),
   sectionCount: v.number(),
   setKey: v.string(),
+  trackKey: v.string(),
   totalQuestionCount: v.number(),
+  visibleSectionCount: v.number(),
 });
 
 export const syncedQuestionSetValidator = v.object({
@@ -56,7 +84,7 @@ export const syncedTryoutSectionValidator = v.object({
   examKey: v.string(),
   locale: localeValidator,
   order: v.number(),
-  publicPath: v.string(),
+  publicPath: v.optional(v.string()),
   questionCount: v.number(),
   questionSourcePath: v.string(),
   sectionKey: v.string(),
@@ -64,6 +92,8 @@ export const syncedTryoutSectionValidator = v.object({
   sourceRevision: v.string(),
   timeLimitSeconds: v.number(),
   title: v.string(),
+  trackKey: v.string(),
+  visibility: tryoutSectionVisibilityValidator,
 });
 
 export const syncedTryoutRouteValidator = v.object({
@@ -112,6 +142,7 @@ export const deleteResultValidator = v.object({
 
 export type SyncedTryoutCountry = Infer<typeof syncedTryoutCountryValidator>;
 export type SyncedTryoutExam = Infer<typeof syncedTryoutExamValidator>;
+export type SyncedTryoutTrack = Infer<typeof syncedTryoutTrackValidator>;
 export type SyncedTryoutRoute = Infer<typeof syncedTryoutRouteValidator>;
 export type SyncedTryoutSet = Infer<typeof syncedTryoutSetValidator>;
 export type SyncedQuestionSet = Infer<typeof syncedQuestionSetValidator>;

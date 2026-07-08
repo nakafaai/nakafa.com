@@ -10,10 +10,11 @@ import { describe, expect, it } from "vitest";
 
 const COUNTRY_ROUTE = "try-out/indonesia";
 const EXAM_ROUTE = `${COUNTRY_ROUTE}/snbt`;
-const SET_ROUTE = `${EXAM_ROUTE}/set-1`;
+const TRACK_ROUTE = `${EXAM_ROUTE}/2027`;
+const SET_ROUTE = `${TRACK_ROUTE}/set-1`;
 const SECTION_ROUTE = `${SET_ROUTE}/penalaran-matematika`;
 const SECTION_SOURCE =
-  "question-bank/tryout/indonesia/snbt/set-1/penalaran-matematika";
+  "question-bank/tryout/indonesia/snbt/2027/set-1/penalaran-matematika";
 const SECTION_GRAPH = getGraphIdentity(SECTION_ROUTE);
 
 /** Builds one route projection fixture matching try-out source routes. */
@@ -93,6 +94,11 @@ function buildSyncPayload() {
         title: "SNBT",
       }),
       buildRoute({
+        kind: "tryout-track",
+        publicPath: TRACK_ROUTE,
+        title: "Tahun 2027",
+      }),
+      buildRoute({
         kind: "tryout-set",
         publicPath: SET_ROUTE,
         title: "Set 1",
@@ -119,6 +125,8 @@ function buildSyncPayload() {
         sourceRevision: "2026",
         timeLimitSeconds: 1800,
         title: "Penalaran Matematika",
+        trackKey: "2027",
+        visibility: "visible" as const,
       },
     ],
     sets: [
@@ -130,11 +138,36 @@ function buildSyncPayload() {
         order: 1,
         publicPath: SET_ROUTE,
         scoringStrategy: "irt" as const,
+        readyQuestionCount: 20,
+        readyVisibleSectionCount: 1,
         sectionCount: 1,
         setKey: "set-1",
         sourceRevision: "2026",
         title: "Set 1",
+        trackKey: "2027",
         totalQuestionCount: 20,
+        visibleSectionCount: 1,
+        isReady: true,
+      },
+    ],
+    tracks: [
+      {
+        authoredSetCount: 1,
+        countryKey: "indonesia",
+        description: "Try-out SNBT Tahun 2027",
+        examKey: "snbt",
+        isActive: true,
+        isReady: true,
+        locale: "id" as const,
+        order: 1,
+        publicPath: TRACK_ROUTE,
+        readyQuestionCount: 20,
+        readySetCount: 1,
+        readyVisibleSectionCount: 1,
+        sourceRevision: "2026",
+        title: "Tahun 2027",
+        trackKey: "2027",
+        trackKind: "year" as const,
       },
     ],
   };
@@ -219,7 +252,7 @@ describe("contentSync/mutations/tryouts", () => {
       return { route, search };
     });
 
-    expect(result).toEqual({ created: 5, unchanged: 0, updated: 0 });
+    expect(result).toEqual({ created: 6, unchanged: 0, updated: 0 });
     expect(snapshot.route).toMatchObject({
       contentHash: `${SECTION_ROUTE}:hash`,
       kind: "tryout-section",
@@ -360,8 +393,8 @@ describe("contentSync/mutations/tryouts", () => {
       return { itemCount: items.length, scales };
     });
 
-    expect(firstResult).toEqual({ created: 25, unchanged: 0, updated: 0 });
-    expect(secondResult).toEqual({ created: 0, unchanged: 25, updated: 0 });
+    expect(firstResult).toEqual({ created: 26, unchanged: 0, updated: 0 });
+    expect(secondResult).toEqual({ created: 0, unchanged: 26, updated: 0 });
     expect(snapshot.scales).toHaveLength(1);
     expect(snapshot.scales[0]).toMatchObject({
       model: "2pl",

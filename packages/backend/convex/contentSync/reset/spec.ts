@@ -60,6 +60,7 @@ export const resettableTableNames = [
   "tryoutAccessLinks",
   "tryoutCountries",
   "tryoutExams",
+  "tryoutTracks",
   "tryoutSets",
   "tryoutSections",
   "tryoutAttempts",

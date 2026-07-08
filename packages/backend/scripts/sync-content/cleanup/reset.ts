@@ -115,6 +115,7 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Tryout Access Grants:    ${counts.tryoutAccessGrants}`);
   log(`  Tryout Countries:      ${counts.tryoutCountries}`);
   log(`  Tryout Exams:          ${counts.tryoutExams}`);
+  log(`  Tryout Tracks:         ${counts.tryoutTracks}`);
   log(`  Tryout Sets:           ${counts.tryoutSets}`);
   log(`  Tryout Sections:       ${counts.tryoutSections}`);
   log(`  Tryout Entitlements:   ${counts.tryoutEntitlements}`);
@@ -148,6 +149,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.questions +
     counts.tryoutCountries +
     counts.tryoutExams +
+    counts.tryoutTracks +
     counts.tryoutSets +
     counts.tryoutSections;
   const totalRelated =

@@ -214,6 +214,7 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   const questionSourceKeySet = new Set(filesystemSlugs.questionSourceKeys);
   const tryoutCountryPathSet = new Set(filesystemSlugs.tryoutCountryPaths);
   const tryoutExamPathSet = new Set(filesystemSlugs.tryoutExamPaths);
+  const tryoutTrackPathSet = new Set(filesystemSlugs.tryoutTrackPaths);
   const tryoutSetPathSet = new Set(filesystemSlugs.tryoutSetPaths);
   const tryoutSectionPathSet = new Set(filesystemSlugs.tryoutSectionPaths);
   const [
@@ -224,6 +225,7 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     questions,
     tryoutCountries,
     tryoutExams,
+    tryoutTracks,
     tryoutSets,
     tryoutSections,
   ] = yield* Effect.all([
@@ -272,6 +274,12 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     collectPages(
       config,
       internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("tryoutTracks"),
+      StaleContentPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.stale.listStaleContentPage,
       buildStaleContentArgs("tryoutSets"),
       StaleContentPageSchema
     ),
@@ -304,6 +312,9 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     ),
     staleTryoutExams: tryoutExams.filter(
       (item) => !tryoutExamPathSet.has(item.sourcePath)
+    ),
+    staleTryoutTracks: tryoutTracks.filter(
+      (item) => !tryoutTrackPathSet.has(item.sourcePath)
     ),
     staleTryoutSets: tryoutSets.filter(
       (item) => !tryoutSetPathSet.has(item.sourcePath)

@@ -20,6 +20,7 @@ interface VerifySummaryCounts {
   tryoutExams: number;
   tryoutSections: number;
   tryoutSets: number;
+  tryoutTracks: number;
 }
 
 /** Logs the successful verification summary after every integrity gate passes. */
@@ -36,6 +37,7 @@ export function logVerifySuccess(counts: VerifySummaryCounts) {
   log(`  - ${counts.quranVerses} Quran verses`);
   log(`  - ${counts.tryoutCountries} try-out countries`);
   log(`  - ${counts.tryoutExams} try-out exams`);
+  log(`  - ${counts.tryoutTracks} try-out tracks`);
   log(`  - ${counts.tryoutSets} try-out sets`);
   log(`  - ${counts.tryoutSections} try-out sections`);
   log(`  - ${counts.articleReferences} references`);

@@ -17,6 +17,7 @@ export const CONTENT_SYNC_BATCH_LIMITS = {
   staleTryoutExams: 50,
   staleTryoutSections: 50,
   staleTryoutSets: 50,
+  staleTryoutTracks: 50,
   curriculumLessons: 20,
   curriculumTopics: 50,
   generatedAssessmentNodes: 100,

@@ -63,6 +63,7 @@ export const BATCH_SIZES = {
   staleTryoutExams: CONTENT_SYNC_BATCH_LIMITS.staleTryoutExams,
   staleTryoutSections: CONTENT_SYNC_BATCH_LIMITS.staleTryoutSections,
   staleTryoutSets: CONTENT_SYNC_BATCH_LIMITS.staleTryoutSets,
+  staleTryoutTracks: CONTENT_SYNC_BATCH_LIMITS.staleTryoutTracks,
   unusedAuthors: CONTENT_SYNC_BATCH_LIMITS.unusedAuthors,
 } as const;
 
@@ -454,6 +455,7 @@ export const ContentCountsSchema = Schema.Struct({
   tryoutSectionAttempts: Schema.Number,
   tryoutSections: Schema.Number,
   tryoutSets: Schema.Number,
+  tryoutTracks: Schema.Number,
   tryoutEntitlements: Schema.Number,
 });
 
@@ -517,6 +519,7 @@ const StaleItemSchema = Schema.Struct({
     ConvexIdSchema("questions"),
     ConvexIdSchema("tryoutCountries"),
     ConvexIdSchema("tryoutExams"),
+    ConvexIdSchema("tryoutTracks"),
     ConvexIdSchema("tryoutSets"),
     ConvexIdSchema("tryoutSections")
   ),
@@ -566,6 +569,12 @@ const StaleTryoutExamSchema = Schema.Struct({
   sourcePath: Schema.String,
 });
 
+const StaleTryoutTrackSchema = Schema.Struct({
+  id: ConvexIdSchema("tryoutTracks"),
+  locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
+});
+
 const StaleTryoutSetSchema = Schema.Struct({
   id: ConvexIdSchema("tryoutSets"),
   locale: SyncLocaleSchema,
@@ -593,6 +602,7 @@ export const StaleContentSchema = Schema.Struct({
   staleTryoutExams: Schema.Array(StaleTryoutExamSchema),
   staleTryoutSections: Schema.Array(StaleTryoutSectionSchema),
   staleTryoutSets: Schema.Array(StaleTryoutSetSchema),
+  staleTryoutTracks: Schema.Array(StaleTryoutTrackSchema),
 });
 
 export const StaleContentPageSchema = Schema.mutable(

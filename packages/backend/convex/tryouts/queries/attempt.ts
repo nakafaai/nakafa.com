@@ -119,6 +119,7 @@ export const getCurrent = query({
     locale: localeValidator,
     sectionKey: v.optional(tryoutRouteKeyValidator),
     setKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
   },
   returns: v.union(v.null(), currentAttemptValidator),
   handler: async (ctx, args) => {
@@ -207,6 +208,7 @@ export const getSectionRuntime = query({
     locale: localeValidator,
     sectionKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
   },
   returns: v.union(v.null(), sectionRuntimeValidator),
   handler: async (ctx, args) => {
