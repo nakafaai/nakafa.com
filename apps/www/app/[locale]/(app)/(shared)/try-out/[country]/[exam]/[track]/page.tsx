@@ -5,28 +5,34 @@ import { getTranslations } from "next-intl/server";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutHeader } from "@/components/tryout/chrome";
-import { TryoutExamPageClient } from "@/components/tryout/exam.client";
 import { getTryoutHref } from "@/components/tryout/routes";
 import { TryoutExamSelector } from "@/components/tryout/selector.client";
 import {
   readStaticTryoutExamOptions,
   readStaticTryoutRoute,
 } from "@/components/tryout/static";
+import { TryoutTrackPageClient } from "@/components/tryout/track.client";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-/** Renders active try-out tracks for one country and exam family. */
+/** Renders active try-out sets for one exam track. */
 export default async function Page(props: {
-  params: Promise<{ country: string; exam: string; locale: string }>;
+  params: Promise<{
+    country: string;
+    exam: string;
+    locale: string;
+    track: string;
+  }>;
 }) {
-  const { country, exam, locale: localeParam } = await props.params;
+  const { country, exam, locale: localeParam, track } = await props.params;
   const locale = getLocaleOrThrow(localeParam);
   const countryPath = getTryoutHref({ country }).slice(1);
   const examPath = getTryoutHref({ country, exam }).slice(1);
+  const trackPath = getTryoutHref({ country, exam, track }).slice(1);
   const preloaded = await preloadQuery(
-    api.tryouts.queries.catalog.getExamPage,
+    api.tryouts.queries.catalog.getTrackPage,
     {
       locale,
-      publicPath: examPath,
+      publicPath: trackPath,
     }
   );
   const page = preloadedQueryResult(preloaded);
@@ -35,16 +41,23 @@ export default async function Page(props: {
     notFound();
   }
 
-  const tCommon = await getTranslations({ locale, namespace: "Common" });
-  const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
+  const [tCommon, tTryouts] = await Promise.all([
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Tryouts" }),
+  ]);
   const examOptions = readStaticTryoutExamOptions({
     countryPath,
     locale,
   });
-  const route = readStaticTryoutRoute({
+  const examRoute = readStaticTryoutRoute({
     kind: "tryout-exam",
     locale,
     publicPath: examPath,
+  });
+  const trackRoute = readStaticTryoutRoute({
+    kind: "tryout-track",
+    locale,
+    publicPath: trackPath,
   });
 
   return (
@@ -64,11 +77,15 @@ export default async function Page(props: {
               href: getTryoutHref({ country }),
               label: tCommon("try-out"),
             },
-            { label: route?.title ?? exam },
+            {
+              href: getTryoutHref({ country, exam }),
+              label: examRoute?.title ?? exam,
+            },
+            { label: trackRoute?.title ?? track },
           ]}
-          title={route?.title ?? tCommon("try-out")}
+          title={trackRoute?.title ?? tCommon("try-out")}
         />
-        <TryoutExamPageClient preloaded={preloaded} />
+        <TryoutTrackPageClient locale={locale} preloaded={preloaded} />
       </LayoutMaterialContent>
     </LayoutMaterial>
   );

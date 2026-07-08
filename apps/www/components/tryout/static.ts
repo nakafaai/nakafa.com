@@ -12,7 +12,7 @@ export function readStaticTryoutRoute({
   locale,
   publicPath,
 }: {
-  kind: "tryout-country" | "tryout-exam";
+  kind: "tryout-country" | "tryout-exam" | "tryout-track";
   locale: Locale;
   publicPath: string;
 }) {

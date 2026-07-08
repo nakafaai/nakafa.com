@@ -120,9 +120,9 @@ describe("cleanSlug", () => {
     });
 
     it("should handle nested try-out slug", () => {
-      const slug = "/try-out/indonesia/snbt/set-1/quantitative-knowledge/";
+      const slug = "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge/";
       expect(cleanSlug(slug)).toBe(
-        "try-out/indonesia/snbt/set-1/quantitative-knowledge"
+        "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
       );
     });
 

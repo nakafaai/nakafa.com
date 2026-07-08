@@ -23,24 +23,29 @@ type CurrentAttempt = FunctionReturnType<
 interface StartTryoutButtonProps {
   attempt?: CurrentAttempt;
   countryKey: string;
+  entrySectionKey?: string;
   examKey: string;
   firstSectionHref: string;
   locale: Locale;
   setKey: string;
+  trackKey: string;
 }
 
 /** Starts a Convex-owned try-out attempt and opens the first section on success. */
 export function StartTryoutButton({
   attempt,
   countryKey,
+  entrySectionKey,
   examKey,
   firstSectionHref,
   locale,
   setKey,
+  trackKey,
 }: StartTryoutButtonProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const startAttempt = useMutation(api.tryouts.mutations.attempts.startAttempt);
+  const startSection = useMutation(api.tryouts.mutations.sections.start);
   const tTryouts = useTranslations("Tryouts");
   const [isPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
@@ -77,7 +82,23 @@ export function StartTryoutButton({
     }
 
     if (hasActiveAttempt) {
-      router.push(firstSectionHref);
+      if (!entrySectionKey) {
+        router.push(firstSectionHref);
+        return;
+      }
+
+      startTransition(async () => {
+        await Effect.runPromise(
+          startEntrySection({
+            attemptId: attempt.attemptId,
+            firstSectionHref,
+            router,
+            sectionKey: entrySectionKey,
+            startSection,
+            tTryouts,
+          })
+        );
+      });
       return;
     }
 
@@ -104,9 +125,22 @@ export function StartTryoutButton({
               examKey,
               locale,
               setKey,
+              trackKey,
             }),
           catch: (cause) => cause,
         }).pipe(
+          Effect.flatMap((result) =>
+            entrySectionKey
+              ? Effect.tryPromise({
+                  try: () =>
+                    startSection({
+                      attemptId: result.attemptId,
+                      sectionKey: entrySectionKey,
+                    }),
+                  catch: (cause) => cause,
+                })
+              : Effect.succeed(undefined)
+          ),
           Effect.tap(() =>
             Effect.sync(() => {
               closeDialog();
@@ -172,63 +206,47 @@ export function StartTryoutButton({
   );
 }
 
-interface StartSectionButtonProps {
-  attemptId: Id<"tryoutAttempts">;
-  sectionHref: string;
-  sectionKey: string;
-}
-
-/** Starts the selected section inside an already-active try-out attempt. */
-export function StartSectionButton({
+/** Starts the internal entry section for an already-active attempt. */
+function startEntrySection({
   attemptId,
-  sectionHref,
+  firstSectionHref,
+  router,
   sectionKey,
-}: StartSectionButtonProps) {
-  const router = useRouter();
-  const startSection = useMutation(api.tryouts.mutations.sections.start);
-  const tTryouts = useTranslations("Tryouts");
-  const [isPending, startTransition] = useTransition();
-
-  /** Starts this section timer and lets the Convex runtime subscription update. */
-  function onStart() {
-    if (isPending) {
-      return;
-    }
-
-    startTransition(async () => {
-      await Effect.runPromise(
-        Effect.tryPromise({
-          try: () =>
-            startSection({
-              attemptId,
-              sectionKey,
-            }),
-          catch: (cause) => cause,
-        }).pipe(
-          Effect.tap(() =>
-            Effect.sync(() => {
-              router.replace(sectionHref);
-              toast.success(tTryouts("start-part-success"), {
-                position: "bottom-center",
-              });
-            })
-          ),
-          Effect.catchAll(() =>
-            Effect.sync(() => {
-              toast.error(tTryouts("start-part-error"), {
-                position: "bottom-center",
-              });
-            })
-          )
-        )
-      );
-    });
-  }
-
-  return (
-    <Button disabled={isPending} onClick={onStart} type="button">
-      <Spinner className="size-4" icon={Rocket01Icon} isLoading={isPending} />
-      {tTryouts("start-part-cta")}
-    </Button>
+  startSection,
+  tTryouts,
+}: {
+  attemptId: Id<"tryoutAttempts">;
+  firstSectionHref: string;
+  router: ReturnType<typeof useRouter>;
+  sectionKey: string;
+  startSection: (args: {
+    attemptId: Id<"tryoutAttempts">;
+    sectionKey: string;
+  }) => Promise<unknown>;
+  tTryouts: ReturnType<typeof useTranslations>;
+}) {
+  return Effect.tryPromise({
+    try: () =>
+      startSection({
+        attemptId,
+        sectionKey,
+      }),
+    catch: (cause) => cause,
+  }).pipe(
+    Effect.tap(() =>
+      Effect.sync(() => {
+        router.push(firstSectionHref);
+        toast.success(tTryouts("start-part-success"), {
+          position: "bottom-center",
+        });
+      })
+    ),
+    Effect.catchAll(() =>
+      Effect.sync(() => {
+        toast.error(tTryouts("start-part-error"), {
+          position: "bottom-center",
+        });
+      })
+    )
   );
 }

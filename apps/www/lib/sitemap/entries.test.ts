@@ -116,7 +116,7 @@ describe("sitemap entries", () => {
 
   it("looks up content lastmod by public sitemap route", async () => {
     await Effect.runPromise(
-      getEntries("/try-out/indonesia/snbt/set-1/quantitative-knowledge")
+      getEntries("/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge")
     );
     await Effect.runPromise(
       getEntries("/subjects/chemistry/green-chemistry/definition")
@@ -124,7 +124,7 @@ describe("sitemap entries", () => {
 
     expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
       locale: "en",
-      route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+      route: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     });
     expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
       locale: "en",
@@ -216,7 +216,7 @@ describe("sitemap entries", () => {
     );
     await expect(
       Effect.runPromise(
-        getEntries("/try-out/indonesia/snbt/set-1/quantitative-knowledge")
+        getEntries("/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge")
       )
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.6 })

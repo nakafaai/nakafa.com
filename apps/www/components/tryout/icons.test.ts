@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getTryoutExamIcon, getTryoutSetIcon } from "@/components/tryout/icons";
+import {
+  getTryoutExamIcon,
+  getTryoutSetIcon,
+  getTryoutTrackIcon,
+} from "@/components/tryout/icons";
 
 function serializeIcon(icon: unknown) {
   return JSON.stringify(icon);
@@ -28,5 +32,13 @@ describe("try-out icons", () => {
 
   it("returns a default set icon for future unsupported set keys", () => {
     expect(getTryoutSetIcon("unknown-set")).toBeTruthy();
+  });
+
+  it("keeps subject track icons sourced from material icons", () => {
+    expect(getTryoutTrackIcon("mathematics")).toBeTruthy();
+  });
+
+  it("returns a default track icon for future unsupported track keys", () => {
+    expect(getTryoutTrackIcon("unknown-track")).toBeTruthy();
   });
 });

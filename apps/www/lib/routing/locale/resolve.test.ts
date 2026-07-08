@@ -107,23 +107,23 @@ describe("resolveLocalizedNavigationHref", () => {
   });
 
   it("keeps concrete try-out set and section URLs canonical across locale switching", () => {
-    expect(resolveHref("/id/try-out/indonesia/snbt/set-1", "en")).toBe(
-      "/try-out/indonesia/snbt/set-1"
+    expect(resolveHref("/id/try-out/indonesia/snbt/2027/set-1", "en")).toBe(
+      "/try-out/indonesia/snbt/2027/set-1"
     );
 
     expect(
       resolveHref(
-        "/id/try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif",
+        "/id/try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
         "en"
       )
-    ).toBe("/try-out/indonesia/snbt/set-1/quantitative-knowledge");
+    ).toBe("/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge");
 
     expect(
       resolveHref(
-        "/en/try-out/indonesia/snbt/set-1/quantitative-knowledge",
+        "/en/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
         "id"
       )
-    ).toBe("/try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif");
+    ).toBe("/try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif");
   });
 
   it("keeps static app pages on normal localized path switching with safe state", () => {

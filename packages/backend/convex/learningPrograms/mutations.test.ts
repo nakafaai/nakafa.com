@@ -15,7 +15,7 @@ const englishSubjectGraph = getGraphIdentity(
   "material/lesson/chemistry/atomic-structure",
   "en"
 );
-const snbtGraph = getGraphIdentity("try-out/indonesia/snbt/set-1");
+const snbtGraph = getGraphIdentity("try-out/indonesia/snbt/2027/set-1");
 
 describe("learningPrograms/mutations", () => {
   it("creates an authenticated profile and graph-backed first plan", async () => {

@@ -3,6 +3,7 @@ interface TryoutHrefInput {
   exam?: string;
   section?: string;
   set?: string;
+  track?: string;
 }
 
 /** Builds a public try-out href from already-localized route segments. */
@@ -11,8 +12,9 @@ export function getTryoutHref({
   exam,
   section,
   set,
+  track,
 }: TryoutHrefInput = {}) {
-  const segments = ["try-out", country, exam, set, section].filter(
+  const segments = ["try-out", country, exam, track, set, section].filter(
     (segment): segment is string => Boolean(segment)
   );
 

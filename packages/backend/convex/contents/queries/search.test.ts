@@ -279,7 +279,7 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-english-section",
         description: "",
         locale: "id",
-        route: "try-out/indonesia/snbt/set-2/english-language",
+        route: "try-out/indonesia/snbt/2027/set-2/english-language",
         section: "tryout",
         syncedAt: 1,
         text: "english-language try-out set-2 reading passage",
@@ -289,7 +289,7 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-quantitative-section",
         description: "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2",
         locale: "id",
-        route: "try-out/indonesia/snbt/set-2/quantitative-knowledge",
+        route: "try-out/indonesia/snbt/2027/set-2/quantitative-knowledge",
         section: "tryout",
         syncedAt: 1,
         text: "quantitative-knowledge Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi tangga",
@@ -309,7 +309,7 @@ describe("contents/queries/search:search", () => {
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "try-out/indonesia/snbt/set-2/quantitative-knowledge"
+          "try-out/indonesia/snbt/2027/set-2/quantitative-knowledge"
         ),
       })
     );
@@ -323,7 +323,7 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-language-section",
         description: "",
         locale: "id",
-        route: "try-out/indonesia/snbt/set-1/indonesian-language",
+        route: "try-out/indonesia/snbt/2027/set-1/indonesian-language",
         section: "tryout",
         syncedAt: 1,
         text: "Bagian bacaan yang menyebut pola bilangan sebagai contoh.",
@@ -333,7 +333,7 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-math-section",
         description: "SNBT Penalaran Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
-        route: "try-out/indonesia/snbt/set-1/mathematical-reasoning",
+        route: "try-out/indonesia/snbt/2027/set-1/mathematical-reasoning",
         section: "tryout",
         syncedAt: 1,
         text: "Latihan pola bilangan untuk penalaran matematika.",
@@ -353,7 +353,7 @@ describe("contents/queries/search:search", () => {
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "try-out/indonesia/snbt/set-1/mathematical-reasoning"
+          "try-out/indonesia/snbt/2027/set-1/mathematical-reasoning"
         ),
       })
     );
@@ -367,7 +367,7 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-general-reasoning-section",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
-        route: "try-out/indonesia/snbt/set-3/general-reasoning",
+        route: "try-out/indonesia/snbt/2027/set-3/general-reasoning",
         section: "tryout",
         syncedAt: 1,
         text: "Bagian umum nomor 11.",
@@ -411,7 +411,7 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-class-section",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
-        route: "try-out/indonesia/snbt/set-3/general-reasoning",
+        route: "try-out/indonesia/snbt/2027/set-3/general-reasoning",
         section: "tryout",
         syncedAt: 1,
         text: "Semua siswa kelas 9 mengikuti ujian sekolah.",

@@ -7,6 +7,7 @@ import {
   SchoolReportCardIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 
 /** Resolves one try-out exam identity to its stable card icon. */
 export function getTryoutExamIcon(examKey: string): IconSvgElement {
@@ -30,4 +31,9 @@ export function getTryoutSetIcon(setKey: string): IconSvgElement {
     default:
       return CheckListIcon;
   }
+}
+
+/** Resolves one subject track identity to its stable material icon. */
+export function getTryoutTrackIcon(trackKey: string): IconSvgElement {
+  return getMaterialIcon(trackKey);
 }

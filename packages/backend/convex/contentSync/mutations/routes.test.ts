@@ -24,8 +24,9 @@ describe("contentSync/mutations/routes", () => {
       "material/lesson/chemistry/atomic-structure",
       "material/lesson/chemistry/atomic-structure/electron-configuration",
       "try-out/indonesia/snbt",
-      "try-out/indonesia/snbt/set-1",
-      "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+      "try-out/indonesia/snbt/2027",
+      "try-out/indonesia/snbt/2027/set-1",
+      "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     ];
 
     await t.mutation(async (ctx) => {
@@ -71,11 +72,15 @@ describe("contentSync/mutations/routes", () => {
       }),
       expect.objectContaining({
         sourceParentPath: "try-out/indonesia/snbt",
-        sourcePath: "try-out/indonesia/snbt/set-1",
+        sourcePath: "try-out/indonesia/snbt/2027",
       }),
       expect.objectContaining({
-        sourceParentPath: "try-out/indonesia/snbt/set-1",
-        sourcePath: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+        sourceParentPath: "try-out/indonesia/snbt/2027",
+        sourcePath: "try-out/indonesia/snbt/2027/set-1",
+      }),
+      expect.objectContaining({
+        sourceParentPath: "try-out/indonesia/snbt/2027/set-1",
+        sourcePath: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
       }),
     ]);
   });

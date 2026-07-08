@@ -63,7 +63,7 @@ describe("contentSync/reset/tryouts", () => {
 async function seedTryoutRouteProjections(ctx: MutationCtx) {
   await insertProjectedRoute(ctx, {
     kind: "tryout-set",
-    route: "try-out/indonesia/snbt/set-1",
+    route: "try-out/indonesia/snbt/2027/set-1",
     section: "tryout",
   });
   await insertProjectedRoute(ctx, {
@@ -83,7 +83,7 @@ async function seedQuestionWithDependents(ctx: MutationCtx) {
     questionCount: 1,
     sectionKey: "pengetahuan-kuantitatif",
     setKey: "set-1",
-    sourcePath: "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif",
+    sourcePath: "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
     sourceRevision: "2026",
     syncedAt: 1,
     title: "Pengetahuan Kuantitatif",
@@ -97,7 +97,7 @@ async function seedQuestionWithDependents(ctx: MutationCtx) {
     questionBody: "Pertanyaan",
     questionSetId,
     sourceKey: "tryout:question:1",
-    sourcePath: "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif/1",
+    sourcePath: "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif/1",
     sourceRevision: "2026",
     syncedAt: 1,
     title: "Pertanyaan 1",
@@ -183,7 +183,7 @@ async function insertQuestionProjection(
   ctx: MutationCtx,
   questionId: Id<"questions">
 ) {
-  const route = "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif/1";
+  const route = "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif/1";
   const graph = projectionGraph(route);
 
   await ctx.db.insert("contentRoutes", {

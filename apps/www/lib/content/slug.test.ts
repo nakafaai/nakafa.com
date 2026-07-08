@@ -5,9 +5,9 @@ describe("getContentRuntimeSlug", () => {
   it("normalizes public content paths into Convex runtime slugs", () => {
     expect(
       getContentRuntimeSlug(
-        "/try-out/indonesia/snbt/set-1/quantitative-knowledge"
+        "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
       )
-    ).toBe("try-out/indonesia/snbt/set-1/quantitative-knowledge");
+    ).toBe("try-out/indonesia/snbt/2027/set-1/quantitative-knowledge");
     expect(getContentRuntimeSlug("articles/politics/example")).toBe(
       "articles/politics/example"
     );

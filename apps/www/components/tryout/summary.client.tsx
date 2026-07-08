@@ -26,10 +26,8 @@ import {
   getTryoutHref,
   getTryoutPublicPathHref,
 } from "@/components/tryout/routes";
-import {
-  StartSectionButton,
-  StartTryoutButton,
-} from "@/components/tryout/start";
+import { StartSectionButton } from "@/components/tryout/section-start";
+import { StartTryoutButton } from "@/components/tryout/start";
 import { TryoutStatus } from "@/components/tryout/status";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
@@ -48,6 +46,7 @@ interface TryoutSectionSummaryProps {
   section: string;
   sectionFinished?: boolean;
   set: string;
+  track: string;
 }
 
 /** Renders the pre-runtime section summary and the correct start CTA. */
@@ -61,9 +60,10 @@ export function TryoutSectionSummary({
   section,
   sectionFinished: sectionFinishedProp,
   set,
+  track,
 }: TryoutSectionSummaryProps) {
   const tTryouts = useTranslations("Tryouts");
-  const returnHref = getTryoutHref({ country, exam, set });
+  const returnHref = getTryoutHref({ country, exam, set, track });
   const sectionAttempt = attempt?.section ?? null;
   const sectionFinished =
     sectionFinishedProp ??
@@ -102,6 +102,7 @@ export function TryoutSectionSummary({
             section={section}
             sectionFinished={sectionFinished}
             set={set}
+            track={track}
           />
         </TryoutPartCtas>
       </TryoutPartBody>
@@ -121,6 +122,7 @@ function TryoutSectionCta({
   section,
   sectionFinished,
   set,
+  track,
 }: TryoutSectionSummaryProps & {
   returnHref: string;
   sectionFinished: boolean;
@@ -170,6 +172,7 @@ function TryoutSectionCta({
           exam,
           section,
           set,
+          track,
         })}
         sectionKey={page.section.sectionKey}
       />
@@ -190,9 +193,11 @@ function TryoutSectionCta({
         exam,
         section,
         set,
+        track,
       })}
       locale={locale}
       setKey={page.set.setKey}
+      trackKey={page.set.trackKey}
     />
   );
 }

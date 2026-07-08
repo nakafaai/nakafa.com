@@ -32,6 +32,7 @@ interface TryoutSectionPageClientProps {
   runtime: Preloaded<SectionRuntimeQuery>;
   section: string;
   set: string;
+  track: string;
 }
 
 /** Renders one realtime try-out section page from Convex. */
@@ -44,6 +45,7 @@ export function TryoutSectionPageClient({
   runtime: preloadedRuntime,
   section,
   set,
+  track,
 }: TryoutSectionPageClientProps) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const page = usePreloadedQuery(preloaded);
@@ -57,6 +59,7 @@ export function TryoutSectionPageClient({
           locale,
           sectionKey: page.section.sectionKey,
           setKey: page.set.setKey,
+          trackKey: page.set.trackKey,
         }
       : "skip"
   );
@@ -132,6 +135,7 @@ export function TryoutSectionPageClient({
       section={section}
       sectionFinished={sectionFinished}
       set={set}
+      track={track}
     />
   );
 
@@ -140,7 +144,7 @@ export function TryoutSectionPageClient({
       <TryoutRuntime
         isExpired={false}
         questions={questions}
-        returnHref={getTryoutHref({ country, exam, set })}
+        returnHref={getTryoutHref({ country, exam, set, track })}
         runtime={activeRuntime}
       />
     );
@@ -151,7 +155,7 @@ export function TryoutSectionPageClient({
         <TryoutRuntime
           isExpired={true}
           questions={questions}
-          returnHref={getTryoutHref({ country, exam, set })}
+          returnHref={getTryoutHref({ country, exam, set, track })}
           runtime={reviewRuntime}
         />
       </>
@@ -164,10 +168,14 @@ export function TryoutSectionPageClient({
         <TryoutPageHeader
           icon={getMaterialIcon(page.section.sectionKey)}
           link={{
-            href: getTryoutHref({ country, exam, set }),
+            href: getTryoutHref({ country, exam, set, track }),
             label: tCommon("back"),
           }}
-          meta={<TryoutMeta items={[page.exam.title, page.set.title]} />}
+          meta={
+            <TryoutMeta
+              items={[page.exam.title, page.track.title, page.set.title]}
+            />
+          }
           status={status}
           title={page.section.title}
         />

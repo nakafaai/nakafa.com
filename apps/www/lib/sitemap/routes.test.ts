@@ -181,8 +181,8 @@ describe("sitemap route discovery", () => {
     });
 
     await expect(getSitemapRoutes("content_en_tryout_0")).resolves.toEqual([
-      "/try-out/indonesia/snbt/set-1",
-      "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
+      "/try-out/indonesia/snbt/2027/set-1",
+      "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     ]);
 
     await expect(getSitemapRoutes("public_en")).resolves.toEqual([
@@ -244,8 +244,8 @@ describe("sitemap route discovery", () => {
       "/articles/politics/dynastic-politics-asian-values",
       "/quran/1",
       "/subjects/chemistry/green-chemistry/definition",
-      "/try-out/indonesia/snbt/set-1",
-      "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
+      "/try-out/indonesia/snbt/2027/set-1",
+      "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     ]);
   });
 
@@ -293,12 +293,12 @@ const routeRows = [
   }),
   routeRow({
     locale: "en",
-    route: "try-out/indonesia/snbt/set-1",
+    route: "try-out/indonesia/snbt/2027/set-1",
     section: "tryout",
   }),
   routeRow({
     locale: "en",
-    route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+    route: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     section: "tryout",
   }),
   routeRow({

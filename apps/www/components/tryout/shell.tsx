@@ -16,6 +16,7 @@ export function TryoutShell({ children }: { children: ReactNode }) {
   const countryKey = getRouteParam(params.country);
   const examKey = getRouteParam(params.exam);
   const setKey = getRouteParam(params.set);
+  const trackKey = getRouteParam(params.track);
   const shouldLoadAttempt =
     !isLoading &&
     isAuthenticated &&
@@ -23,7 +24,8 @@ export function TryoutShell({ children }: { children: ReactNode }) {
     hasLocale(routing.locales, locale) &&
     countryKey !== null &&
     examKey !== null &&
-    setKey !== null;
+    setKey !== null &&
+    trackKey !== null;
   const attempt = useQuery(
     api.tryouts.queries.attempt.getCurrent,
     shouldLoadAttempt
@@ -32,6 +34,7 @@ export function TryoutShell({ children }: { children: ReactNode }) {
           examKey,
           locale,
           setKey,
+          trackKey,
         }
       : "skip"
   );

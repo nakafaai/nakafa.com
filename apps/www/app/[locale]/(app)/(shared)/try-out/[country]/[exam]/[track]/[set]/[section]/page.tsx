@@ -15,6 +15,7 @@ export default async function Page(props: {
     locale: string;
     section: string;
     set: string;
+    track: string;
   }>;
 }) {
   const {
@@ -23,9 +24,16 @@ export default async function Page(props: {
     locale: localeParam,
     section,
     set,
+    track,
   } = await props.params;
   const locale = getLocaleOrThrow(localeParam);
-  const sectionPath = getTryoutHref({ country, exam, section, set }).slice(1);
+  const sectionPath = getTryoutHref({
+    country,
+    exam,
+    section,
+    set,
+    track,
+  }).slice(1);
   const queryArgs = {
     locale,
     publicPath: sectionPath,
@@ -46,6 +54,7 @@ export default async function Page(props: {
     locale,
     sectionKey: page.section.sectionKey,
     setKey: page.set.setKey,
+    trackKey: page.set.trackKey,
   };
   const [runtime, questions] = await Promise.all([
     preloadAuthQuery(
@@ -72,6 +81,7 @@ export default async function Page(props: {
       runtime={runtime}
       section={section}
       set={set}
+      track={track}
     />
   );
 }
