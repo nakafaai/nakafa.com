@@ -10,6 +10,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
@@ -87,21 +88,23 @@ function TryoutBreadcrumbMenu({
             }
           />
           <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuLabel>Menu</DropdownMenuLabel>
-            {items.map((item) => (
-              <DropdownMenuItem
-                key={`${item.label}:${item.href ?? "current"}`}
-                render={
-                  item.href ? (
-                    <NavigationLink href={item.href}>
-                      {item.label}
-                    </NavigationLink>
-                  ) : (
-                    <span>{item.label}</span>
-                  )
-                }
-              />
-            ))}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Menu</DropdownMenuLabel>
+              {items.map((item) => (
+                <DropdownMenuItem
+                  key={`${item.label}:${item.href ?? "current"}`}
+                  render={
+                    item.href ? (
+                      <NavigationLink href={item.href}>
+                        {item.label}
+                      </NavigationLink>
+                    ) : (
+                      <span>{item.label}</span>
+                    )
+                  }
+                />
+              ))}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </BreadcrumbItem>
