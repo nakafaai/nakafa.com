@@ -207,6 +207,16 @@ export const getExamPage = query({
       return null;
     }
 
+    const readySetRows = await Promise.all(
+      sets.map(async (set) => ({
+        readySections: await loadReadySections(ctx, set),
+        set,
+      }))
+    );
+    const readySets = readySetRows
+      .filter((row) => row.readySections !== null)
+      .map((row) => row.set);
+
     return {
       country: {
         countryCode: readSourceCountryCode(country.countryKey),
@@ -222,7 +232,7 @@ export const getExamPage = query({
         scoringStrategy: exam.scoringStrategy,
         title: exam.title,
       },
-      sets: sets.map((set) => ({
+      sets: readySets.map((set) => ({
         countryKey: set.countryKey,
         description: set.description,
         examKey: set.examKey,
