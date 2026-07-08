@@ -19,9 +19,11 @@ import { toast } from "sonner";
 type CurrentAttempt = FunctionReturnType<
   typeof api.tryouts.queries.attempt.getCurrent
 >;
+type StartTryoutCopy = "direct-entry" | "section-picker";
 
 interface StartTryoutButtonProps {
   attempt?: CurrentAttempt;
+  copy?: StartTryoutCopy;
   countryKey: string;
   entrySectionKey?: string;
   examKey: string;
@@ -35,6 +37,7 @@ interface StartTryoutButtonProps {
 export function StartTryoutButton({
   attempt,
   countryKey,
+  copy = "section-picker",
   entrySectionKey,
   examKey,
   firstSectionHref,
@@ -55,8 +58,11 @@ export function StartTryoutButton({
   const hasFinishedAttempt = Boolean(attempt && !hasActiveAttempt);
   const isAttemptLoading = isAuthenticated && attempt === undefined;
   const isBusy = isLoading || isPending || isAttemptLoading;
+  const isDirectEntry = copy === "direct-entry";
   let buttonLabel = tTryouts("start-cta");
-  let dialogDescription = tTryouts("start-dialog-description");
+  let dialogDescription = isDirectEntry
+    ? tTryouts("start-entry-dialog-description")
+    : tTryouts("start-dialog-description");
   let dialogTitle = tTryouts("start-dialog-title");
   let confirmLabel = tTryouts("start-cta");
 
@@ -95,6 +101,7 @@ export function StartTryoutButton({
             router,
             sectionKey: entrySectionKey,
             startSection,
+            successMessage: tTryouts("start-entry-success"),
             tTryouts,
           })
         );
@@ -137,9 +144,11 @@ export function StartTryoutButton({
               if (entrySectionKey) {
                 router.refresh();
               }
-              toast.success(tTryouts("start-success"), {
-                position: "bottom-center",
-              });
+              const successMessage = isDirectEntry
+                ? tTryouts("start-entry-success")
+                : tTryouts("start-success");
+
+              toast.success(successMessage, { position: "bottom-center" });
             })
           ),
           Effect.catchAll(() =>
@@ -205,6 +214,7 @@ function startEntrySection({
   router,
   sectionKey,
   startSection,
+  successMessage,
   tTryouts,
 }: {
   attemptId: Id<"tryoutAttempts">;
@@ -215,6 +225,7 @@ function startEntrySection({
     attemptId: Id<"tryoutAttempts">;
     sectionKey: string;
   }) => Promise<unknown>;
+  successMessage: string;
   tTryouts: ReturnType<typeof useTranslations>;
 }) {
   return Effect.tryPromise({
@@ -229,9 +240,7 @@ function startEntrySection({
       Effect.sync(() => {
         router.push(firstSectionHref);
         router.refresh();
-        toast.success(tTryouts("start-part-success"), {
-          position: "bottom-center",
-        });
+        toast.success(successMessage, { position: "bottom-center" });
       })
     ),
     Effect.catchAll(() =>

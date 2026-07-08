@@ -17,6 +17,10 @@ import {
 import { TryoutRuntime } from "@/components/tryout/runtime.client";
 import { TryoutSetAction } from "@/components/tryout/set-action.client";
 import { TryoutSectionRows } from "@/components/tryout/set-sections.client";
+import {
+  getTryoutFinishedSectionStatus,
+  TryoutEntrySummary,
+} from "@/components/tryout/summary.client";
 
 interface TryoutSetPageClientProps {
   country: string;
@@ -117,13 +121,42 @@ export function TryoutSetPageClient({
     ? getActiveRuntime(runtime ?? null, activeAttempt, now)
     : null;
   const reviewRuntime =
-    isInternalEntry && runtime?.section.status !== "in-progress"
+    isInternalEntry && runtime && runtime.section.status !== "in-progress"
       ? runtime
       : null;
   const runtimeContent = activeRuntime ?? reviewRuntime;
+  const hasActiveEntrySection =
+    isInternalEntry && activeAttempt?.section?.status === "in-progress";
+
+  if (isInternalEntry && isAuthenticated && attempt === undefined) {
+    return null;
+  }
+
+  if (hasActiveEntrySection && !activeRuntime) {
+    return null;
+  }
 
   if (runtimeContent && entryQuestions.length === 0) {
     return null;
+  }
+
+  if (isInternalEntry && entrySection) {
+    return (
+      <TryoutInternalEntrySetPage
+        activeAttempt={activeAttempt}
+        activeRuntime={activeRuntime}
+        country={country}
+        currentAttempt={actionAttempt}
+        entryQuestions={entryQuestions}
+        entrySection={entrySection}
+        exam={exam}
+        locale={locale}
+        page={page}
+        reviewRuntime={reviewRuntime}
+        set={set}
+        track={track}
+      />
+    );
   }
 
   return (
@@ -179,6 +212,110 @@ export function TryoutSetPageClient({
             sections={page.sections}
           />
         ) : null}
+      </div>
+    </div>
+  );
+}
+
+/** Renders a no-nested-section set as the directly startable section surface. */
+function TryoutInternalEntrySetPage({
+  activeAttempt,
+  activeRuntime,
+  country,
+  currentAttempt,
+  entryQuestions,
+  entrySection,
+  exam,
+  locale,
+  page,
+  reviewRuntime,
+  set,
+  track,
+}: {
+  activeAttempt: NonNullable<CurrentAttempt> | null;
+  activeRuntime: NonNullable<SectionRuntime> | null;
+  country: string;
+  currentAttempt?: CurrentAttempt;
+  entryQuestions: readonly TryoutQuestionContent[];
+  entrySection: SetEntrySection;
+  exam: string;
+  locale: Locale;
+  page: SetPage;
+  reviewRuntime: NonNullable<SectionRuntime> | null;
+  set: string;
+  track: string;
+}) {
+  const tCommon = useTranslations("Common");
+  const tTryouts = useTranslations("Tryouts");
+  const entryHref = getTryoutHref({ country, exam, set, track });
+  const parentHref = getTryoutHref({ country, exam, track });
+  const runtimeContent = activeRuntime ?? reviewRuntime;
+  const sectionAttempt = currentAttempt?.section ?? null;
+  const sectionFinished = Boolean(
+    sectionAttempt &&
+      (sectionAttempt.status === "completed" ||
+        sectionAttempt.status === "expired")
+  );
+  const sectionTimeExpired = Boolean(
+    sectionAttempt &&
+      (sectionAttempt.endReason === "time-expired" ||
+        sectionAttempt.status === "expired")
+  );
+  const attemptFinished = Boolean(
+    currentAttempt && currentAttempt.status !== "in-progress"
+  );
+  let status = tTryouts("entry-head-ready");
+
+  if (activeRuntime) {
+    status = tTryouts("part-head-in-progress");
+  } else if (sectionFinished) {
+    status = getTryoutFinishedSectionStatus({
+      attemptFinished,
+      sectionTimeExpired,
+      tTryouts,
+    });
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
+      <div className="space-y-10">
+        <TryoutPageHeader
+          link={{
+            href: parentHref,
+            label: tCommon("back"),
+          }}
+          meta={
+            <TryoutMeta
+              items={[page.exam.title, page.track.title, page.set.title]}
+            />
+          }
+          status={status}
+          title={page.set.title}
+        />
+
+        <div className="space-y-12">
+          <TryoutEntrySummary
+            activeAttempt={activeAttempt}
+            attempt={currentAttempt}
+            completedAction="restart"
+            locale={locale}
+            returnHref={parentHref}
+            section={entrySection}
+            sectionFinished={sectionFinished}
+            sectionHref={entryHref}
+            set={page.set}
+            startAttemptSectionKey={entrySection.sectionKey}
+          />
+
+          {runtimeContent ? (
+            <TryoutRuntime
+              isExpired={runtimeContent.section.status !== "in-progress"}
+              questions={entryQuestions}
+              returnHref={entryHref}
+              runtime={runtimeContent}
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );

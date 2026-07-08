@@ -54,11 +54,13 @@ export function TryoutTrackPageClient({
                     count: set.readyQuestionCount,
                   })}
                 </Badge>
-                <Badge variant="muted">
-                  {tTryouts("section-count", {
-                    count: set.visibleSectionCount,
-                  })}
-                </Badge>
+                {set.visibleSectionCount > 0 ? (
+                  <Badge variant="muted">
+                    {tTryouts("section-count", {
+                      count: set.visibleSectionCount,
+                    })}
+                  </Badge>
+                ) : null}
               </>
             ),
             title: set.title,

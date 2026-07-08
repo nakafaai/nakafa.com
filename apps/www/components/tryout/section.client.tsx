@@ -14,7 +14,10 @@ import { TryoutPageHeader } from "@/components/tryout/header";
 import { TryoutMeta } from "@/components/tryout/meta";
 import { getTryoutHref } from "@/components/tryout/routes";
 import { TryoutRuntime } from "@/components/tryout/runtime.client";
-import { TryoutSectionSummary } from "@/components/tryout/summary.client";
+import {
+  getTryoutFinishedSectionStatus,
+  TryoutSectionSummary,
+} from "@/components/tryout/summary.client";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
 type SectionRuntimeQuery = typeof api.tryouts.queries.attempt.getSectionRuntime;
@@ -113,7 +116,7 @@ export function TryoutSectionPageClient({
   if (activeRuntime) {
     status = tTryouts("part-head-in-progress");
   } else if (sectionFinished) {
-    status = getFinishedSectionStatus({
+    status = getTryoutFinishedSectionStatus({
       attemptFinished,
       sectionTimeExpired,
       tTryouts,
@@ -218,29 +221,4 @@ function getActiveRuntime(
   }
 
   return runtime;
-}
-
-/** Selects the production header copy for finished try-out sections. */
-function getFinishedSectionStatus({
-  attemptFinished,
-  sectionTimeExpired,
-  tTryouts,
-}: {
-  attemptFinished: boolean;
-  sectionTimeExpired: boolean;
-  tTryouts: ReturnType<typeof useTranslations>;
-}) {
-  if (sectionTimeExpired && attemptFinished) {
-    return tTryouts("part-head-completed-time-expired");
-  }
-
-  if (sectionTimeExpired) {
-    return tTryouts("part-head-completed-time-expired-pending-review");
-  }
-
-  if (attemptFinished) {
-    return tTryouts("part-head-completed");
-  }
-
-  return tTryouts("part-head-completed-pending-review");
 }

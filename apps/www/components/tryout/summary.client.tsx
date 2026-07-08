@@ -35,6 +35,20 @@ type SectionPage = NonNullable<FunctionReturnType<SectionPageQuery>>;
 type CurrentAttempt = FunctionReturnType<
   typeof api.tryouts.queries.attempt.getCurrent
 >;
+type CompletedAction = "restart" | "return";
+
+interface TryoutSummarySection {
+  questionCount: number;
+  sectionKey: string;
+  timeLimitSeconds: number;
+}
+
+interface TryoutSummarySet {
+  countryKey: string;
+  examKey: string;
+  setKey: string;
+  trackKey: string;
+}
 
 interface TryoutSectionSummaryProps {
   activeAttempt: NonNullable<CurrentAttempt> | null;
@@ -47,6 +61,19 @@ interface TryoutSectionSummaryProps {
   sectionFinished?: boolean;
   set: string;
   track: string;
+}
+
+interface TryoutEntrySummaryProps {
+  activeAttempt: NonNullable<CurrentAttempt> | null;
+  attempt?: CurrentAttempt;
+  completedAction: CompletedAction;
+  locale: Locale;
+  returnHref: string;
+  section: TryoutSummarySection;
+  sectionFinished?: boolean;
+  sectionHref: string;
+  set: TryoutSummarySet;
+  startAttemptSectionKey?: string;
 }
 
 /** Renders the pre-runtime section summary and the correct start CTA. */
@@ -62,8 +89,38 @@ export function TryoutSectionSummary({
   set,
   track,
 }: TryoutSectionSummaryProps) {
-  const tTryouts = useTranslations("Tryouts");
   const returnHref = getTryoutHref({ country, exam, set, track });
+  const sectionHref = getTryoutHref({ country, exam, section, set, track });
+
+  return (
+    <TryoutEntrySummary
+      activeAttempt={activeAttempt}
+      attempt={attempt}
+      completedAction="return"
+      locale={locale}
+      returnHref={returnHref}
+      section={page.section}
+      sectionFinished={sectionFinishedProp}
+      sectionHref={sectionHref}
+      set={page.set}
+    />
+  );
+}
+
+/** Renders the shared try-out section metrics and start/restart CTA card. */
+export function TryoutEntrySummary({
+  activeAttempt,
+  attempt,
+  completedAction,
+  locale,
+  returnHref,
+  section,
+  sectionFinished: sectionFinishedProp,
+  sectionHref,
+  set,
+  startAttemptSectionKey,
+}: TryoutEntrySummaryProps) {
+  const tTryouts = useTranslations("Tryouts");
   const sectionAttempt = attempt?.section ?? null;
   const sectionFinished =
     sectionFinishedProp ??
@@ -81,11 +138,11 @@ export function TryoutSectionSummary({
 
           <TryoutPartStats>
             <TryoutPartStat label={tTryouts("part-questions-label")}>
-              <TryoutMetricNumber value={page.section.questionCount} />
+              <TryoutMetricNumber value={section.questionCount} />
             </TryoutPartStat>
 
             <TryoutPartStat label={tTryouts("part-time-label")}>
-              <TryoutMetricTime totalSeconds={page.section.timeLimitSeconds} />
+              <TryoutMetricTime totalSeconds={section.timeLimitSeconds} />
             </TryoutPartStat>
           </TryoutPartStats>
         </TryoutPartLead>
@@ -94,15 +151,14 @@ export function TryoutSectionSummary({
           <TryoutSectionCta
             activeAttempt={activeAttempt}
             attempt={attempt}
-            country={country}
-            exam={exam}
+            completedAction={completedAction}
             locale={locale}
-            page={page}
             returnHref={returnHref}
             section={section}
             sectionFinished={sectionFinished}
+            sectionHref={sectionHref}
             set={set}
-            track={track}
+            startAttemptSectionKey={startAttemptSectionKey}
           />
         </TryoutPartCtas>
       </TryoutPartBody>
@@ -114,67 +170,28 @@ export function TryoutSectionSummary({
 function TryoutSectionCta({
   activeAttempt,
   attempt,
-  country,
-  exam,
+  completedAction,
   locale,
-  page,
   returnHref,
   section,
   sectionFinished,
+  sectionHref,
   set,
-  track,
-}: TryoutSectionSummaryProps & {
-  returnHref: string;
+  startAttemptSectionKey,
+}: TryoutEntrySummaryProps & {
   sectionFinished: boolean;
 }) {
-  const tTryouts = useTranslations("Tryouts");
-
-  if (sectionFinished) {
-    return (
-      <Link
-        className={cn(buttonVariants(), "w-full sm:w-auto")}
-        href={returnHref}
-      >
-        <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
-        {tTryouts("back-to-set-cta")}
-      </Link>
-    );
+  if (sectionFinished && completedAction === "return") {
+    return <BackToSetLink href={returnHref} />;
   }
 
   if (activeAttempt && !activeAttempt.section) {
-    if (
-      activeAttempt.resumeSectionKey &&
-      activeAttempt.resumeSectionKey !== page.section.sectionKey
-    ) {
-      let resumeHref = returnHref;
-
-      if (activeAttempt.resumeSectionPublicPath) {
-        resumeHref = getTryoutPublicPathHref(
-          activeAttempt.resumeSectionPublicPath
-        );
-      }
-
-      return (
-        <Link
-          className={cn(buttonVariants(), "w-full sm:w-auto")}
-          href={resumeHref}
-        >
-          {tTryouts("continue-cta")}
-        </Link>
-      );
-    }
-
     return (
-      <StartSectionButton
-        attemptId={activeAttempt.attemptId}
-        sectionHref={getTryoutHref({
-          country,
-          exam,
-          section,
-          set,
-          track,
-        })}
-        sectionKey={page.section.sectionKey}
+      <StartOrResumeSectionCta
+        activeAttempt={activeAttempt}
+        returnHref={returnHref}
+        section={section}
+        sectionHref={sectionHref}
       />
     );
   }
@@ -186,18 +203,96 @@ function TryoutSectionCta({
   return (
     <StartTryoutButton
       attempt={attempt}
-      countryKey={page.set.countryKey}
-      examKey={page.set.examKey}
-      firstSectionHref={getTryoutHref({
-        country,
-        exam,
-        section,
-        set,
-        track,
-      })}
+      copy={startAttemptSectionKey ? "direct-entry" : "section-picker"}
+      countryKey={set.countryKey}
+      entrySectionKey={startAttemptSectionKey}
+      examKey={set.examKey}
+      firstSectionHref={sectionHref}
       locale={locale}
-      setKey={page.set.setKey}
-      trackKey={page.set.trackKey}
+      setKey={set.setKey}
+      trackKey={set.trackKey}
+    />
+  );
+}
+
+/** Selects the production header copy for finished try-out sections. */
+export function getTryoutFinishedSectionStatus({
+  attemptFinished,
+  sectionTimeExpired,
+  tTryouts,
+}: {
+  attemptFinished: boolean;
+  sectionTimeExpired: boolean;
+  tTryouts: ReturnType<typeof useTranslations>;
+}) {
+  if (sectionTimeExpired && attemptFinished) {
+    return tTryouts("part-head-completed-time-expired");
+  }
+
+  if (sectionTimeExpired) {
+    return tTryouts("part-head-completed-time-expired-pending-review");
+  }
+
+  if (attemptFinished) {
+    return tTryouts("part-head-completed");
+  }
+
+  return tTryouts("part-head-completed-pending-review");
+}
+
+/** Sends completed visible-section pages back to their set overview. */
+function BackToSetLink({ href }: { href: string }) {
+  const tTryouts = useTranslations("Tryouts");
+
+  return (
+    <Link className={cn(buttonVariants(), "w-full sm:w-auto")} href={href}>
+      <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
+      {tTryouts("back-to-set-cta")}
+    </Link>
+  );
+}
+
+/** Starts a ready section or links to the active section already in progress. */
+function StartOrResumeSectionCta({
+  activeAttempt,
+  returnHref,
+  section,
+  sectionHref,
+}: {
+  activeAttempt: NonNullable<CurrentAttempt>;
+  returnHref: string;
+  section: TryoutSummarySection;
+  sectionHref: string;
+}) {
+  const tTryouts = useTranslations("Tryouts");
+
+  if (
+    activeAttempt.resumeSectionKey &&
+    activeAttempt.resumeSectionKey !== section.sectionKey
+  ) {
+    let resumeHref = returnHref;
+
+    if (activeAttempt.resumeSectionPublicPath) {
+      resumeHref = getTryoutPublicPathHref(
+        activeAttempt.resumeSectionPublicPath
+      );
+    }
+
+    return (
+      <Link
+        className={cn(buttonVariants(), "w-full sm:w-auto")}
+        href={resumeHref}
+      >
+        {tTryouts("continue-cta")}
+      </Link>
+    );
+  }
+
+  return (
+    <StartSectionButton
+      attemptId={activeAttempt.attemptId}
+      sectionHref={sectionHref}
+      sectionKey={section.sectionKey}
     />
   );
 }
