@@ -353,7 +353,6 @@
     "back-to-set": "Back to set",
     "list-empty": "There are no tryouts showing right now.",
     "preference-save-error": "We could not save your tryout preference yet.",
-    "available-item-description": "{questions} questions - {sections} sections",
     "scoring-irt": "IRT scoring",
     "scoring-raw": "Raw scoring",
     "scoring-weighted": "Weighted scoring",

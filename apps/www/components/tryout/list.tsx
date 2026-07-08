@@ -23,7 +23,7 @@ type TryoutListRowVisual =
 
 export type TryoutListRow = Readonly<{
   current?: boolean;
-  description: string;
+  description?: string;
   href: string;
   key: string;
   meta?: ReactNode;
@@ -76,11 +76,17 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
             <div className="flex flex-wrap items-center gap-2">
               <h3>{row.title}</h3>
               {row.status ? <TryoutStatus status={row.status} /> : null}
-              {row.meta}
             </div>
-            <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
-              {row.description}
-            </span>
+            {row.meta ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {row.meta}
+              </div>
+            ) : null}
+            {row.description ? (
+              <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
+                {row.description}
+              </span>
+            ) : null}
           </div>
 
           <HugeIcons

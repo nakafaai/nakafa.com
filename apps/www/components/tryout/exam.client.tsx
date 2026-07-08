@@ -35,10 +35,7 @@ export function TryoutExamPageClient({
     <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-24">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
         {page.tracks.map((track) => {
-          const icon =
-            track.trackKind === "subject"
-              ? getTryoutTrackIcon(track.trackKey)
-              : null;
+          const icon = getTrackCardIcon(track);
 
           return (
             <NavigationLink
@@ -59,11 +56,7 @@ export function TryoutExamPageClient({
                     className="relative size-6 text-foreground"
                     icon={icon}
                   />
-                ) : (
-                  <span className="relative font-mono text-2xl text-foreground tabular-nums">
-                    {track.trackKey}
-                  </span>
-                )}
+                ) : null}
               </div>
               <div className="px-6 pt-3 pb-6 text-center">
                 <h2>{track.title}</h2>
@@ -78,4 +71,15 @@ export function TryoutExamPageClient({
       </div>
     </div>
   );
+}
+
+function getTrackCardIcon(track: {
+  trackKey: string;
+  trackKind: "subject" | "year";
+}) {
+  if (track.trackKind === "subject") {
+    return getTryoutTrackIcon(track.trackKey);
+  }
+
+  return null;
 }

@@ -45,12 +45,6 @@ export function TryoutTrackPageClient({
         <TryoutList
           emptyLabel={tTryouts("list-empty")}
           rows={results.map((set) => ({
-            description:
-              set.description ??
-              tTryouts("available-item-description", {
-                questions: set.readyQuestionCount,
-                sections: set.visibleSectionCount,
-              }),
             href: getTryoutPublicPathHref(set.publicPath),
             key: set.setKey,
             meta: (

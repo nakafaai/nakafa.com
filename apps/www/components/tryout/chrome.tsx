@@ -11,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -78,7 +79,7 @@ function TryoutBreadcrumbMenu({
             render={
               <button
                 aria-label="Open breadcrumb menu"
-                className="flex size-6 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex size-6 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 type="button"
               >
                 <BreadcrumbEllipsis />
@@ -86,6 +87,7 @@ function TryoutBreadcrumbMenu({
             }
           />
           <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuLabel>Menu</DropdownMenuLabel>
             {items.map((item) => (
               <DropdownMenuItem
                 key={`${item.label}:${item.href ?? "current"}`}
