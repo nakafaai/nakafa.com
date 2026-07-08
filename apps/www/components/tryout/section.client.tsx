@@ -65,17 +65,17 @@ export function TryoutSectionPageClient({
   );
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
-  const currentAttempt = attempt ?? null;
+  const currentAttempt = isAuthenticated ? attempt : null;
   const now = useTryoutClock(
     currentAttempt?.status === "in-progress" ||
       runtime?.section.status === "in-progress"
   );
 
-  if (!page || isLoading || (isAuthenticated && attempt === undefined)) {
+  if (!page) {
     return null;
   }
 
-  const activeAttempt = getActiveAttempt(currentAttempt, now);
+  const activeAttempt = getActiveAttempt(currentAttempt ?? null, now);
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
       ? null

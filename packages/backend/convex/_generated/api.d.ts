@@ -289,6 +289,7 @@ import type * as tryouts_runtime_irt from "../tryouts/runtime/irt.js";
 import type * as tryouts_runtime_placement from "../tryouts/runtime/placement.js";
 import type * as tryouts_runtime_result from "../tryouts/runtime/result.js";
 import type * as tryouts_runtime_score from "../tryouts/runtime/score.js";
+import type * as tryouts_runtime_sectionAttempt from "../tryouts/runtime/sectionAttempt.js";
 import type * as users_mutations from "../users/mutations.js";
 import type * as users_queries from "../users/queries.js";
 import type * as users_roles from "../users/roles.js";
@@ -594,6 +595,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/runtime/placement": typeof tryouts_runtime_placement;
   "tryouts/runtime/result": typeof tryouts_runtime_result;
   "tryouts/runtime/score": typeof tryouts_runtime_score;
+  "tryouts/runtime/sectionAttempt": typeof tryouts_runtime_sectionAttempt;
   "users/mutations": typeof users_mutations;
   "users/queries": typeof users_queries;
   "users/roles": typeof users_roles;

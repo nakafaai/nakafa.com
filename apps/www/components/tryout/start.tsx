@@ -122,6 +122,7 @@ export function StartTryoutButton({
           try: () =>
             startAttempt({
               countryKey,
+              ...(entrySectionKey ? { entrySectionKey } : {}),
               examKey,
               locale,
               setKey,
@@ -129,22 +130,13 @@ export function StartTryoutButton({
             }),
           catch: (cause) => cause,
         }).pipe(
-          Effect.flatMap((result) =>
-            entrySectionKey
-              ? Effect.tryPromise({
-                  try: () =>
-                    startSection({
-                      attemptId: result.attemptId,
-                      sectionKey: entrySectionKey,
-                    }),
-                  catch: (cause) => cause,
-                })
-              : Effect.succeed(undefined)
-          ),
           Effect.tap(() =>
             Effect.sync(() => {
               closeDialog();
               router.push(firstSectionHref);
+              if (entrySectionKey) {
+                router.refresh();
+              }
               toast.success(tTryouts("start-success"), {
                 position: "bottom-center",
               });
@@ -236,6 +228,7 @@ function startEntrySection({
     Effect.tap(() =>
       Effect.sync(() => {
         router.push(firstSectionHref);
+        router.refresh();
         toast.success(tTryouts("start-part-success"), {
           position: "bottom-center",
         });

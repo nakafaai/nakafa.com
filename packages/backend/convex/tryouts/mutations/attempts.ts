@@ -20,6 +20,7 @@ import {
   finalizeAttemptScore,
   requireOwnedAttempt,
 } from "@repo/backend/convex/tryouts/runtime/score";
+import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 
@@ -27,6 +28,7 @@ const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS_PER_USER_SET = 100;
 
 type TryoutSet = Doc<"tryoutSets">;
+type TryoutSection = Doc<"tryoutSections">;
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutAttemptInsert = Omit<TryoutAttempt, "_creationTime" | "_id">;
 
@@ -100,6 +102,21 @@ async function loadLatestAttempt(
   return attempts.at(0) ?? null;
 }
 
+/** Ensures atomic section start is only used for a set-owned internal entry. */
+function requireInternalEntrySection(
+  sections: TryoutSection[],
+  sectionKey: string
+) {
+  const section = sections.find((row) => row.sectionKey === sectionKey);
+
+  if (section?.visibility !== "internal-entry") {
+    throw new ConvexError({
+      code: "TRYOUT_ENTRY_SECTION_NOT_FOUND",
+      message: "Try-out entry section is not available for this set.",
+    });
+  }
+}
+
 /** Returns true when every snapshot is already completed or expired. */
 function hasCompletedEverySection(attempt: TryoutAttempt) {
   const completedKeys = new Set(attempt.completedSectionKeys);
@@ -122,6 +139,7 @@ export const startAttempt = mutation({
   args: {
     countryKey: tryoutRouteKeyValidator,
     examKey: tryoutRouteKeyValidator,
+    entrySectionKey: v.optional(tryoutRouteKeyValidator),
     locale: localeValidator,
     setKey: tryoutRouteKeyValidator,
     trackKey: tryoutRouteKeyValidator,
@@ -148,8 +166,20 @@ export const startAttempt = mutation({
       }),
     ]);
 
+    if (args.entrySectionKey) {
+      requireInternalEntrySection(sections, args.entrySectionKey);
+    }
+
     if (latestAttempt?.status === "in-progress") {
       if (now < getAttemptExpiresAt(latestAttempt)) {
+        if (args.entrySectionKey) {
+          await startSectionAttempt(ctx, {
+            attempt: latestAttempt,
+            now,
+            sectionKey: args.entrySectionKey,
+          });
+        }
+
         return { attemptId: latestAttempt._id };
       }
 
@@ -200,6 +230,22 @@ export const startAttempt = mutation({
     }
 
     const attemptId = await ctx.db.insert("tryoutAttempts", attemptValues);
+    const attempt = await ctx.db.get(attemptId);
+
+    if (!attempt) {
+      throw new ConvexError({
+        code: "TRYOUT_ATTEMPT_NOT_FOUND",
+        message: "Try-out attempt not found.",
+      });
+    }
+
+    if (args.entrySectionKey) {
+      await startSectionAttempt(ctx, {
+        attempt,
+        now,
+        sectionKey: args.entrySectionKey,
+      });
+    }
 
     await scheduleAttemptExpiry(ctx, { attemptId, expiresAt, now });
     await trackAttemptStarted(ctx, {

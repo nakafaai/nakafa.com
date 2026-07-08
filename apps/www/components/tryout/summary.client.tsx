@@ -38,7 +38,7 @@ type CurrentAttempt = FunctionReturnType<
 
 interface TryoutSectionSummaryProps {
   activeAttempt: NonNullable<CurrentAttempt> | null;
-  attempt: CurrentAttempt;
+  attempt?: CurrentAttempt;
   country: string;
   exam: string;
   locale: Locale;

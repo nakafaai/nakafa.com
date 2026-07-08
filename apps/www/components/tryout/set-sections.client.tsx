@@ -17,7 +17,7 @@ export function TryoutSectionRows({
   questionUnitLabel,
   sections,
 }: {
-  attempt: FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>;
+  attempt?: FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>;
   emptyLabel: string;
   questionUnitLabel: string;
   sections: readonly SetSection[];

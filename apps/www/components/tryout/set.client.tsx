@@ -47,7 +47,8 @@ export function TryoutSetPageClient({
 }: TryoutSetPageClientProps) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const page = usePreloadedQuery(preloaded);
-  const isInternalEntry = page?.entrySection?.visibility === "internal-entry";
+  const entrySection = page?.entrySection ?? null;
+  const isInternalEntry = entrySection?.visibility === "internal-entry";
   const attempt = useQuery(
     api.tryouts.queries.attempt.getCurrent,
     page && isAuthenticated && !isLoading
@@ -60,14 +61,22 @@ export function TryoutSetPageClient({
         }
       : "skip"
   );
+  const shouldLoadRuntime =
+    page !== null &&
+    entrySection !== null &&
+    isInternalEntry &&
+    isAuthenticated &&
+    !isLoading &&
+    attempt !== undefined &&
+    attempt !== null;
   const runtime = useQuery(
     api.tryouts.queries.attempt.getSectionRuntime,
-    page?.entrySection && isInternalEntry && isAuthenticated && !isLoading
+    shouldLoadRuntime
       ? {
           countryKey: page.set.countryKey,
           examKey: page.set.examKey,
           locale,
-          sectionKey: page.entrySection.sectionKey,
+          sectionKey: entrySection.sectionKey,
           setKey: page.set.setKey,
           trackKey: page.set.trackKey,
         }
@@ -75,20 +84,14 @@ export function TryoutSetPageClient({
   );
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
-  const currentAttempt = isAuthenticated ? (attempt ?? null) : null;
+  const currentAttempt = isAuthenticated ? attempt : null;
   const now = useTryoutClock(currentAttempt?.status === "in-progress");
 
-  if (
-    !page ||
-    isLoading ||
-    (isAuthenticated && attempt === undefined) ||
-    (isInternalEntry && isAuthenticated && runtime === undefined)
-  ) {
+  if (!page) {
     return null;
   }
 
-  const entrySection = page.entrySection;
-  const activeAttempt = getActiveAttempt(currentAttempt, now);
+  const activeAttempt = getActiveAttempt(currentAttempt ?? null, now);
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
       ? null

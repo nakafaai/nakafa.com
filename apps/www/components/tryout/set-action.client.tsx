@@ -27,7 +27,7 @@ export function TryoutSetAction({
 }: {
   activeAttempt: NonNullable<CurrentAttempt> | null;
   countryKey: string;
-  currentAttempt: CurrentAttempt;
+  currentAttempt?: CurrentAttempt;
   entryHref: string;
   entrySection: SetEntrySection | null;
   examKey: string;
