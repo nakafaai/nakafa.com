@@ -421,7 +421,7 @@ export const getSectionPage = query({
       return null;
     }
 
-    const [exam, questions] = await Promise.all([
+    const [exam, readySections] = await Promise.all([
       ctx.db
         .query("tryoutExams")
         .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
@@ -431,12 +431,22 @@ export const getSectionPage = query({
             .eq("locale", args.locale)
         )
         .unique(),
-      loadQuestionContentRows(ctx, section),
+      loadReadySections(ctx, set),
     ]);
 
     if (!exam?.isActive) {
       return null;
     }
+
+    const readySection = readySections?.find(
+      (item) => item._id === section._id
+    );
+
+    if (!readySection) {
+      return null;
+    }
+
+    const questions = await loadQuestionContentRows(ctx, readySection);
 
     return {
       exam: {

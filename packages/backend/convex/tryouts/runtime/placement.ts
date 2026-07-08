@@ -107,6 +107,17 @@ async function loadSectionQuestions(ctx: MutationCtx, section: TryoutSection) {
     });
   }
 
+  const hasMixedRevision = questions.some(
+    (question) => question.sourceRevision !== section.sourceRevision
+  );
+
+  if (hasMixedRevision) {
+    throw new ConvexError({
+      code: "TRYOUT_QUESTION_SNAPSHOT_MISMATCH",
+      message: "Try-out section questions are not fully synced.",
+    });
+  }
+
   return questions;
 }
 
