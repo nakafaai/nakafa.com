@@ -1,3 +1,4 @@
+import path from "node:path";
 import {
   getUnknownMessage,
   ScriptFailureError,
@@ -17,6 +18,7 @@ import {
   getGraphIdentityIntegrity,
 } from "@repo/backend/scripts/sync-content/convex/inspection";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
+import { CONTENTS_DIR } from "@repo/backend/scripts/sync-content/runtime/paths";
 import { verifyQuranRuntime } from "@repo/backend/scripts/sync-content/verify/quran";
 import { logVerifySuccess } from "@repo/backend/scripts/sync-content/verify/summary";
 import { getAllSurah } from "@repo/contents/_lib/quran";
@@ -60,11 +62,11 @@ function logCountMatch({
   label: string;
 }) {
   if (actual === expected) {
-    logSuccess(`${label}: ${actual} in DB = ${expected} expected`);
+    logSuccess(`${label}: ${actual} = ${expected} expected`);
     return true;
   }
 
-  logError(`${label}: ${actual} in DB != ${expected} expected`);
+  logError(`${label}: ${actual} != ${expected} expected`);
   return false;
 }
 
@@ -111,9 +113,34 @@ function getExpectedLocaleCount(options: SyncOptions) {
   return options.locale ? 1 : locales.length;
 }
 
-/** Builds try-out question-bank count targets from active source placements. */
-function getExpectedTryoutCounts(options: SyncOptions) {
-  const localeCount = getExpectedLocaleCount(options);
+interface TryoutFileCounts {
+  activeAnswerFiles: number;
+  activeChoicesFiles: number;
+  activeQuestionFiles: number;
+  localizedQuestionFiles: number;
+  localizedQuestionSets: number;
+  questionSourceDirectories: number;
+}
+
+/** Builds try-out file counts from active source placements. */
+function getTryoutFileCounts({
+  answerFiles,
+  choicesFiles,
+  options,
+  questionFiles,
+}: {
+  answerFiles: readonly string[];
+  choicesFiles: readonly string[];
+  options: SyncOptions;
+  questionFiles: readonly string[];
+}): TryoutFileCounts {
+  const selectedLocales = getSelectedLocales(options);
+  const answerFileSet = new Set(answerFiles);
+  const choicesFileSet = new Set(choicesFiles);
+  const questionFileSet = new Set(questionFiles);
+  let activeAnswerFiles = 0;
+  let activeChoicesFiles = 0;
+  let activeQuestionFiles = 0;
   let questionSourceDirectories = 0;
   let questionSetPlacements = 0;
 
@@ -121,16 +148,55 @@ function getExpectedTryoutCounts(options: SyncOptions) {
     for (const set of source.sets) {
       for (const section of set.sections) {
         questionSetPlacements += 1;
-        questionSourceDirectories += section.questionCount;
+
+        for (let number = 1; number <= section.questionCount; number++) {
+          const questionDir = path.join(
+            CONTENTS_DIR,
+            section.questionSourcePath,
+            `question-${number}`
+          );
+
+          questionSourceDirectories += 1;
+
+          if (choicesFileSet.has(path.join(questionDir, "choices.ts"))) {
+            activeChoicesFiles += 1;
+          }
+
+          for (const locale of selectedLocales) {
+            if (
+              questionFileSet.has(
+                path.join(questionDir, `question.${locale}.mdx`)
+              )
+            ) {
+              activeQuestionFiles += 1;
+            }
+            if (
+              answerFileSet.has(path.join(questionDir, `answer.${locale}.mdx`))
+            ) {
+              activeAnswerFiles += 1;
+            }
+          }
+        }
       }
     }
   }
 
+  const localizedQuestionFiles =
+    questionSourceDirectories * selectedLocales.length;
+
   return {
-    localizedQuestionFiles: questionSourceDirectories * localeCount,
-    localizedQuestionSets: questionSetPlacements * localeCount,
+    activeAnswerFiles,
+    activeChoicesFiles,
+    activeQuestionFiles,
+    localizedQuestionFiles,
+    localizedQuestionSets: questionSetPlacements * selectedLocales.length,
     questionSourceDirectories,
   };
+}
+
+/** Returns the exact locale list that this verifier invocation should inspect. */
+function getSelectedLocales(options: SyncOptions) {
+  return options.locale ? [options.locale] : locales;
 }
 
 /** Result shape returned by the persisted graph identity integrity check. */
@@ -247,7 +313,12 @@ export const verify = Effect.fn("sync.verify")(function* (
   const lessonSourceCount = listLessonMaterialSources().length;
   const tryoutSourceCount = TRYOUT_SOURCES.length;
   const expectedGeneratedCounts = yield* getExpectedGeneratedCounts(options);
-  const expectedTryoutCounts = getExpectedTryoutCounts(options);
+  const tryoutFileCounts = getTryoutFileCounts({
+    answerFiles,
+    choicesFiles,
+    options,
+    questionFiles,
+  });
 
   log("=== FILESYSTEM ===\n");
   log("Articles:");
@@ -269,6 +340,15 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`    - Indonesian (id): ${questionFilesId.length}`);
   log(`  Answer files:        ${answerFiles.length} (answer.*.mdx)`);
   log(`  Choices files:       ${choicesFiles.length} (choices.ts)`);
+  log(
+    `  Active question files: ${tryoutFileCounts.activeQuestionFiles}/${tryoutFileCounts.localizedQuestionFiles}`
+  );
+  log(
+    `  Active answer files:   ${tryoutFileCounts.activeAnswerFiles}/${tryoutFileCounts.localizedQuestionFiles}`
+  );
+  log(
+    `  Active choices files:  ${tryoutFileCounts.activeChoicesFiles}/${tryoutFileCounts.questionSourceDirectories}`
+  );
 
   log("\n=== DATABASE ===\n");
 
@@ -351,33 +431,33 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   allMatch =
     logCountMatch({
-      actual: questionFiles.length,
-      expected: expectedTryoutCounts.localizedQuestionFiles,
-      label: "Question Files",
+      actual: tryoutFileCounts.activeQuestionFiles,
+      expected: tryoutFileCounts.localizedQuestionFiles,
+      label: "Active Question Files",
     }) && allMatch;
   allMatch =
     logCountMatch({
-      actual: answerFiles.length,
-      expected: expectedTryoutCounts.localizedQuestionFiles,
-      label: "Answer Files",
+      actual: tryoutFileCounts.activeAnswerFiles,
+      expected: tryoutFileCounts.localizedQuestionFiles,
+      label: "Active Answer Files",
     }) && allMatch;
   allMatch =
     logCountMatch({
-      actual: choicesFiles.length,
-      expected: expectedTryoutCounts.questionSourceDirectories,
-      label: "Choices Files",
+      actual: tryoutFileCounts.activeChoicesFiles,
+      expected: tryoutFileCounts.questionSourceDirectories,
+      label: "Active Choices Files",
     }) && allMatch;
   allMatch =
     logCountMatch({
       actual: counts.questions,
-      expected: expectedTryoutCounts.localizedQuestionFiles,
+      expected: tryoutFileCounts.localizedQuestionFiles,
       label: "Questions",
     }) && allMatch;
 
   allMatch =
     logCountMatch({
       actual: counts.questionSets,
-      expected: expectedTryoutCounts.localizedQuestionSets,
+      expected: tryoutFileCounts.localizedQuestionSets,
       label: "Question Sets",
     }) && allMatch;
 
@@ -405,9 +485,11 @@ export const verify = Effect.fn("sync.verify")(function* (
   );
   log(`Content-Author links: ${counts.contentAuthors} in DB`);
 
-  if (answerFiles.length !== questionFiles.length) {
+  if (
+    tryoutFileCounts.activeAnswerFiles !== tryoutFileCounts.activeQuestionFiles
+  ) {
     logError(
-      `Answer files (${answerFiles.length}) != Question files (${questionFiles.length})`
+      `Active answer files (${tryoutFileCounts.activeAnswerFiles}) != active question files (${tryoutFileCounts.activeQuestionFiles})`
     );
     allMatch = false;
   }

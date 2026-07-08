@@ -137,7 +137,38 @@ describe("tryouts/runtime/access", () => {
     ).rejects.toThrow("Try-out access is required for this set.");
   });
 
-  it("rejects active Pro subscriptions without a valid period end", async () => {
+  it("creates an unbounded entitlement from an active Pro subscription without a period end", async () => {
+    const t = convexTest(schema, convexModules);
+
+    const result = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx);
+      await insertCustomer(ctx, userId);
+      await insertSubscription(ctx, {
+        currentPeriodEnd: null,
+        status: "active",
+        subscriptionId: "sub-active-pro-without-period",
+      });
+
+      return await requireActiveEntitlement(ctx, {
+        countryKey: "indonesia",
+        examKey: "snbt",
+        now: NOW,
+        setKey: "set-1",
+        userId,
+      });
+    });
+
+    expect(result).toMatchObject({
+      countryKey: "indonesia",
+      endsAt: Number.MAX_SAFE_INTEGER,
+      examKey: "snbt",
+      sourceKind: tryoutEntitlementSourceKindSubscription,
+      startsAt: NOW,
+      subscriptionId: "sub-active-pro-without-period",
+    });
+  });
+
+  it("rejects active Pro subscriptions with an invalid period end", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
@@ -145,9 +176,9 @@ describe("tryouts/runtime/access", () => {
         const userId = await insertUser(ctx);
         await insertCustomer(ctx, userId);
         await insertSubscription(ctx, {
-          currentPeriodEnd: null,
+          currentPeriodEnd: "not-a-date",
           status: "active",
-          subscriptionId: "sub-active-pro-without-period",
+          subscriptionId: "sub-active-pro-invalid-period",
         });
 
         await requireActiveEntitlement(ctx, {

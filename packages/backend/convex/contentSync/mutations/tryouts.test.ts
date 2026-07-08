@@ -195,7 +195,7 @@ function getGraphIdentity(route: string) {
 }
 
 describe("contentSync/mutations/tryouts", () => {
-  it("syncs try-out catalog routes without readable search projections", async () => {
+  it("syncs try-out catalog routes with readable search projections", async () => {
     const t = convexTest(schema, convexModules);
 
     const result = await t.mutation(
@@ -229,7 +229,15 @@ describe("contentSync/mutations/tryouts", () => {
       sourcePath: SECTION_ROUTE,
       title: "Penalaran Matematika",
     });
-    expect(snapshot.search).toBeNull();
+    expect(snapshot.search).toMatchObject({
+      contentHash: `${SECTION_ROUTE}:hash`,
+      route: SECTION_ROUTE,
+      section: "tryout",
+      sourcePath: SECTION_ROUTE,
+      title: "Penalaran Matematika",
+    });
+    expect(snapshot.search?.text).toContain("Penalaran Matematika");
+    expect(snapshot.search?.text).toContain(SECTION_ROUTE);
   });
 
   it("deletes stale try-out sections before their question sets", async () => {

@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
 import { syncIrtScaleForSet } from "@repo/backend/convex/contentSync/tryouts/irt";
+import { syncTryoutRoute } from "@repo/backend/convex/contentSync/tryouts/route";
 import type {
   SyncedQuestion,
   SyncedQuestionChoice,
@@ -19,9 +20,6 @@ import type {
   SyncedTryoutSection,
   SyncedTryoutSet,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
-import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
-import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
-import { deleteContentSearchByRoute } from "@repo/backend/convex/contents/helpers/search/write";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
@@ -122,36 +120,6 @@ function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
 
 function addOutcome(totals: SyncTotals, outcome: SyncOutcome) {
   totals[outcome]++;
-}
-
-async function syncTryoutRoute(
-  ctx: MutationCtx,
-  route: SyncedTryoutRoute,
-  syncedAt: number
-) {
-  const graph = getContentGraphIdentity({
-    kind: route.kind,
-    locale: route.locale,
-    route: route.sourcePath,
-  });
-
-  await deleteContentSearchByRoute(ctx, {
-    locale: route.locale,
-    route: route.publicPath,
-  });
-  await syncContentRoute(ctx, {
-    ...graph,
-    contentHash: route.contentHash,
-    description: route.description,
-    kind: route.kind,
-    locale: route.locale,
-    markdown: false,
-    publicPath: route.publicPath,
-    section: "tryout",
-    sourcePath: route.sourcePath,
-    syncedAt,
-    title: route.title,
-  });
 }
 
 async function syncCountry(

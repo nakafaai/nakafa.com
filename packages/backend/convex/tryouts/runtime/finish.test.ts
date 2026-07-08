@@ -229,6 +229,7 @@ describe("tryouts/runtime/finish", () => {
         lastActivityAt: NOW - 10_000,
         scaleVersionId,
         scoreStatus: "provisional",
+        scoringStrategy: "irt",
         sectionSnapshots: [
           {
             publicPath: "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif",

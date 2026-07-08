@@ -176,6 +176,7 @@ export const startAttempt = mutation({
       expiresAt,
       lastActivityAt: now,
       scoreStatus,
+      scoringStrategy: set.scoringStrategy,
       sectionSnapshots: sections.map((section) => ({
         publicPath: section.publicPath,
         questionCount: section.questionCount,

@@ -6,17 +6,13 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { TryoutChoices } from "@/components/tryout/choice";
-import type {
-  TryoutRuntimeQuestion as RuntimeQuestion,
-  TryoutSectionRuntimeArgs,
-} from "@/components/tryout/types";
+import type { TryoutRuntimeQuestion as RuntimeQuestion } from "@/components/tryout/types";
 
 interface TryoutRuntimeQuestionProps {
   content: ReactNode;
   isLocked: boolean;
   isReviewMode: boolean;
   question: RuntimeQuestion;
-  runtimeQueryArgs: TryoutSectionRuntimeArgs;
   sectionStartedAt: number;
 }
 
@@ -26,7 +22,6 @@ export function TryoutRuntimeQuestion({
   isLocked,
   isReviewMode,
   question,
-  runtimeQueryArgs,
   sectionStartedAt,
 }: TryoutRuntimeQuestionProps) {
   const tExercises = useTranslations("Exercises");
@@ -70,7 +65,6 @@ export function TryoutRuntimeQuestion({
           isLocked={isLocked}
           isReviewMode={isReviewMode}
           question={question}
-          runtimeQueryArgs={runtimeQueryArgs}
           sectionStartedAt={sectionStartedAt}
         />
       </section>

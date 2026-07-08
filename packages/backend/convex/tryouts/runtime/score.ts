@@ -75,7 +75,7 @@ export async function finalizeAttemptScore(
   const score = await scoreAttempt(ctx, {
     attempt: args.attempt,
     responses,
-    scoringStrategy: set.scoringStrategy,
+    scoringStrategy: args.attempt.scoringStrategy,
   });
   const scoreId = await insertAttemptScore(ctx, {
     attempt: args.attempt,

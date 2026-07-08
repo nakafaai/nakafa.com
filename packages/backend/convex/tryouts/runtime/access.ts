@@ -10,6 +10,7 @@ import { ConvexError } from "convex/values";
 const ENTITLEMENT_LOOKUP_LIMIT = 50;
 const SUBSCRIPTION_LOOKUP_LIMIT = 10;
 const activeSubscriptionStatus = "active";
+const perpetualSubscriptionEndsAt = Number.MAX_SAFE_INTEGER;
 
 interface AttemptAccessFields {
   accessCampaignId?: Id<"tryoutAccessCampaigns">;
@@ -269,7 +270,7 @@ function getSubscriptionEntitlementEndsAt(
   now: number
 ) {
   if (!subscription.currentPeriodEnd) {
-    return null;
+    return perpetualSubscriptionEndsAt;
   }
 
   const periodEnd = Date.parse(subscription.currentPeriodEnd);

@@ -8,23 +8,27 @@ import { Label } from "@repo/design-system/components/ui/label";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
+import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { type ComponentProps, useTransition } from "react";
+import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import type {
   TryoutRuntimeChoice,
   TryoutRuntimeQuestion,
-  TryoutSectionRuntimeArgs,
+  TryoutSectionRuntime,
 } from "@/components/tryout/types";
 import { reportClientException } from "@/lib/analytics/client";
+
+type SaveResponseArgs = FunctionArgs<
+  typeof api.tryouts.mutations.attempts.saveResponse
+>;
 
 interface TryoutChoicesProps {
   isLocked: boolean;
   isReviewMode: boolean;
   question: TryoutRuntimeQuestion;
-  runtimeQueryArgs: TryoutSectionRuntimeArgs;
   sectionStartedAt: number;
 }
 
@@ -33,70 +37,30 @@ export function TryoutChoices({
   isLocked,
   isReviewMode,
   question,
-  runtimeQueryArgs,
   sectionStartedAt,
 }: TryoutChoicesProps) {
-  const [, startTransition] = useTransition();
   const saveResponse = useMutation(
     api.tryouts.mutations.attempts.saveResponse
   ).withOptimisticUpdate((localStore, args) => {
-    if (!args.selectedOptionId) {
-      return;
-    }
-
-    const currentRuntime = localStore.getQuery(
-      api.tryouts.queries.attempt.getSectionRuntime,
-      runtimeQueryArgs
+    const runtimeQueries = localStore.getAllQueries(
+      api.tryouts.queries.attempt.getSectionRuntime
     );
 
-    if (!currentRuntime) {
-      return;
-    }
-
-    const selectedAt = currentRuntime.section.startedAt + args.timeSpent * 1000;
-    let foundQuestion = false;
-    let answeredFirstTime = false;
-    const questions = currentRuntime.questions.map((runtimeQuestion) => {
-      if (runtimeQuestion.placementId !== args.placementId) {
-        return runtimeQuestion;
+    for (const runtimeQuery of runtimeQueries) {
+      if (!runtimeQuery.value) {
+        continue;
       }
 
-      foundQuestion = true;
-      answeredFirstTime = !runtimeQuestion.response;
+      const nextRuntime = applyOptimisticResponse(runtimeQuery.value, args);
 
-      return {
-        ...runtimeQuestion,
-        response: {
-          answeredAt: runtimeQuestion.response?.answeredAt ?? selectedAt,
-          selectedOptionId: args.selectedOptionId,
-          updatedAt: selectedAt,
-        },
-      };
-    });
-
-    if (!foundQuestion) {
-      return;
-    }
-
-    const answeredCount = answeredFirstTime
-      ? Math.min(
-          currentRuntime.section.totalQuestions,
-          currentRuntime.section.answeredCount + 1
-        )
-      : currentRuntime.section.answeredCount;
-
-    localStore.setQuery(
-      api.tryouts.queries.attempt.getSectionRuntime,
-      runtimeQueryArgs,
-      {
-        ...currentRuntime,
-        questions,
-        section: {
-          ...currentRuntime.section,
-          answeredCount,
-        },
+      if (nextRuntime) {
+        localStore.setQuery(
+          api.tryouts.queries.attempt.getSectionRuntime,
+          runtimeQuery.args,
+          nextRuntime
+        );
       }
-    );
+    }
   });
   const tExercises = useTranslations("Exercises");
 
@@ -106,21 +70,18 @@ export function TryoutChoices({
       return;
     }
 
-    startTransition(async () => {
-      await Effect.runPromise(
-        Effect.tryPromise({
-          try: () =>
-            saveResponse({
-              placementId: question.placementId,
-              selectedOptionId: choice.optionKey,
-              timeSpent: getElapsedSeconds(sectionStartedAt),
-            }),
-          catch: (cause) => cause,
-        }).pipe(
-          Effect.catchAll((error) => handleSubmitError(error, tExercises))
-        )
-      );
+    const saveRequest = saveResponse({
+      placementId: question.placementId,
+      selectedOptionId: choice.optionKey,
+      timeSpent: getElapsedSeconds(sectionStartedAt),
     });
+
+    Effect.runPromise(
+      Effect.tryPromise({
+        try: () => saveRequest,
+        catch: (cause) => cause,
+      }).pipe(Effect.catchAll((error) => handleSubmitError(error, tExercises)))
+    );
   }
 
   return (
@@ -181,6 +142,60 @@ function TryoutChoice({
       </Response>
     </Label>
   );
+}
+
+/** Applies a Convex optimistic answer snapshot to the matching runtime query. */
+function applyOptimisticResponse(
+  runtime: TryoutSectionRuntime,
+  args: SaveResponseArgs
+) {
+  if (!args.selectedOptionId) {
+    return null;
+  }
+
+  const selectedAt = runtime.section.startedAt + args.timeSpent * 1000;
+  let foundQuestion = false;
+  let answeredFirstTime = false;
+  const questions = runtime.questions.map((runtimeQuestion) => {
+    if (runtimeQuestion.placementId !== args.placementId) {
+      return runtimeQuestion;
+    }
+
+    foundQuestion = true;
+    answeredFirstTime = !runtimeQuestion.response;
+
+    return {
+      ...runtimeQuestion,
+      response: {
+        answeredAt: runtimeQuestion.response?.answeredAt ?? selectedAt,
+        selectedOptionId: args.selectedOptionId,
+        updatedAt: selectedAt,
+      },
+    };
+  });
+
+  if (!foundQuestion) {
+    return null;
+  }
+
+  if (!answeredFirstTime) {
+    return {
+      ...runtime,
+      questions,
+    };
+  }
+
+  return {
+    ...runtime,
+    questions,
+    section: {
+      ...runtime.section,
+      answeredCount: Math.min(
+        runtime.section.totalQuestions,
+        runtime.section.answeredCount + 1
+      ),
+    },
+  };
 }
 
 /** Calculates elapsed whole seconds since a Convex section start timestamp. */

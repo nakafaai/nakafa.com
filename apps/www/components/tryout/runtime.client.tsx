@@ -4,17 +4,13 @@ import { useTryoutClock } from "@/components/tryout/clock";
 import type { TryoutQuestionContent } from "@/components/tryout/content";
 import { TryoutRuntimeControls } from "@/components/tryout/controls.client";
 import { TryoutRuntimeQuestion } from "@/components/tryout/question.client";
-import type {
-  TryoutSectionRuntime,
-  TryoutSectionRuntimeArgs,
-} from "@/components/tryout/types";
+import type { TryoutSectionRuntime } from "@/components/tryout/types";
 
 interface TryoutRuntimeProps {
   isExpired: boolean;
   questions: readonly TryoutQuestionContent[];
   returnHref: string;
   runtime: TryoutSectionRuntime;
-  runtimeQueryArgs: TryoutSectionRuntimeArgs;
 }
 
 /** Renders the active Convex-backed try-out section runtime. */
@@ -23,7 +19,6 @@ export function TryoutRuntime({
   questions,
   returnHref,
   runtime,
-  runtimeQueryArgs,
 }: TryoutRuntimeProps) {
   const isActive = runtime.section.status === "in-progress";
   const remainingSeconds = useRemainingSeconds(runtime.expiresAt, isActive);
@@ -60,7 +55,6 @@ export function TryoutRuntime({
           isReviewMode={!isActive}
           key={question.placementId}
           question={question}
-          runtimeQueryArgs={runtimeQueryArgs}
           sectionStartedAt={runtime.section.startedAt}
         />
       ))}

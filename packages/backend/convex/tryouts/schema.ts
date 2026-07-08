@@ -163,6 +163,7 @@ const tables = {
     accessEndsAt: v.optional(v.number()),
     countsForCompetition: v.optional(v.boolean()),
     scoreStatus: tryoutScoreStatusValidator,
+    scoringStrategy: tryoutScoringStrategyValidator,
     status: tryoutStatusValidator,
     sectionSnapshots: v.array(tryoutSectionSnapshotValidator),
     completedSectionKeys: v.array(tryoutRouteKeyValidator),

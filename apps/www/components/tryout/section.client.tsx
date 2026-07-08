@@ -142,13 +142,6 @@ export function TryoutSectionPageClient({
         questions={questions}
         returnHref={getTryoutHref({ country, exam, set })}
         runtime={activeRuntime}
-        runtimeQueryArgs={{
-          countryKey: page.set.countryKey,
-          examKey: page.set.examKey,
-          locale,
-          sectionKey: page.section.sectionKey,
-          setKey: page.set.setKey,
-        }}
       />
     );
   } else if (reviewRuntime && questions.length > 0) {
@@ -160,13 +153,6 @@ export function TryoutSectionPageClient({
           questions={questions}
           returnHref={getTryoutHref({ country, exam, set })}
           runtime={reviewRuntime}
-          runtimeQueryArgs={{
-            countryKey: page.set.countryKey,
-            examKey: page.set.examKey,
-            locale,
-            sectionKey: page.section.sectionKey,
-            setKey: page.set.setKey,
-          }}
         />
       </>
     );

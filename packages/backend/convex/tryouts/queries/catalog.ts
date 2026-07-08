@@ -277,6 +277,39 @@ async function loadQuestionContentRows(
   }));
 }
 
+/** Returns ordered section rows only when they match the set snapshot. */
+async function loadReadySections(ctx: QueryCtx, set: Doc<"tryoutSets">) {
+  const sections = await ctx.db
+    .query("tryoutSections")
+    .withIndex("by_tryoutSetId_and_order", (q) => q.eq("tryoutSetId", set._id))
+    .take(set.sectionCount + 1);
+
+  if (sections.length > set.sectionCount) {
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_COUNT_EXCEEDED",
+      message: "Try-out set has more sections than its snapshot count.",
+    });
+  }
+
+  if (sections.length < set.sectionCount) {
+    return null;
+  }
+
+  const totalQuestionCount = sections.reduce(
+    (total, section) => total + section.questionCount,
+    0
+  );
+  const hasMixedRevision = sections.some(
+    (section) => section.sourceRevision !== set.sourceRevision
+  );
+
+  if (totalQuestionCount !== set.totalQuestionCount || hasMixedRevision) {
+    return null;
+  }
+
+  return sections;
+}
+
 /** Reads one try-out set and its ordered sections. */
 export const getSetPage = query({
   args: {
@@ -303,7 +336,7 @@ export const getSetPage = query({
       return null;
     }
 
-    const [exam, sections] = await Promise.all([
+    const [exam, readySections] = await Promise.all([
       ctx.db
         .query("tryoutExams")
         .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
@@ -313,26 +346,14 @@ export const getSetPage = query({
             .eq("locale", args.locale)
         )
         .unique(),
-      ctx.db
-        .query("tryoutSections")
-        .withIndex("by_tryoutSetId_and_order", (q) =>
-          q.eq("tryoutSetId", set._id)
-        )
-        .take(set.sectionCount + 1),
+      loadReadySections(ctx, set),
     ]);
 
     if (!exam?.isActive) {
       return null;
     }
 
-    if (sections.length > set.sectionCount) {
-      throw new ConvexError({
-        code: "TRYOUT_SECTION_COUNT_EXCEEDED",
-        message: "Try-out set has more sections than its snapshot count.",
-      });
-    }
-
-    if (sections.length < set.sectionCount) {
+    if (!readySections) {
       return null;
     }
 
@@ -355,7 +376,7 @@ export const getSetPage = query({
         title: set.title,
         totalQuestionCount: set.totalQuestionCount,
       },
-      sections: sections.map((section) => ({
+      sections: readySections.map((section) => ({
         description: section.description,
         publicPath: section.publicPath,
         questionCount: section.questionCount,
