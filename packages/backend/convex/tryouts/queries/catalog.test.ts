@@ -257,6 +257,31 @@ describe("tryouts/queries/catalog", () => {
     expect(page.page.map((set) => set.setKey)).toEqual(["set-1"]);
   });
 
+  it("hides ready child sets when their parent track is not ready", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await insertCountry(ctx);
+      await insertExam(ctx);
+      await insertTrack(ctx, { isReady: false });
+      await insertSet(ctx);
+    });
+
+    const page = await t.query(api.tryouts.queries.catalog.listTrackSets, {
+      countryKey: "indonesia",
+      examKey: "snbt",
+      locale: "id",
+      paginationOpts: { cursor: null, numItems: 10 },
+      trackKey: "2027",
+    });
+
+    expect(page).toMatchObject({
+      continueCursor: "",
+      isDone: true,
+      page: [],
+    });
+  });
+
   it("does not expose legacy exam-to-set paths as track pages", async () => {
     const t = convexTest(schema, convexModules);
 
@@ -375,15 +400,6 @@ describe("tryouts/queries/catalog", () => {
       visibility: "internal-entry",
     });
     expect(page?.entrySection?.publicPath).toBeUndefined();
-    expect(page?.entryQuestions).toEqual([
-      {
-        contentHash:
-          "question-bank/tryout/indonesia/snbt/mathematics/set-1/mathematics:question-hash",
-        questionOrder: 1,
-        sourcePath:
-          "question-bank/tryout/indonesia/snbt/mathematics/set-1/mathematics/question-1",
-        sourceRevision: "2026",
-      },
-    ]);
+    expect(page).not.toHaveProperty("entryQuestions");
   });
 });

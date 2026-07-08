@@ -1,5 +1,8 @@
-import { query } from "@repo/backend/convex/_generated/server";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
+import {
+  type Locale,
+  localeValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import {
   loadQuestionContentRows,
   loadReadySections,
@@ -24,6 +27,12 @@ import {
 import { v } from "convex/values";
 
 const CATALOG_PAGE_LIMIT = 100;
+
+const emptySetPage = {
+  continueCursor: "",
+  isDone: true,
+  page: [],
+};
 
 /** Reads the localized country-first try-out hub page model. */
 export const getHubPage = query({
@@ -234,6 +243,12 @@ export const listTrackSets = query({
   },
   returns: paginationResultValidator(publicTryoutSetValidator),
   handler: async (ctx, args) => {
+    const hasReadyTrackParent = await readReadyTrackParent(ctx, args);
+
+    if (!hasReadyTrackParent) {
+      return emptySetPage;
+    }
+
     const page = await ctx.db
       .query("tryoutSets")
       .withIndex("by_track_locale_active_ready_order", (q) =>
@@ -264,7 +279,6 @@ export const getSetPage = query({
     v.null(),
     v.object({
       exam: publicTryoutExamValidator,
-      entryQuestions: v.array(publicTryoutQuestionContentValidator),
       entrySection: v.union(publicTryoutSectionValidator, v.null()),
       set: publicTryoutSetValidator,
       sections: v.array(publicTryoutSectionValidator),
@@ -323,13 +337,9 @@ export const getSetPage = query({
       ) ??
       visibleSections[0] ??
       null;
-    const entryQuestions = entrySection
-      ? await loadQuestionContentRows(ctx, entrySection)
-      : [];
 
     return {
       exam: toPublicTryoutExam(exam),
-      entryQuestions,
       entrySection: entrySection ? toPublicTryoutSection(entrySection) : null,
       set: toPublicTryoutSet(set),
       sections: visibleSections.map(toPublicTryoutSection),
@@ -337,6 +347,48 @@ export const getSetPage = query({
     };
   },
 });
+
+async function readReadyTrackParent(
+  ctx: QueryCtx,
+  args: {
+    countryKey: string;
+    examKey: string;
+    locale: Locale;
+    trackKey: string;
+  }
+) {
+  const [country, exam, track] = await Promise.all([
+    ctx.db
+      .query("tryoutCountries")
+      .withIndex("by_countryKey_and_locale", (q) =>
+        q.eq("countryKey", args.countryKey).eq("locale", args.locale)
+      )
+      .unique(),
+    ctx.db
+      .query("tryoutExams")
+      .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
+        q
+          .eq("countryKey", args.countryKey)
+          .eq("examKey", args.examKey)
+          .eq("locale", args.locale)
+      )
+      .unique(),
+    ctx.db
+      .query("tryoutTracks")
+      .withIndex("by_countryKey_and_examKey_and_trackKey_and_locale", (q) =>
+        q
+          .eq("countryKey", args.countryKey)
+          .eq("examKey", args.examKey)
+          .eq("trackKey", args.trackKey)
+          .eq("locale", args.locale)
+      )
+      .unique(),
+  ]);
+
+  return Boolean(
+    country?.isActive && exam?.isActive && track?.isActive && track.isReady
+  );
+}
 
 /** Reads public metadata for one try-out section. */
 export const getSectionPage = query({

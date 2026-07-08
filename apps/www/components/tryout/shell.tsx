@@ -13,28 +13,26 @@ export function TryoutShell({ children }: { children: ReactNode }) {
   const params = useParams();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const locale = getRouteParam(params.locale);
-  const countryKey = getRouteParam(params.country);
-  const examKey = getRouteParam(params.exam);
-  const setKey = getRouteParam(params.set);
-  const trackKey = getRouteParam(params.track);
+  const country = getRouteParam(params.country);
+  const exam = getRouteParam(params.exam);
+  const set = getRouteParam(params.set);
+  const track = getRouteParam(params.track);
+  const setPath =
+    country && exam && track && set
+      ? `try-out/${country}/${exam}/${track}/${set}`
+      : null;
   const shouldLoadAttempt =
     !isLoading &&
     isAuthenticated &&
     locale !== null &&
     hasLocale(routing.locales, locale) &&
-    countryKey !== null &&
-    examKey !== null &&
-    setKey !== null &&
-    trackKey !== null;
+    setPath !== null;
   const attempt = useQuery(
-    api.tryouts.queries.attempt.getCurrent,
+    api.tryouts.queries.attempt.getCurrentByPublicPath,
     shouldLoadAttempt
       ? {
-          countryKey,
-          examKey,
           locale,
-          setKey,
-          trackKey,
+          publicPath: setPath,
         }
       : "skip"
   );

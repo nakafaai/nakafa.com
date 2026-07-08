@@ -3,7 +3,10 @@ import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
+import {
+  getActiveTryoutSet,
+  getActiveTryoutSetByPublicPath,
+} from "@repo/backend/convex/tryouts/read";
 import {
   tryoutRouteKeyValidator,
   tryoutStatusValidator,
@@ -111,6 +114,80 @@ async function loadRuntimeResponses(
   return new Map(responses.map((response) => [response.placementId, response]));
 }
 
+/** Reads the latest attempt snapshot for one resolved set row. */
+async function loadCurrentAttempt(
+  ctx: QueryCtx,
+  args: {
+    sectionKey?: string;
+    set: Doc<"tryoutSets">;
+    userId: Doc<"users">["_id"];
+  }
+) {
+  const attempt = await ctx.db
+    .query("tryoutAttempts")
+    .withIndex("by_userId_and_tryoutSetId_and_startedAt", (q) =>
+      q.eq("userId", args.userId).eq("tryoutSetId", args.set._id)
+    )
+    .order("desc")
+    .first();
+
+  if (!attempt) {
+    return null;
+  }
+
+  let section: Doc<"tryoutSectionAttempts"> | null = null;
+
+  if (args.sectionKey) {
+    const sectionKey = args.sectionKey;
+
+    section = await ctx.db
+      .query("tryoutSectionAttempts")
+      .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
+        q.eq("tryoutAttemptId", attempt._id).eq("sectionKey", sectionKey)
+      )
+      .unique();
+  }
+
+  const sections = await loadSectionAttempts(ctx, attempt);
+  const inProgressSection = sections.find(
+    (sectionAttempt) => sectionAttempt.status === "in-progress"
+  );
+  const completedSections = new Set(attempt.completedSectionKeys);
+  const nextSection = attempt.sectionSnapshots.find(
+    (snapshot) => !completedSections.has(snapshot.sectionKey)
+  );
+  const resumeSection = inProgressSection
+    ? attempt.sectionSnapshots.find(
+        (snapshot) => snapshot.sectionKey === inProgressSection.sectionKey
+      )
+    : nextSection;
+
+  return {
+    attemptId: attempt._id,
+    attemptNumber: attempt.attemptNumber,
+    completedSectionKeys: attempt.completedSectionKeys,
+    expiresAt: attempt.expiresAt,
+    lastActivityAt: attempt.lastActivityAt,
+    resumeSectionKey: resumeSection?.sectionKey ?? null,
+    resumeSectionPublicPath: resumeSection?.publicPath ?? null,
+    section: section
+      ? {
+          answeredCount: section.answeredCount,
+          completedAt: section.completedAt,
+          endReason: section.endReason,
+          expiresAt: section.expiresAt,
+          sectionKey: section.sectionKey,
+          startedAt: section.startedAt,
+          status: section.status,
+          totalQuestions: section.totalQuestions,
+        }
+      : null,
+    startedAt: attempt.startedAt,
+    status: attempt.status,
+    totalQuestions: attempt.totalQuestions,
+  };
+}
+
 /** Reads the current user's latest try-out attempt for a public set identity. */
 export const getCurrent = query({
   args: {
@@ -135,68 +212,38 @@ export const getCurrent = query({
       return null;
     }
 
-    const attempt = await ctx.db
-      .query("tryoutAttempts")
-      .withIndex("by_userId_and_tryoutSetId_and_startedAt", (q) =>
-        q.eq("userId", auth.appUser._id).eq("tryoutSetId", set._id)
-      )
-      .order("desc")
-      .first();
+    return await loadCurrentAttempt(ctx, {
+      sectionKey: args.sectionKey,
+      set,
+      userId: auth.appUser._id,
+    });
+  },
+});
 
-    if (!attempt) {
+/** Reads the current user's latest try-out attempt for a localized set route. */
+export const getCurrentByPublicPath = query({
+  args: {
+    locale: localeValidator,
+    publicPath: v.string(),
+  },
+  returns: v.union(v.null(), currentAttemptValidator),
+  handler: async (ctx, args) => {
+    const auth = await getOptionalAppUser(ctx);
+
+    if (!auth) {
       return null;
     }
 
-    let section: Doc<"tryoutSectionAttempts"> | null = null;
+    const set = await getActiveTryoutSetByPublicPath(ctx, args);
 
-    if (args.sectionKey) {
-      const sectionKey = args.sectionKey;
-      section = await ctx.db
-        .query("tryoutSectionAttempts")
-        .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
-          q.eq("tryoutAttemptId", attempt._id).eq("sectionKey", sectionKey)
-        )
-        .unique();
+    if (!set) {
+      return null;
     }
 
-    const sections = await loadSectionAttempts(ctx, attempt);
-    const inProgressSection = sections.find(
-      (sectionAttempt) => sectionAttempt.status === "in-progress"
-    );
-    const completedSections = new Set(attempt.completedSectionKeys);
-    const nextSection = attempt.sectionSnapshots.find(
-      (snapshot) => !completedSections.has(snapshot.sectionKey)
-    );
-    const resumeSection = inProgressSection
-      ? attempt.sectionSnapshots.find(
-          (snapshot) => snapshot.sectionKey === inProgressSection.sectionKey
-        )
-      : nextSection;
-
-    return {
-      attemptId: attempt._id,
-      attemptNumber: attempt.attemptNumber,
-      completedSectionKeys: attempt.completedSectionKeys,
-      expiresAt: attempt.expiresAt,
-      lastActivityAt: attempt.lastActivityAt,
-      resumeSectionKey: resumeSection?.sectionKey ?? null,
-      resumeSectionPublicPath: resumeSection?.publicPath ?? null,
-      section: section
-        ? {
-            answeredCount: section.answeredCount,
-            completedAt: section.completedAt,
-            endReason: section.endReason,
-            expiresAt: section.expiresAt,
-            sectionKey: section.sectionKey,
-            startedAt: section.startedAt,
-            status: section.status,
-            totalQuestions: section.totalQuestions,
-          }
-        : null,
-      startedAt: attempt.startedAt,
-      status: attempt.status,
-      totalQuestions: attempt.totalQuestions,
-    };
+    return await loadCurrentAttempt(ctx, {
+      set,
+      userId: auth.appUser._id,
+    });
   },
 });
 

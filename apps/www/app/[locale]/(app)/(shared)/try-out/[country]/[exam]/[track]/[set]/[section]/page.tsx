@@ -1,7 +1,10 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
-import { loadTryoutQuestionContent } from "@/components/tryout/content";
+import {
+  loadTryoutQuestionContent,
+  type TryoutQuestionContent,
+} from "@/components/tryout/content";
 import { getTryoutHref } from "@/components/tryout/routes";
 import { TryoutSectionPageClient } from "@/components/tryout/section.client";
 import { preloadAuthQuery } from "@/lib/auth/server";
@@ -56,19 +59,24 @@ export default async function Page(props: {
     setKey: page.set.setKey,
     trackKey: page.set.trackKey,
   };
-  const [runtime, questions] = await Promise.all([
-    preloadAuthQuery(
-      api.tryouts.queries.attempt.getSectionRuntime,
-      runtimeArgs
-    ),
-    loadTryoutQuestionContent({
-      locale,
-      questions: page.questions,
-    }),
-  ]);
+  const runtime = await preloadAuthQuery(
+    api.tryouts.queries.attempt.getSectionRuntime,
+    runtimeArgs
+  );
+  const runtimeContent = preloadedQueryResult(runtime);
+  let questions: TryoutQuestionContent[] = [];
 
-  if (!questions) {
-    notFound();
+  if (runtimeContent) {
+    const loadedQuestions = await loadTryoutQuestionContent({
+      locale,
+      questions: runtimeContent.questions,
+    });
+
+    if (!loadedQuestions) {
+      notFound();
+    }
+
+    questions = loadedQuestions;
   }
 
   return (

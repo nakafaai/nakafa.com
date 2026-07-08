@@ -17,6 +17,11 @@ interface TryoutSetIdentity {
   trackKey: string;
 }
 
+interface TryoutSetPublicPath {
+  locale: TryoutLocale;
+  publicPath: string;
+}
+
 /** Finds one active try-out set by the public source identity. */
 export async function getActiveTryoutSet(
   ctx: MutationCtx | QueryCtx,
@@ -33,6 +38,25 @@ export async function getActiveTryoutSet(
           .eq("trackKey", args.trackKey)
           .eq("setKey", args.setKey)
           .eq("locale", args.locale)
+    )
+    .unique();
+
+  if (!set?.isActive) {
+    return null;
+  }
+
+  return set;
+}
+
+/** Finds one active try-out set by its localized public path. */
+export async function getActiveTryoutSetByPublicPath(
+  ctx: MutationCtx | QueryCtx,
+  args: TryoutSetPublicPath
+): Promise<TryoutSet | null> {
+  const set = await ctx.db
+    .query("tryoutSets")
+    .withIndex("by_locale_and_publicPath", (q) =>
+      q.eq("locale", args.locale).eq("publicPath", args.publicPath)
     )
     .unique();
 
