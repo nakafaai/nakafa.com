@@ -173,6 +173,33 @@ function buildSyncPayload() {
   };
 }
 
+/** Builds the same section as an internal entry with no public route. */
+function buildInternalEntryPayload() {
+  const payload = buildSyncPayload();
+
+  return {
+    ...payload,
+    routes: payload.routes.filter((route) => route.kind !== "tryout-section"),
+    sections: payload.sections.map(
+      ({ description: _description, ...section }) => ({
+        ...section,
+        publicPath: undefined,
+        visibility: "internal-entry" as const,
+      })
+    ),
+    sets: payload.sets.map((set) => ({
+      ...set,
+      internalEntrySectionKey: "penalaran-matematika",
+      readyVisibleSectionCount: 0,
+      visibleSectionCount: 0,
+    })),
+    tracks: payload.tracks.map((track) => ({
+      ...track,
+      readyVisibleSectionCount: 0,
+    })),
+  };
+}
+
 /** Builds one synced try-out question fixture for the IRT scale snapshot. */
 function buildQuestion(number: number): SyncedQuestion {
   const sourcePath = `${SECTION_SOURCE}/question-${number}`;
@@ -343,6 +370,60 @@ describe("contentSync/mutations/tryouts", () => {
       search: null,
       section: null,
     });
+  });
+
+  it("deletes stale section projections when a section becomes internal-entry", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(
+      internal.contentSync.mutations.tryouts.bulkSyncTryouts,
+      buildSyncPayload()
+    );
+    await t.mutation(
+      internal.contentSync.mutations.tryouts.bulkSyncTryouts,
+      buildInternalEntryPayload()
+    );
+    const snapshot = await t.query(async (ctx) => {
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_GRAPH.assetId)
+        )
+        .unique();
+      const search = await ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_GRAPH.assetId)
+        )
+        .unique();
+      const set = await ctx.db
+        .query("tryoutSets")
+        .withIndex("by_locale_and_publicPath", (q) =>
+          q.eq("locale", "id").eq("publicPath", SET_ROUTE)
+        )
+        .unique();
+
+      if (!set) {
+        throw new Error("Expected synced try-out set.");
+      }
+
+      const section = await ctx.db
+        .query("tryoutSections")
+        .withIndex("by_tryoutSetId_and_sectionKey", (q) =>
+          q.eq("tryoutSetId", set._id).eq("sectionKey", "penalaran-matematika")
+        )
+        .unique();
+
+      return { route, search, section };
+    });
+
+    expect(snapshot.route).toBeNull();
+    expect(snapshot.search).toBeNull();
+    expect(snapshot.section).toMatchObject({
+      visibility: "internal-entry",
+    });
+    expect(snapshot.section).not.toHaveProperty("description");
+    expect(snapshot.section).not.toHaveProperty("publicPath");
   });
 
   it("provisions one source-snapshot IRT scale for synced questions", async () => {

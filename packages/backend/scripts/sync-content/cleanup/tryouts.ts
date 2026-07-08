@@ -183,6 +183,11 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "try-out sets",
   },
   {
+    label: "Deleting try-out tracks...",
+    mutation: reset.deleteTryoutTracksBatch,
+    resultLabel: "try-out tracks",
+  },
+  {
     label: "Deleting try-out exams...",
     mutation: reset.deleteTryoutExamsBatch,
     resultLabel: "try-out exams",

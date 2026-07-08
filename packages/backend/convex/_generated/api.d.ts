@@ -132,6 +132,7 @@ import type * as contentSync_reset_spec from "../contentSync/reset/spec.js";
 import type * as contentSync_tables from "../contentSync/tables.js";
 import type * as contentSync_tryouts_impl from "../contentSync/tryouts/impl.js";
 import type * as contentSync_tryouts_irt from "../contentSync/tryouts/irt.js";
+import type * as contentSync_tryouts_questionBank from "../contentSync/tryouts/questionBank.js";
 import type * as contentSync_tryouts_route from "../contentSync/tryouts/route.js";
 import type * as contentSync_tryouts_spec from "../contentSync/tryouts/spec.js";
 import type * as contentSync_tryouts_stale from "../contentSync/tryouts/stale.js";
@@ -438,6 +439,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/tables": typeof contentSync_tables;
   "contentSync/tryouts/impl": typeof contentSync_tryouts_impl;
   "contentSync/tryouts/irt": typeof contentSync_tryouts_irt;
+  "contentSync/tryouts/questionBank": typeof contentSync_tryouts_questionBank;
   "contentSync/tryouts/route": typeof contentSync_tryouts_route;
   "contentSync/tryouts/spec": typeof contentSync_tryouts_spec;
   "contentSync/tryouts/stale": typeof contentSync_tryouts_stale;
