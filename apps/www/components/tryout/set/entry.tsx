@@ -1,10 +1,14 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
+import {
+  TryoutEntrySummary,
+  TryoutEntrySummaryAction,
+} from "@/components/tryout/section/entry.client";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
-import { TryoutEntrySummary } from "@/components/tryout/section/summary.client";
 import type {
   CurrentAttempt,
   TryoutInternalSetView,
@@ -30,14 +34,51 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
   );
   let status = tTryouts("entry-head-ready");
 
-  if (value.activeRuntime) {
+  if (value.runtimeState.kind === "active") {
     status = tTryouts("part-head-in-progress");
+  } else if (value.runtimeState.kind === "pending") {
+    status = tTryouts("part-head-expiring");
   } else if (sectionFinished) {
     status = getTryoutFinishedSectionStatus({
       attemptFinished,
       sectionTimeExpired,
       tTryouts,
     });
+  }
+
+  let summaryAction: ReactNode = (
+    <TryoutEntrySummaryAction
+      value={{
+        activeAttempt: value.activeAttempt,
+        attempt: value.actionAttempt,
+        locale: value.route.locale,
+        returnHref: parentHref,
+        section: value.entrySection,
+        sectionFinished,
+        sectionHref: entryHref,
+        set: value.page.set,
+        startAttemptSectionKey: value.entrySection.sectionKey,
+      }}
+    />
+  );
+
+  if (value.runtimeState.kind === "pending") {
+    summaryAction = null;
+  }
+
+  let runtimeContent: ReactNode = null;
+
+  if (value.runtimeState.kind !== "none") {
+    runtimeContent = (
+      <TryoutRuntime
+        value={{
+          expired: value.runtimeState.kind !== "active",
+          questions: value.content.entryQuestions,
+          returnHref: entryHref,
+          runtime: value.runtimeState.runtime,
+        }}
+      />
+    );
   }
 
   return (
@@ -66,28 +107,14 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
         <div className="space-y-12">
           <TryoutEntrySummary
             value={{
-              activeAttempt: value.activeAttempt,
-              attempt: value.actionAttempt,
-              locale: value.route.locale,
-              returnHref: parentHref,
               section: value.entrySection,
               sectionFinished,
-              sectionHref: entryHref,
-              set: value.page.set,
-              startAttemptSectionKey: value.entrySection.sectionKey,
             }}
-          />
+          >
+            {summaryAction}
+          </TryoutEntrySummary>
 
-          {value.runtimeContent ? (
-            <TryoutRuntime
-              value={{
-                expired: value.runtimeContent.section.status !== "in-progress",
-                questions: value.content.entryQuestions,
-                returnHref: entryHref,
-                runtime: value.runtimeContent,
-              }}
-            />
-          ) : null}
+          {runtimeContent}
         </div>
       </div>
     </div>

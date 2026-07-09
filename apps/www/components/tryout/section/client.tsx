@@ -4,7 +4,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import type { Preloaded } from "convex/react";
 import { useConvexAuth, usePreloadedQuery, useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -12,6 +11,10 @@ import type { TryoutQuestionContent } from "@/components/tryout/content/load";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import {
+  getActiveTryoutAttempt,
+  getTryoutRuntimeState,
+} from "@/components/tryout/runtime/state";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import { TryoutVisibleSummary } from "@/components/tryout/section/summary.client";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
@@ -19,10 +22,6 @@ import { TryoutMeta } from "@/components/tryout/shell/meta";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
 type SectionRuntimeQuery = typeof api.tryouts.queries.attempt.getSectionRuntime;
-type CurrentAttempt = FunctionReturnType<
-  typeof api.tryouts.queries.attempt.getCurrent
->;
-type SectionRuntime = FunctionReturnType<SectionRuntimeQuery>;
 
 interface TryoutSectionPageClientProps {
   content: TryoutSectionContent;
@@ -90,16 +89,14 @@ export function TryoutSectionPageClient({
     return null;
   }
 
-  const activeAttempt = getActiveAttempt(currentAttempt ?? null, now);
+  const activeAttempt = getActiveTryoutAttempt(currentAttempt ?? null, now);
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
       ? null
       : currentAttempt;
   const sectionAttempt = actionAttempt?.section ?? null;
-  const activeRuntime = getActiveRuntime(runtime, activeAttempt, now);
-  const reviewRuntime =
-    runtime && runtime.section.status !== "in-progress" ? runtime : null;
-  const hasActiveSection = activeAttempt?.section?.status === "in-progress";
+  const runtimeState = getTryoutRuntimeState({ activeAttempt, now, runtime });
+  const hasActiveSection = currentAttempt?.section?.status === "in-progress";
   const setHref = getTryoutHref({
     country: route.country,
     exam: route.exam,
@@ -107,11 +104,11 @@ export function TryoutSectionPageClient({
     track: route.track,
   });
 
-  if (hasActiveSection && !activeRuntime) {
+  if (hasActiveSection && runtimeState.kind === "none") {
     return null;
   }
 
-  if (activeRuntime && content.questions.length === 0) {
+  if (runtimeState.kind !== "none" && content.questions.length === 0) {
     return null;
   }
 
@@ -131,8 +128,10 @@ export function TryoutSectionPageClient({
 
   let status = tTryouts("part-head-needs-tryout");
 
-  if (activeRuntime) {
+  if (runtimeState.kind === "active") {
     status = tTryouts("part-head-in-progress");
+  } else if (runtimeState.kind === "pending") {
+    status = tTryouts("part-head-expiring");
   } else if (sectionFinished) {
     status = getTryoutFinishedSectionStatus({
       attemptFinished,
@@ -145,44 +144,50 @@ export function TryoutSectionPageClient({
     status = tTryouts("part-head-ended");
   }
 
-  let sectionContent: ReactNode = (
-    <TryoutVisibleSummary
-      value={{
-        activeAttempt,
-        attempt: actionAttempt,
-        locale: route.locale,
-        page,
-        route,
-        sectionFinished,
-      }}
-    />
-  );
+  let sectionContent: ReactNode;
 
-  if (activeRuntime) {
+  if (runtimeState.kind === "active" || runtimeState.kind === "pending") {
     sectionContent = (
       <TryoutRuntime
         value={{
-          expired: false,
+          expired: runtimeState.kind === "pending",
           questions: content.questions,
           returnHref: setHref,
-          runtime: activeRuntime,
+          runtime: runtimeState.runtime,
         }}
       />
     );
-  } else if (reviewRuntime && content.questions.length > 0) {
-    sectionContent = (
-      <>
-        {sectionContent}
-        <TryoutRuntime
-          value={{
-            expired: true,
-            questions: content.questions,
-            returnHref: setHref,
-            runtime: reviewRuntime,
-          }}
-        />
-      </>
+  } else {
+    const summary = (
+      <TryoutVisibleSummary
+        value={{
+          activeAttempt,
+          attempt: actionAttempt,
+          locale: route.locale,
+          page,
+          route,
+          sectionFinished,
+        }}
+      />
     );
+
+    sectionContent = summary;
+
+    if (runtimeState.kind === "review") {
+      sectionContent = (
+        <>
+          {summary}
+          <TryoutRuntime
+            value={{
+              expired: true,
+              questions: content.questions,
+              returnHref: setHref,
+              runtime: runtimeState.runtime,
+            }}
+          />
+        </>
+      );
+    }
   }
 
   return (
@@ -209,38 +214,4 @@ export function TryoutSectionPageClient({
       </div>
     </div>
   );
-}
-
-/** Returns the current attempt only while its Convex expiry is still active. */
-function getActiveAttempt(attempt: CurrentAttempt, now: number) {
-  if (attempt?.status !== "in-progress") {
-    return null;
-  }
-
-  if (now >= attempt.expiresAt) {
-    return null;
-  }
-
-  return attempt;
-}
-
-/** Returns an active section runtime only while both timers are still active. */
-function getActiveRuntime(
-  runtime: SectionRuntime,
-  activeAttempt: NonNullable<CurrentAttempt> | null,
-  now: number
-) {
-  if (!activeAttempt) {
-    return null;
-  }
-
-  if (runtime?.section.status !== "in-progress") {
-    return null;
-  }
-
-  if (now >= runtime.expiresAt) {
-    return null;
-  }
-
-  return runtime;
 }

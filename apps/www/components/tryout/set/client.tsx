@@ -8,10 +8,12 @@ import {
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import {
+  getActiveTryoutAttempt,
+  getTryoutRuntimeState,
+} from "@/components/tryout/runtime/state";
 import { TryoutSetEntry } from "@/components/tryout/set/entry";
 import type {
-  CurrentAttempt,
-  SectionRuntime,
   SetEntrySection,
   SetPageQuery,
   TryoutSetContent,
@@ -51,7 +53,7 @@ export function TryoutSetPageClient({
   );
   const currentAttempt = isAuthenticated ? attempt : null;
   const now = useTryoutClock(currentAttempt?.status === "in-progress");
-  const activeAttempt = getActiveAttempt(currentAttempt ?? null, now);
+  const activeAttempt = getActiveTryoutAttempt(currentAttempt ?? null, now);
   const shouldLoadRuntime =
     page !== null &&
     entrySection !== null &&
@@ -59,7 +61,7 @@ export function TryoutSetPageClient({
     isAuthenticated &&
     !isLoading &&
     attempt !== undefined &&
-    isEntrySectionRuntimeAvailable(currentAttempt ?? null, activeAttempt);
+    Boolean(currentAttempt?.section);
   const runtime = useQuery(
     api.tryouts.queries.attempt.getSectionRuntime,
     shouldLoadRuntime
@@ -86,6 +88,10 @@ export function TryoutSetPageClient({
     return null;
   }
 
+  if (shouldLoadRuntime && runtime === undefined) {
+    return null;
+  }
+
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
       ? null
@@ -103,92 +109,45 @@ export function TryoutSetPageClient({
         route,
       })
     : setHref;
-  const activeRuntime = isInternalEntry
-    ? getActiveRuntime(runtime ?? null, activeAttempt, now)
-    : null;
-  const reviewRuntime =
-    isInternalEntry && runtime && runtime.section.status !== "in-progress"
-      ? runtime
-      : null;
-  const runtimeContent = activeRuntime ?? reviewRuntime;
+  const runtimeState = getTryoutRuntimeState({
+    activeAttempt,
+    now,
+    runtime: isInternalEntry ? (runtime ?? null) : null,
+  });
   const hasActiveEntrySection =
-    isInternalEntry && activeAttempt?.section?.status === "in-progress";
+    isInternalEntry && currentAttempt?.section?.status === "in-progress";
 
-  if (hasActiveEntrySection && !activeRuntime) {
+  if (hasActiveEntrySection && runtimeState.kind === "none") {
     return null;
   }
 
-  if (runtimeContent && content.entryQuestions.length === 0) {
+  if (runtimeState.kind !== "none" && content.entryQuestions.length === 0) {
     return null;
   }
 
   const view: TryoutSetView = {
     actionAttempt,
     activeAttempt,
-    activeRuntime,
-    content,
     entryHref,
     entrySection,
     page,
-    reviewRuntime,
     route,
-    runtimeContent,
   };
 
   if (isInternalEntry && entrySection) {
-    return <TryoutSetEntry value={{ ...view, entrySection }} />;
+    return (
+      <TryoutSetEntry
+        value={{
+          ...view,
+          content,
+          entrySection,
+          runtimeState,
+        }}
+      />
+    );
   }
 
   return <TryoutSetOverview value={view} />;
-}
-
-/** Returns the current attempt only while its Convex expiry is still active. */
-function getActiveAttempt(attempt: CurrentAttempt, now: number) {
-  if (attempt?.status !== "in-progress") {
-    return null;
-  }
-
-  if (now >= attempt.expiresAt) {
-    return null;
-  }
-
-  return attempt;
-}
-
-/** Returns an active section runtime only while both timers are still active. */
-function getActiveRuntime(
-  runtime: SectionRuntime,
-  activeAttempt: NonNullable<CurrentAttempt> | null,
-  now: number
-) {
-  if (!activeAttempt) {
-    return null;
-  }
-
-  if (runtime?.section.status !== "in-progress") {
-    return null;
-  }
-
-  if (now >= runtime.expiresAt) {
-    return null;
-  }
-
-  return runtime;
-}
-
-/** Returns true when direct-entry pages can load active or review runtime. */
-function isEntrySectionRuntimeAvailable(
-  attempt: CurrentAttempt,
-  activeAttempt: NonNullable<CurrentAttempt> | null
-) {
-  if (activeAttempt) {
-    return true;
-  }
-
-  return (
-    attempt?.section?.status === "completed" ||
-    attempt?.section?.status === "expired"
-  );
 }
 
 /** Builds the href for either a visible public section or an internal set entry. */

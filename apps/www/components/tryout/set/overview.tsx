@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 import { getTryoutHref } from "@/components/tryout/route/path";
-import { TryoutRuntime } from "@/components/tryout/runtime/client";
 import { TryoutSetAction } from "@/components/tryout/set/action.client";
 import type { TryoutSetView } from "@/components/tryout/set/model";
 import { TryoutSectionRows } from "@/components/tryout/set/rows.client";
@@ -57,17 +56,6 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
             }}
           />
         </div>
-
-        {value.runtimeContent ? (
-          <TryoutRuntime
-            value={{
-              expired: value.runtimeContent.section.status !== "in-progress",
-              questions: value.content.entryQuestions,
-              returnHref: setHref,
-              runtime: value.runtimeContent,
-            }}
-          />
-        ) : null}
 
         {value.page.sections.length > 0 ? (
           <TryoutSectionRows

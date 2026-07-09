@@ -387,6 +387,7 @@
     "part-head-needs-tryout": "Mulai try out dulu agar bebas pilih bagian yang mau dikerjakan.",
     "part-head-ready": "Bagian ini siap dikerjakan kapan saja selama try out masih aktif.",
     "part-head-in-progress": "Kamu sedang mengerjakan bagian ini.",
+    "part-head-expiring": "Waktu habis. Jawaban sedang disimpan.",
     "part-head-completed": "Bagian ini selesai, silakan cek jawaban dan pembahasan di bawah.",
     "part-head-completed-pending-review": "Bagian ini selesai, tapi pembahasan baru bisa dibuka setelah seluruh try out selesai.",
     "part-head-completed-time-expired": "Waktu habis dan jawaban otomatis tersimpan, silakan cek pembahasannya di bawah.",
