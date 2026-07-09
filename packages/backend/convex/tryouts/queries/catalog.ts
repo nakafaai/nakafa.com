@@ -16,6 +16,7 @@ import {
   toPublicTryoutSet,
   toPublicTryoutTrack,
 } from "@repo/backend/convex/tryouts/queries/catalogModel";
+import { loadActiveTryoutSetParents } from "@repo/backend/convex/tryouts/queries/parents";
 import { v } from "convex/values";
 
 const CATALOG_PAGE_LIMIT = 100;
@@ -246,30 +247,12 @@ export const getSetPage = query({
       return null;
     }
 
-    const [exam, track, readySections] = await Promise.all([
-      ctx.db
-        .query("tryoutExams")
-        .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
-          q
-            .eq("countryKey", set.countryKey)
-            .eq("examKey", set.examKey)
-            .eq("locale", args.locale)
-        )
-        .unique(),
-      ctx.db
-        .query("tryoutTracks")
-        .withIndex("by_countryKey_and_examKey_and_trackKey_and_locale", (q) =>
-          q
-            .eq("countryKey", set.countryKey)
-            .eq("examKey", set.examKey)
-            .eq("trackKey", set.trackKey)
-            .eq("locale", args.locale)
-        )
-        .unique(),
+    const [parents, readySections] = await Promise.all([
+      loadActiveTryoutSetParents(ctx, set),
       loadReadySections(ctx, set),
     ]);
 
-    if (!(exam?.isActive && track?.isActive && track.isReady)) {
+    if (!parents) {
       return null;
     }
 
@@ -288,11 +271,11 @@ export const getSetPage = query({
       null;
 
     return {
-      exam: toPublicTryoutExam(exam),
+      exam: toPublicTryoutExam(parents.exam),
       entrySection: entrySection ? toPublicTryoutSection(entrySection) : null,
       set: toPublicTryoutSet(set),
       sections: visibleSections.map(toPublicTryoutSection),
-      track: toPublicTryoutTrack(track),
+      track: toPublicTryoutTrack(parents.track),
     };
   },
 });
@@ -331,30 +314,12 @@ export const getSectionPage = query({
       return null;
     }
 
-    const [exam, track, readySections] = await Promise.all([
-      ctx.db
-        .query("tryoutExams")
-        .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
-          q
-            .eq("countryKey", set.countryKey)
-            .eq("examKey", set.examKey)
-            .eq("locale", args.locale)
-        )
-        .unique(),
-      ctx.db
-        .query("tryoutTracks")
-        .withIndex("by_countryKey_and_examKey_and_trackKey_and_locale", (q) =>
-          q
-            .eq("countryKey", set.countryKey)
-            .eq("examKey", set.examKey)
-            .eq("trackKey", set.trackKey)
-            .eq("locale", args.locale)
-        )
-        .unique(),
+    const [parents, readySections] = await Promise.all([
+      loadActiveTryoutSetParents(ctx, set),
       loadReadySections(ctx, set),
     ]);
 
-    if (!(exam?.isActive && track?.isActive && track.isReady)) {
+    if (!parents) {
       return null;
     }
 
@@ -369,11 +334,11 @@ export const getSectionPage = query({
     const questions = await loadQuestionContentRows(ctx, readySection);
 
     return {
-      exam: toPublicTryoutExam(exam),
+      exam: toPublicTryoutExam(parents.exam),
       questions,
       section: toPublicTryoutSection(section),
       set: toPublicTryoutSet(set),
-      track: toPublicTryoutTrack(track),
+      track: toPublicTryoutTrack(parents.track),
     };
   },
 });

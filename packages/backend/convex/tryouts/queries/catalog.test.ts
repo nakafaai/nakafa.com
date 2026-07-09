@@ -59,6 +59,7 @@ describe("tryouts/queries/catalog", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
+      await insertTryoutCountry(ctx);
       await insertTryoutExam(ctx);
       await insertTryoutTrack(ctx);
       const setId = await insertTryoutSet(ctx, {
@@ -86,6 +87,7 @@ describe("tryouts/queries/catalog", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
+      await insertTryoutCountry(ctx);
       await insertTryoutExam(ctx);
       await insertTryoutTrack(ctx);
       const setId = await insertTryoutSet(ctx, {
@@ -115,6 +117,7 @@ describe("tryouts/queries/catalog", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
+      await insertTryoutCountry(ctx);
       await insertTryoutExam(ctx);
       await insertTryoutTrack(ctx, {
         publicPath: `${TRYOUT_EXAM_PATH}/matematika`,
@@ -157,5 +160,39 @@ describe("tryouts/queries/catalog", () => {
     });
     expect(page?.entrySection?.publicPath).toBeUndefined();
     expect(page).not.toHaveProperty("entryQuestions");
+  });
+
+  it("hides direct set and section pages when their country is inactive", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      const countryId = await insertTryoutCountry(ctx);
+      await insertTryoutExam(ctx);
+      await insertTryoutTrack(ctx);
+      const setId = await insertTryoutSet(ctx);
+      const questionSetId = await insertTryoutQuestionSource(ctx);
+
+      await insertTryoutSection(ctx, {
+        publicPath: TRYOUT_SECTION_PATH,
+        questionSetId,
+        tryoutSetId: setId,
+      });
+      await ctx.db.patch(countryId, { isActive: false });
+    });
+
+    const setPage = await t.query(api.tryouts.queries.catalog.getSetPage, {
+      locale: "id",
+      publicPath: TRYOUT_SET_PATH,
+    });
+    const sectionPage = await t.query(
+      api.tryouts.queries.catalog.getSectionPage,
+      {
+        locale: "id",
+        publicPath: TRYOUT_SECTION_PATH,
+      }
+    );
+
+    expect(setPage).toBeNull();
+    expect(sectionPage).toBeNull();
   });
 });
