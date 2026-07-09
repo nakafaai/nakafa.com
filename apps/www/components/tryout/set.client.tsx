@@ -141,7 +141,7 @@ export function TryoutSetPageClient({
         activeAttempt={activeAttempt}
         activeRuntime={activeRuntime}
         country={country}
-        currentAttempt={activeAttempt}
+        currentAttempt={actionAttempt}
         entryQuestions={entryQuestions}
         entrySection={entrySection}
         exam={exam}
