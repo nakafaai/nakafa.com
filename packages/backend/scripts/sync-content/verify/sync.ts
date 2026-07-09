@@ -422,6 +422,12 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   allMatch =
     !logIntegrityList(
+      "orphan question-choice owner IDs",
+      integrity.orphanQuestionChoiceIds,
+      "No question choices reference deleted questions"
+    ) && allMatch;
+  allMatch =
+    !logIntegrityList(
       "questions without choices",
       integrity.questionsWithoutChoices,
       `All ${integrity.totalQuestions} questions have choices`

@@ -460,6 +460,7 @@ export const ContentCountsSchema = Schema.Struct({
 });
 
 export const DataIntegritySchema = Schema.Struct({
+  orphanQuestionChoiceIds: Schema.Array(Schema.String),
   questionsWithoutChoices: Schema.Array(Schema.String),
   questionsWithoutAuthors: Schema.Array(Schema.String),
   articlesWithoutReferences: Schema.Array(Schema.String),

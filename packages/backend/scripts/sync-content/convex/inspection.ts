@@ -384,6 +384,7 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   const questionIdsWithChoices = new Set(
     choices.map((choice) => choice.questionId)
   );
+  const questionIds = new Set(questions.map((question) => question.id));
   const questionIdsWithAuthors = new Set(
     contentAuthors
       .filter((authorLink) => authorLink.contentType === "question")
@@ -394,6 +395,13 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   );
 
   return Schema.decodeUnknownSync(DataIntegritySchema)({
+    orphanQuestionChoiceIds: Array.from(
+      new Set(
+        choices
+          .filter((choice) => !questionIds.has(choice.questionId))
+          .map((choice) => choice.questionId)
+      )
+    ),
     questionsWithoutChoices: questions
       .filter((question) => !questionIdsWithChoices.has(question.id))
       .map((question) => `${question.sourcePath} (${question.locale})`),
