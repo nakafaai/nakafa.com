@@ -18,27 +18,23 @@ import type {
   TryoutRuntimeChoice,
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,
-} from "@/components/tryout/types";
+} from "@/components/tryout/runtime/types";
 import { reportClientException } from "@/lib/analytics/client";
 
 type SaveResponseArgs = FunctionArgs<
   typeof api.tryouts.mutations.attempts.saveResponse
 >;
 
-interface TryoutChoicesProps {
-  isLocked: boolean;
-  isReviewMode: boolean;
+interface TryoutChoicesValue {
+  locked: boolean;
   question: TryoutRuntimeQuestion;
+  reviewMode: boolean;
   sectionStartedAt: number;
 }
 
 /** Renders and saves selectable answers for one runtime question. */
-export function TryoutChoices({
-  isLocked,
-  isReviewMode,
-  question,
-  sectionStartedAt,
-}: TryoutChoicesProps) {
+export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
+  const { locked, question, sectionStartedAt } = value;
   const saveResponse = useMutation(
     api.tryouts.mutations.attempts.saveResponse
   ).withOptimisticUpdate((localStore, args) => {
@@ -66,7 +62,7 @@ export function TryoutChoices({
 
   /** Saves one selected choice through Convex with elapsed section time. */
   function saveChoice(choice: TryoutRuntimeChoice) {
-    if (isLocked) {
+    if (locked) {
       return;
     }
 
@@ -88,12 +84,14 @@ export function TryoutChoices({
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
       {question.choices.map((choice) => (
         <TryoutChoice
-          choice={choice}
-          disabled={isLocked}
-          isReviewMode={isReviewMode}
           key={choice.optionKey}
-          onSelect={() => saveChoice(choice)}
-          question={question}
+          value={{
+            choice,
+            disabled: locked,
+            onSelect: () => saveChoice(choice),
+            question,
+            reviewMode: value.reviewMode,
+          }}
         />
       ))}
     </div>
@@ -101,21 +99,10 @@ export function TryoutChoices({
 }
 
 /** Renders one selectable answer option in the production exercise style. */
-function TryoutChoice({
-  choice,
-  disabled,
-  isReviewMode,
-  onSelect,
-  question,
-}: {
-  choice: TryoutRuntimeChoice;
-  disabled: boolean;
-  isReviewMode: boolean;
-  onSelect: () => void;
-  question: TryoutRuntimeQuestion;
-}) {
+function TryoutChoice({ value }: { value: TryoutChoiceValue }) {
+  const { choice, disabled, onSelect, question, reviewMode } = value;
   const checked = question.response?.selectedOptionId === choice.optionKey;
-  const variant = getChoiceVariant({ checked, choice, isReviewMode });
+  const variant = getChoiceVariant({ checked, choice, reviewMode });
 
   return (
     <Label
@@ -142,6 +129,14 @@ function TryoutChoice({
       </Response>
     </Label>
   );
+}
+
+interface TryoutChoiceValue {
+  choice: TryoutRuntimeChoice;
+  disabled: boolean;
+  onSelect: () => void;
+  question: TryoutRuntimeQuestion;
+  reviewMode: boolean;
 }
 
 /** Applies a Convex optimistic answer snapshot to the matching runtime query. */
@@ -207,13 +202,13 @@ function getElapsedSeconds(startedAt: number) {
 function getChoiceVariant({
   checked,
   choice,
-  isReviewMode,
+  reviewMode,
 }: {
   checked: boolean;
   choice: TryoutRuntimeChoice;
-  isReviewMode: boolean;
+  reviewMode: boolean;
 }): ComponentProps<typeof Button>["variant"] {
-  if (!isReviewMode) {
+  if (!reviewMode) {
     return checked ? "default-outline" : "outline";
   }
 

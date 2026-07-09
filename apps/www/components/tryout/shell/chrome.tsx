@@ -24,18 +24,17 @@ export type TryoutBreadcrumbItem = Readonly<{
   menuLabel?: string;
 }>;
 
-/** Renders the sticky try-out navigation header used by chooser pages. */
-export function TryoutHeader({
-  action,
-  homeLabel,
-  items,
-  title,
-}: {
+/** Cohesive render model for the sticky try-out breadcrumb header. */
+export interface TryoutHeaderValue {
   action?: ReactNode;
   homeLabel: string;
   items: readonly TryoutBreadcrumbItem[];
   title: string;
-}) {
+}
+
+/** Renders the sticky try-out navigation header used by chooser pages. */
+export function TryoutHeader({ value }: { value: TryoutHeaderValue }) {
+  const { action, homeLabel, items, title } = value;
   const currentItem = items.at(-1) ?? null;
   const hiddenItems = currentItem ? items.slice(0, -1) : items;
 

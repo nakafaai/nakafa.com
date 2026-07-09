@@ -19,11 +19,8 @@ import { toast } from "sonner";
 type CurrentAttempt = FunctionReturnType<
   typeof api.tryouts.queries.attempt.getCurrent
 >;
-type StartTryoutCopy = "direct-entry" | "section-picker";
 
-interface StartTryoutButtonProps {
-  attempt?: CurrentAttempt;
-  copy?: StartTryoutCopy;
+export interface StartTryoutRequest {
   countryKey: string;
   entrySectionKey?: string;
   examKey: string;
@@ -33,17 +30,15 @@ interface StartTryoutButtonProps {
   trackKey: string;
 }
 
+interface StartTryoutButtonProps {
+  attempt?: CurrentAttempt;
+  request: StartTryoutRequest;
+}
+
 /** Starts a Convex-owned try-out attempt and opens the first section on success. */
 export function StartTryoutButton({
   attempt,
-  countryKey,
-  copy = "section-picker",
-  entrySectionKey,
-  examKey,
-  firstSectionHref,
-  locale,
-  setKey,
-  trackKey,
+  request,
 }: StartTryoutButtonProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -53,12 +48,12 @@ export function StartTryoutButton({
   const [isPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const authRedirectHref = `/${locale}${firstSectionHref}`;
+  const authRedirectHref = `/${request.locale}${request.firstSectionHref}`;
   const hasActiveAttempt = attempt?.status === "in-progress";
   const hasFinishedAttempt = Boolean(attempt && !hasActiveAttempt);
   const isAttemptLoading = isAuthenticated && attempt === undefined;
   const isBusy = isLoading || isPending || isAttemptLoading;
-  const isDirectEntry = copy === "direct-entry";
+  const isDirectEntry = Boolean(request.entrySectionKey);
   let buttonLabel = tTryouts("start-cta");
   let dialogDescription = isDirectEntry
     ? tTryouts("start-entry-dialog-description")
@@ -88,16 +83,18 @@ export function StartTryoutButton({
     }
 
     if (hasActiveAttempt) {
-      if (!entrySectionKey) {
-        router.push(firstSectionHref);
+      if (!request.entrySectionKey) {
+        router.push(request.firstSectionHref);
         return;
       }
+
+      const entrySectionKey = request.entrySectionKey;
 
       startTransition(async () => {
         await Effect.runPromise(
           startEntrySection({
             attemptId: attempt.attemptId,
-            firstSectionHref,
+            firstSectionHref: request.firstSectionHref,
             router,
             sectionKey: entrySectionKey,
             startSection,
@@ -128,20 +125,22 @@ export function StartTryoutButton({
         Effect.tryPromise({
           try: () =>
             startAttempt({
-              countryKey,
-              ...(entrySectionKey ? { entrySectionKey } : {}),
-              examKey,
-              locale,
-              setKey,
-              trackKey,
+              countryKey: request.countryKey,
+              ...(request.entrySectionKey
+                ? { entrySectionKey: request.entrySectionKey }
+                : {}),
+              examKey: request.examKey,
+              locale: request.locale,
+              setKey: request.setKey,
+              trackKey: request.trackKey,
             }),
           catch: (cause) => cause,
         }).pipe(
           Effect.tap(() =>
             Effect.sync(() => {
               closeDialog();
-              router.push(firstSectionHref);
-              if (entrySectionKey) {
+              router.push(request.firstSectionHref);
+              if (request.entrySectionKey) {
                 router.refresh();
               }
               const successMessage = isDirectEntry
@@ -166,7 +165,11 @@ export function StartTryoutButton({
   return (
     <>
       <Button disabled={isBusy} onClick={onStart}>
-        <Spinner className="size-4" icon={Rocket01Icon} isLoading={isPending} />
+        <Spinner
+          data-icon="inline-start"
+          icon={Rocket01Icon}
+          isLoading={isPending}
+        />
         {buttonLabel}
       </Button>
 
@@ -184,7 +187,7 @@ export function StartTryoutButton({
             </Button>
             <Button disabled={isBusy} onClick={onConfirm} type="button">
               <Spinner
-                className="size-4"
+                data-icon="inline-start"
                 icon={Rocket01Icon}
                 isLoading={isPending}
               />

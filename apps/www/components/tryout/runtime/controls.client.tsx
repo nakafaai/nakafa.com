@@ -21,11 +21,11 @@ import { domAnimation, LazyMotion, m } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import type { TryoutSectionRuntime } from "@/components/tryout/types";
+import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 
-interface TryoutRuntimeControlsProps {
-  isExpired: boolean;
+interface TryoutRuntimeControlsValue {
+  expired: boolean;
   remainingSeconds: number;
   returnHref: string;
   runtime: TryoutSectionRuntime;
@@ -33,11 +33,11 @@ interface TryoutRuntimeControlsProps {
 
 /** Renders the production sticky timer, progress, and finish controls. */
 export function TryoutRuntimeControls({
-  isExpired,
-  remainingSeconds,
-  returnHref,
-  runtime,
-}: TryoutRuntimeControlsProps) {
+  value,
+}: {
+  value: TryoutRuntimeControlsValue;
+}) {
+  const { expired, remainingSeconds, returnHref, runtime } = value;
   const router = useRouter();
   const completeSection = useMutation(api.tryouts.mutations.sections.complete);
   const tExercises = useTranslations("Exercises");
@@ -47,7 +47,7 @@ export function TryoutRuntimeControls({
     useDisclosure(false);
   const { hidden } = useStickyVisibility();
   const progress = getProgress(runtime);
-  const isBusy = isPending || isExpired;
+  const isBusy = isPending || expired;
 
   /** Completes the current section through Convex and returns to the set page. */
   function onComplete() {

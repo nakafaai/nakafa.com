@@ -3,7 +3,7 @@ import {
   getTryoutExamIcon,
   getTryoutSetIcon,
   getTryoutTrackIcon,
-} from "@/components/tryout/icons";
+} from "@/components/tryout/catalog/icons";
 
 function serializeIcon(icon: unknown) {
   return JSON.stringify(icon);

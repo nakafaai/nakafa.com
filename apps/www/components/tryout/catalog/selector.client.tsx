@@ -16,8 +16,8 @@ import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
-import { getTryoutExamIcon } from "@/components/tryout/icons";
-import { saveTryoutPreference } from "@/components/tryout/preference.client";
+import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
+import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
 
 export type TryoutCountrySelectorOption = Readonly<{
   countryCode: string;

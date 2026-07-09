@@ -7,11 +7,11 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { RefContent } from "@/components/shared/ref-content";
-import { TryoutHeader } from "@/components/tryout/chrome";
-import { TryoutCountryPageClient } from "@/components/tryout/country.client";
-import { getTryoutHref } from "@/components/tryout/routes";
-import { TryoutCountrySelector } from "@/components/tryout/selector.client";
-import { readStaticTryoutCountryOptions } from "@/components/tryout/static";
+import { TryoutCountryPageClient } from "@/components/tryout/catalog/country.client";
+import { TryoutCountrySelector } from "@/components/tryout/catalog/selector.client";
+import { readStaticTryoutCountryOptions } from "@/components/tryout/catalog/static";
+import { getTryoutHref } from "@/components/tryout/route/path";
+import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 
@@ -45,18 +45,19 @@ export default async function Page(props: {
     <LayoutMaterial>
       <LayoutMaterialContent>
         <TryoutHeader
-          action={
-            countryOptions.length > 0 ? (
-              <TryoutCountrySelector
-                currentValue={countryPath}
-                label={tTryouts("country-selector-label")}
-                options={countryOptions}
-              />
-            ) : undefined
-          }
-          homeLabel={tCommon("home")}
-          items={[{ label: tCommon("try-out") }]}
-          title={tCommon("try-out")}
+          value={{
+            action:
+              countryOptions.length > 0 ? (
+                <TryoutCountrySelector
+                  currentValue={countryPath}
+                  label={tTryouts("country-selector-label")}
+                  options={countryOptions}
+                />
+              ) : undefined,
+            homeLabel: tCommon("home"),
+            items: [{ label: tCommon("try-out") }],
+            title: tCommon("try-out"),
+          }}
         />
         <LayoutContent>
           <TryoutCountryPageClient preloaded={preloaded} />

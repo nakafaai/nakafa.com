@@ -11,8 +11,8 @@ import { useTranslations } from "next-intl";
 import { choiceCardVariants } from "@/components/shared/choice-card";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
-import { saveTryoutPreference } from "@/components/tryout/preference.client";
-import { getTryoutPublicPathHref } from "@/components/tryout/routes";
+import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
+import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 interface TryoutHubClientProps {
   locale: Locale;

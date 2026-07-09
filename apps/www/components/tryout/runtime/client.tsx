@@ -1,25 +1,22 @@
 "use client";
 
-import { useTryoutClock } from "@/components/tryout/clock";
-import type { TryoutQuestionContent } from "@/components/tryout/content";
-import { TryoutRuntimeControls } from "@/components/tryout/controls.client";
-import { TryoutRuntimeQuestion } from "@/components/tryout/question.client";
-import type { TryoutSectionRuntime } from "@/components/tryout/types";
+import type { TryoutQuestionContent } from "@/components/tryout/content/load";
+import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
+import { TryoutRuntimeQuestion } from "@/components/tryout/runtime/question.client";
+import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
-interface TryoutRuntimeProps {
-  isExpired: boolean;
+/** Cohesive render model for one loaded try-out runtime. */
+export interface TryoutRuntimeValue {
+  expired: boolean;
   questions: readonly TryoutQuestionContent[];
   returnHref: string;
   runtime: TryoutSectionRuntime;
 }
 
 /** Renders the active Convex-backed try-out section runtime. */
-export function TryoutRuntime({
-  isExpired,
-  questions,
-  returnHref,
-  runtime,
-}: TryoutRuntimeProps) {
+export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
+  const { expired, questions, returnHref, runtime } = value;
   const isActive = runtime.section.status === "in-progress";
   const remainingSeconds = useRemainingSeconds(runtime.expiresAt, isActive);
   const contentBySnapshot = new Map(
@@ -41,21 +38,25 @@ export function TryoutRuntime({
     <section className="space-y-12">
       {isActive ? (
         <TryoutRuntimeControls
-          isExpired={isExpired}
-          remainingSeconds={remainingSeconds}
-          returnHref={returnHref}
-          runtime={runtime}
+          value={{
+            expired,
+            remainingSeconds,
+            returnHref,
+            runtime,
+          }}
         />
       ) : null}
 
       {runtimeQuestions.map(({ content, question }) => (
         <TryoutRuntimeQuestion
-          content={content}
-          isLocked={isExpired || !isActive}
-          isReviewMode={!isActive}
           key={question.placementId}
-          question={question}
-          sectionStartedAt={runtime.section.startedAt}
+          value={{
+            content,
+            locked: expired || !isActive,
+            question,
+            reviewMode: !isActive,
+            sectionStartedAt: runtime.section.startedAt,
+          }}
         />
       ))}
     </section>

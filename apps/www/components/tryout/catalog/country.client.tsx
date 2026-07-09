@@ -8,8 +8,8 @@ import type { Preloaded } from "convex/react";
 import { usePreloadedQuery } from "convex/react";
 import { choiceCardVariants } from "@/components/shared/choice-card";
 import { ComingSoon } from "@/components/shared/coming-soon";
-import { getTryoutExamIcon } from "@/components/tryout/icons";
-import { getTryoutPublicPathHref } from "@/components/tryout/routes";
+import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
+import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type CountryPageQuery = typeof api.tryouts.queries.catalog.getCountryPage;
 

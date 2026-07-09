@@ -3,7 +3,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ReactNode } from "react";
 
-interface TryoutPageHeaderProps {
+/** Cohesive content model for the compact try-out page header. */
+export interface TryoutPageHeaderValue {
   description?: ReactNode;
   icon?: IconSvgElement;
   link: {
@@ -19,14 +20,9 @@ interface TryoutPageHeaderProps {
  * Renders the compact try-out page header with parent navigation and optional
  * concise state or set-introduction copy.
  */
-export function TryoutPageHeader({
-  description,
-  icon,
-  link,
-  meta,
-  status,
-  title,
-}: TryoutPageHeaderProps) {
+export function TryoutPageHeader({ value }: { value: TryoutPageHeaderValue }) {
+  const { description, icon, link, meta, status, title } = value;
+
   return (
     <header className="flex flex-col gap-3">
       <NavigationLink

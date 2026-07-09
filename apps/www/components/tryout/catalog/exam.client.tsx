@@ -9,8 +9,8 @@ import { usePreloadedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { choiceCardVariants } from "@/components/shared/choice-card";
 import { ComingSoon } from "@/components/shared/coming-soon";
-import { getTryoutTrackIcon } from "@/components/tryout/icons";
-import { getTryoutPublicPathHref } from "@/components/tryout/routes";
+import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
+import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type ExamPageQuery = typeof api.tryouts.queries.catalog.getExamPage;
 

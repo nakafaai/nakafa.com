@@ -8,14 +8,14 @@ import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { useTryoutClock } from "@/components/tryout/clock";
-import type { TryoutQuestionContent } from "@/components/tryout/content";
-import { getTryoutFinishedSectionStatus } from "@/components/tryout/finished-status";
-import { TryoutPageHeader } from "@/components/tryout/header";
-import { TryoutMeta } from "@/components/tryout/meta";
-import { getTryoutHref } from "@/components/tryout/routes";
-import { TryoutRuntime } from "@/components/tryout/runtime.client";
-import { TryoutSectionSummary } from "@/components/tryout/summary.client";
+import type { TryoutQuestionContent } from "@/components/tryout/content/load";
+import { getTryoutHref } from "@/components/tryout/route/path";
+import { TryoutRuntime } from "@/components/tryout/runtime/client";
+import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
+import { TryoutVisibleSummary } from "@/components/tryout/section/summary.client";
+import { TryoutPageHeader } from "@/components/tryout/shell/header";
+import { TryoutMeta } from "@/components/tryout/shell/meta";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
 type SectionRuntimeQuery = typeof api.tryouts.queries.attempt.getSectionRuntime;
@@ -25,12 +25,24 @@ type CurrentAttempt = FunctionReturnType<
 type SectionRuntime = FunctionReturnType<SectionRuntimeQuery>;
 
 interface TryoutSectionPageClientProps {
+  content: TryoutSectionContent;
+  preloaded: TryoutSectionPreloads;
+  route: TryoutSectionRoute;
+}
+
+interface TryoutSectionContent {
+  questions: readonly TryoutQuestionContent[];
+}
+
+interface TryoutSectionPreloads {
+  page: Preloaded<SectionPageQuery>;
+  runtime: Preloaded<SectionRuntimeQuery>;
+}
+
+interface TryoutSectionRoute {
   country: string;
   exam: string;
   locale: Locale;
-  preloaded: Preloaded<SectionPageQuery>;
-  questions: readonly TryoutQuestionContent[];
-  runtime: Preloaded<SectionRuntimeQuery>;
   section: string;
   set: string;
   track: string;
@@ -38,26 +50,20 @@ interface TryoutSectionPageClientProps {
 
 /** Renders one realtime try-out section page from Convex. */
 export function TryoutSectionPageClient({
-  country,
-  exam,
-  locale,
+  content,
   preloaded,
-  questions,
-  runtime: preloadedRuntime,
-  section,
-  set,
-  track,
+  route,
 }: TryoutSectionPageClientProps) {
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const page = usePreloadedQuery(preloaded);
-  const runtime = usePreloadedQuery(preloadedRuntime);
+  const page = usePreloadedQuery(preloaded.page);
+  const runtime = usePreloadedQuery(preloaded.runtime);
   const attempt = useQuery(
     api.tryouts.queries.attempt.getCurrent,
     page && isAuthenticated && !isLoading
       ? {
           countryKey: page.set.countryKey,
           examKey: page.set.examKey,
-          locale,
+          locale: route.locale,
           sectionKey: page.section.sectionKey,
           setKey: page.set.setKey,
           trackKey: page.set.trackKey,
@@ -86,12 +92,18 @@ export function TryoutSectionPageClient({
   const reviewRuntime =
     runtime && runtime.section.status !== "in-progress" ? runtime : null;
   const hasActiveSection = activeAttempt?.section?.status === "in-progress";
+  const setHref = getTryoutHref({
+    country: route.country,
+    exam: route.exam,
+    set: route.set,
+    track: route.track,
+  });
 
   if (hasActiveSection && !activeRuntime) {
     return null;
   }
 
-  if (activeRuntime && questions.length === 0) {
+  if (activeRuntime && content.questions.length === 0) {
     return null;
   }
 
@@ -126,38 +138,40 @@ export function TryoutSectionPageClient({
   }
 
   let sectionContent: ReactNode = (
-    <TryoutSectionSummary
-      activeAttempt={activeAttempt}
-      attempt={actionAttempt}
-      country={country}
-      exam={exam}
-      locale={locale}
-      page={page}
-      section={section}
-      sectionFinished={sectionFinished}
-      set={set}
-      track={track}
+    <TryoutVisibleSummary
+      value={{
+        activeAttempt,
+        attempt: actionAttempt,
+        locale: route.locale,
+        page,
+        route,
+        sectionFinished,
+      }}
     />
   );
 
   if (activeRuntime) {
     sectionContent = (
       <TryoutRuntime
-        isExpired={false}
-        questions={questions}
-        returnHref={getTryoutHref({ country, exam, set, track })}
-        runtime={activeRuntime}
+        value={{
+          expired: false,
+          questions: content.questions,
+          returnHref: setHref,
+          runtime: activeRuntime,
+        }}
       />
     );
-  } else if (reviewRuntime && questions.length > 0) {
+  } else if (reviewRuntime && content.questions.length > 0) {
     sectionContent = (
       <>
         {sectionContent}
         <TryoutRuntime
-          isExpired={true}
-          questions={questions}
-          returnHref={getTryoutHref({ country, exam, set, track })}
-          runtime={reviewRuntime}
+          value={{
+            expired: true,
+            questions: content.questions,
+            returnHref: setHref,
+            runtime: reviewRuntime,
+          }}
         />
       </>
     );
@@ -167,18 +181,20 @@ export function TryoutSectionPageClient({
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
         <TryoutPageHeader
-          icon={getMaterialIcon(page.section.sectionKey)}
-          link={{
-            href: getTryoutHref({ country, exam, set, track }),
-            label: tCommon("back"),
+          value={{
+            icon: getMaterialIcon(page.section.sectionKey),
+            link: {
+              href: setHref,
+              label: tCommon("back"),
+            },
+            meta: (
+              <TryoutMeta
+                items={[page.exam.title, page.track.title, page.set.title]}
+              />
+            ),
+            status,
+            title: page.section.title,
           }}
-          meta={
-            <TryoutMeta
-              items={[page.exam.title, page.track.title, page.set.title]}
-            />
-          }
-          status={status}
-          title={page.section.title}
         />
 
         <div className="space-y-12">{sectionContent}</div>

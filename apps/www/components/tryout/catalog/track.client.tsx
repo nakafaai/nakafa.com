@@ -7,8 +7,8 @@ import type { Preloaded } from "convex/react";
 import { usePaginatedQuery, usePreloadedQuery } from "convex/react";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { TryoutList } from "@/components/tryout/list";
-import { getTryoutPublicPathHref } from "@/components/tryout/routes";
+import { TryoutList } from "@/components/tryout/catalog/list";
+import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type TrackPageQuery = typeof api.tryouts.queries.catalog.getTrackPage;
 

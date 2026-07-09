@@ -4,7 +4,7 @@ import type { Locale } from "next-intl";
 import type {
   TryoutCountrySelectorOption,
   TryoutExamSelectorOption,
-} from "@/components/tryout/selector.client";
+} from "@/components/tryout/catalog/selector.client";
 
 /** Reads one source-projected try-out route for static header context. */
 export function readStaticTryoutRoute({

@@ -17,10 +17,12 @@ export function TryoutShell({ children }: { children: ReactNode }) {
   const exam = getRouteParam(params.exam);
   const set = getRouteParam(params.set);
   const track = getRouteParam(params.track);
-  const setPath =
-    country && exam && track && set
-      ? `try-out/${country}/${exam}/${track}/${set}`
-      : null;
+  const setPath = getSetPath({
+    country,
+    exam,
+    set,
+    track,
+  });
   const shouldLoadAttempt =
     !isLoading &&
     isAuthenticated &&
@@ -48,4 +50,35 @@ export function TryoutShell({ children }: { children: ReactNode }) {
 /** Normalizes a Next.js route param into one stable segment value. */
 function getRouteParam(param: string | string[] | undefined) {
   return typeof param === "string" ? param : null;
+}
+
+/** Builds the current set public path only when every route segment exists. */
+function getSetPath({
+  country,
+  exam,
+  set,
+  track,
+}: {
+  country: string | null;
+  exam: string | null;
+  set: string | null;
+  track: string | null;
+}) {
+  if (!country) {
+    return null;
+  }
+
+  if (!exam) {
+    return null;
+  }
+
+  if (!track) {
+    return null;
+  }
+
+  if (!set) {
+    return null;
+  }
+
+  return `try-out/${country}/${exam}/${track}/${set}`;
 }

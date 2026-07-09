@@ -3,33 +3,35 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import type { FunctionReturnType } from "convex/server";
-import { TryoutList } from "@/components/tryout/list";
-import { getTryoutPublicPathHref } from "@/components/tryout/routes";
+import { TryoutList } from "@/components/tryout/catalog/list";
+import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type SetPageQuery = typeof api.tryouts.queries.catalog.getSetPage;
 type SetPage = NonNullable<FunctionReturnType<SetPageQuery>>;
 type SetSection = SetPage["sections"][number];
 
-/** Renders the production-style divided visible section list for one set page. */
-export function TryoutSectionRows({
-  attempt,
-  emptyLabel,
-  questionUnitLabel,
-  sections,
-}: {
+export interface TryoutSectionRowsValue {
   attempt?: FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>;
   emptyLabel: string;
   questionUnitLabel: string;
   sections: readonly SetSection[];
+}
+
+/** Renders the production-style divided visible section list for one set page. */
+export function TryoutSectionRows({
+  value,
+}: {
+  value: TryoutSectionRowsValue;
 }) {
-  const activeAttempt = attempt?.status === "in-progress" ? attempt : null;
+  const activeAttempt =
+    value.attempt?.status === "in-progress" ? value.attempt : null;
   const completedSections = new Set(activeAttempt?.completedSectionKeys ?? []);
   const currentSectionKey = activeAttempt?.resumeSectionKey ?? null;
 
   return (
     <TryoutList
-      emptyLabel={emptyLabel}
-      rows={sections.flatMap((section) => {
+      emptyLabel={value.emptyLabel}
+      rows={value.sections.flatMap((section) => {
         if (!section.publicPath) {
           return [];
         }
@@ -37,7 +39,7 @@ export function TryoutSectionRows({
         return [
           {
             current: section.sectionKey === currentSectionKey,
-            description: `${section.questionCount} ${questionUnitLabel}`,
+            description: `${section.questionCount} ${value.questionUnitLabel}`,
             href: getTryoutPublicPathHref(section.publicPath),
             key: section.sectionKey,
             status: completedSections.has(section.sectionKey)

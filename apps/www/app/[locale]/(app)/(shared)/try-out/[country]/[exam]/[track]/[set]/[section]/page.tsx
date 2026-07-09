@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import {
   loadTryoutQuestionContent,
   type TryoutQuestionContent,
-} from "@/components/tryout/content";
-import { getTryoutHref } from "@/components/tryout/routes";
-import { TryoutSectionPageClient } from "@/components/tryout/section.client";
+} from "@/components/tryout/content/load";
+import { getTryoutHref } from "@/components/tryout/route/path";
+import { TryoutSectionPageClient } from "@/components/tryout/section/client";
 import { preloadAuthQuery } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -81,15 +81,9 @@ export default async function Page(props: {
 
   return (
     <TryoutSectionPageClient
-      country={country}
-      exam={exam}
-      locale={locale}
-      preloaded={preloaded}
-      questions={questions}
-      runtime={runtime}
-      section={section}
-      set={set}
-      track={track}
+      content={{ questions }}
+      preloaded={{ page: preloaded, runtime }}
+      route={{ country, exam, locale, section, set, track }}
     />
   );
 }

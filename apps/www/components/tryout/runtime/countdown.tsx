@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/ui/number-flow";
 import { useTranslations } from "next-intl";
 import { Fragment, type ReactNode } from "react";
-import { useTryoutClock } from "@/components/tryout/clock";
+import { useTryoutClock } from "@/components/tryout/runtime/clock";
 
 const SECOND_MS = 1000;
 const MINUTE_SECONDS = 60;

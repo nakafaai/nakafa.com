@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import {
   TryoutStatus,
   type TryoutStatusValue,
-} from "@/components/tryout/status";
+} from "@/components/tryout/shell/status";
 
 type TryoutListRowVisual =
   | Readonly<{

@@ -6,8 +6,8 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { RefContent } from "@/components/shared/ref-content";
-import { TryoutHeader } from "@/components/tryout/chrome";
-import { TryoutHubClient } from "@/components/tryout/hub.client";
+import { TryoutHubClient } from "@/components/tryout/catalog/hub.client";
+import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -68,9 +68,11 @@ export default async function Page(props: PageProps<"/[locale]/try-out">) {
       <LayoutMaterial>
         <LayoutMaterialContent>
           <TryoutHeader
-            homeLabel={tCommon("home")}
-            items={[{ label: title }]}
-            title={title}
+            value={{
+              homeLabel: tCommon("home"),
+              items: [{ label: title }],
+              title,
+            }}
           />
           <LayoutContent>
             <TryoutHubClient locale={locale} />

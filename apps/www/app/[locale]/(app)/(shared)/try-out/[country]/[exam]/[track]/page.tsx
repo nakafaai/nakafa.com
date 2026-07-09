@@ -4,14 +4,14 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { TryoutHeader } from "@/components/tryout/chrome";
-import { getTryoutHref } from "@/components/tryout/routes";
-import { TryoutExamSelector } from "@/components/tryout/selector.client";
+import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
 import {
   readStaticTryoutExamOptions,
   readStaticTryoutRoute,
-} from "@/components/tryout/static";
-import { TryoutTrackPageClient } from "@/components/tryout/track.client";
+} from "@/components/tryout/catalog/static";
+import { TryoutTrackPageClient } from "@/components/tryout/catalog/track.client";
+import { getTryoutHref } from "@/components/tryout/route/path";
+import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Renders active try-out sets for one exam track. */
@@ -64,27 +64,29 @@ export default async function Page(props: {
     <LayoutMaterial>
       <LayoutMaterialContent>
         <TryoutHeader
-          action={
-            <TryoutExamSelector
-              currentValue={examPath}
-              label={tTryouts("exam-selector-label")}
-              options={examOptions}
-            />
-          }
-          homeLabel={tCommon("home")}
-          items={[
-            {
-              href: getTryoutHref({ country }),
-              label: tCommon("try-out"),
-              menuLabel: tCommon("try-out-short"),
-            },
-            {
-              href: getTryoutHref({ country, exam }),
-              label: examRoute?.title ?? exam,
-            },
-            { label: trackRoute?.title ?? track },
-          ]}
-          title={trackRoute?.title ?? tCommon("try-out")}
+          value={{
+            action: (
+              <TryoutExamSelector
+                currentValue={examPath}
+                label={tTryouts("exam-selector-label")}
+                options={examOptions}
+              />
+            ),
+            homeLabel: tCommon("home"),
+            items: [
+              {
+                href: getTryoutHref({ country }),
+                label: tCommon("try-out"),
+                menuLabel: tCommon("try-out-short"),
+              },
+              {
+                href: getTryoutHref({ country, exam }),
+                label: examRoute?.title ?? exam,
+              },
+              { label: trackRoute?.title ?? track },
+            ],
+            title: trackRoute?.title ?? tCommon("try-out"),
+          }}
         />
         <TryoutTrackPageClient locale={locale} preloaded={preloaded} />
       </LayoutMaterialContent>

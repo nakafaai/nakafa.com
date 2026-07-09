@@ -5,26 +5,25 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { TryoutChoices } from "@/components/tryout/choice";
-import type { TryoutRuntimeQuestion as RuntimeQuestion } from "@/components/tryout/types";
+import { TryoutChoices } from "@/components/tryout/runtime/choice";
+import type { TryoutRuntimeQuestion as RuntimeQuestion } from "@/components/tryout/runtime/types";
 
-interface TryoutRuntimeQuestionProps {
+interface TryoutRuntimeQuestionValue {
   content: ReactNode;
-  isLocked: boolean;
-  isReviewMode: boolean;
+  locked: boolean;
   question: RuntimeQuestion;
+  reviewMode: boolean;
   sectionStartedAt: number;
 }
 
 /** Renders one question with the original production exercise answer styling. */
 export function TryoutRuntimeQuestion({
-  content,
-  isLocked,
-  isReviewMode,
-  question,
-  sectionStartedAt,
-}: TryoutRuntimeQuestionProps) {
+  value,
+}: {
+  value: TryoutRuntimeQuestionValue;
+}) {
   const tExercises = useTranslations("Exercises");
+  const { content, locked, question, reviewMode, sectionStartedAt } = value;
   const id = `question-${question.questionOrder}`;
 
   return (
@@ -58,10 +57,12 @@ export function TryoutRuntimeQuestion({
 
       <section className="my-8">
         <TryoutChoices
-          isLocked={isLocked}
-          isReviewMode={isReviewMode}
-          question={question}
-          sectionStartedAt={sectionStartedAt}
+          value={{
+            locked,
+            question,
+            reviewMode,
+            sectionStartedAt,
+          }}
         />
       </section>
     </article>
