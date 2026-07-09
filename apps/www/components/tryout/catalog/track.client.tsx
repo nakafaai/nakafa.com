@@ -23,12 +23,13 @@ export function TryoutTrackPageClient({
   const page = usePreloadedQuery(preloaded);
   const tTryouts = useTranslations("Tryouts");
   const { loadMore, results, status } = usePaginatedQuery(
-    api.tryouts.queries.catalog.listTrackSets,
+    api.tryouts.queries.sets.list,
     page
       ? {
           countryKey: page.country.countryKey,
           examKey: page.exam.examKey,
           locale,
+          sort: { direction: "asc", field: "order" },
           trackKey: page.track.trackKey,
         }
       : "skip",

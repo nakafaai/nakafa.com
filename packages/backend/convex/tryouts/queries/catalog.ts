@@ -1,8 +1,5 @@
-import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
-import {
-  type Locale,
-  localeValidator,
-} from "@repo/backend/convex/lib/validators/contents";
+import { query } from "@repo/backend/convex/_generated/server";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   loadQuestionContentRows,
   loadReadySections,
@@ -19,20 +16,9 @@ import {
   toPublicTryoutSet,
   toPublicTryoutTrack,
 } from "@repo/backend/convex/tryouts/queries/catalogModel";
-import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
-import {
-  paginationOptsValidator,
-  paginationResultValidator,
-} from "convex/server";
 import { v } from "convex/values";
 
 const CATALOG_PAGE_LIMIT = 100;
-
-const emptySetPage = {
-  continueCursor: "",
-  isDone: true,
-  page: [],
-};
 
 /** Reads the localized country-first try-out hub page model. */
 export const getHubPage = query({
@@ -232,55 +218,6 @@ export const getTrackPage = query({
   },
 });
 
-/** Lists ready sets for one active track using Convex pagination. */
-export const listTrackSets = query({
-  args: {
-    countryKey: tryoutRouteKeyValidator,
-    examKey: tryoutRouteKeyValidator,
-    locale: localeValidator,
-    paginationOpts: paginationOptsValidator,
-    trackKey: tryoutRouteKeyValidator,
-  },
-  returns: paginationResultValidator(publicTryoutSetValidator),
-  handler: async (ctx, args) => {
-    const hasReadyTrackParent = await readReadyTrackParent(ctx, args);
-
-    if (!hasReadyTrackParent) {
-      return emptySetPage;
-    }
-
-    const page = await ctx.db
-      .query("tryoutSets")
-      .withIndex("by_track_locale_active_ready_order", (q) =>
-        q
-          .eq("countryKey", args.countryKey)
-          .eq("examKey", args.examKey)
-          .eq("trackKey", args.trackKey)
-          .eq("locale", args.locale)
-          .eq("isActive", true)
-          .eq("isReady", true)
-      )
-      .paginate(args.paginationOpts);
-
-    const readySets: ReturnType<typeof toPublicTryoutSet>[] = [];
-
-    for (const set of page.page) {
-      const readySections = await loadReadySections(ctx, set);
-
-      if (!readySections) {
-        continue;
-      }
-
-      readySets.push(toPublicTryoutSet(set));
-    }
-
-    return {
-      ...page,
-      page: readySets,
-    };
-  },
-});
-
 /** Reads one try-out set and its ordered sections. */
 export const getSetPage = query({
   args: {
@@ -359,48 +296,6 @@ export const getSetPage = query({
     };
   },
 });
-
-async function readReadyTrackParent(
-  ctx: QueryCtx,
-  args: {
-    countryKey: string;
-    examKey: string;
-    locale: Locale;
-    trackKey: string;
-  }
-) {
-  const [country, exam, track] = await Promise.all([
-    ctx.db
-      .query("tryoutCountries")
-      .withIndex("by_countryKey_and_locale", (q) =>
-        q.eq("countryKey", args.countryKey).eq("locale", args.locale)
-      )
-      .unique(),
-    ctx.db
-      .query("tryoutExams")
-      .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
-        q
-          .eq("countryKey", args.countryKey)
-          .eq("examKey", args.examKey)
-          .eq("locale", args.locale)
-      )
-      .unique(),
-    ctx.db
-      .query("tryoutTracks")
-      .withIndex("by_countryKey_and_examKey_and_trackKey_and_locale", (q) =>
-        q
-          .eq("countryKey", args.countryKey)
-          .eq("examKey", args.examKey)
-          .eq("trackKey", args.trackKey)
-          .eq("locale", args.locale)
-      )
-      .unique(),
-  ]);
-
-  return Boolean(
-    country?.isActive && exam?.isActive && track?.isActive && track.isReady
-  );
-}
 
 /** Reads public metadata for one try-out section. */
 export const getSectionPage = query({
