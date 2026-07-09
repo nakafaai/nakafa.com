@@ -228,6 +228,20 @@ describe("tryouts/mutations/attempts", () => {
       }),
     ]);
     expect(runtime.placements).toHaveLength(1);
+
+    const current = await authed.query(api.tryouts.queries.attempt.getCurrent, {
+      countryKey: COUNTRY,
+      examKey: EXAM,
+      locale: "id",
+      sectionKey: SECTION,
+      setKey: SET,
+      trackKey: TRACK,
+    });
+
+    expect(current?.section).toMatchObject({
+      sectionKey: SECTION,
+      status: "in-progress",
+    });
   });
 
   it("rejects entry-section starts for visible sections", async () => {

@@ -3,17 +3,12 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import type { api } from "@repo/backend/convex/_generated/api";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  NumberFormat,
-  NumberFormatGroup,
-} from "@repo/design-system/components/ui/number-flow";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { Fragment } from "react";
 import {
   TryoutPartBody,
   TryoutPartCtas,
@@ -275,15 +270,9 @@ function StartOrResumeSectionCta({
 /** Renders the production try-out metric number style. */
 function TryoutMetricNumber({ value }: { value: number }) {
   return (
-    <NumberFormatGroup>
-      <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
-        <NumberFormat
-          format={{ maximumFractionDigits: 0 }}
-          trend={0}
-          value={value}
-        />
-      </div>
-    </NumberFormatGroup>
+    <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
+      {value}
+    </div>
   );
 }
 
@@ -292,26 +281,20 @@ function TryoutMetricTime({ totalSeconds }: { totalSeconds: number }) {
   const segments = getTimeSegments(totalSeconds);
 
   return (
-    <NumberFormatGroup>
-      <div className="flex items-center gap-2 sm:gap-3">
-        {segments.map((segment, index) => (
-          <Fragment key={segment.label}>
-            <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
-              <NumberFormat
-                format={{ minimumIntegerDigits: 2 }}
-                trend={0}
-                value={segment.value}
-              />
-            </div>
-            {index < segments.length - 1 ? (
-              <span className="font-light font-mono text-3xl text-muted-foreground leading-none">
-                :
-              </span>
-            ) : null}
-          </Fragment>
-        ))}
-      </div>
-    </NumberFormatGroup>
+    <div className="flex items-center gap-2 sm:gap-3">
+      {segments.map((segment, index) => (
+        <div className="contents" key={segment.label}>
+          <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
+            {segment.value.toString().padStart(2, "0")}
+          </div>
+          {index < segments.length - 1 ? (
+            <span className="font-light font-mono text-3xl text-muted-foreground leading-none">
+              :
+            </span>
+          ) : null}
+        </div>
+      ))}
+    </div>
   );
 }
 

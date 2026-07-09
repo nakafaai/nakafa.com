@@ -1,3 +1,4 @@
+import type { Locale } from "@repo/contents/_types/content";
 import {
   isNumberSegment,
   joinRoute,
@@ -12,6 +13,7 @@ import {
   SourceRouteInputSchema,
   type SourceRouteProjectionDraft,
 } from "@repo/contents/_types/graph/schema";
+import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { Effect, Option, Schema } from "effect";
 
 /** Infers graph projection metadata from one public route projection. */
@@ -190,6 +192,12 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
     return null;
   }
 
+  const source = findTryoutSource(country, exam);
+
+  if (!source) {
+    return null;
+  }
+
   const countryRoute = joinRoute("try-out", country);
   const examRoute = exam ? joinRoute(countryRoute, exam) : countryRoute;
   const trackRoute = track ? joinRoute(examRoute, track) : examRoute;
@@ -218,6 +226,10 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
       parentRoute: countryRoute,
       route,
     } satisfies SourceRouteProjectionDraft;
+  }
+
+  if (!hasTryoutTrackSlug(source, track)) {
+    return null;
   }
 
   if (!set) {
@@ -257,6 +269,43 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
     parentRoute: setRoute,
     route,
   } satisfies SourceRouteProjectionDraft;
+}
+
+/** Finds the try-out source that owns one localized country/exam route prefix. */
+function findTryoutSource(country: string, exam: string | undefined) {
+  for (const source of TRYOUT_SOURCES) {
+    if (!hasRouteSlug(source.countryRouteSlugs, country)) {
+      continue;
+    }
+
+    if (!exam) {
+      return source;
+    }
+
+    if (hasRouteSlug(source.examRouteSlugs, exam)) {
+      return source;
+    }
+  }
+
+  return null;
+}
+
+/** Returns true when a localized track segment belongs to the source exam. */
+function hasTryoutTrackSlug(
+  source: NonNullable<ReturnType<typeof findTryoutSource>>,
+  track: string
+) {
+  return source.tracks.some((candidate) =>
+    hasRouteSlug(candidate.routeSlugs, track)
+  );
+}
+
+/** Compares decoded route slugs to a normalized projection segment. */
+function hasRouteSlug(
+  slugs: Readonly<{ [Key in Locale]: string }>,
+  segment: string
+) {
+  return Object.values(slugs).some((slug) => slug === segment);
 }
 
 /** Projects a curriculum-neutral lesson material route into graph metadata. */

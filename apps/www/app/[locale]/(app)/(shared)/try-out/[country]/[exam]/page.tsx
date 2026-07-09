@@ -63,6 +63,7 @@ export default async function Page(props: {
             {
               href: getTryoutHref({ country }),
               label: tCommon("try-out"),
+              menuLabel: tCommon("try-out-short"),
             },
             { label: route?.title ?? exam },
           ]}

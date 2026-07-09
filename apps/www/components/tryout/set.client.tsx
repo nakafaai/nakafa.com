@@ -60,6 +60,7 @@ export function TryoutSetPageClient({
           countryKey: page.set.countryKey,
           examKey: page.set.examKey,
           locale,
+          ...(isInternalEntry ? { sectionKey: entrySection.sectionKey } : {}),
           setKey: page.set.setKey,
           trackKey: page.set.trackKey,
         }

@@ -377,7 +377,7 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-rational-section",
         description: "SMA TKA Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
-        route: "try-out/indonesia/tka/set-1/mathematics",
+        route: "try-out/indonesia/tka/mathematics/set-1",
         section: "tryout",
         syncedAt: 1,
         text: "Latihan fungsi rasional kelas 11.",
@@ -397,7 +397,7 @@ describe("contents/queries/search:search", () => {
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "try-out/indonesia/tka/set-1/mathematics"
+          "try-out/indonesia/tka/mathematics/set-1"
         ),
       })
     );

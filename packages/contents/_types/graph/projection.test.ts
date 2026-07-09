@@ -105,7 +105,13 @@ describe("source route projection", () => {
   });
 
   it("rejects malformed projections instead of inferring partial route identity", () => {
+    expect(getSourceRouteProjectionForRoute("unknown/root")).toBeNull();
+    expect(getSourceRouteProjectionForRoute("articles/politics")).toBeNull();
     expect(getSourceRouteProjectionForRoute("quran")).toBeNull();
+    expect(getSourceRouteProjectionForRoute("try-out/malaysia")).toBeNull();
+    expect(
+      getSourceRouteProjectionForRoute("try-out/indonesia/unknown")
+    ).toBeNull();
     expect(
       getSourceRouteProjectionForRoute(
         "try-out/indonesia/snbt/2027/set-1/unknown-section/extra"
@@ -123,6 +129,14 @@ describe("source route projection", () => {
     expect(
       getSourceRouteProjectionForRoute(
         "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge/extra"
+      )
+    ).toBeNull();
+    expect(
+      getSourceRouteProjectionForRoute("try-out/indonesia/snbt/set-1")
+    ).toBeNull();
+    expect(
+      getSourceRouteProjectionForRoute(
+        "try-out/indonesia/snbt/set-1/quantitative-knowledge"
       )
     ).toBeNull();
     expect(

@@ -21,6 +21,7 @@ import type { ReactNode } from "react";
 export type TryoutBreadcrumbItem = Readonly<{
   href?: string;
   label: string;
+  menuLabel?: string;
 }>;
 
 /** Renders the sticky try-out navigation header used by chooser pages. */
@@ -96,10 +97,10 @@ function TryoutBreadcrumbMenu({
                   render={
                     item.href ? (
                       <NavigationLink href={item.href}>
-                        {item.label}
+                        {item.menuLabel ?? item.label}
                       </NavigationLink>
                     ) : (
-                      <span>{item.label}</span>
+                      <span>{item.menuLabel ?? item.label}</span>
                     )
                   }
                 />

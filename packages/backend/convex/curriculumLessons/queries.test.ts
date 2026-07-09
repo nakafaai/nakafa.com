@@ -342,7 +342,7 @@ async function insertTryoutCounter(
     readonly suffix: string;
   }
 ) {
-  const sourcePath = `try-out/indonesia/snbt/${input.suffix}`;
+  const sourcePath = "try-out/indonesia/snbt/2027/set-1";
   const identity = createLearningGraphIdentityFromRoute({
     locale: "en",
     route: sourcePath,
