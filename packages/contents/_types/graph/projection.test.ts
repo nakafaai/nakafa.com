@@ -150,10 +150,31 @@ describe("source route projection", () => {
         "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
       )
     ).toMatchObject({ kind: "tryout-section" });
+    expect(
+      getSourceRouteProjectionForRoute(
+        "try-out/indonesia/snbt/2027/set-2/general-reasoning"
+      )
+    ).toMatchObject({ kind: "tryout-section" });
     expect(getSourceRouteProjectionForRoute("material/video/topic")).toBeNull();
     expect(
       getSourceRouteProjectionForRoute("try-out/indonesia/snbt/2027/set-1/1")
-    ).toMatchObject({ kind: "tryout-section" });
+    ).toBeNull();
+    expect(
+      getSourceRouteProjectionForRoute("try-out/indonesia/snbt/2027/missing")
+    ).toBeNull();
+    expect(
+      getSourceRouteProjectionForRoute(
+        "try-out/indonesia/snbt/2027/set-1/missing"
+      )
+    ).toBeNull();
+    expect(
+      getSourceRouteProjectionForRoute(
+        "try-out/indonesia/tka/matematika/set-1/matematika"
+      )
+    ).toBeNull();
+    expect(
+      getSourceRouteProjectionForRoute("try-out/indonesia/tka/matematika/set-1")
+    ).toMatchObject({ kind: "tryout-set" });
   });
 
   it("keeps declared kind validation next to the projection spec", () => {

@@ -228,7 +228,9 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
     } satisfies SourceRouteProjectionDraft;
   }
 
-  if (!hasTryoutTrackSlug(source, track)) {
+  const sourceTrack = findTryoutTrack(source, track);
+
+  if (!sourceTrack) {
     return null;
   }
 
@@ -243,6 +245,12 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
     } satisfies SourceRouteProjectionDraft;
   }
 
+  const sourceSet = findTryoutSet(sourceTrack, set);
+
+  if (!sourceSet) {
+    return null;
+  }
+
   if (!section) {
     return {
       conceptSegments: ["tryout", country, exam, track, set],
@@ -252,6 +260,10 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
       parentRoute: trackRoute,
       route,
     } satisfies SourceRouteProjectionDraft;
+  }
+
+  if (!findTryoutVisibleSection(sourceSet, section)) {
+    return null;
   }
 
   return {
@@ -290,15 +302,34 @@ function findTryoutSource(country: string, exam: string | undefined) {
   return null;
 }
 
-/** Returns true when a localized track segment belongs to the source exam. */
-function hasTryoutTrackSlug(
-  source: NonNullable<ReturnType<typeof findTryoutSource>>,
-  track: string
-) {
-  return source.tracks.some((candidate) =>
+/** Finds the source track that owns one localized track route segment. */
+function findTryoutTrack(source: TryoutSource, track: string) {
+  return source.tracks.find((candidate) =>
     hasRouteSlug(candidate.routeSlugs, track)
   );
 }
+
+/** Finds the source set that owns one localized set route segment. */
+function findTryoutSet(track: TryoutTrack, set: string) {
+  return track.sets.find((candidate) =>
+    hasRouteSlug(candidate.routeSlugs, set)
+  );
+}
+
+/** Finds a public visible section that owns one localized section route segment. */
+function findTryoutVisibleSection(set: TryoutSet, section: string) {
+  return set.sections.find((candidate) => {
+    if (candidate.visibility === "internal-entry") {
+      return false;
+    }
+
+    return hasRouteSlug(candidate.routeSlugs, section);
+  });
+}
+
+type TryoutSource = NonNullable<ReturnType<typeof findTryoutSource>>;
+type TryoutTrack = TryoutSource["tracks"][number];
+type TryoutSet = TryoutTrack["sets"][number];
 
 /** Compares decoded route slugs to a normalized projection segment. */
 function hasRouteSlug(
