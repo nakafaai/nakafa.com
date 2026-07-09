@@ -11,7 +11,7 @@ export function TryoutPartSummary({ children }: { children: ReactNode }) {
 
 /** Stacks the summary lead metrics and CTAs. */
 export function TryoutPartBody({ children }: { children: ReactNode }) {
-  return <div className="flex flex-col gap-2">{children}</div>;
+  return <div className="flex flex-col gap-4">{children}</div>;
 }
 
 /** Holds the primary summary metrics. */

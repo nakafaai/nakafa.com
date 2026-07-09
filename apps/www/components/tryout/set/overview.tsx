@@ -48,6 +48,7 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
           <TryoutSetAction
             value={{
               activeAttempt: value.activeAttempt,
+              currentHref: setHref,
               currentAttempt: value.actionAttempt,
               entryHref: value.entryHref,
               entrySection: value.entrySection,

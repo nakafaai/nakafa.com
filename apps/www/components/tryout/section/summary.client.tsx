@@ -223,6 +223,7 @@ function TryoutSummaryCta({ value }: { value: TryoutSummaryActionValue }) {
   }
 
   const request: StartTryoutRequest = {
+    authRedirectHref: value.sectionHref,
     countryKey: value.set.countryKey,
     entrySectionKey: value.startAttemptSectionKey,
     examKey: value.set.examKey,

@@ -19,6 +19,7 @@ type CurrentAttempt = FunctionReturnType<
 export interface TryoutSetActionValue {
   activeAttempt: NonNullable<CurrentAttempt> | null;
   currentAttempt?: CurrentAttempt;
+  currentHref: string;
   entryHref: string;
   entrySection: SetEntrySection | null;
   locale: Locale;
@@ -36,6 +37,7 @@ export function TryoutSetAction({ value }: { value: TryoutSetActionValue }) {
       ? value.entrySection.sectionKey
       : undefined;
   const request: StartTryoutRequest = {
+    authRedirectHref: value.currentHref,
     countryKey: value.set.countryKey,
     entrySectionKey,
     examKey: value.set.examKey,

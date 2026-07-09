@@ -21,6 +21,7 @@ type CurrentAttempt = FunctionReturnType<
 >;
 
 export interface StartTryoutRequest {
+  authRedirectHref: string;
   countryKey: string;
   entrySectionKey?: string;
   examKey: string;
@@ -35,7 +36,7 @@ interface StartTryoutButtonProps {
   request: StartTryoutRequest;
 }
 
-/** Starts a Convex-owned try-out attempt and opens the first section on success. */
+/** Starts or resumes a Convex-owned try-out attempt from the current page. */
 export function StartTryoutButton({
   attempt,
   request,
@@ -48,7 +49,7 @@ export function StartTryoutButton({
   const [isPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const authRedirectHref = `/${request.locale}${request.firstSectionHref}`;
+  const authRedirectHref = `/${request.locale}${request.authRedirectHref}`;
   const hasActiveAttempt = attempt?.status === "in-progress";
   const hasFinishedAttempt = Boolean(attempt && !hasActiveAttempt);
   const isAttemptLoading = isAuthenticated && attempt === undefined;
@@ -139,10 +140,7 @@ export function StartTryoutButton({
           Effect.tap(() =>
             Effect.sync(() => {
               closeDialog();
-              router.push(request.firstSectionHref);
-              if (request.entrySectionKey) {
-                router.refresh();
-              }
+              router.refresh();
               const successMessage = isDirectEntry
                 ? tTryouts("start-entry-success")
                 : tTryouts("start-success");

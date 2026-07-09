@@ -82,6 +82,14 @@ export function TryoutSectionPageClient({
     return null;
   }
 
+  if (isLoading) {
+    return null;
+  }
+
+  if (isAuthenticated && attempt === undefined) {
+    return null;
+  }
+
   const activeAttempt = getActiveAttempt(currentAttempt ?? null, now);
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt

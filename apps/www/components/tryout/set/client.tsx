@@ -78,6 +78,14 @@ export function TryoutSetPageClient({
     return null;
   }
 
+  if (isLoading) {
+    return null;
+  }
+
+  if (isAuthenticated && attempt === undefined) {
+    return null;
+  }
+
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
       ? null
@@ -105,10 +113,6 @@ export function TryoutSetPageClient({
   const runtimeContent = activeRuntime ?? reviewRuntime;
   const hasActiveEntrySection =
     isInternalEntry && activeAttempt?.section?.status === "in-progress";
-
-  if (isInternalEntry && isAuthenticated && attempt === undefined) {
-    return null;
-  }
 
   if (hasActiveEntrySection && !activeRuntime) {
     return null;
