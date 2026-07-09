@@ -36,18 +36,27 @@ export default async function Page(props: {
   let questions: TryoutQuestionContent[] = [];
 
   if (page.entrySection?.visibility === "internal-entry") {
-    const runtime = await preloadAuthQuery(
-      api.tryouts.queries.attempt.getSectionRuntime,
-      {
-        countryKey: page.set.countryKey,
-        examKey: page.set.examKey,
-        locale,
-        sectionKey: page.entrySection.sectionKey,
-        setKey: page.set.setKey,
-        trackKey: page.set.trackKey,
-      }
+    const runtimeArgs = {
+      countryKey: page.set.countryKey,
+      examKey: page.set.examKey,
+      locale,
+      sectionKey: page.entrySection.sectionKey,
+      setKey: page.set.setKey,
+      trackKey: page.set.trackKey,
+    };
+    const currentAttempt = await preloadAuthQuery(
+      api.tryouts.queries.attempt.getCurrent,
+      runtimeArgs
     );
-    const runtimeContent = preloadedQueryResult(runtime);
+    const currentAttemptContent = preloadedQueryResult(currentAttempt);
+    const runtime =
+      currentAttemptContent?.status === "in-progress"
+        ? await preloadAuthQuery(
+            api.tryouts.queries.attempt.getSectionRuntime,
+            runtimeArgs
+          )
+        : null;
+    const runtimeContent = runtime ? preloadedQueryResult(runtime) : null;
 
     if (runtimeContent) {
       const loadedQuestions = await loadTryoutQuestionContent({

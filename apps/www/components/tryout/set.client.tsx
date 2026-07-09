@@ -66,6 +66,11 @@ export function TryoutSetPageClient({
         }
       : "skip"
   );
+  const tCommon = useTranslations("Common");
+  const tTryouts = useTranslations("Tryouts");
+  const currentAttempt = isAuthenticated ? attempt : null;
+  const now = useTryoutClock(currentAttempt?.status === "in-progress");
+  const activeAttempt = getActiveAttempt(currentAttempt ?? null, now);
   const shouldLoadRuntime =
     page !== null &&
     entrySection !== null &&
@@ -73,7 +78,7 @@ export function TryoutSetPageClient({
     isAuthenticated &&
     !isLoading &&
     attempt !== undefined &&
-    attempt !== null;
+    activeAttempt !== null;
   const runtime = useQuery(
     api.tryouts.queries.attempt.getSectionRuntime,
     shouldLoadRuntime
@@ -87,16 +92,11 @@ export function TryoutSetPageClient({
         }
       : "skip"
   );
-  const tCommon = useTranslations("Common");
-  const tTryouts = useTranslations("Tryouts");
-  const currentAttempt = isAuthenticated ? attempt : null;
-  const now = useTryoutClock(currentAttempt?.status === "in-progress");
 
   if (!page) {
     return null;
   }
 
-  const activeAttempt = getActiveAttempt(currentAttempt ?? null, now);
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
       ? null
@@ -119,11 +119,7 @@ export function TryoutSetPageClient({
   const activeRuntime = isInternalEntry
     ? getActiveRuntime(runtime ?? null, activeAttempt, now)
     : null;
-  const reviewRuntime =
-    isInternalEntry && runtime && runtime.section.status !== "in-progress"
-      ? runtime
-      : null;
-  const runtimeContent = activeRuntime ?? reviewRuntime;
+  const runtimeContent = activeRuntime;
   const hasActiveEntrySection =
     isInternalEntry && activeAttempt?.section?.status === "in-progress";
 
@@ -145,13 +141,12 @@ export function TryoutSetPageClient({
         activeAttempt={activeAttempt}
         activeRuntime={activeRuntime}
         country={country}
-        currentAttempt={actionAttempt}
+        currentAttempt={activeAttempt}
         entryQuestions={entryQuestions}
         entrySection={entrySection}
         exam={exam}
         locale={locale}
         page={page}
-        reviewRuntime={reviewRuntime}
         set={set}
         track={track}
       />
@@ -227,7 +222,6 @@ function TryoutInternalEntrySetPage({
   exam,
   locale,
   page,
-  reviewRuntime,
   set,
   track,
 }: {
@@ -240,7 +234,6 @@ function TryoutInternalEntrySetPage({
   exam: string;
   locale: Locale;
   page: SetPage;
-  reviewRuntime: NonNullable<SectionRuntime> | null;
   set: string;
   track: string;
 }) {
@@ -248,7 +241,7 @@ function TryoutInternalEntrySetPage({
   const tTryouts = useTranslations("Tryouts");
   const entryHref = getTryoutHref({ country, exam, set, track });
   const parentHref = getTryoutHref({ country, exam, track });
-  const runtimeContent = activeRuntime ?? reviewRuntime;
+  const runtimeContent = activeRuntime;
   const sectionAttempt = currentAttempt?.section ?? null;
   const sectionFinished = Boolean(
     sectionAttempt &&
