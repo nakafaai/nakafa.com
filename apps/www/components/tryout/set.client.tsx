@@ -78,7 +78,7 @@ export function TryoutSetPageClient({
     isAuthenticated &&
     !isLoading &&
     attempt !== undefined &&
-    activeAttempt !== null;
+    isEntrySectionRuntimeAvailable(currentAttempt ?? null, activeAttempt);
   const runtime = useQuery(
     api.tryouts.queries.attempt.getSectionRuntime,
     shouldLoadRuntime
@@ -119,7 +119,11 @@ export function TryoutSetPageClient({
   const activeRuntime = isInternalEntry
     ? getActiveRuntime(runtime ?? null, activeAttempt, now)
     : null;
-  const runtimeContent = activeRuntime;
+  const reviewRuntime =
+    isInternalEntry && runtime && runtime.section.status !== "in-progress"
+      ? runtime
+      : null;
+  const runtimeContent = activeRuntime ?? reviewRuntime;
   const hasActiveEntrySection =
     isInternalEntry && activeAttempt?.section?.status === "in-progress";
 
@@ -147,6 +151,7 @@ export function TryoutSetPageClient({
         exam={exam}
         locale={locale}
         page={page}
+        reviewRuntime={reviewRuntime}
         set={set}
         track={track}
       />
@@ -222,6 +227,7 @@ function TryoutInternalEntrySetPage({
   exam,
   locale,
   page,
+  reviewRuntime,
   set,
   track,
 }: {
@@ -234,6 +240,7 @@ function TryoutInternalEntrySetPage({
   exam: string;
   locale: Locale;
   page: SetPage;
+  reviewRuntime: NonNullable<SectionRuntime> | null;
   set: string;
   track: string;
 }) {
@@ -241,7 +248,7 @@ function TryoutInternalEntrySetPage({
   const tTryouts = useTranslations("Tryouts");
   const entryHref = getTryoutHref({ country, exam, set, track });
   const parentHref = getTryoutHref({ country, exam, track });
-  const runtimeContent = activeRuntime;
+  const runtimeContent = activeRuntime ?? reviewRuntime;
   const sectionAttempt = currentAttempt?.section ?? null;
   const sectionFinished = Boolean(
     sectionAttempt &&
@@ -345,6 +352,21 @@ function getActiveRuntime(
   }
 
   return runtime;
+}
+
+/** Returns true when direct-entry pages can load active or review runtime. */
+function isEntrySectionRuntimeAvailable(
+  attempt: CurrentAttempt,
+  activeAttempt: NonNullable<CurrentAttempt> | null
+) {
+  if (activeAttempt) {
+    return true;
+  }
+
+  return (
+    attempt?.section?.status === "completed" ||
+    attempt?.section?.status === "expired"
+  );
 }
 
 /** Builds the href for either a visible public section or an internal set entry. */

@@ -1,5 +1,6 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
+import type { FunctionReturnType } from "convex/server";
 import { notFound } from "next/navigation";
 import {
   loadTryoutQuestionContent,
@@ -9,6 +10,10 @@ import { getTryoutHref } from "@/components/tryout/routes";
 import { TryoutSetPageClient } from "@/components/tryout/set.client";
 import { preloadAuthQuery } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+
+type CurrentAttempt = FunctionReturnType<
+  typeof api.tryouts.queries.attempt.getCurrent
+>;
 
 /** Renders one try-out set and its section list. */
 export default async function Page(props: {
@@ -49,13 +54,12 @@ export default async function Page(props: {
       runtimeArgs
     );
     const currentAttemptContent = preloadedQueryResult(currentAttempt);
-    const runtime =
-      currentAttemptContent?.status === "in-progress"
-        ? await preloadAuthQuery(
-            api.tryouts.queries.attempt.getSectionRuntime,
-            runtimeArgs
-          )
-        : null;
+    const runtime = isEntrySectionRuntimeAvailable(currentAttemptContent)
+      ? await preloadAuthQuery(
+          api.tryouts.queries.attempt.getSectionRuntime,
+          runtimeArgs
+        )
+      : null;
     const runtimeContent = runtime ? preloadedQueryResult(runtime) : null;
 
     if (runtimeContent) {
@@ -82,5 +86,21 @@ export default async function Page(props: {
       set={set}
       track={track}
     />
+  );
+}
+
+/** Returns true when the direct-entry set can render active or review runtime. */
+function isEntrySectionRuntimeAvailable(attempt: CurrentAttempt) {
+  if (!attempt) {
+    return false;
+  }
+
+  if (attempt.status === "in-progress") {
+    return true;
+  }
+
+  return (
+    attempt.section?.status === "completed" ||
+    attempt.section?.status === "expired"
   );
 }
