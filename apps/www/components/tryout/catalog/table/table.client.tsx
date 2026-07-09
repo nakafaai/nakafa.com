@@ -115,7 +115,7 @@ export function TryoutSetTable({
   return (
     <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-6">
       <div className="flex flex-col gap-4">
-        <TryoutSetTableToolbar table={table} />
+        <TryoutSetTableToolbar table={table} visibility={columnVisibility} />
         <div className="overflow-hidden rounded-md border">
           <Table className="table-fixed">
             <TableHeader>

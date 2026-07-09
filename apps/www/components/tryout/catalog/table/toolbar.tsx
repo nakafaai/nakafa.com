@@ -11,11 +11,17 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import type { Column, Table } from "@tanstack/react-table";
+import type { Column, Table, VisibilityState } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 
-function TryoutSetColumnToggle({ column }: { column: Column<TryoutSetRow> }) {
+function TryoutSetColumnToggle({
+  column,
+  visible,
+}: {
+  column: Column<TryoutSetRow>;
+  visible: boolean;
+}) {
   const tTryouts = useTranslations("Tryouts");
   let label = tTryouts("set-column-status");
 
@@ -29,7 +35,7 @@ function TryoutSetColumnToggle({ column }: { column: Column<TryoutSetRow> }) {
 
   return (
     <DropdownMenuCheckboxItem
-      checked={column.getIsVisible()}
+      checked={visible}
       onCheckedChange={(checked) => column.toggleVisibility(checked)}
     >
       {label}
@@ -40,8 +46,10 @@ function TryoutSetColumnToggle({ column }: { column: Column<TryoutSetRow> }) {
 /** Renders the compact column visibility controls for the set table. */
 export function TryoutSetTableToolbar({
   table,
+  visibility,
 }: {
   table: Table<TryoutSetRow>;
+  visibility: VisibilityState;
 }) {
   const tTryouts = useTranslations("Tryouts");
   const columns = table.getAllColumns().filter((column) => column.getCanHide());
@@ -61,7 +69,11 @@ export function TryoutSetTableToolbar({
               {tTryouts("set-columns-menu-label")}
             </DropdownMenuLabel>
             {columns.map((column) => (
-              <TryoutSetColumnToggle column={column} key={column.id} />
+              <TryoutSetColumnToggle
+                column={column}
+                key={column.id}
+                visible={visibility[column.id] ?? true}
+              />
             ))}
           </DropdownMenuGroup>
         </DropdownMenuContent>
