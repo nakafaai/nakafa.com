@@ -22,16 +22,18 @@ import { useQuery } from "convex/react";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
+import { tryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { TryoutSetTablePager } from "@/components/tryout/catalog/table/pager";
 import { readTryoutSetSort } from "@/components/tryout/catalog/table/sort";
 import { TryoutSetTableToolbar } from "@/components/tryout/catalog/table/toolbar";
 import type {
   TryoutSetPagerValue,
+  TryoutSetRow,
   TryoutTrackPage,
 } from "@/components/tryout/catalog/table/types";
 
 const PAGE_SIZE = 8;
+const EMPTY_ROWS: TryoutSetRow[] = [];
 
 /** Renders one realtime, server-sorted try-out set discovery table. */
 export function TryoutSetTable({
@@ -42,7 +44,6 @@ export function TryoutSetTable({
   page: TryoutTrackPage;
 }) {
   const tTryouts = useTranslations("Tryouts");
-  const columns = useTryoutSetColumns();
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [cursors, setCursors] = useState<readonly (string | null)[]>([null]);
   const [pageIndex, setPageIndex] = useState(0);
@@ -63,9 +64,11 @@ export function TryoutSetTable({
     setPageIndex(0);
   };
 
+  // TanStack's supported React adapter intentionally owns this narrow state boundary.
+  // react-doctor-disable-next-line react-hooks-js/incompatible-library
   const table = useReactTable({
-    columns,
-    data: result?.page ?? [],
+    columns: tryoutSetColumns,
+    data: result?.page ?? EMPTY_ROWS,
     enableMultiSort: false,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.setKey,

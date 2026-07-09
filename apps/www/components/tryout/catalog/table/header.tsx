@@ -9,6 +9,12 @@ import type { Column } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 
+export type TryoutSetColumnLabel =
+  | "set-column-name"
+  | "set-column-questions"
+  | "set-column-sections"
+  | "set-column-status";
+
 function getSortIcon(direction: false | "asc" | "desc") {
   if (direction === "asc") {
     return SortingUpIcon;
@@ -24,13 +30,14 @@ function getSortIcon(direction: false | "asc" | "desc") {
 /** Renders one accessible server-sorted set table heading. */
 export function TryoutSetTableHeader({
   column,
-  label,
+  labelKey,
 }: {
   column: Column<TryoutSetRow>;
-  label: string;
+  labelKey: TryoutSetColumnLabel;
 }) {
   const tTryouts = useTranslations("Tryouts");
   const direction = column.getIsSorted();
+  const label = tTryouts(labelKey);
 
   return (
     <Button
@@ -45,4 +52,15 @@ export function TryoutSetTableHeader({
       <HugeIcons data-icon="inline-end" icon={getSortIcon(direction)} />
     </Button>
   );
+}
+
+/** Renders one localized, non-sortable set table heading. */
+export function TryoutSetTableLabel({
+  labelKey,
+}: {
+  labelKey: TryoutSetColumnLabel;
+}) {
+  const tTryouts = useTranslations("Tryouts");
+
+  return tTryouts(labelKey);
 }
