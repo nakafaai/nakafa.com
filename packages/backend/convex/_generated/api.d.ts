@@ -118,9 +118,6 @@ import type * as contentSync_mutations_articles from "../contentSync/mutations/a
 import type * as contentSync_mutations_authors from "../contentSync/mutations/authors.js";
 import type * as contentSync_mutations_curriculum from "../contentSync/mutations/curriculum.js";
 import type * as contentSync_mutations_quran from "../contentSync/mutations/quran.js";
-import type * as contentSync_mutations_readModels_assessments from "../contentSync/mutations/readModels/assessments.js";
-import type * as contentSync_mutations_readModels_curricula from "../contentSync/mutations/readModels/curricula.js";
-import type * as contentSync_mutations_readModels_materials from "../contentSync/mutations/readModels/materials.js";
 import type * as contentSync_mutations_readModels_routes from "../contentSync/mutations/readModels/routes.js";
 import type * as contentSync_mutations_readModels_stale from "../contentSync/mutations/readModels/stale.js";
 import type * as contentSync_mutations_routes from "../contentSync/mutations/routes.js";
@@ -430,9 +427,6 @@ declare const fullApi: ApiFromModules<{
   "contentSync/mutations/authors": typeof contentSync_mutations_authors;
   "contentSync/mutations/curriculum": typeof contentSync_mutations_curriculum;
   "contentSync/mutations/quran": typeof contentSync_mutations_quran;
-  "contentSync/mutations/readModels/assessments": typeof contentSync_mutations_readModels_assessments;
-  "contentSync/mutations/readModels/curricula": typeof contentSync_mutations_readModels_curricula;
-  "contentSync/mutations/readModels/materials": typeof contentSync_mutations_readModels_materials;
   "contentSync/mutations/readModels/routes": typeof contentSync_mutations_readModels_routes;
   "contentSync/mutations/readModels/stale": typeof contentSync_mutations_readModels_stale;
   "contentSync/mutations/routes": typeof contentSync_mutations_routes;

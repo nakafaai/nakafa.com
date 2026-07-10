@@ -65,41 +65,6 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "learning popularity counter rows",
   },
   {
-    label: "Deleting generated assessment nodes...",
-    mutation: reset.deleteAssessmentNodesBatch,
-    resultLabel: "generated assessment nodes",
-  },
-  {
-    label: "Deleting generated assessments...",
-    mutation: reset.deleteAssessmentsBatch,
-    resultLabel: "generated assessments",
-  },
-  {
-    label: "Deleting generated curriculum material links...",
-    mutation: reset.deleteCurriculumMaterialsBatch,
-    resultLabel: "generated curriculum material links",
-  },
-  {
-    label: "Deleting generated curriculum nodes...",
-    mutation: reset.deleteCurriculumNodesBatch,
-    resultLabel: "generated curriculum nodes",
-  },
-  {
-    label: "Deleting generated curricula...",
-    mutation: reset.deleteCurriculaBatch,
-    resultLabel: "generated curricula",
-  },
-  {
-    label: "Deleting generated material locale rows...",
-    mutation: reset.deleteMaterialLocalesBatch,
-    resultLabel: "generated material locale rows",
-  },
-  {
-    label: "Deleting generated material rows...",
-    mutation: reset.deleteMaterialsBatch,
-    resultLabel: "generated material rows",
-  },
-  {
     label: "Deleting generated learning plan items...",
     mutation: reset.deleteLearningPlanItemsBatch,
     resultLabel: "generated learning plan items",

@@ -84,13 +84,6 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Viewer Signals:        ${counts.learningPopularityViewerSignals}`);
   log(`  Popularity Signals:    ${counts.learningPopularitySignals}`);
   log(`  Popularity Counters:   ${counts.learningPopularityCounters}`);
-  log(`  Materials:             ${counts.materials}`);
-  log(`  Material Locales:      ${counts.materialLocales}`);
-  log(`  Curricula:             ${counts.curricula}`);
-  log(`  Curriculum Nodes:      ${counts.curriculumNodes}`);
-  log(`  Curriculum Materials:  ${counts.curriculumMaterials}`);
-  log(`  Assessments:           ${counts.assessments}`);
-  log(`  Assessment Nodes:      ${counts.assessmentNodes}`);
   log(`  Learning Programs:     ${counts.learningPrograms}`);
   log(`  Learning Program Srcs: ${counts.learningProgramSources}`);
   log(`  Learning Plan Items:   ${counts.learningPlanItems}`);
@@ -187,13 +180,6 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.learningPopularityViewerSignals +
     counts.learningPopularitySignals +
     counts.learningPopularityCounters +
-    counts.materials +
-    counts.materialLocales +
-    counts.curricula +
-    counts.curriculumNodes +
-    counts.curriculumMaterials +
-    counts.assessments +
-    counts.assessmentNodes +
     counts.learningPlanItems +
     counts.learningProgramCoverage +
     counts.contentRoutes +

@@ -24,7 +24,6 @@ import {
   listLessonRows,
 } from "@repo/contents/_types/material/registry";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
-import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
 /** Logs a bounded integrity sample and reports whether the verifier found issues. */
@@ -76,38 +75,17 @@ function getExpectedQuranCounts() {
   };
 }
 
-/** Builds final read-model count targets from typed material and curriculum sources. */
-const getExpectedGeneratedCounts = Effect.fn("sync.expectedGeneratedCounts")(
-  function* (options: SyncOptions) {
-    const materialTopics = listLessonRows(options.locale);
+/** Builds curriculum count targets from the source-owned material registry. */
+function getExpectedCurriculumCounts(options: SyncOptions) {
+  const materialTopics = listLessonRows(options.locale);
 
-    return {
-      curriculumLessons: materialTopics.reduce(
-        (total, topic) => total + topic.sections.length,
-        0
-      ),
-      curriculumTopics: materialTopics.length,
-      materialLocales: getExpectedLessonMaterialLocales(options),
-    };
-  }
-);
-
-/**
- * Counts lesson material locale rows from source-authored sections so verify
- * compares Convex against the same projection inputs used by sync.
- */
-function getExpectedLessonMaterialLocales(options: SyncOptions) {
-  const localeCount = getExpectedLocaleCount(options);
-
-  return listLessonMaterialSources().reduce(
-    (total, material) => total + material.sections.length * localeCount,
-    0
-  );
-}
-
-/** Counts the locales a verify run should expect after optional locale scoping. */
-function getExpectedLocaleCount(options: SyncOptions) {
-  return options.locale ? 1 : locales.length;
+  return {
+    curriculumLessons: materialTopics.reduce(
+      (total, topic) => total + topic.sections.length,
+      0
+    ),
+    curriculumTopics: materialTopics.length,
+  };
 }
 
 /** Verifies filesystem content counts against Convex read models. */
@@ -149,7 +127,7 @@ export const verify = Effect.fn("sync.verify")(function* (
   );
   const lessonSourceCount = listLessonMaterialSources().length;
   const tryoutSourceCount = TRYOUT_SOURCES.length;
-  const expectedGeneratedCounts = yield* getExpectedGeneratedCounts(options);
+  const expectedCurriculumCounts = getExpectedCurriculumCounts(options);
   const tryoutFileCounts = getTryoutFileCounts({
     answerFiles,
     choicesFiles,
@@ -203,13 +181,6 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   log("Content tables:");
   log(`  articleContents:     ${counts.articles}`);
-  log(`  materials:           ${counts.materials}`);
-  log(`  materialLocales:     ${counts.materialLocales}`);
-  log(`  curricula:           ${counts.curricula}`);
-  log(`  curriculumNodes:     ${counts.curriculumNodes}`);
-  log(`  curriculumMaterials: ${counts.curriculumMaterials}`);
-  log(`  assessments:         ${counts.assessments}`);
-  log(`  assessmentNodes:     ${counts.assessmentNodes}`);
   log(`  curriculumTopics:       ${counts.curriculumTopics}`);
   log(`  curriculumLessons:     ${counts.curriculumLessons}`);
   log(`  questionSets:        ${counts.questionSets}`);
@@ -250,20 +221,14 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   allMatch =
     logCountMatch({
-      actual: counts.materialLocales,
-      expected: expectedGeneratedCounts.materialLocales,
-      label: "Material Locales",
-    }) && allMatch;
-  allMatch =
-    logCountMatch({
       actual: counts.curriculumTopics,
-      expected: expectedGeneratedCounts.curriculumTopics,
+      expected: expectedCurriculumCounts.curriculumTopics,
       label: "Curriculum Topics",
     }) && allMatch;
   allMatch =
     logCountMatch({
       actual: counts.curriculumLessons,
-      expected: expectedGeneratedCounts.curriculumLessons,
+      expected: expectedCurriculumCounts.curriculumLessons,
       label: "Curriculum Lessons",
     }) && allMatch;
 

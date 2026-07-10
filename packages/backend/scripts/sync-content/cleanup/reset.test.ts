@@ -70,15 +70,8 @@ const emptyCounts = {
   irtScaleQualityChecks: 0,
   irtScaleQualityRefreshQueue: 0,
   irtScaleVersions: 0,
-  assessmentNodes: 0,
-  assessments: 0,
-  curricula: 0,
-  curriculumMaterials: 0,
-  curriculumNodes: 0,
   quranSurahs: 0,
   quranVerses: 0,
-  materialLocales: 0,
-  materials: 0,
   questionChoices: 0,
   questions: 0,
   questionSets: 0,
@@ -241,59 +234,6 @@ describe("sync-content reset", () => {
 
     expect(planItemsIndex).toBeGreaterThanOrEqual(0);
     expect(coverageIndex).toBeGreaterThan(planItemsIndex);
-  });
-
-  it("deletes final generated read models during forced reset", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({
-        ...emptyCounts,
-        assessmentNodes: 1,
-        assessments: 1,
-        curricula: 1,
-        curriculumMaterials: 1,
-        curriculumNodes: 1,
-        materialLocales: 1,
-        materials: 1,
-      })
-    );
-
-    await Effect.runPromise(reset(config, { force: true }));
-
-    const mutations = vi
-      .mocked(callConvexMutation)
-      .mock.calls.map(([, mutation]) => getFunctionName(mutation));
-
-    expect(mutations).toContain(
-      getFunctionName(internal.contentSync.reset.internal.deleteMaterialsBatch)
-    );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteMaterialLocalesBatch
-      )
-    );
-    expect(mutations).toContain(
-      getFunctionName(internal.contentSync.reset.internal.deleteCurriculaBatch)
-    );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteCurriculumNodesBatch
-      )
-    );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteCurriculumMaterialsBatch
-      )
-    );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteAssessmentsBatch
-      )
-    );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteAssessmentNodesBatch
-      )
-    );
   });
 
   it("does not delete selected program catalog rows during forced reset", async () => {

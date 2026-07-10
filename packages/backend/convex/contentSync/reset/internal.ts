@@ -64,32 +64,6 @@ export const deleteLearningPopularityCountersBatch = createBatchDeleteMutation(
   "learningPopularityCounters"
 );
 
-/** Delete one bounded batch of generated material identity rows. */
-export const deleteMaterialsBatch = createBatchDeleteMutation("materials");
-
-/** Delete one bounded batch of generated localized material rows. */
-export const deleteMaterialLocalesBatch =
-  createBatchDeleteMutation("materialLocales");
-
-/** Delete one bounded batch of generated curriculum rows. */
-export const deleteCurriculaBatch = createBatchDeleteMutation("curricula");
-
-/** Delete one bounded batch of generated curriculum node rows. */
-export const deleteCurriculumNodesBatch =
-  createBatchDeleteMutation("curriculumNodes");
-
-/** Delete one bounded batch of generated curriculum material link rows. */
-export const deleteCurriculumMaterialsBatch = createBatchDeleteMutation(
-  "curriculumMaterials"
-);
-
-/** Delete one bounded batch of generated assessment rows. */
-export const deleteAssessmentsBatch = createBatchDeleteMutation("assessments");
-
-/** Delete one bounded batch of generated assessment node rows. */
-export const deleteAssessmentNodesBatch =
-  createBatchDeleteMutation("assessmentNodes");
-
 /** Delete one bounded batch of generated learning plan item rows. */
 export const deleteLearningPlanItemsBatch =
   createBatchDeleteMutation("learningPlanItems");
