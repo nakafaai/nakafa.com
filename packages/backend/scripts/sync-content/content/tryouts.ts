@@ -140,15 +140,6 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
         const trackPublicPath = `${examPublicPath}/${trackSlug}`;
         const trackSets: TryoutSyncArgs["sets"] = [];
 
-        addTryoutRoute(routes, {
-          description: trackTranslation.description,
-          kind: "tryout-track",
-          locale,
-          publicPath: trackPublicPath,
-          sourceRevision: source.sourceRevision,
-          title: trackTranslation.title,
-        });
-
         for (const set of track.sets) {
           const setSlug = set.routeSlugs[locale];
           const setTranslation = set.translations[locale];
@@ -267,7 +258,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
           }
         }
 
-        tracks.push({
+        const trackRow = {
           countryKey: source.countryKey,
           description: trackTranslation.description,
           authoredSetCount: track.sets.length,
@@ -290,6 +281,11 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
           title: trackTranslation.title,
           trackKey: track.key,
           trackKind: track.kind,
+        };
+        tracks.push(trackRow);
+        addTryoutRoute(routes, {
+          ...trackRow,
+          kind: "tryout-track",
         });
       }
     }
@@ -307,10 +303,12 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
   };
 });
 
+/** Adds one resolvable public route, skipping catalog rows that are not ready. */
 function addTryoutRoute(
   routes: Map<string, SyncedTryoutRoute>,
   source: {
     description?: string;
+    isReady?: boolean;
     kind: TryoutRouteKind;
     locale: Locale;
     publicPath: string;
@@ -318,6 +316,10 @@ function addTryoutRoute(
     title: string;
   }
 ) {
+  if (source.isReady === false) {
+    return;
+  }
+
   const sourcePath = source.publicPath;
   const row = {
     contentHash: createTryoutRouteHash({ ...source, sourcePath }),
