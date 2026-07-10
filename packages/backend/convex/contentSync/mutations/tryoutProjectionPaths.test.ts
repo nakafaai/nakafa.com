@@ -112,10 +112,12 @@ function getGraphIdentity(route: string) {
 }
 
 describe("contentSync/mutations/tryout projection paths", () => {
-  it("deletes stale track projections when the public path changes", async () => {
+  it("updates canonical track projections when the public path changes", async () => {
     const t = convexTest(schema, convexModules);
     const oldGraph = getGraphIdentity(OLD_TRACK_ROUTE);
     const newGraph = getGraphIdentity(NEW_TRACK_ROUTE);
+
+    expect(newGraph).toEqual(oldGraph);
 
     await t.mutation(
       internal.contentSync.mutations.tryouts.bulkSyncTryouts,
@@ -127,17 +129,31 @@ describe("contentSync/mutations/tryout projection paths", () => {
     );
 
     const snapshot = await t.query(async (ctx) => {
-      const oldRoute = await ctx.db
+      const oldRoutes = await ctx.db
         .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", oldGraph.assetId))
-        .unique();
-      const oldSearch = await ctx.db
+        .withIndex("by_locale_and_sourcePath", (q) =>
+          q.eq("locale", "id").eq("sourcePath", OLD_TRACK_ROUTE)
+        )
+        .take(2);
+      const oldSearchRows = await ctx.db
         .query("contentSearch")
-        .withIndex("by_content_id", (q) => q.eq("content_id", oldGraph.assetId))
-        .unique();
-      const newRoute = await ctx.db
+        .withIndex("by_locale_and_sourcePath", (q) =>
+          q.eq("locale", "id").eq("sourcePath", OLD_TRACK_ROUTE)
+        )
+        .take(2);
+      const currentRoute = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) => q.eq("content_id", newGraph.assetId))
+        .unique();
+      const currentSearch = await ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) => q.eq("content_id", newGraph.assetId))
+        .unique();
+      const routeCount = await ctx.db
+        .query("contentRouteCounts")
+        .withIndex("by_locale_and_section", (q) =>
+          q.eq("locale", "id").eq("section", "tryout")
+        )
         .unique();
       const track = await ctx.db
         .query("tryoutTracks")
@@ -146,16 +162,29 @@ describe("contentSync/mutations/tryout projection paths", () => {
         )
         .unique();
 
-      return { newRoute, oldRoute, oldSearch, track };
+      return {
+        currentRoute,
+        currentSearch,
+        oldRoutes,
+        oldSearchRows,
+        routeCount,
+        track,
+      };
     });
 
-    expect(snapshot.oldRoute).toBeNull();
-    expect(snapshot.oldSearch).toBeNull();
-    expect(snapshot.newRoute).toMatchObject({
+    expect(snapshot.oldRoutes).toEqual([]);
+    expect(snapshot.oldSearchRows).toEqual([]);
+    expect(snapshot.currentRoute).toMatchObject({
       route: NEW_TRACK_ROUTE,
       sourcePath: NEW_TRACK_ROUTE,
       title: "Matematika",
     });
+    expect(snapshot.currentSearch).toMatchObject({
+      route: NEW_TRACK_ROUTE,
+      sourcePath: NEW_TRACK_ROUTE,
+      title: "Matematika",
+    });
+    expect(snapshot.routeCount?.count).toBe(3);
     expect(snapshot.track).toMatchObject({
       publicPath: NEW_TRACK_ROUTE,
       trackKey: "mathematics",
