@@ -1,7 +1,6 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -12,6 +11,7 @@ import { choiceCardVariants } from "@/components/shared/choice-card";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
+import { TryoutCardVisual } from "@/components/tryout/catalog/visual";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 interface TryoutHubClientProps {
@@ -64,18 +64,12 @@ export function TryoutHubClient({ locale }: TryoutHubClientProps) {
           key={country.countryKey}
           onClick={() => handleCountryClick(country)}
         >
-          <div className="relative flex aspect-video w-full items-center justify-center">
-            <GradientBlock
-              className="mask-[linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] mask-no-repeat mask-size-[100%_100%] pointer-events-none absolute inset-0 opacity-20"
-              colorScheme="vibrant"
-              intensity="medium"
-              keyString={country.publicPath}
-            />
+          <TryoutCardVisual keyString={country.publicPath}>
             <CountryFlagIcon
               className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
               countryCode={country.countryCode}
             />
-          </div>
+          </TryoutCardVisual>
           <div className="px-6 pt-3 pb-6 text-center">
             <h2>{country.title}</h2>
           </div>

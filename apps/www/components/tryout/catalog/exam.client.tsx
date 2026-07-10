@@ -1,8 +1,6 @@
 "use client";
 
 import type { api } from "@repo/backend/convex/_generated/api";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { Preloaded } from "convex/react";
 import { usePreloadedQuery } from "convex/react";
@@ -10,6 +8,10 @@ import { useTranslations } from "next-intl";
 import { choiceCardVariants } from "@/components/shared/choice-card";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
+import {
+  TryoutCardIcon,
+  TryoutCardVisual,
+} from "@/components/tryout/catalog/visual";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type ExamPageQuery = typeof api.tryouts.queries.catalog.getExamPage;
@@ -43,21 +45,9 @@ export function TryoutExamPageClient({
               href={getTryoutPublicPathHref(track.publicPath)}
               key={track.trackKey}
             >
-              <div className="relative flex aspect-video w-full items-center justify-center">
-                <GradientBlock
-                  className="mask-[linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] mask-no-repeat mask-size-[100%_100%] pointer-events-none absolute inset-0 opacity-20"
-                  colorScheme="vibrant"
-                  intensity="medium"
-                  keyString={track.publicPath}
-                />
-                {icon ? (
-                  <HugeIcons
-                    aria-hidden
-                    className="relative size-6 text-foreground"
-                    icon={icon}
-                  />
-                ) : null}
-              </div>
+              <TryoutCardVisual keyString={track.publicPath}>
+                {icon ? <TryoutCardIcon icon={icon} /> : null}
+              </TryoutCardVisual>
               <div className="px-6 pt-3 pb-6 text-center">
                 <h2>{track.title}</h2>
                 <p className="mt-1 text-muted-foreground text-sm">
