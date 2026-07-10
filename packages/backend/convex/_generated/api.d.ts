@@ -120,6 +120,7 @@ import type * as contentSync_mutations_curriculum from "../contentSync/mutations
 import type * as contentSync_mutations_quran from "../contentSync/mutations/quran.js";
 import type * as contentSync_mutations_routes from "../contentSync/mutations/routes.js";
 import type * as contentSync_mutations_tryouts from "../contentSync/mutations/tryouts.js";
+import type * as contentSync_publicRoutes_impl from "../contentSync/publicRoutes/impl.js";
 import type * as contentSync_publicRoutes_internal from "../contentSync/publicRoutes/internal.js";
 import type * as contentSync_publicRoutes_spec from "../contentSync/publicRoutes/spec.js";
 import type * as contentSync_queries_authors from "../contentSync/queries/authors.js";
@@ -164,6 +165,7 @@ import type * as contents_mutations_popularity from "../contents/mutations/popul
 import type * as contents_mutations_search from "../contents/mutations/search.js";
 import type * as contents_mutations_views from "../contents/mutations/views.js";
 import type * as contents_popularity from "../contents/popularity.js";
+import type * as contents_publicRoutes_spec from "../contents/publicRoutes/spec.js";
 import type * as contents_queries_audio from "../contents/queries/audio.js";
 import type * as contents_queries_recent from "../contents/queries/recent.js";
 import type * as contents_queries_runtime from "../contents/queries/runtime.js";
@@ -429,6 +431,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/mutations/quran": typeof contentSync_mutations_quran;
   "contentSync/mutations/routes": typeof contentSync_mutations_routes;
   "contentSync/mutations/tryouts": typeof contentSync_mutations_tryouts;
+  "contentSync/publicRoutes/impl": typeof contentSync_publicRoutes_impl;
   "contentSync/publicRoutes/internal": typeof contentSync_publicRoutes_internal;
   "contentSync/publicRoutes/spec": typeof contentSync_publicRoutes_spec;
   "contentSync/queries/authors": typeof contentSync_queries_authors;
@@ -473,6 +476,7 @@ declare const fullApi: ApiFromModules<{
   "contents/mutations/search": typeof contents_mutations_search;
   "contents/mutations/views": typeof contents_mutations_views;
   "contents/popularity": typeof contents_popularity;
+  "contents/publicRoutes/spec": typeof contents_publicRoutes_spec;
   "contents/queries/audio": typeof contents_queries_audio;
   "contents/queries/recent": typeof contents_queries_recent;
   "contents/queries/runtime": typeof contents_queries_runtime;

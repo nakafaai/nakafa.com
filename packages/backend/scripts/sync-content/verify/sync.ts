@@ -188,6 +188,8 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`  questionChoices:     ${counts.questionChoices}`);
   log(`  contentSearch:       ${counts.contentSearch}`);
   log(`  contentRoutes:       ${counts.contentRoutes}`);
+  log(`  publicRoutes:        ${counts.publicRoutes}`);
+  log(`  publicRouteState:    ${counts.publicRouteSyncState}`);
   log(`  learningPrograms:    ${counts.learningPrograms}`);
   log(`  learningProgramSrcs: ${counts.learningProgramSources}`);
   log(`  learningProgramCov:  ${counts.learningProgramCoverage}`);

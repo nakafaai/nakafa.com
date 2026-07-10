@@ -76,6 +76,9 @@ export const deleteContentRoutesBatch =
   createBatchDeleteMutation("contentRoutes");
 export const deletePublicRoutesBatch =
   createBatchDeleteMutation("publicRoutes");
+export const deletePublicRouteSyncStateBatch = createBatchDeleteMutation(
+  "publicRouteSyncState"
+);
 export const deleteContentRouteCountsBatch =
   createBatchDeleteMutation("contentRouteCounts");
 export const deleteContentRoutePagesBatch =

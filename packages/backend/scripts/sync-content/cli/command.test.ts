@@ -68,6 +68,10 @@ const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
       return Effect.succeed(syncResult);
     },
   }));
+  vi.doMock("@repo/backend/scripts/sync-content/content/quran", () => ({
+    /** Records Quran sync calls if a test accidentally reaches them. */
+    syncQuran: unusedCommand,
+  }));
   vi.doMock("@repo/backend/scripts/sync-content/cli/logging", () => ({
     /** Suppresses normal CLI usage logs. */
     log: () => undefined,
@@ -103,6 +107,10 @@ const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
   vi.doMock("@repo/backend/scripts/sync-content/verify/sync", () => ({
     /** Records verification calls if a test accidentally reaches them. */
     verify: unusedCommand,
+  }));
+  vi.doMock("@repo/backend/scripts/sync-content/routes/sync", () => ({
+    /** Records public-route sync calls if a test accidentally reaches them. */
+    syncPublicRoutes: unusedCommand,
   }));
   vi.doMock("@repo/backend/scripts/sync-content/workflow/full", () => ({
     /** Records full sync calls if a test accidentally reaches them. */

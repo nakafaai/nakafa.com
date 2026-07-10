@@ -85,6 +85,11 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "public route rows",
   },
   {
+    label: "Deleting public route sync state...",
+    mutation: reset.deletePublicRouteSyncStateBatch,
+    resultLabel: "public route sync state rows",
+  },
+  {
     label: "Deleting content route count rows...",
     mutation: reset.deleteContentRouteCountsBatch,
     resultLabel: "content route count rows",

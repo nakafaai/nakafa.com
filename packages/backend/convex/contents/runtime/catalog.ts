@@ -444,7 +444,6 @@ function toRuntimePublicRoute(route: Doc<"publicRoutes">) {
     sectionKey: route.sectionKey,
     sitemap: route.sitemap,
     sourcePath: route.sourcePath,
-    syncedAt: route.syncedAt,
     title: route.title,
   };
 }

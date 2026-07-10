@@ -77,6 +77,7 @@ export const contentCountTables = [
   { field: "learningProgramCoverage", tableName: "learningProgramCoverage" },
   { field: "contentRoutes", tableName: "contentRoutes" },
   { field: "publicRoutes", tableName: "publicRoutes" },
+  { field: "publicRouteSyncState", tableName: "publicRouteSyncState" },
   { field: "contentRouteCounts", tableName: "contentRouteCounts" },
   { field: "contentRoutePages", tableName: "contentRoutePages" },
   { field: "quranSurahs", tableName: "quranSurahs" },

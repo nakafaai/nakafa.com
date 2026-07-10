@@ -22,6 +22,9 @@ describe("contentSync/reset/impl", () => {
 
     const routeDelete = await t.mutation(deleteContentRoutesBatch);
     const publicRouteDelete = await t.mutation(deletePublicRoutesBatch);
+    const publicRouteStateDelete = await t.mutation(
+      deletePublicRouteSyncStateBatch
+    );
     const viewDelete = await t.mutation(deleteLearningViewsBatch);
     const queueDelete = await t.mutation(deleteLearningEngagementQueueBatch);
     const partitionDelete = await t.mutation(
@@ -45,6 +48,7 @@ describe("contentSync/reset/impl", () => {
 
     expect(routeDelete).toEqual({ deleted: 1, hasMore: false });
     expect(publicRouteDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(publicRouteStateDelete).toEqual({ deleted: 1, hasMore: false });
     expect(viewDelete).toEqual({ deleted: 1, hasMore: false });
     expect(queueDelete).toEqual({ deleted: 1, hasMore: false });
     expect(partitionDelete).toEqual({ deleted: 1, hasMore: false });
@@ -70,6 +74,7 @@ describe("contentSync/reset/impl", () => {
       learningViews: [],
       learningPlanItems: [],
       publicRoutes: [],
+      publicRouteSyncState: [],
       routes: [],
       surahs: [],
       userLearningRecents: [],
@@ -96,14 +101,20 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     title: "Al-Fatihah",
   });
   await ctx.db.insert("publicRoutes", {
+    contentHash: "public-route-hash",
     kind: "subject-topic",
     locale: "id",
     materialKey: "fixture.material",
     publicPath: "materi/fixture/topik",
     sitemap: true,
     sourcePath: "material/lesson/fixture",
-    syncedAt: 1,
+    syncShard: 1,
     title: "Fixture Topic",
+  });
+  await ctx.db.insert("publicRouteSyncState", {
+    hash: "public-route-state-hash",
+    rowCount: 1,
+    shard: 1,
   });
   const recentUserId = await ctx.db.insert("users", {
     authId: "reset-user",
@@ -329,6 +340,11 @@ async function deletePublicRoutesBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "publicRoutes");
 }
 
+/** Deletes one public route sync state reset batch. */
+async function deletePublicRouteSyncStateBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "publicRouteSyncState");
+}
+
 /** Deletes one learning view reset batch through the shared reset helper. */
 async function deleteLearningViewsBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "learningViews");
@@ -404,6 +420,7 @@ async function getDerivedRuntimeRows(ctx: QueryCtx) {
       .collect(),
     learningPrograms: await ctx.db.query("learningPrograms").collect(),
     publicRoutes: await ctx.db.query("publicRoutes").collect(),
+    publicRouteSyncState: await ctx.db.query("publicRouteSyncState").collect(),
     routes: await ctx.db.query("contentRoutes").collect(),
     surahs: await ctx.db.query("quranSurahs").collect(),
     userLearningRecents: await ctx.db.query("userLearningRecents").collect(),

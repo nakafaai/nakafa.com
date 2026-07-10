@@ -31,6 +31,7 @@ export const ContentCountsSchema = Schema.Struct({
   contentRoutePages: Schema.Number,
   contentRoutes: Schema.Number,
   publicRoutes: Schema.Number,
+  publicRouteSyncState: Schema.Number,
   contentSearch: Schema.Number,
   learningEngagementQueue: Schema.Number,
   learningViews: Schema.Number,

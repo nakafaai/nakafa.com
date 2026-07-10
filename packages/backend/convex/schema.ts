@@ -6,6 +6,7 @@ import bookmarksSchema from "@repo/backend/convex/bookmarks/schema";
 import chatsSchema from "@repo/backend/convex/chats/schema";
 import classesSchema from "@repo/backend/convex/classes/schema";
 import commentsSchema from "@repo/backend/convex/comments/schema";
+import contentSyncSchema from "@repo/backend/convex/contentSync/schema";
 import contentsSchema from "@repo/backend/convex/contents/schema";
 import creditsSchema from "@repo/backend/convex/credits/schema";
 import curriculumLessonsSchema from "@repo/backend/convex/curriculumLessons/schema";
@@ -29,6 +30,7 @@ export default defineSchema(
     ...usersSchema,
     ...chatsSchema,
     ...commentsSchema,
+    ...contentSyncSchema,
     ...customersSchema,
     ...subscriptionsSchema,
     ...schoolsSchema,

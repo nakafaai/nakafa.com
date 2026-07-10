@@ -33,7 +33,6 @@ export const BATCH_SIZES = {
   curriculumLessons: CONTENT_SYNC_BATCH_LIMITS.curriculumLessons,
   questionSets: CONTENT_SYNC_BATCH_LIMITS.questionSets,
   questions: CONTENT_SYNC_BATCH_LIMITS.questions,
-  publicRoutes: CONTENT_SYNC_BATCH_LIMITS.publicRoutes,
   quranSurahs: CONTENT_SYNC_BATCH_LIMITS.quranSurahs,
   quranVerses: CONTENT_SYNC_BATCH_LIMITS.quranVerses,
   quranSearchDocuments: CONTENT_SYNC_BATCH_LIMITS.quranSearchDocuments,
@@ -205,10 +204,27 @@ export const QuestionSetSyncResultSchema = SyncSummarySchema;
 
 export const CurriculumTopicSyncResultSchema = SyncSummarySchema;
 
-export const PublicRouteSyncResultSchema = SyncSummarySchema;
+const PublicRouteSyncStateSchema = Schema.Struct({
+  hash: Schema.String,
+  rowCount: Schema.Number,
+  shard: Schema.Number,
+});
 
-export const PublicRouteDeleteResultSchema = Schema.Struct({
+export const PublicRouteRootStateSchema = Schema.NullOr(
+  PublicRouteSyncStateSchema
+);
+
+export const PublicRouteSyncStatePageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: mutableArraySchema(PublicRouteSyncStateSchema),
+});
+
+export const PublicRouteSyncResultSchema = Schema.Struct({
+  created: Schema.Number,
   deleted: Schema.Number,
+  unchanged: Schema.Number,
+  updated: Schema.Number,
 });
 
 export const AuthorSyncResultSchema = Schema.Struct({

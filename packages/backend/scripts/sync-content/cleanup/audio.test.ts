@@ -46,6 +46,7 @@ const emptyCounts = {
   contentRoutePages: 0,
   contentRoutes: 0,
   publicRoutes: 0,
+  publicRouteSyncState: 0,
   contentSearch: 0,
   learningEngagementQueue: 0,
   learningViews: 0,

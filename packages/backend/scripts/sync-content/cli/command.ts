@@ -12,6 +12,7 @@ import {
   syncCurriculumTopics,
 } from "@repo/backend/scripts/sync-content/content/curriculum";
 import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/content/programs";
+import { syncQuran } from "@repo/backend/scripts/sync-content/content/quran";
 import { syncTryouts } from "@repo/backend/scripts/sync-content/content/tryouts";
 import { validate } from "@repo/backend/scripts/sync-content/content/validate";
 import type { SyncOptions } from "@repo/backend/scripts/sync-content/contract/types";
@@ -71,6 +72,7 @@ const printUsage = (): void => {
   );
   log("  sync:validate         - Validate content without syncing (for CI)");
   log("  sync:verify           - Verify database matches filesystem");
+  log("  quran                 - Sync Quran surahs, verses, and search rows");
   log("  tryouts               - Sync source-driven try-out catalog and bank");
   log(
     "  learning-programs     - Sync program catalog and graph-backed coverage"
@@ -135,6 +137,9 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
     case "articles":
       yield* syncAuthors(config, options);
       yield* syncArticles(config, options);
+      return;
+    case "quran":
+      yield* syncQuran(config, options);
       return;
     case "subjects":
       yield* syncAuthors(config, options);

@@ -23,6 +23,7 @@ export const resettableTableNames = [
   "contentRoutePages",
   "contentRoutes",
   "publicRoutes",
+  "publicRouteSyncState",
   "contentSearch",
   "learningEngagementQueue",
   "learningViews",

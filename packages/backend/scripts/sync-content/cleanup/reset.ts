@@ -90,6 +90,7 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Learning Program Cov:  ${counts.learningProgramCoverage}`);
   log(`  Content Routes:        ${counts.contentRoutes}`);
   log(`  Public Routes:         ${counts.publicRoutes}`);
+  log(`  Public Route State:    ${counts.publicRouteSyncState}`);
   log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
   log(`  Content Route Pages:   ${counts.contentRoutePages}`);
   log(`  Quran Surahs:          ${counts.quranSurahs}`);
@@ -184,6 +185,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.learningProgramCoverage +
     counts.contentRoutes +
     counts.publicRoutes +
+    counts.publicRouteSyncState +
     counts.contentRouteCounts +
     counts.contentRoutePages +
     counts.quranSurahs +
