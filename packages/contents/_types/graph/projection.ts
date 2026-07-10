@@ -202,15 +202,17 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
   const examRoute = exam ? joinRoute(countryRoute, exam) : countryRoute;
   const trackRoute = track ? joinRoute(examRoute, track) : examRoute;
   const setRoute = set ? joinRoute(trackRoute, set) : trackRoute;
+  const countryKey = source.countryKey;
+  const examKey = source.examKey;
   const lensSegments = exam
-    ? ["tryout", country, exam]
-    : ["tryout", country, "catalog"];
+    ? ["tryout", countryKey, examKey]
+    : ["tryout", countryKey, "catalog"];
 
   if (!exam) {
     return {
-      conceptSegments: ["tryout", country],
+      conceptSegments: ["tryout", countryKey],
       kind: "tryout-country",
-      learningObjectSegments: ["tryout-country", country],
+      learningObjectSegments: ["tryout-country", countryKey],
       lensSegments,
       parentRoute: "try-out",
       route,
@@ -219,9 +221,9 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
 
   if (!track) {
     return {
-      conceptSegments: ["tryout", country, exam],
+      conceptSegments: ["tryout", countryKey, examKey],
       kind: "tryout-exam",
-      learningObjectSegments: ["tryout-exam", country, exam],
+      learningObjectSegments: ["tryout-exam", countryKey, examKey],
       lensSegments,
       parentRoute: countryRoute,
       route,
@@ -236,9 +238,14 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
 
   if (!set) {
     return {
-      conceptSegments: ["tryout", country, exam, track],
+      conceptSegments: ["tryout", countryKey, examKey, sourceTrack.key],
       kind: "tryout-track",
-      learningObjectSegments: ["tryout-track", country, exam, track],
+      learningObjectSegments: [
+        "tryout-track",
+        countryKey,
+        examKey,
+        sourceTrack.key,
+      ],
       lensSegments,
       parentRoute: examRoute,
       route,
@@ -253,29 +260,49 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
 
   if (!section) {
     return {
-      conceptSegments: ["tryout", country, exam, track, set],
+      conceptSegments: [
+        "tryout",
+        countryKey,
+        examKey,
+        sourceTrack.key,
+        sourceSet.key,
+      ],
       kind: "tryout-set",
-      learningObjectSegments: ["tryout-set", country, exam, track, set],
+      learningObjectSegments: [
+        "tryout-set",
+        countryKey,
+        examKey,
+        sourceTrack.key,
+        sourceSet.key,
+      ],
       lensSegments,
       parentRoute: trackRoute,
       route,
     } satisfies SourceRouteProjectionDraft;
   }
 
-  if (!findTryoutVisibleSection(sourceSet, section)) {
+  const sourceSection = findTryoutVisibleSection(sourceSet, section);
+
+  if (!sourceSection) {
     return null;
   }
 
   return {
-    conceptSegments: ["tryout", country, exam, track, section],
+    conceptSegments: [
+      "tryout",
+      countryKey,
+      examKey,
+      sourceTrack.key,
+      sourceSection.key,
+    ],
     kind: "tryout-section",
     learningObjectSegments: [
       "tryout-section",
-      country,
-      exam,
-      track,
-      set,
-      section,
+      countryKey,
+      examKey,
+      sourceTrack.key,
+      sourceSet.key,
+      sourceSection.key,
     ],
     lensSegments,
     parentRoute: setRoute,

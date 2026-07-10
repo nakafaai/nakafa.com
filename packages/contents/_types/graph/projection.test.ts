@@ -104,6 +104,64 @@ describe("source route projection", () => {
     });
   });
 
+  it("uses source keys for graph identity across localized try-out routes", () => {
+    const englishTrack = getSourceRouteProjectionForRoute(
+      "try-out/indonesia/tka/mathematics"
+    );
+    const indonesianTrack = getSourceRouteProjectionForRoute(
+      "try-out/indonesia/tka/matematika"
+    );
+    const englishSection = getSourceRouteProjectionForRoute(
+      "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
+    );
+    const indonesianSection = getSourceRouteProjectionForRoute(
+      "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif"
+    );
+
+    expect(englishTrack).toMatchObject({
+      conceptSegments: ["tryout", "indonesia", "tka", "mathematics"],
+      learningObjectSegments: [
+        "tryout-track",
+        "indonesia",
+        "tka",
+        "mathematics",
+      ],
+      route: "try-out/indonesia/tka/mathematics",
+    });
+    expect(indonesianTrack).toMatchObject({
+      conceptSegments: ["tryout", "indonesia", "tka", "mathematics"],
+      learningObjectSegments: [
+        "tryout-track",
+        "indonesia",
+        "tka",
+        "mathematics",
+      ],
+      route: "try-out/indonesia/tka/matematika",
+    });
+    expect(englishSection).toMatchObject({
+      conceptSegments: [
+        "tryout",
+        "indonesia",
+        "snbt",
+        "2027",
+        "quantitative-knowledge",
+      ],
+      learningObjectSegments: [
+        "tryout-section",
+        "indonesia",
+        "snbt",
+        "2027",
+        "set-1",
+        "quantitative-knowledge",
+      ],
+    });
+    expect(indonesianSection).toMatchObject({
+      conceptSegments: englishSection?.conceptSegments,
+      learningObjectSegments: englishSection?.learningObjectSegments,
+      route: "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
+    });
+  });
+
   it("rejects malformed projections instead of inferring partial route identity", () => {
     expect(getSourceRouteProjectionForRoute("unknown/root")).toBeNull();
     expect(getSourceRouteProjectionForRoute("articles/politics")).toBeNull();

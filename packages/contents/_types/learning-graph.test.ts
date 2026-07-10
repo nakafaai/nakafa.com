@@ -101,6 +101,35 @@ describe("learning graph identity", () => {
     );
   });
 
+  it("keeps non-locale graph IDs stable across localized try-out routes", () => {
+    const english = readGraphIdentityFixture({
+      kind: "tryout-track",
+      locale: "en",
+      route: "try-out/indonesia/tka/mathematics",
+    });
+    const indonesian = readGraphIdentityFixture({
+      kind: "tryout-track",
+      locale: "id",
+      route: "try-out/indonesia/tka/matematika",
+    });
+
+    expect({
+      alignmentId: indonesian.alignmentId,
+      conceptId: indonesian.conceptId,
+      learningObjectId: indonesian.learningObjectId,
+      lensId: indonesian.lensId,
+    }).toEqual({
+      alignmentId: english.alignmentId,
+      conceptId: english.conceptId,
+      learningObjectId: english.learningObjectId,
+      lensId: english.lensId,
+    });
+    expect(english.learningObjectId).toBe(
+      "lo:tryout-track:indonesia:tka:mathematics"
+    );
+    expect(english.assetId).not.toBe(indonesian.assetId);
+  });
+
   it("supports non-route Quran graph identity", () => {
     expect(
       readGraphIdentityFixture({
