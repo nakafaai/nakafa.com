@@ -12,11 +12,9 @@ import type {
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/convex/counts";
-import {
-  getDataIntegrity,
-  getGraphIdentityIntegrity,
-} from "@repo/backend/scripts/sync-content/convex/inspection";
+import { getDataIntegrity } from "@repo/backend/scripts/sync-content/convex/inspection";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
+import { verifyGraphIdentity } from "@repo/backend/scripts/sync-content/verify/graph";
 import { verifyQuranRuntime } from "@repo/backend/scripts/sync-content/verify/quran";
 import { logVerifySuccess } from "@repo/backend/scripts/sync-content/verify/summary";
 import { getTryoutFileCounts } from "@repo/backend/scripts/sync-content/verify/tryouts";
@@ -110,80 +108,6 @@ function getExpectedLessonMaterialLocales(options: SyncOptions) {
 /** Counts the locales a verify run should expect after optional locale scoping. */
 function getExpectedLocaleCount(options: SyncOptions) {
   return options.locale ? 1 : locales.length;
-}
-
-/** Result shape returned by the persisted graph identity integrity check. */
-type GraphIdentityIntegrity = Effect.Effect.Success<
-  ReturnType<typeof getGraphIdentityIntegrity>
->;
-
-/** Logs graph identity integrity gates and returns whether all gates passed. */
-function logGraphIdentityIntegrity(graphIdentity: GraphIdentityIntegrity) {
-  let allMatch = true;
-
-  log(
-    `Checked ${graphIdentity.checkedRefs} graph refs and ${graphIdentity.checkedRefInputs} Nakafa content_ref inputs across ${graphIdentity.scannedRows} persisted rows`
-  );
-
-  if (graphIdentity.missingGraphRows === 0) {
-    logSuccess("All persisted content refs include graph identity fields");
-  } else {
-    logError(
-      `${graphIdentity.missingGraphRows} persisted content refs are missing graph identity fields`
-    );
-    if (graphIdentity.firstMissingGraph) {
-      log(
-        `  First missing graph ref: ${JSON.stringify(graphIdentity.firstMissingGraph)}`
-      );
-    }
-    allMatch = false;
-  }
-
-  if (graphIdentity.routeShapedContentIds === 0) {
-    logSuccess("No persisted content refs use route-shaped content_id values");
-  } else {
-    logError(
-      `${graphIdentity.routeShapedContentIds} persisted content refs still use route-shaped content_id values`
-    );
-    if (graphIdentity.firstRouteShapedContentId) {
-      log(
-        `  First route-shaped content_id: ${JSON.stringify(graphIdentity.firstRouteShapedContentId)}`
-      );
-    }
-    allMatch = false;
-  }
-
-  if (graphIdentity.invalidRefInputs === 0) {
-    logSuccess(
-      "All persisted Nakafa content_ref inputs use graph IDs, resource URIs, or canonical URLs"
-    );
-  } else {
-    logError(
-      `${graphIdentity.invalidRefInputs} persisted Nakafa content_ref inputs are invalid`
-    );
-    if (graphIdentity.firstInvalidRefInput) {
-      log(
-        `  First invalid content_ref input: ${JSON.stringify(graphIdentity.firstInvalidRefInput)}`
-      );
-    }
-    allMatch = false;
-  }
-
-  if (graphIdentity.mismatchedContentIds === 0) {
-    logSuccess("All persisted content refs use assetId as content_id");
-  } else {
-    logError(
-      `${graphIdentity.mismatchedContentIds} persisted content refs have content_id values that differ from assetId`
-    );
-    if (graphIdentity.firstMismatchedContentId) {
-      log(
-        `  First mismatched content_id: ${JSON.stringify(graphIdentity.firstMismatchedContentId)}`
-      );
-    }
-    allMatch = false;
-  }
-
-  return allMatch;
 }
 
 /** Verifies filesystem content counts against Convex read models. */
@@ -459,7 +383,7 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   log("\n=== GRAPH IDENTITY ===\n");
   const graphIdentityResult = yield* Effect.either(
-    getGraphIdentityIntegrity(config)
+    verifyGraphIdentity(config, options)
   );
   if (graphIdentityResult._tag === "Left") {
     return yield* Effect.fail(
@@ -469,7 +393,7 @@ export const verify = Effect.fn("sync.verify")(function* (
     );
   }
 
-  allMatch = logGraphIdentityIntegrity(graphIdentityResult.right) && allMatch;
+  allMatch = graphIdentityResult.right && allMatch;
 
   log("\n=== QURAN RUNTIME ===\n");
   const quranRuntimeResult = yield* Effect.either(
