@@ -22,31 +22,31 @@ import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
 type MaterialPayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncMaterials
+  typeof internal.contentSync.mutations.readModels.materials.bulkSyncMaterials
 >["materials"][number];
 
 type MaterialLocalePayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncMaterialLocales
+  typeof internal.contentSync.mutations.readModels.materials.bulkSyncMaterialLocales
 >["locales"][number];
 
 type GeneratedProgramPayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncCurricula
+  typeof internal.contentSync.mutations.readModels.curricula.bulkSyncCurricula
 >["curricula"][number];
 
 type CurriculumNodePayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncCurriculumNodes
+  typeof internal.contentSync.mutations.readModels.curricula.bulkSyncCurriculumNodes
 >["nodes"][number];
 
 type CurriculumMaterialPayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncCurriculumMaterials
+  typeof internal.contentSync.mutations.readModels.curricula.bulkSyncCurriculumMaterials
 >["mappings"][number];
 
 type AssessmentNodePayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncAssessmentNodes
+  typeof internal.contentSync.mutations.readModels.assessments.bulkSyncAssessmentNodes
 >["nodes"][number];
 
 type PublicRoutePayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncPublicRoutes
+  typeof internal.contentSync.mutations.readModels.routes.bulkSyncPublicRoutes
 >["routes"][number];
 
 const MATERIAL_LOCALES: readonly MaterialLocale[] = ["en", "id"];

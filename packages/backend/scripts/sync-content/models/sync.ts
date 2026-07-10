@@ -115,7 +115,8 @@ const syncMaterials = Effect.fn("sync.generatedMaterials")(function* (
     batchSize: BATCH_SIZES.generatedMaterials,
     config,
     label: "Materials",
-    mutation: internal.contentSync.mutations.readModels.bulkSyncMaterials,
+    mutation:
+      internal.contentSync.mutations.readModels.materials.bulkSyncMaterials,
     options,
     rows,
     toArgs: (batch) => ({ materials: batch, syncedAt }),
@@ -132,7 +133,8 @@ const syncMaterialLocales = Effect.fn("sync.generatedMaterialLocales")(
       config,
       label: "Material Locales",
       mutation:
-        internal.contentSync.mutations.readModels.bulkSyncMaterialLocales,
+        internal.contentSync.mutations.readModels.materials
+          .bulkSyncMaterialLocales,
       options,
       rows,
       toArgs: (batch) => ({ locales: batch, syncedAt }),
@@ -154,7 +156,8 @@ const syncCurricula = Effect.fn("sync.generatedCurricula")(function* (
       batchSize: BATCH_SIZES.generatedCurricula,
       config,
       label: "Curricula",
-      mutation: internal.contentSync.mutations.readModels.bulkSyncCurricula,
+      mutation:
+        internal.contentSync.mutations.readModels.curricula.bulkSyncCurricula,
       options,
       rows: curriculumRows,
       toArgs: (batch) => ({ curricula: batch, syncedAt }),
@@ -164,7 +167,8 @@ const syncCurricula = Effect.fn("sync.generatedCurricula")(function* (
       config,
       label: "Curriculum Nodes",
       mutation:
-        internal.contentSync.mutations.readModels.bulkSyncCurriculumNodes,
+        internal.contentSync.mutations.readModels.curricula
+          .bulkSyncCurriculumNodes,
       options,
       rows: nodeRows,
       toArgs: (batch) => ({ nodes: batch, syncedAt }),
@@ -174,7 +178,8 @@ const syncCurricula = Effect.fn("sync.generatedCurricula")(function* (
       config,
       label: "Curriculum Materials",
       mutation:
-        internal.contentSync.mutations.readModels.bulkSyncCurriculumMaterials,
+        internal.contentSync.mutations.readModels.curricula
+          .bulkSyncCurriculumMaterials,
       options,
       rows: materialRows,
       toArgs: (batch) => ({ mappings: batch, syncedAt }),
@@ -197,7 +202,9 @@ const syncAssessments = Effect.fn("sync.generatedAssessments")(function* (
       batchSize: BATCH_SIZES.generatedAssessments,
       config,
       label: "Assessments",
-      mutation: internal.contentSync.mutations.readModels.bulkSyncAssessments,
+      mutation:
+        internal.contentSync.mutations.readModels.assessments
+          .bulkSyncAssessments,
       options,
       rows: assessmentRows,
       toArgs: (batch) => ({ assessments: batch, syncedAt }),
@@ -207,7 +214,8 @@ const syncAssessments = Effect.fn("sync.generatedAssessments")(function* (
       config,
       label: "Assessment Nodes",
       mutation:
-        internal.contentSync.mutations.readModels.bulkSyncAssessmentNodes,
+        internal.contentSync.mutations.readModels.assessments
+          .bulkSyncAssessmentNodes,
       options,
       rows: nodeRows,
       toArgs: (batch) => ({ nodes: batch, syncedAt }),
@@ -229,7 +237,8 @@ const syncPublicRoutes = Effect.fn("sync.generatedPublicRoutes")(function* (
     batchSize: BATCH_SIZES.generatedPublicRoutes,
     config,
     label: "Public Routes",
-    mutation: internal.contentSync.mutations.readModels.bulkSyncPublicRoutes,
+    mutation:
+      internal.contentSync.mutations.readModels.routes.bulkSyncPublicRoutes,
     options,
     rows,
     toArgs: (batch) => ({ routes: batch, syncedAt }),

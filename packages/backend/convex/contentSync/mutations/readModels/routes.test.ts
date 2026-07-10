@@ -6,7 +6,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 type PublicRoutePayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncPublicRoutes
+  typeof internal.contentSync.mutations.readModels.routes.bulkSyncPublicRoutes
 >["routes"][number];
 
 const FIRST_SYNC = 1000;
@@ -24,16 +24,16 @@ const PUBLIC_ROUTE: PublicRoutePayload = {
   title: "Barisan Aritmetika",
 };
 
-describe("contentSync/mutations/readModels", () => {
+describe("contentSync/mutations/readModels/routes", () => {
   it("refreshes unchanged public route rows before stale cleanup", async () => {
     const t = convexTest(schema, convexModules);
 
     const created = await t.mutation(
-      internal.contentSync.mutations.readModels.bulkSyncPublicRoutes,
+      internal.contentSync.mutations.readModels.routes.bulkSyncPublicRoutes,
       { routes: [PUBLIC_ROUTE], syncedAt: FIRST_SYNC }
     );
     const unchanged = await t.mutation(
-      internal.contentSync.mutations.readModels.bulkSyncPublicRoutes,
+      internal.contentSync.mutations.readModels.routes.bulkSyncPublicRoutes,
       { routes: [PUBLIC_ROUTE], syncedAt: SECOND_SYNC }
     );
     const staleDelete = await t.mutation(
