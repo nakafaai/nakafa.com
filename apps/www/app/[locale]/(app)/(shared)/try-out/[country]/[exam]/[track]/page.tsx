@@ -61,7 +61,7 @@ export default async function Page(props: {
   });
 
   return (
-    <LayoutMaterial className="h-[calc(100svh-4rem)] flex-col overflow-hidden lg:h-svh">
+    <LayoutMaterial className="h-[calc(100svh-4rem)] flex-col overflow-clip lg:h-svh">
       <LayoutMaterialContent className="flex min-h-0 flex-1 flex-col">
         <TryoutHeader
           value={{
