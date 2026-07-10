@@ -213,7 +213,7 @@ function quranSurah() {
           sajda: { obligatory: false, recommended: false },
         },
         number: { inQuran: 1, inSurah: 1 },
-        tafsir: { id: { long: "Tafsir panjang.", short: "Tafsir pendek." } },
+        tafsir: { id: { short: "Tafsir pendek." } },
         text: {
           arab: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
           transliteration: { en: "Bismillahirrahmanirrahim" },

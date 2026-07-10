@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import type { Surah } from "@repo/contents/_types/quran";
+import type { RuntimeQuranSurahMetadata } from "@repo/backend/client/nakafa/types";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateQuranMetadata } from "@/lib/utils/seo/quran";
@@ -25,8 +25,7 @@ const surah = {
   preBismillah: null,
   revelation: { arab: "مكة", en: "Meccan", id: "Makkiyah" },
   sequence: 5,
-  verses: [],
-} satisfies Surah;
+} satisfies RuntimeQuranSurahMetadata;
 
 /** Reads a mocked translation value as display text. */
 function getValue(

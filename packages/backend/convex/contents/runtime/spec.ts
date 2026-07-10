@@ -99,7 +99,6 @@ const quranVerseValidator = v.object({
   }),
   tafsir: v.object({
     id: v.object({
-      long: v.string(),
       short: v.string(),
     }),
   }),
@@ -346,6 +345,14 @@ export const listMaterialApiContentPageReturnValidator =
   paginatedApiContentValidator;
 
 export const listQuranSurahsReturnValidator = v.array(
+  quranSurahMetadataValidator
+);
+
+export const getQuranSurahMetadataArgsValidator = {
+  surah: v.number(),
+};
+
+export const getQuranSurahMetadataReturnValidator = nullable(
   quranSurahMetadataValidator
 );
 

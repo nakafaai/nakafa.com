@@ -425,7 +425,7 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     sajdaRecommended: false,
     surahNumber: 1,
     syncedAt: 1,
-    tafsir: { id: { long: "Tafsir panjang", short: "Tafsir pendek" } },
+    tafsir: { id: { short: "Tafsir pendek" } },
     text: { arab: "بسم الله", transliteration: { en: "Bismillah" } },
     translation: { en: "In the name of Allah", id: "Dengan nama Allah" },
     verseNumber: 1,

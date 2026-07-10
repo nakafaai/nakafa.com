@@ -27,6 +27,16 @@ export async function listQuranSurahsImpl(ctx: QueryCtx) {
     .map(toQuranSurahMetadata);
 }
 
+/** Loads one Quran surah metadata row without reading verse documents. */
+export async function getQuranSurahMetadataImpl(
+  ctx: QueryCtx,
+  args: { surah: number }
+) {
+  const surah = await getSurahByNumber(ctx, args.surah);
+
+  return surah ? toQuranSurahMetadata(surah) : null;
+}
+
 /** Loads one Quran surah plus adjacent metadata from the runtime model. */
 export async function getQuranSurahPageImpl(
   ctx: QueryCtx,

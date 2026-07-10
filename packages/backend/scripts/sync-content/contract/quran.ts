@@ -107,7 +107,6 @@ const QuranVerseSchema = Schema.mutable(
       Schema.Struct({
         id: Schema.mutable(
           Schema.Struct({
-            long: Schema.String,
             short: Schema.String,
           })
         ),

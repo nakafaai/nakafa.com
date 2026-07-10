@@ -119,7 +119,6 @@ describe("generateFallbackMetadata", () => {
           preBismillah: null,
           revelation: { arab: "مكة", en: "Meccan", id: "Makkiyah" },
           sequence: 5,
-          verses: [],
         },
       })
     ).toStrictEqual({

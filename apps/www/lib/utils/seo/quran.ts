@@ -1,4 +1,4 @@
-import type { Surah } from "@repo/contents/_types/quran";
+import type { RuntimeQuranSurahMetadata } from "@repo/backend/client/nakafa/types";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { createSEOKeywords } from "@/lib/utils/seo/keywords";
@@ -6,7 +6,7 @@ import { fetchSEOTranslationsNamespace } from "@/lib/utils/seo/translations";
 
 /** Generates localized SEO metadata for one Quran surah payload. */
 export const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
-  (surah: Surah, locale: Locale) =>
+  (surah: RuntimeQuranSurahMetadata, locale: Locale) =>
     Effect.gen(function* () {
       const name = surah.name.short;
       const transliteration =
