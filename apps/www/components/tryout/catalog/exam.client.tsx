@@ -48,7 +48,7 @@ export function TryoutExamPageClient({
               <TryoutCardVisual keyString={track.publicPath}>
                 {icon ? <TryoutCardIcon icon={icon} /> : null}
               </TryoutCardVisual>
-              <div className="px-6 pt-3 pb-6 text-center">
+              <div className="px-6 py-3 text-center">
                 <h2>{track.title}</h2>
                 <p className="mt-1 text-muted-foreground text-sm">
                   {track.description ??

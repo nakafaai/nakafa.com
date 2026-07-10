@@ -45,7 +45,7 @@ export function TryoutCountryPageClient({
             <TryoutCardVisual keyString={exam.publicPath}>
               <TryoutCardIcon icon={icon} />
             </TryoutCardVisual>
-            <div className="px-6 pt-3 pb-6 text-center">
+            <div className="px-6 py-3 text-center">
               <h2>{exam.title}</h2>
             </div>
           </NavigationLink>

@@ -70,7 +70,7 @@ export function TryoutHubClient({ locale }: TryoutHubClientProps) {
               countryCode={country.countryCode}
             />
           </TryoutCardVisual>
-          <div className="px-6 pt-3 pb-6 text-center">
+          <div className="px-6 py-3 text-center">
             <h2>{country.title}</h2>
           </div>
         </NavigationLink>

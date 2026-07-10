@@ -3,7 +3,7 @@ import { GradientBlock } from "@repo/design-system/components/ui/gradient-block"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { ReactNode } from "react";
 
-/** Renders the vivid gradient artwork shared by try-out discovery cards. */
+/** Renders the full-color artwork shared by try-out discovery cards. */
 export function TryoutCardVisual({
   children,
   keyString,
@@ -14,7 +14,7 @@ export function TryoutCardVisual({
   return (
     <div className="relative flex aspect-video w-full items-center justify-center">
       <GradientBlock
-        className="mask-[linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] mask-no-repeat mask-size-[100%_100%] pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0"
         colorScheme="vibrant"
         intensity="medium"
         keyString={keyString}
