@@ -151,7 +151,6 @@ describe("tryouts/runtime/score", () => {
         sourceRevision: "2026",
         title: "Question",
         tryoutAttemptId: attemptId,
-        tryoutSectionAttemptId: sectionAttemptId,
         tryoutSectionId: sectionId,
       });
 

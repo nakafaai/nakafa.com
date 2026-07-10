@@ -6,7 +6,6 @@ import { ConvexError } from "convex/values";
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutQuestion = Doc<"questions">;
 type TryoutSection = Doc<"tryoutSections">;
-type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
 
 /** Loads the immutable section snapshot for one attempt section key. */
@@ -56,14 +55,28 @@ export async function requireSnapshotSection(
   return section;
 }
 
-/** Creates the runtime question placements for one section attempt. */
-export async function createSectionPlacements(
+/** Freezes every question placement when an attempt starts. */
+export async function createAttemptPlacements(
   ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
-    section: TryoutSection;
-    sectionAttempt: TryoutSectionAttempt;
+  args: { attempt: TryoutAttempt }
+) {
+  for (const snapshot of args.attempt.sectionSnapshots) {
+    const section = await requireSnapshotSection(ctx, {
+      attempt: args.attempt,
+      snapshot,
+    });
+
+    await createSectionPlacements(ctx, {
+      attempt: args.attempt,
+      section,
+    });
   }
+}
+
+/** Creates the immutable placements for one snapshotted section. */
+async function createSectionPlacements(
+  ctx: MutationCtx,
+  args: { attempt: TryoutAttempt; section: TryoutSection }
 ) {
   const questions = await loadSectionQuestions(ctx, args.section);
   const snapshots = await Promise.all(
@@ -85,7 +98,6 @@ export async function createSectionPlacements(
       sourceRevision: question.sourceRevision,
       title: question.title,
       tryoutAttemptId: args.attempt._id,
-      tryoutSectionAttemptId: args.sectionAttempt._id,
       tryoutSectionId: args.section._id,
     });
   }

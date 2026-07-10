@@ -16,11 +16,15 @@ import {
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireIrtScaleVersion } from "@repo/backend/convex/tryouts/runtime/irt";
+import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import {
   finalizeAttemptScore,
   requireOwnedAttempt,
 } from "@repo/backend/convex/tryouts/runtime/score";
-import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
+import {
+  loadPlacementSectionAttempt,
+  startSectionAttempt,
+} from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 
@@ -240,6 +244,8 @@ export const startAttempt = mutation({
       });
     }
 
+    await createAttemptPlacements(ctx, { attempt });
+
     if (args.entrySectionKey) {
       await startSectionAttempt(ctx, {
         attempt,
@@ -347,7 +353,7 @@ export const saveResponse = mutation({
       });
     }
 
-    const section = await ctx.db.get(placement.tryoutSectionAttemptId);
+    const section = await loadPlacementSectionAttempt(ctx, placement);
 
     if (section?.status !== "in-progress") {
       throw new ConvexError({
@@ -437,7 +443,7 @@ export const saveResponse = mutation({
       selectedOptionId: args.selectedOptionId,
       timeSpent: args.timeSpent,
       tryoutAttemptId: placement.tryoutAttemptId,
-      tryoutSectionAttemptId: placement.tryoutSectionAttemptId,
+      tryoutSectionAttemptId: section._id,
       updatedAt: now,
     });
     await ctx.db.patch(section._id, {

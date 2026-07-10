@@ -65,25 +65,25 @@ async function deleteTryoutAttemptRuntime(
       await ctx.db.delete("tryoutResponses", response._id);
     }
 
-    const placements = await ctx.db
-      .query("tryoutAttemptPlacements")
-      .withIndex("by_tryoutSectionAttemptId_and_questionOrder", (q) =>
-        q.eq("tryoutSectionAttemptId", sectionAttempt._id)
-      )
-      .take(sectionAttempt.totalQuestions + 1);
-
-    if (placements.length > sectionAttempt.totalQuestions) {
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout section attempt has more placements than questions.",
-      });
-    }
-
-    for (const placement of placements) {
-      await ctx.db.delete("tryoutAttemptPlacements", placement._id);
-    }
-
     await ctx.db.delete("tryoutSectionAttempts", sectionAttempt._id);
+  }
+
+  const placements = await ctx.db
+    .query("tryoutAttemptPlacements")
+    .withIndex("by_tryoutAttemptId_and_questionOrder", (q) =>
+      q.eq("tryoutAttemptId", tryoutAttempt._id)
+    )
+    .take(tryoutAttempt.totalQuestions + 1);
+
+  if (placements.length > tryoutAttempt.totalQuestions) {
+    throw new ConvexError({
+      code: "INVALID_TRYOUT_STATE",
+      message: "Tryout attempt has more placements than questions.",
+    });
+  }
+
+  for (const placement of placements) {
+    await ctx.db.delete("tryoutAttemptPlacements", placement._id);
   }
 
   const score = await ctx.db

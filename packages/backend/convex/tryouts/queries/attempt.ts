@@ -305,8 +305,12 @@ export const getSectionRuntime = query({
 
     const placements = await ctx.db
       .query("tryoutAttemptPlacements")
-      .withIndex("by_tryoutSectionAttemptId_and_questionOrder", (q) =>
-        q.eq("tryoutSectionAttemptId", section._id)
+      .withIndex(
+        "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
+        (q) =>
+          q
+            .eq("tryoutAttemptId", attempt._id)
+            .eq("tryoutSectionId", section.tryoutSectionId)
       )
       .take(section.totalQuestions + 1);
 

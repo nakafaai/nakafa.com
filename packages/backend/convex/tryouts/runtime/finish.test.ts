@@ -3,6 +3,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { expireAttempt } from "@repo/backend/convex/tryouts/runtime/finish";
+import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -283,37 +284,39 @@ describe("tryouts/runtime/finish", () => {
         tryoutAttemptId: attemptId,
         tryoutSectionId: firstSectionId,
       });
-      const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
-        choiceSnapshots: [
-          {
-            isCorrect: true,
-            label: "A",
-            optionKey: "a",
-            order: 1,
-          },
-          {
-            isCorrect: false,
-            label: "B",
-            optionKey: "b",
-            order: 2,
-          },
-        ],
-        contentHash: "pengetahuan-kuantitatif:question-hash",
-        questionId: firstSource.questionId,
-        questionOrder: 1,
-        questionSourceKey: `${firstSource.sourcePath}:question-1`,
-        sourcePath: `${firstSource.sourcePath}/question-1`,
-        sourceRevision: "2026",
-        title: "Pengetahuan Kuantitatif Question",
-        tryoutAttemptId: attemptId,
-        tryoutSectionAttemptId: sectionAttemptId,
-        tryoutSectionId: firstSectionId,
-      });
+      const startedAttempt = await ctx.db.get(attemptId);
+
+      if (!startedAttempt) {
+        throw new ConvexError({
+          code: "TRYOUT_ATTEMPT_NOT_FOUND",
+          message: "Expected try-out attempt.",
+        });
+      }
+
+      await createAttemptPlacements(ctx, { attempt: startedAttempt });
+
+      const placement = await ctx.db
+        .query("tryoutAttemptPlacements")
+        .withIndex(
+          "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
+          (q) =>
+            q
+              .eq("tryoutAttemptId", attemptId)
+              .eq("tryoutSectionId", firstSectionId)
+        )
+        .unique();
+
+      if (!placement) {
+        throw new ConvexError({
+          code: "TRYOUT_PLACEMENT_NOT_FOUND",
+          message: "Expected try-out placement.",
+        });
+      }
 
       await ctx.db.insert("tryoutResponses", {
         answeredAt: NOW - 5000,
         isCorrect: true,
-        placementId,
+        placementId: placement._id,
         questionId: firstSource.questionId,
         selectedOptionId: "a",
         timeSpent: 1000,
@@ -376,7 +379,7 @@ describe("tryouts/runtime/finish", () => {
       sectionKey: "penalaran-matematika",
       status: "expired",
     });
-    expect(snapshot.placements).toHaveLength(1);
+    expect(snapshot.placements).toHaveLength(2);
     expect(snapshot.score).toMatchObject({
       rawScore: 50,
       scoringStrategy: "irt",

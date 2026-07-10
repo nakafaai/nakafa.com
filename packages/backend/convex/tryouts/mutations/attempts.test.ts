@@ -242,6 +242,20 @@ describe("tryouts/mutations/attempts", () => {
       sectionKey: SECTION,
       status: "in-progress",
     });
+
+    const sectionRuntime = await authed.query(
+      api.tryouts.queries.attempt.getSectionRuntime,
+      {
+        countryKey: COUNTRY,
+        examKey: EXAM,
+        locale: "id",
+        sectionKey: SECTION,
+        setKey: SET,
+        trackKey: TRACK,
+      }
+    );
+
+    expect(sectionRuntime?.questions).toHaveLength(1);
   });
 
   it("rejects entry-section starts for visible sections", async () => {

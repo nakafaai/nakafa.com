@@ -300,11 +300,14 @@ const tables = {
       "tryoutAttemptId",
       "sectionKey",
     ])
+    .index("by_tryoutAttemptId_and_tryoutSectionId", [
+      "tryoutAttemptId",
+      "tryoutSectionId",
+    ])
     .index("by_status_and_expiresAt", ["status", "expiresAt"]),
 
   tryoutAttemptPlacements: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
-    tryoutSectionAttemptId: v.id("tryoutSectionAttempts"),
     tryoutSectionId: v.id("tryoutSections"),
     questionId: v.id("questions"),
     questionSourceKey: v.string(),
@@ -319,8 +322,9 @@ const tables = {
       "tryoutAttemptId",
       "questionOrder",
     ])
-    .index("by_tryoutSectionAttemptId_and_questionOrder", [
-      "tryoutSectionAttemptId",
+    .index("by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder", [
+      "tryoutAttemptId",
+      "tryoutSectionId",
       "questionOrder",
     ])
     .index("by_questionId", ["questionId"]),

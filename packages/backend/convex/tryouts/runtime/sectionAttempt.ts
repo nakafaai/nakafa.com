@@ -7,13 +7,27 @@ import {
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import {
-  createSectionPlacements,
   requireSectionSnapshot,
   requireSnapshotSection,
 } from "@repo/backend/convex/tryouts/runtime/placement";
 import { ConvexError } from "convex/values";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
+
+/** Resolves the timer row that authorizes answers for one placement. */
+export function loadPlacementSectionAttempt(
+  ctx: MutationCtx,
+  placement: Doc<"tryoutAttemptPlacements">
+) {
+  return ctx.db
+    .query("tryoutSectionAttempts")
+    .withIndex("by_tryoutAttemptId_and_tryoutSectionId", (q) =>
+      q
+        .eq("tryoutAttemptId", placement.tryoutAttemptId)
+        .eq("tryoutSectionId", placement.tryoutSectionId)
+    )
+    .unique();
+}
 
 /** Starts one section attempt and its timer inside an active try-out attempt. */
 export async function startSectionAttempt(
@@ -98,11 +112,6 @@ export async function startSectionAttempt(
     });
   }
 
-  await createSectionPlacements(ctx, {
-    attempt: currentAttempt,
-    section,
-    sectionAttempt,
-  });
   await ctx.db.patch(currentAttempt._id, {
     lastActivityAt: args.now,
   });

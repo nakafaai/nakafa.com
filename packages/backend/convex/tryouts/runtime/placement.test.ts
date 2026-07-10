@@ -2,7 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { createSectionPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -134,36 +134,16 @@ async function insertRuntime(
     tryoutSetId,
     userId,
   });
-  const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
-    answeredCount: 0,
-    completedAt: null,
-    correctAnswers: 0,
-    endReason: null,
-    expiresAt: NOW + 1_800_000,
-    lastActivityAt: NOW,
-    sectionKey: SECTION,
-    sectionOrder: 1,
-    startedAt: NOW,
-    status: "in-progress",
-    totalQuestions: 1,
-    tryoutAttemptId: attemptId,
-    tryoutSectionId: sectionId,
-  });
+  const attempt = await ctx.db.get(attemptId);
 
-  const [attempt, section, sectionAttempt] = await Promise.all([
-    ctx.db.get(attemptId),
-    ctx.db.get(sectionId),
-    ctx.db.get(sectionAttemptId),
-  ]);
-
-  if (!(attempt && section && sectionAttempt)) {
+  if (!attempt) {
     throw new ConvexError({
       code: "TRYOUT_FIXTURE_NOT_FOUND",
       message: "Expected try-out fixture rows.",
     });
   }
 
-  return { attempt, section, sectionAttempt };
+  return attempt;
 }
 
 describe("tryouts/runtime/placement", () => {
@@ -173,9 +153,9 @@ describe("tryouts/runtime/placement", () => {
     await expect(
       t.mutation(async (ctx) => {
         const questionSetId = await insertSource(ctx);
-        const runtime = await insertRuntime(ctx, questionSetId);
+        const attempt = await insertRuntime(ctx, questionSetId);
 
-        await createSectionPlacements(ctx, runtime);
+        await createAttemptPlacements(ctx, { attempt });
       })
     ).rejects.toThrow("TRYOUT_QUESTION_SNAPSHOT_MISMATCH");
   });
