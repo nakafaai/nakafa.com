@@ -4,13 +4,16 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { Preloaded } from "convex/react";
 import { usePreloadedQuery } from "convex/react";
-import { choiceCardVariants } from "@/components/shared/choice-card";
+import {
+  ChoiceCardContent,
+  choiceCardVariants,
+} from "@/components/shared/choice/card";
+import {
+  ChoiceCardIcon,
+  ChoiceCardVisual,
+} from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
-import {
-  TryoutCardIcon,
-  TryoutCardVisual,
-} from "@/components/tryout/catalog/visual";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type CountryPageQuery = typeof api.tryouts.queries.catalog.getCountryPage;
@@ -42,12 +45,12 @@ export function TryoutCountryPageClient({
             href={getTryoutPublicPathHref(exam.publicPath)}
             key={exam.examKey}
           >
-            <TryoutCardVisual keyString={exam.publicPath}>
-              <TryoutCardIcon icon={icon} />
-            </TryoutCardVisual>
-            <div className="px-6 py-3 text-center">
+            <ChoiceCardVisual seed={exam.publicPath}>
+              <ChoiceCardIcon icon={icon} />
+            </ChoiceCardVisual>
+            <ChoiceCardContent>
               <h2>{exam.title}</h2>
-            </div>
+            </ChoiceCardContent>
           </NavigationLink>
         );
       })}

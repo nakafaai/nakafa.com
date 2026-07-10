@@ -5,13 +5,16 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { Preloaded } from "convex/react";
 import { usePreloadedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
-import { choiceCardVariants } from "@/components/shared/choice-card";
+import {
+  ChoiceCardContent,
+  choiceCardVariants,
+} from "@/components/shared/choice/card";
+import {
+  ChoiceCardIcon,
+  ChoiceCardVisual,
+} from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
-import {
-  TryoutCardIcon,
-  TryoutCardVisual,
-} from "@/components/tryout/catalog/visual";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type ExamPageQuery = typeof api.tryouts.queries.catalog.getExamPage;
@@ -45,16 +48,18 @@ export function TryoutExamPageClient({
               href={getTryoutPublicPathHref(track.publicPath)}
               key={track.trackKey}
             >
-              <TryoutCardVisual keyString={track.publicPath}>
-                {icon ? <TryoutCardIcon icon={icon} /> : null}
-              </TryoutCardVisual>
-              <div className="px-6 py-3 text-center">
-                <h2>{track.title}</h2>
-                <p className="mt-1 text-muted-foreground text-sm">
-                  {track.description ??
-                    tTryouts("set-count", { count: track.readySetCount })}
-                </p>
-              </div>
+              <ChoiceCardVisual seed={track.publicPath}>
+                {icon ? <ChoiceCardIcon icon={icon} /> : null}
+              </ChoiceCardVisual>
+              <ChoiceCardContent>
+                <div className="grid gap-1">
+                  <h2>{track.title}</h2>
+                  <p className="text-muted-foreground text-sm">
+                    {track.description ??
+                      tTryouts("set-count", { count: track.readySetCount })}
+                  </p>
+                </div>
+              </ChoiceCardContent>
             </NavigationLink>
           );
         })}

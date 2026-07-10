@@ -11,7 +11,7 @@ import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { RoleChoice } from "@/components/programs/onboarding/choice";
+import { OnboardingChoice } from "@/components/programs/onboarding/choice";
 import { StepHeading } from "@/components/programs/onboarding/heading";
 import {
   type getSelectableRoleOptions,
@@ -23,7 +23,7 @@ import {
   onboardingChoiceGridVariants,
 } from "@/components/programs/onboarding/styles";
 import { submitOnboardingRole } from "@/components/programs/onboarding/submit";
-import { choiceCardVariants } from "@/components/shared/choice-card";
+import { choiceCardVariants } from "@/components/shared/choice/card";
 import { useUser } from "@/lib/context/use-user";
 
 /** Saves the normal Nakafa role step from the reactive current-user role. */
@@ -121,7 +121,7 @@ function RoleStepFormBody({
                 onClick={() => field.handleChange(option.key)}
                 type="button"
               >
-                <RoleChoice option={option} />
+                <OnboardingChoice option={option} />
               </button>
             ))}
           </section>

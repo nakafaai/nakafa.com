@@ -3,13 +3,13 @@ import { GradientBlock } from "@repo/design-system/components/ui/gradient-block"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { ReactNode } from "react";
 
-/** Renders the full-color artwork shared by try-out discovery cards. */
-export function TryoutCardVisual({
+/** Renders full-color generated artwork behind composed choice-card content. */
+export function ChoiceCardVisual({
   children,
-  keyString,
+  seed,
 }: {
   children: ReactNode;
-  keyString: string;
+  seed: string;
 }) {
   return (
     <div className="relative flex aspect-video w-full items-center justify-center">
@@ -17,15 +17,15 @@ export function TryoutCardVisual({
         className="pointer-events-none absolute inset-0"
         colorScheme="vibrant"
         intensity="medium"
-        keyString={keyString}
+        keyString={seed}
       />
       {children}
     </div>
   );
 }
 
-/** Renders a theme-contrasting icon over vivid try-out card artwork. */
-export function TryoutCardIcon({ icon }: { icon: IconSvgElement }) {
+/** Renders an accessible-contrast decorative icon over choice-card artwork. */
+export function ChoiceCardIcon({ icon }: { icon: IconSvgElement }) {
   return (
     <HugeIcons
       aria-hidden

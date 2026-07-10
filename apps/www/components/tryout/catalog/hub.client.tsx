@@ -7,11 +7,14 @@ import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { choiceCardVariants } from "@/components/shared/choice-card";
+import {
+  ChoiceCardContent,
+  choiceCardVariants,
+} from "@/components/shared/choice/card";
+import { ChoiceCardVisual } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
-import { TryoutCardVisual } from "@/components/tryout/catalog/visual";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 interface TryoutHubClientProps {
@@ -64,15 +67,15 @@ export function TryoutHubClient({ locale }: TryoutHubClientProps) {
           key={country.countryKey}
           onClick={() => handleCountryClick(country)}
         >
-          <TryoutCardVisual keyString={country.publicPath}>
+          <ChoiceCardVisual seed={country.publicPath}>
             <CountryFlagIcon
               className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
               countryCode={country.countryCode}
             />
-          </TryoutCardVisual>
-          <div className="px-6 py-3 text-center">
+          </ChoiceCardVisual>
+          <ChoiceCardContent>
             <h2>{country.title}</h2>
-          </div>
+          </ChoiceCardContent>
         </NavigationLink>
       ))}
     </div>

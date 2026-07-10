@@ -8,15 +8,20 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@repo/design-system/components/ui/breadcrumb";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import {
   CurriculumSelector,
   type CurriculumSelectorOption,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/selector";
-import { choiceCardVariants } from "@/components/shared/choice-card";
+import {
+  ChoiceCardContent,
+  choiceCardVariants,
+} from "@/components/shared/choice/card";
+import {
+  ChoiceCardIcon,
+  ChoiceCardVisual,
+} from "@/components/shared/choice/visual";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 
 /** Renders the curriculum index header with breadcrumb context. */
@@ -105,29 +110,19 @@ export function CurriculumRootCards({
             href={`/${locale}/${route.publicPath}`}
             key={route.publicPath}
           >
-            <div className="relative flex aspect-video w-full items-center justify-center">
-              <GradientBlock
-                className="mask-[linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] mask-no-repeat mask-size-[100%_100%] pointer-events-none absolute inset-0 opacity-20"
-                colorScheme="vibrant"
-                intensity="medium"
-                keyString={route.publicPath}
-              />
+            <ChoiceCardVisual seed={route.publicPath}>
               {countryCode ? (
                 <CountryFlagIcon
                   className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
                   countryCode={countryCode}
                 />
               ) : (
-                <HugeIcons
-                  aria-hidden
-                  className="relative size-6 text-foreground"
-                  icon={Icon}
-                />
+                <ChoiceCardIcon icon={Icon} />
               )}
-            </div>
-            <div className="px-6 pt-3 pb-6 text-center">
+            </ChoiceCardVisual>
+            <ChoiceCardContent>
               <h2>{route.title}</h2>
-            </div>
+            </ChoiceCardContent>
           </NavigationLink>
         );
       })}
