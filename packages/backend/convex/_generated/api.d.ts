@@ -118,10 +118,10 @@ import type * as contentSync_mutations_articles from "../contentSync/mutations/a
 import type * as contentSync_mutations_authors from "../contentSync/mutations/authors.js";
 import type * as contentSync_mutations_curriculum from "../contentSync/mutations/curriculum.js";
 import type * as contentSync_mutations_quran from "../contentSync/mutations/quran.js";
-import type * as contentSync_mutations_readModels_routes from "../contentSync/mutations/readModels/routes.js";
-import type * as contentSync_mutations_readModels_stale from "../contentSync/mutations/readModels/stale.js";
 import type * as contentSync_mutations_routes from "../contentSync/mutations/routes.js";
 import type * as contentSync_mutations_tryouts from "../contentSync/mutations/tryouts.js";
+import type * as contentSync_publicRoutes_internal from "../contentSync/publicRoutes/internal.js";
+import type * as contentSync_publicRoutes_spec from "../contentSync/publicRoutes/spec.js";
 import type * as contentSync_queries_authors from "../contentSync/queries/authors.js";
 import type * as contentSync_queries_counts from "../contentSync/queries/counts.js";
 import type * as contentSync_queries_integrity from "../contentSync/queries/integrity.js";
@@ -427,10 +427,10 @@ declare const fullApi: ApiFromModules<{
   "contentSync/mutations/authors": typeof contentSync_mutations_authors;
   "contentSync/mutations/curriculum": typeof contentSync_mutations_curriculum;
   "contentSync/mutations/quran": typeof contentSync_mutations_quran;
-  "contentSync/mutations/readModels/routes": typeof contentSync_mutations_readModels_routes;
-  "contentSync/mutations/readModels/stale": typeof contentSync_mutations_readModels_stale;
   "contentSync/mutations/routes": typeof contentSync_mutations_routes;
   "contentSync/mutations/tryouts": typeof contentSync_mutations_tryouts;
+  "contentSync/publicRoutes/internal": typeof contentSync_publicRoutes_internal;
+  "contentSync/publicRoutes/spec": typeof contentSync_publicRoutes_spec;
   "contentSync/queries/authors": typeof contentSync_queries_authors;
   "contentSync/queries/counts": typeof contentSync_queries_counts;
   "contentSync/queries/integrity": typeof contentSync_queries_integrity;

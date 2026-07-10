@@ -29,9 +29,9 @@ import type {
   SyncResult,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
-import { syncGeneratedReadModels } from "@repo/backend/scripts/sync-content/models/sync";
 import { syncContentRouteArtifactPages } from "@repo/backend/scripts/sync-content/routes/artifacts";
 import { readRoutePageOptionsAfterCleanup } from "@repo/backend/scripts/sync-content/routes/options";
+import { syncPublicRoutes } from "@repo/backend/scripts/sync-content/routes/sync";
 import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/runtime/cache";
 import {
   getChangedFilesSince,
@@ -78,7 +78,7 @@ export const syncAll = Effect.fn("sync.all")(function* (
   let quranResult: SyncResult;
   let tryoutResult: SyncResult;
   let routePageResult: SyncResult;
-  let generatedReadModelResult: SyncResult;
+  let publicRouteResult: SyncResult;
   let learningProgramResult: SyncResult;
 
   if (options.sequential) {
@@ -130,13 +130,13 @@ export const syncAll = Effect.fn("sync.all")(function* (
         routePageResult.unchanged
     );
 
-    const generatedModelPhase = startPhase(metrics, "Generated Read Models");
-    generatedReadModelResult = yield* syncGeneratedReadModels(config, options);
+    const publicRoutePhase = startPhase(metrics, "Public Routes");
+    publicRouteResult = yield* syncPublicRoutes(config, options);
     endPhase(
-      generatedModelPhase,
-      generatedReadModelResult.created +
-        generatedReadModelResult.updated +
-        generatedReadModelResult.unchanged
+      publicRoutePhase,
+      publicRouteResult.created +
+        publicRouteResult.updated +
+        publicRouteResult.unchanged
     );
 
     const learningProgramPhase = startPhase(metrics, "Learning Programs");
@@ -186,8 +186,8 @@ export const syncAll = Effect.fn("sync.all")(function* (
 
     log("Phase 6: Syncing learning programs and coverage...");
     const phase6Start = performance.now();
-    generatedReadModelResult = yield* syncGeneratedReadModels(config, options);
-    log(`  Generated Models:    ${formatSyncResult(generatedReadModelResult)}`);
+    publicRouteResult = yield* syncPublicRoutes(config, options);
+    log(`  Public Routes:    ${formatSyncResult(publicRouteResult)}`);
     learningProgramResult = yield* syncLearningPrograms(config, options);
     log(`  Learning Programs:   ${formatSyncResult(learningProgramResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase6Start)}`);
@@ -198,7 +198,7 @@ export const syncAll = Effect.fn("sync.all")(function* (
     addPhaseMetrics(metrics, "Quran", quranResult);
     addPhaseMetrics(metrics, "Tryouts", tryoutResult);
     addPhaseMetrics(metrics, "Route Pages", routePageResult);
-    addPhaseMetrics(metrics, "Generated Read Models", generatedReadModelResult);
+    addPhaseMetrics(metrics, "Public Routes", publicRouteResult);
     addPhaseMetrics(metrics, "Learning Programs", learningProgramResult);
   }
 
@@ -211,7 +211,7 @@ export const syncAll = Effect.fn("sync.all")(function* (
     quranResult,
     tryoutResult,
     routePageResult,
-    generatedReadModelResult,
+    publicRouteResult,
     learningProgramResult
   );
   logSyncMetrics(metrics);
@@ -267,11 +267,8 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     );
     addPhaseMetrics(metrics, "Route Pages", routePageResult);
 
-    const generatedReadModelResult = yield* syncGeneratedReadModels(
-      config,
-      options
-    );
-    addPhaseMetrics(metrics, "Generated Read Models", generatedReadModelResult);
+    const publicRouteResult = yield* syncPublicRoutes(config, options);
+    addPhaseMetrics(metrics, "Public Routes", publicRouteResult);
 
     const learningProgramResult = yield* syncLearningPrograms(config, options);
     addPhaseMetrics(metrics, "Learning Programs", learningProgramResult);
@@ -339,7 +336,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   };
   let quranResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   let routePageResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
-  let generatedReadModelResult: SyncResult = {
+  let publicRouteResult: SyncResult = {
     created: 0,
     updated: 0,
     unchanged: 0,
@@ -407,12 +404,9 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   );
   addPhaseMetrics(metrics, "Route Pages", routePageResult);
 
-  if (syncPlan.refreshGeneratedReadModels) {
-    generatedReadModelResult = yield* syncGeneratedReadModels(
-      config,
-      routePageOptions
-    );
-    addPhaseMetrics(metrics, "Generated Read Models", generatedReadModelResult);
+  if (syncPlan.refreshPublicRoutes) {
+    publicRouteResult = yield* syncPublicRoutes(config, routePageOptions);
+    addPhaseMetrics(metrics, "Public Routes", publicRouteResult);
   }
 
   learningProgramResult = yield* syncLearningPrograms(config, routePageOptions);
@@ -428,7 +422,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     tryoutResult.created +
     quranResult.created +
     routePageResult.created +
-    generatedReadModelResult.created +
+    publicRouteResult.created +
     learningProgramResult.created;
   const totalUpdated =
     articleResult.updated +
@@ -437,7 +431,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     tryoutResult.updated +
     quranResult.updated +
     routePageResult.updated +
-    generatedReadModelResult.updated +
+    publicRouteResult.updated +
     learningProgramResult.updated;
   if (totalCreated > 0 || totalUpdated > 0) {
     log(`Changes: ${totalCreated} created, ${totalUpdated} updated`);

@@ -128,9 +128,9 @@ const loadWorkflow = async (
       return syncStep("syncRoutePages");
     },
   }));
-  vi.doMock("@repo/backend/scripts/sync-content/models/sync", () => ({
+  vi.doMock("@repo/backend/scripts/sync-content/routes/sync", () => ({
     /** Records generated material/curriculum/assessment read-model refresh calls. */
-    syncGeneratedReadModels: () => syncStep("syncGeneratedReadModels"),
+    syncPublicRoutes: () => syncStep("syncPublicRoutes"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/content/programs", () => ({
     /** Records learning program catalog and coverage refresh calls. */
@@ -220,7 +220,7 @@ describe("sync-content workflows", () => {
       expect.arrayContaining([
         "syncAuthors",
         "syncRoutePages",
-        "syncGeneratedReadModels",
+        "syncPublicRoutes",
         "syncLearningPrograms",
         "clean",
         "verify",
@@ -235,9 +235,9 @@ describe("sync-content workflows", () => {
       events.indexOf("clean")
     );
     expect(events.lastIndexOf("syncRoutePages")).toBeLessThan(
-      events.lastIndexOf("syncGeneratedReadModels")
+      events.lastIndexOf("syncPublicRoutes")
     );
-    expect(events.lastIndexOf("syncGeneratedReadModels")).toBeLessThan(
+    expect(events.lastIndexOf("syncPublicRoutes")).toBeLessThan(
       events.lastIndexOf("syncLearningPrograms")
     );
     expect(events.lastIndexOf("syncLearningPrograms")).toBeLessThan(
@@ -268,9 +268,9 @@ describe("sync-content workflows", () => {
       events.indexOf("clean")
     );
     expect(events.lastIndexOf("syncRoutePages")).toBeLessThan(
-      events.lastIndexOf("syncGeneratedReadModels")
+      events.lastIndexOf("syncPublicRoutes")
     );
-    expect(events.lastIndexOf("syncGeneratedReadModels")).toBeLessThan(
+    expect(events.lastIndexOf("syncPublicRoutes")).toBeLessThan(
       events.indexOf("verify")
     );
     expect(routePageOptions).toHaveLength(2);
@@ -296,9 +296,9 @@ describe("sync-content workflows", () => {
       events.filter((event) => event === "syncLearningPrograms")
     ).toHaveLength(1);
     expect(events.indexOf("syncRoutePages")).toBeLessThan(
-      events.indexOf("syncGeneratedReadModels")
+      events.indexOf("syncPublicRoutes")
     );
-    expect(events.indexOf("syncGeneratedReadModels")).toBeLessThan(
+    expect(events.indexOf("syncPublicRoutes")).toBeLessThan(
       events.indexOf("syncLearningPrograms")
     );
     expect(events.indexOf("syncLearningPrograms")).toBeLessThan(
@@ -427,7 +427,7 @@ describe("sync-content workflows", () => {
         "syncTryouts",
         "clean",
         "syncRoutePages",
-        "syncGeneratedReadModels",
+        "syncPublicRoutes",
         "syncLearningPrograms",
         "invalidateContentRuntimeCache",
         "saveSyncState",
@@ -445,9 +445,9 @@ describe("sync-content workflows", () => {
       events.indexOf("syncRoutePages")
     );
     expect(events.indexOf("syncRoutePages")).toBeLessThan(
-      events.indexOf("syncGeneratedReadModels")
+      events.indexOf("syncPublicRoutes")
     );
-    expect(events.indexOf("syncGeneratedReadModels")).toBeLessThan(
+    expect(events.indexOf("syncPublicRoutes")).toBeLessThan(
       events.indexOf("syncLearningPrograms")
     );
   });
@@ -478,7 +478,7 @@ describe("sync-content workflows", () => {
         "syncTryouts",
         "clean",
         "syncRoutePages",
-        "syncGeneratedReadModels",
+        "syncPublicRoutes",
         "syncLearningPrograms",
         "invalidateContentRuntimeCache",
         "saveSyncState",
@@ -495,7 +495,7 @@ describe("sync-content workflows", () => {
       events.indexOf("syncRoutePages")
     );
     expect(events.indexOf("syncRoutePages")).toBeLessThan(
-      events.indexOf("syncGeneratedReadModels")
+      events.indexOf("syncPublicRoutes")
     );
   });
 
@@ -520,7 +520,7 @@ describe("sync-content workflows", () => {
     expect(events).toEqual([
       "syncQuran",
       "syncRoutePages",
-      "syncGeneratedReadModels",
+      "syncPublicRoutes",
       "syncLearningPrograms",
       "invalidateContentRuntimeCache",
       "saveSyncState",

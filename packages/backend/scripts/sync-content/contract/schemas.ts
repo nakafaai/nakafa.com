@@ -33,7 +33,7 @@ export const BATCH_SIZES = {
   curriculumLessons: CONTENT_SYNC_BATCH_LIMITS.curriculumLessons,
   questionSets: CONTENT_SYNC_BATCH_LIMITS.questionSets,
   questions: CONTENT_SYNC_BATCH_LIMITS.questions,
-  generatedPublicRoutes: CONTENT_SYNC_BATCH_LIMITS.generatedPublicRoutes,
+  publicRoutes: CONTENT_SYNC_BATCH_LIMITS.publicRoutes,
   quranSurahs: CONTENT_SYNC_BATCH_LIMITS.quranSurahs,
   quranVerses: CONTENT_SYNC_BATCH_LIMITS.quranVerses,
   quranSearchDocuments: CONTENT_SYNC_BATCH_LIMITS.quranSearchDocuments,
@@ -205,9 +205,9 @@ export const QuestionSetSyncResultSchema = SyncSummarySchema;
 
 export const CurriculumTopicSyncResultSchema = SyncSummarySchema;
 
-export const GeneratedReadModelSyncResultSchema = SyncSummarySchema;
+export const PublicRouteSyncResultSchema = SyncSummarySchema;
 
-export const GeneratedReadModelDeleteResultSchema = Schema.Struct({
+export const PublicRouteDeleteResultSchema = Schema.Struct({
   deleted: Schema.Number,
 });
 

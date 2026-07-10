@@ -5,12 +5,12 @@ export type IncrementalSyncRowPhase = "articles" | "curriculum" | "tryouts";
  * Ordered work plan for one incremental sync pass.
  *
  * Row phases repair persisted content rows such as `contentRoutes` and
- * `contentSearch`; route artifacts and generated read models are derived from
+ * `contentSearch`; route artifacts and public routes are derived from
  * those rows and therefore run after the planned row phases.
  */
 export interface IncrementalSyncPlan {
   readonly cleanBeforeRouteArtifacts: boolean;
-  readonly refreshGeneratedReadModels: boolean;
+  readonly refreshPublicRoutes: boolean;
   readonly rowPhases: readonly IncrementalSyncRowPhase[];
 }
 
@@ -18,7 +18,7 @@ export interface IncrementalSyncPlan {
  * Builds the ordered incremental sync plan from changed repository paths.
  *
  * Projection modules are part of the persisted content-row contract: route and
- * graph changes can alter `contentRoutes`, `contentSearch`, and generated
+ * graph changes can alter `contentRoutes`, `contentSearch`, and source-owned
  * public route rows even when no MDX file changed. Keeping that invalidation
  * rule here gives the workflow one stable plan to execute.
  */
@@ -66,7 +66,7 @@ export function readIncrementalSyncPlan(
 
   return {
     cleanBeforeRouteArtifacts: rowPhases.length > 0,
-    refreshGeneratedReadModels: curriculumRowsChanged || tryoutRowsChanged,
+    refreshPublicRoutes: curriculumRowsChanged || tryoutRowsChanged,
     rowPhases,
   };
 }

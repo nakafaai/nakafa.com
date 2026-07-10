@@ -5,7 +5,7 @@ import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
 type PublicRoutePayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.routes.bulkSyncPublicRoutes
+  typeof internal.contentSync.publicRoutes.internal.bulkSyncPublicRoutes
 >["routes"][number];
 
 /** Builds public route rows from the source-owned route projection. */

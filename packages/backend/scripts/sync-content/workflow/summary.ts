@@ -6,7 +6,7 @@ interface AuthorSummary {
 }
 
 /**
- * Prints the combined content-sync summary after all source and read-model
+ * Prints the combined content-sync summary after all source and route-catalog
  * phases complete, preserving the operator-facing grouping used by the CLI.
  */
 export function logSyncSummary(
@@ -17,7 +17,7 @@ export function logSyncSummary(
   quranResult: SyncResult,
   tryoutResult: SyncResult,
   routePageResult: SyncResult,
-  generatedReadModelResult: SyncResult,
+  publicRouteResult: SyncResult,
   learningProgramResult: SyncResult
 ): void {
   const totalCreated =
@@ -27,7 +27,7 @@ export function logSyncSummary(
     quranResult.created +
     tryoutResult.created +
     routePageResult.created +
-    generatedReadModelResult.created +
+    publicRouteResult.created +
     learningProgramResult.created;
   const totalUpdated =
     articleResult.updated +
@@ -36,7 +36,7 @@ export function logSyncSummary(
     quranResult.updated +
     tryoutResult.updated +
     routePageResult.updated +
-    generatedReadModelResult.updated +
+    publicRouteResult.updated +
     learningProgramResult.updated;
   const total =
     totalCreated +
@@ -47,7 +47,7 @@ export function logSyncSummary(
     quranResult.unchanged +
     tryoutResult.unchanged +
     routePageResult.unchanged +
-    generatedReadModelResult.unchanged +
+    publicRouteResult.unchanged +
     learningProgramResult.unchanged;
   const totalAuthorLinksCreated =
     (articleResult.authorLinksCreated || 0) +
@@ -74,7 +74,7 @@ export function logSyncSummary(
     `  Route Pages:         ${routePageResult.created + routePageResult.updated + routePageResult.unchanged} (${routePageResult.created} new, ${routePageResult.updated} updated)`
   );
   log(
-    `  Generated Models:    ${generatedReadModelResult.created + generatedReadModelResult.updated + generatedReadModelResult.unchanged} (${generatedReadModelResult.created} new, ${generatedReadModelResult.updated} updated)`
+    `  Public Routes:       ${publicRouteResult.created + publicRouteResult.updated + publicRouteResult.unchanged} (${publicRouteResult.created} new, ${publicRouteResult.updated} updated)`
   );
   log(
     `  Learning Programs:   ${learningProgramResult.created + learningProgramResult.updated + learningProgramResult.unchanged} (${learningProgramResult.created} new, ${learningProgramResult.updated} updated)`

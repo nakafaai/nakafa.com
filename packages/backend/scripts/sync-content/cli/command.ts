@@ -16,7 +16,7 @@ import { syncTryouts } from "@repo/backend/scripts/sync-content/content/tryouts"
 import { validate } from "@repo/backend/scripts/sync-content/content/validate";
 import type { SyncOptions } from "@repo/backend/scripts/sync-content/contract/types";
 import { getConvexConfig } from "@repo/backend/scripts/sync-content/convex/client";
-import { syncGeneratedReadModels } from "@repo/backend/scripts/sync-content/models/sync";
+import { syncPublicRoutes } from "@repo/backend/scripts/sync-content/routes/sync";
 import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/runtime/cache";
 import { verify } from "@repo/backend/scripts/sync-content/verify/sync";
 import { syncFull } from "@repo/backend/scripts/sync-content/workflow/full";
@@ -75,9 +75,7 @@ const printUsage = (): void => {
   log(
     "  learning-programs     - Sync program catalog and graph-backed coverage"
   );
-  log(
-    "  read-models           - Sync generated material/curriculum/assessment read models"
-  );
+  log("  public-routes         - Sync the source-owned public route catalog");
   log("  sync:clean            - Find and remove stale content");
   log(
     "  sync:reset            - Delete synced content/runtime rows (authors optional, requires --force)"
@@ -142,25 +140,25 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       yield* syncAuthors(config, options);
       yield* syncCurriculumTopics(config, options);
       yield* syncCurriculumLessons(config, options);
-      yield* syncGeneratedReadModels(config, options);
+      yield* syncPublicRoutes(config, options);
       return;
     case "curriculum-topics":
       yield* syncAuthors(config, options);
       yield* syncCurriculumTopics(config, options);
-      yield* syncGeneratedReadModels(config, options);
+      yield* syncPublicRoutes(config, options);
       return;
     case "curriculum-lessons":
       yield* syncAuthors(config, options);
       yield* syncCurriculumLessons(config, options);
-      yield* syncGeneratedReadModels(config, options);
+      yield* syncPublicRoutes(config, options);
       return;
     case "tryouts":
       yield* syncAuthors(config, options);
       yield* syncTryouts(config, options);
-      yield* syncGeneratedReadModels(config, options);
+      yield* syncPublicRoutes(config, options);
       return;
-    case "read-models":
-      yield* syncGeneratedReadModels(config, options);
+    case "public-routes":
+      yield* syncPublicRoutes(config, options);
       return;
     case "learning-programs":
       yield* syncLearningPrograms(config, options);

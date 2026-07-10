@@ -1,10 +1,11 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
+  deleteResultValidator,
   publicRouteRowValidator,
   type SyncedPublicRouteRow,
   syncSummaryValidator,
-} from "@repo/backend/convex/contentSync/mutations/readModels/schema";
+} from "@repo/backend/convex/contentSync/publicRoutes/spec";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { v } from "convex/values";
 
@@ -18,7 +19,7 @@ export const bulkSyncPublicRoutes = internalMutation({
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "bulkSyncPublicRoutes",
-      limit: CONTENT_SYNC_BATCH_LIMITS.generatedPublicRoutes,
+      limit: CONTENT_SYNC_BATCH_LIMITS.publicRoutes,
       received: args.routes.length,
       unit: "public routes",
     });
@@ -58,6 +59,24 @@ export const bulkSyncPublicRoutes = internalMutation({
     }
 
     return { created, unchanged, updated };
+  },
+});
+
+/** Deletes stale public route rows in bounded batches. */
+export const deleteStalePublicRoutes = internalMutation({
+  args: { limit: v.number(), syncedAt: v.number() },
+  returns: deleteResultValidator,
+  handler: async (ctx, args) => {
+    const staleRows = await ctx.db
+      .query("publicRoutes")
+      .withIndex("by_syncedAt", (query) => query.lt("syncedAt", args.syncedAt))
+      .take(args.limit);
+
+    for (const row of staleRows) {
+      await ctx.db.delete(row._id);
+    }
+
+    return { deleted: staleRows.length };
   },
 });
 
