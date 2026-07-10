@@ -23,7 +23,7 @@ import {
   onboardingChoiceGridVariants,
 } from "@/components/programs/onboarding/styles";
 import { submitOnboardingRole } from "@/components/programs/onboarding/submit";
-import { choiceCardVariants } from "@/components/shared/choice/card";
+import { choiceCardVariants } from "@/components/shared/choice/variants";
 import { useUser } from "@/lib/context/use-user";
 
 /** Saves the normal Nakafa role step from the reactive current-user role. */

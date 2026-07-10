@@ -7,10 +7,8 @@ import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import {
-  ChoiceCardContent,
-  choiceCardVariants,
-} from "@/components/shared/choice/card";
+import { ChoiceCardContent } from "@/components/shared/choice/card";
+import { choiceCardVariants } from "@/components/shared/choice/variants";
 import { ChoiceCardVisual } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { CountryFlagIcon } from "@/components/shared/country-flag";

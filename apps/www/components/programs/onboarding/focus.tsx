@@ -38,7 +38,7 @@ import {
   onboardingChoiceGridVariants,
 } from "@/components/programs/onboarding/styles";
 import { submitOnboardingSelection } from "@/components/programs/onboarding/submit";
-import { choiceCardVariants } from "@/components/shared/choice/card";
+import { choiceCardVariants } from "@/components/shared/choice/variants";
 import { useUser } from "@/lib/context/use-user";
 
 /** Saves the selected learning focus for the latest reactive onboarding role. */

@@ -14,10 +14,8 @@ import {
   CurriculumSelector,
   type CurriculumSelectorOption,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/selector";
-import {
-  ChoiceCardContent,
-  choiceCardVariants,
-} from "@/components/shared/choice/card";
+import { ChoiceCardContent } from "@/components/shared/choice/card";
+import { choiceCardVariants } from "@/components/shared/choice/variants";
 import {
   ChoiceCardIcon,
   ChoiceCardVisual,

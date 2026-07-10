@@ -5,10 +5,8 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { Preloaded } from "convex/react";
 import { usePreloadedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
-import {
-  ChoiceCardContent,
-  choiceCardVariants,
-} from "@/components/shared/choice/card";
+import { ChoiceCardContent } from "@/components/shared/choice/card";
+import { choiceCardVariants } from "@/components/shared/choice/variants";
 import {
   ChoiceCardIcon,
   ChoiceCardVisual,
