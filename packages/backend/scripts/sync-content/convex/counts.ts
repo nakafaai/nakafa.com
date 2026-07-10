@@ -3,7 +3,7 @@ import { contentCountTables } from "@repo/backend/convex/contentSync/tables";
 import {
   ContentCountsSchema,
   CountTablePageSchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
+} from "@repo/backend/scripts/sync-content/contract/inspection";
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexQuery } from "@repo/backend/scripts/sync-content/convex/client";
 import { Effect, Schema } from "effect";

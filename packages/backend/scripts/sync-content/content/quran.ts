@@ -6,12 +6,12 @@ import {
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
 import {
-  BATCH_SIZES,
   QuranSearchSyncResultSchema,
   QuranStaleDeleteResultSchema,
   QuranSurahSyncResultSchema,
   QuranVerseSyncResultSchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
+} from "@repo/backend/scripts/sync-content/contract/quran";
+import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
   SyncOptions,

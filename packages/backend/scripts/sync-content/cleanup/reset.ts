@@ -9,7 +9,7 @@ import {
   logSuccess,
   logWarning,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import { BatchDeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
+import { BatchDeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
 import type {
   ConvexConfig,
   SyncOptions,

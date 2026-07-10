@@ -1,8 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import {
-  AuthorSyncResultSchema,
-  CountTablePageSchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
+import { CountTablePageSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
+import { AuthorSyncResultSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/contract/types";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Cause, ConfigProvider, Effect, Exit, Schema } from "effect";

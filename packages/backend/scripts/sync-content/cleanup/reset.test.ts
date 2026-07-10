@@ -4,7 +4,7 @@ import {
   log,
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import type { ContentCountsSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
+import type { ContentCountsSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/convex/counts";
 import { getFunctionName } from "convex/server";

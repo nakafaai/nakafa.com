@@ -14,7 +14,7 @@ import {
   StaleContentSchema,
   TryoutScaleIntegrityPageSchema,
   UnusedAuthorsSchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
+} from "@repo/backend/scripts/sync-content/contract/inspection";
 import type {
   ConvexConfig,
   FilesystemSlugs,

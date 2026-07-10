@@ -5,10 +5,8 @@ import {
   logStaleItems,
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import {
-  BATCH_SIZES,
-  DeleteResultSchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
+import { DeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
+import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
   StaleItem,
