@@ -18,6 +18,8 @@ import {
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ReactNode } from "react";
 
+const VISIBLE_PATH_ITEM_COUNT = 2;
+
 export type TryoutBreadcrumbItem = Readonly<{
   href?: string;
   label: string;
@@ -35,8 +37,8 @@ export interface TryoutHeaderValue {
 /** Renders the sticky try-out navigation header used by chooser pages. */
 export function TryoutHeader({ value }: { value: TryoutHeaderValue }) {
   const { action, homeLabel, items, title } = value;
-  const currentItem = items.at(-1) ?? null;
-  const hiddenItems = currentItem ? items.slice(0, -1) : items;
+  const hiddenItems = items.slice(0, -VISIBLE_PATH_ITEM_COUNT);
+  const visibleItems = items.slice(-VISIBLE_PATH_ITEM_COUNT);
 
   return (
     <header className="sticky top-16 z-10 flex min-h-16 w-full shrink-0 border-b bg-background lg:top-0">
@@ -54,9 +56,13 @@ export function TryoutHeader({ value }: { value: TryoutHeaderValue }) {
             {hiddenItems.length > 0 ? (
               <TryoutBreadcrumbMenu items={hiddenItems} />
             ) : null}
-            {currentItem ? (
-              <TryoutBreadcrumbSegment isCurrent item={currentItem} />
-            ) : null}
+            {visibleItems.map((item, index) => (
+              <TryoutBreadcrumbSegment
+                isCurrent={index === visibleItems.length - 1}
+                item={item}
+                key={`${item.label}:${item.href ?? "current"}`}
+              />
+            ))}
           </BreadcrumbList>
         </Breadcrumb>
         {action}
