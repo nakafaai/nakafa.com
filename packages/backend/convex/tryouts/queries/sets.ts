@@ -20,12 +20,7 @@ import { literals } from "convex-helpers/validators";
 
 const setSortValidator = v.object({
   direction: literals("asc", "desc"),
-  field: literals(
-    "order",
-    "title",
-    "readyQuestionCount",
-    "visibleSectionCount"
-  ),
+  field: literals("order", "title", "readyQuestionCount"),
 });
 
 const trackIdentityValidator = v.object({
@@ -126,22 +121,6 @@ async function readSetPage(ctx: QueryCtx, args: ListArgs) {
     return await ctx.db
       .query("tryoutSets")
       .withIndex("by_track_locale_active_ready_questions", (q) =>
-        q
-          .eq("countryKey", args.countryKey)
-          .eq("examKey", args.examKey)
-          .eq("trackKey", args.trackKey)
-          .eq("locale", args.locale)
-          .eq("isActive", true)
-          .eq("isReady", true)
-      )
-      .order(args.sort.direction)
-      .paginate(args.paginationOpts);
-  }
-
-  if (args.sort.field === "visibleSectionCount") {
-    return await ctx.db
-      .query("tryoutSets")
-      .withIndex("by_track_locale_active_ready_sections", (q) =>
         q
           .eq("countryKey", args.countryKey)
           .eq("examKey", args.examKey)

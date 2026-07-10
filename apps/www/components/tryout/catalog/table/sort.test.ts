@@ -17,9 +17,6 @@ describe("readTryoutSetSort", () => {
     expect(
       readTryoutSetSort([{ desc: true, id: "readyQuestionCount" }])
     ).toEqual({ direction: "desc", field: "readyQuestionCount" });
-    expect(
-      readTryoutSetSort([{ desc: false, id: "visibleSectionCount" }])
-    ).toEqual({ direction: "asc", field: "visibleSectionCount" });
   });
 
   it("falls back to authored order for non-sortable columns", () => {

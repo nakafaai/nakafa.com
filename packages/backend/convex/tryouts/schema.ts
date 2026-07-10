@@ -194,15 +194,6 @@ const tables = {
       "isReady",
       "readyQuestionCount",
     ])
-    .index("by_track_locale_active_ready_sections", [
-      "countryKey",
-      "examKey",
-      "trackKey",
-      "locale",
-      "isActive",
-      "isReady",
-      "visibleSectionCount",
-    ])
     .index("by_countryKey_and_examKey_and_trackKey_and_setKey_and_locale", [
       "countryKey",
       "examKey",

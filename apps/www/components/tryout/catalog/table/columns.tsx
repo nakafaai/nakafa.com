@@ -2,7 +2,6 @@
 
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useTranslations } from "next-intl";
 import {
   TryoutSetTableHeader,
   TryoutSetTableLabel,
@@ -10,20 +9,6 @@ import {
 import { TryoutSetTableStatus } from "@/components/tryout/catalog/table/status";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
-
-function TryoutSetSectionCount({ count }: { count: number }) {
-  const tTryouts = useTranslations("Tryouts");
-
-  if (count === 0) {
-    return (
-      <span className="text-muted-foreground">
-        {tTryouts("set-section-direct")}
-      </span>
-    );
-  }
-
-  return <span className="tabular-nums">{count}</span>;
-}
 
 /** Stable TanStack column definitions for try-out set discovery. */
 export const tryoutSetColumns: ColumnDef<TryoutSetRow>[] = [
@@ -51,16 +36,6 @@ export const tryoutSetColumns: ColumnDef<TryoutSetRow>[] = [
     ),
     header: ({ column }) => (
       <TryoutSetTableHeader column={column} labelKey="set-column-questions" />
-    ),
-    size: 100,
-  },
-  {
-    accessorKey: "visibleSectionCount",
-    cell: ({ row }) => (
-      <TryoutSetSectionCount count={row.original.visibleSectionCount} />
-    ),
-    header: ({ column }) => (
-      <TryoutSetTableHeader column={column} labelKey="set-column-sections" />
     ),
     size: 100,
   },

@@ -12,7 +12,6 @@ import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 export type TryoutSetColumnLabel =
   | "set-column-name"
   | "set-column-questions"
-  | "set-column-sections"
   | "set-column-status";
 
 function getSortIcon(direction: false | "asc" | "desc") {

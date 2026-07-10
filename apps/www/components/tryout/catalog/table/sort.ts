@@ -21,7 +21,6 @@ export function readTryoutSetSort(
   switch (primary.id) {
     case "readyQuestionCount":
     case "title":
-    case "visibleSectionCount":
       return { direction, field: primary.id };
     default:
       return defaultSort;
