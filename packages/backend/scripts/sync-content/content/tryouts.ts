@@ -428,7 +428,7 @@ const readQuestion = Effect.fn("sync.readQuestion")(function* (
   if (!choices) {
     return yield* Effect.fail(
       new ScriptFailureError({
-        message: "Missing choices.ts",
+        message: `Missing or invalid choices.ts for ${questionSourcePath}.`,
       })
     );
   }

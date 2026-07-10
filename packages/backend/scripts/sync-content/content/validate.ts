@@ -116,10 +116,10 @@ const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
 
           const choices = yield* readQuestionChoices(path.dirname(file));
 
-          if (!choices || choices.en.length === 0 || choices.id.length === 0) {
+          if (!choices) {
             return yield* Effect.fail(
               new ScriptFailureError({
-                message: `Missing try-out choices for ${file}. Add non-empty en and id choices.ts arrays.`,
+                message: `Missing or invalid try-out choices for ${file}. Add en and id choices.ts arrays with exactly one correct option per locale.`,
               })
             );
           }
