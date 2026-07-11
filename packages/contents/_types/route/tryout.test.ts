@@ -1,4 +1,5 @@
 import { listPublicTryoutRoutes } from "@repo/contents/_types/route/tryout";
+import { defineTryoutExamSource } from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -65,5 +66,39 @@ describe("public try-out routes", () => {
         (route) => route.kind === "tryout-exam" && route.examKey === "tka"
       )
     ).toBe(false);
+  });
+
+  it("does not publish tracks or sets without authored questions", () => {
+    const source = TRYOUT_SOURCES.find(
+      (candidate) => candidate.examKey === "snbt"
+    );
+    const track = source?.tracks[0];
+    const set = track?.sets[0];
+
+    expect(source).toBeDefined();
+    expect(track).toBeDefined();
+    expect(set).toBeDefined();
+    if (!(source && track && set)) {
+      return;
+    }
+
+    const unreadySource = defineTryoutExamSource({
+      ...source,
+      tracks: [
+        {
+          ...track,
+          sets: [{ ...set, sections: [] }],
+        },
+      ],
+    });
+    const routes = Effect.runSync(
+      listPublicTryoutRoutes({ tryouts: [unreadySource] })
+    );
+
+    expect(routes.some((route) => route.kind === "tryout-country")).toBe(true);
+    expect(routes.some((route) => route.kind === "tryout-exam")).toBe(true);
+    expect(routes.some((route) => route.kind === "tryout-track")).toBe(false);
+    expect(routes.some((route) => route.kind === "tryout-set")).toBe(false);
+    expect(routes.some((route) => route.kind === "tryout-section")).toBe(false);
   });
 });

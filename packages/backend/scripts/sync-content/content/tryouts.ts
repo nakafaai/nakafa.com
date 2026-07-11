@@ -28,6 +28,7 @@ import {
   chunkTryoutRows,
   type TryoutSyncArgs,
 } from "@repo/backend/scripts/sync-content/tryout/batch";
+import { getTryoutSetQuestionCount } from "@repo/contents/_types/tryout/readiness";
 import type { TryoutRouteKind } from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { type Locale, locales } from "@repo/utilities/locales";
@@ -150,10 +151,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
           const internalEntrySections = set.sections.filter(
             (section) => section.visibility === "internal-entry"
           );
-          const totalQuestionCount = set.sections.reduce(
-            (total, section) => total + section.questionCount,
-            0
-          );
+          const totalQuestionCount = getTryoutSetQuestionCount(set);
           const internalEntrySectionKey =
             internalEntrySections.length === 1 && visibleSections.length === 0
               ? internalEntrySections[0]?.key

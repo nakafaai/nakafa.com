@@ -5,6 +5,7 @@ import {
   uniqueRoutes,
 } from "@repo/contents/_types/route/path";
 import { PublicTryoutRouteSchema } from "@repo/contents/_types/route/schema";
+import { isTryoutSetReady } from "@repo/contents/_types/tryout/readiness";
 import type { TryoutExamSource } from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { locales } from "@repo/utilities/locales";
@@ -88,6 +89,12 @@ function listExamTryoutRoutes({
       );
 
       for (const track of source.tracks) {
+        const readySets = track.sets.filter(isTryoutSetReady);
+
+        if (readySets.length === 0) {
+          continue;
+        }
+
         const trackPath = yield* makePath([examPath, track.routeSlugs[locale]]);
 
         routes.push(
@@ -106,7 +113,7 @@ function listExamTryoutRoutes({
           })
         );
 
-        for (const set of track.sets) {
+        for (const set of readySets) {
           const setPath = yield* makePath([trackPath, set.routeSlugs[locale]]);
 
           routes.push(
