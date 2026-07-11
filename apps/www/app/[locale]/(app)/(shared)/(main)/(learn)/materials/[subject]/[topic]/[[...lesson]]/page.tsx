@@ -22,6 +22,7 @@ import {
   requireParentMaterialRoute,
   resolveMaterialRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
+import { getMaterialPageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/runtime";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
@@ -34,8 +35,7 @@ import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { importContentModuleOrNull } from "@/lib/content/module";
-import { fetchRuntimeCurriculumPage } from "@/lib/content/runtime/pages";
-import { getRuntimeContentViewId } from "@/lib/content/views";
+import { getContentViewId } from "@/lib/content/views";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -45,7 +45,7 @@ import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 type MaterialPageProps =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">;
 type RuntimeLessonPage = NonNullable<
-  Awaited<ReturnType<typeof fetchRuntimeCurriculumPage>>
+  Awaited<ReturnType<typeof getMaterialPageData>>
 >;
 type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
 type ArticleJsonLdAuthor = ArrayItem<
@@ -72,9 +72,9 @@ export async function generateMetadata({
 }: MaterialPageProps): Promise<Metadata> {
   const { locale, route } = await resolveMaterialRoute(params);
   const path = toLocalizedContentHref(route);
-  const runtimeLesson = await fetchRuntimeCurriculumPage({
+  const runtimeLesson = await getMaterialPageData({
     locale,
-    slug: route.sourcePath,
+    sourcePath: route.sourcePath,
   });
   const title = runtimeLesson?.metadata.title ?? route.title;
   const description =
@@ -115,9 +115,9 @@ export default async function Page({
   ]);
 
   const [runtimeLesson, content] = await Promise.all([
-    fetchRuntimeCurriculumPage({
+    getMaterialPageData({
       locale,
-      slug: route.sourcePath,
+      sourcePath: route.sourcePath,
     }),
     importContentModuleOrNull({
       filePath: route.sourcePath,
@@ -144,9 +144,9 @@ export default async function Page({
         programKey: materialContext.programKey,
       }
     : undefined;
-  const contentId = await getRuntimeContentViewId({
+  const contentId = getContentViewId({
     locale,
-    route: route.publicPath,
+    route: route.sourcePath,
   });
 
   return (

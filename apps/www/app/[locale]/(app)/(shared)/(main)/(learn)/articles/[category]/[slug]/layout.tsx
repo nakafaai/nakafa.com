@@ -4,7 +4,7 @@ import { cleanSlug } from "@repo/utilities/helper";
 import { Option } from "effect";
 import { notFound } from "next/navigation";
 import { ContentViewTracker } from "@/components/tracking/tracker";
-import { getRuntimeContentViewId } from "@/lib/content/views";
+import { getContentViewId } from "@/lib/content/views";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Wraps article pages with graph content-view tracking when the route resolves. */
@@ -23,7 +23,7 @@ export default async function Layout(
   const category = parsedCategory.value;
   const filePath = getSlugPath(category, slug);
   const cleanedSlug = cleanSlug(filePath);
-  const contentId = await getRuntimeContentViewId({
+  const contentId = getContentViewId({
     locale,
     route: cleanedSlug,
   });

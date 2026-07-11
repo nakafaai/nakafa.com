@@ -1,5 +1,4 @@
 import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
-import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
@@ -12,6 +11,7 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { getArticlePageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/runtime";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
@@ -21,9 +21,7 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
-import { fetchRuntimeArticlePage } from "@/lib/content/runtime/pages";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -67,7 +65,7 @@ export async function generateMetadata({
   const { locale, category, slug } = await getResolvedParams(params);
   const [t, { content, filePath }] = await Promise.all([
     getTranslations({ locale, namespace: "Articles" }),
-    getArticleMetadataData({
+    getArticlePageData({
       locale,
       category,
       slug,
@@ -122,32 +120,9 @@ export async function generateMetadata({
   };
 }
 
-/** Loads the cached Convex article row used to build page metadata. */
-async function getArticleMetadataData({
-  locale,
-  category,
-  slug,
-}: {
-  locale: Locale;
-  category: ArticleCategory;
-  slug: string;
-}) {
-  "use cache";
-
-  applyContentRuntimeCache();
-
-  const filePath = getSlugPath(category, slug);
-  const content = await fetchRuntimeArticlePage({
-    locale,
-    slug: filePath.slice(1),
-  });
-
-  return { content, filePath };
-}
-
 /** Non-null runtime article row after metadata/page lookup has passed the 404 guard. */
 type ArticleRuntimePage = NonNullable<
-  Awaited<ReturnType<typeof getArticleMetadataData>>["content"]
+  Awaited<ReturnType<typeof getArticlePageData>>["content"]
 >;
 
 /** Prebuilds article pages from the runtime route catalog instead of filesystem-only slugs. */
@@ -163,10 +138,10 @@ export default async function Page({
   params,
 }: PageProps<"/[locale]/articles/[category]/[slug]">) {
   const { locale, category, slug } = await getResolvedParams(params);
-  const filePath = getSlugPath(category, slug);
-  const article = await fetchRuntimeArticlePage({
+  const { content: article, filePath } = await getArticlePageData({
+    category,
     locale,
-    slug: filePath.slice(1),
+    slug,
   });
 
   if (!article) {

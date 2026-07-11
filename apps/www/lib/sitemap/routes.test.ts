@@ -405,7 +405,6 @@ const publicRouteRows: RuntimeSitemapPublicRoute[] = [
     sectionKey: undefined,
     sitemap: true,
     sourcePath: undefined,
-    syncedAt: 1,
     title: "Mathematics",
   },
   {
@@ -429,7 +428,6 @@ const publicRouteRows: RuntimeSitemapPublicRoute[] = [
     sectionKey: undefined,
     sitemap: true,
     sourcePath: "material/lesson/mathematics/integral/area",
-    syncedAt: 1,
     title: "Area",
   },
 ];
