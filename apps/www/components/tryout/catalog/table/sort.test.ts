@@ -17,10 +17,14 @@ describe("readTryoutSetSort", () => {
     expect(
       readTryoutSetSort([{ desc: true, id: "readyQuestionCount" }])
     ).toEqual({ direction: "desc", field: "readyQuestionCount" });
+    expect(readTryoutSetSort([{ desc: true, id: "attemptStatus" }])).toEqual({
+      direction: "desc",
+      field: "attemptStatus",
+    });
   });
 
-  it("falls back to authored order for non-sortable columns", () => {
-    expect(readTryoutSetSort([{ desc: true, id: "attemptStatus" }])).toEqual({
+  it("falls back to authored order for unknown columns", () => {
+    expect(readTryoutSetSort([{ desc: true, id: "unknown" }])).toEqual({
       direction: "asc",
       field: "order",
     });

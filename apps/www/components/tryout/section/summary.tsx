@@ -12,7 +12,7 @@ import {
   TryoutMetricNumber,
   TryoutMetricTime,
 } from "@/components/tryout/section/metrics";
-import { TryoutStatus } from "@/components/tryout/shell/status";
+import { TryoutStatus } from "@/components/tryout/status";
 
 /** Minimal section contract rendered by the shared summary surface. */
 export interface TryoutSummarySection {

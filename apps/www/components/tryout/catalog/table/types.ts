@@ -7,12 +7,9 @@ type TrackPageQuery = typeof api.tryouts.queries.catalog.getTrackPage;
 export type TryoutSetListArgs = FunctionArgs<SetListQuery>;
 export type TryoutSetRow = FunctionReturnType<SetListQuery>["page"][number];
 export type TryoutTrackPage = NonNullable<FunctionReturnType<TrackPageQuery>>;
-
-/** Navigation state for one cursor-backed set table page. */
-export interface TryoutSetPagerValue {
-  readonly canNext: boolean;
-  readonly canPrevious: boolean;
-  readonly index: number;
-  readonly next: () => void;
-  readonly previous: () => void;
-}
+export type TryoutSetSort =
+  | TryoutSetListArgs["sort"]
+  | {
+      direction: TryoutSetListArgs["sort"]["direction"];
+      field: "attemptStatus";
+    };

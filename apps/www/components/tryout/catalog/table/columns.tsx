@@ -2,13 +2,10 @@
 
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  TryoutSetTableHeader,
-  TryoutSetTableLabel,
-} from "@/components/tryout/catalog/table/header";
-import { TryoutSetTableStatus } from "@/components/tryout/catalog/table/status";
+import { TryoutSetTableHeader } from "@/components/tryout/catalog/table/header";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { TryoutStatus } from "@/components/tryout/status";
 
 /** Stable TanStack column definitions for try-out set discovery. */
 export const tryoutSetColumns: ColumnDef<TryoutSetRow>[] = [
@@ -16,7 +13,7 @@ export const tryoutSetColumns: ColumnDef<TryoutSetRow>[] = [
     accessorKey: "title",
     cell: ({ row }) => (
       <NavigationLink
-        className="font-medium underline-offset-4 hover:underline"
+        className="underline-offset-4 hover:underline"
         href={getTryoutPublicPathHref(row.original.publicPath)}
         prefetch={false}
       >
@@ -41,11 +38,10 @@ export const tryoutSetColumns: ColumnDef<TryoutSetRow>[] = [
   },
   {
     accessorKey: "attemptStatus",
-    cell: ({ row }) => (
-      <TryoutSetTableStatus status={row.original.attemptStatus} />
+    cell: ({ row }) => <TryoutStatus status={row.original.attemptStatus} />,
+    header: ({ column }) => (
+      <TryoutSetTableHeader column={column} labelKey="set-column-status" />
     ),
-    enableSorting: false,
-    header: () => <TryoutSetTableLabel labelKey="set-column-status" />,
     size: 160,
   },
 ];

@@ -4,6 +4,13 @@ import {
   SortingUpIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { Column } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
@@ -39,27 +46,42 @@ export function TryoutSetTableHeader({
   const label = tTryouts(labelKey);
 
   return (
-    <Button
-      aria-label={tTryouts("set-sort-label", { column: label })}
-      className="-ml-3"
-      onClick={column.getToggleSortingHandler()}
-      size="sm"
-      type="button"
-      variant="ghost"
-    >
-      {label}
-      <HugeIcons data-icon="inline-end" icon={getSortIcon(direction)} />
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label={tTryouts("set-sort-label", { column: label })}
+            className="-ml-3"
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
+            {label}
+            <HugeIcons data-icon="inline-end" icon={getSortIcon(direction)} />
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="start" className="w-auto">
+        <DropdownMenuRadioGroup
+          onValueChange={(value) => {
+            if (value !== "asc" && value !== "desc") {
+              return;
+            }
+
+            column.toggleSorting(value === "desc", false);
+          }}
+          value={direction || ""}
+        >
+          <DropdownMenuRadioItem value="asc">
+            <HugeIcons icon={SortingUpIcon} />
+            {tTryouts("set-sort-ascending")}
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="desc">
+            <HugeIcons icon={SortingDownIcon} />
+            {tTryouts("set-sort-descending")}
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
-}
-
-/** Renders one localized, non-sortable set table heading. */
-export function TryoutSetTableLabel({
-  labelKey,
-}: {
-  labelKey: TryoutSetColumnLabel;
-}) {
-  const tTryouts = useTranslations("Tryouts");
-
-  return tTryouts(labelKey);
 }
