@@ -7,7 +7,10 @@ import { getLocalizedSourceKey } from "@repo/backend/scripts/sync-content/contra
 import { parseLocale } from "@repo/backend/scripts/sync-content/contract/schemas";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
-import { listPublicTryoutRoutes } from "@repo/contents/_types/route/tryout";
+import {
+  lookupNamespaceSegment,
+  makePath,
+} from "@repo/contents/_types/route/path";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
@@ -69,29 +72,62 @@ export const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
   }
 );
 
-/** Collects source-owned public try-out paths grouped by catalog table. */
+/** Collects every source-owned try-out catalog identity, including unpublished sets. */
 const collectTryoutPaths = Effect.fn("sync.collectTryoutPaths")(function* () {
-  const routes = yield* listPublicTryoutRoutes();
+  const tryoutCountryKeys = new Set<string>();
+  const tryoutExamKeys = new Set<string>();
+  const tryoutTrackKeys = new Set<string>();
+  const tryoutSetKeys = new Set<string>();
+  const tryoutSectionKeys = new Set<string>();
+
+  for (const source of TRYOUT_SOURCES) {
+    for (const locale of locales) {
+      const tryoutPath = yield* makePath([
+        yield* lookupNamespaceSegment("tryout", locale),
+      ]);
+      const countryPath = yield* makePath([
+        tryoutPath,
+        source.countryRouteSlugs[locale],
+      ]);
+      const examPath = yield* makePath([
+        countryPath,
+        source.examRouteSlugs[locale],
+      ]);
+
+      tryoutCountryKeys.add(getLocalizedSourceKey(locale, countryPath));
+      tryoutExamKeys.add(getLocalizedSourceKey(locale, examPath));
+
+      for (const track of source.tracks) {
+        const trackPath = yield* makePath([examPath, track.routeSlugs[locale]]);
+        tryoutTrackKeys.add(getLocalizedSourceKey(locale, trackPath));
+
+        for (const set of track.sets) {
+          const setPath = yield* makePath([trackPath, set.routeSlugs[locale]]);
+          tryoutSetKeys.add(getLocalizedSourceKey(locale, setPath));
+
+          for (const section of set.sections) {
+            let sourcePath = section.questionSourcePath;
+
+            if (section.visibility === "visible") {
+              sourcePath = yield* makePath([
+                setPath,
+                section.routeSlugs[locale],
+              ]);
+            }
+
+            tryoutSectionKeys.add(getLocalizedSourceKey(locale, sourcePath));
+          }
+        }
+      }
+    }
+  }
 
   return {
-    tryoutCountryKeys: routes
-      .filter((route) => route.kind === "tryout-country")
-      .map((route) => getLocalizedSourceKey(route.locale, route.publicPath)),
-    tryoutExamKeys: routes
-      .filter((route) => route.kind === "tryout-exam")
-      .map((route) => getLocalizedSourceKey(route.locale, route.publicPath)),
-    tryoutTrackKeys: routes
-      .filter((route) => route.kind === "tryout-track")
-      .map((route) => getLocalizedSourceKey(route.locale, route.publicPath)),
-    tryoutSectionKeys: [
-      ...routes
-        .filter((route) => route.kind === "tryout-section")
-        .map((route) => getLocalizedSourceKey(route.locale, route.publicPath)),
-      ...listActiveInternalTryoutSectionKeys(),
-    ],
-    tryoutSetKeys: routes
-      .filter((route) => route.kind === "tryout-set")
-      .map((route) => getLocalizedSourceKey(route.locale, route.publicPath)),
+    tryoutCountryKeys: [...tryoutCountryKeys],
+    tryoutExamKeys: [...tryoutExamKeys],
+    tryoutSectionKeys: [...tryoutSectionKeys],
+    tryoutSetKeys: [...tryoutSetKeys],
+    tryoutTrackKeys: [...tryoutTrackKeys],
   };
 });
 
@@ -148,23 +184,6 @@ function listActiveTryoutQuestionPaths() {
             { length: section.questionCount },
             (_, index) => `${section.questionSourcePath}/question-${index + 1}`
           )
-        )
-      )
-    )
-  );
-}
-
-/** Lists internal try-out sections by source path because they have no public route. */
-function listActiveInternalTryoutSectionKeys() {
-  return TRYOUT_SOURCES.flatMap((source) =>
-    source.tracks.flatMap((track) =>
-      track.sets.flatMap((set) =>
-        set.sections.flatMap((section) =>
-          section.visibility === "internal-entry"
-            ? locales.map((locale) =>
-                getLocalizedSourceKey(locale, section.questionSourcePath)
-              )
-            : []
         )
       )
     )
