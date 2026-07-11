@@ -2,7 +2,6 @@
 
 import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
 import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
 import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
 import {
@@ -18,12 +17,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
-import { useRouter } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { useClassImageMutation } from "@/components/school/classes/image/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
@@ -67,26 +65,23 @@ export function SchoolClassesHeaderInfo() {
 function InfoCustomizeButton() {
   const t = useTranslations("Common");
   const [open, openHandlers] = useDisclosure(false);
-  const router = useRouter();
 
   const [isPending, startTransition] = useTransition();
   const { can } = useClassPermissions();
 
   const classId = useClass((state) => state.class._id);
 
-  const updateClassImage = useMutation(api.classes.mutations.updateClassImage);
+  const updateClassImage = useClassImageMutation();
 
   const handleImageClick = (image: SchoolClassImage) => {
     startTransition(async () => {
       await Effect.runPromise(
         Effect.tryPromise({
-          try: async () => {
-            await updateClassImage({
+          try: () =>
+            updateClassImage({
               classId,
               image,
-            });
-            router.refresh();
-          },
+            }),
           catch: (error) => error,
         }).pipe(
           Effect.catchAll((error) =>

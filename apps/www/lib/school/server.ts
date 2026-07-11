@@ -1,9 +1,10 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
+import { preloadedQueryResult } from "convex/nextjs";
 import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 import { cache } from "react";
-import { fetchAuthQuery, getToken } from "@/lib/auth/server";
+import { fetchAuthQuery, getToken, preloadAuthQuery } from "@/lib/auth/server";
 
 const SCHOOL_SWITCHER_PAGE_SIZE = 20;
 
@@ -85,12 +86,12 @@ export const getSchoolRouteSnapshot = cache(
 );
 
 /**
- * Load the authenticated class route snapshot.
+ * Preload the authenticated class route for server rendering and hydration.
  *
  * Returns `null` when the class cannot be resolved for the current viewer so
  * the route can delegate to Next's native not-found handling.
  */
-export async function getClassRouteSnapshot({ classId }: { classId: string }) {
+export async function preloadClassRoute({ classId }: { classId: string }) {
   const token = await getToken();
 
   if (!token) {
@@ -99,9 +100,14 @@ export async function getClassRouteSnapshot({ classId }: { classId: string }) {
 
   return Effect.runPromise(
     Effect.tryPromise({
-      try: () => fetchAuthQuery(api.classes.queries.getClassRoute, { classId }),
+      try: () =>
+        preloadAuthQuery(api.classes.queries.getClassRoute, { classId }),
       catch: (error) => error,
     }).pipe(
+      Effect.map((preloaded) => ({
+        preloaded,
+        value: preloadedQueryResult(preloaded),
+      })),
       Effect.catchIf(
         (error) =>
           hasConvexErrorCode(error, [
