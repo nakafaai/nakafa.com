@@ -1,13 +1,11 @@
 "use client";
 
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -24,6 +22,7 @@ import {
 } from "@/components/programs/onboarding/styles";
 import { submitOnboardingRole } from "@/components/programs/onboarding/submit";
 import { choiceCardVariants } from "@/components/shared/choice/variants";
+import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
 import { useUser } from "@/lib/context/use-user";
 
 /** Saves the normal Nakafa role step from the reactive current-user role. */
@@ -60,7 +59,7 @@ function RoleStepFormBody({
 }) {
   const t = useTranslations("LearningPrograms");
   const router = useRouter();
-  const updateRole = useMutation(api.users.mutations.updateUserRole);
+  const updateRole = useUpdateUserRoleMutation();
   const form = useForm({
     defaultValues: {
       role: currentRole,

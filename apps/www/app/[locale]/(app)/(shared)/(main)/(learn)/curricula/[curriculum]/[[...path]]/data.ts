@@ -139,6 +139,7 @@ export function readCurriculumRootOptions(
       countryCode: program?.provider.homeCountry,
       href: `/${locale}/${route.publicPath}`,
       programKey: route.programKey,
+      publicSlug: program?.translations[locale].publicSlug,
       title: route.title,
       value: route.publicPath,
     };

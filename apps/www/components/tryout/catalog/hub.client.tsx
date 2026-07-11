@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { useConvexAuth, useMutation } from "convex/react";
+import type { api } from "@repo/backend/convex/_generated/api";
+import { useConvexAuth } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -14,6 +14,7 @@ import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
 import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation.client";
 
 interface TryoutHubClientProps {
   locale: Locale;
@@ -28,9 +29,7 @@ type HubCountry = FunctionReturnType<
 export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
   const tTryouts = useTranslations("Tryouts");
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const setPreferredTryout = useMutation(
-    api.learningPreferences.mutations.setPreferredTryoutCountry
-  );
+  const setPreferredTryout = useSetPreferredTryoutMutation(page.countries);
 
   if (!page) {
     return null;

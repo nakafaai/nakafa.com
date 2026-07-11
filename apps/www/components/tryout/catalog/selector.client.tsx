@@ -1,6 +1,5 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
@@ -10,18 +9,20 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
-import { useConvexAuth, useMutation } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
 import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
+import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation.client";
 
 export type TryoutCountrySelectorOption = Readonly<{
   countryCode: string;
   countryKey: string;
   href: string;
+  publicPath: string;
   title: string;
   value: string;
 }>;
@@ -46,9 +47,7 @@ export function TryoutCountrySelector({
   const locale = useLocale();
   const tTryouts = useTranslations("Tryouts");
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const setPreferredTryout = useMutation(
-    api.learningPreferences.mutations.setPreferredTryoutCountry
-  );
+  const setPreferredTryout = useSetPreferredTryoutMutation(options);
   const items = options.map((option) => ({
     label: option.title,
     value: option.value,

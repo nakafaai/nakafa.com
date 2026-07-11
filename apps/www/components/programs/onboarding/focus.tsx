@@ -39,6 +39,7 @@ import {
 } from "@/components/programs/onboarding/styles";
 import { submitOnboardingSelection } from "@/components/programs/onboarding/submit";
 import { choiceCardVariants } from "@/components/shared/choice/variants";
+import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
 import { useUser } from "@/lib/context/use-user";
 
 /** Saves the selected learning focus for the latest reactive onboarding role. */
@@ -98,7 +99,7 @@ function FocusStepFormBody({
   const t = useTranslations("LearningPrograms");
   const locale = useLocale();
   const router = useRouter();
-  const updateRole = useMutation(api.users.mutations.updateUserRole);
+  const updateRole = useUpdateUserRoleMutation();
   const selectProgram = useMutation(
     api.learningPrograms.mutations.selectLearningProgram
   );

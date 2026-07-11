@@ -13,7 +13,6 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -21,6 +20,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { FormBlock } from "@/components/shared/form-block";
 import { reportClientException } from "@/lib/analytics/client";
+import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
 
 type CurriculumPrograms = FunctionReturnType<
   typeof api.learningPreferences.queries.listCurriculumPrograms
@@ -94,9 +94,7 @@ function UserSettingsCurriculumForm({
 }) {
   const locale = useLocale();
   const t = useTranslations("Auth");
-  const setPreferredCurriculum = useMutation(
-    api.learningPreferences.mutations.setPreferredCurriculum
-  );
+  const setPreferredCurriculum = useSetPreferredCurriculumMutation(programs);
   const selectItems = programs.map((program) => ({
     label: (
       <>

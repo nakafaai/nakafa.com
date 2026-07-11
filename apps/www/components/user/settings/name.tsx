@@ -1,14 +1,13 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
 import { Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { FormBlock } from "@/components/shared/form-block";
+import { useUpdateUserNameMutation } from "@/components/user/mutation.client";
 import type { CurrentUser } from "@/lib/context/use-user";
 
 const MAX_NAME_LENGTH = 32;
@@ -26,7 +25,7 @@ const formSchema = Schema.standardSchemaV1(
 export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
 
-  const updateUserName = useMutation(api.users.mutations.updateUserName);
+  const updateUserName = useUpdateUserNameMutation();
 
   const form = useForm({
     defaultValues: {

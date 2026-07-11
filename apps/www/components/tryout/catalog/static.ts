@@ -59,6 +59,7 @@ export function readStaticTryoutCountryOptions(
         countryCode,
         countryKey: route.countryKey,
         href: `/${locale}/${route.publicPath}`,
+        publicPath: route.publicPath,
         title: route.title,
         value: route.publicPath,
       },
