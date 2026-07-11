@@ -345,7 +345,7 @@ function routeRow({
   sourcePath?: string;
 }): RuntimeContentRoute {
   const graph = routeGraph(locale, sourcePath);
-  const kind = getLearningObjectKindForRoute(sourcePath);
+  const kind = getLearningObjectKindForRoute(sourcePath, locale);
 
   if (!kind) {
     throw new Error(`Expected graph route kind for ${sourcePath}.`);

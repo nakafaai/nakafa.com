@@ -26,7 +26,7 @@ describe("contentSync/mutations/routes", () => {
       "try-out/indonesia/snbt",
       "try-out/indonesia/snbt/2027",
       "try-out/indonesia/snbt/2027/set-1",
-      "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
+      "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
     ];
 
     await t.mutation(async (ctx) => {
@@ -80,7 +80,8 @@ describe("contentSync/mutations/routes", () => {
       }),
       expect.objectContaining({
         sourceParentPath: "try-out/indonesia/snbt/2027/set-1",
-        sourcePath: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
+        sourcePath:
+          "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
       }),
     ]);
   });
@@ -401,7 +402,7 @@ function contentRouteSource(route: string) {
 
 /** Builds one route row from the shared graph source-route projection spec. */
 function contentRouteFromProjection(route: string) {
-  const projection = getSourceRouteProjectionForRoute(route);
+  const projection = getSourceRouteProjectionForRoute(route, "id");
 
   if (!projection) {
     throw new Error(`Expected graph source-route projection for ${route}.`);

@@ -1,3 +1,4 @@
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { Schema } from "effect";
 
 /** Stable learning object kinds supported by graph identity generation. */
@@ -115,6 +116,7 @@ export type SourceRouteProjection = Schema.Schema.Type<
 /** Runtime schema for a source route plus its declared graph object kind. */
 export const SourceRouteInputSchema = Schema.Struct({
   kind: LearningObjectKindSchema,
+  locale: LocaleSchema,
   route: Schema.String,
 });
 

@@ -1,4 +1,4 @@
-import type { Locale } from "@repo/contents/_types/content";
+import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
 import {
   isNumberSegment,
   joinRoute,
@@ -17,10 +17,13 @@ import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { Effect, Option, Schema } from "effect";
 
 /** Infers graph projection metadata from one public route projection. */
-export function getSourceRouteProjectionForRoute(route: string) {
+export function getSourceRouteProjectionForRoute(
+  route: string,
+  locale: Locale
+) {
   const normalizedRoute = normalizeSourceRouteProjection(route);
   const [root, ...segments] = normalizedRoute.split("/");
-  const draft = createProjectionDraft(normalizedRoute, root, segments);
+  const draft = createProjectionDraft(normalizedRoute, root, segments, locale);
 
   if (!draft) {
     return null;
@@ -31,7 +34,10 @@ export function getSourceRouteProjectionForRoute(route: string) {
 
 /** Validates that one declared source kind matches its public route projection. */
 export function getSourceRouteProjection(source: SourceRouteInput) {
-  const projection = getSourceRouteProjectionForRoute(source.route);
+  const projection = getSourceRouteProjectionForRoute(
+    source.route,
+    source.locale
+  );
 
   if (!projection || projection.kind !== source.kind) {
     return null;
@@ -56,10 +62,16 @@ export const parseSourceRouteProjection = Effect.fn(
   return yield* Effect.fail(createInvalidSourceRouteError(source));
 });
 
-/** Returns the Quran surah number encoded by a valid Quran source route. */
-export function getQuranSurahNumberForRoute(route: string) {
+const QuranRouteInputSchema = Schema.Struct({
+  locale: LocaleSchema,
+  route: Schema.String,
+});
+
+/** Returns the Quran surah number encoded by a valid localized source route. */
+export function getQuranSurahNumberForRoute(route: string, locale: Locale) {
   const projection = getSourceRouteProjection({
     kind: "quran-surah",
+    locale,
     route,
   });
 
@@ -74,7 +86,7 @@ export function getQuranSurahNumberForRoute(route: string) {
 export const parseQuranSurahNumberForRoute = Effect.fn(
   "contents.graph.parseQuranSurahNumberForRoute"
 )(function* (input: unknown) {
-  const route = yield* Schema.decodeUnknown(Schema.String)(input).pipe(
+  const source = yield* Schema.decodeUnknown(QuranRouteInputSchema)(input).pipe(
     Effect.mapError(
       () =>
         new InvalidLearningGraphRouteError({
@@ -83,7 +95,7 @@ export const parseQuranSurahNumberForRoute = Effect.fn(
         })
     )
   );
-  const surahNumber = getQuranSurahNumberForRoute(route);
+  const surahNumber = getQuranSurahNumberForRoute(source.route, source.locale);
 
   if (surahNumber !== null) {
     return surahNumber;
@@ -92,7 +104,8 @@ export const parseQuranSurahNumberForRoute = Effect.fn(
   return yield* Effect.fail(
     createInvalidSourceRouteError({
       kind: "quran-surah",
-      route,
+      locale: source.locale,
+      route: source.route,
     })
   );
 });
@@ -152,7 +165,8 @@ function readUnknownKind(input: unknown) {
 function createProjectionDraft(
   route: string,
   root: string | undefined,
-  segments: readonly string[]
+  segments: readonly string[],
+  locale: Locale
 ) {
   if (root === "articles") {
     return createArticleProjection(route, segments);
@@ -163,7 +177,7 @@ function createProjectionDraft(
   }
 
   if (root === "try-out") {
-    return createTryoutProjection(route, segments);
+    return createTryoutProjection(route, segments, locale);
   }
 
   if (root === "material") {
@@ -185,14 +199,18 @@ function createMaterialProjection(route: string, segments: readonly string[]) {
 }
 
 /** Projects a try-out public route into graph metadata. */
-function createTryoutProjection(route: string, segments: readonly string[]) {
+function createTryoutProjection(
+  route: string,
+  segments: readonly string[],
+  locale: Locale
+) {
   const [country, exam, track, set, section, ...extraSegments] = segments;
 
   if (!country || extraSegments.length > 0) {
     return null;
   }
 
-  const source = findTryoutSource(country, exam);
+  const source = findTryoutSource(locale, country, exam);
 
   if (!source) {
     return null;
@@ -230,7 +248,7 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
     } satisfies SourceRouteProjectionDraft;
   }
 
-  const sourceTrack = findTryoutTrack(source, track);
+  const sourceTrack = findTryoutTrack(source, locale, track);
 
   if (!sourceTrack) {
     return null;
@@ -252,7 +270,7 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
     } satisfies SourceRouteProjectionDraft;
   }
 
-  const sourceSet = findTryoutSet(sourceTrack, set);
+  const sourceSet = findTryoutSet(sourceTrack, locale, set);
 
   if (!sourceSet) {
     return null;
@@ -281,7 +299,7 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
     } satisfies SourceRouteProjectionDraft;
   }
 
-  const sourceSection = findTryoutVisibleSection(sourceSet, section);
+  const sourceSection = findTryoutVisibleSection(sourceSet, locale, section);
 
   if (!sourceSection) {
     return null;
@@ -311,9 +329,13 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
 }
 
 /** Finds the try-out source that owns one localized country/exam route prefix. */
-function findTryoutSource(country: string, exam: string | undefined) {
+function findTryoutSource(
+  locale: Locale,
+  country: string,
+  exam: string | undefined
+) {
   for (const source of TRYOUT_SOURCES) {
-    if (!hasRouteSlug(source.countryRouteSlugs, country)) {
+    if (source.countryRouteSlugs[locale] !== country) {
       continue;
     }
 
@@ -321,7 +343,7 @@ function findTryoutSource(country: string, exam: string | undefined) {
       return source;
     }
 
-    if (hasRouteSlug(source.examRouteSlugs, exam)) {
+    if (source.examRouteSlugs[locale] === exam) {
       return source;
     }
   }
@@ -330,41 +352,35 @@ function findTryoutSource(country: string, exam: string | undefined) {
 }
 
 /** Finds the source track that owns one localized track route segment. */
-function findTryoutTrack(source: TryoutSource, track: string) {
-  return source.tracks.find((candidate) =>
-    hasRouteSlug(candidate.routeSlugs, track)
+function findTryoutTrack(source: TryoutSource, locale: Locale, track: string) {
+  return source.tracks.find(
+    (candidate) => candidate.routeSlugs[locale] === track
   );
 }
 
 /** Finds the source set that owns one localized set route segment. */
-function findTryoutSet(track: TryoutTrack, set: string) {
-  return track.sets.find((candidate) =>
-    hasRouteSlug(candidate.routeSlugs, set)
-  );
+function findTryoutSet(track: TryoutTrack, locale: Locale, set: string) {
+  return track.sets.find((candidate) => candidate.routeSlugs[locale] === set);
 }
 
 /** Finds a public visible section that owns one localized section route segment. */
-function findTryoutVisibleSection(set: TryoutSet, section: string) {
+function findTryoutVisibleSection(
+  set: TryoutSet,
+  locale: Locale,
+  section: string
+) {
   return set.sections.find((candidate) => {
     if (candidate.visibility === "internal-entry") {
       return false;
     }
 
-    return hasRouteSlug(candidate.routeSlugs, section);
+    return candidate.routeSlugs[locale] === section;
   });
 }
 
 type TryoutSource = NonNullable<ReturnType<typeof findTryoutSource>>;
 type TryoutTrack = TryoutSource["tracks"][number];
 type TryoutSet = TryoutTrack["sets"][number];
-
-/** Compares decoded route slugs to a normalized projection segment. */
-function hasRouteSlug(
-  slugs: Readonly<{ [Key in Locale]: string }>,
-  segment: string
-) {
-  return Object.values(slugs).some((slug) => slug === segment);
-}
 
 /** Projects a curriculum-neutral lesson material route into graph metadata. */
 function createMaterialLessonProjection(

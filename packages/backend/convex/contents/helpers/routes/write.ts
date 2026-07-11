@@ -43,6 +43,7 @@ export async function syncContentRoute(
 ) {
   const routeProjection = getSourceRouteProjection({
     kind: source.kind,
+    locale: source.locale,
     route: source.sourcePath,
   });
 

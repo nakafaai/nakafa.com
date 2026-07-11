@@ -12,6 +12,11 @@ import {
 import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 
+/** Infers one Indonesian route kind through the localized graph contract. */
+function getIndonesianKind(route: string) {
+  return getLearningObjectKindForRoute(route, "id");
+}
+
 describe("learning graph identity", () => {
   it("maps article sources into locale asset identity and route-free graph IDs", () => {
     const identity = readGraphIdentityFixture({
@@ -158,38 +163,32 @@ describe("learning graph identity", () => {
   });
 
   it("infers graph kind from route projections", () => {
-    expect(getLearningObjectKindForRoute("articles/politics/example")).toBe(
-      "article"
-    );
-    expect(getLearningObjectKindForRoute("quran/1")).toBe("quran-surah");
-    expect(getLearningObjectKindForRoute("quran/not-number")).toBeNull();
-    expect(getLearningObjectKindForRoute("material/lesson/physics/waves")).toBe(
+    expect(getIndonesianKind("articles/politics/example")).toBe("article");
+    expect(getIndonesianKind("quran/1")).toBe("quran-surah");
+    expect(getIndonesianKind("quran/not-number")).toBeNull();
+    expect(getIndonesianKind("material/lesson/physics/waves")).toBe(
       "curriculum-topic"
     );
-    expect(
-      getLearningObjectKindForRoute("material/lesson/physics/waves/sound")
-    ).toBe("curriculum-lesson");
-    expect(getLearningObjectKindForRoute("try-out/indonesia")).toBe(
-      "tryout-country"
+    expect(getIndonesianKind("material/lesson/physics/waves/sound")).toBe(
+      "curriculum-lesson"
     );
-    expect(getLearningObjectKindForRoute("try-out/indonesia/snbt")).toBe(
-      "tryout-exam"
-    );
-    expect(getLearningObjectKindForRoute("try-out/indonesia/snbt/2027")).toBe(
+    expect(getIndonesianKind("try-out/indonesia")).toBe("tryout-country");
+    expect(getIndonesianKind("try-out/indonesia/snbt")).toBe("tryout-exam");
+    expect(getIndonesianKind("try-out/indonesia/snbt/2027")).toBe(
       "tryout-track"
     );
+    expect(getIndonesianKind("try-out/indonesia/snbt/2027/set-1")).toBe(
+      "tryout-set"
+    );
     expect(
-      getLearningObjectKindForRoute("try-out/indonesia/snbt/2027/set-1")
-    ).toBe("tryout-set");
-    expect(
-      getLearningObjectKindForRoute(
-        "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
+      getIndonesianKind(
+        "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif"
       )
     ).toBe("tryout-section");
-    expect(getLearningObjectKindForRoute("assessment/high-school")).toBeNull();
-    expect(getLearningObjectKindForRoute("assessment/set-1/7")).toBeNull();
+    expect(getIndonesianKind("assessment/high-school")).toBeNull();
+    expect(getIndonesianKind("assessment/set-1/7")).toBeNull();
     expect(
-      getLearningObjectKindForRoute(
+      getIndonesianKind(
         "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge/extra"
       )
     ).toBeNull();
