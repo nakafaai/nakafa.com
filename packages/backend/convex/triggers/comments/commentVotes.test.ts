@@ -40,6 +40,24 @@ describe("triggers/comments/commentVotes", () => {
       vote: 1,
     });
 
+    const [slugComments, userComments, guestComments] = await Promise.all([
+      voter.query(api.comments.queries.getCommentsBySlug, {
+        paginationOpts: { cursor: null, numItems: 10 },
+        slug: "/en/articles/politics/votes",
+      }),
+      voter.query(api.comments.queries.getCommentsByUserId, {
+        paginationOpts: { cursor: null, numItems: 10 },
+        userId: users.author.userId,
+      }),
+      t.query(api.comments.queries.getCommentsBySlug, {
+        paginationOpts: { cursor: null, numItems: 10 },
+        slug: "/en/articles/politics/votes",
+      }),
+    ]);
+    expect(slugComments.page[0].viewerVote).toBe(1);
+    expect(userComments.page[0].viewerVote).toBe(1);
+    expect(guestComments.page[0].viewerVote).toBeNull();
+
     const upvoted = await t.query(async (ctx) =>
       ctx.db.get("comments", commentId)
     );
