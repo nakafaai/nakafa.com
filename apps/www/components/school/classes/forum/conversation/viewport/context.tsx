@@ -1,7 +1,5 @@
 import { useReducedMotion } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { Effect, Fiber, Stream } from "effect";
 import {
   type ReactNode,
@@ -35,6 +33,7 @@ import {
   type ConversationViewport,
   makeConversationViewport,
 } from "@/components/school/classes/forum/conversation/viewport/service";
+import { useMarkForumReadMutation } from "@/components/school/classes/forum/read/mutation.client";
 import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
 
 interface ViewportActions {
@@ -85,9 +84,7 @@ export function ConversationViewportProvider({
   const saveConversationScrollSnapshot = useForumSession(
     (state) => state.saveConversationScrollSnapshot
   );
-  const markForumRead = useMutation(
-    api.classes.forums.mutations.readState.markForumRead
-  );
+  const markForumRead = useMarkForumReadMutation();
   const prefersReducedMotion = useReducedMotion();
   const activeTranscriptRef = useRef(activeTranscript);
   const frameRef = useRef<number | null>(null);
