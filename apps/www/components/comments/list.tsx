@@ -25,12 +25,16 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation, usePaginatedQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState, useTransition } from "react";
 import { CommentsAdd } from "@/components/comments/add";
+import {
+  useDeleteCommentMutation,
+  useVoteCommentMutation,
+} from "@/components/comments/mutation.client";
 import { useUser } from "@/lib/context/use-user";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
@@ -172,15 +176,18 @@ function CommentActions({
 
   const [isPending, startTransition] = useTransition();
 
-  const voteOnComment = useMutation(api.comments.mutations.voteOnComment);
-  const deleteComment = useMutation(api.comments.mutations.deleteComment);
+  const voteOnComment = useVoteCommentMutation();
+  const deleteComment = useDeleteCommentMutation();
 
   function handleVote(vote: -1 | 1) {
     if (!user) {
       return;
     }
     startTransition(async () => {
-      await voteOnComment({ commentId: comment._id, vote });
+      await voteOnComment({
+        commentId: comment._id,
+        vote: comment.viewerVote === vote ? 0 : vote,
+      });
     });
   }
 
@@ -199,11 +206,12 @@ function CommentActions({
         <TooltipTrigger
           render={
             <Button
+              aria-pressed={comment.viewerVote === 1}
               className="group"
               disabled={isPending}
               onClick={() => handleVote(1)}
               size={comment.upvoteCount === 0 ? "icon-sm" : "sm"}
-              variant="ghost"
+              variant={comment.viewerVote === 1 ? "secondary" : "ghost"}
             >
               <HugeIcons icon={ThumbsUpIcon} />
               <NumberFormat
@@ -224,11 +232,12 @@ function CommentActions({
         <TooltipTrigger
           render={
             <Button
+              aria-pressed={comment.viewerVote === -1}
               className="group"
               disabled={isPending}
               onClick={() => handleVote(-1)}
               size={comment.downvoteCount === 0 ? "icon-sm" : "sm"}
-              variant="ghost"
+              variant={comment.viewerVote === -1 ? "secondary" : "ghost"}
             >
               <HugeIcons icon={ThumbsDownIcon} />
               <NumberFormat

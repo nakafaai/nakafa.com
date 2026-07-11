@@ -8,7 +8,7 @@ import {
   ThumbsUpIcon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
@@ -26,9 +26,14 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation, usePaginatedQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
+import {
+  useDeleteCommentMutation,
+  useVoteCommentMutation,
+} from "@/components/comments/mutation.client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 import { getCleanHref } from "@/lib/utils/link";
@@ -59,7 +64,11 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
   );
 }
 
-function CommentThread({ comment }: { comment: Doc<"comments"> }) {
+type UserComment = FunctionReturnType<
+  typeof api.comments.queries.getCommentsByUserId
+>["page"][number];
+
+function CommentThread({ comment }: { comment: UserComment }) {
   const t = useTranslations("Common");
 
   const { data: user } = useQueryWithStatus(api.auth.queries.getUserById, {
@@ -72,8 +81,8 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
 
   const [isPending, startTransition] = useTransition();
 
-  const voteOnComment = useMutation(api.comments.mutations.voteOnComment);
-  const deleteComment = useMutation(api.comments.mutations.deleteComment);
+  const voteOnComment = useVoteCommentMutation();
+  const deleteComment = useDeleteCommentMutation();
 
   function handleVote(vote: -1 | 1) {
     if (!currentUser) {
@@ -83,7 +92,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
     startTransition(async () => {
       await voteOnComment({
         commentId: comment._id,
-        vote,
+        vote: comment.viewerVote === vote ? 0 : vote,
       });
     });
   }
@@ -117,11 +126,12 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
             <TooltipTrigger
               render={
                 <Button
+                  aria-pressed={comment.viewerVote === 1}
                   className="group"
                   disabled={isPending}
                   onClick={() => handleVote(1)}
                   size={comment.upvoteCount === 0 ? "icon-sm" : "sm"}
-                  variant="ghost"
+                  variant={comment.viewerVote === 1 ? "secondary" : "ghost"}
                 >
                   <HugeIcons icon={ThumbsUpIcon} />
                   <NumberFormat
@@ -142,11 +152,12 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
             <TooltipTrigger
               render={
                 <Button
+                  aria-pressed={comment.viewerVote === -1}
                   className="group"
                   disabled={isPending}
                   onClick={() => handleVote(-1)}
                   size={comment.downvoteCount === 0 ? "icon-sm" : "sm"}
-                  variant="ghost"
+                  variant={comment.viewerVote === -1 ? "secondary" : "ghost"}
                 >
                   <HugeIcons icon={ThumbsDownIcon} />
                   <NumberFormat
