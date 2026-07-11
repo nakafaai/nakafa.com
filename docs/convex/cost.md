@@ -117,8 +117,8 @@ as a normal-traffic projection.
 - Dev and production content verification both pass with 840 questions, 4,200
   choices, 10 sets, 34 sections, and zero orphan choices.
 - Dev and production Quran verification pass with 114 surahs and 6,236 verses.
-- Dev has 4 existing try-out attempts and 4 verified latest-progress rows.
-- Production has 0 attempts and 0 progress rows.
+- Dev and production both have 0 try-out attempts and 0 progress rows after
+  the canonical reset and rebuild; no browser verification data remains.
 - The latest 100 dev and production Convex executions had no non-null errors at
   the final verification point.
 
