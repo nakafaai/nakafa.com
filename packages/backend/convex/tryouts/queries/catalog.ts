@@ -229,6 +229,7 @@ export const getSetPage = query({
     v.null(),
     v.object({
       exam: publicTryoutExamValidator,
+      entryQuestions: v.array(publicTryoutQuestionContentValidator),
       entrySection: v.union(publicTryoutSectionValidator, v.null()),
       set: publicTryoutSetValidator,
       sections: v.array(publicTryoutSectionValidator),
@@ -269,9 +270,14 @@ export const getSetPage = query({
       ) ??
       visibleSections[0] ??
       null;
+    const entryQuestions =
+      entrySection?.visibility === "internal-entry"
+        ? await loadQuestionContentRows(ctx, entrySection)
+        : [];
 
     return {
       exam: toPublicTryoutExam(parents.exam),
+      entryQuestions,
       entrySection: entrySection ? toPublicTryoutSection(entrySection) : null,
       set: toPublicTryoutSet(set),
       sections: visibleSections.map(toPublicTryoutSection),
