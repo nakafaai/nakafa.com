@@ -11,7 +11,6 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -29,7 +28,6 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { getAppUrl } from "@repo/next-config/app";
-import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import {
   Activity,
@@ -40,6 +38,11 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
+import {
+  useDeleteChatMutation,
+  useUpdateChatTitleMutation,
+  useUpdateChatVisibilityMutation,
+} from "@/components/ai/chat/mutation.client";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { useUser } from "@/lib/context/use-user";
 
@@ -74,11 +77,9 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   const user = useUser((s) => s.user);
   const isOwner = user?.appUser._id === chat.userId;
 
-  const updateChatTitle = useMutation(api.chats.mutations.updateChatTitle);
-  const updateChatVisibility = useMutation(
-    api.chats.mutations.updateChatVisibility
-  );
-  const deleteChat = useMutation(api.chats.mutations.deleteChat);
+  const updateChatTitle = useUpdateChatTitleMutation();
+  const updateChatVisibility = useUpdateChatVisibilityMutation();
+  const deleteChat = useDeleteChatMutation();
 
   const [isPending, startTransition] = useTransition();
 

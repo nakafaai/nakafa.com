@@ -19,14 +19,11 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import {
-  type PaginationStatus,
-  useMutation,
-  usePaginatedQuery,
-} from "convex/react";
+import { type PaginationStatus, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { useUser } from "@/lib/context/use-user";
 import { getLocale } from "@/lib/utils/date";
 
@@ -160,7 +157,7 @@ function ChatList({
 function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
   const t = useTranslations("Common");
 
-  const deleteChat = useMutation(api.chats.mutations.deleteChat);
+  const deleteChat = useDeleteChatMutation();
 
   const [isPending, startTransition] = useTransition();
 
