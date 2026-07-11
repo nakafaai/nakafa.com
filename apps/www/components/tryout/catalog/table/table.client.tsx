@@ -31,6 +31,7 @@ import type {
   TryoutSetRow,
   TryoutTrackPage,
 } from "@/components/tryout/catalog/table/types";
+import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 const EMPTY_ROWS: TryoutSetRow[] = [];
@@ -44,14 +45,21 @@ export function TryoutSetTable({
   page: TryoutTrackPage;
 }) {
   const router = useRouter();
+  const prewarmData = useTryoutDataIntent();
   const tTryouts = useTranslations("Tryouts");
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [intentSetKey, setIntentSetKey] = useState<string | null>(null);
   const statusFilter = readTryoutSetStatusFilter(columnFilters);
   const columns = useMemo(
-    () => createTryoutSetColumns({ sorting, statusFilter }),
-    [sorting, statusFilter]
+    () =>
+      createTryoutSetColumns({
+        intent: { setKey: intentSetKey },
+        sorting,
+        statusFilter,
+      }),
+    [intentSetKey, sorting, statusFilter]
   );
   const data = useTryoutSetData({
     locale,
@@ -59,6 +67,15 @@ export function TryoutSetTable({
     statusFilter,
     sort: readTryoutSetSort(sorting),
   });
+
+  function markSetIntent(row: TryoutSetRow) {
+    setIntentSetKey(row.setKey);
+    prewarmData({
+      kind: "set",
+      locale,
+      publicPath: row.publicPath,
+    });
+  }
   const [retainedRows, setRetainedRows] = useState<TryoutSetRow[]>(EMPTY_ROWS);
   const visibleRows = data.pending ? retainedRows : data.rows;
 
@@ -149,6 +166,10 @@ export function TryoutSetTable({
                         getTryoutPublicPathHref(row.original.publicPath)
                       );
                     }}
+                    onFocusCapture={() => markSetIntent(row.original)}
+                    onPointerDown={() => markSetIntent(row.original)}
+                    onPointerEnter={() => markSetIntent(row.original)}
+                    onTouchStart={() => markSetIntent(row.original)}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell className="px-2 sm:px-4" key={cell.id}>

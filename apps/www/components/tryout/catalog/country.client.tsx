@@ -1,9 +1,7 @@
 "use client";
 
 import type { api } from "@repo/backend/convex/_generated/api";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import type { Preloaded } from "convex/react";
-import { usePreloadedQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { ChoiceCardContent } from "@/components/shared/choice/card";
 import { choiceCardVariants } from "@/components/shared/choice/variants";
 import {
@@ -12,22 +10,17 @@ import {
 } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
+import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type CountryPageQuery = typeof api.tryouts.queries.catalog.getCountryPage;
 
 /** Renders one realtime try-out country page from Convex. */
 export function TryoutCountryPageClient({
-  preloaded,
+  page,
 }: {
-  preloaded: Preloaded<CountryPageQuery>;
+  page: NonNullable<FunctionReturnType<CountryPageQuery>>;
 }) {
-  const page = usePreloadedQuery(preloaded);
-
-  if (!page) {
-    return null;
-  }
-
   if (page.exams.length === 0) {
     return <ComingSoon />;
   }
@@ -38,7 +31,7 @@ export function TryoutCountryPageClient({
         const icon = getTryoutExamIcon(exam.examKey);
 
         return (
-          <NavigationLink
+          <TryoutIntentLink
             className={choiceCardVariants()}
             href={getTryoutPublicPathHref(exam.publicPath)}
             key={exam.examKey}
@@ -49,7 +42,7 @@ export function TryoutCountryPageClient({
             <ChoiceCardContent>
               <h2>{exam.title}</h2>
             </ChoiceCardContent>
-          </NavigationLink>
+          </TryoutIntentLink>
         );
       })}
     </div>

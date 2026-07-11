@@ -10,14 +10,13 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
-import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
-import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
+import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 
 export type TryoutCountrySelectorOption = Readonly<{
   countryCode: string;
@@ -45,7 +44,6 @@ export function TryoutCountrySelector({
   options: readonly TryoutCountrySelectorOption[];
 }) {
   const locale = useLocale();
-  const router = useRouter();
   const tTryouts = useTranslations("Tryouts");
   const { isAuthenticated, isLoading } = useConvexAuth();
   const setPreferredTryout = useMutation(
@@ -71,8 +69,6 @@ export function TryoutCountrySelector({
     if (isLoading) {
       return;
     }
-
-    router.push(normalizeLocalizedInternalHref(selectedOption.href));
 
     if (!isAuthenticated) {
       return;
@@ -116,7 +112,11 @@ export function TryoutCountrySelector({
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem
+              key={option.value}
+              render={<TryoutIntentLink href={option.href} />}
+              value={option.value}
+            >
               <CountryFlagIcon countryCode={option.countryCode} />
               <span className="min-w-0 whitespace-normal leading-snug sm:whitespace-nowrap">
                 {option.title}
@@ -139,7 +139,6 @@ export function TryoutExamSelector({
   label: string;
   options: readonly TryoutExamSelectorOption[];
 }) {
-  const router = useRouter();
   const items = options.map((option) => ({
     label: option.title,
     value: option.value,
@@ -147,26 +146,8 @@ export function TryoutExamSelector({
   const currentOption = options.find((option) => option.value === currentValue);
   const currentIcon = getTryoutExamIcon(currentOption?.examKey ?? "");
 
-  function handleValueChange(value: string | null) {
-    if (!value || value === currentValue) {
-      return;
-    }
-
-    const selectedOption = options.find((option) => option.value === value);
-
-    if (!selectedOption) {
-      return;
-    }
-
-    router.push(normalizeLocalizedInternalHref(selectedOption.href));
-  }
-
   return (
-    <Select
-      items={items}
-      onValueChange={handleValueChange}
-      value={currentValue}
-    >
+    <Select items={items} value={currentValue}>
       <SelectTrigger
         aria-label={label}
         className="w-full min-w-0 sm:w-auto sm:max-w-[min(32rem,calc(100vw-2rem))]"
@@ -187,7 +168,11 @@ export function TryoutExamSelector({
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem
+              key={option.value}
+              render={<TryoutIntentLink href={option.href} />}
+              value={option.value}
+            >
               <HugeIcons
                 className="size-4 shrink-0"
                 icon={getTryoutExamIcon(option.examKey)}

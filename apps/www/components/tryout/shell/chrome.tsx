@@ -15,8 +15,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ReactNode } from "react";
+import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 
 const VISIBLE_PATH_ITEM_COUNT = 2;
 
@@ -49,7 +49,7 @@ export function TryoutHeader({ value }: { value: TryoutHeaderValue }) {
             <BreadcrumbItem>
               <BreadcrumbLink
                 render={
-                  <NavigationLink href="/home">{homeLabel}</NavigationLink>
+                  <TryoutIntentLink href="/home">{homeLabel}</TryoutIntentLink>
                 }
               />
             </BreadcrumbItem>
@@ -101,9 +101,9 @@ function TryoutBreadcrumbMenu({
                   key={`${item.label}:${item.href ?? "current"}`}
                   render={
                     item.href ? (
-                      <NavigationLink href={item.href}>
+                      <TryoutIntentLink href={item.href}>
                         {item.menuLabel ?? item.label}
-                      </NavigationLink>
+                      </TryoutIntentLink>
                     ) : (
                       <span>{item.menuLabel ?? item.label}</span>
                     )
@@ -142,7 +142,7 @@ function TryoutBreadcrumbSegment({
       <BreadcrumbItem>
         <BreadcrumbLink
           render={
-            <NavigationLink href={item.href}>{item.label}</NavigationLink>
+            <TryoutIntentLink href={item.href}>{item.label}</TryoutIntentLink>
           }
         />
       </BreadcrumbItem>

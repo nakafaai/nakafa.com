@@ -11,8 +11,7 @@ import type {
   TryoutSetStatusFilter,
   TryoutTrackPage,
 } from "@/components/tryout/catalog/table/types";
-
-const PAGE_SIZE = 25;
+import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 
 interface TryoutSetData {
   readonly busy: boolean;
@@ -45,17 +44,17 @@ export function useTryoutSetData({
   const catalog = usePaginatedQuery(
     api.tryouts.queries.sets.list,
     statusFilter === "all" ? { ...identity, sort } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: TRYOUT_SET_PAGE_SIZE }
   );
   const byStatus = usePaginatedQuery(
     api.tryouts.queries.sets.byStatus,
     attemptStatus ? { ...identity, status: attemptStatus } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: TRYOUT_SET_PAGE_SIZE }
   );
   const unattempted = usePaginatedQuery(
     api.tryouts.queries.sets.unattempted,
     statusFilter === "not-started" ? identity : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: TRYOUT_SET_PAGE_SIZE }
   );
   let active = catalog;
 
@@ -75,7 +74,7 @@ export function useTryoutSetData({
       return;
     }
 
-    active.loadMore(PAGE_SIZE);
+    active.loadMore(TRYOUT_SET_PAGE_SIZE);
   }, [active, canLoadMore, rows.length]);
 
   return {
@@ -85,7 +84,7 @@ export function useTryoutSetData({
     loadKey: `${statusFilter}:${sort.field}:${sort.direction}:${rows.length}:${active.status}`,
     loadMore: () => {
       if (active.status === "CanLoadMore") {
-        active.loadMore(PAGE_SIZE);
+        active.loadMore(TRYOUT_SET_PAGE_SIZE);
       }
     },
     pending: rows.length === 0 && active.status !== "Exhausted",

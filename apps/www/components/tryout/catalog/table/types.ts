@@ -5,6 +5,9 @@ type SetListQuery = typeof api.tryouts.queries.sets.list;
 type SetStatusQuery = typeof api.tryouts.queries.sets.byStatus;
 type TrackPageQuery = typeof api.tryouts.queries.catalog.getTrackPage;
 
+/** Number of sets in each client-paginated catalog page. */
+export const TRYOUT_SET_PAGE_SIZE = 25;
+
 export type TryoutSetListArgs = FunctionArgs<SetListQuery>;
 export type TryoutSetRow = FunctionReturnType<SetListQuery>["page"][number];
 export type TryoutTrackPage = NonNullable<FunctionReturnType<TrackPageQuery>>;

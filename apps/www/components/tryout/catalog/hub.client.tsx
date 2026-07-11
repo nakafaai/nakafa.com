@@ -1,8 +1,7 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -13,10 +12,12 @@ import { ChoiceCardVisual } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
+import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 interface TryoutHubClientProps {
   locale: Locale;
+  page: FunctionReturnType<typeof api.tryouts.queries.catalog.getHubPage>;
 }
 
 type HubCountry = FunctionReturnType<
@@ -24,8 +25,7 @@ type HubCountry = FunctionReturnType<
 >["countries"][number];
 
 /** Renders the realtime country-first try-out hub from Convex. */
-export function TryoutHubClient({ locale }: TryoutHubClientProps) {
-  const page = useQuery(api.tryouts.queries.catalog.getHubPage, { locale });
+export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
   const tTryouts = useTranslations("Tryouts");
   const { isAuthenticated, isLoading } = useConvexAuth();
   const setPreferredTryout = useMutation(
@@ -59,7 +59,7 @@ export function TryoutHubClient({ locale }: TryoutHubClientProps) {
   return (
     <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
       {page.countries.map((country) => (
-        <NavigationLink
+        <TryoutIntentLink
           className={choiceCardVariants()}
           href={getTryoutPublicPathHref(country.publicPath)}
           key={country.countryKey}
@@ -74,7 +74,7 @@ export function TryoutHubClient({ locale }: TryoutHubClientProps) {
           <ChoiceCardContent>
             <h2>{country.title}</h2>
           </ChoiceCardContent>
-        </NavigationLink>
+        </TryoutIntentLink>
       ))}
     </div>
   );

@@ -1,11 +1,11 @@
-import { api } from "@repo/backend/convex/_generated/api";
-import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutExamPageClient } from "@/components/tryout/catalog/exam.client";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
+import { readTryoutExamPage } from "@/components/tryout/catalog/server";
 import {
   readStaticTryoutExamOptions,
   readStaticTryoutRoute,
@@ -14,22 +14,34 @@ import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
+export const unstable_instant = {
+  prefetch: "runtime",
+  samples: [{ params: { country: "indonesia", exam: "tka", locale: "id" } }],
+};
+
 /** Renders active try-out tracks for one country and exam family. */
-export default async function Page(props: {
+export default function Page(props: {
   params: Promise<{ country: string; exam: string; locale: string }>;
 }) {
-  const { country, exam, locale: localeParam } = await props.params;
+  return (
+    <Suspense fallback={null}>
+      <TryoutExamRoute params={props.params} />
+    </Suspense>
+  );
+}
+
+/** Resolves one cached public exam inside its route-owned boundary. */
+async function TryoutExamRoute({
+  params,
+}: {
+  params: Promise<{ country: string; exam: string; locale: string }>;
+}) {
+  const { country, exam, locale: localeParam } = await params;
   const locale = getLocaleOrThrow(localeParam);
   const countryPath = getTryoutHref({ country }).slice(1);
   const examPath = getTryoutHref({ country, exam }).slice(1);
-  const preloaded = await preloadQuery(
-    api.tryouts.queries.catalog.getExamPage,
-    {
-      locale,
-      publicPath: examPath,
-    }
-  );
-  const page = preloadedQueryResult(preloaded);
+
+  const page = await readTryoutExamPage(locale, examPath);
 
   if (!page) {
     notFound();
@@ -71,7 +83,7 @@ export default async function Page(props: {
             title: route?.title ?? tCommon("try-out"),
           }}
         />
-        <TryoutExamPageClient preloaded={preloaded} />
+        <TryoutExamPageClient page={page} />
       </LayoutMaterialContent>
     </LayoutMaterial>
   );

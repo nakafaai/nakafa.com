@@ -6,16 +6,31 @@ import type {
   TryoutExamSelectorOption,
 } from "@/components/tryout/catalog/selector.client";
 
+type StaticTryoutRoute = ReturnType<
+  typeof readStaticPublicTryoutRoutes
+>[number];
+type StaticTryoutRouteKind = "tryout-country" | "tryout-exam" | "tryout-track";
+interface StaticTryoutRouteLookup<Kind extends StaticTryoutRouteKind> {
+  kind: Kind;
+  locale: Locale;
+  publicPath: string;
+}
+
 /** Reads one source-projected try-out route for static header context. */
+export function readStaticTryoutRoute(
+  input: StaticTryoutRouteLookup<"tryout-country">
+): Extract<StaticTryoutRoute, { kind: "tryout-country" }> | undefined;
+export function readStaticTryoutRoute(
+  input: StaticTryoutRouteLookup<"tryout-exam">
+): Extract<StaticTryoutRoute, { kind: "tryout-exam" }> | undefined;
+export function readStaticTryoutRoute(
+  input: StaticTryoutRouteLookup<"tryout-track">
+): Extract<StaticTryoutRoute, { kind: "tryout-track" }> | undefined;
 export function readStaticTryoutRoute({
   kind,
   locale,
   publicPath,
-}: {
-  kind: "tryout-country" | "tryout-exam" | "tryout-track";
-  locale: Locale;
-  publicPath: string;
-}) {
+}: StaticTryoutRouteLookup<StaticTryoutRouteKind>) {
   return readStaticPublicTryoutRoutes().find(
     (route) =>
       route.kind === kind &&

@@ -1,5 +1,6 @@
 import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
 
 export interface TryoutQuestionContent {
@@ -30,6 +31,9 @@ export async function loadTryoutQuestionContent({
   locale: Locale;
   questions: readonly TryoutQuestionSource[];
 }) {
+  "use cache";
+  applyContentRuntimeCache();
+
   const entries = await Promise.all(
     questions.map(async (question) => {
       const module = await importContentModuleOrNull({

@@ -1,10 +1,10 @@
-import { api } from "@repo/backend/convex/_generated/api";
-import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
+import { readTryoutTrackPage } from "@/components/tryout/catalog/server";
 import {
   readStaticTryoutExamOptions,
   readStaticTryoutRoute,
@@ -14,8 +14,22 @@ import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
+export const unstable_instant = {
+  prefetch: "runtime",
+  samples: [
+    {
+      params: {
+        country: "indonesia",
+        exam: "tka",
+        locale: "id",
+        track: "matematika",
+      },
+    },
+  ],
+};
+
 /** Renders active try-out sets for one exam track. */
-export default async function Page(props: {
+export default function Page(props: {
   params: Promise<{
     country: string;
     exam: string;
@@ -23,19 +37,40 @@ export default async function Page(props: {
     track: string;
   }>;
 }) {
-  const { country, exam, locale: localeParam, track } = await props.params;
+  return (
+    <Suspense fallback={null}>
+      <TryoutTrackRoute params={props.params} />
+    </Suspense>
+  );
+}
+
+/** Resolves one cached public track inside its route-owned boundary. */
+async function TryoutTrackRoute({
+  params,
+}: {
+  params: Promise<{
+    country: string;
+    exam: string;
+    locale: string;
+    track: string;
+  }>;
+}) {
+  const { country, exam, locale: localeParam, track } = await params;
   const locale = getLocaleOrThrow(localeParam);
   const countryPath = getTryoutHref({ country }).slice(1);
   const examPath = getTryoutHref({ country, exam }).slice(1);
   const trackPath = getTryoutHref({ country, exam, track }).slice(1);
-  const preloaded = await preloadQuery(
-    api.tryouts.queries.catalog.getTrackPage,
-    {
-      locale,
-      publicPath: trackPath,
-    }
-  );
-  const page = preloadedQueryResult(preloaded);
+  const trackRoute = readStaticTryoutRoute({
+    kind: "tryout-track",
+    locale,
+    publicPath: trackPath,
+  });
+
+  if (!trackRoute) {
+    notFound();
+  }
+
+  const page = await readTryoutTrackPage(locale, trackPath);
 
   if (!page) {
     notFound();
@@ -53,11 +88,6 @@ export default async function Page(props: {
     kind: "tryout-exam",
     locale,
     publicPath: examPath,
-  });
-  const trackRoute = readStaticTryoutRoute({
-    kind: "tryout-track",
-    locale,
-    publicPath: trackPath,
   });
 
   return (
@@ -88,7 +118,7 @@ export default async function Page(props: {
             title: trackRoute?.title ?? tCommon("try-out"),
           }}
         />
-        <TryoutTrackPageClient locale={locale} preloaded={preloaded} />
+        <TryoutTrackPageClient locale={locale} page={page} />
       </LayoutMaterialContent>
     </LayoutMaterial>
   );

@@ -2,9 +2,9 @@ import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
+import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 import {
   TryoutStatus,
   type TryoutStatusValue,
@@ -27,6 +27,7 @@ export type TryoutListRow = Readonly<{
   href: string;
   key: string;
   meta?: ReactNode;
+  onIntent?: () => void;
   status?: TryoutStatusValue;
   title: string;
   visual: TryoutListRowVisual;
@@ -64,9 +65,10 @@ export function TryoutList({
 /** Renders one production try-out list row. */
 function TryoutRow({ row }: { row: TryoutListRow }) {
   return (
-    <NavigationLink
+    <TryoutIntentLink
       className="group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
       href={row.href}
+      onIntent={row.onIntent}
     >
       <div className="grid w-full gap-4">
         <div className="flex flex-1 items-start gap-3">
@@ -99,7 +101,7 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
           />
         </div>
       </div>
-    </NavigationLink>
+    </TryoutIntentLink>
   );
 }
 
