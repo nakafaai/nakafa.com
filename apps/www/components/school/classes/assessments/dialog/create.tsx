@@ -19,6 +19,7 @@ import { AssessmentModeField } from "@/components/school/classes/assessments/dia
 import { AssessmentScheduledAtField } from "@/components/school/classes/assessments/dialog/schedule";
 import { AssessmentStatusField } from "@/components/school/classes/assessments/dialog/status";
 import { AssessmentTitleField } from "@/components/school/classes/assessments/dialog/title";
+import { useUpdateAssessmentMutation } from "@/components/school/classes/assessments/mutation.client";
 import {
   type CreateAssessmentFormValues,
   createAssessmentFormSchema,
@@ -57,9 +58,7 @@ export function CreateAssessmentDialog({
   const createAssessment = useMutation(
     api.assessments.mutations.public.create.createAssessment
   );
-  const updateAssessment = useMutation(
-    api.assessments.mutations.public.update.updateAssessment
-  );
+  const updateAssessment = useUpdateAssessmentMutation();
 
   if (initialAssessment) {
     return (
