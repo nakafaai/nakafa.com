@@ -5,7 +5,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
@@ -14,17 +13,14 @@ import { toast } from "sonner";
 
 interface StartSectionButtonProps {
   attemptId: Id<"tryoutAttempts">;
-  sectionHref: string;
   sectionKey: string;
 }
 
 /** Starts the selected section inside an already-active try-out attempt. */
 export function StartSectionButton({
   attemptId,
-  sectionHref,
   sectionKey,
 }: StartSectionButtonProps) {
-  const router = useRouter();
   const startSection = useMutation(api.tryouts.mutations.sections.start);
   const tTryouts = useTranslations("Tryouts");
   const [isPending, startTransition] = useTransition();
@@ -47,8 +43,6 @@ export function StartSectionButton({
         }).pipe(
           Effect.tap(() =>
             Effect.sync(() => {
-              router.replace(sectionHref);
-              router.refresh();
               toast.success(tTryouts("start-part-success"), {
                 position: "bottom-center",
               });

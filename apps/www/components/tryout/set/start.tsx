@@ -7,6 +7,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvexAuth, useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -15,6 +16,8 @@ import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
+import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 
 type CurrentAttempt = FunctionReturnType<
   typeof api.tryouts.queries.attempt.getCurrent
@@ -26,6 +29,7 @@ export interface StartTryoutRequest {
   entrySectionKey?: string;
   examKey: string;
   firstSectionHref: string;
+  firstSectionKey: string;
   locale: Locale;
   setKey: string;
   trackKey: string;
@@ -42,6 +46,7 @@ export function StartTryoutButton({
   request,
 }: StartTryoutButtonProps) {
   const router = useRouter();
+  const prewarmData = useTryoutDataIntent();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const startAttempt = useMutation(api.tryouts.mutations.attempts.startAttempt);
   const startSection = useMutation(api.tryouts.mutations.sections.start);
@@ -83,20 +88,13 @@ export function StartTryoutButton({
       return;
     }
 
-    if (hasActiveAttempt) {
-      if (!request.entrySectionKey) {
-        router.push(request.firstSectionHref);
-        return;
-      }
-
+    if (hasActiveAttempt && request.entrySectionKey) {
       const entrySectionKey = request.entrySectionKey;
 
       startTransition(async () => {
         await Effect.runPromise(
           startEntrySection({
             attemptId: attempt.attemptId,
-            firstSectionHref: request.firstSectionHref,
-            router,
             sectionKey: entrySectionKey,
             startSection,
             successMessage: tTryouts("start-entry-success"),
@@ -140,7 +138,6 @@ export function StartTryoutButton({
           Effect.tap(() =>
             Effect.sync(() => {
               closeDialog();
-              router.refresh();
               const successMessage = isDirectEntry
                 ? tTryouts("start-entry-success")
                 : tTryouts("start-success");
@@ -158,6 +155,29 @@ export function StartTryoutButton({
         )
       );
     });
+  }
+
+  if (hasActiveAttempt && !isDirectEntry) {
+    return (
+      <TryoutIntentLink
+        className={buttonVariants()}
+        href={request.firstSectionHref}
+        onIntent={() =>
+          prewarmData({
+            countryKey: request.countryKey,
+            examKey: request.examKey,
+            kind: "section",
+            locale: request.locale,
+            sectionKey: request.firstSectionKey,
+            setKey: request.setKey,
+            trackKey: request.trackKey,
+          })
+        }
+      >
+        <Spinner icon={Rocket01Icon} isLoading={false} />
+        {buttonLabel}
+      </TryoutIntentLink>
+    );
   }
 
   return (
@@ -211,16 +231,12 @@ export function StartTryoutButton({
 /** Starts the internal entry section for an already-active attempt. */
 function startEntrySection({
   attemptId,
-  firstSectionHref,
-  router,
   sectionKey,
   startSection,
   successMessage,
   tTryouts,
 }: {
   attemptId: Id<"tryoutAttempts">;
-  firstSectionHref: string;
-  router: ReturnType<typeof useRouter>;
   sectionKey: string;
   startSection: (args: {
     attemptId: Id<"tryoutAttempts">;
@@ -239,8 +255,6 @@ function startEntrySection({
   }).pipe(
     Effect.tap(() =>
       Effect.sync(() => {
-        router.push(firstSectionHref);
-        router.refresh();
         toast.success(successMessage, { position: "bottom-center" });
       })
     ),

@@ -3,7 +3,9 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import type { FunctionReturnType } from "convex/server";
+import type { Locale } from "next-intl";
 import { TryoutList } from "@/components/tryout/catalog/list";
+import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type SetPageQuery = typeof api.tryouts.queries.catalog.getSetPage;
@@ -13,8 +15,10 @@ type SetSection = SetPage["sections"][number];
 export interface TryoutSectionRowsValue {
   attempt?: FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>;
   emptyLabel: string;
+  locale: Locale;
   questionUnitLabel: string;
   sections: readonly SetSection[];
+  set: Pick<SetPage["set"], "countryKey" | "examKey" | "setKey" | "trackKey">;
 }
 
 /** Renders the production-style divided visible section list for one set page. */
@@ -23,6 +27,7 @@ export function TryoutSectionRows({
 }: {
   value: TryoutSectionRowsValue;
 }) {
+  const prewarmData = useTryoutDataIntent();
   const activeAttempt =
     value.attempt?.status === "in-progress" ? value.attempt : null;
   const completedSections = new Set(activeAttempt?.completedSectionKeys ?? []);
@@ -42,6 +47,16 @@ export function TryoutSectionRows({
             description: `${section.questionCount} ${value.questionUnitLabel}`,
             href: getTryoutPublicPathHref(section.publicPath),
             key: section.sectionKey,
+            onIntent: () =>
+              prewarmData({
+                countryKey: value.set.countryKey,
+                examKey: value.set.examKey,
+                kind: "section",
+                locale: value.locale,
+                sectionKey: section.sectionKey,
+                setKey: value.set.setKey,
+                trackKey: value.set.trackKey,
+              }),
             status: completedSections.has(section.sectionKey)
               ? "completed"
               : undefined,

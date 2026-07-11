@@ -1,7 +1,7 @@
 "use client";
 
-import type { Preloaded } from "convex/react";
-import { usePreloadedQuery } from "convex/react";
+import { api } from "@repo/backend/convex/_generated/api";
+import { useQuery } from "convex/react";
 import {
   getTryoutHref,
   getTryoutPublicPathHref,
@@ -13,10 +13,10 @@ import {
 } from "@/components/tryout/runtime/state";
 import { TryoutSetEntry } from "@/components/tryout/set/entry";
 import type {
-  SectionRuntimeQuery,
+  LoadedRuntime,
   SetEntrySection,
+  SetPage,
   TryoutSetContent,
-  TryoutSetPreloads,
   TryoutSetRoute,
   TryoutSetView,
 } from "@/components/tryout/set/model";
@@ -24,24 +24,48 @@ import { TryoutSetOverview } from "@/components/tryout/set/overview";
 
 interface TryoutSetPageClientProps {
   content: TryoutSetContent;
-  preloaded: TryoutSetPreloads;
+  page: SetPage;
   route: TryoutSetRoute;
 }
 
 /** Renders one realtime try-out set page from Convex. */
 export function TryoutSetPageClient({
   content,
-  preloaded,
+  page,
   route,
 }: TryoutSetPageClientProps) {
-  const page = usePreloadedQuery(preloaded.page);
-  const currentAttempt = usePreloadedQuery(preloaded.attempt);
-  const entrySection = page?.entrySection ?? null;
+  const currentAttempt = useQuery(
+    api.tryouts.queries.attempt.getCurrentByPublicPath,
+    {
+      locale: route.locale,
+      publicPath: page.set.publicPath,
+    }
+  );
+  const entrySection = page.entrySection;
   const isInternalEntry = entrySection?.visibility === "internal-entry";
+  const shouldLoadRuntime =
+    isInternalEntry && currentAttempt !== undefined && currentAttempt !== null;
+  const runtime = useQuery(
+    api.tryouts.queries.attempt.getSectionRuntime,
+    shouldLoadRuntime && entrySection
+      ? {
+          countryKey: page.set.countryKey,
+          examKey: page.set.examKey,
+          locale: route.locale,
+          sectionKey: entrySection.sectionKey,
+          setKey: page.set.setKey,
+          trackKey: page.set.trackKey,
+        }
+      : "skip"
+  );
   const now = useTryoutClock(currentAttempt?.status === "in-progress");
   const activeAttempt = getActiveTryoutAttempt(currentAttempt ?? null, now);
 
-  if (!page) {
+  if (currentAttempt === undefined) {
+    return null;
+  }
+
+  if (shouldLoadRuntime && runtime === undefined) {
     return null;
   }
 
@@ -71,15 +95,14 @@ export function TryoutSetPageClient({
     route,
   };
 
-  if (isInternalEntry && entrySection && preloaded.runtime) {
+  if (isInternalEntry && entrySection) {
     return (
       <TryoutInternalSet
-        preloaded={preloaded.runtime}
         value={{
           content,
-          currentAttempt,
           entrySection,
           now,
+          runtime: runtime ?? null,
           view,
         }}
       />
@@ -89,32 +112,23 @@ export function TryoutSetPageClient({
   return <TryoutSetOverview value={view} />;
 }
 
-/** Hydrates one direct-entry runtime from its authenticated server preload. */
+/** Renders one direct-entry runtime from its reactive authenticated query. */
 function TryoutInternalSet({
-  preloaded,
   value,
 }: {
-  preloaded: Preloaded<SectionRuntimeQuery>;
   value: {
     content: TryoutSetContent;
-    currentAttempt: TryoutSetView["actionAttempt"];
     entrySection: SetEntrySection;
     now: number;
+    runtime: LoadedRuntime | null;
     view: TryoutSetView;
   };
 }) {
-  const runtime = usePreloadedQuery(preloaded);
   const runtimeState = getTryoutRuntimeState({
     activeAttempt: value.view.activeAttempt,
     now: value.now,
-    runtime,
+    runtime: value.runtime,
   });
-  const hasActiveEntrySection =
-    value.currentAttempt?.section?.status === "in-progress";
-
-  if (hasActiveEntrySection && runtimeState.kind === "none") {
-    return null;
-  }
 
   if (
     runtimeState.kind !== "none" &&

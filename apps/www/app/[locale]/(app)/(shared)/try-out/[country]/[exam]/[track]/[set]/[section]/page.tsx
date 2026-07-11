@@ -1,17 +1,49 @@
-import { api } from "@repo/backend/convex/_generated/api";
-import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
-import {
-  loadTryoutQuestionContent,
-  type TryoutQuestionContent,
-} from "@/components/tryout/content/load";
+import { Suspense } from "react";
+import { readTryoutSectionPage } from "@/components/tryout/catalog/server";
+import { loadTryoutQuestionContent } from "@/components/tryout/content/load";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
-import { preloadAuthQuery } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
+export const unstable_instant = {
+  prefetch: "runtime",
+  samples: [
+    {
+      params: {
+        country: "indonesia",
+        exam: "snbt",
+        locale: "id",
+        section: "pengetahuan-kuantitatif",
+        set: "set-1",
+        track: "2027",
+      },
+    },
+  ],
+};
+
 /** Renders one try-out section with public metadata and owned runtime content. */
-export default async function Page(props: {
+export default function Page(props: {
+  params: Promise<{
+    country: string;
+    exam: string;
+    locale: string;
+    section: string;
+    set: string;
+    track: string;
+  }>;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <TryoutSectionRoute params={props.params} />
+    </Suspense>
+  );
+}
+
+/** Resolves one cached public section inside its route-owned boundary. */
+async function TryoutSectionRoute({
+  params,
+}: {
   params: Promise<{
     country: string;
     exam: string;
@@ -28,7 +60,7 @@ export default async function Page(props: {
     section,
     set,
     track,
-  } = await props.params;
+  } = await params;
   const locale = getLocaleOrThrow(localeParam);
   const sectionPath = getTryoutHref({
     country,
@@ -37,55 +69,25 @@ export default async function Page(props: {
     set,
     track,
   }).slice(1);
-  const queryArgs = {
-    locale,
-    publicPath: sectionPath,
-  };
-  const preloaded = await preloadQuery(
-    api.tryouts.queries.catalog.getSectionPage,
-    queryArgs
-  );
-  const page = preloadedQueryResult(preloaded);
+  const page = await readTryoutSectionPage(locale, sectionPath);
 
   if (!page) {
     notFound();
   }
 
-  const runtimeArgs = {
-    countryKey: page.set.countryKey,
-    examKey: page.set.examKey,
+  const questions = await loadTryoutQuestionContent({
     locale,
-    sectionKey: page.section.sectionKey,
-    setKey: page.set.setKey,
-    trackKey: page.set.trackKey,
-  };
-  const [attempt, runtime] = await Promise.all([
-    preloadAuthQuery(api.tryouts.queries.attempt.getCurrent, runtimeArgs),
-    preloadAuthQuery(
-      api.tryouts.queries.attempt.getSectionRuntime,
-      runtimeArgs
-    ),
-  ]);
-  const runtimeContent = preloadedQueryResult(runtime);
-  let questions: TryoutQuestionContent[] = [];
+    questions: page.questions,
+  });
 
-  if (runtimeContent) {
-    const loadedQuestions = await loadTryoutQuestionContent({
-      locale,
-      questions: runtimeContent.questions,
-    });
-
-    if (!loadedQuestions) {
-      notFound();
-    }
-
-    questions = loadedQuestions;
+  if (!questions) {
+    notFound();
   }
 
   return (
     <TryoutSectionPageClient
       content={{ questions }}
-      preloaded={{ attempt, page: preloaded, runtime }}
+      page={page}
       route={{ country, exam, locale, section, set, track }}
     />
   );

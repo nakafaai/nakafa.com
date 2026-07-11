@@ -26,7 +26,10 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
     exam: value.route.exam,
     track: value.route.track,
   });
-  const sectionAttempt = value.actionAttempt?.section ?? null;
+  const sectionAttempt =
+    value.runtimeState.kind === "none"
+      ? null
+      : value.runtimeState.runtime.section;
   const sectionFinished = isFinishedSection(sectionAttempt);
   const sectionTimeExpired = isTimeExpiredSection(sectionAttempt);
   const attemptFinished = Boolean(
@@ -62,7 +65,10 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
     />
   );
 
-  if (value.runtimeState.kind === "pending") {
+  if (
+    value.runtimeState.kind === "active" ||
+    value.runtimeState.kind === "pending"
+  ) {
     summaryAction = null;
   }
 

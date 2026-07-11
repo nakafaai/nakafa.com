@@ -18,9 +18,10 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { domAnimation, LazyMotion, m } from "motion/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 
@@ -39,6 +40,8 @@ export function TryoutRuntimeControls({
 }) {
   const { expired, remainingSeconds, returnHref, runtime } = value;
   const router = useRouter();
+  const locale = useLocale();
+  const prewarmData = useTryoutDataIntent();
   const completeSection = useMutation(api.tryouts.mutations.sections.complete);
   const tExercises = useTranslations("Exercises");
   const tTryouts = useTranslations("Tryouts");
@@ -48,6 +51,20 @@ export function TryoutRuntimeControls({
   const { hidden } = useStickyVisibility();
   const progress = getProgress(runtime);
   const isBusy = isPending || expired;
+
+  function prepareReturnRoute() {
+    router.prefetch(returnHref);
+    prewarmData({
+      kind: "set",
+      locale,
+      publicPath: returnHref.slice(1),
+    });
+  }
+
+  function openCompletionDialog() {
+    prepareReturnRoute();
+    openDialog();
+  }
 
   /** Completes the current section through Convex and returns to the set page. */
   function onComplete() {
@@ -109,7 +126,10 @@ export function TryoutRuntimeControls({
 
               <Button
                 disabled={isBusy}
-                onClick={openDialog}
+                onClick={openCompletionDialog}
+                onFocus={prepareReturnRoute}
+                onPointerEnter={prepareReturnRoute}
+                onTouchStart={prepareReturnRoute}
                 type="button"
                 variant="destructive"
               >
@@ -162,7 +182,7 @@ export function TryoutRuntimeControls({
         open={isOpen}
         setOpen={(nextOpen) => {
           if (nextOpen) {
-            openDialog();
+            openCompletionDialog();
             return;
           }
 

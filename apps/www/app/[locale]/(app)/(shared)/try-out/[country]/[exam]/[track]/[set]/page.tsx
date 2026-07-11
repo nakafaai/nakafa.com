@@ -1,22 +1,28 @@
-import { api } from "@repo/backend/convex/_generated/api";
-import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
-import type { FunctionReturnType } from "convex/server";
 import { notFound } from "next/navigation";
-import {
-  loadTryoutQuestionContent,
-  type TryoutQuestionContent,
-} from "@/components/tryout/content/load";
+import { Suspense } from "react";
+import { readTryoutSetPage } from "@/components/tryout/catalog/server";
+import { loadTryoutQuestionContent } from "@/components/tryout/content/load";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
-import { preloadAuthQuery } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-type CurrentAttempt = FunctionReturnType<
-  typeof api.tryouts.queries.attempt.getCurrent
->;
+export const unstable_instant = {
+  prefetch: "runtime",
+  samples: [
+    {
+      params: {
+        country: "indonesia",
+        exam: "tka",
+        locale: "id",
+        set: "set-1",
+        track: "matematika",
+      },
+    },
+  ],
+};
 
 /** Renders one try-out set and its section list. */
-export default async function Page(props: {
+export default function Page(props: {
   params: Promise<{
     country: string;
     exam: string;
@@ -25,92 +31,49 @@ export default async function Page(props: {
     track: string;
   }>;
 }) {
-  const { country, exam, locale: localeParam, set, track } = await props.params;
+  return (
+    <Suspense fallback={null}>
+      <TryoutSetRoute params={props.params} />
+    </Suspense>
+  );
+}
+
+/** Resolves one cached public set inside its route-owned boundary. */
+async function TryoutSetRoute({
+  params,
+}: {
+  params: Promise<{
+    country: string;
+    exam: string;
+    locale: string;
+    set: string;
+    track: string;
+  }>;
+}) {
+  const { country, exam, locale: localeParam, set, track } = await params;
   const locale = getLocaleOrThrow(localeParam);
   const setPath = getTryoutHref({ country, exam, set, track }).slice(1);
-  const preloaded = await preloadQuery(api.tryouts.queries.catalog.getSetPage, {
-    locale,
-    publicPath: setPath,
-  });
-  const page = preloadedQueryResult(preloaded);
+
+  const page = await readTryoutSetPage(locale, setPath);
 
   if (!page) {
     notFound();
   }
 
-  const isInternalEntry = page.entrySection?.visibility === "internal-entry";
-  const attemptArgs = {
-    countryKey: page.set.countryKey,
-    examKey: page.set.examKey,
+  const questions = await loadTryoutQuestionContent({
     locale,
-    ...(isInternalEntry && page.entrySection
-      ? { sectionKey: page.entrySection.sectionKey }
-      : {}),
-    setKey: page.set.setKey,
-    trackKey: page.set.trackKey,
-  };
-  const attempt = await preloadAuthQuery(
-    api.tryouts.queries.attempt.getCurrent,
-    attemptArgs
-  );
-  const runtimeArgs =
-    isInternalEntry && page.entrySection
-      ? {
-          countryKey: page.set.countryKey,
-          examKey: page.set.examKey,
-          locale,
-          sectionKey: page.entrySection.sectionKey,
-          setKey: page.set.setKey,
-          trackKey: page.set.trackKey,
-        }
-      : null;
-  const runtime = runtimeArgs
-    ? await preloadAuthQuery(
-        api.tryouts.queries.attempt.getSectionRuntime,
-        runtimeArgs
-      )
-    : null;
-  const currentAttemptContent = preloadedQueryResult(attempt);
-  const runtimeContent =
-    runtime && isEntrySectionRuntimeAvailable(currentAttemptContent)
-      ? preloadedQueryResult(runtime)
-      : null;
-  let questions: TryoutQuestionContent[] = [];
+    questions: page.entryQuestions,
+  });
 
-  if (runtimeContent) {
-    const loadedQuestions = await loadTryoutQuestionContent({
-      locale,
-      questions: runtimeContent.questions,
-    });
-
-    if (!loadedQuestions) {
-      notFound();
-    }
-
-    questions = loadedQuestions;
+  if (!questions) {
+    notFound();
   }
 
   return (
     <TryoutSetPageClient
       content={{ entryQuestions: questions }}
-      preloaded={{ attempt, page: preloaded, runtime }}
+      page={page}
       route={{ country, exam, locale, set, track }}
     />
-  );
-}
-
-/** Returns true when the direct-entry set can render active or review runtime. */
-function isEntrySectionRuntimeAvailable(attempt: CurrentAttempt) {
-  if (!attempt) {
-    return false;
-  }
-
-  if (attempt.status === "in-progress") {
-    return true;
-  }
-
-  return (
-    attempt.section?.status === "completed" ||
-    attempt.section?.status === "expired"
   );
 }

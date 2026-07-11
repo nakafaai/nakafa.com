@@ -41,6 +41,7 @@ export function TryoutSetAction({ value }: { value: TryoutSetActionValue }) {
     countryKey: value.set.countryKey,
     entrySectionKey,
     examKey: value.set.examKey,
+    firstSectionKey: value.entrySection.sectionKey,
     firstSectionHref: value.entryHref,
     locale: value.locale,
     setKey: value.set.setKey,

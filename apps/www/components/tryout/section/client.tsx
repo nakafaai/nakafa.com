@@ -1,9 +1,9 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import type { Preloaded } from "convex/react";
-import { usePreloadedQuery } from "convex/react";
+import { useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -21,23 +21,15 @@ import { TryoutPageHeader } from "@/components/tryout/shell/header";
 import { TryoutMeta } from "@/components/tryout/shell/meta";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
-type CurrentAttemptQuery = typeof api.tryouts.queries.attempt.getCurrent;
-type SectionRuntimeQuery = typeof api.tryouts.queries.attempt.getSectionRuntime;
 
 interface TryoutSectionPageClientProps {
   content: TryoutSectionContent;
-  preloaded: TryoutSectionPreloads;
+  page: NonNullable<FunctionReturnType<SectionPageQuery>>;
   route: TryoutSectionRoute;
 }
 
 interface TryoutSectionContent {
   questions: readonly TryoutQuestionContent[];
-}
-
-interface TryoutSectionPreloads {
-  attempt: Preloaded<CurrentAttemptQuery>;
-  page: Preloaded<SectionPageQuery>;
-  runtime: Preloaded<SectionRuntimeQuery>;
 }
 
 interface TryoutSectionRoute {
@@ -52,12 +44,22 @@ interface TryoutSectionRoute {
 /** Renders one realtime try-out section page from Convex. */
 export function TryoutSectionPageClient({
   content,
-  preloaded,
+  page,
   route,
 }: TryoutSectionPageClientProps) {
-  const attempt = usePreloadedQuery(preloaded.attempt);
-  const page = usePreloadedQuery(preloaded.page);
-  const runtime = usePreloadedQuery(preloaded.runtime);
+  const runtimeArgs = {
+    countryKey: page.set.countryKey,
+    examKey: page.set.examKey,
+    locale: route.locale,
+    sectionKey: page.section.sectionKey,
+    setKey: page.set.setKey,
+    trackKey: page.set.trackKey,
+  };
+  const attempt = useQuery(api.tryouts.queries.attempt.getCurrent, runtimeArgs);
+  const runtime = useQuery(
+    api.tryouts.queries.attempt.getSectionRuntime,
+    runtimeArgs
+  );
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
   const currentAttempt = attempt;
@@ -66,7 +68,7 @@ export function TryoutSectionPageClient({
       runtime?.section.status === "in-progress"
   );
 
-  if (!page) {
+  if (attempt === undefined || runtime === undefined) {
     return null;
   }
 
