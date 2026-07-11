@@ -15,20 +15,20 @@ describe("contents/queries/search:tryout", () => {
         contentHash: "hash-english-section",
         description: "",
         locale: "id",
-        route: "try-out/indonesia/snbt/2027/set-2/english-language",
+        route: "try-out/indonesia/snbt/2027/set-2/bahasa-inggris",
         section: "tryout",
         syncedAt: 1,
-        text: "english-language try-out set-2 reading passage",
+        text: "bahasa-inggris try-out set-2 reading passage",
         title: "Bahasa Inggris",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-quantitative-section",
         description: "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2",
         locale: "id",
-        route: "try-out/indonesia/snbt/2027/set-2/quantitative-knowledge",
+        route: "try-out/indonesia/snbt/2027/set-2/pengetahuan-kuantitatif",
         section: "tryout",
         syncedAt: 1,
-        text: "quantitative-knowledge Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi tangga",
+        text: "pengetahuan-kuantitatif Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi tangga",
         title: "Pengetahuan Kuantitatif",
       });
     });
@@ -45,7 +45,7 @@ describe("contents/queries/search:tryout", () => {
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "try-out/indonesia/snbt/2027/set-2/quantitative-knowledge"
+          "try-out/indonesia/snbt/2027/set-2/pengetahuan-kuantitatif"
         ),
       })
     );
@@ -59,7 +59,7 @@ describe("contents/queries/search:tryout", () => {
         contentHash: "hash-language-section",
         description: "",
         locale: "id",
-        route: "try-out/indonesia/snbt/2027/set-1/indonesian-language",
+        route: "try-out/indonesia/snbt/2027/set-1/bahasa-indonesia",
         section: "tryout",
         syncedAt: 1,
         text: "Bagian bacaan yang menyebut pola bilangan sebagai contoh.",
@@ -69,7 +69,7 @@ describe("contents/queries/search:tryout", () => {
         contentHash: "hash-math-section",
         description: "SNBT Penalaran Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
-        route: "try-out/indonesia/snbt/2027/set-1/mathematical-reasoning",
+        route: "try-out/indonesia/snbt/2027/set-1/penalaran-matematika",
         section: "tryout",
         syncedAt: 1,
         text: "Latihan pola bilangan untuk penalaran matematika.",
@@ -89,7 +89,7 @@ describe("contents/queries/search:tryout", () => {
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "try-out/indonesia/snbt/2027/set-1/mathematical-reasoning"
+          "try-out/indonesia/snbt/2027/set-1/penalaran-matematika"
         ),
       })
     );
@@ -103,7 +103,7 @@ describe("contents/queries/search:tryout", () => {
         contentHash: "hash-general-reasoning-section",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 2 Nomor 11",
         locale: "id",
-        route: "try-out/indonesia/snbt/2027/set-2/general-reasoning",
+        route: "try-out/indonesia/snbt/2027/set-2/penalaran-umum",
         section: "tryout",
         syncedAt: 1,
         text: "Bagian umum nomor 11.",
@@ -113,7 +113,7 @@ describe("contents/queries/search:tryout", () => {
         contentHash: "hash-rational-section",
         description: "SMA TKA Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
-        route: "try-out/indonesia/tka/mathematics/set-1",
+        route: "try-out/indonesia/tka/matematika/set-1",
         section: "tryout",
         syncedAt: 1,
         text: "Latihan fungsi rasional kelas 11.",
@@ -133,7 +133,7 @@ describe("contents/queries/search:tryout", () => {
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "try-out/indonesia/tka/mathematics/set-1"
+          "try-out/indonesia/tka/matematika/set-1"
         ),
       })
     );
@@ -147,7 +147,7 @@ describe("contents/queries/search:tryout", () => {
         contentHash: "hash-class-section",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 2 Nomor 11",
         locale: "id",
-        route: "try-out/indonesia/snbt/2027/set-2/general-reasoning",
+        route: "try-out/indonesia/snbt/2027/set-2/penalaran-umum",
         section: "tryout",
         syncedAt: 1,
         text: "Semua siswa kelas 9 mengikuti ujian sekolah.",

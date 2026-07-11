@@ -8,8 +8,9 @@ import { describe, expect, it } from "vitest";
 
 const COUNTRY_ROUTE = "try-out/indonesia";
 const EXAM_ROUTE = `${COUNTRY_ROUTE}/tka`;
-const OLD_TRACK_ROUTE = `${EXAM_ROUTE}/mathematics`;
+const OLD_TRACK_ROUTE = `${EXAM_ROUTE}/matematika-lama`;
 const NEW_TRACK_ROUTE = `${EXAM_ROUTE}/matematika`;
+const STALE_CONTENT_ID = "asset:id:tryout:indonesia:tka:mathematics:stale";
 
 /** Builds one route projection fixture matching try-out source routes. */
 function buildRoute(source: {
@@ -28,7 +29,7 @@ function buildRoute(source: {
 }
 
 /** Builds the minimal catalog payload needed to replace one track path. */
-function buildPayload(trackPublicPath: string) {
+function buildPayload() {
   return {
     countries: [
       {
@@ -69,7 +70,7 @@ function buildPayload(trackPublicPath: string) {
       }),
       buildRoute({
         kind: "tryout-track",
-        publicPath: trackPublicPath,
+        publicPath: NEW_TRACK_ROUTE,
         title: "Matematika",
       }),
     ],
@@ -84,7 +85,7 @@ function buildPayload(trackPublicPath: string) {
         isReady: false,
         locale: "id" as const,
         order: 1,
-        publicPath: trackPublicPath,
+        publicPath: NEW_TRACK_ROUTE,
         readyQuestionCount: 0,
         readySetCount: 0,
         readyVisibleSectionCount: 0,
@@ -97,35 +98,90 @@ function buildPayload(trackPublicPath: string) {
   };
 }
 
-/** Returns the graph identity for a test route. */
-function getGraphIdentity(route: string) {
+/** Returns the graph identity for the canonical track route. */
+function getGraphIdentity() {
   const identity = createLearningGraphIdentityFromRoute({
     locale: "id",
-    route,
+    route: NEW_TRACK_ROUTE,
   });
 
   if (!identity) {
-    throw new Error(`Expected graph identity for ${route}.`);
+    throw new Error(`Expected graph identity for ${NEW_TRACK_ROUTE}.`);
   }
 
   return identity;
 }
 
+/** Seeds one stale catalog path and its detached read-model projections. */
+async function seedStaleTrackPath(t: ReturnType<typeof convexTest>) {
+  await t.mutation(async (ctx) => {
+    await ctx.db.insert("tryoutTracks", {
+      authoredSetCount: 0,
+      countryKey: "indonesia",
+      examKey: "tka",
+      isActive: true,
+      isReady: false,
+      locale: "id",
+      order: 1,
+      publicPath: OLD_TRACK_ROUTE,
+      readyQuestionCount: 0,
+      readySetCount: 0,
+      readyVisibleSectionCount: 0,
+      sourceRevision: "2026",
+      syncedAt: 1,
+      title: "Matematika",
+      trackKey: "mathematics",
+      trackKind: "subject",
+    });
+    await ctx.db.insert("contentRoutes", {
+      alignmentId: `${STALE_CONTENT_ID}:alignment`,
+      assetId: STALE_CONTENT_ID,
+      authors: [],
+      conceptId: `${STALE_CONTENT_ID}:concept`,
+      contentHash: "stale-route-hash",
+      content_id: STALE_CONTENT_ID,
+      kind: "tryout-track",
+      learningObjectId: `${STALE_CONTENT_ID}:learning-object`,
+      lensId: `${STALE_CONTENT_ID}:lens`,
+      locale: "id",
+      markdown: false,
+      route: OLD_TRACK_ROUTE,
+      section: "tryout",
+      sourcePath: OLD_TRACK_ROUTE,
+      syncedAt: 1,
+      title: "Matematika",
+    });
+    await ctx.db.insert("contentSearch", {
+      alignmentId: `${STALE_CONTENT_ID}:alignment`,
+      assetId: STALE_CONTENT_ID,
+      conceptId: `${STALE_CONTENT_ID}:concept`,
+      contentHash: "stale-search-hash",
+      content_id: STALE_CONTENT_ID,
+      description: "",
+      learningObjectId: `${STALE_CONTENT_ID}:learning-object`,
+      lensId: `${STALE_CONTENT_ID}:lens`,
+      locale: "id",
+      markdown_url: `https://nakafa.com/id/${OLD_TRACK_ROUTE}.md`,
+      route: OLD_TRACK_ROUTE,
+      section: "tryout",
+      sourcePath: OLD_TRACK_ROUTE,
+      syncedAt: 1,
+      text: "Matematika",
+      title: "Matematika",
+      url: `https://nakafa.com/id/${OLD_TRACK_ROUTE}`,
+    });
+  });
+}
+
 describe("contentSync/mutations/tryout projection paths", () => {
-  it("updates canonical track projections when the public path changes", async () => {
+  it("deletes stale projections when the canonical track path changes", async () => {
     const t = convexTest(schema, convexModules);
-    const oldGraph = getGraphIdentity(OLD_TRACK_ROUTE);
-    const newGraph = getGraphIdentity(NEW_TRACK_ROUTE);
+    const newGraph = getGraphIdentity();
 
-    expect(newGraph).toEqual(oldGraph);
-
+    await seedStaleTrackPath(t);
     await t.mutation(
       internal.contentSync.mutations.tryouts.bulkSyncTryouts,
-      buildPayload(OLD_TRACK_ROUTE)
-    );
-    await t.mutation(
-      internal.contentSync.mutations.tryouts.bulkSyncTryouts,
-      buildPayload(NEW_TRACK_ROUTE)
+      buildPayload()
     );
 
     const snapshot = await t.query(async (ctx) => {
