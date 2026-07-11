@@ -1,9 +1,9 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
+import type { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import type { Preloaded } from "convex/react";
-import { useConvexAuth, usePreloadedQuery, useQuery } from "convex/react";
+import { usePreloadedQuery } from "convex/react";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -21,6 +21,7 @@ import { TryoutPageHeader } from "@/components/tryout/shell/header";
 import { TryoutMeta } from "@/components/tryout/shell/meta";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
+type CurrentAttemptQuery = typeof api.tryouts.queries.attempt.getCurrent;
 type SectionRuntimeQuery = typeof api.tryouts.queries.attempt.getSectionRuntime;
 
 interface TryoutSectionPageClientProps {
@@ -34,6 +35,7 @@ interface TryoutSectionContent {
 }
 
 interface TryoutSectionPreloads {
+  attempt: Preloaded<CurrentAttemptQuery>;
   page: Preloaded<SectionPageQuery>;
   runtime: Preloaded<SectionRuntimeQuery>;
 }
@@ -53,39 +55,18 @@ export function TryoutSectionPageClient({
   preloaded,
   route,
 }: TryoutSectionPageClientProps) {
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const attempt = usePreloadedQuery(preloaded.attempt);
   const page = usePreloadedQuery(preloaded.page);
   const runtime = usePreloadedQuery(preloaded.runtime);
-  const attempt = useQuery(
-    api.tryouts.queries.attempt.getCurrent,
-    page && isAuthenticated && !isLoading
-      ? {
-          countryKey: page.set.countryKey,
-          examKey: page.set.examKey,
-          locale: route.locale,
-          sectionKey: page.section.sectionKey,
-          setKey: page.set.setKey,
-          trackKey: page.set.trackKey,
-        }
-      : "skip"
-  );
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
-  const currentAttempt = isAuthenticated ? attempt : null;
+  const currentAttempt = attempt;
   const now = useTryoutClock(
     currentAttempt?.status === "in-progress" ||
       runtime?.section.status === "in-progress"
   );
 
   if (!page) {
-    return null;
-  }
-
-  if (isLoading) {
-    return null;
-  }
-
-  if (isAuthenticated && attempt === undefined) {
     return null;
   }
 

@@ -38,48 +38,62 @@ export default async function Page(props: {
     notFound();
   }
 
+  const isInternalEntry = page.entrySection?.visibility === "internal-entry";
+  const attemptArgs = {
+    countryKey: page.set.countryKey,
+    examKey: page.set.examKey,
+    locale,
+    ...(isInternalEntry && page.entrySection
+      ? { sectionKey: page.entrySection.sectionKey }
+      : {}),
+    setKey: page.set.setKey,
+    trackKey: page.set.trackKey,
+  };
+  const attempt = await preloadAuthQuery(
+    api.tryouts.queries.attempt.getCurrent,
+    attemptArgs
+  );
+  const runtimeArgs =
+    isInternalEntry && page.entrySection
+      ? {
+          countryKey: page.set.countryKey,
+          examKey: page.set.examKey,
+          locale,
+          sectionKey: page.entrySection.sectionKey,
+          setKey: page.set.setKey,
+          trackKey: page.set.trackKey,
+        }
+      : null;
+  const runtime = runtimeArgs
+    ? await preloadAuthQuery(
+        api.tryouts.queries.attempt.getSectionRuntime,
+        runtimeArgs
+      )
+    : null;
+  const currentAttemptContent = preloadedQueryResult(attempt);
+  const runtimeContent =
+    runtime && isEntrySectionRuntimeAvailable(currentAttemptContent)
+      ? preloadedQueryResult(runtime)
+      : null;
   let questions: TryoutQuestionContent[] = [];
 
-  if (page.entrySection?.visibility === "internal-entry") {
-    const runtimeArgs = {
-      countryKey: page.set.countryKey,
-      examKey: page.set.examKey,
+  if (runtimeContent) {
+    const loadedQuestions = await loadTryoutQuestionContent({
       locale,
-      sectionKey: page.entrySection.sectionKey,
-      setKey: page.set.setKey,
-      trackKey: page.set.trackKey,
-    };
-    const currentAttempt = await preloadAuthQuery(
-      api.tryouts.queries.attempt.getCurrent,
-      runtimeArgs
-    );
-    const currentAttemptContent = preloadedQueryResult(currentAttempt);
-    const runtime = isEntrySectionRuntimeAvailable(currentAttemptContent)
-      ? await preloadAuthQuery(
-          api.tryouts.queries.attempt.getSectionRuntime,
-          runtimeArgs
-        )
-      : null;
-    const runtimeContent = runtime ? preloadedQueryResult(runtime) : null;
+      questions: runtimeContent.questions,
+    });
 
-    if (runtimeContent) {
-      const loadedQuestions = await loadTryoutQuestionContent({
-        locale,
-        questions: runtimeContent.questions,
-      });
-
-      if (!loadedQuestions) {
-        notFound();
-      }
-
-      questions = loadedQuestions;
+    if (!loadedQuestions) {
+      notFound();
     }
+
+    questions = loadedQuestions;
   }
 
   return (
     <TryoutSetPageClient
       content={{ entryQuestions: questions }}
-      preloaded={preloaded}
+      preloaded={{ attempt, page: preloaded, runtime }}
       route={{ country, exam, locale, set, track }}
     />
   );

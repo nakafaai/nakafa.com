@@ -1,8 +1,7 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
 import type { Preloaded } from "convex/react";
-import { useConvexAuth, usePreloadedQuery, useQuery } from "convex/react";
+import { usePreloadedQuery } from "convex/react";
 import {
   getTryoutHref,
   getTryoutPublicPathHref,
@@ -14,9 +13,10 @@ import {
 } from "@/components/tryout/runtime/state";
 import { TryoutSetEntry } from "@/components/tryout/set/entry";
 import type {
+  SectionRuntimeQuery,
   SetEntrySection,
-  SetPageQuery,
   TryoutSetContent,
+  TryoutSetPreloads,
   TryoutSetRoute,
   TryoutSetView,
 } from "@/components/tryout/set/model";
@@ -24,7 +24,7 @@ import { TryoutSetOverview } from "@/components/tryout/set/overview";
 
 interface TryoutSetPageClientProps {
   content: TryoutSetContent;
-  preloaded: Preloaded<SetPageQuery>;
+  preloaded: TryoutSetPreloads;
   route: TryoutSetRoute;
 }
 
@@ -34,61 +34,14 @@ export function TryoutSetPageClient({
   preloaded,
   route,
 }: TryoutSetPageClientProps) {
-  const { isAuthenticated, isLoading } = useConvexAuth();
-  const page = usePreloadedQuery(preloaded);
+  const page = usePreloadedQuery(preloaded.page);
+  const currentAttempt = usePreloadedQuery(preloaded.attempt);
   const entrySection = page?.entrySection ?? null;
   const isInternalEntry = entrySection?.visibility === "internal-entry";
-  const attempt = useQuery(
-    api.tryouts.queries.attempt.getCurrent,
-    page && isAuthenticated && !isLoading
-      ? {
-          countryKey: page.set.countryKey,
-          examKey: page.set.examKey,
-          locale: route.locale,
-          ...(isInternalEntry ? { sectionKey: entrySection.sectionKey } : {}),
-          setKey: page.set.setKey,
-          trackKey: page.set.trackKey,
-        }
-      : "skip"
-  );
-  const currentAttempt = isAuthenticated ? attempt : null;
   const now = useTryoutClock(currentAttempt?.status === "in-progress");
   const activeAttempt = getActiveTryoutAttempt(currentAttempt ?? null, now);
-  const shouldLoadRuntime =
-    page !== null &&
-    entrySection !== null &&
-    isInternalEntry &&
-    isAuthenticated &&
-    !isLoading &&
-    attempt !== undefined &&
-    Boolean(currentAttempt?.section);
-  const runtime = useQuery(
-    api.tryouts.queries.attempt.getSectionRuntime,
-    shouldLoadRuntime
-      ? {
-          countryKey: page.set.countryKey,
-          examKey: page.set.examKey,
-          locale: route.locale,
-          sectionKey: entrySection.sectionKey,
-          setKey: page.set.setKey,
-          trackKey: page.set.trackKey,
-        }
-      : "skip"
-  );
 
   if (!page) {
-    return null;
-  }
-
-  if (isLoading) {
-    return null;
-  }
-
-  if (isAuthenticated && attempt === undefined) {
-    return null;
-  }
-
-  if (shouldLoadRuntime && runtime === undefined) {
     return null;
   }
 
@@ -109,22 +62,6 @@ export function TryoutSetPageClient({
         route,
       })
     : setHref;
-  const runtimeState = getTryoutRuntimeState({
-    activeAttempt,
-    now,
-    runtime: isInternalEntry ? (runtime ?? null) : null,
-  });
-  const hasActiveEntrySection =
-    isInternalEntry && currentAttempt?.section?.status === "in-progress";
-
-  if (hasActiveEntrySection && runtimeState.kind === "none") {
-    return null;
-  }
-
-  if (runtimeState.kind !== "none" && content.entryQuestions.length === 0) {
-    return null;
-  }
-
   const view: TryoutSetView = {
     actionAttempt,
     activeAttempt,
@@ -134,20 +71,68 @@ export function TryoutSetPageClient({
     route,
   };
 
-  if (isInternalEntry && entrySection) {
+  if (isInternalEntry && entrySection && preloaded.runtime) {
     return (
-      <TryoutSetEntry
+      <TryoutInternalSet
+        preloaded={preloaded.runtime}
         value={{
-          ...view,
           content,
+          currentAttempt,
           entrySection,
-          runtimeState,
+          now,
+          view,
         }}
       />
     );
   }
 
   return <TryoutSetOverview value={view} />;
+}
+
+/** Hydrates one direct-entry runtime from its authenticated server preload. */
+function TryoutInternalSet({
+  preloaded,
+  value,
+}: {
+  preloaded: Preloaded<SectionRuntimeQuery>;
+  value: {
+    content: TryoutSetContent;
+    currentAttempt: TryoutSetView["actionAttempt"];
+    entrySection: SetEntrySection;
+    now: number;
+    view: TryoutSetView;
+  };
+}) {
+  const runtime = usePreloadedQuery(preloaded);
+  const runtimeState = getTryoutRuntimeState({
+    activeAttempt: value.view.activeAttempt,
+    now: value.now,
+    runtime,
+  });
+  const hasActiveEntrySection =
+    value.currentAttempt?.section?.status === "in-progress";
+
+  if (hasActiveEntrySection && runtimeState.kind === "none") {
+    return null;
+  }
+
+  if (
+    runtimeState.kind !== "none" &&
+    value.content.entryQuestions.length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <TryoutSetEntry
+      value={{
+        ...value.view,
+        content: value.content,
+        entrySection: value.entrySection,
+        runtimeState,
+      }}
+    />
+  );
 }
 
 /** Builds the href for either a visible public section or an internal set entry. */

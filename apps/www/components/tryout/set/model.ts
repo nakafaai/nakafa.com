@@ -1,4 +1,5 @@
 import type { api } from "@repo/backend/convex/_generated/api";
+import type { Preloaded } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import type { TryoutQuestionContent } from "@/components/tryout/content/load";
@@ -18,6 +19,13 @@ export type CurrentAttempt = FunctionReturnType<
   typeof api.tryouts.queries.attempt.getCurrent
 >;
 
+/** Convex query contract for the current set attempt. */
+export type CurrentAttemptQuery = typeof api.tryouts.queries.attempt.getCurrent;
+
+/** Convex query contract for one direct-entry runtime. */
+export type SectionRuntimeQuery =
+  typeof api.tryouts.queries.attempt.getSectionRuntime;
+
 /** Loaded section runtime payload after null checks. */
 export type LoadedRuntime = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.attempt.getSectionRuntime>
@@ -26,6 +34,13 @@ export type LoadedRuntime = NonNullable<
 /** Static MDX content needed by a direct-entry runtime. */
 export interface TryoutSetContent {
   entryQuestions: readonly TryoutQuestionContent[];
+}
+
+/** Server-preloaded reactive state needed by one set route. */
+export interface TryoutSetPreloads {
+  attempt: Preloaded<CurrentAttemptQuery>;
+  page: Preloaded<SetPageQuery>;
+  runtime: Preloaded<SectionRuntimeQuery> | null;
 }
 
 /** URL route coordinates for one try-out set page. */

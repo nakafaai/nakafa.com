@@ -59,10 +59,13 @@ export default async function Page(props: {
     setKey: page.set.setKey,
     trackKey: page.set.trackKey,
   };
-  const runtime = await preloadAuthQuery(
-    api.tryouts.queries.attempt.getSectionRuntime,
-    runtimeArgs
-  );
+  const [attempt, runtime] = await Promise.all([
+    preloadAuthQuery(api.tryouts.queries.attempt.getCurrent, runtimeArgs),
+    preloadAuthQuery(
+      api.tryouts.queries.attempt.getSectionRuntime,
+      runtimeArgs
+    ),
+  ]);
   const runtimeContent = preloadedQueryResult(runtime);
   let questions: TryoutQuestionContent[] = [];
 
@@ -82,7 +85,7 @@ export default async function Page(props: {
   return (
     <TryoutSectionPageClient
       content={{ questions }}
-      preloaded={{ page: preloaded, runtime }}
+      preloaded={{ attempt, page: preloaded, runtime }}
       route={{ country, exam, locale, section, set, track }}
     />
   );
