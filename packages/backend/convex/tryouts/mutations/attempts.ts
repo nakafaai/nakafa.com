@@ -24,6 +24,7 @@ import {
 } from "@repo/backend/convex/tryouts/runtime/score";
 import {
   loadPlacementSectionAttempt,
+  requireInternalEntrySection,
   startSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
@@ -33,7 +34,6 @@ const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS_PER_USER_SET = 100;
 
 type TryoutSet = Doc<"tryoutSets">;
-type TryoutSection = Doc<"tryoutSections">;
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutAttemptInsert = Omit<TryoutAttempt, "_creationTime" | "_id">;
 
@@ -105,21 +105,6 @@ async function loadLatestAttempt(
     .take(1);
 
   return attempts.at(0) ?? null;
-}
-
-/** Ensures atomic section start is only used for a set-owned internal entry. */
-function requireInternalEntrySection(
-  sections: TryoutSection[],
-  sectionKey: string
-) {
-  const section = sections.find((row) => row.sectionKey === sectionKey);
-
-  if (section?.visibility !== "internal-entry") {
-    throw new ConvexError({
-      code: "TRYOUT_ENTRY_SECTION_NOT_FOUND",
-      message: "Try-out entry section is not available for this set.",
-    });
-  }
 }
 
 /** Returns true when every snapshot is already completed or expired. */

@@ -10,6 +10,22 @@ import { requireSectionSnapshot } from "@repo/backend/convex/tryouts/runtime/pla
 import { ConvexError } from "convex/values";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutSection = Doc<"tryoutSections">;
+
+/** Ensures atomic section start is only used for a set-owned internal entry. */
+export function requireInternalEntrySection(
+  sections: TryoutSection[],
+  sectionKey: string
+) {
+  const section = sections.find((row) => row.sectionKey === sectionKey);
+
+  if (section?.visibility !== "internal-entry") {
+    throw new ConvexError({
+      code: "TRYOUT_ENTRY_SECTION_NOT_FOUND",
+      message: "Try-out entry section is not available for this set.",
+    });
+  }
+}
 
 /** Resolves the timer row that authorizes answers for one placement. */
 export function loadPlacementSectionAttempt(
