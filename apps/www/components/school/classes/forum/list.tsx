@@ -14,7 +14,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
-import { useMutation, usePaginatedQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useParams, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -22,6 +22,7 @@ import { useQueryStates } from "nuqs";
 import { Activity, Suspense, useTransition } from "react";
 import { getTagIcon } from "@/components/school/classes/data/tag";
 import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
+import { useForumReactionMutation } from "@/components/school/classes/forum/reaction/mutation.client";
 import { useClass } from "@/lib/context/use-class";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getLocale } from "@/lib/utils/date";
@@ -193,9 +194,7 @@ function SchoolClassesForumListContent() {
  */
 function TopReaction({ forum }: { forum: ForumListItem }) {
   const [isPending, startTransition] = useTransition();
-  const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.toggleForumReaction
-  );
+  const toggleReaction = useForumReactionMutation();
   const firstReaction = forum.reactionCounts[0];
 
   if (!firstReaction) {
