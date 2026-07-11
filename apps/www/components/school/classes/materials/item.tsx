@@ -11,7 +11,6 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -31,7 +30,6 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
@@ -41,6 +39,10 @@ import { toast } from "sonner";
 import { getMaterialStatus } from "@/components/school/classes/data/material-status";
 import { SchoolClassesDeleteDialog } from "@/components/school/classes/delete-dialog";
 import { EditMaterialGroupDialog } from "@/components/school/classes/materials/editor-dialog";
+import {
+  useDeleteMaterialGroupMutation,
+  useReorderMaterialGroupMutation,
+} from "@/components/school/classes/materials/mutation.client";
 import type { MaterialGroup } from "@/components/school/classes/materials/types";
 import { formatScheduledAt } from "@/components/school/classes/materials/utils";
 import { getLocale } from "@/lib/utils/date";
@@ -167,12 +169,8 @@ function MaterialGroupActions({
   const [confirmDeleteOpen, confirmDeleteHandlers] = useDisclosure(false);
   const [editOpen, editHandlers] = useDisclosure(false);
 
-  const reorderGroup = useMutation(
-    api.classes.materials.mutations.reorderMaterialGroup
-  );
-  const deleteGroup = useMutation(
-    api.classes.materials.mutations.deleteMaterialGroup
-  );
+  const reorderGroup = useReorderMaterialGroupMutation();
+  const deleteGroup = useDeleteMaterialGroupMutation();
 
   function handleMoveUp() {
     startTransition(async () => {

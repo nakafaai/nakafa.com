@@ -44,6 +44,7 @@ import {
   getMaterialStatus,
   materialStatusList,
 } from "@/components/school/classes/data/material-status";
+import { useUpdateMaterialGroupMutation } from "@/components/school/classes/materials/mutation.client";
 import {
   type MaterialGroupFormValues,
   materialGroupFormSchema,
@@ -128,9 +129,7 @@ export function EditMaterialGroupDialog({
   setOpenAction: (open: boolean) => void;
 }) {
   const t = useTranslations("School.Classes");
-  const updateMaterialGroup = useMutation(
-    api.classes.materials.mutations.updateMaterialGroup
-  );
+  const updateMaterialGroup = useUpdateMaterialGroupMutation();
 
   return (
     <MaterialGroupDialogShell
