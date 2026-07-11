@@ -87,9 +87,9 @@ export interface FilesystemSlugs {
   questionSetSourcePaths: string[];
   questionSourceKeys: string[];
   questionSourcePaths: string[];
-  tryoutCountryPaths: string[];
-  tryoutExamPaths: string[];
-  tryoutSectionPaths: string[];
-  tryoutSetPaths: string[];
-  tryoutTrackPaths: string[];
+  tryoutCountryKeys: string[];
+  tryoutExamKeys: string[];
+  tryoutSectionKeys: string[];
+  tryoutSetKeys: string[];
+  tryoutTrackKeys: string[];
 }

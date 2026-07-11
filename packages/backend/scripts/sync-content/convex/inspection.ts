@@ -15,6 +15,7 @@ import {
   TryoutScaleIntegrityPageSchema,
   UnusedAuthorsSchema,
 } from "@repo/backend/scripts/sync-content/contract/inspection";
+import { hasLocalizedSourceKey } from "@repo/backend/scripts/sync-content/contract/key";
 import type {
   ConvexConfig,
   FilesystemSlugs,
@@ -212,11 +213,11 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     filesystemSlugs.questionSetSourcePaths
   );
   const questionSourceKeySet = new Set(filesystemSlugs.questionSourceKeys);
-  const tryoutCountryPathSet = new Set(filesystemSlugs.tryoutCountryPaths);
-  const tryoutExamPathSet = new Set(filesystemSlugs.tryoutExamPaths);
-  const tryoutTrackPathSet = new Set(filesystemSlugs.tryoutTrackPaths);
-  const tryoutSetPathSet = new Set(filesystemSlugs.tryoutSetPaths);
-  const tryoutSectionPathSet = new Set(filesystemSlugs.tryoutSectionPaths);
+  const tryoutCountryKeySet = new Set(filesystemSlugs.tryoutCountryKeys);
+  const tryoutExamKeySet = new Set(filesystemSlugs.tryoutExamKeys);
+  const tryoutTrackKeySet = new Set(filesystemSlugs.tryoutTrackKeys);
+  const tryoutSetKeySet = new Set(filesystemSlugs.tryoutSetKeys);
+  const tryoutSectionKeySet = new Set(filesystemSlugs.tryoutSectionKeys);
   const [
     articles,
     curriculumTopics,
@@ -308,19 +309,19 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
       (item) => !questionSourceKeySet.has(getQuestionSourceKey(item))
     ),
     staleTryoutCountries: tryoutCountries.filter(
-      (item) => !tryoutCountryPathSet.has(item.sourcePath)
+      (item) => !hasLocalizedSourceKey(tryoutCountryKeySet, item)
     ),
     staleTryoutExams: tryoutExams.filter(
-      (item) => !tryoutExamPathSet.has(item.sourcePath)
+      (item) => !hasLocalizedSourceKey(tryoutExamKeySet, item)
     ),
     staleTryoutTracks: tryoutTracks.filter(
-      (item) => !tryoutTrackPathSet.has(item.sourcePath)
+      (item) => !hasLocalizedSourceKey(tryoutTrackKeySet, item)
     ),
     staleTryoutSets: tryoutSets.filter(
-      (item) => !tryoutSetPathSet.has(item.sourcePath)
+      (item) => !hasLocalizedSourceKey(tryoutSetKeySet, item)
     ),
     staleTryoutSections: tryoutSections.filter(
-      (item) => !tryoutSectionPathSet.has(item.sourcePath)
+      (item) => !hasLocalizedSourceKey(tryoutSectionKeySet, item)
     ),
   });
 });

@@ -80,8 +80,7 @@ describe("contentSync/mutations/routes", () => {
       }),
       expect.objectContaining({
         sourceParentPath: "try-out/indonesia/snbt/2027/set-1",
-        sourcePath:
-          "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
+        sourcePath: "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
       }),
     ]);
   });

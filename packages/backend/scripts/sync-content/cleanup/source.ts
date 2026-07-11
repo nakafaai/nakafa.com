@@ -3,11 +3,13 @@ import {
   parseArticlePath,
   parseMaterialLessonPath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
+import { getLocalizedSourceKey } from "@repo/backend/scripts/sync-content/contract/key";
 import { parseLocale } from "@repo/backend/scripts/sync-content/contract/schemas";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
 import { listPublicTryoutRoutes } from "@repo/contents/_types/route/tryout";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
+import { type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
 const QUESTION_FILE_PREFIX = "question.";
@@ -72,24 +74,24 @@ const collectTryoutPaths = Effect.fn("sync.collectTryoutPaths")(function* () {
   const routes = yield* listPublicTryoutRoutes();
 
   return {
-    tryoutCountryPaths: routes
+    tryoutCountryKeys: routes
       .filter((route) => route.kind === "tryout-country")
-      .map((route) => route.publicPath),
-    tryoutExamPaths: routes
+      .map((route) => getLocalizedSourceKey(route.locale, route.publicPath)),
+    tryoutExamKeys: routes
       .filter((route) => route.kind === "tryout-exam")
-      .map((route) => route.publicPath),
-    tryoutTrackPaths: routes
+      .map((route) => getLocalizedSourceKey(route.locale, route.publicPath)),
+    tryoutTrackKeys: routes
       .filter((route) => route.kind === "tryout-track")
-      .map((route) => route.publicPath),
-    tryoutSectionPaths: [
+      .map((route) => getLocalizedSourceKey(route.locale, route.publicPath)),
+    tryoutSectionKeys: [
       ...routes
         .filter((route) => route.kind === "tryout-section")
-        .map((route) => route.publicPath),
-      ...listActiveInternalTryoutSectionPaths(),
+        .map((route) => getLocalizedSourceKey(route.locale, route.publicPath)),
+      ...listActiveInternalTryoutSectionKeys(),
     ],
-    tryoutSetPaths: routes
+    tryoutSetKeys: routes
       .filter((route) => route.kind === "tryout-set")
-      .map((route) => route.publicPath),
+      .map((route) => getLocalizedSourceKey(route.locale, route.publicPath)),
   };
 });
 
@@ -121,8 +123,8 @@ const readQuestionLocale = Effect.fn("sync.readQuestionLocale")(function* (
 });
 
 /** Builds the locale-qualified source key used for stale question cleanup. */
-function getQuestionSourceKey(locale: string, sourcePath: string) {
-  return `${locale}:${sourcePath}`;
+function getQuestionSourceKey(locale: Locale, sourcePath: string) {
+  return getLocalizedSourceKey(locale, sourcePath);
 }
 
 /** Lists source-owned try-out question-set folders that should exist in Convex. */
@@ -153,13 +155,15 @@ function listActiveTryoutQuestionPaths() {
 }
 
 /** Lists internal try-out sections by source path because they have no public route. */
-function listActiveInternalTryoutSectionPaths() {
+function listActiveInternalTryoutSectionKeys() {
   return TRYOUT_SOURCES.flatMap((source) =>
     source.tracks.flatMap((track) =>
       track.sets.flatMap((set) =>
         set.sections.flatMap((section) =>
           section.visibility === "internal-entry"
-            ? [section.questionSourcePath]
+            ? locales.map((locale) =>
+                getLocalizedSourceKey(locale, section.questionSourcePath)
+              )
             : []
         )
       )

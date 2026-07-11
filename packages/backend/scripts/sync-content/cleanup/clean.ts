@@ -258,11 +258,11 @@ export const clean = Effect.fn("sync.clean")(function* (
   log(`  Curriculum lessons on disk: ${slugs.curriculumLessonSlugs.length}`);
   log(`  Question sets on disk: ${slugs.questionSetSourcePaths.length}`);
   log(`  Questions on disk: ${slugs.questionSourcePaths.length}`);
-  log(`  Try-out countries on disk: ${slugs.tryoutCountryPaths.length}`);
-  log(`  Try-out exams on disk: ${slugs.tryoutExamPaths.length}`);
-  log(`  Try-out tracks on disk: ${slugs.tryoutTrackPaths.length}`);
-  log(`  Try-out sets on disk: ${slugs.tryoutSetPaths.length}`);
-  log(`  Try-out sections on disk: ${slugs.tryoutSectionPaths.length}`);
+  log(`  Try-out countries on disk: ${slugs.tryoutCountryKeys.length}`);
+  log(`  Try-out exams on disk: ${slugs.tryoutExamKeys.length}`);
+  log(`  Try-out tracks on disk: ${slugs.tryoutTrackKeys.length}`);
+  log(`  Try-out sets on disk: ${slugs.tryoutSetKeys.length}`);
+  log(`  Try-out sections on disk: ${slugs.tryoutSectionKeys.length}`);
 
   log("\nQuerying database for stale content...");
   const stale = yield* getStaleContent(config, slugs);
