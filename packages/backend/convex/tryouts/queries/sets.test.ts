@@ -224,6 +224,7 @@ describe("tryouts/queries/sets", () => {
             sectionKey: TRYOUT_SECTION_KEY,
             sectionOrder: 1,
             sourceRevision: "2026",
+            timeLimitSeconds: 1800,
             tryoutSectionId: sectionId,
           },
         ],

@@ -6,10 +6,7 @@ import {
   finalizeSectionAttempt,
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
-import {
-  requireSectionSnapshot,
-  requireSnapshotSection,
-} from "@repo/backend/convex/tryouts/runtime/placement";
+import { requireSectionSnapshot } from "@repo/backend/convex/tryouts/runtime/placement";
 import { ConvexError } from "convex/values";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
@@ -80,12 +77,8 @@ export async function startSectionAttempt(
 
   const currentAttempt = await requireNoParallelSectionTimer(ctx, args);
   const snapshot = requireSectionSnapshot(currentAttempt, args.sectionKey);
-  const section = await requireSnapshotSection(ctx, {
-    attempt: currentAttempt,
-    snapshot,
-  });
   const expiresAt = Math.min(
-    args.now + section.timeLimitSeconds * 1000,
+    args.now + snapshot.timeLimitSeconds * 1000,
     getAttemptExpiresAt(currentAttempt)
   );
   const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
@@ -95,13 +88,13 @@ export async function startSectionAttempt(
     endReason: null,
     expiresAt,
     lastActivityAt: args.now,
-    sectionKey: section.sectionKey,
-    sectionOrder: section.order,
+    sectionKey: snapshot.sectionKey,
+    sectionOrder: snapshot.sectionOrder,
     startedAt: args.now,
     status: "in-progress",
-    totalQuestions: section.questionCount,
+    totalQuestions: snapshot.questionCount,
     tryoutAttemptId: currentAttempt._id,
-    tryoutSectionId: section._id,
+    tryoutSectionId: snapshot.tryoutSectionId,
   });
   const sectionAttempt = await ctx.db.get(sectionAttemptId);
 

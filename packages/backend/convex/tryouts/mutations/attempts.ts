@@ -222,6 +222,7 @@ export const startAttempt = mutation({
         sectionKey: section.sectionKey,
         sectionOrder: section.order,
         sourceRevision: section.sourceRevision,
+        timeLimitSeconds: section.timeLimitSeconds,
         tryoutSectionId: section._id,
       })),
       startedAt: now,

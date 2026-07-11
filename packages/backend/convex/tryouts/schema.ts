@@ -57,6 +57,7 @@ export const tryoutSectionSnapshotValidator = v.object({
   sectionKey: tryoutRouteKeyValidator,
   sectionOrder: v.number(),
   sourceRevision: v.string(),
+  timeLimitSeconds: v.number(),
   tryoutSectionId: v.id("tryoutSections"),
 });
 export type TryoutSectionSnapshot = Infer<

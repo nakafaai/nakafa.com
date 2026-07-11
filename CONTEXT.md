@@ -12,6 +12,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Try-out track**: The source-owned discovery layer between exam and set. Tracks group sets by the exam's natural offer shape, such as an SNBT year or a TKA subject.
 - **Try-out set**: One attemptable exam package under a try-out track. It owns section membership, scoring strategy, and public set copy.
 - **Try-out section**: One timed question group inside a try-out set. Sections reference question bank source paths; visible sections have public routes, while internal-entry sections are runtime-only.
+- **Try-out attempt snapshot**: The immutable section configuration and question placements captured when an attempt starts. It remains valid for the life of that attempt even when the authored try-out catalog changes.
 - **IRT scale version**: An immutable scoring scale for one try-out set. Published attempts keep the exact scale version and item parameters used for scoring.
 - **Learning program**: A durable educational pathway such as a school curriculum, assessment preparation track, or institution program. Public curriculum pages present Learning programs through localized routes.
 - **Curriculum preference**: A signed-in learner's default school curriculum for browsing curriculum surfaces. It does not replace an explicit curriculum URL and it is not the source of generated learning plans.

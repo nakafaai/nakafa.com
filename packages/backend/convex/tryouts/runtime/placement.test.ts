@@ -124,6 +124,7 @@ async function insertRuntime(
         sectionKey: SECTION,
         sectionOrder: 1,
         sourceRevision: "2026",
+        timeLimitSeconds: 1800,
         tryoutSectionId: sectionId,
       },
     ],

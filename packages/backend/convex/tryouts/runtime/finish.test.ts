@@ -249,6 +249,7 @@ describe("tryouts/runtime/finish", () => {
             sectionKey: "pengetahuan-kuantitatif",
             sectionOrder: 1,
             sourceRevision: "2026",
+            timeLimitSeconds: 1800,
             tryoutSectionId: firstSectionId,
           },
           {
@@ -259,6 +260,7 @@ describe("tryouts/runtime/finish", () => {
             sectionKey: "penalaran-matematika",
             sectionOrder: 2,
             sourceRevision: "2026",
+            timeLimitSeconds: 1800,
             tryoutSectionId: secondSectionId,
           },
         ],
