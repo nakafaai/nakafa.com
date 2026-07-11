@@ -5,6 +5,7 @@ import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
 import { requireActiveReadyTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
   getAttemptAccessFields,
@@ -243,6 +244,13 @@ export const startAttempt = mutation({
         message: "Try-out attempt not found.",
       });
     }
+
+    await writeTryoutSetProgress(ctx, {
+      attempt,
+      set,
+      status: attemptStatus,
+      updatedAt: now,
+    });
 
     await createAttemptPlacements(ctx, { attempt });
 

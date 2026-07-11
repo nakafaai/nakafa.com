@@ -11,6 +11,9 @@ export const tryoutStatusValidator = literals(
 );
 export type TryoutStatus = Infer<typeof tryoutStatusValidator>;
 
+export const tryoutStatusRankValidator = literals(1, 2, 3);
+export type TryoutStatusRank = Infer<typeof tryoutStatusRankValidator>;
+
 export const tryoutScoreStatusValidator = literals("provisional", "official");
 export type TryoutScoreStatus = Infer<typeof tryoutScoreStatusValidator>;
 
@@ -273,6 +276,31 @@ const tables = {
       "scoreStatus",
       "status",
       "startedAt",
+    ]),
+
+  tryoutSetProgress: defineTable({
+    userId: v.id("users"),
+    tryoutSetId: v.id("tryoutSets"),
+    latestAttemptId: v.id("tryoutAttempts"),
+    countryKey: tryoutRouteKeyValidator,
+    examKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
+    setKey: tryoutRouteKeyValidator,
+    locale: localeValidator,
+    attemptNumber: v.number(),
+    status: tryoutStatusValidator,
+    statusRank: tryoutStatusRankValidator,
+    updatedAt: v.number(),
+  })
+    .index("by_userId_and_tryoutSetId", ["userId", "tryoutSetId"])
+    .index("by_userId_and_track_and_statusRank_and_setKey", [
+      "userId",
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "locale",
+      "statusRank",
+      "setKey",
     ]),
 
   tryoutSectionAttempts: defineTable({

@@ -1,6 +1,7 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
+import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
 import { scoreIrtAttempt } from "@repo/backend/convex/tryouts/runtime/irt";
 import type { AttemptScore } from "@repo/backend/convex/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/convex/tryouts/schema";
@@ -92,6 +93,13 @@ export async function finalizeAttemptScore(
     scoreStatus: score.scoreStatus,
     status,
     totalCorrect: score.totalCorrect,
+  });
+
+  await writeTryoutSetProgress(ctx, {
+    attempt: args.attempt,
+    set,
+    status,
+    updatedAt: args.now,
   });
 
   await captureProductEvent(ctx, {

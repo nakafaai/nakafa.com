@@ -281,6 +281,7 @@ import type * as triggers_subscriptions_subscriptions from "../triggers/subscrip
 import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
 import type * as tryouts_mutations_expiry from "../tryouts/mutations/expiry.js";
 import type * as tryouts_mutations_sections from "../tryouts/mutations/sections.js";
+import type * as tryouts_progress from "../tryouts/progress.js";
 import type * as tryouts_queries_attempt from "../tryouts/queries/attempt.js";
 import type * as tryouts_queries_catalog from "../tryouts/queries/catalog.js";
 import type * as tryouts_queries_catalogModel from "../tryouts/queries/catalogModel.js";
@@ -295,6 +296,8 @@ import type * as tryouts_runtime_placement from "../tryouts/runtime/placement.js
 import type * as tryouts_runtime_result from "../tryouts/runtime/result.js";
 import type * as tryouts_runtime_score from "../tryouts/runtime/score.js";
 import type * as tryouts_runtime_sectionAttempt from "../tryouts/runtime/sectionAttempt.js";
+import type * as tryouts_sets_catalog from "../tryouts/sets/catalog.js";
+import type * as tryouts_sets_spec from "../tryouts/sets/spec.js";
 import type * as users_mutations from "../users/mutations.js";
 import type * as users_queries from "../users/queries.js";
 import type * as users_roles from "../users/roles.js";
@@ -592,6 +595,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;
   "tryouts/mutations/expiry": typeof tryouts_mutations_expiry;
   "tryouts/mutations/sections": typeof tryouts_mutations_sections;
+  "tryouts/progress": typeof tryouts_progress;
   "tryouts/queries/attempt": typeof tryouts_queries_attempt;
   "tryouts/queries/catalog": typeof tryouts_queries_catalog;
   "tryouts/queries/catalogModel": typeof tryouts_queries_catalogModel;
@@ -606,6 +610,8 @@ declare const fullApi: ApiFromModules<{
   "tryouts/runtime/result": typeof tryouts_runtime_result;
   "tryouts/runtime/score": typeof tryouts_runtime_score;
   "tryouts/runtime/sectionAttempt": typeof tryouts_runtime_sectionAttempt;
+  "tryouts/sets/catalog": typeof tryouts_sets_catalog;
+  "tryouts/sets/spec": typeof tryouts_sets_spec;
   "users/mutations": typeof users_mutations;
   "users/queries": typeof users_queries;
   "users/roles": typeof users_roles;

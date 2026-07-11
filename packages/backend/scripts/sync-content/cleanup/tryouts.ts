@@ -113,6 +113,11 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "IRT calibration runs",
   },
   {
+    label: "Deleting try-out set progress...",
+    mutation: reset.deleteTryoutSetProgressBatch,
+    resultLabel: "try-out set progress rows",
+  },
+  {
     label: "Deleting try-out attempts...",
     mutation: reset.deleteTryoutAttemptsBatch,
     resultLabel: "try-out attempts",

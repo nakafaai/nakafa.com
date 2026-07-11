@@ -212,8 +212,16 @@ describe("tryouts/mutations/attempts", () => {
           q.eq("tryoutAttemptId", result.attemptId)
         )
         .collect();
+      const progress = await ctx.db
+        .query("tryoutSetProgress")
+        .withIndex("by_userId_and_tryoutSetId", (q) =>
+          q
+            .eq("userId", seeded.identity.userId)
+            .eq("tryoutSetId", seeded.fixture.tryoutSetId)
+        )
+        .unique();
 
-      return { attempt, placements, sectionAttempts };
+      return { attempt, placements, progress, sectionAttempts };
     });
 
     expect(runtime.attempt).toMatchObject({
@@ -228,6 +236,11 @@ describe("tryouts/mutations/attempts", () => {
       }),
     ]);
     expect(runtime.placements).toHaveLength(1);
+    expect(runtime.progress).toMatchObject({
+      latestAttemptId: result.attemptId,
+      status: "in-progress",
+      statusRank: 1,
+    });
 
     const current = await authed.query(api.tryouts.queries.attempt.getCurrent, {
       countryKey: COUNTRY,

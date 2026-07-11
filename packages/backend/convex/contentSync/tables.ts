@@ -20,6 +20,7 @@ export const contentCountTables = [
   { field: "tryoutSections", tableName: "tryoutSections" },
   { field: "tryoutEntitlements", tableName: "tryoutEntitlements" },
   { field: "tryoutAttempts", tableName: "tryoutAttempts" },
+  { field: "tryoutSetProgress", tableName: "tryoutSetProgress" },
   { field: "tryoutSectionAttempts", tableName: "tryoutSectionAttempts" },
   { field: "tryoutAttemptPlacements", tableName: "tryoutAttemptPlacements" },
   { field: "tryoutResponses", tableName: "tryoutResponses" },

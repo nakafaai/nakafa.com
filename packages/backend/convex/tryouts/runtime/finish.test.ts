@@ -357,10 +357,17 @@ describe("tryouts/runtime/finish", () => {
         )
         .unique();
       const expiredAttempt = await ctx.db.get(attemptId);
+      const progress = await ctx.db
+        .query("tryoutSetProgress")
+        .withIndex("by_userId_and_tryoutSetId", (q) =>
+          q.eq("userId", userId).eq("tryoutSetId", tryoutSetId)
+        )
+        .unique();
 
       return {
         expiredAttempt,
         placements,
+        progress,
         score,
         sections,
       };
@@ -385,6 +392,11 @@ describe("tryouts/runtime/finish", () => {
       scoringStrategy: "irt",
       totalCorrect: 1,
       totalQuestions: 2,
+    });
+    expect(snapshot.progress).toMatchObject({
+      latestAttemptId: expect.any(String),
+      status: "expired",
+      statusRank: 3,
     });
   });
 });

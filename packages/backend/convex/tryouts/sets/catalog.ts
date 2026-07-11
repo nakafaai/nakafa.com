@@ -1,0 +1,233 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import {
+  loadReadySections,
+  toPublicTryoutSet,
+} from "@repo/backend/convex/tryouts/queries/catalogModel";
+import type { TryoutStatus } from "@repo/backend/convex/tryouts/schema";
+import type {
+  ListArgs,
+  StatusArgs,
+  TrackIdentity,
+} from "@repo/backend/convex/tryouts/sets/spec";
+import type { PaginationResult } from "convex/server";
+
+type TryoutSet = Doc<"tryoutSets">;
+type User = Doc<"users">;
+
+/** Returns whether every catalog parent for one track is active and ready. */
+export async function readReadyTrackParent(
+  ctx: QueryCtx,
+  identity: TrackIdentity
+) {
+  const [country, exam, track] = await Promise.all([
+    ctx.db
+      .query("tryoutCountries")
+      .withIndex("by_countryKey_and_locale", (q) =>
+        q.eq("countryKey", identity.countryKey).eq("locale", identity.locale)
+      )
+      .unique(),
+    ctx.db
+      .query("tryoutExams")
+      .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
+        q
+          .eq("countryKey", identity.countryKey)
+          .eq("examKey", identity.examKey)
+          .eq("locale", identity.locale)
+      )
+      .unique(),
+    ctx.db
+      .query("tryoutTracks")
+      .withIndex("by_countryKey_and_examKey_and_trackKey_and_locale", (q) =>
+        q
+          .eq("countryKey", identity.countryKey)
+          .eq("examKey", identity.examKey)
+          .eq("trackKey", identity.trackKey)
+          .eq("locale", identity.locale)
+      )
+      .unique(),
+  ]);
+
+  return Boolean(
+    country?.isActive && exam?.isActive && track?.isActive && track.isReady
+  );
+}
+
+/** Reads the compact latest progress row for one user and set. */
+async function readSetProgress(ctx: QueryCtx, user: User, set: TryoutSet) {
+  return await ctx.db
+    .query("tryoutSetProgress")
+    .withIndex("by_userId_and_tryoutSetId", (q) =>
+      q.eq("userId", user._id).eq("tryoutSetId", set._id)
+    )
+    .unique();
+}
+
+/** Projects one set only while its section snapshot remains ready. */
+async function projectSet(
+  ctx: QueryCtx,
+  set: TryoutSet,
+  attemptStatus: TryoutStatus | null
+) {
+  if (!(await loadReadySections(ctx, set))) {
+    return null;
+  }
+
+  return {
+    ...toPublicTryoutSet(set),
+    attemptStatus,
+  };
+}
+
+/** Reads one page using the selected catalog-owned index. */
+async function readCatalogPage(ctx: QueryCtx, args: ListArgs) {
+  if (args.sort.field === "title") {
+    return await ctx.db
+      .query("tryoutSets")
+      .withIndex("by_track_locale_active_ready_title", (q) =>
+        q
+          .eq("countryKey", args.countryKey)
+          .eq("examKey", args.examKey)
+          .eq("trackKey", args.trackKey)
+          .eq("locale", args.locale)
+          .eq("isActive", true)
+          .eq("isReady", true)
+      )
+      .order(args.sort.direction)
+      .paginate(args.paginationOpts);
+  }
+
+  if (args.sort.field === "readyQuestionCount") {
+    return await ctx.db
+      .query("tryoutSets")
+      .withIndex("by_track_locale_active_ready_questions", (q) =>
+        q
+          .eq("countryKey", args.countryKey)
+          .eq("examKey", args.examKey)
+          .eq("trackKey", args.trackKey)
+          .eq("locale", args.locale)
+          .eq("isActive", true)
+          .eq("isReady", true)
+      )
+      .order(args.sort.direction)
+      .paginate(args.paginationOpts);
+  }
+
+  return await readOrderedSetPage(ctx, {
+    ...args,
+    direction: args.sort.direction,
+  });
+}
+
+/** Reads one ready set page in source-owned order. */
+async function readOrderedSetPage(ctx: QueryCtx, args: StatusArgs) {
+  return await ctx.db
+    .query("tryoutSets")
+    .withIndex("by_track_locale_active_ready_order", (q) =>
+      q
+        .eq("countryKey", args.countryKey)
+        .eq("examKey", args.examKey)
+        .eq("trackKey", args.trackKey)
+        .eq("locale", args.locale)
+        .eq("isActive", true)
+        .eq("isReady", true)
+    )
+    .order(args.direction)
+    .paginate(args.paginationOpts);
+}
+
+/** Lists catalog-sorted sets with compact user progress point reads. */
+export async function listCatalogSets(
+  ctx: QueryCtx,
+  args: ListArgs,
+  user: User | null
+) {
+  const page = await readCatalogPage(ctx, args);
+  const rows = await Promise.all(
+    page.page.map(async (set) => {
+      const progress = user ? await readSetProgress(ctx, user, set) : null;
+      return await projectSet(ctx, set, progress?.status ?? null);
+    })
+  );
+
+  return compactPage(page, rows);
+}
+
+/** Lists attempted sets using the user progress status index. */
+export async function listAttemptedSets(
+  ctx: QueryCtx,
+  args: StatusArgs,
+  user: User
+) {
+  const page = await ctx.db
+    .query("tryoutSetProgress")
+    .withIndex("by_userId_and_track_and_statusRank_and_setKey", (q) =>
+      q
+        .eq("userId", user._id)
+        .eq("countryKey", args.countryKey)
+        .eq("examKey", args.examKey)
+        .eq("trackKey", args.trackKey)
+        .eq("locale", args.locale)
+    )
+    .order(args.direction)
+    .paginate(args.paginationOpts);
+  const rows = await Promise.all(
+    page.page.map(async (progress) => {
+      const set = await ctx.db.get(progress.tryoutSetId);
+
+      if (!isReadyTrackSet(set, args)) {
+        return null;
+      }
+
+      return await projectSet(ctx, set, progress.status);
+    })
+  );
+
+  return compactPage(page, rows);
+}
+
+/** Lists ready sets with no progress row for the current user. */
+export async function listUnattemptedSets(
+  ctx: QueryCtx,
+  args: StatusArgs,
+  user: User | null
+) {
+  const page = await readOrderedSetPage(ctx, args);
+  const rows = await Promise.all(
+    page.page.map(async (set) => {
+      const progress = user ? await readSetProgress(ctx, user, set) : null;
+
+      if (progress) {
+        return null;
+      }
+
+      return await projectSet(ctx, set, null);
+    })
+  );
+
+  return compactPage(page, rows);
+}
+
+function isReadyTrackSet(
+  set: TryoutSet | null,
+  identity: TrackIdentity
+): set is TryoutSet {
+  return Boolean(
+    set?.isActive &&
+      set.isReady &&
+      set.countryKey === identity.countryKey &&
+      set.examKey === identity.examKey &&
+      set.trackKey === identity.trackKey &&
+      set.locale === identity.locale
+  );
+}
+
+function compactPage<TDocument, TRow>(
+  page: PaginationResult<TDocument>,
+  rows: (TRow | null)[]
+): PaginationResult<TRow> {
+  return {
+    ...page,
+    page: rows.flatMap((row) => (row ? [row] : [])),
+  };
+}

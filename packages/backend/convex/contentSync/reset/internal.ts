@@ -171,6 +171,8 @@ export const deleteIrtScaleQualityRefreshQueueBatch = createBatchDeleteMutation(
 );
 export const deleteTryoutAttemptsBatch =
   createBatchDeleteMutation("tryoutAttempts");
+export const deleteTryoutSetProgressBatch =
+  createBatchDeleteMutation("tryoutSetProgress");
 export const deleteTryoutAccessCampaignsBatch = createBatchDeleteMutation(
   "tryoutAccessCampaigns"
 );

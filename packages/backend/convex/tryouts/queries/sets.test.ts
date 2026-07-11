@@ -199,7 +199,7 @@ describe("tryouts/queries/sets", () => {
         tryoutSetId: setId,
       });
 
-      await ctx.db.insert("tryoutAttempts", {
+      const attemptId = await ctx.db.insert("tryoutAttempts", {
         attemptNumber: 1,
         completedAt: null,
         completedSectionKeys: [],
@@ -225,6 +225,20 @@ describe("tryouts/queries/sets", () => {
         totalCorrect: 0,
         totalQuestions: 1,
         tryoutSetId: setId,
+        userId: user.userId,
+      });
+      await ctx.db.insert("tryoutSetProgress", {
+        attemptNumber: 1,
+        countryKey: "indonesia",
+        examKey: "snbt",
+        latestAttemptId: attemptId,
+        locale: "id",
+        setKey: "set-1",
+        status: "in-progress",
+        statusRank: 1,
+        trackKey: "2027",
+        tryoutSetId: setId,
+        updatedAt: TRYOUT_TEST_NOW,
         userId: user.userId,
       });
 
