@@ -67,7 +67,6 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
     <NavigationLink
       className="group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
       href={row.href}
-      prefetch={false}
     >
       <div className="grid w-full gap-4">
         <div className="flex flex-1 items-start gap-3">

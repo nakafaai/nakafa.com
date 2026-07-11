@@ -9,8 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import {
+  type ColumnFiltersState,
   flexRender,
   functionalUpdate,
   getCoreRowModel,
@@ -23,6 +25,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { tryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
+import { readTryoutSetStatusFilter } from "@/components/tryout/catalog/table/filter";
 import { readTryoutSetSort } from "@/components/tryout/catalog/table/sort";
 import type {
   TryoutSetRow,
@@ -43,10 +46,12 @@ export function TryoutSetTable({
   const router = useRouter();
   const tTryouts = useTranslations("Tryouts");
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const data = useTryoutSetData({
     locale,
     page,
+    statusFilter: readTryoutSetStatusFilter(columnFilters),
     sort: readTryoutSetSort(sorting),
   });
   const [retainedRows, setRetainedRows] = useState<TryoutSetRow[]>(EMPTY_ROWS);
@@ -54,7 +59,16 @@ export function TryoutSetTable({
 
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
     setRetainedRows(visibleRows);
+    setColumnFilters([]);
     setSorting((current) => functionalUpdate(updater, current));
+  };
+
+  const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (
+    updater
+  ) => {
+    setRetainedRows(visibleRows);
+    setSorting([]);
+    setColumnFilters((current) => functionalUpdate(updater, current));
   };
 
   // TanStack's supported React adapter intentionally owns this narrow state boundary.
@@ -65,9 +79,12 @@ export function TryoutSetTable({
     enableMultiSort: false,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.setKey,
+    manualFiltering: true,
     manualSorting: true,
+    onColumnFiltersChange: handleColumnFiltersChange,
     onSortingChange: handleSortingChange,
     state: {
+      columnFilters,
       sorting,
     },
   });
@@ -82,15 +99,21 @@ export function TryoutSetTable({
         aria-busy={data.busy}
         className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border"
       >
-        <div className="min-h-0 flex-1 overflow-auto" ref={setScrollRoot}>
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+          ref={setScrollRoot}
+        >
           <Table className="table-fixed" containerClassName="overflow-visible">
             <TableHeader className="sticky top-0 z-10 bg-background">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow className="hover:bg-transparent" key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <TableHead
+                      className={cn(
+                        "px-2 sm:px-4",
+                        getColumnWidthClassName(header.column.id)
+                      )}
                       key={header.id}
-                      style={{ width: `${header.getSize()}px` }}
                     >
                       {header.isPlaceholder
                         ? null
@@ -123,7 +146,7 @@ export function TryoutSetTable({
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell className="px-2 sm:px-4" key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -166,4 +189,16 @@ export function TryoutSetTable({
       </div>
     </div>
   );
+}
+
+function getColumnWidthClassName(columnId: string) {
+  if (columnId === "title") {
+    return "w-[44%] sm:w-1/2";
+  }
+
+  if (columnId === "readyQuestionCount") {
+    return "w-[22%] sm:w-1/5";
+  }
+
+  return "w-[34%] sm:w-[30%]";
 }

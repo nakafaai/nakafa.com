@@ -4,9 +4,11 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { usePaginatedQuery } from "convex/react";
 import type { Locale } from "next-intl";
 import { useEffect } from "react";
+import { readTryoutSetAttemptStatus } from "@/components/tryout/catalog/table/filter";
 import type {
   TryoutSetRow,
   TryoutSetSort,
+  TryoutSetStatusFilter,
   TryoutTrackPage,
 } from "@/components/tryout/catalog/table/types";
 
@@ -21,14 +23,16 @@ interface TryoutSetData {
   readonly rows: TryoutSetRow[];
 }
 
-/** Composes reactive catalog and progress cursors into one ordered row stream. */
+/** Loads one reactive cursor for the active catalog sort or status filter. */
 export function useTryoutSetData({
   locale,
   page,
+  statusFilter,
   sort,
 }: {
   locale: Locale;
   page: TryoutTrackPage;
+  statusFilter: TryoutSetStatusFilter;
   sort: TryoutSetSort;
 }): TryoutSetData {
   const identity = {
@@ -37,34 +41,33 @@ export function useTryoutSetData({
     locale,
     trackKey: page.track.trackKey,
   };
-  const isStatusSort = sort.field === "attemptStatus";
+  const attemptStatus = readTryoutSetAttemptStatus(statusFilter);
   const catalog = usePaginatedQuery(
     api.tryouts.queries.sets.list,
-    isStatusSort ? "skip" : { ...identity, sort },
+    statusFilter === "all" ? { ...identity, sort } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
-  const statusArgs = isStatusSort
-    ? { ...identity, direction: sort.direction }
-    : "skip";
-  const attempted = usePaginatedQuery(
-    api.tryouts.queries.sets.attempted,
-    statusArgs,
+  const byStatus = usePaginatedQuery(
+    api.tryouts.queries.sets.byStatus,
+    attemptStatus ? { ...identity, status: attemptStatus } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
   const unattempted = usePaginatedQuery(
     api.tryouts.queries.sets.unattempted,
-    statusArgs,
+    statusFilter === "not-started" ? identity : "skip",
     { initialNumItems: PAGE_SIZE }
   );
-  const primary = sort.direction === "asc" ? unattempted : attempted;
-  const secondary = sort.direction === "asc" ? attempted : unattempted;
-  const statusRows =
-    primary.status === "Exhausted"
-      ? [...primary.results, ...secondary.results]
-      : primary.results;
-  const activeStatusPage = primary.status === "Exhausted" ? secondary : primary;
-  const active = isStatusSort ? activeStatusPage : catalog;
-  const rows = isStatusSort ? statusRows : catalog.results;
+  let active = catalog;
+
+  if (statusFilter === "not-started") {
+    active = unattempted;
+  }
+
+  if (attemptStatus) {
+    active = byStatus;
+  }
+
+  const rows = active.results;
   const canLoadMore = active.status === "CanLoadMore";
 
   useEffect(() => {
@@ -79,7 +82,7 @@ export function useTryoutSetData({
     busy:
       active.status === "LoadingFirstPage" || active.status === "LoadingMore",
     exhausted: active.status === "Exhausted",
-    loadKey: `${sort.field}:${sort.direction}:${rows.length}:${active.status}`,
+    loadKey: `${statusFilter}:${sort.field}:${sort.direction}:${rows.length}:${active.status}`,
     loadMore: () => {
       if (active.status === "CanLoadMore") {
         active.loadMore(PAGE_SIZE);

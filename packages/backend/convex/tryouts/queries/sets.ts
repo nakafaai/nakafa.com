@@ -1,8 +1,8 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import {
-  listAttemptedSets,
   listCatalogSets,
+  listSetsByStatus,
   listUnattemptedSets,
   readReadyTrackParent,
 } from "@repo/backend/convex/tryouts/sets/catalog";
@@ -11,6 +11,7 @@ import {
   listArgsValidator,
   statusArgsValidator,
   trackSetValidator,
+  unattemptedArgsValidator,
 } from "@repo/backend/convex/tryouts/sets/spec";
 import { paginationResultValidator } from "convex/server";
 
@@ -28,8 +29,8 @@ export const list = query({
   },
 });
 
-/** Lists attempted sets by indexed latest workflow status. */
-export const attempted = query({
+/** Lists sets matching one exact indexed workflow status. */
+export const byStatus = query({
   args: statusArgsValidator.fields,
   returns: paginationResultValidator(trackSetValidator),
   handler: async (ctx, args) => {
@@ -43,13 +44,13 @@ export const attempted = query({
       return emptySetPage;
     }
 
-    return await listAttemptedSets(ctx, args, auth.appUser);
+    return await listSetsByStatus(ctx, args, auth.appUser);
   },
 });
 
 /** Lists ready sets that the current user has not attempted. */
 export const unattempted = query({
-  args: statusArgsValidator.fields,
+  args: unattemptedArgsValidator.fields,
   returns: paginationResultValidator(trackSetValidator),
   handler: async (ctx, args) => {
     if (!(await readReadyTrackParent(ctx, args))) {

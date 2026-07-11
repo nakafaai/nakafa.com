@@ -30,7 +30,12 @@ export const listArgsValidator = v.object({
 
 export const statusArgsValidator = v.object({
   ...trackIdentityValidator.fields,
-  direction: setDirectionValidator,
+  paginationOpts: paginationOptsValidator,
+  status: tryoutStatusValidator,
+});
+
+export const unattemptedArgsValidator = v.object({
+  ...trackIdentityValidator.fields,
   paginationOpts: paginationOptsValidator,
 });
 
@@ -42,6 +47,7 @@ export const trackSetValidator = v.object({
 export type ListArgs = Infer<typeof listArgsValidator>;
 export type StatusArgs = Infer<typeof statusArgsValidator>;
 export type TrackIdentity = Infer<typeof trackIdentityValidator>;
+export type UnattemptedArgs = Infer<typeof unattemptedArgsValidator>;
 
 export const emptySetPage = {
   continueCursor: "",

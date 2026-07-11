@@ -9,7 +9,7 @@ describe("readTryoutSetSort", () => {
     });
   });
 
-  it("maps every sortable table column to the Convex contract", () => {
+  it("maps the sortable catalog columns to the Convex contract", () => {
     expect(readTryoutSetSort([{ desc: false, id: "title" }])).toEqual({
       direction: "asc",
       field: "title",
@@ -17,10 +17,6 @@ describe("readTryoutSetSort", () => {
     expect(
       readTryoutSetSort([{ desc: true, id: "readyQuestionCount" }])
     ).toEqual({ direction: "desc", field: "readyQuestionCount" });
-    expect(readTryoutSetSort([{ desc: true, id: "attemptStatus" }])).toEqual({
-      direction: "desc",
-      field: "attemptStatus",
-    });
   });
 
   it("falls back to authored order for unknown columns", () => {

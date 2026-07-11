@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/progress";
 import {
   loadReadySections,
   toPublicTryoutSet,
@@ -9,11 +10,16 @@ import type {
   ListArgs,
   StatusArgs,
   TrackIdentity,
+  UnattemptedArgs,
 } from "@repo/backend/convex/tryouts/sets/spec";
 import type { PaginationResult } from "convex/server";
 
 type TryoutSet = Doc<"tryoutSets">;
 type User = Doc<"users">;
+type OrderedSetPageArgs = TrackIdentity & {
+  direction: ListArgs["sort"]["direction"];
+  paginationOpts: ListArgs["paginationOpts"];
+};
 
 /** Returns whether every catalog parent for one track is active and ready. */
 export async function readReadyTrackParent(
@@ -120,7 +126,7 @@ async function readCatalogPage(ctx: QueryCtx, args: ListArgs) {
 }
 
 /** Reads one ready set page in source-owned order. */
-async function readOrderedSetPage(ctx: QueryCtx, args: StatusArgs) {
+async function readOrderedSetPage(ctx: QueryCtx, args: OrderedSetPageArgs) {
   return await ctx.db
     .query("tryoutSets")
     .withIndex("by_track_locale_active_ready_order", (q) =>
@@ -153,8 +159,8 @@ export async function listCatalogSets(
   return compactPage(page, rows);
 }
 
-/** Lists attempted sets using the user progress status index. */
-export async function listAttemptedSets(
+/** Lists one exact attempted state using the user progress status index. */
+export async function listSetsByStatus(
   ctx: QueryCtx,
   args: StatusArgs,
   user: User
@@ -168,8 +174,9 @@ export async function listAttemptedSets(
         .eq("examKey", args.examKey)
         .eq("trackKey", args.trackKey)
         .eq("locale", args.locale)
+        .eq("statusRank", getTryoutStatusRank(args.status))
     )
-    .order(args.direction)
+    .order("asc")
     .paginate(args.paginationOpts);
   const rows = await Promise.all(
     page.page.map(async (progress) => {
@@ -189,10 +196,13 @@ export async function listAttemptedSets(
 /** Lists ready sets with no progress row for the current user. */
 export async function listUnattemptedSets(
   ctx: QueryCtx,
-  args: StatusArgs,
+  args: UnattemptedArgs,
   user: User | null
 ) {
-  const page = await readOrderedSetPage(ctx, args);
+  const page = await readOrderedSetPage(ctx, {
+    ...args,
+    direction: "asc",
+  });
   const rows = await Promise.all(
     page.page.map(async (set) => {
       const progress = user ? await readSetProgress(ctx, user, set) : null;

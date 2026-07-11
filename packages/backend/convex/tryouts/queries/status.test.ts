@@ -24,19 +24,32 @@ import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-type StatusArgs = FunctionArgs<typeof api.tryouts.queries.sets.attempted>;
+type StatusArgs = FunctionArgs<typeof api.tryouts.queries.sets.byStatus>;
+type UnattemptedArgs = FunctionArgs<
+  typeof api.tryouts.queries.sets.unattempted
+>;
 
 function getStatusArgs(
-  direction: StatusArgs["direction"],
+  status: StatusArgs["status"],
   cursor: string | null = null,
   numItems = 10
 ): StatusArgs {
   return {
     countryKey: "indonesia",
-    direction,
     examKey: "snbt",
     locale: "id",
     paginationOpts: { cursor, numItems },
+    status,
+    trackKey: "2027",
+  };
+}
+
+function getUnattemptedArgs(): UnattemptedArgs {
+  return {
+    countryKey: "indonesia",
+    examKey: "snbt",
+    locale: "id",
+    paginationOpts: { cursor: null, numItems: 10 },
     trackKey: "2027",
   };
 }
@@ -108,8 +121,8 @@ async function insertSet(
   });
 }
 
-describe("tryouts/queries/sets status sorting", () => {
-  it("sorts attempted states before pagination and keeps unattempted separate", async () => {
+describe("tryouts/queries/sets status filtering", () => {
+  it("filters one attempted state before pagination and keeps unattempted separate", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
@@ -136,8 +149,13 @@ describe("tryouts/queries/sets status sorting", () => {
         userId: user.userId,
       });
       await insertSet(ctx, {
-        isReady: false,
         order: 5,
+        status: "in-progress",
+        userId: user.userId,
+      });
+      await insertSet(ctx, {
+        isReady: false,
+        order: 6,
         status: "in-progress",
         userId: user.userId,
       });
@@ -148,17 +166,16 @@ describe("tryouts/queries/sets status sorting", () => {
       sessionId: identity.sessionId,
       subject: identity.authUserId,
     });
-    const ascendingStatuses: (TryoutStatus | null)[] = [];
+    const inProgressSetKeys: string[] = [];
     let cursor: string | null = null;
 
     for (let pageIndex = 0; pageIndex < 5; pageIndex++) {
-      const page: FunctionReturnType<
-        typeof api.tryouts.queries.sets.attempted
-      > = await authed.query(
-        api.tryouts.queries.sets.attempted,
-        getStatusArgs("asc", cursor, 1)
-      );
-      ascendingStatuses.push(...page.page.map((row) => row.attemptStatus));
+      const page: FunctionReturnType<typeof api.tryouts.queries.sets.byStatus> =
+        await authed.query(
+          api.tryouts.queries.sets.byStatus,
+          getStatusArgs("in-progress", cursor, 1)
+        );
+      inProgressSetKeys.push(...page.page.map((row) => row.setKey));
 
       if (page.isDone) {
         break;
@@ -166,49 +183,54 @@ describe("tryouts/queries/sets status sorting", () => {
 
       cursor = page.continueCursor;
     }
-    const descending = await authed.query(
-      api.tryouts.queries.sets.attempted,
-      getStatusArgs("desc")
+    const completed = await authed.query(
+      api.tryouts.queries.sets.byStatus,
+      getStatusArgs("completed")
+    );
+    const expired = await authed.query(
+      api.tryouts.queries.sets.byStatus,
+      getStatusArgs("expired")
     );
     const unattempted = await authed.query(
       api.tryouts.queries.sets.unattempted,
-      getStatusArgs("asc")
+      getUnattemptedArgs()
     );
-    const publicAttempted = await t.query(
-      api.tryouts.queries.sets.attempted,
-      getStatusArgs("asc")
+    const publicByStatus = await t.query(
+      api.tryouts.queries.sets.byStatus,
+      getStatusArgs("in-progress")
     );
     const publicUnattempted = await t.query(
       api.tryouts.queries.sets.unattempted,
-      getStatusArgs("asc")
+      getUnattemptedArgs()
     );
 
-    expect(ascendingStatuses).toEqual(["in-progress", "completed", "expired"]);
-    expect(descending.page.map((row) => row.attemptStatus)).toEqual([
-      "expired",
-      "completed",
-      "in-progress",
+    expect(inProgressSetKeys).toEqual(["set-2", "set-5"]);
+    expect(completed.page).toMatchObject([
+      { attemptStatus: "completed", setKey: "set-3" },
+    ]);
+    expect(expired.page).toMatchObject([
+      { attemptStatus: "expired", setKey: "set-4" },
     ]);
     expect(unattempted.page).toMatchObject([
       { attemptStatus: null, setKey: "set-1" },
     ]);
-    expect(publicAttempted.page).toEqual([]);
-    expect(publicUnattempted.page).toHaveLength(4);
+    expect(publicByStatus.page).toEqual([]);
+    expect(publicUnattempted.page).toHaveLength(5);
   });
 
   it("returns empty status streams for an unavailable track", async () => {
     const t = convexTest(schema, convexModules);
 
-    const attempted = await t.query(
-      api.tryouts.queries.sets.attempted,
-      getStatusArgs("asc")
+    const byStatus = await t.query(
+      api.tryouts.queries.sets.byStatus,
+      getStatusArgs("in-progress")
     );
     const unattempted = await t.query(
       api.tryouts.queries.sets.unattempted,
-      getStatusArgs("asc")
+      getUnattemptedArgs()
     );
 
-    expect(attempted.page).toEqual([]);
+    expect(byStatus.page).toEqual([]);
     expect(unattempted.page).toEqual([]);
   });
 });

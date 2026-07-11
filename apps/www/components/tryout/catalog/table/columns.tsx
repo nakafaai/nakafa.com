@@ -2,10 +2,13 @@
 
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ColumnDef } from "@tanstack/react-table";
-import { TryoutSetTableHeader } from "@/components/tryout/catalog/table/header";
+import {
+  TryoutSetSortHeader,
+  TryoutSetStatusHeader,
+} from "@/components/tryout/catalog/table/header";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
-import { TryoutStatus } from "@/components/tryout/status";
+import { TryoutStatusCompact } from "@/components/tryout/status";
 
 /** Stable TanStack column definitions for try-out set discovery. */
 export const tryoutSetColumns: ColumnDef<TryoutSetRow>[] = [
@@ -13,35 +16,34 @@ export const tryoutSetColumns: ColumnDef<TryoutSetRow>[] = [
     accessorKey: "title",
     cell: ({ row }) => (
       <NavigationLink
-        className="underline-offset-4 hover:underline"
+        className="block truncate underline-offset-4 hover:underline"
         href={getTryoutPublicPathHref(row.original.publicPath)}
-        prefetch={false}
       >
         {row.original.title}
       </NavigationLink>
     ),
+    enableColumnFilter: false,
     enableHiding: false,
     header: ({ column }) => (
-      <TryoutSetTableHeader column={column} labelKey="set-column-name" />
+      <TryoutSetSortHeader column={column} labelKey="set-column-name" />
     ),
-    size: 280,
   },
   {
     accessorKey: "readyQuestionCount",
     cell: ({ row }) => (
       <span className="tabular-nums">{row.original.readyQuestionCount}</span>
     ),
+    enableColumnFilter: false,
     header: ({ column }) => (
-      <TryoutSetTableHeader column={column} labelKey="set-column-questions" />
+      <TryoutSetSortHeader column={column} labelKey="set-column-questions" />
     ),
-    size: 100,
   },
   {
     accessorKey: "attemptStatus",
-    cell: ({ row }) => <TryoutStatus status={row.original.attemptStatus} />,
-    header: ({ column }) => (
-      <TryoutSetTableHeader column={column} labelKey="set-column-status" />
+    cell: ({ row }) => (
+      <TryoutStatusCompact status={row.original.attemptStatus} />
     ),
-    size: 160,
+    enableSorting: false,
+    header: ({ column }) => <TryoutSetStatusHeader column={column} />,
   },
 ];
