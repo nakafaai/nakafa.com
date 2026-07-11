@@ -1,9 +1,10 @@
-# Convex Cost Baseline
+# Convex Cost And Scale Evidence
 
 ## Status
 
-Measured on 2026-07-10. This document records evidence and an optimization
-order. It does not authorize a schema, query, CI, backup, or deployment change.
+Measured and implemented through 2026-07-11. This document separates billing
+evidence, runtime evidence, shipped architecture, and remaining operational
+work. A short log sample is not treated as proof of a full monthly invoice.
 
 ## Billing Snapshot
 
@@ -18,133 +19,166 @@ The Convex usage screen for 2026-06-12 through 2026-07-12 showed:
 | File storage | 7.68 MB | 100 GB | 0 |
 | Data egress | 90.08 MB | 50 GB | 0 |
 
-Database I/O is the only visible overage. At the current US Professional rate
-of $0.20 per additional GB, 58.03 GB is approximately $11.61. Added to the
-$25 developer subscription, the pre-tax estimate is $36.61. The invoice remains
-the source of truth because tax and regional multipliers are not represented in
-this estimate.
+Database I/O was the only visible overage. At the observed US Professional rate
+of $0.20 per additional GB, 58.03 GB is approximately $11.61. Added to the $25
+developer subscription, the pre-tax estimate is $36.61. The invoice remains the
+source of truth for tax and regional adjustments.
 
-Convex defines database I/O as document and index data transferred between a
-function and the database. Cached query reads do not incur database bandwidth.
-Backups do read every document and are billed for that database bandwidth.
+Convex bills database I/O for document and index data transferred between a
+function and the database. Cached query reads do not incur database bandwidth,
+while logical backups read documents and consume database bandwidth.
 
-## Execution Samples
+## Baseline Evidence
 
-Bounded `convex logs --history 1000 --success --jsonl` samples were aggregated
-from `usageStats.databaseIoReadBytes`. The commands only read deployment logs.
+The original bounded log samples identified large Quran page reads as the
+clearest repeatable hot path:
 
-### Development
+- Development: 965 executions read 19,820,211 bytes. Quran page reads accounted
+  for 17,139,989 bytes, or 86.5% of the sample.
+- Production: 656 executions read 1,735,605 bytes. Quran pages read 778,838
+  bytes, curriculum pages read 494,237 bytes, and one analytics partition read
+  364,442 bytes.
+- Serializing all 114 Quran page payloads from source produced 19,504,297 bytes.
+  Long Indonesian tafsir contributed 9,147,814 bytes, although the web page only
+  rendered short tafsir.
 
-Window: 2026-07-10 10:57:12 UTC through 11:35:19 UTC.
+Omitting long tafsir only from a response would not save database I/O because
+Convex reads the stored document before projecting the response. The hot stored
+row had to change.
 
-- 965 completed executions read 19,820,211 bytes across 6,139 documents.
-- `getQuranSurahPage` accounted for 17,139,989 bytes across 277 calls and
-  5,453 documents. Of those calls, 186 were cache hits.
-- `getCurriculumPage` accounted for 1,758,320 bytes across 526 calls. Of those
-  calls, 315 were cache hits.
-- Quran page reads represented 86.5% of sampled development database I/O.
+## Shipped Architecture
 
-### Production
+### Quran runtime
 
-Window: 2026-07-10 10:50:54 UTC through 11:35:36 UTC.
+- `quranVerses` no longer stores unused long tafsir in the hot verse document.
+- Metadata generation uses a lightweight surah metadata query instead of
+  loading every verse.
+- Body rendering still uses the indexed surah page query and preserves the same
+  public content contract.
 
-- 656 completed executions read 1,735,605 bytes across 763 documents.
-- `getQuranSurahPage` read 778,838 bytes across 9 calls. Six were cache hits.
-- `getCurriculumPage` read 494,237 bytes across 254 calls. 201 were cache hits.
-- One analytics partition read 364,442 bytes and wrote 79,050 bytes.
-- `getContentRoute` read 79,462 bytes across 163 calls. 33 were cache hits.
+### Public content routes
 
-This sample does not explain an entire monthly invoice. It does show that normal
-production traffic in the sampled window was small relative to development
-Quran page generation.
+- Public routes are synchronized through deterministic shards rather than one
+  monolithic root document or full-table rewrite.
+- A root content hash and shard states make an unchanged sync a no-op.
+- Incremental sync skips Convex work when the source projection has not changed.
+- Route tracking identity is derived from the source graph contract; runtime
+  reads no longer perform a redundant tracking lookup.
+- Route-owned cached loaders prevent metadata and page rendering from repeating
+  the same build read.
+- Static parameter generation is capped at 512 routes per locale and route
+  family. The remaining long tail renders on demand under Next.js Cache
+  Components rather than forcing every content row into every build.
 
-## Source Payload Estimate
+### Try-out discovery
 
-The current Quran source contains 114 surahs and 6,236 verse rows. Serializing
-the current page-query shape from source produces these directional estimates:
+- `tryoutSetProgress` stores one compact latest-state row only after a user has
+  attempted a set. It does not create a user-by-catalog cross product.
+- Attempt start and finalization update the progress row in the same Convex
+  transaction as the attempt lifecycle.
+- Normal set pages read compact progress rows instead of large attempt documents
+  containing section snapshots.
+- User status ordering uses a compound index before cursor pagination.
+- Unattempted and attempted streams remain separate standard Convex paginated
+  queries, composed reactively by the client. No loaded-page client sort or
+  unbounded table collection is used.
 
-- All 114 page payloads: 19,504,297 bytes (18.60 MiB).
-- The long Indonesian tafsir strings alone: 9,147,814 bytes.
-- Page payloads without long tafsir: 10,245,750 bytes (9.77 MiB).
-- Estimated payload reduction: 47.47%.
-- Largest page, surah 2: 1,343,103 bytes; 679,179 bytes without long tafsir.
+### Removed data and work
 
-These are JSON payload estimates, not invoice bytes. Convex bills the stored
-document and index bytes read by a function. Omitting `tafsir.id.long` only from
-the returned object would therefore not remove its database I/O; the stored hot
-row must change. The current web Quran page uses only `tafsir.id.short`.
+- Dead projection tables and 1,105 obsolete projection rows per environment were
+  removed.
+- The obsolete `materialLocales` data path was removed.
+- No-change content synchronization performs no redundant mutation batches.
+- One-time repair and migration functions were removed after dev and production
+  verification.
 
-## Current Architecture
+## Post-change Evidence
 
-- `getQuranSurahPage` reads every verse document for a surah. Each verse row
-  stores both short and long tafsir.
-- Route metadata and the rendered Quran shell independently call the full Quran
-  page query.
-- Both reads use the `contentRuntime` Next.js cache profile: five-minute stale,
-  one-day revalidation, and seven-day expiry.
-- Next.js includes the build ID in every `use cache` key. A new build therefore
-  invalidates the previous build's entries.
-- `.github/workflows/agent-docs.yml` runs the root production build on every pull
-  request synchronization and points content reads at the production Convex
-  deployment.
-- Convex query caching limits repeated identical reads while source data remains
-  unchanged, but a cold page or invalidated query still reads the stored rows.
+### Runtime sample
 
-## Causal Assessment
+A fresh production sample after the content read changes contained 745 completed
+executions, about 3.5 MB read, and zero errors:
 
-Confidence is high that Quran cold reads are an expensive hot path: they dominate
-the development sample, and nearly half of their source payload is long tafsir
-that the page does not use.
+| Function | Calls | Approximate bytes read |
+| --- | ---: | ---: |
+| `getCurriculumPage` | 249 | 2.36 MB |
+| `getContentRouteArtifactPage` | 14 | 577 KB |
+| `getContentRoute` | 457 | 365 KB |
+| `getArticlePage` | 7 | 184 KB |
 
-Confidence is medium that repeated static builds are the main monthly trigger.
-The code and Next.js cache-key rules support that mechanism, but the monthly
-Database I/O breakdown is still required to attribute every billed byte.
+The corresponding development sample was dominated by deliberate reset,
+migration, Quran rebuild, and integrity verification work. It must not be used
+as a normal-traffic projection.
 
-Confidence is unknown for backup contribution. Convex confirms that logical
-backups consume database bandwidth, but the active dev and production backup
-schedules were not available in the collected evidence.
+### Synchronization and integrity
 
-## Optimization Order
+- Production public-route rebuild: 1,276 routes across 1,236 occupied shards.
+- Immediate second public-route sync: 1,276 unchanged routes and zero writes.
+- Dev and production content verification both pass with 840 questions, 4,200
+  choices, 10 sets, 34 sections, and zero orphan choices.
+- Dev and production Quran verification pass with 114 surahs and 6,236 verses.
+- Dev has 4 existing try-out attempts and 4 verified latest-progress rows.
+- Production has 0 attempts and 0 progress rows.
+- The latest 100 dev and production Convex executions had no non-null errors at
+  the final verification point.
 
-No step should ship before its measurement gate passes.
+### Recovery evidence
 
-1. Export the Database I/O dashboard breakdown and record the dev and production
-   backup schedules. Reconcile both with the invoice period.
-2. Stop avoidable repeated production-data builds. Ensure one validation build
-   per commit SHA and determine whether pull-request agent docs can consume one
-   existing build artifact or a non-production content snapshot.
-3. Add a lightweight Quran metadata query so metadata generation never loads all
-   verses. Keep the full page query for the body.
-4. Remove long tafsir from the hot `quranVerses` document. If the product needs it,
-   move it to a separately keyed table and read it only on demand; otherwise do
-   not sync it into Convex.
-5. Re-evaluate logical backup frequency against the product recovery-point
-   objective. Do not disable production backups merely to reduce cost.
-6. Add durable usage attribution from Convex log-stream fields such as
-   `database_io_read_bytes` and `database_io_write_bytes`, with a monthly alert
-   before included I/O is exhausted.
+Pre-migration logical backups exist for both deployments and were opened as ZIP
+archives before schema deployment:
 
-After each step, compare seven-day database I/O per build and per active user.
-Keep a change only when measured I/O falls without correctness, freshness,
-recovery, or realtime regressions.
+- `dev.zip`
+- `prod.zip`
+
+The local backup directory is intentionally not committed because it contains
+deployment data.
+
+## Scale Model
+
+Millions of localized content records are partitioned by source identity,
+locale, route family, and bounded route shards. Hot user state remains in
+Convex, while static authoring truth remains in the repository and is projected
+incrementally. Queries use equality-prefixed indexes and cursor pagination; no
+runtime query added by this work collects a globally growing table.
+
+Try-out growth is partitioned by country, exam, track, locale, and set. Progress
+storage grows with actual user participation, not with every possible user and
+set pair. Status pagination reads the attempted index directly; the sparse
+unattempted stream advances through the already indexed track catalog in bounded
+pages.
+
+## Remaining Operations
+
+1. Export the monthly Database I/O breakdown after a full billing cycle on this
+   architecture and compare I/O per build and active user with the baseline.
+2. Record dev and production logical-backup schedules and reconcile their reads
+   with the same invoice period. Do not disable production backups merely to
+   reduce cost.
+3. Add a durable monthly alert before included database I/O is exhausted, using
+   Convex usage attribution fields.
+4. Review high-I/O Insights findings by function before considering another
+   schema change. Do not add speculative digest tables or caches without a
+   measured hot path.
 
 ## Guardrails
 
-- Do not move mutable attempt, response, entitlement, or user state out of
-  Convex to solve a static-content read problem.
-- Do not replace indexed reads with unbounded collection or client filtering.
-- Do not add a response-only projection and claim database savings while the
-  same large document is still read.
+- Keep mutable attempts, responses, entitlements, and user state in Convex.
+- Do not replace indexed reads with unbounded collection or loaded-page client
+  sorting.
+- Do not claim savings from response projection while the same large stored
+  document is still read.
+- Do not add compatibility reads for removed data models; migrate, verify, and
+  delete the obsolete path.
 - Do not disable backups without a documented recovery-point objective and a
-  tested restore path.
-- Do not add another cache layer before measuring Convex cache hits and build
-  invalidation; stale duplicated caches increase operational risk.
+  tested restore procedure.
 
 ## References
 
 - [Convex pricing](https://www.convex.dev/pricing)
-- [Convex limits and database I/O definition](https://docs.convex.dev/production/state/limits)
+- [Convex limits and database I/O](https://docs.convex.dev/production/state/limits)
+- [Convex indexes](https://docs.convex.dev/database/reading-data/indexes/)
+- [Convex pagination](https://docs.convex.dev/database/pagination)
 - [Convex automatic query caching](https://docs.convex.dev/realtime)
 - [Convex backup pricing](https://docs.convex.dev/database/backup-restore)
-- [Convex usage attribution fields](https://docs.convex.dev/platform-apis/track-usage)
+- [Convex usage attribution](https://docs.convex.dev/platform-apis/track-usage)
 - [Next.js `use cache` keys](https://nextjs.org/docs/app/api-reference/directives/use-cache#cache-keys)
