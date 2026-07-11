@@ -425,7 +425,7 @@ describe("nakafa search tool", () => {
                       "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
                     locale: input.locale,
                     route:
-                      "try-out/indonesia/snbt/2027/set-2/quantitative-knowledge",
+                      "try-out/indonesia/snbt/2027/set-2/pengetahuan-kuantitatif",
                     section: "tryout",
                     title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
                   }),
@@ -470,7 +470,8 @@ describe("nakafa search tool", () => {
             const setItem = searchItem({
               description: "SNBT Pengetahuan Kuantitatif set 1",
               locale: input.locale,
-              route: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
+              route:
+                "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
               section: "tryout",
               title: "SNBT Pengetahuan Kuantitatif set 1",
             });
@@ -502,7 +503,7 @@ describe("nakafa search tool", () => {
     );
 
     expect(output.result?.items.map((item) => item.route)).toEqual([
-      "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
+      "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
       "try-out/indonesia/snbt/2027/set-1",
     ]);
   });
@@ -653,7 +654,7 @@ describe("nakafa search tool", () => {
                         "SNBT Penalaran Matematika Try Out 2026 Set 1 pola bilangan",
                       locale: input.locale,
                       route:
-                        "try-out/indonesia/snbt/2027/set-1/mathematical-reasoning",
+                        "try-out/indonesia/snbt/2027/set-1/penalaran-matematika",
                       section: "tryout",
                       title: "SNBT Penalaran Matematika Try Out 2026 Set 1",
                     }),
@@ -673,8 +674,7 @@ describe("nakafa search tool", () => {
                     description:
                       "Bagian Bahasa Indonesia yang menyebut pola bilangan.",
                     locale: input.locale,
-                    route:
-                      "try-out/indonesia/snbt/2027/set-1/indonesian-language",
+                    route: "try-out/indonesia/snbt/2027/set-1/bahasa-indonesia",
                     section: "tryout",
                     title: "Bahasa Indonesia",
                   }),
@@ -785,8 +785,8 @@ describe("nakafa search tool", () => {
             const query = input.queries?.at(0) ?? "empty";
             const route =
               query === "???"
-                ? "try-out/indonesia/snbt/2027/set-2/general-reasoning"
-                : "try-out/indonesia/snbt/2027/set-1/general-reasoning";
+                ? "try-out/indonesia/snbt/2027/set-2/penalaran-umum"
+                : "try-out/indonesia/snbt/2027/set-1/penalaran-umum";
 
             return Effect.succeed(
               searchResult({
@@ -845,7 +845,7 @@ describe("nakafa search tool", () => {
                       excerpt: "pola",
                       locale: input.locale,
                       route:
-                        "try-out/indonesia/snbt/2027/set-1/mathematical-reasoning",
+                        "try-out/indonesia/snbt/2027/set-1/penalaran-matematika",
                       section: "tryout",
                       title: "Penalaran Matematika",
                     }),
@@ -865,8 +865,7 @@ describe("nakafa search tool", () => {
                     description: "pola",
                     excerpt: "pola",
                     locale: input.locale,
-                    route:
-                      "try-out/indonesia/snbt/2027/set-1/indonesian-language",
+                    route: "try-out/indonesia/snbt/2027/set-1/bahasa-indonesia",
                     section: "tryout",
                     title: "Bahasa Indonesia",
                   }),
