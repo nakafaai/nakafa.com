@@ -4,6 +4,7 @@ import {
   getSourceRouteProjectionForRoute,
   parseQuranSurahNumberForRoute,
   parseSourceRouteProjection,
+  type SourceRouteProjectionOptions,
 } from "@repo/contents/_types/graph/projection";
 import { normalizeSourceRouteProjection } from "@repo/contents/_types/graph/route";
 import {
@@ -12,12 +13,16 @@ import {
   SourceRouteInputSchema,
   SourceRouteProjectionSchema,
 } from "@repo/contents/_types/graph/schema";
+import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { Effect, Exit, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Projects one Indonesian route through the localized graph contract. */
-function getIndonesianProjection(route: string) {
-  return getSourceRouteProjectionForRoute(route, "id");
+function getIndonesianProjection(
+  route: string,
+  options?: SourceRouteProjectionOptions
+) {
+  return getSourceRouteProjectionForRoute(route, "id", options);
 }
 
 /** Projects one English route through the localized graph contract. */
@@ -174,6 +179,52 @@ describe("source route projection", () => {
     expect(
       getIndonesianProjection("try-out/indonesia/tka/mathematics")
     ).toBeNull();
+  });
+
+  it("rejects graph identities for staged tracks, sets, and sections", () => {
+    const [source] = TRYOUT_SOURCES;
+    const track = source?.tracks.at(0);
+    const set = track?.sets.at(0);
+    const section = set?.sections.at(0);
+
+    expect(source).toBeDefined();
+    expect(track).toBeDefined();
+    expect(set).toBeDefined();
+    expect(section).toBeDefined();
+
+    if (!(source && track && set && section)) {
+      return;
+    }
+
+    const options = {
+      tryouts: [
+        {
+          ...source,
+          tracks: source.tracks.map((candidate) => ({
+            ...candidate,
+            sets: candidate.sets.map((candidateSet) => ({
+              ...candidateSet,
+              sections: [],
+            })),
+          })),
+        },
+      ],
+    } satisfies SourceRouteProjectionOptions;
+    const countryRoute = `try-out/${source.countryRouteSlugs.id}`;
+    const examRoute = `${countryRoute}/${source.examRouteSlugs.id}`;
+    const trackRoute = `${examRoute}/${track.routeSlugs.id}`;
+    const setRoute = `${trackRoute}/${set.routeSlugs.id}`;
+    const sectionRoute = `${setRoute}/${section.routeSlugs.id}`;
+
+    expect(getIndonesianProjection(countryRoute, options)).toMatchObject({
+      kind: "tryout-country",
+    });
+    expect(getIndonesianProjection(examRoute, options)).toMatchObject({
+      kind: "tryout-exam",
+    });
+    expect(getIndonesianProjection(trackRoute, options)).toBeNull();
+    expect(getIndonesianProjection(setRoute, options)).toBeNull();
+    expect(getIndonesianProjection(sectionRoute, options)).toBeNull();
   });
 
   it("rejects malformed projections instead of inferring partial route identity", () => {

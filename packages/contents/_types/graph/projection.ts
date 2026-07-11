@@ -13,17 +13,34 @@ import {
   SourceRouteInputSchema,
   type SourceRouteProjectionDraft,
 } from "@repo/contents/_types/graph/schema";
+import { isTryoutSetReady } from "@repo/contents/_types/tryout/readiness";
+import type {
+  TryoutExamSource,
+  TryoutSetSource,
+} from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { Effect, Option, Schema } from "effect";
+
+/** Source registries used to resolve public graph routes. */
+export interface SourceRouteProjectionOptions {
+  readonly tryouts?: readonly TryoutExamSource[];
+}
 
 /** Infers graph projection metadata from one public route projection. */
 export function getSourceRouteProjectionForRoute(
   route: string,
-  locale: Locale
+  locale: Locale,
+  { tryouts = TRYOUT_SOURCES }: SourceRouteProjectionOptions = {}
 ) {
   const normalizedRoute = normalizeSourceRouteProjection(route);
   const [root, ...segments] = normalizedRoute.split("/");
-  const draft = createProjectionDraft(normalizedRoute, root, segments, locale);
+  const draft = createProjectionDraft(
+    normalizedRoute,
+    root,
+    segments,
+    locale,
+    tryouts
+  );
 
   if (!draft) {
     return null;
@@ -166,7 +183,8 @@ function createProjectionDraft(
   route: string,
   root: string | undefined,
   segments: readonly string[],
-  locale: Locale
+  locale: Locale,
+  tryouts: readonly TryoutExamSource[]
 ) {
   if (root === "articles") {
     return createArticleProjection(route, segments);
@@ -177,7 +195,7 @@ function createProjectionDraft(
   }
 
   if (root === "try-out") {
-    return createTryoutProjection(route, segments, locale);
+    return createTryoutProjection(route, segments, locale, tryouts);
   }
 
   if (root === "material") {
@@ -202,7 +220,8 @@ function createMaterialProjection(route: string, segments: readonly string[]) {
 function createTryoutProjection(
   route: string,
   segments: readonly string[],
-  locale: Locale
+  locale: Locale,
+  tryouts: readonly TryoutExamSource[]
 ) {
   const [country, exam, track, set, section, ...extraSegments] = segments;
 
@@ -210,7 +229,7 @@ function createTryoutProjection(
     return null;
   }
 
-  const source = findTryoutSource(locale, country, exam);
+  const source = findTryoutSource(tryouts, locale, country, exam);
 
   if (!source) {
     return null;
@@ -254,6 +273,12 @@ function createTryoutProjection(
     return null;
   }
 
+  const readySets = sourceTrack.sets.filter(isTryoutSetReady);
+
+  if (readySets.length === 0) {
+    return null;
+  }
+
   if (!set) {
     return {
       conceptSegments: ["tryout", countryKey, examKey, sourceTrack.key],
@@ -270,7 +295,9 @@ function createTryoutProjection(
     } satisfies SourceRouteProjectionDraft;
   }
 
-  const sourceSet = findTryoutSet(sourceTrack, locale, set);
+  const sourceSet = readySets.find(
+    (candidate) => candidate.routeSlugs[locale] === set
+  );
 
   if (!sourceSet) {
     return null;
@@ -330,11 +357,12 @@ function createTryoutProjection(
 
 /** Finds the try-out source that owns one localized country/exam route prefix. */
 function findTryoutSource(
+  tryouts: readonly TryoutExamSource[],
   locale: Locale,
   country: string,
   exam: string | undefined
 ) {
-  for (const source of TRYOUT_SOURCES) {
+  for (const source of tryouts) {
     if (source.countryRouteSlugs[locale] !== country) {
       continue;
     }
@@ -352,20 +380,19 @@ function findTryoutSource(
 }
 
 /** Finds the source track that owns one localized track route segment. */
-function findTryoutTrack(source: TryoutSource, locale: Locale, track: string) {
+function findTryoutTrack(
+  source: TryoutExamSource,
+  locale: Locale,
+  track: string
+) {
   return source.tracks.find(
     (candidate) => candidate.routeSlugs[locale] === track
   );
 }
 
-/** Finds the source set that owns one localized set route segment. */
-function findTryoutSet(track: TryoutTrack, locale: Locale, set: string) {
-  return track.sets.find((candidate) => candidate.routeSlugs[locale] === set);
-}
-
 /** Finds a public visible section that owns one localized section route segment. */
 function findTryoutVisibleSection(
-  set: TryoutSet,
+  set: TryoutSetSource,
   locale: Locale,
   section: string
 ) {
@@ -377,10 +404,6 @@ function findTryoutVisibleSection(
     return candidate.routeSlugs[locale] === section;
   });
 }
-
-type TryoutSource = NonNullable<ReturnType<typeof findTryoutSource>>;
-type TryoutTrack = TryoutSource["tracks"][number];
-type TryoutSet = TryoutTrack["sets"][number];
 
 /** Projects a curriculum-neutral lesson material route into graph metadata. */
 function createMaterialLessonProjection(
