@@ -176,9 +176,16 @@ describe("tryouts/queries/sets", () => {
         sort: questionSort,
       })
     );
+    const titlePage = await t.query(
+      api.tryouts.queries.sets.list,
+      getListArgs({
+        sort: { direction: "desc", field: "title" },
+      })
+    );
 
     expect(firstPage.page.map((set) => set.setKey)).toEqual(["set-2"]);
     expect(secondPage.page.map((set) => set.setKey)).toEqual(["set-1"]);
+    expect(titlePage.page.map((set) => set.setKey)).toEqual(["set-2", "set-1"]);
   });
 
   it("projects the authenticated user's latest attempt status", async () => {

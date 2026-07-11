@@ -44,6 +44,7 @@ function getStatusArgs(
 async function insertSet(
   ctx: MutationCtx,
   args: {
+    isReady?: boolean;
     order: number;
     status: TryoutStatus | null;
     userId: Id<"users">;
@@ -52,6 +53,7 @@ async function insertSet(
   const setKey = `set-${args.order}`;
   const sourcePath = `${TRYOUT_SOURCE}:${setKey}`;
   const tryoutSetId = await insertTryoutSet(ctx, {
+    isReady: args.isReady,
     order: args.order,
     publicPath: `${TRYOUT_TRACK_PATH}/${setKey}`,
     setKey,
@@ -133,6 +135,12 @@ describe("tryouts/queries/sets status sorting", () => {
         status: "expired",
         userId: user.userId,
       });
+      await insertSet(ctx, {
+        isReady: false,
+        order: 5,
+        status: "in-progress",
+        userId: user.userId,
+      });
 
       return user;
     });
@@ -140,18 +148,22 @@ describe("tryouts/queries/sets status sorting", () => {
       sessionId: identity.sessionId,
       subject: identity.authUserId,
     });
-    const first = await authed.query(
-      api.tryouts.queries.sets.attempted,
-      getStatusArgs("asc", null, 1)
-    );
-    const second = await authed.query(
-      api.tryouts.queries.sets.attempted,
-      getStatusArgs("asc", first.continueCursor, 1)
-    );
-    const remaining = await authed.query(
-      api.tryouts.queries.sets.attempted,
-      getStatusArgs("asc", second.continueCursor)
-    );
+    const ascendingStatuses: (TryoutStatus | null)[] = [];
+    let cursor: string | null = null;
+
+    for (let pageIndex = 0; pageIndex < 5; pageIndex++) {
+      const page = await authed.query(
+        api.tryouts.queries.sets.attempted,
+        getStatusArgs("asc", cursor, 1)
+      );
+      ascendingStatuses.push(...page.page.map((row) => row.attemptStatus));
+
+      if (page.isDone) {
+        break;
+      }
+
+      cursor = page.continueCursor;
+    }
     const descending = await authed.query(
       api.tryouts.queries.sets.attempted,
       getStatusArgs("desc")
@@ -169,11 +181,7 @@ describe("tryouts/queries/sets status sorting", () => {
       getStatusArgs("asc")
     );
 
-    expect([
-      first.page[0]?.attemptStatus,
-      second.page[0]?.attemptStatus,
-      remaining.page[0]?.attemptStatus,
-    ]).toEqual(["in-progress", "completed", "expired"]);
+    expect(ascendingStatuses).toEqual(["in-progress", "completed", "expired"]);
     expect(descending.page.map((row) => row.attemptStatus)).toEqual([
       "expired",
       "completed",
