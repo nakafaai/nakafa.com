@@ -233,6 +233,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
             if (publicPath) {
               addTryoutRoute(routes, {
                 description: sectionTranslation.description,
+                isReady: setRow.isReady,
                 kind: "tryout-section",
                 locale,
                 publicPath,
@@ -301,7 +302,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
   };
 });
 
-/** Adds one resolvable public route, skipping catalog rows that are not ready. */
+/** Adds one source-owned route reconciliation instruction. */
 function addTryoutRoute(
   routes: Map<string, SyncedTryoutRoute>,
   source: {
@@ -314,14 +315,11 @@ function addTryoutRoute(
     title: string;
   }
 ) {
-  if (source.isReady === false) {
-    return;
-  }
-
   const sourcePath = source.publicPath;
   const row = {
     contentHash: createTryoutRouteHash({ ...source, sourcePath }),
     description: source.description,
+    isReady: source.isReady !== false,
     kind: source.kind,
     locale: source.locale,
     publicPath: source.publicPath,

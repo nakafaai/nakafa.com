@@ -37,24 +37,22 @@ function createTryoutSource(ready: boolean) {
             key: "set-1",
             order: 1,
             routeSlugs: { en: "set-1", id: "set-1" },
-            sections: ready
-              ? [
-                  {
-                    key: "mathematics",
-                    order: 1,
-                    questionCount: 1,
-                    questionSourcePath:
-                      "question-bank/tryout/indonesia/tka/mathematics/set-1",
-                    routeSlugs: { en: "mathematics", id: "matematika" },
-                    timeLimitSeconds: 3600,
-                    translations: {
-                      en: { title: "Mathematics" },
-                      id: { title: "Matematika" },
-                    },
-                    visibility: "internal-entry",
-                  },
-                ]
-              : [],
+            sections: [
+              {
+                key: "mathematics",
+                order: 1,
+                questionCount: ready ? 1 : 0,
+                questionSourcePath:
+                  "question-bank/tryout/indonesia/tka/mathematics/set-1",
+                routeSlugs: { en: "mathematics", id: "matematika" },
+                timeLimitSeconds: 3600,
+                translations: {
+                  en: { title: "Mathematics" },
+                  id: { title: "Matematika" },
+                },
+                visibility: "visible",
+              },
+            ],
             translations: {
               en: { title: "Set 1" },
               id: { title: "Set 1" },
@@ -133,20 +131,24 @@ afterEach(() => {
 describe("syncTryouts", () => {
   it.each([
     {
-      expectedKinds: ["tryout-country", "tryout-exam"],
+      cleanupKinds: ["tryout-section", "tryout-set", "tryout-track"],
+      publishedKinds: ["tryout-country", "tryout-exam"],
       ready: false,
     },
     {
-      expectedKinds: [
+      cleanupKinds: [],
+      publishedKinds: [
         "tryout-country",
         "tryout-exam",
+        "tryout-section",
         "tryout-set",
         "tryout-track",
       ],
       ready: true,
     },
-  ])("publishes only ready catalog routes when ready is $ready", async ({
-    expectedKinds,
+  ])("reconciles catalog routes when ready is $ready", async ({
+    cleanupKinds,
+    publishedKinds,
     ready,
   }) => {
     const { calls, tryouts } = await loadTryoutSync(ready);
@@ -156,6 +158,17 @@ describe("syncTryouts", () => {
     );
 
     const routes = calls.flatMap((call) => call.routes);
-    expect(routes.map((route) => route.kind).sort()).toEqual(expectedKinds);
+    expect(
+      routes
+        .filter((route) => route.isReady)
+        .map((route) => route.kind)
+        .sort()
+    ).toEqual(publishedKinds);
+    expect(
+      routes
+        .filter((route) => !route.isReady)
+        .map((route) => route.kind)
+        .sort()
+    ).toEqual(cleanupKinds);
   });
 });

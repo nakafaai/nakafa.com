@@ -99,6 +99,7 @@ export const syncedTryoutSectionValidator = v.object({
 export const syncedTryoutRouteValidator = v.object({
   contentHash: v.string(),
   description: v.optional(v.string()),
+  isReady: v.boolean(),
   kind: literals(...TRYOUT_ROUTE_KIND_VALUES),
   locale: localeValidator,
   publicPath: v.string(),

@@ -27,6 +27,7 @@ function buildRoute(source: {
   return {
     contentHash: `${source.publicPath}:hash`,
     description: source.description,
+    isReady: true,
     kind: source.kind,
     locale: "id" as const,
     publicPath: source.publicPath,

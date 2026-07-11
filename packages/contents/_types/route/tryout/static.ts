@@ -1,3 +1,4 @@
+import type { RouteInputs } from "@repo/contents/_types/route/input";
 import {
   comparePublicRouteOrder,
   makePathSync,
@@ -7,17 +8,20 @@ import {
   type PublicTryoutRoute,
   PublicTryoutRouteSchema,
 } from "@repo/contents/_types/route/schema";
+import { isTryoutSetReady } from "@repo/contents/_types/tryout/readiness";
 import type { TryoutExamSource } from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 /** Projects the default source-controlled try-out registry for static routes. */
-export function readStaticPublicTryoutRoutes() {
+export function readStaticPublicTryoutRoutes({
+  tryouts = TRYOUT_SOURCES,
+}: Pick<RouteInputs, "tryouts"> = {}) {
   const routes: PublicTryoutRoute[] = [];
   const emittedCountryPaths = new Set<string>();
 
-  for (const source of TRYOUT_SOURCES) {
+  for (const source of tryouts) {
     routes.push(
       ...readStaticExamTryoutRoutes({
         emittedCountryPaths,
@@ -80,6 +84,12 @@ function readStaticExamTryoutRoutes({
     );
 
     for (const track of source.tracks) {
+      const readySets = track.sets.filter(isTryoutSetReady);
+
+      if (readySets.length === 0) {
+        continue;
+      }
+
       const trackPath = makePathSync([examPath, track.routeSlugs[locale]]);
 
       routes.push(
@@ -98,7 +108,7 @@ function readStaticExamTryoutRoutes({
         })
       );
 
-      for (const set of track.sets) {
+      for (const set of readySets) {
         const setPath = makePathSync([trackPath, set.routeSlugs[locale]]);
 
         routes.push(

@@ -20,6 +20,7 @@ function buildRoute(source: {
 }) {
   return {
     contentHash: `${source.publicPath}:hash`,
+    isReady: true,
     kind: source.kind,
     locale: "id" as const,
     publicPath: source.publicPath,
@@ -29,7 +30,7 @@ function buildRoute(source: {
 }
 
 /** Builds the minimal catalog payload needed to replace one track path. */
-function buildPayload() {
+function buildPayload(isReady = true) {
   return {
     countries: [
       {
@@ -68,26 +69,29 @@ function buildPayload() {
         publicPath: EXAM_ROUTE,
         title: "TKA",
       }),
-      buildRoute({
-        kind: "tryout-track",
-        publicPath: NEW_TRACK_ROUTE,
-        title: "Matematika",
-      }),
+      {
+        ...buildRoute({
+          kind: "tryout-track",
+          publicPath: NEW_TRACK_ROUTE,
+          title: "Matematika",
+        }),
+        isReady,
+      },
     ],
     sections: [],
     sets: [],
     tracks: [
       {
-        authoredSetCount: 0,
+        authoredSetCount: isReady ? 1 : 0,
         countryKey: "indonesia",
         examKey: "tka",
         isActive: true,
-        isReady: false,
+        isReady,
         locale: "id" as const,
         order: 1,
         publicPath: NEW_TRACK_ROUTE,
-        readyQuestionCount: 0,
-        readySetCount: 0,
+        readyQuestionCount: isReady ? 1 : 0,
+        readySetCount: isReady ? 1 : 0,
         readyVisibleSectionCount: 0,
         sourceRevision: "2026",
         title: "Matematika",
@@ -245,5 +249,52 @@ describe("contentSync/mutations/tryout projection paths", () => {
       publicPath: NEW_TRACK_ROUTE,
       trackKey: "mathematics",
     });
+  });
+
+  it("deletes route projections when a published track becomes unready", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(
+      internal.contentSync.mutations.tryouts.bulkSyncTryouts,
+      buildPayload()
+    );
+    await t.mutation(
+      internal.contentSync.mutations.tryouts.bulkSyncTryouts,
+      buildPayload(false)
+    );
+
+    const snapshot = await t.query(async (ctx) => {
+      const routes = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_locale_and_sourcePath", (q) =>
+          q.eq("locale", "id").eq("sourcePath", NEW_TRACK_ROUTE)
+        )
+        .take(2);
+      const searchRows = await ctx.db
+        .query("contentSearch")
+        .withIndex("by_locale_and_sourcePath", (q) =>
+          q.eq("locale", "id").eq("sourcePath", NEW_TRACK_ROUTE)
+        )
+        .take(2);
+      const routeCount = await ctx.db
+        .query("contentRouteCounts")
+        .withIndex("by_locale_and_section", (q) =>
+          q.eq("locale", "id").eq("section", "tryout")
+        )
+        .unique();
+      const track = await ctx.db
+        .query("tryoutTracks")
+        .withIndex("by_locale_and_publicPath", (q) =>
+          q.eq("locale", "id").eq("publicPath", NEW_TRACK_ROUTE)
+        )
+        .unique();
+
+      return { routeCount, routes, searchRows, track };
+    });
+
+    expect(snapshot.routes).toEqual([]);
+    expect(snapshot.searchRows).toEqual([]);
+    expect(snapshot.routeCount?.count).toBe(2);
+    expect(snapshot.track?.isReady).toBe(false);
   });
 });
