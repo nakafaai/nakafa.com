@@ -20,7 +20,7 @@ import {
   TRYOUT_TEST_NOW,
   TRYOUT_TRACK_PATH,
 } from "@repo/backend/test/tryouts";
-import type { FunctionArgs } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -152,7 +152,9 @@ describe("tryouts/queries/sets status sorting", () => {
     let cursor: string | null = null;
 
     for (let pageIndex = 0; pageIndex < 5; pageIndex++) {
-      const page = await authed.query(
+      const page: FunctionReturnType<
+        typeof api.tryouts.queries.sets.attempted
+      > = await authed.query(
         api.tryouts.queries.sets.attempted,
         getStatusArgs("asc", cursor, 1)
       );
