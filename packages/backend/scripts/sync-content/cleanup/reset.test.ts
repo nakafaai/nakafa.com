@@ -237,6 +237,35 @@ describe("sync-content reset", () => {
     expect(coverageIndex).toBeGreaterThan(planItemsIndex);
   });
 
+  it("invalidates public route sync state before deleting route rows", async () => {
+    vi.mocked(getContentCounts).mockReturnValue(
+      Effect.succeed({
+        ...emptyCounts,
+        publicRoutes: 1,
+        publicRouteSyncState: 1,
+      })
+    );
+
+    await Effect.runPromise(reset(config, { force: true }));
+
+    const mutations = vi
+      .mocked(callConvexMutation)
+      .mock.calls.map(([, mutation]) => getFunctionName(mutation));
+    const syncStateIndex = mutations.indexOf(
+      getFunctionName(
+        internal.contentSync.reset.internal.deletePublicRouteSyncStateBatch
+      )
+    );
+    const routeRowsIndex = mutations.indexOf(
+      getFunctionName(
+        internal.contentSync.reset.internal.deletePublicRoutesBatch
+      )
+    );
+
+    expect(syncStateIndex).toBeGreaterThanOrEqual(0);
+    expect(routeRowsIndex).toBeGreaterThan(syncStateIndex);
+  });
+
   it("does not delete selected program catalog rows during forced reset", async () => {
     vi.mocked(getContentCounts).mockReturnValue(
       Effect.succeed({
