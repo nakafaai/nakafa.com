@@ -66,13 +66,14 @@ function getSortIcon(direction: false | "asc" | "desc") {
 /** Renders one contextual server-sort menu for a catalog-owned column. */
 export function TryoutSetSortHeader({
   column,
+  direction,
   labelKey,
 }: {
   column: Column<TryoutSetRow>;
+  direction: false | "asc" | "desc";
   labelKey: TryoutSetSortColumnLabel;
 }) {
   const tTryouts = useTranslations("Tryouts");
-  const direction = column.getIsSorted();
   const label = tTryouts(labelKey);
   const optionKeys = sortLabelKeys[labelKey];
 
@@ -122,12 +123,13 @@ export function TryoutSetSortHeader({
 /** Renders one exact workflow-status filter for the set table. */
 export function TryoutSetStatusHeader({
   column,
+  statusFilter,
 }: {
   column: Column<TryoutSetRow>;
+  statusFilter: TryoutSetStatusFilter;
 }) {
   const tTryouts = useTranslations("Tryouts");
   const label = tTryouts("set-column-status");
-  const statusFilter = readStatusFilter(column);
 
   return (
     <DropdownMenu>
@@ -198,14 +200,4 @@ function TryoutStatusFilterOption({
       <TryoutStatusLabel status={status} />
     </>
   );
-}
-
-function readStatusFilter(column: Column<TryoutSetRow>): TryoutSetStatusFilter {
-  const value = column.getFilterValue();
-
-  if (isTryoutSetStatusFilter(value)) {
-    return value;
-  }
-
-  return "all";
 }

@@ -22,8 +22,8 @@ import {
 } from "@tanstack/react-table";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { tryoutSetColumns } from "@/components/tryout/catalog/table/columns";
+import { useMemo, useState } from "react";
+import { createTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
 import { readTryoutSetStatusFilter } from "@/components/tryout/catalog/table/filter";
 import { readTryoutSetSort } from "@/components/tryout/catalog/table/sort";
@@ -48,10 +48,15 @@ export function TryoutSetTable({
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const statusFilter = readTryoutSetStatusFilter(columnFilters);
+  const columns = useMemo(
+    () => createTryoutSetColumns({ sorting, statusFilter }),
+    [sorting, statusFilter]
+  );
   const data = useTryoutSetData({
     locale,
     page,
-    statusFilter: readTryoutSetStatusFilter(columnFilters),
+    statusFilter,
     sort: readTryoutSetSort(sorting),
   });
   const [retainedRows, setRetainedRows] = useState<TryoutSetRow[]>(EMPTY_ROWS);
@@ -74,7 +79,7 @@ export function TryoutSetTable({
   // TanStack's supported React adapter intentionally owns this narrow state boundary.
   // react-doctor-disable-next-line react-hooks-js/incompatible-library
   const table = useReactTable({
-    columns: tryoutSetColumns,
+    columns,
     data: visibleRows,
     enableMultiSort: false,
     getCoreRowModel: getCoreRowModel(),
