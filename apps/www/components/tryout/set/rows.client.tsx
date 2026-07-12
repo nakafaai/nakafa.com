@@ -34,7 +34,7 @@ export function TryoutSectionRows({
   const activeAttempt =
     value.attempt?.status === "in-progress" ? value.attempt : null;
   const activeSectionKey = activeAttempt?.activeSectionKey ?? null;
-  const completedSections = new Set(activeAttempt?.completedSectionKeys ?? []);
+  const completedSections = new Set(value.attempt?.completedSectionKeys ?? []);
   const currentSectionKey = activeAttempt?.resumeSectionKey ?? null;
 
   return (
