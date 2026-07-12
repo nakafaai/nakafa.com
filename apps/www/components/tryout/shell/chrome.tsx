@@ -53,9 +53,7 @@ export function TryoutHeader({ value }: { value: TryoutHeaderValue }) {
                 }
               />
             </BreadcrumbItem>
-            {hiddenItems.length > 0 ? (
-              <TryoutBreadcrumbMenu items={hiddenItems} />
-            ) : null}
+            <TryoutHiddenBreadcrumbs items={hiddenItems} />
             {visibleItems.map((item, index) => (
               <TryoutBreadcrumbSegment
                 isCurrent={index === visibleItems.length - 1}
@@ -69,6 +67,19 @@ export function TryoutHeader({ value }: { value: TryoutHeaderValue }) {
       </div>
     </header>
   );
+}
+
+/** Renders the collapsed breadcrumb group only when the path exceeds its cap. */
+function TryoutHiddenBreadcrumbs({
+  items,
+}: {
+  items: readonly TryoutBreadcrumbItem[];
+}) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return <TryoutBreadcrumbMenu items={items} />;
 }
 
 /** Renders collapsed middle breadcrumb items inside an ellipsis menu. */
@@ -97,17 +108,9 @@ function TryoutBreadcrumbMenu({
             <DropdownMenuGroup>
               <DropdownMenuLabel>Menu</DropdownMenuLabel>
               {items.map((item) => (
-                <DropdownMenuItem
+                <TryoutBreadcrumbMenuItem
+                  item={item}
                   key={`${item.label}:${item.href ?? "current"}`}
-                  render={
-                    item.href ? (
-                      <TryoutIntentLink href={item.href}>
-                        {item.menuLabel ?? item.label}
-                      </TryoutIntentLink>
-                    ) : (
-                      <span>{item.menuLabel ?? item.label}</span>
-                    )
-                  }
                 />
               ))}
             </DropdownMenuGroup>
@@ -115,6 +118,21 @@ function TryoutBreadcrumbMenu({
         </DropdownMenu>
       </BreadcrumbItem>
     </>
+  );
+}
+
+/** Renders one linked or inert collapsed breadcrumb menu item. */
+function TryoutBreadcrumbMenuItem({ item }: { item: TryoutBreadcrumbItem }) {
+  const label = item.menuLabel ?? item.label;
+
+  if (!item.href) {
+    return <DropdownMenuItem render={<span>{label}</span>} />;
+  }
+
+  return (
+    <DropdownMenuItem
+      render={<TryoutIntentLink href={item.href}>{label}</TryoutIntentLink>}
+    />
   );
 }
 

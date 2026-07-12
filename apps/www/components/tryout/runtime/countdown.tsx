@@ -49,11 +49,7 @@ export function TryoutCountdown({
                   />
                 </span>
               </div>
-              {index < segments.length - 1 ? (
-                <span className="pb-0.5 text-center align-middle font-light font-mono text-3xl text-muted-foreground leading-none">
-                  :
-                </span>
-              ) : null}
+              <TryoutCountdownSeparator visible={index < segments.length - 1} />
             </Fragment>
           ))}
         </div>
@@ -65,6 +61,19 @@ export function TryoutCountdown({
 
       <div className="flex justify-center pt-4">{action}</div>
     </section>
+  );
+}
+
+/** Separates adjacent countdown segments without trailing punctuation. */
+function TryoutCountdownSeparator({ visible }: { visible: boolean }) {
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <span className="pb-0.5 text-center align-middle font-light font-mono text-3xl text-muted-foreground leading-none">
+      :
+    </span>
   );
 }
 

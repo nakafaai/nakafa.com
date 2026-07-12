@@ -36,25 +36,38 @@ export function TryoutPageHeader({ value }: { value: TryoutPageHeaderValue }) {
         {meta}
 
         <div className="flex items-start gap-2">
-          {icon ? (
-            <HugeIcons
-              className="hidden size-7 shrink-0 translate-y-1 sm:block"
-              icon={icon}
-            />
-          ) : null}
+          <TryoutPageIcon icon={icon} />
           <h1 className="text-pretty font-medium text-3xl leading-tight tracking-tight">
             {title}
           </h1>
         </div>
       </div>
 
-      {description ? (
-        <p className="max-w-2xl text-muted-foreground">{description}</p>
-      ) : null}
-
-      {status ? (
-        <p className="max-w-2xl text-muted-foreground">{status}</p>
-      ) : null}
+      <TryoutPageCopy content={description} />
+      <TryoutPageCopy content={status} />
     </header>
   );
+}
+
+/** Renders an optional try-out heading icon at supported viewport sizes. */
+function TryoutPageIcon({ icon }: { icon: IconSvgElement | undefined }) {
+  if (!icon) {
+    return null;
+  }
+
+  return (
+    <HugeIcons
+      className="hidden size-7 shrink-0 translate-y-1 sm:block"
+      icon={icon}
+    />
+  );
+}
+
+/** Renders optional concise copy with the shared page-header treatment. */
+function TryoutPageCopy({ content }: { content: ReactNode | undefined }) {
+  if (content === undefined || content === null) {
+    return null;
+  }
+
+  return <p className="max-w-2xl text-muted-foreground">{content}</p>;
 }
