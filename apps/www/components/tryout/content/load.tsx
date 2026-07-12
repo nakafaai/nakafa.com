@@ -1,10 +1,17 @@
 import type { Locale } from "next-intl";
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
 
 export interface TryoutQuestionContent {
   content: ReactNode;
+  contentHash: string;
+  sourcePath: string;
+  sourceRevision: string;
+}
+
+export interface TryoutAnswerContent {
+  answer: ReactNode;
   contentHash: string;
   sourcePath: string;
   sourceRevision: string;
@@ -36,7 +43,7 @@ export async function loadTryoutQuestionContent({
 
   const entries = await Promise.all(
     questions.map(async (question) => {
-      const module = await importContentModuleOrNull({
+      const questionModule = await importContentModuleOrNull({
         context: {
           question_number: question.questionOrder,
           source_path: question.sourcePath,
@@ -46,14 +53,12 @@ export async function loadTryoutQuestionContent({
         source: "tryout-question-module",
       });
 
-      if (!module?.default) {
+      if (!questionModule?.default) {
         return null;
       }
 
-      const Question = module.default;
-
       return {
-        content: <Question />,
+        content: createElement(questionModule.default),
         contentHash: question.contentHash,
         sourcePath: question.sourcePath,
         sourceRevision: question.sourceRevision,
@@ -62,6 +67,54 @@ export async function loadTryoutQuestionContent({
   );
 
   const content: TryoutQuestionContent[] = [];
+
+  for (const entry of entries) {
+    if (!entry) {
+      return null;
+    }
+
+    content.push(entry);
+  }
+
+  return content;
+}
+
+/** Loads answer MDX only after the route authorizes terminal review. */
+export async function loadTryoutAnswerContent({
+  locale,
+  questions,
+}: {
+  locale: Locale;
+  questions: readonly TryoutQuestionSource[];
+}) {
+  "use cache";
+  applyContentRuntimeCache();
+
+  const entries = await Promise.all(
+    questions.map(async (question) => {
+      const answerModule = await importContentModuleOrNull({
+        context: {
+          question_number: question.questionOrder,
+          source_path: question.sourcePath,
+        },
+        filePath: `${question.sourcePath}/answer`,
+        locale,
+        source: "tryout-answer-module",
+      });
+
+      if (!answerModule?.default) {
+        return null;
+      }
+
+      return {
+        answer: createElement(answerModule.default),
+        contentHash: question.contentHash,
+        sourcePath: question.sourcePath,
+        sourceRevision: question.sourceRevision,
+      };
+    })
+  );
+  const content: TryoutAnswerContent[] = [];
 
   for (const entry of entries) {
     if (!entry) {
