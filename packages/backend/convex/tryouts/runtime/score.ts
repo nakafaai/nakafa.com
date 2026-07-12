@@ -136,6 +136,7 @@ export async function finalizeAttemptScore(
 
   await writeTryoutSetProgress(ctx, {
     attempt: args.attempt,
+    publishedScore: score.publishedScore,
     set,
     status,
     updatedAt: args.now,

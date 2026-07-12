@@ -42,6 +42,7 @@ export const unattemptedArgsValidator = v.object({
 export const trackSetValidator = v.object({
   ...publicTryoutSetValidator.fields,
   attemptStatus: v.union(v.null(), tryoutStatusValidator),
+  publishedScore: v.union(v.number(), v.null()),
 });
 
 export type ListArgs = Infer<typeof listArgsValidator>;

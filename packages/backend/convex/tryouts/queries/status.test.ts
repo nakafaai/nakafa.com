@@ -91,6 +91,12 @@ async function insertSet(
     return;
   }
 
+  let publishedScore: number | null = null;
+
+  if (args.status !== "in-progress") {
+    publishedScore = args.order * 10;
+  }
+
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     attemptNumber: 1,
     completedAt: null,
@@ -114,6 +120,7 @@ async function insertSet(
     examKey: "snbt",
     latestAttemptId: attemptId,
     locale: "id",
+    publishedScore,
     setKey,
     status: args.status,
     statusRank: getTryoutStatusRank(args.status),
@@ -209,13 +216,13 @@ describe("tryouts/queries/sets status filtering", () => {
 
     expect(inProgressSetKeys).toEqual(["set-2", "set-5"]);
     expect(completed.page).toMatchObject([
-      { attemptStatus: "completed", setKey: "set-3" },
+      { attemptStatus: "completed", publishedScore: 30, setKey: "set-3" },
     ]);
     expect(expired.page).toMatchObject([
-      { attemptStatus: "expired", setKey: "set-4" },
+      { attemptStatus: "expired", publishedScore: 40, setKey: "set-4" },
     ]);
     expect(unattempted.page).toMatchObject([
-      { attemptStatus: null, setKey: "set-1" },
+      { attemptStatus: null, publishedScore: null, setKey: "set-1" },
     ]);
     expect(publicByStatus.page).toEqual([]);
     expect(publicUnattempted.page).toHaveLength(5);

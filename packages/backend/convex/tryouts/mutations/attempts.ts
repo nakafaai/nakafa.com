@@ -224,6 +224,7 @@ export const startAttempt = mutation({
 
     await writeTryoutSetProgress(ctx, {
       attempt,
+      publishedScore: null,
       set,
       status: attemptStatus,
       updatedAt: now,

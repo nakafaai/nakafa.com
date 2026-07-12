@@ -5,7 +5,6 @@ import {
   loadReadySections,
   toPublicTryoutSet,
 } from "@repo/backend/convex/tryouts/queries/catalogModel";
-import type { TryoutStatus } from "@repo/backend/convex/tryouts/schema";
 import type {
   ListArgs,
   StatusArgs,
@@ -15,6 +14,7 @@ import type {
 import type { PaginationResult } from "convex/server";
 
 type TryoutSet = Doc<"tryoutSets">;
+type TryoutSetProgress = Doc<"tryoutSetProgress">;
 type User = Doc<"users">;
 type OrderedSetPageArgs = TrackIdentity & {
   direction: ListArgs["sort"]["direction"];
@@ -73,7 +73,7 @@ async function readSetProgress(ctx: QueryCtx, user: User, set: TryoutSet) {
 async function projectSet(
   ctx: QueryCtx,
   set: TryoutSet,
-  attemptStatus: TryoutStatus | null
+  progress: TryoutSetProgress | null
 ) {
   if (!(await loadReadySections(ctx, set))) {
     return null;
@@ -81,7 +81,8 @@ async function projectSet(
 
   return {
     ...toPublicTryoutSet(set),
-    attemptStatus,
+    attemptStatus: progress?.status ?? null,
+    publishedScore: progress?.publishedScore ?? null,
   };
 }
 
@@ -152,7 +153,7 @@ export async function listCatalogSets(
   const rows = await Promise.all(
     page.page.map(async (set) => {
       const progress = user ? await readSetProgress(ctx, user, set) : null;
-      return await projectSet(ctx, set, progress?.status ?? null);
+      return await projectSet(ctx, set, progress);
     })
   );
 
@@ -186,7 +187,7 @@ export async function listSetsByStatus(
         return null;
       }
 
-      return await projectSet(ctx, set, progress.status);
+      return await projectSet(ctx, set, progress);
     })
   );
 

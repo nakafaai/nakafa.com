@@ -75,7 +75,9 @@ describe("tryouts/queries/sets", () => {
 
     const page = await t.query(api.tryouts.queries.sets.list, getListArgs());
 
-    expect(page.page).toMatchObject([{ attemptStatus: null, setKey: "set-1" }]);
+    expect(page.page).toMatchObject([
+      { attemptStatus: null, publishedScore: null, setKey: "set-1" },
+    ]);
   });
 
   it("hides sets until every section row is synced", async () => {
@@ -242,6 +244,7 @@ describe("tryouts/queries/sets", () => {
         examKey: "snbt",
         latestAttemptId: attemptId,
         locale: "id",
+        publishedScore: null,
         setKey: "set-1",
         status: "in-progress",
         statusRank: 1,
@@ -263,6 +266,9 @@ describe("tryouts/queries/sets", () => {
       getListArgs()
     );
 
-    expect(page.page[0]?.attemptStatus).toBe("in-progress");
+    expect(page.page[0]).toMatchObject({
+      attemptStatus: "in-progress",
+      publishedScore: null,
+    });
   });
 });

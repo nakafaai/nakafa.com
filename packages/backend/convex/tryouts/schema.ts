@@ -299,6 +299,7 @@ const tables = {
     setKey: tryoutRouteKeyValidator,
     locale: localeValidator,
     attemptNumber: v.number(),
+    publishedScore: v.union(v.number(), v.null()),
     status: tryoutStatusValidator,
     statusRank: tryoutStatusRankValidator,
     updatedAt: v.number(),

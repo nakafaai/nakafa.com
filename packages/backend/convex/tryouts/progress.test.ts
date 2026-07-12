@@ -47,12 +47,14 @@ describe("tryouts/progress", () => {
 
       await writeTryoutSetProgress(ctx, {
         attempt: firstAttempt,
+        publishedScore: null,
         set,
         status: "in-progress",
         updatedAt: TRYOUT_TEST_NOW,
       });
       await writeTryoutSetProgress(ctx, {
         attempt: firstAttempt,
+        publishedScore: 75,
         set,
         status: "completed",
         updatedAt: TRYOUT_TEST_NOW + 1,
@@ -83,12 +85,14 @@ describe("tryouts/progress", () => {
 
       await writeTryoutSetProgress(ctx, {
         attempt: latestAttempt,
+        publishedScore: 50,
         set,
         status: "expired",
         updatedAt: TRYOUT_TEST_NOW + 2,
       });
       await writeTryoutSetProgress(ctx, {
         attempt: firstAttempt,
+        publishedScore: null,
         set,
         status: "in-progress",
         updatedAt: TRYOUT_TEST_NOW + 3,
@@ -104,8 +108,65 @@ describe("tryouts/progress", () => {
 
     expect(progress).toMatchObject({
       attemptNumber: 2,
+      publishedScore: 50,
       status: "expired",
       statusRank: 3,
     });
+  });
+
+  it.each([
+    {
+      message: "Active try-out progress cannot expose a score.",
+      publishedScore: 80,
+      status: "in-progress",
+    },
+    {
+      message: "Terminal try-out progress requires a score.",
+      publishedScore: null,
+      status: "completed",
+    },
+  ] as const)("rejects $status score mismatches", async (scenario) => {
+    const t = createConvexTestWithBetterAuth();
+
+    await expect(
+      t.mutation(async (ctx) => {
+        const user = await seedAuthenticatedUser(ctx, {
+          now: TRYOUT_TEST_NOW,
+          suffix: `tryout-progress-score-${scenario.status}`,
+        });
+        const tryoutSetId = await insertTryoutSet(ctx);
+        const set = await ctx.db.get(tryoutSetId);
+        const attemptId = await ctx.db.insert("tryoutAttempts", {
+          attemptNumber: 1,
+          completedAt: null,
+          completedSectionKeys: [],
+          endReason: null,
+          expiresAt: TRYOUT_TEST_NOW + 1000,
+          lastActivityAt: TRYOUT_TEST_NOW,
+          scoreStatus: "official",
+          scoringStrategy: "raw",
+          sectionSnapshots: [],
+          startedAt: TRYOUT_TEST_NOW,
+          status: scenario.status,
+          totalCorrect: 0,
+          totalQuestions: 0,
+          tryoutSetId,
+          userId: user.userId,
+        });
+        const attempt = await ctx.db.get(attemptId);
+
+        if (!(attempt && set)) {
+          throw new Error("Expected progress score fixtures.");
+        }
+
+        await writeTryoutSetProgress(ctx, {
+          attempt,
+          publishedScore: scenario.publishedScore,
+          set,
+          status: scenario.status,
+          updatedAt: TRYOUT_TEST_NOW,
+        });
+      })
+    ).rejects.toThrow(scenario.message);
   });
 });
