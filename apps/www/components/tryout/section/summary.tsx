@@ -1,5 +1,8 @@
+import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/schema";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
+import { TryoutScoreStatus } from "@/components/tryout/score/status";
 import {
   TryoutPartBody,
   TryoutPartCtas,
@@ -25,34 +28,84 @@ export interface TryoutSummarySection {
 /** Renders shared section metrics around a composed action. */
 export function TryoutSectionSummary({
   children,
-  section,
-  sectionStatus,
+  value,
 }: {
   children: ReactNode;
-  section: TryoutSummarySection;
-  sectionStatus: TryoutFinishedSectionStatus | null;
+  value: {
+    score: TryoutScoreResult | null;
+    section: TryoutSummarySection;
+    sectionStatus: TryoutFinishedSectionStatus | null;
+  };
 }) {
-  const tTryouts = useTranslations("Tryouts");
+  const { score, section, sectionStatus } = value;
 
   return (
     <TryoutPartSummary>
       <TryoutPartBody>
         <TryoutPartLead>
-          {sectionStatus ? <TryoutStatus status={sectionStatus} /> : null}
+          <div className="flex flex-wrap gap-2">
+            <TryoutSectionScoreStatus score={score} />
+            <TryoutSectionWorkflowStatus status={sectionStatus} />
+          </div>
 
-          <TryoutPartStats>
-            <TryoutPartStat label={tTryouts("part-questions-label")}>
-              <TryoutMetricNumber value={section.questionCount} />
-            </TryoutPartStat>
-
-            <TryoutPartStat label={tTryouts("part-time-label")}>
-              <TryoutMetricTime totalSeconds={section.timeLimitSeconds} />
-            </TryoutPartStat>
-          </TryoutPartStats>
+          <TryoutSectionMetrics score={score} section={section} />
         </TryoutPartLead>
 
         <TryoutPartCtas>{children}</TryoutPartCtas>
       </TryoutPartBody>
     </TryoutPartSummary>
+  );
+}
+
+/** Renders a section's score status only after terminal scoring. */
+function TryoutSectionScoreStatus({
+  score,
+}: {
+  score: TryoutScoreResult | null;
+}) {
+  if (!score) {
+    return null;
+  }
+
+  return <TryoutScoreStatus score={score} />;
+}
+
+/** Renders a section's terminal workflow status when it exists. */
+function TryoutSectionWorkflowStatus({
+  status,
+}: {
+  status: TryoutFinishedSectionStatus | null;
+}) {
+  if (!status) {
+    return null;
+  }
+
+  return <TryoutStatus status={status} />;
+}
+
+/** Chooses terminal score metrics or pre-start section facts explicitly. */
+function TryoutSectionMetrics({
+  score,
+  section,
+}: {
+  score: TryoutScoreResult | null;
+  section: TryoutSummarySection;
+}) {
+  const tTryouts = useTranslations("Tryouts");
+
+  if (score) {
+    return <TryoutScoreMetrics score={score} />;
+  }
+
+  return (
+    <TryoutPartStats>
+      <TryoutPartStat label={tTryouts("part-questions-label")}>
+        <TryoutMetricNumber value={section.questionCount} />
+      </TryoutPartStat>
+
+      <TryoutPartStat label={tTryouts("part-time-label")}>
+        <TryoutMetricTime totalSeconds={section.timeLimitSeconds} />
+      </TryoutPartStat>
+    </TryoutPartStats>
   );
 }

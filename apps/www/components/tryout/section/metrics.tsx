@@ -7,6 +7,25 @@ export function TryoutMetricNumber({ value }: { value: number }) {
   );
 }
 
+/** Renders one correct-answer fraction with stable metric dimensions. */
+export function TryoutMetricFraction({
+  correct,
+  total,
+}: {
+  correct: number;
+  total: number;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <TryoutMetricNumber value={correct} />
+      <span className="font-light font-mono text-3xl text-muted-foreground leading-none">
+        /
+      </span>
+      <TryoutMetricNumber value={total} />
+    </div>
+  );
+}
+
 /** Renders the production try-out duration style. */
 export function TryoutMetricTime({ totalSeconds }: { totalSeconds: number }) {
   const segments = getTimeSegments(totalSeconds);
@@ -18,14 +37,23 @@ export function TryoutMetricTime({ totalSeconds }: { totalSeconds: number }) {
           <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none">
             {segment.value.toString().padStart(2, "0")}
           </div>
-          {index < segments.length - 1 ? (
-            <span className="font-light font-mono text-3xl text-muted-foreground leading-none">
-              :
-            </span>
-          ) : null}
+          <TryoutMetricSeparator visible={index < segments.length - 1} />
         </div>
       ))}
     </div>
+  );
+}
+
+/** Separates adjacent duration segments without a component ternary. */
+function TryoutMetricSeparator({ visible }: { visible: boolean }) {
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <span className="font-light font-mono text-3xl text-muted-foreground leading-none">
+      :
+    </span>
   );
 }
 

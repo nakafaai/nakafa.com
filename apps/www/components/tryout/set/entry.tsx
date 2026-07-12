@@ -1,9 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
+import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
 import {
   TryoutEntrySummary,
   TryoutEntrySummaryAction,
@@ -20,7 +20,6 @@ import { TryoutMeta } from "@/components/tryout/shell/meta";
 export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
-  const entryHref = getTryoutHref(value.route);
   const parentHref = getTryoutHref({
     country: value.route.country,
     exam: value.route.exam,
@@ -50,44 +49,6 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
     });
   }
 
-  let summaryAction: ReactNode = (
-    <TryoutEntrySummaryAction
-      value={{
-        activeAttempt: value.activeAttempt,
-        attempt: value.actionAttempt,
-        locale: value.route.locale,
-        returnHref: parentHref,
-        section: value.entrySection,
-        sectionFinished,
-        sectionHref: entryHref,
-        set: value.page.set,
-        startAttemptSectionKey: value.entrySection.sectionKey,
-      }}
-    />
-  );
-
-  if (
-    value.runtimeState.kind === "active" ||
-    value.runtimeState.kind === "pending"
-  ) {
-    summaryAction = null;
-  }
-
-  let runtimeContent: ReactNode = null;
-
-  if (value.runtimeState.kind !== "none") {
-    runtimeContent = (
-      <TryoutRuntime
-        value={{
-          expired: value.runtimeState.kind !== "active",
-          questions: value.content.entryQuestions,
-          returnHref: entryHref,
-          runtime: value.runtimeState.runtime,
-        }}
-      />
-    );
-  }
-
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
@@ -112,18 +73,110 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
         />
 
         <div className="space-y-12">
-          <TryoutEntrySummary
-            value={{
-              section: value.entrySection,
-              sectionStatus,
-            }}
-          >
-            {summaryAction}
-          </TryoutEntrySummary>
+          <TryoutEntryResult value={value} />
 
-          {runtimeContent}
+          <TryoutEntryRuntime value={value} />
         </div>
       </div>
     </div>
+  );
+}
+
+/** Renders either the direct-entry facts or one terminal attempt result. */
+function TryoutEntryResult({ value }: { value: TryoutInternalSetView }) {
+  const sectionAttempt =
+    value.runtimeState.kind === "none"
+      ? null
+      : value.runtimeState.runtime.section;
+  const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
+  const attempt = value.actionAttempt;
+
+  if (!attempt?.score) {
+    return (
+      <TryoutEntrySummary
+        value={{
+          score: sectionAttempt?.score ?? null,
+          section: value.entrySection,
+          sectionStatus,
+        }}
+      >
+        <TryoutEntryAction value={value} />
+      </TryoutEntrySummary>
+    );
+  }
+
+  return (
+    <TryoutAttemptResults
+      value={{
+        attempt: {
+          attemptId: attempt.attemptId,
+          attemptNumber: attempt.attemptNumber,
+          score: attempt.score,
+          startedAt: attempt.startedAt,
+          status: attempt.status,
+        },
+        locale: value.route.locale,
+        publicPath: value.page.set.publicPath,
+      }}
+    >
+      <TryoutEntryAction value={value} />
+    </TryoutAttemptResults>
+  );
+}
+
+/** Renders a direct-entry action only outside active runtime states. */
+function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
+  if (
+    value.runtimeState.kind === "active" ||
+    value.runtimeState.kind === "pending"
+  ) {
+    return null;
+  }
+
+  const entryHref = getTryoutHref(value.route);
+  const parentHref = getTryoutHref({
+    country: value.route.country,
+    exam: value.route.exam,
+    track: value.route.track,
+  });
+  const sectionAttempt =
+    value.runtimeState.kind === "none"
+      ? null
+      : value.runtimeState.runtime.section;
+  const sectionFinished =
+    getTryoutFinishedSectionStatus(sectionAttempt) !== null;
+
+  return (
+    <TryoutEntrySummaryAction
+      value={{
+        activeAttempt: value.activeAttempt,
+        attempt: value.actionAttempt,
+        locale: value.route.locale,
+        returnHref: parentHref,
+        section: value.entrySection,
+        sectionFinished,
+        sectionHref: entryHref,
+        set: value.page.set,
+        startAttemptSectionKey: value.entrySection.sectionKey,
+      }}
+    />
+  );
+}
+
+/** Renders the direct-entry question runtime when Convex has one. */
+function TryoutEntryRuntime({ value }: { value: TryoutInternalSetView }) {
+  if (value.runtimeState.kind === "none") {
+    return null;
+  }
+
+  return (
+    <TryoutRuntime
+      value={{
+        expired: value.runtimeState.kind !== "active",
+        questions: value.content.entryQuestions,
+        returnHref: getTryoutHref(value.route),
+        runtime: value.runtimeState.runtime,
+      }}
+    />
   );
 }

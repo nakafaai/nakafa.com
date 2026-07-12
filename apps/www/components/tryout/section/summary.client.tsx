@@ -49,8 +49,11 @@ export function TryoutVisibleSummary({
 
   return (
     <TryoutSectionSummary
-      section={value.page.section}
-      sectionStatus={value.sectionStatus}
+      value={{
+        score: value.attempt?.section?.score ?? null,
+        section: value.page.section,
+        sectionStatus: value.sectionStatus,
+      }}
     >
       <TryoutSummaryAction
         value={{

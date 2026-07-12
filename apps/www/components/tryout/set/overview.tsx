@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { getTryoutHref } from "@/components/tryout/route/path";
+import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
 import { TryoutSetAction } from "@/components/tryout/set/action.client";
 import type { TryoutSetView } from "@/components/tryout/set/model";
 import { TryoutSectionRows } from "@/components/tryout/set/rows.client";
@@ -44,32 +45,75 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
             }}
           />
 
-          <TryoutSetAction
-            value={{
-              activeAttempt: value.activeAttempt,
-              currentHref: setHref,
-              currentAttempt: value.actionAttempt,
-              destination: value.destination,
-              entrySection: value.entrySection,
-              locale: value.route.locale,
-              set: value.page.set,
-            }}
-          />
+          <TryoutSetResult setHref={setHref} value={value} />
         </div>
 
-        {value.page.sections.length > 0 ? (
-          <TryoutSectionRows
-            value={{
-              attempt: value.actionAttempt,
-              emptyLabel: tTryouts("list-empty"),
-              locale: value.route.locale,
-              questionUnitLabel: tTryouts("question-unit"),
-              sections: value.page.sections,
-              set: value.page.set,
-            }}
-          />
-        ) : null}
+        <TryoutSetSections value={value} />
       </div>
     </div>
+  );
+}
+
+/** Renders nested section rows only for sets that expose them. */
+function TryoutSetSections({ value }: { value: TryoutSetView }) {
+  const tTryouts = useTranslations("Tryouts");
+
+  if (value.page.sections.length === 0) {
+    return null;
+  }
+
+  return (
+    <TryoutSectionRows
+      value={{
+        attempt: value.actionAttempt,
+        emptyLabel: tTryouts("list-empty"),
+        locale: value.route.locale,
+        questionUnitLabel: tTryouts("question-unit"),
+        sections: value.page.sections,
+        set: value.page.set,
+      }}
+    />
+  );
+}
+
+/** Composes the set action inside a score card only for terminal attempts. */
+function TryoutSetResult({
+  setHref,
+  value,
+}: {
+  setHref: string;
+  value: TryoutSetView;
+}) {
+  const actionValue = {
+    activeAttempt: value.activeAttempt,
+    currentHref: setHref,
+    currentAttempt: value.actionAttempt,
+    destination: value.destination,
+    entrySection: value.entrySection,
+    locale: value.route.locale,
+    set: value.page.set,
+  };
+  const attempt = value.actionAttempt;
+
+  if (!attempt?.score) {
+    return <TryoutSetAction value={actionValue} />;
+  }
+
+  return (
+    <TryoutAttemptResults
+      value={{
+        attempt: {
+          attemptId: attempt.attemptId,
+          attemptNumber: attempt.attemptNumber,
+          score: attempt.score,
+          startedAt: attempt.startedAt,
+          status: attempt.status,
+        },
+        locale: value.route.locale,
+        publicPath: value.page.set.publicPath,
+      }}
+    >
+      <TryoutSetAction value={actionValue} />
+    </TryoutAttemptResults>
   );
 }

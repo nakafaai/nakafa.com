@@ -1,5 +1,6 @@
 "use client";
 
+import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/schema";
 import type { ReactNode } from "react";
 import {
   TryoutSummaryAction,
@@ -13,6 +14,7 @@ import {
 
 /** Direct-entry section summary presentation contract. */
 export interface TryoutEntrySummaryValue {
+  score: TryoutScoreResult | null;
   section: TryoutSummarySection;
   sectionStatus: TryoutFinishedSectionStatus | null;
 }
@@ -30,14 +32,7 @@ export function TryoutEntrySummary({
   children: ReactNode;
   value: TryoutEntrySummaryValue;
 }) {
-  return (
-    <TryoutSectionSummary
-      section={value.section}
-      sectionStatus={value.sectionStatus}
-    >
-      {children}
-    </TryoutSectionSummary>
-  );
+  return <TryoutSectionSummary value={value}>{children}</TryoutSectionSummary>;
 }
 
 /** Renders the start, resume, or restart action for a direct-entry summary. */
