@@ -44,16 +44,14 @@ async function readScoredSets(
 ) {
   const page = await ctx.db
     .query("tryoutSetProgress")
-    .withIndex(
-      "by_userId_and_track_and_publishedScore_and_setKey",
-      (query) =>
-        query
-          .eq("userId", user._id)
-          .eq("countryKey", args.countryKey)
-          .eq("examKey", args.examKey)
-          .eq("trackKey", args.trackKey)
-          .eq("locale", args.locale)
-          .gt("publishedScore", null)
+    .withIndex("by_userId_and_track_and_publishedScore_and_setKey", (query) =>
+      query
+        .eq("userId", user._id)
+        .eq("countryKey", args.countryKey)
+        .eq("examKey", args.examKey)
+        .eq("trackKey", args.trackKey)
+        .eq("locale", args.locale)
+        .gt("publishedScore", null)
     )
     .order(args.sort.direction)
     .paginate({ ...args.paginationOpts, cursor });
