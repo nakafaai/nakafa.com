@@ -43,10 +43,7 @@ export function TryoutSectionSummary({
     <TryoutPartSummary>
       <TryoutPartBody>
         <TryoutPartLead>
-          <div className="flex flex-wrap gap-2">
-            <TryoutSectionScoreStatus score={score} />
-            <TryoutSectionWorkflowStatus status={sectionStatus} />
-          </div>
+          <TryoutSectionStatuses score={score} status={sectionStatus} />
 
           <TryoutSectionMetrics score={score} section={section} />
         </TryoutPartLead>
@@ -54,6 +51,26 @@ export function TryoutSectionSummary({
         <TryoutPartCtas>{children}</TryoutPartCtas>
       </TryoutPartBody>
     </TryoutPartSummary>
+  );
+}
+
+/** Renders the section status row only when at least one status exists. */
+function TryoutSectionStatuses({
+  score,
+  status,
+}: {
+  score: TryoutScoreResult | null;
+  status: TryoutFinishedSectionStatus | null;
+}) {
+  if (score === null && status === null) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <TryoutSectionScoreStatus score={score} />
+      <TryoutSectionWorkflowStatus status={status} />
+    </div>
   );
 }
 
