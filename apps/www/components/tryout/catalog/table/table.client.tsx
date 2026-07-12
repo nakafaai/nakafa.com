@@ -170,8 +170,7 @@ export function TryoutSetTable({
                       );
                     }}
                     onFocusCapture={() => markSetIntent(row.original)}
-                    onPointerDown={() => markSetIntent(row.original)}
-                    onPointerEnter={() => markSetIntent(row.original)}
+                    onMouseEnter={() => markSetIntent(row.original)}
                     onTouchStart={() => markSetIntent(row.original)}
                   >
                     {row.getVisibleCells().map((cell) => (

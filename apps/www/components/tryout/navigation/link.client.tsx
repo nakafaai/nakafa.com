@@ -1,12 +1,7 @@
 "use client";
 
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import type {
-  ComponentProps,
-  FocusEvent,
-  PointerEvent,
-  TouchEvent,
-} from "react";
+import type { ComponentProps, FocusEvent, MouseEvent, TouchEvent } from "react";
 import { useState } from "react";
 
 type NavigationLinkProps = ComponentProps<typeof NavigationLink>;
@@ -21,7 +16,7 @@ type TryoutIntentLinkProps = Omit<NavigationLinkProps, "prefetch"> & {
 export function TryoutIntentLink({
   onFocus,
   onIntent,
-  onPointerEnter,
+  onMouseEnter,
   onTouchStart,
   ...props
 }: TryoutIntentLinkProps) {
@@ -40,9 +35,9 @@ export function TryoutIntentLink({
   }
 
   /** Record pointer hover as navigation intent. */
-  function handlePointerEnter(event: PointerEvent<HTMLAnchorElement>) {
+  function handleMouseEnter(event: MouseEvent<HTMLAnchorElement>) {
     markIntent();
-    onPointerEnter?.(event);
+    onMouseEnter?.(event);
   }
 
   /** Record touch contact as navigation intent. */
@@ -55,7 +50,7 @@ export function TryoutIntentLink({
     <NavigationLink
       {...props}
       onFocus={handleFocus}
-      onPointerEnter={handlePointerEnter}
+      onMouseEnter={handleMouseEnter}
       onTouchStart={handleTouchStart}
       prefetch={shouldPrefetch ? null : false}
     />
