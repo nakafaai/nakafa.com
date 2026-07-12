@@ -29,6 +29,7 @@ const defaultSort: SetListArgs["sort"] = {
   field: "order",
 };
 
+/** Create canonical set-list arguments with focused overrides. */
 function getListArgs(
   overrides: {
     cursor?: string | null;

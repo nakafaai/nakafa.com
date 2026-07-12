@@ -95,10 +95,12 @@ function readContentRepositoryPath(file: string) {
   return `${packagePrefix}${normalizedFile}`;
 }
 
+/** Return whether a changed path belongs to authored article content. */
 function isArticleSourcePath(file: string) {
   return file.includes("/articles/");
 }
 
+/** Return whether a changed path owns a cross-source content contract. */
 function isSharedContentContractPath(file: string) {
   return (
     file === "packages/contents/_types/content.ts" ||
@@ -106,10 +108,12 @@ function isSharedContentContractPath(file: string) {
   );
 }
 
+/** Return whether a changed path belongs to authored curriculum content. */
 function isCurriculumSourcePath(file: string) {
   return file.includes("/curriculum/");
 }
 
+/** Return whether a changed path can affect try-out projections. */
 function isTryoutSourcePath(file: string) {
   return (
     file.includes("/tryout/") ||
@@ -118,10 +122,12 @@ function isTryoutSourcePath(file: string) {
   );
 }
 
+/** Return whether a changed path owns learning-graph projection logic. */
 function isGraphProjectionPath(file: string) {
   return file.startsWith("packages/contents/_types/graph/");
 }
 
+/** Return whether a changed path owns the material registry contract. */
 function isMaterialRegistryPath(file: string) {
   return (
     file.startsWith("packages/contents/_types/material/") ||
@@ -129,14 +135,17 @@ function isMaterialRegistryPath(file: string) {
   );
 }
 
+/** Return whether a changed path belongs to authored material content. */
 function isMaterialSourcePath(file: string) {
   return file.includes("/material/");
 }
 
+/** Return whether a changed path owns learning-program catalog data. */
 function isProgramCatalogPath(file: string) {
   return file.startsWith("packages/contents/_types/program/");
 }
 
+/** Return whether a changed path owns public route projections. */
 function isRouteProjectionPath(file: string) {
   return file.startsWith("packages/contents/_types/route/");
 }

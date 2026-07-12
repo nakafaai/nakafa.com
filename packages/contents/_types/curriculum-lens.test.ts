@@ -75,6 +75,7 @@ describe("curriculum lens", () => {
   });
 });
 
+/** Decode one curriculum-lens fixture from a learning graph source. */
 function readCurriculumLensFixture(
   source: LearningGraphSource
 ): CurriculumLensDescriptor {

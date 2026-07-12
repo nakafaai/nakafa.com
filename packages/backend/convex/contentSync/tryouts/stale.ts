@@ -148,6 +148,7 @@ export async function deleteStaleTryoutCountriesImpl(
   return { deleted };
 }
 
+/** Delete an empty, unreferenced question set after its dependents are gone. */
 async function deleteQuestionSet(
   ctx: MutationCtx,
   questionSetId: Id<"questionSets">
@@ -188,6 +189,7 @@ async function deleteQuestionSet(
   await ctx.db.delete("questionSets", questionSetId);
 }
 
+/** Delete one section and its optional public route projection. */
 async function deleteTryoutSection(
   ctx: MutationCtx,
   sectionId: Id<"tryoutSections">
@@ -208,6 +210,7 @@ async function deleteTryoutSection(
   return 1;
 }
 
+/** Delete one empty set and its public route projection. */
 async function deleteTryoutSet(ctx: MutationCtx, setId: Id<"tryoutSets">) {
   const set = await ctx.db.get(setId);
 
@@ -242,6 +245,7 @@ async function deleteTryoutSet(ctx: MutationCtx, setId: Id<"tryoutSets">) {
   return 1;
 }
 
+/** Delete one empty track and its public route projection. */
 async function deleteTryoutTrack(
   ctx: MutationCtx,
   trackId: Id<"tryoutTracks">
@@ -285,6 +289,7 @@ async function deleteTryoutTrack(
   return 1;
 }
 
+/** Delete one empty exam and its public route projection. */
 async function deleteTryoutExam(ctx: MutationCtx, examId: Id<"tryoutExams">) {
   const exam = await ctx.db.get(examId);
 
@@ -326,6 +331,7 @@ async function deleteTryoutExam(ctx: MutationCtx, examId: Id<"tryoutExams">) {
   return 1;
 }
 
+/** Delete one country and its public route projection. */
 async function deleteTryoutCountry(
   ctx: MutationCtx,
   countryId: Id<"tryoutCountries">

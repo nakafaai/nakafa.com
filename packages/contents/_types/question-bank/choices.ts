@@ -7,6 +7,7 @@ const QuestionChoiceItemSchema = Schema.Struct({
 
 type QuestionChoiceItem = Schema.Schema.Type<typeof QuestionChoiceItemSchema>;
 
+/** Validate that one localized choice list has one correct answer. */
 const hasExactlyOneCorrectChoice = (choices: readonly QuestionChoiceItem[]) =>
   choices.filter((choice) => choice.value).length === 1;
 

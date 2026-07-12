@@ -175,6 +175,7 @@ function contentRoute(route: string) {
 /** Recreates the stale localized identity that source verification must reject. */
 function localizedContentRoute() {
   const route = contentRoute(TKA_ROUTE);
+  /** Convert one canonical English fixture slug to its Indonesian form. */
   const localize = (value: string) =>
     value.replaceAll("mathematics", "matematika");
 

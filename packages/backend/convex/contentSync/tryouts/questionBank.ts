@@ -159,6 +159,7 @@ function hasSameDescribedValues<TValues extends { description?: string }>(
   );
 }
 
+/** Replace the bounded localized choice set for one synchronized question. */
 async function replaceQuestionChoicesForLocale(
   ctx: MutationCtx,
   questionId: Id<"questions">,

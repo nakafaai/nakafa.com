@@ -241,6 +241,7 @@ export async function deleteQuestionRows(ctx: MutationCtx) {
   return { deleted, hasMore };
 }
 
+/** Check whether any locale still has a try-out search projection. */
 async function hasTryoutContentSearchRows(ctx: MutationCtx) {
   for (const locale of SUPPORTED_CONTENT_LOCALES) {
     const row = await ctx.db
@@ -258,6 +259,7 @@ async function hasTryoutContentSearchRows(ctx: MutationCtx) {
   return false;
 }
 
+/** Check whether any locale still has a try-out route-count projection. */
 async function hasTryoutContentRouteCountRows(ctx: MutationCtx) {
   for (const locale of SUPPORTED_CONTENT_LOCALES) {
     const row = await ctx.db
@@ -275,6 +277,7 @@ async function hasTryoutContentRouteCountRows(ctx: MutationCtx) {
   return false;
 }
 
+/** Check whether any locale still has a try-out route-page projection. */
 async function hasTryoutContentRoutePageRows(ctx: MutationCtx) {
   for (const locale of SUPPORTED_CONTENT_LOCALES) {
     const row = await ctx.db

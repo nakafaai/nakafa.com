@@ -294,6 +294,7 @@ describe("learning graph identity", () => {
   });
 });
 
+/** Decode one graph-identity fixture from a learning graph source. */
 function readGraphIdentityFixture(
   source: LearningGraphSource
 ): LearningGraphIdentity {

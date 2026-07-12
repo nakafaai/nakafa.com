@@ -33,6 +33,7 @@ export function readStaticPublicTryoutRoutes({
   return routes.sort(comparePublicRouteOrder);
 }
 
+/** Project one source exam synchronously for static route generation. */
 function readStaticExamTryoutRoutes({
   emittedCountryPaths,
   source,
@@ -158,6 +159,7 @@ function readStaticExamTryoutRoutes({
   return routes;
 }
 
+/** Decode one static projected route through the shared runtime contract. */
 function decodeTryoutRouteSync(
   input: Schema.Schema.Encoded<typeof PublicTryoutRouteSchema>
 ) {

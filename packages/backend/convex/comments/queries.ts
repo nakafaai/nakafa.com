@@ -31,6 +31,7 @@ const commentWithUserValidator = v.object({
   replyToUser: nullable(publicCommentUserValidator),
 });
 
+/** Load the current viewer's vote for each bounded comment page row. */
 async function getViewerVotes(
   ctx: QueryCtx,
   comments: Doc<"comments">[],

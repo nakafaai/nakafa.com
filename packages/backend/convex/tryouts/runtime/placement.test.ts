@@ -14,6 +14,7 @@ const SOURCE = `question-bank/tryout/indonesia/snbt/${TRACK}/set-1/${SECTION}`;
 const SET_ROUTE = `try-out/indonesia/snbt/${TRACK}/set-1`;
 const ROUTE = `${SET_ROUTE}/${SECTION}`;
 
+/** Insert the source graph required by placement scenarios. */
 async function insertSource(ctx: MutationCtx) {
   const questionSetId = await ctx.db.insert("questionSets", {
     contentHash: "question-set-hash",
@@ -55,6 +56,7 @@ async function insertSource(ctx: MutationCtx) {
   return questionSetId;
 }
 
+/** Insert an attempt runtime required by placement scenarios. */
 async function insertRuntime(
   ctx: MutationCtx,
   questionSetId: Id<"questionSets">

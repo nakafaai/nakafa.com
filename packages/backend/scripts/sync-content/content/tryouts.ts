@@ -330,6 +330,7 @@ function addTryoutRoute(
   routes.set(`${row.locale}:${row.publicPath}`, row);
 }
 
+/** Hash every source-owned field that determines a projected try-out route. */
 function createTryoutRouteHash(source: {
   description?: string;
   kind: TryoutRouteKind;

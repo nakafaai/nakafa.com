@@ -26,6 +26,7 @@ const QUESTION_FILE_PREFIX = "question.";
 const ANSWER_FILE_PREFIX = "answer.";
 const MDX_FILE_SUFFIX = ".mdx";
 
+/** Create an empty mutable validation accumulator for one source family. */
 const createValidationResult = (): ValidationResult => ({
   valid: 0,
   invalid: 0,

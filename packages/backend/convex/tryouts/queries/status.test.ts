@@ -29,6 +29,7 @@ type UnattemptedArgs = FunctionArgs<
   typeof api.tryouts.queries.sets.unattempted
 >;
 
+/** Create canonical status-query arguments for one status bucket. */
 function getStatusArgs(
   status: StatusArgs["status"],
   cursor: string | null = null,
@@ -44,6 +45,7 @@ function getStatusArgs(
   };
 }
 
+/** Create canonical unattempted-set query arguments. */
 function getUnattemptedArgs(): UnattemptedArgs {
   return {
     countryKey: "indonesia",
@@ -54,6 +56,7 @@ function getUnattemptedArgs(): UnattemptedArgs {
   };
 }
 
+/** Insert one try-out set fixture for status-query scenarios. */
 async function insertSet(
   ctx: MutationCtx,
   args: {

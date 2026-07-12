@@ -161,6 +161,7 @@ export type TryoutExamSourceInput = SchemaEncoded<
   typeof TryoutExamSourceSchema
 >;
 
+/** Require each set to expose sections or one internal direct-entry section. */
 function hasReachableTryoutSections(source: {
   sections: readonly { visibility: TryoutSectionVisibility }[];
 }) {

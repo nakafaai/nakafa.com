@@ -93,6 +93,7 @@ export async function bulkSyncTryoutsImpl(
   return totals;
 }
 
+/** Reject a combined try-out sync batch before any transactional writes. */
 function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
   assertContentSyncBatchSize({
     functionName: "bulkSyncTryouts",
@@ -125,10 +126,12 @@ function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
   });
 }
 
+/** Add one row-level sync outcome to the aggregate totals. */
 function addOutcome(totals: SyncTotals, outcome: SyncOutcome) {
   totals[outcome]++;
 }
 
+/** Create, replace, or preserve one localized try-out country row. */
 async function syncCountry(
   ctx: MutationCtx,
   country: SyncedTryoutCountry,
@@ -157,6 +160,7 @@ async function syncCountry(
   return "created";
 }
 
+/** Create, replace, or preserve one localized try-out exam row. */
 async function syncExam(
   ctx: MutationCtx,
   exam: SyncedTryoutExam,
@@ -188,6 +192,7 @@ async function syncExam(
   return "created";
 }
 
+/** Create, replace, or preserve one localized try-out set row. */
 async function syncSet(
   ctx: MutationCtx,
   set: SyncedTryoutSet,
@@ -223,6 +228,7 @@ async function syncSet(
   return "created";
 }
 
+/** Create, replace, or preserve one localized try-out track row. */
 async function syncTrack(
   ctx: MutationCtx,
   track: SyncedTryoutTrack,
@@ -255,6 +261,7 @@ async function syncTrack(
   return "created";
 }
 
+/** Resolve parents and synchronize one localized try-out section row. */
 async function syncSection(
   ctx: MutationCtx,
   section: SyncedTryoutSection,
@@ -295,6 +302,7 @@ async function syncSection(
   return "created";
 }
 
+/** Synchronize each affected set's IRT scale once per section batch. */
 async function syncIrtScalesForSections(
   ctx: MutationCtx,
   sections: SyncedTryoutSection[],
@@ -314,6 +322,7 @@ async function syncIrtScalesForSections(
   }
 }
 
+/** Resolve the concrete parent set for one synchronized section. */
 async function getTryoutSet(
   ctx: MutationCtx,
   section: Pick<
@@ -356,6 +365,7 @@ function hasSameDescribedValues<TValues extends { description?: string }>(
   );
 }
 
+/** Compare all source-owned set fields that influence runtime behavior. */
 function hasSameSetValues(
   nextValues: SyncedTryoutSet,
   existing: Partial<SyncedTryoutSet> | null | undefined
@@ -366,6 +376,7 @@ function hasSameSetValues(
   );
 }
 
+/** Compare all source-owned section fields and resolved relationships. */
 function hasSameSectionValues(
   nextValues: SyncedTryoutSection & {
     questionSetId: string;
@@ -379,6 +390,7 @@ function hasSameSectionValues(
   );
 }
 
+/** Remove an obsolete route projection before replacing a public path. */
 async function deleteChangedPublicPathProjection(
   ctx: MutationCtx,
   existing:

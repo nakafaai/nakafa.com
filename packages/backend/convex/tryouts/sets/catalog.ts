@@ -218,6 +218,7 @@ export async function listUnattemptedSets(
   return compactPage(page, rows);
 }
 
+/** Narrow a candidate set to the active ready row for one track identity. */
 function isReadyTrackSet(
   set: TryoutSet | null,
   identity: TrackIdentity
@@ -232,6 +233,7 @@ function isReadyTrackSet(
   );
 }
 
+/** Remove omitted rows while preserving Convex pagination metadata. */
 function compactPage<TDocument, TRow>(
   page: PaginationResult<TDocument>,
   rows: (TRow | null)[]

@@ -32,6 +32,7 @@ export const listPublicTryoutRoutes = Effect.fn("contents.route.listTryouts")(
   }
 );
 
+/** Project one source exam into localized public route rows. */
 function listExamTryoutRoutes({
   emittedCountryPaths,
   source,
@@ -169,6 +170,7 @@ function listExamTryoutRoutes({
   });
 }
 
+/** Decode one projected route through the shared runtime contract. */
 function decodeTryoutRoute(
   input: Schema.Schema.Encoded<typeof PublicTryoutRouteSchema>
 ) {

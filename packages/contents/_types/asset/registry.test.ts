@@ -124,6 +124,7 @@ describe("asset registry", () => {
   });
 });
 
+/** Create a subject asset source fixture for one locale. */
 function subjectSource(locale: "en" | "id"): AssetSourceInput {
   return {
     locale,
@@ -132,6 +133,7 @@ function subjectSource(locale: "en" | "id"): AssetSourceInput {
   };
 }
 
+/** Create a mechanics asset source fixture for one locale. */
 function mechanicsSource(locale: "en" | "id"): AssetSourceInput {
   return {
     locale,
@@ -140,6 +142,7 @@ function mechanicsSource(locale: "en" | "id"): AssetSourceInput {
   };
 }
 
+/** Format a schema decoding failure for readable fixture assertions. */
 function formatError<Decoded, Encoded>(
   schema: Schema.Schema<Decoded, Encoded, never>,
   value: unknown

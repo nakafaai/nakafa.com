@@ -33,6 +33,7 @@ export function chunkTryoutRows(rows: TryoutSyncArgs): TryoutSyncArgs[] {
   ];
 }
 
+/** Split route projections into independently bounded mutation payloads. */
 function chunkRoutes(routes: SyncedTryoutRoute[]) {
   const batches: TryoutSyncArgs[] = [];
 
@@ -54,6 +55,7 @@ function chunkRoutes(routes: SyncedTryoutRoute[]) {
   return batches;
 }
 
+/** Pack catalog parents into bounded batches while preserving source order. */
 function chunkCatalogRows(
   rows: Pick<TryoutSyncArgs, "countries" | "exams" | "sets" | "tracks">
 ) {
@@ -100,6 +102,7 @@ function chunkCatalogRows(
   return batches;
 }
 
+/** Split question-set rows at the configured transactional limit. */
 function chunkQuestionSets(questionSets: SyncedQuestionSet[]) {
   const batches: TryoutSyncArgs[] = [];
 
@@ -121,6 +124,7 @@ function chunkQuestionSets(questionSets: SyncedQuestionSet[]) {
   return batches;
 }
 
+/** Split question rows at the configured transactional limit. */
 function chunkQuestions(questions: SyncedQuestion[]) {
   const batches: TryoutSyncArgs[] = [];
 
@@ -142,6 +146,7 @@ function chunkQuestions(questions: SyncedQuestion[]) {
   return batches;
 }
 
+/** Split section rows at the configured transactional limit. */
 function chunkSections(sections: SyncedTryoutSection[]) {
   const batches: TryoutSyncArgs[] = [];
 
@@ -163,6 +168,7 @@ function chunkSections(sections: SyncedTryoutSection[]) {
   return batches;
 }
 
+/** Fill omitted try-out sync collections with empty arrays. */
 function createBatch(values: Partial<TryoutSyncArgs>): TryoutSyncArgs {
   return {
     countries: values.countries ?? [],
