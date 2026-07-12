@@ -15,7 +15,10 @@ import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
-import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
+import {
+  getTryoutFinishedSectionDescription,
+  getTryoutFinishedSectionStatus,
+} from "@/components/tryout/section/finished";
 import { TryoutVisibleSummary } from "@/components/tryout/section/summary.client";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
 import { TryoutMeta } from "@/components/tryout/shell/meta";
@@ -95,16 +98,9 @@ export function TryoutSectionPageClient({
     return null;
   }
 
-  const sectionFinished = Boolean(
-    sectionAttempt &&
-      (sectionAttempt.status === "completed" ||
-        sectionAttempt.status === "expired")
-  );
-  const sectionTimeExpired = Boolean(
-    sectionAttempt &&
-      (sectionAttempt.endReason === "time-expired" ||
-        sectionAttempt.status === "expired")
-  );
+  const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
+  const sectionFinished = sectionStatus !== null;
+  const sectionTimeExpired = sectionStatus === "expired";
   const attemptFinished = Boolean(
     currentAttempt && currentAttempt.status !== "in-progress"
   );
@@ -116,7 +112,7 @@ export function TryoutSectionPageClient({
   } else if (runtimeState.kind === "pending") {
     status = tTryouts("part-head-expiring");
   } else if (sectionFinished) {
-    status = getTryoutFinishedSectionStatus({
+    status = getTryoutFinishedSectionDescription({
       attemptFinished,
       sectionTimeExpired,
       tTryouts,
@@ -149,7 +145,7 @@ export function TryoutSectionPageClient({
           locale: route.locale,
           page,
           route,
-          sectionFinished,
+          sectionStatus,
         }}
       />
     );

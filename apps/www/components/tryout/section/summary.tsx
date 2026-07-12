@@ -8,6 +8,7 @@ import {
   TryoutPartStats,
   TryoutPartSummary,
 } from "@/components/tryout/section/card";
+import type { TryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import {
   TryoutMetricNumber,
   TryoutMetricTime,
@@ -25,11 +26,11 @@ export interface TryoutSummarySection {
 export function TryoutSectionSummary({
   children,
   section,
-  sectionFinished,
+  sectionStatus,
 }: {
   children: ReactNode;
   section: TryoutSummarySection;
-  sectionFinished: boolean;
+  sectionStatus: TryoutFinishedSectionStatus | null;
 }) {
   const tTryouts = useTranslations("Tryouts");
 
@@ -37,7 +38,7 @@ export function TryoutSectionSummary({
     <TryoutPartSummary>
       <TryoutPartBody>
         <TryoutPartLead>
-          {sectionFinished ? <TryoutStatus status="completed" /> : null}
+          {sectionStatus ? <TryoutStatus status={sectionStatus} /> : null}
 
           <TryoutPartStats>
             <TryoutPartStat label={tTryouts("part-questions-label")}>

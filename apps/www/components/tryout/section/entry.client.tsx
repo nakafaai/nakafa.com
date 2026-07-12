@@ -5,6 +5,7 @@ import {
   TryoutSummaryAction,
   type TryoutSummaryActionValue,
 } from "@/components/tryout/section/action.client";
+import type { TryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import {
   TryoutSectionSummary,
   type TryoutSummarySection,
@@ -13,7 +14,7 @@ import {
 /** Direct-entry section summary presentation contract. */
 export interface TryoutEntrySummaryValue {
   section: TryoutSummarySection;
-  sectionFinished: boolean;
+  sectionStatus: TryoutFinishedSectionStatus | null;
 }
 
 type TryoutEntrySummaryActionValue = Omit<
@@ -32,7 +33,7 @@ export function TryoutEntrySummary({
   return (
     <TryoutSectionSummary
       section={value.section}
-      sectionFinished={value.sectionFinished}
+      sectionStatus={value.sectionStatus}
     >
       {children}
     </TryoutSectionSummary>

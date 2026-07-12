@@ -1,3 +1,10 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+
+export type TryoutFinishedSectionStatus = Exclude<
+  Doc<"tryoutSectionAttempts">["status"],
+  "in-progress"
+>;
+
 type TryoutStatusTranslator = (
   key:
     | "part-head-completed"
@@ -6,8 +13,19 @@ type TryoutStatusTranslator = (
     | "part-head-completed-time-expired-pending-review"
 ) => string;
 
+/** Reads the canonical terminal status from one Convex section attempt. */
+export function getTryoutFinishedSectionStatus(
+  section: Pick<Doc<"tryoutSectionAttempts">, "status"> | null
+): TryoutFinishedSectionStatus | null {
+  if (!section || section.status === "in-progress") {
+    return null;
+  }
+
+  return section.status;
+}
+
 /** Selects the production header copy for finished try-out sections. */
-export function getTryoutFinishedSectionStatus({
+export function getTryoutFinishedSectionDescription({
   attemptFinished,
   sectionTimeExpired,
   tTryouts,

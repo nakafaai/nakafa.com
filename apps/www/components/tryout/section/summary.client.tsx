@@ -5,6 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutSummaryAction } from "@/components/tryout/section/action.client";
+import type { TryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
@@ -28,7 +29,7 @@ export interface TryoutVisibleSummaryValue {
   locale: Locale;
   page: SectionPage;
   route: TryoutSectionRoute;
-  sectionFinished: boolean;
+  sectionStatus: TryoutFinishedSectionStatus | null;
 }
 
 /** Renders the pre-runtime summary for a public visible section route. */
@@ -49,7 +50,7 @@ export function TryoutVisibleSummary({
   return (
     <TryoutSectionSummary
       section={value.page.section}
-      sectionFinished={value.sectionFinished}
+      sectionStatus={value.sectionStatus}
     >
       <TryoutSummaryAction
         value={{
@@ -59,7 +60,7 @@ export function TryoutVisibleSummary({
           locale: value.locale,
           returnHref,
           section: value.page.section,
-          sectionFinished: value.sectionFinished,
+          sectionFinished: value.sectionStatus !== null,
           sectionHref,
           set: value.page.set,
         }}

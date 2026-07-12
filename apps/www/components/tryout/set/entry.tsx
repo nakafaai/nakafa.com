@@ -8,11 +8,11 @@ import {
   TryoutEntrySummary,
   TryoutEntrySummaryAction,
 } from "@/components/tryout/section/entry.client";
-import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
-import type {
-  CurrentAttempt,
-  TryoutInternalSetView,
-} from "@/components/tryout/set/model";
+import {
+  getTryoutFinishedSectionDescription,
+  getTryoutFinishedSectionStatus,
+} from "@/components/tryout/section/finished";
+import type { TryoutInternalSetView } from "@/components/tryout/set/model";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
 import { TryoutMeta } from "@/components/tryout/shell/meta";
 
@@ -30,8 +30,9 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
     value.runtimeState.kind === "none"
       ? null
       : value.runtimeState.runtime.section;
-  const sectionFinished = isFinishedSection(sectionAttempt);
-  const sectionTimeExpired = isTimeExpiredSection(sectionAttempt);
+  const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
+  const sectionFinished = sectionStatus !== null;
+  const sectionTimeExpired = sectionStatus === "expired";
   const attemptFinished = Boolean(
     value.actionAttempt && value.actionAttempt.status !== "in-progress"
   );
@@ -42,7 +43,7 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
   } else if (value.runtimeState.kind === "pending") {
     status = tTryouts("part-head-expiring");
   } else if (sectionFinished) {
-    status = getTryoutFinishedSectionStatus({
+    status = getTryoutFinishedSectionDescription({
       attemptFinished,
       sectionTimeExpired,
       tTryouts,
@@ -114,7 +115,7 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
           <TryoutEntrySummary
             value={{
               section: value.entrySection,
-              sectionFinished,
+              sectionStatus,
             }}
           >
             {summaryAction}
@@ -125,22 +126,4 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
       </div>
     </div>
   );
-}
-
-/** Returns true when a section attempt has reached a terminal state. */
-function isFinishedSection(section: NonNullable<CurrentAttempt>["section"]) {
-  if (!section) {
-    return false;
-  }
-
-  return section.status === "completed" || section.status === "expired";
-}
-
-/** Returns true when a terminal section ended because its timer expired. */
-function isTimeExpiredSection(section: NonNullable<CurrentAttempt>["section"]) {
-  if (!section) {
-    return false;
-  }
-
-  return section.endReason === "time-expired" || section.status === "expired";
 }
