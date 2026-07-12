@@ -305,18 +305,15 @@ const tables = {
     updatedAt: v.number(),
   })
     .index("by_userId_and_tryoutSetId", ["userId", "tryoutSetId"])
-    .index(
-      "by_userId_and_countryKey_and_examKey_and_trackKey_and_locale_and_publishedScore_and_setKey",
-      [
-        "userId",
-        "countryKey",
-        "examKey",
-        "trackKey",
-        "locale",
-        "publishedScore",
-        "setKey",
-      ]
-    )
+    .index("by_userId_and_track_and_publishedScore_and_setKey", [
+      "userId",
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "locale",
+      "publishedScore",
+      "setKey",
+    ])
     .index("by_userId_and_track_and_statusRank_and_setKey", [
       "userId",
       "countryKey",

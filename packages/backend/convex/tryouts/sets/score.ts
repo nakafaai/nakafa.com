@@ -45,7 +45,7 @@ async function readScoredSets(
   const page = await ctx.db
     .query("tryoutSetProgress")
     .withIndex(
-      "by_userId_and_countryKey_and_examKey_and_trackKey_and_locale_and_publishedScore_and_setKey",
+      "by_userId_and_track_and_publishedScore_and_setKey",
       (query) =>
         query
           .eq("userId", user._id)
