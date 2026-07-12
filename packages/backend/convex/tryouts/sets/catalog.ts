@@ -60,7 +60,11 @@ export async function readReadyTrackParent(
 }
 
 /** Reads the compact latest progress row for one user and set. */
-async function readSetProgress(ctx: QueryCtx, user: User, set: TryoutSet) {
+export async function readSetProgress(
+  ctx: QueryCtx,
+  user: User,
+  set: TryoutSet
+) {
   return await ctx.db
     .query("tryoutSetProgress")
     .withIndex("by_userId_and_tryoutSetId", (q) =>
@@ -70,7 +74,7 @@ async function readSetProgress(ctx: QueryCtx, user: User, set: TryoutSet) {
 }
 
 /** Projects one set only while its section snapshot remains ready. */
-async function projectSet(
+export async function projectSet(
   ctx: QueryCtx,
   set: TryoutSet,
   progress: TryoutSetProgress | null
@@ -127,7 +131,10 @@ async function readCatalogPage(ctx: QueryCtx, args: ListArgs) {
 }
 
 /** Reads one ready set page in source-owned order. */
-async function readOrderedSetPage(ctx: QueryCtx, args: OrderedSetPageArgs) {
+export async function readOrderedSetPage(
+  ctx: QueryCtx,
+  args: OrderedSetPageArgs
+) {
   return await ctx.db
     .query("tryoutSets")
     .withIndex("by_track_locale_active_ready_order", (q) =>
@@ -220,7 +227,7 @@ export async function listUnattemptedSets(
 }
 
 /** Narrow a candidate set to the active ready row for one track identity. */
-function isReadyTrackSet(
+export function isReadyTrackSet(
   set: TryoutSet | null,
   identity: TrackIdentity
 ): set is TryoutSet {
@@ -235,7 +242,7 @@ function isReadyTrackSet(
 }
 
 /** Remove omitted rows while preserving Convex pagination metadata. */
-function compactPage<TDocument, TRow>(
+export function compactPage<TDocument, TRow>(
   page: PaginationResult<TDocument>,
   rows: (TRow | null)[]
 ): PaginationResult<TRow> {

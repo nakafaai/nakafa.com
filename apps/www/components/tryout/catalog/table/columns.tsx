@@ -3,7 +3,6 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import {
-  TryoutSetScoreHeader,
   TryoutSetSortHeader,
   TryoutSetStatusHeader,
 } from "@/components/tryout/catalog/table/header";
@@ -63,8 +62,13 @@ export function createTryoutSetColumns({
         <TryoutSetScoreCell score={row.original.publishedScore} />
       ),
       enableColumnFilter: false,
-      enableSorting: false,
-      header: () => <TryoutSetScoreHeader />,
+      header: ({ column }) => (
+        <TryoutSetSortHeader
+          column={column}
+          direction={readSortDirection(sorting, column.id)}
+          labelKey="set-column-score"
+        />
+      ),
     },
     {
       accessorKey: "attemptStatus",

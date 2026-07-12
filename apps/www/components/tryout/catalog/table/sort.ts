@@ -17,6 +17,7 @@ export function readTryoutSetSort(sorting: SortingState): TryoutSetSort {
   const direction = primary.desc ? "desc" : "asc";
 
   switch (primary.id) {
+    case "publishedScore":
     case "readyQuestionCount":
     case "title":
       return { direction, field: primary.id };

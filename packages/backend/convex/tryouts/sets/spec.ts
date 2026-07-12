@@ -12,7 +12,7 @@ export const setDirectionValidator = literals("asc", "desc");
 
 export const setSortValidator = v.object({
   direction: setDirectionValidator,
-  field: literals("order", "title", "readyQuestionCount"),
+  field: literals("order", "publishedScore", "readyQuestionCount", "title"),
 });
 
 export const trackIdentityValidator = v.object({

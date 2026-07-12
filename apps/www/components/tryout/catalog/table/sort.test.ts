@@ -17,6 +17,10 @@ describe("readTryoutSetSort", () => {
     expect(
       readTryoutSetSort([{ desc: true, id: "readyQuestionCount" }])
     ).toEqual({ direction: "desc", field: "readyQuestionCount" });
+    expect(readTryoutSetSort([{ desc: false, id: "publishedScore" }])).toEqual({
+      direction: "asc",
+      field: "publishedScore",
+    });
   });
 
   it("falls back to authored order for unknown columns", () => {

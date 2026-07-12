@@ -401,6 +401,8 @@
     "set-sort-name-descending": "Z ke A",
     "set-sort-questions-ascending": "Paling sedikit",
     "set-sort-questions-descending": "Paling banyak",
+    "set-sort-score-ascending": "Nilai terendah",
+    "set-sort-score-descending": "Nilai tertinggi",
     "set-filter-label": "Filter {column}",
     "set-filter-all": "Semua",
     "status-not-started": "Belum mulai",

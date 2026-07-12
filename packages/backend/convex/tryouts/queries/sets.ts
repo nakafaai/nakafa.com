@@ -6,6 +6,7 @@ import {
   listUnattemptedSets,
   readReadyTrackParent,
 } from "@repo/backend/convex/tryouts/sets/catalog";
+import { listScoreSortedSets } from "@repo/backend/convex/tryouts/sets/score";
 import {
   emptySetPage,
   listArgsValidator,
@@ -25,6 +26,11 @@ export const list = query({
     }
 
     const auth = await getOptionalAppUser(ctx);
+
+    if (args.sort.field === "publishedScore" && auth) {
+      return await listScoreSortedSets(ctx, args, auth.appUser);
+    }
+
     return await listCatalogSets(ctx, args, auth?.appUser ?? null);
   },
 });

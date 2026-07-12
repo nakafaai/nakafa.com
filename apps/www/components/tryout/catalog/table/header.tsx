@@ -39,6 +39,10 @@ const sortLabelKeys = {
     asc: "set-sort-questions-ascending",
     desc: "set-sort-questions-descending",
   },
+  "set-column-score": {
+    asc: "set-sort-score-ascending",
+    desc: "set-sort-score-descending",
+  },
 } as const;
 
 const statusFilters = [
@@ -50,13 +54,6 @@ const statusFilters = [
 ] as const satisfies readonly TryoutSetStatusFilter[];
 
 type TryoutSetSortColumnLabel = keyof typeof sortLabelKeys;
-
-/** Renders the localized non-interactive score column label. */
-export function TryoutSetScoreHeader() {
-  const tTryouts = useTranslations("Tryouts");
-
-  return <span>{tTryouts("set-column-score")}</span>;
-}
 
 /** Resolve a compact icon for an inactive, ascending, or descending sort. */
 function getSortIcon(direction: false | "asc" | "desc") {

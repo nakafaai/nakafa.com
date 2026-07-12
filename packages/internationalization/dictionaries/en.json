@@ -401,6 +401,8 @@
     "set-sort-name-descending": "Z to A",
     "set-sort-questions-ascending": "Fewest",
     "set-sort-questions-descending": "Most",
+    "set-sort-score-ascending": "Lowest score",
+    "set-sort-score-descending": "Highest score",
     "set-filter-label": "Filter {column}",
     "set-filter-all": "All",
     "status-not-started": "Not started",
