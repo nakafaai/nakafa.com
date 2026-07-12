@@ -18,10 +18,7 @@ import {
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireIrtScaleVersion } from "@repo/backend/convex/tryouts/runtime/irt";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
-import {
-  finalizeAttemptScore,
-  requireOwnedAttempt,
-} from "@repo/backend/convex/tryouts/runtime/score";
+import { requireOwnedAttempt } from "@repo/backend/convex/tryouts/runtime/score";
 import {
   loadPlacementSectionAttempt,
   requireInternalEntrySection,
@@ -105,15 +102,6 @@ async function loadLatestAttempt(
     .take(1);
 
   return attempts.at(0) ?? null;
-}
-
-/** Returns true when every snapshot is already completed or expired. */
-function hasCompletedEverySection(attempt: TryoutAttempt) {
-  const completedKeys = new Set(attempt.completedSectionKeys);
-
-  return attempt.sectionSnapshots.every((section) =>
-    completedKeys.has(section.sectionKey)
-  );
 }
 
 /** Returns the entitlement-bounded attempt expiry for a new attempt. */
@@ -450,42 +438,5 @@ export const saveResponse = mutation({
     });
 
     return null;
-  },
-});
-
-/** Finalizes one attempt idempotently and stores the score snapshot. */
-export const finalizeAttempt = mutation({
-  args: {
-    attemptId: v.id("tryoutAttempts"),
-  },
-  returns: v.object({
-    scoreId: v.id("tryoutScores"),
-  }),
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-    const now = Date.now();
-    const attempt = await requireOwnedAttempt(ctx, {
-      attemptId: args.attemptId,
-      userId: appUser._id,
-    });
-
-    if (
-      attempt.status === "in-progress" &&
-      now >= getAttemptExpiresAt(attempt)
-    ) {
-      return expireAttemptAtEffectiveTime(ctx, { attempt, now });
-    }
-
-    if (
-      attempt.status === "in-progress" &&
-      !hasCompletedEverySection(attempt)
-    ) {
-      throw new ConvexError({
-        code: "TRYOUT_ATTEMPT_NOT_COMPLETE",
-        message: "Try-out attempt still has unfinished sections.",
-      });
-    }
-
-    return finalizeAttemptScore(ctx, { attempt, now });
   },
 });

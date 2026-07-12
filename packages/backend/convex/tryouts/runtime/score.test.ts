@@ -177,17 +177,28 @@ describe("tryouts/runtime/score", () => {
         });
       }
 
-      await finalizeAttemptScore(ctx, { attempt, now: NOW });
+      await finalizeAttemptScore(ctx, {
+        attempt,
+        endReason: "submitted",
+        now: NOW,
+      });
 
-      return await ctx.db
+      const score = await ctx.db
         .query("tryoutScores")
         .withIndex("by_tryoutAttemptId", (q) =>
           q.eq("tryoutAttemptId", attemptId)
         )
         .unique();
+      const finalizedAttempt = await ctx.db.get(attemptId);
+
+      return { finalizedAttempt, score };
     });
 
-    expect(snapshot).toMatchObject({
+    expect(snapshot.finalizedAttempt).toMatchObject({
+      endReason: "submitted",
+      status: "completed",
+    });
+    expect(snapshot.score).toMatchObject({
       publishedScore: 100,
       rawScore: 100,
       scoringStrategy: "raw",

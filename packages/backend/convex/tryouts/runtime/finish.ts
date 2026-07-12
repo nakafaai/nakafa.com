@@ -164,6 +164,7 @@ export async function finalizeSectionAttempt(
 
   await finalizeAttemptScore(ctx, {
     attempt: currentAttempt,
+    endReason: "submitted",
     now: args.now,
   });
 
@@ -232,6 +233,7 @@ export async function expireAttempt(
 
   return finalizeAttemptScore(ctx, {
     attempt: currentAttempt,
+    endReason: "time-expired",
     now: args.now,
   });
 }
