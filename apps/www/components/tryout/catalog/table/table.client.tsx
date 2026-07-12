@@ -75,8 +75,7 @@ export function TryoutSetTable({
       return;
     }
 
-    warmedPaths.current.add(pathKey);
-    prewarmData({
+    const warmed = prewarmData({
       directEntry:
         row.internalEntrySectionKey && row.attemptStatus !== null
           ? {
@@ -91,6 +90,10 @@ export function TryoutSetTable({
       locale,
       publicPath: row.publicPath,
     });
+
+    if (warmed) {
+      warmedPaths.current.add(pathKey);
+    }
   }
   const [retainedRows, setRetainedRows] = useState<TryoutSetRow[]>(EMPTY_ROWS);
   const visibleRows = data.pending ? retainedRows : data.rows;
@@ -180,6 +183,7 @@ export function TryoutSetTable({
                         return;
                       }
 
+                      markSetIntent(row.original);
                       router.push(
                         getTryoutPublicPathHref(row.original.publicPath)
                       );

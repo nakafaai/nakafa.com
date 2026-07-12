@@ -32,6 +32,8 @@ export type TryoutDataIntent =
  * Prewarms the exact authenticated Convex queries mounted by a set or section.
  * Convex owns the short subscription lifetime and reuses the result when the
  * destination hook subscribes.
+ *
+ * @returns An intent callback that reports whether authenticated warming ran.
  */
 export function useTryoutDataIntent() {
   const convex = useConvex();
@@ -40,7 +42,7 @@ export function useTryoutDataIntent() {
   return useCallback(
     (intent: TryoutDataIntent) => {
       if (isLoading || !isAuthenticated) {
-        return;
+        return false;
       }
 
       if (intent.kind === "set") {
@@ -61,7 +63,7 @@ export function useTryoutDataIntent() {
             query: api.tryouts.queries.attempt.getSectionRuntime,
           });
         }
-        return;
+        return true;
       }
 
       const args = {
@@ -81,6 +83,7 @@ export function useTryoutDataIntent() {
         args,
         query: api.tryouts.queries.attempt.getSectionRuntime,
       });
+      return true;
     },
     [convex, isAuthenticated, isLoading]
   );
