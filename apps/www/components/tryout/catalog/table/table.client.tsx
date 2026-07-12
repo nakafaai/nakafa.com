@@ -16,8 +16,10 @@ import {
   flexRender,
   functionalUpdate,
   getCoreRowModel,
+  type Header,
   type OnChangeFn,
   type SortingState,
+  type Table as TanStackTable,
   useReactTable,
 } from "@tanstack/react-table";
 import type { Locale } from "next-intl";
@@ -26,6 +28,7 @@ import { useMemo, useRef, useState } from "react";
 import { createTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
 import { readTryoutSetStatusFilter } from "@/components/tryout/catalog/table/filter";
+import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
 import { readTryoutSetSort } from "@/components/tryout/catalog/table/sort";
 import type {
   TryoutSetRow,
@@ -95,6 +98,12 @@ export function TryoutSetTable({
       warmedPaths.current.add(pathKey);
     }
   }
+
+  /** Navigates one row after warming its route and authenticated data. */
+  function navigateToSet(row: TryoutSetRow) {
+    markSetIntent(row);
+    router.push(getTryoutPublicPathHref(row.publicPath));
+  }
   const [retainedRows, setRetainedRows] = useState<TryoutSetRow[]>(EMPTY_ROWS);
   const visibleRows = data.pending ? retainedRows : data.rows;
 
@@ -158,83 +167,69 @@ export function TryoutSetTable({
                       )}
                       key={header.id}
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                      <TryoutTableHeaderContent header={header} />
                     </TableHead>
                   ))}
                 </TableRow>
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows.length > 0 ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    className="cursor-pointer"
-                    key={row.id}
-                    onClick={(event) => {
-                      if (
-                        event.target instanceof Element &&
-                        event.target.closest("a")
-                      ) {
-                        return;
-                      }
-
-                      markSetIntent(row.original);
-                      router.push(
-                        getTryoutPublicPathHref(row.original.publicPath)
-                      );
-                    }}
-                    onFocusCapture={() => markSetIntent(row.original)}
-                    onMouseEnter={() => markSetIntent(row.original)}
-                    onTouchStart={() => markSetIntent(row.original)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell className="px-2 sm:px-4" key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    className="h-24 text-center text-muted-foreground"
-                    colSpan={table.getVisibleLeafColumns().length}
-                  >
-                    {tTryouts("list-empty")}
-                  </TableCell>
-                </TableRow>
-              )}
-              {data.exhausted ? null : (
-                <TableRow
-                  aria-hidden="true"
-                  className="h-px hover:bg-transparent"
-                >
-                  <TableCell
-                    className="p-0"
-                    colSpan={table.getVisibleLeafColumns().length}
-                  >
-                    <Intersection
-                      className="h-px"
-                      key={data.loadKey}
-                      onIntersect={data.loadMore}
-                      root={scrollRoot}
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
+              <TryoutTableRows
+                emptyLabel={tTryouts("list-empty")}
+                navigation={{ intent: markSetIntent, navigate: navigateToSet }}
+                table={table}
+              />
+              <TryoutTableLoader
+                data={data}
+                scrollRoot={scrollRoot}
+                table={table}
+              />
             </TableBody>
           </Table>
         </div>
       </div>
     </div>
+  );
+}
+
+/** Renders one concrete TanStack header or nothing for a placeholder. */
+function TryoutTableHeaderContent({
+  header,
+}: {
+  header: Header<TryoutSetRow, unknown>;
+}) {
+  if (header.isPlaceholder) {
+    return null;
+  }
+
+  return flexRender(header.column.columnDef.header, header.getContext());
+}
+
+/** Renders the infinite-query sentinel until Convex exhausts the result set. */
+function TryoutTableLoader({
+  data,
+  scrollRoot,
+  table,
+}: {
+  data: ReturnType<typeof useTryoutSetData>;
+  scrollRoot: HTMLDivElement | null;
+  table: TanStackTable<TryoutSetRow>;
+}) {
+  if (data.exhausted) {
+    return null;
+  }
+
+  return (
+    <TableRow aria-hidden="true" className="h-px hover:bg-transparent">
+      <TableCell className="p-0" colSpan={table.getVisibleLeafColumns().length}>
+        <Intersection
+          className="h-px"
+          key={data.loadKey}
+          onIntersect={data.loadMore}
+          root={scrollRoot}
+        />
+      </TableCell>
+    </TableRow>
   );
 }
 
