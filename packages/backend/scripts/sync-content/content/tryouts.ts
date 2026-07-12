@@ -16,6 +16,10 @@ import {
   log,
   logError,
 } from "@repo/backend/scripts/sync-content/cli/logging";
+import {
+  addTryoutCountry,
+  addTryoutRoute,
+} from "@repo/backend/scripts/sync-content/content/tryout/route";
 import { TryoutSyncResultSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
@@ -29,7 +33,6 @@ import {
   type TryoutSyncArgs,
 } from "@repo/backend/scripts/sync-content/tryout/batch";
 import { getTryoutSetQuestionCount } from "@repo/contents/_types/tryout/readiness";
-import type { TryoutRouteKind } from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
@@ -111,11 +114,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
         sourceRevision: source.sourceRevision,
         title: countryTranslation.title,
       };
-      countries.set(`${locale}:${source.countryKey}`, countryRow);
-      addTryoutRoute(routes, {
-        ...countryRow,
-        kind: "tryout-country",
-      });
+      yield* addTryoutCountry(countries, routes, countryRow);
 
       const examRow = {
         countryKey: source.countryKey,
@@ -130,7 +129,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
         title: examTranslation.title,
       };
       exams.push(examRow);
-      addTryoutRoute(routes, {
+      yield* addTryoutRoute(routes, {
         ...examRow,
         kind: "tryout-exam",
       });
@@ -180,7 +179,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
           };
           sets.push(setRow);
           trackSets.push(setRow);
-          addTryoutRoute(routes, {
+          yield* addTryoutRoute(routes, {
             ...setRow,
             kind: "tryout-set",
           });
@@ -231,7 +230,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
               visibility: section.visibility,
             });
             if (publicPath) {
-              addTryoutRoute(routes, {
+              yield* addTryoutRoute(routes, {
                 description: sectionTranslation.description,
                 isReady: setRow.isReady,
                 kind: "tryout-section",
@@ -282,7 +281,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
           trackKind: track.kind,
         };
         tracks.push(trackRow);
-        addTryoutRoute(routes, {
+        yield* addTryoutRoute(routes, {
           ...trackRow,
           kind: "tryout-track",
         });
@@ -301,57 +300,6 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
     tracks,
   };
 });
-
-/** Adds one source-owned route reconciliation instruction. */
-function addTryoutRoute(
-  routes: Map<string, SyncedTryoutRoute>,
-  source: {
-    description?: string;
-    isReady?: boolean;
-    kind: TryoutRouteKind;
-    locale: Locale;
-    publicPath: string;
-    sourceRevision: string;
-    title: string;
-  }
-) {
-  const sourcePath = source.publicPath;
-  const row = {
-    contentHash: createTryoutRouteHash({ ...source, sourcePath }),
-    description: source.description,
-    isReady: source.isReady !== false,
-    kind: source.kind,
-    locale: source.locale,
-    publicPath: source.publicPath,
-    sourcePath,
-    title: source.title,
-  };
-
-  routes.set(`${row.locale}:${row.publicPath}`, row);
-}
-
-/** Hash every source-owned field that determines a projected try-out route. */
-function createTryoutRouteHash(source: {
-  description?: string;
-  kind: TryoutRouteKind;
-  locale: Locale;
-  publicPath: string;
-  sourcePath: string;
-  sourceRevision: string;
-  title: string;
-}) {
-  return computeHash(
-    JSON.stringify({
-      description: source.description,
-      kind: source.kind,
-      locale: source.locale,
-      publicPath: source.publicPath,
-      sourcePath: source.sourcePath,
-      sourceRevision: source.sourceRevision,
-      title: source.title,
-    })
-  );
-}
 
 const readSectionQuestions = Effect.fn("sync.readSectionQuestions")(
   function* (source: {

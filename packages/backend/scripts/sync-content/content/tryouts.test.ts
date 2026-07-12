@@ -9,7 +9,45 @@ const config: ConvexConfig = {
 };
 
 /** Builds one staged or ready try-out source for route projection tests. */
-function createTryoutSource(ready: boolean) {
+function createTryoutSource(ready: boolean, duplicateTrack = false) {
+  const track = {
+    key: "mathematics",
+    kind: "subject",
+    order: 1,
+    routeSlugs: { en: "mathematics", id: "matematika" },
+    sets: [
+      {
+        key: "set-1",
+        order: 1,
+        routeSlugs: { en: "set-1", id: "set-1" },
+        sections: [
+          {
+            key: "mathematics",
+            order: 1,
+            questionCount: ready ? 1 : 0,
+            questionSourcePath:
+              "question-bank/tryout/indonesia/tka/mathematics/set-1",
+            routeSlugs: { en: "mathematics", id: "matematika" },
+            timeLimitSeconds: 3600,
+            translations: {
+              en: { title: "Mathematics" },
+              id: { title: "Matematika" },
+            },
+            visibility: "visible",
+          },
+        ],
+        translations: {
+          en: { title: "Set 1" },
+          id: { title: "Set 1" },
+        },
+      },
+    ],
+    translations: {
+      en: { title: "Mathematics" },
+      id: { title: "Matematika" },
+    },
+  };
+
   return {
     countryCode: "ID",
     countryKey: "indonesia",
@@ -26,51 +64,47 @@ function createTryoutSource(ready: boolean) {
     },
     scoringStrategy: "raw",
     sourceRevision: "2026-07-10",
-    tracks: [
-      {
-        key: "mathematics",
-        kind: "subject",
-        order: 1,
-        routeSlugs: { en: "mathematics", id: "matematika" },
-        sets: [
+    tracks: duplicateTrack
+      ? [
+          track,
           {
-            key: "set-1",
-            order: 1,
-            routeSlugs: { en: "set-1", id: "set-1" },
-            sections: [
-              {
-                key: "mathematics",
-                order: 1,
-                questionCount: ready ? 1 : 0,
-                questionSourcePath:
-                  "question-bank/tryout/indonesia/tka/mathematics/set-1",
-                routeSlugs: { en: "mathematics", id: "matematika" },
-                timeLimitSeconds: 3600,
-                translations: {
-                  en: { title: "Mathematics" },
-                  id: { title: "Matematika" },
-                },
-                visibility: "visible",
-              },
-            ],
+            ...track,
+            key: "advanced-mathematics",
+            sets: [],
             translations: {
-              en: { title: "Set 1" },
-              id: { title: "Set 1" },
+              en: { title: "Advanced Mathematics" },
+              id: { title: "Matematika Lanjut" },
             },
           },
-        ],
-        translations: {
-          en: { title: "Mathematics" },
-          id: { title: "Matematika" },
-        },
-      },
-    ],
+        ]
+      : [track],
   };
 }
 
 /** Loads the try-out sync boundary with source and Convex IO fixtures. */
-async function loadTryoutSync(ready: boolean) {
+async function loadTryoutSync(
+  ready: boolean,
+  duplicateTrack = false,
+  sharedCountry = false
+) {
   const calls: TryoutSyncArgs[] = [];
+  const source = createTryoutSource(ready, duplicateTrack);
+  const sources = sharedCountry
+    ? [
+        source,
+        {
+          ...source,
+          examKey: "snbt",
+          examRouteSlugs: { en: "snbt", id: "snbt" },
+          examTranslations: {
+            en: { title: "SNBT" },
+            id: { title: "SNBT" },
+          },
+          sourceRevision: "2026-07-11",
+          tracks: [],
+        },
+      ]
+    : [source];
 
   vi.doMock("@repo/backend/scripts/sync-content/convex/client", () => ({
     callConvexMutation: (
@@ -113,7 +147,7 @@ async function loadTryoutSync(ready: boolean) {
       }),
   }));
   vi.doMock("@repo/contents/_types/tryout/source", () => ({
-    TRYOUT_SOURCES: [createTryoutSource(ready)],
+    TRYOUT_SOURCES: sources,
   }));
 
   const tryouts = await import(
@@ -170,5 +204,39 @@ describe("syncTryouts", () => {
         .map((route) => route.kind)
         .sort()
     ).toEqual(cleanupKinds);
+  });
+
+  it("rejects duplicate localized routes before the first mutation", async () => {
+    const { calls, tryouts } = await loadTryoutSync(true, true);
+
+    const error = await Effect.runPromise(
+      tryouts
+        .syncTryouts(config, { locale: "id", quiet: true })
+        .pipe(Effect.flip)
+    );
+
+    expect(error).toEqual(
+      expect.objectContaining({
+        _tag: "ScriptFailureError",
+        message:
+          "Duplicate try-out route: id:try-out/indonesia/tka/matematika.",
+      })
+    );
+    expect(calls).toEqual([]);
+  });
+
+  it("projects a shared country once across independent exam sources", async () => {
+    const { calls, tryouts } = await loadTryoutSync(true, false, true);
+
+    await Effect.runPromise(
+      tryouts.syncTryouts(config, { locale: "id", quiet: true })
+    );
+
+    expect(calls.flatMap((call) => call.countries)).toHaveLength(1);
+    expect(
+      calls
+        .flatMap((call) => call.routes)
+        .filter((route) => route.kind === "tryout-country")
+    ).toHaveLength(1);
   });
 });
