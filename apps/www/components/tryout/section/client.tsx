@@ -10,7 +10,7 @@ import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
 } from "@/components/tryout/content/load";
-import { TryoutReviewRefresh } from "@/components/tryout/content/refresh.client";
+import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
@@ -65,10 +65,7 @@ export function TryoutSectionPageClient({
     trackKey: page.set.trackKey,
   };
   const attempt = useQuery(api.tryouts.queries.attempt.getCurrent, runtimeArgs);
-  const runtime = useQuery(
-    api.tryouts.queries.attempt.getSectionRuntime,
-    runtimeArgs
-  );
+  const runtime = useQuery(api.tryouts.queries.runtime.getSection, runtimeArgs);
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
   const now = useTryoutClock(
@@ -101,7 +98,7 @@ export function TryoutSectionPageClient({
   }
 
   if (runtimeState.kind !== "none" && content.questions.length === 0) {
-    return null;
+    return <TryoutContentRefresh />;
   }
 
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
@@ -217,7 +214,7 @@ function TryoutSectionBody({
 
   if (value.runtimeState.kind === "review") {
     if (value.content.answers.length === 0) {
-      return <TryoutReviewRefresh />;
+      return <TryoutContentRefresh />;
     }
 
     return (

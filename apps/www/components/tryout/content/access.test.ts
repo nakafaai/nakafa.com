@@ -2,7 +2,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { canReadTryoutAnswers } from "@/components/tryout/content/review";
+import { readTryoutContentAccess } from "@/components/tryout/content/access";
 
 vi.mock("server-only", () => ({}));
 vi.mock("convex/nextjs", () => ({ fetchQuery: vi.fn() }));
@@ -16,19 +16,22 @@ const args = {
   trackKey: "2027",
 };
 
-describe("tryout review server access", () => {
+describe("tryout server content access", () => {
   beforeEach(() => {
     vi.mocked(fetchQuery).mockReset();
   });
 
-  it("passes the request token to the review authorization query", async () => {
-    vi.mocked(fetchQuery).mockResolvedValue(true);
+  it("passes the request token to the content authorization query", async () => {
+    vi.mocked(fetchQuery).mockResolvedValue({
+      answers: false,
+      questions: true,
+    });
 
     await expect(
-      Effect.runPromise(canReadTryoutAnswers("request-token", args))
-    ).resolves.toBe(true);
+      Effect.runPromise(readTryoutContentAccess("request-token", args))
+    ).resolves.toEqual({ answers: false, questions: true });
     expect(fetchQuery).toHaveBeenCalledWith(
-      api.tryouts.queries.review.canReadSection,
+      api.tryouts.queries.access.getSectionContent,
       args,
       { token: "request-token" }
     );
@@ -39,12 +42,12 @@ describe("tryout review server access", () => {
 
     await expect(
       Effect.runPromise(
-        canReadTryoutAnswers("request-token", args).pipe(Effect.flip)
+        readTryoutContentAccess("request-token", args).pipe(Effect.flip)
       )
     ).resolves.toEqual(
       expect.objectContaining({
-        _tag: "TryoutReviewAccessError",
-        message: "Unable to authorize try-out answer review.",
+        _tag: "TryoutContentAccessError",
+        message: "Unable to authorize try-out content.",
       })
     );
   });

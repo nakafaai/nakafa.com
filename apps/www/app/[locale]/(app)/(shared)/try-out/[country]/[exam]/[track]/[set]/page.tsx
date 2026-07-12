@@ -2,12 +2,13 @@ import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { readTryoutSetPage } from "@/components/tryout/catalog/server";
+import { readTryoutContentAccess } from "@/components/tryout/content/access";
 import {
   loadTryoutAnswerContent,
   loadTryoutQuestionContent,
   type TryoutAnswerContent,
+  type TryoutQuestionContent,
 } from "@/components/tryout/content/load";
-import { canReadTryoutAnswers } from "@/components/tryout/content/review";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import { getToken } from "@/lib/auth/server";
@@ -70,16 +71,12 @@ async function TryoutSetRoute({
     notFound();
   }
 
-  const questionsPromise = loadTryoutQuestionContent({
-    locale,
-    questions: page.entryQuestions,
-  });
   const entrySection = page.entrySection;
-  let canReview = false;
+  let contentAccess = { answers: false, questions: false };
 
   if (token && entrySection?.visibility === "internal-entry") {
-    canReview = await Effect.runPromise(
-      canReadTryoutAnswers(token, {
+    contentAccess = await Effect.runPromise(
+      readTryoutContentAccess(token, {
         countryKey: page.set.countryKey,
         examKey: page.set.examKey,
         locale,
@@ -90,15 +87,23 @@ async function TryoutSetRoute({
     );
   }
 
-  const questions = await questionsPromise;
-
-  if (!questions) {
-    notFound();
-  }
-
+  let questions: readonly TryoutQuestionContent[] = [];
   let answers: readonly TryoutAnswerContent[] = [];
 
-  if (canReview) {
+  if (contentAccess.questions) {
+    const questionContent = await loadTryoutQuestionContent({
+      locale,
+      questions: page.entryQuestions,
+    });
+
+    if (!questionContent) {
+      notFound();
+    }
+
+    questions = questionContent;
+  }
+
+  if (contentAccess.answers) {
     const answerContent = await loadTryoutAnswerContent({
       locale,
       questions: page.entryQuestions,

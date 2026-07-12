@@ -3,7 +3,7 @@ import type { FunctionReturnType } from "convex/server";
 
 /** Runtime data returned by the active try-out section query. */
 export type TryoutSectionRuntime = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.attempt.getSectionRuntime>
+  FunctionReturnType<typeof api.tryouts.queries.runtime.getSection>
 >;
 
 /** One ordered question in an active try-out section runtime. */

@@ -3,8 +3,8 @@
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useEffect, useRef } from "react";
 
-/** Refreshes one stale prefetched route once Convex publishes review access. */
-export function TryoutReviewRefresh() {
+/** Refreshes one stale prefetched route once Convex publishes content access. */
+export function TryoutContentRefresh() {
   const router = useRouter();
   const hasRefreshed = useRef(false);
 

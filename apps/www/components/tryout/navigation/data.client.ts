@@ -60,7 +60,7 @@ export function useTryoutDataIntent() {
               ...intent.directEntry,
               locale: intent.locale,
             },
-            query: api.tryouts.queries.attempt.getSectionRuntime,
+            query: api.tryouts.queries.runtime.getSection,
           });
         }
         return true;
@@ -81,7 +81,7 @@ export function useTryoutDataIntent() {
       });
       convex.prewarmQuery({
         args,
-        query: api.tryouts.queries.attempt.getSectionRuntime,
+        query: api.tryouts.queries.runtime.getSection,
       });
       return true;
     },

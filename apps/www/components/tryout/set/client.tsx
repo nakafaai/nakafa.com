@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
-import { TryoutReviewRefresh } from "@/components/tryout/content/refresh.client";
+import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import {
   getTryoutHref,
   getTryoutPublicPathHref,
@@ -47,7 +47,7 @@ export function TryoutSetPageClient({
   const shouldLoadRuntime =
     isInternalEntry && currentAttempt !== undefined && currentAttempt !== null;
   const runtime = useQuery(
-    api.tryouts.queries.attempt.getSectionRuntime,
+    api.tryouts.queries.runtime.getSection,
     shouldLoadRuntime && entrySection
       ? {
           countryKey: page.set.countryKey,
@@ -137,14 +137,14 @@ function TryoutInternalSet({
     runtimeState.kind !== "none" &&
     value.content.entryQuestions.length === 0
   ) {
-    return null;
+    return <TryoutContentRefresh />;
   }
 
   if (
     runtimeState.kind === "review" &&
     value.content.entryAnswers.length === 0
   ) {
-    return <TryoutReviewRefresh />;
+    return <TryoutContentRefresh />;
   }
 
   return (

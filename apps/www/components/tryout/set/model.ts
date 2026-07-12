@@ -23,7 +23,7 @@ export type CurrentAttempt = FunctionReturnType<
 
 /** Loaded section runtime payload after null checks. */
 export type LoadedRuntime = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.attempt.getSectionRuntime>
+  FunctionReturnType<typeof api.tryouts.queries.runtime.getSection>
 >;
 
 /** Static MDX content needed by a direct-entry runtime. */

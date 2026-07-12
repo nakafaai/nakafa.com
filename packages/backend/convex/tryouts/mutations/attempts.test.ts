@@ -263,7 +263,7 @@ describe("tryouts/mutations/attempts", () => {
     });
 
     const sectionRuntime = await authed.query(
-      api.tryouts.queries.attempt.getSectionRuntime,
+      api.tryouts.queries.runtime.getSection,
       {
         countryKey: COUNTRY,
         examKey: EXAM,

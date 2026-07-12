@@ -39,7 +39,7 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
     api.tryouts.mutations.attempts.saveResponse
   ).withOptimisticUpdate((localStore, args) => {
     const runtimeQueries = localStore.getAllQueries(
-      api.tryouts.queries.attempt.getSectionRuntime
+      api.tryouts.queries.runtime.getSection
     );
 
     for (const runtimeQuery of runtimeQueries) {
@@ -51,7 +51,7 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
 
       if (nextRuntime) {
         localStore.setQuery(
-          api.tryouts.queries.attempt.getSectionRuntime,
+          api.tryouts.queries.runtime.getSection,
           runtimeQuery.args,
           nextRuntime
         );

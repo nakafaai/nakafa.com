@@ -14,7 +14,7 @@ import {
 } from "@repo/backend/test/tryouts";
 import { describe, expect, it } from "vitest";
 
-const reviewArgs = {
+const contentArgs = {
   countryKey: "indonesia",
   examKey: "snbt",
   locale: "id" as const,
@@ -36,8 +36,8 @@ function getEndReason(status: TryoutStatus) {
   return "submitted" as const;
 }
 
-/** Inserts one attempt and section state used by the review authorization query. */
-async function seedReviewState(
+/** Inserts one attempt and section state used by the content access query. */
+async function seedContentState(
   ctx: MutationCtx,
   args: {
     attemptStatus: TryoutStatus;
@@ -94,13 +94,13 @@ async function seedReviewState(
   return { identity, sectionAttemptId };
 }
 
-describe("tryouts/queries/review", () => {
-  it("rejects anonymous review access", async () => {
+describe("tryouts/queries/access", () => {
+  it("rejects anonymous content access", async () => {
     const t = createConvexTestWithBetterAuth();
 
     expect(
-      await t.query(api.tryouts.queries.review.canReadSection, reviewArgs)
-    ).toBe(false);
+      await t.query(api.tryouts.queries.access.getSectionContent, contentArgs)
+    ).toEqual({ answers: false, questions: false });
   });
 
   it("rejects access when the active set does not exist", async () => {
@@ -108,7 +108,7 @@ describe("tryouts/queries/review", () => {
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: TRYOUT_TEST_NOW,
-        suffix: "review-missing-set",
+        suffix: "content-missing-set",
       })
     );
     const authed = t.withIdentity({
@@ -117,8 +117,11 @@ describe("tryouts/queries/review", () => {
     });
 
     expect(
-      await authed.query(api.tryouts.queries.review.canReadSection, reviewArgs)
-    ).toBe(false);
+      await authed.query(
+        api.tryouts.queries.access.getSectionContent,
+        contentArgs
+      )
+    ).toEqual({ answers: false, questions: false });
   });
 
   it("rejects access when the user has no attempt", async () => {
@@ -126,7 +129,7 @@ describe("tryouts/queries/review", () => {
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
         now: TRYOUT_TEST_NOW,
-        suffix: "review-missing-attempt",
+        suffix: "content-missing-attempt",
       });
       await insertTryoutSet(ctx);
 
@@ -138,17 +141,20 @@ describe("tryouts/queries/review", () => {
     });
 
     expect(
-      await authed.query(api.tryouts.queries.review.canReadSection, reviewArgs)
-    ).toBe(false);
+      await authed.query(
+        api.tryouts.queries.access.getSectionContent,
+        contentArgs
+      )
+    ).toEqual({ answers: false, questions: false });
   });
 
   it("rejects access when the terminal attempt has no section", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedReviewState(ctx, {
+      const fixture = await seedContentState(ctx, {
         attemptStatus: "completed",
         sectionStatus: "completed",
-        suffix: "review-missing-section",
+        suffix: "content-missing-section",
       });
       await ctx.db.delete(fixture.sectionAttemptId);
 
@@ -160,22 +166,26 @@ describe("tryouts/queries/review", () => {
     });
 
     expect(
-      await authed.query(api.tryouts.queries.review.canReadSection, reviewArgs)
-    ).toBe(false);
+      await authed.query(
+        api.tryouts.queries.access.getSectionContent,
+        contentArgs
+      )
+    ).toEqual({ answers: false, questions: false });
   });
 
   it.each([
-    ["in-progress", "in-progress", false],
-    ["in-progress", "completed", false],
-    ["completed", "completed", true],
-    ["expired", "expired", true],
-  ] as const)("authorizes attempt=%s section=%s as %s", async (attemptStatus, sectionStatus, expected) => {
+    ["in-progress", "in-progress", { answers: false, questions: true }],
+    ["in-progress", "completed", { answers: false, questions: false }],
+    ["completed", "in-progress", { answers: false, questions: false }],
+    ["completed", "completed", { answers: true, questions: true }],
+    ["expired", "expired", { answers: true, questions: true }],
+  ] as const)("authorizes attempt=%s section=%s", async (attemptStatus, sectionStatus, expected) => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation((ctx) =>
-      seedReviewState(ctx, {
+      seedContentState(ctx, {
         attemptStatus,
         sectionStatus,
-        suffix: `review-${attemptStatus}-${sectionStatus}`,
+        suffix: `content-${attemptStatus}-${sectionStatus}`,
       })
     );
     const authed = t.withIdentity({
@@ -184,7 +194,10 @@ describe("tryouts/queries/review", () => {
     });
 
     expect(
-      await authed.query(api.tryouts.queries.review.canReadSection, reviewArgs)
-    ).toBe(expected);
+      await authed.query(
+        api.tryouts.queries.access.getSectionContent,
+        contentArgs
+      )
+    ).toEqual(expected);
   });
 });

@@ -2,11 +2,16 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
+import {
+  getTryoutSectionContentAccess,
+  tryoutSectionContentAccessValidator,
+} from "@repo/backend/convex/tryouts/runtime/content";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
-import { v } from "convex/values";
 
-/** Authorizes answer content only after both the attempt and section terminate. */
-export const canReadSection = query({
+const noContentAccess = { answers: false, questions: false };
+
+/** Authorizes server-rendered content for the current user's owned runtime. */
+export const getSectionContent = query({
   args: {
     countryKey: tryoutRouteKeyValidator,
     examKey: tryoutRouteKeyValidator,
@@ -15,18 +20,18 @@ export const canReadSection = query({
     setKey: tryoutRouteKeyValidator,
     trackKey: tryoutRouteKeyValidator,
   },
-  returns: v.boolean(),
+  returns: tryoutSectionContentAccessValidator,
   handler: async (ctx, args) => {
     const auth = await getOptionalAppUser(ctx);
 
     if (!auth) {
-      return false;
+      return noContentAccess;
     }
 
     const set = await getActiveTryoutSet(ctx, args);
 
     if (!set) {
-      return false;
+      return noContentAccess;
     }
 
     const attempt = await ctx.db
@@ -37,8 +42,8 @@ export const canReadSection = query({
       .order("desc")
       .first();
 
-    if (!attempt || attempt.status === "in-progress") {
-      return false;
+    if (!attempt) {
+      return noContentAccess;
     }
 
     const section = await ctx.db
@@ -49,9 +54,9 @@ export const canReadSection = query({
       .unique();
 
     if (!section) {
-      return false;
+      return noContentAccess;
     }
 
-    return section.status !== "in-progress";
+    return getTryoutSectionContentAccess(attempt.status, section.status);
   },
 });
