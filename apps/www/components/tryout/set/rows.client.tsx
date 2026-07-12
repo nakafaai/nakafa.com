@@ -11,6 +11,9 @@ import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 type SetPageQuery = typeof api.tryouts.queries.catalog.getSetPage;
 type SetPage = NonNullable<FunctionReturnType<SetPageQuery>>;
 type SetSection = SetPage["sections"][number];
+type SectionStatus = NonNullable<
+  FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>
+>["status"];
 
 export interface TryoutSectionRowsValue {
   attempt?: FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>;
@@ -30,6 +33,7 @@ export function TryoutSectionRows({
   const prewarmData = useTryoutDataIntent();
   const activeAttempt =
     value.attempt?.status === "in-progress" ? value.attempt : null;
+  const activeSectionKey = activeAttempt?.activeSectionKey ?? null;
   const completedSections = new Set(activeAttempt?.completedSectionKeys ?? []);
   const currentSectionKey = activeAttempt?.resumeSectionKey ?? null;
 
@@ -57,9 +61,11 @@ export function TryoutSectionRows({
                 setKey: value.set.setKey,
                 trackKey: value.set.trackKey,
               }),
-            status: completedSections.has(section.sectionKey)
-              ? "completed"
-              : undefined,
+            status: getSectionStatus({
+              activeSectionKey,
+              completedSections,
+              sectionKey: section.sectionKey,
+            }),
             title: section.title,
             visual: {
               icon: getMaterialIcon(section.sectionKey),
@@ -71,4 +77,25 @@ export function TryoutSectionRows({
       })}
     />
   );
+}
+
+/** Resolves one nested section's canonical workflow status. */
+function getSectionStatus({
+  activeSectionKey,
+  completedSections,
+  sectionKey,
+}: {
+  activeSectionKey: string | null;
+  completedSections: ReadonlySet<string>;
+  sectionKey: string;
+}): SectionStatus | undefined {
+  if (sectionKey === activeSectionKey) {
+    return "in-progress";
+  }
+
+  if (completedSections.has(sectionKey)) {
+    return "completed";
+  }
+
+  return;
 }

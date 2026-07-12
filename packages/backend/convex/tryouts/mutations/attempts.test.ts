@@ -251,6 +251,9 @@ describe("tryouts/mutations/attempts", () => {
       trackKey: TRACK,
     });
 
+    expect(current).toMatchObject({
+      activeSectionKey: SECTION,
+    });
     expect(current?.section).toMatchObject({
       sectionKey: SECTION,
       status: "in-progress",

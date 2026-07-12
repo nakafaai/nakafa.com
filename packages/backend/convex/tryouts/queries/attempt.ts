@@ -25,6 +25,7 @@ const currentSectionValidator = v.object({
 });
 
 const currentAttemptValidator = v.object({
+  activeSectionKey: v.union(tryoutRouteKeyValidator, v.null()),
   attemptId: v.id("tryoutAttempts"),
   attemptNumber: v.number(),
   completedSectionKeys: v.array(tryoutRouteKeyValidator),
@@ -163,6 +164,7 @@ async function loadCurrentAttempt(
     : nextSection;
 
   return {
+    activeSectionKey: inProgressSection?.sectionKey ?? null,
     attemptId: attempt._id,
     attemptNumber: attempt.attemptNumber,
     completedSectionKeys: attempt.completedSectionKeys,
