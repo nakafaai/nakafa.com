@@ -32,7 +32,7 @@ export function createTryoutSetColumns({
         <NavigationLink
           className="block truncate underline-offset-4 hover:underline"
           href={getTryoutPublicPathHref(row.original.publicPath)}
-          prefetch={intent.setKey === row.original.setKey}
+          prefetch={intent.setKey === row.original.setKey ? null : false}
         >
           {row.original.title}
         </NavigationLink>

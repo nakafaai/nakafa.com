@@ -57,7 +57,7 @@ export function TryoutIntentLink({
       onFocus={handleFocus}
       onPointerEnter={handlePointerEnter}
       onTouchStart={handleTouchStart}
-      prefetch={shouldPrefetch}
+      prefetch={shouldPrefetch ? null : false}
     />
   );
 }
