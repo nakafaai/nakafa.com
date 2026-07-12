@@ -153,7 +153,7 @@ export function TryoutSetTable({
       >
         <div className="min-h-0 flex-1 overflow-auto" ref={setScrollRoot}>
           <Table
-            className="min-w-[30rem] table-fixed"
+            className="min-w-136 table-fixed"
             containerClassName="overflow-visible"
           >
             <TableHeader className="sticky top-0 z-10 bg-background">
@@ -236,12 +236,16 @@ function TryoutTableLoader({
 /** Return responsive widths for each stable try-out table column. */
 function getColumnWidthClassName(columnId: string) {
   if (columnId === "title") {
-    return "w-[44%] sm:w-1/2";
+    return "w-[30%] sm:w-[40%]";
   }
 
   if (columnId === "readyQuestionCount") {
-    return "w-[22%] sm:w-1/5";
+    return "w-[16%]";
   }
 
-  return "w-[34%] sm:w-[30%]";
+  if (columnId === "publishedScore") {
+    return "w-[16%]";
+  }
+
+  return "w-[38%] sm:w-[28%]";
 }

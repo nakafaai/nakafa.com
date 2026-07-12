@@ -1,8 +1,8 @@
 "use client";
 
 import {
+  Award02Icon,
   Certificate02Icon,
-  CheckmarkCircle02Icon,
   Compass01Icon,
 } from "@hugeicons/core-free-icons";
 import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/schema";
@@ -37,8 +37,8 @@ export function TryoutScoreStatus({
   }
 
   return (
-    <Badge variant="secondary">
-      <HugeIcons icon={CheckmarkCircle02Icon} />
+    <Badge variant="default">
+      <HugeIcons icon={Award02Icon} />
       {tTryouts("score-status-official")}
     </Badge>
   );

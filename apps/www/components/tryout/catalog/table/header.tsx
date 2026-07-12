@@ -51,6 +51,13 @@ const statusFilters = [
 
 type TryoutSetSortColumnLabel = keyof typeof sortLabelKeys;
 
+/** Renders the localized non-interactive score column label. */
+export function TryoutSetScoreHeader() {
+  const tTryouts = useTranslations("Tryouts");
+
+  return <span>{tTryouts("set-column-score")}</span>;
+}
+
 /** Resolve a compact icon for an inactive, ascending, or descending sort. */
 function getSortIcon(direction: false | "asc" | "desc") {
   if (direction === "asc") {

@@ -3,6 +3,7 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import {
+  TryoutSetScoreHeader,
   TryoutSetSortHeader,
   TryoutSetStatusHeader,
 } from "@/components/tryout/catalog/table/header";
@@ -57,6 +58,15 @@ export function createTryoutSetColumns({
       ),
     },
     {
+      accessorKey: "publishedScore",
+      cell: ({ row }) => (
+        <TryoutSetScoreCell score={row.original.publishedScore} />
+      ),
+      enableColumnFilter: false,
+      enableSorting: false,
+      header: () => <TryoutSetScoreHeader />,
+    },
+    {
       accessorKey: "attemptStatus",
       cell: ({ row }) => <TryoutStatus status={row.original.attemptStatus} />,
       enableSorting: false,
@@ -65,6 +75,15 @@ export function createTryoutSetColumns({
       ),
     },
   ];
+}
+
+/** Renders a persisted score or an intentionally empty unscored cell. */
+function TryoutSetScoreCell({ score }: { score: number | null }) {
+  if (score === null) {
+    return null;
+  }
+
+  return <span className="tabular-nums">{score}</span>;
 }
 
 /** Read the active direction for one controlled table column. */
