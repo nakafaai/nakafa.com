@@ -6,8 +6,14 @@ import {
   getAttemptStatusFromEndReason,
 } from "@repo/backend/convex/lib/attempts";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
-import { scoreIrtAttempt } from "@repo/backend/convex/tryouts/runtime/irt";
-import type { AttemptScore } from "@repo/backend/convex/tryouts/runtime/result";
+import {
+  scoreIrtAttempt,
+  scoreIrtSection,
+} from "@repo/backend/convex/tryouts/runtime/irt";
+import {
+  type AttemptScore,
+  scoreRawAnswers,
+} from "@repo/backend/convex/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
 
@@ -40,6 +46,34 @@ export function summarizeResponses(responses: TryoutResponse[]) {
     }),
     { answeredCount: 0, correctAnswers: 0 }
   );
+}
+
+/** Scores one terminal section with its parent attempt's frozen strategy. */
+export async function scoreTryoutSection(
+  ctx: MutationCtx,
+  args: {
+    attempt: TryoutAttempt;
+    responses: TryoutResponse[];
+    totalQuestions: number;
+    tryoutSectionId: Id<"tryoutSections">;
+  }
+) {
+  if (args.attempt.scoringStrategy === "irt") {
+    const score = await scoreIrtSection(ctx, {
+      ...args,
+      scoringStrategy: args.attempt.scoringStrategy,
+    });
+
+    return score;
+  }
+
+  const { correctAnswers } = summarizeResponses(args.responses);
+
+  return scoreRawAnswers({
+    correctAnswers,
+    scoringStrategy: args.attempt.scoringStrategy,
+    totalQuestions: args.totalQuestions,
+  });
 }
 
 /** Finalizes one attempt and stores the score snapshot exactly once. */
@@ -173,19 +207,12 @@ function scoreRawAttempt(args: {
   scoringStrategy: TryoutScoringStrategy;
 }): AttemptScore {
   const { correctAnswers } = summarizeResponses(args.responses);
-  const publishedScore = getRawPercentage(
-    correctAnswers,
-    args.attempt.totalQuestions
-  );
 
-  return {
-    publishedScore,
-    rawScore: publishedScore,
-    scoreStatus: "official",
+  return scoreRawAnswers({
+    correctAnswers,
     scoringStrategy: args.scoringStrategy,
-    totalCorrect: correctAnswers,
     totalQuestions: args.attempt.totalQuestions,
-  };
+  });
 }
 
 /** Inserts the public score snapshot without undefined optional fields. */
@@ -228,13 +255,4 @@ function insertAttemptScore(
   }
 
   return ctx.db.insert("tryoutScores", score);
-}
-
-/** Converts raw correctness into the public percentage score. */
-function getRawPercentage(correctAnswers: number, totalQuestions: number) {
-  if (totalQuestions === 0) {
-    return 0;
-  }
-
-  return Math.round((correctAnswers / totalQuestions) * 100);
 }

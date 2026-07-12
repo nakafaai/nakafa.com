@@ -26,14 +26,24 @@ export type TryoutScoringStrategy = Infer<
   typeof tryoutScoringStrategyValidator
 >;
 
-export const tryoutPublicResultStatusValidator = literals(
-  "estimated",
-  "verified-irt",
-  "final-event"
-);
-export type TryoutPublicResultStatus = Infer<
-  typeof tryoutPublicResultStatusValidator
->;
+const tryoutScoreValueValidators = {
+  publishedScore: v.number(),
+  rawScore: v.number(),
+  scoreStatus: tryoutScoreStatusValidator,
+  scoringStrategy: tryoutScoringStrategyValidator,
+  theta: v.optional(v.number()),
+  thetaSE: v.optional(v.number()),
+};
+
+export const tryoutSectionScoreValidator = v.object(tryoutScoreValueValidators);
+export type TryoutSectionScore = Infer<typeof tryoutSectionScoreValidator>;
+
+export const tryoutScoreResultValidator = v.object({
+  ...tryoutScoreValueValidators,
+  totalCorrect: v.number(),
+  totalQuestions: v.number(),
+});
+export type TryoutScoreResult = Infer<typeof tryoutScoreResultValidator>;
 
 export const tryoutRouteKeyValidator = v.string();
 export type TryoutRouteKey = Infer<typeof tryoutRouteKeyValidator>;
@@ -318,8 +328,7 @@ const tables = {
     totalQuestions: v.number(),
     answeredCount: v.number(),
     correctAnswers: v.number(),
-    theta: v.optional(v.number()),
-    thetaSE: v.optional(v.number()),
+    score: v.optional(tryoutSectionScoreValidator),
   })
     .index("by_tryoutAttemptId_and_sectionOrder", [
       "tryoutAttemptId",
