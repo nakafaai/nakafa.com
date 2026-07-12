@@ -22,7 +22,7 @@ import {
 } from "@tanstack/react-table";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
 import { readTryoutSetStatusFilter } from "@/components/tryout/catalog/table/filter";
@@ -50,16 +50,15 @@ export function TryoutSetTable({
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [intentSetKey, setIntentSetKey] = useState<string | null>(null);
+  const warmedPaths = useRef(new Set<string>());
   const statusFilter = readTryoutSetStatusFilter(columnFilters);
   const columns = useMemo(
     () =>
       createTryoutSetColumns({
-        intent: { setKey: intentSetKey },
         sorting,
         statusFilter,
       }),
-    [intentSetKey, sorting, statusFilter]
+    [sorting, statusFilter]
   );
   const data = useTryoutSetData({
     locale,
@@ -68,9 +67,15 @@ export function TryoutSetTable({
     sort: readTryoutSetSort(sorting),
   });
 
-  /** Prefetch and prewarm a set after the viewer signals navigation intent. */
+  /** Prewarm a set after the viewer signals navigation intent. */
   function markSetIntent(row: TryoutSetRow) {
-    setIntentSetKey(row.setKey);
+    const pathKey = `${locale}:${row.publicPath}`;
+
+    if (warmedPaths.current.has(pathKey)) {
+      return;
+    }
+
+    warmedPaths.current.add(pathKey);
     prewarmData({
       kind: "set",
       locale,

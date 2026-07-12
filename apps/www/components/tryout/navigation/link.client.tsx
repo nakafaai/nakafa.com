@@ -2,29 +2,35 @@
 
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ComponentProps, FocusEvent, MouseEvent, TouchEvent } from "react";
-import { useState } from "react";
+import { useRef } from "react";
 
 type NavigationLinkProps = ComponentProps<typeof NavigationLink>;
-type TryoutIntentLinkProps = Omit<NavigationLinkProps, "prefetch"> & {
+type TryoutIntentLinkProps = Omit<NavigationLinkProps, "href" | "prefetch"> & {
+  href: string;
   onIntent?: () => void;
 };
 
 /**
- * Fully prefetches one try-out destination only after pointer, keyboard, or
- * touch intent, avoiding eager route and Convex work for every visible item.
+ * Always prefetches the route while warming authenticated destination data
+ * once after pointer, keyboard, or touch intent.
  */
 export function TryoutIntentLink({
+  href,
   onFocus,
   onIntent,
   onMouseEnter,
   onTouchStart,
   ...props
 }: TryoutIntentLinkProps) {
-  const [shouldPrefetch, setShouldPrefetch] = useState(false);
+  const warmedHref = useRef<string | null>(null);
 
-  /** Enable route prefetch and invoke destination-specific data warming. */
+  /** Invoke destination-specific data warming once for the current href. */
   function markIntent() {
-    setShouldPrefetch(true);
+    if (warmedHref.current === href) {
+      return;
+    }
+
+    warmedHref.current = href;
     onIntent?.();
   }
 
@@ -49,10 +55,10 @@ export function TryoutIntentLink({
   return (
     <NavigationLink
       {...props}
+      href={href}
       onFocus={handleFocus}
       onMouseEnter={handleMouseEnter}
       onTouchStart={handleTouchStart}
-      prefetch={shouldPrefetch ? null : false}
     />
   );
 }

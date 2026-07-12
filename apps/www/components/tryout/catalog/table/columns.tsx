@@ -15,13 +15,9 @@ import { TryoutStatusCompact } from "@/components/tryout/status";
 
 /** Builds stable TanStack columns from the table's controlled UI state. */
 export function createTryoutSetColumns({
-  intent,
   sorting,
   statusFilter,
 }: {
-  intent: {
-    setKey: string | null;
-  };
   sorting: SortingState;
   statusFilter: TryoutSetStatusFilter;
 }): ColumnDef<TryoutSetRow>[] {
@@ -32,7 +28,6 @@ export function createTryoutSetColumns({
         <NavigationLink
           className="block truncate underline-offset-4 hover:underline"
           href={getTryoutPublicPathHref(row.original.publicPath)}
-          prefetch={intent.setKey === row.original.setKey ? null : false}
         >
           {row.original.title}
         </NavigationLink>
