@@ -1,6 +1,9 @@
 "use client";
 
-import type { TryoutQuestionContent } from "@/components/tryout/content/load";
+import type {
+  TryoutAnswerContent,
+  TryoutQuestionContent,
+} from "@/components/tryout/content/load";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
 import { TryoutRuntimeQuestion } from "@/components/tryout/runtime/question.client";
@@ -8,6 +11,7 @@ import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
 /** Cohesive render model for one loaded try-out runtime. */
 export interface TryoutRuntimeValue {
+  answers: readonly TryoutAnswerContent[];
   expired: boolean;
   questions: readonly TryoutQuestionContent[];
   returnHref: string;
@@ -16,41 +20,42 @@ export interface TryoutRuntimeValue {
 
 /** Renders the active Convex-backed try-out section runtime. */
 export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
-  const { expired, questions, returnHref, runtime } = value;
+  const { answers, expired, questions, runtime } = value;
   const isActive = runtime.section.status === "in-progress";
-  const remainingSeconds = useRemainingSeconds(runtime.expiresAt, isActive);
-  const contentBySnapshot = new Map(
-    questions.map((question) => [
-      getQuestionContentKey(question),
-      question.content,
-    ])
+  const questionBySnapshot = new Map(
+    questions.map((question) => [getQuestionContentKey(question), question])
   );
-  const runtimeQuestions = runtime.questions.map((question) => ({
-    content: contentBySnapshot.get(getQuestionContentKey(question)) ?? null,
-    question,
-  }));
+  const answerBySnapshot = new Map(
+    answers.map((answer) => [getQuestionContentKey(answer), answer.answer])
+  );
+  const runtimeQuestions = runtime.questions.map((question) => {
+    const key = getQuestionContentKey(question);
+    const content = questionBySnapshot.get(key);
+
+    return {
+      answer: answerBySnapshot.get(key) ?? null,
+      content: content?.content ?? null,
+      question,
+    };
+  });
 
   if (runtimeQuestions.some(({ content }) => content === null)) {
     return null;
   }
 
+  if (!isActive && runtimeQuestions.some(({ answer }) => answer === null)) {
+    return null;
+  }
+
   return (
     <section className="space-y-12">
-      {isActive ? (
-        <TryoutRuntimeControls
-          value={{
-            expired,
-            remainingSeconds,
-            returnHref,
-            runtime,
-          }}
-        />
-      ) : null}
+      <TryoutRuntimeActions value={value} />
 
-      {runtimeQuestions.map(({ content, question }) => (
+      {runtimeQuestions.map(({ answer, content, question }) => (
         <TryoutRuntimeQuestion
           key={question.placementId}
           value={{
+            answer,
             content,
             locked: expired || !isActive,
             question,
@@ -60,6 +65,30 @@ export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
         />
       ))}
     </section>
+  );
+}
+
+/** Renders runtime controls only while the section remains active. */
+function TryoutRuntimeActions({ value }: { value: TryoutRuntimeValue }) {
+  const isActive = value.runtime.section.status === "in-progress";
+  const remainingSeconds = useRemainingSeconds(
+    value.runtime.expiresAt,
+    isActive
+  );
+
+  if (!isActive) {
+    return null;
+  }
+
+  return (
+    <TryoutRuntimeControls
+      value={{
+        expired: value.expired,
+        remainingSeconds,
+        returnHref: value.returnHref,
+        runtime: value.runtime,
+      }}
+    />
   );
 }
 

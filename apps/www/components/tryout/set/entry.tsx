@@ -172,6 +172,7 @@ function TryoutEntryRuntime({ value }: { value: TryoutInternalSetView }) {
   return (
     <TryoutRuntime
       value={{
+        answers: value.content.entryAnswers,
         expired: value.runtimeState.kind !== "active",
         questions: value.content.entryQuestions,
         returnHref: getTryoutHref(value.route),

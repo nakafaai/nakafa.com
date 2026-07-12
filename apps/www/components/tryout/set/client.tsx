@@ -2,6 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
+import { TryoutReviewRefresh } from "@/components/tryout/content/refresh.client";
 import {
   getTryoutHref,
   getTryoutPublicPathHref,
@@ -137,6 +138,13 @@ function TryoutInternalSet({
     value.content.entryQuestions.length === 0
   ) {
     return null;
+  }
+
+  if (
+    runtimeState.kind === "review" &&
+    value.content.entryAnswers.length === 0
+  ) {
+    return <TryoutReviewRefresh />;
   }
 
   return (

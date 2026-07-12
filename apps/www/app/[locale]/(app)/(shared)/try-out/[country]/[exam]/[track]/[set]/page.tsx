@@ -1,9 +1,16 @@
+import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { readTryoutSetPage } from "@/components/tryout/catalog/server";
-import { loadTryoutQuestionContent } from "@/components/tryout/content/load";
+import {
+  loadTryoutAnswerContent,
+  loadTryoutQuestionContent,
+  type TryoutAnswerContent,
+} from "@/components/tryout/content/load";
+import { canReadTryoutAnswers } from "@/components/tryout/content/review";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
+import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export const unstable_instant = {
@@ -54,24 +61,59 @@ async function TryoutSetRoute({
   const locale = getLocaleOrThrow(localeParam);
   const setPath = getTryoutHref({ country, exam, set, track }).slice(1);
 
-  const page = await readTryoutSetPage(locale, setPath);
+  const [page, token] = await Promise.all([
+    readTryoutSetPage(locale, setPath),
+    getToken(),
+  ]);
 
   if (!page) {
     notFound();
   }
 
-  const questions = await loadTryoutQuestionContent({
+  const questionsPromise = loadTryoutQuestionContent({
     locale,
     questions: page.entryQuestions,
   });
+  const entrySection = page.entrySection;
+  let canReview = false;
+
+  if (token && entrySection?.visibility === "internal-entry") {
+    canReview = await Effect.runPromise(
+      canReadTryoutAnswers(token, {
+        countryKey: page.set.countryKey,
+        examKey: page.set.examKey,
+        locale,
+        sectionKey: entrySection.sectionKey,
+        setKey: page.set.setKey,
+        trackKey: page.set.trackKey,
+      })
+    );
+  }
+
+  const questions = await questionsPromise;
 
   if (!questions) {
     notFound();
   }
 
+  let answers: readonly TryoutAnswerContent[] = [];
+
+  if (canReview) {
+    const answerContent = await loadTryoutAnswerContent({
+      locale,
+      questions: page.entryQuestions,
+    });
+
+    if (!answerContent) {
+      notFound();
+    }
+
+    answers = answerContent;
+  }
+
   return (
     <TryoutSetPageClient
-      content={{ entryQuestions: questions }}
+      content={{ entryAnswers: answers, entryQuestions: questions }}
       page={page}
       route={{ country, exam, locale, set, track }}
     />

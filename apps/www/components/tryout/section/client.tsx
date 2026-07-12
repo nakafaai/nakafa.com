@@ -6,15 +6,20 @@ import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
-import type { TryoutQuestionContent } from "@/components/tryout/content/load";
+import type {
+  TryoutAnswerContent,
+  TryoutQuestionContent,
+} from "@/components/tryout/content/load";
+import { TryoutReviewRefresh } from "@/components/tryout/content/refresh.client";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
+  type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
+import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 import {
   getTryoutFinishedSectionDescription,
   getTryoutFinishedSectionStatus,
@@ -26,12 +31,13 @@ import { TryoutMeta } from "@/components/tryout/shell/meta";
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
 
 interface TryoutSectionPageClientProps {
-  content: TryoutSectionContent;
+  content: TryoutSectionAssets;
   page: NonNullable<FunctionReturnType<SectionPageQuery>>;
   route: TryoutSectionRoute;
 }
 
-interface TryoutSectionContent {
+interface TryoutSectionAssets {
+  answers: readonly TryoutAnswerContent[];
   questions: readonly TryoutQuestionContent[];
 }
 
@@ -65,9 +71,8 @@ export function TryoutSectionPageClient({
   );
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
-  const currentAttempt = attempt;
   const now = useTryoutClock(
-    currentAttempt?.status === "in-progress" ||
+    attempt?.status === "in-progress" ||
       runtime?.section.status === "in-progress"
   );
 
@@ -75,6 +80,7 @@ export function TryoutSectionPageClient({
     return null;
   }
 
+  const currentAttempt = attempt;
   const activeAttempt = getActiveTryoutAttempt(currentAttempt ?? null, now);
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
@@ -123,52 +129,6 @@ export function TryoutSectionPageClient({
     status = tTryouts("part-head-ended");
   }
 
-  let sectionContent: ReactNode;
-
-  if (runtimeState.kind === "active" || runtimeState.kind === "pending") {
-    sectionContent = (
-      <TryoutRuntime
-        value={{
-          expired: runtimeState.kind === "pending",
-          questions: content.questions,
-          returnHref: setHref,
-          runtime: runtimeState.runtime,
-        }}
-      />
-    );
-  } else {
-    const summary = (
-      <TryoutVisibleSummary
-        value={{
-          activeAttempt,
-          attempt: actionAttempt,
-          locale: route.locale,
-          page,
-          route,
-          sectionStatus,
-        }}
-      />
-    );
-
-    sectionContent = summary;
-
-    if (runtimeState.kind === "review") {
-      sectionContent = (
-        <>
-          {summary}
-          <TryoutRuntime
-            value={{
-              expired: true,
-              questions: content.questions,
-              returnHref: setHref,
-              runtime: runtimeState.runtime,
-            }}
-          />
-        </>
-      );
-    }
-  }
-
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
@@ -189,8 +149,112 @@ export function TryoutSectionPageClient({
           }}
         />
 
-        <div className="space-y-12">{sectionContent}</div>
+        <div className="space-y-12">
+          <TryoutSectionBody
+            value={{
+              actionAttempt,
+              activeAttempt,
+              content,
+              page,
+              route,
+              runtimeState,
+              sectionStatus,
+              setHref,
+            }}
+          />
+        </div>
       </div>
     </div>
+  );
+}
+
+/** Composes active runtime, terminal summary, and review content explicitly. */
+function TryoutSectionBody({
+  value,
+}: {
+  value: {
+    actionAttempt: FunctionReturnType<
+      typeof api.tryouts.queries.attempt.getCurrent
+    >;
+    activeAttempt: NonNullable<
+      FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>
+    > | null;
+    content: TryoutSectionAssets;
+    page: NonNullable<FunctionReturnType<SectionPageQuery>>;
+    route: TryoutSectionRoute;
+    runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
+    sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
+    setHref: string;
+  };
+}) {
+  if (value.runtimeState.kind === "active") {
+    return (
+      <TryoutRuntime
+        value={{
+          answers: value.content.answers,
+          expired: false,
+          questions: value.content.questions,
+          returnHref: value.setHref,
+          runtime: value.runtimeState.runtime,
+        }}
+      />
+    );
+  }
+
+  if (value.runtimeState.kind === "pending") {
+    return (
+      <TryoutRuntime
+        value={{
+          answers: value.content.answers,
+          expired: true,
+          questions: value.content.questions,
+          returnHref: value.setHref,
+          runtime: value.runtimeState.runtime,
+        }}
+      />
+    );
+  }
+
+  if (value.runtimeState.kind === "review") {
+    if (value.content.answers.length === 0) {
+      return <TryoutReviewRefresh />;
+    }
+
+    return (
+      <>
+        <TryoutVisibleSummary
+          value={{
+            activeAttempt: value.activeAttempt,
+            attempt: value.actionAttempt,
+            locale: value.route.locale,
+            page: value.page,
+            route: value.route,
+            sectionStatus: value.sectionStatus,
+          }}
+        />
+        <TryoutRuntime
+          value={{
+            answers: value.content.answers,
+            expired: true,
+            questions: value.content.questions,
+            returnHref: value.setHref,
+            runtime: value.runtimeState.runtime,
+          }}
+        />
+      </>
+    );
+  }
+
+  return (
+    <TryoutVisibleSummary
+      value={{
+        activeAttempt: value.activeAttempt,
+        attempt: value.actionAttempt,
+        locale: value.route.locale,
+        page: value.page,
+        route: value.route,
+        sectionStatus: value.sectionStatus,
+      }}
+    />
   );
 }

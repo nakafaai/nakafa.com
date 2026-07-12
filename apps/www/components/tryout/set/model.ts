@@ -1,7 +1,10 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
-import type { TryoutQuestionContent } from "@/components/tryout/content/load";
+import type {
+  TryoutAnswerContent,
+  TryoutQuestionContent,
+} from "@/components/tryout/content/load";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 
 /** Convex query contract for the set discovery page. */
@@ -25,6 +28,7 @@ export type LoadedRuntime = NonNullable<
 
 /** Static MDX content needed by a direct-entry runtime. */
 export interface TryoutSetContent {
+  entryAnswers: readonly TryoutAnswerContent[];
   entryQuestions: readonly TryoutQuestionContent[];
 }
 
