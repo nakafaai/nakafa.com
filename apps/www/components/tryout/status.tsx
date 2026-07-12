@@ -95,16 +95,3 @@ export function TryoutStatus({ status }: { status: TryoutStatus }) {
     </Badge>
   );
 }
-
-/** Renders a narrow workflow badge without hiding its accessible label. */
-export function TryoutStatusCompact({ status }: { status: TryoutStatus }) {
-  return (
-    <Badge variant={getStatusVariant(status)}>
-      <TryoutStatusIcon status={status} />
-      <TryoutStatusLabel
-        className="sr-only sm:not-sr-only sm:whitespace-nowrap"
-        status={status}
-      />
-    </Badge>
-  );
-}

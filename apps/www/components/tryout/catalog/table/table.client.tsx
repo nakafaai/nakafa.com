@@ -142,11 +142,11 @@ export function TryoutSetTable({
         aria-busy={data.busy}
         className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border"
       >
-        <div
-          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
-          ref={setScrollRoot}
-        >
-          <Table className="table-fixed" containerClassName="overflow-visible">
+        <div className="min-h-0 flex-1 overflow-auto" ref={setScrollRoot}>
+          <Table
+            className="min-w-[30rem] table-fixed"
+            containerClassName="overflow-visible"
+          >
             <TableHeader className="sticky top-0 z-10 bg-background">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow className="hover:bg-transparent" key={headerGroup.id}>

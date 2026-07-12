@@ -11,7 +11,7 @@ import type {
   TryoutSetStatusFilter,
 } from "@/components/tryout/catalog/table/types";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
-import { TryoutStatusCompact } from "@/components/tryout/status";
+import { TryoutStatus } from "@/components/tryout/status";
 
 /** Builds stable TanStack columns from the table's controlled UI state. */
 export function createTryoutSetColumns({
@@ -58,9 +58,7 @@ export function createTryoutSetColumns({
     },
     {
       accessorKey: "attemptStatus",
-      cell: ({ row }) => (
-        <TryoutStatusCompact status={row.original.attemptStatus} />
-      ),
+      cell: ({ row }) => <TryoutStatus status={row.original.attemptStatus} />,
       enableSorting: false,
       header: ({ column }) => (
         <TryoutSetStatusHeader column={column} statusFilter={statusFilter} />
