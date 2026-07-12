@@ -37,11 +37,17 @@ export interface TryoutSetRoute {
   track: string;
 }
 
+/** Section route and query identity selected for the current set action. */
+export interface TryoutSetDestination {
+  href: string;
+  sectionKey: string;
+}
+
 /** Cohesive render model shared by set overview surfaces. */
 export interface TryoutSetView {
   actionAttempt?: CurrentAttempt;
   activeAttempt: NonNullable<CurrentAttempt> | null;
-  entryHref: string;
+  destination: TryoutSetDestination | null;
   entrySection: SetEntrySection | null;
   page: SetPage;
   route: TryoutSetRoute;

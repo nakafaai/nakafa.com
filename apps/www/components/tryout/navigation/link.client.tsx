@@ -11,8 +11,8 @@ type TryoutIntentLinkProps = Omit<NavigationLinkProps, "href" | "prefetch"> & {
 };
 
 /**
- * Always prefetches the route while warming authenticated destination data
- * once after pointer, keyboard, or touch intent.
+ * Preserves Next's default route prefetch while warming authenticated
+ * destination data once after pointer, keyboard, or touch intent.
  */
 export function TryoutIntentLink({
   href,

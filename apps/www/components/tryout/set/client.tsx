@@ -79,17 +79,19 @@ export function TryoutSetPageClient({
     page.sections.find(
       (sectionItem) => sectionItem.sectionKey === resumeSectionKey
     ) ?? entrySection;
-  const setHref = getTryoutHref(route);
-  const entryHref = resumeSection
-    ? getEntrySectionHref({
-        entrySection: resumeSection,
-        route,
-      })
-    : setHref;
+  const destination = resumeSection
+    ? {
+        href: getEntrySectionHref({
+          entrySection: resumeSection,
+          route,
+        }),
+        sectionKey: resumeSection.sectionKey,
+      }
+    : null;
   const view: TryoutSetView = {
     actionAttempt,
     activeAttempt,
-    entryHref,
+    destination,
     entrySection,
     page,
     route,

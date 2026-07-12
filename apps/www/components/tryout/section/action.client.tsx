@@ -104,10 +104,10 @@ export function TryoutSummaryAction({
   const request: StartTryoutRequest = {
     authRedirectHref: value.sectionHref,
     countryKey: value.set.countryKey,
+    destinationHref: value.sectionHref,
+    destinationSectionKey: value.section.sectionKey,
     entrySectionKey: value.startAttemptSectionKey,
     examKey: value.set.examKey,
-    firstSectionKey: value.section.sectionKey,
-    firstSectionHref: value.sectionHref,
     locale: value.locale,
     setKey: value.set.setKey,
     trackKey: value.set.trackKey,

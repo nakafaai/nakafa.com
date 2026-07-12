@@ -49,7 +49,7 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
               activeAttempt: value.activeAttempt,
               currentHref: setHref,
               currentAttempt: value.actionAttempt,
-              entryHref: value.entryHref,
+              destination: value.destination,
               entrySection: value.entrySection,
               locale: value.route.locale,
               set: value.page.set,

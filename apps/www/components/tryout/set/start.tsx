@@ -26,10 +26,10 @@ type CurrentAttempt = FunctionReturnType<
 export interface StartTryoutRequest {
   authRedirectHref: string;
   countryKey: string;
+  destinationHref: string;
+  destinationSectionKey: string;
   entrySectionKey?: string;
   examKey: string;
-  firstSectionHref: string;
-  firstSectionKey: string;
   locale: Locale;
   setKey: string;
   trackKey: string;
@@ -163,14 +163,14 @@ export function StartTryoutButton({
     return (
       <TryoutIntentLink
         className={buttonVariants()}
-        href={request.firstSectionHref}
+        href={request.destinationHref}
         onIntent={() =>
           prewarmData({
             countryKey: request.countryKey,
             examKey: request.examKey,
             kind: "section",
             locale: request.locale,
-            sectionKey: request.firstSectionKey,
+            sectionKey: request.destinationSectionKey,
             setKey: request.setKey,
             trackKey: request.trackKey,
           })

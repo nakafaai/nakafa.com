@@ -4,6 +4,7 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
+import type { TryoutSetDestination } from "@/components/tryout/set/model";
 import {
   StartTryoutButton,
   type StartTryoutRequest,
@@ -20,7 +21,7 @@ export interface TryoutSetActionValue {
   activeAttempt: NonNullable<CurrentAttempt> | null;
   currentAttempt?: CurrentAttempt;
   currentHref: string;
-  entryHref: string;
+  destination: TryoutSetDestination | null;
   entrySection: SetEntrySection | null;
   locale: Locale;
   set: Pick<SetPage["set"], "countryKey" | "examKey" | "setKey" | "trackKey">;
@@ -28,7 +29,7 @@ export interface TryoutSetActionValue {
 
 /** Renders the only valid set-page action for the current attempt state. */
 export function TryoutSetAction({ value }: { value: TryoutSetActionValue }) {
-  if (!value.entrySection) {
+  if (!(value.entrySection && value.destination)) {
     return null;
   }
 
@@ -39,10 +40,10 @@ export function TryoutSetAction({ value }: { value: TryoutSetActionValue }) {
   const request: StartTryoutRequest = {
     authRedirectHref: value.currentHref,
     countryKey: value.set.countryKey,
+    destinationHref: value.destination.href,
+    destinationSectionKey: value.destination.sectionKey,
     entrySectionKey,
     examKey: value.set.examKey,
-    firstSectionKey: value.entrySection.sectionKey,
-    firstSectionHref: value.entryHref,
     locale: value.locale,
     setKey: value.set.setKey,
     trackKey: value.set.trackKey,
