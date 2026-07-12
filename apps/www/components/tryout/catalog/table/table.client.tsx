@@ -77,6 +77,16 @@ export function TryoutSetTable({
 
     warmedPaths.current.add(pathKey);
     prewarmData({
+      directEntry:
+        row.internalEntrySectionKey && row.attemptStatus !== null
+          ? {
+              countryKey: row.countryKey,
+              examKey: row.examKey,
+              sectionKey: row.internalEntrySectionKey,
+              setKey: row.setKey,
+              trackKey: row.trackKey,
+            }
+          : null,
       kind: "set",
       locale,
       publicPath: row.publicPath,

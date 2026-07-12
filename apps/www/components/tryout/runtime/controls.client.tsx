@@ -56,6 +56,7 @@ export function TryoutRuntimeControls({
   function prepareReturnRoute() {
     router.prefetch(returnHref);
     prewarmData({
+      directEntry: null,
       kind: "set",
       locale,
       publicPath: returnHref.slice(1),

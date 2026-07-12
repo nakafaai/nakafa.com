@@ -69,6 +69,7 @@ export function TryoutSummaryAction({
         href={value.returnHref}
         onIntent={() =>
           prewarmData({
+            directEntry: null,
             kind: "set",
             locale: value.locale,
             publicPath: value.returnHref.slice(1),

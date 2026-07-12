@@ -7,6 +7,13 @@ import { useCallback } from "react";
 
 export type TryoutDataIntent =
   | {
+      directEntry: {
+        countryKey: string;
+        examKey: string;
+        sectionKey: string;
+        setKey: string;
+        trackKey: string;
+      } | null;
       kind: "set";
       locale: Locale;
       publicPath: string;
@@ -44,6 +51,16 @@ export function useTryoutDataIntent() {
           },
           query: api.tryouts.queries.attempt.getCurrentByPublicPath,
         });
+
+        if (intent.directEntry) {
+          convex.prewarmQuery({
+            args: {
+              ...intent.directEntry,
+              locale: intent.locale,
+            },
+            query: api.tryouts.queries.attempt.getSectionRuntime,
+          });
+        }
         return;
       }
 
