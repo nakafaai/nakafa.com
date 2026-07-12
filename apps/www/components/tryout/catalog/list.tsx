@@ -77,18 +77,10 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
           <div className="-mt-1 flex flex-1 flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-2">
               <h3>{row.title}</h3>
-              {row.status ? <TryoutStatus status={row.status} /> : null}
+              <TryoutRowStatus status={row.status} />
             </div>
-            {row.meta ? (
-              <div className="flex flex-wrap items-center gap-2">
-                {row.meta}
-              </div>
-            ) : null}
-            {row.description ? (
-              <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
-                {row.description}
-              </span>
-            ) : null}
+            <TryoutRowMeta meta={row.meta} />
+            <TryoutRowDescription description={row.description} />
           </div>
 
           <HugeIcons
@@ -105,6 +97,45 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
   );
 }
 
+/** Renders one row status only when Convex provides it. */
+function TryoutRowStatus({
+  status,
+}: {
+  status: TryoutStatusValue | undefined;
+}) {
+  if (!status) {
+    return null;
+  }
+
+  return <TryoutStatus status={status} />;
+}
+
+/** Renders the optional compact metadata slot. */
+function TryoutRowMeta({ meta }: { meta: ReactNode }) {
+  if (!meta) {
+    return null;
+  }
+
+  return <div className="flex flex-wrap items-center gap-2">{meta}</div>;
+}
+
+/** Renders one concise row description when authored. */
+function TryoutRowDescription({
+  description,
+}: {
+  description: string | undefined;
+}) {
+  if (!description) {
+    return null;
+  }
+
+  return (
+    <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
+      {description}
+    </span>
+  );
+}
+
 /** Renders the configured row visual without branching at call sites. */
 function TryoutRowVisual({ visual }: { visual: TryoutListRowVisual }) {
   const keyString = visual.kind === "icon" ? visual.iconKey : visual.keyString;
@@ -117,14 +148,23 @@ function TryoutRowVisual({ visual }: { visual: TryoutListRowVisual }) {
         intensity="medium"
         keyString={keyString}
       />
-      {visual.kind === "icon" ? (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <HugeIcons
-            className="size-4 text-background drop-shadow-md"
-            icon={visual.icon}
-          />
-        </div>
-      ) : null}
+      <TryoutRowIcon visual={visual} />
+    </div>
+  );
+}
+
+/** Renders an icon overlay only for icon-backed row visuals. */
+function TryoutRowIcon({ visual }: { visual: TryoutListRowVisual }) {
+  if (visual.kind !== "icon") {
+    return null;
+  }
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <HugeIcons
+        className="size-4 text-background drop-shadow-md"
+        icon={visual.icon}
+      />
     </div>
   );
 }

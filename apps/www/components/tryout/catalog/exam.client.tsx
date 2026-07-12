@@ -41,7 +41,7 @@ export function TryoutExamPageClient({
               key={track.trackKey}
             >
               <ChoiceCardVisual seed={track.publicPath}>
-                {icon ? <ChoiceCardIcon icon={icon} /> : null}
+                <TryoutTrackCardIcon icon={icon} />
               </ChoiceCardVisual>
               <ChoiceCardContent>
                 <div className="grid gap-1">
@@ -58,6 +58,19 @@ export function TryoutExamPageClient({
       </div>
     </div>
   );
+}
+
+/** Renders subject-track artwork while year tracks remain intentionally empty. */
+function TryoutTrackCardIcon({
+  icon,
+}: {
+  icon: ReturnType<typeof getTrackCardIcon>;
+}) {
+  if (!icon) {
+    return null;
+  }
+
+  return <ChoiceCardIcon icon={icon} />;
 }
 
 /** Resolve subject tracks to icons while leaving year tracks text-free. */
