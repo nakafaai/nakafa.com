@@ -287,6 +287,7 @@ import type * as tryouts_queries_catalog from "../tryouts/queries/catalog.js";
 import type * as tryouts_queries_catalogModel from "../tryouts/queries/catalogModel.js";
 import type * as tryouts_queries_history from "../tryouts/queries/history.js";
 import type * as tryouts_queries_parents from "../tryouts/queries/parents.js";
+import type * as tryouts_queries_review from "../tryouts/queries/review.js";
 import type * as tryouts_queries_score from "../tryouts/queries/score.js";
 import type * as tryouts_queries_sets from "../tryouts/queries/sets.js";
 import type * as tryouts_questions from "../tryouts/questions.js";
@@ -604,6 +605,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/queries/catalogModel": typeof tryouts_queries_catalogModel;
   "tryouts/queries/history": typeof tryouts_queries_history;
   "tryouts/queries/parents": typeof tryouts_queries_parents;
+  "tryouts/queries/review": typeof tryouts_queries_review;
   "tryouts/queries/score": typeof tryouts_queries_score;
   "tryouts/queries/sets": typeof tryouts_queries_sets;
   "tryouts/questions": typeof tryouts_questions;
