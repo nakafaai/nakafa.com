@@ -37,7 +37,7 @@ describe("curriculum lens", () => {
     const section = readCurriculumLensFixture({
       kind: "tryout-section",
       locale: "en",
-      route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+      route: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     });
 
     expect(exam).toMatchObject({
@@ -75,6 +75,7 @@ describe("curriculum lens", () => {
   });
 });
 
+/** Decode one curriculum-lens fixture from a learning graph source. */
 function readCurriculumLensFixture(
   source: LearningGraphSource
 ): CurriculumLensDescriptor {

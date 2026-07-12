@@ -85,7 +85,6 @@ const syncedQuranVerseValidator = v.object({
   surahNumber: v.number(),
   tafsir: v.object({
     id: v.object({
-      long: v.string(),
       short: v.string(),
     }),
   }),

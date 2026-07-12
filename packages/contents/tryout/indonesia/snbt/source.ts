@@ -106,22 +106,34 @@ export const snbtTryoutSource = defineTryoutExamSource({
     },
   },
   scoringStrategy: "irt",
-  sets: [1, 2].map((setNumber) => ({
-    key: `set-${setNumber}`,
-    order: setNumber,
-    routeSlugs: {
-      en: `set-${setNumber}`,
-      id: `set-${setNumber}`,
-    },
-    sections: snbtSections.map((section, sectionIndex) => ({
-      ...section,
-      order: sectionIndex + 1,
-      questionSourcePath: `question-bank/tryout/indonesia/snbt/${section.key}/set-${setNumber}`,
-    })),
-    translations: {
-      en: { title: `Set ${setNumber}` },
-      id: { title: `Set ${setNumber}` },
-    },
-  })),
   sourceRevision: "2026-07-05",
+  tracks: [
+    {
+      key: "2027",
+      kind: "year",
+      order: 1,
+      routeSlugs: { en: "2027", id: "2027" },
+      sets: [1, 2].map((setNumber) => ({
+        key: `set-${setNumber}`,
+        order: setNumber,
+        routeSlugs: {
+          en: `set-${setNumber}`,
+          id: `set-${setNumber}`,
+        },
+        sections: snbtSections.map((section, sectionIndex) => ({
+          ...section,
+          order: sectionIndex + 1,
+          questionSourcePath: `question-bank/tryout/indonesia/snbt/${section.key}/set-${setNumber}`,
+        })),
+        translations: {
+          en: { title: `Set ${setNumber}` },
+          id: { title: `Set ${setNumber}` },
+        },
+      })),
+      translations: {
+        en: { title: "Year 2027" },
+        id: { title: "Tahun 2027" },
+      },
+    },
+  ],
 });

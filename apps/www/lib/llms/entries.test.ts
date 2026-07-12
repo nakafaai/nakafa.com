@@ -155,7 +155,7 @@ function routeRow({
   title?: string;
 }): RuntimeContentRouteItem {
   const graph = routeGraph("en", sourcePath);
-  const kind = getLearningObjectKindForRoute(sourcePath);
+  const kind = getLearningObjectKindForRoute(sourcePath, "en");
 
   if (!kind) {
     expect.fail(`Expected graph route kind for ${sourcePath}.`);

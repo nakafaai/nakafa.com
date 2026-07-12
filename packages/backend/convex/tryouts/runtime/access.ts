@@ -54,6 +54,7 @@ export async function requireActiveEntitlement(
     examKey: string;
     now: number;
     setKey: string;
+    trackKey: string;
     userId: Id<"users">;
   }
 ): Promise<ActiveEntitlement> {
@@ -63,9 +64,19 @@ export async function requireActiveEntitlement(
     return setEntitlement;
   }
 
+  const trackEntitlement = await loadActiveEntitlement(ctx, {
+    ...args,
+    setKey: undefined,
+  });
+
+  if (trackEntitlement) {
+    return trackEntitlement;
+  }
+
   const examEntitlement = await loadActiveEntitlement(ctx, {
     ...args,
     setKey: undefined,
+    trackKey: undefined,
   });
 
   if (examEntitlement) {
@@ -97,20 +108,20 @@ async function loadActiveEntitlement(
     examKey: string;
     now: number;
     setKey?: string;
+    trackKey?: string;
     userId: Id<"users">;
   }
 ) {
   const entitlements = await ctx.db
     .query("tryoutEntitlements")
-    .withIndex(
-      "by_userId_and_countryKey_and_examKey_and_setKey_and_endsAt",
-      (q) =>
-        q
-          .eq("userId", args.userId)
-          .eq("countryKey", args.countryKey)
-          .eq("examKey", args.examKey)
-          .eq("setKey", args.setKey)
-          .gt("endsAt", args.now)
+    .withIndex("by_user_tryout_scope_endsAt", (q) =>
+      q
+        .eq("userId", args.userId)
+        .eq("countryKey", args.countryKey)
+        .eq("examKey", args.examKey)
+        .eq("trackKey", args.trackKey)
+        .eq("setKey", args.setKey)
+        .gt("endsAt", args.now)
     )
     .order("asc")
     .take(ENTITLEMENT_LOOKUP_LIMIT);
@@ -158,6 +169,7 @@ async function ensureSubscriptionEntitlement(
         .eq("subscriptionId", subscription.id)
         .eq("countryKey", args.countryKey)
         .eq("examKey", args.examKey)
+        .eq("trackKey", undefined)
         .eq("setKey", undefined)
     )
     .unique();

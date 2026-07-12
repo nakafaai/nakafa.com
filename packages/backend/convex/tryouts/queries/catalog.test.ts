@@ -1,212 +1,83 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import {
+  insertTryoutCountry,
+  insertTryoutExam,
+  insertTryoutQuestionSource,
+  insertTryoutSection,
+  insertTryoutSet,
+  insertTryoutTrack,
+  TRYOUT_EXAM_PATH,
+  TRYOUT_SECTION_PATH,
+  TRYOUT_SET_PATH,
+} from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
-
 describe("tryouts/queries/catalog", () => {
-  it("hides exam page sets until their section snapshot is ready", async () => {
+  it("hides exam page tracks until their materialized readiness is true", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("tryoutCountries", {
-        countryKey: "indonesia",
-        isActive: true,
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Indonesia",
-      });
-      await ctx.db.insert("tryoutExams", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        isActive: true,
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia/snbt",
-        scoringStrategy: "irt",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "SNBT",
-      });
-      const readySetId = await ctx.db.insert("tryoutSets", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        isActive: true,
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia/snbt/set-1",
-        scoringStrategy: "irt",
-        sectionCount: 1,
-        setKey: "set-1",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Set 1",
-        totalQuestionCount: 1,
-      });
-      const staleSetId = await ctx.db.insert("tryoutSets", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        isActive: true,
-        locale: "id",
-        order: 2,
-        publicPath: "try-out/indonesia/snbt/set-2",
-        scoringStrategy: "irt",
-        sectionCount: 1,
-        setKey: "set-2",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Set 2",
-        totalQuestionCount: 1,
-      });
-      const readyQuestionSetId = await ctx.db.insert("questionSets", {
-        contentHash: "ready-question-set-hash",
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        questionCount: 1,
-        sectionKey: "penalaran-matematika",
-        setKey: "set-1",
-        sourcePath:
-          "question-bank/tryout/indonesia/snbt/set-1/penalaran-matematika",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Penalaran Matematika",
-      });
-      const staleQuestionSetId = await ctx.db.insert("questionSets", {
-        contentHash: "stale-question-set-hash",
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        questionCount: 1,
-        sectionKey: "penalaran-matematika",
-        setKey: "set-2",
-        sourcePath:
-          "question-bank/tryout/indonesia/snbt/set-2/penalaran-matematika",
-        sourceRevision: "2025",
-        syncedAt: NOW,
-        title: "Penalaran Matematika",
-      });
-
-      await ctx.db.insert("tryoutSections", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia/snbt/set-1/penalaran-matematika",
-        questionCount: 1,
-        questionSetId: readyQuestionSetId,
-        questionSourcePath:
-          "question-bank/tryout/indonesia/snbt/set-1/penalaran-matematika",
-        sectionKey: "penalaran-matematika",
-        setKey: "set-1",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        timeLimitSeconds: 1800,
-        title: "Penalaran Matematika",
-        tryoutSetId: readySetId,
-      });
-      await ctx.db.insert("tryoutSections", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia/snbt/set-2/penalaran-matematika",
-        questionCount: 1,
-        questionSetId: staleQuestionSetId,
-        questionSourcePath:
-          "question-bank/tryout/indonesia/snbt/set-2/penalaran-matematika",
-        sectionKey: "penalaran-matematika",
-        setKey: "set-2",
-        sourceRevision: "2025",
-        syncedAt: NOW,
-        timeLimitSeconds: 1800,
-        title: "Penalaran Matematika",
-        tryoutSetId: staleSetId,
+      await insertTryoutCountry(ctx);
+      await insertTryoutExam(ctx);
+      await insertTryoutTrack(ctx);
+      await insertTryoutTrack(ctx, {
+        isReady: false,
+        publicPath: `${TRYOUT_EXAM_PATH}/2028`,
+        trackKey: "2028",
       });
     });
 
     const page = await t.query(api.tryouts.queries.catalog.getExamPage, {
       locale: "id",
-      publicPath: "try-out/indonesia/snbt",
+      publicPath: TRYOUT_EXAM_PATH,
     });
 
-    expect(page?.sets.map((set) => set.setKey)).toEqual(["set-1"]);
+    expect(page?.tracks.map((track) => track.trackKey)).toEqual(["2027"]);
+  });
+
+  it("does not expose legacy exam-to-set paths as track pages", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await insertTryoutCountry(ctx);
+      await insertTryoutExam(ctx);
+      await insertTryoutTrack(ctx);
+    });
+
+    const page = await t.query(api.tryouts.queries.catalog.getTrackPage, {
+      locale: "id",
+      publicPath: `${TRYOUT_EXAM_PATH}/set-1`,
+    });
+
+    expect(page).toBeNull();
   });
 
   it("hides set pages until every section row is synced", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      const questionSetId = await ctx.db.insert("questionSets", {
-        contentHash: "question-set-hash",
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        questionCount: 1,
-        sectionKey: "penalaran-matematika",
-        setKey: "set-1",
-        sourcePath:
-          "question-bank/tryout/indonesia/snbt/set-1/penalaran-matematika",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Penalaran Matematika",
-      });
-      const setId = await ctx.db.insert("tryoutSets", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        isActive: true,
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia/snbt/set-1",
-        scoringStrategy: "irt",
+      await insertTryoutCountry(ctx);
+      await insertTryoutExam(ctx);
+      await insertTryoutTrack(ctx);
+      const setId = await insertTryoutSet(ctx, {
         sectionCount: 2,
-        setKey: "set-1",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Set 1",
         totalQuestionCount: 2,
       });
+      const questionSetId = await insertTryoutQuestionSource(ctx);
 
-      await ctx.db.insert("tryoutExams", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        isActive: true,
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia/snbt",
-        scoringStrategy: "irt",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "SNBT",
-      });
-      await ctx.db.insert("tryoutSections", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia/snbt/set-1/penalaran-matematika",
-        questionCount: 1,
+      await insertTryoutSection(ctx, {
+        publicPath: TRYOUT_SECTION_PATH,
         questionSetId,
-        questionSourcePath:
-          "question-bank/tryout/indonesia/snbt/set-1/penalaran-matematika",
-        sectionKey: "penalaran-matematika",
-        setKey: "set-1",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        timeLimitSeconds: 1800,
-        title: "Penalaran Matematika",
         tryoutSetId: setId,
       });
     });
 
     const page = await t.query(api.tryouts.queries.catalog.getSetPage, {
       locale: "id",
-      publicPath: "try-out/indonesia/snbt/set-1",
+      publicPath: TRYOUT_SET_PATH,
     });
 
     expect(page).toBeNull();
@@ -216,73 +87,112 @@ describe("tryouts/queries/catalog", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      const questionSetId = await ctx.db.insert("questionSets", {
-        contentHash: "question-set-hash",
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        questionCount: 1,
-        sectionKey: "penalaran-matematika",
-        setKey: "set-1",
-        sourcePath:
-          "question-bank/tryout/indonesia/snbt/set-1/penalaran-matematika",
-        sourceRevision: "2025",
-        syncedAt: NOW,
-        title: "Penalaran Matematika",
-      });
-      const setId = await ctx.db.insert("tryoutSets", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        isActive: true,
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia/snbt/set-1",
-        scoringStrategy: "irt",
-        sectionCount: 1,
-        setKey: "set-1",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Set 1",
+      await insertTryoutCountry(ctx);
+      await insertTryoutExam(ctx);
+      await insertTryoutTrack(ctx);
+      const setId = await insertTryoutSet(ctx, {
         totalQuestionCount: 2,
       });
-
-      await ctx.db.insert("tryoutExams", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        isActive: true,
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia/snbt",
-        scoringStrategy: "irt",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "SNBT",
-      });
-      await ctx.db.insert("tryoutSections", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        order: 1,
-        publicPath: "try-out/indonesia/snbt/set-1/penalaran-matematika",
-        questionCount: 1,
-        questionSetId,
-        questionSourcePath:
-          "question-bank/tryout/indonesia/snbt/set-1/penalaran-matematika",
-        sectionKey: "penalaran-matematika",
-        setKey: "set-1",
+      const questionSetId = await insertTryoutQuestionSource(ctx, {
         sourceRevision: "2025",
-        syncedAt: NOW,
-        timeLimitSeconds: 1800,
-        title: "Penalaran Matematika",
+      });
+
+      await insertTryoutSection(ctx, {
+        publicPath: TRYOUT_SECTION_PATH,
+        questionSetId,
+        sourceRevision: "2025",
         tryoutSetId: setId,
       });
     });
 
     const page = await t.query(api.tryouts.queries.catalog.getSetPage, {
       locale: "id",
-      publicPath: "try-out/indonesia/snbt/set-1",
+      publicPath: TRYOUT_SET_PATH,
     });
 
     expect(page).toBeNull();
+  });
+
+  it("serves internal-entry set pages without a public section route", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await insertTryoutCountry(ctx);
+      await insertTryoutExam(ctx);
+      await insertTryoutTrack(ctx, {
+        publicPath: `${TRYOUT_EXAM_PATH}/matematika`,
+        trackKey: "mathematics",
+        trackKind: "subject",
+      });
+      const setId = await insertTryoutSet(ctx, {
+        internalEntrySectionKey: "mathematics",
+        publicPath: `${TRYOUT_EXAM_PATH}/matematika/set-1`,
+        trackKey: "mathematics",
+        visibleSectionCount: 0,
+      });
+      const sourcePath =
+        "question-bank/tryout/indonesia/snbt/mathematics/set-1/mathematics";
+      const questionSetId = await insertTryoutQuestionSource(ctx, {
+        sectionKey: "mathematics",
+        sourcePath,
+      });
+
+      await insertTryoutSection(ctx, {
+        publicPath: undefined,
+        questionSetId,
+        questionSourcePath: sourcePath,
+        sectionKey: "mathematics",
+        trackKey: "mathematics",
+        tryoutSetId: setId,
+        visibility: "internal-entry",
+      });
+    });
+
+    const page = await t.query(api.tryouts.queries.catalog.getSetPage, {
+      locale: "id",
+      publicPath: `${TRYOUT_EXAM_PATH}/matematika/set-1`,
+    });
+
+    expect(page?.sections).toEqual([]);
+    expect(page?.entrySection).toMatchObject({
+      sectionKey: "mathematics",
+      visibility: "internal-entry",
+    });
+    expect(page?.entrySection?.publicPath).toBeUndefined();
+    expect(page?.entryQuestions).toHaveLength(1);
+  });
+
+  it("hides direct set and section pages when their country is inactive", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      const countryId = await insertTryoutCountry(ctx);
+      await insertTryoutExam(ctx);
+      await insertTryoutTrack(ctx);
+      const setId = await insertTryoutSet(ctx);
+      const questionSetId = await insertTryoutQuestionSource(ctx);
+
+      await insertTryoutSection(ctx, {
+        publicPath: TRYOUT_SECTION_PATH,
+        questionSetId,
+        tryoutSetId: setId,
+      });
+      await ctx.db.patch(countryId, { isActive: false });
+    });
+
+    const setPage = await t.query(api.tryouts.queries.catalog.getSetPage, {
+      locale: "id",
+      publicPath: TRYOUT_SET_PATH,
+    });
+    const sectionPage = await t.query(
+      api.tryouts.queries.catalog.getSectionPage,
+      {
+        locale: "id",
+        publicPath: TRYOUT_SECTION_PATH,
+      }
+    );
+
+    expect(setPage).toBeNull();
+    expect(sectionPage).toBeNull();
   });
 });

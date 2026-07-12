@@ -20,8 +20,10 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link, usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { type SubmitEventHandler, useState, useTransition } from "react";
+import { reportClientException } from "@/lib/analytics/client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -34,6 +36,12 @@ interface Props {
   slug: string;
 }
 
+class CommentCreateError extends Schema.TaggedError<CommentCreateError>()(
+  "CommentCreateError",
+  { cause: Schema.Unknown }
+) {}
+
+/** Render the authenticated comment or reply composer for one content route. */
 export function CommentsAdd({ slug, comment, closeButton }: Props) {
   const t = useTranslations("Comments");
   const tCommon = useTranslations("Common");
@@ -45,6 +53,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
 
   const [isPending, startTransition] = useTransition();
 
+  /** Submit the trimmed comment while restoring its text after a failure. */
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
 
@@ -54,19 +63,43 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
       return;
     }
 
-    startTransition(async () => {
-      await addComment({
-        slug,
-        text,
-        parentId: comment?._id,
-      });
+    if (!user) {
+      return;
+    }
 
-      setCommentText("");
-
-      if (closeButton) {
-        closeButton.onClick();
-      }
-    });
+    setCommentText("");
+    startTransition(() =>
+      Effect.runPromise(
+        Effect.tryPromise({
+          try: () =>
+            addComment({
+              slug,
+              text,
+              parentId: comment?._id,
+            }),
+          catch: (cause) => new CommentCreateError({ cause }),
+        }).pipe(
+          Effect.tap(() =>
+            Effect.sync(() => {
+              closeButton?.onClick();
+            })
+          ),
+          Effect.asVoid,
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              slug,
+              source: "comment-create",
+            }).pipe(
+              Effect.tap(() =>
+                Effect.sync(() => {
+                  setCommentText(text);
+                })
+              )
+            )
+          )
+        )
+      )
+    );
   };
 
   return (
@@ -121,6 +154,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
   );
 }
 
+/** Render the current commenter identity or an authentication link. */
 function UserAvatar() {
   const pathname = usePathname();
 

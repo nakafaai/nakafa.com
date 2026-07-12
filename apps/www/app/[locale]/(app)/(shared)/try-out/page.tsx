@@ -1,18 +1,25 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { FooterContent } from "@/components/shared/footer-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { RefContent } from "@/components/shared/ref-content";
-import { TryoutHeader } from "@/components/tryout/chrome";
-import { TryoutHubClient } from "@/components/tryout/hub.client";
+import { TryoutHubClient } from "@/components/tryout/catalog/hub.client";
+import { readTryoutHubPage } from "@/components/tryout/catalog/server";
+import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
+
+export const unstable_instant = {
+  prefetch: "runtime",
+  samples: [{ params: { locale: "id" } }],
+};
 
 /**
  * Builds metadata-only copy for the try-out hub while keeping helper prose out
@@ -52,9 +59,25 @@ export async function generateMetadata({
  * Composes the localized try-out hub and JSON-LD breadcrumb for the canonical
  * try-out entry page.
  */
-export default async function Page(props: PageProps<"/[locale]/try-out">) {
-  const locale = getLocaleOrThrow((await props.params).locale);
-  const tCommon = await getTranslations({ locale, namespace: "Common" });
+export default function Page(props: PageProps<"/[locale]/try-out">) {
+  return (
+    <Suspense fallback={null}>
+      <TryoutHubRoute params={props.params} />
+    </Suspense>
+  );
+}
+
+/** Resolves the cached public hub inside its route-owned boundary. */
+async function TryoutHubRoute({
+  params,
+}: {
+  params: PageProps<"/[locale]/try-out">["params"];
+}) {
+  const locale = getLocaleOrThrow((await params).locale);
+  const [page, tCommon] = await Promise.all([
+    readTryoutHubPage(locale),
+    getTranslations({ locale, namespace: "Common" }),
+  ]);
   const title = tCommon("try-out");
 
   return (
@@ -68,12 +91,14 @@ export default async function Page(props: PageProps<"/[locale]/try-out">) {
       <LayoutMaterial>
         <LayoutMaterialContent>
           <TryoutHeader
-            homeLabel={tCommon("home")}
-            items={[{ label: title }]}
-            title={title}
+            value={{
+              homeLabel: tCommon("home"),
+              items: [{ label: title }],
+              title,
+            }}
           />
           <LayoutContent>
-            <TryoutHubClient locale={locale} />
+            <TryoutHubClient locale={locale} page={page} />
           </LayoutContent>
           <FooterContent>
             <RefContent

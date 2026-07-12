@@ -1,7 +1,6 @@
 import { WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -31,12 +30,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { useMutation } from "convex/react";
 import { format } from "date-fns";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
+import { useForumReactionMutation } from "@/components/school/classes/forum/reaction/mutation.client";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -95,9 +94,7 @@ function ForumReactions() {
   const forum = useData((state) => state.forum);
 
   const [isPending, startTransition] = useTransition();
-  const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.toggleForumReaction
-  );
+  const toggleReaction = useForumReactionMutation();
 
   if (!(forum && forum.reactionUsers.length > 0)) {
     return null;
@@ -178,9 +175,7 @@ function ForumActions() {
 
   const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
-  const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.toggleForumReaction
-  );
+  const toggleReaction = useForumReactionMutation();
 
   if (!forum) {
     return null;

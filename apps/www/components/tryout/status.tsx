@@ -1,20 +1,97 @@
 "use client";
 
-import { Flag03Icon } from "@hugeicons/core-free-icons";
+import {
+  CheckmarkCircle02Icon,
+  CircleDashedIcon,
+  ClockAlertIcon,
+  PlayCircle02Icon,
+} from "@hugeicons/core-free-icons";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
+import type { ComponentProps } from "react";
 
-export type TryoutStatusValue = "completed";
+export type TryoutStatusValue = Doc<"tryoutSetProgress">["status"];
+type TryoutStatus = TryoutStatusValue | null;
 
-/** Renders the production try-out row status badge. */
-export function TryoutStatus({ status }: { status: TryoutStatusValue }) {
+/** Resolve the shared icon for one try-out workflow status. */
+function getStatusIcon(status: TryoutStatus) {
+  if (status === "in-progress") {
+    return PlayCircle02Icon;
+  }
+
+  if (status === "completed") {
+    return CheckmarkCircle02Icon;
+  }
+
+  if (status === "expired") {
+    return ClockAlertIcon;
+  }
+
+  return CircleDashedIcon;
+}
+
+/** Resolve the translation key for one try-out workflow status. */
+function getStatusLabelKey(status: TryoutStatus) {
+  if (status === "in-progress") {
+    return "status-in-progress" as const;
+  }
+
+  if (status === "completed") {
+    return "status-completed" as const;
+  }
+
+  if (status === "expired") {
+    return "status-expired" as const;
+  }
+
+  return "status-not-started" as const;
+}
+
+/** Resolve the filled badge variant for one try-out workflow status. */
+function getStatusVariant(status: TryoutStatus) {
+  if (status === "in-progress") {
+    return "default" as const;
+  }
+
+  if (status === "completed") {
+    return "secondary" as const;
+  }
+
+  if (status === "expired") {
+    return "destructive" as const;
+  }
+
+  return "muted" as const;
+}
+
+/** Renders the shared icon for one try-out workflow status. */
+export function TryoutStatusIcon({ status }: { status: TryoutStatus }) {
+  return <HugeIcons data-icon="inline-start" icon={getStatusIcon(status)} />;
+}
+
+/** Renders the localized label for one try-out workflow status. */
+export function TryoutStatusLabel({
+  className,
+  status,
+}: {
+  className?: ComponentProps<"span">["className"];
+  status: TryoutStatus;
+}) {
   const tTryouts = useTranslations("Tryouts");
 
   return (
-    <Badge variant="secondary">
-      <HugeIcons icon={Flag03Icon} />
-      {tTryouts(`part-status-${status}`)}
+    <span className={className}>{tTryouts(getStatusLabelKey(status))}</span>
+  );
+}
+
+/** Renders one consistent, filled try-out workflow badge. */
+export function TryoutStatus({ status }: { status: TryoutStatus }) {
+  return (
+    <Badge variant={getStatusVariant(status)}>
+      <TryoutStatusIcon status={status} />
+      <TryoutStatusLabel status={status} />
     </Badge>
   );
 }

@@ -267,10 +267,10 @@ describe("createNinaPrompt", () => {
         planItems: [
           {
             content_id:
-              "asset:id:tryout-section:indonesia:snbt:set-2:general-knowledge",
+              "asset:id:tryout-section:indonesia:snbt:2027:set-2:general-knowledge",
             lensId: "lens:snbt",
             position: 1,
-            route: "/try-out/indonesia/snbt/set-2/general-knowledge",
+            route: "/try-out/indonesia/snbt/2027/set-2/general-knowledge",
             status: "ready",
             title: "SNBT Set 2",
           },
@@ -289,7 +289,7 @@ describe("createNinaPrompt", () => {
     expect(prompt).toContain("- program: SNBT 2026");
     expect(prompt).toContain("- interests: exam-prep, assessment-prep");
     expect(prompt).toContain(
-      "1. SNBT Set 2; route: /try-out/indonesia/snbt/set-2/general-knowledge; status: ready"
+      "1. SNBT Set 2; route: /try-out/indonesia/snbt/2027/set-2/general-knowledge; status: ready"
     );
     const runtimeContext = prompt.slice(
       prompt.indexOf("# Runtime Context"),

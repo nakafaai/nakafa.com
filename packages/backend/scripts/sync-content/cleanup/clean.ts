@@ -5,10 +5,8 @@ import {
   logStaleItems,
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import {
-  BATCH_SIZES,
-  DeleteResultSchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
+import { DeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
+import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
   StaleItem,
@@ -53,6 +51,9 @@ type DeleteStaleTryoutCountryArgs = FunctionArgs<
 >;
 type DeleteStaleTryoutExamArgs = FunctionArgs<
   typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutExams
+>;
+type DeleteStaleTryoutTrackArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutTracks
 >;
 type DeleteStaleTryoutSetArgs = FunctionArgs<
   typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutSets
@@ -122,6 +123,15 @@ const buildDeleteStaleTryoutExamArgs = (
   })[]
 ): DeleteStaleTryoutExamArgs => ({
   examIds: items.map((item) => item.id),
+});
+
+/** Builds mutation args for deleting stale try-out track rows. */
+const buildDeleteStaleTryoutTrackArgs = (
+  items: readonly (StaleItem & {
+    id: DeleteStaleTryoutTrackArgs["trackIds"][number];
+  })[]
+): DeleteStaleTryoutTrackArgs => ({
+  trackIds: items.map((item) => item.id),
 });
 
 /** Builds mutation args for deleting stale try-out set rows. */
@@ -248,10 +258,11 @@ export const clean = Effect.fn("sync.clean")(function* (
   log(`  Curriculum lessons on disk: ${slugs.curriculumLessonSlugs.length}`);
   log(`  Question sets on disk: ${slugs.questionSetSourcePaths.length}`);
   log(`  Questions on disk: ${slugs.questionSourcePaths.length}`);
-  log(`  Try-out countries on disk: ${slugs.tryoutCountryPaths.length}`);
-  log(`  Try-out exams on disk: ${slugs.tryoutExamPaths.length}`);
-  log(`  Try-out sets on disk: ${slugs.tryoutSetPaths.length}`);
-  log(`  Try-out sections on disk: ${slugs.tryoutSectionPaths.length}`);
+  log(`  Try-out countries on disk: ${slugs.tryoutCountryKeys.length}`);
+  log(`  Try-out exams on disk: ${slugs.tryoutExamKeys.length}`);
+  log(`  Try-out tracks on disk: ${slugs.tryoutTrackKeys.length}`);
+  log(`  Try-out sets on disk: ${slugs.tryoutSetKeys.length}`);
+  log(`  Try-out sections on disk: ${slugs.tryoutSectionKeys.length}`);
 
   log("\nQuerying database for stale content...");
   const stale = yield* getStaleContent(config, slugs);
@@ -264,6 +275,7 @@ export const clean = Effect.fn("sync.clean")(function* (
     stale.staleQuestions.length +
     stale.staleTryoutCountries.length +
     stale.staleTryoutExams.length +
+    stale.staleTryoutTracks.length +
     stale.staleTryoutSets.length +
     stale.staleTryoutSections.length;
 
@@ -282,6 +294,7 @@ export const clean = Effect.fn("sync.clean")(function* (
     logStaleItems("\nStale questions", stale.staleQuestions);
     logStaleItems("\nStale try-out countries", stale.staleTryoutCountries);
     logStaleItems("\nStale try-out exams", stale.staleTryoutExams);
+    logStaleItems("\nStale try-out tracks", stale.staleTryoutTracks);
     logStaleItems("\nStale try-out sets", stale.staleTryoutSets);
     logStaleItems("\nStale try-out sections", stale.staleTryoutSections);
 
@@ -343,6 +356,14 @@ export const clean = Effect.fn("sync.clean")(function* (
         stale.staleTryoutSets,
         "stale try-out sets",
         BATCH_SIZES.staleTryoutSets
+      );
+      deleted += yield* deleteStaleItems(
+        config,
+        internal.contentSync.mutations.tryouts.deleteStaleTryoutTracks,
+        buildDeleteStaleTryoutTrackArgs,
+        stale.staleTryoutTracks,
+        "stale try-out tracks",
+        BATCH_SIZES.staleTryoutTracks
       );
       deleted += yield* deleteStaleItems(
         config,

@@ -14,7 +14,8 @@ import {
   StaleContentSchema,
   TryoutScaleIntegrityPageSchema,
   UnusedAuthorsSchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
+} from "@repo/backend/scripts/sync-content/contract/inspection";
+import { hasLocalizedSourceKey } from "@repo/backend/scripts/sync-content/contract/key";
 import type {
   ConvexConfig,
   FilesystemSlugs,
@@ -212,10 +213,11 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     filesystemSlugs.questionSetSourcePaths
   );
   const questionSourceKeySet = new Set(filesystemSlugs.questionSourceKeys);
-  const tryoutCountryPathSet = new Set(filesystemSlugs.tryoutCountryPaths);
-  const tryoutExamPathSet = new Set(filesystemSlugs.tryoutExamPaths);
-  const tryoutSetPathSet = new Set(filesystemSlugs.tryoutSetPaths);
-  const tryoutSectionPathSet = new Set(filesystemSlugs.tryoutSectionPaths);
+  const tryoutCountryKeySet = new Set(filesystemSlugs.tryoutCountryKeys);
+  const tryoutExamKeySet = new Set(filesystemSlugs.tryoutExamKeys);
+  const tryoutTrackKeySet = new Set(filesystemSlugs.tryoutTrackKeys);
+  const tryoutSetKeySet = new Set(filesystemSlugs.tryoutSetKeys);
+  const tryoutSectionKeySet = new Set(filesystemSlugs.tryoutSectionKeys);
   const [
     articles,
     curriculumTopics,
@@ -224,6 +226,7 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     questions,
     tryoutCountries,
     tryoutExams,
+    tryoutTracks,
     tryoutSets,
     tryoutSections,
   ] = yield* Effect.all([
@@ -272,6 +275,12 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     collectPages(
       config,
       internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("tryoutTracks"),
+      StaleContentPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.stale.listStaleContentPage,
       buildStaleContentArgs("tryoutSets"),
       StaleContentPageSchema
     ),
@@ -300,16 +309,19 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
       (item) => !questionSourceKeySet.has(getQuestionSourceKey(item))
     ),
     staleTryoutCountries: tryoutCountries.filter(
-      (item) => !tryoutCountryPathSet.has(item.sourcePath)
+      (item) => !hasLocalizedSourceKey(tryoutCountryKeySet, item)
     ),
     staleTryoutExams: tryoutExams.filter(
-      (item) => !tryoutExamPathSet.has(item.sourcePath)
+      (item) => !hasLocalizedSourceKey(tryoutExamKeySet, item)
+    ),
+    staleTryoutTracks: tryoutTracks.filter(
+      (item) => !hasLocalizedSourceKey(tryoutTrackKeySet, item)
     ),
     staleTryoutSets: tryoutSets.filter(
-      (item) => !tryoutSetPathSet.has(item.sourcePath)
+      (item) => !hasLocalizedSourceKey(tryoutSetKeySet, item)
     ),
     staleTryoutSections: tryoutSections.filter(
-      (item) => !tryoutSectionPathSet.has(item.sourcePath)
+      (item) => !hasLocalizedSourceKey(tryoutSectionKeySet, item)
     ),
   });
 });
@@ -373,6 +385,7 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   const questionIdsWithChoices = new Set(
     choices.map((choice) => choice.questionId)
   );
+  const questionIds = new Set(questions.map((question) => question.id));
   const questionIdsWithAuthors = new Set(
     contentAuthors
       .filter((authorLink) => authorLink.contentType === "question")
@@ -383,6 +396,13 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   );
 
   return Schema.decodeUnknownSync(DataIntegritySchema)({
+    orphanQuestionChoiceIds: Array.from(
+      new Set(
+        choices
+          .filter((choice) => !questionIds.has(choice.questionId))
+          .map((choice) => choice.questionId)
+      )
+    ),
     questionsWithoutChoices: questions
       .filter((question) => !questionIdsWithChoices.has(question.id))
       .map((question) => `${question.sourcePath} (${question.locale})`),

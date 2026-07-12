@@ -143,7 +143,11 @@ const nakafaTestRefs = [
     "articles"
   ),
   readNakafaContentRefFixture("en", "articles/politics/missing", "articles"),
-  readNakafaContentRefFixture("en", "try-out/indonesia/snbt/set-2", "tryout"),
+  readNakafaContentRefFixture(
+    "en",
+    "try-out/indonesia/snbt/2027/set-2",
+    "tryout"
+  ),
 ] as const;
 
 /** Resolves graph content IDs and public URL projections for injected tests. */

@@ -9,6 +9,7 @@ import {
   syncedTryoutRouteValidator,
   syncedTryoutSectionValidator,
   syncedTryoutSetValidator,
+  syncedTryoutTrackValidator,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
 import {
   deleteStaleQuestionSetsImpl,
@@ -17,6 +18,7 @@ import {
   deleteStaleTryoutExamsImpl,
   deleteStaleTryoutSectionsImpl,
   deleteStaleTryoutSetsImpl,
+  deleteStaleTryoutTracksImpl,
 } from "@repo/backend/convex/contentSync/tryouts/stale";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { v } from "convex/values";
@@ -28,6 +30,7 @@ export const bulkSyncTryouts = internalMutation({
     exams: v.array(syncedTryoutExamValidator),
     routes: v.array(syncedTryoutRouteValidator),
     sets: v.array(syncedTryoutSetValidator),
+    tracks: v.array(syncedTryoutTrackValidator),
     questionSets: v.array(syncedQuestionSetValidator),
     questions: v.array(syncedQuestionValidator),
     sections: v.array(syncedTryoutSectionValidator),
@@ -70,6 +73,15 @@ export const deleteStaleTryoutSets = internalMutation({
   },
   returns: deleteResultValidator,
   handler: async (ctx, args) => await deleteStaleTryoutSetsImpl(ctx, args),
+});
+
+/** Deletes one bounded stale try-out track batch after direct set rows. */
+export const deleteStaleTryoutTracks = internalMutation({
+  args: {
+    trackIds: v.array(v.id("tryoutTracks")),
+  },
+  returns: deleteResultValidator,
+  handler: async (ctx, args) => await deleteStaleTryoutTracksImpl(ctx, args),
 });
 
 /** Deletes one bounded stale try-out exam batch. */

@@ -1,16 +1,25 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { deleteContentProjectionsBySourcePath } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import type { SyncedTryoutRoute } from "@repo/backend/convex/contentSync/tryouts/spec";
 import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import { getContentSearchText } from "@repo/backend/convex/contents/helpers/search/documents";
 import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 
-/** Syncs a try-out route into both route lookup and agent-search read models. */
+/** Reconciles one try-out route across route lookup and agent-search read models. */
 export async function syncTryoutRoute(
   ctx: MutationCtx,
   route: SyncedTryoutRoute,
   syncedAt: number
 ) {
+  if (!route.isReady) {
+    await deleteContentProjectionsBySourcePath(ctx, {
+      locale: route.locale,
+      route: route.sourcePath,
+    });
+    return;
+  }
+
   const graph = getContentGraphIdentity({
     kind: route.kind,
     locale: route.locale,

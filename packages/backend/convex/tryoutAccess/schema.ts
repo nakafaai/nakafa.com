@@ -40,6 +40,21 @@ export const tryoutEntitlementSourceKindValidator = literals(
   tryoutEntitlementSourceKindSubscription
 );
 
+const tryoutScopeFields = {
+  countryKey: v.string(),
+  examKey: v.string(),
+};
+
+const tryoutTrackScopeFields = {
+  ...tryoutScopeFields,
+  trackKey: v.string(),
+};
+
+const tryoutSetScopeFields = {
+  ...tryoutTrackScopeFields,
+  setKey: v.string(),
+};
+
 export const tryoutAccessCampaignValidator = v.object({
   slug: v.string(),
   name: v.string(),
@@ -54,15 +69,29 @@ export const tryoutAccessCampaignValidator = v.object({
   grantDurationDays: v.optional(v.number()),
 });
 
-export const tryoutAccessTargetValidator = v.object({
-  campaignId: v.id("tryoutAccessCampaigns"),
-  countryKey: v.string(),
-  examKey: v.string(),
-  setKey: v.optional(v.string()),
-  campaignKind: tryoutAccessCampaignKindValidator,
-  startsAt: v.number(),
-  endsAt: v.number(),
-});
+export const tryoutAccessTargetValidator = v.union(
+  v.object({
+    campaignId: v.id("tryoutAccessCampaigns"),
+    campaignKind: tryoutAccessCampaignKindValidator,
+    endsAt: v.number(),
+    startsAt: v.number(),
+    ...tryoutScopeFields,
+  }),
+  v.object({
+    campaignId: v.id("tryoutAccessCampaigns"),
+    campaignKind: tryoutAccessCampaignKindValidator,
+    endsAt: v.number(),
+    startsAt: v.number(),
+    ...tryoutTrackScopeFields,
+  }),
+  v.object({
+    campaignId: v.id("tryoutAccessCampaigns"),
+    campaignKind: tryoutAccessCampaignKindValidator,
+    endsAt: v.number(),
+    startsAt: v.number(),
+    ...tryoutSetScopeFields,
+  })
+);
 
 export const tryoutAccessLinkValidator = v.object({
   campaignId: v.id("tryoutAccessCampaigns"),
@@ -80,18 +109,38 @@ export const tryoutAccessGrantValidator = v.object({
   status: tryoutAccessGrantStatusValidator,
 });
 
-export const tryoutEntitlementValidator = v.object({
-  userId: v.id("users"),
-  countryKey: v.string(),
-  examKey: v.string(),
-  setKey: v.optional(v.string()),
-  sourceKind: tryoutEntitlementSourceKindValidator,
-  accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
-  accessGrantId: v.optional(v.id("tryoutAccessGrants")),
-  subscriptionId: v.optional(v.string()),
-  startsAt: v.number(),
-  endsAt: v.number(),
-});
+export const tryoutEntitlementValidator = v.union(
+  v.object({
+    accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
+    accessGrantId: v.optional(v.id("tryoutAccessGrants")),
+    endsAt: v.number(),
+    sourceKind: tryoutEntitlementSourceKindValidator,
+    startsAt: v.number(),
+    subscriptionId: v.optional(v.string()),
+    userId: v.id("users"),
+    ...tryoutScopeFields,
+  }),
+  v.object({
+    accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
+    accessGrantId: v.optional(v.id("tryoutAccessGrants")),
+    endsAt: v.number(),
+    sourceKind: tryoutEntitlementSourceKindValidator,
+    startsAt: v.number(),
+    subscriptionId: v.optional(v.string()),
+    userId: v.id("users"),
+    ...tryoutTrackScopeFields,
+  }),
+  v.object({
+    accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
+    accessGrantId: v.optional(v.id("tryoutAccessGrants")),
+    endsAt: v.number(),
+    sourceKind: tryoutEntitlementSourceKindValidator,
+    startsAt: v.number(),
+    subscriptionId: v.optional(v.string()),
+    userId: v.id("users"),
+    ...tryoutSetScopeFields,
+  })
+);
 
 const tables = {
   tryoutAccessCampaigns: defineTable(tryoutAccessCampaignValidator)
@@ -107,9 +156,10 @@ const tables = {
 
   tryoutAccessTargets: defineTable(tryoutAccessTargetValidator)
     .index("by_campaignId", ["campaignId"])
-    .index("by_countryKey_and_examKey_and_setKey_and_campaignKind", [
+    .index("by_countryKey_and_examKey_and_trackKey_and_setKey_and_kind", [
       "countryKey",
       "examKey",
+      "trackKey",
       "setKey",
       "campaignKind",
     ]),
@@ -126,17 +176,19 @@ const tables = {
   tryoutEntitlements: defineTable(tryoutEntitlementValidator)
     .index("by_accessGrantId", ["accessGrantId"])
     .index("by_sourceKind_and_endsAt", ["sourceKind", "endsAt"])
-    .index("by_userId_and_countryKey_and_examKey_and_setKey_and_endsAt", [
+    .index("by_user_tryout_scope_endsAt", [
       "userId",
       "countryKey",
       "examKey",
+      "trackKey",
       "setKey",
       "endsAt",
     ])
-    .index("by_userId_and_countryKey_and_examKey_and_setKey_and_startsAt", [
+    .index("by_user_tryout_scope_startsAt", [
       "userId",
       "countryKey",
       "examKey",
+      "trackKey",
       "setKey",
       "startsAt",
     ])
@@ -146,6 +198,7 @@ const tables = {
       "subscriptionId",
       "countryKey",
       "examKey",
+      "trackKey",
       "setKey",
     ]),
 };

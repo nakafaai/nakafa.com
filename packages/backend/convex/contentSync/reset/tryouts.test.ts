@@ -3,6 +3,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { questionResetBatchSize } from "@repo/backend/convex/contentSync/reset/spec";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -43,7 +44,9 @@ describe("contentSync/reset/tryouts", () => {
   it("deletes questions through their dependent rows", async () => {
     const t = convexTest(schema, convexModules);
 
-    await t.mutation(seedQuestionWithDependents);
+    await t.mutation(async (ctx) => {
+      await seedQuestionWithDependents(ctx, 1);
+    });
 
     const result = await t.mutation(deleteQuestionRows);
     const rows = await t.query(getQuestionRows);
@@ -57,13 +60,35 @@ describe("contentSync/reset/tryouts", () => {
       questions: [],
     });
   });
+
+  it("paginates question deletion below the dependent choice read limit", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      for (let index = 1; index <= questionResetBatchSize + 1; index += 1) {
+        await seedQuestionWithDependents(ctx, index);
+      }
+    });
+
+    const firstBatch = await t.mutation(deleteQuestionRows);
+    const secondBatch = await t.mutation(deleteQuestionRows);
+    const rows = await t.query(getQuestionRows);
+
+    expect(firstBatch).toEqual({
+      deleted: questionResetBatchSize,
+      hasMore: true,
+    });
+    expect(secondBatch).toEqual({ deleted: 1, hasMore: false });
+    expect(rows.questions).toEqual([]);
+    expect(rows.questionChoices).toEqual([]);
+  });
 });
 
 /** Seeds try-out and non-try-out route projection rows. */
 async function seedTryoutRouteProjections(ctx: MutationCtx) {
   await insertProjectedRoute(ctx, {
     kind: "tryout-set",
-    route: "try-out/indonesia/snbt/set-1",
+    route: "try-out/indonesia/snbt/2027/set-1",
     section: "tryout",
   });
   await insertProjectedRoute(ctx, {
@@ -74,7 +99,9 @@ async function seedTryoutRouteProjections(ctx: MutationCtx) {
 }
 
 /** Seeds one question with the dependent rows owned by question cleanup. */
-async function seedQuestionWithDependents(ctx: MutationCtx) {
+async function seedQuestionWithDependents(ctx: MutationCtx, index: number) {
+  const setKey = `set-${index}`;
+  const sourcePath = `try-out/indonesia/snbt/2027/${setKey}/pengetahuan-kuantitatif`;
   const questionSetId = await ctx.db.insert("questionSets", {
     contentHash: "question-set-hash",
     countryKey: "indonesia",
@@ -82,8 +109,8 @@ async function seedQuestionWithDependents(ctx: MutationCtx) {
     locale: "id",
     questionCount: 1,
     sectionKey: "pengetahuan-kuantitatif",
-    setKey: "set-1",
-    sourcePath: "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif",
+    setKey,
+    sourcePath,
     sourceRevision: "2026",
     syncedAt: 1,
     title: "Pengetahuan Kuantitatif",
@@ -96,8 +123,8 @@ async function seedQuestionWithDependents(ctx: MutationCtx) {
     number: 1,
     questionBody: "Pertanyaan",
     questionSetId,
-    sourceKey: "tryout:question:1",
-    sourcePath: "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif/1",
+    sourceKey: `tryout:question:${index}`,
+    sourcePath: `${sourcePath}/1`,
     sourceRevision: "2026",
     syncedAt: 1,
     title: "Pertanyaan 1",
@@ -121,7 +148,10 @@ async function seedQuestionWithDependents(ctx: MutationCtx) {
     contentType: "question",
     order: 0,
   });
-  await insertQuestionProjection(ctx, questionId);
+  await insertQuestionProjection(ctx, {
+    questionId,
+    route: `${sourcePath}/1`,
+  });
 }
 
 /** Inserts one route projection row family for the requested section. */
@@ -181,10 +211,12 @@ async function insertProjectedRoute(
 /** Inserts question route and search projections matching deleteQuestion. */
 async function insertQuestionProjection(
   ctx: MutationCtx,
-  questionId: Id<"questions">
+  args: {
+    questionId: Id<"questions">;
+    route: string;
+  }
 ) {
-  const route = "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif/1";
-  const graph = projectionGraph(route);
+  const graph = projectionGraph(args.route);
 
   await ctx.db.insert("contentRoutes", {
     ...graph,
@@ -193,11 +225,11 @@ async function insertQuestionProjection(
     kind: "tryout-set",
     locale: "id",
     markdown: false,
-    route,
+    route: args.route,
     section: "tryout",
-    sourcePath: route,
+    sourcePath: args.route,
     syncedAt: 1,
-    title: `Question ${questionId}`,
+    title: `Question ${args.questionId}`,
   });
   await ctx.db.insert(
     "contentSearch",
@@ -205,9 +237,9 @@ async function insertQuestionProjection(
       ...graph,
       contentHash: "question-search-hash",
       locale: "id",
-      route,
+      route: args.route,
       section: "tryout",
-      sourcePath: route,
+      sourcePath: args.route,
       syncedAt: 1,
       text: "Question body",
       title: "Question search",

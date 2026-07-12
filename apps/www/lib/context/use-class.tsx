@@ -1,6 +1,7 @@
 "use client";
 
 import type { api } from "@repo/backend/convex/_generated/api";
+import { type Preloaded, usePreloadedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { createContext, useContextSelector } from "use-context-selector";
 
@@ -12,17 +13,23 @@ type ClassContextValue = Extract<
 const ClassContext = createContext<ClassContextValue | null>(null);
 
 /**
- * Provide the resolved class route snapshot to the class client subtree.
+ * Hydrate and provide the reactive class route to the class client subtree.
  */
 export function ClassContextProvider({
   children,
-  value,
+  preloaded,
 }: {
   children: React.ReactNode;
-  value: ClassContextValue;
+  preloaded: Preloaded<typeof api.classes.queries.getClassRoute>;
 }) {
+  const route = usePreloadedQuery(preloaded);
+
+  if (route.kind !== "accessible") {
+    return null;
+  }
+
   return (
-    <ClassContext.Provider value={value}>{children}</ClassContext.Provider>
+    <ClassContext.Provider value={route}>{children}</ClassContext.Provider>
   );
 }
 

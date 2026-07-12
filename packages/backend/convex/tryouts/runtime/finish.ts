@@ -1,7 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { getSectionScoreSnapshot } from "@repo/backend/convex/tryouts/runtime/result";
 import {
   finalizeAttemptScore,
+  scoreTryoutSection,
   summarizeResponses,
 } from "@repo/backend/convex/tryouts/runtime/score";
 import { ConvexError } from "convex/values";
@@ -75,6 +77,13 @@ async function createExpiredSectionAttempt(
     snapshot: TryoutSectionSnapshot;
   }
 ) {
+  const score = await scoreTryoutSection(ctx, {
+    attempt: args.attempt,
+    responses: [],
+    totalQuestions: args.snapshot.questionCount,
+    tryoutSectionId: args.snapshot.tryoutSectionId,
+  });
+
   await ctx.db.insert("tryoutSectionAttempts", {
     answeredCount: 0,
     completedAt: args.attempt.expiresAt,
@@ -84,6 +93,7 @@ async function createExpiredSectionAttempt(
     lastActivityAt: args.now,
     sectionKey: args.snapshot.sectionKey,
     sectionOrder: args.snapshot.sectionOrder,
+    score: getSectionScoreSnapshot(score),
     startedAt: args.attempt.expiresAt,
     status: "expired",
     totalQuestions: args.snapshot.questionCount,
@@ -127,17 +137,19 @@ export async function finalizeSectionAttempt(
     now: number;
     section: TryoutSectionAttempt;
   }
-) {
-  const sectionSummary = summarizeResponses(
-    await loadSectionResponses(ctx, args.section)
-  );
+): Promise<{ kind: "completed" }> {
+  const finalization = await getSectionFinalization(ctx, {
+    attempt: args.attempt,
+    section: args.section,
+  });
 
   await ctx.db.patch(args.section._id, {
-    answeredCount: sectionSummary.answeredCount,
+    answeredCount: finalization.answeredCount,
     completedAt: args.now,
-    correctAnswers: sectionSummary.correctAnswers,
+    correctAnswers: finalization.correctAnswers,
     endReason: args.endReason,
     lastActivityAt: args.now,
+    score: finalization.score,
     status: args.endReason === "time-expired" ? "expired" : "completed",
   });
 
@@ -150,7 +162,7 @@ export async function finalizeSectionAttempt(
   });
 
   if (completedSectionKeys.length < args.attempt.sectionSnapshots.length) {
-    return { kind: "completed" as const };
+    return { kind: "completed" };
   }
 
   const currentAttempt = await ctx.db.get(args.attempt._id);
@@ -164,10 +176,11 @@ export async function finalizeSectionAttempt(
 
   await finalizeAttemptScore(ctx, {
     attempt: currentAttempt,
+    endReason: "submitted",
     now: args.now,
   });
 
-  return { kind: "completed" as const };
+  return { kind: "completed" };
 }
 
 /** Expires one whole attempt and any in-progress section attempts it owns. */
@@ -194,16 +207,18 @@ export async function expireAttempt(
       continue;
     }
 
-    const summary = summarizeResponses(
-      await loadSectionResponses(ctx, section)
-    );
+    const finalization = await getSectionFinalization(ctx, {
+      attempt: args.attempt,
+      section,
+    });
 
     await ctx.db.patch(section._id, {
-      answeredCount: summary.answeredCount,
+      answeredCount: finalization.answeredCount,
       completedAt: args.attempt.expiresAt,
-      correctAnswers: summary.correctAnswers,
+      correctAnswers: finalization.correctAnswers,
       endReason: "time-expired",
       lastActivityAt: args.now,
+      score: finalization.score,
       status: "expired",
     });
   }
@@ -232,6 +247,30 @@ export async function expireAttempt(
 
   return finalizeAttemptScore(ctx, {
     attempt: currentAttempt,
+    endReason: "time-expired",
     now: args.now,
   });
+}
+
+/** Calculates the immutable counters and score stored by one terminal section. */
+async function getSectionFinalization(
+  ctx: MutationCtx,
+  args: {
+    attempt: TryoutAttempt;
+    section: TryoutSectionAttempt;
+  }
+) {
+  const responses = await loadSectionResponses(ctx, args.section);
+  const summary = summarizeResponses(responses);
+  const score = await scoreTryoutSection(ctx, {
+    attempt: args.attempt,
+    responses,
+    totalQuestions: args.section.totalQuestions,
+    tryoutSectionId: args.section.tryoutSectionId,
+  });
+
+  return {
+    ...summary,
+    score: getSectionScoreSnapshot(score),
+  };
 }

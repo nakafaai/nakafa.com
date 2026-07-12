@@ -17,7 +17,7 @@ const ARTICLE_ROUTE = "articles/politics/views";
 const ARTICLE_CONTENT_ID = "asset:id:catalog:article:views";
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
 const SUBJECT_CONTENT_ID = "asset:id:catalog:subject:views";
-const TRYOUT_SET_ROUTE = "try-out/indonesia/snbt/set-1";
+const TRYOUT_SET_ROUTE = "try-out/indonesia/snbt/2027/set-1";
 const TRYOUT_SET_CONTENT_ID = "asset:id:catalog:tryout-set:views";
 const canonicalContext = {
   contextKey: "canonical",

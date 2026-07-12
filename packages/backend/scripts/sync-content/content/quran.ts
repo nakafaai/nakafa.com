@@ -6,12 +6,12 @@ import {
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
 import {
-  BATCH_SIZES,
   QuranSearchSyncResultSchema,
   QuranStaleDeleteResultSchema,
   QuranSurahSyncResultSchema,
   QuranVerseSyncResultSchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
+} from "@repo/backend/scripts/sync-content/contract/quran";
+import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -242,6 +242,8 @@ function buildQuranVersePayload(
   surahNumber: number,
   verse: Verse
 ): QuranVersePayload {
+  const tafsir = { id: { short: verse.tafsir.id.short } };
+
   return {
     audio: verse.audio,
     contentHash: computeHash(
@@ -249,7 +251,7 @@ function buildQuranVersePayload(
         audio: verse.audio,
         meta: verse.meta,
         surahNumber,
-        tafsir: verse.tafsir,
+        tafsir,
         text: verse.text,
         translation: verse.translation,
         verseNumber: verse.number.inSurah,
@@ -264,7 +266,7 @@ function buildQuranVersePayload(
     sajdaObligatory: verse.meta.sajda.obligatory,
     sajdaRecommended: verse.meta.sajda.recommended,
     surahNumber,
-    tafsir: verse.tafsir,
+    tafsir,
     text: verse.text,
     translation: verse.translation,
     verseNumber: verse.number.inSurah,

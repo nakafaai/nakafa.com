@@ -1,12 +1,10 @@
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
-import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -14,14 +12,13 @@ import {
   type ForumPost,
   isOptimisticForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
+import { usePostReactionMutation } from "@/components/school/classes/forum/reaction/mutation.client";
 
 /** Renders the current reaction chips and toggles for one post. */
 export function PostReactions({ post }: { post: ForumPost }) {
   const t = useTranslations("Common");
   const [isPending, startTransition] = useTransition();
-  const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.togglePostReaction
-  );
+  const toggleReaction = usePostReactionMutation();
 
   if (isOptimisticForumPost(post) || post.reactionUsers.length === 0) {
     return null;

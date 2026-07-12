@@ -29,13 +29,14 @@ const subjectRoute = decodeRoute({
 });
 
 const snbtRoute = decodeRoute({
-  assetId: "asset:id:tryout:indonesia:snbt:tryout-set:indonesia:snbt:set-1",
-  conceptId: "concept:tryout:indonesia:snbt:set-1",
+  assetId:
+    "asset:id:tryout:indonesia:snbt:tryout-set:indonesia:snbt:2027:set-1",
+  conceptId: "concept:tryout:indonesia:snbt:2027:set-1",
   kind: "tryout-set",
   lensId: "lens:tryout:indonesia:snbt",
   locale: "id",
-  route: "try-out/indonesia/snbt/set-1",
-  sourcePath: "try-out/indonesia/snbt/set-1",
+  route: "try-out/indonesia/snbt/2027/set-1",
+  sourcePath: "try-out/indonesia/snbt/2027/set-1",
 });
 
 const englishSubjectRoute = decodeRoute({

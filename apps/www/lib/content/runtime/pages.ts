@@ -12,6 +12,9 @@ type ArticlePageArgs = FunctionArgs<
 type CurriculumPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getCurriculumPage
 >;
+type QuranSurahMetadataArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.getQuranSurahMetadata
+>;
 type QuranSurahPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getQuranSurahPage
 >;
@@ -35,6 +38,14 @@ export function fetchRuntimeArticlePage(args: ArticlePageArgs) {
 export function fetchRuntimeCurriculumPage(args: CurriculumPageArgs) {
   return fetchRuntimeQuery(
     api.contents.queries.runtime.getCurriculumPage,
+    args
+  );
+}
+
+/** Reads one Quran surah metadata row without loading verse documents. */
+export function fetchRuntimeQuranSurahMetadata(args: QuranSurahMetadataArgs) {
+  return fetchRuntimeQuery(
+    api.contents.queries.runtime.getQuranSurahMetadata,
     args
   );
 }
@@ -77,6 +88,15 @@ export const getRuntimeCurriculumPage = Effect.fn(
 )(function* (args: CurriculumPageArgs) {
   return yield* readRuntimeQuery("getCurriculumPage", () =>
     fetchRuntimeCurriculumPage(args)
+  );
+});
+
+/** Reads one Quran surah metadata row from the Convex content runtime model. */
+export const getRuntimeQuranSurahMetadata = Effect.fn(
+  "www.contentRuntime.quranSurahMetadata"
+)(function* (args: QuranSurahMetadataArgs) {
+  return yield* readRuntimeQuery("getQuranSurahMetadata", () =>
+    fetchRuntimeQuranSurahMetadata(args)
   );
 });
 

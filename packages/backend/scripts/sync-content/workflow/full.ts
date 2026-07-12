@@ -14,9 +14,9 @@ import type {
   ConvexConfig,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/contract/types";
-import { syncGeneratedReadModels } from "@repo/backend/scripts/sync-content/models/sync";
 import { syncContentRouteArtifactPages } from "@repo/backend/scripts/sync-content/routes/artifacts";
 import { readRoutePageOptionsAfterCleanup } from "@repo/backend/scripts/sync-content/routes/options";
+import { syncPublicRoutes } from "@repo/backend/scripts/sync-content/routes/sync";
 import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/runtime/cache";
 import {
   getCurrentGitCommit,
@@ -59,13 +59,11 @@ export const syncFull = Effect.fn("sync.full")(function* (
           routePageOptions
         );
         log(`  Route Pages: ${formatSyncResult(routePageResult)}`);
-        const generatedReadModelResult = yield* syncGeneratedReadModels(
+        const publicRouteResult = yield* syncPublicRoutes(
           config,
           routePageOptions
         );
-        log(
-          `  Generated Models: ${formatSyncResult(generatedReadModelResult)}`
-        );
+        log(`  Public Routes: ${formatSyncResult(publicRouteResult)}`);
         const learningProgramResult = yield* syncLearningPrograms(
           config,
           routePageOptions

@@ -11,7 +11,6 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -29,7 +28,6 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { getAppUrl } from "@repo/next-config/app";
-import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import {
   Activity,
@@ -40,9 +38,15 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
+import {
+  useDeleteChatMutation,
+  useUpdateChatTitleMutation,
+  useUpdateChatVisibilityMutation,
+} from "@/components/ai/chat/mutation.client";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { useUser } from "@/lib/context/use-user";
 
+/** Render the current chat header or its stable empty placeholder. */
 export function AiChatHeader() {
   const chat = useCurrentChat((s) => s.chat);
 
@@ -53,10 +57,12 @@ export function AiChatHeader() {
   return <AiChatHeaderContent chat={chat} />;
 }
 
+/** Preserve the chat-header layout while no current chat is available. */
 function AiChatHeaderPlaceholder() {
   return <Header />;
 }
 
+/** Render title, visibility, sharing, and deletion controls for one chat. */
 function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   const t = useTranslations("Ai");
 
@@ -74,14 +80,13 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   const user = useUser((s) => s.user);
   const isOwner = user?.appUser._id === chat.userId;
 
-  const updateChatTitle = useMutation(api.chats.mutations.updateChatTitle);
-  const updateChatVisibility = useMutation(
-    api.chats.mutations.updateChatVisibility
-  );
-  const deleteChat = useMutation(api.chats.mutations.deleteChat);
+  const updateChatTitle = useUpdateChatTitleMutation();
+  const updateChatVisibility = useUpdateChatVisibilityMutation();
+  const deleteChat = useDeleteChatMutation();
 
   const [isPending, startTransition] = useTransition();
 
+  /** Enter title editing with the current title selected for input. */
   const handleEdit = () => {
     setChatTitle(chat.title ?? "");
     setIsEditing(true);
@@ -90,6 +95,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
     }, 0);
   };
 
+  /** Persist a non-empty edited chat title. */
   const handleSave = () => {
     startTransition(async () => {
       const nextTitle = chatTitle.trim();
@@ -106,6 +112,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
     });
   };
 
+  /** Persist the selected chat visibility. */
   const handleUpdateVisibility = (visibility: "public" | "private") => {
     startTransition(async () => {
       await updateChatVisibility({
@@ -115,6 +122,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
     });
   };
 
+  /** Leave the current route and delete the owned chat. */
   const handleDelete = () => {
     if (!user) {
       return;
@@ -322,6 +330,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   );
 }
 
+/** Compose the fixed-height chat header surface. */
 function Header({
   className,
   children,
@@ -340,6 +349,7 @@ function Header({
   );
 }
 
+/** Group compact chat-header controls with consistent spacing. */
 function HeaderGroup({ className, ...props }: ComponentProps<"div">) {
   return (
     <div className={cn("flex items-center gap-1.5", className)} {...props} />

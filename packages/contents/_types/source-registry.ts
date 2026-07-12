@@ -57,7 +57,10 @@ export function createSourceRegistryRecord(
   input: SourceRegistryInput
 ): SourceRegistryRecord | null {
   const publicRoute = normalizeGraphRoute(input.route);
-  const projection = getSourceRouteProjectionForRoute(publicRoute);
+  const projection = getSourceRouteProjectionForRoute(
+    publicRoute,
+    input.locale
+  );
 
   if (!projection) {
     return null;

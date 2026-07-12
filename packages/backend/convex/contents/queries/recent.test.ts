@@ -339,7 +339,7 @@ async function insertMaterialRoute(ctx: MutationCtx, suffix: string) {
 
 /** Inserts the route catalog graph projection for one try-out set. */
 async function insertTryoutRoute(ctx: MutationCtx, suffix: string) {
-  const route = `try-out/indonesia/snbt/${suffix}`;
+  const route = "try-out/indonesia/snbt/2027/set-1";
   const identity = createLearningGraphIdentityFromRoute({
     locale: "en",
     route,

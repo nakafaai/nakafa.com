@@ -9,7 +9,6 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -22,7 +21,6 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
@@ -32,6 +30,10 @@ import { toast } from "sonner";
 import { getAssessmentMode } from "@/components/school/classes/assessments/data/mode";
 import { getAssessmentStatus } from "@/components/school/classes/assessments/data/status";
 import { CreateAssessmentDialog } from "@/components/school/classes/assessments/dialog/create";
+import {
+  useDeleteAssessmentMutation,
+  useReorderAssessmentMutation,
+} from "@/components/school/classes/assessments/mutation.client";
 import type { Assessment } from "@/components/school/classes/assessments/types";
 import { formatScheduledAt } from "@/components/school/classes/assessments/utils";
 import { SchoolClassesDeleteDialog } from "@/components/school/classes/delete-dialog";
@@ -139,13 +141,10 @@ function AssessmentActions({
   const [isPending, startTransition] = useTransition();
   const [confirmDeleteOpen, confirmDeleteHandlers] = useDisclosure(false);
   const [editOpen, editHandlers] = useDisclosure(false);
-  const reorderAssessment = useMutation(
-    api.assessments.mutations.public.reorder.reorderAssessment
-  );
-  const deleteAssessment = useMutation(
-    api.assessments.mutations.public.delete.deleteAssessment
-  );
+  const reorderAssessment = useReorderAssessmentMutation();
+  const deleteAssessment = useDeleteAssessmentMutation();
 
+  /** Move this assessment one loaded position upward. */
   function handleMoveUp() {
     startTransition(async () => {
       await reorderAssessment({
@@ -156,6 +155,7 @@ function AssessmentActions({
     });
   }
 
+  /** Move this assessment one loaded position downward. */
   function handleMoveDown() {
     startTransition(async () => {
       await reorderAssessment({
@@ -166,6 +166,7 @@ function AssessmentActions({
     });
   }
 
+  /** Delete this assessment and report an unexpected failure. */
   function handleDelete() {
     startTransition(async () => {
       await Effect.runPromise(

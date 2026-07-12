@@ -1,4 +1,3 @@
-import { LocaleSchema } from "@repo/contents/_types/content";
 import {
   getSourceRouteProjection,
   getSourceRouteProjectionForRoute,
@@ -7,7 +6,7 @@ import {
 import { normalizeSourceRouteProjection } from "@repo/contents/_types/graph/route";
 import {
   InvalidLearningGraphRouteError,
-  LearningObjectKindSchema,
+  SourceRouteInputSchema,
   type SourceRouteProjection,
 } from "@repo/contents/_types/graph/schema";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -28,11 +27,7 @@ export type LearningGraphIdentity = Schema.Schema.Type<
 >;
 
 /** Runtime schema for source records that can be projected into graph identity. */
-export const LearningGraphSourceSchema = Schema.Struct({
-  kind: LearningObjectKindSchema,
-  locale: LocaleSchema,
-  route: Schema.String,
-});
+export const LearningGraphSourceSchema = SourceRouteInputSchema;
 
 /** Learning graph source derived from the runtime schema. */
 export type LearningGraphSource = Schema.Schema.Type<
@@ -72,7 +67,10 @@ export const parseLearningGraphIdentity = Effect.fn(
 export function createLearningGraphIdentityFromRoute(
   source: Omit<LearningGraphSource, "kind">
 ) {
-  const projection = getSourceRouteProjectionForRoute(source.route);
+  const projection = getSourceRouteProjectionForRoute(
+    source.route,
+    source.locale
+  );
 
   if (!projection) {
     return null;
@@ -106,8 +104,11 @@ export function buildGraphId(prefix: string, segments: readonly string[]) {
 }
 
 /** Infers the graph object kind represented by one canonical public route. */
-export function getLearningObjectKindForRoute(route: string) {
-  return getSourceRouteProjectionForRoute(route)?.kind ?? null;
+export function getLearningObjectKindForRoute(
+  route: string,
+  locale: LearningGraphSource["locale"]
+) {
+  return getSourceRouteProjectionForRoute(route, locale)?.kind ?? null;
 }
 
 /** Builds stable graph IDs from a validated source-route projection. */

@@ -74,7 +74,10 @@ function renderNakafaQuranMarkdown(
   return Effect.gen(function* () {
     const loadSurah = readers.loadSurah ?? getSurah;
     const readQuran = readers.readQuran ?? getNakafaAgentQuranReference;
-    const surahNumber = yield* parseQuranSurahNumberForRoute(ref.route);
+    const surahNumber = yield* parseQuranSurahNumberForRoute({
+      locale: ref.locale,
+      route: ref.route,
+    });
 
     const surah = yield* Effect.option(loadSurah(surahNumber));
 

@@ -1,14 +1,24 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
-import { scoreIrtAttempt } from "@repo/backend/convex/tryouts/runtime/irt";
-import type { AttemptScore } from "@repo/backend/convex/tryouts/runtime/result";
+import {
+  type AttemptEndReason,
+  getAttemptStatusFromEndReason,
+} from "@repo/backend/convex/lib/attempts";
+import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
+import {
+  scoreIrtAttempt,
+  scoreIrtSection,
+} from "@repo/backend/convex/tryouts/runtime/irt";
+import {
+  type AttemptScore,
+  scoreRawAnswers,
+} from "@repo/backend/convex/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutResponse = Doc<"tryoutResponses">;
-type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
 
 /** Loads one owned attempt or rejects it before mutating runtime rows. */
 export async function requireOwnedAttempt(
@@ -38,10 +48,42 @@ export function summarizeResponses(responses: TryoutResponse[]) {
   );
 }
 
+/** Scores one terminal section with its parent attempt's frozen strategy. */
+export async function scoreTryoutSection(
+  ctx: MutationCtx,
+  args: {
+    attempt: TryoutAttempt;
+    responses: TryoutResponse[];
+    totalQuestions: number;
+    tryoutSectionId: Id<"tryoutSections">;
+  }
+) {
+  if (args.attempt.scoringStrategy === "irt") {
+    const score = await scoreIrtSection(ctx, {
+      ...args,
+      scoringStrategy: args.attempt.scoringStrategy,
+    });
+
+    return score;
+  }
+
+  const { correctAnswers } = summarizeResponses(args.responses);
+
+  return scoreRawAnswers({
+    correctAnswers,
+    scoringStrategy: args.attempt.scoringStrategy,
+    totalQuestions: args.totalQuestions,
+  });
+}
+
 /** Finalizes one attempt and stores the score snapshot exactly once. */
 export async function finalizeAttemptScore(
   ctx: MutationCtx,
-  args: { attempt: TryoutAttempt; now: number }
+  args: {
+    attempt: TryoutAttempt;
+    endReason: AttemptEndReason;
+    now: number;
+  }
 ) {
   const existingScore = await ctx.db
     .query("tryoutScores")
@@ -71,7 +113,6 @@ export async function finalizeAttemptScore(
   }
 
   const responses = await loadAttemptResponses(ctx, args.attempt);
-  const sections = await loadAttemptSections(ctx, args.attempt);
   const score = await scoreAttempt(ctx, {
     attempt: args.attempt,
     responses,
@@ -82,16 +123,23 @@ export async function finalizeAttemptScore(
     finalizedAt: args.now,
     score,
   });
-  const status = getAttemptStatus(args.attempt, sections, args.now);
-  const endReason = getEndReason(args.attempt, sections, args.now);
+  const status = getAttemptStatusFromEndReason(args.endReason);
 
   await ctx.db.patch(args.attempt._id, {
     completedAt: args.now,
-    endReason,
+    endReason: args.endReason,
     lastActivityAt: args.now,
     scoreStatus: score.scoreStatus,
     status,
     totalCorrect: score.totalCorrect,
+  });
+
+  await writeTryoutSetProgress(ctx, {
+    attempt: args.attempt,
+    publishedScore: score.publishedScore,
+    set,
+    status,
+    updatedAt: args.now,
   });
 
   await captureProductEvent(ctx, {
@@ -109,6 +157,7 @@ export async function finalizeAttemptScore(
         theta: score.theta,
         total_correct: score.totalCorrect,
         total_questions: score.totalQuestions,
+        track_key: set.trackKey,
       },
     },
     timestamp: new Date(args.now),
@@ -136,25 +185,6 @@ async function loadAttemptResponses(ctx: MutationCtx, attempt: TryoutAttempt) {
   return responses;
 }
 
-/** Loads bounded section attempts for final attempt state derivation. */
-async function loadAttemptSections(ctx: MutationCtx, attempt: TryoutAttempt) {
-  const sections = await ctx.db
-    .query("tryoutSectionAttempts")
-    .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
-      q.eq("tryoutAttemptId", attempt._id)
-    )
-    .take(attempt.sectionSnapshots.length + 1);
-
-  if (sections.length > attempt.sectionSnapshots.length) {
-    throw new ConvexError({
-      code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
-      message: "Try-out section attempt count exceeds the attempt snapshot.",
-    });
-  }
-
-  return sections;
-}
-
 /** Scores one attempt with the scoring strategy declared by its set. */
 function scoreAttempt(
   ctx: MutationCtx,
@@ -178,19 +208,12 @@ function scoreRawAttempt(args: {
   scoringStrategy: TryoutScoringStrategy;
 }): AttemptScore {
   const { correctAnswers } = summarizeResponses(args.responses);
-  const publishedScore = getRawPercentage(
-    correctAnswers,
-    args.attempt.totalQuestions
-  );
 
-  return {
-    publishedScore,
-    rawScore: publishedScore,
-    scoreStatus: "official",
+  return scoreRawAnswers({
+    correctAnswers,
     scoringStrategy: args.scoringStrategy,
-    totalCorrect: correctAnswers,
     totalQuestions: args.attempt.totalQuestions,
-  };
+  });
 }
 
 /** Inserts the public score snapshot without undefined optional fields. */
@@ -233,55 +256,4 @@ function insertAttemptScore(
   }
 
   return ctx.db.insert("tryoutScores", score);
-}
-
-/** Converts raw correctness into the public percentage score. */
-function getRawPercentage(correctAnswers: number, totalQuestions: number) {
-  if (totalQuestions === 0) {
-    return 0;
-  }
-
-  return Math.round((correctAnswers / totalQuestions) * 100);
-}
-
-/** Returns the final attempt status from deadline and section timers. */
-function getAttemptStatus(
-  attempt: TryoutAttempt,
-  sections: TryoutSectionAttempt[],
-  now: number
-) {
-  if (now >= attempt.expiresAt) {
-    return "expired";
-  }
-
-  if (hasTimedOutSection(sections)) {
-    return "expired";
-  }
-
-  return "completed";
-}
-
-/** Returns the final attempt reason from deadline and section timers. */
-function getEndReason(
-  attempt: TryoutAttempt,
-  sections: TryoutSectionAttempt[],
-  now: number
-) {
-  if (now >= attempt.expiresAt) {
-    return "time-expired";
-  }
-
-  if (hasTimedOutSection(sections)) {
-    return "time-expired";
-  }
-
-  return "submitted";
-}
-
-/** Returns true when any completed section ended by timer expiry. */
-function hasTimedOutSection(sections: TryoutSectionAttempt[]) {
-  return sections.some(
-    (section) =>
-      section.status === "expired" || section.endReason === "time-expired"
-  );
 }

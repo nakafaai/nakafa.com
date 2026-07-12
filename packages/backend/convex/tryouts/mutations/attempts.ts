@@ -5,7 +5,8 @@ import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { requireActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
+import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
+import { requireActiveReadyTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
   getAttemptAccessFields,
   requireActiveEntitlement,
@@ -16,11 +17,17 @@ import {
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireIrtScaleVersion } from "@repo/backend/convex/tryouts/runtime/irt";
+import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import { requireOwnedAttempt } from "@repo/backend/convex/tryouts/runtime/score";
 import {
-  finalizeAttemptScore,
-  requireOwnedAttempt,
-} from "@repo/backend/convex/tryouts/runtime/score";
-import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
+  loadPlacementSectionAttempt,
+  requireInternalEntrySection,
+  startSectionAttempt,
+} from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
+import {
+  type TryoutScoreStatus,
+  tryoutRouteKeyValidator,
+} from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 
 const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
@@ -100,15 +107,6 @@ async function loadLatestAttempt(
   return attempts.at(0) ?? null;
 }
 
-/** Returns true when every snapshot is already completed or expired. */
-function hasCompletedEverySection(attempt: TryoutAttempt) {
-  const completedKeys = new Set(attempt.completedSectionKeys);
-
-  return attempt.sectionSnapshots.every((section) =>
-    completedKeys.has(section.sectionKey)
-  );
-}
-
 /** Returns the entitlement-bounded attempt expiry for a new attempt. */
 function getNewAttemptExpiresAt(
   now: number,
@@ -122,15 +120,17 @@ export const startAttempt = mutation({
   args: {
     countryKey: tryoutRouteKeyValidator,
     examKey: tryoutRouteKeyValidator,
+    entrySectionKey: v.optional(tryoutRouteKeyValidator),
     locale: localeValidator,
     setKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
   },
   returns: v.object({
     attemptId: v.id("tryoutAttempts"),
   }),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const set = await requireActiveTryoutSet(ctx, args);
+    const set = await requireActiveReadyTryoutSet(ctx, args);
     const now = Date.now();
     const [sections, entitlement, latestAttempt] = await Promise.all([
       loadSections(ctx, set),
@@ -139,6 +139,7 @@ export const startAttempt = mutation({
         examKey: args.examKey,
         now,
         setKey: args.setKey,
+        trackKey: args.trackKey,
         userId: appUser._id,
       }),
       loadLatestAttempt(ctx, {
@@ -147,8 +148,20 @@ export const startAttempt = mutation({
       }),
     ]);
 
+    if (args.entrySectionKey) {
+      requireInternalEntrySection(sections, args.entrySectionKey);
+    }
+
     if (latestAttempt?.status === "in-progress") {
       if (now < getAttemptExpiresAt(latestAttempt)) {
+        if (args.entrySectionKey) {
+          await startSectionAttempt(ctx, {
+            attempt: latestAttempt,
+            now,
+            sectionKey: args.entrySectionKey,
+          });
+        }
+
         return { attemptId: latestAttempt._id };
       }
 
@@ -166,7 +179,7 @@ export const startAttempt = mutation({
     const expiresAt = getNewAttemptExpiresAt(now, entitlement);
     const access = getAttemptAccessFields(entitlement);
     const attemptStatus = "in-progress";
-    const scoreStatus = "provisional";
+    const scoreStatus = scaleVersion?.status ?? "official";
     const attemptValues: TryoutAttemptInsert = {
       attemptNumber,
       ...access,
@@ -185,6 +198,7 @@ export const startAttempt = mutation({
         sectionKey: section.sectionKey,
         sectionOrder: section.order,
         sourceRevision: section.sourceRevision,
+        timeLimitSeconds: section.timeLimitSeconds,
         tryoutSectionId: section._id,
       })),
       startedAt: now,
@@ -199,12 +213,39 @@ export const startAttempt = mutation({
     }
 
     const attemptId = await ctx.db.insert("tryoutAttempts", attemptValues);
+    const attempt = await ctx.db.get(attemptId);
+
+    if (!attempt) {
+      throw new ConvexError({
+        code: "TRYOUT_ATTEMPT_NOT_FOUND",
+        message: "Try-out attempt not found.",
+      });
+    }
+
+    await writeTryoutSetProgress(ctx, {
+      attempt,
+      publishedScore: null,
+      set,
+      status: attemptStatus,
+      updatedAt: now,
+    });
+
+    await createAttemptPlacements(ctx, { attempt });
+
+    if (args.entrySectionKey) {
+      await startSectionAttempt(ctx, {
+        attempt,
+        now,
+        sectionKey: args.entrySectionKey,
+      });
+    }
 
     await scheduleAttemptExpiry(ctx, { attemptId, expiresAt, now });
     await trackAttemptStarted(ctx, {
       appUserId: appUser._id,
       attemptNumber,
       now,
+      scoreStatus,
       set,
     });
 
@@ -247,6 +288,7 @@ async function trackAttemptStarted(
     appUserId: Id<"users">;
     attemptNumber: number;
     now: number;
+    scoreStatus: TryoutScoreStatus;
     set: TryoutSet;
   }
 ) {
@@ -259,8 +301,9 @@ async function trackAttemptStarted(
         country_key: args.set.countryKey,
         exam_key: args.set.examKey,
         locale: args.set.locale,
-        score_status: "provisional",
+        score_status: args.scoreStatus,
         set_key: args.set.setKey,
+        track_key: args.set.trackKey,
       },
     },
     timestamp: new Date(args.now),
@@ -298,7 +341,7 @@ export const saveResponse = mutation({
       });
     }
 
-    const section = await ctx.db.get(placement.tryoutSectionAttemptId);
+    const section = await loadPlacementSectionAttempt(ctx, placement);
 
     if (section?.status !== "in-progress") {
       throw new ConvexError({
@@ -388,7 +431,7 @@ export const saveResponse = mutation({
       selectedOptionId: args.selectedOptionId,
       timeSpent: args.timeSpent,
       tryoutAttemptId: placement.tryoutAttemptId,
-      tryoutSectionAttemptId: placement.tryoutSectionAttemptId,
+      tryoutSectionAttemptId: section._id,
       updatedAt: now,
     });
     await ctx.db.patch(section._id, {
@@ -401,42 +444,5 @@ export const saveResponse = mutation({
     });
 
     return null;
-  },
-});
-
-/** Finalizes one attempt idempotently and stores the score snapshot. */
-export const finalizeAttempt = mutation({
-  args: {
-    attemptId: v.id("tryoutAttempts"),
-  },
-  returns: v.object({
-    scoreId: v.id("tryoutScores"),
-  }),
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-    const now = Date.now();
-    const attempt = await requireOwnedAttempt(ctx, {
-      attemptId: args.attemptId,
-      userId: appUser._id,
-    });
-
-    if (
-      attempt.status === "in-progress" &&
-      now >= getAttemptExpiresAt(attempt)
-    ) {
-      return expireAttemptAtEffectiveTime(ctx, { attempt, now });
-    }
-
-    if (
-      attempt.status === "in-progress" &&
-      !hasCompletedEverySection(attempt)
-    ) {
-      throw new ConvexError({
-        code: "TRYOUT_ATTEMPT_NOT_COMPLETE",
-        message: "Try-out attempt still has unfinished sections.",
-      });
-    }
-
-    return finalizeAttemptScore(ctx, { attempt, now });
   },
 });

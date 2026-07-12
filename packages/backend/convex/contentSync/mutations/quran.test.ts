@@ -261,7 +261,6 @@ function quranVerse({
     syncedAt: 1,
     tafsir: {
       id: {
-        long: "Long tafsir",
         short: "Short tafsir",
       },
     },

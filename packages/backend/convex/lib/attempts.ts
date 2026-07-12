@@ -16,9 +16,21 @@ const attemptEndReasonsByStatus = {
   expired: "time-expired",
 } satisfies Record<FinalizedAttemptStatus, AttemptEndReason>;
 
+const finalizedAttemptStatusesByEndReason = {
+  submitted: "completed",
+  "time-expired": "expired",
+} satisfies Record<AttemptEndReason, FinalizedAttemptStatus>;
+
 /** Returns the persisted end reason for one finalized attempt status. */
 export function getAttemptEndReasonFromStatus(
   status: FinalizedAttemptStatus
 ): AttemptEndReason {
   return attemptEndReasonsByStatus[status];
+}
+
+/** Returns the final attempt status for one persisted end reason. */
+export function getAttemptStatusFromEndReason(
+  endReason: AttemptEndReason
+): FinalizedAttemptStatus {
+  return finalizedAttemptStatusesByEndReason[endReason];
 }

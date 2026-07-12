@@ -95,7 +95,7 @@ describe("Quran Nakafa reader", () => {
   });
 
   it("parses canonical Quran surah routes and rejects malformed routes", async () => {
-    const valid = parseQuranSurahRoute("quran/1");
+    const valid = parseQuranSurahRoute("id", "quran/1");
     const missing = await Effect.runPromise(
       readQuranMarkdown(
         convexUrl,
@@ -104,9 +104,13 @@ describe("Quran Nakafa reader", () => {
     );
 
     expect(Option.getOrUndefined(valid)).toBe(1);
-    expect(Option.isNone(parseQuranSurahRoute("quran/01"))).toBe(true);
-    expect(Option.isNone(parseQuranSurahRoute("quran/1/extra"))).toBe(true);
-    expect(Option.isNone(parseQuranSurahRoute("quran/not-number"))).toBe(true);
+    expect(Option.isNone(parseQuranSurahRoute("id", "quran/01"))).toBe(true);
+    expect(Option.isNone(parseQuranSurahRoute("id", "quran/1/extra"))).toBe(
+      true
+    );
+    expect(Option.isNone(parseQuranSurahRoute("id", "quran/not-number"))).toBe(
+      true
+    );
     expect(() =>
       readNakafaContentRefFixture("en", "quran/01", "quran")
     ).toThrow(InvalidLearningGraphRouteError);
@@ -213,7 +217,7 @@ function quranSurah() {
           sajda: { obligatory: false, recommended: false },
         },
         number: { inQuran: 1, inSurah: 1 },
-        tafsir: { id: { long: "Tafsir panjang.", short: "Tafsir pendek." } },
+        tafsir: { id: { short: "Tafsir pendek." } },
         text: {
           arab: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
           transliteration: { en: "Bismillahirrahmanirrahim" },

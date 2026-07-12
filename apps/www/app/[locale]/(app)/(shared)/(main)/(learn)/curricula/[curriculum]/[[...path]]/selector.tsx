@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
+import type { api } from "@repo/backend/convex/_generated/api";
 import {
   Select,
   SelectContent,
@@ -11,7 +11,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useConvexAuth, useMutation } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -19,11 +19,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { reportClientException } from "@/lib/analytics/client";
+import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
 
 export type CurriculumSelectorOption = Readonly<{
   countryCode?: string;
   href: string;
   programKey: string;
+  publicSlug?: string;
   title: string;
   value: string;
 }>;
@@ -61,8 +63,19 @@ export function CurriculumSelector({
   const router = useRouter();
   const t = useTranslations("LearningPrograms");
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const setPreferredCurriculum = useMutation(
-    api.learningPreferences.mutations.setPreferredCurriculum
+  const setPreferredCurriculum = useSetPreferredCurriculumMutation(
+    options.flatMap((option) =>
+      option.publicSlug
+        ? [
+            {
+              countryCode: option.countryCode,
+              key: option.programKey,
+              publicSlug: option.publicSlug,
+              title: option.title,
+            },
+          ]
+        : []
+    )
   );
   const items = options.map((option) => ({
     label: option.title,
@@ -70,6 +83,7 @@ export function CurriculumSelector({
   }));
   const currentOption = options.find((option) => option.value === currentValue);
 
+  /** Navigate to a selected curriculum and persist it for signed-in viewers. */
   async function handleValueChange(value: string | null) {
     if (!value || value === currentValue) {
       return;

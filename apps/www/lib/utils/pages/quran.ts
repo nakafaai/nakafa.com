@@ -2,7 +2,10 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import type { Locale } from "@repo/utilities/locales";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
-import { getRuntimeQuranSurahPage } from "@/lib/content/runtime/pages";
+import {
+  getRuntimeQuranSurahMetadata,
+  getRuntimeQuranSurahPage,
+} from "@/lib/content/runtime/pages";
 
 type QuranSurahPage = NonNullable<
   FunctionReturnType<typeof api.contents.queries.runtime.getQuranSurahPage>
@@ -37,7 +40,7 @@ export interface FetchSurahContextOutput {
 /** Output data containing fetched Quran surah metadata context. */
 export interface FetchSurahMetadataContextOutput {
   /** The surah data for metadata generation, or null if not found. */
-  surahData: QuranSurah | null;
+  surahData: NonNullable<QuranSurahMetadata> | null;
 }
 
 /** Navigation data for Quran previous and next links. */
@@ -72,10 +75,10 @@ export function fetchSurahContext({ surah }: FetchSurahContextInput) {
 /** Fetches Quran surah metadata from Convex runtime rows. */
 export function fetchSurahMetadataContext({ surah }: FetchSurahContextInput) {
   return Effect.gen(function* () {
-    const page = yield* getRuntimeQuranSurahPage({ surah });
+    const metadata = yield* getRuntimeQuranSurahMetadata({ surah });
 
     return {
-      surahData: page?.surahData ?? null,
+      surahData: metadata,
     };
   });
 }

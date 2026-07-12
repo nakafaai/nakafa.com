@@ -198,8 +198,8 @@ const routeRows = [
   routeRow({
     kind: "tryout-section",
     locale: "en",
-    parentRoute: "try-out/indonesia/snbt/set-1",
-    route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+    parentRoute: "try-out/indonesia/snbt/2027/set-1",
+    route: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     section: "tryout",
   }),
 ];

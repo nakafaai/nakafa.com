@@ -183,7 +183,6 @@ function verseFixture(number: number) {
     },
     tafsir: {
       id: {
-        long: "Tafsir panjang.",
         short: "Tafsir pendek.",
       },
     },

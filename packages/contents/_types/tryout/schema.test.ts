@@ -20,29 +20,41 @@ const validTryoutSource = {
     id: { title: "SNBT" },
   },
   scoringStrategy: "irt",
-  sets: [
+  tracks: [
     {
-      key: "set-1",
+      key: "2027",
+      kind: "year",
       order: 1,
-      routeSlugs: { en: "set-1", id: "set-1" },
-      sections: [
+      routeSlugs: { en: "2027", id: "2027" },
+      sets: [
         {
-          key: "general-reasoning",
+          key: "set-1",
           order: 1,
-          questionCount: 20,
-          questionSourcePath:
-            "question-bank/tryout/indonesia/snbt/general-reasoning/set-1",
-          routeSlugs: { en: "general-reasoning", id: "penalaran-umum" },
-          timeLimitSeconds: 1800,
+          routeSlugs: { en: "set-1", id: "set-1" },
+          sections: [
+            {
+              key: "general-reasoning",
+              order: 1,
+              questionCount: 20,
+              questionSourcePath:
+                "question-bank/tryout/indonesia/snbt/general-reasoning/set-1",
+              routeSlugs: { en: "general-reasoning", id: "penalaran-umum" },
+              timeLimitSeconds: 1800,
+              translations: {
+                en: { title: "General Reasoning" },
+                id: { title: "Penalaran Umum" },
+              },
+            },
+          ],
           translations: {
-            en: { title: "General Reasoning" },
-            id: { title: "Penalaran Umum" },
+            en: { title: "Set 1" },
+            id: { title: "Set 1" },
           },
         },
       ],
       translations: {
-        en: { title: "Set 1" },
-        id: { title: "Set 1" },
+        en: { title: "Year 2027" },
+        id: { title: "Tahun 2027" },
       },
     },
   ],
@@ -73,14 +85,19 @@ describe("tryout/schema", () => {
       TryoutExamSourceSchema
     )({
       ...validTryoutSource,
-      sets: [
+      tracks: [
         {
-          ...validTryoutSource.sets[0],
-          sections: [
+          ...validTryoutSource.tracks[0],
+          sets: [
             {
-              ...validTryoutSource.sets[0].sections[0],
-              questionSourcePath:
-                "tryout/indonesia/snbt/general-reasoning/set-1",
+              ...validTryoutSource.tracks[0].sets[0],
+              sections: [
+                {
+                  ...validTryoutSource.tracks[0].sets[0].sections[0],
+                  questionSourcePath:
+                    "tryout/indonesia/snbt/general-reasoning/set-1",
+                },
+              ],
             },
           ],
         },
@@ -105,6 +122,52 @@ describe("tryout/schema", () => {
       expect(
         ParseResult.TreeFormatter.formatErrorSync(invalidSourcePath.left)
       ).toContain("Invalid try-out question source path.");
+    }
+  });
+
+  it("rejects internal-entry sections that are not the only set section", () => {
+    const invalidInternalEntryShape = Schema.decodeUnknownEither(
+      TryoutExamSourceSchema
+    )({
+      ...validTryoutSource,
+      tracks: [
+        {
+          ...validTryoutSource.tracks[0],
+          sets: [
+            {
+              ...validTryoutSource.tracks[0].sets[0],
+              sections: [
+                {
+                  ...validTryoutSource.tracks[0].sets[0].sections[0],
+                  visibility: "internal-entry",
+                },
+                {
+                  ...validTryoutSource.tracks[0].sets[0].sections[0],
+                  key: "quantitative-reasoning",
+                  questionSourcePath:
+                    "question-bank/tryout/indonesia/snbt/quantitative-reasoning/set-1",
+                  routeSlugs: {
+                    en: "quantitative-reasoning",
+                    id: "penalaran-kuantitatif",
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(Either.isLeft(invalidInternalEntryShape)).toBe(true);
+
+    if (Either.isLeft(invalidInternalEntryShape)) {
+      expect(
+        ParseResult.TreeFormatter.formatErrorSync(
+          invalidInternalEntryShape.left
+        )
+      ).toContain(
+        "Internal-entry try-out sections must be the only section in a set."
+      );
     }
   });
 });

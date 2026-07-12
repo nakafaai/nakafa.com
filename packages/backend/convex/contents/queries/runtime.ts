@@ -22,6 +22,7 @@ import {
 import { getCurriculumPageImpl } from "@repo/backend/convex/contents/runtime/curriculum";
 import {
   getQuranReferenceImpl,
+  getQuranSurahMetadataImpl,
   getQuranSurahPageImpl,
   listQuranSurahsImpl,
 } from "@repo/backend/convex/contents/runtime/quran";
@@ -50,6 +51,8 @@ import {
   getCurriculumPageReturnValidator,
   getQuranReferenceArgsValidator,
   getQuranReferenceReturnValidator,
+  getQuranSurahMetadataArgsValidator,
+  getQuranSurahMetadataReturnValidator,
   getQuranSurahPageArgsValidator,
   getQuranSurahPageReturnValidator,
   listArticleApiContentPageArgsValidator,
@@ -200,6 +203,13 @@ export const listQuranSurahs = query({
   args: {},
   returns: listQuranSurahsReturnValidator,
   handler: listQuranSurahsImpl,
+});
+
+/** Loads one Quran surah metadata row without verse payloads. */
+export const getQuranSurahMetadata = query({
+  args: getQuranSurahMetadataArgsValidator,
+  returns: getQuranSurahMetadataReturnValidator,
+  handler: getQuranSurahMetadataImpl,
 });
 
 /** Loads one Quran surah page from the durable Quran runtime rows. */

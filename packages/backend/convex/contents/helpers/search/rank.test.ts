@@ -24,13 +24,13 @@ describe("rankContentSearchDocuments", () => {
   it("keeps source try-out section metadata ahead of generic body hits", () => {
     const sectionRow = createSearchRow({
       description: "SNBT mathematical reasoning.",
-      route: "try-out/indonesia/snbt/set-1/mathematical-reasoning",
-      sourcePath: "try-out/indonesia/snbt/set-1/mathematical-reasoning",
+      route: "try-out/indonesia/snbt/2027/set-1/mathematical-reasoning",
+      sourcePath: "try-out/indonesia/snbt/2027/set-1/mathematical-reasoning",
       title: "SNBT Mathematical Reasoning Set 1",
     });
     const genericRow = createSearchRow({
-      route: "try-out/indonesia/snbt/set-1/indonesian-language",
-      sourcePath: "try-out/indonesia/snbt/set-1/indonesian-language",
+      route: "try-out/indonesia/snbt/2027/set-1/indonesian-language",
+      sourcePath: "try-out/indonesia/snbt/2027/set-1/indonesian-language",
       text: "linear equations and arithmetic reasoning",
       title: "SNBT Indonesian Language Set 1",
     });

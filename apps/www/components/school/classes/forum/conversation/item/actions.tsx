@@ -1,7 +1,6 @@
 import { ArrowTurnBackwardIcon, WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -22,7 +21,6 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -31,6 +29,7 @@ import {
   type ForumPost,
   isOptimisticForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
+import { usePostReactionMutation } from "@/components/school/classes/forum/reaction/mutation.client";
 
 /**
  * Keeps post-level quick actions grouped together so reply and reaction updates
@@ -43,9 +42,7 @@ export function PostItemActions({ post }: { post: ForumPost }) {
   );
   const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
-  const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.togglePostReaction
-  );
+  const toggleReaction = usePostReactionMutation();
   const userName = post.user?.name ?? t("anonymous");
 
   if (isOptimisticForumPost(post)) {

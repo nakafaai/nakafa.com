@@ -1,6 +1,5 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
 import { selfSelectableUserRoles } from "@repo/backend/convex/users/roles";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
@@ -14,10 +13,10 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
 import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { FormBlock } from "@/components/shared/form-block";
+import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
 import type { CurrentUser } from "@/lib/context/use-user";
 import { roles } from "@/lib/data/roles";
 
@@ -41,7 +40,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     value: role.value,
   }));
 
-  const updateUserRole = useMutation(api.users.mutations.updateUserRole);
+  const updateUserRole = useUpdateUserRoleMutation();
   const initialRole = roles.find(
     (role) => role.value === user.appUser.role
   )?.value;

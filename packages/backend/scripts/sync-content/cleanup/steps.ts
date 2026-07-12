@@ -65,41 +65,6 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "learning popularity counter rows",
   },
   {
-    label: "Deleting generated assessment nodes...",
-    mutation: reset.deleteAssessmentNodesBatch,
-    resultLabel: "generated assessment nodes",
-  },
-  {
-    label: "Deleting generated assessments...",
-    mutation: reset.deleteAssessmentsBatch,
-    resultLabel: "generated assessments",
-  },
-  {
-    label: "Deleting generated curriculum material links...",
-    mutation: reset.deleteCurriculumMaterialsBatch,
-    resultLabel: "generated curriculum material links",
-  },
-  {
-    label: "Deleting generated curriculum nodes...",
-    mutation: reset.deleteCurriculumNodesBatch,
-    resultLabel: "generated curriculum nodes",
-  },
-  {
-    label: "Deleting generated curricula...",
-    mutation: reset.deleteCurriculaBatch,
-    resultLabel: "generated curricula",
-  },
-  {
-    label: "Deleting generated material locale rows...",
-    mutation: reset.deleteMaterialLocalesBatch,
-    resultLabel: "generated material locale rows",
-  },
-  {
-    label: "Deleting generated material rows...",
-    mutation: reset.deleteMaterialsBatch,
-    resultLabel: "generated material rows",
-  },
-  {
     label: "Deleting generated learning plan items...",
     mutation: reset.deleteLearningPlanItemsBatch,
     resultLabel: "generated learning plan items",
@@ -113,6 +78,11 @@ export const RESET_STEPS: ResetStep[] = [
     label: "Deleting content route rows...",
     mutation: reset.deleteContentRoutesBatch,
     resultLabel: "content route rows",
+  },
+  {
+    label: "Deleting public route sync state...",
+    mutation: reset.deletePublicRouteSyncStateBatch,
+    resultLabel: "public route sync state rows",
   },
   {
     label: "Deleting public route rows...",
@@ -250,6 +220,11 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "IRT calibration runs",
   },
   {
+    label: "Deleting try-out set progress...",
+    mutation: reset.deleteTryoutSetProgressBatch,
+    resultLabel: "try-out set progress rows",
+  },
+  {
     label: "Deleting try-out attempts...",
     mutation: reset.deleteTryoutAttemptsBatch,
     resultLabel: "try-out attempts",
@@ -298,6 +273,11 @@ export const RESET_STEPS: ResetStep[] = [
     label: "Deleting try-out sets...",
     mutation: reset.deleteTryoutSetsBatch,
     resultLabel: "try-out sets",
+  },
+  {
+    label: "Deleting try-out tracks...",
+    mutation: reset.deleteTryoutTracksBatch,
+    resultLabel: "try-out tracks",
   },
   {
     label: "Deleting try-out exams...",

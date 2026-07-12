@@ -5,7 +5,7 @@ import {
   logSuccess,
   logWarning,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import { BatchDeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
+import { BatchDeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -113,6 +113,11 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "IRT calibration runs",
   },
   {
+    label: "Deleting try-out set progress...",
+    mutation: reset.deleteTryoutSetProgressBatch,
+    resultLabel: "try-out set progress rows",
+  },
+  {
     label: "Deleting try-out attempts...",
     mutation: reset.deleteTryoutAttemptsBatch,
     resultLabel: "try-out attempts",
@@ -181,6 +186,11 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     label: "Deleting try-out sets...",
     mutation: reset.deleteTryoutSetsBatch,
     resultLabel: "try-out sets",
+  },
+  {
+    label: "Deleting try-out tracks...",
+    mutation: reset.deleteTryoutTracksBatch,
+    resultLabel: "try-out tracks",
   },
   {
     label: "Deleting try-out exams...",
@@ -279,6 +289,7 @@ export const resetTryouts = Effect.fn("sync.resetTryouts")(function* (
   log(`  Tryout Access Grants:   ${counts.tryoutAccessGrants}`);
   log(`  Tryout Countries:       ${counts.tryoutCountries}`);
   log(`  Tryout Exams:           ${counts.tryoutExams}`);
+  log(`  Tryout Tracks:          ${counts.tryoutTracks}`);
   log(`  Tryout Sets:            ${counts.tryoutSets}`);
   log(`  Tryout Sections:        ${counts.tryoutSections}`);
   log(`  Tryout Entitlements:    ${counts.tryoutEntitlements}`);
@@ -311,6 +322,7 @@ export const resetTryouts = Effect.fn("sync.resetTryouts")(function* (
     counts.tryoutEntitlements +
     counts.tryoutCountries +
     counts.tryoutExams +
+    counts.tryoutTracks +
     counts.tryoutSets +
     counts.tryoutSections +
     counts.tryoutAttempts +

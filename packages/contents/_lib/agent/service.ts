@@ -19,7 +19,11 @@ export const verifyNakafaContent = Effect.fn("Nakafa.verify")(function* (
   }
 
   if (ref.value.section === "quran") {
-    return yield* verifyNakafaQuranRoute(ref.value.route, loadSurah);
+    return yield* verifyNakafaQuranRoute(
+      ref.value.locale,
+      ref.value.route,
+      loadSurah
+    );
   }
 
   const content = yield* Effect.either(readContent(contentRef));
@@ -31,8 +35,12 @@ export const verifyNakafaContent = Effect.fn("Nakafa.verify")(function* (
 });
 
 /** Verifies canonical Quran content routes without loading non-Quran content. */
-function verifyNakafaQuranRoute(route: string, loadSurah: typeof getSurah) {
-  return parseQuranSurahNumberForRoute(route).pipe(
+function verifyNakafaQuranRoute(
+  locale: "en" | "id",
+  route: string,
+  loadSurah: typeof getSurah
+) {
+  return parseQuranSurahNumberForRoute({ locale, route }).pipe(
     Effect.flatMap(loadSurah),
     Effect.either,
     Effect.map(Either.isRight)

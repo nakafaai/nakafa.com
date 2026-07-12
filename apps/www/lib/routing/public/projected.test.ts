@@ -15,7 +15,7 @@ describe("projected public html route rejection", () => {
       ],
       ["/id/try-out/snbt/tryout-2026", "id"],
       ["/id/try-out/snbt/tryout-2026/part/penalaran-umum", "id"],
-      ["/en/try-out/indonesia/snbt/set-1/not-a-section", "en"],
+      ["/en/try-out/indonesia/snbt/2027/set-1/not-a-section", "en"],
     ];
 
     for (const [pathname, locale] of paths) {
@@ -34,8 +34,8 @@ describe("projected public html route rejection", () => {
       "/en/curriculum/merdeka/class-10",
       "/id/try-out",
       "/en/try-out/indonesia",
-      "/id/try-out/indonesia/snbt/set-1/penalaran-umum",
-      "/en/try-out/indonesia/snbt/set-1/general-reasoning",
+      "/id/try-out/indonesia/snbt/2027/set-1/penalaran-umum",
+      "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
     ];
 
     for (const pathname of paths) {

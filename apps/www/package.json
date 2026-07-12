@@ -42,6 +42,7 @@
     "@tanstack/react-form": "^1.33.0",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-query-devtools": "^5.101.2",
+    "@tanstack/react-table": "^8.21.3",
     "@vercel/functions": "^3.7.5",
     "ai": "^7.0.15",
     "any-ascii": "^0.3.3",

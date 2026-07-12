@@ -4,7 +4,7 @@ import {
   log,
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import type { ContentCountsSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
+import type { ContentCountsSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/convex/counts";
 import { getFunctionName } from "convex/server";
@@ -50,6 +50,7 @@ const emptyCounts = {
   contentRoutePages: 0,
   contentRoutes: 0,
   publicRoutes: 0,
+  publicRouteSyncState: 0,
   contentSearch: 0,
   learningEngagementQueue: 0,
   learningViews: 0,
@@ -70,15 +71,8 @@ const emptyCounts = {
   irtScaleQualityChecks: 0,
   irtScaleQualityRefreshQueue: 0,
   irtScaleVersions: 0,
-  assessmentNodes: 0,
-  assessments: 0,
-  curricula: 0,
-  curriculumMaterials: 0,
-  curriculumNodes: 0,
   quranSurahs: 0,
   quranVerses: 0,
-  materialLocales: 0,
-  materials: 0,
   questionChoices: 0,
   questions: 0,
   questionSets: 0,
@@ -95,6 +89,7 @@ const emptyCounts = {
   tryoutLeaderboardUserStats: 0,
   tryoutCountries: 0,
   tryoutExams: 0,
+  tryoutTracks: 0,
   tryoutResponses: 0,
   tryoutScores: 0,
   tryoutSectionAttempts: 0,
@@ -242,17 +237,12 @@ describe("sync-content reset", () => {
     expect(coverageIndex).toBeGreaterThan(planItemsIndex);
   });
 
-  it("deletes final generated read models during forced reset", async () => {
+  it("invalidates public route sync state before deleting route rows", async () => {
     vi.mocked(getContentCounts).mockReturnValue(
       Effect.succeed({
         ...emptyCounts,
-        assessmentNodes: 1,
-        assessments: 1,
-        curricula: 1,
-        curriculumMaterials: 1,
-        curriculumNodes: 1,
-        materialLocales: 1,
-        materials: 1,
+        publicRoutes: 1,
+        publicRouteSyncState: 1,
       })
     );
 
@@ -261,38 +251,19 @@ describe("sync-content reset", () => {
     const mutations = vi
       .mocked(callConvexMutation)
       .mock.calls.map(([, mutation]) => getFunctionName(mutation));
+    const syncStateIndex = mutations.indexOf(
+      getFunctionName(
+        internal.contentSync.reset.internal.deletePublicRouteSyncStateBatch
+      )
+    );
+    const routeRowsIndex = mutations.indexOf(
+      getFunctionName(
+        internal.contentSync.reset.internal.deletePublicRoutesBatch
+      )
+    );
 
-    expect(mutations).toContain(
-      getFunctionName(internal.contentSync.reset.internal.deleteMaterialsBatch)
-    );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteMaterialLocalesBatch
-      )
-    );
-    expect(mutations).toContain(
-      getFunctionName(internal.contentSync.reset.internal.deleteCurriculaBatch)
-    );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteCurriculumNodesBatch
-      )
-    );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteCurriculumMaterialsBatch
-      )
-    );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteAssessmentsBatch
-      )
-    );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteAssessmentNodesBatch
-      )
-    );
+    expect(syncStateIndex).toBeGreaterThanOrEqual(0);
+    expect(routeRowsIndex).toBeGreaterThan(syncStateIndex);
   });
 
   it("does not delete selected program catalog rows during forced reset", async () => {

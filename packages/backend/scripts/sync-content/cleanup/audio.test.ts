@@ -3,7 +3,7 @@ import {
   log,
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import type { ContentCountsSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
+import type { ContentCountsSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/convex/counts";
 import { Effect, type Schema } from "effect";
@@ -46,6 +46,7 @@ const emptyCounts = {
   contentRoutePages: 0,
   contentRoutes: 0,
   publicRoutes: 0,
+  publicRouteSyncState: 0,
   contentSearch: 0,
   learningEngagementQueue: 0,
   learningViews: 0,
@@ -68,13 +69,6 @@ const emptyCounts = {
   irtScaleVersions: 0,
   quranSurahs: 0,
   quranVerses: 0,
-  assessmentNodes: 0,
-  assessments: 0,
-  curricula: 0,
-  curriculumMaterials: 0,
-  curriculumNodes: 0,
-  materialLocales: 0,
-  materials: 0,
   questionChoices: 0,
   questions: 0,
   questionSets: 0,
@@ -91,6 +85,7 @@ const emptyCounts = {
   tryoutLeaderboardUserStats: 0,
   tryoutCountries: 0,
   tryoutExams: 0,
+  tryoutTracks: 0,
   tryoutResponses: 0,
   tryoutScores: 0,
   tryoutSectionAttempts: 0,

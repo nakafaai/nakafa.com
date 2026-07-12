@@ -51,12 +51,5 @@ export default function NavigationLink({
     return;
   }, [isActive]);
 
-  return (
-    <Link
-      aria-current={ariaCurrent}
-      href={cleanHref}
-      {...props}
-      prefetch // always prefetch the link
-    />
-  );
+  return <Link aria-current={ariaCurrent} href={cleanHref} {...props} />;
 }

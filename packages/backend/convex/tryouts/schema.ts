@@ -11,6 +11,9 @@ export const tryoutStatusValidator = literals(
 );
 export type TryoutStatus = Infer<typeof tryoutStatusValidator>;
 
+export const tryoutStatusRankValidator = literals(1, 2, 3);
+export type TryoutStatusRank = Infer<typeof tryoutStatusRankValidator>;
+
 export const tryoutScoreStatusValidator = literals("provisional", "official");
 export type TryoutScoreStatus = Infer<typeof tryoutScoreStatusValidator>;
 
@@ -23,26 +26,48 @@ export type TryoutScoringStrategy = Infer<
   typeof tryoutScoringStrategyValidator
 >;
 
-export const tryoutPublicResultStatusValidator = literals(
-  "estimated",
-  "verified-irt",
-  "final-event"
-);
-export type TryoutPublicResultStatus = Infer<
-  typeof tryoutPublicResultStatusValidator
->;
+const tryoutScoreValueValidators = {
+  publishedScore: v.number(),
+  rawScore: v.number(),
+  scoreStatus: tryoutScoreStatusValidator,
+  scoringStrategy: tryoutScoringStrategyValidator,
+  theta: v.optional(v.number()),
+  thetaSE: v.optional(v.number()),
+};
+
+export const tryoutSectionScoreValidator = v.object(tryoutScoreValueValidators);
+export type TryoutSectionScore = Infer<typeof tryoutSectionScoreValidator>;
+
+export const tryoutScoreResultValidator = v.object({
+  ...tryoutScoreValueValidators,
+  totalCorrect: v.number(),
+  totalQuestions: v.number(),
+});
+export type TryoutScoreResult = Infer<typeof tryoutScoreResultValidator>;
 
 export const tryoutRouteKeyValidator = v.string();
 export type TryoutRouteKey = Infer<typeof tryoutRouteKeyValidator>;
 
+export const tryoutTrackKindValidator = literals("subject", "year");
+export type TryoutTrackKind = Infer<typeof tryoutTrackKindValidator>;
+
+export const tryoutSectionVisibilityValidator = literals(
+  "internal-entry",
+  "visible"
+);
+export type TryoutSectionVisibility = Infer<
+  typeof tryoutSectionVisibilityValidator
+>;
+
 export const tryoutSectionSnapshotValidator = v.object({
-  publicPath: v.string(),
+  publicPath: v.optional(v.string()),
   questionCount: v.number(),
   questionSetId: v.id("questionSets"),
   questionSourcePath: v.string(),
   sectionKey: tryoutRouteKeyValidator,
   sectionOrder: v.number(),
   sourceRevision: v.string(),
+  timeLimitSeconds: v.number(),
   tryoutSectionId: v.id("tryoutSections"),
 });
 export type TryoutSectionSnapshot = Infer<
@@ -99,19 +124,22 @@ const tables = {
       "locale",
     ]),
 
-  tryoutSets: defineTable({
+  tryoutTracks: defineTable({
     countryKey: tryoutRouteKeyValidator,
     examKey: tryoutRouteKeyValidator,
-    setKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
+    trackKind: tryoutTrackKindValidator,
     locale: localeValidator,
     publicPath: v.string(),
     title: v.string(),
     description: v.optional(v.string()),
-    scoringStrategy: tryoutScoringStrategyValidator,
-    sectionCount: v.number(),
-    totalQuestionCount: v.number(),
+    authoredSetCount: v.number(),
+    readyQuestionCount: v.number(),
+    readySetCount: v.number(),
+    readyVisibleSectionCount: v.number(),
     order: v.number(),
     isActive: v.boolean(),
+    isReady: v.boolean(),
     sourceRevision: v.string(),
     syncedAt: v.number(),
   })
@@ -123,9 +151,67 @@ const tables = {
       "isActive",
       "order",
     ])
-    .index("by_countryKey_and_examKey_and_setKey_and_locale", [
+    .index("by_countryKey_and_examKey_and_trackKey_and_locale", [
       "countryKey",
       "examKey",
+      "trackKey",
+      "locale",
+    ]),
+
+  tryoutSets: defineTable({
+    countryKey: tryoutRouteKeyValidator,
+    examKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
+    setKey: tryoutRouteKeyValidator,
+    locale: localeValidator,
+    publicPath: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    scoringStrategy: tryoutScoringStrategyValidator,
+    internalEntrySectionKey: v.optional(tryoutRouteKeyValidator),
+    readyQuestionCount: v.number(),
+    readyVisibleSectionCount: v.number(),
+    sectionCount: v.number(),
+    totalQuestionCount: v.number(),
+    visibleSectionCount: v.number(),
+    order: v.number(),
+    isActive: v.boolean(),
+    isReady: v.boolean(),
+    sourceRevision: v.string(),
+    syncedAt: v.number(),
+  })
+    .index("by_locale_and_publicPath", ["locale", "publicPath"])
+    .index("by_track_locale_active_ready_order", [
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "locale",
+      "isActive",
+      "isReady",
+      "order",
+    ])
+    .index("by_track_locale_active_ready_title", [
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "locale",
+      "isActive",
+      "isReady",
+      "title",
+    ])
+    .index("by_track_locale_active_ready_questions", [
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "locale",
+      "isActive",
+      "isReady",
+      "readyQuestionCount",
+    ])
+    .index("by_countryKey_and_examKey_and_trackKey_and_setKey_and_locale", [
+      "countryKey",
+      "examKey",
+      "trackKey",
       "setKey",
       "locale",
     ]),
@@ -135,10 +221,11 @@ const tables = {
     questionSetId: v.id("questionSets"),
     countryKey: tryoutRouteKeyValidator,
     examKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
     sectionKey: tryoutRouteKeyValidator,
     locale: localeValidator,
-    publicPath: v.string(),
+    publicPath: v.optional(v.string()),
     questionSourcePath: v.string(),
     title: v.string(),
     description: v.optional(v.string()),
@@ -147,6 +234,7 @@ const tables = {
     sourceRevision: v.string(),
     timeLimitSeconds: v.number(),
     syncedAt: v.number(),
+    visibility: tryoutSectionVisibilityValidator,
   })
     .index("by_locale_and_publicPath", ["locale", "publicPath"])
     .index("by_tryoutSetId_and_order", ["tryoutSetId", "order"])
@@ -201,6 +289,41 @@ const tables = {
       "startedAt",
     ]),
 
+  tryoutSetProgress: defineTable({
+    userId: v.id("users"),
+    tryoutSetId: v.id("tryoutSets"),
+    latestAttemptId: v.id("tryoutAttempts"),
+    countryKey: tryoutRouteKeyValidator,
+    examKey: tryoutRouteKeyValidator,
+    trackKey: tryoutRouteKeyValidator,
+    setKey: tryoutRouteKeyValidator,
+    locale: localeValidator,
+    attemptNumber: v.number(),
+    publishedScore: v.union(v.number(), v.null()),
+    status: tryoutStatusValidator,
+    statusRank: tryoutStatusRankValidator,
+    updatedAt: v.number(),
+  })
+    .index("by_userId_and_tryoutSetId", ["userId", "tryoutSetId"])
+    .index("by_userId_and_track_and_publishedScore_and_setKey", [
+      "userId",
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "locale",
+      "publishedScore",
+      "setKey",
+    ])
+    .index("by_userId_and_track_and_statusRank_and_setKey", [
+      "userId",
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "locale",
+      "statusRank",
+      "setKey",
+    ]),
+
   tryoutSectionAttempts: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
     tryoutSectionId: v.id("tryoutSections"),
@@ -215,8 +338,7 @@ const tables = {
     totalQuestions: v.number(),
     answeredCount: v.number(),
     correctAnswers: v.number(),
-    theta: v.optional(v.number()),
-    thetaSE: v.optional(v.number()),
+    score: v.optional(tryoutSectionScoreValidator),
   })
     .index("by_tryoutAttemptId_and_sectionOrder", [
       "tryoutAttemptId",
@@ -226,11 +348,14 @@ const tables = {
       "tryoutAttemptId",
       "sectionKey",
     ])
+    .index("by_tryoutAttemptId_and_tryoutSectionId", [
+      "tryoutAttemptId",
+      "tryoutSectionId",
+    ])
     .index("by_status_and_expiresAt", ["status", "expiresAt"]),
 
   tryoutAttemptPlacements: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
-    tryoutSectionAttemptId: v.id("tryoutSectionAttempts"),
     tryoutSectionId: v.id("tryoutSections"),
     questionId: v.id("questions"),
     questionSourceKey: v.string(),
@@ -245,8 +370,9 @@ const tables = {
       "tryoutAttemptId",
       "questionOrder",
     ])
-    .index("by_tryoutSectionAttemptId_and_questionOrder", [
-      "tryoutSectionAttemptId",
+    .index("by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder", [
+      "tryoutAttemptId",
+      "tryoutSectionId",
       "questionOrder",
     ])
     .index("by_questionId", ["questionId"]),

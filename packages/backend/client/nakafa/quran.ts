@@ -44,7 +44,7 @@ export function readQuranMarkdown(
   ref: NakafaAgentContentRef
 ) {
   return Effect.gen(function* () {
-    const surahNumber = parseQuranSurahRoute(ref.route);
+    const surahNumber = parseQuranSurahRoute(ref.locale, ref.route);
 
     if (Option.isNone(surahNumber)) {
       return Option.none<NakafaAgentMarkdown>();
@@ -96,8 +96,8 @@ export function readQuranMarkdown(
 }
 
 /** Parses only canonical `quran/{surah}` content routes. */
-export function parseQuranSurahRoute(route: string) {
-  const projection = getSourceRouteProjectionForRoute(route);
+export function parseQuranSurahRoute(locale: "en" | "id", route: string) {
+  const projection = getSourceRouteProjectionForRoute(route, locale);
   const surahSegment = projection?.quran?.surahSegment;
 
   if (projection?.kind !== "quran-surah" || !surahSegment) {

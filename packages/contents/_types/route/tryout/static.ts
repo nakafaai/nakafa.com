@@ -1,3 +1,4 @@
+import type { RouteInputs } from "@repo/contents/_types/route/input";
 import {
   comparePublicRouteOrder,
   makePathSync,
@@ -7,17 +8,20 @@ import {
   type PublicTryoutRoute,
   PublicTryoutRouteSchema,
 } from "@repo/contents/_types/route/schema";
+import { isTryoutSetReady } from "@repo/contents/_types/tryout/readiness";
 import type { TryoutExamSource } from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 /** Projects the default source-controlled try-out registry for static routes. */
-export function readStaticPublicTryoutRoutes() {
+export function readStaticPublicTryoutRoutes({
+  tryouts = TRYOUT_SOURCES,
+}: Pick<RouteInputs, "tryouts"> = {}) {
   const routes: PublicTryoutRoute[] = [];
   const emittedCountryPaths = new Set<string>();
 
-  for (const source of TRYOUT_SOURCES) {
+  for (const source of tryouts) {
     routes.push(
       ...readStaticExamTryoutRoutes({
         emittedCountryPaths,
@@ -29,6 +33,7 @@ export function readStaticPublicTryoutRoutes() {
   return routes.sort(comparePublicRouteOrder);
 }
 
+/** Project one source exam synchronously for static route generation. */
 function readStaticExamTryoutRoutes({
   emittedCountryPaths,
   source,
@@ -79,42 +84,74 @@ function readStaticExamTryoutRoutes({
       })
     );
 
-    for (const set of source.sets) {
-      const setPath = makePathSync([examPath, set.routeSlugs[locale]]);
+    for (const track of source.tracks) {
+      const readySets = track.sets.filter(isTryoutSetReady);
+
+      if (readySets.length === 0) {
+        continue;
+      }
+
+      const trackPath = makePathSync([examPath, track.routeSlugs[locale]]);
 
       routes.push(
         decodeTryoutRouteSync({
           countryKey: source.countryKey,
           examKey: source.examKey,
-          kind: "tryout-set",
+          kind: "tryout-track",
           locale,
-          order: set.order,
+          order: track.order,
           parentPath: examPath,
-          publicPath: setPath,
-          setKey: set.key,
+          publicPath: trackPath,
           sitemap: true,
           sourceRevision: source.sourceRevision,
-          title: set.translations[locale].title,
+          title: track.translations[locale].title,
+          trackKey: track.key,
         })
       );
 
-      for (const section of set.sections) {
+      for (const set of readySets) {
+        const setPath = makePathSync([trackPath, set.routeSlugs[locale]]);
+
         routes.push(
           decodeTryoutRouteSync({
             countryKey: source.countryKey,
             examKey: source.examKey,
-            kind: "tryout-section",
+            kind: "tryout-set",
             locale,
-            order: section.order,
-            parentPath: setPath,
-            publicPath: makePathSync([setPath, section.routeSlugs[locale]]),
-            sectionKey: section.key,
+            order: set.order,
+            parentPath: trackPath,
+            publicPath: setPath,
             setKey: set.key,
             sitemap: true,
             sourceRevision: source.sourceRevision,
-            title: section.translations[locale].title,
+            title: set.translations[locale].title,
+            trackKey: track.key,
           })
         );
+
+        for (const section of set.sections) {
+          if (section.visibility === "internal-entry") {
+            continue;
+          }
+
+          routes.push(
+            decodeTryoutRouteSync({
+              countryKey: source.countryKey,
+              examKey: source.examKey,
+              kind: "tryout-section",
+              locale,
+              order: section.order,
+              parentPath: setPath,
+              publicPath: makePathSync([setPath, section.routeSlugs[locale]]),
+              sectionKey: section.key,
+              setKey: set.key,
+              sitemap: true,
+              sourceRevision: source.sourceRevision,
+              title: section.translations[locale].title,
+              trackKey: track.key,
+            })
+          );
+        }
       }
     }
   }
@@ -122,6 +159,7 @@ function readStaticExamTryoutRoutes({
   return routes;
 }
 
+/** Decode one static projected route through the shared runtime contract. */
 function decodeTryoutRouteSync(
   input: Schema.Schema.Encoded<typeof PublicTryoutRouteSchema>
 ) {

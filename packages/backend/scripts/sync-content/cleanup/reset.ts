@@ -9,7 +9,7 @@ import {
   logSuccess,
   logWarning,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import { BatchDeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
+import { BatchDeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -84,19 +84,13 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Viewer Signals:        ${counts.learningPopularityViewerSignals}`);
   log(`  Popularity Signals:    ${counts.learningPopularitySignals}`);
   log(`  Popularity Counters:   ${counts.learningPopularityCounters}`);
-  log(`  Materials:             ${counts.materials}`);
-  log(`  Material Locales:      ${counts.materialLocales}`);
-  log(`  Curricula:             ${counts.curricula}`);
-  log(`  Curriculum Nodes:      ${counts.curriculumNodes}`);
-  log(`  Curriculum Materials:  ${counts.curriculumMaterials}`);
-  log(`  Assessments:           ${counts.assessments}`);
-  log(`  Assessment Nodes:      ${counts.assessmentNodes}`);
   log(`  Learning Programs:     ${counts.learningPrograms}`);
   log(`  Learning Program Srcs: ${counts.learningProgramSources}`);
   log(`  Learning Plan Items:   ${counts.learningPlanItems}`);
   log(`  Learning Program Cov:  ${counts.learningProgramCoverage}`);
   log(`  Content Routes:        ${counts.contentRoutes}`);
   log(`  Public Routes:         ${counts.publicRoutes}`);
+  log(`  Public Route State:    ${counts.publicRouteSyncState}`);
   log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
   log(`  Content Route Pages:   ${counts.contentRoutePages}`);
   log(`  Quran Surahs:          ${counts.quranSurahs}`);
@@ -115,6 +109,7 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Tryout Access Grants:    ${counts.tryoutAccessGrants}`);
   log(`  Tryout Countries:      ${counts.tryoutCountries}`);
   log(`  Tryout Exams:          ${counts.tryoutExams}`);
+  log(`  Tryout Tracks:         ${counts.tryoutTracks}`);
   log(`  Tryout Sets:           ${counts.tryoutSets}`);
   log(`  Tryout Sections:       ${counts.tryoutSections}`);
   log(`  Tryout Entitlements:   ${counts.tryoutEntitlements}`);
@@ -148,6 +143,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.questions +
     counts.tryoutCountries +
     counts.tryoutExams +
+    counts.tryoutTracks +
     counts.tryoutSets +
     counts.tryoutSections;
   const totalRelated =
@@ -185,17 +181,11 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.learningPopularityViewerSignals +
     counts.learningPopularitySignals +
     counts.learningPopularityCounters +
-    counts.materials +
-    counts.materialLocales +
-    counts.curricula +
-    counts.curriculumNodes +
-    counts.curriculumMaterials +
-    counts.assessments +
-    counts.assessmentNodes +
     counts.learningPlanItems +
     counts.learningProgramCoverage +
     counts.contentRoutes +
     counts.publicRoutes +
+    counts.publicRouteSyncState +
     counts.contentRouteCounts +
     counts.contentRoutePages +
     counts.quranSurahs +

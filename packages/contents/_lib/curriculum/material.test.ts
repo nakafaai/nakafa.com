@@ -45,7 +45,9 @@ describe("getMaterialIcon", () => {
 
   it("resolves every known material domain without the fallback icon", () => {
     const tryoutSectionKeys = TRYOUT_SOURCES.flatMap((source) =>
-      source.sets.flatMap((set) => set.sections.map((section) => section.key))
+      source.tracks.flatMap((track) =>
+        track.sets.flatMap((set) => set.sections.map((section) => section.key))
+      )
     );
 
     for (const material of [...SUBJECT_MATERIALS, ...tryoutSectionKeys]) {

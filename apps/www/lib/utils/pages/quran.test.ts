@@ -9,15 +9,21 @@ import {
 } from "@/lib/utils/pages/quran";
 
 const runtimeMocks = vi.hoisted(() => ({
+  getRuntimeQuranSurahMetadata: vi.fn(),
   getRuntimeQuranSurahPage: vi.fn(),
 }));
 
 vi.mock("@/lib/content/runtime/pages", () => ({
+  getRuntimeQuranSurahMetadata: runtimeMocks.getRuntimeQuranSurahMetadata,
   getRuntimeQuranSurahPage: runtimeMocks.getRuntimeQuranSurahPage,
 }));
 
 beforeEach(() => {
+  runtimeMocks.getRuntimeQuranSurahMetadata.mockReset();
   runtimeMocks.getRuntimeQuranSurahPage.mockReset();
+  runtimeMocks.getRuntimeQuranSurahMetadata.mockImplementation(({ surah }) =>
+    Effect.succeed(surah === 1 ? surahPage().surahData : null)
+  );
   runtimeMocks.getRuntimeQuranSurahPage.mockImplementation(({ surah }) =>
     Effect.succeed(surah === 1 ? surahPage() : null)
   );

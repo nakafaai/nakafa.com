@@ -1,3 +1,4 @@
+import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
 import {
   isNumberSegment,
   joinRoute,
@@ -12,13 +13,34 @@ import {
   SourceRouteInputSchema,
   type SourceRouteProjectionDraft,
 } from "@repo/contents/_types/graph/schema";
+import { isTryoutSetReady } from "@repo/contents/_types/tryout/readiness";
+import type {
+  TryoutExamSource,
+  TryoutSetSource,
+} from "@repo/contents/_types/tryout/schema";
+import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { Effect, Option, Schema } from "effect";
 
+/** Source registries used to resolve public graph routes. */
+export interface SourceRouteProjectionOptions {
+  readonly tryouts?: readonly TryoutExamSource[];
+}
+
 /** Infers graph projection metadata from one public route projection. */
-export function getSourceRouteProjectionForRoute(route: string) {
+export function getSourceRouteProjectionForRoute(
+  route: string,
+  locale: Locale,
+  { tryouts = TRYOUT_SOURCES }: SourceRouteProjectionOptions = {}
+) {
   const normalizedRoute = normalizeSourceRouteProjection(route);
   const [root, ...segments] = normalizedRoute.split("/");
-  const draft = createProjectionDraft(normalizedRoute, root, segments);
+  const draft = createProjectionDraft(
+    normalizedRoute,
+    root,
+    segments,
+    locale,
+    tryouts
+  );
 
   if (!draft) {
     return null;
@@ -29,7 +51,10 @@ export function getSourceRouteProjectionForRoute(route: string) {
 
 /** Validates that one declared source kind matches its public route projection. */
 export function getSourceRouteProjection(source: SourceRouteInput) {
-  const projection = getSourceRouteProjectionForRoute(source.route);
+  const projection = getSourceRouteProjectionForRoute(
+    source.route,
+    source.locale
+  );
 
   if (!projection || projection.kind !== source.kind) {
     return null;
@@ -54,10 +79,16 @@ export const parseSourceRouteProjection = Effect.fn(
   return yield* Effect.fail(createInvalidSourceRouteError(source));
 });
 
-/** Returns the Quran surah number encoded by a valid Quran source route. */
-export function getQuranSurahNumberForRoute(route: string) {
+const QuranRouteInputSchema = Schema.Struct({
+  locale: LocaleSchema,
+  route: Schema.String,
+});
+
+/** Returns the Quran surah number encoded by a valid localized source route. */
+export function getQuranSurahNumberForRoute(route: string, locale: Locale) {
   const projection = getSourceRouteProjection({
     kind: "quran-surah",
+    locale,
     route,
   });
 
@@ -72,7 +103,7 @@ export function getQuranSurahNumberForRoute(route: string) {
 export const parseQuranSurahNumberForRoute = Effect.fn(
   "contents.graph.parseQuranSurahNumberForRoute"
 )(function* (input: unknown) {
-  const route = yield* Schema.decodeUnknown(Schema.String)(input).pipe(
+  const source = yield* Schema.decodeUnknown(QuranRouteInputSchema)(input).pipe(
     Effect.mapError(
       () =>
         new InvalidLearningGraphRouteError({
@@ -81,7 +112,7 @@ export const parseQuranSurahNumberForRoute = Effect.fn(
         })
     )
   );
-  const surahNumber = getQuranSurahNumberForRoute(route);
+  const surahNumber = getQuranSurahNumberForRoute(source.route, source.locale);
 
   if (surahNumber !== null) {
     return surahNumber;
@@ -90,7 +121,8 @@ export const parseQuranSurahNumberForRoute = Effect.fn(
   return yield* Effect.fail(
     createInvalidSourceRouteError({
       kind: "quran-surah",
-      route,
+      locale: source.locale,
+      route: source.route,
     })
   );
 });
@@ -150,7 +182,9 @@ function readUnknownKind(input: unknown) {
 function createProjectionDraft(
   route: string,
   root: string | undefined,
-  segments: readonly string[]
+  segments: readonly string[],
+  locale: Locale,
+  tryouts: readonly TryoutExamSource[]
 ) {
   if (root === "articles") {
     return createArticleProjection(route, segments);
@@ -161,7 +195,7 @@ function createProjectionDraft(
   }
 
   if (root === "try-out") {
-    return createTryoutProjection(route, segments);
+    return createTryoutProjection(route, segments, locale, tryouts);
   }
 
   if (root === "material") {
@@ -183,61 +217,192 @@ function createMaterialProjection(route: string, segments: readonly string[]) {
 }
 
 /** Projects a try-out public route into graph metadata. */
-function createTryoutProjection(route: string, segments: readonly string[]) {
-  const [country, exam, set, section, ...extraSegments] = segments;
+function createTryoutProjection(
+  route: string,
+  segments: readonly string[],
+  locale: Locale,
+  tryouts: readonly TryoutExamSource[]
+) {
+  const [country, exam, track, set, section, ...extraSegments] = segments;
 
   if (!country || extraSegments.length > 0) {
     return null;
   }
 
+  const source = findTryoutSource(tryouts, locale, country, exam);
+
+  if (!source) {
+    return null;
+  }
+
   const countryRoute = joinRoute("try-out", country);
   const examRoute = exam ? joinRoute(countryRoute, exam) : countryRoute;
-  const setRoute = set ? joinRoute(examRoute, set) : examRoute;
+  const trackRoute = track ? joinRoute(examRoute, track) : examRoute;
+  const setRoute = set ? joinRoute(trackRoute, set) : trackRoute;
+  const countryKey = source.countryKey;
+  const examKey = source.examKey;
   const lensSegments = exam
-    ? ["tryout", country, exam]
-    : ["tryout", country, "catalog"];
+    ? ["tryout", countryKey, examKey]
+    : ["tryout", countryKey, "catalog"];
 
   if (!exam) {
     return {
-      conceptSegments: ["tryout", country],
+      conceptSegments: ["tryout", countryKey],
       kind: "tryout-country",
-      learningObjectSegments: ["tryout-country", country],
+      learningObjectSegments: ["tryout-country", countryKey],
       lensSegments,
       parentRoute: "try-out",
       route,
     } satisfies SourceRouteProjectionDraft;
   }
 
-  if (!set) {
+  if (!track) {
     return {
-      conceptSegments: ["tryout", country, exam],
+      conceptSegments: ["tryout", countryKey, examKey],
       kind: "tryout-exam",
-      learningObjectSegments: ["tryout-exam", country, exam],
+      learningObjectSegments: ["tryout-exam", countryKey, examKey],
       lensSegments,
       parentRoute: countryRoute,
       route,
     } satisfies SourceRouteProjectionDraft;
   }
 
-  if (!section) {
+  const sourceTrack = findTryoutTrack(source, locale, track);
+
+  if (!sourceTrack) {
+    return null;
+  }
+
+  const readySets = sourceTrack.sets.filter(isTryoutSetReady);
+
+  if (readySets.length === 0) {
+    return null;
+  }
+
+  if (!set) {
     return {
-      conceptSegments: ["tryout", country, exam, set],
-      kind: "tryout-set",
-      learningObjectSegments: ["tryout-set", country, exam, set],
+      conceptSegments: ["tryout", countryKey, examKey, sourceTrack.key],
+      kind: "tryout-track",
+      learningObjectSegments: [
+        "tryout-track",
+        countryKey,
+        examKey,
+        sourceTrack.key,
+      ],
       lensSegments,
       parentRoute: examRoute,
       route,
     } satisfies SourceRouteProjectionDraft;
   }
 
+  const sourceSet = readySets.find(
+    (candidate) => candidate.routeSlugs[locale] === set
+  );
+
+  if (!sourceSet) {
+    return null;
+  }
+
+  if (!section) {
+    return {
+      conceptSegments: [
+        "tryout",
+        countryKey,
+        examKey,
+        sourceTrack.key,
+        sourceSet.key,
+      ],
+      kind: "tryout-set",
+      learningObjectSegments: [
+        "tryout-set",
+        countryKey,
+        examKey,
+        sourceTrack.key,
+        sourceSet.key,
+      ],
+      lensSegments,
+      parentRoute: trackRoute,
+      route,
+    } satisfies SourceRouteProjectionDraft;
+  }
+
+  const sourceSection = findTryoutVisibleSection(sourceSet, locale, section);
+
+  if (!sourceSection) {
+    return null;
+  }
+
   return {
-    conceptSegments: ["tryout", country, exam, section],
+    conceptSegments: [
+      "tryout",
+      countryKey,
+      examKey,
+      sourceTrack.key,
+      sourceSection.key,
+    ],
     kind: "tryout-section",
-    learningObjectSegments: ["tryout-section", country, exam, set, section],
+    learningObjectSegments: [
+      "tryout-section",
+      countryKey,
+      examKey,
+      sourceTrack.key,
+      sourceSet.key,
+      sourceSection.key,
+    ],
     lensSegments,
     parentRoute: setRoute,
     route,
   } satisfies SourceRouteProjectionDraft;
+}
+
+/** Finds the try-out source that owns one localized country/exam route prefix. */
+function findTryoutSource(
+  tryouts: readonly TryoutExamSource[],
+  locale: Locale,
+  country: string,
+  exam: string | undefined
+) {
+  for (const source of tryouts) {
+    if (source.countryRouteSlugs[locale] !== country) {
+      continue;
+    }
+
+    if (!exam) {
+      return source;
+    }
+
+    if (source.examRouteSlugs[locale] === exam) {
+      return source;
+    }
+  }
+
+  return null;
+}
+
+/** Finds the source track that owns one localized track route segment. */
+function findTryoutTrack(
+  source: TryoutExamSource,
+  locale: Locale,
+  track: string
+) {
+  return source.tracks.find(
+    (candidate) => candidate.routeSlugs[locale] === track
+  );
+}
+
+/** Finds a public visible section that owns one localized section route segment. */
+function findTryoutVisibleSection(
+  set: TryoutSetSource,
+  locale: Locale,
+  section: string
+) {
+  return set.sections.find((candidate) => {
+    if (candidate.visibility === "internal-entry") {
+      return false;
+    }
+
+    return candidate.routeSlugs[locale] === section;
+  });
 }
 
 /** Projects a curriculum-neutral lesson material route into graph metadata. */

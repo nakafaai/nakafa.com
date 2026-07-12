@@ -23,7 +23,7 @@ import type {
   ActiveLearningProfile,
   LearningProgramCatalog,
 } from "@/components/programs/contract";
-import { FocusChoice } from "@/components/programs/onboarding/choice";
+import { OnboardingChoice } from "@/components/programs/onboarding/choice";
 import { StepHeading } from "@/components/programs/onboarding/heading";
 import {
   getFocusOptionForKey,
@@ -38,7 +38,8 @@ import {
   onboardingChoiceGridVariants,
 } from "@/components/programs/onboarding/styles";
 import { submitOnboardingSelection } from "@/components/programs/onboarding/submit";
-import { choiceCardVariants } from "@/components/shared/choice-card";
+import { choiceCardVariants } from "@/components/shared/choice/variants";
+import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
 import { useUser } from "@/lib/context/use-user";
 
 /** Saves the selected learning focus for the latest reactive onboarding role. */
@@ -98,7 +99,7 @@ function FocusStepFormBody({
   const t = useTranslations("LearningPrograms");
   const locale = useLocale();
   const router = useRouter();
-  const updateRole = useMutation(api.users.mutations.updateUserRole);
+  const updateRole = useUpdateUserRoleMutation();
   const selectProgram = useMutation(
     api.learningPrograms.mutations.selectLearningProgram
   );
@@ -174,7 +175,7 @@ function FocusStepFormBody({
                 onClick={() => field.handleChange(option.key)}
                 type="button"
               >
-                <FocusChoice option={option} />
+                <OnboardingChoice option={option} />
               </button>
             ))}
           </section>

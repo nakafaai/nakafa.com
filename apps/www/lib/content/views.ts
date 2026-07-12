@@ -1,15 +1,7 @@
-import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { fetchRuntimeContentRoute } from "@/lib/content/runtime/routes";
+import type { Locale } from "@repo/contents/_types/content";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 
-/** Reads the persisted graph content ID for a public route projection. */
-export async function getRuntimeContentViewId(
-  args: Parameters<typeof fetchRuntimeContentRoute>[0]
-) {
-  "use cache";
-
-  applyContentRuntimeCache();
-
-  const route = await fetchRuntimeContentRoute(args);
-
-  return route?.content_id ?? null;
+/** Derives the stable graph content ID validated again by the view mutation. */
+export function getContentViewId(args: { locale: Locale; route: string }) {
+  return createLearningGraphIdentityFromRoute(args)?.assetId ?? null;
 }

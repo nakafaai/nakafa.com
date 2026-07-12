@@ -7,9 +7,9 @@ import { SchoolClassesJoinForm } from "@/components/school/classes/join-form";
 import { SchoolClassesTabs } from "@/components/school/classes/tabs";
 import { SchoolClassesWorkspaceShell } from "@/components/school/classes/workspace-shell";
 import { ClassContextProvider } from "@/lib/context/use-class";
-import { getClassRouteSnapshot } from "@/lib/school/server";
+import { preloadClassRoute } from "@/lib/school/server";
 
-/** Bind the resolved class route snapshot to the class subtree. */
+/** Bind the preloaded class route to the class subtree. */
 export default function Layout({
   children,
   panel,
@@ -48,8 +48,7 @@ async function ResolvedClassRouteBoundary({
 }
 
 /**
- * Resolve the class route snapshot on the server so the client subtree only
- * consumes stable class state.
+ * Preload the class route so the client subtree hydrates without a data gap.
  */
 async function ClassRouteBoundary({
   children,
@@ -60,11 +59,13 @@ async function ClassRouteBoundary({
   classId: string;
   panel: ReactNode;
 }) {
-  const value = await getClassRouteSnapshot({ classId });
+  const route = await preloadClassRoute({ classId });
 
-  if (!value) {
+  if (!route) {
     notFound();
   }
+
+  const { preloaded, value } = route;
 
   if (value.kind === "joinRequired") {
     return (
@@ -76,7 +77,7 @@ async function ClassRouteBoundary({
   }
 
   return (
-    <ClassContextProvider value={value}>
+    <ClassContextProvider preloaded={preloaded}>
       <ForumSessionProvider classId={classId} key={classId}>
         <SchoolClassesWorkspaceShell panel={panel}>
           <SchoolClassesHeaderInfo />

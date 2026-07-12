@@ -4,9 +4,11 @@ import {
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
 import {
-  ContentSearchResultSchema,
   QuranReferenceSchema,
   QuranSurahPageSchema,
+} from "@repo/backend/scripts/sync-content/contract/quran";
+import {
+  ContentSearchResultSchema,
   RuntimeContentRouteSchema,
 } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {

@@ -16,6 +16,10 @@ import {
   log,
   logError,
 } from "@repo/backend/scripts/sync-content/cli/logging";
+import {
+  addTryoutCountry,
+  addTryoutRoute,
+} from "@repo/backend/scripts/sync-content/content/tryout/route";
 import { TryoutSyncResultSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
@@ -28,7 +32,7 @@ import {
   chunkTryoutRows,
   type TryoutSyncArgs,
 } from "@repo/backend/scripts/sync-content/tryout/batch";
-import type { TryoutRouteKind } from "@repo/contents/_types/tryout/schema";
+import { getTryoutSetQuestionCount } from "@repo/contents/_types/tryout/readiness";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
@@ -89,6 +93,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
   const sections: TryoutSyncArgs["sections"] = [];
   const questionSets: TryoutSyncArgs["questionSets"] = [];
   const questions: TryoutSyncArgs["questions"] = [];
+  const tracks: TryoutSyncArgs["tracks"] = [];
 
   for (const source of TRYOUT_SOURCES) {
     for (const locale of selectedLocales) {
@@ -109,11 +114,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
         sourceRevision: source.sourceRevision,
         title: countryTranslation.title,
       };
-      countries.set(`${locale}:${source.countryKey}`, countryRow);
-      addTryoutRoute(routes, {
-        ...countryRow,
-        kind: "tryout-country",
-      });
+      yield* addTryoutCountry(countries, routes, countryRow);
 
       const examRow = {
         countryKey: source.countryKey,
@@ -128,102 +129,162 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
         title: examTranslation.title,
       };
       exams.push(examRow);
-      addTryoutRoute(routes, {
+      yield* addTryoutRoute(routes, {
         ...examRow,
         kind: "tryout-exam",
       });
 
-      for (const set of source.sets) {
-        const setSlug = set.routeSlugs[locale];
-        const setTranslation = set.translations[locale];
-        const setPublicPath = `${examPublicPath}/${setSlug}`;
+      for (const track of source.tracks) {
+        const trackSlug = track.routeSlugs[locale];
+        const trackTranslation = track.translations[locale];
+        const trackPublicPath = `${examPublicPath}/${trackSlug}`;
+        const trackSets: TryoutSyncArgs["sets"] = [];
 
-        const setRow = {
-          countryKey: source.countryKey,
-          description: setTranslation.description,
-          examKey: source.examKey,
-          isActive: true,
-          locale,
-          order: set.order,
-          publicPath: setPublicPath,
-          scoringStrategy: source.scoringStrategy,
-          sectionCount: set.sections.length,
-          setKey: set.key,
-          sourceRevision: source.sourceRevision,
-          title: setTranslation.title,
-          totalQuestionCount: set.sections.reduce(
-            (total, section) => total + section.questionCount,
-            0
-          ),
-        };
-        sets.push(setRow);
-        addTryoutRoute(routes, {
-          ...setRow,
-          kind: "tryout-set",
-        });
+        for (const set of track.sets) {
+          const setSlug = set.routeSlugs[locale];
+          const setTranslation = set.translations[locale];
+          const setPublicPath = `${trackPublicPath}/${setSlug}`;
+          const visibleSections = set.sections.filter(
+            (section) => section.visibility === "visible"
+          );
+          const internalEntrySections = set.sections.filter(
+            (section) => section.visibility === "internal-entry"
+          );
+          const totalQuestionCount = getTryoutSetQuestionCount(set);
+          const internalEntrySectionKey =
+            internalEntrySections.length === 1 && visibleSections.length === 0
+              ? internalEntrySections[0]?.key
+              : undefined;
 
-        for (const section of set.sections) {
-          const sectionSlug = section.routeSlugs[locale];
-          const sectionTranslation = section.translations[locale];
-          const publicPath = `${setPublicPath}/${sectionSlug}`;
-
-          questionSets.push({
-            contentHash: computeHash(
-              JSON.stringify({
-                locale,
-                questionCount: section.questionCount,
-                sourcePath: section.questionSourcePath,
-                sourceRevision: source.sourceRevision,
-                title: sectionTranslation.title,
-              })
-            ),
+          const setRow = {
             countryKey: source.countryKey,
-            description: sectionTranslation.description,
+            description: setTranslation.description,
             examKey: source.examKey,
+            internalEntrySectionKey,
+            isActive: true,
+            isReady: totalQuestionCount > 0,
             locale,
-            questionCount: section.questionCount,
-            sectionKey: section.key,
-            setKey: set.key,
-            sourcePath: section.questionSourcePath,
-            sourceRevision: source.sourceRevision,
-            title: sectionTranslation.title,
-          });
-          sections.push({
-            countryKey: source.countryKey,
-            description: sectionTranslation.description,
-            examKey: source.examKey,
-            locale,
-            order: section.order,
-            publicPath,
-            questionCount: section.questionCount,
-            questionSourcePath: section.questionSourcePath,
-            sectionKey: section.key,
+            order: set.order,
+            publicPath: setPublicPath,
+            readyQuestionCount: totalQuestionCount,
+            readyVisibleSectionCount: visibleSections.length,
+            scoringStrategy: source.scoringStrategy,
+            sectionCount: set.sections.length,
             setKey: set.key,
             sourceRevision: source.sourceRevision,
-            timeLimitSeconds: section.timeLimitSeconds,
-            title: sectionTranslation.title,
+            title: setTranslation.title,
+            totalQuestionCount,
+            trackKey: track.key,
+            visibleSectionCount: visibleSections.length,
+          };
+          sets.push(setRow);
+          trackSets.push(setRow);
+          yield* addTryoutRoute(routes, {
+            ...setRow,
+            kind: "tryout-set",
           });
-          addTryoutRoute(routes, {
-            description: sectionTranslation.description,
-            kind: "tryout-section",
-            locale,
-            publicPath,
-            sourceRevision: source.sourceRevision,
-            title: sectionTranslation.title,
-          });
-          questions.push(
-            ...(yield* readSectionQuestions({
+
+          for (const section of set.sections) {
+            const sectionTranslation = section.translations[locale];
+            const publicPath =
+              section.visibility === "visible"
+                ? `${setPublicPath}/${section.routeSlugs[locale]}`
+                : undefined;
+
+            questionSets.push({
+              contentHash: computeHash(
+                JSON.stringify({
+                  locale,
+                  questionCount: section.questionCount,
+                  sourcePath: section.questionSourcePath,
+                  sourceRevision: source.sourceRevision,
+                  title: sectionTranslation.title,
+                })
+              ),
               countryKey: source.countryKey,
+              description: sectionTranslation.description,
               examKey: source.examKey,
               locale,
+              questionCount: section.questionCount,
+              sectionKey: section.key,
+              setKey: set.key,
+              sourcePath: section.questionSourcePath,
+              sourceRevision: source.sourceRevision,
+              title: sectionTranslation.title,
+            });
+            sections.push({
+              countryKey: source.countryKey,
+              description: sectionTranslation.description,
+              examKey: source.examKey,
+              locale,
+              order: section.order,
+              publicPath,
               questionCount: section.questionCount,
               questionSourcePath: section.questionSourcePath,
               sectionKey: section.key,
               setKey: set.key,
               sourceRevision: source.sourceRevision,
-            }))
-          );
+              timeLimitSeconds: section.timeLimitSeconds,
+              title: sectionTranslation.title,
+              trackKey: track.key,
+              visibility: section.visibility,
+            });
+            if (publicPath) {
+              yield* addTryoutRoute(routes, {
+                description: sectionTranslation.description,
+                isReady: setRow.isReady,
+                kind: "tryout-section",
+                locale,
+                publicPath,
+                sourceRevision: source.sourceRevision,
+                title: sectionTranslation.title,
+              });
+            }
+            questions.push(
+              ...(yield* readSectionQuestions({
+                countryKey: source.countryKey,
+                examKey: source.examKey,
+                locale,
+                questionCount: section.questionCount,
+                questionSourcePath: section.questionSourcePath,
+                sectionKey: section.key,
+                setKey: set.key,
+                sourceRevision: source.sourceRevision,
+                trackKey: track.key,
+              }))
+            );
+          }
         }
+
+        const trackRow = {
+          countryKey: source.countryKey,
+          description: trackTranslation.description,
+          authoredSetCount: track.sets.length,
+          examKey: source.examKey,
+          isActive: true,
+          isReady: trackSets.some((set) => set.isReady),
+          locale,
+          order: track.order,
+          publicPath: trackPublicPath,
+          readyQuestionCount: trackSets.reduce(
+            (total, set) => total + set.readyQuestionCount,
+            0
+          ),
+          readySetCount: trackSets.filter((set) => set.isReady).length,
+          readyVisibleSectionCount: trackSets.reduce(
+            (total, set) => total + set.readyVisibleSectionCount,
+            0
+          ),
+          sourceRevision: source.sourceRevision,
+          title: trackTranslation.title,
+          trackKey: track.key,
+          trackKind: track.kind,
+        };
+        tracks.push(trackRow);
+        yield* addTryoutRoute(routes, {
+          ...trackRow,
+          kind: "tryout-track",
+        });
       }
     }
   }
@@ -236,55 +297,9 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
     questionSets,
     questions,
     sections,
+    tracks,
   };
 });
-
-function addTryoutRoute(
-  routes: Map<string, SyncedTryoutRoute>,
-  source: {
-    description?: string;
-    kind: TryoutRouteKind;
-    locale: Locale;
-    publicPath: string;
-    sourceRevision: string;
-    title: string;
-  }
-) {
-  const sourcePath = source.publicPath;
-  const row = {
-    contentHash: createTryoutRouteHash({ ...source, sourcePath }),
-    description: source.description,
-    kind: source.kind,
-    locale: source.locale,
-    publicPath: source.publicPath,
-    sourcePath,
-    title: source.title,
-  };
-
-  routes.set(`${row.locale}:${row.publicPath}`, row);
-}
-
-function createTryoutRouteHash(source: {
-  description?: string;
-  kind: TryoutRouteKind;
-  locale: Locale;
-  publicPath: string;
-  sourcePath: string;
-  sourceRevision: string;
-  title: string;
-}) {
-  return computeHash(
-    JSON.stringify({
-      description: source.description,
-      kind: source.kind,
-      locale: source.locale,
-      publicPath: source.publicPath,
-      sourcePath: source.sourcePath,
-      sourceRevision: source.sourceRevision,
-      title: source.title,
-    })
-  );
-}
 
 const readSectionQuestions = Effect.fn("sync.readSectionQuestions")(
   function* (source: {
@@ -296,6 +311,7 @@ const readSectionQuestions = Effect.fn("sync.readSectionQuestions")(
     sectionKey: string;
     setKey: string;
     sourceRevision: string;
+    trackKey: string;
   }) {
     const questions: TryoutQuestionPayload[] = [];
     const errors: string[] = [];
@@ -342,6 +358,7 @@ const readQuestion = Effect.fn("sync.readQuestion")(function* (
     sectionKey: string;
     setKey: string;
     sourceRevision: string;
+    trackKey: string;
   },
   number: number
 ) {
@@ -358,7 +375,7 @@ const readQuestion = Effect.fn("sync.readQuestion")(function* (
   if (!choices) {
     return yield* Effect.fail(
       new ScriptFailureError({
-        message: "Missing choices.ts",
+        message: `Missing or invalid choices.ts for ${questionSourcePath}.`,
       })
     );
   }
@@ -397,6 +414,7 @@ const readQuestion = Effect.fn("sync.readQuestion")(function* (
       "tryout",
       source.countryKey,
       source.examKey,
+      source.trackKey,
       source.setKey,
       source.sectionKey,
       `question-${number}`,

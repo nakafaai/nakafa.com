@@ -143,7 +143,7 @@ export const resolveNakafaContentRef = Effect.fn(
 
 /** Builds a graph-backed ref from a route that already belongs to source identity. */
 function createNakafaSourceContentRef(locale: Locale, route: string) {
-  const projection = getSourceRouteProjectionForRoute(route);
+  const projection = getSourceRouteProjectionForRoute(route, locale);
 
   if (!projection) {
     return Option.none<NakafaAgentContentRef>();
@@ -191,7 +191,7 @@ function createNakafaContentRefFromSourceRoute({
   }
 
   const contentRoute = parsedRoute.value;
-  const projection = getSourceRouteProjectionForRoute(contentRoute);
+  const projection = getSourceRouteProjectionForRoute(contentRoute, locale);
 
   if (!projection) {
     return Option.none<NakafaAgentContentRef>();

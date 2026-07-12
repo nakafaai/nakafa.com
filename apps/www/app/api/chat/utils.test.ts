@@ -26,7 +26,7 @@ vi.mock("@/app/api/chat/nakafa-content", async () => {
             url ===
               "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values" ||
             url ===
-              "https://nakafa.com/en/try-out/indonesia/snbt/set-1/quantitative-knowledge" ||
+              "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge" ||
             url === "asset:id:quran:quran-surah:1" ||
             url === "nakafa://content/asset:id:quran:quran-surah:1"
         ),
@@ -46,7 +46,7 @@ describe("app/api/chat/utils", () => {
       true,
     ],
     [
-      "https://nakafa.com/en/try-out/indonesia/snbt/set-1/quantitative-knowledge",
+      "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
       true,
     ],
     ["asset:id:quran:quran-surah:1", true],
@@ -90,11 +90,11 @@ describe("app/api/chat/utils", () => {
       planItems: [
         {
           content_id:
-            "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:set-1:quantitative-knowledge",
+            "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:2027:set-1:quantitative-knowledge",
           lensId: "lens:snbt",
           position: 1,
           reason: "program-alignment",
-          route: "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
+          route: "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
           status: "ready",
           title: "SNBT Set 1",
         },
@@ -124,10 +124,10 @@ describe("app/api/chat/utils", () => {
       planItems: [
         {
           content_id:
-            "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:set-1:quantitative-knowledge",
+            "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:2027:set-1:quantitative-knowledge",
           lensId: "lens:snbt",
           position: 1,
-          route: "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
+          route: "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
           status: "ready",
           title: "SNBT Set 1",
         },

@@ -55,7 +55,7 @@ describe("createPublicLearningIndex", () => {
 
     expect(
       index.resolveRouteByPath(
-        "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif",
+        "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
         "id"
       )
     ).toMatchObject({
@@ -64,17 +64,18 @@ describe("createPublicLearningIndex", () => {
       kind: "tryout-section",
       sectionKey: "quantitative-knowledge",
       setKey: "set-1",
+      trackKey: "2027",
     });
 
     const idTryoutRoute = requireRoute(
       index.resolveRouteByPath(
-        "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif",
+        "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
         "id"
       )
     );
 
     expect(index.projectRouteToLocale(idTryoutRoute, "en")).toMatchObject({
-      publicPath: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+      publicPath: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     });
   });
 

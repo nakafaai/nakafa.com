@@ -9,26 +9,17 @@ import {
   learningPopularityScopeValues,
   learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
+import { storedPublicRouteValidator } from "@repo/backend/convex/contents/publicRoutes/spec";
 import {
   localeValidator,
   materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import {
-  PROGRAM_NAVIGATION_ICON_KEY_VALUES,
-  PROGRAM_NAVIGATION_LEVEL_VALUES,
-} from "@repo/contents/_types/program/schema";
-import { PUBLIC_ROUTE_KIND_VALUES } from "@repo/contents/_types/route/schema";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
-const navigationIconKeyValidator = literals(
-  ...PROGRAM_NAVIGATION_ICON_KEY_VALUES
-);
-const navigationLevelValidator = literals(...PROGRAM_NAVIGATION_LEVEL_VALUES);
-const publicRouteKindValidator = literals(...PUBLIC_ROUTE_KIND_VALUES);
 const learningPopularityWindowValidator = literals(
   ...learningPopularityWindowValues
 );
@@ -381,30 +372,7 @@ const tables = {
    * contract used by app routing, SEO artifacts, assistant context, and
    * curriculum navigation.
    */
-  publicRoutes: defineTable({
-    canonicalPath: v.optional(v.string()),
-    description: v.optional(v.string()),
-    displayGroupIconKey: v.optional(navigationIconKeyValidator),
-    displayGroupTitle: v.optional(v.string()),
-    iconKey: v.optional(navigationIconKeyValidator),
-    kind: publicRouteKindValidator,
-    level: v.optional(navigationLevelValidator),
-    locale: localeValidator,
-    materialCardDescription: v.optional(v.string()),
-    materialCardTitle: v.optional(v.string()),
-    materialDomain: v.optional(materialValidator),
-    materialKey: v.optional(v.string()),
-    nodeKey: v.optional(v.string()),
-    order: v.optional(v.number()),
-    parentPath: v.optional(v.string()),
-    programKey: v.optional(v.string()),
-    publicPath: v.string(),
-    sectionKey: v.optional(v.string()),
-    sitemap: v.boolean(),
-    sourcePath: v.optional(v.string()),
-    syncedAt: v.number(),
-    title: v.string(),
-  })
+  publicRoutes: defineTable(storedPublicRouteValidator.fields)
     .index("by_locale_and_publicPath", ["locale", "publicPath"])
     .index("by_locale_and_kind_and_publicPath", [
       "locale",
@@ -448,7 +416,7 @@ const tables = {
       "sitemap",
       "publicPath",
     ])
-    .index("by_syncedAt", ["syncedAt"]),
+    .index("by_syncShard", ["syncShard"]),
 };
 
 export default tables;

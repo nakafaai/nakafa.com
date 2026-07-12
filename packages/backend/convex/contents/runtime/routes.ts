@@ -1,50 +1,12 @@
-import {
-  localeValidator,
-  materialValidator,
-} from "@repo/backend/convex/lib/validators/contents";
-import {
-  PROGRAM_NAVIGATION_ICON_KEY_VALUES,
-  PROGRAM_NAVIGATION_LEVEL_VALUES,
-} from "@repo/contents/_types/program/schema";
-import { PUBLIC_ROUTE_KIND_VALUES } from "@repo/contents/_types/route/schema";
+import { publicRouteValidator } from "@repo/backend/convex/contents/publicRoutes/spec";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { type Infer, v } from "convex/values";
-import { literals, nullable } from "convex-helpers/validators";
-
-const publicRouteKindValidator = literals(...PUBLIC_ROUTE_KIND_VALUES);
-const navigationIconKeyValidator = literals(
-  ...PROGRAM_NAVIGATION_ICON_KEY_VALUES
-);
-const navigationLevelValidator = literals(...PROGRAM_NAVIGATION_LEVEL_VALUES);
-
-const runtimePublicRouteValidator = v.object({
-  canonicalPath: v.optional(v.string()),
-  description: v.optional(v.string()),
-  displayGroupIconKey: v.optional(navigationIconKeyValidator),
-  displayGroupTitle: v.optional(v.string()),
-  iconKey: v.optional(navigationIconKeyValidator),
-  kind: publicRouteKindValidator,
-  level: v.optional(navigationLevelValidator),
-  locale: localeValidator,
-  materialCardDescription: v.optional(v.string()),
-  materialCardTitle: v.optional(v.string()),
-  materialDomain: v.optional(materialValidator),
-  materialKey: v.optional(v.string()),
-  nodeKey: v.optional(v.string()),
-  order: v.optional(v.number()),
-  parentPath: v.optional(v.string()),
-  programKey: v.optional(v.string()),
-  publicPath: v.string(),
-  sectionKey: v.optional(v.string()),
-  sitemap: v.boolean(),
-  sourcePath: v.optional(v.string()),
-  syncedAt: v.number(),
-  title: v.string(),
-});
+import { nullable } from "convex-helpers/validators";
 
 const paginatedPublicRoutesValidator = v.object({
   continueCursor: v.string(),
   isDone: v.boolean(),
-  page: v.array(runtimePublicRouteValidator),
+  page: v.array(publicRouteValidator),
 });
 
 const getPublicRouteByPathArgsObjectValidator = v.object({
@@ -57,13 +19,12 @@ export const getPublicRouteByPathArgsValidator =
 export type GetPublicRouteByPathArgs = Infer<
   typeof getPublicRouteByPathArgsObjectValidator
 >;
-export const getPublicRouteByPathReturnValidator = nullable(
-  runtimePublicRouteValidator
-);
+export const getPublicRouteByPathReturnValidator =
+  nullable(publicRouteValidator);
 
 const listPublicRoutesByParentArgsObjectValidator = v.object({
   cursor: v.union(v.string(), v.null()),
-  kind: publicRouteKindValidator,
+  kind: publicRouteValidator.fields.kind,
   limit: v.number(),
   locale: localeValidator,
   parentPath: v.optional(v.string()),
@@ -89,9 +50,8 @@ export const listPublicRoutesByMaterialArgsValidator =
 export type ListPublicRoutesByMaterialArgs = Infer<
   typeof listPublicRoutesByMaterialArgsObjectValidator
 >;
-export const listPublicRoutesByMaterialReturnValidator = v.array(
-  runtimePublicRouteValidator
-);
+export const listPublicRoutesByMaterialReturnValidator =
+  v.array(publicRouteValidator);
 
 const listSitemapPublicRoutesArgsObjectValidator = v.object({
   cursor: v.union(v.string(), v.null()),

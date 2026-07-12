@@ -12,6 +12,11 @@ import {
 import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 
+/** Infers one Indonesian route kind through the localized graph contract. */
+function getIndonesianKind(route: string) {
+  return getLearningObjectKindForRoute(route, "id");
+}
+
 describe("learning graph identity", () => {
   it("maps article sources into locale asset identity and route-free graph IDs", () => {
     const identity = readGraphIdentityFixture({
@@ -76,23 +81,58 @@ describe("learning graph identity", () => {
       locale: "en",
       route: "try-out/indonesia/snbt",
     });
+    const track = readGraphIdentityFixture({
+      kind: "tryout-track",
+      locale: "en",
+      route: "try-out/indonesia/snbt/2027",
+    });
     const set = readGraphIdentityFixture({
       kind: "tryout-set",
       locale: "en",
-      route: "try-out/indonesia/snbt/set-1",
+      route: "try-out/indonesia/snbt/2027/set-1",
     });
     const section = readGraphIdentityFixture({
       kind: "tryout-section",
       locale: "en",
-      route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+      route: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     });
 
     expect(exam.lensId).toBe("lens:tryout:indonesia:snbt");
+    expect(track.lensId).toBe(exam.lensId);
     expect(set.lensId).toBe(exam.lensId);
     expect(section.lensId).toBe(exam.lensId);
     expect(section.assetId).toBe(
-      "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:set-1:quantitative-knowledge"
+      "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:2027:set-1:quantitative-knowledge"
     );
+  });
+
+  it("keeps non-locale graph IDs stable across localized try-out routes", () => {
+    const english = readGraphIdentityFixture({
+      kind: "tryout-track",
+      locale: "en",
+      route: "try-out/indonesia/tka/mathematics",
+    });
+    const indonesian = readGraphIdentityFixture({
+      kind: "tryout-track",
+      locale: "id",
+      route: "try-out/indonesia/tka/matematika",
+    });
+
+    expect({
+      alignmentId: indonesian.alignmentId,
+      conceptId: indonesian.conceptId,
+      learningObjectId: indonesian.learningObjectId,
+      lensId: indonesian.lensId,
+    }).toEqual({
+      alignmentId: english.alignmentId,
+      conceptId: english.conceptId,
+      learningObjectId: english.learningObjectId,
+      lensId: english.lensId,
+    });
+    expect(english.learningObjectId).toBe(
+      "lo:tryout-track:indonesia:tka:mathematics"
+    );
+    expect(english.assetId).not.toBe(indonesian.assetId);
   });
 
   it("supports non-route Quran graph identity", () => {
@@ -123,36 +163,33 @@ describe("learning graph identity", () => {
   });
 
   it("infers graph kind from route projections", () => {
-    expect(getLearningObjectKindForRoute("articles/politics/example")).toBe(
-      "article"
-    );
-    expect(getLearningObjectKindForRoute("quran/1")).toBe("quran-surah");
-    expect(getLearningObjectKindForRoute("quran/not-number")).toBeNull();
-    expect(getLearningObjectKindForRoute("material/lesson/physics/waves")).toBe(
+    expect(getIndonesianKind("articles/politics/example")).toBe("article");
+    expect(getIndonesianKind("quran/1")).toBe("quran-surah");
+    expect(getIndonesianKind("quran/not-number")).toBeNull();
+    expect(getIndonesianKind("material/lesson/physics/waves")).toBe(
       "curriculum-topic"
     );
-    expect(
-      getLearningObjectKindForRoute("material/lesson/physics/waves/sound")
-    ).toBe("curriculum-lesson");
-    expect(getLearningObjectKindForRoute("try-out/indonesia")).toBe(
-      "tryout-country"
+    expect(getIndonesianKind("material/lesson/physics/waves/sound")).toBe(
+      "curriculum-lesson"
     );
-    expect(getLearningObjectKindForRoute("try-out/indonesia/snbt")).toBe(
-      "tryout-exam"
+    expect(getIndonesianKind("try-out/indonesia")).toBe("tryout-country");
+    expect(getIndonesianKind("try-out/indonesia/snbt")).toBe("tryout-exam");
+    expect(getIndonesianKind("try-out/indonesia/snbt/2027")).toBe(
+      "tryout-track"
     );
-    expect(getLearningObjectKindForRoute("try-out/indonesia/snbt/set-1")).toBe(
+    expect(getIndonesianKind("try-out/indonesia/snbt/2027/set-1")).toBe(
       "tryout-set"
     );
     expect(
-      getLearningObjectKindForRoute(
-        "try-out/indonesia/snbt/set-1/quantitative-knowledge"
+      getIndonesianKind(
+        "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif"
       )
     ).toBe("tryout-section");
-    expect(getLearningObjectKindForRoute("assessment/high-school")).toBeNull();
-    expect(getLearningObjectKindForRoute("assessment/set-1/7")).toBeNull();
+    expect(getIndonesianKind("assessment/high-school")).toBeNull();
+    expect(getIndonesianKind("assessment/set-1/7")).toBeNull();
     expect(
-      getLearningObjectKindForRoute(
-        "try-out/indonesia/snbt/set-1/quantitative-knowledge/extra"
+      getIndonesianKind(
+        "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge/extra"
       )
     ).toBeNull();
   });
@@ -257,6 +294,7 @@ describe("learning graph identity", () => {
   });
 });
 
+/** Decode one graph-identity fixture from a learning graph source. */
 function readGraphIdentityFixture(
   source: LearningGraphSource
 ): LearningGraphIdentity {

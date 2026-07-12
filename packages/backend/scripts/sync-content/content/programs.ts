@@ -5,10 +5,8 @@ import {
 } from "@repo/backend/convex/contents/constants";
 import { getLearningProgramCatalogInputs } from "@repo/backend/convex/learningPrograms/catalog";
 import { log } from "@repo/backend/scripts/sync-content/cli/logging";
-import {
-  DeleteResultSchema,
-  RuntimeContentRoutePageSchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
+import { DeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
+import { RuntimeContentRoutePageSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
   SyncOptions,

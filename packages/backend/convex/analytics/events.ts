@@ -58,6 +58,7 @@ export const productAnalyticsEventValidator = v.union(
       locale: localeValidator,
       score_status: tryoutScoreStatusValidator,
       set_key: tryoutRouteKeyValidator,
+      track_key: tryoutRouteKeyValidator,
     }),
   }),
   v.object({
@@ -73,6 +74,7 @@ export const productAnalyticsEventValidator = v.union(
       theta: optionalNumber,
       total_correct: v.number(),
       total_questions: v.number(),
+      track_key: tryoutRouteKeyValidator,
     }),
   }),
   v.object({

@@ -22,6 +22,7 @@ import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
+  fetchRuntimeQuranSurahMetadata,
   fetchRuntimeQuranSurahPage,
   fetchRuntimeQuranSurahs,
 } from "@/lib/content/runtime/pages";
@@ -152,7 +153,7 @@ async function ResolvedSurahPage({
         inLanguage={locale}
         name={title}
         position={surahNumber}
-        totalPages={surahData.verses.length}
+        totalPages={surahData.numberOfVerses}
         url={`https://nakafa.com/${locale}/quran/${surah}`}
       />
       <CachedSurahShell
@@ -172,9 +173,7 @@ async function getSurahMetadataData({ surah }: { surah: number }) {
 
   applyContentRuntimeCache();
 
-  const surahPage = await fetchRuntimeQuranSurahPage({ surah });
-
-  return surahPage?.surahData ?? null;
+  return await fetchRuntimeQuranSurahMetadata({ surah });
 }
 
 /** Renders the cached Quran surah body, controls, pagination, and table of contents. */

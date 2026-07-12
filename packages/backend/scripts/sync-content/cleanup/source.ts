@@ -3,11 +3,16 @@ import {
   parseArticlePath,
   parseMaterialLessonPath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
+import { getLocalizedSourceKey } from "@repo/backend/scripts/sync-content/contract/key";
 import { parseLocale } from "@repo/backend/scripts/sync-content/contract/schemas";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
-import { listPublicTryoutRoutes } from "@repo/contents/_types/route/tryout";
+import {
+  lookupNamespaceSegment,
+  makePath,
+} from "@repo/contents/_types/route/path";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
+import { type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
 const QUESTION_FILE_PREFIX = "question.";
@@ -67,23 +72,62 @@ export const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
   }
 );
 
-/** Collects source-owned public try-out paths grouped by catalog table. */
+/** Collects every source-owned try-out catalog identity, including unpublished sets. */
 const collectTryoutPaths = Effect.fn("sync.collectTryoutPaths")(function* () {
-  const routes = yield* listPublicTryoutRoutes();
+  const tryoutCountryKeys = new Set<string>();
+  const tryoutExamKeys = new Set<string>();
+  const tryoutTrackKeys = new Set<string>();
+  const tryoutSetKeys = new Set<string>();
+  const tryoutSectionKeys = new Set<string>();
+
+  for (const source of TRYOUT_SOURCES) {
+    for (const locale of locales) {
+      const tryoutPath = yield* makePath([
+        yield* lookupNamespaceSegment("tryout", locale),
+      ]);
+      const countryPath = yield* makePath([
+        tryoutPath,
+        source.countryRouteSlugs[locale],
+      ]);
+      const examPath = yield* makePath([
+        countryPath,
+        source.examRouteSlugs[locale],
+      ]);
+
+      tryoutCountryKeys.add(getLocalizedSourceKey(locale, countryPath));
+      tryoutExamKeys.add(getLocalizedSourceKey(locale, examPath));
+
+      for (const track of source.tracks) {
+        const trackPath = yield* makePath([examPath, track.routeSlugs[locale]]);
+        tryoutTrackKeys.add(getLocalizedSourceKey(locale, trackPath));
+
+        for (const set of track.sets) {
+          const setPath = yield* makePath([trackPath, set.routeSlugs[locale]]);
+          tryoutSetKeys.add(getLocalizedSourceKey(locale, setPath));
+
+          for (const section of set.sections) {
+            let sourcePath = section.questionSourcePath;
+
+            if (section.visibility === "visible") {
+              sourcePath = yield* makePath([
+                setPath,
+                section.routeSlugs[locale],
+              ]);
+            }
+
+            tryoutSectionKeys.add(getLocalizedSourceKey(locale, sourcePath));
+          }
+        }
+      }
+    }
+  }
 
   return {
-    tryoutCountryPaths: routes
-      .filter((route) => route.kind === "tryout-country")
-      .map((route) => route.publicPath),
-    tryoutExamPaths: routes
-      .filter((route) => route.kind === "tryout-exam")
-      .map((route) => route.publicPath),
-    tryoutSectionPaths: routes
-      .filter((route) => route.kind === "tryout-section")
-      .map((route) => route.publicPath),
-    tryoutSetPaths: routes
-      .filter((route) => route.kind === "tryout-set")
-      .map((route) => route.publicPath),
+    tryoutCountryKeys: [...tryoutCountryKeys],
+    tryoutExamKeys: [...tryoutExamKeys],
+    tryoutSectionKeys: [...tryoutSectionKeys],
+    tryoutSetKeys: [...tryoutSetKeys],
+    tryoutTrackKeys: [...tryoutTrackKeys],
   };
 });
 
@@ -115,15 +159,17 @@ const readQuestionLocale = Effect.fn("sync.readQuestionLocale")(function* (
 });
 
 /** Builds the locale-qualified source key used for stale question cleanup. */
-function getQuestionSourceKey(locale: string, sourcePath: string) {
-  return `${locale}:${sourcePath}`;
+function getQuestionSourceKey(locale: Locale, sourcePath: string) {
+  return getLocalizedSourceKey(locale, sourcePath);
 }
 
 /** Lists source-owned try-out question-set folders that should exist in Convex. */
 function listActiveTryoutQuestionSetPaths() {
   return TRYOUT_SOURCES.flatMap((source) =>
-    source.sets.flatMap((set) =>
-      set.sections.map((section) => section.questionSourcePath)
+    source.tracks.flatMap((track) =>
+      track.sets.flatMap((set) =>
+        set.sections.map((section) => section.questionSourcePath)
+      )
     )
   );
 }
@@ -131,11 +177,13 @@ function listActiveTryoutQuestionSetPaths() {
 /** Lists exact source-owned try-out question files that should exist in Convex. */
 function listActiveTryoutQuestionPaths() {
   return TRYOUT_SOURCES.flatMap((source) =>
-    source.sets.flatMap((set) =>
-      set.sections.flatMap((section) =>
-        Array.from(
-          { length: section.questionCount },
-          (_, index) => `${section.questionSourcePath}/question-${index + 1}`
+    source.tracks.flatMap((track) =>
+      track.sets.flatMap((set) =>
+        set.sections.flatMap((section) =>
+          Array.from(
+            { length: section.questionCount },
+            (_, index) => `${section.questionSourcePath}/question-${index + 1}`
+          )
         )
       )
     )

@@ -26,6 +26,7 @@ const QUESTION_FILE_PREFIX = "question.";
 const ANSWER_FILE_PREFIX = "answer.";
 const MDX_FILE_SUFFIX = ".mdx";
 
+/** Create an empty mutable validation accumulator for one source family. */
 const createValidationResult = (): ValidationResult => ({
   valid: 0,
   invalid: 0,
@@ -116,10 +117,10 @@ const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
 
           const choices = yield* readQuestionChoices(path.dirname(file));
 
-          if (!choices || choices.en.length === 0 || choices.id.length === 0) {
+          if (!choices) {
             return yield* Effect.fail(
               new ScriptFailureError({
-                message: `Missing try-out choices for ${file}. Add non-empty en and id choices.ts arrays.`,
+                message: `Missing or invalid try-out choices for ${file}. Add en and id choices.ts arrays with exactly one correct option per locale.`,
               })
             );
           }

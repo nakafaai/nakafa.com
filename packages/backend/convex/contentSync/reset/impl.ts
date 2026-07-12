@@ -4,6 +4,7 @@ import {
   batchDeleteResultValidator,
   contentSearchResetBatchSize,
   eventTryoutEntitlementBatchSize,
+  questionResetBatchSize,
   type ResettableTableName,
   resetBatchSize,
 } from "@repo/backend/convex/contentSync/reset/spec";
@@ -225,7 +226,9 @@ export async function deleteTryoutContentRoutePageRows(ctx: MutationCtx) {
 
 /** Deletes questions through their dependent cleanup helper. */
 export async function deleteQuestionRows(ctx: MutationCtx) {
-  const questions = await ctx.db.query("questions").take(resetBatchSize);
+  const questions = await ctx.db
+    .query("questions")
+    .take(questionResetBatchSize);
   let deleted = 0;
 
   for (const question of questions) {
@@ -238,6 +241,7 @@ export async function deleteQuestionRows(ctx: MutationCtx) {
   return { deleted, hasMore };
 }
 
+/** Check whether any locale still has a try-out search projection. */
 async function hasTryoutContentSearchRows(ctx: MutationCtx) {
   for (const locale of SUPPORTED_CONTENT_LOCALES) {
     const row = await ctx.db
@@ -255,6 +259,7 @@ async function hasTryoutContentSearchRows(ctx: MutationCtx) {
   return false;
 }
 
+/** Check whether any locale still has a try-out route-count projection. */
 async function hasTryoutContentRouteCountRows(ctx: MutationCtx) {
   for (const locale of SUPPORTED_CONTENT_LOCALES) {
     const row = await ctx.db
@@ -272,6 +277,7 @@ async function hasTryoutContentRouteCountRows(ctx: MutationCtx) {
   return false;
 }
 
+/** Check whether any locale still has a try-out route-page projection. */
 async function hasTryoutContentRoutePageRows(ctx: MutationCtx) {
   for (const locale of SUPPORTED_CONTENT_LOCALES) {
     const row = await ctx.db

@@ -11,6 +11,9 @@ export type RuntimeMdxPage = RuntimeArticlePage | RuntimeCurriculumPage;
 export type RuntimeContentRoutePage = FunctionReturnType<
   typeof api.contents.queries.runtime.listContentRoutesByPrefix
 >;
+export type RuntimeQuranSurahMetadata = NonNullable<
+  FunctionReturnType<typeof api.contents.queries.runtime.getQuranSurahMetadata>
+>;
 export type RuntimeQuranSurahPage = NonNullable<
   FunctionReturnType<typeof api.contents.queries.runtime.getQuranSurahPage>
 >;

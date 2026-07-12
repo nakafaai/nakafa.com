@@ -7,7 +7,7 @@ describe("readIncrementalSyncPlan", () => {
       readIncrementalSyncPlan(["packages/contents/_types/route/tryout.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["curriculum", "tryouts"],
     });
   });
@@ -19,7 +19,7 @@ describe("readIncrementalSyncPlan", () => {
       ])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["curriculum", "tryouts"],
     });
   });
@@ -29,7 +29,7 @@ describe("readIncrementalSyncPlan", () => {
       readIncrementalSyncPlan(["packages/contents/_types/graph/projection.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["articles", "curriculum", "tryouts"],
     });
   });
@@ -41,7 +41,7 @@ describe("readIncrementalSyncPlan", () => {
       ])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["articles", "curriculum", "tryouts"],
     });
   });
@@ -51,7 +51,7 @@ describe("readIncrementalSyncPlan", () => {
       readIncrementalSyncPlan(["packages/contents/_types/material/domain.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["curriculum", "tryouts"],
     });
   });
@@ -61,7 +61,7 @@ describe("readIncrementalSyncPlan", () => {
       readIncrementalSyncPlan(["packages/contents/_types/material/source.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["curriculum", "tryouts"],
     });
   });
@@ -71,7 +71,7 @@ describe("readIncrementalSyncPlan", () => {
       readIncrementalSyncPlan(["packages/contents/_types/taxonomy.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["articles", "curriculum", "tryouts"],
     });
   });
@@ -81,7 +81,7 @@ describe("readIncrementalSyncPlan", () => {
       readIncrementalSyncPlan(["packages/contents/_types/content.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["articles", "curriculum", "tryouts"],
     });
   });
@@ -91,7 +91,7 @@ describe("readIncrementalSyncPlan", () => {
       readIncrementalSyncPlan(["packages/contents/_types/program/catalog.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["curriculum", "tryouts"],
     });
   });
@@ -103,7 +103,7 @@ describe("readIncrementalSyncPlan", () => {
       ])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["tryouts"],
     });
   });
@@ -115,7 +115,7 @@ describe("readIncrementalSyncPlan", () => {
       ])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: true,
+      refreshPublicRoutes: true,
       rowPhases: ["tryouts"],
     });
   });
@@ -127,7 +127,7 @@ describe("readIncrementalSyncPlan", () => {
       ])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
-      refreshGeneratedReadModels: false,
+      refreshPublicRoutes: false,
       rowPhases: ["articles"],
     });
   });

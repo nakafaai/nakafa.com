@@ -1,3 +1,4 @@
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { Schema } from "effect";
 
 /** Stable learning object kinds supported by graph identity generation. */
@@ -7,6 +8,7 @@ export const LEARNING_OBJECT_KIND_VALUES = [
   "curriculum-lesson",
   "tryout-country",
   "tryout-exam",
+  "tryout-track",
   "tryout-set",
   "tryout-section",
   "quran-surah",
@@ -114,6 +116,7 @@ export type SourceRouteProjection = Schema.Schema.Type<
 /** Runtime schema for a source route plus its declared graph object kind. */
 export const SourceRouteInputSchema = Schema.Struct({
   kind: LearningObjectKindSchema,
+  locale: LocaleSchema,
   route: Schema.String,
 });
 
@@ -126,6 +129,7 @@ const ROOT_BY_KIND = {
   article: "articles",
   "tryout-country": "tryout",
   "tryout-exam": "tryout",
+  "tryout-track": "tryout",
   "tryout-set": "tryout",
   "tryout-section": "tryout",
   "quran-surah": "quran",
@@ -137,6 +141,7 @@ const LENS_SCOPE_BY_KIND = {
   article: "article-domain",
   "tryout-country": "exam",
   "tryout-exam": "exam",
+  "tryout-track": "exam",
   "tryout-set": "exam",
   "tryout-section": "exam",
   "quran-surah": "scripture",
