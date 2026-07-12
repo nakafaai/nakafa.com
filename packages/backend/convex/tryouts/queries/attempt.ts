@@ -4,11 +4,16 @@ import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
+  getSectionScoreResult,
+  loadAttemptScoreResult,
+} from "@repo/backend/convex/tryouts/queries/score";
+import {
   getActiveTryoutSet,
   getActiveTryoutSetByPublicPath,
 } from "@repo/backend/convex/tryouts/read";
 import {
   tryoutRouteKeyValidator,
+  tryoutScoreResultValidator,
   tryoutStatusValidator,
 } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
@@ -18,6 +23,7 @@ const currentSectionValidator = v.object({
   completedAt: v.union(v.number(), v.null()),
   endReason: v.union(attemptEndReasonValidator, v.null()),
   expiresAt: v.number(),
+  score: v.union(tryoutScoreResultValidator, v.null()),
   sectionKey: tryoutRouteKeyValidator,
   startedAt: v.number(),
   status: tryoutStatusValidator,
@@ -33,6 +39,7 @@ const currentAttemptValidator = v.object({
   lastActivityAt: v.number(),
   resumeSectionPublicPath: v.union(v.string(), v.null()),
   resumeSectionKey: v.union(tryoutRouteKeyValidator, v.null()),
+  score: v.union(tryoutScoreResultValidator, v.null()),
   section: v.union(currentSectionValidator, v.null()),
   startedAt: v.number(),
   status: tryoutStatusValidator,
@@ -149,7 +156,10 @@ async function loadCurrentAttempt(
       .unique();
   }
 
-  const sections = await loadSectionAttempts(ctx, attempt);
+  const [sections, score] = await Promise.all([
+    loadSectionAttempts(ctx, attempt),
+    loadAttemptScoreResult(ctx, attempt),
+  ]);
   const inProgressSection = sections.find(
     (sectionAttempt) => sectionAttempt.status === "in-progress"
   );
@@ -172,12 +182,14 @@ async function loadCurrentAttempt(
     lastActivityAt: attempt.lastActivityAt,
     resumeSectionKey: resumeSection?.sectionKey ?? null,
     resumeSectionPublicPath: resumeSection?.publicPath ?? null,
+    score,
     section: section
       ? {
           answeredCount: section.answeredCount,
           completedAt: section.completedAt,
           endReason: section.endReason,
           expiresAt: section.expiresAt,
+          score: getSectionScoreResult(section),
           sectionKey: section.sectionKey,
           startedAt: section.startedAt,
           status: section.status,
@@ -363,6 +375,7 @@ export const getSectionRuntime = query({
         completedAt: section.completedAt,
         endReason: section.endReason,
         expiresAt: section.expiresAt,
+        score: getSectionScoreResult(section),
         sectionKey: section.sectionKey,
         startedAt: section.startedAt,
         status: section.status,

@@ -377,14 +377,29 @@ describe("tryouts/runtime/finish", () => {
 
     expect(snapshot.expiredAttempt).toMatchObject({
       completedSectionKeys: ["pengetahuan-kuantitatif", "penalaran-matematika"],
+      endReason: "time-expired",
       status: "expired",
       totalCorrect: 1,
     });
     expect(snapshot.sections).toHaveLength(2);
+    expect(snapshot.sections[0]).toMatchObject({
+      score: {
+        publishedScore: 900,
+        rawScore: 100,
+        scoringStrategy: "irt",
+        theta: 4,
+      },
+    });
     expect(snapshot.sections[1]).toMatchObject({
       answeredCount: 0,
       correctAnswers: 0,
       endReason: "time-expired",
+      score: {
+        publishedScore: 100,
+        rawScore: 0,
+        scoringStrategy: "irt",
+        theta: -4,
+      },
       sectionKey: "penalaran-matematika",
       status: "expired",
     });

@@ -24,7 +24,10 @@ import {
   requireInternalEntrySection,
   startSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
-import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
+import {
+  type TryoutScoreStatus,
+  tryoutRouteKeyValidator,
+} from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 
 const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
@@ -176,7 +179,7 @@ export const startAttempt = mutation({
     const expiresAt = getNewAttemptExpiresAt(now, entitlement);
     const access = getAttemptAccessFields(entitlement);
     const attemptStatus = "in-progress";
-    const scoreStatus = "provisional";
+    const scoreStatus = scaleVersion?.status ?? "official";
     const attemptValues: TryoutAttemptInsert = {
       attemptNumber,
       ...access,
@@ -241,6 +244,7 @@ export const startAttempt = mutation({
       appUserId: appUser._id,
       attemptNumber,
       now,
+      scoreStatus,
       set,
     });
 
@@ -283,6 +287,7 @@ async function trackAttemptStarted(
     appUserId: Id<"users">;
     attemptNumber: number;
     now: number;
+    scoreStatus: TryoutScoreStatus;
     set: TryoutSet;
   }
 ) {
@@ -295,7 +300,7 @@ async function trackAttemptStarted(
         country_key: args.set.countryKey,
         exam_key: args.set.examKey,
         locale: args.set.locale,
-        score_status: "provisional",
+        score_status: args.scoreStatus,
         set_key: args.set.setKey,
         track_key: args.set.trackKey,
       },

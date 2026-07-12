@@ -225,6 +225,7 @@ describe("tryouts/mutations/attempts", () => {
     });
 
     expect(runtime.attempt).toMatchObject({
+      scoreStatus: "official",
       status: "in-progress",
       tryoutSetId: seeded.fixture.tryoutSetId,
     });
@@ -253,8 +254,10 @@ describe("tryouts/mutations/attempts", () => {
 
     expect(current).toMatchObject({
       activeSectionKey: SECTION,
+      score: null,
     });
     expect(current?.section).toMatchObject({
+      score: null,
       sectionKey: SECTION,
       status: "in-progress",
     });
@@ -271,6 +274,10 @@ describe("tryouts/mutations/attempts", () => {
       }
     );
 
+    expect(sectionRuntime).toMatchObject({
+      questions: expect.any(Array),
+      section: { score: null },
+    });
     expect(sectionRuntime?.questions).toHaveLength(1);
   });
 
