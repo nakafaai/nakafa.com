@@ -179,6 +179,10 @@ describe("tryouts/sets/score", () => {
       sessionId: seeded.sessionId,
       subject: seeded.authUserId,
     });
+    const anonymousDescending = await t.query(
+      api.tryouts.queries.sets.list,
+      getScoreArgs("desc", null)
+    );
     const ascendingLow = await authed.query(
       api.tryouts.queries.sets.list,
       getScoreArgs("asc", null, 1)
@@ -204,6 +208,11 @@ describe("tryouts/sets/score", () => {
       getScoreArgs("desc", descendingLow.continueCursor)
     );
 
+    expect(anonymousDescending.page).toMatchObject([
+      { publishedScore: null, setKey: "set-1" },
+      { publishedScore: null, setKey: "set-2" },
+      { publishedScore: null, setKey: "set-3" },
+    ]);
     expect(ascendingLow).toMatchObject({
       isDone: false,
       page: [{ publishedScore: 300, setKey: "set-2" }],
