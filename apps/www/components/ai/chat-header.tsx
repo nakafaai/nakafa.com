@@ -46,6 +46,7 @@ import {
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { useUser } from "@/lib/context/use-user";
 
+/** Render the current chat header or its stable empty placeholder. */
 export function AiChatHeader() {
   const chat = useCurrentChat((s) => s.chat);
 
@@ -56,10 +57,12 @@ export function AiChatHeader() {
   return <AiChatHeaderContent chat={chat} />;
 }
 
+/** Preserve the chat-header layout while no current chat is available. */
 function AiChatHeaderPlaceholder() {
   return <Header />;
 }
 
+/** Render title, visibility, sharing, and deletion controls for one chat. */
 function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   const t = useTranslations("Ai");
 
@@ -83,6 +86,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
 
   const [isPending, startTransition] = useTransition();
 
+  /** Enter title editing with the current title selected for input. */
   const handleEdit = () => {
     setChatTitle(chat.title ?? "");
     setIsEditing(true);
@@ -91,6 +95,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
     }, 0);
   };
 
+  /** Persist a non-empty edited chat title. */
   const handleSave = () => {
     startTransition(async () => {
       const nextTitle = chatTitle.trim();
@@ -107,6 +112,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
     });
   };
 
+  /** Persist the selected chat visibility. */
   const handleUpdateVisibility = (visibility: "public" | "private") => {
     startTransition(async () => {
       await updateChatVisibility({
@@ -116,6 +122,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
     });
   };
 
+  /** Leave the current route and delete the owned chat. */
   const handleDelete = () => {
     if (!user) {
       return;
@@ -323,6 +330,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   );
 }
 
+/** Compose the fixed-height chat header surface. */
 function Header({
   className,
   children,
@@ -341,6 +349,7 @@ function Header({
   );
 }
 
+/** Group compact chat-header controls with consistent spacing. */
 function HeaderGroup({ className, ...props }: ComponentProps<"div">) {
   return (
     <div className={cn("flex items-center gap-1.5", className)} {...props} />

@@ -68,6 +68,7 @@ export function TryoutSetTable({
     sort: readTryoutSetSort(sorting),
   });
 
+  /** Prefetch and prewarm a set after the viewer signals navigation intent. */
   function markSetIntent(row: TryoutSetRow) {
     setIntentSetKey(row.setKey);
     prewarmData({
@@ -79,12 +80,14 @@ export function TryoutSetTable({
   const [retainedRows, setRetainedRows] = useState<TryoutSetRow[]>(EMPTY_ROWS);
   const visibleRows = data.pending ? retainedRows : data.rows;
 
+  /** Retain visible rows while requesting a newly sorted server page. */
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
     setRetainedRows(visibleRows);
     setColumnFilters([]);
     setSorting((current) => functionalUpdate(updater, current));
   };
 
+  /** Retain visible rows while requesting a newly filtered server page. */
   const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (
     updater
   ) => {
@@ -217,6 +220,7 @@ export function TryoutSetTable({
   );
 }
 
+/** Return responsive widths for each stable try-out table column. */
 function getColumnWidthClassName(columnId: string) {
   if (columnId === "title") {
     return "w-[44%] sm:w-1/2";

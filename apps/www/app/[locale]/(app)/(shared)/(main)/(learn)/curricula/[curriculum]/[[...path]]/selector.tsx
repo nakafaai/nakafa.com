@@ -83,6 +83,7 @@ export function CurriculumSelector({
   }));
   const currentOption = options.find((option) => option.value === currentValue);
 
+  /** Navigate to a selected curriculum and persist it for signed-in viewers. */
   async function handleValueChange(value: string | null) {
     if (!value || value === currentValue) {
       return;

@@ -27,21 +27,25 @@ export function TryoutIntentLink({
 }: TryoutIntentLinkProps) {
   const [shouldPrefetch, setShouldPrefetch] = useState(false);
 
+  /** Enable route prefetch and invoke destination-specific data warming. */
   function markIntent() {
     setShouldPrefetch(true);
     onIntent?.();
   }
 
+  /** Record keyboard focus as navigation intent. */
   function handleFocus(event: FocusEvent<HTMLAnchorElement>) {
     markIntent();
     onFocus?.(event);
   }
 
+  /** Record pointer hover as navigation intent. */
   function handlePointerEnter(event: PointerEvent<HTMLAnchorElement>) {
     markIntent();
     onPointerEnter?.(event);
   }
 
+  /** Record touch contact as navigation intent. */
   function handleTouchStart(event: TouchEvent<HTMLAnchorElement>) {
     markIntent();
     onTouchStart?.(event);

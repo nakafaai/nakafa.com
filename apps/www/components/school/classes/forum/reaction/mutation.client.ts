@@ -6,6 +6,7 @@ import { useMutation } from "convex/react";
 import { toggleReactionState } from "@/components/school/classes/forum/reaction/state";
 import { useUser } from "@/lib/context/use-user";
 
+/** Toggle a forum reaction across every loaded forum list page. */
 function updateForumLists(
   localStore: OptimisticLocalStore,
   forumId: string,

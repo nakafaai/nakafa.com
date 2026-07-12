@@ -13,6 +13,7 @@ interface ReactionState {
   reactionUsers?: ReactionPreview[];
 }
 
+/** Apply one reaction delta while removing empty counters. */
 function updateCounts(counts: ReactionCount[], emoji: string, added: boolean) {
   const current = counts.find((reaction) => reaction.emoji === emoji);
   const nextCount = (current?.count ?? 0) + (added ? 1 : -1);
@@ -30,6 +31,7 @@ function updateCounts(counts: ReactionCount[], emoji: string, added: boolean) {
   );
 }
 
+/** Update the bounded reactor-name preview for one reaction. */
 function updateReactors(
   reactors: string[],
   reactorName: string | undefined,
@@ -57,6 +59,7 @@ function updateReactors(
   return reactors.slice(0, count);
 }
 
+/** Apply one reaction delta to detailed reactor previews. */
 function updatePreviews(
   previews: ReactionPreview[],
   emoji: string,

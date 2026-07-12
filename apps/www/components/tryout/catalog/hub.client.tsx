@@ -39,6 +39,7 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
     return <ComingSoon />;
   }
 
+  /** Persist an authenticated viewer's selected country in the background. */
   function handleCountryClick(country: HubCountry) {
     if (isLoading || !isAuthenticated) {
       return;

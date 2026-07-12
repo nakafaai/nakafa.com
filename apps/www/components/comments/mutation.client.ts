@@ -14,6 +14,7 @@ type SlugComment = FunctionReturnType<
   typeof api.comments.queries.getCommentsBySlug
 >["page"][number];
 
+/** Apply a comment transform across every loaded content-route feed. */
 function updateSlugFeeds(
   localStore: OptimisticLocalStore,
   commentId: Id<"comments">,
@@ -67,6 +68,7 @@ export function useVoteCommentMutation() {
   );
 }
 
+/** Remove one comment from every loaded content and profile feed. */
 function deleteFromLoadedFeeds(
   localStore: OptimisticLocalStore,
   commentId: Id<"comments">

@@ -172,18 +172,21 @@ function MaterialGroupActions({
   const reorderGroup = useReorderMaterialGroupMutation();
   const deleteGroup = useDeleteMaterialGroupMutation();
 
+  /** Move this material group one loaded position upward. */
   function handleMoveUp() {
     startTransition(async () => {
       await reorderGroup({ groupId: group._id, direction: "up" });
     });
   }
 
+  /** Move this material group one loaded position downward. */
   function handleMoveDown() {
     startTransition(async () => {
       await reorderGroup({ groupId: group._id, direction: "down" });
     });
   }
 
+  /** Delete this material group and report an unexpected failure. */
   function handleDelete() {
     startTransition(async () => {
       await Effect.runPromise(

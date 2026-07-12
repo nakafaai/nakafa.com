@@ -10,6 +10,7 @@ import {
   updateOwnChatVisibility,
 } from "@/components/ai/chat/state";
 
+/** Patch a loaded chat detail projection when it is subscribed. */
 function patchChatDetail(
   localStore: OptimisticLocalStore,
   chatId: Id<"chats">,
@@ -28,6 +29,7 @@ function patchChatDetail(
   }
 }
 
+/** Patch or remove a chat across every loaded visibility-aware list. */
 function patchLoadedLists(
   localStore: OptimisticLocalStore,
   chatId: Id<"chats">,
@@ -68,6 +70,7 @@ function patchLoadedLists(
   }
 }
 
+/** Remove one chat from every loaded owned and public list. */
 function removeFromLoadedLists(
   localStore: OptimisticLocalStore,
   chatId: Id<"chats">

@@ -47,6 +47,7 @@ export function SchoolClassesForumList() {
   );
 }
 
+/** Render the resolved searchable and incrementally loaded forum list. */
 function SchoolClassesForumListContent() {
   const t = useTranslations("School.Classes");
 
@@ -209,6 +210,7 @@ function TopReaction({ forum }: { forum: ForumListItem }) {
 
   const isMyReaction = forum.myReactions.includes(topReaction.emoji);
 
+  /** Toggle the leading reaction without activating the forum link. */
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     startTransition(async () => {

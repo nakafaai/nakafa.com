@@ -60,6 +60,7 @@ export function TryoutExamPageClient({
   );
 }
 
+/** Resolve subject tracks to icons while leaving year tracks text-free. */
 function getTrackCardIcon(track: {
   trackKey: string;
   trackKind: "subject" | "year";

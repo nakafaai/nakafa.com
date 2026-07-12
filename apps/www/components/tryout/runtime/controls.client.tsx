@@ -52,6 +52,7 @@ export function TryoutRuntimeControls({
   const progress = getProgress(runtime);
   const isBusy = isPending || expired;
 
+  /** Prefetch the set route and warm its authenticated data before return. */
   function prepareReturnRoute() {
     router.prefetch(returnHref);
     prewarmData({
@@ -61,6 +62,7 @@ export function TryoutRuntimeControls({
     });
   }
 
+  /** Prepare the return route before opening completion confirmation. */
   function openCompletionDialog() {
     prepareReturnRoute();
     openDialog();

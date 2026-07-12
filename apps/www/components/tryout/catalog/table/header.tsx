@@ -51,6 +51,7 @@ const statusFilters = [
 
 type TryoutSetSortColumnLabel = keyof typeof sortLabelKeys;
 
+/** Resolve a compact icon for an inactive, ascending, or descending sort. */
 function getSortIcon(direction: false | "asc" | "desc") {
   if (direction === "asc") {
     return ArrowUp02Icon;
@@ -176,6 +177,7 @@ export function TryoutSetStatusHeader({
   );
 }
 
+/** Render one status-filter option with its shared status icon and label. */
 function TryoutStatusFilterOption({
   filter,
 }: {

@@ -27,6 +27,7 @@ import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { useUser } from "@/lib/context/use-user";
 import { getLocale } from "@/lib/utils/date";
 
+/** Render the correct owned or public chat list for a profile viewer. */
 export function UserChats({ userId }: { userId: Id<"users"> }) {
   const user = useUser((state) => state.user);
 
@@ -43,6 +44,7 @@ export function UserChats({ userId }: { userId: Id<"users"> }) {
   );
 }
 
+/** Select the owned or public query contract for a profile chat list. */
 function UserChatsList({
   canDelete,
   userId,
@@ -59,6 +61,7 @@ function UserChatsList({
   return <PublicChatsList userId={userId} visibility={visibility} />;
 }
 
+/** Subscribe to all study chats owned by the current viewer. */
 function OwnChatsList() {
   const { results, status } = usePaginatedQuery(
     api.chats.queries.getOwnChats,
@@ -69,6 +72,7 @@ function OwnChatsList() {
   return <ChatList canDelete={true} results={results} status={status} />;
 }
 
+/** Subscribe to public study chats for the selected profile. */
 function PublicChatsList({
   userId,
   visibility,
@@ -89,6 +93,7 @@ function PublicChatsList({
   return <ChatList canDelete={false} results={results} status={status} />;
 }
 
+/** Render a resolved chat page with optional owner controls. */
 function ChatList({
   canDelete,
   results,
@@ -154,6 +159,7 @@ function ChatList({
   );
 }
 
+/** Render owner actions for one profile chat row. */
 function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
   const t = useTranslations("Common");
 
@@ -161,6 +167,7 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
 
   const [isPending, startTransition] = useTransition();
 
+  /** Delete this chat through the optimistic list mutation. */
   function handleDelete() {
     startTransition(async () => {
       await deleteChat({ chatId: chat._id });

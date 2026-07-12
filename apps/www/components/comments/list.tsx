@@ -47,6 +47,7 @@ interface Props {
   slug: string;
 }
 
+/** Render the incrementally loaded comment feed for one content route. */
 export function CommentsList({ slug }: Props) {
   const { results, status, loadMore } = usePaginatedQuery(
     api.comments.queries.getCommentsBySlug,
@@ -71,6 +72,7 @@ export function CommentsList({ slug }: Props) {
   );
 }
 
+/** Compose one comment row with its optional reply editor. */
 function CommentItem({
   comment,
   slug,
@@ -97,6 +99,7 @@ function CommentItem({
   );
 }
 
+/** Render one comment's identity, body, reply context, and actions. */
 function CommentContent({
   comment,
   onReplyToggle,
@@ -164,6 +167,7 @@ function CommentContent({
   );
 }
 
+/** Render optimistic vote, reply, and owner deletion controls. */
 function CommentActions({
   comment,
   onReplyToggle,
@@ -179,6 +183,7 @@ function CommentActions({
   const voteOnComment = useVoteCommentMutation();
   const deleteComment = useDeleteCommentMutation();
 
+  /** Toggle the viewer's selected vote. */
   function handleVote(vote: -1 | 1) {
     if (!user) {
       return;
@@ -191,6 +196,7 @@ function CommentActions({
     });
   }
 
+  /** Delete the current user's comment. */
   function handleDelete() {
     if (!user) {
       return;
@@ -299,6 +305,7 @@ function CommentActions({
   );
 }
 
+/** Link a reply to its loaded parent comment when metadata is available. */
 function ReplyToIndicator({ comment }: { comment: CommentWithUser }) {
   const { replyToUser, parentId, replyToText } = comment;
 
@@ -306,6 +313,7 @@ function ReplyToIndicator({ comment }: { comment: CommentWithUser }) {
     return null;
   }
 
+  /** Scroll the linked parent comment into the viewport. */
   const scrollToParent = (e: React.MouseEvent) => {
     e.preventDefault();
     document.getElementById(parentId)?.scrollIntoView({

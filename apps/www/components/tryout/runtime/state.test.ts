@@ -61,10 +61,12 @@ describe("getTryoutRuntimeState", () => {
   });
 });
 
+/** Create one attempt fixture with an explicit status and expiration. */
 function createAttempt(status: "in-progress" | "completed", expiresAt: number) {
   return { expiresAt, status };
 }
 
+/** Create one section runtime fixture with an explicit status and expiration. */
 function createRuntime(status: "in-progress" | "completed", expiresAt: number) {
   return { expiresAt, section: { status } };
 }

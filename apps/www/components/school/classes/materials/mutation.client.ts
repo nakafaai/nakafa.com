@@ -7,6 +7,7 @@ import { useMutation } from "convex/react";
 import { updateMaterialGroupState } from "@/components/school/classes/materials/state";
 import { reorderPage } from "@/components/school/classes/order";
 
+/** Remove a material group from every loaded class material page. */
 function removeGroup(
   localStore: OptimisticLocalStore,
   groupId: Id<"schoolClassMaterialGroups">

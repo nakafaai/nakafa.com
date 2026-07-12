@@ -7,6 +7,7 @@ import { useMutation } from "convex/react";
 import { updateClassImageState } from "@/components/school/classes/image/state";
 import { useClass } from "@/lib/context/use-class";
 
+/** Replace the class image across every loaded school class page. */
 function updateClassLists(
   localStore: OptimisticLocalStore,
   classId: string,

@@ -54,6 +54,7 @@ export function TryoutCountrySelector({
   }));
   const currentOption = options.find((option) => option.value === currentValue);
 
+  /** Persist a selected try-out country for an authenticated viewer. */
   async function handleValueChange(value: string | null) {
     if (!value || value === currentValue) {
       return;

@@ -78,6 +78,7 @@ export function StartTryoutButton({
     buttonLabel = tTryouts("continue-cta");
   }
 
+  /** Start, continue, authenticate, or open confirmation for this set. */
   function onStart() {
     if (isBusy) {
       return;
@@ -108,6 +109,7 @@ export function StartTryoutButton({
     openDialog();
   }
 
+  /** Confirm a fresh or restarted attempt through the transactional mutation. */
   function onConfirm() {
     if (isBusy) {
       return;

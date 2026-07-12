@@ -41,6 +41,7 @@ class CommentCreateError extends Schema.TaggedError<CommentCreateError>()(
   { cause: Schema.Unknown }
 ) {}
 
+/** Render the authenticated comment or reply composer for one content route. */
 export function CommentsAdd({ slug, comment, closeButton }: Props) {
   const t = useTranslations("Comments");
   const tCommon = useTranslations("Common");
@@ -52,6 +53,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
 
   const [isPending, startTransition] = useTransition();
 
+  /** Submit the trimmed comment while restoring its text after a failure. */
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
 
@@ -152,6 +154,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
   );
 }
 
+/** Render the current commenter identity or an authentication link. */
 function UserAvatar() {
   const pathname = usePathname();
 

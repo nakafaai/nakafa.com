@@ -38,6 +38,7 @@ import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 import { getCleanHref } from "@/lib/utils/link";
 
+/** Render the incrementally loaded comments for one user profile. */
 export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
 
@@ -68,6 +69,7 @@ type UserComment = FunctionReturnType<
   typeof api.comments.queries.getCommentsByUserId
 >["page"][number];
 
+/** Render one profile comment with optimistic viewer actions. */
 function CommentThread({ comment }: { comment: UserComment }) {
   const t = useTranslations("Common");
 
@@ -84,6 +86,7 @@ function CommentThread({ comment }: { comment: UserComment }) {
   const voteOnComment = useVoteCommentMutation();
   const deleteComment = useDeleteCommentMutation();
 
+  /** Toggle the current viewer's vote on this comment. */
   function handleVote(vote: -1 | 1) {
     if (!currentUser) {
       return;
@@ -97,6 +100,7 @@ function CommentThread({ comment }: { comment: UserComment }) {
     });
   }
 
+  /** Delete this comment when the viewer owns it. */
   function handleDelete() {
     if (!currentUser) {
       return;

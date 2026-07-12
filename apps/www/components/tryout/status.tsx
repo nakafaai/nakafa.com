@@ -15,6 +15,7 @@ import type { ComponentProps } from "react";
 export type TryoutStatusValue = Doc<"tryoutSetProgress">["status"];
 type TryoutStatus = TryoutStatusValue | null;
 
+/** Resolve the shared icon for one try-out workflow status. */
 function getStatusIcon(status: TryoutStatus) {
   if (status === "in-progress") {
     return PlayCircle02Icon;
@@ -31,6 +32,7 @@ function getStatusIcon(status: TryoutStatus) {
   return CircleDashedIcon;
 }
 
+/** Resolve the translation key for one try-out workflow status. */
 function getStatusLabelKey(status: TryoutStatus) {
   if (status === "in-progress") {
     return "status-in-progress" as const;
@@ -47,6 +49,7 @@ function getStatusLabelKey(status: TryoutStatus) {
   return "status-not-started" as const;
 }
 
+/** Resolve the filled badge variant for one try-out workflow status. */
 function getStatusVariant(status: TryoutStatus) {
   if (status === "in-progress") {
     return "default" as const;

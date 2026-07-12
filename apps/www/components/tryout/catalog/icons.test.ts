@@ -5,6 +5,7 @@ import {
   getTryoutTrackIcon,
 } from "@/components/tryout/catalog/icons";
 
+/** Serialize an icon definition for stable structural assertions. */
 function serializeIcon(icon: unknown) {
   return JSON.stringify(icon);
 }

@@ -7,6 +7,7 @@ import { useMutation } from "convex/react";
 import { updateAssessmentState } from "@/components/school/classes/assessments/state";
 import { reorderPage } from "@/components/school/classes/order";
 
+/** Remove an assessment from every loaded class assessment page. */
 function removeAssessment(
   localStore: OptimisticLocalStore,
   assessmentId: Id<"schoolAssessments">

@@ -118,6 +118,7 @@ function TryoutBreadcrumbMenu({
   );
 }
 
+/** Render one visible current or linked try-out breadcrumb segment. */
 function TryoutBreadcrumbSegment({
   isCurrent,
   item,

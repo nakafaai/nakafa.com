@@ -20,12 +20,15 @@ interface StaticTryoutRouteLookup<Kind extends StaticTryoutRouteKind> {
 export function readStaticTryoutRoute(
   input: StaticTryoutRouteLookup<"tryout-country">
 ): Extract<StaticTryoutRoute, { kind: "tryout-country" }> | undefined;
+/** Reads one source-projected exam route for static header context. */
 export function readStaticTryoutRoute(
   input: StaticTryoutRouteLookup<"tryout-exam">
 ): Extract<StaticTryoutRoute, { kind: "tryout-exam" }> | undefined;
+/** Reads one source-projected track route for static header context. */
 export function readStaticTryoutRoute(
   input: StaticTryoutRouteLookup<"tryout-track">
 ): Extract<StaticTryoutRoute, { kind: "tryout-track" }> | undefined;
+/** Implements the shared source-projected try-out route lookup. */
 export function readStaticTryoutRoute({
   kind,
   locale,

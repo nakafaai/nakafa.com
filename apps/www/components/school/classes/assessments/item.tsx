@@ -144,6 +144,7 @@ function AssessmentActions({
   const reorderAssessment = useReorderAssessmentMutation();
   const deleteAssessment = useDeleteAssessmentMutation();
 
+  /** Move this assessment one loaded position upward. */
   function handleMoveUp() {
     startTransition(async () => {
       await reorderAssessment({
@@ -154,6 +155,7 @@ function AssessmentActions({
     });
   }
 
+  /** Move this assessment one loaded position downward. */
   function handleMoveDown() {
     startTransition(async () => {
       await reorderAssessment({
@@ -164,6 +166,7 @@ function AssessmentActions({
     });
   }
 
+  /** Delete this assessment and report an unexpected failure. */
   function handleDelete() {
     startTransition(async () => {
       await Effect.runPromise(

@@ -73,6 +73,7 @@ function InfoCustomizeButton() {
 
   const updateClassImage = useClassImageMutation();
 
+  /** Select a class image with optimistic cache rollback on failure. */
   const handleImageClick = (image: SchoolClassImage) => {
     startTransition(async () => {
       await Effect.runPromise(

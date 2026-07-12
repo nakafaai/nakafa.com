@@ -74,6 +74,7 @@ export function createTryoutSetColumns({
   ];
 }
 
+/** Read the active direction for one controlled table column. */
 function readSortDirection(
   sorting: SortingState,
   columnId: string

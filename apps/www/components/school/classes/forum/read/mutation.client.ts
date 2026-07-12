@@ -5,6 +5,7 @@ import type { OptimisticLocalStore } from "convex/browser";
 import { useMutation } from "convex/react";
 import { markTranscriptRead } from "@/components/school/classes/forum/read/state";
 
+/** Replace the unread count across every loaded forum-list page. */
 function updateForumLists(
   localStore: OptimisticLocalStore,
   forumId: string,

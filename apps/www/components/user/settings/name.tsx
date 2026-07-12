@@ -22,6 +22,7 @@ const formSchema = Schema.standardSchemaV1(
   })
 );
 
+/** Render the validated optimistic user-name settings form. */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
 
