@@ -10,6 +10,7 @@
     "module": "NodeNext",
     "moduleDetection": "force",
     "moduleResolution": "NodeNext",
+    "plugins": [{ "name": "@effect/language-service" }],
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,

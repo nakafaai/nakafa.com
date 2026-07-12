@@ -11,7 +11,7 @@
     "test:ui": "NODE_ENV=test vitest --ui",
     "test:coverage": "NODE_ENV=test vitest run --coverage",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "typecheck": "next typegen && tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",
@@ -31,13 +31,11 @@
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "26.1.0",
     "@types/react": "19.2.17",
     "@vercel/config": "^0.5.5",
-    "@vitest/coverage-istanbul": "^4.1.9",
-    "@vitest/ui": "^4.1.9",
+    "@vitest/coverage-istanbul": "^4.1.10",
+    "@vitest/ui": "^4.1.10",
     "jsdom": "^29.1.1",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   }
 }

@@ -31,7 +31,7 @@ import {
 
 ```tsx
 <OTPField aria-label="Verification code" length={6}>
-  <OTPFieldInput aria-label="Character 1 of 6" />
+  <OTPFieldInput />
   <OTPFieldInput aria-label="Character 2 of 6" />
   <OTPFieldInput aria-label="Character 3 of 6" />
   <OTPFieldSeparator />
@@ -57,7 +57,7 @@ const [value, setValue] = useState("")
     value={value}
     onValueChange={setValue}
   >
-    <OTPFieldInput aria-label="Character 1 of 6" />
+    <OTPFieldInput />
     <OTPFieldInput aria-label="Character 2 of 6" />
     <OTPFieldInput aria-label="Character 3 of 6" />
     <OTPFieldSeparator />
@@ -79,7 +79,7 @@ See `p-otp-field-1` through `p-otp-field-4` and `p-otp-field-6` through `p-otp-f
 ## Common pitfalls
 
 - Slot count mismatch with `length`, causing broken OTP UX.
-- Missing `aria-label` when no visible label is present.
+- Missing root labeling (`aria-label` or visible label), or adding per-slot labels to the first input.
 - Using OTP slots for arbitrary text input instead of fixed verification codes.
 
 ## Useful particle references

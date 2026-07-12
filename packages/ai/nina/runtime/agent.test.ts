@@ -360,8 +360,7 @@ describe("nina/agent", () => {
         page,
         runtime,
         settings: {
-          experimental_repairToolCall: () =>
-            Effect.runPromise(Effect.succeed(null)),
+          repairToolCall: () => Effect.runPromise(Effect.succeed(null)),
           tools,
         },
         stream: {
@@ -456,7 +455,7 @@ function readExitFailure(exit: Exit.Exit<unknown, unknown>) {
 /** Creates the minimal AI SDK settings needed to exercise Nina's package Module. */
 function createSettings() {
   return {
-    experimental_repairToolCall: () => Effect.runPromise(Effect.succeed(null)),
+    repairToolCall: () => Effect.runPromise(Effect.succeed(null)),
     tools: createTools(),
   };
 }

@@ -47,10 +47,7 @@ export type NinaAgentMessages = Extract<
 type NinaAgentToolSettings = Required<
   Pick<ToolLoopAgentSettings<never, NinaToolSet>, "tools">
 > &
-  Pick<
-    ToolLoopAgentSettings<never, NinaToolSet>,
-    "experimental_repairToolCall"
-  >;
+  Pick<ToolLoopAgentSettings<never, NinaToolSet>, "repairToolCall">;
 
 type NinaMessageMetadataPart = TextStreamPart<NinaToolSet>;
 
@@ -115,7 +112,7 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
       needsPageFetch: page.needsFetch,
       instructions,
     }),
-    experimental_repairToolCall: settings.experimental_repairToolCall,
+    repairToolCall: settings.repairToolCall,
     providerOptions: {
       gateway: gatewayProviderOptions,
       google: getModelProviderOptions(runtime.modelId),

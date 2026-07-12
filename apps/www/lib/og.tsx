@@ -65,7 +65,6 @@ export function generateOGImage(options: GenerateOGImageOptions) {
         {
           width,
           height,
-          fetchedResources: [],
         }
       );
     })

@@ -241,7 +241,7 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
     page,
     runtime,
     settings: {
-      experimental_repairToolCall: (options) =>
+      repairToolCall: (options) =>
         Effect.runPromise(
           repairNinaToolCall({
             ...options,

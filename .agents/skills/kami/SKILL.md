@@ -7,7 +7,7 @@ description: 'Typeset professional documents and product landing pages: resumes,
 
 **紙 · かみ** - the paper your deliverables land on.
 
-Good content deserves good paper. One design language across eight document types: warm parchment canvas, ink-blue accent, serif-led hierarchy, tight editorial rhythm.
+Good content deserves good paper. One design language across documents and landing pages: warm parchment canvas, ink-blue accent, serif-led hierarchy, tight editorial rhythm.
 
 Part of `Kaku · Waza · Kami` - Kaku writes code, Waza drills habits, **Kami delivers documents**.
 
@@ -143,6 +143,7 @@ When the user asks for **a diagram inside** a long-doc / portfolio / slide (not 
 | User says | Diagram | Template |
 |---|---|---|
 | "架构图 / architecture / 系统图 / components diagram" | Architecture | `assets/diagrams/architecture.html` |
+| "架构全景 / architecture board / 平台全景 / 系统大图 / five-layer panorama" | Architecture Board | `assets/diagrams/architecture-board.html` |
 | "流程图 / flowchart / 决策流 / branching logic" | Flowchart | `assets/diagrams/flowchart.html` |
 | "象限图 / quadrant / 优先级矩阵 / 2×2 matrix" | Quadrant | `assets/diagrams/quadrant.html` |
 | "柱状图 / bar chart / 分类对比 / grouped bars" | Bar Chart | `assets/diagrams/bar-chart.html` |
@@ -158,6 +159,10 @@ When the user asks for **a diagram inside** a long-doc / portfolio / slide (not 
 | "瀑布图 / waterfall / 收入桥 / revenue bridge / decomposition" | Waterfall | `assets/diagrams/waterfall.html` |
 
 Read `references/diagrams.md` before drawing - it has the selection guide, kami token map, and the AI-slop anti-pattern table. Extract the `<svg>` block from the template and drop it into a `<figure>` inside long-doc / portfolio.
+
+For a **full-system architecture board** (platform panorama, control plane, roadmap, or owner map in one artifact), do not inflate the single architecture figure past its node budget. Start from `assets/diagrams/architecture-board.html` and follow the «Architecture boards» section in `references/diagrams.md`: five fixed information layers, bands over cards, lines never on module edges, and a structure outline before any rendering.
+
+For a **repo-maintained diagram** (README or docs-site architecture figure, "给项目画张架构图", or updating a diagram that already lives in the user's repository), follow «Maintained diagram assets» in `references/diagrams.md`: run the evidence pass first (existing `prompt.md`, `index.html`, current PNG, then the facts that define objects and boundaries), keep the trio (`index.html` + same-name PNG + `prompt.md`) consistent, encode shipped / in-build / future maturity, and re-export the PNG after every HTML change. Never redraw an existing diagram from memory, and never hand-edit the PNG.
 
 Before drawing, always ask: **would a well-written paragraph teach the reader less than this diagram?** If no, don't draw.
 
@@ -180,6 +185,15 @@ Before drawing, always ask: **would a well-written paragraph teach the reader le
 | Category comparison, single series, no time axis | Bar |
 
 When data fits multiple types, prefer the one that shows variance most clearly. Always embed inside a `<figure>` with a caption that states the insight, not just the data range.
+
+### Illustrations (host image model, not inline SVG)
+
+Inline diagrams above are vector SVGs you assemble by hand. For a standalone raster illustration, or a redraw of a figure, photo, or screenshot in the Kami look, delegate the drawing to the host's own image generation. Never call an external image API or require a key; rendering is the host's job.
+
+- If the running host can generate images (for example ChatGPT), apply the brief below and render the image directly.
+- If it cannot (Claude, Codex, most coding agents), output the brief as text so the user can paste it into any image model.
+
+Brief: warm parchment (`#f5f4ed`) background, never pure white; one accent only, ink blue (`#1B365D`); all else warm gray with a yellow-brown undertone, no other colors; thin single-line geometric strokes and simple flat icons; no gradients, drop shadows, or 3D; serif labels; generous whitespace, composed like a figure in a well-typeset report.
 
 ## Step 2.1 · Source and material pass
 
@@ -347,7 +361,7 @@ Pick the tier that matches the task. Default to the lowest tier that covers the 
 | **Deck (>20 slides)** | Long presentation needing Part Divider, Code Cards, section headers. | Full design spec + Deck Recipe (design.md section 8) |
 | **Troubleshoot** | Rendering bug, font issue, page overflow. | `production.md` (+ design spec if CSS is the cause) |
 | **Anti-patterns** | Reviewing AI-generated drafts before shipping. | `anti-patterns.md` (six-category checklist) |
-| **Diagram** | Embedding SVG in a doc. | `diagrams.md` only (has its own token map) |
+| **Diagram** | Embedding SVG in a doc, or maintaining a repo-owned diagram (trio: HTML + PNG + prompt.md). | `diagrams.md` only (has its own token map) |
 
 You can always escalate mid-task if the work turns out to need more than the initial tier.
 
@@ -436,6 +450,14 @@ python3 scripts/build.py --check-density   # flags >25% (WARN) / >50% (SPARSE) t
 
 If a body page (not cover, not last page) gets a SPARSE warning, treat it as a draft defect and re-author with the merge rule.
 
+## Step 4.2 · Resume recruiter pass (resume only)
+
+Mechanical checks (`--check-placeholders`, `--check-resume-balance`, `--check-density`) validate structure and layout, not prose. A resume can pass all of them and still read broken. After filling and before building, reread every project card the way a recruiter would, against the row definitions in `references/resume-writing.md` ("What goes in each row"): Role carries your position in the project, not background alone; Actions are verb-led, one concrete approach per sentence; Impact reads as an outcome, not a restatement of the process. One cross-row check on top: no row repeats another row's information.
+
+Fix a failing row by rewriting from the source material. If the source cannot support a row (for example, no outcome fact exists), ask the user for the missing fact. Do not pad, and do not fall back to generic claims ("保障稳定运行", "improved efficiency").
+
+This pass is internal: run it silently; surface it only when a row cannot be fixed without new information from the user.
+
 ## Step 4.5 · Auto-select output format
 
 Do not ask the user which format to export. Decide from context:
@@ -458,15 +480,18 @@ python3 scripts/build.py --verify resume-en # single target full verification
 python3 scripts/build.py landing-page        # screen-first static HTML template check
 python3 scripts/build.py --verify slides    # single slide deck verification
 python3 scripts/build.py --check-placeholders path/to/filled.html
+python3 scripts/build.py --check-markdown path/to/filled.pdf
 python3 scripts/build.py --check-resume-balance path/to/resume.pdf
 python3 scripts/build.py --check-density              # page whitespace scanner (skips cover)
-python3 scripts/build.py --check            # CSS rule violations only (fast, no build)
-python3 scripts/build_metadata.py --check   # Codex plugin mirror + marketplace drift check
+python3 scripts/build.py --check            # lint + token/theme + public-site fact checks
+python3 scripts/build_metadata.py --check   # Claude/Codex plugin mirror + marketplace drift check
 ```
 
 > **Screen verify**: `--check-density` is a print gate. For screen output (landing or docs pages) instead screenshot the rendered page at 375px and 1280px in every locale and scan for line widows before shipping. See `references/design.md` Section 11 «Responsive screenshot verification».
 
 Source templates intentionally keep `{{...}}` fields. Run placeholder checks on completed documents, not on the template library.
+
+For Markdown-sourced long documents, also run `--check-markdown` on the rendered PDF. It catches visible raw `---`, `**bold**`, and inline-code backticks that should have been converted or removed before delivery.
 
 Visual anomalies (tag double rectangle, font fallback, page break issues) -> `production.md` Part 4.
 
@@ -474,7 +499,7 @@ Visual anomalies (tag double rectangle, font fallback, page break issues) -> `pr
 
 Use these only when maintaining this repository or release package, not for ordinary document generation.
 
-- If marketplace metadata, generated plugin mirrors, version selection, or install paths change, run `python3 scripts/build_metadata.py --check`; for Codex install behavior, also smoke with an isolated `CODEX_HOME=/tmp/...` using `codex plugin marketplace add <path>`, `codex plugin add kami@kami`, and `codex plugin list`.
+- If marketplace metadata, generated plugin mirrors, version selection, or install paths change, run `python3 scripts/build_metadata.py --check`; for Claude Code install behavior, smoke with an isolated `HOME=/tmp/...` using `claude plugin marketplace add <path>`, `claude plugin install kami@kami`, and `claude plugin details kami@kami`; for Codex install behavior, smoke with an isolated `CODEX_HOME=/tmp/...` using `codex plugin marketplace add <path>`, `codex plugin add kami@kami`, and `codex plugin list`.
 - If `SKILL.md`, templates, scripts, references, or other package inputs change and the behavior ships through the skill package, run `bash scripts/package-skill.sh` and inspect `dist/kami.zip` before handoff.
 - If a GitHub release asset is refreshed, download the uploaded `kami.zip` and compare ZIP entry names plus per-entry SHA-256 digests against local `dist/kami.zip`; page text, file size, and the container hash are not enough.
 
@@ -501,7 +526,7 @@ Use these only when maintaining this repository or release package, not for ordi
 - No separate sans: `--sans: var(--serif)`, one font per page
 - Fallback: Georgia (cross-platform) / Palatino / Times New Roman
 
-Font files next to HTML with relative `@font-face` paths is the most stable setup. `scripts/package-skill.sh` excludes large CJK font files from the Claude Desktop ZIP, so the uploaded package stays under the 6MB package ceiling. Always upload that `package-skill.sh` output, never a hand-zipped checkout (the tracked CJK fonts make it too large and Claude Desktop rejects the upload).
+Font files next to HTML with relative `@font-face` paths is the most stable setup. `scripts/package-skill.sh` excludes large CJK font files from the Claude Desktop ZIP, so the uploaded package stays under the 6MB package ceiling and contains a top-level `kami/` skill folder. Always upload that `package-skill.sh` output, never a hand-zipped checkout (the tracked CJK fonts make it too large and Claude Desktop rejects the upload).
 
 **Font auto-recovery (Claude Desktop)**
 

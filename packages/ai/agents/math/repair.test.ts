@@ -4,7 +4,7 @@ import {
   mathEquationInput,
 } from "@repo/ai/agents/math/schema";
 import { ModelIdSchema } from "@repo/ai/config/model";
-import type { JSONSchema7 } from "ai";
+import type { JSONSchema7, ToolCallRepairFunction, ToolSet } from "ai";
 import { InvalidToolInputError, NoSuchToolError, tool } from "ai";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -60,7 +60,9 @@ const invalidInputError = new InvalidToolInputError({
   toolName: toolCall.toolName,
 });
 
-const inputSchema = vi.fn(() => Promise.resolve(algebraSchema));
+const inputSchema = vi.fn<
+  Parameters<ToolCallRepairFunction<ToolSet>>[0]["inputSchema"]
+>(() => Promise.resolve(algebraSchema));
 const modelId = ModelIdSchema.make("nakafa-lite");
 
 afterEach(() => {

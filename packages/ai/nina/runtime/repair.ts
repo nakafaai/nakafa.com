@@ -44,7 +44,7 @@ export const repairNinaToolCall = Effect.fn("nina.repair.toolCall")(function* ({
 }: NinaRepairOptions) {
   yield* logError(error, {
     ...sessionLogger,
-    errorLocation: "experimental_repairToolCall",
+    errorLocation: "repairToolCall",
     toolName: toolCall.toolName,
     toolInput: toolCall.input,
     errorType: error.name,
@@ -90,11 +90,12 @@ export const repairNinaToolCall = Effect.fn("nina.repair.toolCall")(function* ({
 
   const schema = yield* Effect.tryPromise({
     try: () => inputSchema(toolCall),
-    catch: (cause) => {
-      reporter.report({ error: cause, source: "repair.inputSchema" });
-      return cause;
-    },
-  });
+    catch: (cause) => cause,
+  }).pipe(
+    Effect.tapError((cause) =>
+      reporter.report({ error: cause, source: "repair.inputSchema" })
+    )
+  );
   const { output: recoveredArgs } = yield* Effect.tryPromise({
     try: () =>
       generateText({

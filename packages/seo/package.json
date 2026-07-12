@@ -11,7 +11,7 @@
     "@repo/utilities": "workspace:*",
     "lodash.merge": "^4.6.2",
     "next": "16.2.10",
-    "next-intl": "^4.13.1",
+    "next-intl": "^4.13.2",
     "react": "^19.2.7",
     "schema-dts": "^2.0.0"
   },

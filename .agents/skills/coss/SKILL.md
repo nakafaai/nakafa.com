@@ -6,13 +6,13 @@ metadata:
   author: cosscom
 ---
 
-# coss ui
-
-coss ui is a component library built on Base UI with a shadcn-like developer experience plus a large particle catalog.
-
 ## Compatibility
 
 Requires Tailwind CSS v4 and @base-ui/react. Designed for React projects using the coss component registry.
+
+# coss ui
+
+coss ui is a component library built on Base UI with a shadcn-like developer experience plus a large particle catalog.
 
 ## What this skill is for
 

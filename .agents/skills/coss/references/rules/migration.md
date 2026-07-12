@@ -132,7 +132,7 @@ const items = [
 
 ### OTP Field: `input-otp` package → `@coss/otp-field`
 
-coss wraps [Base UI OTP Field](https://base-ui.com/react/components/otp-field) (`OTPFieldPreview`). Remove the `input-otp` dependency and align with the new names and root props.
+coss wraps [Base UI OTP Field](https://base-ui.com/react/components/otp-field) (`OTPField`). Remove the `input-otp` dependency and align with the new names and root props.
 
 ```tsx
 // shadcn / input-otp
@@ -146,14 +146,15 @@ coss wraps [Base UI OTP Field](https://base-ui.com/react/components/otp-field) (
 
 ```tsx
 // coss
-<OTPField length={6} value={value} onValueChange={setValue}>
-  <OTPFieldInput aria-label="Character 1 of 6" />
+<OTPField aria-label="Verification code" length={6} value={value} onValueChange={setValue}>
+  <OTPFieldInput />
   <OTPFieldInput aria-label="Character 2 of 6" />
 </OTPField>
 ```
 
 - `InputOTPGroup` is not used; optional `size="lg"` lives on `OTPField`.
 - Render one `OTPFieldInput` per character in order; do not pass `index`.
+- Label the OTP root with `aria-label` or a `<label>`/`FieldLabel`; keep the first input unlabeled and add `aria-label` to slots 2..N when you need slot-position announcements.
 
 ## Migration checklist
 

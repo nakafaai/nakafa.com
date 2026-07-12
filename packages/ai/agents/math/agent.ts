@@ -62,7 +62,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           gateway: gatewayProviderOptions,
           google: getFastModelProviderOptions(modelId),
         },
-        experimental_repairToolCall: (options) =>
+        repairToolCall: (options) =>
           Effect.runPromise(
             repairMathToolCall({
               ...options,

@@ -6,13 +6,13 @@ metadata:
   author: cosscom
 ---
 
-# COSS UI Particles Index
-
-Particles are copy-paste-ready UI patterns built on [coss](https://coss.com/ui) primitives. Browse them visually at <https://coss.com/ui/particles>.
-
 ## Compatibility
 
 Requires coss UI components installed in the project.
+
+# COSS UI Particles Index
+
+Particles are copy-paste-ready UI patterns built on [coss](https://coss.com/ui) primitives. Browse them visually at <https://coss.com/ui/particles>.
 
 ## How to use this skill
 

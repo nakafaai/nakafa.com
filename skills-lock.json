@@ -5,13 +5,13 @@
       "source": "vercel-labs/ai",
       "sourceType": "github",
       "skillPath": "skills/use-ai-sdk/SKILL.md",
-      "computedHash": "8190ed3dc5fd836fb9b902f6cf8266a0ede8fb1e1c2fff754aaf79cbdaba5670"
+      "computedHash": "da25c27a274ef2b71017c255f95a26350d2519765a75cb54ee1a37872b121dab"
     },
     "ai-seo": {
       "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
       "skillPath": "skills/ai-seo/SKILL.md",
-      "computedHash": "8fbda031c25d3a198725dd8b5a61133d2ac5c409f7b79fe893ee6b77b84d9b54"
+      "computedHash": "a6265a6c9451a25987a94453f638e07bef84eb3f1cd73366d703fee79151cf09"
     },
     "analytics": {
       "source": "coreyhaines31/marketingskills",
@@ -22,8 +22,8 @@
     "audit-website": {
       "source": "squirrelscan/skills",
       "sourceType": "github",
-      "skillPath": "audit-website/SKILL.md",
-      "computedHash": "47bcb150725f6f9fd51f8486b2b201be59194d942a405610d2e15d6e93de20e5"
+      "skillPath": "skills/audit-website/SKILL.md",
+      "computedHash": "b67fd2b5df7f6077b4276c3d28074b9b02b0c8916c63417ae856f33187ba6759"
     },
     "codebase-design": {
       "source": "mattpocock/skills",
@@ -155,13 +155,13 @@
       "source": "cosscom/coss",
       "sourceType": "github",
       "skillPath": "apps/ui/skills/coss/SKILL.md",
-      "computedHash": "454e2464926beb2fd6197f5514ea5c8903161886a97507668af00fc9e767138a"
+      "computedHash": "3c2c33b1a8fe2e1f171766274f8d84ec6db23bf64c881afa0c1f2957fda63ae0"
     },
     "coss-particles": {
       "source": "cosscom/coss",
       "sourceType": "github",
       "skillPath": "apps/ui/skills/coss-particles/SKILL.md",
-      "computedHash": "e8f52d1d698c5cb18af6bfc96a41e7effb57cdb89bd30c58c716d80b46c2821d"
+      "computedHash": "998f3aa169ecaf8caf60bd896a6e91fd2e26b95b34f082400e4f2d035c92b29f"
     },
     "domain-modeling": {
       "source": "mattpocock/skills",
@@ -176,10 +176,10 @@
       "computedHash": "30cf820c12e4f3dbbe39c82385fb0d3536fc16cff10b33b0ee3cb653bbcd1c83"
     },
     "effect-ts": {
-      "source": "effect-ts/skills",
+      "source": "pproenca/dot-skills",
       "sourceType": "github",
-      "skillPath": "skills/effect-ts/SKILL.md",
-      "computedHash": "301521e167410dd42d834dd0e7cedbe9cfffa519f630a12241dbea7b1d932324"
+      "skillPath": "skills/.experimental/effect-ts/SKILL.md",
+      "computedHash": "29bc8c0cc5f7541e1e590154120be6e4d8ca36eafc72145d613217ffe2bc63ce"
     },
     "email-best-practices": {
       "source": "resend/email-best-practices",
@@ -197,7 +197,7 @@
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/productivity/grilling/SKILL.md",
-      "computedHash": "ef685a6fa0bbe73b05bbd8dc1ec97258191587f07c6aa7dbc9006675ceb8f90f"
+      "computedHash": "1de9e777a60b184b29412fadacb7bbde8c14bb7037e5c4d9d086c941281d1742"
     },
     "improve-codebase-architecture": {
       "source": "mattpocock/skills",
@@ -209,7 +209,7 @@
       "source": "tw93/kami",
       "sourceType": "github",
       "skillPath": "SKILL.md",
-      "computedHash": "395cebdd2f2d28d21bf764d32774a7eee25f65386122965c5adc598636cc4dd1"
+      "computedHash": "f6510f95e132c0d45ba2bcc887fda670ceb58295db3e5f95a75b12d276b15840"
     },
     "mcp-apps-builder": {
       "source": "mcp-use/mcp-use",
@@ -227,13 +227,13 @@
       "source": "vercel-labs/vercel-plugin",
       "sourceType": "github",
       "skillPath": "skills/next-cache-components/SKILL.md",
-      "computedHash": "d62310b0ad37f95d2755eda29ed908acb947b525ab660c87a4e2b9813d59e7c5"
+      "computedHash": "58c9eca71b82f8e4e5b03db8ebb1b8f2e8150d9481a74719edea7b53191fe792"
     },
     "nextjs": {
       "source": "vercel-labs/vercel-plugin",
       "sourceType": "github",
       "skillPath": "skills/nextjs/SKILL.md",
-      "computedHash": "7f7db9846dceb5a10348c91088ca5b978ae2cb750564e2c7323ae2c4bbb074c4"
+      "computedHash": "53ac6f37581c3cf07d54220d1c069c3cd5436617c9ee2d084d5349a60cf91393"
     },
     "onboarding": {
       "source": "coreyhaines31/marketingskills",
@@ -340,8 +340,8 @@
     "remotion-best-practices": {
       "source": "remotion-dev/skills",
       "sourceType": "github",
-      "skillPath": "skills/remotion/SKILL.md",
-      "computedHash": "14e4caa85e5c91d629e53397f94c9e8bb81460e93cafa31b278d14f5e9f640b7"
+      "skillPath": "skills/remotion-best-practices/SKILL.md",
+      "computedHash": "870a6a4e17b64db0859d77f0654639234f89b5274667c309e5da8566e2bff261"
     },
     "seo-audit": {
       "source": "coreyhaines31/marketingskills",
@@ -353,7 +353,7 @@
       "source": "shadcn/ui",
       "sourceType": "github",
       "skillPath": "skills/shadcn/SKILL.md",
-      "computedHash": "fa04e87fb47e130c30b96c38053306ff1aadafd368d838a7340c118d72e1fd22"
+      "computedHash": "cee3b1c78228e9dfe787ee2b4039d64e607c70fb80b7a464ddca333d2dd354ba"
     },
     "signup": {
       "source": "coreyhaines31/marketingskills",
@@ -365,7 +365,7 @@
       "source": "vercel/turborepo",
       "sourceType": "github",
       "skillPath": "skills/turborepo/SKILL.md",
-      "computedHash": "da868de578ffc307dc2e138cf7e4f2df866d5bd456b1ab46f90c14eeb31053be"
+      "computedHash": "b8f0b251e04b1e809e643ff7ac82fbe93857bfbd96595f18e856166e70210474"
     },
     "vercel-composition-patterns": {
       "source": "vercel-labs/agent-skills",

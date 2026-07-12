@@ -10,17 +10,17 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/devtools": "^1.0.2",
-    "@ai-sdk/elevenlabs": "^3.0.6",
-    "@ai-sdk/gateway": "^4.0.12",
-    "@ai-sdk/google": "^4.0.8",
-    "@ai-sdk/react": "^4.0.16",
-    "@mendable/firecrawl-js": "^4.29.2",
+    "@ai-sdk/devtools": "^1.0.4",
+    "@ai-sdk/elevenlabs": "^3.0.8",
+    "@ai-sdk/gateway": "^4.0.16",
+    "@ai-sdk/google": "^4.0.12",
+    "@ai-sdk/react": "^4.0.23",
+    "@mendable/firecrawl-js": "^4.30.0",
     "@repo/contents": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^7.0.15",
+    "ai": "^7.0.22",
     "convex": "^1.42.1",
     "dedent": "^1.7.2",
     "effect": "^3.21.4",
@@ -31,10 +31,9 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "26.1.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitest/coverage-istanbul": "^4.1.9",
-    "vitest": "^4.1.9"
+    "@vitest/coverage-istanbul": "^4.1.10",
+    "vitest": "^4.1.10"
   }
 }

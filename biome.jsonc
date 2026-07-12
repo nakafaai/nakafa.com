@@ -8,6 +8,13 @@
   "formatter": {
     "indentStyle": "space"
   },
+  "assist": {
+    "actions": {
+      "source": {
+        "useSortedKeys": "off"
+      }
+    }
+  },
   "javascript": {
     "formatter": {
       "quoteStyle": "double",
@@ -24,21 +31,36 @@
         "noNoninteractiveElementInteractions": "off"
       },
       "complexity": {
+        "noRedundantDefaultExport": "off",
         "noExcessiveCognitiveComplexity": {
           "level": "warn",
           "options": {
             "maxAllowedComplexity": 40
           }
-        }
+        },
+        "noUselessReturn": "off",
+        "useArrayFind": "off"
       },
       "suspicious": {
-        "noUnknownAtRules": "off"
+        "noEqualsToNull": "off",
+        "noLeakedRender": "off",
+        "noNestedPromises": "off",
+        "noShadow": "off",
+        "noUnknownAtRules": "off",
+        "noUnknownAttribute": "off",
+        "noUnnecessaryConditions": "off",
+        "useArraySortCompare": "off"
       },
       "performance": {
+        "noAwaitInLoops": "off",
         "noNamespaceImport": "off",
-        "noBarrelFile": "off"
+        "noBarrelFile": "off",
+        "noJsxPropsBind": "off"
       },
       "style": {
+        "noIncrementDecrement": "off",
+        "useConsistentMethodSignatures": "off",
+        "useDestructuring": "off",
         "useFilenamingConvention": "off",
         "useNamingConvention": "off"
       }

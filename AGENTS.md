@@ -12,6 +12,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Also read any nested `AGENTS.md` files in the area you touch.
 - For Convex work, `packages/backend/AGENTS.md` is mandatory.
 - For Convex work, read `packages/backend/convex/_generated/ai/guidelines.md` before making changes.
+- Convex AI files keep their generated guideline current, while `packages/backend/convex.json` disables package-local skill copies. Root `.agents/skills` is the one canonical repo skill surface.
 - For structural work, skim recent `git log` first so you do not reintroduce old patterns.
 - Verify behavior from actual code and docs, not memory.
 
@@ -20,7 +21,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Package manager: `pnpm@10.34.1`
 - Runtime: Node `24.x` through pnpm `devEngines.runtime`
 - Monorepo: Turborepo
-- Frontend: Next.js 16, React 19, TypeScript 6
+- Frontend: Next.js 16, React 19, TypeScript 7 CLI with TypeScript 6 API compatibility
 - Backend: Convex
 - Lint/format: Biome via Ultracite
 - Tests: Vitest
@@ -160,6 +161,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 ## TypeScript Rules
 
 - TypeScript is strict across the repo.
+- The root toolchain intentionally installs TypeScript 7 as `@typescript/native` and exposes it as `tsc`, while the `typescript` package name resolves to `@typescript/typescript6` for Next.js, Ultracite, and language-service consumers that still require the JavaScript compiler API. Keep this side-by-side arrangement until those consumers support the TypeScript 7 API.
+- `packages/backend` owns package-local TypeScript 6 because the Convex CLI resolves `node_modules/typescript/bin/tsc` directly and Effect diagnostics still require the JavaScript compiler API. Its workspace `typecheck` script explicitly runs the root native TypeScript 7 compiler, while Convex deployment performs an additional TypeScript 6 compatibility check. Keep this boundary until Convex supports the stable native compiler path and programmatic consumers support TypeScript 7.
+- Run `pnpm exec tsc --version` to verify the native TypeScript 7 compiler and `pnpm exec tsc6 --version` only for compatibility diagnostics.
 - Prefer derived and inferred types over manual annotations.
 - Do not add redundant type annotations just to restate what TypeScript already knows.
 - If inference breaks, fix the source design instead of forcing the type system.

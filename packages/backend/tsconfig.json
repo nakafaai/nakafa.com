@@ -12,6 +12,7 @@
     "moduleResolution": "Bundler",
     "isolatedModules": true,
     "noEmit": true,
+    "plugins": [{ "name": "@effect/language-service" }],
     "types": ["node"],
     "paths": {
       "@/*": ["./*"],
