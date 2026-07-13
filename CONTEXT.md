@@ -17,8 +17,9 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Learning program**: A durable educational pathway such as a school curriculum, assessment preparation track, or institution program. Public curriculum pages present Learning programs through localized routes.
 - **Curriculum preference**: A signed-in learner's default school curriculum for browsing curriculum surfaces. It does not replace an explicit curriculum URL and it is not the source of generated learning plans.
 - **Curriculum index**: A public discovery surface that lists school curricula and links to their curriculum roots. It is not personalized.
+- **Material placement**: A source-owned relation connecting one canonical material asset to the exact Learning program and curriculum card group that presented it. It is interaction context, not canonical URL identity or a learner preference.
 - **Learning profile**: A signed-in learner's onboarding and planning state for interests, stage, and an active learning plan. It is separate from Curriculum preference.
-- **Learning context**: The verified page, placement, and tool policy facts available for one user interaction.
+- **Learning context**: The verified page, Material placement, and tool policy facts available for one user interaction. A direct or SEO material visit has canonical context unless the request carries a valid Material placement.
 - **NinaContextPack**: The immutable learning context snapshot built before one Nina turn and stored on chat messages for replay.
 - **Continue Learning**: A signed-in user read model ranked from recent learning interactions. It must not be inferred for anonymous users.
 - **Popularity**: Aggregate learning interest derived from view events and durable counters. Product reads use bounded read models, not raw event scans.

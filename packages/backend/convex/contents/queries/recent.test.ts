@@ -147,7 +147,7 @@ describe("contents/queries/recent", () => {
     ]);
   });
 
-  it("preserves the latest verified material context in the Continue Learning href", async () => {
+  it("drops a stored placement that the current route projection cannot verify", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -185,8 +185,8 @@ describe("contents/queries/recent", () => {
 
     expect(results).toEqual([
       expect.objectContaining({
-        contextKey: "placement:merdeka:class-10-mathematics-topic",
-        href: "/subjects/mathematics/topic-recent-context-href/section-recent-context-href?ctx=merdeka~class-10-mathematics-topic",
+        contextKey: "canonical",
+        href: "/subjects/mathematics/topic-recent-context-href/section-recent-context-href",
       }),
     ]);
   });

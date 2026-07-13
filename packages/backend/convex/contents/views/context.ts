@@ -1,5 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   createCanonicalLearningContext,
   createContextKey,
@@ -13,8 +13,6 @@ import {
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import { Effect } from "effect";
 
-const MAX_CONTEXT_ROUTES_PER_MATERIAL = 100;
-
 /** Maps thrown Convex IO failures into the content-view error channel. */
 function toContextIoError(error: unknown) {
   return new ContentViewIoError({
@@ -26,7 +24,7 @@ function toContextIoError(error: unknown) {
 /** Resolves the public material route that corresponds to a graph route row. */
 const loadPublicMaterialRoute = Effect.fn(
   "contents.views.context.loadPublicMaterialRoute"
-)(function* (db: MutationCtx["db"], route: Doc<"contentRoutes">) {
+)(function* (db: QueryCtx["db"], route: Doc<"contentRoutes">) {
   if (route.kind !== "curriculum-lesson") {
     return null;
   }
@@ -38,7 +36,7 @@ const loadPublicMaterialRoute = Effect.fn(
         .withIndex("by_locale_and_sourcePath", (q) =>
           q.eq("locale", route.locale).eq("sourcePath", route.sourcePath)
         )
-        .first(),
+        .unique(),
     catch: toContextIoError,
   });
 
@@ -76,10 +74,12 @@ function toLearningContextStorage(input: {
   readonly contextRoute: Doc<"publicRoutes">;
   readonly materialRoute: Doc<"publicRoutes">;
 }): LearningContextStorage {
-  const nodeKey = input.contextRoute.nodeKey;
+  const nodeKey = input.contextRoute.materialContextNodeKey;
+  const parentPath = input.contextRoute.materialContextParentPath;
   const programKey = input.contextRoute.programKey;
+  const publicPath = input.contextRoute.materialContextPublicPath;
 
-  if (!(nodeKey && programKey)) {
+  if (!(nodeKey && parentPath && programKey && publicPath)) {
     return createCanonicalLearningContext();
   }
 
@@ -92,9 +92,9 @@ function toLearningContextStorage(input: {
     contextMaterialKey: input.materialRoute.materialKey,
     contextMode: input.context.mode,
     contextNodeKey: nodeKey,
-    contextParentPath: input.contextRoute.parentPath,
+    contextParentPath: parentPath,
     contextProgramKey: programKey,
-    contextPublicPath: input.contextRoute.publicPath,
+    contextPublicPath: publicPath,
     contextSourcePath: input.materialRoute.sourcePath,
   };
 }
@@ -108,7 +108,7 @@ function toLearningContextStorage(input: {
 export const resolveLearningContext = Effect.fn(
   "contents.views.context.resolveLearningContext"
 )(function* (
-  db: MutationCtx["db"],
+  db: QueryCtx["db"],
   route: Doc<"contentRoutes">,
   context: LearningContextInput | undefined
 ) {
@@ -122,28 +122,30 @@ export const resolveLearningContext = Effect.fn(
     return createCanonicalLearningContext();
   }
 
-  const contextRoutes = yield* Effect.tryPromise({
+  const contextRoute = yield* Effect.tryPromise({
     try: () =>
       db
         .query("publicRoutes")
-        .withIndex("by_materialKey_and_locale", (q) =>
-          q
-            .eq("materialKey", materialRoute.materialKey)
-            .eq("locale", materialRoute.locale)
+        .withIndex(
+          "by_materialKey_and_locale_and_programKey_and_contextNodeKey",
+          (q) =>
+            q
+              .eq("materialKey", materialRoute.materialKey)
+              .eq("locale", materialRoute.locale)
+              .eq("programKey", context.programKey)
+              .eq("materialContextNodeKey", context.nodeKey)
         )
-        .take(MAX_CONTEXT_ROUTES_PER_MATERIAL),
+        .unique(),
     catch: toContextIoError,
   });
 
-  const contextRoute = contextRoutes.find(
-    (candidate) =>
-      candidate.kind === "curriculum-context" &&
-      candidate.programKey === context.programKey &&
-      candidate.nodeKey === context.nodeKey &&
-      matchesMaterialRoute({ contextRoute: candidate, materialRoute })
-  );
-
-  if (!contextRoute) {
+  if (
+    !(
+      contextRoute &&
+      contextRoute.kind === "curriculum-context" &&
+      matchesMaterialRoute({ contextRoute, materialRoute })
+    )
+  ) {
     return createCanonicalLearningContext();
   }
 

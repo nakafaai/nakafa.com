@@ -14,6 +14,15 @@ type SyncShardsArgs = FunctionArgs<
 >;
 type PublicRouteShard = SyncShardsArgs["shards"][number];
 type PublicRouteSyncRow = PublicRouteShard["routes"][number];
+type MaterialContextIdentityRow = Pick<
+  PublicRouteSyncRow,
+  | "locale"
+  | "materialContextNodeKey"
+  | "materialContextParentPath"
+  | "materialContextPublicPath"
+  | "materialKey"
+  | "programKey"
+>;
 
 export interface PublicRouteProjection {
   hash: string;
@@ -31,7 +40,16 @@ export const readPublicRouteProjection = Effect.fn(
   "sync.readPublicRouteProjection"
 )(function* () {
   const sourceRoutes = yield* listPublicRoutes();
+
+  return yield* buildPublicRouteProjection(sourceRoutes);
+});
+
+/** Validates and projects source routes into deterministic Convex sync shards. */
+export const buildPublicRouteProjection = Effect.fn(
+  "sync.buildPublicRouteProjection"
+)(function* (sourceRoutes: readonly PublicRoute[]) {
   const identities = new Set<string>();
+  const materialContextIdentities = new Set<string>();
   const routesByShard = new Map<number, PublicRouteSyncRow[]>();
 
   for (const sourceRoute of sourceRoutes) {
@@ -47,6 +65,41 @@ export const readPublicRouteProjection = Effect.fn(
     }
 
     identities.add(identity);
+    const materialContextIdentity = getMaterialContextIdentity(values);
+    const requiresMaterialContextOwnership =
+      values.kind === "curriculum-context" && Boolean(values.materialKey);
+
+    if (
+      (requiresMaterialContextOwnership ||
+        hasMaterialContextOwnership(values)) &&
+      !(
+        materialContextIdentity &&
+        values.materialContextParentPath &&
+        values.materialContextPublicPath
+      )
+    ) {
+      return yield* Effect.fail(
+        new PublicRouteProjectionError({
+          message: `Incomplete material context ownership: ${identity}.`,
+        })
+      );
+    }
+
+    if (
+      materialContextIdentity &&
+      materialContextIdentities.has(materialContextIdentity)
+    ) {
+      return yield* Effect.fail(
+        new PublicRouteProjectionError({
+          message: `Duplicate material context identity: ${materialContextIdentity}.`,
+        })
+      );
+    }
+
+    if (materialContextIdentity) {
+      materialContextIdentities.add(materialContextIdentity);
+    }
+
     const route = {
       ...values,
       contentHash: computeHash(JSON.stringify(values)),
@@ -105,6 +158,31 @@ function getRouteIdentity(
   return JSON.stringify([route.locale, route.publicPath]);
 }
 
+/** Builds the exact identity used by the material-context Convex index. */
+function getMaterialContextIdentity(route: MaterialContextIdentityRow) {
+  if (
+    !(route.materialKey && route.programKey && route.materialContextNodeKey)
+  ) {
+    return;
+  }
+
+  return JSON.stringify([
+    route.materialKey,
+    route.locale,
+    route.programKey,
+    route.materialContextNodeKey,
+  ]);
+}
+
+/** Detects whether a projected row declares any context-ownership field. */
+function hasMaterialContextOwnership(route: MaterialContextIdentityRow) {
+  return Boolean(
+    route.materialContextNodeKey ||
+      route.materialContextParentPath ||
+      route.materialContextPublicPath
+  );
+}
+
 /** Converts one source route into learner-facing durable route fields. */
 function toPublicRouteValues(route: PublicRoute) {
   return {
@@ -124,6 +202,18 @@ function toPublicRouteValues(route: PublicRoute) {
         : undefined,
     materialCardTitle:
       "materialCardTitle" in route ? route.materialCardTitle : undefined,
+    materialContextNodeKey:
+      "materialContextNodeKey" in route
+        ? route.materialContextNodeKey
+        : undefined,
+    materialContextParentPath:
+      "materialContextParentPath" in route
+        ? route.materialContextParentPath
+        : undefined,
+    materialContextPublicPath:
+      "materialContextPublicPath" in route
+        ? route.materialContextPublicPath
+        : undefined,
     materialDomain:
       "materialDomain" in route ? route.materialDomain : undefined,
     materialKey: "materialKey" in route ? route.materialKey : undefined,

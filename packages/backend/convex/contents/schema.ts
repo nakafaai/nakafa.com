@@ -411,6 +411,12 @@ const tables = {
       "publicPath",
     ])
     .index("by_materialKey_and_locale", ["materialKey", "locale"])
+    .index("by_materialKey_and_locale_and_programKey_and_contextNodeKey", [
+      "materialKey",
+      "locale",
+      "programKey",
+      "materialContextNodeKey",
+    ])
     .index("by_locale_and_sourcePath", ["locale", "sourcePath"])
     .index("by_locale_and_sitemap_and_publicPath", [
       "locale",

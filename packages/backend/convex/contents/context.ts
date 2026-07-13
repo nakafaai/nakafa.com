@@ -2,20 +2,11 @@ import { encodeMaterialContextHint } from "@repo/contents/_types/route/material/
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-export const learningContextModeValues = [
-  "canonical",
-  "placement",
-  "session",
-  "memory-assisted",
-] as const;
+const learningContextModeValues = ["canonical", "placement"] as const;
 
 const learningContextModeValidator = literals(...learningContextModeValues);
 
-export const learningContextInputModeValues = [
-  "placement",
-  "session",
-  "memory-assisted",
-] as const;
+const learningContextInputModeValues = ["placement"] as const;
 
 const learningContextInputModeValidator = literals(
   ...learningContextInputModeValues
