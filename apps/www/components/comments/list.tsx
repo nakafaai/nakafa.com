@@ -223,7 +223,8 @@ function CommentActions({
               <NumberFormat
                 className={cn(
                   "tabular-nums text-xs tracking-tight",
-                  comment.upvoteCount === 0 && "hidden"
+                  comment.upvoteCount === 0 && "hidden",
+                  comment.upvoteCount === 1 && "text-secondary-foreground"
                 )}
                 isolate={true}
                 value={comment.upvoteCount}
@@ -249,7 +250,8 @@ function CommentActions({
               <NumberFormat
                 className={cn(
                   "tabular-nums text-xs tracking-tight",
-                  comment.downvoteCount === 0 && "hidden"
+                  comment.downvoteCount === 0 && "hidden",
+                  comment.downvoteCount === 1 && "text-secondary-foreground"
                 )}
                 isolate={true}
                 value={comment.downvoteCount}
