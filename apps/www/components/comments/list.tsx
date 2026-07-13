@@ -222,7 +222,7 @@ function CommentActions({
               <HugeIcons icon={ThumbsUpIcon} />
               <NumberFormat
                 className={cn(
-                  "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
+                  "tabular-nums text-xs tracking-tight",
                   comment.upvoteCount === 0 && "hidden"
                 )}
                 isolate={true}
@@ -248,7 +248,7 @@ function CommentActions({
               <HugeIcons icon={ThumbsDownIcon} />
               <NumberFormat
                 className={cn(
-                  "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
+                  "tabular-nums text-xs tracking-tight",
                   comment.downvoteCount === 0 && "hidden"
                 )}
                 isolate={true}
