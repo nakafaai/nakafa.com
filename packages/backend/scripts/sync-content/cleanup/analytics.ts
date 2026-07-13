@@ -43,17 +43,6 @@ const RESET_ANALYTICS_STEPS: ResetAnalyticsStep[] = [
     resultLabel: "content analytics partition leases",
   },
   {
-    label: "Deleting learning view rows...",
-    mutation: internal.contentSync.reset.internal.deleteLearningViewsBatch,
-    resultLabel: "learning view rows",
-  },
-  {
-    label: "Deleting user learning recents rows...",
-    mutation:
-      internal.contentSync.reset.internal.deleteUserLearningRecentsBatch,
-    resultLabel: "user learning recents rows",
-  },
-  {
     label: "Deleting learning popularity signal rows...",
     mutation:
       internal.contentSync.reset.internal.deleteLearningPopularitySignalsBatch,
@@ -115,23 +104,21 @@ const deleteAllBatched = Effect.fn("sync.resetAnalytics.deleteAllBatched")(
   }
 );
 
-/** Deletes graph-derived analytics rows so new traffic starts from clean graph identity. */
+/** Deletes rebuildable analytics projections while preserving learner history. */
 export const resetAnalytics = Effect.fn("sync.resetAnalytics")(function* (
   config: ConvexConfig,
   options: SyncOptions
 ) {
   log("=== RESET CONTENT ANALYTICS ===\n");
   log(
-    "This deletes learning view history, analytics queue rows, popularity read models, and analytics partition leases."
+    "This deletes analytics queue rows, popularity read models, and analytics partition leases."
   );
-  log(
-    "New product traffic will repopulate these graph-backed analytics tables after strict code is deployed.\n"
-  );
+  log("Durable learning views and Continue Learning recents are preserved.\n");
 
   if (options.prod) {
     logWarning("PRODUCTION DATABASE SELECTED!");
     logWarning(
-      "This will permanently delete production content view history and derived analytics rows.\n"
+      "This will permanently delete rebuildable production analytics rows.\n"
     );
   }
 
@@ -140,27 +127,28 @@ export const resetAnalytics = Effect.fn("sync.resetAnalytics")(function* (
   }
 
   const counts = yield* getContentCounts(config);
-  const totalAnalyticsRows =
-    counts.learningViews +
+  const totalResettableAnalyticsRows =
     counts.learningEngagementQueue +
     counts.contentAnalyticsPartitions +
-    counts.userLearningRecents +
     counts.learningPopularityViewerSignals +
     counts.learningPopularitySignals +
     counts.learningPopularityCounters;
 
   log("Current content analytics database contents:\n");
-  log(`  Learning Views:       ${counts.learningViews}`);
+  log(`  Learning Views (preserved): ${counts.learningViews}`);
   log(`  Engagement Queue:     ${counts.learningEngagementQueue}`);
   log(`  Analytics Partitions: ${counts.contentAnalyticsPartitions}`);
-  log(`  User Recents:         ${counts.userLearningRecents}`);
+  log(`  User Recents (preserved): ${counts.userLearningRecents}`);
   log(`  Viewer Signals:       ${counts.learningPopularityViewerSignals}`);
   log(`  Popularity Signals:   ${counts.learningPopularitySignals}`);
   log(`  Popularity Counters:  ${counts.learningPopularityCounters}`);
-  log(`\n  Total analytics rows: ${totalAnalyticsRows}`);
+  log(`\n  Total resettable analytics rows: ${totalResettableAnalyticsRows}`);
+  log(
+    `  Total preserved learner rows: ${counts.learningViews + counts.userLearningRecents}`
+  );
 
-  if (totalAnalyticsRows === 0) {
-    logSuccess("\nContent analytics read models are already empty.");
+  if (totalResettableAnalyticsRows === 0) {
+    logSuccess("\nResettable content analytics rows are already empty.");
     return;
   }
 

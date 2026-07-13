@@ -66,7 +66,10 @@ flowchart TD
 
 ## Convex Reset Rule
 
-Convex schemas validate only tables listed in the schema. Removing a table from the code schema does not delete old deployed tables automatically. Legacy deployed tables such as `exerciseAnswers`, `exerciseAttempts`, `exerciseChoices`, `exerciseItemParameters`, `exerciseQuestions`, `exerciseSets`, old `parts`, and old event try-out tables must be deleted only after backup.
+Convex schemas validate only tables listed in the schema. Removing a table from the code schema does not delete old deployed tables automatically. Legacy deployed tables such as `exerciseAnswers`, `exerciseAttempts`, `exerciseChoices`, `exerciseItemParameters`, `exerciseQuestions`, `exerciseSets`, and old event try-out tables must be deleted only after backup.
+
+Chat tables are outside the try-out reset boundary. A chat table rename requires
+its own backed-up, validated data migration before the old table is removed.
 
 Backup commands:
 

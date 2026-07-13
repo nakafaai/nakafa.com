@@ -97,17 +97,35 @@ describe("sync-content resetAnalytics", () => {
 
   it("points production dry runs at the analytics-only reset command", async () => {
     vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({ ...emptyCounts, learningViews: 20_000 })
+      Effect.succeed({ ...emptyCounts, learningPopularitySignals: 20_000 })
     );
 
     await Effect.runPromise(resetAnalytics(config, { prod: true }));
 
-    expect(log).toHaveBeenCalledWith("  Learning Views:       20000");
+    expect(log).toHaveBeenCalledWith("  Popularity Signals:   20000");
     expect(log).toHaveBeenCalledWith(
       "\nTo delete content analytics rows, run:"
     );
     expect(log).toHaveBeenCalledWith(
       "  pnpm --filter @repo/backend sync:prod:reset:analytics --force"
+    );
+    expect(callConvexMutation).not.toHaveBeenCalled();
+  });
+
+  it("preserves durable views and Continue Learning recents", async () => {
+    vi.mocked(getContentCounts).mockReturnValue(
+      Effect.succeed({
+        ...emptyCounts,
+        learningViews: 20_000,
+        userLearningRecents: 500,
+      })
+    );
+
+    await Effect.runPromise(resetAnalytics(config, { force: true }));
+
+    expect(log).toHaveBeenCalledWith("  Total preserved learner rows: 20500");
+    expect(logSuccess).toHaveBeenCalledWith(
+      "\nResettable content analytics rows are already empty."
     );
     expect(callConvexMutation).not.toHaveBeenCalled();
   });
@@ -128,24 +146,18 @@ describe("sync-content resetAnalytics", () => {
     vi.mocked(callConvexMutation)
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
-      .mockReturnValueOnce(Effect.succeed({ deleted: 2, hasMore: false }))
-      .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }));
 
     await Effect.runPromise(resetAnalytics(config, { force: true }));
 
-    expect(callConvexMutation).toHaveBeenCalledTimes(7);
+    expect(callConvexMutation).toHaveBeenCalledTimes(5);
     expect(logSuccess).toHaveBeenCalledWith(
       "  Deleted 1 learning engagement queue rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
       "  Deleted 1 content analytics partition leases"
-    );
-    expect(logSuccess).toHaveBeenCalledWith("  Deleted 2 learning view rows");
-    expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 1 user learning recents rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
       "  Deleted 1 learning popularity signal rows"
@@ -157,7 +169,7 @@ describe("sync-content resetAnalytics", () => {
       "  Deleted 1 learning popularity counter rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
-      "Deleted 8 analytics rows across content tables"
+      "Deleted 5 analytics rows across content tables"
     );
   });
 });

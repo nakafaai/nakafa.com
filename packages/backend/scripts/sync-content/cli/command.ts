@@ -83,7 +83,7 @@ const printUsage = (): void => {
     "  sync:reset            - Delete synced content/runtime rows (authors optional, requires --force)"
   );
   log(
-    "  sync:reset:analytics  - Delete content view, popularity, trending, and analytics queue rows"
+    "  sync:reset:analytics  - Delete analytics queues, leases, and popularity projections"
   );
   log(
     "  sync:reset:audio      - Delete audio source, generated audio, and audio queue rows"
@@ -100,7 +100,7 @@ const printUsage = (): void => {
     "  sync:prod:reset       - Delete synced content/runtime rows in production (authors optional)"
   );
   log(
-    "  sync:prod:reset:analytics - Delete content analytics rows in production"
+    "  sync:prod:reset:analytics - Delete analytics queues, leases, and popularity projections in production"
   );
   log("  sync:prod:reset:audio - Delete audio read models in production");
   log(

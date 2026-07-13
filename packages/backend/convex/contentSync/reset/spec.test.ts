@@ -8,5 +8,7 @@ describe("contentSync/reset spec", () => {
     expect(resettableTableNames).toContain("publicRouteSyncState");
     expect(resettableTableNames).not.toContain("learningPrograms");
     expect(resettableTableNames).not.toContain("learningProgramSources");
+    expect(resettableTableNames).not.toContain("learningViews");
+    expect(resettableTableNames).not.toContain("userLearningRecents");
   });
 });

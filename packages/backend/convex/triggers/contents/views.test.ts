@@ -9,6 +9,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 const ARTICLE_ROUTE = "articles/politics/analytics";
 const ARTICLE_CONTENT_ID = "asset:id:catalog:article:analytics";
+const TRYOUT_ROUTE = "try-out/indonesia/snbt/2027/set-1";
+const TRYOUT_CONTENT_ID = "asset:id:catalog:tryout-set:analytics";
 
 /** Builds the article graph fixture used by the content-view trigger test. */
 function getArticleGraphFixture() {
@@ -20,6 +22,22 @@ function getArticleGraphFixture() {
   if (!graph) {
     throw new Error(
       `Unable to build graph fixture for route "${ARTICLE_ROUTE}".`
+    );
+  }
+
+  return graph;
+}
+
+/** Builds the try-out graph fixture used by the analytics taxonomy test. */
+function getTryoutGraphFixture() {
+  const graph = createLearningGraphIdentityFromRoute({
+    locale: "id",
+    route: TRYOUT_ROUTE,
+  });
+
+  if (!graph) {
+    throw new Error(
+      `Unable to build graph fixture for route "${TRYOUT_ROUTE}".`
     );
   }
 
@@ -110,5 +128,62 @@ describe("triggers/contents/views", () => {
         }),
       ])
     );
+  });
+
+  it("classifies try-out views as question analytics", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const graph = getTryoutGraphFixture();
+    const identity = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, { now: NOW });
+
+      await ctx.db.insert("contentRoutes", {
+        ...graph,
+        assetId: TRYOUT_CONTENT_ID,
+        authors: [],
+        contentHash: "tryout-route-hash",
+        content_id: TRYOUT_CONTENT_ID,
+        kind: "tryout-set",
+        locale: "id",
+        markdown: true,
+        route: TRYOUT_ROUTE,
+        section: "tryout",
+        sourcePath: TRYOUT_ROUTE,
+        syncedAt: NOW,
+        title: "SNBT Set 1",
+      });
+
+      return identity;
+    });
+
+    await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.contents.mutations.views.recordContentView, {
+        contentId: TRYOUT_CONTENT_ID,
+        deviceId: "device-tryout",
+        locale: "id",
+      });
+
+    const scheduledJobs = await t.query(
+      async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
+    );
+    const contentViewJob = scheduledJobs.find((job) => {
+      const [args] = job.args;
+
+      return (
+        typeof args === "object" &&
+        args !== null &&
+        Reflect.get(args, "event") === "content viewed"
+      );
+    });
+    const [args] = contentViewJob?.args ?? [];
+    const properties =
+      typeof args === "object" && args !== null
+        ? Reflect.get(args, "properties")
+        : undefined;
+
+    expect(properties).toContain('"content_type":"question"');
   });
 });

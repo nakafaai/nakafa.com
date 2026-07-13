@@ -43,6 +43,10 @@ function getContentViewEventType(
     return "material";
   }
 
+  if (section === "tryout") {
+    return "question";
+  }
+
   return "material";
 }
 

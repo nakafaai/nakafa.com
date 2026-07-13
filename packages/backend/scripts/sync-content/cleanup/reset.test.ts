@@ -208,6 +208,25 @@ describe("sync-content reset", () => {
     expect(log).not.toHaveBeenCalledWith("\nTo delete all content, run:");
   });
 
+  it("preserves learner history when reset-managed content is empty", async () => {
+    vi.mocked(getContentCounts).mockReturnValue(
+      Effect.succeed({
+        ...emptyCounts,
+        learningViews: 20_000,
+        userLearningRecents: 500,
+      })
+    );
+
+    await Effect.runPromise(reset(config, { force: true }));
+
+    expect(log).toHaveBeenCalledWith("  Total derived items:  0");
+    expect(log).toHaveBeenCalledWith("  Total preserved items: 20500");
+    expect(logSuccess).toHaveBeenCalledWith(
+      "\nReset-managed content is already empty. Nothing to delete."
+    );
+    expect(callConvexMutation).not.toHaveBeenCalled();
+  });
+
   it("deletes generated plan items before program coverage during forced reset", async () => {
     vi.mocked(getContentCounts).mockReturnValue(
       Effect.succeed({
