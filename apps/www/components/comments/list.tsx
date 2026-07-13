@@ -274,7 +274,7 @@ function CommentActions({
               <HugeIcons icon={ArrowTurnBackwardIcon} />
               <NumberFormat
                 className={cn(
-                  "font-mono text-muted-foreground text-xs tracking-tight",
+                  "tabular-nums text-xs tracking-tight",
                   comment.replyCount === 0 && "hidden"
                 )}
                 isolate={true}
