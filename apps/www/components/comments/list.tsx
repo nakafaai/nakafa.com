@@ -222,9 +222,8 @@ function CommentActions({
               <HugeIcons icon={ThumbsUpIcon} />
               <NumberFormat
                 className={cn(
-                  "tabular-nums text-xs tracking-tight",
-                  comment.upvoteCount === 0 && "hidden",
-                  comment.upvoteCount === 1 && "text-secondary-foreground"
+                  "text-xs tabular-nums tracking-tight",
+                  comment.upvoteCount === 0 && "hidden"
                 )}
                 isolate={true}
                 value={comment.upvoteCount}
@@ -249,9 +248,8 @@ function CommentActions({
               <HugeIcons icon={ThumbsDownIcon} />
               <NumberFormat
                 className={cn(
-                  "tabular-nums text-xs tracking-tight",
-                  comment.downvoteCount === 0 && "hidden",
-                  comment.downvoteCount === -1 && "text-secondary-foreground"
+                  "text-xs tabular-nums tracking-tight",
+                  comment.downvoteCount === 0 && "hidden"
                 )}
                 isolate={true}
                 value={comment.downvoteCount}
@@ -274,7 +272,7 @@ function CommentActions({
               <HugeIcons icon={ArrowTurnBackwardIcon} />
               <NumberFormat
                 className={cn(
-                  "tabular-nums text-xs tracking-tight",
+                  "text-xs tabular-nums tracking-tight",
                   comment.replyCount === 0 && "hidden"
                 )}
                 isolate={true}

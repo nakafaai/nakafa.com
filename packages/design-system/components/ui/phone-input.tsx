@@ -131,10 +131,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
           />
         </span>
       </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="w-full border-[color-mix(in_oklch,var(--input)_5%,var(--border))] p-0"
-      >
+      <PopoverContent align="start" className="w-full border-input p-0">
         <Autocomplete
           autoHighlight="always"
           filter={null}
@@ -148,7 +145,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
           value={searchQuery}
         >
           <AutocompleteInput
-            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
+            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-inset"
             placeholder={t("search-country-placeholder")}
             showClear
             startAddon={countrySearchIcon}
@@ -180,7 +177,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
                     <HugeIcons
                       aria-hidden="true"
                       className={cn(
-                        "ml-auto size-4 shrink-0 text-primary",
+                        "ml-auto size-4 shrink-0",
                         c.value === value ? "opacity-100" : "opacity-0"
                       )}
                       icon={Tick01Icon}

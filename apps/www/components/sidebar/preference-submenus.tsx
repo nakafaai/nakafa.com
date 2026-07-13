@@ -10,7 +10,7 @@ import {
   DropdownMenuSubTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { themes } from "@repo/design-system/lib/theme";
+import { themeOptions } from "@repo/design-system/lib/theme-options";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
@@ -95,7 +95,7 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
       side={side}
     >
       <DropdownMenuGroup>
-        {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
+        {themeOptions.slice(0, BASE_THEMES_COUNT).map((theme) => (
           <DropdownMenuItem
             className="cursor-pointer"
             key={theme.value}
@@ -111,7 +111,7 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
       <DropdownMenuSeparator />
 
       <DropdownMenuGroup>
-        {themes.slice(BASE_THEMES_COUNT).map((theme) => (
+        {themeOptions.slice(BASE_THEMES_COUNT).map((theme) => (
           <DropdownMenuItem
             className="cursor-pointer"
             key={theme.value}

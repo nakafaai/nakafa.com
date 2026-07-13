@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  ActiveDot,
+  Dot,
   EvilLineChart,
   Grid,
   Legend,
@@ -21,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getLineSeriesCue } from "@repo/design-system/lib/chart-series-cue";
 import type { ReactNode } from "react";
 
 const EXPONENTIAL_BASE = 3;
@@ -52,17 +55,26 @@ const data = Array.from({ length: 5 }, (_, i) => {
   };
 });
 
+const VIRUS_CUES = {
+  exponential: getLineSeriesCue(0),
+  linear: getLineSeriesCue(1),
+  logarithmic: getLineSeriesCue(2),
+};
+
 export function VirusChart({ labels }: Props) {
   const chartConfig = {
     exponential: {
+      cue: VIRUS_CUES.exponential,
       label: labels.exponential,
       colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
     linear: {
+      cue: VIRUS_CUES.linear,
       label: labels.linear,
       colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
     },
     logarithmic: {
+      cue: VIRUS_CUES.logarithmic,
       label: labels.logarithmic,
       colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
     },
@@ -113,16 +125,37 @@ export function VirusChart({ labels }: Props) {
           />
           <Line
             dataKey="exponential"
-            lineProps={{ dot: true, name: "exponential", strokeWidth: 2 }}
-          />
+            lineProps={{
+              name: "exponential",
+              strokeDasharray: VIRUS_CUES.exponential.strokeDasharray,
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={VIRUS_CUES.exponential.dot} />
+            <ActiveDot variant={VIRUS_CUES.exponential.activeDot} />
+          </Line>
           <Line
             dataKey="linear"
-            lineProps={{ dot: true, name: "linear", strokeWidth: 2 }}
-          />
+            lineProps={{
+              name: "linear",
+              strokeDasharray: VIRUS_CUES.linear.strokeDasharray,
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={VIRUS_CUES.linear.dot} />
+            <ActiveDot variant={VIRUS_CUES.linear.activeDot} />
+          </Line>
           <Line
             dataKey="logarithmic"
-            lineProps={{ dot: true, name: "logarithmic", strokeWidth: 2 }}
-          />
+            lineProps={{
+              name: "logarithmic",
+              strokeDasharray: VIRUS_CUES.logarithmic.strokeDasharray,
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={VIRUS_CUES.logarithmic.dot} />
+            <ActiveDot variant={VIRUS_CUES.logarithmic.activeDot} />
+          </Line>
           <Legend verticalAlign="bottom" />
         </EvilLineChart>
       </CardContent>

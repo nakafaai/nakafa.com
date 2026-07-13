@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme";
 import type { ReactNode } from "react";
 import { Vector3 } from "three";
 
@@ -64,7 +65,7 @@ export function formatSigned(value: number) {
 }
 
 export function getSceneColors(resolvedTheme: string | undefined) {
-  const isDarkTheme = resolvedTheme === "dark";
+  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
     cable: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),

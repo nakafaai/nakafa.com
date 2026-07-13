@@ -140,9 +140,8 @@ function CommentThread({ comment }: { comment: UserComment }) {
                   <HugeIcons icon={ThumbsUpIcon} />
                   <NumberFormat
                     className={cn(
-                      "tabular-nums text-xs tracking-tight",
-                      comment.upvoteCount === 0 && "hidden",
-                      comment.upvoteCount === 1 && "text-secondary-foreground"
+                      "text-xs tabular-nums tracking-tight",
+                      comment.upvoteCount === 0 && "hidden"
                     )}
                     isolate={true}
                     value={comment.upvoteCount}
@@ -167,9 +166,8 @@ function CommentThread({ comment }: { comment: UserComment }) {
                   <HugeIcons icon={ThumbsDownIcon} />
                   <NumberFormat
                     className={cn(
-                      "tabular-nums text-xs tracking-tight",
-                      comment.downvoteCount === 0 && "hidden",
-                      comment.downvoteCount === -1 && "text-secondary-foreground"
+                      "text-xs tabular-nums tracking-tight",
+                      comment.downvoteCount === 0 && "hidden"
                     )}
                     isolate={true}
                     value={comment.downvoteCount}
@@ -191,8 +189,8 @@ function CommentThread({ comment }: { comment: UserComment }) {
                   <HugeIcons icon={ArrowTurnBackwardIcon} />
                   <NumberFormat
                     className={cn(
-                      "tabular-nums text-xs tracking-tight",
-                      comment.replyCount === 0 && "hidden",
+                      "text-xs tabular-nums tracking-tight",
+                      comment.replyCount === 0 && "hidden"
                     )}
                     isolate={true}
                     value={comment.replyCount}

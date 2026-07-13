@@ -5,6 +5,7 @@ import {
   getPayloadConfigEntry,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
+import { ChartSeriesCueIndicator } from "@repo/design-system/components/evilcharts/ui/series-cue-indicator";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 import * as RechartsPrimitive from "recharts";
@@ -58,18 +59,33 @@ function ChartLegendContent({
     const dataKey = configEntry?.dataKey ?? key;
     const isSelected = selected === null || selected === dataKey;
     const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
+    let indicator = (
+      <LegendIndicator
+        colorsCount={colorsCount}
+        dataKey={dataKey}
+        key={`${key}-indicator`}
+        variant={variant}
+      />
+    );
+
+    if (itemConfig?.cue && !hideIcon) {
+      indicator = (
+        <ChartSeriesCueIndicator
+          cue={itemConfig.cue}
+          dataKey={dataKey}
+          key={`${key}-cue`}
+        />
+      );
+    }
+
+    if (itemConfig?.icon && !hideIcon) {
+      const Icon = itemConfig.icon;
+      indicator = <Icon key={`${key}-icon`} />;
+    }
 
     const content = (
       <>
-        {itemConfig?.icon && !hideIcon ? (
-          <itemConfig.icon />
-        ) : (
-          <LegendIndicator
-            colorsCount={colorsCount}
-            dataKey={dataKey}
-            variant={variant}
-          />
-        )}
+        {indicator}
         {itemConfig?.label}
       </>
     );

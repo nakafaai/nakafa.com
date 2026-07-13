@@ -13,16 +13,16 @@ const buttonVariants = cva(
       },
       variant: {
         default: "bg-primary text-primary-foreground",
-        "default-outline": "border border-primary bg-primary/5 text-primary",
+        "default-outline": "border border-primary bg-primary/5 text-foreground",
         destructive: "bg-destructive text-destructive-foreground",
         "destructive-outline":
-          "border border-destructive bg-destructive/5 text-destructive",
+          "border border-destructive bg-destructive/5 text-foreground",
         ghost: "",
         link: "text-primary underline underline-offset-4",
         outline: "border border-border bg-background",
         secondary: "bg-secondary text-secondary-foreground",
         "secondary-outline":
-          "border border-secondary bg-secondary/5 text-secondary",
+          "border border-muted-foreground bg-secondary/5 text-foreground",
       },
     },
     defaultVariants: {

@@ -17,17 +17,21 @@ import {
 } from "@repo/design-system/components/ui/input-group";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
-  Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
+} from "@repo/design-system/components/ui/sidebar-content";
+import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import {
+  Sidebar,
   SidebarTrigger,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-shell";
 import { usePaginatedQuery } from "convex/react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";

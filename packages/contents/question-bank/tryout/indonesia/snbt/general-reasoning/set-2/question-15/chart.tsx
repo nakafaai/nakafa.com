@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  ActiveDot,
+  Dot,
   EvilLineChart,
   Grid,
   Legend,
@@ -17,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getLineSeriesCue } from "@repo/design-system/lib/chart-series-cue";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -27,6 +30,11 @@ const chartData = [
 ] as const;
 
 type ChartMonth = (typeof chartData)[number]["month"];
+
+const SALES_CUES = {
+  grainPrice: getLineSeriesCue(0),
+  governmentPrice: getLineSeriesCue(1),
+};
 
 interface Props {
   description: ReactNode;
@@ -51,10 +59,12 @@ export function SalesChart({
     () =>
       ({
         grainPrice: {
+          cue: SALES_CUES.grainPrice,
           label: seriesLabels.grainPrice,
           colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         governmentPrice: {
+          cue: SALES_CUES.governmentPrice,
           label: seriesLabels.governmentPrice,
           colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
@@ -108,13 +118,25 @@ export function SalesChart({
           <Line
             curveType="monotone"
             dataKey="grainPrice"
-            lineProps={{ dot: { r: 4 }, strokeWidth: 2 }}
-          />
+            lineProps={{
+              strokeDasharray: SALES_CUES.grainPrice.strokeDasharray,
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={SALES_CUES.grainPrice.dot} />
+            <ActiveDot variant={SALES_CUES.grainPrice.activeDot} />
+          </Line>
           <Line
             curveType="monotone"
             dataKey="governmentPrice"
-            lineProps={{ dot: { r: 4 }, strokeWidth: 2 }}
-          />
+            lineProps={{
+              strokeDasharray: SALES_CUES.governmentPrice.strokeDasharray,
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={SALES_CUES.governmentPrice.dot} />
+            <ActiveDot variant={SALES_CUES.governmentPrice.activeDot} />
+          </Line>
         </EvilLineChart>
       </CardContent>
     </Card>

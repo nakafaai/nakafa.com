@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme";
 import type { ReactNode } from "react";
 
 export const COMBUSTION_TYPE_ID = "combustion";
@@ -89,7 +90,7 @@ export function isChemicalReactionTypeId(
 export function getChemicalReactionTypeSceneColors(
   resolvedTheme: string | undefined
 ) {
-  const isDarkTheme = resolvedTheme === "dark";
+  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,

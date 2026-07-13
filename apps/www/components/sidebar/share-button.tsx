@@ -6,7 +6,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
 import { getAppUrl } from "@repo/next-config/app";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";

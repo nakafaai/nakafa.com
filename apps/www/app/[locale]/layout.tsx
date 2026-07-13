@@ -5,6 +5,7 @@ import { DesignSystemProvider } from "@repo/design-system";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { fonts } from "@repo/design-system/lib/fonts";
+import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme-compatibility";
 import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
@@ -132,8 +133,14 @@ export async function generateMetadata(): Promise<Metadata> {
 /** Root viewport contract shared by every localized app route. */
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f5f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    {
+      media: "(prefers-color-scheme: light)",
+      color: THEME_COMPATIBILITY_COLORS.light.background,
+    },
+    {
+      media: "(prefers-color-scheme: dark)",
+      color: THEME_COMPATIBILITY_COLORS.dark.background,
+    },
   ],
   width: "device-width",
   initialScale: 1,
@@ -170,11 +177,10 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
         <WebsiteJsonLd locale={locale} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AnalyticsProvider>
-            <div className="isolate">
-              <DesignSystemProvider>{children}</DesignSystemProvider>
-            </div>
-
-            <Toaster />
+            <DesignSystemProvider>
+              <div className="isolate">{children}</div>
+              <Toaster />
+            </DesignSystemProvider>
           </AnalyticsProvider>
           <TailwindIndicator />
         </NextIntlClientProvider>

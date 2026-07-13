@@ -16,6 +16,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import { getColor } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
@@ -341,7 +342,7 @@ function WindFact({ label, value }: { label: string; value: ReactNode }) {
 }
 
 function getWindSceneColors(theme: string | undefined) {
-  const dark = theme === "dark";
+  const dark = getThemeAppearance(theme) === "dark";
 
   return {
     blade: dark ? getColor("GRAY", 200) : getColor("SLATE", 50),

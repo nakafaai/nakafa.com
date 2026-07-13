@@ -105,7 +105,7 @@ export function HeaderAddSubjectField({
               open
             >
               <AutocompleteInput
-                className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
+                className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-inset"
                 placeholder={t("search-subjects-placeholder")}
                 showClear
                 startAddon={

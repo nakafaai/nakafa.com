@@ -1,14 +1,16 @@
 import { SchoolIcon, UnfoldMoreIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+} from "@repo/design-system/components/ui/sidebar-content";
+import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { cn } from "@repo/design-system/lib/utils";
 import { type ComponentProps, Suspense } from "react";
 import { SchoolSidebarNavLearning } from "@/components/school/sidebar/nav-learning";

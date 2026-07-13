@@ -2,7 +2,7 @@
 
 import { Login01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { SidebarMenuButton } from "@repo/design-system/components/ui/sidebar";
+import { SidebarMenuButton } from "@repo/design-system/components/ui/sidebar-menu";
 import {
   usePathname,
   useRouter,

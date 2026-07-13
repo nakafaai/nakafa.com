@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { themes } from "@repo/design-system/lib/theme";
+import { themeOptions } from "@repo/design-system/lib/theme-options";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
@@ -125,7 +125,7 @@ export function Theme({
         className="max-h-[min(var(--available-height),24rem)] w-max max-w-[calc(100vw-2rem)]"
       >
         <DropdownMenuGroup>
-          {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
+          {themeOptions.slice(0, BASE_THEMES_COUNT).map((theme) => (
             <DropdownMenuItem
               className="cursor-pointer"
               key={theme.value}
@@ -141,7 +141,7 @@ export function Theme({
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
-          {themes.slice(BASE_THEMES_COUNT).map((theme) => (
+          {themeOptions.slice(BASE_THEMES_COUNT).map((theme) => (
             <DropdownMenuItem
               className="cursor-pointer"
               key={theme.value}

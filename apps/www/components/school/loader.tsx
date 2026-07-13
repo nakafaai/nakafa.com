@@ -15,7 +15,7 @@ export function SchoolLoader() {
       <Empty>
         <EmptyHeader>
           <EmptyMedia
-            className="bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] text-primary"
+            className="bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] text-foreground"
             variant="icon"
           >
             <Spinner aria-hidden="true" />

@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getBarSeriesCue } from "@repo/design-system/lib/chart-series-cue";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -26,6 +27,11 @@ const chartData = [
   { class: "D", passed: 30, failed: 20 },
   { class: "E", passed: 25, failed: 15 },
 ];
+
+const GRADUATION_CUES = {
+  failed: getBarSeriesCue(1),
+  passed: getBarSeriesCue(0),
+};
 
 interface Props {
   classLabel: string;
@@ -56,10 +62,12 @@ export function GraduationChart({
     () =>
       ({
         passed: {
+          cue: GRADUATION_CUES.passed,
           label: passedLabel,
           colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         failed: {
+          cue: GRADUATION_CUES.failed,
           label: failedLabel,
           colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
@@ -85,8 +93,16 @@ export function GraduationChart({
           <YAxis axisLine={false} tickLine={false} tickMargin={10} />
           <Tooltip />
           <Legend />
-          <Bar dataKey="passed" radius={4} />
-          <Bar dataKey="failed" radius={4} />
+          <Bar
+            dataKey="passed"
+            radius={GRADUATION_CUES.passed.radius}
+            variant={GRADUATION_CUES.passed.variant}
+          />
+          <Bar
+            dataKey="failed"
+            radius={GRADUATION_CUES.failed.radius}
+            variant={GRADUATION_CUES.failed.variant}
+          />
         </EvilBarChart>
       </CardContent>
     </Card>

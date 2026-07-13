@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme";
 
 export interface ShellModelSample {
   atomicNumber: number;
@@ -19,7 +20,7 @@ export type ShellModelSceneColors = ReturnType<typeof getShellModelSceneColors>;
  * Chooses theme-aware colors for shared electron-shell scenes.
  */
 export function getShellModelSceneColors(resolvedTheme: string | undefined) {
-  const isDarkTheme = resolvedTheme === "dark";
+  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
     electron: isDarkTheme ? getColor("CYAN") : getColor("TEAL"),

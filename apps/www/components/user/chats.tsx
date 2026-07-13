@@ -144,7 +144,7 @@ function ChatList({
             </div>
 
             <div className="flex shrink-0 items-center justify-between gap-2">
-              <time className="truncate text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground/80">
+              <time className="truncate text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground">
                 {formatDistanceToNow(chat.updatedAt, {
                   locale: getLocale(locale),
                   addSuffix: true,

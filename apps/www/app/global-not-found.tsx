@@ -35,6 +35,7 @@ async function getNotFoundLocale() {
   return routing.defaultLocale;
 }
 
+/** Renders the global localized 404 document under the shared theme policy. */
 export default function GlobalNotFound() {
   const fallbackMessages = dictionaries[routing.defaultLocale].NotFound;
 
@@ -45,12 +46,7 @@ export default function GlobalNotFound() {
       suppressHydrationWarning
     >
       <body>
-        <DesignSystemProvider
-          attribute="class"
-          defaultTheme="system"
-          disableTransitionOnChange
-          enableSystem
-        >
+        <DesignSystemProvider>
           <Suspense fallback={<NotFoundContent messages={fallbackMessages} />}>
             <LocalizedNotFoundContent />
           </Suspense>

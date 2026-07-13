@@ -1,160 +1,200 @@
-import {
-  AlphabetJapaneseIcon,
-  AsteriskIcon,
-  CloudIcon,
-  CottonCandyIcon,
-  CpuIcon,
-  DrinkIcon,
-  FastWindIcon,
-  FlowerIcon,
-  GameIcon,
-  GemIcon,
-  HappyIcon,
-  HourglassIcon,
-  InLoveIcon,
-  KnightShieldIcon,
-  LaptopIcon,
-  MoonEclipseIcon,
-  MoonIcon,
-  NotebookIcon,
-  OrangeIcon,
-  PineTreeIcon,
-  RadioIcon,
-  RecordIcon,
-  ShellfishIcon,
-  SnailIcon,
-  SnowIcon,
-  StarIcon,
-  Sun01Icon,
-  SunsetIcon,
-  TeaIcon,
-  TwitterIcon,
-  YenIcon,
-} from "@hugeicons/core-free-icons";
+/** Concrete visual appearance used by runtime renderers and integrations. */
+export type ThemeAppearance = "light" | "dark";
 
+type ThemeAppearancePolicy = ThemeAppearance | "dynamic";
+type ThemeShaderColor = `rgb(${number}, ${number}, ${number})`;
+
+interface ThemeDefinition {
+  readonly appearance: ThemeAppearancePolicy;
+  readonly shaderColor: ThemeShaderColor;
+  readonly value: string;
+}
+
+const LIGHT_SHADER_COLOR = "rgb(21, 41, 79)";
+
+/** Selectable Nakafa themes and the appearance policy owned by each theme. */
 export const themes = [
   {
     value: "light",
-    icon: Sun01Icon,
+    appearance: "light",
+    shaderColor: LIGHT_SHADER_COLOR,
   },
   {
     value: "dark",
-    icon: MoonIcon,
+    appearance: "dark",
+    shaderColor: "rgb(57, 199, 244)",
   },
   {
     value: "system",
-    icon: LaptopIcon,
+    appearance: "dynamic",
+    shaderColor: LIGHT_SHADER_COLOR,
+  },
+  {
+    value: "darkmatter",
+    appearance: "light",
+    shaderColor: "rgb(180, 88, 30)",
   },
   {
     value: "bean",
-    icon: SnailIcon,
+    appearance: "light",
+    shaderColor: "rgb(137, 96, 78)",
   },
   {
     value: "bubblegum",
-    icon: CottonCandyIcon,
+    appearance: "light",
+    shaderColor: "rgb(179, 51, 128)",
   },
   {
     value: "caffeine",
-    icon: TeaIcon,
+    appearance: "light",
+    shaderColor: "rgb(99, 73, 63)",
   },
   {
     value: "claude",
-    icon: AsteriskIcon,
+    appearance: "light",
+    shaderColor: "rgb(182, 81, 46)",
   },
   {
     value: "cosmic",
-    icon: StarIcon,
+    appearance: "light",
+    shaderColor: "rgb(110, 85, 207)",
   },
   {
     value: "cute",
-    icon: HappyIcon,
+    appearance: "light",
+    shaderColor: "rgb(167, 67, 112)",
   },
   {
     value: "dreamy",
-    icon: CloudIcon,
+    appearance: "light",
+    shaderColor: "rgb(120, 90, 197)",
   },
   {
     value: "ghibli",
-    icon: AlphabetJapaneseIcon,
+    appearance: "light",
+    shaderColor: "rgb(98, 101, 24)",
   },
   {
     value: "luxury",
-    icon: GemIcon,
+    appearance: "light",
+    shaderColor: "rgb(155, 44, 44)",
   },
   {
     value: "matcha",
-    icon: DrinkIcon,
+    appearance: "light",
+    shaderColor: "rgb(96, 115, 102)",
   },
   {
     value: "nature",
-    icon: PineTreeIcon,
+    appearance: "light",
+    shaderColor: "rgb(48, 123, 52)",
   },
   {
     value: "neo",
-    icon: CpuIcon,
+    appearance: "light",
+    shaderColor: "rgb(231, 8, 28)",
   },
   {
     value: "notebook",
-    icon: NotebookIcon,
+    appearance: "light",
+    shaderColor: "rgb(96, 96, 96)",
   },
   {
     value: "pacman",
-    icon: GameIcon,
+    appearance: "light",
+    shaderColor: "rgb(144, 106, 0)",
   },
   {
     value: "perpetuity",
-    icon: HourglassIcon,
+    appearance: "light",
+    shaderColor: "rgb(0, 117, 125)",
   },
   {
     value: "pinky",
-    icon: InLoveIcon,
+    appearance: "light",
+    shaderColor: "rgb(213, 0, 112)",
   },
   {
     value: "popsicle",
-    icon: SnowIcon,
+    appearance: "light",
+    shaderColor: "rgb(79, 70, 229)",
   },
   {
     value: "retro",
-    icon: RadioIcon,
+    appearance: "light",
+    shaderColor: "rgb(190, 32, 113)",
   },
   {
     value: "shell",
-    icon: ShellfishIcon,
+    appearance: "light",
+    shaderColor: "rgb(62, 67, 240)",
   },
   {
     value: "solar",
-    icon: MoonEclipseIcon,
+    appearance: "light",
+    shaderColor: "rgb(179, 81, 0)",
   },
   {
     value: "sunset",
-    icon: SunsetIcon,
+    appearance: "light",
+    shaderColor: "rgb(194, 74, 45)",
   },
   {
     value: "tangerine",
-    icon: OrangeIcon,
+    appearance: "light",
+    shaderColor: "rgb(186, 59, 19)",
   },
   {
     value: "tokyo",
-    icon: YenIcon,
+    appearance: "light",
+    shaderColor: "rgb(97, 39, 205)",
   },
   {
     value: "tree",
-    icon: FlowerIcon,
+    appearance: "light",
+    shaderColor: "rgb(84, 97, 0)",
   },
   {
     value: "twitter",
-    icon: TwitterIcon,
+    appearance: "light",
+    shaderColor: "rgb(0, 116, 184)",
   },
   {
     value: "vintage",
-    icon: RecordIcon,
+    appearance: "light",
+    shaderColor: "rgb(141, 99, 56)",
   },
   {
     value: "windy",
-    icon: FastWindIcon,
+    appearance: "light",
+    shaderColor: "rgb(57, 90, 161)",
   },
   {
     value: "zelda",
-    icon: KnightShieldIcon,
+    appearance: "light",
+    shaderColor: "rgb(130, 102, 0)",
   },
-] as const;
+] as const satisfies readonly ThemeDefinition[];
+
+/**
+ * Resolves a next-themes runtime value to the concrete appearance consumers
+ * should render. Unknown and pre-hydration values use Nakafa's light default.
+ */
+export function getThemeAppearance(
+  resolvedTheme: string | undefined
+): ThemeAppearance {
+  const definition = themes.find((theme) => theme.value === resolvedTheme);
+
+  if (definition?.appearance === "dark") {
+    return "dark";
+  }
+
+  return "light";
+}
+
+/** Returns the deterministic sRGB projection used by shader-only renderers. */
+export function getThemeShaderColor(resolvedTheme: string | undefined) {
+  const definition = themes.find((theme) => theme.value === resolvedTheme);
+
+  return definition?.shaderColor ?? LIGHT_SHADER_COLOR;
+}

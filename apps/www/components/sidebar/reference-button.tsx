@@ -30,7 +30,7 @@ import {
 import {
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
 import { cleanupUrl, formatUrl } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";

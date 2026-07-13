@@ -5,10 +5,11 @@ import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
+import { getThemeAppearance } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef } from "react";
 
 const MIN_PARTICLE_SIZE = 1;
 const MAX_PARTICLE_SIZE = 3;
@@ -76,12 +77,7 @@ function ParticlesComponent({
     createSeededRandom(quantity, staticity, ease)
   );
 
-  const isThemeDark = useMemo(() => {
-    if (!resolvedTheme) {
-      return false;
-    }
-    return resolvedTheme === "dark";
-  }, [resolvedTheme]);
+  const isThemeDark = getThemeAppearance(resolvedTheme) === "dark";
 
   const resizeCanvas = useCallback(() => {
     if (canvasContainerRef.current && canvasRef.current && context.current) {

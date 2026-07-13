@@ -1,10 +1,10 @@
 import {
-  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-content";
+import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
+import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ComponentProps } from "react";
 import { HeaderMenu } from "@/components/sidebar/header-menu";

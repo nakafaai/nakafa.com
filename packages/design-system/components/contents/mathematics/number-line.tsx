@@ -177,7 +177,7 @@ export function NumberLine({
                   <div
                     className={cn(
                       numberLineSegmentVariants({ edge: segment.edge }),
-                      !segment.bgColor && "bg-chart-1/80"
+                      !segment.bgColor && "bg-chart-1"
                     )}
                     style={{
                       left: `${segment.startPos}%`,

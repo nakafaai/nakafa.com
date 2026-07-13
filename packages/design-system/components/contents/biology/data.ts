@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme";
 import type { ReactNode } from "react";
 
 export type BiologyScenePoint = readonly [number, number, number];
@@ -84,7 +85,7 @@ export const BIOLOGY_SMALL_RING_POINT_COUNT = 8;
  * so scene colors stay behind this adapter instead of being embedded in models.
  */
 export function getBiologySceneColors(theme?: string): BiologySceneColors {
-  const isDarkTheme = theme === "dark";
+  const isDarkTheme = getThemeAppearance(theme) === "dark";
 
   return {
     animal: getColor("AMBER"),

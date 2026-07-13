@@ -18,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getBarSeriesCue } from "@repo/design-system/lib/chart-series-cue";
 import type { ReactNode } from "react";
 
 const VALUE_AXIS_PADDING_RATIO = 0.12;
@@ -65,6 +66,10 @@ const maxCabinetSize = Math.max(
 const cabinetAxisMax = Math.ceil(
   maxCabinetSize * (1 + VALUE_AXIS_PADDING_RATIO)
 );
+const COMPOSITION_CUES = {
+  primary: getBarSeriesCue(0),
+  secondary: getBarSeriesCue(1),
+};
 
 export function CabinetChart({
   title,
@@ -129,10 +134,12 @@ export function CompositionChart({
 
   const ministerChartConfig = {
     new: {
+      cue: COMPOSITION_CUES.primary,
       label: labels.new,
       colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
     incumbent: {
+      cue: COMPOSITION_CUES.secondary,
       label: labels.incumbent,
       colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
     },
@@ -140,10 +147,12 @@ export function CompositionChart({
 
   const genderChartConfig = {
     male: {
+      cue: COMPOSITION_CUES.primary,
       label: labels.male,
       colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
     female: {
+      cue: COMPOSITION_CUES.secondary,
       label: labels.female,
       colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
     },
@@ -151,10 +160,12 @@ export function CompositionChart({
 
   const politicalStatusChartConfig = {
     politician: {
+      cue: COMPOSITION_CUES.primary,
       label: labels.politicians,
       colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
     non_politician: {
+      cue: COMPOSITION_CUES.secondary,
       label: labels.nonPoliticians,
       colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
     },
@@ -176,8 +187,16 @@ export function CompositionChart({
             <Grid vertical={false} />
             <XAxis dataKey="name" tickMargin={10} />
             <Tooltip />
-            <Bar dataKey="new" radius={8} />
-            <Bar dataKey="incumbent" radius={8} />
+            <Bar
+              dataKey="new"
+              radius={COMPOSITION_CUES.primary.radius}
+              variant={COMPOSITION_CUES.primary.variant}
+            />
+            <Bar
+              dataKey="incumbent"
+              radius={COMPOSITION_CUES.secondary.radius}
+              variant={COMPOSITION_CUES.secondary.variant}
+            />
             <Legend />
           </EvilBarChart>
 
@@ -189,8 +208,16 @@ export function CompositionChart({
             <Grid vertical={false} />
             <XAxis dataKey="name" tickMargin={10} />
             <Tooltip />
-            <Bar dataKey="male" radius={8} />
-            <Bar dataKey="female" radius={8} />
+            <Bar
+              dataKey="male"
+              radius={COMPOSITION_CUES.primary.radius}
+              variant={COMPOSITION_CUES.primary.variant}
+            />
+            <Bar
+              dataKey="female"
+              radius={COMPOSITION_CUES.secondary.radius}
+              variant={COMPOSITION_CUES.secondary.variant}
+            />
             <Legend />
           </EvilBarChart>
 
@@ -202,8 +229,16 @@ export function CompositionChart({
             <Grid vertical={false} />
             <XAxis dataKey="name" tickMargin={10} />
             <Tooltip />
-            <Bar dataKey="politician" radius={8} />
-            <Bar dataKey="non_politician" radius={8} />
+            <Bar
+              dataKey="politician"
+              radius={COMPOSITION_CUES.primary.radius}
+              variant={COMPOSITION_CUES.primary.variant}
+            />
+            <Bar
+              dataKey="non_politician"
+              radius={COMPOSITION_CUES.secondary.radius}
+              variant={COMPOSITION_CUES.secondary.variant}
+            />
             <Legend />
           </EvilBarChart>
         </div>

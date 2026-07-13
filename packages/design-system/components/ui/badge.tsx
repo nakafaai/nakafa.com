@@ -4,34 +4,34 @@ import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-md border px-2 py-0.5 text-xs transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
+  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-md border px-2 py-0.5 text-xs transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring aria-invalid:border-destructive aria-invalid:ring-destructive [&>svg]:pointer-events-none [&>svg]:size-3",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
+          "border-transparent bg-primary text-primary-foreground [a&]:hover:shadow-sm",
         "default-subtle":
-          "border-primary bg-primary/10 text-primary [a&]:hover:bg-primary/20",
+          "border-primary bg-primary/5 text-foreground [a&]:hover:shadow-sm",
         "default-outline":
-          "border-border bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
+          "border-border bg-primary text-primary-foreground [a&]:hover:shadow-sm",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:shadow-sm",
         "secondary-subtle":
-          "border-secondary bg-secondary/10 text-secondary [a&]:hover:bg-secondary/20",
+          "border-muted-foreground bg-secondary/5 text-foreground [a&]:hover:shadow-sm",
         "secondary-outline":
-          "border-border bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+          "border-border bg-secondary text-secondary-foreground [a&]:hover:shadow-sm",
         muted:
-          "border-transparent bg-muted text-muted-foreground [a&]:hover:bg-muted/90",
+          "border-transparent bg-muted text-muted-foreground [a&]:hover:shadow-sm",
         "muted-outline":
-          "border-border bg-muted text-muted-foreground [a&]:hover:bg-muted/90",
+          "border-border bg-muted text-muted-foreground [a&]:hover:shadow-sm",
         "muted-subtle":
-          "border-muted bg-muted/10 text-muted [a&]:hover:bg-muted/20",
+          "border-muted-foreground bg-muted/5 text-foreground [a&]:hover:shadow-sm",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90",
+          "border-transparent bg-destructive text-destructive-foreground [a&]:hover:shadow-sm",
         "destructive-subtle":
-          "border-destructive bg-destructive/10 text-destructive [a&]:hover:bg-destructive/20",
+          "border-destructive bg-destructive/5 text-foreground [a&]:hover:shadow-sm",
         "destructive-outline":
-          "border-border bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90",
+          "border-border bg-destructive text-destructive-foreground [a&]:hover:shadow-sm",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
       },

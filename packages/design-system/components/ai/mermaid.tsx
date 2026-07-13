@@ -2,6 +2,7 @@
 
 import { captureException } from "@repo/analytics/posthog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { getThemeAppearance } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import type { MermaidConfig } from "mermaid";
 import { useTheme } from "next-themes";
@@ -67,7 +68,8 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
   const { resolvedTheme } = useTheme();
   const renderId = getMermaidRenderId(componentId, chart);
   const theme =
-    config?.theme ?? (resolvedTheme === "dark" ? "dark" : "default");
+    config?.theme ??
+    (getThemeAppearance(resolvedTheme) === "dark" ? "dark" : "default");
   const renderKey = `${renderId}-${theme}`;
   const [renderState, setRenderState] = useState({
     errorMessage: "",
@@ -135,18 +137,16 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
     return (
       <div
         className={cn(
-          "border border-destructive/20 bg-destructive/10 p-4",
+          "border border-destructive bg-card p-4 text-destructive",
           className
         )}
       >
-        <p className="font-mono text-destructive text-sm">
+        <p className="font-mono text-sm">
           Mermaid Error: {renderState.errorMessage}
         </p>
         <details className="mt-2">
-          <summary className="cursor-pointer text-destructive text-xs">
-            Show Code
-          </summary>
-          <pre className="mt-2 overflow-x-auto rounded bg-destructive/10 p-2 text-destructive text-xs">
+          <summary className="cursor-pointer text-xs">Show Code</summary>
+          <pre className="mt-2 overflow-x-auto rounded bg-card p-2 text-xs">
             {chart}
           </pre>
         </details>

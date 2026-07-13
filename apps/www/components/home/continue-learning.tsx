@@ -54,14 +54,14 @@ export function HomeContinueLearning() {
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <HugeIcons
-                    className="size-4 text-background drop-shadow-md"
+                    className="size-5 rounded-sm bg-background p-0.5 text-foreground shadow-sm"
                     icon={getMaterialIcon(subject.materialDomain)}
                   />
                 </div>
               </div>
               <div className="-mt-1 flex flex-col gap-0.5">
                 <h3>{subject.title}</h3>
-                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground/80 sm:mr-12">
+                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground sm:mr-12">
                   {subject.description}
                 </span>
               </div>

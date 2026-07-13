@@ -16,6 +16,7 @@ import { threeSceneFrameVariants } from "@repo/design-system/components/three/sc
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COLORS, getColor } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTheme } from "next-themes";
 import {
@@ -88,6 +89,7 @@ export function CoordinateSystem({
   className,
 }: Props) {
   const { resolvedTheme } = useTheme();
+  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
   const [sceneState, setSceneState] = useState(() => ({
     isDragging: false,
     play: false,
@@ -98,22 +100,20 @@ export function CoordinateSystem({
 
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {
-    switch (resolvedTheme) {
-      case "dark":
-        return {
-          main: getColor("NEUTRAL", 700),
-          secondary: getColor("NEUTRAL", 800),
-        };
-      default:
-        return {
-          main: getColor("NEUTRAL", 300),
-          secondary: getColor("NEUTRAL", 200),
-        };
+    if (isDarkTheme) {
+      return {
+        main: getColor("NEUTRAL", 700),
+        secondary: getColor("NEUTRAL", 800),
+      };
     }
-  }, [resolvedTheme]);
 
-  const originColor =
-    resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
+    return {
+      main: getColor("NEUTRAL", 300),
+      secondary: getColor("NEUTRAL", 200),
+    };
+  }, [isDarkTheme]);
+
+  const originColor = isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
 
   // Handle button clicks with proper invalidation for on-demand rendering
   const handleGridToggle = useCallback(() => {

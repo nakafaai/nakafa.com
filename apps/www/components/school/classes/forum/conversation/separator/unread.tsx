@@ -18,19 +18,19 @@ export function ConversationUnreadSeparator({
       <div
         className={cn(
           "h-px flex-1 transition-colors ease-out motion-reduce:transition-none",
-          isHistory ? "bg-muted" : "bg-destructive"
+          isHistory ? "bg-muted" : "bg-primary"
         )}
       />
       <Badge
         className="transition-colors ease-out motion-reduce:transition-none"
-        variant={isHistory ? "muted" : "destructive"}
+        variant={isHistory ? "muted" : "default"}
       >
         {isHistory ? t("left-off-here") : t("new-messages", { count })}
       </Badge>
       <div
         className={cn(
           "h-px flex-1 transition-colors ease-out motion-reduce:transition-none",
-          isHistory ? "bg-muted" : "bg-destructive"
+          isHistory ? "bg-muted" : "bg-primary"
         )}
       />
     </div>

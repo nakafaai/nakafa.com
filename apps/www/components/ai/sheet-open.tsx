@@ -4,7 +4,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { AudioContentType } from "@repo/backend/convex/lib/validators/audio";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import { AudioPlayerProvider } from "@repo/design-system/components/ui/audio-player";
+import { AudioPlayerProvider } from "@repo/design-system/components/ui/audio-player-provider";
 import { cleanSlug } from "@repo/utilities/helper";
 import { PageTitleProvider } from "@/components/ai/context/use-page-title";
 import { SheetAudioToolbar } from "@/components/ai/sheet-audio-toolbar";

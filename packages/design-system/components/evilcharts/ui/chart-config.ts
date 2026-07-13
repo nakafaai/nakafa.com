@@ -2,6 +2,7 @@ import {
   getChartPayloadStringValue,
   isChartPayloadRecord,
 } from "@repo/design-system/components/evilcharts/ui/chart-payload";
+import type { ChartSeriesCue } from "@repo/design-system/lib/chart-series-cue";
 import type * as React from "react";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -37,6 +38,7 @@ const CHART_KEY_SAFE_CHAR_PATTERN = /^[A-Za-z0-9_-]$/;
 export type ChartConfig = Record<
   string,
   {
+    cue?: ChartSeriesCue;
     label?: React.ReactNode;
     icon?: React.ComponentType;
     colors?: AtLeastOneThemeColor;

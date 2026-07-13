@@ -20,6 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getBarSeriesCue } from "@repo/design-system/lib/chart-series-cue";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -54,14 +55,17 @@ export function SalesChart({
     () =>
       ({
         A: {
+          cue: getBarSeriesCue(0),
           label: seriesLabels.A,
           colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         B: {
+          cue: getBarSeriesCue(1),
           label: seriesLabels.B,
           colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
         C: {
+          cue: getBarSeriesCue(2),
           label: seriesLabels.C,
           colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
         },
@@ -103,9 +107,18 @@ export function SalesChart({
             }
           />
           <Legend />
-          {Object.keys(chartConfig).map((key) => (
-            <Bar dataKey={key} key={key} radius={4} />
-          ))}
+          {Object.keys(chartConfig).map((key, index) => {
+            const cue = getBarSeriesCue(index);
+
+            return (
+              <Bar
+                dataKey={key}
+                key={key}
+                radius={cue.radius}
+                variant={cue.variant}
+              />
+            );
+          })}
         </EvilBarChart>
       </CardContent>
     </Card>

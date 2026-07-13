@@ -5,7 +5,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/lib/context/use-user";

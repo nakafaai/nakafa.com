@@ -292,7 +292,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                     />
                     <span className="text-sm">{t(visibility)}</span>
                   </div>
-                  <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground/80">
+                  <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground">
                     {t(`${visibility}-description`)}
                   </p>
                 </div>

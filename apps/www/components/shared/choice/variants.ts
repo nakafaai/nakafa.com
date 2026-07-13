@@ -7,7 +7,7 @@ export const choiceCardVariants = cva(
     variants: {
       selected: {
         false: "",
-        true: "border-primary/60 bg-[color-mix(in_oklch,var(--primary)_2%,var(--background))] ring-1 ring-primary/20",
+        true: "border-primary bg-[color-mix(in_oklch,var(--primary)_2%,var(--background))] ring-1 ring-primary",
       },
     },
     defaultVariants: {

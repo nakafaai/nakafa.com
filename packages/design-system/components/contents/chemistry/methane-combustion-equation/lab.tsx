@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
@@ -380,7 +381,7 @@ function offsetY([x, y, z]: Point, offset: number): Point {
 type CombustionColors = ReturnType<typeof getCombustionColors>;
 
 function getCombustionColors(theme?: string) {
-  const isDarkTheme = theme === "dark";
+  const isDarkTheme = getThemeAppearance(theme) === "dark";
 
   return {
     bond: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),

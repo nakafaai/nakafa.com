@@ -103,7 +103,7 @@ export function Weather() {
       <WeatherCardHeader>
         <div className="flex flex-col">
           <p className="font-mono text-xl tracking-tight">{currentTemp}° C</p>
-          <p className="text-card-foreground/80 text-xs">{conditionTitle}</p>
+          <p className="text-card-foreground text-xs">{conditionTitle}</p>
         </div>
 
         <HugeIcons className="size-8" icon={getWeatherIcon(iconCode)} />

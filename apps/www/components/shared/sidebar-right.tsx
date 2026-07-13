@@ -2,16 +2,20 @@ import { Menu02Icon } from "@hugeicons/core-free-icons";
 import type { Reference } from "@repo/contents/_types/content";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
-  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+} from "@repo/design-system/components/ui/sidebar-content";
+import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import {
+  Sidebar,
   SidebarTrigger,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-shell";
 import type { ComponentProps, ReactNode } from "react";
 import { CommentsButton } from "@/components/sidebar/comments-button";
 import { GithubButton } from "@/components/sidebar/github-button";

@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme";
 import type { ReactNode } from "react";
 
 export const ATOM_MODE_ID = "atom";
@@ -159,7 +160,7 @@ export function isMatterParticleModeId(
 export function getMatterParticleSceneColors(
   resolvedTheme: string | undefined
 ) {
-  const isDarkTheme = resolvedTheme === "dark";
+  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
     bond: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),

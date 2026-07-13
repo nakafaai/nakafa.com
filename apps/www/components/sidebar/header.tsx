@@ -1,4 +1,4 @@
-import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar";
+import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
 import { HeaderContainer } from "@/components/sidebar/header-container";
 import { HeaderSearch } from "@/components/sidebar/header-search";
 
