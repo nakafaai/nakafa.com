@@ -251,7 +251,7 @@ function CommentActions({
                 className={cn(
                   "tabular-nums text-xs tracking-tight",
                   comment.downvoteCount === 0 && "hidden",
-                  comment.downvoteCount === 1 && "text-secondary-foreground"
+                  comment.downvoteCount === -1 && "text-secondary-foreground"
                 )}
                 isolate={true}
                 value={comment.downvoteCount}
