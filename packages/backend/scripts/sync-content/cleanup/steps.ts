@@ -40,16 +40,6 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "content analytics partition leases",
   },
   {
-    label: "Deleting learning view rows...",
-    mutation: reset.deleteLearningViewsBatch,
-    resultLabel: "learning view rows",
-  },
-  {
-    label: "Deleting user learning recents rows...",
-    mutation: reset.deleteUserLearningRecentsBatch,
-    resultLabel: "user learning recents rows",
-  },
-  {
     label: "Deleting learning popularity signal rows...",
     mutation: reset.deleteLearningPopularitySignalsBatch,
     resultLabel: "learning popularity signal rows",

@@ -55,14 +55,14 @@ const deleteAllBatched = Effect.fn("sync.reset.deleteAllBatched")(function* (
   return totalDeleted;
 });
 
-/** Deletes the full sync-managed content graph and its derived runtime rows. */
+/** Deletes the sync-managed content graph while preserving learner history. */
 export const reset = Effect.fn("sync.reset")(function* (
   config: ConvexConfig,
   options: SyncOptions
 ) {
   log("=== RESET CONTENT ===\n");
   log(
-    "This will DELETE synced content and the runtime data derived from it.\n"
+    "This will DELETE synced content and rebuildable runtime data. Durable learner history is preserved.\n"
   );
 
   if (options.prod) {
@@ -77,10 +77,10 @@ export const reset = Effect.fn("sync.reset")(function* (
   const counts = yield* getContentCounts(config);
 
   log(`  Content Search:        ${counts.contentSearch}`);
-  log(`  Learning Views:        ${counts.learningViews}`);
+  log(`  Learning Views (preserved): ${counts.learningViews}`);
   log(`  Engagement Queue:      ${counts.learningEngagementQueue}`);
   log(`  Analytics Partitions:  ${counts.contentAnalyticsPartitions}`);
-  log(`  User Recents:          ${counts.userLearningRecents}`);
+  log(`  User Recents (preserved): ${counts.userLearningRecents}`);
   log(`  Viewer Signals:        ${counts.learningPopularityViewerSignals}`);
   log(`  Popularity Signals:    ${counts.learningPopularitySignals}`);
   log(`  Popularity Counters:   ${counts.learningPopularityCounters}`);
@@ -174,10 +174,8 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.irtScaleItems;
   const totalDerived =
     counts.contentSearch +
-    counts.learningViews +
     counts.learningEngagementQueue +
     counts.contentAnalyticsPartitions +
-    counts.userLearningRecents +
     counts.learningPopularityViewerSignals +
     counts.learningPopularitySignals +
     counts.learningPopularityCounters +
@@ -193,7 +191,10 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.audioContentSources +
     counts.contentAudios;
   const totalPreserved =
-    counts.learningProgramSources + counts.learningPrograms;
+    counts.learningProgramSources +
+    counts.learningPrograms +
+    counts.learningViews +
+    counts.userLearningRecents;
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);
   log(`  Total runtime items:  ${totalRuntime}`);

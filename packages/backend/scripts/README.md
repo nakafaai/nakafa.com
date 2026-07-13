@@ -126,6 +126,10 @@ pnpm --filter @repo/backend sync:prod:verify
 
 ### Reset (Start Fresh)
 
+This rebuilds synced content and resettable runtime projections. Durable learning
+views and Continue Learning recents are preserved across the reset and rejoin the
+current content routes after sync.
+
 ```bash
 # See what would be deleted (dry run)
 pnpm --filter @repo/backend sync:reset
@@ -152,11 +156,11 @@ pnpm --filter @repo/backend sync:prod:reset --force
 
 ### Reset Content Analytics
 
-Use this when content view history and derived analytics read models must be
-discarded and restarted under graph identity, such as after analytics projection
-shape changes. It clears content views, analytics queue rows, partition leases,
-popularity counts, and trending buckets. New product traffic repopulates these
-tables after strict code is deployed.
+Use this when rebuildable analytics projections must be restarted, such as after
+an analytics projection shape change. It clears analytics queue rows, partition
+leases, popularity counts, and trending buckets. Durable learning views and the
+Continue Learning read model are preserved. If their identity contract changes,
+use an explicit backed-up migration instead of this generic reset.
 
 ```bash
 # Preview deletion

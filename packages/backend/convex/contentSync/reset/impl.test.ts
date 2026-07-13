@@ -15,7 +15,7 @@ const canonicalContext = {
 } as const;
 
 describe("contentSync/reset/impl", () => {
-  it("deletes runtime and analytics rows through bounded reset batches", async () => {
+  it("deletes rebuildable rows while preserving durable learner history", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(seedDerivedRuntimeRows);
@@ -25,12 +25,10 @@ describe("contentSync/reset/impl", () => {
     const publicRouteStateDelete = await t.mutation(
       deletePublicRouteSyncStateBatch
     );
-    const viewDelete = await t.mutation(deleteLearningViewsBatch);
     const queueDelete = await t.mutation(deleteLearningEngagementQueueBatch);
     const partitionDelete = await t.mutation(
       deleteContentAnalyticsPartitionsBatch
     );
-    const recentsDelete = await t.mutation(deleteUserLearningRecentsBatch);
     const viewerSignalsDelete = await t.mutation(
       deleteLearningPopularityViewerSignalsBatch
     );
@@ -49,10 +47,8 @@ describe("contentSync/reset/impl", () => {
     expect(routeDelete).toEqual({ deleted: 1, hasMore: false });
     expect(publicRouteDelete).toEqual({ deleted: 1, hasMore: false });
     expect(publicRouteStateDelete).toEqual({ deleted: 1, hasMore: false });
-    expect(viewDelete).toEqual({ deleted: 1, hasMore: false });
     expect(queueDelete).toEqual({ deleted: 1, hasMore: false });
     expect(partitionDelete).toEqual({ deleted: 1, hasMore: false });
-    expect(recentsDelete).toEqual({ deleted: 1, hasMore: false });
     expect(viewerSignalsDelete).toEqual({ deleted: 1, hasMore: false });
     expect(popularitySignalsDelete).toEqual({ deleted: 1, hasMore: false });
     expect(popularityCountersDelete).toEqual({ deleted: 1, hasMore: false });
@@ -71,13 +67,18 @@ describe("contentSync/reset/impl", () => {
       learningPopularityCounters: [],
       learningPopularitySignals: [],
       learningPopularityViewerSignals: [],
-      learningViews: [],
+      learningViews: [expect.objectContaining({ deviceId: "device-1" })],
       learningPlanItems: [],
       publicRoutes: [],
       publicRouteSyncState: [],
       routes: [],
       surahs: [],
-      userLearningRecents: [],
+      userLearningRecents: [
+        expect.objectContaining({
+          contextKey: "canonical",
+          title: "Al-Fatihah",
+        }),
+      ],
       verses: [],
     });
   });
@@ -345,11 +346,6 @@ async function deletePublicRouteSyncStateBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "publicRouteSyncState");
 }
 
-/** Deletes one learning view reset batch through the shared reset helper. */
-async function deleteLearningViewsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "learningViews");
-}
-
 /** Deletes one learning engagement queue reset batch. */
 async function deleteLearningEngagementQueueBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "learningEngagementQueue");
@@ -358,11 +354,6 @@ async function deleteLearningEngagementQueueBatch(ctx: MutationCtx) {
 /** Deletes one content analytics partition reset batch. */
 async function deleteContentAnalyticsPartitionsBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "contentAnalyticsPartitions");
-}
-
-/** Deletes one signed-in Continue Learning reset batch. */
-async function deleteUserLearningRecentsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "userLearningRecents");
 }
 
 /** Deletes one daily viewer popularity signal reset batch. */

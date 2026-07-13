@@ -33,9 +33,6 @@ export const deleteContentSearchBatch = internalMutation({
   returns: batchDeleteResultValidator,
   handler: deleteContentSearchRows,
 });
-/** Delete one bounded batch of stored learning view rows. */
-export const deleteLearningViewsBatch =
-  createBatchDeleteMutation("learningViews");
 /** Delete one bounded batch of queued learning engagement events. */
 export const deleteLearningEngagementQueueBatch = createBatchDeleteMutation(
   "learningEngagementQueue"
@@ -43,11 +40,6 @@ export const deleteLearningEngagementQueueBatch = createBatchDeleteMutation(
 /** Delete one bounded batch of analytics partition checkpoint rows. */
 export const deleteContentAnalyticsPartitionsBatch = createBatchDeleteMutation(
   "contentAnalyticsPartitions"
-);
-
-/** Delete one bounded batch of graph-backed user learning recents rows. */
-export const deleteUserLearningRecentsBatch = createBatchDeleteMutation(
-  "userLearningRecents"
 );
 
 /** Delete one bounded batch of graph-backed learning popularity signal rows. */

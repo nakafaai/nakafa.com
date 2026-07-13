@@ -49,7 +49,7 @@ const contentRoutePageItemValidator = v.object({
 
 const tables = {
   /**
-   * Graph-backed learning engagement read model.
+   * Durable graph-backed learning engagement history.
    * One record per anonymous device or authenticated user-device for each
    * canonical asset and verified context.
    * `route` is a display/navigation projection; `content_id` is the graph asset ID.
@@ -124,9 +124,10 @@ const tables = {
   }).index("by_partition_and_insertedAt", ["partition", "insertedAt"]),
 
   /**
-   * Continue Learning read model ranked by the learner's latest verified view.
-   * One record per signed-in learner and canonical asset. Context fields store
-   * the latest validated resume path, but never define item identity.
+   * Durable user-facing Continue Learning projection ranked by the learner's
+   * latest verified view. One record per signed-in learner and canonical asset.
+   * Context fields store the latest validated resume path, but never define item
+   * identity. Generic content and analytics resets must preserve these rows.
    */
   userLearningRecents: defineTable({
     ...learningGraphIdentityValidator.fields,
