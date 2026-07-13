@@ -19,6 +19,7 @@ import {
   isRenderableCurriculumLevel,
   readCurriculumRouteIconKey,
 } from "@repo/contents/_types/route/curriculum";
+import { addCurriculumMaterialContextOwnership } from "@repo/contents/_types/route/curriculum/context";
 import {
   getParentPath,
   lastPathSegmentSync,
@@ -127,7 +128,9 @@ export function readStaticPublicCurriculumRoutes() {
     }
   }
 
-  return routes.sort(compareCurriculumRouteOrder);
+  return addCurriculumMaterialContextOwnership(routes).sort(
+    compareCurriculumRouteOrder
+  );
 }
 
 /** Indexes default material topic rows for pure static curriculum projection. */

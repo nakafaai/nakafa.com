@@ -10,6 +10,7 @@ import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
 import type { LearningProgram } from "@repo/contents/_types/program/schema";
 import { createTopicRouteByMaterialKey } from "@repo/contents/_types/route/content";
+import { addCurriculumMaterialContextOwnership } from "@repo/contents/_types/route/curriculum/context";
 import { InvalidPublicRouteSourceError } from "@repo/contents/_types/route/error";
 import type { RouteInputs } from "@repo/contents/_types/route/input";
 import {
@@ -149,7 +150,7 @@ export const listPublicCurriculumRoutes = Effect.fn(
     }
   }
 
-  return yield* uniqueRoutes(routes);
+  return yield* uniqueRoutes(addCurriculumMaterialContextOwnership(routes));
 });
 
 /**

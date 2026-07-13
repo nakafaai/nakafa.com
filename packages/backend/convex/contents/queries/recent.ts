@@ -3,6 +3,7 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
 import { toLearningContextQuery } from "@repo/backend/convex/contents/context";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
+import { resolveLearningContext } from "@repo/backend/convex/contents/views/context";
 import {
   getUnknownErrorMessage,
   runConvexProgram,
@@ -151,11 +152,25 @@ const toRecentlyViewedSubject = Effect.fn(
     return;
   }
 
+  const context = yield* resolveLearningContext(
+    db,
+    route,
+    row.contextMode === "placement" &&
+      row.contextProgramKey &&
+      row.contextNodeKey
+      ? {
+          mode: "placement",
+          nodeKey: row.contextNodeKey,
+          programKey: row.contextProgramKey,
+        }
+      : undefined
+  ).pipe(Effect.mapError(toRecentLearningIoError));
+
   return {
     ...toPublicContentRef(route),
-    contextKey: row.contextKey,
+    contextKey: context.contextKey,
     description: route.description ?? "",
-    href: `/${cleanSlug(route.route)}${toLearningContextQuery(row)}`,
+    href: `/${cleanSlug(route.route)}${toLearningContextQuery(context)}`,
     lastViewedAt: row.lastViewedAt,
     materialDomain: route.materialDomain,
     title: route.title,

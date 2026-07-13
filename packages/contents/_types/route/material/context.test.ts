@@ -1,5 +1,6 @@
 import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
 import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
+import { addCurriculumMaterialContextOwnership } from "@repo/contents/_types/route/curriculum/context";
 import {
   projectMaterialContextToLocale,
   readMaterialContextHint,
@@ -16,6 +17,12 @@ describe("material route context", () => {
     const contentRoutes = Effect.runSync(listPublicContentRoutes());
     const curriculumRoutes = Effect.runSync(listPublicCurriculumRoutes());
     const refs = listMaterialContextRefs({ contentRoutes, curriculumRoutes });
+    const placementRoute = curriculumRoutes.find(
+      (candidate) =>
+        candidate.locale === "id" &&
+        candidate.nodeKey ===
+          "class-10-mathematics-linear-equation-inequality-material"
+    );
     const route = contentRoutes.find(
       (candidate) =>
         candidate.kind === "subject-lesson" &&
@@ -25,6 +32,22 @@ describe("material route context", () => {
     );
 
     expect(route).toBeDefined();
+    expect(
+      curriculumRoutes
+        .filter((candidate) => candidate.materialKey)
+        .every(
+          (candidate) =>
+            candidate.materialContextNodeKey &&
+            candidate.materialContextParentPath &&
+            candidate.materialContextPublicPath
+        )
+    ).toBe(true);
+    expect(placementRoute).toMatchObject({
+      materialContextNodeKey: "class-10-mathematics-linear-equation-inequality",
+      materialContextParentPath: "kurikulum/merdeka/kelas-10/matematika",
+      materialContextPublicPath:
+        "kurikulum/merdeka/kelas-10/matematika/sistem-persamaan-dan-pertidaksamaan-linear",
+    });
 
     if (!route) {
       return;
@@ -275,6 +298,9 @@ describe("material route context", () => {
         curriculumRoutes: [detachedRoute],
       })
     ).toEqual([]);
+    expect(addCurriculumMaterialContextOwnership([detachedRoute])).toEqual([
+      detachedRoute,
+    ]);
     expect(
       listMaterialContextRefs({
         contentRoutes,

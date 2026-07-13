@@ -3,7 +3,7 @@ import {
   isMaterialContentRoute,
   isMaterialLessonRoute,
 } from "@repo/contents/_types/route/content";
-import { readCurriculumRouteByPublicPath } from "@repo/contents/_types/route/curriculum";
+import { readCurriculumMaterialContext } from "@repo/contents/_types/route/curriculum/context";
 import { comparePublicRouteOrder } from "@repo/contents/_types/route/path";
 import type {
   PublicContentRoute,
@@ -29,11 +29,6 @@ export interface MaterialContextIdentity {
 interface MaterialContextIndexInput {
   contentRoutes: readonly PublicContentRoute[];
   curriculumRoutes: readonly PublicCurriculumRoute[];
-}
-
-interface MaterialContextRoute {
-  groupRoute: PublicCurriculumRoute;
-  parentRoute: PublicCurriculumRoute;
 }
 
 /**
@@ -70,7 +65,7 @@ export function listMaterialContextRefs({
       continue;
     }
 
-    const contextRoute = readMaterialContextRoute(
+    const contextRoute = readCurriculumMaterialContext(
       curriculumRoute,
       curriculumRoutes
     );
@@ -190,45 +185,4 @@ function readMaterialLessonRoutes({
     )
     .slice()
     .sort(comparePublicRouteOrder);
-}
-
-/**
- * Walks from a curriculum material reference to the card-list page that owns it.
- *
- * The returned parent route is where the header link should send learners back;
- * missing parents make the optional context unusable instead of inventing one.
- */
-function readMaterialContextRoute(
-  route: PublicCurriculumRoute,
-  routes: readonly PublicCurriculumRoute[]
-): MaterialContextRoute | undefined {
-  let current: PublicCurriculumRoute | undefined = route;
-
-  while (current?.parentPath) {
-    const parent = readCurriculumRouteByPublicPath(
-      routes,
-      current.locale,
-      current.parentPath
-    );
-
-    if (!parent) {
-      return;
-    }
-
-    if (isCurriculumCardListRoute(parent)) {
-      return {
-        groupRoute: current,
-        parentRoute: parent,
-      };
-    }
-
-    current = parent;
-  }
-
-  return;
-}
-
-/** Detects curriculum pages that render material cards for learners. */
-function isCurriculumCardListRoute(route: PublicCurriculumRoute) {
-  return route.level === "subject" || route.level === "course";
 }
