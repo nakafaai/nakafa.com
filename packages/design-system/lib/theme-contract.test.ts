@@ -20,7 +20,7 @@ import {
   SEMANTIC_COLOR_TOKENS,
   STANDALONE_TEXT_ROLE_PAIRS,
   TEXT_ROLE_PAIRS,
-  THEME_METADATA_TOKENS,
+  THEME_METADATA_PROPERTIES,
   ThemeStyleSourceLoadError,
 } from "./theme-contract";
 
@@ -253,12 +253,33 @@ describe("theme profile contract", () => {
       (property) =>
         !(
           REQUIRED_THEME_TOKENS.includes(property) ||
-          THEME_METADATA_TOKENS.includes(property)
+          THEME_METADATA_PROPERTIES.includes(property)
         )
     );
 
     expect(coreProperties.sort()).toEqual([...REQUIRED_THEME_TOKENS].sort());
     expect(unexpectedProperties).toEqual([]);
+  });
+
+  it.each(profiles)("$name owns its concrete color scheme", (profile) => {
+    const rule = findTopLevelRule(profile.root, profile.selector);
+    expect(rule).toBeDefined();
+    if (!rule) {
+      return;
+    }
+
+    const definition = themes.find((theme) => theme.value === profile.name);
+    expect(definition).toBeDefined();
+    if (!definition) {
+      return;
+    }
+
+    const colorSchemes = rule.nodes.flatMap((node) =>
+      node.type === "decl" && node.prop === "color-scheme"
+        ? [node.value.trim()]
+        : []
+    );
+    expect(colorSchemes).toEqual([definition.appearance]);
   });
 
   it("maps every status pair into Tailwind's inline theme", () => {

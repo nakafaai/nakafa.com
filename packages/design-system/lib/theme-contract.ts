@@ -90,8 +90,9 @@ export const REQUIRED_THEME_TOKENS = [
   "--shadow-2xl",
 ];
 
-/** Theme-local metadata allowed alongside the 47 required core declarations. */
-export const THEME_METADATA_TOKENS = [
+/** Theme-local properties allowed alongside the 47 required core declarations. */
+export const THEME_METADATA_PROPERTIES = [
+  "color-scheme",
   "--font-mono",
   "--font-sans",
   "--font-serif",

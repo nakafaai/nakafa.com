@@ -51,6 +51,7 @@
   --shadow-xl:
     0px 1px 4px 0px hsl(0 0% 0% / 0.05), 0px 8px 10px -1px hsl(0 0% 0% / 0.05);
   --shadow-2xl: 0px 1px 4px 0px hsl(0 0% 0% / 0.13);
+  color-scheme: light;
 }
 
 .claude {
@@ -105,6 +106,7 @@
   --shadow-xl:
     0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  color-scheme: light;
 }
 
 .tree {
@@ -165,6 +167,7 @@
     3px 3px 2px 0px hsl(88 22% 35% / 0.15),
     3px 8px 10px -1px hsl(88 22% 35% / 0.15);
   --shadow-2xl: 3px 3px 2px 0px hsl(88 22% 35% / 0.38);
+  color-scheme: light;
 }
 
 .sunset {
@@ -220,6 +223,7 @@
   --shadow-xl:
     0px 6px 12px -3px hsl(0 0% 0% / 0.09), 0px 8px 10px -4px hsl(0 0% 0% / 0.09);
   --shadow-2xl: 0px 6px 12px -3px hsl(0 0% 0% / 0.22);
+  color-scheme: light;
 }
 
 .nature {
@@ -274,6 +278,7 @@
   --shadow-xl:
     0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  color-scheme: light;
 }
 
 .caffeine {
@@ -328,6 +333,7 @@
   --shadow-xl:
     0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  color-scheme: light;
 }
 
 .perpetuity {
@@ -388,6 +394,7 @@
     1px 1px 2px 0px hsl(180 70% 60% / 0.2),
     1px 8px 10px -1px hsl(180 70% 60% / 0.2);
   --shadow-2xl: 1px 1px 2px 0px hsl(180 70% 60% / 0.5);
+  color-scheme: light;
 }
 
 .neo {
@@ -442,6 +449,7 @@
   --shadow-xl:
     4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 8px 10px -1px hsl(0 0% 0% / 1);
   --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 2.5);
+  color-scheme: light;
 }
 
 .dreamy {
@@ -497,6 +505,7 @@
   --shadow-xl:
     0px 8px 16px -4px hsl(0 0% 0% / 0.08), 0px 8px 10px -5px hsl(0 0% 0% / 0.08);
   --shadow-2xl: 0px 8px 16px -4px hsl(0 0% 0% / 0.2);
+  color-scheme: light;
 }
 
 .pinky {
@@ -557,6 +566,7 @@
     0px 3px 0px 0px hsl(330 70% 30% / 0.18),
     0px 8px 10px -1px hsl(330 70% 30% / 0.18);
   --shadow-2xl: 0px 3px 0px 0px hsl(330 70% 30% / 0.45);
+  color-scheme: light;
 }
 
 .retro {
@@ -617,6 +627,7 @@
     2px 2px 4px 0px hsl(196 83% 10% / 0.15),
     2px 8px 10px -1px hsl(196 83% 10% / 0.15);
   --shadow-2xl: 2px 2px 4px 0px hsl(196 83% 10% / 0.38);
+  color-scheme: light;
 }
 
 .cosmic {
@@ -680,6 +691,7 @@
     0px 4px 10px 0px hsl(240 30% 25% / 0.12),
     0px 8px 10px -1px hsl(240 30% 25% / 0.12);
   --shadow-2xl: 0px 4px 10px 0px hsl(240 30% 25% / 0.3);
+  color-scheme: light;
 }
 
 .tangerine {
@@ -735,6 +747,7 @@
   --shadow-xl:
     0px 1px 3px 0px hsl(0 0% 0% / 0.1), 0px 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.25);
+  color-scheme: light;
 }
 
 .solar {
@@ -795,6 +808,7 @@
     0px 2px 3px 0px hsl(28 18% 25% / 0.18),
     0px 8px 10px -1px hsl(28 18% 25% / 0.18);
   --shadow-2xl: 0px 2px 3px 0px hsl(28 18% 25% / 0.45);
+  color-scheme: light;
 }
 
 .windy {
@@ -849,6 +863,7 @@
   --shadow-xl:
     0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  color-scheme: light;
 }
 
 .bubblegum {
@@ -909,6 +924,7 @@
     3px 3px 0px 0px hsl(325.78 58.18% 56.86% / 1),
     3px 8px 10px -1px hsl(325.78 58.18% 56.86% / 1);
   --shadow-2xl: 3px 3px 0px 0px hsl(325.78 58.18% 56.86% / 2.5);
+  color-scheme: light;
 }
 
 .vintage {
@@ -969,6 +985,7 @@
     2px 3px 5px 0px hsl(28 13% 20% / 0.12),
     2px 8px 10px -1px hsl(28 13% 20% / 0.12);
   --shadow-2xl: 2px 3px 5px 0px hsl(28 13% 20% / 0.3);
+  color-scheme: light;
 }
 
 .cute {
@@ -1023,6 +1040,7 @@
   --shadow-xl:
     0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  color-scheme: light;
 }
 
 .bean {
@@ -1083,6 +1101,7 @@
     2px 2px 0px 0px hsl(20 18% 51% / 0.11),
     2px 8px 10px -1px hsl(20 18% 51% / 0.11);
   --shadow-2xl: 2px 2px 0px 0px hsl(20 18% 51% / 0.28);
+  color-scheme: light;
 }
 
 .twitter {
@@ -1143,6 +1162,7 @@
     0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0),
     0px 8px 10px -1px hsl(202.82 89.12% 53.14% / 0);
   --shadow-2xl: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0);
+  color-scheme: light;
 }
 
 .ghibli {
@@ -1204,6 +1224,7 @@
     1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 1),
     1px 8px 10px -1px rgb(from var(--shadow-color) r g b / 1);
   --shadow-2xl: 1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 1);
+  color-scheme: light;
 }
 
 .tokyo {
@@ -1265,6 +1286,7 @@
     1px 1px 6px 0px rgb(from var(--shadow-color) r g b / 0.1),
     1px 8px 10px -1px rgb(from var(--shadow-color) r g b / 0.1);
   --shadow-2xl: 1px 1px 6px 0px rgb(from var(--shadow-color) r g b / 0.1);
+  color-scheme: light;
 }
 
 .notebook {
@@ -1320,6 +1342,7 @@
   --shadow-xl:
     1px 4px 5px 0px hsl(0 0% 0% / 0.03), 1px 8px 10px -1px hsl(0 0% 0% / 0.03);
   --shadow-2xl: 1px 4px 5px 0px hsl(0 0% 0% / 0.07);
+  color-scheme: light;
 }
 
 .popsicle {
@@ -1380,6 +1403,7 @@
     0px 0px 0px 0px hsl(0 0% 10.1961% / 0.05),
     0px 8px 10px -1px hsl(0 0% 10.1961% / 0.05);
   --shadow-2xl: 0px 0px 0px 0px hsl(0 0% 10.1961% / 0.13);
+  color-scheme: light;
 }
 
 .luxury {
@@ -1440,6 +1464,7 @@
     1px 1px 16px -2px hsl(0 63% 18% / 0.12),
     1px 8px 10px -3px hsl(0 63% 18% / 0.12);
   --shadow-2xl: 1px 1px 16px -2px hsl(0 63% 18% / 0.3);
+  color-scheme: light;
 }
 
 .shell {
@@ -1500,6 +1525,7 @@
     2px 2px 4px 0px hsl(255 86% 66% / 0.2),
     2px 8px 10px -1px hsl(255 86% 66% / 0.2);
   --shadow-2xl: 2px 2px 4px 0px hsl(255 86% 66% / 0.5);
+  color-scheme: light;
 }
 
 .matcha {
@@ -1560,6 +1586,7 @@
     0px 1px 2px 0px hsl(225 27.7778% 14.1176% / 0.04),
     0px 8px 10px -1px hsl(225 27.7778% 14.1176% / 0.04);
   --shadow-2xl: 0px 1px 2px 0px hsl(225 27.7778% 14.1176% / 0.1);
+  color-scheme: light;
 }
 
 .pacman {
@@ -1614,6 +1641,7 @@
   --shadow-xl:
     0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 8px 10px -1px hsl(0 0% 0% / 0);
   --shadow-2xl: 0px 0px 0px 0px hsl(0 0% 0% / 0);
+  color-scheme: light;
 }
 
 .zelda {
@@ -1668,4 +1696,5 @@
   --shadow-xl:
     0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 8px 10px -1px hsl(0 0% 0% / 0);
   --shadow-2xl: 0px 0px 0px 0px hsl(0 0% 0% / 0);
+  color-scheme: light;
 }
