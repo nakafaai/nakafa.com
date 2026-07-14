@@ -299,7 +299,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
 
                 <HugeIcons
                   className={cn(
-                    "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out",
+                    "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out group-hover:text-accent-foreground",
                     !!isSelected && "opacity-100"
                   )}
                   icon={Tick01Icon}

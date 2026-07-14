@@ -65,7 +65,7 @@ function Slider<Value extends number | readonly number[]>({
         {thumbKeys.map((thumbKey, thumbIndex) => (
           <SliderPrimitive.Thumb
             aria-label={ariaLabel}
-            className="block size-4 shrink-0 cursor-grab select-none rounded-full border border-primary bg-background shadow-sm ring-ring transition-[color,box-shadow] hover:ring-4 focus-visible:outline-hidden focus-visible:ring-4 data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-dragging:cursor-grabbing data-disabled:opacity-50"
+            className="block size-4 shrink-0 cursor-grab select-none rounded-full border border-primary bg-background shadow-sm ring-ring/50 transition-[color,box-shadow] hover:ring-4 focus-visible:outline-hidden focus-visible:ring-4 focus-visible:ring-ring data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-dragging:cursor-grabbing data-disabled:opacity-50"
             data-slot="slider-thumb"
             index={thumbIndex}
             key={thumbKey}

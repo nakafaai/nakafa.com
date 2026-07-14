@@ -1,23 +1,27 @@
 "use client";
 
-import type { CodeBlockData } from "@repo/design-system/components/code-block";
 import {
   CodeBlock,
+  type CodeBlockData,
+} from "@repo/design-system/components/code-block";
+import {
   CodeBlockBody,
-  CodeBlockContent,
-  CodeBlockCopyButton,
+  CodeBlockItem,
+} from "@repo/design-system/components/code-block/body";
+import { CodeBlockContent } from "@repo/design-system/components/code-block/content";
+import { CodeBlockCopyButton } from "@repo/design-system/components/code-block/copy-button";
+import {
   CodeBlockFilename,
   CodeBlockFiles,
   CodeBlockHeader,
-  CodeBlockItem,
   CodeBlockSelect,
   CodeBlockSelectContent,
   CodeBlockSelectItem,
   CodeBlockSelectTrigger,
   CodeBlockSelectValue,
-} from "@repo/design-system/components/code-block";
-import type { BundledLanguage } from "shiki";
+} from "@repo/design-system/components/code-block/header";
 
+/** Composes authored MDX code sources into Nakafa's tabbed code block. */
 export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
   return (
     <CodeBlock
@@ -50,7 +54,7 @@ export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
       <CodeBlockBody>
         {(item) => (
           <CodeBlockItem key={item.language} value={item.language}>
-            <CodeBlockContent language={item.language as BundledLanguage}>
+            <CodeBlockContent language={item.language}>
               {item.code}
             </CodeBlockContent>
           </CodeBlockItem>

@@ -5,8 +5,8 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@repo/design-system/components/ai/conversation";
-import type { PromptInputMessage } from "@repo/design-system/components/ai/input";
 import { Message } from "@repo/design-system/components/ai/message";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input";
 import {
   usePathname,
   useRouter,

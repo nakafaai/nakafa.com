@@ -31,6 +31,11 @@ const VELOCITY_TICK_STEP = getNiceTickStep(MAX_OBSERVED_VELOCITY);
 const MAX_VELOCITY = getAxisMaximum(MAX_OBSERVED_VELOCITY, VELOCITY_TICK_STEP);
 const TIME_TICKS = getTicks(MAX_TIME, 1);
 const VELOCITY_TICKS = getTicks(MAX_VELOCITY, VELOCITY_TICK_STEP);
+const SCENARIO_CHART_COLORS = {
+  "from-rest": "var(--chart-1)",
+  "speed-up": "var(--chart-2)",
+  brake: "var(--chart-3)",
+} satisfies Record<GlbbScenario["id"], string>;
 
 export function VelocityTimeGraph({
   labels,
@@ -40,12 +45,13 @@ export function VelocityTimeGraph({
   scenario: GlbbScenario;
 }) {
   const finalVelocity = getFinalVelocity(scenario);
+  const scenarioChartColor = SCENARIO_CHART_COLORS[scenario.id];
   const chartConfig = {
     velocity: {
       label: labels.velocityAxis,
       colors: {
-        light: [scenario.color],
-        dark: [scenario.color],
+        light: [scenarioChartColor],
+        dark: [scenarioChartColor],
       },
     },
   } satisfies ChartConfig;
@@ -98,6 +104,7 @@ export function VelocityTimeGraph({
           fillOpacity: 0.22,
           name: labels.velocityAxis,
           strokeLinecap: "round",
+          strokeOpacity: 1,
           strokeWidth: 2,
         }}
         dataKey="velocity"

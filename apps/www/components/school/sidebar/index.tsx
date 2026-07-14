@@ -8,6 +8,7 @@ import {
 import {
   SidebarMenu,
   SidebarMenuButton,
+  SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
@@ -64,7 +65,7 @@ function SchoolSwitcherFallback() {
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <p className="truncate font-medium">Nakafa</p>
-            <span className="truncate text-xs">School</span>
+            <SidebarMenuDescription>School</SidebarMenuDescription>
           </div>
           <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
         </SidebarMenuButton>

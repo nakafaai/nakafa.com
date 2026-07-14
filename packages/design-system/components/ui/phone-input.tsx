@@ -126,7 +126,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
         <span className="text-muted-foreground">
           <HugeIcons
             aria-hidden="true"
-            className="ml-auto h-4 w-4 shrink-0 opacity-50"
+            className="ml-auto h-4 w-4 shrink-0 opacity-80"
             icon={ArrowDown01Icon}
           />
         </span>

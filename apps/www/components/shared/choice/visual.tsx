@@ -29,7 +29,7 @@ export function ChoiceCardIcon({ icon }: { icon: IconSvgElement }) {
   return (
     <HugeIcons
       aria-hidden
-      className="relative size-7 rounded-sm bg-background p-0.5 text-foreground shadow-sm"
+      className="relative size-6 text-background drop-shadow-md"
       icon={icon}
     />
   );

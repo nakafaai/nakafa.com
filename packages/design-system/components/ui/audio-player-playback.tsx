@@ -7,6 +7,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { AudioPlayerItem } from "@repo/design-system/lib/audio-player";
 import { runAudioPlayerProgram } from "@repo/design-system/lib/audio-player-boundary";
 import { cn } from "@repo/design-system/lib/utils";
+import { Effect, Fiber } from "effect";
 import { type ComponentProps, useEffect } from "react";
 
 interface SpinnerProps {
@@ -18,7 +19,7 @@ function Spinner({ className }: SpinnerProps) {
     <output
       aria-label="Loading"
       className={cn(
-        "size-3.5 animate-spin rounded-full border-2 border-muted border-t-foreground",
+        "size-3.5 animate-spin rounded-full border-2 border-current/30 border-t-current",
         className
       )}
     >
@@ -138,7 +139,14 @@ export function AudioPlayerInitializer<TData = unknown>({
   const { setActiveItem } = useAudioPlayer();
 
   useEffect(() => {
-    runAudioPlayerProgram(setActiveItem(item), "audio-player-initializer");
+    const fiber = runAudioPlayerProgram(
+      setActiveItem(item),
+      "audio-player-initializer"
+    );
+
+    return () => {
+      Effect.runFork(Fiber.interrupt(fiber));
+    };
   }, [item, setActiveItem]);
 
   return null;

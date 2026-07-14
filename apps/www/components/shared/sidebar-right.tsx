@@ -9,6 +9,7 @@ import {
 import {
   SidebarMenu,
   SidebarMenuButton,
+  SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
@@ -58,7 +59,9 @@ function SidebarRightHeader({
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{header.title}</span>
               {!!header.description && (
-                <span className="truncate text-xs">{header.description}</span>
+                <SidebarMenuDescription>
+                  {header.description}
+                </SidebarMenuDescription>
               )}
             </div>
           </SidebarMenuButton>

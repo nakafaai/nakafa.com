@@ -70,7 +70,7 @@ export function AudioPlayerProgress({
           className="relative flex size-0 items-center justify-center opacity-0 focus-visible:opacity-100 focus-visible:outline-none group-hover/player:opacity-100 data-disabled:pointer-events-none data-disabled:opacity-50"
           data-slot="slider-thumb"
         >
-          <div className="absolute size-3 rounded-full bg-foreground" />
+          <div className="absolute size-3 rounded-full border border-primary bg-background" />
         </SliderPrimitive.Thumb>
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>

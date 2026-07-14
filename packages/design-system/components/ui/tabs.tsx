@@ -37,7 +37,7 @@ export function TabsList({
         "data-[orientation=vertical]:flex-col",
         variant === "default"
           ? "rounded-lg bg-muted p-0.5 text-muted-foreground"
-          : "data-[orientation=vertical]:px-1 data-[orientation=horizontal]:py-1 *:data-[slot=tabs-tab]:hover:bg-accent",
+          : "data-[orientation=vertical]:px-1 data-[orientation=horizontal]:py-1 *:data-[slot=tabs-tab]:hover:bg-accent *:data-[slot=tabs-tab]:hover:text-accent-foreground",
         className
       )}
       data-slot="tabs-list"

@@ -25,7 +25,7 @@ export function ReplyIndicator() {
   }
 
   return (
-    <div className="flex items-center gap-2 overflow-hidden rounded-t-md border-x border-t bg-[color-mix(in_oklch,var(--secondary)_10%,var(--background))] px-3 py-2 text-sm">
+    <div className="flex items-center gap-2 overflow-hidden rounded-t-md border-x border-t bg-[color-mix(in_oklch,var(--secondary)_3%,var(--background))] px-3 py-2 text-sm">
       <HugeIcons
         className="size-4 text-muted-foreground"
         icon={ArrowTurnBackwardIcon}

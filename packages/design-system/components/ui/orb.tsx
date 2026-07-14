@@ -34,7 +34,7 @@ interface OrbProps {
  * Renders the animated voice orb canvas used for listening and speaking states.
  */
 export function Orb({
-  colors = ["#CADCFC", "#A0B9D1"],
+  colors = ["rgb(202, 220, 252)", "rgb(160, 185, 209)"],
   colorsRef,
   resizeDebounce = 100,
   seed,
@@ -287,10 +287,14 @@ function splitmix32(initialSeed: number) {
     t ^= t >>> 15;
     t = Math.imul(t, 0x73_5a_2d_97);
     // biome-ignore lint/suspicious/noBitwiseOperators: <Required for PRNG>
-    return ((t ^ (t >>> 15)) >>> 0) / 4_294_967_296;
+    const result = ((t ^ (t >>> 15)) >>> 0) / 4_294_967_296;
+    return result;
   };
 }
 
+/**
+ * Clamps a numeric value into the inclusive 0..1 range.
+ */
 function clamp01(n: number) {
   if (!Number.isFinite(n)) {
     return 0;

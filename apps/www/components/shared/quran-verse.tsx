@@ -24,7 +24,7 @@ const verseButtonClassName = buttonVariants({
 
 const audioButtonClassName = cn(
   verseButtonClassName,
-  "group data-[state=playing]:border-primary data-[state=playing]:bg-primary data-[state=playing]:text-primary-foreground data-[state=playing]:hover:bg-primary data-[state=playing]:hover:text-primary-foreground data-[state=playing]:hover:shadow-md"
+  "group data-[state=playing]:border-primary data-[state=playing]:bg-primary data-[state=playing]:text-primary-foreground data-[state=playing]:hover:bg-[color-mix(in_oklch,var(--primary)_99%,var(--background))] data-[state=playing]:hover:text-primary-foreground data-[state=playing]:hover:shadow-md"
 );
 
 /**

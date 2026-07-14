@@ -5,15 +5,15 @@ import { DesignSystemProvider } from "@repo/design-system";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { fonts } from "@repo/design-system/lib/fonts";
-import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme-compatibility";
 import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { appViewport } from "@/lib/theme/viewport";
 
 /**
  * Builds locale-scoped root metadata for every page under `[locale]`.
@@ -131,22 +131,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Root viewport contract shared by every localized app route. */
-export const viewport: Viewport = {
-  themeColor: [
-    {
-      media: "(prefers-color-scheme: light)",
-      color: THEME_COMPATIBILITY_COLORS.light.background,
-    },
-    {
-      media: "(prefers-color-scheme: dark)",
-      color: THEME_COMPATIBILITY_COLORS.dark.background,
-    },
-  ],
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-  interactiveWidget: "resizes-visual",
-};
+export const viewport = appViewport;
 
 /** Prebuilds one root layout shell per configured next-intl locale. */
 export function generateStaticParams() {

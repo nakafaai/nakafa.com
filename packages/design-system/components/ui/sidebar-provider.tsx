@@ -12,6 +12,7 @@ import {
   persistSidebarState,
   SIDEBAR_COOKIE_NAME,
 } from "@repo/design-system/lib/sidebar-state";
+import { runSidebarStateProgram } from "@repo/design-system/lib/sidebar-state-boundary";
 import { cn } from "@repo/design-system/lib/utils";
 import { Effect } from "effect";
 import {
@@ -100,7 +101,7 @@ export function SidebarProvider({
         setUncontrolledOpen(openState);
       }
 
-      Effect.runSync(
+      runSidebarStateProgram(
         persistSidebarState({
           cookieName: cookieName ?? SIDEBAR_COOKIE_NAME,
           open: openState,

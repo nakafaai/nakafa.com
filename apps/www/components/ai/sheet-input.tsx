@@ -6,16 +6,16 @@ import {
   LeftToRightListBulletIcon,
   Quiz03Icon,
 } from "@hugeicons/core-free-icons";
+import { PromptInput } from "@repo/design-system/components/ai/input";
 import {
-  PromptInput,
-  type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
   PromptInputTools,
-} from "@repo/design-system/components/ai/input";
+} from "@repo/design-system/components/ai/input-controls";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input";
 import type { ChatStatus } from "ai";
 import { useTranslations } from "next-intl";
 

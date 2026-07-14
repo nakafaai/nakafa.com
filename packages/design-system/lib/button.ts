@@ -5,19 +5,20 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-xs hover:shadow-md",
+        default:
+          "bg-primary text-primary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--primary)_99%,var(--background))] hover:shadow-md",
         "default-outline":
-          "border border-primary bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] text-foreground shadow-xs hover:shadow-md",
+          "border border-primary bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--primary)_8%,var(--background))] hover:shadow-md",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-xs hover:shadow-md focus-visible:ring-destructive",
+          "bg-destructive text-destructive-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_99%,var(--background))] hover:shadow-md focus-visible:ring-destructive",
         "destructive-outline":
-          "border border-destructive bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] text-foreground shadow-xs hover:shadow-md",
+          "border border-destructive bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] hover:shadow-md",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-xs hover:shadow-md",
+          "bg-secondary text-secondary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] hover:shadow-md",
         "secondary-outline":
-          "border border-muted-foreground bg-[color-mix(in_oklch,var(--secondary)_5%,var(--background))] text-foreground shadow-xs hover:shadow-md",
+          "border border-muted-foreground bg-[color-mix(in_oklch,var(--secondary)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] hover:shadow-md",
         ghost:
           "hover:bg-accent hover:text-accent-foreground hover:[&_svg]:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",

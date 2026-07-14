@@ -42,12 +42,10 @@
         "files": [
           "components/ai/code-block.tsx",
           "components/code-block/index.tsx",
-          "components/code-block/server.tsx",
           "components/markdown/code.tsx",
           "json-ld/index.tsx",
           "packages/design-system/components/ai/code-block.tsx",
           "packages/design-system/components/code-block/index.tsx",
-          "packages/design-system/components/code-block/server.tsx",
           "packages/design-system/components/markdown/code.tsx",
           "packages/seo/json-ld/index.tsx"
         ],

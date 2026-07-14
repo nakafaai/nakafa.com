@@ -36,6 +36,23 @@ export function SidebarMenuItem({ className, ...props }: ComponentProps<"li">) {
   );
 }
 
+/**
+ * Renders secondary menu text while inheriting the button's base, hover, and
+ * active foreground instead of binding it to an unrelated page surface.
+ */
+export function SidebarMenuDescription(
+  props: Omit<ComponentProps<"span">, "className" | "color" | "style">
+) {
+  return (
+    <span
+      className="truncate text-xs"
+      data-sidebar="menu-description"
+      data-slot="sidebar-menu-description"
+      {...props}
+    />
+  );
+}
+
 const sidebarMenuButtonVariants = cva(
   "peer/menu-button flex w-full cursor-pointer items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-all ease-out hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-popup-open:hover:bg-sidebar-accent data-popup-open:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
@@ -43,7 +60,7 @@ const sidebarMenuButtonVariants = cva(
       variant: {
         default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         outline:
-          "border border-sidebar-border bg-background hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          "border border-input bg-background hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
       },
       size: {
         default: "h-8 text-sm",

@@ -14,11 +14,15 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { hasLocale } from "next-intl";
 import { Suspense } from "react";
+import { appViewport } from "@/lib/theme/viewport";
 
 export const metadata: Metadata = {
   title: "404 - Page Not Found",
   description: "The page you are looking for does not exist.",
 };
+
+/** Global 404 viewport contract shared with localized app documents. */
+export const viewport = appViewport;
 
 const dictionaries = { en, id };
 const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
@@ -35,7 +39,6 @@ async function getNotFoundLocale() {
   return routing.defaultLocale;
 }
 
-/** Renders the global localized 404 document under the shared theme policy. */
 export default function GlobalNotFound() {
   const fallbackMessages = dictionaries[routing.defaultLocale].NotFound;
 
@@ -46,7 +49,12 @@ export default function GlobalNotFound() {
       suppressHydrationWarning
     >
       <body>
-        <DesignSystemProvider>
+        <DesignSystemProvider
+          attribute="class"
+          defaultTheme="system"
+          disableTransitionOnChange
+          enableSystem
+        >
           <Suspense fallback={<NotFoundContent messages={fallbackMessages} />}>
             <LocalizedNotFoundContent />
           </Suspense>

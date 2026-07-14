@@ -9,7 +9,7 @@ export function runAudioPlayerProgram(
   program: Effect.Effect<void, AudioPlayerError>,
   source: string
 ) {
-  Effect.runFork(
+  return Effect.runFork(
     program.pipe(
       Effect.catchTags({
         AudioPlayerOperationError: (error) =>

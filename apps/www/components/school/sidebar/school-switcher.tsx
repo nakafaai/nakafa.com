@@ -27,6 +27,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenu,
   SidebarMenuButton,
+  SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useSidebar } from "@repo/design-system/components/ui/sidebar-provider";
@@ -75,9 +76,9 @@ export function SchoolSwitcher({
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <p className="truncate font-medium">{currentSchool.name}</p>
-                  <span className="truncate text-xs">
+                  <SidebarMenuDescription>
                     {t(currentSchool.type)}
-                  </span>
+                  </SidebarMenuDescription>
                 </div>
                 <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
               </SidebarMenuButton>

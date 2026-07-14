@@ -48,7 +48,7 @@ const toggleGroupItemLayoutVariants = cva("", {
     layout: {
       default:
         "group-data-[orientation=vertical]/toggle-group:w-full group-data-[orientation=vertical]/toggle-group:flex-none group-data-[orientation=vertical]/toggle-group:border-t-0 group-data-[orientation=horizontal]/toggle-group:border-l-0 group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:first:border-t group-data-[orientation=horizontal]/toggle-group:first:border-l",
-      grid: "rounded-none border-0 bg-background hover:bg-accent data-pressed:bg-accent",
+      grid: "rounded-none border-0 bg-background hover:bg-accent hover:text-accent-foreground data-pressed:bg-accent",
     },
   },
   defaultVariants: {

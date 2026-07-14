@@ -54,7 +54,7 @@ export function ForumHeader() {
 
   return (
     <div className="min-w-0 pb-3">
-      <div className="group flex items-start gap-3 border-primary border-l-2 bg-primary/5 p-4">
+      <div className="group flex items-start gap-3 border-primary border-l-2 bg-[color-mix(in_oklch,var(--accent)_3%,var(--background))] p-4">
         <Avatar className="size-8 shrink-0">
           <AvatarImage alt={userName} src={userImage} />
           <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
@@ -100,8 +100,6 @@ function ForumReactions() {
     return null;
   }
 
-  const myReactions = new Set(forum.myReactions);
-
   /** Toggles the current user's forum reaction without blocking transcript input. */
   const handleToggleReaction = (emoji: string) => {
     startTransition(() =>
@@ -126,7 +124,7 @@ function ForumReactions() {
   return (
     <div className="flex flex-wrap items-center gap-1">
       {forum.reactionUsers.map(({ emoji, count, reactors }) => {
-        const isMyReaction = myReactions.has(emoji);
+        const isMyReaction = forum.myReactions.includes(emoji);
         const moreCount = count - reactors.length;
 
         return (

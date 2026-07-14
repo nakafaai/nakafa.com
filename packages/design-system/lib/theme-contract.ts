@@ -32,20 +32,30 @@ export const NON_TEXT_ROLE_PAIRS = [
   ]),
   ["ring", "background", "focus indicator on the page surface"],
   ["ring", "card", "focus indicator on a card surface"],
+  ["ring", "popover", "focus indicator on a popover surface"],
   ["input", "background", "unchecked control on the page surface"],
   ["input", "card", "unchecked control on a card surface"],
+  ["input", "popover", "unchecked control on a popover surface"],
   ["sidebar-ring", "sidebar", "focus indicator on the sidebar surface"],
+  [
+    "sidebar-ring",
+    "background",
+    "focus indicator on a page-backed sidebar control",
+  ],
   ["sidebar-ring", "sidebar-accent", "focus indicator on active sidebar"],
 ];
 
-/** Semantic colors used directly as normal-sized text on page/card surfaces. */
+/** Semantic colors used directly as normal-sized text on common surfaces. */
 export const STANDALONE_TEXT_ROLE_PAIRS = [
+  ["foreground", "muted", "foreground text on a muted surface"],
   ["primary", "background", "primary-colored text on the page surface"],
   ["primary", "card", "primary-colored text on a card surface"],
   ["destructive", "background", "destructive text on the page surface"],
   ["destructive", "card", "destructive text on a card surface"],
+  ["destructive", "popover", "destructive text on a popover surface"],
   ["muted-foreground", "background", "muted text on the page surface"],
   ["muted-foreground", "card", "muted text on a card surface"],
+  ["muted-foreground", "popover", "muted text on a popover surface"],
 ];
 
 /** Complete semantic color surface shared by every concrete profile. */

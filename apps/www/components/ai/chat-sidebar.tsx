@@ -86,7 +86,7 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
 
         <SidebarMenu>
           <SidebarMenuItem>
-            <InputGroup className="h-8 border-sidebar-border bg-background shadow-none">
+            <InputGroup className="h-8 bg-background text-foreground shadow-none has-[[data-slot=input-group-control]:focus-visible]:ring-sidebar-ring/50">
               <InputGroupInput
                 className="h-8"
                 onChange={(e) => setQ(e.target.value)}

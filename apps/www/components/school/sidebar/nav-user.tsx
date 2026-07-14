@@ -19,6 +19,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
+  SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useSidebar } from "@repo/design-system/components/ui/sidebar-provider";
@@ -107,9 +108,7 @@ export function SchoolSidebarNavUser() {
               </Avatar>
               <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                 <span className="truncate">{user.authUser.name}</span>
-                <span className="truncate text-muted-foreground text-xs">
-                  {planLabel}
-                </span>
+                <SidebarMenuDescription>{planLabel}</SidebarMenuDescription>
               </div>
               <HugeIcons className="ml-auto" icon={MoreVerticalIcon} />
             </SidebarMenuButton>

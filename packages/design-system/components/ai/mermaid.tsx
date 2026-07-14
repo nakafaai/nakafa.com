@@ -146,7 +146,7 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
         </p>
         <details className="mt-2">
           <summary className="cursor-pointer text-xs">Show Code</summary>
-          <pre className="mt-2 overflow-x-auto rounded bg-card p-2 text-xs">
+          <pre className="mt-2 overflow-x-auto rounded border border-input bg-background p-2 text-foreground text-xs">
             {chart}
           </pre>
         </details>

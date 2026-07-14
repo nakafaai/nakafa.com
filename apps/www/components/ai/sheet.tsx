@@ -60,8 +60,8 @@ export function AiSheet() {
         <button
           aria-label="Resize chat sheet"
           className={cn(
-            "absolute top-0 bottom-0 left-0 z-10 w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-accent",
-            !!isResizing && "bg-accent",
+            "absolute top-0 bottom-0 left-0 z-10 w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-ring focus-visible:bg-ring",
+            !!isResizing && "bg-ring",
             !!isMobile && "hidden"
           )}
           onKeyDown={resizerProps.onKeyDown}

@@ -121,7 +121,8 @@ function CommentContent({
     <div
       className={cn(
         "flex items-start gap-3 rounded-xl p-2 text-left transition-colors",
-        !!isReplyToMe && "rounded-l-none border-primary border-l bg-primary/5"
+        !!isReplyToMe &&
+          "rounded-l-none border-primary border-l bg-[color-mix(in_oklch,var(--accent)_3%,var(--background))]"
       )}
     >
       <Avatar className="size-10">

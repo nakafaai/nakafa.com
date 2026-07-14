@@ -118,7 +118,7 @@ export function Weather() {
 
 function WeatherCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex aspect-square flex-col justify-between overflow-hidden rounded-md border bg-linear-to-br from-[color-mix(in_oklch,var(--secondary)_50%,var(--card))] to-[color-mix(in_oklch,var(--primary)_50%,var(--card))] p-3 text-card-foreground shadow-xs">
+    <div className="flex aspect-square flex-col justify-between overflow-hidden rounded-md border bg-linear-to-br from-[color-mix(in_oklch,var(--secondary)_19%,var(--card))] to-[color-mix(in_oklch,var(--primary)_19%,var(--card))] p-3 text-card-foreground shadow-xs">
       {children}
     </div>
   );

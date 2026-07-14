@@ -196,7 +196,7 @@ function AssessmentActions({
         <DropdownMenuTrigger
           render={
             <Button
-              className="z-1 opacity-50 transition-opacity ease-out group-hover:opacity-100"
+              className="z-1 text-muted-foreground focus-visible:text-foreground group-hover:text-foreground"
               disabled={isPending}
               size="icon-sm"
               variant="ghost"

@@ -69,7 +69,7 @@ export function AttachmentPreviews({
 
             <Button
               aria-label="Remove attachment"
-              className="absolute -top-2 -right-2 z-1 opacity-0 transition-opacity ease-out group-hover:opacity-100"
+              className="absolute -top-2 -right-2 z-1 opacity-0 transition-opacity ease-out focus-visible:opacity-100 focus-visible:transition-none group-hover:opacity-100"
               onClick={() => onRemove(id)}
               size="icon-xs"
               type="button"
