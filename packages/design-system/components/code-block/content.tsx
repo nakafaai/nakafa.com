@@ -9,16 +9,26 @@ import type { CodeOptionsMultipleThemes } from "shiki";
 
 type CodeBlockFallbackProps = HTMLAttributes<HTMLDivElement>;
 
+/** Gives repeated code lines stable keys based on their source offsets. */
+function getCodeLines(code: string) {
+  let offset = 0;
+
+  return code.split("\n").map((line) => {
+    const key = `${offset}:${line}`;
+    offset += line.length + 1;
+    return { key, line };
+  });
+}
+
 function CodeBlockFallback({ children, ...props }: CodeBlockFallbackProps) {
-  const lines = children?.toString().split("\n") ?? [];
+  const lines = getCodeLines(children?.toString() ?? "");
 
   return (
     <div {...props}>
       <pre className="w-full">
         <code>
-          {lines.map((line, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: Line content may repeat, need index for uniqueness
-            <Fragment key={`${index}-${line}`}>
+          {lines.map(({ key, line }, index) => (
+            <Fragment key={key}>
               <span className="line">{line}</span>
               {index < lines.length - 1 ? "\n" : null}
             </Fragment>

@@ -176,14 +176,16 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     [activeItem]
   );
 
-  useAnimationFrame(() => {
+  const syncAnimationFrame = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) {
       return;
     }
 
     syncSnapshot(audio, itemRef.current);
-  });
+  }, [syncSnapshot]);
+
+  useAnimationFrame(syncAnimationFrame);
 
   useEffect(() => {
     const audio = audioRef.current;

@@ -44,12 +44,19 @@ export function usePromptInputFiles({
   const localUrlsRef = useRef(new Map<string, string>());
   const files = controller ? controller.attachments.files : items;
   const fileCountRef = useRef(files.length);
-  const fileIdsRef = useRef(new Set(files.map((file) => file.id)));
+  const fileIdsRef = useRef<Set<string> | null>(null);
+  if (fileIdsRef.current === null) {
+    fileIdsRef.current = new Set(files.map((file) => file.id));
+  }
+  const fileIds = fileIdsRef.current;
 
   useLayoutEffect(() => {
     fileCountRef.current = files.length;
-    fileIdsRef.current = new Set(files.map((file) => file.id));
-  }, [files]);
+    fileIds.clear();
+    for (const file of files) {
+      fileIds.add(file.id);
+    }
+  }, [fileIds, files]);
 
   const openFileDialogLocal = useCallback(() => {
     inputRef.current?.click();
@@ -132,7 +139,7 @@ export function usePromptInputFiles({
   );
   const remove = useCallback(
     (id: string) => {
-      if (fileIdsRef.current.delete(id)) {
+      if (fileIds.delete(id)) {
         fileCountRef.current = Math.max(0, fileCountRef.current - 1);
       }
 
@@ -142,17 +149,17 @@ export function usePromptInputFiles({
       }
       removeLocal(id);
     },
-    [controller, removeLocal]
+    [controller, fileIds, removeLocal]
   );
   const clear = useCallback(() => {
     fileCountRef.current = 0;
-    fileIdsRef.current.clear();
+    fileIds.clear();
     if (controller) {
       controller.attachments.clear();
       return;
     }
     clearLocal();
-  }, [clearLocal, controller]);
+  }, [clearLocal, controller, fileIds]);
   const openFileDialog = controller
     ? controller.attachments.openFileDialog
     : openFileDialogLocal;
