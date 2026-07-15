@@ -217,7 +217,7 @@ function getChoiceVariant({
   }
 
   if (choice.isCorrect) {
-    return "default-outline";
+    return "success-outline";
   }
 
   return "outline";

@@ -14,6 +14,8 @@ export const buttonVariants = cva(
           "bg-destructive text-destructive-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_99%,var(--background))] hover:shadow-md focus-visible:ring-destructive/20",
         "destructive-outline":
           "border border-destructive bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] hover:shadow-md",
+        "success-outline":
+          "border border-success bg-[color-mix(in_oklch,var(--success)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--success)_8%,var(--background))] hover:shadow-md",
         outline:
           "border border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
         secondary:

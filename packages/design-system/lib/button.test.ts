@@ -6,6 +6,7 @@ const BUTTON_VARIANTS = [
   "default-outline",
   "destructive",
   "destructive-outline",
+  "success-outline",
   "outline",
   "secondary",
   "secondary-outline",
@@ -25,5 +26,17 @@ describe("buttonVariants", () => {
     const classes = buttonVariants({ variant: "destructive" }).split(" ");
 
     expect(classes).toContain("focus-visible:ring-destructive/20");
+  });
+
+  it("keeps the success outline in the success family", () => {
+    const classes = buttonVariants({ variant: "success-outline" }).split(" ");
+
+    expect(classes).toContain("border-success");
+    expect(classes).toContain(
+      "bg-[color-mix(in_oklch,var(--success)_5%,var(--background))]"
+    );
+    expect(classes).toContain(
+      "hover:bg-[color-mix(in_oklch,var(--success)_8%,var(--background))]"
+    );
   });
 });
