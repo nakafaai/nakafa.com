@@ -10,7 +10,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { cva } from "class-variance-authority";
 import { useLocale, useTranslations } from "next-intl";
 import {
   getAppNavigationViewer,
@@ -20,19 +19,6 @@ import {
 import { useUser } from "@/lib/context/use-user";
 import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
 import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
-
-const homeExploreCardVisualVariants = cva(
-  "flex aspect-[1/0.95] w-full items-center justify-center rounded-xl transition-all ease-out",
-  {
-    variants: {
-      tone: {
-        askNina: "bg-chart-3/15 group-hover:bg-chart-3/20",
-        subject: "bg-chart-1/10 group-hover:bg-chart-1/15",
-        tryOut: "bg-chart-2/10 group-hover:bg-chart-2/15",
-      },
-    },
-  }
-);
 
 function SubjectIcon() {
   return (
@@ -173,7 +159,7 @@ export function HomeExplore() {
               href={card.href}
               key={card.id}
             >
-              <div className={homeExploreCardVisualVariants({ tone: card.id })}>
+              <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl border bg-card">
                 {card.visual}
               </div>
               <h2>{card.title}</h2>

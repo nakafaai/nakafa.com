@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -62,14 +63,17 @@ export function SpiceSalesChart({
     () =>
       ({
         garlic: {
+          cue: getBarSeriesCue(0),
           label: seriesLabels.garlic,
           colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         shallot: {
+          cue: getBarSeriesCue(1),
           label: seriesLabels.shallot,
           colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
         chili: {
+          cue: getBarSeriesCue(2),
           label: seriesLabels.chili,
           colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
         },
@@ -104,9 +108,18 @@ export function SpiceSalesChart({
           />
           <Tooltip />
           <Legend />
-          {Object.keys(chartConfig).map((key) => (
-            <Bar dataKey={key} key={key} radius={4} />
-          ))}
+          {Object.keys(chartConfig).map((key, index) => {
+            const cue = getBarSeriesCue(index);
+
+            return (
+              <Bar
+                dataKey={key}
+                key={key}
+                radius={cue.radius}
+                variant={cue.variant}
+              />
+            );
+          })}
         </EvilBarChart>
       </CardContent>
     </Card>

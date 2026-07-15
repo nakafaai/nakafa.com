@@ -4,8 +4,9 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenu,
   SidebarMenuButton,
+  SidebarMenuDescription,
   SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/lib/context/use-user";
@@ -36,9 +37,9 @@ export function HeaderMenu() {
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <p className="truncate font-medium">Nakafa</p>
-            <span className="truncate text-xs">
+            <SidebarMenuDescription>
               {t("very-short-description")}
-            </span>
+            </SidebarMenuDescription>
           </div>
         </SidebarMenuButton>
       </SidebarMenuItem>

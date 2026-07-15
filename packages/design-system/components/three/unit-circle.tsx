@@ -20,7 +20,8 @@ import {
   getRadians,
   getSin,
   getTan,
-} from "@repo/design-system/lib/math";
+} from "@repo/design-system/lib/geometry/angles";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";
@@ -201,7 +202,9 @@ export function UnitCircle({
 
   // Colors based on theme
   const circleColor =
-    resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
+    getThemeAppearance(resolvedTheme) === "dark"
+      ? ORIGIN_COLOR.LIGHT
+      : ORIGIN_COLOR.DARK;
 
   // Pre-calculate positions
   const pointPosition = useMemo(() => new Vector3(cos, sin, 0), [cos, sin]);

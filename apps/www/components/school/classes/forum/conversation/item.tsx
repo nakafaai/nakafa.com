@@ -51,10 +51,13 @@ export function ForumPostItem({
     >
       <div
         className={cn(
-          "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-1.5 transition-colors ease-out hover:bg-accent/20",
-          isReplyToMe === true && "border-primary bg-primary/10",
-          isReplyTarget === true && "border-secondary bg-secondary/10",
-          isJumpHighlighted === true && "border-secondary bg-secondary/10"
+          "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-1.5 transition-colors ease-out hover:bg-[color-mix(in_oklch,var(--accent)_3%,var(--background))]",
+          isReplyToMe === true &&
+            "border-primary bg-[color-mix(in_oklch,var(--accent)_3%,var(--background))]",
+          isReplyTarget === true &&
+            "border-ring bg-[color-mix(in_oklch,var(--accent)_3%,var(--background))]",
+          isJumpHighlighted === true &&
+            "border-ring bg-[color-mix(in_oklch,var(--accent)_3%,var(--background))]"
         )}
         id={post._id}
       >

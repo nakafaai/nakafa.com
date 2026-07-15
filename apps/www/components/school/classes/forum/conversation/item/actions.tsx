@@ -52,7 +52,7 @@ export function PostItemActions({ post }: { post: ForumPost }) {
   return (
     <ButtonGroup
       className={cn(
-        "absolute -top-4 right-4 z-1 opacity-0 shadow-xs transition-opacity ease-out group-hover:opacity-100",
+        "absolute -top-4 right-4 z-1 opacity-0 shadow-xs transition-opacity ease-out focus-within:opacity-100 focus-within:transition-none group-hover:opacity-100",
         isReactionPickerOpen && "opacity-100"
       )}
     >

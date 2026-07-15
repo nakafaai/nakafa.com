@@ -15,13 +15,14 @@ import type {
   PublicCurriculumRoute,
 } from "@repo/contents/_types/route/schema";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
-import { slugify } from "@repo/design-system/lib/utils";
+import { slugify } from "@repo/design-system/lib/routing/slug";
 import { notFound } from "next/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
 type CurriculumParams =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">["params"];
+type CurriculumStaticParam = Omit<Awaited<CurriculumParams>, "locale">;
 
 let curriculumRouteCache: readonly PublicCurriculumRoute[] | undefined;
 let materialRouteCache: readonly PublicContentRoute[] | undefined;
@@ -51,15 +52,20 @@ export function readMaterialRoutes() {
 /** Builds static params for rendered curriculum context pages only. */
 export function listCurriculumStaticParams(rawLocale?: string) {
   const locale = rawLocale ? getLocaleOrThrow(rawLocale) : undefined;
+  const params: CurriculumStaticParam[] = [];
 
-  const params = readCurriculumRoutes()
-    .filter((route) => !locale || route.locale === locale)
-    .filter(isRenderableCurriculumRoute)
-    .map((route) => {
-      const [, curriculum, ...path] = route.publicPath.split("/");
+  for (const route of readCurriculumRoutes()) {
+    if (locale && route.locale !== locale) {
+      continue;
+    }
 
-      return path.length > 0 ? { curriculum, path } : { curriculum };
-    });
+    if (!isRenderableCurriculumRoute(route)) {
+      continue;
+    }
+
+    const [, curriculum, ...path] = route.publicPath.split("/");
+    params.push(path.length > 0 ? { curriculum, path } : { curriculum });
+  }
 
   return selectLearningStaticParams(params);
 }
@@ -91,10 +97,10 @@ export function readCurriculumRouteModel({
   const childRoutes = curriculumRoutes
     .filter(
       (child) =>
-        child.locale === locale && child.parentPath === route.publicPath
+        child.locale === locale &&
+        child.parentPath === route.publicPath &&
+        isRenderableCurriculumRoute(child)
     )
-    .filter(isRenderableCurriculumRoute)
-    .slice()
     .sort(compareCurriculumRouteOrder);
   const materialCards = isMaterialCardListRoute(route)
     ? readCurriculumMaterialCards({

@@ -144,7 +144,12 @@ function SchoolClassesForumListContent() {
                         className="size-3 shrink-0"
                         icon={ArrowTurnForwardIcon}
                       />
-                      <span className="truncate text-primary">
+                      <span
+                        className={cn(
+                          "truncate text-primary group-focus-within:text-foreground group-hover:text-foreground",
+                          isActive && "text-foreground"
+                        )}
+                      >
                         {forum.user?.name ?? t("unknown-user")}
                       </span>
                     </div>

@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@repo/design-system/components/ui/sidebar";
+import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
 import type { ReactNode } from "react";
 import { AiSheet } from "@/components/ai/sheet";
 import { SearchCommand } from "@/components/shared/search-command";

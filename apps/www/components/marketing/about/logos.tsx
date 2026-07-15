@@ -8,13 +8,16 @@ interface SchoolLogoProps {
   school: (typeof schools)[number];
 }
 
-const duplicatedSchools = [...schools, ...schools];
+const marqueeSchools = [
+  ...schools.map((school) => ({ copy: "original", school })),
+  ...schools.map((school) => ({ copy: "duplicate", school })),
+];
 
 function SchoolLogo({ school }: SchoolLogoProps) {
   return (
     <a
       aria-label={school.name}
-      className="group/logo relative flex h-28 w-56 shrink-0 items-center justify-center px-6 transition-opacity duration-300 hover:opacity-100"
+      className="group/logo relative flex h-28 w-56 shrink-0 items-center justify-center rounded-md px-6 outline-none focus-visible:ring-2 focus-visible:ring-ring"
       href={school.href}
       rel="noopener noreferrer"
       target="_blank"
@@ -23,7 +26,7 @@ function SchoolLogo({ school }: SchoolLogoProps) {
         <div className="relative aspect-square size-12 shrink-0">
           <Image
             alt={school.alt}
-            className="size-12 object-contain"
+            className="size-12 object-contain transition-opacity duration-300 ease-out group-hover/logo:opacity-100! group-hover/logos:opacity-60 group-focus-visible/logo:opacity-100!"
             height={48}
             src={school.logo}
             title={school.name}
@@ -67,12 +70,8 @@ export function Logos() {
         <div className="pointer-events-none absolute inset-y-0 right-0 z-1 w-24 bg-linear-to-l from-background to-transparent" />
 
         <div className="group/logos hover:paused mx-auto flex w-max animate-marquee">
-          {duplicatedSchools.map((school, index) => (
-            <div
-              className="shrink-0 transition-opacity duration-300 ease-out hover:opacity-100! group-hover/logos:opacity-60"
-              // biome-ignore lint/suspicious/noArrayIndexKey: Schools are duplicated, need index for unique keys
-              key={`${school.href}-${index}`}
-            >
+          {marqueeSchools.map(({ copy, school }) => (
+            <div className="shrink-0" key={`${copy}-${school.href}`}>
               <SchoolLogo school={school} />
             </div>
           ))}

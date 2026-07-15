@@ -121,7 +121,8 @@ function CommentContent({
     <div
       className={cn(
         "flex items-start gap-3 rounded-xl p-2 text-left transition-colors",
-        !!isReplyToMe && "rounded-l-none border-primary border-l bg-primary/5"
+        !!isReplyToMe &&
+          "rounded-l-none border-primary border-l bg-[color-mix(in_oklch,var(--accent)_3%,var(--background))]"
       )}
     >
       <Avatar className="size-10">
@@ -222,9 +223,8 @@ function CommentActions({
               <HugeIcons icon={ThumbsUpIcon} />
               <NumberFormat
                 className={cn(
-                  "tabular-nums text-xs tracking-tight",
-                  comment.upvoteCount === 0 && "hidden",
-                  comment.upvoteCount === 1 && "text-secondary-foreground"
+                  "text-xs tabular-nums tracking-tight",
+                  comment.upvoteCount === 0 && "hidden"
                 )}
                 isolate={true}
                 value={comment.upvoteCount}
@@ -249,9 +249,8 @@ function CommentActions({
               <HugeIcons icon={ThumbsDownIcon} />
               <NumberFormat
                 className={cn(
-                  "tabular-nums text-xs tracking-tight",
-                  comment.downvoteCount === 0 && "hidden",
-                  comment.downvoteCount === -1 && "text-secondary-foreground"
+                  "text-xs tabular-nums tracking-tight",
+                  comment.downvoteCount === 0 && "hidden"
                 )}
                 isolate={true}
                 value={comment.downvoteCount}
@@ -274,7 +273,7 @@ function CommentActions({
               <HugeIcons icon={ArrowTurnBackwardIcon} />
               <NumberFormat
                 className={cn(
-                  "tabular-nums text-xs tracking-tight",
+                  "text-xs tabular-nums tracking-tight",
                   comment.replyCount === 0 && "hidden"
                 )}
                 isolate={true}

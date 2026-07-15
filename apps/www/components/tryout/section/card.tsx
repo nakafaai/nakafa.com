@@ -37,7 +37,7 @@ export function TryoutPartStat({
   label: ReactNode;
 }) {
   return (
-    <div className="flex flex-col text-left">
+    <div className="flex flex-col gap-1 text-left">
       <span className="text-muted-foreground text-xs uppercase tracking-wide">
         {label}
       </span>

@@ -18,8 +18,8 @@ import {
   DialogTrigger,
 } from "@repo/design-system/components/ui/dialog";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { normalizeMermaidChart } from "@repo/design-system/lib/mermaid";
-import { languageIconMap } from "@repo/design-system/lib/programming";
+import { languageIconMap } from "@repo/design-system/lib/code-block/icons";
+import { normalizeMermaidChart } from "@repo/design-system/lib/markdown/mermaid";
 import { cn } from "@repo/design-system/lib/utils";
 import type { MermaidConfig } from "mermaid";
 

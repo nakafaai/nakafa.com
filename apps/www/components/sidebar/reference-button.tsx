@@ -30,8 +30,8 @@ import {
 import {
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar";
-import { cleanupUrl, formatUrl } from "@repo/design-system/lib/utils";
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { cleanupUrl, formatUrl } from "@repo/design-system/lib/routing/url";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 

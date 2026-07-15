@@ -1,9 +1,9 @@
 "use client";
 
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react-mdx";
-import { normalizeText } from "@repo/design-system/lib/normalize";
-import { parseMarkdownIntoBlocks } from "@repo/design-system/lib/parse-blocks";
-import { preprocessLaTeX } from "@repo/design-system/lib/parse-math";
+import { parseMarkdownIntoBlocks } from "@repo/design-system/lib/markdown/blocks";
+import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
+import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
 import { cn } from "@repo/design-system/lib/utils";
 import hardenReactMarkdown from "harden-react-markdown";
 import type { ComponentProps } from "react";

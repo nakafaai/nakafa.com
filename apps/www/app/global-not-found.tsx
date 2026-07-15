@@ -6,6 +6,7 @@ import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
+import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import en from "@repo/internationalization/dictionaries/en.json";
 import id from "@repo/internationalization/dictionaries/id.json";
 import { routing } from "@repo/internationalization/src/routing";
@@ -14,11 +15,15 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { hasLocale } from "next-intl";
 import { Suspense } from "react";
+import { appViewport } from "@/lib/theme/viewport";
 
 export const metadata: Metadata = {
   title: "404 - Page Not Found",
   description: "The page you are looking for does not exist.",
 };
+
+/** Global 404 viewport contract shared with localized app documents. */
+export const viewport = appViewport;
 
 const dictionaries = { en, id };
 const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
@@ -44,6 +49,9 @@ export default function GlobalNotFound() {
       lang={routing.defaultLocale}
       suppressHydrationWarning
     >
+      <head>
+        <ThemeBootstrap defaultTheme="system" />
+      </head>
       <body>
         <DesignSystemProvider
           attribute="class"

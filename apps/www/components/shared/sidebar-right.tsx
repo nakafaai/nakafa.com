@@ -2,16 +2,21 @@ import { Menu02Icon } from "@hugeicons/core-free-icons";
 import type { Reference } from "@repo/contents/_types/content";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
-  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+} from "@repo/design-system/components/ui/sidebar-content";
+import {
   SidebarMenu,
   SidebarMenuButton,
+  SidebarMenuDescription,
   SidebarMenuItem,
-  SidebarProvider,
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import {
+  Sidebar,
   SidebarTrigger,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-shell";
 import type { ComponentProps, ReactNode } from "react";
 import { CommentsButton } from "@/components/sidebar/comments-button";
 import { GithubButton } from "@/components/sidebar/github-button";
@@ -54,7 +59,9 @@ function SidebarRightHeader({
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{header.title}</span>
               {!!header.description && (
-                <span className="truncate text-xs">{header.description}</span>
+                <SidebarMenuDescription>
+                  {header.description}
+                </SidebarMenuDescription>
               )}
             </div>
           </SidebarMenuButton>

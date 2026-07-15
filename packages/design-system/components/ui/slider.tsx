@@ -51,7 +51,7 @@ function Slider<Value extends number | readonly number[]>({
       >
         <SliderPrimitive.Track
           className={cn(
-            "relative grow cursor-pointer select-none overflow-hidden rounded-full bg-muted data-horizontal:h-1.5 data-vertical:h-full data-horizontal:w-full data-vertical:w-1.5 data-disabled:cursor-not-allowed"
+            "relative grow cursor-pointer select-none overflow-hidden rounded-full border border-input bg-background data-horizontal:h-1.5 data-vertical:h-full data-horizontal:w-full data-vertical:w-1.5 data-disabled:cursor-not-allowed"
           )}
           data-slot="slider-track"
         >

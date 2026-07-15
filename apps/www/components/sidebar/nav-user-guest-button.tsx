@@ -2,7 +2,10 @@
 
 import { Login01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { SidebarMenuButton } from "@repo/design-system/components/ui/sidebar";
+import {
+  SidebarMenuButton,
+  SidebarMenuDescription,
+} from "@repo/design-system/components/ui/sidebar-menu";
 import {
   usePathname,
   useRouter,
@@ -40,9 +43,7 @@ export function NavUserGuestButton({
       </div>
       <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
         <span className="truncate font-medium">{t("login-cta-title")}</span>
-        <span className="truncate text-muted-foreground text-xs">
-          {t("login-cta-action")}
-        </span>
+        <SidebarMenuDescription>{t("login-cta-action")}</SidebarMenuDescription>
       </div>
     </SidebarMenuButton>
   );

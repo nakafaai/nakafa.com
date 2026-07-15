@@ -15,7 +15,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { getCountryName } from "@repo/design-system/lib/utils";
+import { getCountryName } from "@repo/design-system/lib/locale/country";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { useWeather } from "@/lib/react-query/use-weather";
@@ -103,7 +103,7 @@ export function Weather() {
       <WeatherCardHeader>
         <div className="flex flex-col">
           <p className="font-mono text-xl tracking-tight">{currentTemp}° C</p>
-          <p className="text-card-foreground/80 text-xs">{conditionTitle}</p>
+          <p className="text-card-foreground text-xs">{conditionTitle}</p>
         </div>
 
         <HugeIcons className="size-8" icon={getWeatherIcon(iconCode)} />
@@ -118,7 +118,7 @@ export function Weather() {
 
 function WeatherCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex aspect-square flex-col justify-between overflow-hidden rounded-md border bg-linear-to-br from-[color-mix(in_oklch,var(--secondary)_50%,var(--card))] to-[color-mix(in_oklch,var(--primary)_50%,var(--card))] p-3 text-card-foreground shadow-xs">
+    <div className="flex aspect-square flex-col justify-between overflow-hidden rounded-md border bg-linear-to-br from-[color-mix(in_oklch,var(--secondary)_19%,var(--card))] to-[color-mix(in_oklch,var(--primary)_19%,var(--card))] p-3 text-card-foreground shadow-xs">
       {children}
     </div>
   );

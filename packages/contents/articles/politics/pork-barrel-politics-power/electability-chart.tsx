@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  ActiveDot,
+  Dot,
   EvilLineChart,
   Grid,
   Legend,
@@ -21,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { format } from "date-fns";
 import type { ReactNode } from "react";
 
@@ -123,6 +126,12 @@ const electabilityChartData = [
   },
 ];
 
+const ELECTABILITY_CUES = {
+  aniesMuhaimin: getLineSeriesCue(0),
+  prabowoGibran: getLineSeriesCue(1),
+  ganjarMahfud: getLineSeriesCue(2),
+};
+
 /** Renders the candidate electability chart with MDX-owned labels. */
 export function ElectabilityChart({
   title,
@@ -133,14 +142,17 @@ export function ElectabilityChart({
 }: ElectabilityChartProps) {
   const chartConfig = {
     anies_muhaimin: {
+      cue: ELECTABILITY_CUES.aniesMuhaimin,
       label: labels.aniesMuhaimin,
       colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
     prabowo_gibran: {
+      cue: ELECTABILITY_CUES.prabowoGibran,
       label: labels.prabowoGibran,
       colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
     },
     ganjar_mahfud: {
+      cue: ELECTABILITY_CUES.ganjarMahfud,
       label: labels.ganjarMahfud,
       colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
     },
@@ -186,9 +198,36 @@ export function ElectabilityChart({
             }
             cursor={false}
           />
-          <Line dataKey="anies_muhaimin" lineProps={{ strokeWidth: 2 }} />
-          <Line dataKey="prabowo_gibran" lineProps={{ strokeWidth: 2 }} />
-          <Line dataKey="ganjar_mahfud" lineProps={{ strokeWidth: 2 }} />
+          <Line
+            dataKey="anies_muhaimin"
+            lineProps={{
+              strokeDasharray: ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray,
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={ELECTABILITY_CUES.aniesMuhaimin.dot} />
+            <ActiveDot variant={ELECTABILITY_CUES.aniesMuhaimin.activeDot} />
+          </Line>
+          <Line
+            dataKey="prabowo_gibran"
+            lineProps={{
+              strokeDasharray: ELECTABILITY_CUES.prabowoGibran.strokeDasharray,
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={ELECTABILITY_CUES.prabowoGibran.dot} />
+            <ActiveDot variant={ELECTABILITY_CUES.prabowoGibran.activeDot} />
+          </Line>
+          <Line
+            dataKey="ganjar_mahfud"
+            lineProps={{
+              strokeDasharray: ELECTABILITY_CUES.ganjarMahfud.strokeDasharray,
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={ELECTABILITY_CUES.ganjarMahfud.dot} />
+            <ActiveDot variant={ELECTABILITY_CUES.ganjarMahfud.activeDot} />
+          </Line>
           <Legend />
         </EvilLineChart>
       </CardContent>

@@ -27,9 +27,10 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
+  SidebarMenuDescription,
   SidebarMenuItem,
-  useSidebar,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import {
   usePathname,
   useRouter,
@@ -37,11 +38,11 @@ import {
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
+import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
+import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
-import { NavUserSkeleton } from "./nav-user-skeleton";
-import { SidebarUtilityMenuItems } from "./utility-menu-items";
 
 /**
  * Renders the signed-in user menu, plan indicator, and guest login shortcut in the sidebar.
@@ -116,9 +117,7 @@ export function NavUser() {
               </Avatar>
               <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                 <span className="truncate">{user.authUser.name}</span>
-                <span className="truncate text-muted-foreground text-xs">
-                  {planLabel}
-                </span>
+                <SidebarMenuDescription>{planLabel}</SidebarMenuDescription>
               </div>
               <HugeIcons className="ml-auto" icon={MoreVerticalIcon} />
             </SidebarMenuButton>

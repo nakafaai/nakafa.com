@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  ActiveDot,
+  Dot,
   EvilLineChart,
   Grid,
   Legend,
@@ -17,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -28,6 +31,11 @@ const chartData = [
 ] as const;
 
 type ChartDay = (typeof chartData)[number]["day"];
+
+const VISITOR_CUES = {
+  laboratory: getLineSeriesCue(1),
+  library: getLineSeriesCue(0),
+};
 
 interface Props {
   dayLabels: Record<ChartDay, string>;
@@ -61,10 +69,12 @@ export function VisitorChart({
     () =>
       ({
         library: {
+          cue: VISITOR_CUES.library,
           label: seriesLabels.library,
           colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         laboratory: {
+          cue: VISITOR_CUES.laboratory,
           label: seriesLabels.laboratory,
           colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
@@ -107,12 +117,24 @@ export function VisitorChart({
           <Legend />
           <Line
             dataKey="library"
-            lineProps={{ dot: { r: 4 }, strokeWidth: 2 }}
-          />
+            lineProps={{
+              strokeDasharray: VISITOR_CUES.library.strokeDasharray,
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={VISITOR_CUES.library.dot} />
+            <ActiveDot variant={VISITOR_CUES.library.activeDot} />
+          </Line>
           <Line
             dataKey="laboratory"
-            lineProps={{ dot: { r: 4 }, strokeWidth: 2 }}
-          />
+            lineProps={{
+              strokeDasharray: VISITOR_CUES.laboratory.strokeDasharray,
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={VISITOR_CUES.laboratory.dot} />
+            <ActiveDot variant={VISITOR_CUES.laboratory.activeDot} />
+          </Line>
         </EvilLineChart>
       </CardContent>
     </Card>

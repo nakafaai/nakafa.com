@@ -70,7 +70,7 @@ export function HomeTrending() {
                     {subject.viewCount}
                   </Badge>
                 </div>
-                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground/80 sm:mr-12">
+                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground sm:mr-12">
                   {subject.description}
                 </span>
               </div>

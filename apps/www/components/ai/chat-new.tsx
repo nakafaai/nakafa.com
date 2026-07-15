@@ -2,14 +2,14 @@
 
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import { api } from "@repo/backend/convex/_generated/api";
+import { PromptInput } from "@repo/design-system/components/ai/input";
 import {
-  PromptInput,
-  type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
   PromptInputTools,
-} from "@repo/design-system/components/ai/input";
+} from "@repo/design-system/components/ai/input-controls";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";

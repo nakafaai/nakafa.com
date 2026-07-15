@@ -1,6 +1,9 @@
 "use client";
 
+import { VectorChartTooltip } from "@repo/design-system/components/contents/mathematics/vector-chart-tooltip";
 import {
+  ActiveDot,
+  Dot,
   EvilLineChart,
   Grid,
   Legend,
@@ -17,69 +20,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { Fragment, type ReactNode, useMemo } from "react";
 
 interface Vector {
-  /**
-   * Color of the vector
-   */
   color?: string;
-  /**
-   * Direction of the vector arrow
-   */
   direction?: "forward" | "backward" | "both" | "none";
-  /**
-   * Unique identifier for the vector
-   */
   id: string;
-  /**
-   * Name of the vector
-   */
   name: string;
-  /**
-   * Points of the vector
-   */
   points: {
     x: number;
     y: number;
   }[];
-  /**
-   * Type of the vector
-   * @default "monotone"
-   */
   type?: "monotone" | "step" | "linear";
 }
 
 interface Props {
-  /**
-   * Description of the chart
-   */
   description: ReactNode;
-  /**
-   * Labels for the x and y axes
-   */
   labels?: {
-    /**
-     * Label for the x axis
-     * @default "x"
-     */
     xAxis: string;
-    /**
-     * Label for the y axis
-     * @default "y"
-     */
     yAxis: string;
   };
-  /**
-   * Title of the chart
-   */
   title: ReactNode;
-  /**
-   * Vectors to display in the chart
-   */
   vectors: Vector[];
 }
 
+/** Renders one or more directed vectors with named, non-color series cues. */
 export function VectorChart({
   title,
   description,
@@ -91,6 +57,7 @@ export function VectorChart({
       vectors.map((vector, index) => ({
         ...vector,
         color: vector.color ?? `var(--chart-${index + 1})`,
+        cue: getLineSeriesCue(index),
       })),
     [vectors]
   );
@@ -129,6 +96,7 @@ export function VectorChart({
 
     for (const vector of coloredVectors) {
       config[vector.id] = {
+        cue: vector.cue,
         label: vector.name,
         colors: { light: [vector.color], dark: [vector.color] },
       };
@@ -269,44 +237,7 @@ export function VectorChart({
             tickMargin={8}
           />
 
-          <ChartTooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length > 0) {
-                const xValue = payload[0]?.payload.x;
-
-                return (
-                  <div className="grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-sm shadow-xl">
-                    {payload.map((entry) => {
-                      if (entry.value === null) {
-                        return null;
-                      }
-
-                      const vectorName = entry.name;
-                      const yValue = entry.value;
-                      const color = entry.color;
-
-                      return (
-                        <div
-                          className="flex items-center gap-2"
-                          key={`tooltip-${entry.name}-${entry.value}`}
-                        >
-                          <div
-                            className="h-2 w-2 shrink-0 rounded-xs"
-                            style={{ backgroundColor: color }}
-                          />
-                          <span className="font-medium">{vectorName}</span>
-                          <span className="ml-auto font-mono tracking-tight">
-                            ({xValue}, {yValue})
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
+          <ChartTooltip content={<VectorChartTooltip />} />
 
           {processedVectors.map((vector) => {
             // Set marker properties based on direction
@@ -327,16 +258,19 @@ export function VectorChart({
                 dataKey={vector.id}
                 key={vector.id}
                 lineProps={{
-                  dot: true,
                   name: vector.name,
                   stroke: vector.color,
+                  strokeDasharray: vector.cue.strokeDasharray,
                   strokeWidth: 2,
                   style: {
                     stroke: vector.color,
                     ...markerProps,
                   },
                 }}
-              />
+              >
+                <Dot variant={vector.cue.dot} />
+                <ActiveDot variant={vector.cue.activeDot} />
+              </Line>
             );
           })}
 

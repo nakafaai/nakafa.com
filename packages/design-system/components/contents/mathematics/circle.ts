@@ -3,7 +3,7 @@ import {
   GRAPH_FULL_CIRCLE_SEGMENTS,
 } from "@repo/design-system/components/three/helpers/quality";
 import type { Props as LineEquationProps } from "@repo/design-system/components/three/line-equation";
-import { getRadians } from "@repo/design-system/lib/math";
+import { getRadians } from "@repo/design-system/lib/geometry/angles";
 
 type CircleLineLabel = Omit<
   NonNullable<LineEquationProps["labels"]>[number],

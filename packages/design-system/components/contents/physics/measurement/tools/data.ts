@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import type { ReactNode } from "react";
 
 export const LENGTH_TOOL_ID = "length";
@@ -163,7 +164,7 @@ export function createInitialMeasurements() {
  * Chooses text and studio-light colors that remain legible in light and dark.
  */
 export function getSceneColors(resolvedTheme: string | undefined) {
-  const isDarkTheme = resolvedTheme === "dark";
+  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
     groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),

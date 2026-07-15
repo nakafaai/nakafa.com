@@ -5,15 +5,15 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@repo/design-system/components/ai/conversation";
+import { PromptInput } from "@repo/design-system/components/ai/input";
 import {
-  PromptInput,
-  type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
   PromptInputTools,
-} from "@repo/design-system/components/ai/input";
+} from "@repo/design-system/components/ai/input-controls";
 import { Message } from "@repo/design-system/components/ai/message";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 

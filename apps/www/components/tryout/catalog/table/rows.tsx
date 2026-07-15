@@ -25,7 +25,7 @@ export function TryoutTableRows({
 
   if (rows.length === 0) {
     return (
-      <TableRow>
+      <TableRow className="hover:bg-transparent hover:text-inherit">
         <TableCell
           className="h-24 text-center text-muted-foreground"
           colSpan={table.getVisibleLeafColumns().length}

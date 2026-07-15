@@ -6,7 +6,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
 import { IconLetterK } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { useSearch } from "@/lib/context/use-search";

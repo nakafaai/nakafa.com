@@ -61,7 +61,7 @@ export function HomeContinueLearning() {
               </div>
               <div className="-mt-1 flex flex-col gap-0.5">
                 <h3>{subject.title}</h3>
-                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground/80 sm:mr-12">
+                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground sm:mr-12">
                   {subject.description}
                 </span>
               </div>

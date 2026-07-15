@@ -158,7 +158,10 @@ export function TryoutSetTable({
           >
             <TableHeader className="sticky top-0 z-10 bg-background">
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow className="hover:bg-transparent" key={headerGroup.id}>
+                <TableRow
+                  className="hover:bg-transparent hover:text-inherit"
+                  key={headerGroup.id}
+                >
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       className={cn(

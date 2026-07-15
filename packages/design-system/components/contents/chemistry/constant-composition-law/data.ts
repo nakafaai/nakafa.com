@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import type { ReactNode } from "react";
 
 export const EXACT_RATIO_MODE_ID = "exact";
@@ -78,7 +79,7 @@ export function isConstantCompositionModeId(
 export function getConstantCompositionSceneColors(
   resolvedTheme: string | undefined
 ) {
-  const isDarkTheme = resolvedTheme === "dark";
+  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
 
   return {
     arrow: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,

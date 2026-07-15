@@ -1,3 +1,4 @@
+import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import type { MetadataRoute } from "next";
 import { getTranslations } from "next-intl/server";
 
@@ -15,8 +16,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     short_name: "Nakafa",
     description: t("description"),
     start_url: "/",
-    theme_color: "#f5f5f5",
-    background_color: "#f5f5f5",
+    theme_color: THEME_COMPATIBILITY_COLORS.light.background,
+    background_color: THEME_COMPATIBILITY_COLORS.light.background,
     display: "standalone",
     orientation: "portrait",
     scope: "/",

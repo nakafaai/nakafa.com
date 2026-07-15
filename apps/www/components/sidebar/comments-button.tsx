@@ -6,7 +6,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "next-intl";
 
 export function CommentsButton() {

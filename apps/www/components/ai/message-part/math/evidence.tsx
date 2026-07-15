@@ -99,7 +99,7 @@ function StepRow({ number, step }: StepRowProps) {
 
   return (
     <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
-      <span className="flex shrink-0 items-center gap-2 text-muted-foreground/80">
+      <span className="flex shrink-0 items-center gap-2 text-muted-foreground">
         <span>{t("math-step", { number })}</span>
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
@@ -119,7 +119,7 @@ function ResultLine({ result }: ResultLineProps) {
 
   return (
     <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
-      <span className="flex shrink-0 items-center gap-2 text-muted-foreground/80">
+      <span className="flex shrink-0 items-center gap-2 text-muted-foreground">
         <span>{label}</span>
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
@@ -178,7 +178,7 @@ function ItemRow({ item }: ItemRowProps) {
 
   return (
     <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
-      <span className="flex shrink-0 items-center gap-2 text-muted-foreground/80">
+      <span className="flex shrink-0 items-center gap-2 text-muted-foreground">
         <span>{t(getItemLabelKey(item.label))}</span>
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
@@ -215,7 +215,7 @@ function ConditionList({ conditions }: ConditionListProps) {
 
   return (
     <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
-      <span className="flex shrink-0 items-center gap-2 text-muted-foreground/80">
+      <span className="flex shrink-0 items-center gap-2 text-muted-foreground">
         <span>{t("math-condition")}</span>
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>

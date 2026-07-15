@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -48,14 +49,17 @@ export function PriceChart({
     () =>
       ({
         mieA: {
+          cue: getBarSeriesCue(0),
           label: seriesLabels.mieA,
           colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         mieB: {
+          cue: getBarSeriesCue(1),
           label: seriesLabels.mieB,
           colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
         mieC: {
+          cue: getBarSeriesCue(2),
           label: seriesLabels.mieC,
           colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
         },
@@ -95,9 +99,18 @@ export function PriceChart({
           />
           <Tooltip />
           <Legend />
-          {Object.keys(chartConfig).map((key) => (
-            <Bar dataKey={key} key={key} radius={4} />
-          ))}
+          {Object.keys(chartConfig).map((key, index) => {
+            const cue = getBarSeriesCue(index);
+
+            return (
+              <Bar
+                dataKey={key}
+                key={key}
+                radius={cue.radius}
+                variant={cue.variant}
+              />
+            );
+          })}
         </EvilBarChart>
       </CardContent>
     </Card>

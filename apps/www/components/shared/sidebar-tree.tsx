@@ -8,17 +8,19 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+} from "@repo/design-system/components/ui/sidebar-content";
+import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { SidebarMenuSub } from "@repo/design-system/components/ui/sidebar-submenu";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { slugify } from "@repo/design-system/lib/utils";
+import { slugify } from "@repo/design-system/lib/routing/slug";
 import { useTranslations } from "next-intl";
 import { TocProvider, useToc } from "@/lib/context/use-toc";
 import { useVirtual } from "@/lib/context/use-virtual";

@@ -1,14 +1,17 @@
 import { SchoolIcon, UnfoldMoreIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
-  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+} from "@repo/design-system/components/ui/sidebar-content";
+import {
   SidebarMenu,
   SidebarMenuButton,
+  SidebarMenuDescription,
   SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { cn } from "@repo/design-system/lib/utils";
 import { type ComponentProps, Suspense } from "react";
 import { SchoolSidebarNavLearning } from "@/components/school/sidebar/nav-learning";
@@ -62,7 +65,7 @@ function SchoolSwitcherFallback() {
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <p className="truncate font-medium">Nakafa</p>
-            <span className="truncate text-xs">School</span>
+            <SidebarMenuDescription>School</SidebarMenuDescription>
           </div>
           <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
         </SidebarMenuButton>

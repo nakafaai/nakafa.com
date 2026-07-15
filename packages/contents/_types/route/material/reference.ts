@@ -9,7 +9,7 @@ import type {
   PublicContentRoute,
   PublicCurriculumRoute,
 } from "@repo/contents/_types/route/schema";
-import { slugify } from "@repo/design-system/lib/utils";
+import { slugify } from "@repo/design-system/lib/routing/slug";
 
 type MaterialLessonRoute = Extract<
   PublicContentRoute,
@@ -178,11 +178,11 @@ function readMaterialLessonRoutes({
   }
 
   return contentRoutes
-    .filter(isMaterialLessonRoute)
     .filter(
-      (candidate) =>
-        candidate.locale === locale && candidate.parentPath === route.publicPath
+      (candidate): candidate is MaterialLessonRoute =>
+        isMaterialLessonRoute(candidate) &&
+        candidate.locale === locale &&
+        candidate.parentPath === route.publicPath
     )
-    .slice()
     .sort(comparePublicRouteOrder);
 }

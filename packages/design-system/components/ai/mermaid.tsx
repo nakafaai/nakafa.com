@@ -2,36 +2,70 @@
 
 import { captureException } from "@repo/analytics/posthog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "@repo/design-system/lib/utils";
+import { Effect, Fiber, Schema } from "effect";
 import type { MermaidConfig } from "mermaid";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
 
 const HASH_SEED = 0;
 const SHIFT_5 = 5;
+const MermaidOperationSchema = Schema.Literal("initialize", "render");
+
+/** Expected client failure while loading, configuring, or rendering Mermaid. */
+class MermaidRenderError extends Schema.TaggedError<MermaidRenderError>()(
+  "MermaidRenderError",
+  {
+    cause: Schema.Unknown,
+    operation: MermaidOperationSchema,
+  }
+) {}
 
 /**
  * Loads Mermaid on the client and applies the site defaults before rendering.
  */
-async function initializeMermaid(customConfig?: MermaidConfig) {
-  const defaultConfig = {
-    startOnLoad: false,
-    theme: "default",
-    securityLevel: "strict",
-    fontFamily: "inherit",
-    suppressErrorRendering: true,
-  } satisfies MermaidConfig;
+const initializeMermaid = Effect.fn("designSystem.mermaid.initialize")(
+  function* (customConfig?: MermaidConfig) {
+    const defaultConfig = {
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "strict",
+      fontFamily: "inherit",
+      suppressErrorRendering: true,
+    } satisfies MermaidConfig;
 
-  const config = { ...defaultConfig, ...customConfig };
+    const config = { ...defaultConfig, ...customConfig };
+    const mermaidModule = yield* Effect.tryPromise({
+      try: () => import("mermaid"),
+      catch: (cause) =>
+        new MermaidRenderError({ cause, operation: "initialize" }),
+    });
+    const mermaid = mermaidModule.default;
 
-  const mermaidModule = await import("mermaid");
-  const mermaid = mermaidModule.default;
+    yield* Effect.try({
+      try: () => mermaid.initialize(config),
+      catch: (cause) =>
+        new MermaidRenderError({ cause, operation: "initialize" }),
+    });
 
-  // Always reinitialize with the current config to support different configs per component
-  mermaid.initialize(config);
+    return mermaid;
+  }
+);
 
-  return mermaid;
-}
+/** Renders one Mermaid chart through the typed client boundary. */
+const renderMermaid = Effect.fn("designSystem.mermaid.render")(function* (
+  renderId: string,
+  chart: string,
+  config: MermaidConfig
+) {
+  const mermaid = yield* initializeMermaid(config);
+
+  return yield* Effect.tryPromise({
+    try: () => mermaid.render(renderId, chart),
+    catch: (cause) => new MermaidRenderError({ cause, operation: "render" }),
+  });
+});
 
 /** Creates a stable Mermaid DOM id for one component instance and chart body. */
 function getMermaidRenderId(componentId: string, chart: string) {
@@ -67,7 +101,8 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
   const { resolvedTheme } = useTheme();
   const renderId = getMermaidRenderId(componentId, chart);
   const theme =
-    config?.theme ?? (resolvedTheme === "dark" ? "dark" : "default");
+    config?.theme ??
+    (getThemeAppearance(resolvedTheme) === "dark" ? "dark" : "default");
   const renderKey = `${renderId}-${theme}`;
   const [renderState, setRenderState] = useState({
     errorMessage: "",
@@ -77,43 +112,45 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
   const lastValidSvg = useRef("");
 
   useEffect(() => {
-    let isCurrentRender = true;
+    const renderFiber = Effect.runFork(
+      renderMermaid(renderId, chart, { ...config, theme }).pipe(
+        Effect.matchEffect({
+          onFailure: (error) =>
+            Effect.sync(() => {
+              const svg = lastValidSvg.current;
 
-    initializeMermaid({
-      ...config,
-      theme,
-    })
-      .then((mermaid) => mermaid.render(renderId, chart))
-      .then(({ svg }) => {
-        lastValidSvg.current = svg;
-        return {
-          errorMessage: "",
-          renderKey,
-          svg,
-        };
-      })
-      .catch((error) => {
-        const svg = lastValidSvg.current;
+              captureException(error.cause, {
+                has_cached_svg: !!svg,
+                operation: error.operation,
+                source: "mermaid-render",
+              });
 
-        captureException(error, {
-          has_cached_svg: !!svg,
-          source: "mermaid-render",
-        });
-
-        return {
-          errorMessage: svg ? "" : getMermaidRenderErrorMessage(error),
-          renderKey,
-          svg,
-        };
-      })
-      .then((nextRenderState) => {
-        if (isCurrentRender) {
-          setRenderState(nextRenderState);
-        }
-      });
+              return {
+                errorMessage: svg
+                  ? ""
+                  : getMermaidRenderErrorMessage(error.cause),
+                renderKey,
+                svg,
+              };
+            }),
+          onSuccess: ({ svg }) =>
+            Effect.sync(() => {
+              lastValidSvg.current = svg;
+              return {
+                errorMessage: "",
+                renderKey,
+                svg,
+              };
+            }),
+        }),
+        Effect.tap((nextRenderState) =>
+          Effect.sync(() => setRenderState(nextRenderState))
+        )
+      )
+    );
 
     return () => {
-      isCurrentRender = false;
+      Effect.runFork(Fiber.interrupt(renderFiber));
     };
   }, [chart, config, renderId, renderKey, theme]);
 
@@ -135,18 +172,16 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
     return (
       <div
         className={cn(
-          "border border-destructive/20 bg-destructive/10 p-4",
+          "border border-destructive bg-card p-4 text-destructive",
           className
         )}
       >
-        <p className="font-mono text-destructive text-sm">
+        <p className="font-mono text-sm">
           Mermaid Error: {renderState.errorMessage}
         </p>
         <details className="mt-2">
-          <summary className="cursor-pointer text-destructive text-xs">
-            Show Code
-          </summary>
-          <pre className="mt-2 overflow-x-auto rounded bg-destructive/10 p-2 text-destructive text-xs">
+          <summary className="cursor-pointer text-xs">Show Code</summary>
+          <pre className="mt-2 overflow-x-auto rounded border bg-background p-2 text-foreground text-xs">
             {chart}
           </pre>
         </details>

@@ -4,12 +4,14 @@ import { StarsIcon } from "@hugeicons/core-free-icons";
 import type { api } from "@repo/backend/convex/_generated/api";
 import {
   AudioPlayerButton,
-  AudioPlayerDuration,
   AudioPlayerInitializer,
+} from "@repo/design-system/components/ui/audio-player-playback";
+import { AudioPlayerSpeed } from "@repo/design-system/components/ui/audio-player-speed";
+import {
+  AudioPlayerDuration,
   AudioPlayerProgress,
-  AudioPlayerSpeed,
   AudioPlayerTime,
-} from "@repo/design-system/components/ui/audio-player";
+} from "@repo/design-system/components/ui/audio-player-timeline";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {

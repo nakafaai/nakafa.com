@@ -1,41 +1,56 @@
+import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import type { ReactNode } from "react";
 import type { TailwindConfig } from "react-email";
 import { pixelBasedPreset, Tailwind as ReactEmailTailwind } from "react-email";
+
+const emailThemeColors = THEME_COMPATIBILITY_COLORS.light;
 
 const tailwindConfig = {
   presets: [pixelBasedPreset],
   theme: {
     extend: {
       colors: {
-        background: "#FFFFFF",
-        foreground: "#111827",
-        card: "#FFFFFF",
-        "card-foreground": "#111827",
-        popover: "#FFFFFF",
-        "popover-foreground": "#111827",
+        background: emailThemeColors.background,
+        foreground: emailThemeColors.foreground,
+        card: emailThemeColors.card,
+        "card-foreground": emailThemeColors["card-foreground"],
+        popover: emailThemeColors.popover,
+        "popover-foreground": emailThemeColors["popover-foreground"],
         primary: {
-          DEFAULT: "#d87943",
-          foreground: "#FFFFFF",
+          DEFAULT: emailThemeColors.primary,
+          foreground: emailThemeColors["primary-foreground"],
         },
         secondary: {
-          DEFAULT: "#527575",
-          foreground: "#FFFFFF",
+          DEFAULT: emailThemeColors.secondary,
+          foreground: emailThemeColors["secondary-foreground"],
         },
         destructive: {
-          DEFAULT: "#ef4444",
-          foreground: "#FFFFFF",
+          DEFAULT: emailThemeColors.destructive,
+          foreground: emailThemeColors["destructive-foreground"],
+        },
+        success: {
+          DEFAULT: emailThemeColors.success,
+          foreground: emailThemeColors["success-foreground"],
+        },
+        warning: {
+          DEFAULT: emailThemeColors.warning,
+          foreground: emailThemeColors["warning-foreground"],
+        },
+        info: {
+          DEFAULT: emailThemeColors.info,
+          foreground: emailThemeColors["info-foreground"],
         },
         muted: {
-          DEFAULT: "#f3f4f6",
-          foreground: "#6b7280",
+          DEFAULT: emailThemeColors.muted,
+          foreground: emailThemeColors["muted-foreground"],
         },
         accent: {
-          DEFAULT: "#eeeeee",
-          foreground: "#111827",
+          DEFAULT: emailThemeColors.accent,
+          foreground: emailThemeColors["accent-foreground"],
         },
-        border: "#e5e7eb",
-        input: "#e5e7eb",
-        ring: "#d87943",
+        border: emailThemeColors.border,
+        input: emailThemeColors.input,
+        ring: emailThemeColors.ring,
       },
       borderRadius: {
         md: "6px",

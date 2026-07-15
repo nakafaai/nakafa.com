@@ -1,18 +1,18 @@
 "use client";
 
 import { Dithering, type DitheringProps } from "@paper-design/shaders-react";
+import { getThemeShaderColor } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "next-themes";
-import { getColorFront } from "@/components/marketing/about/utils";
 
 export function FeaturesDithering({ ...props }: DitheringProps) {
   const { resolvedTheme } = useTheme();
 
-  const colorFront = getColorFront(resolvedTheme);
+  const colorFront = getThemeShaderColor(resolvedTheme);
 
   return (
     <Dithering
       className="size-full"
-      colorBack="#00000000"
+      colorBack="rgba(0, 0, 0, 0)"
       colorFront={colorFront}
       scale={1.2}
       shape="warp"

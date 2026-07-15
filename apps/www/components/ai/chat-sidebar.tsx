@@ -17,17 +17,21 @@ import {
 } from "@repo/design-system/components/ui/input-group";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
-  Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
+} from "@repo/design-system/components/ui/sidebar-content";
+import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import {
+  Sidebar,
   SidebarTrigger,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-shell";
 import { usePaginatedQuery } from "convex/react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -67,7 +71,7 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <Button
-              className="w-full border border-sidebar-border shadow-none"
+              className="w-full border border-sidebar-border shadow-none focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/50"
               nativeButton={false}
               render={
                 <NavigationLink href="/chat" title={t("new-chat")}>
@@ -82,7 +86,7 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
 
         <SidebarMenu>
           <SidebarMenuItem>
-            <InputGroup className="h-8 border-sidebar-border bg-background shadow-none">
+            <InputGroup className="h-8 border-sidebar-border bg-background text-foreground shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-sidebar-ring has-[[data-slot=input-group-control]:focus-visible]:ring-sidebar-ring/50">
               <InputGroupInput
                 className="h-8"
                 onChange={(e) => setQ(e.target.value)}

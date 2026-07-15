@@ -14,6 +14,7 @@ import {
 } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";
 import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
@@ -135,7 +136,9 @@ export function Triangle({
 
   // Colors based on theme
   const baseColor =
-    resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
+    getThemeAppearance(resolvedTheme) === "dark"
+      ? ORIGIN_COLOR.LIGHT
+      : ORIGIN_COLOR.DARK;
 
   // Scale the vertex points based on triangle size
   const vertexSize =

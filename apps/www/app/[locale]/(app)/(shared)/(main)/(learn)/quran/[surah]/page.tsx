@@ -1,5 +1,5 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import { slugify } from "@repo/design-system/lib/utils";
+import { slugify } from "@repo/design-system/lib/routing/slug";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";

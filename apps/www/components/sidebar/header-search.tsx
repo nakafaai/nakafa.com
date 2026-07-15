@@ -38,11 +38,11 @@ export function HeaderSearch() {
         </span>
       </span>
       <span className="hidden items-center gap-1 lg:flex">
-        <kbd className="rounded border bg-background p-0.75">
+        <kbd className="rounded border p-0.75">
           <IconCommand className="size-3 shrink-0" />
           <span className="sr-only">Command/Ctrl</span>
         </kbd>
-        <kbd className="rounded border bg-background p-0.75">
+        <kbd className="rounded border p-0.75">
           <IconLetterK className="size-3 shrink-0" strokeWidth={2} />
           <span className="sr-only">K</span>
         </kbd>

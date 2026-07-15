@@ -10,10 +10,12 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+} from "@repo/design-system/components/ui/sidebar-content";
+import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar";
+} from "@repo/design-system/components/ui/sidebar-menu";
 import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 

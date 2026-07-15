@@ -1,5 +1,5 @@
 import { formatCodeBlockData } from "@repo/contents/_types/llms/code";
-import { preprocessLaTeX } from "@repo/design-system/lib/parse-math";
+import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
 import { Effect, Schema } from "effect";
 import type { Parent, Root, RootContent } from "mdast";
 import type {
@@ -91,9 +91,11 @@ function renderNode(node: RootContent, source: string): string {
 
 /** Renders a parent node by preserving only visible child markdown rows. */
 function renderChildren(node: Parent, source: string): string[] {
-  return node.children
-    .map((child) => renderNode(child, source).trim())
-    .filter(Boolean);
+  return node.children.flatMap((child) => {
+    const renderedChild = renderNode(child, source).trim();
+
+    return renderedChild ? [renderedChild] : [];
+  });
 }
 
 /** Renders framework MDX elements into a compact markdown representation. */
@@ -172,9 +174,11 @@ function renderGenericComponentRows(
   omittedAttributes: string[]
 ) {
   const rows = [`Component: ${name}`];
-  const props = attributes
-    .map((attribute) => renderAttribute(attribute, omittedAttributes))
-    .filter(Boolean);
+  const props = attributes.flatMap((attribute) => {
+    const renderedAttribute = renderAttribute(attribute, omittedAttributes);
+
+    return renderedAttribute ? [renderedAttribute] : [];
+  });
   const children = renderChildren(node, source).join("\n\n").trim();
 
   if (props.length > 0) {

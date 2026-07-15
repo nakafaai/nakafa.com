@@ -1,3 +1,4 @@
+import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import anyAscii from "any-ascii";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -10,12 +11,13 @@ export interface OgImageProps {
   title: ReactNode;
 }
 
-const foregroundColor = "hsl(220.91 39% 11%)";
+const lightThemeColors = THEME_COMPATIBILITY_COLORS.light;
+const foregroundColor = lightThemeColors.foreground;
 
 const ogShellStyle = {
   width: "100%",
   height: "100%",
-  backgroundColor: "hsl(300 50% 100%)",
+  backgroundColor: lightThemeColors.background,
   position: "relative",
   display: "flex",
   flexDirection: "column",
@@ -100,8 +102,8 @@ export function OgImage({
   title,
   description,
   icon,
-  primaryColor = "hsla(21.74, 66%, 55%, 1)",
-  primaryTextColor = "hsla(21.74, 66%, 55%, 1)",
+  primaryColor = lightThemeColors.secondary,
+  primaryTextColor = lightThemeColors.primary,
   site = "Nakafa",
 }: OgImageProps) {
   const sanitizedTitle = anyAscii(String(title));

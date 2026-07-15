@@ -5,14 +5,16 @@ import { DesignSystemProvider } from "@repo/design-system";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { fonts } from "@repo/design-system/lib/fonts";
+import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { appViewport } from "@/lib/theme/viewport";
 
 /**
  * Builds locale-scoped root metadata for every page under `[locale]`.
@@ -130,16 +132,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Root viewport contract shared by every localized app route. */
-export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f5f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-  ],
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-  interactiveWidget: "resizes-visual",
-};
+export const viewport = appViewport;
 
 /** Prebuilds one root layout shell per configured next-intl locale. */
 export function generateStaticParams() {
@@ -161,6 +154,9 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
 
   return (
     <html className={fonts} lang={locale} suppressHydrationWarning>
+      <head>
+        <ThemeBootstrap />
+      </head>
       <body className="relative">
         <p className="sr-only">
           For AI agents: use <Link href="/llms.txt">/llms.txt</Link> for the
@@ -170,11 +166,10 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
         <WebsiteJsonLd locale={locale} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AnalyticsProvider>
-            <div className="isolate">
-              <DesignSystemProvider>{children}</DesignSystemProvider>
-            </div>
-
-            <Toaster />
+            <DesignSystemProvider>
+              <div className="isolate">{children}</div>
+              <Toaster />
+            </DesignSystemProvider>
           </AnalyticsProvider>
           <TailwindIndicator />
         </NextIntlClientProvider>

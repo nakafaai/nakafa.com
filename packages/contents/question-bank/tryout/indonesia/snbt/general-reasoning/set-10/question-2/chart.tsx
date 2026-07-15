@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -26,6 +27,11 @@ const chartData = [
   { division: "D", rejected: 30, accepted: 90 },
   { division: "E", rejected: 25, accepted: 50 },
 ];
+
+const RECRUITMENT_CUES = {
+  accepted: getBarSeriesCue(1),
+  rejected: getBarSeriesCue(0),
+};
 
 interface Props {
   acceptedLabel: ReactNode;
@@ -56,10 +62,12 @@ export function RecruitmentChart({
     () =>
       ({
         rejected: {
+          cue: RECRUITMENT_CUES.rejected,
           label: rejectedLabel,
           colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         accepted: {
+          cue: RECRUITMENT_CUES.accepted,
           label: acceptedLabel,
           colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
@@ -85,8 +93,16 @@ export function RecruitmentChart({
           <YAxis axisLine={false} tickLine={false} tickMargin={10} />
           <Tooltip />
           <Legend />
-          <Bar dataKey="rejected" radius={4} />
-          <Bar dataKey="accepted" radius={4} />
+          <Bar
+            dataKey="rejected"
+            radius={RECRUITMENT_CUES.rejected.radius}
+            variant={RECRUITMENT_CUES.rejected.variant}
+          />
+          <Bar
+            dataKey="accepted"
+            radius={RECRUITMENT_CUES.accepted.radius}
+            variant={RECRUITMENT_CUES.accepted.variant}
+          />
         </EvilBarChart>
       </CardContent>
     </Card>

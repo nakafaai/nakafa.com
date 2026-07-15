@@ -5,6 +5,7 @@ import {
   getPayloadConfigEntry,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
+import { ChartSeriesCueIndicator } from "@repo/design-system/components/evilcharts/ui/series-cue-indicator";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 import * as RechartsPrimitive from "recharts";
@@ -56,33 +57,51 @@ function ChartLegendContent({
     const configEntry = getPayloadConfigEntry(config, item, key);
     const itemConfig = configEntry?.config;
     const dataKey = configEntry?.dataKey ?? key;
-    const isSelected = selected === null || selected === dataKey;
+    const isSelected =
+      selected === null || selected === undefined || selected === dataKey;
     const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
+    let indicator = (
+      <LegendIndicator
+        colorsCount={colorsCount}
+        dataKey={dataKey}
+        key={`${key}-indicator`}
+        variant={variant}
+      />
+    );
+
+    if (itemConfig?.cue && !hideIcon) {
+      indicator = (
+        <ChartSeriesCueIndicator
+          cue={itemConfig.cue}
+          dataKey={dataKey}
+          key={`${key}-cue`}
+        />
+      );
+    }
+
+    if (itemConfig?.icon && !hideIcon) {
+      const Icon = itemConfig.icon;
+      indicator = <Icon key={`${key}-icon`} />;
+    }
 
     const content = (
       <>
-        {itemConfig?.icon && !hideIcon ? (
-          <itemConfig.icon />
-        ) : (
-          <LegendIndicator
-            colorsCount={colorsCount}
-            dataKey={dataKey}
-            variant={variant}
-          />
-        )}
+        {indicator}
         {itemConfig?.label}
       </>
     );
 
     const itemClassName = cn(
-      "flex items-center gap-1.5 transition-opacity [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
-      !isSelected && "opacity-30",
-      isClickable && "cursor-pointer"
+      "flex items-center gap-1.5 transition-colors [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
+      !isSelected && "text-muted-foreground",
+      isClickable &&
+        "cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     );
 
     if (isClickable) {
       return [
         <button
+          aria-pressed={selected === dataKey}
           className={itemClassName}
           key={key}
           onClick={() =>
@@ -209,9 +228,9 @@ function getLegendOutlineStyle(
 ): React.CSSProperties {
   const maskStyle: React.CSSProperties = {
     WebkitMask:
-      "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+      "linear-gradient(oklch(1 0 0) 0 0) content-box, linear-gradient(oklch(1 0 0) 0 0)",
     WebkitMaskComposite: "xor",
-    mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+    mask: "linear-gradient(oklch(1 0 0) 0 0) content-box, linear-gradient(oklch(1 0 0) 0 0)",
     maskComposite: "exclude",
   };
 

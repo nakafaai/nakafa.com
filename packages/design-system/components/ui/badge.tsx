@@ -9,29 +9,29 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
+          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--primary)_99%,var(--background))] [a&]:hover:shadow-sm",
         "default-subtle":
-          "border-primary bg-primary/10 text-primary [a&]:hover:bg-primary/20",
+          "border-primary bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] text-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--primary)_8%,var(--background))] [a&]:hover:shadow-sm",
         "default-outline":
-          "border-border bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
+          "border-border bg-primary text-primary-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--primary)_99%,var(--background))] [a&]:hover:shadow-sm",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] [a&]:hover:shadow-sm",
         "secondary-subtle":
-          "border-secondary bg-secondary/10 text-secondary [a&]:hover:bg-secondary/20",
+          "border-muted-foreground bg-[color-mix(in_oklch,var(--secondary)_5%,var(--background))] text-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] [a&]:hover:shadow-sm",
         "secondary-outline":
-          "border-border bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+          "border-border bg-secondary text-secondary-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] [a&]:hover:shadow-sm",
         muted:
-          "border-transparent bg-muted text-muted-foreground [a&]:hover:bg-muted/90",
+          "border-transparent bg-muted text-muted-foreground [a&]:hover:bg-muted/90 [a&]:hover:shadow-sm",
         "muted-outline":
-          "border-border bg-muted text-muted-foreground [a&]:hover:bg-muted/90",
+          "border-border bg-muted text-muted-foreground [a&]:hover:bg-muted/90 [a&]:hover:shadow-sm",
         "muted-subtle":
-          "border-muted bg-muted/10 text-muted [a&]:hover:bg-muted/20",
+          "border-muted-foreground bg-[color-mix(in_oklch,var(--muted)_5%,var(--background))] text-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--muted)_20%,var(--background))] [a&]:hover:shadow-sm",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90",
+          "border-transparent bg-destructive text-destructive-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--destructive)_99%,var(--background))] [a&]:hover:shadow-sm",
         "destructive-subtle":
-          "border-destructive bg-destructive/10 text-destructive [a&]:hover:bg-destructive/20",
+          "border-destructive bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] text-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] [a&]:hover:shadow-sm",
         "destructive-outline":
-          "border-border bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90",
+          "border-border bg-destructive text-destructive-foreground [a&]:hover:bg-[color-mix(in_oklch,var(--destructive)_99%,var(--background))] [a&]:hover:shadow-sm",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
       },
@@ -64,4 +64,4 @@ function Badge({
   });
 }
 
-export { Badge, badgeVariants };
+export { Badge };

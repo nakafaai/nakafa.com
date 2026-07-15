@@ -92,13 +92,14 @@ function ChartTooltipContent({
     const dataKey = configEntry?.dataKey ?? key;
     const payloadFill = getChartPayloadStringValue(item.payload, "fill");
     const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
+    const isDeemphasized = selected != null && selected !== dataKey;
 
     return [
       <div
         className={cn(
           "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
           indicator === "dot" && "items-center",
-          selected != null && selected !== item.dataKey && "opacity-30"
+          isDeemphasized && "text-muted-foreground"
         )}
         key={`${key}-${String(item.dataKey ?? item.name ?? item.value)}`}
       >
@@ -139,7 +140,12 @@ function ChartTooltipContent({
                 </span>
               </div>
               {item.value != null && (
-                <span className="font-medium font-mono text-foreground tabular-nums">
+                <span
+                  className={cn(
+                    "font-medium font-mono tabular-nums",
+                    isDeemphasized ? "text-muted-foreground" : "text-foreground"
+                  )}
+                >
                   {typeof item.value === "number"
                     ? item.value.toLocaleString()
                     : String(item.value)}

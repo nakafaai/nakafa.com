@@ -21,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getPointSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import type { ReactNode } from "react";
 
 interface Point {
@@ -66,9 +67,10 @@ export function ScatterDiagram({
   showResiduals,
 }: Props) {
   const datasetConfig = Object.fromEntries(
-    datasets.map((dataset) => [
+    datasets.map((dataset, index) => [
       dataset.name,
       {
+        cue: getPointSeriesCue(index),
         label: dataset.name,
         colors: { light: [dataset.color], dark: [dataset.color] },
       },
@@ -149,16 +151,20 @@ export function ScatterDiagram({
             type="number"
           />
           <Tooltip hideContent />
-          {datasets.map((dataset) => (
-            <Scatter
-              data={dataset.points}
-              dataKey={dataset.name}
-              key={dataset.name}
-            >
-              <Dot variant="default" />
-              <ActiveDot variant="colored-border" />
-            </Scatter>
-          ))}
+          {datasets.map((dataset, index) => {
+            const cue = getPointSeriesCue(index);
+
+            return (
+              <Scatter
+                data={dataset.points}
+                dataKey={dataset.name}
+                key={dataset.name}
+              >
+                <Dot variant={cue.dot} />
+                <ActiveDot variant={cue.activeDot} />
+              </Scatter>
+            );
+          })}
           {!!regressionLineData && !!calculateRegressionLine && (
             <Line
               dataKey={REGRESSION_DATA_KEY}

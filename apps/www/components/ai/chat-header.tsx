@@ -292,14 +292,14 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                     />
                     <span className="text-sm">{t(visibility)}</span>
                   </div>
-                  <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground/80">
+                  <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground">
                     {t(`${visibility}-description`)}
                   </p>
                 </div>
 
                 <HugeIcons
                   className={cn(
-                    "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out",
+                    "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out group-hover:text-accent-foreground",
                     !!isSelected && "opacity-100"
                   )}
                   icon={Tick01Icon}

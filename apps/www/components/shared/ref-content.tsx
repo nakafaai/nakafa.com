@@ -36,7 +36,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { cleanupUrl, cn, formatUrl } from "@repo/design-system/lib/utils";
+import { cleanupUrl, formatUrl } from "@repo/design-system/lib/routing/url";
+import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 

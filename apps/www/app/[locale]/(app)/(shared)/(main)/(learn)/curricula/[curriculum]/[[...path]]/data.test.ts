@@ -29,6 +29,15 @@ describe("curriculum route data", () => {
   it("builds static params for root and nested curriculum routes", () => {
     const params = listCurriculumStaticParams();
 
+    expect(listCurriculumStaticParams("id").slice(0, 4)).toEqual([
+      { curriculum: "amerika-serikat", path: ["sma"] },
+      { curriculum: "amerika-serikat", path: ["sma", "matematika"] },
+      {
+        curriculum: "cambridge-international",
+        path: ["upper-secondary", "mathematics-0580"],
+      },
+      { curriculum: "merdeka" },
+    ]);
     expect(params).toContainEqual({ curriculum: "merdeka" });
     expect(params).toContainEqual({
       curriculum: "merdeka",

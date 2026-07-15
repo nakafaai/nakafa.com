@@ -1,8 +1,10 @@
 import { getChartSeriesId } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import { GeometricDot } from "@repo/design-system/components/evilcharts/ui/geometric-dot";
+import type { ChartDotVariant } from "@repo/design-system/lib/charts/series-cue";
 import { cn } from "@repo/design-system/lib/utils";
 import * as React from "react";
 
-export type DotVariant = "default" | "border" | "colored-border";
+export type DotVariant = ChartDotVariant;
 
 interface ChartDotProps {
   chartId: string;
@@ -56,6 +58,23 @@ const ChartDot = React.memo(function ChartDot({
           fillOpacity={fillOpacity}
           gradientUrl={gradientUrl}
           maskId={maskId}
+        />
+      );
+    case "square":
+    case "square-border":
+    case "diamond":
+    case "diamond-border":
+    case "triangle":
+    case "triangle-border":
+      return (
+        <GeometricDot
+          className={className}
+          cx={cx}
+          cy={cy}
+          fillOpacity={fillOpacity}
+          gradientUrl={gradientUrl}
+          maskId={maskId}
+          type={type}
         />
       );
     default:

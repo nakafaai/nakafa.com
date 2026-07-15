@@ -20,6 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -29,6 +30,11 @@ const chartData = [
   { year: "4", capital: 150, revenue: 250 },
   { year: "5", capital: 200, revenue: 300 },
 ];
+
+const PROFIT_CUES = {
+  capital: getBarSeriesCue(0),
+  revenue: getBarSeriesCue(1),
+};
 
 interface Props {
   capitalLabel: ReactNode;
@@ -50,10 +56,12 @@ export function ProfitChart({
     () =>
       ({
         capital: {
+          cue: PROFIT_CUES.capital,
           label: capitalLabel,
           colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         revenue: {
+          cue: PROFIT_CUES.revenue,
           label: revenueLabel,
           colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
@@ -86,8 +94,16 @@ export function ProfitChart({
             }
           />
           <Legend />
-          <Bar dataKey="capital" radius={4} />
-          <Bar dataKey="revenue" radius={4} />
+          <Bar
+            dataKey="capital"
+            radius={PROFIT_CUES.capital.radius}
+            variant={PROFIT_CUES.capital.variant}
+          />
+          <Bar
+            dataKey="revenue"
+            radius={PROFIT_CUES.revenue.radius}
+            variant={PROFIT_CUES.revenue.variant}
+          />
         </EvilBarChart>
       </CardContent>
     </Card>
