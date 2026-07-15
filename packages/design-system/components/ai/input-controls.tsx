@@ -2,10 +2,6 @@
 
 import { Add01Icon, ArrowUp02Icon, StopIcon } from "@hugeicons/core-free-icons";
 import {
-  useOptionalPromptInputController,
-  usePromptInputAttachments,
-} from "@repo/design-system/components/ai/input-context";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -18,6 +14,10 @@ import {
   InputGroupTextarea,
 } from "@repo/design-system/components/ui/input-group";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import {
+  useOptionalPromptInputController,
+  usePromptInputAttachments,
+} from "@repo/design-system/lib/prompt-input/context";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ChatStatus } from "ai";
 import {

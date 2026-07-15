@@ -2,7 +2,7 @@ import { getChartColorVariable } from "@repo/design-system/components/evilcharts
 import type {
   ChartDotVariant,
   ChartSeriesCue,
-} from "@repo/design-system/lib/chart-series-cue";
+} from "@repo/design-system/lib/charts/series-cue";
 import type { CSSProperties } from "react";
 
 interface ChartSeriesCueIndicatorProps {

@@ -3,11 +3,11 @@
 import { useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import {
   ORB_FRAGMENT_SHADER,
   ORB_VERTEX_SHADER,
-} from "@repo/design-system/lib/orb-shaders";
-import { getThemeAppearance } from "@repo/design-system/lib/theme";
+} from "@repo/design-system/lib/visual-effects/orb-shaders";
 import { useTheme } from "next-themes";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -271,9 +271,7 @@ function Scene({
   );
 }
 
-/**
- * Creates a deterministic 32-bit pseudo-random number generator.
- */
+/** Creates a deterministic 32-bit pseudo-random number generator. */
 function splitmix32(initialSeed: number) {
   // biome-ignore lint/suspicious/noBitwiseOperators: <Required for PRNG>
   let state = initialSeed | 0;
@@ -292,9 +290,7 @@ function splitmix32(initialSeed: number) {
   };
 }
 
-/**
- * Clamps a numeric value into the inclusive 0..1 range.
- */
+/** Clamps a numeric value into the inclusive 0..1 range. */
 function clamp01(n: number) {
   if (!Number.isFinite(n)) {
     return 0;

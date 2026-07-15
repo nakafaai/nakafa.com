@@ -23,7 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { getLineSeriesCue } from "@repo/design-system/lib/chart-series-cue";
+import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { format } from "date-fns";
 import type { ReactNode } from "react";
 

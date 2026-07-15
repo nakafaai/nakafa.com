@@ -1,5 +1,5 @@
 import { formatCodeBlockData } from "@repo/contents/_types/llms/code";
-import { preprocessLaTeX } from "@repo/design-system/lib/parse-math";
+import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
 import { Effect, Schema } from "effect";
 import type { Parent, Root, RootContent } from "mdast";
 import type {

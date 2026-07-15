@@ -1,6 +1,6 @@
 import { getChartSeriesId } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { GeometricDot } from "@repo/design-system/components/evilcharts/ui/geometric-dot";
-import type { ChartDotVariant } from "@repo/design-system/lib/chart-series-cue";
+import type { ChartDotVariant } from "@repo/design-system/lib/charts/series-cue";
 import { cn } from "@repo/design-system/lib/utils";
 import * as React from "react";
 

@@ -102,10 +102,12 @@ function unsubscribeSpeechRecognitionAvailability() {
   return;
 }
 
+/** Browser support is stable for a document lifetime, so no change events exist. */
 function subscribeSpeechRecognitionAvailability(_listener: () => void) {
   return unsubscribeSpeechRecognitionAvailability;
 }
 
+/** Constructs the vendor speech-recognition boundary through a typed Effect. */
 const createSpeechRecognition = Effect.fn(
   "designSystem.promptInput.createSpeechRecognition"
 )((SpeechRecognitionApi: { new (): SpeechRecognition }) =>
@@ -116,6 +118,7 @@ const createSpeechRecognition = Effect.fn(
   })
 );
 
+/** Starts or stops recognition while preserving browser failures in the error channel. */
 const controlSpeechRecognition = Effect.fn(
   "designSystem.promptInput.controlSpeechRecognition"
 )((recognition: SpeechRecognition, operation: "start" | "stop") =>

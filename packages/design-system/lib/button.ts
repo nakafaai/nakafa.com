@@ -1,5 +1,6 @@
 import { cva } from "class-variance-authority";
 
+/** Shared interaction, semantic, and size variants for every Nakafa button. */
 export const buttonVariants = cva(
   "inline-flex shrink-0 cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm outline-none transition-all ease-out focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
@@ -14,7 +15,7 @@ export const buttonVariants = cva(
         "destructive-outline":
           "border border-destructive bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] hover:shadow-md",
         outline:
-          "border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
+          "border border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
         secondary:
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] hover:shadow-md",
         "secondary-outline":

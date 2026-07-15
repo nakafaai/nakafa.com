@@ -30,7 +30,7 @@ import {
   SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { useSidebar } from "@repo/design-system/components/ui/sidebar-provider";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvexAuth, usePaginatedQuery } from "convex/react";

@@ -20,11 +20,11 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { readMermaidMetadata } from "@repo/design-system/lib/mermaid";
-import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
+import { filterWhitespaceNodes } from "@repo/design-system/lib/markdown/children";
+import { readMermaidMetadata } from "@repo/design-system/lib/markdown/mermaid";
+import { cn } from "@repo/design-system/lib/utils";
 import { memo } from "react";
 import type { ExtraProps, Options } from "react-markdown";
-import type { BundledLanguage } from "shiki";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
@@ -343,7 +343,7 @@ export const reactMdxComponents: Options["components"] = {
       }
 
       const match = className?.match(LANGUAGE_REGEX);
-      const language = (match?.at(1) ?? "") as BundledLanguage | "math";
+      const language = match?.at(1) ?? "";
       const code = readMarkdownNodeText(node);
 
       if (language === "math") {

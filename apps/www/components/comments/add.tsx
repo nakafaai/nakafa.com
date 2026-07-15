@@ -104,7 +104,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
 
   return (
     <form
-      className="w-full divide-y overflow-hidden rounded-xl border bg-background shadow-xs"
+      className="w-full divide-y overflow-hidden rounded-xl border border-input bg-background shadow-xs outline-none transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring"
       onSubmit={handleSubmit}
     >
       <Textarea

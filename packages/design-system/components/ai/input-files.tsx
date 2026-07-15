@@ -3,12 +3,12 @@
 import type {
   AttachmentsContext,
   PromptInputController,
-} from "@repo/design-system/components/ai/input-context";
+} from "@repo/design-system/lib/prompt-input/context";
 import {
   type PromptInputFile,
   type PromptInputFileConstraintError,
   validatePromptInputFiles,
-} from "@repo/design-system/lib/prompt-input-files";
+} from "@repo/design-system/lib/prompt-input/files";
 import { Effect, Either } from "effect";
 import { nanoid } from "nanoid";
 import {

@@ -16,7 +16,7 @@ import { threeSceneFrameVariants } from "@repo/design-system/components/three/sc
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COLORS, getColor } from "@repo/design-system/lib/color";
-import { getThemeAppearance } from "@repo/design-system/lib/theme";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTheme } from "next-themes";
 import {

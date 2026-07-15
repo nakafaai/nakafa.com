@@ -18,7 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
+import { filterWhitespaceNodes } from "@repo/design-system/lib/markdown/children";
+import { cn } from "@repo/design-system/lib/utils";
 import type {
   BlockquoteProps,
   CodeProps,

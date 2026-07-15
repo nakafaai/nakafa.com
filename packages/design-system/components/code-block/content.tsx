@@ -1,13 +1,16 @@
 "use client";
 
 import { captureException } from "@repo/analytics/posthog";
-import { highlightCode } from "@repo/design-system/lib/code-block";
+import { highlightCode } from "@repo/design-system/lib/code-block/highlight";
+import { cn } from "@repo/design-system/lib/utils";
 import { Effect, Fiber } from "effect";
 import type { HTMLAttributes } from "react";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import type { CodeOptionsMultipleThemes } from "shiki";
 
-type CodeBlockFallbackProps = HTMLAttributes<HTMLDivElement>;
+type CodeBlockFallbackProps = HTMLAttributes<HTMLDivElement> & {
+  preClassName?: string;
+};
 
 /** Gives repeated code lines stable keys based on their source offsets. */
 function getCodeLines(code: string) {
@@ -20,12 +23,16 @@ function getCodeLines(code: string) {
   });
 }
 
-function CodeBlockFallback({ children, ...props }: CodeBlockFallbackProps) {
+function CodeBlockFallback({
+  children,
+  preClassName,
+  ...props
+}: CodeBlockFallbackProps) {
   const lines = getCodeLines(children?.toString() ?? "");
 
   return (
     <div {...props}>
-      <pre className="w-full">
+      <pre className={cn("w-full", preClassName)}>
         <code>
           {lines.map(({ key, line }, index) => (
             <Fragment key={key}>
@@ -39,18 +46,23 @@ function CodeBlockFallback({ children, ...props }: CodeBlockFallbackProps) {
   );
 }
 
+/** Highlighting options plus the exact source used by the text fallback. */
 export type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
-  themes?: CodeOptionsMultipleThemes["themes"];
-  language?: string;
-  syntaxHighlighting?: boolean;
   children: string;
+  language?: string;
+  preClassName?: string;
+  syntaxHighlighting?: boolean;
+  themes?: CodeOptionsMultipleThemes["themes"];
+  transparentBackground?: boolean;
 };
 
 interface CodeHighlightRequest {
   children: string;
   language: string | undefined;
+  preClassName: string | undefined;
   syntaxHighlighting: boolean;
   themes: CodeOptionsMultipleThemes["themes"] | undefined;
+  transparentBackground: boolean;
 }
 
 /** Highlights client-rendered code while retaining a safe text fallback. */
@@ -58,12 +70,28 @@ export const CodeBlockContent = ({
   children,
   themes,
   language,
+  preClassName,
   syntaxHighlighting = true,
+  transparentBackground = false,
   ...props
 }: CodeBlockContentProps) => {
   const request = useMemo<CodeHighlightRequest>(
-    () => ({ children, language, syntaxHighlighting, themes }),
-    [children, language, syntaxHighlighting, themes]
+    () => ({
+      children,
+      language,
+      preClassName,
+      syntaxHighlighting,
+      themes,
+      transparentBackground,
+    }),
+    [
+      children,
+      language,
+      preClassName,
+      syntaxHighlighting,
+      themes,
+      transparentBackground,
+    ]
   );
   const [highlightedCode, setHighlightedCode] = useState<{
     html: string;
@@ -82,7 +110,9 @@ export const CodeBlockContent = ({
       highlightCode({
         code: request.children,
         language: request.language,
+        preClassName: request.preClassName,
         themes: request.themes,
+        transparentBackground: request.transparentBackground,
       }).pipe(
         Effect.matchEffect({
           onFailure: (error) =>
@@ -113,7 +143,11 @@ export const CodeBlockContent = ({
   const html = highlightedCode.request === request ? highlightedCode.html : "";
 
   if (!(request.syntaxHighlighting && html)) {
-    return <CodeBlockFallback {...props}>{children}</CodeBlockFallback>;
+    return (
+      <CodeBlockFallback preClassName={request.preClassName} {...props}>
+        {children}
+      </CodeBlockFallback>
+    );
   }
 
   return (

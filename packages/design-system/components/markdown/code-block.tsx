@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  CodeBlock,
-  type CodeBlockData,
-} from "@repo/design-system/components/code-block";
+import { CodeBlock } from "@repo/design-system/components/code-block";
 import {
   CodeBlockBody,
   CodeBlockItem,
@@ -20,6 +17,7 @@ import {
   CodeBlockSelectTrigger,
   CodeBlockSelectValue,
 } from "@repo/design-system/components/code-block/header";
+import type { CodeBlockData } from "@repo/design-system/lib/code-block/context";
 
 /** Composes authored MDX code sources into Nakafa's tabbed code block. */
 export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {

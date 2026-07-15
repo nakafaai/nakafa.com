@@ -1,4 +1,4 @@
-import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme-compatibility";
+import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import { describe, expect, it, vi } from "vitest";
 import manifest from "@/app/manifest";
 

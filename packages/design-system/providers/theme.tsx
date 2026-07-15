@@ -1,10 +1,10 @@
-import { themes } from "@repo/design-system/lib/theme";
+import {
+  concreteThemeValues,
+  DEFAULT_THEME,
+  THEME_STORAGE_KEY,
+} from "@repo/design-system/lib/theme/registry";
 import type { ThemeProviderProps } from "next-themes";
 import { ThemeProvider as NextThemeProvider } from "next-themes";
-
-const concreteThemeValues = themes.flatMap((theme) =>
-  theme.appearance === "dynamic" ? [] : [theme.value]
-);
 
 /** Configures Nakafa's concrete themes and delegates system resolution to next-themes. */
 export const ThemeProvider = ({
@@ -13,9 +13,10 @@ export const ThemeProvider = ({
 }: ThemeProviderProps) => (
   <NextThemeProvider
     attribute="class"
-    defaultTheme="light"
+    defaultTheme={DEFAULT_THEME}
     disableTransitionOnChange
     enableSystem
+    storageKey={THEME_STORAGE_KEY}
     themes={concreteThemeValues}
     {...properties}
   >

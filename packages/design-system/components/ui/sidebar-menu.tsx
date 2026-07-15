@@ -1,16 +1,16 @@
 "use client";
 
 import { useRender } from "@base-ui/react/use-render";
-import { useSidebar } from "@repo/design-system/components/ui/sidebar-provider";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactElement } from "react";
 
 /** Renders the list container for sidebar menu items. */
 export function SidebarMenu({ className, ...props }: ComponentProps<"ul">) {
@@ -60,7 +60,7 @@ const sidebarMenuButtonVariants = cva(
       variant: {
         default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         outline:
-          "border border-input bg-background hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          "border border-sidebar-border bg-background hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
       },
       size: {
         default: "h-8 text-sm",
@@ -150,7 +150,7 @@ export function SidebarMenuAction({
   ...props
 }: useRender.ComponentProps<"button"> & {
   showOnHover?: boolean;
-}) {
+}): ReactElement {
   return useRender({
     defaultTagName: "button",
     render,

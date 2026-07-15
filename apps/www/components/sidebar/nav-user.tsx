@@ -30,7 +30,7 @@ import {
   SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { useSidebar } from "@repo/design-system/components/ui/sidebar-provider";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import {
   usePathname,
   useRouter,
@@ -38,11 +38,11 @@ import {
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
+import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
+import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
-import { NavUserSkeleton } from "./nav-user-skeleton";
-import { SidebarUtilityMenuItems } from "./utility-menu-items";
 
 /**
  * Renders the signed-in user menu, plan indicator, and guest login shortcut in the sidebar.

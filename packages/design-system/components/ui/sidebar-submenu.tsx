@@ -2,7 +2,7 @@
 
 import { useRender } from "@base-ui/react/use-render";
 import { cn } from "@repo/design-system/lib/utils";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactElement } from "react";
 
 /** Renders a nested sidebar menu with a visual parent-child guide. */
 export function SidebarMenuSub({ className, ...props }: ComponentProps<"ul">) {
@@ -45,7 +45,7 @@ export function SidebarMenuSubButton({
 }: useRender.ComponentProps<"a"> & {
   size?: "sm" | "md";
   isActive?: boolean;
-}) {
+}): ReactElement {
   return useRender({
     defaultTagName: "a",
     render,

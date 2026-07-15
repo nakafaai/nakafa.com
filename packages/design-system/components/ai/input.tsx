@@ -1,17 +1,15 @@
 "use client";
 
-import {
-  PromptInputAttachmentsProvider,
-  useOptionalPromptInputController,
-} from "@repo/design-system/components/ai/input-context";
+import { PromptInputAttachmentsProvider } from "@repo/design-system/components/ai/input-context";
 import { usePromptInputFiles } from "@repo/design-system/components/ai/input-files";
 import { InputGroup } from "@repo/design-system/components/ui/input-group";
+import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
+import { useOptionalPromptInputController } from "@repo/design-system/lib/prompt-input/context";
+import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
 import {
   type PromptInputMessage,
   submitPromptInput,
-} from "@repo/design-system/lib/prompt-input";
-import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input-boundary";
-import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input-files";
+} from "@repo/design-system/lib/prompt-input/submission";
 import { cn } from "@repo/design-system/lib/utils";
 import { Effect, Fiber } from "effect";
 import {
@@ -195,9 +193,7 @@ export function PromptInput({
         type="file"
       />
       <form className="w-full" onSubmit={handleSubmit} ref={formRef} {...props}>
-        <InputGroup className={cn("border-input bg-card", className)}>
-          {children}
-        </InputGroup>
+        <InputGroup className={cn("bg-card", className)}>{children}</InputGroup>
       </form>
     </>
   );

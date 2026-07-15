@@ -1,7 +1,7 @@
 "use client";
 
 import { NeuroNoise } from "@paper-design/shaders-react";
-import { getThemeShaderColor } from "@repo/design-system/lib/theme";
+import { getThemeShaderColor } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "next-themes";
 
 export function AiNeuroNoise() {

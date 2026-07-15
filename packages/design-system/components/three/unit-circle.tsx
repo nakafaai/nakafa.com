@@ -20,8 +20,8 @@ import {
   getRadians,
   getSin,
   getTan,
-} from "@repo/design-system/lib/math";
-import { getThemeAppearance } from "@repo/design-system/lib/theme";
+} from "@repo/design-system/lib/geometry/angles";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";

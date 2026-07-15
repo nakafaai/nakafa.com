@@ -10,7 +10,7 @@ import {
   ConversationScrollButton,
 } from "@repo/design-system/components/ai/conversation";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import {
   usePathname,
   useRouter,

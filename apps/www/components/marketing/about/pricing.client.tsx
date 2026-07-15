@@ -7,7 +7,7 @@ import { products } from "@repo/backend/convex/utils/polar/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { getThemeShaderColor } from "@repo/design-system/lib/theme";
+import { getThemeShaderColor } from "@repo/design-system/lib/theme/registry";
 import { useAction } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";

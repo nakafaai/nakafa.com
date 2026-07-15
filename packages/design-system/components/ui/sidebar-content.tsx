@@ -4,7 +4,7 @@ import { useRender } from "@base-ui/react/use-render";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cn } from "@repo/design-system/lib/utils";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactElement } from "react";
 
 /** Renders a compact input aligned with the sidebar surface. */
 export function SidebarInput({
@@ -13,7 +13,10 @@ export function SidebarInput({
 }: ComponentProps<typeof Input>) {
   return (
     <Input
-      className={cn("h-8 w-full bg-background shadow-none", className)}
+      className={cn(
+        "h-8 w-full border-sidebar-border bg-background shadow-none focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring",
+        className
+      )}
       data-sidebar="input"
       data-slot="sidebar-input"
       {...props}
@@ -92,7 +95,7 @@ export function SidebarGroupLabel({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"div">) {
+}: useRender.ComponentProps<"div">): ReactElement {
   return useRender({
     defaultTagName: "div",
     render,
@@ -114,7 +117,7 @@ export function SidebarGroupAction({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"button">) {
+}: useRender.ComponentProps<"button">): ReactElement {
   return useRender({
     defaultTagName: "button",
     render,

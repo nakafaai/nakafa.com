@@ -1,12 +1,12 @@
 "use client";
 
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
+import { runAudioPlayerProgram } from "@repo/design-system/lib/audio-player/boundary";
 import {
   useAudioPlayer,
   useAudioPlayerTime,
-} from "@repo/design-system/components/ui/audio-player-context";
-import { formatAudioPlayerTime } from "@repo/design-system/lib/audio-player";
-import { runAudioPlayerProgram } from "@repo/design-system/lib/audio-player-boundary";
+} from "@repo/design-system/lib/audio-player/context";
+import { formatAudioPlayerTime } from "@repo/design-system/lib/audio-player/runtime";
 import { cn } from "@repo/design-system/lib/utils";
 import { type HTMLProps, useRef } from "react";
 

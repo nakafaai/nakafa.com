@@ -2,15 +2,16 @@
 
 import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
-import { useCodeBlock } from "@repo/design-system/components/code-block";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { writeCodeToClipboard } from "@repo/design-system/lib/code-block";
+import { writeCodeToClipboard } from "@repo/design-system/lib/code-block/clipboard";
+import { useCodeBlock } from "@repo/design-system/lib/code-block/context";
 import { cn } from "@repo/design-system/lib/utils";
 import { Duration, Effect, Fiber } from "effect";
 import type { ComponentProps } from "react";
 import { useEffect, useRef, useState } from "react";
 
+/** Copy callbacks and duration for the transient success state. */
 export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
@@ -45,11 +46,7 @@ export const CodeBlockCopyButton = ({
   );
 
   function copyToClipboard() {
-    if (
-      typeof window === "undefined" ||
-      !navigator.clipboard?.writeText ||
-      !code
-    ) {
+    if (typeof window === "undefined" || !code) {
       return;
     }
 
@@ -62,6 +59,13 @@ export const CodeBlockCopyButton = ({
       yield* Effect.sleep(Duration.millis(timeout));
       yield* Effect.sync(() => setIsCopied(false));
     }).pipe(
+      Effect.catchTag("CodeClipboardUnavailableError", (error) =>
+        Effect.sync(() => {
+          setIsCopied(false);
+          captureException(error, { source: "code-block-copy" });
+          onError?.(error);
+        })
+      ),
       Effect.catchTag("CodeClipboardWriteError", (error) =>
         Effect.sync(() => {
           const cause = error.cause instanceof Error ? error.cause : error;

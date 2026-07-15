@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { getPointSeriesCue } from "@repo/design-system/lib/chart-series-cue";
+import { getPointSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import type { ReactNode } from "react";
 
 interface Point {

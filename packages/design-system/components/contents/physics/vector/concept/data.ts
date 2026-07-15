@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { getThemeAppearance } from "@repo/design-system/lib/theme";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import type { ReactNode } from "react";
 import { Vector3 } from "three";
 

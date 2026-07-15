@@ -1,4 +1,4 @@
-import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme-compatibility";
+import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import type { MetadataRoute } from "next";
 import { getTranslations } from "next-intl/server";
 

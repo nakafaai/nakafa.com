@@ -22,7 +22,7 @@ import {
   SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { useSidebar } from "@repo/design-system/components/ui/sidebar-provider";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import {
   usePathname,
   useRouter,

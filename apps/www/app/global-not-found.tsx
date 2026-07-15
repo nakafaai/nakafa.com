@@ -6,6 +6,7 @@ import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
+import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import en from "@repo/internationalization/dictionaries/en.json";
 import id from "@repo/internationalization/dictionaries/id.json";
 import { routing } from "@repo/internationalization/src/routing";
@@ -48,6 +49,9 @@ export default function GlobalNotFound() {
       lang={routing.defaultLocale}
       suppressHydrationWarning
     >
+      <head>
+        <ThemeBootstrap defaultTheme="system" />
+      </head>
       <body>
         <DesignSystemProvider
           attribute="class"

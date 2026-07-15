@@ -5,7 +5,7 @@ import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
-import { getThemeAppearance } from "@repo/design-system/lib/theme";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "@repo/design-system/lib/utils";
 import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";

@@ -7,51 +7,25 @@ import {
   createMaxWidthMediaQuery,
   TAILWIND_BREAKPOINT_PIXELS,
 } from "@repo/design-system/lib/breakpoints";
+import { runSidebarStateProgram } from "@repo/design-system/lib/sidebar/boundary";
+import {
+  SidebarContext,
+  type SidebarContextValue,
+} from "@repo/design-system/lib/sidebar/context";
 import {
   BrowserSidebarCookieWriterLive,
   persistSidebarState,
   SIDEBAR_COOKIE_NAME,
-} from "@repo/design-system/lib/sidebar-state";
-import { runSidebarStateProgram } from "@repo/design-system/lib/sidebar-state-boundary";
+} from "@repo/design-system/lib/sidebar/persistence";
 import { cn } from "@repo/design-system/lib/utils";
 import { Effect } from "effect";
-import {
-  type ComponentProps,
-  createContext,
-  use,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { type ComponentProps, useCallback, useMemo, useState } from "react";
 
 /** Default modifier-key shortcut used to toggle the sidebar. */
-export const SIDEBAR_KEYBOARD_SHORTCUT = "b";
+const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
 /** Desktop breakpoint that switches the sidebar from sheet to panel. */
-export const SIDEBAR_DESKTOP = TAILWIND_BREAKPOINT_PIXELS.lg;
-
-interface SidebarContextProps {
-  isLocked: boolean;
-  isMobile: boolean;
-  open: boolean;
-  openMobile: boolean;
-  setOpen: (open: boolean) => void;
-  setOpenMobile: (open: boolean) => void;
-  state: "expanded" | "collapsed";
-  toggleSidebar: () => void;
-}
-
-const SidebarContext = createContext<SidebarContextProps | null>(null);
-
-/** Reads sidebar state and actions from the nearest SidebarProvider. */
-export function useSidebar() {
-  const context = use(SidebarContext);
-  if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider.");
-  }
-
-  return context;
-}
+const SIDEBAR_DESKTOP = TAILWIND_BREAKPOINT_PIXELS.lg;
 
 /**
  * Provides responsive, persistent sidebar state for an app shell.
@@ -143,7 +117,7 @@ export function SidebarProvider({
   );
 
   const state = open ? "expanded" : "collapsed";
-  const contextValue = useMemo<SidebarContextProps>(
+  const contextValue = useMemo<SidebarContextValue>(
     () => ({
       state,
       open,

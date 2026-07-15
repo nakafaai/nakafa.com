@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { getColor } from "@repo/design-system/lib/color";
-import { getThemeAppearance } from "@repo/design-system/lib/theme";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense } from "react";

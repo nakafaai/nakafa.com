@@ -15,7 +15,7 @@ import type {
   PublicCurriculumRoute,
 } from "@repo/contents/_types/route/schema";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
-import { slugify } from "@repo/design-system/lib/utils";
+import { slugify } from "@repo/design-system/lib/routing/slug";
 import { notFound } from "next/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";

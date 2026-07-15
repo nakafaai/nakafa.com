@@ -5,7 +5,7 @@ import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { generateNanoId } from "@repo/design-system/lib/utils";
+import { generateNanoId } from "@repo/design-system/lib/identity/nanoid";
 import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useEffect, useState } from "react";

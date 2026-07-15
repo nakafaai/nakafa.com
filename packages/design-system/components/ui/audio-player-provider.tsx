@@ -1,9 +1,11 @@
 "use client";
 
+import { useAnimationFrame } from "@repo/design-system/lib/audio-player/animation-frame";
+import { runAudioPlayerProgram } from "@repo/design-system/lib/audio-player/boundary";
 import {
   AudioPlayerContext,
   AudioPlayerTimeContext,
-} from "@repo/design-system/components/ui/audio-player-context";
+} from "@repo/design-system/lib/audio-player/context";
 import {
   AudioNetworkState,
   type AudioPlayerApi,
@@ -18,9 +20,7 @@ import {
   seekAudioPlayer,
   setAudioPlayerPlaybackRate,
   stabilizeAudioPlayerSnapshot,
-} from "@repo/design-system/lib/audio-player";
-import { runAudioPlayerProgram } from "@repo/design-system/lib/audio-player-boundary";
-import { useAnimationFrame } from "@repo/design-system/lib/use-animation-frame";
+} from "@repo/design-system/lib/audio-player/runtime";
 import { Effect } from "effect";
 import {
   type ReactNode,

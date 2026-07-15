@@ -1,4 +1,4 @@
-import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme-compatibility";
+import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import anyAscii from "any-ascii";
 import type { CSSProperties, ReactNode } from "react";
 

@@ -9,7 +9,7 @@ import type {
   PublicContentRoute,
   PublicCurriculumRoute,
 } from "@repo/contents/_types/route/schema";
-import { slugify } from "@repo/design-system/lib/utils";
+import { slugify } from "@repo/design-system/lib/routing/slug";
 
 type MaterialLessonRoute = Extract<
   PublicContentRoute,

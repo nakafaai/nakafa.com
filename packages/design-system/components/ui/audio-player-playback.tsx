@@ -1,11 +1,11 @@
 "use client";
 
 import { PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
-import { useAudioPlayer } from "@repo/design-system/components/ui/audio-player-context";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import type { AudioPlayerItem } from "@repo/design-system/lib/audio-player";
-import { runAudioPlayerProgram } from "@repo/design-system/lib/audio-player-boundary";
+import { runAudioPlayerProgram } from "@repo/design-system/lib/audio-player/boundary";
+import { useAudioPlayer } from "@repo/design-system/lib/audio-player/context";
+import type { AudioPlayerItem } from "@repo/design-system/lib/audio-player/runtime";
 import { cn } from "@repo/design-system/lib/utils";
 import { Effect, Fiber } from "effect";
 import { type ComponentProps, useEffect } from "react";

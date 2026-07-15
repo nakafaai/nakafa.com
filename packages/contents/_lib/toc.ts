@@ -2,7 +2,7 @@ import type { ParsedHeading } from "@repo/contents/_types/toc";
 import {
   createHeadingId,
   createHeadingLabel,
-} from "@repo/design-system/lib/utils";
+} from "@repo/design-system/lib/markdown/headings";
 
 const HEADING_LEVELS = 6;
 

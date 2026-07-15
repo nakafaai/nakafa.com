@@ -16,7 +16,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import { getColor } from "@repo/design-system/lib/color";
-import { getThemeAppearance } from "@repo/design-system/lib/theme";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";

@@ -5,6 +5,7 @@ import { DesignSystemProvider } from "@repo/design-system";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { fonts } from "@repo/design-system/lib/fonts";
+import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
@@ -153,6 +154,9 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
 
   return (
     <html className={fonts} lang={locale} suppressHydrationWarning>
+      <head>
+        <ThemeBootstrap />
+      </head>
       <body className="relative">
         <p className="sr-only">
           For AI agents: use <Link href="/llms.txt">/llms.txt</Link> for the

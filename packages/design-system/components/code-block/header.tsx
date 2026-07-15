@@ -2,10 +2,6 @@
 
 import { TerminalIcon } from "@hugeicons/core-free-icons";
 import {
-  type CodeBlockData,
-  useCodeBlock,
-} from "@repo/design-system/components/code-block";
-import {
   type ProgrammingIcon,
   SimpleIcon,
 } from "@repo/design-system/components/icons/simple";
@@ -19,11 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import { filenameIconMap } from "@repo/design-system/lib/programming";
+import {
+  type CodeBlockData,
+  useCodeBlock,
+} from "@repo/design-system/lib/code-block/context";
+import { filenameIconMap } from "@repo/design-system/lib/code-block/icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 
+/** Native toolbar attributes for the code-block header surface. */
 export type CodeBlockHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 /** Renders the toolbar surface above a code block. */
@@ -40,6 +41,7 @@ export const CodeBlockHeader = ({
   />
 );
 
+/** Render-prop contract for projecting every source into the filename region. */
 export type CodeBlockFilesProps = Omit<
   HTMLAttributes<HTMLDivElement>,
   "children"
@@ -65,6 +67,7 @@ export const CodeBlockFiles = ({
   );
 };
 
+/** Filename identity and optional icon override for one source. */
 export type CodeBlockFilenameProps = HTMLAttributes<HTMLDivElement> & {
   icon?: ProgrammingIcon;
   value?: string;
@@ -106,6 +109,7 @@ export const CodeBlockFilename = ({
   );
 };
 
+/** Select behavior bound to the active code source. */
 export type CodeBlockSelectProps = ComponentProps<typeof Select>;
 
 /** Binds a language selector to the code block's active source. */
@@ -134,6 +138,7 @@ export const CodeBlockSelect = (props: CodeBlockSelectProps) => {
   );
 };
 
+/** Trigger attributes for the compact language selector. */
 export type CodeBlockSelectTriggerProps = ComponentProps<typeof SelectTrigger>;
 
 /** Applies the compact code-block treatment to a select trigger. */
@@ -151,6 +156,7 @@ export const CodeBlockSelectTrigger = ({
   />
 );
 
+/** Value-slot attributes for the selected language label. */
 export type CodeBlockSelectValueProps = ComponentProps<typeof SelectValue>;
 
 /** Displays the selected code language inside its trigger. */
@@ -158,6 +164,7 @@ export const CodeBlockSelectValue = (props: CodeBlockSelectValueProps) => (
   <SelectValue {...props} />
 );
 
+/** Render-prop contract for projecting sources into language options. */
 export type CodeBlockSelectContentProps = Omit<
   ComponentProps<typeof SelectContent>,
   "children"
@@ -183,6 +190,7 @@ export const CodeBlockSelectContent = ({
   );
 };
 
+/** Menu-item attributes for one selectable language. */
 export type CodeBlockSelectItemProps = ComponentProps<typeof SelectItem>;
 
 /** Applies the code-block typography to one language option. */

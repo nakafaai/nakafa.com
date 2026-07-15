@@ -13,7 +13,7 @@ import {
   PromptInputTools,
 } from "@repo/design-system/components/ai/input-controls";
 import { Message } from "@repo/design-system/components/ai/message";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 

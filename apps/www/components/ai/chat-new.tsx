@@ -9,7 +9,7 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from "@repo/design-system/components/ai/input-controls";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";

@@ -10,7 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
-import { useSidebar } from "@repo/design-system/components/ui/sidebar-provider";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ComponentProps } from "react";
 
@@ -94,7 +94,7 @@ export function Sidebar({
               : "right-0 group-data-[collapsible=offcanvas]:-right-64",
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(3rem+(--spacing(4))+2px)]"
-              : "group-data-[collapsible=icon]:w-12 group-data-[side=left]:border-r group-data-[side=right]:border-l",
+              : "border-sidebar-border group-data-[collapsible=icon]:w-12 group-data-[side=left]:border-r group-data-[side=right]:border-l",
             className
           )}
           data-slot="sidebar-container"

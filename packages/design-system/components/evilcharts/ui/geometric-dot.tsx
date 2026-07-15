@@ -1,4 +1,4 @@
-import type { ChartDotVariant } from "@repo/design-system/lib/chart-series-cue";
+import type { ChartDotVariant } from "@repo/design-system/lib/charts/series-cue";
 import { cn } from "@repo/design-system/lib/utils";
 import { memo } from "react";
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { Settings01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
-import { useAudioPlayer } from "@repo/design-system/components/ui/audio-player-context";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { runAudioPlayerProgram } from "@repo/design-system/lib/audio-player-boundary";
+import { runAudioPlayerProgram } from "@repo/design-system/lib/audio-player/boundary";
+import { useAudioPlayer } from "@repo/design-system/lib/audio-player/context";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ComponentProps, HTMLAttributes } from "react";
 

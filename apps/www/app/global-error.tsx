@@ -7,6 +7,7 @@ import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
+import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import "@repo/design-system/styles/globals.css";
 import "@repo/design-system/styles/theme.css";
 import { useEffect } from "react";
@@ -28,6 +29,9 @@ export default function GlobalError({
   return (
     // global-error must include html and body tags
     <html className={fonts} lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeBootstrap />
+      </head>
       <body>
         <DesignSystemProvider>
           <div className="relative">

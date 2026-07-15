@@ -117,7 +117,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
       <PopoverTrigger
         render={
           <Button
-            className="inline-flex items-center rounded-r-none border px-3 hover:bg-accent hover:text-accent-foreground"
+            className="inline-flex items-center rounded-r-none border border-input px-3 hover:bg-accent hover:text-accent-foreground"
             variant="ghost"
           />
         }
@@ -131,7 +131,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
           />
         </span>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-full border-input p-0">
+      <PopoverContent align="start" className="w-full p-0">
         <Autocomplete
           autoHighlight="always"
           filter={null}

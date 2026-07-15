@@ -5,7 +5,6 @@ import {
   Cancel01Icon,
   Image02Icon,
 } from "@hugeicons/core-free-icons";
-import { usePromptInputAttachments } from "@repo/design-system/components/ai/input-context";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -15,7 +14,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import type { PromptInputFile } from "@repo/design-system/lib/prompt-input-files";
+import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
+import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
 import { cn } from "@repo/design-system/lib/utils";
 import Image from "next/image";
 import {

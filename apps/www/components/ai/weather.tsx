@@ -15,7 +15,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { getCountryName } from "@repo/design-system/lib/utils";
+import { getCountryName } from "@repo/design-system/lib/locale/country";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { useWeather } from "@/lib/react-query/use-weather";

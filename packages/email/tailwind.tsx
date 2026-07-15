@@ -1,4 +1,4 @@
-import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme-compatibility";
+import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import type { ReactNode } from "react";
 import type { TailwindConfig } from "react-email";
 import { pixelBasedPreset, Tailwind as ReactEmailTailwind } from "react-email";
