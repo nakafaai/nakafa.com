@@ -2,7 +2,6 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { Response } from "@repo/design-system/components/ai/response";
-import type { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -12,7 +11,6 @@ import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import type {
   TryoutRuntimeChoice,
@@ -20,6 +18,7 @@ import type {
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
 import { reportClientException } from "@/lib/analytics/client";
+import { getTryoutChoiceVariant } from "@/lib/tryout/choice-variant";
 
 type SaveResponseArgs = FunctionArgs<
   typeof api.tryouts.mutations.attempts.saveResponse
@@ -102,7 +101,11 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
 function TryoutChoice({ value }: { value: TryoutChoiceValue }) {
   const { choice, disabled, onSelect, question, reviewMode } = value;
   const checked = question.response?.selectedOptionId === choice.optionKey;
-  const variant = getChoiceVariant({ checked, choice, reviewMode });
+  const variant = getTryoutChoiceVariant({
+    checked,
+    isCorrect: choice.isCorrect,
+    reviewMode,
+  });
 
   return (
     <Label
@@ -196,31 +199,6 @@ function applyOptimisticResponse(
 /** Calculates elapsed whole seconds since a Convex section start timestamp. */
 function getElapsedSeconds(startedAt: number) {
   return Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
-}
-
-/** Selects the production answer option variant for active and review modes. */
-function getChoiceVariant({
-  checked,
-  choice,
-  reviewMode,
-}: {
-  checked: boolean;
-  choice: TryoutRuntimeChoice;
-  reviewMode: boolean;
-}): ComponentProps<typeof Button>["variant"] {
-  if (!reviewMode) {
-    return checked ? "default-outline" : "outline";
-  }
-
-  if (checked && !choice.isCorrect) {
-    return "destructive-outline";
-  }
-
-  if (choice.isCorrect) {
-    return "success-outline";
-  }
-
-  return "outline";
 }
 
 /** Handles Convex answer-save failures with the existing exercise toasts. */
