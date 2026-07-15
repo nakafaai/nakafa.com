@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import vm from "node:vm";
 import { createThemeBootstrapScript } from "@repo/design-system/lib/theme/bootstrap";
 import {

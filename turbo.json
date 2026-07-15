@@ -3,7 +3,7 @@
   "globalDependencies": ["**/.env.*local"],
   "ui": "tui",
   "envMode": "loose",
-  "globalEnv": ["AI_SDK_DEVTOOLS", "ANALYZE", "NEXT_RUNTIME"],
+  "globalEnv": ["AI_SDK_DEVTOOLS", "ANALYZE", "NEXT_RUNTIME", "NODE_ENV"],
   "globalPassThroughEnv": [
     "REDIS_URL",
     "BING_WEBMASTER_API_KEY",
