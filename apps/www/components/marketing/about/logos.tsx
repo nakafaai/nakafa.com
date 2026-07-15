@@ -8,7 +8,10 @@ interface SchoolLogoProps {
   school: (typeof schools)[number];
 }
 
-const duplicatedSchools = [...schools, ...schools];
+const marqueeSchools = [
+  ...schools.map((school) => ({ copy: "original", school })),
+  ...schools.map((school) => ({ copy: "duplicate", school })),
+];
 
 function SchoolLogo({ school }: SchoolLogoProps) {
   return (
@@ -67,12 +70,8 @@ export function Logos() {
         <div className="pointer-events-none absolute inset-y-0 right-0 z-1 w-24 bg-linear-to-l from-background to-transparent" />
 
         <div className="group/logos hover:paused mx-auto flex w-max animate-marquee">
-          {duplicatedSchools.map((school, index) => (
-            <div
-              className="shrink-0"
-              // biome-ignore lint/suspicious/noArrayIndexKey: Schools are duplicated, need index for unique keys
-              key={`${school.href}-${index}`}
-            >
+          {marqueeSchools.map(({ copy, school }) => (
+            <div className="shrink-0" key={`${copy}-${school.href}`}>
               <SchoolLogo school={school} />
             </div>
           ))}

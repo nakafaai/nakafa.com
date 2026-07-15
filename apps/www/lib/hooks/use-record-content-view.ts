@@ -5,9 +5,9 @@ import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { generateNanoId } from "@repo/design-system/lib/identity/nanoid";
 import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
+import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
 import { useUser } from "@/lib/context/use-user";
@@ -57,9 +57,7 @@ export function useRecordContentView({
     context,
     signedInUserId,
   });
-  const [defaultDeviceId] = useState(
-    () => `${Date.now()}-${generateNanoId(9)}`
-  );
+  const [defaultDeviceId] = useState(() => `${Date.now()}-${nanoid(9)}`);
   const [deviceId] = useLocalStorage({
     key: "nakafa-device-id",
     defaultValue: defaultDeviceId,

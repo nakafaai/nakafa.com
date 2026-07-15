@@ -41,7 +41,7 @@ interface CodeBlockContextType {
 }
 
 /** Provides the light theme first and the dark theme second. */
-export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
+const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
   "github-light",
   "github-dark",
 ]);

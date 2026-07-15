@@ -117,7 +117,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
       <PopoverTrigger
         render={
           <Button
-            className="inline-flex items-center rounded-r-none border border-input px-3 hover:bg-accent hover:text-accent-foreground"
+            className="inline-flex items-center rounded-r-none border px-3 hover:bg-accent hover:text-accent-foreground"
             variant="ghost"
           />
         }
@@ -126,12 +126,15 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
         <span className="text-muted-foreground">
           <HugeIcons
             aria-hidden="true"
-            className="ml-auto h-4 w-4 shrink-0 opacity-80"
+            className="ml-auto h-4 w-4 shrink-0 opacity-50"
             icon={ArrowDown01Icon}
           />
         </span>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-full p-0">
+      <PopoverContent
+        align="start"
+        className="w-full border-[color-mix(in_oklch,var(--input)_5%,var(--border))] p-0"
+      >
         <Autocomplete
           autoHighlight="always"
           filter={null}
@@ -145,7 +148,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
           value={searchQuery}
         >
           <AutocompleteInput
-            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-inset"
+            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
             placeholder={t("search-country-placeholder")}
             showClear
             startAddon={countrySearchIcon}
@@ -177,7 +180,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
                     <HugeIcons
                       aria-hidden="true"
                       className={cn(
-                        "ml-auto size-4 shrink-0",
+                        "ml-auto size-4 shrink-0 text-primary",
                         c.value === value ? "opacity-100" : "opacity-0"
                       )}
                       icon={Tick01Icon}

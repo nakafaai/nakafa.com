@@ -14,7 +14,7 @@ export function SidebarInput({
   return (
     <Input
       className={cn(
-        "h-8 w-full border-sidebar-border bg-background shadow-none focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring",
+        "h-8 w-full border-sidebar-border bg-background shadow-none focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/50",
         className
       )}
       data-sidebar="input"

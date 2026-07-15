@@ -104,7 +104,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
 
   return (
     <form
-      className="w-full divide-y overflow-hidden rounded-xl border border-input bg-background shadow-xs outline-none transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring"
+      className="w-full divide-y overflow-hidden rounded-xl border border-input bg-background shadow-xs outline-none transition-[color,box-shadow] has-[[data-slot=textarea]:focus-visible]:border-ring has-[[data-slot=textarea]:focus-visible]:ring-[3px] has-[[data-slot=textarea]:focus-visible]:ring-ring/50"
       onSubmit={handleSubmit}
     >
       <Textarea

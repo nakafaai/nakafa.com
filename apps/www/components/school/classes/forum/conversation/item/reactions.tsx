@@ -24,10 +24,12 @@ export function PostReactions({ post }: { post: ForumPost }) {
     return null;
   }
 
+  const myReactions = new Set(post.myReactions);
+
   return (
     <div className="flex flex-wrap items-center gap-1">
       {post.reactionUsers.map(({ emoji, count, reactors }) => {
-        const isMyReaction = post.myReactions.includes(emoji);
+        const isMyReaction = myReactions.has(emoji);
         const moreCount = count - reactors.length;
 
         return (

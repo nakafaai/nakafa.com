@@ -20,6 +20,20 @@ import postcss from "postcss";
 import { describe, expect, it } from "vitest";
 
 const STATUS_NAMES = ["success", "warning", "info"];
+const THEME_IDENTITY_TOKENS = [
+  "--primary",
+  "--secondary",
+  "--accent",
+  "--ring",
+  "--success",
+  "--warning",
+  "--info",
+  "--chart-1",
+  "--chart-2",
+  "--chart-3",
+  "--chart-4",
+  "--chart-5",
+] as const;
 const EXPECTED_CONCRETE_THEME_COUNT = 31;
 
 const sources = await Effect.runPromise(
@@ -114,6 +128,39 @@ describe("theme profile contract", () => {
     expect(readCustomThemeNames(sources.customThemes).sort()).toEqual(
       [...customThemeNames].sort()
     );
+  });
+
+  it("gives every concrete theme a distinct semantic identity", () => {
+    const fingerprints = profiles.map((profile) => {
+      const rule = findTopLevelRule(profile.root, profile.selector);
+      expect(rule).toBeDefined();
+      if (!rule) {
+        return "";
+      }
+
+      return THEME_IDENTITY_TOKENS.map((token) =>
+        readDirectValue(rule, token)
+      ).join("|");
+    });
+
+    expect(new Set(fingerprints).size).toBe(profiles.length);
+  });
+
+  it("keeps each theme's feedback palette distinct", () => {
+    const fingerprints = profiles.map((profile) => {
+      const rule = findTopLevelRule(profile.root, profile.selector);
+      expect(rule).toBeDefined();
+      if (!rule) {
+        return "";
+      }
+
+      return STATUS_NAMES.flatMap((status) => [
+        readDirectValue(rule, `--${status}`),
+        readDirectValue(rule, `--${status}-foreground`),
+      ]).join("|");
+    });
+
+    expect(new Set(fingerprints).size).toBe(profiles.length);
   });
 
   it.each(profiles)("$name owns each required core token once", (profile) => {

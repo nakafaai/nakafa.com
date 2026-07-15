@@ -26,6 +26,13 @@
       },
       {
         "files": [
+          "components/three/coordinate-system.tsx",
+          "packages/design-system/components/three/coordinate-system.tsx"
+        ],
+        "rules": ["react-doctor/no-many-boolean-props"]
+      },
+      {
+        "files": [
           "components/evilcharts/**/*.tsx",
           "packages/design-system/components/evilcharts/**/*.tsx"
         ],

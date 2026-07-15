@@ -71,6 +71,7 @@ interface Props {
   size?: number;
 }
 
+/** Renders an interactive coordinate scene with grid and playback controls. */
 export function CoordinateSystem({
   showGrid: initialShowGrid = true,
   showAxes = true,

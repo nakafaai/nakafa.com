@@ -100,6 +100,8 @@ function ForumReactions() {
     return null;
   }
 
+  const myReactions = new Set(forum.myReactions);
+
   /** Toggles the current user's forum reaction without blocking transcript input. */
   const handleToggleReaction = (emoji: string) => {
     startTransition(() =>
@@ -124,7 +126,7 @@ function ForumReactions() {
   return (
     <div className="flex flex-wrap items-center gap-1">
       {forum.reactionUsers.map(({ emoji, count, reactors }) => {
-        const isMyReaction = forum.myReactions.includes(emoji);
+        const isMyReaction = myReactions.has(emoji);
         const moreCount = count - reactors.length;
 
         return (

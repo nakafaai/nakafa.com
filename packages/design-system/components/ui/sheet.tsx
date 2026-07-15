@@ -162,5 +162,4 @@ export {
   SheetPortal,
   SheetTitle,
   SheetTrigger,
-  sheetPopupVariants,
 };

@@ -178,11 +178,11 @@ function readMaterialLessonRoutes({
   }
 
   return contentRoutes
-    .filter(isMaterialLessonRoute)
     .filter(
-      (candidate) =>
-        candidate.locale === locale && candidate.parentPath === route.publicPath
+      (candidate): candidate is MaterialLessonRoute =>
+        isMaterialLessonRoute(candidate) &&
+        candidate.locale === locale &&
+        candidate.parentPath === route.publicPath
     )
-    .slice()
     .sort(comparePublicRouteOrder);
 }
