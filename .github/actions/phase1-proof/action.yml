@@ -1,0 +1,299 @@
+name: Phase 1 proof
+description: Proves an exact pull request tuple from trusted default-branch code.
+
+inputs:
+  check-name:
+    description: Exact temporary CheckRun name to evaluate.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - id: prove
+      name: Prove exact pull request tuple
+      shell: bash
+      env:
+        CHECK_NAME: ${{ inputs.check-name }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -Eeuo pipefail
+        printf 'conclusion=failure\nhead_sha=\nexternal_id=\ncheck_run_id=\n' >> "$GITHUB_OUTPUT"
+        readonly api_version="2026-03-10" expected_actor="nabilfatih" expected_actor_id="77352432"
+        readonly expected_app_id="15368" expected_repo="nakafaai/nakafa.com" expected_repo_id="936220655"
+        readonly expected_ref="refs/heads/main"
+        readonly run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+        fail() {
+          printf '::error::%s\n' "$1"
+          exit 1
+        }
+        api() {
+          local method="$1"
+          local endpoint="$2"
+          local body="${3:-}"
+          local mode="${4:-}"
+          local -a arguments=(--fail-with-body --silent --show-error --request "$method" \
+            --header "Accept: application/vnd.github+json" --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: ${api_version}")
+          if [[ "$method" == "GET" || "$method" == "PATCH" ]]; then arguments+=(--retry 3 --retry-all-errors); fi
+          if [[ -n "$body" ]]; then arguments+=(--header "Content-Type: application/json" --data "$body"); fi
+          if [[ "$mode" == "allow-404" ]]; then
+            local result rc=0
+            result="$(curl "${arguments[@]}" --write-out $'\n%{http_code}' "https://api.github.com${endpoint}")" || rc=$?
+            [[ "$rc" == "0" || ("$rc" == "22" && "${result##*$'\n'}" == "404") ]] || return "$rc"
+            printf '%s' "$result"; return 0
+          fi
+          curl "${arguments[@]}" "https://api.github.com${endpoint}"
+        }
+        validate_main() {
+          local current
+          current="$(api GET "/repos/${expected_repo}/git/ref/heads/main")"
+          jq -e --arg sha "$GITHUB_SHA" '.object.type == "commit" and .object.sha == $sha' \
+            <<<"$current" >/dev/null || fail "The default branch moved during validation."
+        }
+        validate_live_tuple() {
+          local current
+          current="$(api GET "/repos/${expected_repo}/pulls/${pr}")"
+          jq -e --argjson number "$pr" --argjson repo "$expected_repo_id" \
+            --arg base "$base_sha" --arg head "$head_sha" '
+              .number == $number and .state == "open" and .draft == false
+                and .base.ref == "main" and .base.sha == $base and .base.repo.id == $repo
+                and .head.sha == $head and .head.repo.id == $repo
+            ' <<<"$current" >/dev/null || fail "The live pull request tuple does not match."
+        }
+        case "$CHECK_NAME" in
+          phase1-review | phase1-gate) ;;
+          *) fail "The temporary check name is not admitted." ;;
+        esac
+        readonly expected_event="$CHECK_NAME"
+        readonly workflow_path=".github/workflows/${CHECK_NAME}.yml"
+        readonly expected_workflow_ref="${expected_repo}/${workflow_path}@${expected_ref}"
+        [[ "$GITHUB_ACTOR" == "$expected_actor" ]] || fail "The dispatcher is not the founder."
+        [[ "$GITHUB_ACTOR_ID" == "$expected_actor_id" ]] || fail "The dispatcher ID is not admitted."
+        [[ "$GITHUB_REPOSITORY" == "$expected_repo" ]] || fail "The repository is not admitted."
+        [[ "$GITHUB_REPOSITORY_ID" == "$expected_repo_id" ]] || fail "The repository ID is not admitted."
+        [[ "$GITHUB_EVENT_NAME" == "repository_dispatch" ]] || fail "The event is not repository_dispatch."
+        [[ "$GITHUB_REF" == "$expected_ref" ]] || fail "The workflow did not run on main."
+        [[ "$GITHUB_REF_PROTECTED" == "true" ]] || fail "The default branch is not protected."
+        [[ "$GITHUB_RUN_ATTEMPT" == "1" ]] || fail "Workflow reruns are not admitted."
+        [[ "$GITHUB_SERVER_URL" == "https://github.com" ]] || fail "The GitHub origin is not admitted."
+        [[ "$GITHUB_API_URL" == "https://api.github.com" ]] || fail "The API origin is not admitted."
+        [[ "$GITHUB_WORKFLOW_REF" == "$expected_workflow_ref" ]] || fail "The workflow ref is not admitted."
+        [[ "$GITHUB_WORKFLOW_SHA" == "$GITHUB_SHA" ]] || fail "The workflow SHA differs from the event SHA."
+        [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "The default-branch SHA is malformed."
+        [[ -f "$GITHUB_EVENT_PATH" && ! -L "$GITHUB_EVENT_PATH" ]] || fail "The event payload is unavailable."
+        payload="$(jq -ce --arg event "$expected_event" '
+          if .action != $event then error("wrong event type") else . end
+          | .client_payload
+          | if type != "object" then error("payload is not an object") else . end
+          | if (keys | sort) != ["baseSha", "diffDigest", "headSha", "pr"]
+            then error("payload keys are not closed") else . end
+          | if ((.pr | type) != "number" or (.pr | floor) != .pr or .pr < 1 or .pr > 2147483647)
+            then error("pr is malformed") else . end
+          | if ((.baseSha | type) != "string" or (.baseSha | test("^[0-9a-f]{40}$") | not))
+            then error("baseSha is malformed") else . end
+          | if ((.headSha | type) != "string" or (.headSha | test("^[0-9a-f]{40}$") | not))
+            then error("headSha is malformed") else . end
+          | if ((.diffDigest | type) != "string" or (.diffDigest | test("^[0-9a-f]{64}$") | not))
+            then error("diffDigest is malformed") else . end
+        ' "$GITHUB_EVENT_PATH")" || fail "The dispatch payload is malformed."
+        readonly pr="$(jq -r '.pr' <<<"$payload")"
+        readonly base_sha="$(jq -r '.baseSha' <<<"$payload")"
+        readonly head_sha="$(jq -r '.headSha' <<<"$payload")"
+        readonly diff_digest="$(jq -r '.diffDigest' <<<"$payload")"
+        [[ "$base_sha" != "$head_sha" ]] || fail "The pull request has no distinct head."
+        [[ "$base_sha" == "$GITHUB_SHA" ]] || fail "The declared base is not the trusted main SHA."
+        repository="$(api GET "/repos/${expected_repo}")"
+        jq -e \
+          --argjson id "$expected_repo_id" \
+          '.id == $id and .full_name == "nakafaai/nakafa.com" and .default_branch == "main"' \
+          <<<"$repository" >/dev/null || fail "Repository identity or default branch drifted."
+
+        validate_main
+        [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]] || fail "Trusted checkout SHA mismatch."
+
+        target_commit="$(api GET "/repos/${expected_repo}/commits/${head_sha}")"
+        jq -e --arg sha "$head_sha" '.sha == $sha' <<<"$target_commit" >/dev/null \
+          || fail "The target commit is not in the repository."
+
+        validate_live_tuple
+
+        git update-ref -d refs/phase1/base || true
+        git update-ref -d refs/phase1/head || true
+        GIT_NO_REPLACE_OBJECTS=1 git fetch --no-tags --force --filter=blob:none origin \
+          "+${base_sha}:refs/phase1/base" "+${head_sha}:refs/phase1/head"
+        [[ "$(git rev-parse refs/phase1/base^{commit})" == "$base_sha" ]] || fail "Fetched base SHA mismatch."
+        [[ "$(git rev-parse refs/phase1/head^{commit})" == "$head_sha" ]] || fail "Fetched head SHA mismatch."
+        GIT_NO_REPLACE_OBJECTS=1 git merge-base --is-ancestor "$base_sha" "$head_sha" \
+          || fail "The base is not an ancestor of the head."
+        [[ "$(GIT_NO_REPLACE_OBJECTS=1 git merge-base "$base_sha" "$head_sha")" == "$base_sha" ]] \
+          || fail "The merge base differs from the declared base."
+        if GIT_NO_REPLACE_OBJECTS=1 git diff-tree --quiet --no-commit-id -r --no-renames \
+          --no-ext-diff --no-textconv "$base_sha" "$head_sha"; then
+          fail "The pull request tree delta is empty."
+        fi
+        observed_diff="$(LC_ALL=C GIT_NO_REPLACE_OBJECTS=1 git diff-tree \
+          --no-commit-id -r -z --raw --full-index --no-renames --no-ext-diff --no-textconv \
+          "$base_sha" "$head_sha" | sha256sum | cut -d ' ' -f 1)"
+        [[ "$observed_diff" == "$diff_digest" ]] || fail "The canonical diff digest does not match."
+
+        tuple_digest="$(printf '%s\0' \
+          'nakafa.phase1.review' '1' "$expected_repo_id" "$pr" "$base_sha" "$head_sha" "$diff_digest" \
+          | sha256sum | cut -d ' ' -f 1)"
+        readonly tuple_digest
+        readonly external_id="${CHECK_NAME}:v1:${tuple_digest}"
+        checks="$(api GET "/repos/${expected_repo}/commits/${head_sha}/check-runs?check_name=${CHECK_NAME}&filter=all&per_page=100")"
+        jq -e '.total_count <= 1 and (.check_runs | length) == .total_count' <<<"$checks" >/dev/null \
+          || fail "The exact-head CheckRun inventory is ambiguous."
+        check_count="$(jq -r '.total_count' <<<"$checks")"
+        [[ "$check_count" =~ ^[01]$ ]] || fail "The CheckRun count is malformed."
+        start_body="$(jq -cn --arg name "$CHECK_NAME" --arg head "$head_sha" \
+          --arg external "$external_id" --arg url "$run_url" --arg started "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+          '{name:$name,head_sha:$head,status:"in_progress",external_id:$external,details_url:$url,started_at:$started,output:{title:$name,summary:"Validation is running from trusted default-branch code."}}')"
+        if (( check_count == 1 )); then
+          existing="$(jq -c '.check_runs[0]' <<<"$checks")"
+          jq -e --argjson app "$expected_app_id" --arg external "$external_id" \
+            '.app.id == $app and .external_id == $external' <<<"$existing" >/dev/null \
+            || fail "The existing CheckRun belongs to another tuple or App."
+          old_url="$(jq -r '.details_url' <<<"$existing")"
+          [[ "$old_url" =~ ^https://github\.com/nakafaai/nakafa\.com/actions/runs/([1-9][0-9]*)$ ]] \
+            || fail "The existing CheckRun has untrusted workflow provenance."
+          old_run_id="${BASH_REMATCH[1]}"
+          [[ "$old_run_id" != "$GITHUB_RUN_ID" ]] || fail "The current run cannot recover its own CheckRun."
+          old_readback="$(api GET "/repos/${expected_repo}/actions/runs/${old_run_id}" "" allow-404)"
+          old_status="${old_readback##*$'\n'}"
+          old_run="${old_readback%$'\n'*}"
+          if [[ "$old_status" == "200" ]]; then
+            jq -e --arg path "$workflow_path" --arg event "$expected_event" --arg base "$base_sha" \
+              --argjson id "$old_run_id" --argjson repo "$expected_repo_id" --argjson founder "$expected_actor_id" '
+                .id == $id and .repository.id == $repo and .path == $path and .event == $event
+                  and .head_sha == $base and .head_branch == "main" and .run_attempt == 1
+                  and .actor.id == $founder and .triggering_actor.id == $founder and .status == "completed"
+              ' <<<"$old_run" >/dev/null || fail "The prior proof workflow provenance is not recoverable."
+          elif [[ "$old_status" == "404" ]]; then
+            old_started="$(jq -r '.started_at' <<<"$existing")"
+            [[ "$old_started" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] \
+              || fail "The missing prior run has a malformed CheckRun timestamp."
+            old_epoch="$(date -u -d "$old_started" +%s)" || fail "The missing prior run timestamp is invalid."
+            now_epoch="$(date -u +%s)"
+            (( old_epoch <= now_epoch && now_epoch - old_epoch >= 600 )) \
+              || fail "The missing prior run is too young to recover."
+          else
+            fail "The prior proof workflow read-back returned an unexpected status."
+          fi
+        fi
+        printf 'head_sha=%s\nexternal_id=%s\n' "$head_sha" "$external_id" >> "$GITHUB_OUTPUT"
+        if (( check_count == 0 )); then
+          started="$(api POST "/repos/${expected_repo}/check-runs" "$start_body")"
+        else
+          check_run_id="$(jq -r '.id' <<<"$existing")"
+          started="$(api PATCH "/repos/${expected_repo}/check-runs/${check_run_id}" "$(jq -c 'del(.head_sha)' <<<"$start_body")")"
+        fi
+        check_run_id="$(jq -r '.id' <<<"$started")"
+        [[ "$check_run_id" =~ ^[1-9][0-9]*$ ]] || fail "GitHub returned an invalid CheckRun ID."
+        printf 'check_run_id=%s\n' "$check_run_id" >> "$GITHUB_OUTPUT"
+        jq -e --arg name "$CHECK_NAME" --arg head "$head_sha" --arg external "$external_id" \
+          --argjson app "$expected_app_id" \
+          '.name == $name and .head_sha == $head and .external_id == $external and .app.id == $app and .status == "in_progress"' \
+          <<<"$started" >/dev/null || fail "GitHub returned a mismatched in-progress CheckRun."
+
+        require_check() {
+          local name="$1" path="$2" event="$3" required_external="${4:-}"
+          local inventory selected details run_id run
+
+          inventory="$(api GET "/repos/${expected_repo}/commits/${head_sha}/check-runs?check_name=${name}&filter=all&per_page=100")"
+          jq -e '.total_count <= 100 and (.check_runs | length) == .total_count' <<<"$inventory" >/dev/null \
+            || fail "A required CheckRun inventory is incomplete."
+          [[ -z "$required_external" ]] || jq -e '.total_count == 1' <<<"$inventory" >/dev/null \
+            || fail "The required review CheckRun inventory is ambiguous."
+          selected="$(jq -ce --arg name "$name" --argjson app "$expected_app_id" '
+            [.check_runs[] | select(.name == $name and .app.id == $app)] | sort_by(.id) | last
+          ' <<<"$inventory")" || fail "A required GitHub Actions CheckRun is missing."
+          jq -e --arg head "$head_sha" '.head_sha == $head and .status == "completed" and .conclusion == "success"' \
+            <<<"$selected" >/dev/null || fail "A required CheckRun is not successful on the exact head."
+          if [[ -n "$required_external" ]]; then
+            jq -e --arg external "$required_external" '.external_id == $external' <<<"$selected" >/dev/null \
+              || fail "The required review CheckRun tuple differs."
+          fi
+
+          details="$(jq -r '.details_url' <<<"$selected")"
+          [[ "$details" =~ ^https://github\.com/nakafaai/nakafa\.com/actions/runs/([1-9][0-9]*)(/job/[1-9][0-9]*)?$ ]] \
+            || fail "A required CheckRun has untrusted provenance."
+          run_id="${BASH_REMATCH[1]}"
+          run="$(api GET "/repos/${expected_repo}/actions/runs/${run_id}")"
+          jq -e \
+            --arg path "$path" \
+            --arg event "$event" \
+            --argjson id "$run_id" \
+            --argjson repo "$expected_repo_id" \
+            '.id == $id and .repository.id == $repo and .path == $path and .event == $event
+              and .status == "completed" and .conclusion == "success" and .run_attempt >= 1' \
+            <<<"$run" >/dev/null || fail "A required CheckRun workflow provenance differs."
+          if [[ "$event" == "pull_request" ]]; then
+            jq -e --arg head "$head_sha" --argjson repo "$expected_repo_id" --argjson pr "$pr" '
+              .head_sha == $head and .head_repository.id == $repo
+                and ([.pull_requests[].number] | index($pr) != null)
+            ' <<<"$run" >/dev/null || fail "A required PR workflow run is not bound to the tuple."
+          else
+            jq -e --arg base "$base_sha" --argjson founder "$expected_actor_id" '
+              .head_sha == $base and .head_branch == "main" and .actor.id == $founder and .triggering_actor.id == $founder
+                and .run_attempt == 1
+            ' <<<"$run" >/dev/null || fail "The review workflow run is not founder-dispatched from main."
+          fi
+        }
+
+        if [[ "$CHECK_NAME" == "phase1-gate" ]]; then
+          require_check phase1-review .github/workflows/phase1-review.yml repository_dispatch \
+            "phase1-review:v1:${tuple_digest}"
+          require_check agent-docs .github/workflows/agent-docs.yml pull_request
+          require_check react-doctor .github/workflows/react-doctor.yml pull_request
+        fi
+        validate_main
+        validate_live_tuple
+        printf 'conclusion=success\n' >> "$GITHUB_OUTPUT"
+
+    - name: Terminally complete the exact-head CheckRun
+      if: ${{ always() }}
+      shell: bash
+      env:
+        CHECK_NAME: ${{ inputs.check-name }}
+        CHECK_RUN_ID: ${{ steps.prove.outputs.check_run_id }}
+        CONCLUSION: ${{ job.status == 'success' && steps.prove.outcome == 'success' && steps.prove.outputs.conclusion == 'success' && 'success' || 'failure' }}
+        EXTERNAL_ID: ${{ steps.prove.outputs.external_id }}
+        GH_TOKEN: ${{ github.token }}
+        HEAD_SHA: ${{ steps.prove.outputs.head_sha }}
+      run: |
+        set -Eeuo pipefail
+        [[ -n "$HEAD_SHA" ]] || exit 0
+        [[ "$CONCLUSION" == "success" || "$CONCLUSION" == "failure" ]] || CONCLUSION="failure"
+        readonly repo="nakafaai/nakafa.com" app_id="15368"
+        api() {
+          local method="$1"
+          local body="${3:-}"
+          local -a args=(--fail-with-body --silent --show-error --request "$method" \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" --header "X-GitHub-Api-Version: 2026-03-10")
+          if [[ "$method" == "GET" || "$method" == "PATCH" ]]; then args+=(--retry 3 --retry-all-errors); fi
+          if [[ -n "$body" ]]; then args+=(--header "Content-Type: application/json" --data "$body"); fi
+          curl "${args[@]}" "https://api.github.com$2"
+        }
+        inventory="$(api GET "/repos/${repo}/commits/${HEAD_SHA}/check-runs?check_name=${CHECK_NAME}&filter=all&per_page=100")"
+        jq -e '.total_count <= 1 and (.check_runs | length) == .total_count' <<<"$inventory" >/dev/null
+        [[ "$(jq -r '.total_count' <<<"$inventory")" == "1" ]] || exit 0
+        selected="$(jq -c '.check_runs[0]' <<<"$inventory")"
+        jq -e --arg name "$CHECK_NAME" --arg head "$HEAD_SHA" --arg external "$EXTERNAL_ID" \
+          --argjson app "$app_id" \
+          '.name == $name and .head_sha == $head and .external_id == $external and .app.id == $app' \
+          <<<"$selected" >/dev/null
+        check_run_id="$(jq -r '.id' <<<"$selected")"
+        [[ "$check_run_id" =~ ^[1-9][0-9]*$ ]] || exit 1
+        [[ -z "$CHECK_RUN_ID" || "$CHECK_RUN_ID" == "$check_run_id" ]] || exit 1
+        summary="Phase 1 proof validation failed. Inspect the trusted workflow log."
+        [[ "$CONCLUSION" != "success" ]] || summary="Phase 1 proof validated the exact pull request tuple."
+        body="$(jq -cn --arg conclusion "$CONCLUSION" --arg completed "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+          --arg external "$EXTERNAL_ID" --arg title "$CHECK_NAME" --arg summary "$summary" \
+          '{status:"completed",conclusion:$conclusion,completed_at:$completed,external_id:$external,output:{title:$title,summary:$summary}}')"
+        response="$(api PATCH "/repos/${repo}/check-runs/${check_run_id}" "$body")"
+        jq -e --argjson id "$check_run_id" --argjson app "$app_id" --arg conclusion "$CONCLUSION" \
+          --arg external "$EXTERNAL_ID" \
+          '.id == $id and .app.id == $app and .status == "completed" and .conclusion == $conclusion and .external_id == $external' \
+          <<<"$response" >/dev/null
