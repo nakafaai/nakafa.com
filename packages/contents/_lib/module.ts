@@ -10,23 +10,6 @@ export interface ContentModule {
 }
 
 /**
- * Builds the localized MDX file path for one content slug.
- *
- * Most content is authored as `slug/{locale}.mdx`. Typed practice assets keep
- * question and answer files beside choices as `question.{locale}.mdx` and
- * `answer.{locale}.mdx`, so their content slug points at the file stem.
- */
-export function getLocalizedContentPath(cleanPath: string, locale: Locale) {
-  const normalizedPath = cleanSlug(cleanPath);
-
-  if (usesFileStemLocalizedContent(normalizedPath)) {
-    return `${normalizedPath}.${locale}.mdx`;
-  }
-
-  return `${normalizedPath}/${locale}.mdx`;
-}
-
-/**
  * Detects practice MDX assets whose locale belongs in the filename stem so
  * dynamic imports match the authored question and answer file layout.
  */

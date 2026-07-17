@@ -6,7 +6,6 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   succeedMcpReadModelError,
-  toMcpReadModelError,
   toMcpStructuredResult,
   toMcpToolError,
 } from "@/lib/mcp/result";
@@ -15,16 +14,20 @@ describe("MCP result helpers", () => {
   it("formats structured success and actionable errors", async () => {
     const success = toMcpStructuredResult({ ok: true });
     const explicitError = toMcpToolError("Missing content.", ["Search first."]);
-    const inputError = toMcpReadModelError(
-      new NakafaAgentInputError({
-        cause: "Invalid locale.",
-        message: "Bad input.",
-      })
+    const inputError = await Effect.runPromise(
+      succeedMcpReadModelError(
+        new NakafaAgentInputError({
+          cause: "Invalid locale.",
+          message: "Bad input.",
+        })
+      )
     );
-    const dataError = toMcpReadModelError(
-      new NakafaAgentDataReadError({
-        message: "Read failed.",
-      })
+    const dataError = await Effect.runPromise(
+      succeedMcpReadModelError(
+        new NakafaAgentDataReadError({
+          message: "Read failed.",
+        })
+      )
     );
     const liftedError = await Effect.runPromise(
       succeedMcpReadModelError(

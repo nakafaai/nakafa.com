@@ -135,7 +135,7 @@ export async function getQuranReferenceImpl(
     lensId: ref.lensId,
     locale: ref.locale,
     markdown_url: ref.markdown_url,
-    name: getSurahName({ locale: args.locale, name: surah.name }),
+    name: surah.name.transliteration[args.locale],
     revelation: surah.revelation[args.locale],
     route: ref.route,
     section: QURAN_SECTION,
@@ -229,19 +229,6 @@ function toQuranVerse(verse: Doc<"quranVerses">) {
     text: verse.text,
     translation: verse.translation,
   };
-}
-
-/**
- * Resolves the best localized Quran display name from synced metadata.
- */
-export function getSurahName({
-  locale,
-  name,
-}: {
-  locale: Locale;
-  name: Doc<"quranSurahs">["name"];
-}) {
-  return name.transliteration[locale] ?? name.long;
 }
 
 /** Raises a structured integrity failure for impossible Quran runtime states. */

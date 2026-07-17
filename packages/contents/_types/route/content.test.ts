@@ -1,20 +1,14 @@
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import {
-  findPublicContentRouteByPath,
   findPublicContentRouteBySourcePath,
   isMaterialContentRoute,
   isMaterialLessonRoute,
-  isMaterialTopicRoute,
   listPublicContentRoutes,
-  readContentPathSegments,
-  readContentPathWithoutNamespace,
-  readContentRouteSlug,
   readMaterialPagination,
   readParentMaterialRoute,
   toLocalizedContentHref,
 } from "@repo/contents/_types/route/content";
-import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import {
   comparePublicRouteOrder,
   makePath,
@@ -23,12 +17,6 @@ import { Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("public content routes", () => {
-  it("keeps static route helper rows identical to the validated default projection", () => {
-    expect(readStaticPublicContentRoutes()).toEqual(
-      Effect.runSync(listPublicContentRoutes())
-    );
-  });
-
   it("derives canonical subject routes from unified material sources", () => {
     const routes = Effect.runSync(listPublicContentRoutes());
 
@@ -106,22 +94,10 @@ describe("public content routes", () => {
     }
 
     expect(isMaterialContentRoute(topic)).toBe(true);
-    expect(isMaterialTopicRoute(topic)).toBe(true);
     expect(isMaterialLessonRoute(topic)).toBe(false);
     expect(isMaterialLessonRoute(firstLesson)).toBe(true);
     expect(toLocalizedContentHref(firstLesson)).toBe(
       "/id/materi/matematika/barisan-dan-deret/konsep-barisan"
-    );
-    expect(readContentPathSegments(firstLesson)).toEqual([
-      "matematika",
-      "barisan-dan-deret",
-      "konsep-barisan",
-    ]);
-    expect(readContentPathWithoutNamespace(firstLesson)).toBe(
-      "matematika/barisan-dan-deret/konsep-barisan"
-    );
-    expect(Effect.runSync(readContentRouteSlug(firstLesson))).toBe(
-      "konsep-barisan"
     );
     expect(readParentMaterialRoute(firstLesson, routes)).toMatchObject({
       publicPath: topic.publicPath,
@@ -174,13 +150,7 @@ describe("public content routes", () => {
     });
   });
 
-  it("finds public content routes by localized path and source path", () => {
-    const routeByPath = Effect.runSync(
-      findPublicContentRouteByPath(
-        "materi/matematika/integral/jumlahan-riemann",
-        "id"
-      )
-    );
+  it("finds public content routes by source path", () => {
     const routeBySourcePath = Effect.runSync(
       findPublicContentRouteBySourcePath(
         "material/lesson/mathematics/integral/riemann-sum",
@@ -188,11 +158,6 @@ describe("public content routes", () => {
       )
     );
 
-    expect(Option.isSome(routeByPath)).toBe(true);
-    expect(Option.getOrNull(routeByPath)).toMatchObject({
-      kind: "subject-lesson",
-      sourcePath: "material/lesson/mathematics/integral/riemann-sum",
-    });
     expect(Option.isSome(routeBySourcePath)).toBe(true);
     expect(Option.getOrNull(routeBySourcePath)).toMatchObject({
       kind: "subject-lesson",
@@ -201,11 +166,6 @@ describe("public content routes", () => {
   });
 
   it("returns none for missing public content route lookups", () => {
-    expect(
-      Option.isNone(
-        Effect.runSync(findPublicContentRouteByPath("materi/tidak-ada", "id"))
-      )
-    ).toBe(true);
     expect(
       Option.isNone(
         Effect.runSync(

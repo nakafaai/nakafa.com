@@ -91,6 +91,28 @@ export function verifyQuranRuntime(config: ConvexConfig, options: SyncOptions) {
       return false;
     }
 
+    for (const locale of activeLocales) {
+      const { surahData } = surahPage;
+      const preBismillahMissing =
+        surahData.preBismillah !== null &&
+        surahData.preBismillah !== undefined &&
+        surahData.preBismillah.translation[locale] === undefined;
+      const verseTranslationMissing = surahData.verses.some(
+        (verse) => verse.translation[locale] === undefined
+      );
+
+      if (
+        surahData.name.translation[locale] === undefined ||
+        surahData.name.transliteration[locale] === undefined ||
+        surahData.revelation[locale] === undefined ||
+        preBismillahMissing ||
+        verseTranslationMissing
+      ) {
+        logError(`Quran runtime locale data missing for ${locale}`);
+        return false;
+      }
+    }
+
     logSuccess("Quran surah runtime page available for surah 1");
     return true;
   });

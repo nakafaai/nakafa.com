@@ -1,20 +1,24 @@
 import { createHash } from "node:crypto";
 import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/constants";
+import { languages } from "@repo/internationalization/data/lang";
 
-export const NAKAFA_SKILL_NAME = "nakafa";
-export const NAKAFA_SKILL_DESCRIPTION =
+const NAKAFA_SKILL_NAME = "nakafa";
+const NAKAFA_SKILL_DESCRIPTION =
   "Use Nakafa to retrieve multilingual educational lessons, Quran references, article context, and try-out catalog pages through agent-friendly markdown and MCP tools.";
-export const NAKAFA_AGENT_SKILL_PATH =
-  "/.well-known/agent-skills/nakafa/SKILL.md";
+const NAKAFA_AGENT_SKILL_PATH = "/.well-known/agent-skills/nakafa/SKILL.md";
 
 /** Builds the public Nakafa skill.md capability guide. */
 export function getNakafaSkillText() {
+  const localeGuidance = languages
+    .map(({ label, value }) => `\`/${value}\` for ${label}`)
+    .join(", ");
+
   return [
     "---",
     `name: ${NAKAFA_SKILL_NAME}`,
     `description: ${NAKAFA_SKILL_DESCRIPTION}`,
     "license: MIT",
-    "clients: Public HTTPS documentation, markdown URLs, llms.txt, llms-full.txt, and Streamable HTTP MCP clients.",
+    "clients: Public HTTPS documentation, markdown URLs, llms.txt, and Streamable HTTP MCP clients.",
     "metadata:",
     "  author: Nakafa",
     '  version: "1.0"',
@@ -26,10 +30,9 @@ export function getNakafaSkillText() {
     "",
     "## Discovery",
     "",
-    "- Start with `https://nakafa.com/llms.txt` for the small locale and section index.",
-    "- Use `https://nakafa.com/llms-full.txt` to discover the full-corpus shard map.",
-    "- Use `https://nakafa.com/llms-full/index.json` to choose smaller locale, section, topic, set, or Quran full-content shards.",
-    "- Prefer same-origin `.md` URLs from `llms.txt` for focused page retrieval.",
+    "- Start with `https://nakafa.com/llms.txt` for locale, section, and bounded page indexes.",
+    "- Follow bounded page-index links to discover page-level `.md` URLs without loading the whole corpus.",
+    "- Prefer same-origin `.md` URLs for focused page retrieval.",
     "- Send `Accept: text/markdown` when requesting normal content URLs.",
     `- Use \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\` when the client supports Streamable HTTP MCP tools.`,
     "- Prefer `nakafa_search_content` first, then pass returned source-backed `content_id` values as `content_ref` to `nakafa_get_content`.",
@@ -37,9 +40,9 @@ export function getNakafaSkillText() {
     "",
     "## Locale Rules",
     "",
-    "- Use `/en` for English content and `/id` for Indonesian content.",
+    `- Use ${localeGuidance} content.`,
     "- Preserve the user's requested language when choosing links.",
-    "- If one locale is missing a specific explanation, use the available locale and say which locale was retrieved.",
+    "- If requested content is missing in that locale, report the missing locale instead of silently substituting another language.",
     "",
     "## Answering Rules",
     "",

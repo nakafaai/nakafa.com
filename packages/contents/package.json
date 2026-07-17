@@ -21,7 +21,6 @@
     "@repo/utilities": "workspace:*",
     "date-fns": "4.4.0",
     "effect": "^3.21.4",
-    "json5": "^2.2.3",
     "motion": "^12.42.2",
     "next-intl": "^4.13.2",
     "react": "19.2.7",

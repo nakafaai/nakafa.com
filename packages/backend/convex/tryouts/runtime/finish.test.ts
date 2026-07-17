@@ -1,55 +1,51 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { expireAttempt } from "@repo/backend/convex/tryouts/runtime/finish";
+import {
+  expireAttempt,
+  finalizeSectionAttempt,
+} from "@repo/backend/convex/tryouts/runtime/finish";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import {
+  insertIrtScaleItem,
+  insertTryoutAttempt,
+  insertTryoutSectionAttempt,
+  tryoutSectionSnapshot,
+} from "@repo/backend/test/tryout-runtime";
+import {
+  insertTryoutQuestionSource,
+  insertTryoutSection,
+  insertTryoutSet,
+} from "@repo/backend/test/tryouts";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const EXPIRED_AT = NOW - 1000;
-const TRACK_KEY = "2027";
 const SET_PATH = "try-out/indonesia/snbt/2027/set-1";
+const FIRST_SECTION = "pengetahuan-kuantitatif";
+const SECOND_SECTION = "penalaran-matematika";
 
-/** Inserts one question set with one question and two choices. */
-async function insertSectionSource(
-  ctx: MutationCtx,
-  args: {
-    order: number;
-    sectionKey: string;
-    title: string;
-  }
-) {
-  const sourcePath = `question-bank/tryout/indonesia/snbt/${TRACK_KEY}/set-1/${args.sectionKey}`;
-  const questionSetId = await ctx.db.insert("questionSets", {
-    contentHash: `${args.sectionKey}:set-hash`,
-    countryKey: "indonesia",
-    examKey: "snbt",
-    locale: "id",
-    questionCount: 1,
-    sectionKey: args.sectionKey,
-    setKey: "set-1",
+async function insertSectionSource(ctx: MutationCtx, sectionKey: string) {
+  const sourcePath = `question-bank/tryout/indonesia/snbt/2027/set-1/${sectionKey}`;
+  const questionSetId = await insertTryoutQuestionSource(ctx, {
+    sectionKey,
     sourcePath,
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    title: args.title,
   });
-  const questionId = await ctx.db.insert("questions", {
-    answerBody: `${args.title} answer`,
-    contentHash: `${args.sectionKey}:question-hash`,
-    date: 0,
-    locale: "id",
-    number: args.order,
-    questionBody: `${args.title} question`,
-    questionSetId,
-    sourceKey: `${sourcePath}:question-1`,
-    sourcePath: `${sourcePath}/question-1`,
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    title: `${args.title} Question`,
-  });
+  const question = await ctx.db
+    .query("questions")
+    .withIndex("by_questionSetId_and_number", (q) =>
+      q.eq("questionSetId", questionSetId).eq("number", 1)
+    )
+    .unique();
+
+  if (!question) {
+    throw new ConvexError({
+      code: "TRYOUT_QUESTION_NOT_FOUND",
+      message: "Expected try-out question fixture.",
+    });
+  }
 
   await ctx.db.insert("questionChoices", {
     isCorrect: true,
@@ -57,99 +53,14 @@ async function insertSectionSource(
     locale: "id",
     optionKey: "a",
     order: 1,
-    questionId,
-  });
-  await ctx.db.insert("questionChoices", {
-    isCorrect: false,
-    label: "B",
-    locale: "id",
-    optionKey: "b",
-    order: 2,
-    questionId,
+    questionId: question._id,
   });
 
-  return {
-    questionId,
-    questionSetId,
-    sourcePath,
-  };
-}
-
-/** Inserts one try-out section backed by an already inserted source. */
-async function insertTryoutSection(
-  ctx: MutationCtx,
-  args: {
-    order: number;
-    questionSetId: Id<"questionSets">;
-    sectionKey: string;
-    sourcePath: string;
-    title: string;
-    tryoutSetId: Id<"tryoutSets">;
-  }
-) {
-  return await ctx.db.insert("tryoutSections", {
-    countryKey: "indonesia",
-    examKey: "snbt",
-    locale: "id",
-    order: args.order,
-    publicPath: `${SET_PATH}/${args.sectionKey}`,
-    questionCount: 1,
-    questionSetId: args.questionSetId,
-    questionSourcePath: args.sourcePath,
-    sectionKey: args.sectionKey,
-    setKey: "set-1",
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    timeLimitSeconds: 1800,
-    title: args.title,
-    trackKey: TRACK_KEY,
-    tryoutSetId: args.tryoutSetId,
-    visibility: "visible",
-  });
-}
-
-/** Inserts one completed calibration run and item for a question. */
-async function insertScaleItem(
-  ctx: MutationCtx,
-  args: {
-    contentHash: string;
-    questionId: Id<"questions">;
-    questionSourceKey: string;
-    scaleVersionId: Id<"irtScaleVersions">;
-    sectionId: Id<"tryoutSections">;
-  }
-) {
-  const calibrationRunId = await ctx.db.insert("irtCalibrationRuns", {
-    attemptCount: 0,
-    completedAt: NOW,
-    iterationCount: 0,
-    maxParameterDelta: 0,
-    model: "2pl",
-    questionCount: 1,
-    responseCount: 0,
-    startedAt: NOW,
-    status: "completed",
-    tryoutSectionId: args.sectionId,
-    updatedAt: NOW,
-  });
-
-  await ctx.db.insert("irtScaleItems", {
-    calibrationRunId,
-    calibrationStatus: "provisional",
-    contentHash: args.contentHash,
-    correctRate: 0,
-    difficulty: 0,
-    discrimination: 1,
-    questionId: args.questionId,
-    questionSourceKey: args.questionSourceKey,
-    responseCount: 0,
-    scaleVersionId: args.scaleVersionId,
-    sourceRevision: "2026",
-  });
+  return { questionId: question._id, questionSetId, sourcePath };
 }
 
 describe("tryouts/runtime/finish", () => {
-  it("expires unopened IRT sections as unanswered before scoring", async () => {
+  it("expires opened and unopened IRT sections before scoring", async () => {
     const t = convexTest(schema, convexModules);
 
     const snapshot = await t.mutation(async (ctx) => {
@@ -161,50 +72,26 @@ describe("tryouts/runtime/finish", () => {
         name: "Expire IRT",
         plan: "pro",
       });
-      const firstSource = await insertSectionSource(ctx, {
-        order: 1,
-        sectionKey: "pengetahuan-kuantitatif",
-        title: "Pengetahuan Kuantitatif",
-      });
-      const secondSource = await insertSectionSource(ctx, {
-        order: 2,
-        sectionKey: "penalaran-matematika",
-        title: "Penalaran Matematika",
-      });
-      const tryoutSetId = await ctx.db.insert("tryoutSets", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        isActive: true,
-        isReady: true,
-        locale: "id",
-        order: 1,
-        publicPath: SET_PATH,
-        readyQuestionCount: 2,
-        readyVisibleSectionCount: 2,
-        scoringStrategy: "irt",
+      const firstSource = await insertSectionSource(ctx, FIRST_SECTION);
+      const secondSource = await insertSectionSource(ctx, SECOND_SECTION);
+      const tryoutSetId = await insertTryoutSet(ctx, {
         sectionCount: 2,
-        setKey: "set-1",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Set 1",
-        trackKey: TRACK_KEY,
         totalQuestionCount: 2,
         visibleSectionCount: 2,
       });
       const firstSectionId = await insertTryoutSection(ctx, {
-        order: 1,
+        publicPath: `${SET_PATH}/pengetahuan-kuantitatif`,
         questionSetId: firstSource.questionSetId,
-        sectionKey: "pengetahuan-kuantitatif",
-        sourcePath: firstSource.sourcePath,
-        title: "Pengetahuan Kuantitatif",
+        questionSourcePath: firstSource.sourcePath,
+        sectionKey: FIRST_SECTION,
         tryoutSetId,
       });
       const secondSectionId = await insertTryoutSection(ctx, {
         order: 2,
+        publicPath: `${SET_PATH}/penalaran-matematika`,
         questionSetId: secondSource.questionSetId,
-        sectionKey: "penalaran-matematika",
-        sourcePath: secondSource.sourcePath,
-        title: "Penalaran Matematika",
+        questionSourcePath: secondSource.sourcePath,
+        sectionKey: SECOND_SECTION,
         tryoutSetId,
       });
       const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
@@ -215,87 +102,59 @@ describe("tryouts/runtime/finish", () => {
         tryoutSetId,
       });
 
-      await insertScaleItem(ctx, {
-        contentHash: "pengetahuan-kuantitatif:question-hash",
+      await insertIrtScaleItem(ctx, {
         questionId: firstSource.questionId,
-        questionSourceKey: `${firstSource.sourcePath}:question-1`,
         scaleVersionId,
         sectionId: firstSectionId,
+        sourcePath: firstSource.sourcePath,
       });
-      await insertScaleItem(ctx, {
-        contentHash: "penalaran-matematika:question-hash",
+      await insertIrtScaleItem(ctx, {
         questionId: secondSource.questionId,
-        questionSourceKey: `${secondSource.sourcePath}:question-1`,
         scaleVersionId,
         sectionId: secondSectionId,
+        sourcePath: secondSource.sourcePath,
       });
 
-      const attemptId = await ctx.db.insert("tryoutAttempts", {
-        attemptNumber: 1,
-        completedAt: null,
-        completedSectionKeys: [],
-        endReason: null,
+      const attemptId = await insertTryoutAttempt(ctx, {
         expiresAt: EXPIRED_AT,
-        lastActivityAt: NOW - 10_000,
         scaleVersionId,
-        scoreStatus: "provisional",
-        scoringStrategy: "irt",
         sectionSnapshots: [
-          {
+          tryoutSectionSnapshot({
+            order: 1,
             publicPath: `${SET_PATH}/pengetahuan-kuantitatif`,
-            questionCount: 1,
             questionSetId: firstSource.questionSetId,
-            questionSourcePath: firstSource.sourcePath,
-            sectionKey: "pengetahuan-kuantitatif",
-            sectionOrder: 1,
-            sourceRevision: "2026",
-            timeLimitSeconds: 1800,
+            sectionKey: FIRST_SECTION,
+            sourcePath: firstSource.sourcePath,
             tryoutSectionId: firstSectionId,
-          },
-          {
+          }),
+          tryoutSectionSnapshot({
+            order: 2,
             publicPath: `${SET_PATH}/penalaran-matematika`,
-            questionCount: 1,
             questionSetId: secondSource.questionSetId,
-            questionSourcePath: secondSource.sourcePath,
-            sectionKey: "penalaran-matematika",
-            sectionOrder: 2,
-            sourceRevision: "2026",
-            timeLimitSeconds: 1800,
+            sectionKey: SECOND_SECTION,
+            sourcePath: secondSource.sourcePath,
             tryoutSectionId: secondSectionId,
-          },
+          }),
         ],
-        startedAt: NOW - 20_000,
-        status: "in-progress",
-        totalCorrect: 0,
-        totalQuestions: 2,
         tryoutSetId,
         userId,
       });
-      const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
-        answeredCount: 0,
-        completedAt: null,
-        correctAnswers: 0,
-        endReason: null,
+      const sectionAttemptId = await insertTryoutSectionAttempt(ctx, {
         expiresAt: EXPIRED_AT,
-        lastActivityAt: NOW - 10_000,
-        sectionKey: "pengetahuan-kuantitatif",
-        sectionOrder: 1,
-        startedAt: NOW - 20_000,
-        status: "in-progress",
-        totalQuestions: 1,
+        sectionKey: FIRST_SECTION,
         tryoutAttemptId: attemptId,
         tryoutSectionId: firstSectionId,
       });
-      const startedAttempt = await ctx.db.get(attemptId);
+      const attempt = await ctx.db.get(attemptId);
 
-      if (!startedAttempt) {
+      if (!attempt) {
         throw new ConvexError({
           code: "TRYOUT_ATTEMPT_NOT_FOUND",
-          message: "Expected try-out attempt.",
+          message: "Expected try-out attempt fixture.",
         });
       }
 
-      await createAttemptPlacements(ctx, { attempt: startedAttempt });
+      await createAttemptPlacements(ctx, { attempt });
 
       const placement = await ctx.db
         .query("tryoutAttemptPlacements")
@@ -311,7 +170,7 @@ describe("tryouts/runtime/finish", () => {
       if (!placement) {
         throw new ConvexError({
           code: "TRYOUT_PLACEMENT_NOT_FOUND",
-          message: "Expected try-out placement.",
+          message: "Expected try-out placement fixture.",
         });
       }
 
@@ -326,29 +185,11 @@ describe("tryouts/runtime/finish", () => {
         tryoutSectionAttemptId: sectionAttemptId,
         updatedAt: NOW - 5000,
       });
-
-      await ctx.db.delete(secondSectionId);
-
-      const attempt = await ctx.db.get(attemptId);
-
-      if (!attempt) {
-        throw new ConvexError({
-          code: "TRYOUT_ATTEMPT_NOT_FOUND",
-          message: "Expected try-out attempt.",
-        });
-      }
-
       await expireAttempt(ctx, { attempt, now: NOW });
 
       const sections = await ctx.db
         .query("tryoutSectionAttempts")
         .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
-          q.eq("tryoutAttemptId", attemptId)
-        )
-        .collect();
-      const placements = await ctx.db
-        .query("tryoutAttemptPlacements")
-        .withIndex("by_tryoutAttemptId_and_questionOrder", (q) =>
           q.eq("tryoutAttemptId", attemptId)
         )
         .collect();
@@ -358,62 +199,120 @@ describe("tryouts/runtime/finish", () => {
           q.eq("tryoutAttemptId", attemptId)
         )
         .unique();
-      const expiredAttempt = await ctx.db.get(attemptId);
-      const progress = await ctx.db
-        .query("tryoutSetProgress")
-        .withIndex("by_userId_and_tryoutSetId", (q) =>
-          q.eq("userId", userId).eq("tryoutSetId", tryoutSetId)
-        )
-        .unique();
+
+      return { attempt: await ctx.db.get(attemptId), score, sections };
+    });
+
+    expect(snapshot).toMatchObject({
+      attempt: {
+        completedSectionKeys: [FIRST_SECTION, SECOND_SECTION],
+        endReason: "time-expired",
+        status: "expired",
+      },
+      score: {
+        rawScore: 50,
+        scoringStrategy: "irt",
+      },
+      sections: [
+        {
+          endReason: "time-expired",
+          score: { rawScore: 100, scoringStrategy: "irt", theta: 4 },
+          sectionKey: FIRST_SECTION,
+          status: "expired",
+        },
+        {
+          endReason: "time-expired",
+          score: { rawScore: 0, scoringStrategy: "irt", theta: -4 },
+          sectionKey: SECOND_SECTION,
+          status: "expired",
+        },
+      ],
+    });
+  });
+
+  it("completes the parent after its final section", async () => {
+    const t = convexTest(schema, convexModules);
+
+    const completed = await t.mutation(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "auth-section-timeout",
+        credits: 0,
+        creditsResetAt: NOW,
+        email: "section-timeout@example.com",
+        name: "Section Timeout",
+        plan: "pro",
+      });
+      const sourcePath =
+        "question-bank/tryout/indonesia/snbt/2027/set-1/penalaran-matematika";
+      const questionSetId = await insertTryoutQuestionSource(ctx, {
+        sourcePath,
+        withQuestion: false,
+      });
+      const tryoutSetId = await insertTryoutSet(ctx);
+      const tryoutSectionId = await insertTryoutSection(ctx, {
+        publicPath: `${SET_PATH}/penalaran-matematika`,
+        questionSetId,
+        questionSourcePath: sourcePath,
+        tryoutSetId,
+      });
+      const attemptId = await insertTryoutAttempt(ctx, {
+        scoringStrategy: "raw",
+        sectionSnapshots: [
+          tryoutSectionSnapshot({
+            order: 1,
+            publicPath: `${SET_PATH}/penalaran-matematika`,
+            questionSetId,
+            sectionKey: "penalaran-matematika",
+            sourcePath,
+            tryoutSectionId,
+          }),
+        ],
+        tryoutSetId,
+        userId,
+      });
+      const sectionId = await insertTryoutSectionAttempt(ctx, {
+        expiresAt: NOW,
+        tryoutAttemptId: attemptId,
+        tryoutSectionId,
+      });
+      const attempt = await ctx.db.get(attemptId);
+      const section = await ctx.db.get(sectionId);
+
+      if (!(attempt && section)) {
+        throw new ConvexError({
+          code: "TRYOUT_FIXTURE_INCOMPLETE",
+          message: "Expected try-out attempt and section fixtures.",
+        });
+      }
+
+      await finalizeSectionAttempt(ctx, {
+        attempt,
+        endReason: "time-expired",
+        now: NOW,
+        section,
+      });
 
       return {
-        expiredAttempt,
-        placements,
-        progress,
-        score,
-        sections,
+        attempt: await ctx.db.get(attemptId),
+        section: await ctx.db.get(sectionId),
       };
     });
 
-    expect(snapshot.expiredAttempt).toMatchObject({
-      completedSectionKeys: ["pengetahuan-kuantitatif", "penalaran-matematika"],
-      endReason: "time-expired",
-      status: "expired",
-      totalCorrect: 1,
-    });
-    expect(snapshot.sections).toHaveLength(2);
-    expect(snapshot.sections[0]).toMatchObject({
-      score: {
-        publishedScore: 900,
-        rawScore: 100,
-        scoringStrategy: "irt",
-        theta: 4,
+    expect(completed).toMatchObject({
+      attempt: {
+        completedSectionKeys: ["penalaran-matematika"],
+        endReason: "submitted",
+        status: "completed",
       },
-    });
-    expect(snapshot.sections[1]).toMatchObject({
-      answeredCount: 0,
-      correctAnswers: 0,
-      endReason: "time-expired",
-      score: {
-        publishedScore: 100,
-        rawScore: 0,
-        scoringStrategy: "irt",
-        theta: -4,
+      section: {
+        endReason: "time-expired",
+        score: {
+          publishedScore: 0,
+          scoreStatus: "official",
+          scoringStrategy: "raw",
+        },
+        status: "expired",
       },
-      sectionKey: "penalaran-matematika",
-      status: "expired",
-    });
-    expect(snapshot.placements).toHaveLength(2);
-    expect(snapshot.score).toMatchObject({
-      rawScore: 50,
-      scoringStrategy: "irt",
-      totalCorrect: 1,
-      totalQuestions: 2,
-    });
-    expect(snapshot.progress).toMatchObject({
-      latestAttemptId: expect.any(String),
-      status: "expired",
-      statusRank: 3,
     });
   });
 });

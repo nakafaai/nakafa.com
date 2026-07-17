@@ -660,9 +660,6 @@ importers:
       effect:
         specifier: ^3.21.4
         version: 3.21.4
-      json5:
-        specifier: ^2.2.3
-        version: 2.2.3
       motion:
         specifier: ^12.42.2
         version: 12.42.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)

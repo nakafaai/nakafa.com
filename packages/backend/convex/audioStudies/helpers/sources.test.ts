@@ -1,5 +1,4 @@
 import {
-  deleteAudioContentSource,
   getAudioContentSourceByContentId,
   getAudioContentSourceByLocale,
   syncAudioContentSource,
@@ -81,7 +80,7 @@ describe("audioStudies/helpers/sources", () => {
     });
   });
 
-  it("updates and deletes compact audio metadata", async () => {
+  it("updates compact audio metadata", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
@@ -101,16 +100,6 @@ describe("audioStudies/helpers/sources", () => {
         await getAudioContentSourceByContentId(ctx, articleSource.content_id)
     );
 
-    await t.mutation(
-      async (ctx) =>
-        await deleteAudioContentSource(ctx, articleSource.content_id)
-    );
-
-    const deleted = await t.query(
-      async (ctx) =>
-        await getAudioContentSourceByContentId(ctx, articleSource.content_id)
-    );
-
     expect(updated).toEqual({
       alignmentId: articleSource.alignmentId,
       assetId: articleSource.assetId,
@@ -123,7 +112,6 @@ describe("audioStudies/helpers/sources", () => {
       locale: articleSource.locale,
       route: articleSource.route,
     });
-    expect(deleted).toBeNull();
   });
 
   it("updates a route-indexed source when graph content ID changes", async () => {

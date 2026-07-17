@@ -1,35 +1,8 @@
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
-import {
-  getAuthCallbackPath,
-  getSafeInternalRedirectPath,
-  isAuthError,
-} from "@/lib/auth/utils";
+import { getAuthCallbackPath, isAuthError } from "@/lib/auth/utils";
 
 describe("lib/auth/utils", () => {
-  describe("getSafeInternalRedirectPath", () => {
-    it("returns valid internal paths", () => {
-      expect(
-        getSafeInternalRedirectPath("/id/try-out/indonesia/snbt/2027/set-1")
-      ).toBe("/id/try-out/indonesia/snbt/2027/set-1");
-      expect(getSafeInternalRedirectPath("/auth?redirect=%2Fid")).toBe(
-        "/auth?redirect=%2Fid"
-      );
-    });
-
-    it("rejects external or malformed redirect targets", () => {
-      expect(getSafeInternalRedirectPath(null)).toBeNull();
-      expect(getSafeInternalRedirectPath("https://nakafa.com/id")).toBeNull();
-      expect(getSafeInternalRedirectPath("//nakafa.com/id")).toBeNull();
-    });
-
-    it("keeps valid internal paths even when they contain commas", () => {
-      expect(getSafeInternalRedirectPath("/id/search?q=a,b")).toBe(
-        "/id/search?q=a,b"
-      );
-    });
-  });
-
   describe("getAuthCallbackPath", () => {
     it("uses app home when no safe redirect is provided", () => {
       expect(getAuthCallbackPath(null)).toBe("/home");
@@ -37,6 +10,7 @@ describe("lib/auth/utils", () => {
       expect(getAuthCallbackPath("https://nakafa.com/id", "id")).toBe(
         "/id/home"
       );
+      expect(getAuthCallbackPath("//nakafa.com/id", "id")).toBe("/id/home");
     });
 
     it("sends marketing roots to the app home instead of the public homepage", () => {

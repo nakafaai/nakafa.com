@@ -2,19 +2,16 @@ import {
   getQuranSurahNumberForRoute,
   getSourceRouteProjection,
   getSourceRouteProjectionForRoute,
-  parseQuranSurahNumberForRoute,
-  parseSourceRouteProjection,
   type SourceRouteProjectionOptions,
 } from "@repo/contents/_types/graph/projection";
 import { normalizeSourceRouteProjection } from "@repo/contents/_types/graph/route";
 import {
   getCurriculumLensScopeForKind,
   getSourceRegistryRootForKind,
-  SourceRouteInputSchema,
   SourceRouteProjectionSchema,
 } from "@repo/contents/_types/graph/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
-import { Effect, Exit, Schema } from "effect";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Projects one Indonesian route through the localized graph contract. */
@@ -316,74 +313,15 @@ describe("source route projection", () => {
     ).toBeNull();
   });
 
-  it("owns projection and parser contracts through Effect schemas", async () => {
-    const source = Schema.decodeUnknownSync(SourceRouteInputSchema)({
+  it("emits projections that satisfy the runtime schema", () => {
+    const projection = getSourceRouteProjection({
       kind: "quran-surah",
       locale: "id",
       route: "quran/1",
     });
 
-    expect(Schema.is(SourceRouteInputSchema)(source)).toBe(true);
-
-    const projection = getSourceRouteProjection(source);
-
     expect(projection).not.toBeNull();
     expect(Schema.is(SourceRouteProjectionSchema)(projection)).toBe(true);
-
-    const parsed = await Effect.runPromiseExit(
-      parseSourceRouteProjection(source)
-    );
-
-    expect(Exit.isSuccess(parsed)).toBe(true);
-    if (Exit.isFailure(parsed)) {
-      return;
-    }
-
-    expect(parsed.value.kind).toBe("quran-surah");
-    expect(
-      await Effect.runPromise(
-        parseQuranSurahNumberForRoute({ locale: "id", route: "quran/1" })
-      )
-    ).toBe(1);
-  });
-
-  it("keeps parse failures typed without throwing from the parser API", async () => {
-    const parsed = await Effect.runPromiseExit(
-      parseSourceRouteProjection({
-        kind: "quran-surah",
-        locale: "id",
-        route: "quran/not-number",
-      })
-    );
-    const quranParsed = await Effect.runPromiseExit(
-      parseQuranSurahNumberForRoute({
-        locale: "id",
-        route: "quran/not-number",
-      })
-    );
-
-    expect(Exit.isFailure(parsed)).toBe(true);
-    expect(Exit.isFailure(quranParsed)).toBe(true);
-  });
-
-  it("decodes unknown source-route inputs before projection parsing", async () => {
-    const missingRoute = await Effect.runPromiseExit(
-      parseSourceRouteProjection({ kind: "quran-surah", locale: "id" })
-    );
-    const missingKind = await Effect.runPromiseExit(
-      parseSourceRouteProjection({ locale: "id", route: "quran/1" })
-    );
-    const nonStringFields = await Effect.runPromiseExit(
-      parseSourceRouteProjection({ kind: 1, locale: 1, route: 1 })
-    );
-    const numericQuranRoute = await Effect.runPromiseExit(
-      parseQuranSurahNumberForRoute(1)
-    );
-
-    expect(Exit.isFailure(missingRoute)).toBe(true);
-    expect(Exit.isFailure(missingKind)).toBe(true);
-    expect(Exit.isFailure(nonStringFields)).toBe(true);
-    expect(Exit.isFailure(numericQuranRoute)).toBe(true);
   });
 
   it("owns registry roots and lens scopes for graph kinds", () => {

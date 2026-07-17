@@ -1,3 +1,4 @@
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 const VerseNumberSchema = Schema.Struct({
@@ -5,10 +6,9 @@ const VerseNumberSchema = Schema.Struct({
   inQuran: Schema.Number,
 }).pipe(Schema.mutable);
 
-const LocalizedTextSchema = Schema.Struct({
-  en: Schema.String,
-  id: Schema.String,
-}).pipe(Schema.mutable);
+const LocalizedTextSchema = Schema.Struct(
+  fieldsForEveryLocale(Schema.String)
+).pipe(Schema.mutable);
 
 const VerseTextSchema = Schema.Struct({
   arab: Schema.String,
@@ -62,8 +62,7 @@ const SurahNameSchema = Schema.Struct({
 
 const RevelationSchema = Schema.Struct({
   arab: Schema.String,
-  en: Schema.String,
-  id: Schema.String,
+  ...fieldsForEveryLocale(Schema.String),
 }).pipe(Schema.mutable);
 
 const surahMetadataFields = {

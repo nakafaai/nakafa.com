@@ -61,61 +61,10 @@ describe("generateQuranMetadata", () => {
     expect(result.description).toBe("Read Surah Al-Fatihah with 7 verses.");
   });
 
-  it("falls back to English Quran labels when locale labels are empty", async () => {
-    const result = await Effect.runPromise(
-      generateQuranMetadata(
-        {
-          ...surah,
-          name: {
-            ...surah.name,
-            translation: { en: "The Opening", id: "" },
-            transliteration: { en: "Al-Fatihah", id: "" },
-          },
-          revelation: { arab: "مكة", en: "Meccan", id: "" },
-        },
-        "id"
-      )
-    );
+  it("uses Quran labels from the requested locale", async () => {
+    const result = await Effect.runPromise(generateQuranMetadata(surah, "id"));
 
-    expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening | Nakafa");
-    expect(result.keywords).toEqual(["Al-Fatihah", "The Opening", "Meccan"]);
-  });
-
-  it("falls back to the short Quran name when translated names are empty", async () => {
-    const result = await Effect.runPromise(
-      generateQuranMetadata(
-        {
-          ...surah,
-          name: {
-            ...surah.name,
-            translation: { en: "", id: "" },
-            transliteration: { en: "", id: "" },
-          },
-          revelation: { arab: "مكة", en: "", id: "" },
-        },
-        "id"
-      )
-    );
-
-    expect(result.title).toBe("Surah 1. Al-Fatihah - Al-Fatihah | Nakafa");
-    expect(result.keywords).toEqual(["Al-Fatihah", "Al-Fatihah"]);
-  });
-
-  it("keeps Quran metadata stable when all display names are empty", async () => {
-    const result = await Effect.runPromise(
-      generateQuranMetadata(
-        {
-          ...surah,
-          name: {
-            ...surah.name,
-            short: "",
-            translation: { en: "", id: "" },
-          },
-        },
-        "id"
-      )
-    );
-
-    expect(result.title).toBe("Surah 1.  -  | Nakafa");
+    expect(result.title).toBe("Surah 1. Al-Fatihah - Pembukaan | Nakafa");
+    expect(result.keywords).toEqual(["Al-Fatihah", "Pembukaan", "Makkiyah"]);
   });
 });

@@ -23,7 +23,7 @@ import {
   getTimeString,
   updateDate,
   updateTime,
-} from "@/components/school/classes/assessments/utils";
+} from "@/components/school/classes/schedule";
 
 interface AssessmentScheduledAtFieldProps {
   formId: string;

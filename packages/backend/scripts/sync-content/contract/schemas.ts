@@ -227,6 +227,20 @@ export const PublicRouteSyncResultSchema = Schema.Struct({
   updated: Schema.Number,
 });
 
+export const PublicRouteSitemapCountSchema = Schema.NullOr(
+  Schema.Struct({
+    count: Schema.Number,
+    hash: Schema.String,
+    locale: SyncLocaleSchema,
+    pageCount: Schema.Number,
+    syncedAt: Schema.Number,
+  })
+);
+
+export const PublicSitemapDeleteResultSchema = Schema.Struct({
+  deleted: Schema.Number,
+});
+
 export const AuthorSyncResultSchema = Schema.Struct({
   created: Schema.Number,
   existing: Schema.Number,

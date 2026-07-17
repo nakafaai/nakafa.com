@@ -1,11 +1,5 @@
 import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
-import {
-  createCurriculumCoverageInputs,
-  createFallbackCoverageInputs,
-  createLearningProgramCoverageInputs,
-  getProgramKeysForCoverageRoute,
-  projectLearningProgramCoverageInputs,
-} from "@repo/contents/_types/program/coverage";
+import { projectLearningProgramCoverageInputs } from "@repo/contents/_types/program/coverage";
 import {
   LearningProgramCoverageRouteSchema,
   LearningProgramKeySchema,
@@ -48,11 +42,6 @@ const englishSubjectRoute = decodeRoute({
 });
 
 describe("program/coverage", () => {
-  it("keeps assessment route rules separate from curriculum mappings", () => {
-    expect(getProgramKeysForCoverageRoute(subjectRoute)).toEqual([]);
-    expect(getProgramKeysForCoverageRoute(snbtRoute)).toEqual(["snbt"]);
-  });
-
   it("maps curriculum topics through curriculum-owned material references", () => {
     const mappedTopicRoute = decodeRoute({
       assetId:
@@ -65,7 +54,7 @@ describe("program/coverage", () => {
       sourcePath: "material/lesson/biology/biodiversity",
     });
 
-    const programKeys = createCurriculumCoverageInputs({
+    const programKeys = projectCoverage({
       programs: LEARNING_PROGRAM_CATALOG,
       routes: [mappedTopicRoute],
       syncedAt: 1,
@@ -81,61 +70,25 @@ describe("program/coverage", () => {
     ]);
   });
 
-  it("falls back only through explicit fallback alignment rules", () => {
-    const unmatchedRoute = decodeRoute({
-      assetId: "asset:id:article:learning:general",
-      conceptId: "concept:article:learning",
-      kind: "tryout-set",
-      lensId: "lens:article:general",
-      locale: "id",
-      route: "articles/learning/general",
-      sourcePath: "articles/learning/general",
-    });
-
+  it("requires both route and lens alignment", () => {
     expect(
-      getProgramKeysForCoverageRoute(unmatchedRoute, [
-        {
-          match: { fallback: true },
-          programKey: LearningProgramKeySchema.make("fixture-program"),
-        },
-      ])
-    ).toEqual(["fixture-program"]);
-    expect(
-      getProgramKeysForCoverageRoute(unmatchedRoute, [
-        {
-          match: { routeKinds: ["curriculum-topic"] },
-          programKey: LearningProgramKeySchema.make("merdeka"),
-        },
-      ])
-    ).toEqual([]);
-    expect(
-      getProgramKeysForCoverageRoute(snbtRoute, [
-        {
-          match: { routeKinds: ["tryout-set"] },
-          programKey: LearningProgramKeySchema.make("fixture-program"),
-        },
-      ])
-    ).toEqual(["fixture-program"]);
-    expect(
-      getProgramKeysForCoverageRoute(snbtRoute, [
-        {
-          match: { lensSegments: ["tka"] },
-          programKey: LearningProgramKeySchema.make("tka"),
-        },
-      ])
-    ).toEqual([]);
-    expect(
-      getProgramKeysForCoverageRoute(snbtRoute, [
-        {
-          match: { lensSegments: ["snbt"], routeSegments: ["missing"] },
-          programKey: LearningProgramKeySchema.make("snbt"),
-        },
-      ])
+      projectCoverage({
+        alignments: [
+          {
+            match: { lensSegments: ["snbt"], routeSegments: ["missing"] },
+            programKey: LearningProgramKeySchema.make("snbt"),
+          },
+        ],
+        curriculumNodes: [],
+        programs: LEARNING_PROGRAM_CATALOG,
+        routes: [snbtRoute],
+        syncedAt: 1,
+      })
     ).toEqual([]);
   });
 
-  it("projects graph routes to program coverage without persisting route identity", () => {
-    const rows = createLearningProgramCoverageInputs({
+  it("projects graph routes through the Effect sync entrypoint", () => {
+    const rows = projectCoverage({
       programs: LEARNING_PROGRAM_CATALOG,
       routes: [subjectRoute, snbtRoute],
       syncedAt: 1,
@@ -152,26 +105,8 @@ describe("program/coverage", () => {
     expect(JSON.stringify(rows)).not.toContain("material/practice");
   });
 
-  it("projects program coverage through the Effect sync entrypoint", async () => {
-    const rows = await Effect.runPromise(
-      projectLearningProgramCoverageInputs({
-        programs: LEARNING_PROGRAM_CATALOG,
-        routes: [subjectRoute, snbtRoute],
-        syncedAt: 1,
-      })
-    );
-    const rowsByProgram = Object.fromEntries(
-      rows.map((row) => [row.programKey, row])
-    );
-
-    expect(rowsByProgram.merdeka).toMatchObject({
-      lensScope: "curriculum",
-    });
-    expect(rowsByProgram.snbt).toMatchObject({ lensScope: "exam" });
-  });
-
   it("preserves explicit available catalog status for real program coverage", () => {
-    const rows = createLearningProgramCoverageInputs({
+    const rows = projectCoverage({
       programs: LEARNING_PROGRAM_CATALOG.map((program) => {
         if (program.key !== "merdeka") {
           return program;
@@ -214,17 +149,24 @@ describe("program/coverage", () => {
       sourcePath: "material/lesson/mathematics/second-topic",
     });
 
-    const rows = createFallbackCoverageInputs({
+    const rows = projectCoverage({
       alignments: [
         {
-          match: { routeSegments: ["eksponen-logaritma"] },
+          match: {
+            lensSegments: ["mathematics"],
+            routeSegments: ["eksponen-logaritma"],
+          },
           programKey: LearningProgramKeySchema.make("merdeka"),
         },
         {
-          match: { routeSegments: ["topik-kedua"] },
+          match: {
+            lensSegments: ["mathematics"],
+            routeSegments: ["topik-kedua"],
+          },
           programKey: LearningProgramKeySchema.make("merdeka"),
         },
       ],
+      curriculumNodes: [],
       programs: LEARNING_PROGRAM_CATALOG,
       routes: [subjectRoute, duplicateSubjectRoute],
       syncedAt: 1,
@@ -239,28 +181,8 @@ describe("program/coverage", () => {
     ]);
   });
 
-  it("exposes curriculum and fallback projection seams", () => {
-    const curriculumRows = createCurriculumCoverageInputs({
-      programs: LEARNING_PROGRAM_CATALOG,
-      routes: [subjectRoute],
-      syncedAt: 1,
-    });
-    const fallbackRows = createFallbackCoverageInputs({
-      programs: LEARNING_PROGRAM_CATALOG,
-      routes: [subjectRoute],
-      syncedAt: 1,
-    });
-
-    expect(curriculumRows.map((row) => row.programKey).sort()).toEqual([
-      "merdeka",
-      "singapore-moe",
-      "united-states",
-    ]);
-    expect(fallbackRows).toEqual([]);
-  });
-
   it("does not invent curriculum coverage for material outside a curriculum mapping", () => {
-    const rows = createLearningProgramCoverageInputs({
+    const rows = projectCoverage({
       alignments: [],
       programs: LEARNING_PROGRAM_CATALOG,
       routes: [
@@ -282,7 +204,7 @@ describe("program/coverage", () => {
   });
 
   it("keeps program identity stable across content languages", () => {
-    const rows = createLearningProgramCoverageInputs({
+    const rows = projectCoverage({
       programs: LEARNING_PROGRAM_CATALOG,
       routes: [subjectRoute, englishSubjectRoute],
       syncedAt: 1,
@@ -315,7 +237,7 @@ describe("program/coverage", () => {
       return { ...program, defaultCoverageStatus: "hidden" as const };
     });
 
-    const rows = createLearningProgramCoverageInputs({
+    const rows = projectCoverage({
       programs,
       routes: [subjectRoute, duplicateSubjectRoute],
       syncedAt: 1,
@@ -342,14 +264,14 @@ describe("program/coverage", () => {
       return { ...program, defaultCoverageStatus: "archived" as const };
     });
 
-    const rows = createLearningProgramCoverageInputs({
+    const rows = projectCoverage({
       alignments: [
         {
-          match: { routeSegments: ["snbt"] },
+          match: { lensSegments: ["snbt"], routeSegments: ["snbt"] },
           programKey: LearningProgramKeySchema.make("snbt"),
         },
         {
-          match: { routeSegments: ["snbt"] },
+          match: { lensSegments: ["snbt"], routeSegments: ["snbt"] },
           programKey: LearningProgramKeySchema.make("unknown-exam"),
         },
       ],
@@ -369,3 +291,10 @@ describe("program/coverage", () => {
     });
   });
 });
+
+/** Runs the public Effect projection at the test boundary. */
+function projectCoverage(
+  args: Parameters<typeof projectLearningProgramCoverageInputs>[0]
+) {
+  return Effect.runSync(projectLearningProgramCoverageInputs(args));
+}

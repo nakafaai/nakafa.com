@@ -62,17 +62,6 @@ export function parseContentDate(dateString: string) {
 }
 
 /**
- * Checks whether a metadata date string matches the canonical repository date
- * format.
- *
- * @param dateString - Raw metadata date string from MDX content
- * @returns True when the date is a valid ISO `YYYY-MM-DD` value
- */
-export function isContentDateString(dateString: string): boolean {
-  return isDateOnlyString(dateString);
-}
-
-/**
  * Formats a repository content date as an ISO-8601 UTC timestamp.
  *
  * @param dateString - Raw metadata date string from MDX content

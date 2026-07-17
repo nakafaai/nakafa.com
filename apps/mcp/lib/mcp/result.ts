@@ -77,7 +77,7 @@ export function toMcpToolError(
 }
 
 /** Maps shared read-model failures to agent-friendly MCP tool errors. */
-export function toMcpReadModelError(
+function toMcpReadModelError(
   error: NakafaAgentInputError | NakafaAgentDataReadError
 ) {
   return toMcpToolError(error.message, [

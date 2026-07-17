@@ -4,7 +4,6 @@ import {
   listCurriculumStaticParams,
   readCurriculumBreadcrumbs,
   readCurriculumHeaderLink,
-  readCurriculumRootHrefForProgramKey,
   readCurriculumRootOptions,
   readCurriculumRouteModel,
   readCurriculumRoutes,
@@ -204,21 +203,6 @@ describe("curriculum route data", () => {
         value: "kurikulum/amerika-serikat",
       },
     ]);
-  });
-
-  it("resolves localized root curriculum hrefs by program key", () => {
-    expect(
-      readCurriculumRootHrefForProgramKey({
-        locale: "id",
-        programKey: "united-states",
-      })
-    ).toBe("/id/kurikulum/amerika-serikat");
-    expect(
-      readCurriculumRootHrefForProgramKey({
-        locale: "en",
-        programKey: "missing",
-      })
-    ).toBeNull();
   });
 
   it("builds parent links, breadcrumbs, TOC headers, and material chapters", () => {

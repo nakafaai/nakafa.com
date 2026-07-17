@@ -225,27 +225,10 @@ async function CachedSurahShell({
   });
 
   const pagination = getQuranPagination({
+    locale,
     prevSurah,
     nextSurah,
   });
-
-  const prevTitle = prevSurah
-    ? getQuranSurahName({ locale, name: prevSurah.name })
-    : "";
-  const nextTitle = nextSurah
-    ? getQuranSurahName({ locale, name: nextSurah.name })
-    : "";
-
-  const paginationWithLocalizedTitles = {
-    prev: {
-      href: pagination.prev.href,
-      title: prevTitle,
-    },
-    next: {
-      href: pagination.next.href,
-      title: nextTitle,
-    },
-  };
 
   const controlLabels = {
     interpretation: t("interpretation"),
@@ -281,8 +264,7 @@ async function CachedSurahShell({
               <div className="mb-20 flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center shadow-sm">
                 <QuranText>{preBismillah.text.arab}</QuranText>
                 <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
-                  {preBismillah.translation[locale] ??
-                    preBismillah.translation.en}
+                  {preBismillah.translation[locale]}
                 </p>
               </div>
             )}
@@ -313,7 +295,7 @@ async function CachedSurahShell({
               })}
             </WindowVirtualized>
           </LayoutContent>
-          <PaginationContent pagination={paginationWithLocalizedTitles} />
+          <PaginationContent pagination={pagination} />
           <FooterContent>{footer}</FooterContent>
           <QuranPageControls
             audioSources={audioSources}

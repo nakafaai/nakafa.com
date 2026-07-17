@@ -1,3 +1,4 @@
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 const QuestionChoiceItemSchema = Schema.Struct({
@@ -19,10 +20,9 @@ const QuestionChoiceListSchema = Schema.Array(QuestionChoiceItemSchema).pipe(
   })
 );
 
-/** Localized single-answer choices with exactly one correct option per locale. */
-export const QuestionChoicesSchema = Schema.Struct({
-  id: QuestionChoiceListSchema,
-  en: QuestionChoiceListSchema,
-}).pipe(Schema.mutable);
+/** Localized single-answer choices required for every supported locale. */
+export const QuestionChoicesSchema = Schema.Struct(
+  fieldsForEveryLocale(QuestionChoiceListSchema)
+).pipe(Schema.mutable);
 
 export type QuestionChoices = Schema.Schema.Type<typeof QuestionChoicesSchema>;

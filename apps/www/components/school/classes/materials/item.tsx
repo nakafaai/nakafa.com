@@ -44,7 +44,7 @@ import {
   useReorderMaterialGroupMutation,
 } from "@/components/school/classes/materials/mutation.client";
 import type { MaterialGroup } from "@/components/school/classes/materials/types";
-import { formatScheduledAt } from "@/components/school/classes/materials/utils";
+import { formatScheduledAt } from "@/components/school/classes/schedule";
 import { getLocale } from "@/lib/utils/date";
 
 /** Return the badge variant used for one material-group status. */

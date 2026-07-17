@@ -5,6 +5,7 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import { questionResetBatchSize } from "@repo/backend/convex/contentSync/reset/spec";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
@@ -15,7 +16,7 @@ import {
   deleteTryoutContentRoutePageRows,
   deleteTryoutContentRouteRows,
   deleteTryoutContentSearchRows,
-} from "./impl";
+} from "./tryouts";
 
 describe("contentSync/reset/tryouts", () => {
   it("clears only try-out route projections during reset", async () => {
@@ -23,10 +24,18 @@ describe("contentSync/reset/tryouts", () => {
 
     await t.mutation(seedTryoutRouteProjections);
 
-    const routeDelete = await t.mutation(deleteTryoutContentRouteRows);
-    const searchDelete = await t.mutation(deleteTryoutContentSearchRows);
-    const countDelete = await t.mutation(deleteTryoutContentRouteCountRows);
-    const pageDelete = await t.mutation(deleteTryoutContentRoutePageRows);
+    const routeDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteTryoutContentRouteRows(ctx))
+    );
+    const searchDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteTryoutContentSearchRows(ctx))
+    );
+    const countDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteTryoutContentRouteCountRows(ctx))
+    );
+    const pageDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteTryoutContentRoutePageRows(ctx))
+    );
     const rows = await t.query(getProjectionRows);
 
     expect(routeDelete).toEqual({ deleted: 1, hasMore: false });
@@ -41,27 +50,7 @@ describe("contentSync/reset/tryouts", () => {
     });
   });
 
-  it("deletes questions through their dependent rows", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await t.mutation(async (ctx) => {
-      await seedQuestionWithDependents(ctx, 1);
-    });
-
-    const result = await t.mutation(deleteQuestionRows);
-    const rows = await t.query(getQuestionRows);
-
-    expect(result).toEqual({ deleted: 1, hasMore: false });
-    expect(rows).toEqual({
-      contentAuthors: [],
-      contentRoutes: [],
-      contentSearch: [],
-      questionChoices: [],
-      questions: [],
-    });
-  });
-
-  it("paginates question deletion below the dependent choice read limit", async () => {
+  it("deletes questions and dependents in bounded batches", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
@@ -70,8 +59,12 @@ describe("contentSync/reset/tryouts", () => {
       }
     });
 
-    const firstBatch = await t.mutation(deleteQuestionRows);
-    const secondBatch = await t.mutation(deleteQuestionRows);
+    const firstBatch = await t.mutation((ctx) =>
+      runConvexProgram(deleteQuestionRows(ctx))
+    );
+    const secondBatch = await t.mutation((ctx) =>
+      runConvexProgram(deleteQuestionRows(ctx))
+    );
     const rows = await t.query(getQuestionRows);
 
     expect(firstBatch).toEqual({
@@ -79,8 +72,13 @@ describe("contentSync/reset/tryouts", () => {
       hasMore: true,
     });
     expect(secondBatch).toEqual({ deleted: 1, hasMore: false });
-    expect(rows.questions).toEqual([]);
-    expect(rows.questionChoices).toEqual([]);
+    expect(rows).toEqual({
+      contentAuthors: [],
+      contentRoutes: [],
+      contentSearch: [],
+      questionChoices: [],
+      questions: [],
+    });
   });
 });
 

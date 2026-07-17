@@ -16,11 +16,10 @@ import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
-import GB from "country-flag-icons/react/3x2/GB";
-import ID from "country-flag-icons/react/3x2/ID";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ComponentProps } from "react";
+import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 /** Renders footer preference actions that share the same language route resolver as the sidebar. */
@@ -32,11 +31,6 @@ export function FooterAction() {
     </ButtonGroup>
   );
 }
-
-const flagMap = {
-  en: GB,
-  id: ID,
-};
 
 /** Renders the footer language switcher and keeps localized route projection outside the UI list. */
 function Language() {
@@ -65,29 +59,26 @@ function Language() {
         className="w-max max-w-[calc(100vw-2rem)]"
       >
         <DropdownMenuGroup>
-          {languages.map((language) => {
-            const Flag = flagMap[language.value];
-            return (
-              <DropdownMenuItem
-                className="cursor-pointer"
-                disabled={isPending}
-                key={language.value}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  handleChangeLocale(language.value);
-                }}
-              >
-                <Flag className="size-4 shrink-0" />
-                <span className="truncate">{language.label}</span>
-                <IconCircleFilled
-                  className={cn(
-                    "ml-auto size-3 text-primary opacity-0 transition-opacity",
-                    currentLocale === language.value && "opacity-100"
-                  )}
-                />
-              </DropdownMenuItem>
-            );
-          })}
+          {languages.map((language) => (
+            <DropdownMenuItem
+              className="cursor-pointer"
+              disabled={isPending}
+              key={language.value}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleChangeLocale(language.value);
+              }}
+            >
+              <CountryFlagIcon countryCode={language.countryCode} />
+              <span className="truncate">{language.label}</span>
+              <IconCircleFilled
+                className={cn(
+                  "ml-auto size-3 text-primary opacity-0 transition-opacity",
+                  currentLocale === language.value && "opacity-100"
+                )}
+              />
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

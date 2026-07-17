@@ -7,22 +7,30 @@ import { BASE_URL } from "@/lib/llms/constants";
 
 const mockGetLlmsMarkdownText = vi.hoisted(() => vi.fn());
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
+const mockResolvePublicLlmsSectionIndex = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/llms/content", () => ({
   getLlmsMarkdownText: mockGetLlmsMarkdownText,
 }));
 
 vi.mock("@/lib/llms/indexes", () => ({
-  buildRootLlmsIndexText: () => "# Nakafa llms index\n",
   getCachedLlmsSectionIndexText: mockGetCachedLlmsSectionIndexText,
+}));
+
+vi.mock("@/lib/llms/public-index", () => ({
+  buildPublicLlmsAppSectionIndexText: () => "# Nakafa English Curriculum\n",
+  buildRootLlmsIndexText: () => "# Nakafa llms index\n",
+  resolvePublicLlmsSectionIndex: mockResolvePublicLlmsSectionIndex,
 }));
 
 describe("llms.mdx route", () => {
   beforeEach(() => {
     mockGetCachedLlmsSectionIndexText.mockReset();
     mockGetLlmsMarkdownText.mockReset();
+    mockResolvePublicLlmsSectionIndex.mockReset();
     mockGetCachedLlmsSectionIndexText.mockResolvedValue(null);
     mockGetLlmsMarkdownText.mockReturnValue(Effect.succeed(null));
+    mockResolvePublicLlmsSectionIndex.mockReturnValue(null);
   });
 
   it("serves cached section index markdown before page markdown", async () => {
@@ -46,6 +54,23 @@ describe("llms.mdx route", () => {
     expect(response.headers.get("content-type")).toBe(
       "text/markdown; charset=utf-8"
     );
+    expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
+  });
+
+  it("serves internal bounded indexes without treating llms as a locale", async () => {
+    mockGetCachedLlmsSectionIndexText.mockResolvedValueOnce(
+      "# Bounded Articles\n"
+    );
+
+    const response = await GET(
+      new NextRequest("https://nakafa.com/llms.mdx/llms/en/articles"),
+      {
+        params: Promise.resolve({ slug: ["llms", "en", "articles"] }),
+      }
+    );
+
+    await expect(response.text()).resolves.toBe("# Bounded Articles\n");
+    expect(mockResolvePublicLlmsSectionIndex).not.toHaveBeenCalled();
     expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
   });
 
@@ -86,10 +111,74 @@ describe("llms.mdx route", () => {
 
     await expect(response.text()).resolves.toBe("# Nakafa llms index\n");
     expect(response.status).toBe(200);
-    expect(mockGetLlmsMarkdownText).toHaveBeenCalledWith({
-      cleanSlug: "llms",
-      locale: "en",
+    expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
+  });
+
+  it("serves bounded locale aggregates at localized public paths", async () => {
+    mockGetCachedLlmsSectionIndexText.mockResolvedValueOnce(
+      "# Nakafa English Content\n"
+    );
+
+    const response = await GET(
+      new NextRequest("https://nakafa.com/llms.mdx/en/llms.txt"),
+      {
+        params: Promise.resolve({ slug: ["en"] }),
+      }
+    );
+
+    await expect(response.text()).resolves.toBe("# Nakafa English Content\n");
+    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
+      cleanSlug: "llms/en",
     });
+    expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
+  });
+
+  it("maps localized subject indexes to the bounded material catalog", async () => {
+    mockResolvePublicLlmsSectionIndex.mockReturnValueOnce({
+      label: "Material",
+      prefix: "subjects",
+      section: "material",
+    });
+    mockGetCachedLlmsSectionIndexText.mockResolvedValueOnce(
+      "# Nakafa English Material Pages\n"
+    );
+
+    const response = await GET(
+      new NextRequest("https://nakafa.com/llms.mdx/en/subjects/llms.txt"),
+      {
+        params: Promise.resolve({ slug: ["en", "subjects"] }),
+      }
+    );
+
+    await expect(response.text()).resolves.toBe(
+      "# Nakafa English Material Pages\n"
+    );
+    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
+      cleanSlug: "llms/en/material",
+    });
+    expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
+  });
+
+  it("serves app-only public indexes without inventing page markdown", async () => {
+    mockResolvePublicLlmsSectionIndex.mockReturnValueOnce({
+      label: "Curriculum",
+      prefix: "curriculum",
+    });
+
+    const response = await GET(
+      new NextRequest("https://nakafa.com/llms.mdx/en/curriculum/llms.txt"),
+      {
+        params: Promise.resolve({
+          slug: ["en", "curriculum"],
+        }),
+      }
+    );
+
+    await expect(response.text()).resolves.toBe(
+      "# Nakafa English Curriculum\n"
+    );
+    expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+    expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
   });
 
   it("keeps missing llms index routes as plain 404s", async () => {

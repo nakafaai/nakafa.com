@@ -1,6 +1,7 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
 import { Effect } from "effect";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
+import { getSitemapPageDescriptor } from "@/lib/sitemap/routes";
 import { buildSitemapUrlSetXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
 
 const sitemapPageError = "Internal Server Error";
@@ -14,15 +15,15 @@ export async function GET(
   const { id } = await ctx.params;
   const pageId = parseSitemapPageId(id);
 
-  if (!pageId) {
-    return new Response("Not found", {
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
-      status: 404,
-    });
+  if (!(pageId && getSitemapPageDescriptor(pageId))) {
+    return createNotFoundResponse();
   }
 
   return Effect.runPromise(
     buildSitemapPageResponse(pageId).pipe(
+      Effect.catchTag("SitemapPageNotFoundError", () =>
+        Effect.succeed(createNotFoundResponse())
+      ),
       Effect.catchAll((error) =>
         reportSitemapRouteError(error, "sitemap-page").pipe(
           Effect.as(
@@ -35,6 +36,14 @@ export async function GET(
       )
     )
   );
+}
+
+/** Builds the canonical plain-text response for a missing sitemap page. */
+function createNotFoundResponse() {
+  return new Response("Not found", {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+    status: 404,
+  });
 }
 
 /** Extracts the materialized page id from a `.xml` sitemap route segment. */
@@ -54,11 +63,7 @@ function parseSitemapPageId(segment: string) {
 /** Builds one sitemap page response from bounded sitemap entries. */
 const buildSitemapPageResponse = Effect.fn("www.sitemap.page.response")(
   function* (pageId: string) {
-    const entries = yield* getSitemapEntries({
-      pageId,
-      reportError: (error, context) =>
-        captureServerException(error, undefined, context),
-    });
+    const entries = yield* getSitemapEntries({ pageId });
 
     return new Response(buildSitemapUrlSetXml(entries), {
       headers: sitemapXmlHeaders,

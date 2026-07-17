@@ -11,6 +11,10 @@ import {
 } from "@repo/backend/convex/contents/popularity";
 import { storedPublicRouteValidator } from "@repo/backend/convex/contents/publicRoutes/spec";
 import {
+  publicRouteSitemapCountValidator,
+  publicRouteSitemapPageValidator,
+} from "@repo/backend/convex/contents/sitemap/spec";
+import {
   localeValidator,
   materialValidator,
   nakafaSectionValidator,
@@ -365,6 +369,16 @@ const tables = {
     .index("by_locale", ["locale"])
     .index("by_locale_and_section", ["locale", "section"]),
 
+  /** Locale totals used to discover bounded public sitemap pages. */
+  publicRouteSitemapCounts: defineTable(
+    publicRouteSitemapCountValidator.fields
+  ).index("by_locale", ["locale"]),
+
+  /** Lexical route boundaries for bounded public sitemap pages. */
+  publicRouteSitemapPages: defineTable(
+    publicRouteSitemapPageValidator.fields
+  ).index("by_locale_and_page", ["locale", "page"]),
+
   /**
    * Source-owned public route projection for material, curriculum, and
    * try-out surfaces.
@@ -418,9 +432,10 @@ const tables = {
       "materialContextNodeKey",
     ])
     .index("by_locale_and_sourcePath", ["locale", "sourcePath"])
-    .index("by_locale_and_sitemap_and_publicPath", [
+    .index("by_locale_and_sitemap_and_kind_and_publicPath", [
       "locale",
       "sitemap",
+      "kind",
       "publicPath",
     ])
     .index("by_syncShard", ["syncShard"]),

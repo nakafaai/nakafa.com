@@ -9,14 +9,9 @@ export const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
   (surah: RuntimeQuranSurahMetadata, locale: Locale) =>
     Effect.gen(function* () {
       const name = surah.name.short;
-      const transliteration =
-        surah.name.transliteration[locale] ||
-        surah.name.transliteration.en ||
-        name;
-      const translation =
-        surah.name.translation[locale] || surah.name.translation.en || name;
-      const revelation = surah.revelation[locale] || surah.revelation.en || "";
-      const effectiveTitle = translation || name;
+      const transliteration = surah.name.transliteration[locale];
+      const translation = surah.name.translation[locale];
+      const revelation = surah.revelation[locale];
 
       const t = yield* fetchSEOTranslationsNamespace(locale, "SEO");
 
@@ -25,7 +20,7 @@ export const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
           number: surah.number,
           name,
           transliteration,
-          translation: effectiveTitle,
+          translation,
         }),
         description: t("quran.description", {
           name,
@@ -35,7 +30,7 @@ export const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
         keywords: createSEOKeywords(
           t("quran.keywords", {
             name,
-            translation: effectiveTitle,
+            translation,
             revelation,
           })
         ),

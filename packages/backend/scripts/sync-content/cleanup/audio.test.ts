@@ -45,6 +45,8 @@ const emptyCounts = {
   contentRouteCounts: 0,
   contentRoutePages: 0,
   contentRoutes: 0,
+  publicRouteSitemapCounts: 0,
+  publicRouteSitemapPages: 0,
   publicRoutes: 0,
   publicRouteSyncState: 0,
   contentSearch: 0,

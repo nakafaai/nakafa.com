@@ -1,7 +1,6 @@
 import {
   BrowserSidebarCookieWriterLive,
   persistSidebarState,
-  SIDEBAR_COOKIE_MAX_AGE,
   SidebarCookieWriter,
   SidebarStatePersistenceError,
 } from "@repo/design-system/lib/sidebar/persistence";
@@ -32,7 +31,7 @@ describe("sidebar state persistence", () => {
     );
 
     expect(persistedCookie).toBe(
-      `${TEST_COOKIE_NAME}=true; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+      `${TEST_COOKIE_NAME}=true; path=/; max-age=604800`
     );
   });
 

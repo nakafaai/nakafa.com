@@ -1,6 +1,5 @@
 import {
   getSurahName,
-  parseQuranSurahRoute,
   readNakafaQuranReference,
   readQuranMarkdown,
 } from "@repo/backend/client/nakafa/quran";
@@ -8,7 +7,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { InvalidLearningGraphRouteError } from "@repo/contents/_types/graph/schema";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -94,8 +92,7 @@ describe("Quran Nakafa reader", () => {
     );
   });
 
-  it("parses canonical Quran surah routes and rejects malformed routes", async () => {
-    const valid = parseQuranSurahRoute("id", "quran/1");
+  it("returns none for missing surahs and localizes known names", async () => {
     const missing = await Effect.runPromise(
       readQuranMarkdown(
         convexUrl,
@@ -103,17 +100,6 @@ describe("Quran Nakafa reader", () => {
       )
     );
 
-    expect(Option.getOrUndefined(valid)).toBe(1);
-    expect(Option.isNone(parseQuranSurahRoute("id", "quran/01"))).toBe(true);
-    expect(Option.isNone(parseQuranSurahRoute("id", "quran/1/extra"))).toBe(
-      true
-    );
-    expect(Option.isNone(parseQuranSurahRoute("id", "quran/not-number"))).toBe(
-      true
-    );
-    expect(() =>
-      readNakafaContentRefFixture("en", "quran/01", "quran")
-    ).toThrow(InvalidLearningGraphRouteError);
     expect(Option.isNone(missing)).toBe(true);
     expect(
       getSurahName({

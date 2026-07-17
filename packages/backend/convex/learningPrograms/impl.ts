@@ -12,7 +12,7 @@ export function toLearningProgramSummary(
   program: Doc<"learningPrograms">,
   locale: Locale = defaultLocale
 ) {
-  const translation = getProgramTranslation(program, locale);
+  const translation = program.translations[locale];
   const summary = {
     coverageStatus: program.defaultCoverageStatus,
     displayOrder: program.displayOrder,
@@ -201,33 +201,4 @@ export async function getContentRouteByContentId(
     .take(5);
 
   return routes.find((route) => route.locale === locale) ?? null;
-}
-
-/** Returns localized program copy, falling back to the app default language. */
-function getProgramTranslation(
-  program: Doc<"learningPrograms">,
-  locale: Locale
-) {
-  const requested = program.translations[locale];
-
-  if (requested) {
-    return requested;
-  }
-
-  const fallback = program.translations[defaultLocale];
-
-  if (fallback) {
-    return fallback;
-  }
-
-  const [firstTranslation] = Object.values(program.translations);
-
-  if (!firstTranslation) {
-    return {
-      publicSlug: program.key,
-      title: program.key,
-    };
-  }
-
-  return firstTranslation;
 }

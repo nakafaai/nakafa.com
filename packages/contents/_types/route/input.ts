@@ -1,4 +1,3 @@
-import { AssessmentSourceSchema } from "@repo/contents/_types/assessment/schema";
 import { ProjectedCurriculumNodeSchema } from "@repo/contents/_types/curriculum/projection";
 import { CurriculumSourceSchema } from "@repo/contents/_types/curriculum/schema";
 import { MaterialRouteDomainSchema } from "@repo/contents/_types/material/domain";
@@ -8,7 +7,6 @@ import { TryoutExamSourceSchema } from "@repo/contents/_types/tryout/schema";
 import { Schema } from "effect";
 
 export const RouteInputsSchema = Schema.Struct({
-  assessments: Schema.optional(Schema.Array(AssessmentSourceSchema)),
   curricula: Schema.optional(Schema.Array(CurriculumSourceSchema)),
   curriculumNodes: Schema.optional(Schema.Array(ProjectedCurriculumNodeSchema)),
   domains: Schema.optional(Schema.Array(MaterialRouteDomainSchema)),
@@ -22,8 +20,7 @@ export type RouteInputs = Schema.Schema.Type<typeof RouteInputsSchema>;
 /** Detects source overrides that must bypass default static route caches. */
 export function hasCustomRouteInputs(inputs: RouteInputs) {
   return Boolean(
-    inputs.assessments ||
-      inputs.curricula ||
+    inputs.curricula ||
       inputs.curriculumNodes ||
       inputs.domains ||
       inputs.materials ||

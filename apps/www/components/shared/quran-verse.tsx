@@ -97,7 +97,7 @@ export function QuranVerse({
   verseLabel,
 }: Props) {
   const transliteration = verse.text.transliteration.en;
-  const translation = verse.translation[locale] ?? verse.translation.en;
+  const translation = verse.translation[locale];
 
   return (
     <div

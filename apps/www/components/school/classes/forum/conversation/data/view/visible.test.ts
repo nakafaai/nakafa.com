@@ -3,7 +3,6 @@ import type { ForumPost } from "@/components/school/classes/forum/conversation/d
 import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 import {
   getCenteredConversationPostId,
-  getFirstVisibleConversationPostId,
   getLastVisibleConversationPostId,
 } from "@/components/school/classes/forum/conversation/data/view/visible";
 import {
@@ -15,7 +14,7 @@ import {
 } from "@/components/school/classes/forum/conversation/fixtures/data";
 
 describe("conversation/data/view/visible", () => {
-  it("resolves the first, last, and centered visible post ids", () => {
+  it("resolves the last and centered visible post ids", () => {
     const handle = createHandle({
       offsets: [0, 60, 120, 150, 170],
       getItemOffset: (index) => [0, 60, 120, 150, 170][index] ?? index * 100,
@@ -25,9 +24,6 @@ describe("conversation/data/view/visible", () => {
 
     expect(getCenteredConversationPostId({ handle, rows })).toBe(
       secondPost._id
-    );
-    expect(getFirstVisibleConversationPostId({ handle, rows })).toBe(
-      firstPost._id
     );
     expect(getLastVisibleConversationPostId({ handle, rows })).toBe(
       secondPost._id
@@ -68,12 +64,6 @@ describe("conversation/data/view/visible", () => {
     const structuralRows = rows.slice(0, 2);
 
     expect(
-      getFirstVisibleConversationPostId({
-        handle: createHandle({ scrollOffset: 0, viewportSize: 90 }).handle,
-        rows: structuralRows,
-      })
-    ).toBeNull();
-    expect(
       getLastVisibleConversationPostId({
         handle: createHandle({ scrollOffset: 0, viewportSize: 90 }).handle,
         rows: structuralRows,
@@ -92,7 +82,13 @@ describe("conversation/data/view/visible", () => {
       })
     ).toBeNull();
     expect(
-      getFirstVisibleConversationPostId({
+      getLastVisibleConversationPostId({
+        handle: createHandle({ scrollOffset: 0 }).handle,
+        rows: [],
+      })
+    ).toBeNull();
+    expect(
+      getCenteredConversationPostId({
         handle: createHandle({ scrollOffset: 0 }).handle,
         rows: [],
       })
@@ -108,23 +104,6 @@ describe("conversation/data/view/visible", () => {
             [0, 100, 200, 260, 350][index] ?? index * 100,
           getItemSize: (index) => [100, 100, 60, 90, 100][index] ?? 100,
           scrollOffset: 100,
-          scrollSize: 450,
-          viewportSize: 250,
-        }).handle,
-        rows,
-      })
-    ).toBe(firstPost._id);
-  });
-
-  it("skips invisible leading rows when resolving the first visible post", () => {
-    expect(
-      getFirstVisibleConversationPostId({
-        handle: createHandle({
-          offsets: [0, 100, 200, 260, 350],
-          getItemOffset: (index) =>
-            [0, 100, 200, 260, 350][index] ?? index * 100,
-          getItemSize: (index) => [100, 50, 60, 90, 100][index] ?? 100,
-          scrollOffset: 150,
           scrollSize: 450,
           viewportSize: 250,
         }).handle,

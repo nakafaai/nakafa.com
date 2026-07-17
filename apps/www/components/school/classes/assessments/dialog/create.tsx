@@ -25,7 +25,7 @@ import {
   createAssessmentFormSchema,
 } from "@/components/school/classes/assessments/schema";
 import type { Assessment } from "@/components/school/classes/assessments/types";
-import { getDefaultScheduledAt } from "@/components/school/classes/assessments/utils";
+import { getDefaultScheduledAt } from "@/components/school/classes/schedule";
 import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";
 

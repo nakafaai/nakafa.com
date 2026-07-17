@@ -48,11 +48,6 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "try-out section attempts",
   },
   {
-    label: "Deleting try-out runtime rows...",
-    mutation: reset.deleteTryoutRuntimeBatch,
-    resultLabel: "try-out runtime rows",
-  },
-  {
     label: "Deleting try-out scores...",
     mutation: reset.deleteTryoutScoresBatch,
     resultLabel: "try-out scores",

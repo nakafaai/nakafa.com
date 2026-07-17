@@ -1,4 +1,7 @@
-import { DirectoryReadError } from "@repo/contents/_shared/error";
+import {
+  DirectoryReadError,
+  MdxLocaleParityError,
+} from "@repo/contents/_shared/error";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,17 +20,7 @@ vi.mock("@repo/contents/_lib/fs/folder-scan", () => ({
   readContentDirectoryPaths: mockReadContentDirectoryPaths,
 }));
 
-vi.mock("@repo/internationalization/src/routing", () => ({
-  routing: {
-    locales: ["en", "id"],
-  },
-}));
-
-import {
-  getMdxSlugsFromManifest,
-  isMdxContentLocale,
-  readMdxSlugManifest,
-} from "@repo/contents/_lib/mdx-slugs/source";
+import { readMdxSlugManifest } from "@repo/contents/_lib/mdx-slugs/source";
 
 beforeEach(() => {
   mockResolveContentsDir.mockReturnValue("/virtual/contents");
@@ -35,25 +28,6 @@ beforeEach(() => {
 });
 
 describe("readMdxSlugManifest", () => {
-  it("copies slugs from a manifest without exposing cached arrays", () => {
-    const slugs = ["articles/en"];
-    const manifest = new Map([["en", slugs]]);
-    const result = getMdxSlugsFromManifest(manifest, "en");
-
-    result.push("articles/mutated");
-
-    expect(result).toStrictEqual(["articles/en", "articles/mutated"]);
-    expect(slugs).toStrictEqual(["articles/en"]);
-    expect(getMdxSlugsFromManifest(manifest, "id")).toStrictEqual([]);
-  });
-
-  it("checks content locales without scanning files", () => {
-    expect(isMdxContentLocale("en")).toBe(true);
-    expect(isMdxContentLocale("fr")).toBe(false);
-
-    expect(mockReadContentDirectoryPaths).not.toHaveBeenCalled();
-  });
-
   it("reads localized MDX slugs from regular content folders", async () => {
     mockReadContentDirectoryPaths.mockImplementation(
       (directoryPath: string) => {
@@ -62,6 +36,7 @@ describe("readMdxSlugManifest", () => {
             "politics",
             "politics/dynasty",
             "politics/en.mdx",
+            "politics/id.mdx",
             "politics/fr.mdx",
             "politics/notes.txt",
             "politics/dynasty/id.mdx",
@@ -75,11 +50,12 @@ describe("readMdxSlugManifest", () => {
 
     const manifest = await Effect.runPromise(readMdxSlugManifest());
 
-    expect(getMdxSlugsFromManifest(manifest, "en")).toStrictEqual([
+    expect(manifest.en).toStrictEqual([
       "articles/politics",
       "articles/politics/dynasty",
     ]);
-    expect(getMdxSlugsFromManifest(manifest, "id")).toStrictEqual([
+    expect(manifest.id).toStrictEqual([
+      "articles/politics",
       "articles/politics/dynasty",
     ]);
   });
@@ -88,7 +64,7 @@ describe("readMdxSlugManifest", () => {
     mockReadContentDirectoryPaths.mockImplementation(
       (directoryPath: string) => {
         if (directoryPath === "/virtual/contents/articles") {
-          return Effect.succeed(["en.mdx", "socket"]);
+          return Effect.succeed(["en.mdx", "id.mdx", "socket"]);
         }
 
         return Effect.succeed([]);
@@ -97,10 +73,10 @@ describe("readMdxSlugManifest", () => {
 
     const manifest = await Effect.runPromise(readMdxSlugManifest());
 
-    expect(getMdxSlugsFromManifest(manifest, "en")).toStrictEqual(["articles"]);
+    expect(manifest.en).toStrictEqual(["articles"]);
   });
 
-  it("treats unreadable directories as empty content folders", async () => {
+  it("preserves typed failures for unreadable content folders", async () => {
     mockReadContentDirectoryPaths.mockImplementation((directoryPath: string) =>
       directoryPath === "/virtual/contents/articles"
         ? Effect.fail(
@@ -113,9 +89,14 @@ describe("readMdxSlugManifest", () => {
         : Effect.succeed([])
     );
 
-    const manifest = await Effect.runPromise(readMdxSlugManifest());
+    const error = await Effect.runPromise(Effect.flip(readMdxSlugManifest()));
 
-    expect(getMdxSlugsFromManifest(manifest, "en")).toStrictEqual([]);
+    expect(error).toBeInstanceOf(DirectoryReadError);
+    if (!(error instanceof DirectoryReadError)) {
+      return;
+    }
+
+    expect(error.path).toBe("/virtual/contents/articles");
   });
 
   it("keeps localized file-stem MDX slugs under material lessons", async () => {
@@ -137,7 +118,7 @@ describe("readMdxSlugManifest", () => {
 
     const manifest = await Effect.runPromise(readMdxSlugManifest());
 
-    expect(getMdxSlugsFromManifest(manifest, "en")).toStrictEqual([
+    expect(manifest.en).toStrictEqual([
       "material/lesson/mathematics/linear-equation/answer",
       "material/lesson/mathematics/linear-equation/question",
     ]);
@@ -147,7 +128,12 @@ describe("readMdxSlugManifest", () => {
     mockReadContentDirectoryPaths.mockImplementation(
       (directoryPath: string) => {
         if (directoryPath === "/virtual/contents/material") {
-          return Effect.succeed(["question.en.mdx", "answer.id.mdx"]);
+          return Effect.succeed([
+            "answer.en.mdx",
+            "answer.id.mdx",
+            "question.en.mdx",
+            "question.id.mdx",
+          ]);
         }
 
         return Effect.succeed([]);
@@ -156,11 +142,28 @@ describe("readMdxSlugManifest", () => {
 
     const manifest = await Effect.runPromise(readMdxSlugManifest());
 
-    expect(getMdxSlugsFromManifest(manifest, "en")).toStrictEqual([
-      "material/question",
-    ]);
-    expect(getMdxSlugsFromManifest(manifest, "id")).toStrictEqual([
-      "material/answer",
-    ]);
+    expect(manifest.en).toStrictEqual(["material/answer", "material/question"]);
+    expect(manifest.id).toStrictEqual(["material/answer", "material/question"]);
+  });
+
+  it("fails when localized MDX paths drift", async () => {
+    mockReadContentDirectoryPaths.mockImplementation(
+      (directoryPath: string) => {
+        if (directoryPath === "/virtual/contents/articles") {
+          return Effect.succeed(["politics/en.mdx"]);
+        }
+
+        return Effect.succeed([]);
+      }
+    );
+
+    const error = await Effect.runPromise(Effect.flip(readMdxSlugManifest()));
+
+    expect(error).toBeInstanceOf(MdxLocaleParityError);
+    if (!(error instanceof MdxLocaleParityError)) {
+      return;
+    }
+
+    expect(error.missingSlugs).toStrictEqual(["articles/politics"]);
   });
 });

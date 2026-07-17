@@ -8,7 +8,6 @@ import {
   conversationTestSecondPost as secondPost,
 } from "@/components/school/classes/forum/conversation/fixtures/data";
 import {
-  canRestoreViewportSnapshot,
   deriveViewportState,
   getOpeningPlacement,
   getViewportLatestAffinity,
@@ -25,15 +24,6 @@ const activeTranscript = {
 } satisfies ActiveTranscriptModel;
 
 describe("conversation/viewport/model", () => {
-  it("does not restore a missing snapshot", () => {
-    expect(
-      canRestoreViewportSnapshot({
-        activeTranscript,
-        snapshot: null,
-      })
-    ).toBe(false);
-  });
-
   it("ignores detached snapshots on open so fresh panels start at an unread cue", () => {
     expect(
       getOpeningPlacement({

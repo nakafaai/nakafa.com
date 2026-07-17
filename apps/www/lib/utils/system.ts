@@ -1,4 +1,5 @@
 import type { api } from "@repo/backend/convex/_generated/api";
+import type { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -29,6 +30,7 @@ class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
 interface ParamConfig {
   basePath: RuntimeContentSection;
   isDeep?: boolean;
+  locale?: Locale;
   paramNames: string[];
   slugParam?: string;
 }
@@ -72,15 +74,16 @@ function buildStaticParams(config: ParamConfig) {
 /** Reads deliberate latest-content candidates for one static params generator. */
 function getStaticParamRoutes(config: ParamConfig) {
   return Effect.gen(function* () {
+    const locales = config.locale ? [config.locale] : routing.locales;
     const routeGroups = yield* Effect.forEach(
-      routing.locales,
+      locales,
       (locale) =>
         listRuntimeLatestContentRoutes({
           limit: staticParamCandidateLimit,
           locale,
           section: config.basePath,
         }),
-      { concurrency: routing.locales.length }
+      { concurrency: locales.length }
     );
     const routes = routeGroups.flat().map(getStaticParamRoutePath);
 
@@ -133,7 +136,10 @@ function routeToStaticParam(route: string, config: ParamConfig) {
 export function getMetadataFromSlug(
   locale: Locale,
   slug: string[]
-): Effect.Effect<SystemMetadata, TranslationLoadError> {
+): Effect.Effect<
+  SystemMetadata,
+  NakafaAgentDataReadError | TranslationLoadError
+> {
   return Effect.gen(function* () {
     const [tCommon, tMetadata] = yield* Effect.all(
       [
@@ -163,7 +169,7 @@ export function getMetadataFromSlug(
     const route = yield* getRuntimeContentRoute({
       locale,
       route: slug.join("/"),
-    }).pipe(Effect.catchAll(() => Effect.succeed(null)));
+    });
 
     if (!route) {
       return defaultMetadata;

@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { NextResponse } from "next/server";
 import {
   getArticleApiContentPage,
+  invalidApiLocaleMessage,
   listApiStaticParams,
   parseApiLocale,
   parseApiPageParams,
@@ -32,7 +33,7 @@ export async function GET(
 
   if (!validLocale) {
     return NextResponse.json(
-      { error: "Invalid locale. Must be 'en' or 'id'." },
+      { error: invalidApiLocaleMessage },
       { status: 400 }
     );
   }

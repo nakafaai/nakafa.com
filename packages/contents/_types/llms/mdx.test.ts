@@ -209,6 +209,22 @@ print("Hello, World!")
     expect(markdown).toContain("| Data A   | Data B   |");
   });
 
+  it("projects the cooked backslashes rendered by template literal code", () => {
+    const body = [
+      "<CodeBlock",
+      "  data={[{",
+      '    language: "python",',
+      "    code: `>>> 'He said: \"I\\\\'m Bob.\"'",
+      '>>> print("C:\\\\\\\\Users\\\\\\\\Documents")`',
+      "  }]}",
+      "/>",
+    ].join("\n");
+    const markdown = Effect.runSync(projectMdxForAgentMarkdown(body));
+
+    expect(markdown).toContain(">>> 'He said: \"I\\'m Bob.\"'");
+    expect(markdown).toContain('>>> print("C:\\\\Users\\\\Documents")');
+  });
+
   it("reports malformed standalone fragments as typed projection failures", () => {
     const explicitError = new MdxAgentProjectionError({
       message: "projection failed",

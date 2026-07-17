@@ -5,7 +5,6 @@ import type {
   GetPublicRouteByPathArgs,
   ListPublicRoutesByMaterialArgs,
   ListPublicRoutesByParentArgs,
-  ListSitemapPublicRoutesArgs,
 } from "@repo/backend/convex/contents/runtime/routes";
 import type {
   GetContentRouteArgs,
@@ -255,23 +254,6 @@ export async function listPublicRoutesByMaterialImpl(
     .take(args.limit);
 
   return routes.map(toRuntimePublicRoute);
-}
-
-/** Reads one bounded sitemap-eligible public route page. */
-export async function listSitemapPublicRoutesImpl(
-  ctx: QueryCtx,
-  args: ListSitemapPublicRoutesArgs
-) {
-  assertPublicRoutePageLimit(args.limit);
-
-  const page = await ctx.db
-    .query("publicRoutes")
-    .withIndex("by_locale_and_sitemap_and_publicPath", (q) =>
-      q.eq("locale", args.locale).eq("sitemap", true)
-    )
-    .paginate({ cursor: args.cursor, numItems: args.limit });
-
-  return toRuntimePublicRoutePage(page);
 }
 
 /** Rejects route-catalog scans that exceed the public runtime page bound. */

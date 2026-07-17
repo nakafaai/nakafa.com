@@ -1,21 +1,11 @@
 import {
-  buildGraphId,
   createLearningGraphIdentityFromRoute,
   getLearningGraphIdentity,
-  getLearningGraphLensSegments,
-  getLearningObjectKindForRoute,
   type LearningGraphIdentity,
   type LearningGraphSource,
   normalizeGraphRoute,
-  parseLearningGraphIdentity,
 } from "@repo/contents/_types/learning-graph";
-import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
-
-/** Infers one Indonesian route kind through the localized graph contract. */
-function getIndonesianKind(route: string) {
-  return getLearningObjectKindForRoute(route, "id");
-}
 
 describe("learning graph identity", () => {
   it("maps article sources into locale asset identity and route-free graph IDs", () => {
@@ -155,45 +145,6 @@ describe("learning graph identity", () => {
     );
   });
 
-  it("builds clean graph IDs from normalized segments", () => {
-    expect(buildGraphId("concept", ["", "/math/", "functions"])).toBe(
-      "concept:math:functions"
-    );
-    expect(buildGraphId("lens", [])).toBe("lens");
-  });
-
-  it("infers graph kind from route projections", () => {
-    expect(getIndonesianKind("articles/politics/example")).toBe("article");
-    expect(getIndonesianKind("quran/1")).toBe("quran-surah");
-    expect(getIndonesianKind("quran/not-number")).toBeNull();
-    expect(getIndonesianKind("material/lesson/physics/waves")).toBe(
-      "curriculum-topic"
-    );
-    expect(getIndonesianKind("material/lesson/physics/waves/sound")).toBe(
-      "curriculum-lesson"
-    );
-    expect(getIndonesianKind("try-out/indonesia")).toBe("tryout-country");
-    expect(getIndonesianKind("try-out/indonesia/snbt")).toBe("tryout-exam");
-    expect(getIndonesianKind("try-out/indonesia/snbt/2027")).toBe(
-      "tryout-track"
-    );
-    expect(getIndonesianKind("try-out/indonesia/snbt/2027/set-1")).toBe(
-      "tryout-set"
-    );
-    expect(
-      getIndonesianKind(
-        "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif"
-      )
-    ).toBe("tryout-section");
-    expect(getIndonesianKind("assessment/high-school")).toBeNull();
-    expect(getIndonesianKind("assessment/set-1/7")).toBeNull();
-    expect(
-      getIndonesianKind(
-        "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge/extra"
-      )
-    ).toBeNull();
-  });
-
   it("creates identity from route projections when kind is inferable", () => {
     expect(
       createLearningGraphIdentityFromRoute({
@@ -215,7 +166,7 @@ describe("learning graph identity", () => {
     ).toBeNull();
   });
 
-  it("exposes nonthrowing and Effect-native declared source parsers", async () => {
+  it("returns null when the declared kind does not match the route", () => {
     const source = {
       kind: "curriculum-topic",
       locale: "id",
@@ -230,67 +181,6 @@ describe("learning graph identity", () => {
       "lens:material:lesson:physics"
     );
     expect(getLearningGraphIdentity(invalidSource)).toBeNull();
-
-    const parsed = await Effect.runPromiseExit(
-      parseLearningGraphIdentity(source)
-    );
-    const invalidParsed = await Effect.runPromiseExit(
-      parseLearningGraphIdentity(invalidSource)
-    );
-
-    expect(Exit.isSuccess(parsed)).toBe(true);
-    expect(Exit.isFailure(invalidParsed)).toBe(true);
-  });
-
-  it("exposes curriculum lens segments without route identity", () => {
-    expect(
-      getLearningGraphLensSegments({
-        kind: "curriculum-lesson",
-        locale: "id",
-        route: "material/lesson/physics/waves/sound",
-      })
-    ).toEqual(["material", "lesson", "physics"]);
-  });
-
-  it("rejects graph identity without throwing when kind does not match route shape", async () => {
-    const source = {
-      kind: "curriculum-lesson",
-      locale: "id",
-      route: "material/lesson/physics/waves",
-    } as const;
-
-    expect(getLearningGraphIdentity(source)).toBeNull();
-    expect(
-      Exit.isFailure(
-        await Effect.runPromiseExit(parseLearningGraphIdentity(source))
-      )
-    ).toBe(true);
-  });
-
-  it("decodes unknown graph source inputs before identity parsing", async () => {
-    const missingLocale = await Effect.runPromiseExit(
-      parseLearningGraphIdentity({
-        kind: "quran-surah",
-        route: "quran/1",
-      })
-    );
-    const missingRoute = await Effect.runPromiseExit(
-      parseLearningGraphIdentity({
-        kind: "quran-surah",
-        locale: "id",
-      })
-    );
-    const nonStringRoute = await Effect.runPromiseExit(
-      parseLearningGraphIdentity({
-        kind: "quran-surah",
-        locale: "id",
-        route: 1,
-      })
-    );
-
-    expect(Exit.isFailure(missingLocale)).toBe(true);
-    expect(Exit.isFailure(missingRoute)).toBe(true);
-    expect(Exit.isFailure(nonStringRoute)).toBe(true);
   });
 });
 

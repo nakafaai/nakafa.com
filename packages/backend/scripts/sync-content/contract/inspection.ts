@@ -30,6 +30,8 @@ export const ContentCountsSchema = Schema.Struct({
   contentRouteCounts: Schema.Number,
   contentRoutePages: Schema.Number,
   contentRoutes: Schema.Number,
+  publicRouteSitemapCounts: Schema.Number,
+  publicRouteSitemapPages: Schema.Number,
   publicRoutes: Schema.Number,
   publicRouteSyncState: Schema.Number,
   contentSearch: Schema.Number,

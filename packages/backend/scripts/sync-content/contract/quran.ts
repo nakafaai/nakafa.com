@@ -2,7 +2,7 @@ import {
   mutableArraySchema,
   SyncSummarySchema,
 } from "@repo/backend/scripts/sync-content/contract/schemas";
-import { locales } from "@repo/utilities/locales";
+import { fieldsForEveryLocale, locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 const SyncLocaleSchema = Schema.Literal(...locales);
@@ -21,10 +21,7 @@ export const QuranStaleDeleteResultSchema = Schema.Struct({
 });
 
 const QuranLocalizedTextSchema = Schema.mutable(
-  Schema.Struct({
-    en: Schema.String,
-    id: Schema.String,
-  })
+  Schema.Struct(fieldsForEveryLocale(Schema.String))
 );
 
 const QuranTextSchema = Schema.mutable(
@@ -68,8 +65,7 @@ const quranSurahMetadataFields = {
   revelation: Schema.mutable(
     Schema.Struct({
       arab: Schema.String,
-      en: Schema.String,
-      id: Schema.String,
+      ...fieldsForEveryLocale(Schema.String),
     })
   ),
   sequence: Schema.Number,

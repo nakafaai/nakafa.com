@@ -35,8 +35,8 @@ import {
   useReorderAssessmentMutation,
 } from "@/components/school/classes/assessments/mutation.client";
 import type { Assessment } from "@/components/school/classes/assessments/types";
-import { formatScheduledAt } from "@/components/school/classes/assessments/utils";
 import { SchoolClassesDeleteDialog } from "@/components/school/classes/delete-dialog";
+import { formatScheduledAt } from "@/components/school/classes/schedule";
 import { getLocale } from "@/lib/utils/date";
 
 /** Return the badge variant used for one assessment status. */

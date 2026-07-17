@@ -1,5 +1,4 @@
 import {
-  getProgramKeysForMaterialRoute,
   getProgramKeysForMaterialRouteFromNodes,
   type ProjectedCurriculumNode,
   projectCurriculumNodes,
@@ -46,13 +45,15 @@ export const projectLearningProgramCoverageInputs = Effect.fn(
 });
 
 /** Projects graph-backed route rows into bounded program coverage rows. */
-export function createLearningProgramCoverageInputs({
+function createLearningProgramCoverageInputs({
   alignments = LEARNING_PROGRAM_COVERAGE_ALIGNMENTS,
   curriculumNodes,
   programs,
   routes,
   syncedAt,
-}: LearningProgramCoverageInputsArgs) {
+}: LearningProgramCoverageInputsArgs & {
+  curriculumNodes: readonly ProjectedCurriculumNode[];
+}) {
   const curriculumRows = createCurriculumCoverageInputs({
     curriculumNodes,
     programs,
@@ -60,24 +61,24 @@ export function createLearningProgramCoverageInputs({
     syncedAt,
   });
   const coveredRouteKeys = new Set(curriculumRows.map(getCoverageRowKey));
-  const fallbackRows = createFallbackCoverageInputs({
+  const alignedRows = createAlignedCoverageInputs({
     alignments,
     programs,
     routes,
     syncedAt,
   }).filter((row) => !coveredRouteKeys.has(getCoverageRowKey(row)));
 
-  return [...curriculumRows, ...fallbackRows].sort(compareCoverageRows);
+  return [...curriculumRows, ...alignedRows].sort(compareCoverageRows);
 }
 
-/** Projects routes through the bounded route/lens fallback adapter. */
-export function createFallbackCoverageInputs({
-  alignments = LEARNING_PROGRAM_COVERAGE_ALIGNMENTS,
+/** Projects routes through the bounded route-and-lens alignment registry. */
+function createAlignedCoverageInputs({
+  alignments,
   programs,
   routes,
   syncedAt,
 }: {
-  alignments?: readonly LearningProgramCoverageAlignment[];
+  alignments: readonly LearningProgramCoverageAlignment[];
   programs: readonly LearningProgram[];
   routes: readonly LearningProgramCoverageRoute[];
   syncedAt: number;
@@ -92,30 +93,22 @@ export function createFallbackCoverageInputs({
 }
 
 /** Projects routes through curriculum-owned material mappings. */
-export function createCurriculumCoverageInputs({
+function createCurriculumCoverageInputs({
   curriculumNodes,
   programs,
   routes,
   syncedAt,
 }: {
-  curriculumNodes?: readonly ProjectedCurriculumNode[];
+  curriculumNodes: readonly ProjectedCurriculumNode[];
   programs: readonly LearningProgram[];
   routes: readonly LearningProgramCoverageRoute[];
   syncedAt: number;
 }) {
-  /**
-   * Resolves program ownership from projected curriculum nodes when sync has
-   * them, falling back to source registry coverage for pure content projections.
-   */
   function resolveProgramKeys(route: LearningProgramCoverageRoute) {
-    if (curriculumNodes) {
-      return getProgramKeysForMaterialRouteFromNodes({
-        curriculumNodes,
-        route: route.sourcePath,
-      });
-    }
-
-    return getProgramKeysForMaterialRoute({ route: route.sourcePath });
+    return getProgramKeysForMaterialRouteFromNodes({
+      curriculumNodes,
+      route: route.sourcePath,
+    });
   }
 
   return createCoverageInputsFromProgramKeys({
@@ -183,9 +176,9 @@ function createCoverageInputsFromProgramKeys({
 }
 
 /** Selects program keys that own the given source-registry route input. */
-export function getProgramKeysForCoverageRoute(
+function getProgramKeysForCoverageRoute(
   route: LearningProgramCoverageRoute,
-  alignments: readonly LearningProgramCoverageAlignment[] = LEARNING_PROGRAM_COVERAGE_ALIGNMENTS
+  alignments: readonly LearningProgramCoverageAlignment[]
 ) {
   const directMatches = alignments.filter((alignment) =>
     matchesCoverageAlignment(route, alignment)
@@ -195,9 +188,7 @@ export function getProgramKeysForCoverageRoute(
     return [...new Set(directMatches.map((alignment) => alignment.programKey))];
   }
 
-  return alignments
-    .filter((alignment) => alignment.match.fallback)
-    .map((alignment) => alignment.programKey);
+  return [];
 }
 
 /** Keeps planned/hidden catalog states honest while surfacing real graph coverage. */
@@ -218,43 +209,21 @@ function matchesCoverageAlignment(
   route: LearningProgramCoverageRoute,
   alignment: LearningProgramCoverageAlignment
 ) {
-  const {
-    fallback,
-    lensSegments: expectedLensSegments,
-    routeKinds,
-    routeSegments: expectedRouteSegments,
-  } = alignment.match;
+  const { lensSegments, routeSegments } = alignment.match;
+  const routeLensSegments = new Set(route.lensId.split(":"));
+  const hasLensSegment = lensSegments.some((segment) =>
+    routeLensSegments.has(segment)
+  );
 
-  if (fallback) {
+  if (!hasLensSegment) {
     return false;
   }
 
-  if (routeKinds?.length && !routeKinds.includes(route.kind)) {
-    return false;
-  }
+  const routePathSegments = new Set(
+    normalizeGraphRoute(route.route).split("/").filter(Boolean)
+  );
 
-  if (expectedLensSegments?.length) {
-    const routeLensSegments = route.lensId.split(":");
-    const hasLensSegment = expectedLensSegments.some((segment) =>
-      routeLensSegments.includes(segment)
-    );
-
-    if (!hasLensSegment) {
-      return false;
-    }
-  }
-
-  if (expectedRouteSegments?.length) {
-    const routePathSegments = normalizeGraphRoute(route.route)
-      .split("/")
-      .filter(Boolean);
-
-    return expectedRouteSegments.some((segment) =>
-      routePathSegments.includes(segment)
-    );
-  }
-
-  return true;
+  return routeSegments.some((segment) => routePathSegments.has(segment));
 }
 
 /** Builds the stable dedupe/sort key for one generated program coverage row. */

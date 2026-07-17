@@ -3,7 +3,7 @@ import {
   Books02Icon,
   Target01Icon,
 } from "@hugeicons/core-free-icons";
-import { userRoles } from "@repo/backend/convex/users/roles";
+import { userRoles } from "@repo/ai/types/roles";
 import type { Locale } from "next-intl";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 

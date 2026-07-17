@@ -1,17 +1,15 @@
 import {
+  QuranCorpusError,
   SurahNotFoundError,
-  VerseNotFoundError,
 } from "@repo/contents/_shared/error";
 import {
   type Surah,
   SurahMetadataSchema,
   SurahSchema,
-  type Verse,
 } from "@repo/contents/_types/quran";
 import { quran } from "@repo/contents/quran/source";
-import { Effect, Array as EffectArray, Option, pipe, Schema } from "effect";
-
-const verses = quran.flatMap((surah) => surah.verses);
+import type { Locale } from "@repo/utilities/locales";
+import { Effect, Option, Schema } from "effect";
 
 /** Checks whether a route number can identify Quran data. */
 function isPositiveInteger(value: number) {
@@ -50,93 +48,31 @@ export function getSurah(id: number): Effect.Effect<Surah, SurahNotFoundError> {
   });
 }
 
-/**
- * Validates a surah value and strips its verses for lightweight listing usage.
- *
- * @param surah - Unknown data to validate
- * @returns Validated surah metadata without verses when parsing succeeds
- *
- * @example
- * ```ts
- * const surahData = validateSurahWithoutVerses(rawData);
- * ```
- */
-export function validateSurahWithoutVerses(
-  surah: unknown
-): Option.Option<Omit<Surah, "verses">> {
-  return Schema.decodeUnknownOption(SurahMetadataSchema)(surah);
-}
-
-/**
- * Returns all validated surahs without verse payloads.
- *
- * @returns Lightweight surah list for indexes and navigation UIs
- */
-export function getAllSurah(): Omit<Surah, "verses">[] {
-  return EffectArray.filterMap(quran, validateSurahWithoutVerses);
-}
-
-/**
- * Returns all verses that belong to a juz.
- *
- * @param juz - Juz number from the available Quran data
- * @returns All verses in the juz, or an empty array for invalid input
- */
-export function getVersesByJuz(juz: number): Verse[] {
-  if (!isPositiveInteger(juz)) {
-    return [];
-  }
-
-  return verses.filter((verse) => verse.meta.juz === juz);
-}
-
-/**
- * Retrieves a verse by surah number and verse number.
- *
- * @param surah - Surah number from the available Quran data
- * @param verse - Verse number validated against the selected surah
- * @returns Effect that resolves to the verse or fails with a not-found error
- */
-export function getVerseBySurah({
-  surah: surahNum,
-  verse: verseNum,
-}: {
-  surah: number;
-  verse: number;
-}): Effect.Effect<Verse, SurahNotFoundError | VerseNotFoundError> {
-  return Effect.gen(function* () {
-    if (!isPositiveInteger(verseNum)) {
-      return yield* Effect.fail(
-        new VerseNotFoundError({
-          message: "Verse number must be a positive integer.",
-          surahNumber: surahNum,
-          verseNumber: verseNum,
+/** Decodes Quran metadata or fails with one typed corpus error. */
+const decodeQuranMetadata = Effect.fn("Quran.decodeMetadata")(function* (
+  source: unknown
+) {
+  return yield* Schema.decodeUnknown(Schema.Array(SurahMetadataSchema))(
+    source,
+    { errors: "all" }
+  ).pipe(
+    Effect.mapError(
+      (cause) =>
+        new QuranCorpusError({
+          cause,
+          message: "Unable to decode the Quran metadata corpus.",
         })
-      );
-    }
+    )
+  );
+});
 
-    const surah = yield* getSurah(surahNum);
-    const verse = surah.verses.find((item) => item.number.inSurah === verseNum);
-
-    if (!verse) {
-      return yield* Effect.fail(
-        new VerseNotFoundError({
-          message: "Verse was not found in the selected surah.",
-          surahNumber: surahNum,
-          verseNumber: verseNum,
-        })
-      );
-    }
-
-    return verse;
-  });
-}
+/** Reads every metadata row from the canonical Quran corpus. */
+export const readQuranMetadata = Effect.fn("Quran.readMetadata")(function* () {
+  return yield* decodeQuranMetadata(quran);
+});
 
 /**
- * Resolves the most appropriate localized surah name for a locale.
- *
- * The transliteration is preferred first, then the translation, and finally the
- * long Arabic-derived name if no localized variant exists.
+ * Resolves the localized surah transliteration from the exact locale contract.
  *
  * @param locale - Locale used to select the display name
  * @param name - Surah name payload from Quran data
@@ -146,20 +82,8 @@ export function getSurahName({
   locale,
   name,
 }: {
-  locale: string;
+  locale: Locale;
   name: Surah["name"];
 }): string {
-  return pipe(
-    Object.entries(name.transliteration).find(([key]) => key === locale),
-    Option.fromNullable,
-    Option.map(([, value]) => value),
-    Option.orElse(() =>
-      pipe(
-        Object.entries(name.translation).find(([key]) => key === locale),
-        Option.fromNullable,
-        Option.map(([, value]) => value)
-      )
-    ),
-    Option.getOrElse(() => name.long)
-  );
+  return name.transliteration[locale];
 }

@@ -3,8 +3,6 @@ import {
   prepareReadStep,
   prepareTaxonomyAnswerStep,
   readSearchFollowup,
-  shouldAnswerFromNakafaEvidence,
-  shouldReadAfterSearch,
 } from "@repo/ai/agents/nakafa/step";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentSection } from "@repo/contents/_lib/agent/schema/ref";
@@ -54,7 +52,7 @@ const subjectResult = {
 
 describe("Nakafa agent step state", () => {
   it("requires full content reads after lesson search results", () => {
-    const shouldReadSubject = shouldReadAfterSearch(
+    const subjectFollowup = readSearchFollowup(
       {
         limit: 1,
         locale: "id",
@@ -64,7 +62,7 @@ describe("Nakafa agent step state", () => {
       },
       subjectResult
     );
-    const shouldReadBroad = shouldReadAfterSearch(
+    const broadFollowup = readSearchFollowup(
       {
         limit: 1,
         locale: "id",
@@ -74,12 +72,12 @@ describe("Nakafa agent step state", () => {
       subjectResult
     );
 
-    expect(shouldReadSubject).toBe(true);
-    expect(shouldReadBroad).toBe(true);
+    expect(subjectFollowup).toEqual({ shouldReadContent: true });
+    expect(broadFollowup).toEqual({ shouldReadContent: true });
   });
 
   it("does not require content reads for quran, empty, or failed searches", () => {
-    const quranSearch = shouldReadAfterSearch(
+    const quranSearch = readSearchFollowup(
       {
         limit: 1,
         locale: "id",
@@ -100,7 +98,7 @@ describe("Nakafa agent step state", () => {
         ],
       }
     );
-    const emptySearch = shouldReadAfterSearch(
+    const emptySearch = readSearchFollowup(
       {
         limit: 1,
         locale: "id",
@@ -114,7 +112,7 @@ describe("Nakafa agent step state", () => {
         items: [],
       }
     );
-    const failedSearch = shouldReadAfterSearch(
+    const failedSearch = readSearchFollowup(
       {
         limit: 1,
         locale: "id",
@@ -125,24 +123,9 @@ describe("Nakafa agent step state", () => {
       null
     );
 
-    expect(quranSearch).toBe(false);
-    expect(emptySearch).toBe(false);
-    expect(failedSearch).toBe(false);
-  });
-
-  it("returns only active read follow-up state after search", () => {
-    const followup = readSearchFollowup(
-      {
-        limit: 1,
-        locale: "id",
-        offset: 0,
-        queries: ["fungsi rasional"],
-        section: "material",
-      },
-      subjectResult
-    );
-
-    expect(followup).toEqual({ shouldReadContent: true });
+    expect(quranSearch).toEqual({ shouldReadContent: false });
+    expect(emptySearch).toEqual({ shouldReadContent: false });
+    expect(failedSearch).toEqual({ shouldReadContent: false });
   });
 
   it("forces read for one step when content search evidence is pending", () => {
@@ -195,7 +178,6 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected a final answer step.");
     }
 
-    expect(shouldAnswerFromNakafaEvidence(steps)).toBe(true);
     expect(answerStep.toolChoice).toBe("none");
     expect(answerStep.messages.at(-1)).toEqual(
       expect.objectContaining({

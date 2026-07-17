@@ -9,7 +9,7 @@ import type { ModelMessage } from "ai";
 /**
  * Detects search results that need a full content read before Nina answers.
  */
-export function shouldReadAfterSearch(
+function shouldReadAfterSearch(
   input: NakafaAgentSearchInput,
   result: NakafaAgentSearchResult | null
 ) {
@@ -142,7 +142,7 @@ export function prepareTaxonomyAnswerStep<const ToolName extends string>(
  * Detects when the content agent has enough retrieval evidence and should stop
  * searching instead of spending the remaining loop budget on repeated discovery.
  */
-export function shouldAnswerFromNakafaEvidence<const ToolName extends string>(
+function shouldAnswerFromNakafaEvidence<const ToolName extends string>(
   steps: readonly {
     readonly toolCalls: readonly { readonly toolName: ToolName }[];
   }[]

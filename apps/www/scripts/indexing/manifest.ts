@@ -18,11 +18,6 @@ export interface SiteIndexUrlBatch {
   urls: readonly string[];
 }
 
-/** Canonical sitemap-derived URL inventory used by indexing notification scripts. */
-export interface SiteIndexManifest extends SiteIndexManifestSummary {
-  urls: readonly string[];
-}
-
 /**
  * Processes canonical sitemap URLs from sitemap pages without exposing one list.
  *
@@ -79,45 +74,4 @@ export function forEachSiteIndexUrlBatch<Success, Failure, Requirements>(
       totalEntryCount,
     } satisfies SiteIndexManifestSummary;
   });
-}
-
-/**
- * Builds a full manifest for audits that need one deterministic URL list.
- *
- * Indexing adapters should prefer `forEachSiteIndexUrlBatch`; this helper is
- * intentionally retained for tests and PR proof commands that report complete
- * sitemap coverage.
- */
-export const getSiteIndexManifest = Effect.fn("scripts.indexing.manifest")(
-  function* () {
-    const urls: string[] = [];
-    const summary = yield* forEachSiteIndexUrlBatch((batch) =>
-      Effect.sync(() => {
-        urls.push(...batch.urls);
-      })
-    );
-
-    return {
-      ...summary,
-      urls: [...urls].sort(),
-    } satisfies SiteIndexManifest;
-  }
-);
-
-/**
- * Deduplicates and sorts sitemap URLs so adapters share one stable manifest.
- *
- * Keeping this deterministic makes script history predictable and lets PR proof
- * report exactly how many canonical URLs are in the public indexing path.
- */
-export function buildSiteIndexManifest(urls: readonly string[]) {
-  const uniqueUrls = [...new Set(urls)].sort();
-
-  return {
-    batchCount: uniqueUrls.length > 0 ? 1 : 0,
-    canonicalUrlCount: uniqueUrls.length,
-    duplicateCount: urls.length - uniqueUrls.length,
-    totalEntryCount: urls.length,
-    urls: uniqueUrls,
-  } satisfies SiteIndexManifest;
 }

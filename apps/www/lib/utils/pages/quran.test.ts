@@ -1,68 +1,21 @@
 // @vitest-environment node
-import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  fetchSurahContext,
-  fetchSurahMetadataContext,
-  getQuranPagination,
-  getQuranSurahName,
-} from "@/lib/utils/pages/quran";
+import { describe, expect, it } from "vitest";
+import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
 
-const runtimeMocks = vi.hoisted(() => ({
-  getRuntimeQuranSurahMetadata: vi.fn(),
-  getRuntimeQuranSurahPage: vi.fn(),
-}));
-
-vi.mock("@/lib/content/runtime/pages", () => ({
-  getRuntimeQuranSurahMetadata: runtimeMocks.getRuntimeQuranSurahMetadata,
-  getRuntimeQuranSurahPage: runtimeMocks.getRuntimeQuranSurahPage,
-}));
-
-beforeEach(() => {
-  runtimeMocks.getRuntimeQuranSurahMetadata.mockReset();
-  runtimeMocks.getRuntimeQuranSurahPage.mockReset();
-  runtimeMocks.getRuntimeQuranSurahMetadata.mockImplementation(({ surah }) =>
-    Effect.succeed(surah === 1 ? surahPage().surahData : null)
-  );
-  runtimeMocks.getRuntimeQuranSurahPage.mockImplementation(({ surah }) =>
-    Effect.succeed(surah === 1 ? surahPage() : null)
-  );
-});
-
-describe("quran page runtime helpers", () => {
-  it("fetches surah context from Convex runtime rows", async () => {
-    await expect(
-      Effect.runPromise(fetchSurahContext({ surah: 1 }))
-    ).resolves.toMatchObject({
-      nextSurah: { number: 2 },
-      prevSurah: null,
-      surahData: { number: 1 },
-    });
-  });
-
-  it("fails for missing surah context and returns null metadata context", async () => {
-    await expect(
-      Effect.runPromise(fetchSurahContext({ surah: 999 }))
-    ).rejects.toThrow('"surah": 999');
-    await expect(
-      Effect.runPromise(fetchSurahMetadataContext({ surah: 999 }))
-    ).resolves.toEqual({
-      surahData: null,
-    });
-  });
-
+describe("quran page helpers", () => {
   it("builds pagination and localized display names", () => {
     const page = surahPage();
 
     expect(
       getQuranPagination({
+        locale: "id",
         nextSurah: page.nextSurah,
         prevSurah: page.prevSurah,
       })
     ).toEqual({
       next: {
         href: "/quran/2",
-        title: "The Cow",
+        title: "Al-Baqarah",
       },
       prev: {
         href: "",
@@ -71,6 +24,7 @@ describe("quran page runtime helpers", () => {
     });
     expect(
       getQuranPagination({
+        locale: "en",
         nextSurah: null,
         prevSurah: page.nextSurah,
       })
@@ -81,7 +35,7 @@ describe("quran page runtime helpers", () => {
       },
       prev: {
         href: "/quran/2",
-        title: "The Cow",
+        title: "Al-Baqara",
       },
     });
     expect(

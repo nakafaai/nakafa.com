@@ -143,23 +143,6 @@ export async function syncAudioContentSource(
   await ctx.db.patch("audioContentSources", primary._id, nextValues);
 }
 
-/** Removes compact audio metadata for deleted source content. */
-export async function deleteAudioContentSource(
-  ctx: MutationCtx,
-  contentId: AudioContentLookup["content_id"]
-) {
-  const existing = await ctx.db
-    .query("audioContentSources")
-    .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
-    .unique();
-
-  if (!existing) {
-    return;
-  }
-
-  await ctx.db.delete(existing._id);
-}
-
 /** Removes compact audio metadata by its persisted source-route projection. */
 export async function deleteAudioContentSourceByRoute(
   ctx: MutationCtx,

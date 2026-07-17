@@ -3,6 +3,7 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/contract/types";
+import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -134,6 +135,29 @@ afterEach(() => {
 });
 
 describe("sync-content cli", () => {
+  it("accepts every configured locale", async () => {
+    const { cli } = await loadCli();
+
+    for (const locale of locales) {
+      const result = await Effect.runPromise(
+        cli.parseSyncArgs(["all", "--locale", locale])
+      );
+
+      expect(result.options.locale).toBe(locale);
+    }
+  });
+
+  it("rejects missing and unsupported locale arguments", async () => {
+    const { cli } = await loadCli();
+
+    await expect(
+      Effect.runPromise(cli.parseSyncArgs(["all", "--locale"]))
+    ).rejects.toThrow("Invalid locale: missing");
+    await expect(
+      Effect.runPromise(cli.parseSyncArgs(["all", "--locale", "unsupported"]))
+    ).rejects.toThrow("Invalid locale: unsupported");
+  });
+
   it("invalidates content runtime cache after targeted learning-program sync", async () => {
     const { cli, events, invalidatedOptions } = await loadCli();
     const options: SyncOptions = { locale: "id" };

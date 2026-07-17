@@ -1,13 +1,18 @@
 import { routing } from "@repo/internationalization/src/routing";
+import type { Locale } from "@repo/utilities/locales";
 import { notFound } from "next/navigation";
 import * as rootParams from "next/root-params";
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
 
+const loadEnglishMessages = () =>
+  import("@repo/internationalization/dictionaries/en.json");
+type EnglishMessagesModule = Awaited<ReturnType<typeof loadEnglishMessages>>;
+
 const loadMessagesByLocale = {
-  en: () => import("@repo/internationalization/dictionaries/en.json"),
+  en: loadEnglishMessages,
   id: () => import("@repo/internationalization/dictionaries/id.json"),
-};
+} satisfies Record<Locale, () => Promise<EnglishMessagesModule>>;
 
 /**
  * Resolves the request locale for `next-intl` from `next/root-params` so the

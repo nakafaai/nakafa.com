@@ -1,6 +1,7 @@
 import {
   getCreditResetGrantTransaction,
   getCurrentCreditResetTimestamp,
+  getEffectiveCreditStateForResetTimestamp,
   getStoredCreditResetTimestamp,
   resolveCurrentCreditResetTimestamp,
   resolveEffectiveCreditState,
@@ -12,6 +13,49 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 describe("credits/helpers/state", () => {
+  it("resolves the current UTC day boundary for free users", () => {
+    const now = Date.UTC(2026, 3, 18, 18, 45, 12);
+
+    expect(getCurrentCreditResetTimestamp("free", now)).toBe(
+      Date.UTC(2026, 3, 18, 0, 0, 0)
+    );
+  });
+
+  it("resolves the current UTC month boundary for pro users", () => {
+    const now = Date.UTC(2026, 3, 18, 18, 45, 12);
+
+    expect(getCurrentCreditResetTimestamp("pro", now)).toBe(
+      Date.UTC(2026, 3, 1, 0, 0, 0)
+    );
+  });
+
+  it("keeps a balance already inside the current reset window", () => {
+    const resetAt = Date.UTC(2026, 3, 1, 0, 0, 0);
+
+    expect(
+      getEffectiveCreditStateForResetTimestamp(
+        { credits: 7, creditsResetAt: resetAt, plan: "free" },
+        resetAt
+      )
+    ).toEqual({ credits: 7, creditsResetAt: resetAt });
+  });
+
+  it("replaces a stale positive balance with the plan grant", () => {
+    expect(
+      getEffectiveCreditStateForResetTimestamp(
+        {
+          credits: 99,
+          creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+          plan: "free",
+        },
+        Date.UTC(2026, 3, 2, 0, 0, 0)
+      )
+    ).toEqual({
+      credits: 10,
+      creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+    });
+  });
+
   it("returns null when no stored reset period exists", async () => {
     const t = convexTest(schema, convexModules);
 

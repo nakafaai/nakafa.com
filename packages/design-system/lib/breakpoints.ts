@@ -1,6 +1,6 @@
 const TAILWIND_ROOT_FONT_SIZE = 16;
 
-export const TAILWIND_BREAKPOINTS = {
+const TAILWIND_BREAKPOINTS = {
   sm: "40rem",
   md: "48rem",
   lg: "64rem",
@@ -45,7 +45,7 @@ export function createMaxWidthInclusiveMediaQuery(breakpoint: number | string) {
 /**
  * Builds a media query that matches Tailwind's `*:` breakpoint semantics.
  */
-export function createMinWidthMediaQuery(breakpoint: number | string) {
+function createMinWidthMediaQuery(breakpoint: number | string) {
   return `(width >= ${formatMediaBreakpoint(breakpoint)})`;
 }
 

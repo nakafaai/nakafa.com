@@ -1,10 +1,8 @@
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
-const localizedTextValidator = v.object({
-  en: v.string(),
-  id: v.string(),
-});
+const localizedTextValidator = v.object(fieldsForEveryLocale(v.string()));
 
 const quranTextValidator = v.object({
   arab: v.string(),
@@ -33,8 +31,7 @@ const quranNameValidator = v.object({
 
 const quranRevelationValidator = v.object({
   arab: v.string(),
-  en: v.string(),
-  id: v.string(),
+  ...fieldsForEveryLocale(v.string()),
 });
 
 const tables = {

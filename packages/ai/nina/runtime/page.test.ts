@@ -2,7 +2,6 @@ import {
   createPageFetchState,
   determinePageFetchNeed,
   getCanonicalNakafaContentUrl,
-  hasFetchedCurrentPageContent,
 } from "@repo/ai/nina/runtime/page";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
@@ -58,7 +57,7 @@ describe("nina/runtime/page", () => {
 
   it("detects completed current-page content evidence in retained messages", () => {
     expect(
-      hasFetchedCurrentPageContent({
+      determinePageFetchNeed({
         messages: [
           messageWithPart({ type: "text", text: "Visible answer." }),
           messageWithPart({
@@ -119,40 +118,17 @@ describe("nina/runtime/page", () => {
           }),
         ],
         url: "/en/subjects/math",
+        verified: true,
       })
-    ).toBe(true);
+    ).toBe(false);
   });
 
-  it("keeps page fetch disabled for unverified pages or retained evidence", () => {
-    const fetchedMessages = [
-      messageWithPart({
-        id: "current-content",
-        type: "data-nakafa",
-        data: {
-          kind: "content",
-          status: "done",
-          input: {
-            content_ref: NakafaAgentContentRefInputSchema.make(
-              "https://nakafa.com/en/subjects/math"
-            ),
-          },
-          result: contentSummary("https://nakafa.com/en/subjects/math"),
-        },
-      }),
-    ];
-
+  it("keeps page fetch disabled for unverified pages", () => {
     expect(
       determinePageFetchNeed({
         messages: [],
         url: "/en/subjects/math",
         verified: false,
-      })
-    ).toBe(false);
-    expect(
-      determinePageFetchNeed({
-        messages: fetchedMessages,
-        url: "/en/subjects/math",
-        verified: true,
       })
     ).toBe(false);
   });

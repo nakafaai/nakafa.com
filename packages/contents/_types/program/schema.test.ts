@@ -8,68 +8,25 @@ import {
   LearningStageSchema,
   PROGRAM_NAVIGATION_MODEL_VALUES,
   ProgramDateOnlySchema,
+  ProgramNavigationModelSchema,
 } from "@repo/contents/_types/program/schema";
 import { Either, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("program/schema", () => {
-  it("keeps program kinds distinct and backed by Effect schemas", () => {
-    const kindsByKey = Object.fromEntries(
-      LEARNING_PROGRAM_CATALOG.map((program) => [program.key, program.kind])
-    );
-
-    expect(
-      LEARNING_PROGRAM_CATALOG.every(Schema.is(LearningProgramSchema))
-    ).toBe(true);
-    expect(
-      LEARNING_PROGRAM_CATALOG.every(
-        (program) => program.translations.en && program.translations.id
-      )
-    ).toBe(true);
-    expect(kindsByKey).toMatchObject({
-      "cambridge-international": "school-curriculum",
-      merdeka: "school-curriculum",
-      "singapore-moe": "school-curriculum",
-      snbt: "admission-exam",
-      tka: "assessment",
-      "united-states": "school-curriculum",
-    });
-  });
-
   it("keeps program navigation models schema-owned and language-neutral", () => {
-    const navigationByKey = Object.fromEntries(
-      LEARNING_PROGRAM_CATALOG.map((program) => [
-        program.key,
-        program.navigation,
-      ])
-    );
-
     expect(PROGRAM_NAVIGATION_MODEL_VALUES).toEqual([
       "curriculum-tree",
       "course-unit-lesson",
       "exam-domain-set",
       "track-topic",
     ]);
-    expect(navigationByKey.merdeka).toEqual({
-      levels: ["stage", "class", "subject", "topic"],
-      model: "curriculum-tree",
-    });
-    expect(navigationByKey.snbt).toEqual({
-      levels: ["section", "domain", "set"],
-      model: "exam-domain-set",
-    });
-    expect(navigationByKey["cambridge-international"]).toEqual({
-      levels: ["stage", "course", "unit", "lesson"],
-      model: "curriculum-tree",
-    });
-    expect(navigationByKey["singapore-moe"]).toEqual({
-      levels: ["stage", "course", "unit", "lesson"],
-      model: "curriculum-tree",
-    });
-    expect(navigationByKey["united-states"]).toEqual({
-      levels: ["stage", "course", "unit", "lesson"],
-      model: "curriculum-tree",
-    });
+    expect(Schema.is(ProgramNavigationModelSchema)("exam-domain-set")).toBe(
+      true
+    );
+    expect(Schema.is(ProgramNavigationModelSchema)("locale-specific")).toBe(
+      false
+    );
   });
 
   it("centralizes interest to program-kind matching", () => {

@@ -10,8 +10,3 @@ const LEARNING_STATIC_PARAM_LIMIT = 512;
 export function selectLearningStaticParams<Param>(params: readonly Param[]) {
   return params.slice(0, LEARNING_STATIC_PARAM_LIMIT);
 }
-
-/** Reports the current learning-route prerender cap for tests and PR proof. */
-export function readLearningStaticParamLimit() {
-  return LEARNING_STATIC_PARAM_LIMIT;
-}

@@ -1,8 +1,8 @@
-import { LocaleSchema } from "@repo/contents/_types/content";
 import {
   PublicRouteSegmentSchema,
   PublicRouteSlugMapSchema,
 } from "@repo/contents/_types/route/segment";
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -65,10 +65,9 @@ const TryoutTranslationSchema = Schema.Struct({
   title: Schema.String,
 });
 
-const TryoutTranslationMapSchema = Schema.Record({
-  key: LocaleSchema,
-  value: TryoutTranslationSchema,
-});
+const TryoutTranslationMapSchema = Schema.Struct(
+  fieldsForEveryLocale(TryoutTranslationSchema)
+);
 
 export const TryoutScoringStrategySchema = Schema.Literal(
   "irt",

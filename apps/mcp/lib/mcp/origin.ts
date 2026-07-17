@@ -67,9 +67,9 @@ function handleMcpOriginGuardedRequest(
 }
 
 /** Returns the request Origin when it is absent or explicitly allowed. */
-export function getAllowedRequestOrigin(
+function getAllowedRequestOrigin(
   request: Request,
-  extraAllowedOrigins = ""
+  extraAllowedOrigins: string
 ) {
   const origin = request.headers.get("origin");
 
@@ -91,7 +91,7 @@ export function getAllowedRequestOrigin(
 }
 
 /** Builds the configured exact Origin allow-list. */
-export function getAllowedMcpOrigins(extraAllowedOrigins = "") {
+function getAllowedMcpOrigins(extraAllowedOrigins: string) {
   return new Set(
     [
       ...DEFAULT_ALLOWED_EXACT_ORIGINS,

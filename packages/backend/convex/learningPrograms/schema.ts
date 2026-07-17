@@ -14,6 +14,7 @@ import {
   PROGRAM_PROVIDER_KIND_VALUES,
   PROGRAM_SOURCE_TYPE_VALUES,
 } from "@repo/contents/_types/program/schema";
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -82,10 +83,9 @@ export const learningProgramInputValidator = v.object({
   }),
   recommendedCountry: v.optional(v.string()),
   sources: v.array(programSourceInputValidator),
-  translations: v.object({
-    en: programTranslationInputValidator,
-    id: programTranslationInputValidator,
-  }),
+  translations: v.object(
+    fieldsForEveryLocale(programTranslationInputValidator)
+  ),
   version: v.object({
     label: v.string(),
     startsAt: v.optional(v.string()),
@@ -148,10 +148,9 @@ const tables = {
     providerName: v.string(),
     recommendedCountry: v.optional(v.string()),
     syncedAt: v.number(),
-    translations: v.object({
-      en: programTranslationInputValidator,
-      id: programTranslationInputValidator,
-    }),
+    translations: v.object(
+      fieldsForEveryLocale(programTranslationInputValidator)
+    ),
     updatedAt: v.number(),
     versionEndsAt: v.optional(v.string()),
     versionLabel: v.string(),

@@ -45,9 +45,5 @@ export type SubjectMenuItem = (typeof subjectMenu)[number]["items"][number];
  * row.
  */
 export function getSubjectMenuHref(item: SubjectMenuItem, locale: Locale) {
-  if (locale === "id") {
-    return item.href.id;
-  }
-
-  return item.href.en;
+  return item.href[locale];
 }

@@ -1,8 +1,5 @@
 import type { Locale } from "@repo/contents/_types/content";
-import {
-  type MaterialRouteDomain,
-  MaterialRouteDomainSchema,
-} from "@repo/contents/_types/material/domain";
+import type { MaterialRouteDomain } from "@repo/contents/_types/material/domain";
 import {
   DuplicatePublicRouteError,
   InvalidPublicRouteSourceError,
@@ -27,15 +24,6 @@ export type PublicRouteProjectionError =
   | DuplicatePublicRouteError
   | InvalidPublicRouteSourceError
   | MissingPublicSlugError;
-
-export type PublicRouteNamespace = PublicRouteSurfaceKey;
-
-/** Reads a localized static namespace segment from the route surface contract. */
-export const getPublicRouteNamespace = Effect.fn("contents.route.namespace")(
-  function* (namespace: PublicRouteNamespace, locale: Locale) {
-    return yield* lookupNamespaceSegment(namespace, locale);
-  }
-);
 
 /** Finds a localized namespace segment or fails with a typed route error. */
 export function lookupNamespaceSegment(
@@ -229,13 +217,6 @@ export function comparePublicRouteOrder(
   }
 
   return left.publicPath.localeCompare(right.publicPath);
-}
-
-/** Decodes source-owned domain rows before route projection consumes them. */
-export function decodeRouteDomains(domains: readonly unknown[]) {
-  return Schema.decodeUnknown(Schema.Array(MaterialRouteDomainSchema))(
-    domains
-  ).pipe(Effect.mapError(toInvalidSourceError));
 }
 
 /** Joins already-decoded path segments while dropping absent optional segments. */

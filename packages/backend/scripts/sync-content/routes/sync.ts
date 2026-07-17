@@ -23,6 +23,7 @@ import {
   type PublicRouteProjection,
   readPublicRouteProjection,
 } from "@repo/backend/scripts/sync-content/routes/rows";
+import { syncPublicSitemapArtifacts } from "@repo/backend/scripts/sync-content/routes/sitemap";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 
@@ -59,6 +60,8 @@ export const syncPublicRoutes = Effect.fn("sync.publicRoutes")(function* (
     rootState?.hash === projection.hash &&
     rootState.rowCount === projection.rowCount
   ) {
+    yield* syncPublicSitemapArtifacts(config, projection);
+
     return finishSync(
       { created: 0, unchanged: projection.rowCount, updated: 0 },
       0,
@@ -93,6 +96,7 @@ export const syncPublicRoutes = Effect.fn("sync.publicRoutes")(function* (
     totals.updated += result.updated;
   }
 
+  yield* syncPublicSitemapArtifacts(config, projection);
   yield* callConvexMutation(
     config,
     internal.contentSync.publicRoutes.internal.saveRootState,

@@ -98,20 +98,20 @@ export function createConversationTestForum() {
 }
 
 /** Creates one configurable `virtua` handle fixture for transcript tests. */
-export function createConversationTestHandle({
-  findItemIndex = (offset: number) => Math.min(9, Math.floor(offset / 100)),
-  getItemOffset = (index: number) => index * 100,
-  getItemSize = () => 100,
+function createConversationTestHandle({
+  findItemIndex,
+  getItemOffset,
+  getItemSize,
   scrollOffset,
-  scrollSize = 3000,
-  viewportSize = 400,
+  scrollSize,
+  viewportSize,
 }: {
-  findItemIndex?: (offset: number) => number;
-  getItemOffset?: (index: number) => number;
-  getItemSize?: (index: number) => number;
+  findItemIndex: (offset: number) => number;
+  getItemOffset: (index: number) => number;
+  getItemSize: (index: number) => number;
   scrollOffset: number;
-  scrollSize?: number;
-  viewportSize?: number;
+  scrollSize: number;
+  viewportSize: number;
 }) {
   const scrollBy = vi.fn();
   const scrollTo = vi.fn();
@@ -157,7 +157,7 @@ export function createConversationTestFindItemIndex(
 /** Creates one row-backed `virtua` handle fixture for transcript tests. */
 export function createConversationTestRowsHandle({
   offsets = conversationTestRows.map((_, index) => index * 100),
-  getItemOffset = (index: number) => offsets[index] ?? index * 100,
+  getItemOffset = (index: number) => index * 100,
   getItemSize = () => 100,
   scrollOffset,
   scrollSize = conversationTestRows.length * 100,

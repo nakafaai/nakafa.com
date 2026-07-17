@@ -19,7 +19,11 @@ import {
 import { parseLocale } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type { ValidationResult } from "@repo/backend/scripts/sync-content/contract/types";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
+import { CONTENTS_DIR } from "@repo/backend/scripts/sync-content/runtime/paths";
+import { readMdxSlugManifest } from "@repo/contents/_lib/mdx-slugs/source";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
+import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
+import { defaultLocale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
 const QUESTION_FILE_PREFIX = "question.";
@@ -103,24 +107,28 @@ const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
       globFiles("question-bank/tryout/**/answer.*.mdx"),
     ]);
     const result = createValidationResult();
+    const expectedQuestionFiles =
+      listExpectedTryoutQuestionFiles(questionFiles);
+    const expectedQuestionFileSet = new Set(expectedQuestionFiles);
     const expectedAnswerFiles = new Set<string>();
 
-    log(`Validating ${questionFiles.length} try-out question files...`);
-    for (const file of questionFiles) {
+    log(`Validating ${expectedQuestionFiles.length} try-out question files...`);
+    for (const file of expectedQuestionFiles) {
       const validated = yield* Effect.either(
         Effect.gen(function* () {
-          yield* readMdxFile(file);
           const answerFile = yield* readAnswerFile(file);
 
           expectedAnswerFiles.add(answerFile);
-          yield* readMdxFile(answerFile);
+          yield* Effect.all([readMdxFile(file), readMdxFile(answerFile)], {
+            concurrency: "unbounded",
+          });
 
           const choices = yield* readQuestionChoices(path.dirname(file));
 
           if (!choices) {
             return yield* Effect.fail(
               new ScriptFailureError({
-                message: `Missing or invalid try-out choices for ${file}. Add en and id choices.ts arrays with exactly one correct option per locale.`,
+                message: `Missing or invalid try-out choices for ${file}. Add exactly one correct option for every supported locale in choices.ts.`,
               })
             );
           }
@@ -140,6 +148,18 @@ const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
       result.errors.push({ file, error: message });
     }
 
+    for (const file of questionFiles) {
+      if (expectedQuestionFileSet.has(file)) {
+        continue;
+      }
+
+      result.invalid++;
+      result.errors.push({
+        file,
+        error: "Try-out question file is not declared by the source registry.",
+      });
+    }
+
     for (const file of answerFiles) {
       if (expectedAnswerFiles.has(file)) {
         continue;
@@ -155,6 +175,46 @@ const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
     return result;
   }
 );
+
+function listExpectedTryoutQuestionFiles(questionFiles: readonly string[]) {
+  const questionDirectories = new Set<string>();
+
+  for (const file of questionFiles) {
+    if (path.basename(file) !== `question.${defaultLocale}.mdx`) {
+      continue;
+    }
+
+    questionDirectories.add(path.dirname(file));
+  }
+
+  for (const exam of TRYOUT_SOURCES) {
+    for (const track of exam.tracks) {
+      for (const set of track.sets) {
+        for (const section of set.sections) {
+          for (let number = 1; number <= section.questionCount; number++) {
+            questionDirectories.add(
+              path.join(
+                CONTENTS_DIR,
+                section.questionSourcePath,
+                `question-${number}`
+              )
+            );
+          }
+        }
+      }
+    }
+  }
+
+  const files = new Set<string>();
+
+  for (const questionDir of questionDirectories) {
+    for (const locale of locales) {
+      files.add(path.join(questionDir, `question.${locale}.mdx`));
+    }
+  }
+
+  return [...files].sort();
+}
 
 /** Resolves the answer MDX file that must exist beside one question MDX file. */
 const readAnswerFile = Effect.fn("sync.readAnswerFile")(function* (
@@ -188,6 +248,7 @@ export const validate = Effect.fn("sync.validate")(function* () {
   log("Validating all content files without syncing...\n");
 
   const startTime = performance.now();
+  yield* readMdxSlugManifest();
   const articleResult = yield* validateArticles();
   const subjectResult = yield* validateSubjects();
   const tryoutResult = yield* validateTryoutQuestions();

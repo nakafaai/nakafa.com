@@ -1,9 +1,8 @@
 import {
   findLearningProgramByKey,
   LEARNING_PROGRAM_CATALOG,
-  listDiscoverableLearningPrograms,
 } from "@repo/contents/_types/program/catalog";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
+import { locales } from "@repo/utilities/locales";
 import { describe, expect, it } from "vitest";
 
 describe("program/catalog", () => {
@@ -12,14 +11,28 @@ describe("program/catalog", () => {
 
     expect(new Set(keys).size).toBe(keys.length);
     for (const program of LEARNING_PROGRAM_CATALOG) {
-      expect(program.translations.en.title.length).toBeGreaterThan(0);
-      expect(program.translations.id.title.length).toBeGreaterThan(0);
+      for (const locale of locales) {
+        expect(program.translations[locale].title.length).toBeGreaterThan(0);
+      }
       expect(program.navigation.levels.length).toBeGreaterThan(0);
       expect(program).not.toHaveProperty("locale");
       for (const translation of Object.values(program.translations)) {
         expect(translation).not.toHaveProperty("description");
       }
     }
+
+    expect(
+      Object.fromEntries(
+        LEARNING_PROGRAM_CATALOG.map((program) => [program.key, program.kind])
+      )
+    ).toMatchObject({
+      "cambridge-international": "school-curriculum",
+      merdeka: "school-curriculum",
+      "singapore-moe": "school-curriculum",
+      snbt: "admission-exam",
+      tka: "assessment",
+      "united-states": "school-curriculum",
+    });
   });
 
   it("stores hierarchy models without enumerating content route coverage", () => {
@@ -58,33 +71,7 @@ describe("program/catalog", () => {
     );
   });
 
-  it("hides unsupported programs from discovery", () => {
-    const [program] = LEARNING_PROGRAM_CATALOG;
-    const visibleKeys = listDiscoverableLearningPrograms([
-      ...LEARNING_PROGRAM_CATALOG,
-      {
-        ...program,
-        defaultCoverageStatus: "hidden",
-        key: LearningProgramKeySchema.make("hidden-program"),
-      },
-    ]).map((item) => item.key);
-
-    expect(visibleKeys).not.toContain("hidden-program");
-  });
-
   it("uses direct program lookup without inventing a default curriculum", () => {
-    const visibleKeys = listDiscoverableLearningPrograms().map(
-      (program) => program.key
-    );
-
-    expect(visibleKeys).toEqual([
-      "merdeka",
-      "cambridge-international",
-      "singapore-moe",
-      "united-states",
-      "tka",
-      "snbt",
-    ]);
     expect(findLearningProgramByKey("snbt")).toMatchObject({
       kind: "admission-exam",
     });

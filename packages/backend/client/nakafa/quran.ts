@@ -8,7 +8,7 @@ import type { RuntimeQuranSurah } from "@repo/backend/client/nakafa/types";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
+import { getQuranSurahNumberForRoute } from "@repo/contents/_types/graph/projection";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Option } from "effect";
 
@@ -44,9 +44,9 @@ export function readQuranMarkdown(
   ref: NakafaAgentContentRef
 ) {
   return Effect.gen(function* () {
-    const surahNumber = parseQuranSurahRoute(ref.locale, ref.route);
+    const surahNumber = getQuranSurahNumberForRoute(ref.route, ref.locale);
 
-    if (Option.isNone(surahNumber)) {
+    if (surahNumber === null) {
       return Option.none<NakafaAgentMarkdown>();
     }
 
@@ -55,7 +55,7 @@ export function readQuranMarkdown(
       "getQuranSurahPage",
       api.contents.queries.runtime.getQuranSurahPage,
       {
-        surah: surahNumber.value,
+        surah: surahNumber,
       }
     );
 
@@ -93,24 +93,6 @@ export function readQuranMarkdown(
 
     return Option.some(markdown);
   });
-}
-
-/** Parses only canonical `quran/{surah}` content routes. */
-export function parseQuranSurahRoute(locale: "en" | "id", route: string) {
-  const projection = getSourceRouteProjectionForRoute(route, locale);
-  const surahSegment = projection?.quran?.surahSegment;
-
-  if (projection?.kind !== "quran-surah" || !surahSegment) {
-    return Option.none<number>();
-  }
-
-  const number = Number.parseInt(surahSegment, 10);
-
-  if (!(Number.isSafeInteger(number) && `${number}` === surahSegment)) {
-    return Option.none<number>();
-  }
-
-  return Option.some(number);
 }
 
 /** Returns the locale-aware display name for one synced Quran surah. */

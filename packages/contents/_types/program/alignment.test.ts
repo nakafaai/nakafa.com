@@ -13,7 +13,10 @@ describe("program/alignment", () => {
       getLearningProgramCoverageAlignmentIssues({
         alignments: [
           {
-            match: { fallback: true },
+            match: {
+              lensSegments: ["fixture"],
+              routeSegments: ["fixture"],
+            },
             programKey: LearningProgramKeySchema.make("missing-program"),
           },
         ],

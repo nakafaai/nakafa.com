@@ -52,17 +52,3 @@ export type ListPublicRoutesByMaterialArgs = Infer<
 >;
 export const listPublicRoutesByMaterialReturnValidator =
   v.array(publicRouteValidator);
-
-const listSitemapPublicRoutesArgsObjectValidator = v.object({
-  cursor: v.union(v.string(), v.null()),
-  limit: v.number(),
-  locale: localeValidator,
-});
-
-export const listSitemapPublicRoutesArgsValidator =
-  listSitemapPublicRoutesArgsObjectValidator.fields;
-export type ListSitemapPublicRoutesArgs = Infer<
-  typeof listSitemapPublicRoutesArgsObjectValidator
->;
-export const listSitemapPublicRoutesReturnValidator =
-  paginatedPublicRoutesValidator;

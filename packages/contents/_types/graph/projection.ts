@@ -1,4 +1,4 @@
-import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
+import type { Locale } from "@repo/contents/_types/content";
 import {
   isNumberSegment,
   joinRoute,
@@ -7,10 +7,7 @@ import {
 import {
   getCurriculumLensScopeForKind,
   getSourceRegistryRootForKind,
-  InvalidLearningGraphRouteError,
-  LearningObjectKindSchema,
   type SourceRouteInput,
-  SourceRouteInputSchema,
   type SourceRouteProjectionDraft,
 } from "@repo/contents/_types/graph/schema";
 import { isTryoutSetReady } from "@repo/contents/_types/tryout/readiness";
@@ -19,7 +16,6 @@ import type {
   TryoutSetSource,
 } from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
-import { Effect, Option, Schema } from "effect";
 
 /** Source registries used to resolve public graph routes. */
 export interface SourceRouteProjectionOptions {
@@ -63,27 +59,6 @@ export function getSourceRouteProjection(source: SourceRouteInput) {
   return projection;
 }
 
-/** Decodes and parses a declared route projection with the graph domain error. */
-export const parseSourceRouteProjection = Effect.fn(
-  "contents.graph.parseSourceRouteProjection"
-)(function* (input: unknown) {
-  const source = yield* Schema.decodeUnknown(SourceRouteInputSchema)(
-    input
-  ).pipe(Effect.mapError(() => createInvalidUnknownSourceRouteError(input)));
-  const projection = getSourceRouteProjection(source);
-
-  if (projection) {
-    return projection;
-  }
-
-  return yield* Effect.fail(createInvalidSourceRouteError(source));
-});
-
-const QuranRouteInputSchema = Schema.Struct({
-  locale: LocaleSchema,
-  route: Schema.String,
-});
-
 /** Returns the Quran surah number encoded by a valid localized source route. */
 export function getQuranSurahNumberForRoute(route: string, locale: Locale) {
   const projection = getSourceRouteProjection({
@@ -97,85 +72,6 @@ export function getQuranSurahNumberForRoute(route: string, locale: Locale) {
   }
 
   return Number.parseInt(projection.quran.surahSegment, 10);
-}
-
-/** Decodes and parses a Quran route into its surah number with a typed failure. */
-export const parseQuranSurahNumberForRoute = Effect.fn(
-  "contents.graph.parseQuranSurahNumberForRoute"
-)(function* (input: unknown) {
-  const source = yield* Schema.decodeUnknown(QuranRouteInputSchema)(input).pipe(
-    Effect.mapError(
-      () =>
-        new InvalidLearningGraphRouteError({
-          message: "Invalid Quran graph route input.",
-          route: "",
-        })
-    )
-  );
-  const surahNumber = getQuranSurahNumberForRoute(source.route, source.locale);
-
-  if (surahNumber !== null) {
-    return surahNumber;
-  }
-
-  return yield* Effect.fail(
-    createInvalidSourceRouteError({
-      kind: "quran-surah",
-      locale: source.locale,
-      route: source.route,
-    })
-  );
-});
-
-/** Builds the single graph route-contract error used by parse APIs. */
-function createInvalidSourceRouteError(source: SourceRouteInput) {
-  const route = normalizeSourceRouteProjection(source.route);
-
-  return new InvalidLearningGraphRouteError({
-    kind: source.kind,
-    message: `Invalid ${source.kind} graph route "${route}".`,
-    route,
-  });
-}
-
-/** Builds the graph route error for values that fail source input decoding. */
-function createInvalidUnknownSourceRouteError(input: unknown) {
-  const route = readUnknownRoute(input) ?? "";
-  const kind = readUnknownKind(input);
-  const parsedKind =
-    kind === undefined
-      ? Option.none()
-      : Schema.decodeUnknownOption(LearningObjectKindSchema)(kind);
-
-  return new InvalidLearningGraphRouteError({
-    ...(Option.isSome(parsedKind) ? { kind: parsedKind.value } : {}),
-    message: route
-      ? `Invalid graph source route input "${normalizeSourceRouteProjection(route)}".`
-      : "Invalid graph source route input.",
-    route: normalizeSourceRouteProjection(route),
-  });
-}
-
-/** Reads the route field from an unknown decoded-boundary value. */
-function readUnknownRoute(input: unknown) {
-  if (!(typeof input === "object" && input !== null && "route" in input)) {
-    return;
-  }
-
-  const { route } = input;
-
-  return typeof route === "string" ? route : undefined;
-}
-
-/** Reads the kind field from an unknown decoded-boundary value. */
-function readUnknownKind(input: unknown) {
-  if (!(typeof input === "object" && input !== null && "kind" in input)) {
-    return;
-  }
-
-  const { kind } = input;
-
-  return typeof kind === "string" ? kind : undefined;
 }
 
 /** Delegates one normalized source root to its owned projection grammar. */

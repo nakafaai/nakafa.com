@@ -152,25 +152,6 @@ export function readCurriculumRootOptions(
   });
 }
 
-/** Resolves the localized root href for a preferred curriculum program key. */
-export function readCurriculumRootHrefForProgramKey({
-  locale,
-  programKey,
-}: {
-  locale: PublicCurriculumRoute["locale"];
-  programKey: string;
-}) {
-  const route = readCurriculumRootRoutes(locale).find(
-    (candidate) => candidate.programKey === programKey
-  );
-
-  if (!route) {
-    return null;
-  }
-
-  return `/${locale}/${route.publicPath}`;
-}
-
 /** Builds the small parent link shown above curriculum page titles. */
 export function readCurriculumHeaderLink(
   locale: PublicCurriculumRoute["locale"],

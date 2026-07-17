@@ -18,12 +18,13 @@ import { verifyGraphIdentity } from "@repo/backend/scripts/sync-content/verify/g
 import { verifyQuranRuntime } from "@repo/backend/scripts/sync-content/verify/quran";
 import { logVerifySuccess } from "@repo/backend/scripts/sync-content/verify/summary";
 import { getTryoutFileCounts } from "@repo/backend/scripts/sync-content/verify/tryouts";
-import { getAllSurah } from "@repo/contents/_lib/quran";
+import { readQuranMetadata } from "@repo/contents/_lib/quran";
 import {
   listLessonMaterialSources,
   listLessonRows,
 } from "@repo/contents/_types/material/registry";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
+import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
 /** Logs a bounded integrity sample and reports whether the verifier found issues. */
@@ -68,16 +69,17 @@ function logCountMatch({
 
 /** Builds the Quran count targets from the content authoring source. */
 function getExpectedQuranCounts() {
-  const surahs = getAllSurah();
-  return {
-    surahs: surahs.length,
-    verses: surahs.reduce((total, surah) => total + surah.numberOfVerses, 0),
-  };
+  return readQuranMetadata().pipe(
+    Effect.map((surahs) => ({
+      surahs: surahs.length,
+      verses: surahs.reduce((total, surah) => total + surah.numberOfVerses, 0),
+    }))
+  );
 }
 
 /** Builds curriculum count targets from the source-owned material registry. */
-function getExpectedCurriculumCounts(options: SyncOptions) {
-  const materialTopics = listLessonRows(options.locale);
+function getExpectedCurriculumCounts() {
+  const materialTopics = listLessonRows();
 
   return {
     curriculumLessons: materialTopics.reduce(
@@ -111,48 +113,45 @@ export const verify = Effect.fn("sync.verify")(function* (
     globFiles("articles/**/ref.ts"),
   ]);
 
-  const articleFilesEn = articleFiles.filter((file) =>
-    file.endsWith("/en.mdx")
-  );
-  const articleFilesId = articleFiles.filter((file) =>
-    file.endsWith("/id.mdx")
-  );
-  const lessonFilesEn = lessonFiles.filter((file) => file.endsWith("/en.mdx"));
-  const lessonFilesId = lessonFiles.filter((file) => file.endsWith("/id.mdx"));
-  const questionFilesEn = questionFiles.filter((file) =>
-    file.endsWith(".en.mdx")
-  );
-  const questionFilesId = questionFiles.filter((file) =>
-    file.endsWith(".id.mdx")
-  );
   const lessonSourceCount = listLessonMaterialSources().length;
   const tryoutSourceCount = TRYOUT_SOURCES.length;
-  const expectedCurriculumCounts = getExpectedCurriculumCounts(options);
+  const expectedCurriculumCounts = getExpectedCurriculumCounts();
   const tryoutFileCounts = getTryoutFileCounts({
     answerFiles,
     choicesFiles,
-    options,
     questionFiles,
   });
 
   log("=== FILESYSTEM ===\n");
   log("Articles:");
   log(`  Total MDX files:     ${articleFiles.length}`);
-  log(`    - English (en):    ${articleFilesEn.length}`);
-  log(`    - Indonesian (id): ${articleFilesId.length}`);
+  for (const locale of locales) {
+    const count = articleFiles.filter((file) =>
+      file.endsWith(`/${locale}.mdx`)
+    ).length;
+    log(`    - ${locale}: ${count}`);
+  }
   log(`  Reference files:     ${refFiles.length} (ref.ts)`);
 
   log("\nCurriculum:");
   log(`  Material sources:        ${lessonSourceCount}`);
   log(`  Total MDX files:     ${lessonFiles.length}`);
-  log(`    - English (en):    ${lessonFilesEn.length}`);
-  log(`    - Indonesian (id): ${lessonFilesId.length}`);
+  for (const locale of locales) {
+    const count = lessonFiles.filter((file) =>
+      file.endsWith(`/${locale}.mdx`)
+    ).length;
+    log(`    - ${locale}: ${count}`);
+  }
 
   log("\nTry-Out Question Bank:");
   log(`  Try-out sources:     ${tryoutSourceCount}`);
   log(`  Question files:      ${questionFiles.length} (question.*.mdx)`);
-  log(`    - English (en):    ${questionFilesEn.length}`);
-  log(`    - Indonesian (id): ${questionFilesId.length}`);
+  for (const locale of locales) {
+    const count = questionFiles.filter((file) =>
+      file.endsWith(`.${locale}.mdx`)
+    ).length;
+    log(`    - ${locale}: ${count}`);
+  }
   log(`  Answer files:        ${answerFiles.length} (answer.*.mdx)`);
   log(`  Choices files:       ${choicesFiles.length} (choices.ts)`);
   log(
@@ -177,7 +176,7 @@ export const verify = Effect.fn("sync.verify")(function* (
   }
 
   const counts = countsResult.right;
-  const expectedQuranCounts = getExpectedQuranCounts();
+  const expectedQuranCounts = yield* getExpectedQuranCounts();
 
   log("Content tables:");
   log(`  articleContents:     ${counts.articles}`);
@@ -280,7 +279,7 @@ export const verify = Effect.fn("sync.verify")(function* (
     }) && allMatch;
 
   log(
-    `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files x 2 locales)`
+    `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files x ${locales.length} locales)`
   );
 
   const avgChoicesPerQuestion =

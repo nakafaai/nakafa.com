@@ -253,8 +253,9 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 ## Testing Rules
 
 - Vitest is the standard test runner.
-- Existing tests live in `__tests__/`, `__test__/`, and `*.test.ts(x)` files.
-- `packages/contents` uses colocated `{filename}.test.ts` files and architecture tests reject nested test folders.
+- Every `name.test.ts` or `name.test.tsx` file must be colocated with and test the real `name.ts` or `name.tsx` Module. Do not add orphan concept, corpus, integration, or regression test filenames. Move essential assertions into the owning Module's test, and delete redundant assertions instead of creating a fake production Module to justify a test name.
+- Keep tests colocated as `*.test.ts` or `*.test.tsx`; do not create `__test__` or `__tests__` folders.
+- The root architecture lint rejects orphan test names and nested test folders across every app and package.
 - Do not add final-code React component `.test.tsx` shell tests that mock child components just to render static markup. For app UI behavior, prefer route, data, or domain seams, or production-mode Browser/e2e checks. Existing historical `.test.tsx` files are not a mandate to delete unrelated tests outside the current PR scope.
 - Use `describe`, `it`/`test`, and focused assertions.
 - Keep tests readable and behavior-oriented.
@@ -266,6 +267,7 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 ## MDX And Content Rules
 
 - Content is primarily Indonesian unless context requires English.
+- Locale variants of language-subject exams preserve the language being assessed; for example, Indonesian-language questions remain Indonesian and English-language questions remain English in every UI locale. Localize the surrounding shell and explanations without adding a redundant `questionLanguage` field.
 - Subject lesson headings start at `h2`; keep lesson depth at `h3`.
 - Exercise answer MDX is rendered under the app-provided `h3` answer heading, so answer sections start at `h4` and may use `h5` for real nested analysis.
 - Use inline code for programming syntax.

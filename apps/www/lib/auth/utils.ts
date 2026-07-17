@@ -34,7 +34,7 @@ function getAuthErrorText(error: unknown) {
 }
 
 /** Returns one safe internal app path that can be reused as a redirect target. */
-export function getSafeInternalRedirectPath(value: string | null | undefined) {
+function getSafeInternalRedirectPath(value: string | null | undefined) {
   if (!value) {
     return null;
   }

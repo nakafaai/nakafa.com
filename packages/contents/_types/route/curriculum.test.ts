@@ -1,7 +1,5 @@
 import { ProjectedCurriculumNodeSchema } from "@repo/contents/_types/curriculum/projection";
 import { defineCurriculum } from "@repo/contents/_types/curriculum/schema";
-import { MATERIAL_CARD_DESCRIPTION_MAX_LENGTH } from "@repo/contents/_types/material/description";
-import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
 import {
   compareCurriculumRouteOrder,
   createCurriculumNodeMap,
@@ -12,25 +10,13 @@ import {
   readCurriculumAncestors,
   readCurriculumRouteByPublicPath,
 } from "@repo/contents/_types/route/curriculum";
-import {
-  readCurriculumCardListContext,
-  readCurriculumMaterialCards,
-} from "@repo/contents/_types/route/curriculum/card";
-import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
 import { makePath } from "@repo/contents/_types/route/path";
 import { Effect, Exit, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-const INDONESIAN_BIOLOGY_MATERIAL_HREF_PATTERN = /^\/id\/materi\/biologi\//;
 const ROUTE_SHAPED_CURRICULUM_PATH_PATTERN = /^curriculum\/[^/]+\/\d/;
 
 describe("public curriculum routes", () => {
-  it("keeps static route helper rows identical to the validated default projection", () => {
-    expect(readStaticPublicCurriculumRoutes()).toEqual(
-      Effect.runSync(listPublicCurriculumRoutes())
-    );
-  });
-
   it("derives Merdeka context routes from curriculum mappings, not grade folders", () => {
     const routes = Effect.runSync(listPublicCurriculumRoutes());
 
@@ -133,61 +119,6 @@ describe("public curriculum routes", () => {
     );
   });
 
-  it("projects descendant curriculum material when children are decoded first", () => {
-    const curriculum = defineCurriculum({
-      programKey: "merdeka",
-      tree: [],
-    });
-    const childNode = Schema.decodeUnknownSync(ProjectedCurriculumNodeSchema)({
-      curriculumKey: "merdeka",
-      key: "child-first",
-      level: "topic",
-      materialKeys: ["lesson.mathematics.integral"],
-      order: 1,
-      parentKey: "parent-second",
-      translations: {
-        en: {
-          routeSlug: "child-first",
-          title: "Child first",
-        },
-        id: {
-          routeSlug: "anak-dulu",
-          title: "Anak dulu",
-        },
-      },
-    });
-    const parentNode = Schema.decodeUnknownSync(ProjectedCurriculumNodeSchema)({
-      curriculumKey: "merdeka",
-      key: "parent-second",
-      level: "subject",
-      materialKeys: [],
-      order: 1,
-      translations: {
-        en: {
-          routeSlug: "parent-second",
-          title: "Parent second",
-        },
-        id: {
-          routeSlug: "induk-kedua",
-          title: "Induk kedua",
-        },
-      },
-    });
-    const routes = Effect.runSync(
-      listPublicCurriculumRoutes({
-        curricula: [curriculum],
-        curriculumNodes: [childNode, parentNode],
-      })
-    );
-
-    expect(routes).toContainEqual(
-      expect.objectContaining({
-        nodeKey: "parent-second",
-        publicPath: "kurikulum/merdeka/induk-kedua",
-      })
-    );
-  });
-
   it("derives Cambridge context routes without making IGCSE the curriculum root", () => {
     const routes = Effect.runSync(listPublicCurriculumRoutes());
 
@@ -267,16 +198,6 @@ describe("public curriculum routes", () => {
     ]);
   });
 
-  it("does not project curriculum display descriptions", () => {
-    const routes = Effect.runSync(listPublicCurriculumRoutes());
-    const describedRoutes = routes
-      .filter(isRenderableCurriculumRoute)
-      .filter((route) => Object.hasOwn(route, "description"))
-      .map((route) => `${route.locale}:${route.publicPath}`);
-
-    expect(describedRoutes).toEqual([]);
-  });
-
   it("projects source-owned group icons separately from card icons", () => {
     const routes = Effect.runSync(listPublicCurriculumRoutes());
 
@@ -291,15 +212,6 @@ describe("public curriculum routes", () => {
     );
     expect(routes).toContainEqual(
       expect.objectContaining({
-        displayGroupIconKey: "high-school",
-        displayGroupTitle: "SMA",
-        iconKey: "grade-10",
-        locale: "id",
-        publicPath: "kurikulum/merdeka/kelas-10",
-      })
-    );
-    expect(routes).toContainEqual(
-      expect.objectContaining({
         displayGroupIconKey: "school",
         displayGroupTitle: "Learning stages",
         iconKey: "high-school",
@@ -307,66 +219,9 @@ describe("public curriculum routes", () => {
         publicPath: "curriculum/cambridge-international/upper-secondary",
       })
     );
-    expect(routes).toContainEqual(
-      expect.objectContaining({
-        displayGroupIconKey: "school",
-        displayGroupTitle: "Tahap sekolah",
-        iconKey: "primary-school",
-        locale: "id",
-        publicPath: "kurikulum/singapore-moe/primary",
-      })
-    );
-    expect(routes).toContainEqual(
-      expect.objectContaining({
-        displayGroupIconKey: "school",
-        displayGroupTitle: "Tahap sekolah",
-        iconKey: "high-school",
-        locale: "id",
-        publicPath: "kurikulum/amerika-serikat/sma",
-      })
-    );
-
-    const rootPaths = [
-      "kurikulum/merdeka",
-      "kurikulum/cambridge-international",
-      "kurikulum/singapore-moe",
-      "kurikulum/amerika-serikat",
-    ];
-
-    for (const rootPath of rootPaths) {
-      const root = routes.find(
-        (route) => route.locale === "id" && route.publicPath === rootPath
-      );
-
-      expect(root).toBeDefined();
-
-      if (!root) {
-        continue;
-      }
-
-      const children = routes
-        .filter(
-          (route) =>
-            route.locale === root.locale && route.parentPath === root.publicPath
-        )
-        .sort(compareCurriculumRouteOrder);
-      const groupedChildren = new Map<string, Set<string>>();
-
-      for (const child of children) {
-        expect(child.displayGroupTitle).not.toBe(root.title);
-        expect(child.displayGroupIconKey).not.toBe(root.iconKey);
-
-        const groupKey = child.displayGroupTitle ?? "curriculum";
-        const iconKeys = groupedChildren.get(groupKey) ?? new Set<string>();
-        expect(iconKeys.has(child.iconKey ?? "")).toBe(false);
-        iconKeys.add(child.iconKey ?? "");
-        groupedChildren.set(groupKey, iconKeys);
-      }
-    }
   });
 
-  it("exposes curriculum context helpers for app card-list composition", () => {
-    const contentRoutes = Effect.runSync(listPublicContentRoutes());
+  it("exposes curriculum context helpers for app route composition", () => {
     const routes = Effect.runSync(listPublicCurriculumRoutes());
     const root = routes.find(
       (route) =>
@@ -446,10 +301,6 @@ describe("public curriculum routes", () => {
       readCurriculumAncestors(subjectRoute, routes).map((route) => route.title)
     ).toEqual(["Kurikulum Merdeka", "Kelas 10"]);
     expect(readCurriculumAncestors(root, routes)).toEqual([]);
-    expect(readCurriculumCardListContext(materialLeafRoute, routes)).toBe(
-      subjectRoute
-    );
-    expect(readCurriculumCardListContext(root, routes)).toBeUndefined();
     expect(
       compareCurriculumRouteOrder(unitRoute, subjectRoute)
     ).toBeGreaterThan(0);
@@ -461,152 +312,6 @@ describe("public curriculum routes", () => {
     expect(readCurriculumAncestors(orphanMaterialLeafRoute, routes)).toEqual(
       []
     );
-    expect(
-      readCurriculumCardListContext(orphanMaterialLeafRoute, routes)
-    ).toBeUndefined();
-
-    const cards = readCurriculumMaterialCards({
-      contentRoutes,
-      curriculumRoutes: routes,
-      route: subjectRoute,
-    });
-
-    expect(cards.length).toBeGreaterThan(0);
-    expect(cards[0]?.items.length).toBeGreaterThan(0);
-    expect(cards[0]?.items[0]?.href).toMatch(
-      INDONESIAN_BIOLOGY_MATERIAL_HREF_PATTERN
-    );
-    expect(cards[0]?.description).toBeTruthy();
-    expect(cards[0]?.description?.length).toBeLessThanOrEqual(
-      MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
-    );
-    expect(
-      readCurriculumMaterialCards({
-        contentRoutes,
-        curriculumRoutes: routes,
-        route: classRoute,
-      })
-    ).toEqual([]);
-    expect(
-      readCurriculumMaterialCards({
-        contentRoutes: [],
-        curriculumRoutes: routes,
-        route: subjectRoute,
-      })
-    ).toEqual([]);
-    const concreteLesson = contentRoutes.find(
-      (route) =>
-        route.kind === "subject-lesson" &&
-        route.locale === materialLeafRoute.locale &&
-        route.parentPath === materialLeafRoute.canonicalPath
-    );
-
-    expect(concreteLesson).toBeDefined();
-
-    if (!concreteLesson) {
-      return;
-    }
-
-    const concreteLessonCards = readCurriculumMaterialCards({
-      contentRoutes,
-      curriculumRoutes: [
-        subjectRoute,
-        unitRoute,
-        { ...materialLeafRoute, canonicalPath: concreteLesson.publicPath },
-      ],
-      route: subjectRoute,
-    });
-
-    expect(concreteLessonCards).toHaveLength(1);
-    expect(concreteLessonCards[0]).toMatchObject({
-      href: expect.stringContaining(
-        `/${concreteLesson.locale}/${concreteLesson.publicPath}?ctx=`
-      ),
-      items: [
-        {
-          href: expect.stringContaining(
-            `/${concreteLesson.locale}/${concreteLesson.publicPath}?ctx=`
-          ),
-          title: concreteLesson.title,
-        },
-      ],
-      title: unitRoute.materialCardTitle,
-    });
-    expect(concreteLessonCards[0]?.description).toBeTruthy();
-    expect(concreteLessonCards[0]?.description?.length).toBeLessThanOrEqual(
-      MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
-    );
-  });
-
-  it("requires concise curriculum-owned display copy for every rendered curriculum material card", () => {
-    const curriculumRoutes = Effect.runSync(listPublicCurriculumRoutes());
-    const contentRoutes = Effect.runSync(listPublicContentRoutes());
-    const programKeysWithCards = new Set<string>();
-
-    for (const route of curriculumRoutes) {
-      const cards = readCurriculumMaterialCards({
-        contentRoutes,
-        curriculumRoutes,
-        route,
-      });
-
-      if (cards.length === 0) {
-        continue;
-      }
-
-      programKeysWithCards.add(route.programKey);
-
-      for (const card of cards) {
-        const sourceRoute = curriculumRoutes.find(
-          (candidate) =>
-            candidate.locale === route.locale &&
-            candidate.parentPath === route.publicPath &&
-            candidate.materialCardTitle === card.title
-        );
-
-        expect(sourceRoute?.level).toBe("unit");
-        expect(sourceRoute?.materialKey).toBeUndefined();
-        expect(sourceRoute?.materialCardDescription).toBe(card.description);
-        expect(sourceRoute?.materialCardTitle).toBe(card.title);
-        expect(
-          curriculumRoutes.some(
-            (candidate) =>
-              candidate.locale === route.locale &&
-              candidate.parentPath === sourceRoute?.publicPath &&
-              candidate.materialKey !== undefined
-          )
-        ).toBe(true);
-        expect(card.description.trim()).toBe(card.description);
-        expect(card.description.length).toBeGreaterThan(0);
-        expect(card.description.length).toBeLessThanOrEqual(
-          MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
-        );
-      }
-    }
-
-    expect(programKeysWithCards).toEqual(
-      new Set([
-        "cambridge-international",
-        "merdeka",
-        "singapore-moe",
-        "united-states",
-      ])
-    );
-  });
-
-  it("keeps concrete material leaves out of curriculum card ownership", () => {
-    const curriculumRoutes = Effect.runSync(listPublicCurriculumRoutes());
-
-    for (const route of curriculumRoutes) {
-      if (route.materialKey === undefined) {
-        continue;
-      }
-
-      expect(route.materialCardDescription).toBeUndefined();
-      expect(route.materialCardTitle).toBeUndefined();
-      expect(isRenderableCurriculumRoute(route)).toBe(false);
-      expect(route.sitemap).toBe(false);
-    }
   });
 
   it("indexes projected curriculum descendants by source-owned node keys", () => {

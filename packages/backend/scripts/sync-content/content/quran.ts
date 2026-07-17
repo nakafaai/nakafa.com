@@ -22,7 +22,11 @@ import {
   formatBatchProgress,
   updateBatchProgress,
 } from "@repo/backend/scripts/sync-content/workflow/metrics";
-import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
+import {
+  getSurah,
+  getSurahName,
+  readQuranMetadata,
+} from "@repo/contents/_lib/quran";
 import type { Surah, Verse } from "@repo/contents/_types/quran";
 import { locales } from "@repo/utilities/locales";
 import type { FunctionArgs } from "convex/server";
@@ -123,7 +127,9 @@ function getQuranPayloads(locale?: QuranSearchPayload["locale"]) {
       verses: [],
     };
 
-    for (const surahSummary of getAllSurah()) {
+    const surahMetadata = yield* readQuranMetadata();
+
+    for (const surahSummary of surahMetadata) {
       const surah = yield* getSurah(surahSummary.number);
       payloads.surahNumbers.push(surah.number);
       payloads.surahs.push(buildQuranSurahPayload(surah, activeLocales));

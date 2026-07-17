@@ -5,7 +5,6 @@ import type {
 } from "@/components/programs/contract";
 import {
   filterOnboardingPrograms,
-  hasOnboardingPrograms,
   shouldRequireLearningProgramOnboarding,
 } from "@/lib/programs/catalog";
 
@@ -75,13 +74,12 @@ describe("programs/catalog", () => {
     expect(
       filterOnboardingPrograms(catalog).map((program) => program.key)
     ).toEqual(["ready-curriculum", "partial-path"]);
-    expect(hasOnboardingPrograms(catalog)).toBe(true);
   });
 
   it("does not require onboarding when the locale has no ready programs", () => {
-    expect(hasOnboardingPrograms([])).toBe(false);
+    expect(shouldRequireLearningProgramOnboarding(null, [])).toBe(false);
     expect(
-      hasOnboardingPrograms([
+      shouldRequireLearningProgramOnboarding(null, [
         { ...catalog[1], coverageStatus: "planned" },
         { ...catalog[1], coverageStatus: "hidden" },
         { ...catalog[1], coverageStatus: "archived" },
@@ -90,7 +88,6 @@ describe("programs/catalog", () => {
   });
 
   it("requires first-run onboarding only when a missing profile can be created", () => {
-    expect(shouldRequireLearningProgramOnboarding(null, [])).toBe(false);
     expect(shouldRequireLearningProgramOnboarding(null, catalog)).toBe(true);
     expect(shouldRequireLearningProgramOnboarding(activeProfile, catalog)).toBe(
       false

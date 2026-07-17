@@ -1,4 +1,3 @@
-import type { Locale } from "next-intl";
 import {
   BASE_URL,
   ENGLISH_LANGUAGE_NAMES,
@@ -32,14 +31,6 @@ export function buildHeader({
   return header;
 }
 
-/** Resolves a localized Quran translation with English as the fallback. */
-export function getTranslation(
-  translations: Record<Locale, string>,
-  locale: Locale
-) {
-  return translations[locale] || translations.en;
-}
-
 /** Removes markdown-style route suffixes before content lookup. */
 export function stripLlmsRouteExtension(slug: string) {
   return slug.replace(MARKDOWN_EXTENSIONS, "");
@@ -60,7 +51,7 @@ export function formatRouteTitle(route: string) {
 }
 
 /** Converts one kebab-case route segment into title case. */
-export function formatSegmentTitle(segment: string) {
+function formatSegmentTitle(segment: string) {
   return segment
     .split("-")
     .filter(Boolean)

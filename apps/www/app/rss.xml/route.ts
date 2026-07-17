@@ -65,8 +65,7 @@ export async function GET() {
   for (const locale of locales) {
     for (const surah of surahs) {
       const title = getQuranSurahName({ locale, name: surah.name });
-      const translation =
-        surah.name.translation[locale] || surah.name.translation.en;
+      const translation = surah.name.translation[locale];
 
       feedItems.push({
         title: `${surah.number}. ${title}`,

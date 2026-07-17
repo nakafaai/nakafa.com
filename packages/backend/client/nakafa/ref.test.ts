@@ -1,10 +1,7 @@
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import {
-  createNakafaContentRefFromGraphProjection,
-  getNakafaContentResourceUri,
-} from "@repo/contents/_lib/agent/refs";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
@@ -44,7 +41,7 @@ describe("resolveNakafaContentRef", () => {
     const resourceRef = await Effect.runPromise(
       resolveNakafaContentRef(
         convexUrl,
-        getNakafaContentResourceUri(articleRef.content_id)
+        `nakafa://content/${articleRef.content_id}`
       )
     );
 

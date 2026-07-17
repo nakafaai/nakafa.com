@@ -6,6 +6,7 @@ import {
   materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { type Infer, v } from "convex/values";
 import { literals, nullable } from "convex-helpers/validators";
 
@@ -39,10 +40,7 @@ const runtimeContentBaseValidator = v.object({
   syncedAt: v.number(),
 });
 
-const localizedTextValidator = v.object({
-  en: v.string(),
-  id: v.string(),
-});
+const localizedTextValidator = v.object(fieldsForEveryLocale(v.string()));
 
 const quranTextValidator = v.object({
   arab: v.string(),
@@ -74,8 +72,7 @@ export const quranSurahMetadataValidator = v.object({
   preBismillah: v.optional(v.union(v.null(), quranPreBismillahValidator)),
   revelation: v.object({
     arab: v.string(),
-    en: v.string(),
-    id: v.string(),
+    ...fieldsForEveryLocale(v.string()),
   }),
   sequence: v.number(),
 });
@@ -113,7 +110,7 @@ const quranSurahValidator = v.object({
 
 const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
 
-const runtimeContentRouteValidator = v.object({
+export const runtimeContentRouteValidator = v.object({
   ...learningGraphIdentityValidator.fields,
   authors: v.array(contentAuthorValidator),
   content_id: v.string(),
