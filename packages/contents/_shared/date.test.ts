@@ -1,6 +1,5 @@
 import {
   formatContentDateISO,
-  isContentDateString,
   parseContentDate,
 } from "@repo/contents/_shared/date";
 import { Option } from "effect";
@@ -28,7 +27,7 @@ describe("content date helpers", () => {
     expect(Option.isNone(parseContentDate("not-a-date"))).toBe(true);
     expect(Option.isNone(parseContentDate("2024/03/19"))).toBe(true);
     expect(Option.isNone(parseContentDate("2024-3-19"))).toBe(true);
-    expect(isContentDateString("2024-02-30")).toBe(false);
+    expect(Option.isNone(parseContentDate("2024-02-30"))).toBe(true);
   });
 
   it("formats valid repository dates to ISO strings", () => {

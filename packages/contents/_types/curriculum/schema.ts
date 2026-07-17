@@ -1,4 +1,3 @@
-import { LocaleSchema } from "@repo/contents/_types/content";
 import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import { MaterialCardDescriptionSchema } from "@repo/contents/_types/material/description";
 import {
@@ -11,6 +10,7 @@ import {
   ProgramNavigationLevelSchema,
 } from "@repo/contents/_types/program/schema";
 import { PublicRouteSegmentSchema } from "@repo/contents/_types/route/segment";
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -31,29 +31,26 @@ export const CurriculumNodeTranslationSchema = Schema.Struct({
   title: Schema.String,
 });
 
-export const CurriculumNodeTranslationMapSchema = Schema.Record({
-  key: LocaleSchema,
-  value: CurriculumNodeTranslationSchema,
-});
+export const CurriculumNodeTranslationMapSchema = Schema.Struct(
+  fieldsForEveryLocale(CurriculumNodeTranslationSchema)
+);
 
 export const CurriculumDisplayGroupTranslationSchema = Schema.Struct({
   title: Schema.String,
 });
 
-const CurriculumDisplayGroupTranslationMapSchema = Schema.Record({
-  key: LocaleSchema,
-  value: CurriculumDisplayGroupTranslationSchema,
-});
+const CurriculumDisplayGroupTranslationMapSchema = Schema.Struct(
+  fieldsForEveryLocale(CurriculumDisplayGroupTranslationSchema)
+);
 
 export const CurriculumMaterialCardTranslationSchema = Schema.Struct({
   description: MaterialCardDescriptionSchema,
   title: Schema.String,
 });
 
-const CurriculumMaterialCardTranslationMapSchema = Schema.Record({
-  key: LocaleSchema,
-  value: CurriculumMaterialCardTranslationSchema,
-});
+const CurriculumMaterialCardTranslationMapSchema = Schema.Struct(
+  fieldsForEveryLocale(CurriculumMaterialCardTranslationSchema)
+);
 
 export const CurriculumNodeSchema = Schema.Struct({
   displayGroup: Schema.optional(CurriculumDisplayGroupTranslationMapSchema),
@@ -203,10 +200,6 @@ export type CurriculumMaterialReferenceNode = SchemaType<
 >;
 
 export type CurriculumTreeNode = SchemaType<typeof CurriculumTreeNodeSchema>;
-export type CurriculumTreeNodeInput = SchemaEncoded<
-  typeof CurriculumTreeNodeSchema
->;
-
 export const CurriculumSourceSchema = Schema.Struct({
   programKey: LearningProgramKeySchema,
   tree: Schema.Array(CurriculumTreeNodeSchema),
@@ -223,15 +216,6 @@ export class CurriculumSourceDefinitionError extends Schema.TaggedError<Curricul
     message: Schema.String,
   }
 ) {}
-
-/** Decodes one nested curriculum tree at the authoring boundary. */
-export function defineCurriculumTree(
-  input: readonly CurriculumTreeNodeInput[]
-) {
-  return Schema.decodeUnknownSync(Schema.Array(CurriculumTreeNodeSchema))(
-    input
-  );
-}
 
 type StructureNodeInput = Omit<
   SchemaEncoded<typeof CurriculumStructureNodeSchema>,

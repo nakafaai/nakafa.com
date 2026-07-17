@@ -7,35 +7,16 @@ import {
   NakafaAgentContentUrlSchema,
   NakafaAgentMarkdownUrlSchema,
 } from "@repo/contents/_lib/agent/schema/ref";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-const quranIdentity = createLearningGraphIdentityFromRoute({
-  locale: "en",
-  route: "quran/1",
-});
-
-if (!quranIdentity) {
-  throw new Error("Expected Quran graph identity fixture.");
-}
-const quranRef = {
-  ...quranIdentity,
-  content_id: quranIdentity.assetId,
-  locale: "en",
-  markdown_url: "https://nakafa.com/en/quran/1.md",
-  route: "quran/1",
-  section: "quran",
-  url: "https://nakafa.com/en/quran/1",
-};
+const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");
 
 describe("NakafaAgentContentIdSchema", () => {
   it("accepts graph-backed asset content IDs", () => {
     expect(
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)(
-        quranIdentity.assetId
-      )
-    ).toBe(quranIdentity.assetId);
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)(quranRef.content_id)
+    ).toBe(quranRef.content_id);
   });
 
   it("rejects non-asset and unsafe content IDs", () => {

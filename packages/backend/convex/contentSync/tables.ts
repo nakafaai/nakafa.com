@@ -79,6 +79,14 @@ export const contentCountTables = [
   { field: "contentRoutes", tableName: "contentRoutes" },
   { field: "publicRoutes", tableName: "publicRoutes" },
   { field: "publicRouteSyncState", tableName: "publicRouteSyncState" },
+  {
+    field: "publicRouteSitemapCounts",
+    tableName: "publicRouteSitemapCounts",
+  },
+  {
+    field: "publicRouteSitemapPages",
+    tableName: "publicRouteSitemapPages",
+  },
   { field: "contentRouteCounts", tableName: "contentRouteCounts" },
   { field: "contentRoutePages", tableName: "contentRoutePages" },
   { field: "quranSurahs", tableName: "quranSurahs" },

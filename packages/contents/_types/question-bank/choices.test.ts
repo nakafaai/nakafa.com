@@ -44,6 +44,14 @@ describe("QuestionChoicesSchema", () => {
     expect(result._tag).toBe("Left");
   });
 
+  it("requires every supported locale", () => {
+    const result = decodeChoices({
+      en: [correctChoice, incorrectChoice],
+    });
+
+    expect(result._tag).toBe("Left");
+  });
+
   it("reports the single-correct-choice invariant", () => {
     expect(() =>
       decodeChoicesSync({

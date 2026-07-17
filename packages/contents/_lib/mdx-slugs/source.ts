@@ -1,8 +1,12 @@
 import path from "node:path";
 import { readContentDirectoryPaths } from "@repo/contents/_lib/fs/folder-scan";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
-import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
-import { routing } from "@repo/internationalization/src/routing";
+import { MdxLocaleParityError } from "@repo/contents/_shared/error";
+import {
+  CONTENT_ROOT_VALUES,
+  type Locale,
+} from "@repo/contents/_types/content";
+import { defaultLocale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
 const contentsDir = resolveContentsDir(import.meta.url);
@@ -12,12 +16,7 @@ const contentScanRoots = [
   CONTENT_ROOT_VALUES.material,
 ] as const;
 
-export type MdxSlugManifest = ReadonlyMap<string, readonly string[]>;
-
-/** Returns whether an unchecked locale can own localized MDX content. */
-export function isMdxContentLocale(locale: string) {
-  return routing.locales.some((contentLocale) => contentLocale === locale);
-}
+type MdxSlugManifest = Readonly<Record<Locale, readonly string[]>>;
 
 /** Reads all localized MDX slugs in one content-tree traversal. */
 export const readMdxSlugManifest = Effect.fn("contents.mdxSlugs.readManifest")(
@@ -25,76 +24,90 @@ export const readMdxSlugManifest = Effect.fn("contents.mdxSlugs.readManifest")(
     const slugsByLocale = createMdxSlugBuckets();
 
     for (const root of contentScanRoots) {
-      const filePaths = yield* readContentRootPaths(root);
+      const filePaths = yield* readContentDirectoryPaths(
+        path.join(contentsDir, root)
+      );
 
       for (const filePath of filePaths) {
         addLocalizedMdxPath(root, filePath, slugsByLocale);
       }
     }
 
-    return sortMdxSlugBuckets(slugsByLocale);
+    const manifest = sortMdxSlugBuckets(slugsByLocale);
+
+    yield* validateMdxSlugParity(manifest);
+    return manifest;
   }
 );
 
-/** Copies one locale's slugs without exposing cached manifest arrays. */
-export function getMdxSlugsFromManifest(
-  manifest: MdxSlugManifest,
-  locale: string
-) {
-  const slugs = manifest.get(locale);
-
-  if (!slugs) {
-    return [];
-  }
-
-  return [...slugs];
-}
-
 /** Creates mutable slug buckets for every supported routing locale. */
 function createMdxSlugBuckets() {
-  const slugsByLocale = new Map<string, Set<string>>();
+  return {
+    en: new Set<string>(),
+    id: new Set<string>(),
+  };
+}
 
-  for (const locale of routing.locales) {
-    slugsByLocale.set(locale, new Set());
+/** Converts mutable slug buckets into the sorted locale parity manifest. */
+function sortMdxSlugBuckets(slugsByLocale: Record<Locale, Set<string>>) {
+  return {
+    en: Array.from(slugsByLocale.en).sort(),
+    id: Array.from(slugsByLocale.id).sort(),
+  };
+}
+
+/** Rejects locale corpora that do not own the same MDX source paths. */
+const validateMdxSlugParity = Effect.fn("contents.mdxSlugs.validateParity")(
+  function* (manifest: MdxSlugManifest) {
+    const referenceSlugs = manifest[defaultLocale];
+    const referenceSlugSet = new Set(referenceSlugs);
+
+    for (const locale of locales) {
+      if (locale === defaultLocale) {
+        continue;
+      }
+
+      const localizedSlugs = manifest[locale];
+      const localizedSlugSet = new Set(localizedSlugs);
+      const missingSlugs = referenceSlugs.filter(
+        (slug) => !localizedSlugSet.has(slug)
+      );
+      const unexpectedSlugs = localizedSlugs.filter(
+        (slug) => !referenceSlugSet.has(slug)
+      );
+
+      if (missingSlugs.length === 0 && unexpectedSlugs.length === 0) {
+        continue;
+      }
+
+      return yield* Effect.fail(
+        new MdxLocaleParityError({
+          locale,
+          message: `MDX paths for ${locale} do not match ${defaultLocale}.`,
+          missingSlugs,
+          unexpectedSlugs,
+        })
+      );
+    }
   }
-
-  return slugsByLocale;
-}
-
-/** Converts mutable slug buckets into sorted arrays for cache consumers. */
-function sortMdxSlugBuckets(slugsByLocale: ReadonlyMap<string, Set<string>>) {
-  const manifest = new Map<string, readonly string[]>();
-
-  for (const [locale, slugs] of slugsByLocale) {
-    manifest.set(locale, Array.from(slugs).sort());
-  }
-
-  return manifest;
-}
-
-/** Reads one content root recursively and treats unreadable roots as empty. */
-function readContentRootPaths(root: (typeof contentScanRoots)[number]) {
-  return readContentDirectoryPaths(path.join(contentsDir, root)).pipe(
-    Effect.catchTag("DirectoryReadError", () => Effect.succeed([]))
-  );
-}
+);
 
 /** Adds locale-matching recursive MDX paths to the slug set. */
 function addLocalizedMdxPath(
   root: (typeof contentScanRoots)[number],
   filePath: string,
-  slugsByLocale: Map<string, Set<string>>
+  slugsByLocale: Record<Locale, Set<string>>
 ) {
-  if (!isLocalizedMdxPath(root, filePath)) {
+  if (!isLocalizedMdxPath(filePath)) {
     return;
   }
 
   const locale = getLocalizedMdxLocale(filePath);
-  const slugs = slugsByLocale.get(locale);
-
-  if (!slugs) {
+  if (!locale) {
     return;
   }
+
+  const slugs = slugsByLocale[locale];
 
   const slugPath = getLocalizedMdxSlugPath(filePath);
 
@@ -109,8 +122,9 @@ function addLocalizedMdxPath(
 /** Returns the locale suffix from `en.mdx` or typed assets like `question.en.mdx`. */
 function getLocalizedMdxLocale(filePath: string) {
   const basename = path.basename(filePath, mdxExtension);
+  const locale = basename.slice(basename.lastIndexOf(".") + 1);
 
-  return basename.slice(basename.lastIndexOf(".") + 1);
+  return locales.find((contentLocale) => contentLocale === locale);
 }
 
 /** Converts one localized MDX file path into its locale-free content slug. */
@@ -133,9 +147,6 @@ function getLocalizedMdxSlugPath(filePath: string) {
 }
 
 /** Returns whether a recursive path is a localized MDX content file. */
-function isLocalizedMdxPath(
-  _root: (typeof contentScanRoots)[number],
-  filePath: string
-) {
+function isLocalizedMdxPath(filePath: string) {
   return filePath.endsWith(mdxExtension);
 }

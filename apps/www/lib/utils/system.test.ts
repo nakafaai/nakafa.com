@@ -1,7 +1,7 @@
 // @vitest-environment node
+
+import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import type { Locale } from "@repo/contents/_types/content";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
-import type { SourceRegistryRoot } from "@repo/contents/_types/source-registry";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -11,57 +11,75 @@ import {
 } from "@/lib/utils/system";
 
 const routeMocks = vi.hoisted(() => ({
-  listRuntimeLatestContentRoutes: vi.fn(),
+  listLatest: vi.fn(),
+  read: vi.fn(),
 }));
 const cacheMocks = vi.hoisted(() => ({
-  cacheLife: vi.fn(),
-  cacheTag: vi.fn(),
+  life: vi.fn(),
+  tag: vi.fn(),
 }));
-const runtimeMocks = vi.hoisted(() => ({
-  getRuntimeContentRoute: vi.fn(),
-}));
-const translationMocks = vi.hoisted(() => ({
-  getTranslations: vi.fn(),
-}));
+const mockGetTranslations = vi.hoisted(() => vi.fn());
 
 vi.mock("@repo/internationalization/src/routing", async () => {
   const { defaultLocale, locales } = await import("@repo/utilities/locales");
-
-  return {
-    routing: { defaultLocale, locales },
-  };
+  return { routing: { defaultLocale, locales } };
 });
 
 vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentRoute: runtimeMocks.getRuntimeContentRoute,
-  listRuntimeLatestContentRoutes: routeMocks.listRuntimeLatestContentRoutes,
+  getRuntimeContentRoute: routeMocks.read,
+  listRuntimeLatestContentRoutes: routeMocks.listLatest,
 }));
 
 vi.mock("next-intl/server", () => ({
-  getTranslations: translationMocks.getTranslations,
+  getTranslations: mockGetTranslations,
 }));
 
 vi.mock("next/cache", () => ({
-  cacheLife: cacheMocks.cacheLife,
-  cacheTag: cacheMocks.cacheTag,
+  cacheLife: cacheMocks.life,
+  cacheTag: cacheMocks.tag,
 }));
 
-beforeEach(() => {
-  routeMocks.listRuntimeLatestContentRoutes.mockReset();
-  cacheMocks.cacheLife.mockClear();
-  cacheMocks.cacheTag.mockClear();
-  runtimeMocks.getRuntimeContentRoute.mockReset();
-  translationMocks.getTranslations.mockReset();
+const routeRows = [
+  {
+    locale: "en",
+    route: "articles/politics/dynastic-politics-asian-values",
+    section: "articles",
+  },
+  {
+    locale: "id",
+    route: "articles/politics/dynastic-politics-asian-values",
+    section: "articles",
+  },
+  {
+    locale: "en",
+    route: "material/lesson/chemistry/green-chemistry/definition",
+    section: "material",
+  },
+];
 
-  routeMocks.listRuntimeLatestContentRoutes.mockImplementation(
-    ({ locale, section }: RuntimeRouteArgs) =>
+const translatedDefaults = {
+  authors: [{ name: "Nakafa" }],
+  date: "",
+  description: "Short description",
+  title: "Made with love",
+};
+
+beforeEach(() => {
+  routeMocks.listLatest.mockReset();
+  routeMocks.read.mockReset();
+  cacheMocks.life.mockClear();
+  cacheMocks.tag.mockClear();
+  mockGetTranslations.mockReset();
+
+  routeMocks.listLatest.mockImplementation(
+    ({ locale, section }: { locale: Locale; section: string }) =>
       Effect.succeed(
         routeRows.filter(
           (route) => route.locale === locale && route.section === section
         )
       )
   );
-  runtimeMocks.getRuntimeContentRoute.mockReturnValue(
+  routeMocks.read.mockReturnValue(
     Effect.succeed({
       authors: [{ name: "Nakafa" }],
       date: new Date("2025-01-02").getTime(),
@@ -69,7 +87,7 @@ beforeEach(() => {
       title: "Runtime title",
     })
   );
-  translationMocks.getTranslations.mockImplementation(({ namespace }) => {
+  mockGetTranslations.mockImplementation(({ namespace }) => {
     if (namespace === "Common") {
       return Promise.resolve((key: string) =>
         key === "made-with-love" ? "Made with love" : key
@@ -83,37 +101,10 @@ beforeEach(() => {
 });
 
 describe("route catalog static params", () => {
-  it("builds shallow static params from Convex-backed public routes", async () => {
+  it("builds shallow and deep params from bounded route reads", async () => {
     await expect(
-      getStaticParams({
-        basePath: "articles",
-        paramNames: ["category"],
-      })
+      getStaticParams({ basePath: "articles", paramNames: ["category"] })
     ).resolves.toEqual([{ category: "politics" }]);
-
-    await expect(
-      getStaticParams({
-        basePath: "material",
-        paramNames: ["category", "grade", "material"],
-      })
-    ).resolves.toContainEqual({
-      category: "lesson",
-      grade: "chemistry",
-      material: "green-chemistry",
-    });
-    expect(routeMocks.listRuntimeLatestContentRoutes).toHaveBeenCalledWith({
-      limit: 100,
-      locale: "en",
-      section: "articles",
-    });
-    expect(routeMocks.listRuntimeLatestContentRoutes).toHaveBeenCalledWith({
-      limit: 100,
-      locale: "id",
-      section: "material",
-    });
-  });
-
-  it("builds deep slug params from Convex-backed public routes", async () => {
     await expect(
       getStaticParams({
         basePath: "material",
@@ -121,42 +112,55 @@ describe("route catalog static params", () => {
         paramNames: ["category", "grade", "material", "slug"],
         slugParam: "slug",
       })
-    ).resolves.toContainEqual({
-      category: "lesson",
-      grade: "chemistry",
-      material: "green-chemistry",
-      slug: ["definition"],
+    ).resolves.toEqual([
+      {
+        category: "lesson",
+        grade: "chemistry",
+        material: "green-chemistry",
+        slug: ["definition"],
+      },
+    ]);
+
+    expect(routeMocks.listLatest).toHaveBeenCalledWith({
+      limit: 100,
+      locale: "id",
+      section: "articles",
     });
   });
 
-  it("skips malformed or nonmatching static-param routes", async () => {
-    routeMocks.listRuntimeLatestContentRoutes.mockReturnValueOnce(
-      Effect.succeed([
-        routeRow({
-          locale: "en",
-          route: "articles",
-          section: "articles",
-        }),
-        routeRow({
-          locale: "en",
-          route: "curriculum/merdeka/class-10/chemistry",
-          section: "material",
-        }),
-        routeRow({
-          locale: "en",
-          route: "articles/politics",
-          section: "articles",
-        }),
-        routeRow({
-          locale: "en",
-          route: "articles/politics/example",
-          section: "articles",
-        }),
-      ])
-    );
-    routeMocks.listRuntimeLatestContentRoutes.mockReturnValueOnce(
-      Effect.succeed([])
-    );
+  it("reads only the requested parent locale", async () => {
+    await expect(
+      getStaticParams({
+        basePath: "articles",
+        locale: "id",
+        paramNames: ["category", "slug"],
+      })
+    ).resolves.toEqual([
+      {
+        category: "politics",
+        slug: "dynastic-politics-asian-values",
+      },
+    ]);
+
+    expect(routeMocks.listLatest).toHaveBeenCalledTimes(1);
+    expect(routeMocks.listLatest).toHaveBeenCalledWith({
+      limit: 100,
+      locale: "id",
+      section: "articles",
+    });
+  });
+
+  it("ignores routes that cannot fill the requested params", async () => {
+    routeMocks.listLatest
+      .mockReturnValueOnce(
+        Effect.succeed([
+          { route: "articles" },
+          { route: "curriculum/merdeka/class-10/chemistry" },
+          { route: "articles/politics" },
+          { route: "articles/politics/example" },
+        ])
+      )
+      .mockReturnValueOnce(Effect.succeed([]));
 
     await expect(
       getStaticParams({
@@ -165,94 +169,15 @@ describe("route catalog static params", () => {
         paramNames: ["category", "slug"],
         slugParam: "slug",
       })
-    ).resolves.toEqual([
-      {
-        category: "politics",
-        slug: ["example"],
-      },
-    ]);
+    ).resolves.toEqual([{ category: "politics", slug: ["example"] }]);
   });
 });
 
-const routeRows = [
-  routeRow({
-    locale: "en",
-    route: "articles/politics/dynastic-politics-asian-values",
-    section: "articles",
-  }),
-  routeRow({
-    locale: "id",
-    route: "articles/politics/dynastic-politics-asian-values",
-    section: "articles",
-  }),
-  routeRow({
-    locale: "en",
-    route: "material/lesson/chemistry/green-chemistry/definition",
-    section: "material",
-  }),
-  routeRow({
-    locale: "id",
-    route: "material/lesson/chemistry/green-chemistry/definition",
-    section: "material",
-  }),
-  routeRow({
-    kind: "tryout-section",
-    locale: "en",
-    parentRoute: "try-out/indonesia/snbt/2027/set-1",
-    route: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
-    section: "tryout",
-  }),
-];
-
-interface RuntimeRouteArgs {
-  locale: Locale;
-  section: SourceRegistryRoot;
-}
-
-interface RuntimeRouteFixture {
-  kind?: string;
-  locale: RuntimeRouteArgs["locale"];
-  parentRoute?: string;
-  route: string;
-  section: RuntimeRouteArgs["section"];
-}
-
-/** Builds one route row with only the fields static-param tests read. */
-function routeRow(args: RuntimeRouteFixture) {
-  return {
-    authors: [{ name: "Nakafa" }],
-    content_id: getFixtureContentId(args.locale, args.route),
-    kind: args.kind ?? "article",
-    locale: args.locale,
-    markdown: true,
-    parentRoute: args.parentRoute,
-    route: args.route,
-    section: args.section,
-    syncedAt: 1,
-    title: "Title",
-  };
-}
-
-/** Builds the graph asset ID used by synced route rows in fixture data. */
-function getFixtureContentId(locale: Locale, route: string) {
-  const identity = createLearningGraphIdentityFromRoute({ locale, route });
-
-  if (identity) {
-    return identity.assetId;
-  }
-
-  return `asset:${locale}:fixture:${route.split("/").filter(Boolean).join(":")}`;
-}
-
 describe("route catalog metadata", () => {
-  it("reads OG metadata from the Convex route catalog", async () => {
+  it("reads complete metadata from the runtime catalog", async () => {
     await expect(
       Effect.runPromise(
-        getMetadataFromSlug("en", [
-          "articles",
-          "politics",
-          "dynastic-politics-asian-values",
-        ])
+        getMetadataFromSlug("en", ["articles", "politics", "example"])
       )
     ).resolves.toEqual({
       authors: [{ name: "Nakafa" }],
@@ -262,38 +187,32 @@ describe("route catalog metadata", () => {
     });
   });
 
-  it("falls back to translated defaults when no route metadata exists", async () => {
-    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
-      Effect.succeed(null)
-    );
-
+  it("uses translated defaults when the catalog has no row", async () => {
+    routeMocks.read.mockReturnValueOnce(Effect.succeed(null));
     await expect(
       Effect.runPromise(getMetadataFromSlug("id", ["articles", "missing"]))
-    ).resolves.toEqual({
-      authors: [{ name: "Nakafa" }],
-      date: "",
-      description: "Short description",
-      title: "Made with love",
-    });
+    ).resolves.toEqual(translatedDefaults);
   });
 
-  it("falls back to translated defaults when route metadata lookup fails", async () => {
-    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
-      Effect.fail(new Error("Route catalog unavailable."))
+  it("preserves typed route-catalog read failures", async () => {
+    routeMocks.read.mockReturnValueOnce(
+      Effect.fail(
+        new NakafaAgentDataReadError({
+          cause: "Route catalog unavailable.",
+          message: "Unable to read route catalog.",
+        })
+      )
     );
 
-    await expect(
-      Effect.runPromise(getMetadataFromSlug("id", ["articles", "failed"]))
-    ).resolves.toEqual({
-      authors: [{ name: "Nakafa" }],
-      date: "",
-      description: "Short description",
-      title: "Made with love",
-    });
+    const error = await Effect.runPromise(
+      Effect.flip(getMetadataFromSlug("id", ["articles", "failed"]))
+    );
+
+    expect(error).toBeInstanceOf(NakafaAgentDataReadError);
   });
 
-  it("uses translation defaults for sparse route metadata", async () => {
-    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
+  it("fills sparse runtime metadata from translations", async () => {
+    routeMocks.read.mockReturnValueOnce(
       Effect.succeed({
         authors: [{ name: "Nakafa" }],
         date: undefined,
@@ -304,46 +223,31 @@ describe("route catalog metadata", () => {
 
     await expect(
       Effect.runPromise(getMetadataFromSlug("en", ["articles", "sparse"]))
-    ).resolves.toEqual({
-      authors: [{ name: "Nakafa" }],
-      date: "",
-      description: "Short description",
-      title: "Made with love",
-    });
+    ).resolves.toEqual(translatedDefaults);
   });
 
-  it("fails with a typed error when metadata translations cannot load", async () => {
-    translationMocks.getTranslations.mockRejectedValueOnce(
-      new Error("Missing Common translations.")
-    );
-
+  it("reports which translation namespace failed", async () => {
+    mockGetTranslations.mockRejectedValueOnce(new Error("Missing Common."));
     await expect(
       Effect.runPromise(getMetadataFromSlug("en", ["articles", "example"]))
     ).rejects.toThrow('"namespace": "Common"');
 
-    translationMocks.getTranslations.mockImplementation(({ namespace }) => {
+    mockGetTranslations.mockImplementation(({ namespace }) => {
       if (namespace === "Common") {
-        return Promise.resolve((key: string) =>
-          key === "made-with-love" ? "Made with love" : key
-        );
+        return Promise.resolve(() => "Made with love");
       }
-
-      return Promise.reject(new Error("Missing Metadata translations."));
+      return Promise.reject(new Error("Missing Metadata."));
     });
-
     await expect(
       Effect.runPromise(getMetadataFromSlug("en", ["articles", "example"]))
     ).rejects.toThrow('"namespace": "Metadata"');
   });
 
-  it("uses the cached metadata helper for route handlers", async () => {
+  it("applies the content cache at the route-handler boundary", async () => {
     await expect(
       getCachedMetadataFromSlug("en", ["articles", "politics", "example"])
-    ).resolves.toMatchObject({
-      description: "Runtime description",
-      title: "Runtime title",
-    });
-    expect(cacheMocks.cacheTag).toHaveBeenCalledWith("content-runtime");
-    expect(cacheMocks.cacheLife).toHaveBeenCalledWith("contentRuntime");
+    ).resolves.toMatchObject({ title: "Runtime title" });
+    expect(cacheMocks.tag).toHaveBeenCalledWith("content-runtime");
+    expect(cacheMocks.life).toHaveBeenCalledWith("contentRuntime");
   });
 });

@@ -74,6 +74,17 @@ export function createAdapters() {
   const placements: ViewportPlacement[] = [];
   const readPostIds: Id<"schoolClassForumPosts">[] = [];
   const snapshots: ConversationScrollSnapshot[] = [];
+  const isViewReached = (view: NonNullable<ViewportMeasurement["view"]>) => {
+    if (!measurement) {
+      return false;
+    }
+
+    if (view.kind === "bottom") {
+      return measurement.isAtLatest;
+    }
+
+    return areConversationViewsEqual(measurement.view, view);
+  };
   const adapters = {
     read: {
       markPostRead: (postId) =>
@@ -84,39 +95,9 @@ export function createAdapters() {
     scroller: {
       captureView: () => measurement?.view ?? null,
       getTranscript: () => transcript,
-      isViewReached: (view) => {
-        if (!measurement) {
-          return false;
-        }
-
-        if (view.kind === "bottom") {
-          return measurement.isAtLatest;
-        }
-
-        return areConversationViewsEqual(measurement.view, view);
-      },
-      isViewSettled: (view) => {
-        if (!measurement) {
-          return false;
-        }
-
-        if (view.kind === "bottom") {
-          return measurement.isAtLatest;
-        }
-
-        return areConversationViewsEqual(measurement.view, view);
-      },
-      isViewVisible: (view) => {
-        if (!measurement) {
-          return false;
-        }
-
-        if (view.kind === "bottom") {
-          return measurement.isAtLatest;
-        }
-
-        return areConversationViewsEqual(measurement.view, view);
-      },
+      isViewReached,
+      isViewSettled: isViewReached,
+      isViewVisible: isViewReached,
       measure: () => measurement,
       place: vi.fn((placement: ViewportPlacement) => {
         placements.push(placement);

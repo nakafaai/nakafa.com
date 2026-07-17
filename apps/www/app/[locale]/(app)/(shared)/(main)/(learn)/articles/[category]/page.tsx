@@ -84,9 +84,14 @@ export async function generateMetadata({
 }
 
 /** Generates localized article category paths from the system route catalog. */
-export function generateStaticParams() {
+export function generateStaticParams({
+  params,
+}: {
+  params: { locale: string };
+}) {
   return getStaticParams({
     basePath: "articles",
+    locale: getLocaleOrThrow(params.locale),
     paramNames: ["category"],
   });
 }

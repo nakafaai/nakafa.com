@@ -14,19 +14,13 @@ import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
-import GB from "country-flag-icons/react/3x2/GB";
-import ID from "country-flag-icons/react/3x2/ID";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type * as React from "react";
+import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 const BASE_THEMES_COUNT = 3;
-
-const flagMap = {
-  en: GB,
-  id: ID,
-};
 
 /** Dropdown side contract inherited from the design-system submenu content. */
 type SubmenuSide = React.ComponentProps<typeof DropdownMenuSubContent>["side"];
@@ -59,22 +53,18 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
       side={side}
     >
       <DropdownMenuGroup>
-        {languages.map((language) => {
-          const Flag = flagMap[language.value];
-
-          return (
-            <DropdownMenuItem
-              className="cursor-pointer"
-              disabled={isPending}
-              key={language.value}
-              onClick={() => handleChangeLocale(language.value)}
-            >
-              <Flag className="size-4 shrink-0" />
-              <span className="truncate">{language.label}</span>
-              <ActiveBadge isActive={currentLocale === language.value} />
-            </DropdownMenuItem>
-          );
-        })}
+        {languages.map((language) => (
+          <DropdownMenuItem
+            className="cursor-pointer"
+            disabled={isPending}
+            key={language.value}
+            onClick={() => handleChangeLocale(language.value)}
+          >
+            <CountryFlagIcon countryCode={language.countryCode} />
+            <span className="truncate">{language.label}</span>
+            <ActiveBadge isActive={currentLocale === language.value} />
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuGroup>
     </DropdownMenuSubContent>
   );

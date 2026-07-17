@@ -2,6 +2,7 @@ import { type DateOnly, DateOnlySchema } from "@repo/contents/_shared/date";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CurriculumLensScopeSchema } from "@repo/contents/_types/graph/schema";
 import { PublicRouteSegmentSchema } from "@repo/contents/_types/route/segment";
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -288,10 +289,9 @@ export const ProgramTranslationSchema = Schema.Struct({
 });
 
 /** Display copy keyed by supported content/app locale. */
-export const ProgramTranslationsSchema = Schema.Struct({
-  en: ProgramTranslationSchema,
-  id: ProgramTranslationSchema,
-});
+export const ProgramTranslationsSchema = Schema.Struct(
+  fieldsForEveryLocale(ProgramTranslationSchema)
+);
 
 export const LearningProgramSchema = Schema.Struct({
   defaultCoverageStatus: CoverageStatusSchema,
@@ -327,10 +327,8 @@ export type LearningProgramCoverageInput = Schema.Schema.Type<
 
 export const LearningProgramCoverageAlignmentSchema = Schema.Struct({
   match: Schema.Struct({
-    fallback: Schema.optional(Schema.Boolean),
-    lensSegments: Schema.optional(Schema.Array(Schema.String)),
-    routeKinds: Schema.optional(Schema.Array(CoverageRouteKindSchema)),
-    routeSegments: Schema.optional(Schema.Array(Schema.String)),
+    lensSegments: Schema.Array(Schema.String),
+    routeSegments: Schema.Array(Schema.String),
   }),
   programKey: LearningProgramKeySchema,
 });

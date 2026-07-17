@@ -34,6 +34,10 @@ const PAGE_SIZE = 100;
 const INITIAL_CURSOR: string | null = null;
 const API_PAGE_SIZE_MIN = 1;
 const API_PAGE_SIZE_MAX = 100;
+const supportedApiLocales = locales.join(", ");
+
+/** Error copy derived from every canonical locale accepted by the content API. */
+export const invalidApiLocaleMessage = `Invalid locale. Supported locales: ${supportedApiLocales}.`;
 
 /** Expected failure while reading Convex content runtime data for API routes. */
 class ApiContentRuntimeReadError extends Schema.TaggedError<ApiContentRuntimeReadError>()(
@@ -142,12 +146,18 @@ export async function listApiStaticParams({
   section: RuntimeContentSection;
 }) {
   const params: Array<{ locale: Locale; slug: string[] }> = [];
+  const localePages = await Effect.runPromise(
+    Effect.forEach(
+      locales,
+      (locale) =>
+        getContentRoutePage({ locale, prefix, section }).pipe(
+          Effect.map((routePage) => ({ locale, routePage }))
+        ),
+      { concurrency: "unbounded" }
+    )
+  );
 
-  for (const locale of locales) {
-    const routePage = await Effect.runPromise(
-      getContentRoutePage({ locale, prefix, section })
-    );
-
+  for (const { locale, routePage } of localePages) {
     for (const route of routePage.page) {
       params.push({
         locale,

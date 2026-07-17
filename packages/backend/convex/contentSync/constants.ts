@@ -22,6 +22,7 @@ export const CONTENT_SYNC_BATCH_LIMITS = {
   curriculumTopics: 50,
   publicRouteRows: 1000,
   publicRouteShards: 100,
+  publicSitemapPages: 100,
   tryoutSets: 50,
   unusedAuthors: 50,
 } as const;

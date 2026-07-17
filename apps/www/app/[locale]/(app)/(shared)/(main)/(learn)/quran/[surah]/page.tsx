@@ -1,4 +1,5 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
+import type { RuntimeQuranSurah } from "@repo/backend/client/nakafa/types";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -36,6 +37,26 @@ import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 
 const QURAN_INITIAL_VERSE_SSR_COUNT = 80;
+
+/** Returns complete localized tafsir controls only when every surah verse has data. */
+function getSurahInterpretations(
+  verses: RuntimeQuranSurah["verses"],
+  locale: Locale
+) {
+  const interpretations: string[] = [];
+
+  for (const verse of verses) {
+    const tafsir = verse.tafsir[locale];
+
+    if (!tafsir?.short.trim()) {
+      return;
+    }
+
+    interpretations.push(tafsir.short);
+  }
+
+  return interpretations;
+}
 
 /** Builds localized Quran surah metadata only after the runtime catalog confirms the surah exists. */
 export async function generateMetadata({
@@ -225,27 +246,10 @@ async function CachedSurahShell({
   });
 
   const pagination = getQuranPagination({
+    locale,
     prevSurah,
     nextSurah,
   });
-
-  const prevTitle = prevSurah
-    ? getQuranSurahName({ locale, name: prevSurah.name })
-    : "";
-  const nextTitle = nextSurah
-    ? getQuranSurahName({ locale, name: nextSurah.name })
-    : "";
-
-  const paginationWithLocalizedTitles = {
-    prev: {
-      href: pagination.prev.href,
-      title: prevTitle,
-    },
-    next: {
-      href: pagination.next.href,
-      title: nextTitle,
-    },
-  };
 
   const controlLabels = {
     interpretation: t("interpretation"),
@@ -258,10 +262,7 @@ async function CachedSurahShell({
     ...verse.audio.secondary,
   ]);
 
-  const interpretations =
-    locale === "id"
-      ? surahData.verses.map((verse) => verse.tafsir.id.short)
-      : undefined;
+  const interpretations = getSurahInterpretations(surahData.verses, locale);
 
   return (
     <VirtualProvider>
@@ -281,8 +282,7 @@ async function CachedSurahShell({
               <div className="mb-20 flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center shadow-sm">
                 <QuranText>{preBismillah.text.arab}</QuranText>
                 <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
-                  {preBismillah.translation[locale] ??
-                    preBismillah.translation.en}
+                  {preBismillah.translation[locale]}
                 </p>
               </div>
             )}
@@ -300,6 +300,7 @@ async function CachedSurahShell({
 
                 return (
                   <QuranVerse
+                    hasInterpretation={interpretations !== undefined}
                     id={slugify(verseLabel)}
                     index={index}
                     isLast={index === surahData.verses.length - 1}
@@ -313,7 +314,7 @@ async function CachedSurahShell({
               })}
             </WindowVirtualized>
           </LayoutContent>
-          <PaginationContent pagination={paginationWithLocalizedTitles} />
+          <PaginationContent pagination={pagination} />
           <FooterContent>{footer}</FooterContent>
           <QuranPageControls
             audioSources={audioSources}

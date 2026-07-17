@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
+import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
 
 /** Expected miss when a declared legal MDX source file is absent. */
 class LegalMarkdownSourceMissing extends Schema.TaggedError<LegalMarkdownSourceMissing>()(
@@ -43,10 +44,17 @@ export const getLlmsLegalPageText = Effect.fn("www.llms.legal.text")(
       try: () => readFile(sourcePath, "utf8"),
       catch: (cause) => toLegalMarkdownReadError(sourcePath, cause),
     }).pipe(
+      Effect.map(addAgentMarkdownDirective),
       Effect.catchTag("LegalMarkdownSourceMissing", () => Effect.succeed(null))
     );
   }
 );
+
+/** Adds discovery metadata without duplicating it across authored legal MDX. */
+function addAgentMarkdownDirective(markdown: string) {
+  const [title, ...body] = markdown.split("\n");
+  return [title, "", AGENT_MARKDOWN_DIRECTIVE, ...body].join("\n");
+}
 
 /**
  * Converts an llms clean slug into a safe legal source directory name.

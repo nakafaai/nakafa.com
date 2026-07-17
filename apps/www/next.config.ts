@@ -12,7 +12,6 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
-import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
 
 const configEnv = createEnv({
   extends: [analyzeKeys(), postHogProxyKeys()],
@@ -35,10 +34,6 @@ function createAppRewrites() {
     {
       source: "/.well-known/llms.txt",
       destination: "/llms.txt",
-    },
-    {
-      source: "/.well-known/llms-full.txt",
-      destination: "/llms-full.txt",
     },
     {
       source: "/.well-known/agent-skills/nakafa/SKILL.md",
@@ -144,29 +139,10 @@ function createLocalizedRedirects() {
  * Return the shared security headers for all application responses.
  */
 function createAppHeaders() {
-  const llmsFileHeaders = [
-    {
-      key: "Cache-Control",
-      value: LLMS_CACHE_CONTROL,
-    },
-  ];
-
   return [
     {
       source: "/:path*",
       headers: [...createSecurityHeaders(), ...AGENT_DISCOVERY_HEADERS],
-    },
-    {
-      source: "/llms-full.txt",
-      headers: llmsFileHeaders,
-    },
-    {
-      source: "/llms-full/:path*",
-      headers: llmsFileHeaders,
-    },
-    {
-      source: "/.well-known/llms-full.txt",
-      headers: llmsFileHeaders,
     },
   ];
 }

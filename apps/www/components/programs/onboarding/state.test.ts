@@ -1,7 +1,6 @@
 import { Effect, Either } from "effect";
 import { describe, expect, it } from "vitest";
 import {
-  decodeOnboardingFocusValue,
   decodeOnboardingRoleValue,
   decodeOnboardingValue,
 } from "@/components/programs/onboarding/state";
@@ -40,17 +39,11 @@ describe("components/programs/onboarding/state", () => {
     expect(Either.isLeft(result)).toBe(true);
   });
 
-  it("decodes route-owned role and focus step values", () => {
+  it("decodes a route-owned role step value", () => {
     const role = Effect.runSync(
       decodeOnboardingRoleValue({ role: "teacher" }).pipe(Effect.either)
     );
-    const focus = Effect.runSync(
-      decodeOnboardingFocusValue({ focusKey: "teacher-practice" }).pipe(
-        Effect.either
-      )
-    );
 
     expect(Either.isRight(role)).toBe(true);
-    expect(Either.isRight(focus)).toBe(true);
   });
 });

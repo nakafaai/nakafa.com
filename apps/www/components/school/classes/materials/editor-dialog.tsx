@@ -57,7 +57,7 @@ import {
   getTimeString,
   updateDate,
   updateTime,
-} from "@/components/school/classes/materials/utils";
+} from "@/components/school/classes/schedule";
 import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";
 

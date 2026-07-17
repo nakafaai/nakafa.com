@@ -35,7 +35,7 @@ describe("rss route", () => {
     mockFetchRuntimeQuranSurahs.mockResolvedValue([
       {
         name: {
-          translation: { en: "The Opening" },
+          translation: { en: "The Opening", id: "Pembukaan" },
         },
         number: 1,
       },
@@ -71,6 +71,7 @@ describe("rss route", () => {
     expect(text).toContain("<rss");
     expect(text).toContain("<![CDATA[Article title]]>");
     expect(text).toContain("<![CDATA[The Opening]]>");
+    expect(text).toContain("<![CDATA[Pembukaan]]>");
     expect(text).toContain("<![CDATA[1. Al-Fatihah]]>");
     expect(text).not.toContain("Undated article");
   });

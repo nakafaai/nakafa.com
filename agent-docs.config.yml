@@ -1,6 +1,11 @@
 url: http://localhost:3000
 options:
   canonicalOrigin: https://nakafa.com
+  # UI-only routes have no canonical Markdown source and are not agent docs.
+  coverageExclusions:
+    - "/[a-z][a-z]"
+    - "/[a-z][a-z]/contributor"
+    - "/[a-z][a-z]/search"
   maxLinksToTest: 50
   parityExclusions:
     - .katex

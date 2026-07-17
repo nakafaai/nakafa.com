@@ -7,10 +7,7 @@ import {
   isMaterialLessonRoute,
   toLocalizedContentHref,
 } from "@repo/contents/_types/route/content";
-import {
-  compareCurriculumRouteOrder,
-  readCurriculumRouteByPublicPath,
-} from "@repo/contents/_types/route/curriculum";
+import { compareCurriculumRouteOrder } from "@repo/contents/_types/route/curriculum";
 import {
   createMaterialContextIndex,
   type MaterialContextIndex,
@@ -21,32 +18,6 @@ import type {
   PublicCurriculumRoute,
 } from "@repo/contents/_types/route/schema";
 import { Schema } from "effect";
-
-/** Reads the closest subject/course context that renders material cards. */
-export function readCurriculumCardListContext(
-  route: PublicCurriculumRoute,
-  routes: readonly PublicCurriculumRoute[]
-): PublicCurriculumRoute | undefined {
-  if (route.level === "subject" || route.level === "course") {
-    return route;
-  }
-
-  if (!route.parentPath) {
-    return;
-  }
-
-  const parent = readCurriculumRouteByPublicPath(
-    routes,
-    route.locale,
-    route.parentPath
-  );
-
-  if (!parent) {
-    return;
-  }
-
-  return readCurriculumCardListContext(parent, routes);
-}
 
 /** Converts subject/course mappings into the established collapsible card model. */
 export function readCurriculumMaterialCards({
@@ -178,10 +149,11 @@ function readMaterialLessonItems(
   }
 
   return contentRoutes
-    .filter(isMaterialLessonRoute)
     .filter(
       (candidate) =>
-        candidate.locale === locale && candidate.parentPath === route.publicPath
+        isMaterialLessonRoute(candidate) &&
+        candidate.locale === locale &&
+        candidate.parentPath === route.publicPath
     )
     .slice()
     .sort(comparePublicRouteOrder)

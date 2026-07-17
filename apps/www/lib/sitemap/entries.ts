@@ -4,236 +4,136 @@ import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
-import { getRuntimeContentRoute } from "@/lib/content/runtime/routes";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 import {
   baseRoutes,
   getSitemapPageDescriptor,
-  readSitemapPageDescriptors,
-  readSitemapRoutes,
+  readSitemapRoutePage,
 } from "@/lib/sitemap/routes";
 
-type Href = Parameters<typeof getPathname>[number]["href"];
-type SitemapErrorContext = Readonly<{
-  content_path?: string;
-  locale?: Locale;
-  route?: string;
-  source: string;
-}>;
-type SitemapErrorReporter = (
-  error: unknown,
-  context: SitemapErrorContext
-) => Promise<void>;
 type SitemapEntry = MetadataRoute.Sitemap[number];
 type SitemapChangeFrequency = NonNullable<SitemapEntry["changeFrequency"]>;
 
 /** Optional settings shared by the Next route and standalone indexing scripts. */
 interface SitemapEntryOptions {
-  domain?: string;
-  locales?: readonly Locale[];
-  pageId?: string;
-  reportError?: SitemapErrorReporter;
+  lastModified?: number;
+  locales: readonly Locale[];
+}
+
+interface SitemapPageEntryOptions {
+  pageId: string;
 }
 
 const host = `https://${MAIN_DOMAIN}`;
 
-const MONTHS_IN_FALLBACK_PERIOD = 6;
 const MONTHS_IN_CONTENT_FALLBACK = 3;
 
 /**
  * Expands one route into localized sitemap entries with alternate language
  * URLs, last-modified metadata, change frequency, and priority.
  */
-export const getEntries = Effect.fn("www.sitemap.entries")(function* (
-  href: Href,
-  options: SitemapEntryOptions = {}
-) {
-  const routeString = typeof href === "string" ? href : href.pathname;
-  const locales = options.locales ?? routing.locales;
+function getEntries(href: string, options: SitemapEntryOptions) {
+  const routeString = href;
+  const locales = options.locales;
   const { changeFrequency, priority } = getContentSeoSettings(routeString);
 
-  return yield* Effect.forEach(
-    locales,
-    (locale) =>
-      Effect.gen(function* () {
-        const lastModified = yield* getRouteLastModified(
-          routeString,
-          locale,
-          options
-        );
+  return locales.map((locale) => ({
+    url: getUrl(href, locale),
+    alternates: {
+      languages: getAlternateLanguages(href, locales),
+    },
+    changeFrequency,
+    lastModified: getRouteLastModified(routeString, options.lastModified),
+    priority,
+  }));
+}
 
-        return {
-          url: getUrl(href, locale, options.domain),
-          alternates: {
-            languages: getAlternateLanguages(href, locales, options.domain),
-          },
-          changeFrequency,
-          lastModified,
-          priority,
-        };
-      }),
-    {
-      concurrency: "unbounded",
-    }
-  );
-});
-
-/** Resolves the sitemap last-modified value for one route and locale. */
-const getRouteLastModified = Effect.fn("www.sitemap.routeLastModified")(
-  function* (
-    routeString: string,
-    locale: Locale,
-    options: SitemapEntryOptions
+/** Resolves the best already-known sitemap modification date. */
+function getRouteLastModified(routeString: string, lastModified?: number) {
+  if (
+    lastModified !== undefined &&
+    Number.isFinite(lastModified) &&
+    lastModified > 0
   ) {
-    if (isContentRoute(routeString)) {
-      const contentPath = routeString.startsWith("/")
-        ? routeString.slice(1)
-        : routeString;
-
-      return yield* getContentLastModified(contentPath, options, locale).pipe(
-        Effect.catchAll((error) =>
-          reportError(error, options, {
-            route: routeString,
-            source: "sitemap-route-entry",
-          }).pipe(Effect.as(getFallbackDate(MONTHS_IN_CONTENT_FALLBACK)))
-        )
-      );
-    }
-
-    if (
-      routeString === "/" ||
-      routeString.startsWith("/quran") ||
-      routeString.startsWith("/contributor")
-    ) {
-      return new Date("2025-01-01");
-    }
-
-    return new Date();
+    return new Date(lastModified);
   }
-);
+
+  if (isContentRoute(routeString)) {
+    return getFallbackDate(MONTHS_IN_CONTENT_FALLBACK);
+  }
+
+  if (
+    routeString === "/" ||
+    routeString.startsWith("/quran") ||
+    routeString.startsWith("/contributor")
+  ) {
+    return new Date("2025-01-01");
+  }
+
+  return new Date();
+}
 
 /** Builds hreflang alternates only for locales included in the current page. */
-function getAlternateLanguages(
-  href: Href,
-  locales: readonly Locale[],
-  domain: string | undefined
-) {
+function getAlternateLanguages(href: string, locales: readonly Locale[]) {
   const languages: Partial<{ [Key in Locale | "x-default"]: string }> = {};
 
   for (const locale of locales) {
-    languages[locale] = getUrl(href, locale, domain);
+    languages[locale] = getUrl(href, locale);
   }
 
   if (locales.includes(routing.defaultLocale)) {
-    languages["x-default"] = getUrl(href, routing.defaultLocale, domain);
+    languages["x-default"] = getUrl(href, routing.defaultLocale);
   }
 
   return languages;
 }
 
 /** Converts an app href and locale into an absolute canonical URL. */
-export function getUrl(href: Href, locale: Locale, domain?: string): string {
-  const route = typeof href === "string" ? href : href.pathname;
-  const mappedPathname = getLocalizedMappedRoutePathname({ locale, route });
-  const domainHost = domain ? `https://${domain}` : host;
+function getUrl(href: string, locale: Locale): string {
+  const mappedPathname = getLocalizedMappedRoutePathname({
+    locale,
+    route: href,
+  });
 
   if (mappedPathname) {
-    return `${domainHost}/${locale}${mappedPathname}`;
+    return `${host}/${locale}${mappedPathname}`;
   }
 
-  return domainHost + getPathname({ locale, href, forcePrefix: true });
+  return host + getPathname({ locale, href, forcePrefix: true });
 }
 
-/** Generates sitemap entries ready for Next metadata output or URL submission. */
-export const getSitemapEntries = Effect.fn("www.sitemap.entries.all")(
-  function* (options: SitemapEntryOptions = {}) {
-    if (options.pageId !== undefined) {
-      return yield* getSitemapPageEntries(options);
+/** Generates entries for one bounded sitemap page. */
+export const getSitemapEntries = Effect.fn("www.sitemap.entries.page")(
+  function* (options: SitemapPageEntryOptions) {
+    const pageId = options.pageId;
+    const page = yield* readSitemapRoutePage(pageId);
+    const locales = getSitemapEntryLocales(pageId);
+    const entries: SitemapEntry[] = [];
+
+    for (const route of page.routes) {
+      entries.push(
+        ...getEntries(route.path, {
+          ...options,
+          lastModified: route.lastModified,
+          locales,
+        })
+      );
     }
 
-    const descriptors = yield* readSitemapPageDescriptors();
-    const pageEntries = yield* Effect.forEach(
-      descriptors,
-      (descriptor) =>
-        getSitemapPageEntries({
-          ...options,
-          pageId: descriptor.id,
-        }),
-      {
-        concurrency: "unbounded",
-      }
-    );
-
-    return pageEntries.flat();
+    return entries;
   }
 );
 
-/** Generates entries for one bounded sitemap page. */
-const getSitemapPageEntries = Effect.fn("www.sitemap.entries.page")(function* (
-  options: SitemapEntryOptions
-) {
-  const pageId = options.pageId;
-  const routes = yield* readSitemapRoutes(pageId);
-  const locales = getSitemapEntryLocales(pageId);
-  const routeArrays = yield* Effect.forEach(
-    routes,
-    (route) =>
-      getEntries(route, {
-        ...options,
-        locales,
-      }),
-    {
-      concurrency: "unbounded",
-    }
-  );
-
-  return routeArrays.flat();
-});
-
 /** Selects all locales for base pages and one locale for content pages. */
-function getSitemapEntryLocales(pageId: string | undefined) {
+function getSitemapEntryLocales(pageId: string) {
   const descriptor = getSitemapPageDescriptor(pageId);
 
-  if (
-    descriptor &&
-    (descriptor.kind === "content" || descriptor.kind === "public")
-  ) {
+  if (descriptor && "kind" in descriptor) {
     return [descriptor.locale];
   }
 
   return routing.locales;
 }
-
-/**
- * Resolves the last-modified date for content from the Convex route catalog.
- * Falls back to a stable date when metadata is missing or invalid.
- */
-const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
-  function* (
-    contentPath: string,
-    options: SitemapEntryOptions,
-    locale: Locale
-  ) {
-    const route = yield* getRuntimeContentRoute({
-      locale,
-      route: contentPath,
-    }).pipe(
-      Effect.catchAll((error) =>
-        reportError(error, options, {
-          content_path: contentPath,
-          locale,
-          source: "sitemap-content-last-modified",
-        }).pipe(Effect.as(null))
-      )
-    );
-
-    if (route?.date && route.date > 0) {
-      return new Date(route.date);
-    }
-
-    return getFallbackDate(MONTHS_IN_FALLBACK_PERIOD);
-  }
-);
 
 /** Builds a stable relative recovery date for sitemap rows without source dates. */
 function getFallbackDate(monthsAgo: number) {
@@ -279,22 +179,4 @@ function isContentRoute(route: string) {
   return (
     route !== "/" && !baseRoutes.includes(route) && !route.startsWith("/quran")
   );
-}
-
-/** Sends a non-fatal sitemap generation error to the optional reporter. */
-function reportError(
-  error: unknown,
-  options: SitemapEntryOptions,
-  context: SitemapErrorContext
-) {
-  const reporter = options.reportError;
-
-  if (!reporter) {
-    return Effect.void;
-  }
-
-  return Effect.tryPromise({
-    try: () => reporter(error, context),
-    catch: (cause) => cause,
-  });
 }

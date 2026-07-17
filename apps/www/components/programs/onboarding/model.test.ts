@@ -4,12 +4,8 @@ import {
   getFocusOptionForKey,
   getFocusOptionsForRole,
   getInitialFocusKey,
-  getProgramsForInterests,
-  getRoleOptionForKey,
-  getSelectableInterests,
   getSelectableRoleOptions,
   hasOnboardingChoices,
-  parseInterests,
   parseOnboardingRole,
   resolveFocusSelection,
 } from "@/components/programs/onboarding/model";
@@ -49,40 +45,6 @@ describe("components/programs/onboarding/model", () => {
     expect(parseOnboardingRole("teacher")).toBe("teacher");
     expect(parseOnboardingRole("administrator")).toBeNull();
     expect(parseOnboardingRole("unknown")).toBeNull();
-  });
-
-  it("matches selected interests to selectable programs", () => {
-    expect(
-      getProgramsForInterests(programs, ["school-curriculum"]).map(
-        (program) => program.key
-      )
-    ).toEqual(["merdeka"]);
-    expect(
-      getProgramsForInterests(programs, ["exam-prep", "assessment-prep"]).map(
-        (program) => program.key
-      )
-    ).toEqual(["snbt"]);
-  });
-
-  it("does not show interests that have no usable program", () => {
-    expect(
-      getProgramsForInterests(programs, ["assessment-prep"]).map(
-        (program) => program.key
-      )
-    ).toEqual(["snbt"]);
-    expect(getProgramsForInterests(programs, [])).toEqual([]);
-    expect(
-      getSelectableInterests(programs, [
-        "school-curriculum",
-        "assessment-prep",
-        "exam-prep",
-      ])
-    ).toEqual(["school-curriculum", "assessment-prep", "exam-prep"]);
-  });
-
-  it("keeps interest parsing deterministic", () => {
-    expect(parseInterests(["exam-prep"])).toEqual(["exam-prep"]);
-    expect(parseInterests(["unknown"])).toEqual([]);
   });
 
   it("resolves role-specific focus cards to persisted profile selections", () => {
@@ -140,11 +102,6 @@ describe("components/programs/onboarding/model", () => {
       "teacher",
       "parent",
     ]);
-    expect(getRoleOptionForKey(selectableRoles, null)).toBeNull();
-    expect(getRoleOptionForKey(selectableRoles, "student")).toMatchObject({
-      key: "student",
-    });
-    expect(getRoleOptionForKey([], "student")).toBeNull();
     expect(
       getInitialFocusKey({
         activeProfile: {

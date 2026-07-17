@@ -1,12 +1,11 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
-import { BASE_URL, ENGLISH_LANGUAGE_NAMES } from "@/lib/llms/constants";
+import { ENGLISH_LANGUAGE_NAMES } from "@/lib/llms/constants";
 import {
+  AGENT_MARKDOWN_DIRECTIVE,
   buildHeader,
   formatRouteTitle,
-  formatSegmentTitle,
   getLocaleLabel,
-  getTranslation,
   stripLlmsRouteExtension,
 } from "@/lib/llms/format";
 
@@ -22,7 +21,7 @@ describe("llms formatting helpers", () => {
     ).toStrictEqual([
       "# Nakafa Learning Content",
       "",
-      `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt) for the site index. Markdown versions are available by appending \`.md\` to content URLs or sending \`Accept: text/markdown\`.`,
+      AGENT_MARKDOWN_DIRECTIVE,
       "",
       "URL: https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
       "Source: packages/contents/articles/politics/dynastic-politics-asian-values/en.mdx",
@@ -50,11 +49,10 @@ describe("llms formatting helpers", () => {
     expect(getLocaleLabel("zz")).toBe("zz");
 
     displayName.mockRestore();
-    expect(getTranslation({ en: "English", id: "" }, "id")).toBe("English");
     expect(formatRouteTitle("/")).toBe("Home");
     expect(formatRouteTitle("")).toBe("");
     expect(formatRouteTitle("/curriculum/merdeka")).toBe("Merdeka");
-    expect(formatSegmentTitle("multi--dash-title")).toBe("Multi Dash Title");
+    expect(formatRouteTitle("/multi--dash-title")).toBe("Multi Dash Title");
     expect(stripLlmsRouteExtension("quran/1.md")).toBe("quran/1");
     expect(stripLlmsRouteExtension("llms/en/llms.txt")).toBe("llms/en/llms");
   });

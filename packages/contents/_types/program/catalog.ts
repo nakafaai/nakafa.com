@@ -6,6 +6,8 @@ import {
 } from "@repo/contents/_types/program/schema";
 import { Schema } from "effect";
 
+type SchemaEncoded<T extends Schema.Schema.Any> = Schema.Schema.Encoded<T>;
+
 const SOURCE_RETRIEVED_AT = ProgramDateOnlySchema.make("2026-06-14");
 const SOURCE_RETRIEVED_AT_2026_06_16 = ProgramDateOnlySchema.make("2026-06-16");
 const PROGRAM_2025_START = ProgramDateOnlySchema.make("2025-01-01");
@@ -27,7 +29,9 @@ export const LEARNING_PROGRAM_KEYS = {
   unitedStates: LearningProgramKeySchema.make("united-states"),
 } as const;
 
-const learningProgramCatalogInput = [
+const learningProgramCatalogInput: readonly SchemaEncoded<
+  typeof LearningProgramSchema
+>[] = [
   {
     defaultCoverageStatus: "partial",
     displayOrder: 10,
@@ -346,15 +350,6 @@ const learningProgramCatalogInput = [
 export const LEARNING_PROGRAM_CATALOG = Schema.decodeUnknownSync(
   Schema.Array(LearningProgramSchema)
 )(learningProgramCatalogInput);
-
-/** Returns source-registry programs that may be presented in discovery surfaces. */
-export function listDiscoverableLearningPrograms(
-  programs: readonly LearningProgram[] = LEARNING_PROGRAM_CATALOG
-) {
-  return programs.filter(
-    (program) => program.defaultCoverageStatus !== "hidden"
-  );
-}
 
 /** Finds one catalog program by its stable program key. */
 export function findLearningProgramByKey(

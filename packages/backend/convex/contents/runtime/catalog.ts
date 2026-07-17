@@ -5,8 +5,8 @@ import type {
   GetPublicRouteByPathArgs,
   ListPublicRoutesByMaterialArgs,
   ListPublicRoutesByParentArgs,
-  ListSitemapPublicRoutesArgs,
 } from "@repo/backend/convex/contents/runtime/routes";
+import { throwRuntimeIntegrityError } from "@repo/backend/convex/contents/runtime/shared";
 import type {
   GetContentRouteArgs,
   GetContentRouteArtifactPageArgs,
@@ -127,12 +127,37 @@ export async function getContentRouteArtifactPageImpl(
   ctx: QueryCtx,
   args: GetContentRouteArtifactPageArgs
 ) {
+  if (!Number.isSafeInteger(args.page) || args.page < 0) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_ARTIFACT_PAGE_INVALID",
+      message: "Content route artifact page must be a non-negative integer.",
+    });
+  }
+
+  const count = await ctx.db
+    .query("contentRouteCounts")
+    .withIndex("by_locale_and_section", (q) =>
+      q.eq("locale", args.locale).eq("section", args.section)
+    )
+    .unique();
+
+  if (!count) {
+    return null;
+  }
+
+  if (!Number.isSafeInteger(count.syncedAt) || count.syncedAt <= 0) {
+    throwRuntimeIntegrityError(
+      `Committed content route generation for ${args.locale}/${args.section} is invalid.`
+    );
+  }
+
   const page = await ctx.db
     .query("contentRoutePages")
-    .withIndex("by_locale_and_section_and_page", (q) =>
+    .withIndex("by_locale_and_section_and_syncedAt_and_page", (q) =>
       q
         .eq("locale", args.locale)
         .eq("section", args.section)
+        .eq("syncedAt", count.syncedAt)
         .eq("page", args.page)
     )
     .unique();
@@ -255,23 +280,6 @@ export async function listPublicRoutesByMaterialImpl(
     .take(args.limit);
 
   return routes.map(toRuntimePublicRoute);
-}
-
-/** Reads one bounded sitemap-eligible public route page. */
-export async function listSitemapPublicRoutesImpl(
-  ctx: QueryCtx,
-  args: ListSitemapPublicRoutesArgs
-) {
-  assertPublicRoutePageLimit(args.limit);
-
-  const page = await ctx.db
-    .query("publicRoutes")
-    .withIndex("by_locale_and_sitemap_and_publicPath", (q) =>
-      q.eq("locale", args.locale).eq("sitemap", true)
-    )
-    .paginate({ cursor: args.cursor, numItems: args.limit });
-
-  return toRuntimePublicRoutePage(page);
 }
 
 /** Rejects route-catalog scans that exceed the public runtime page bound. */

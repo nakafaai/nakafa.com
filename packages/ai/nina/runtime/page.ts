@@ -54,7 +54,7 @@ function normalizeContentRefUrl(url: string) {
 }
 
 /** Checks whether retained chat context already has current-page evidence. */
-export function hasFetchedCurrentPageContent({
+function hasFetchedCurrentPageContent({
   messages,
   url,
 }: {

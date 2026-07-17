@@ -23,7 +23,7 @@ interface OptimisticForumPostInput {
 }
 
 /** Derives the next temporary sequence from the loaded transcript window. */
-export function getOptimisticForumPostSequence({
+function getOptimisticForumPostSequence({
   forum,
   posts,
 }: {

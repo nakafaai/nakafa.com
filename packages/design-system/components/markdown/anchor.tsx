@@ -61,7 +61,7 @@ export function Anchor({
   // External link with source preview
   return (
     <Source href={href}>
-      <SourceTrigger showFavicon />
+      <SourceTrigger label={children} showFavicon />
       <SourceContent title={href} />
     </Source>
   );

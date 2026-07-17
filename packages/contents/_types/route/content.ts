@@ -7,7 +7,6 @@ import {
   comparePublicRouteOrder,
   decodeContentRoute,
   decodePublicPath,
-  lastPathSegment,
   lookupDomainSlug,
   lookupNamespaceSegment,
   makePath,
@@ -46,28 +45,6 @@ export const listPublicContentRoutes = Effect.fn("contents.route.listContent")(
     return yield* uniqueRoutes(routes);
   }
 );
-
-/**
- * Finds only canonical material routes for one localized public path.
- *
- * Context routes are intentionally excluded so callers that need source-backed
- * markdown cannot treat curriculum navigation pages as duplicate material bodies.
- */
-export const findPublicContentRouteByPath = Effect.fn(
-  "contents.route.findContentByPath"
-)(function* (path: string, locale: Locale, inputs: RouteInputs = {}) {
-  const publicPath = yield* decodePublicPath(normalizePublicPath(path));
-  const routes = yield* listPublicContentRoutes(inputs);
-  const exactRoute = routes.find(
-    (route) => route.locale === locale && route.publicPath === publicPath
-  );
-
-  if (exactRoute) {
-    return Option.some(exactRoute);
-  }
-
-  return Option.none();
-});
 
 /** Finds a canonical public material route by source asset path. */
 export const findPublicContentRouteBySourcePath = Effect.fn(
@@ -131,7 +108,7 @@ export function isMaterialLessonRoute(
 }
 
 /** Checks whether one content row is an internal material topic grouping row. */
-export function isMaterialTopicRoute(
+function isMaterialTopicRoute(
   route: PublicContentRoute
 ): route is MaterialTopicRoute {
   return route.kind === "subject-topic";
@@ -142,27 +119,6 @@ export function toLocalizedContentHref(
   route: Pick<PublicContentRoute, "locale" | "publicPath">
 ) {
   return `/${route.locale}/${route.publicPath}`;
-}
-
-/** Reads the localized content path without the namespace segment. */
-export function readContentPathSegments(
-  route: Pick<PublicContentRoute, "publicPath">
-) {
-  return route.publicPath.split("/").slice(1);
-}
-
-/** Reads the localized content path without the namespace as one route string. */
-export function readContentPathWithoutNamespace(
-  route: Pick<PublicContentRoute, "publicPath">
-) {
-  return readContentPathSegments(route).join("/");
-}
-
-/** Reads the local route slug of a canonical content route. */
-export function readContentRouteSlug(
-  route: Pick<PublicContentRoute, "publicPath">
-) {
-  return lastPathSegment(route.publicPath);
 }
 
 /** Finds the topic row that owns one canonical lesson body row. */
@@ -203,9 +159,9 @@ export function readMaterialPagination(
   }
 
   const siblings = routes
-    .filter(isMaterialLessonRoute)
     .filter(
       (candidate) =>
+        isMaterialLessonRoute(candidate) &&
         candidate.locale === route.locale &&
         candidate.parentPath === route.parentPath
     )

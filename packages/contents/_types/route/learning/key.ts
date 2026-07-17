@@ -14,6 +14,10 @@ export function readRouteLocaleIdentityKey(route: PublicRoute, locale: Locale) {
 
 /** Builds the source identity that survives localized public slug changes. */
 function readRouteIdentityKey(route: PublicRoute) {
+  if (route.kind === "article-category") {
+    return ["article-category", route.category].join(":");
+  }
+
   if (route.kind === "curriculum-context") {
     return ["curriculum", route.programKey, route.nodeKey].join(":");
   }

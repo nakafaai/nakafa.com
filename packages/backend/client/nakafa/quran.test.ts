@@ -1,6 +1,5 @@
 import {
   getSurahName,
-  parseQuranSurahRoute,
   readNakafaQuranReference,
   readQuranMarkdown,
 } from "@repo/backend/client/nakafa/quran";
@@ -8,7 +7,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { InvalidLearningGraphRouteError } from "@repo/contents/_types/graph/schema";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -28,6 +26,7 @@ const QuranReferenceArgsSchema = Schema.Struct({
   surah: Schema.Number,
   toVerse: Schema.optional(Schema.Number),
 });
+type QuranReferenceArgs = Schema.Schema.Type<typeof QuranReferenceArgsSchema>;
 const QuranSurahArgsSchema = Schema.Struct({
   surah: Schema.Number,
 });
@@ -55,6 +54,20 @@ describe("Quran Nakafa reader", () => {
       "Tafsir pendek."
     );
     expect(Option.getOrUndefined(reference)?.name).toBe("Al-Fatihah");
+  });
+
+  it("does not fall back to tafsir from another locale", async () => {
+    const reference = await Effect.runPromise(
+      readNakafaQuranReference(convexUrl, {
+        from_verse: 1,
+        include_tafsir: true,
+        locale: "en",
+        surah: 1,
+        to_verse: 1,
+      })
+    );
+
+    expect(Option.getOrUndefined(reference)?.verses[0]?.tafsir).toBeUndefined();
   });
 
   it("maps invalid references to input errors and missing rows to none", async () => {
@@ -94,8 +107,7 @@ describe("Quran Nakafa reader", () => {
     );
   });
 
-  it("parses canonical Quran surah routes and rejects malformed routes", async () => {
-    const valid = parseQuranSurahRoute("id", "quran/1");
+  it("returns none for missing surahs and localizes known names", async () => {
     const missing = await Effect.runPromise(
       readQuranMarkdown(
         convexUrl,
@@ -103,17 +115,6 @@ describe("Quran Nakafa reader", () => {
       )
     );
 
-    expect(Option.getOrUndefined(valid)).toBe(1);
-    expect(Option.isNone(parseQuranSurahRoute("id", "quran/01"))).toBe(true);
-    expect(Option.isNone(parseQuranSurahRoute("id", "quran/1/extra"))).toBe(
-      true
-    );
-    expect(Option.isNone(parseQuranSurahRoute("id", "quran/not-number"))).toBe(
-      true
-    );
-    expect(() =>
-      readNakafaContentRefFixture("en", "quran/01", "quran")
-    ).toThrow(InvalidLearningGraphRouteError);
     expect(Option.isNone(missing)).toBe(true);
     expect(
       getSurahName({
@@ -164,15 +165,26 @@ function readQuranReference(args: unknown) {
     name: input.locale === "id" ? "Al-Fatihah" : "Al-Faatiha",
     revelation: input.locale === "id" ? "Makkah" : "Mecca",
     translation: input.locale === "id" ? "Pembukaan" : "The Opening",
-    verses: [
-      {
-        arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-        number: input.fromVerse,
-        ...(input.includeTafsir ? { tafsir: "Tafsir pendek." } : {}),
-        translation: "Dengan nama Allah.",
-        transliteration: "Bismillahirrahmanirrahim",
-      },
-    ],
+    verses: [quranReferenceVerse(input)],
+  };
+}
+
+/** Builds one locale-aware Quran reference verse fixture. */
+function quranReferenceVerse(input: QuranReferenceArgs) {
+  const verse = {
+    arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+    number: input.fromVerse,
+    translation: "Dengan nama Allah.",
+    transliteration: "Bismillahirrahmanirrahim",
+  };
+
+  if (!input.includeTafsir || input.locale !== "id") {
+    return verse;
+  }
+
+  return {
+    ...verse,
+    tafsir: "Tafsir pendek.",
   };
 }
 

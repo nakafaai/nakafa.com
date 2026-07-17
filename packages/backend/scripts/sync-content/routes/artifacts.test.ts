@@ -18,18 +18,28 @@ interface RoutePage {
   page: ReturnType<typeof contentRoute>[];
 }
 
+interface RouteCount {
+  count: number;
+  locale: (typeof SUPPORTED_CONTENT_LOCALES)[number];
+  section: NakafaSection;
+  syncedAt: number;
+}
+
 /** Registers Convex call mocks for route artifact sync scenarios. */
 const loadRoutesScript = async ({
+  committedCounts = [],
   deleteBatches = [0],
   pagesBySection = {},
 }: {
+  committedCounts?: RouteCount[];
   deleteBatches?: number[];
   pagesBySection?: Partial<Record<NakafaSection, RoutePage[]>>;
 } = {}) => {
   const deleteCalls: unknown[] = [];
+  const operationCalls: unknown[] = [];
   const mutationCalls: unknown[] = [];
   const queryCalls: unknown[] = [];
-  const sectionPageIndexes = new Map<NakafaSection, number>();
+  const sectionPageIndexes = new Map<string, number>();
 
   vi.doMock("@repo/backend/scripts/sync-content/convex/client", () => ({
     callConvexMutation: (
@@ -37,6 +47,8 @@ const loadRoutesScript = async ({
       _functionRef: unknown,
       args: unknown
     ) => {
+      operationCalls.push(args);
+
       if (isDeleteStalePageArgs(args)) {
         deleteCalls.push(args);
         const deleted = deleteBatches.shift() ?? 0;
@@ -49,11 +61,19 @@ const loadRoutesScript = async ({
     callConvexQuery: (
       _config: ConvexConfig,
       _functionRef: unknown,
-      args: { section: NakafaSection }
+      args: { locale: RouteCount["locale"]; section?: NakafaSection }
     ) => {
       queryCalls.push(args);
-      const index = sectionPageIndexes.get(args.section) ?? 0;
-      sectionPageIndexes.set(args.section, index + 1);
+
+      if (!args.section) {
+        return Effect.succeed(
+          committedCounts.filter((count) => count.locale === args.locale)
+        );
+      }
+
+      const key = `${args.locale}:${args.section}`;
+      const index = sectionPageIndexes.get(key) ?? 0;
+      sectionPageIndexes.set(key, index + 1);
 
       return Effect.succeed(
         pagesBySection[args.section]?.[index] ?? emptyRoutePage()
@@ -65,7 +85,7 @@ const loadRoutesScript = async ({
     "@repo/backend/scripts/sync-content/routes/artifacts"
   );
 
-  return { deleteCalls, mutationCalls, queryCalls, routes };
+  return { deleteCalls, mutationCalls, operationCalls, queryCalls, routes };
 };
 
 afterEach(() => {
@@ -74,8 +94,8 @@ afterEach(() => {
 });
 
 describe("sync-content routes", () => {
-  it("materializes counts after paginating route pages and deleting stale pages", async () => {
-    const { deleteCalls, mutationCalls, queryCalls, routes } =
+  it("commits counts after pages and before deleting old generations", async () => {
+    const { deleteCalls, mutationCalls, operationCalls, queryCalls, routes } =
       await loadRoutesScript({
         deleteBatches: [2, 0],
         pagesBySection: {
@@ -96,12 +116,17 @@ describe("sync-content routes", () => {
       });
 
     const result = await Effect.runPromise(
-      routes.syncContentRouteArtifactPages(config, { locale: "id" })
+      routes.syncContentRouteArtifactPages(config, [
+        { locale: "id", section: "articles" },
+      ])
     );
 
     const countCalls = mutationCalls.filter(isCountMutationCall);
     const articlePageCalls = mutationCalls.filter(isPageMutationCall);
     const articleCount = countCalls.find((call) => call.section === "articles");
+    const articleOperations = operationCalls.filter(
+      (call) => getSection(call) === "articles"
+    );
 
     expect(result).toEqual({ created: 2, unchanged: 0, updated: 0 });
     expect(queryCalls).toEqual(
@@ -114,19 +139,28 @@ describe("sync-content routes", () => {
     expect(articleCount).toEqual(
       expect.objectContaining({ count: 3, locale: "id", section: "articles" })
     );
+    expect(articleOperations).toEqual([
+      expect.objectContaining({ page: 0, routes: expect.any(Array) }),
+      expect.objectContaining({ page: 1, routes: expect.any(Array) }),
+      expect.objectContaining({ count: 3 }),
+      expect.objectContaining({ committedSyncedAt: expect.any(Number) }),
+      expect.objectContaining({ committedSyncedAt: expect.any(Number) }),
+    ]);
     expect(deleteCalls.filter(isDeleteStalePageArgs)).toEqual([
-      expect.objectContaining({ firstStalePage: 2, section: "articles" }),
-      expect.objectContaining({ firstStalePage: 2, section: "articles" }),
-      expect.objectContaining({ firstStalePage: 0, section: "material" }),
-      expect.objectContaining({ firstStalePage: 0, section: "tryout" }),
-      expect.objectContaining({ firstStalePage: 0, section: "quran" }),
+      expect.objectContaining({ section: "articles" }),
+      expect.objectContaining({ section: "articles" }),
     ]);
   });
 
   it("rebuilds count rows for every locale when no locale filter is provided", async () => {
     const { mutationCalls, routes } = await loadRoutesScript();
 
-    await Effect.runPromise(routes.syncContentRouteArtifactPages(config, {}));
+    await Effect.runPromise(
+      routes.syncContentRouteArtifactPages(
+        config,
+        routes.createContentRouteArtifactTargets()
+      )
+    );
 
     const countCalls = mutationCalls.filter(isCountMutationCall);
 
@@ -137,6 +171,31 @@ describe("sync-content routes", () => {
     expect(new Set(countCalls.map((call) => call.section))).toEqual(
       new Set(["articles", "material", "tryout", "quran"])
     );
+  });
+
+  it("uses a generation newer than the committed section pointer", async () => {
+    vi.spyOn(Date, "now").mockReturnValue(100);
+    const { mutationCalls, routes } = await loadRoutesScript({
+      committedCounts: [
+        { count: 1, locale: "id", section: "articles", syncedAt: 500 },
+        { count: 4, locale: "id", section: "material", syncedAt: 900 },
+      ],
+    });
+
+    await Effect.runPromise(
+      routes.syncContentRouteArtifactPages(config, [
+        { locale: "id", section: "articles" },
+      ])
+    );
+
+    expect(mutationCalls).toEqual([
+      expect.objectContaining({
+        count: 0,
+        locale: "id",
+        section: "articles",
+        syncedAt: 501,
+      }),
+    ]);
   });
 });
 
@@ -161,8 +220,19 @@ function emptyRoutePage(): RoutePage {
 /** Checks whether one mocked mutation call deletes stale artifact pages. */
 function isDeleteStalePageArgs(
   args: unknown
-): args is { firstStalePage: number; section: NakafaSection } {
-  return typeof args === "object" && args !== null && "firstStalePage" in args;
+): args is { committedSyncedAt: number; section: NakafaSection } {
+  return (
+    typeof args === "object" && args !== null && "committedSyncedAt" in args
+  );
+}
+
+/** Reads a section discriminator from one recorded Convex mutation call. */
+function getSection(args: unknown) {
+  if (typeof args !== "object" || args === null || !("section" in args)) {
+    return;
+  }
+
+  return args.section;
 }
 
 /** Checks whether one mocked mutation call syncs a section route count. */

@@ -155,7 +155,5 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
 /** Reports sitemap coverage processed before Google API eligibility checks. */
 function logManifestSummary(summary: SiteIndexManifestSummary) {
   logger.stats("Google sitemap batches processed", summary.batchCount);
-  logger.stats("Google sitemap entries inspected", summary.totalEntryCount);
   logger.stats("Google canonical URLs inspected", summary.canonicalUrlCount);
-  logger.stats("Google duplicate URLs skipped", summary.duplicateCount);
 }

@@ -10,17 +10,19 @@ import {
   type Locale,
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { quranTafsirValidator } from "@repo/backend/convex/quran/schema";
+import { fieldsForEveryLocale, locales } from "@repo/utilities/locales";
 import { ConvexError, v } from "convex/values";
 
-const MAX_QURAN_SURAH_ROWS = 114;
+const QURAN_SURAH_COUNT = 114;
+// Keep one corpus-sized window so stale surahs can be read and deleted.
+const MAX_QURAN_SURAH_ROWS = QURAN_SURAH_COUNT * 2;
 const MAX_QURAN_VERSES_PER_SURAH = 300;
-const MAX_QURAN_ROUTE_ROWS = 300;
+// Keep one locale-sized window so stale routes can be read and deleted.
+const MAX_QURAN_ROUTE_ROWS = QURAN_SURAH_COUNT * (locales.length + 1);
 const MAX_QURAN_SEARCH_ROWS_PER_LOCALE = 200;
 
-const localizedTextValidator = v.object({
-  en: v.string(),
-  id: v.string(),
-});
+const localizedTextValidator = v.object(fieldsForEveryLocale(v.string()));
 
 const quranTextValidator = v.object({
   arab: v.string(),
@@ -49,8 +51,7 @@ const syncedQuranNameValidator = v.object({
 
 const syncedQuranRevelationValidator = v.object({
   arab: v.string(),
-  en: v.string(),
-  id: v.string(),
+  ...fieldsForEveryLocale(v.string()),
 });
 
 const syncedQuranRouteValidator = v.object({
@@ -83,11 +84,7 @@ const syncedQuranVerseValidator = v.object({
   sajdaObligatory: v.boolean(),
   sajdaRecommended: v.boolean(),
   surahNumber: v.number(),
-  tafsir: v.object({
-    id: v.object({
-      short: v.string(),
-    }),
-  }),
+  tafsir: quranTafsirValidator,
   text: quranTextValidator,
   translation: localizedTextValidator,
   verseNumber: v.number(),

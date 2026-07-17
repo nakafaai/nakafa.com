@@ -1,217 +1,64 @@
 // @vitest-environment node
-import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { resolveLlmsProxyRoute } from "@/lib/llms/routes";
 
-const runtimeMocks = vi.hoisted(() => ({
-  getRuntimeContentRoute: vi.fn(),
-  getRuntimeContentRouteParentPage: vi.fn(),
-}));
-
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentRoute: runtimeMocks.getRuntimeContentRoute,
-  getRuntimeContentRouteParentPage:
-    runtimeMocks.getRuntimeContentRouteParentPage,
-}));
-
 describe("llms proxy route resolver", () => {
-  beforeEach(() => {
-    runtimeMocks.getRuntimeContentRoute.mockReset();
-    runtimeMocks.getRuntimeContentRouteParentPage.mockReset();
-    runtimeMocks.getRuntimeContentRoute.mockReturnValue(
-      Effect.succeed({ route: "fixture" })
-    );
-    runtimeMocks.getRuntimeContentRouteParentPage.mockReturnValue(
-      Effect.succeed({
-        continueCursor: null,
-        isDone: true,
-        page: [{ route: "fixture" }],
+  it("delegates ordinary localized HTML without reading content catalogs", () => {
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: null,
+        pathname: "/en/subjects/mathematics/integral",
       })
-    );
+    ).toEqual({ kind: "delegate" });
   });
 
-  it("rejects markdown taxonomy routes that cannot map to content rows", async () => {
-    await expect(
-      Effect.runPromise(
-        resolveLlmsProxyRoute({
-          acceptHeader: null,
-          method: "GET",
-          pathname: "/en/articles/not-a-category.md",
-        })
-      )
-    ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
-  });
-
-  it("delegates invalid non-Nakafa markdown-looking paths after typed route decode failure", async () => {
-    await expect(
-      Effect.runPromise(
-        resolveLlmsProxyRoute({
-          acceptHeader: null,
-          method: "GET",
-          pathname: "/en/Subjects.md",
-        })
-      )
-    ).resolves.toEqual({ kind: "delegate" });
-  });
-
-  it("rewrites exact public content routes when markdown is requested", async () => {
-    await expect(
-      Effect.runPromise(
-        resolveLlmsProxyRoute({
-          acceptHeader: "text/markdown, text/plain;q=0.8",
-          method: "GET",
-          pathname: "/en/subjects/mathematics/integral/area-of-a-flat-surface",
-        })
-      )
-    ).resolves.toEqual({
+  it("rewrites localized content negotiation to the Markdown handler", () => {
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: "text/markdown, text/plain;q=0.8",
+        pathname: "/en/subjects/mathematics/integral/area",
+      })
+    ).toEqual({
       kind: "rewrite-markdown",
       localizedRoute: {
         locale: "en",
         markdownExtension: "",
-        route: "/subjects/mathematics/integral/area-of-a-flat-surface",
+        route: "/subjects/mathematics/integral/area",
       },
     });
-    expect(runtimeMocks.getRuntimeContentRoute).toHaveBeenCalledWith({
-      locale: "en",
-      route: "subjects/mathematics/integral/area-of-a-flat-surface",
-    });
   });
 
-  it("rewrites source-backed app routes without runtime row probes", async () => {
-    const requests = [
-      "/en/terms-of-service",
-      "/en/search",
-      "/en/contributor.md",
-      "/en/articles.md",
-    ];
-
-    for (const pathname of requests) {
-      await expect(
-        Effect.runPromise(
-          resolveLlmsProxyRoute({
-            acceptHeader: pathname.endsWith(".md") ? null : "text/markdown",
-            method: "GET",
-            pathname,
-          })
-        )
-      ).resolves.toMatchObject({ kind: "rewrite-markdown" });
-    }
-
-    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+  it("rewrites explicit Markdown suffixes without catalog verification", () => {
     expect(
-      runtimeMocks.getRuntimeContentRouteParentPage
-    ).not.toHaveBeenCalled();
-  });
-
-  it("rejects curriculum context markdown without rewriting", async () => {
-    await expect(
-      Effect.runPromise(
-        resolveLlmsProxyRoute({
-          acceptHeader: null,
-          method: "GET",
-          pathname: "/en/curriculum/merdeka/class-10/mathematics.md",
-        })
-      )
-    ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
-
-    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
-    expect(
-      runtimeMocks.getRuntimeContentRouteParentPage
-    ).not.toHaveBeenCalled();
-  });
-
-  it("rejects exact markdown pages when the runtime route cannot prove them", async () => {
-    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
-      Effect.fail(new Error("runtime unavailable"))
-    );
-
-    await expect(
-      Effect.runPromise(
-        resolveLlmsProxyRoute({
-          acceptHeader: null,
-          method: "GET",
-          pathname:
-            "/en/subjects/mathematics/integral/area-of-a-flat-surface.md",
-        })
-      )
-    ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
-  });
-
-  it("checks listing markdown routes through one bounded runtime page", async () => {
-    runtimeMocks.getRuntimeContentRouteParentPage.mockReturnValueOnce(
-      Effect.succeed({
-        continueCursor: null,
-        isDone: true,
-        page: [],
+      resolveLlmsProxyRoute({
+        acceptHeader: null,
+        pathname: "/id/artikel/tidak-ada.mdx",
       })
-    );
-
-    await expect(
-      Effect.runPromise(
-        resolveLlmsProxyRoute({
-          acceptHeader: "text/markdown",
-          method: "GET",
-          pathname: "/en/articles/politics",
-        })
-      )
-    ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
-    expect(runtimeMocks.getRuntimeContentRouteParentPage).toHaveBeenCalledWith({
-      cursor: null,
-      kind: "article",
-      limit: 1,
-      locale: "en",
-      order: "date-desc",
-      parentRoute: "articles/politics",
-      section: "articles",
-    });
-  });
-
-  it("fails closed when listing markdown route probes are unavailable", async () => {
-    runtimeMocks.getRuntimeContentRouteParentPage.mockReturnValueOnce(
-      Effect.fail(new Error("runtime unavailable"))
-    );
-
-    await expect(
-      Effect.runPromise(
-        resolveLlmsProxyRoute({
-          acceptHeader: "text/markdown",
-          method: "GET",
-          pathname: "/en/articles/politics",
-        })
-      )
-    ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
-  });
-
-  it("rewrites non-read markdown methods without runtime probes", async () => {
-    await expect(
-      Effect.runPromise(
-        resolveLlmsProxyRoute({
-          acceptHeader: null,
-          method: "POST",
-          pathname:
-            "/en/subjects/mathematics/integral/area-of-a-flat-surface.md",
-        })
-      )
-    ).resolves.toEqual({
+    ).toEqual({
       kind: "rewrite-markdown",
       localizedRoute: {
-        locale: "en",
-        markdownExtension: ".md",
-        route: "/subjects/mathematics/integral/area-of-a-flat-surface",
+        locale: "id",
+        markdownExtension: ".mdx",
+        route: "/artikel/tidak-ada",
       },
     });
-    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
   });
 
-  it("does not serve locale home markdown from the llms index", async () => {
-    await expect(
-      Effect.runPromise(
-        resolveLlmsProxyRoute({
-          acceptHeader: "text/markdown",
-          method: "GET",
-          pathname: "/en.md",
-        })
-      )
-    ).resolves.toEqual({ kind: "delegate" });
+  it("delegates unsupported locales to normal Next routing", () => {
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: "text/markdown",
+        pathname: "/de/articles/example",
+      })
+    ).toEqual({ kind: "delegate" });
+  });
+
+  it("does not map the locale root to the content Markdown handler", () => {
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: "text/markdown",
+        pathname: "/en",
+      })
+    ).toEqual({ kind: "delegate" });
   });
 });

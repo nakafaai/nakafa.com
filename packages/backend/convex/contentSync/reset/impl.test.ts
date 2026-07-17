@@ -2,6 +2,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
@@ -20,27 +21,41 @@ describe("contentSync/reset/impl", () => {
 
     await t.mutation(seedDerivedRuntimeRows);
 
-    const routeDelete = await t.mutation(deleteContentRoutesBatch);
-    const publicRouteDelete = await t.mutation(deletePublicRoutesBatch);
-    const publicRouteStateDelete = await t.mutation(
-      deletePublicRouteSyncStateBatch
+    const routeDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteBatchFromTable(ctx, "contentRoutes"))
     );
-    const queueDelete = await t.mutation(deleteLearningEngagementQueueBatch);
-    const partitionDelete = await t.mutation(
-      deleteContentAnalyticsPartitionsBatch
+    const publicRouteDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteBatchFromTable(ctx, "publicRoutes"))
     );
-    const viewerSignalsDelete = await t.mutation(
-      deleteLearningPopularityViewerSignalsBatch
+    const publicRouteStateDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteBatchFromTable(ctx, "publicRouteSyncState"))
     );
-    const popularitySignalsDelete = await t.mutation(
-      deleteLearningPopularitySignalsBatch
+    const queueDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteBatchFromTable(ctx, "learningEngagementQueue"))
     );
-    const popularityCountersDelete = await t.mutation(
-      deleteLearningPopularityCountersBatch
+    const partitionDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteBatchFromTable(ctx, "contentAnalyticsPartitions"))
     );
-    const planItemDelete = await t.mutation(deleteLearningPlanItemsBatch);
-    const verseDelete = await t.mutation(deleteQuranVersesBatch);
-    const surahDelete = await t.mutation(deleteQuranSurahsBatch);
+    const viewerSignalsDelete = await t.mutation((ctx) =>
+      runConvexProgram(
+        deleteBatchFromTable(ctx, "learningPopularityViewerSignals")
+      )
+    );
+    const popularitySignalsDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteBatchFromTable(ctx, "learningPopularitySignals"))
+    );
+    const popularityCountersDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteBatchFromTable(ctx, "learningPopularityCounters"))
+    );
+    const planItemDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteBatchFromTable(ctx, "learningPlanItems"))
+    );
+    const verseDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteBatchFromTable(ctx, "quranVerses"))
+    );
+    const surahDelete = await t.mutation((ctx) =>
+      runConvexProgram(deleteBatchFromTable(ctx, "quranSurahs"))
+    );
     const counts = await t.query(getDerivedRuntimeRows);
     const { learningProgramSources, learningPrograms, ...resetRows } = counts;
 
@@ -329,61 +344,6 @@ function quranRouteGraph() {
     ...identity,
     content_id: identity.assetId,
   };
-}
-
-/** Deletes one content route reset batch through the shared reset helper. */
-async function deleteContentRoutesBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "contentRoutes");
-}
-
-/** Deletes one generated public route reset batch. */
-async function deletePublicRoutesBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "publicRoutes");
-}
-
-/** Deletes one public route sync state reset batch. */
-async function deletePublicRouteSyncStateBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "publicRouteSyncState");
-}
-
-/** Deletes one learning engagement queue reset batch. */
-async function deleteLearningEngagementQueueBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "learningEngagementQueue");
-}
-
-/** Deletes one content analytics partition reset batch. */
-async function deleteContentAnalyticsPartitionsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "contentAnalyticsPartitions");
-}
-
-/** Deletes one daily viewer popularity signal reset batch. */
-async function deleteLearningPopularityViewerSignalsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "learningPopularityViewerSignals");
-}
-
-/** Deletes one aggregated daily popularity signal reset batch. */
-async function deleteLearningPopularitySignalsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "learningPopularitySignals");
-}
-
-/** Deletes one ranked popularity counter reset batch. */
-async function deleteLearningPopularityCountersBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "learningPopularityCounters");
-}
-
-/** Deletes one generated learning plan item reset batch. */
-async function deleteLearningPlanItemsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "learningPlanItems");
-}
-
-/** Deletes one Quran verse reset batch through the shared reset helper. */
-async function deleteQuranVersesBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "quranVerses");
-}
-
-/** Deletes one Quran surah reset batch through the shared reset helper. */
-async function deleteQuranSurahsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "quranSurahs");
 }
 
 /** Reads the derived runtime tables after reset has run. */

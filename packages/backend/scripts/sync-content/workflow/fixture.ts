@@ -1,9 +1,13 @@
+import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
+import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
 import type {
   ConvexConfig,
   SyncMetrics,
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/contract/types";
+import type { ContentRouteArtifactTarget } from "@repo/backend/scripts/sync-content/routes/artifacts";
+import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
@@ -19,6 +23,7 @@ interface CleanResult {
 
 interface WorkflowMockOptions {
   changedFiles?: string[];
+  deletedContentFiles?: string[];
   syncState?: {
     lastSyncCommit: string;
     lastSyncTimestamp: number;
@@ -40,7 +45,7 @@ export async function loadWorkflow(
 ) {
   const events: string[] = [];
   const learningProgramOptions: SyncOptions[] = [];
-  const routePageOptions: SyncOptions[] = [];
+  const routeArtifactTargets: (readonly ContentRouteArtifactTarget[])[] = [];
   const syncState = options.syncState ?? null;
   const changedFiles = new Set(options.changedFiles ?? []);
 
@@ -118,12 +123,26 @@ export async function loadWorkflow(
     syncQuran: () => syncStep("syncQuran"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/routes/artifacts", () => ({
+    /** Builds deterministic artifact targets for workflow orchestration tests. */
+    createContentRouteArtifactTargets: (
+      locale?: (typeof locales)[number],
+      sections: readonly NakafaSection[] = NAKAFA_CONTENT_SECTIONS
+    ) => {
+      const targetLocales = locale ? [locale] : locales;
+
+      return sections.flatMap((section) =>
+        targetLocales.map((targetLocale) => ({
+          locale: targetLocale,
+          section,
+        }))
+      );
+    },
     /** Records route artifact page sync calls. */
     syncContentRouteArtifactPages: (
       _config: ConvexConfig,
-      syncOptions: SyncOptions
+      targets: readonly ContentRouteArtifactTarget[]
     ) => {
-      routePageOptions.push(syncOptions);
+      routeArtifactTargets.push(targets);
       return syncStep("syncRoutePages");
     },
   }));
@@ -141,6 +160,9 @@ export async function loadWorkflow(
   vi.doMock("@repo/backend/scripts/sync-content/runtime/files", () => ({
     /** Returns deterministic changed files for incremental workflow tests. */
     getChangedFilesSince: () => Effect.succeed(changedFiles),
+    /** Returns deleted paths separately so rename sources remain visible. */
+    getDeletedFilesSince: () =>
+      Effect.succeed(new Set(options.deletedContentFiles ?? [])),
     /** Returns a deterministic commit for sync-state writes. */
     getCurrentGitCommit: () => Effect.succeed("test-commit"),
     /** Returns deterministic sync state without touching disk. */
@@ -185,7 +207,7 @@ export async function loadWorkflow(
   return {
     events,
     learningProgramOptions,
-    routePageOptions,
+    routeArtifactTargets,
     workflow: {
       syncFull: full.syncFull,
       syncIncremental: workflows.syncIncremental,

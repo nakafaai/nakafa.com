@@ -16,6 +16,8 @@ import type {
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexQuery } from "@repo/backend/scripts/sync-content/convex/client";
+import { readQuranMetadata } from "@repo/contents/_lib/quran";
+import { QURAN_TAFSIR_LOCALES } from "@repo/contents/_types/quran";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
@@ -56,6 +58,16 @@ export function verifyQuranRuntime(config: ConvexConfig, options: SyncOptions) {
         return false;
       }
 
+      const tafsirEnabled = QURAN_TAFSIR_LOCALES.some(
+        (tafsirLocale) => tafsirLocale === locale
+      );
+      const referenceHasTafsir = reference.verses[0]?.tafsir !== undefined;
+
+      if (referenceHasTafsir !== tafsirEnabled) {
+        logError(`Quran reference tafsir locale mismatch for ${locale}`);
+        return false;
+      }
+
       logSuccess(`Quran reference available for ${locale} surah 1 verse 1`);
 
       const search = yield* callConvexQuery(
@@ -91,7 +103,62 @@ export function verifyQuranRuntime(config: ConvexConfig, options: SyncOptions) {
       return false;
     }
 
+    for (const locale of activeLocales) {
+      const { surahData } = surahPage;
+      const preBismillahMissing =
+        surahData.preBismillah !== null &&
+        surahData.preBismillah !== undefined &&
+        surahData.preBismillah.translation[locale] === undefined;
+      const verseTranslationMissing = surahData.verses.some(
+        (verse) => verse.translation[locale] === undefined
+      );
+
+      if (
+        surahData.name.translation[locale] === undefined ||
+        surahData.name.transliteration[locale] === undefined ||
+        surahData.revelation[locale] === undefined ||
+        preBismillahMissing ||
+        verseTranslationMissing
+      ) {
+        logError(`Quran runtime locale data missing for ${locale}`);
+        return false;
+      }
+    }
+
     logSuccess("Quran surah runtime page available for surah 1");
+
+    const surahMetadata = yield* readQuranMetadata();
+
+    for (const locale of QURAN_TAFSIR_LOCALES) {
+      for (const surah of surahMetadata) {
+        const page = yield* callConvexQuery(
+          config,
+          api.contents.queries.runtime.getQuranSurahPage,
+          { surah: surah.number },
+          QuranSurahPageSchema
+        );
+
+        if (page?.surahData.verses.length !== surah.numberOfVerses) {
+          logError(`Quran tafsir corpus missing surah ${surah.number}`);
+          return false;
+        }
+
+        const tafsirMissing = page.surahData.verses.some((verse) => {
+          const tafsir = verse.tafsir[locale];
+          return !tafsir?.short.trim();
+        });
+
+        if (tafsirMissing) {
+          logError(
+            `Quran tafsir corpus incomplete for ${locale} surah ${surah.number}`
+          );
+          return false;
+        }
+      }
+
+      logSuccess(`Complete ${locale} Quran tafsir corpus available`);
+    }
+
     return true;
   });
 }

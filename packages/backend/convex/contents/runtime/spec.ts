@@ -6,6 +6,8 @@ import {
   materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { quranTafsirValidator } from "@repo/backend/convex/quran/schema";
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { type Infer, v } from "convex/values";
 import { literals, nullable } from "convex-helpers/validators";
 
@@ -39,10 +41,7 @@ const runtimeContentBaseValidator = v.object({
   syncedAt: v.number(),
 });
 
-const localizedTextValidator = v.object({
-  en: v.string(),
-  id: v.string(),
-});
+const localizedTextValidator = v.object(fieldsForEveryLocale(v.string()));
 
 const quranTextValidator = v.object({
   arab: v.string(),
@@ -74,8 +73,7 @@ export const quranSurahMetadataValidator = v.object({
   preBismillah: v.optional(v.union(v.null(), quranPreBismillahValidator)),
   revelation: v.object({
     arab: v.string(),
-    en: v.string(),
-    id: v.string(),
+    ...fieldsForEveryLocale(v.string()),
   }),
   sequence: v.number(),
 });
@@ -97,11 +95,7 @@ const quranVerseValidator = v.object({
     inQuran: v.number(),
     inSurah: v.number(),
   }),
-  tafsir: v.object({
-    id: v.object({
-      short: v.string(),
-    }),
-  }),
+  tafsir: quranTafsirValidator,
   text: quranTextValidator,
   translation: localizedTextValidator,
 });
@@ -113,7 +107,7 @@ const quranSurahValidator = v.object({
 
 const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
 
-const runtimeContentRouteValidator = v.object({
+export const runtimeContentRouteValidator = v.object({
   ...learningGraphIdentityValidator.fields,
   authors: v.array(contentAuthorValidator),
   content_id: v.string(),
@@ -376,6 +370,16 @@ export const getQuranReferenceArgsValidator = {
   toVerse: v.optional(v.number()),
 };
 
+const quranReferenceVerseValidator = v.object({
+  arabic: v.string(),
+  number: v.number(),
+  tafsir: v.optional(v.string()),
+  translation: v.string(),
+  transliteration: v.string(),
+});
+
+export type QuranReferenceVerse = Infer<typeof quranReferenceVerseValidator>;
+
 export const getQuranReferenceReturnValidator = nullable(
   v.object({
     ...learningGraphIdentityValidator.fields,
@@ -388,14 +392,6 @@ export const getQuranReferenceReturnValidator = nullable(
     section: v.literal("quran"),
     translation: v.string(),
     url: v.string(),
-    verses: v.array(
-      v.object({
-        arabic: v.string(),
-        number: v.number(),
-        tafsir: v.optional(v.string()),
-        translation: v.string(),
-        transliteration: v.string(),
-      })
-    ),
+    verses: v.array(quranReferenceVerseValidator),
   })
 );

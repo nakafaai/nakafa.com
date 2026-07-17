@@ -1,3 +1,4 @@
+import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import { MaterialKeySchema } from "@repo/contents/_types/material/schema";
@@ -34,6 +35,7 @@ const PublicCurriculumRouteBaseSchema = Schema.extend(
 );
 
 export const PUBLIC_ROUTE_KIND_VALUES = [
+  "article-category",
   "curriculum-context",
   "subject-lesson",
   "subject-topic",
@@ -49,6 +51,16 @@ export const PublicRouteKindSchema = Schema.Literal(
 );
 
 export type PublicRouteKind = SchemaType<typeof PublicRouteKindSchema>;
+
+export const PublicArticleRouteSchema = Schema.extend(
+  PublicRouteBaseSchema,
+  Schema.Struct({
+    category: ArticleCategorySchema,
+    kind: Schema.Literal("article-category"),
+  })
+);
+
+export type PublicArticleRoute = SchemaType<typeof PublicArticleRouteSchema>;
 
 const PublicContentRouteBaseSchema = Schema.extend(
   PublicRouteBaseSchema,
@@ -154,6 +166,7 @@ export const PublicTryoutRouteSchema = Schema.Union(
 export type PublicTryoutRoute = SchemaType<typeof PublicTryoutRouteSchema>;
 
 export const PublicRouteSchema = Schema.Union(
+  PublicArticleRouteSchema,
   PublicContentRouteSchema,
   PublicCurriculumRouteSchema,
   PublicTryoutRouteSchema

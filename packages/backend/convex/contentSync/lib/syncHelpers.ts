@@ -9,7 +9,6 @@ import { deleteContentSearchBySourcePath } from "@repo/backend/convex/contents/h
 import {
   type ContentType,
   type Locale,
-  localeValidator,
   SUPPORTED_CONTENT_LOCALES,
 } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError, type Infer, v } from "convex/values";
@@ -38,28 +37,6 @@ export const syncedArticleReferenceValidator = v.object({
 /** Article reference imported from source content metadata. */
 export type SyncedArticleReference = Infer<
   typeof syncedArticleReferenceValidator
->;
-
-/** Convex validator for localized question choices from source metadata. */
-export const syncedQuestionChoiceValidator = v.object({
-  isCorrect: v.boolean(),
-  label: v.string(),
-  optionKey: v.string(),
-  order: v.number(),
-});
-
-/** Localized question choice imported from source content metadata. */
-export type SyncedQuestionChoice = Infer<typeof syncedQuestionChoiceValidator>;
-
-/** Convex validator for locale-keyed question choice groups. */
-export const syncedQuestionChoicesValidator = v.record(
-  localeValidator,
-  v.array(syncedQuestionChoiceValidator)
-);
-
-/** Locale-keyed question choices derived from the Convex validator. */
-export type SyncedQuestionChoices = Infer<
-  typeof syncedQuestionChoicesValidator
 >;
 
 /** Load existing authors into a lookup map keyed by author name. */
@@ -182,44 +159,6 @@ export async function replaceArticleReferences(
   return created;
 }
 
-/** Replace one question's multiple-choice options within the bounded sync limits. */
-export async function replaceQuestionChoices(
-  ctx: MutationCtx,
-  args: {
-    choices: SyncedQuestionChoices;
-    questionId: Id<"questions">;
-  }
-): Promise<number> {
-  for (const locale of SUPPORTED_CONTENT_LOCALES) {
-    assertContentSyncBatchSize({
-      functionName: "replaceQuestionChoices",
-      limit: CONTENT_SYNC_BATCH_LIMITS.questionChoices,
-      received: args.choices[locale].length,
-      unit: `${locale} question choices`,
-    });
-  }
-
-  await deleteQuestionChoicesForQuestion(ctx, args.questionId);
-
-  let created = 0;
-
-  for (const locale of SUPPORTED_CONTENT_LOCALES) {
-    for (const choice of args.choices[locale]) {
-      await ctx.db.insert("questionChoices", {
-        isCorrect: choice.isCorrect,
-        label: choice.label,
-        locale,
-        optionKey: choice.optionKey,
-        order: choice.order,
-        questionId: args.questionId,
-      });
-      created++;
-    }
-  }
-
-  return created;
-}
-
 /** Delete all author links for one content item under the sync safety limits. */
 export async function deleteContentAuthorLinks(
   ctx: MutationCtx,
@@ -273,7 +212,9 @@ export async function deleteQuestionChoicesForQuestion(
   ctx: MutationCtx,
   questionId: Id<"questions">
 ) {
-  const choiceLimit = CONTENT_SYNC_BATCH_LIMITS.questionChoices * 2;
+  const choiceLimit =
+    CONTENT_SYNC_BATCH_LIMITS.questionChoices *
+    SUPPORTED_CONTENT_LOCALES.length;
   const existingChoices = await ctx.db
     .query("questionChoices")
     .withIndex("by_questionId_and_locale", (q) =>

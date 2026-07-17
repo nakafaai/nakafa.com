@@ -42,4 +42,27 @@ describe("rankContentSearchDocuments", () => {
       )
     ).toEqual([sectionRow]);
   });
+
+  it("does not let numeric metadata outrank semantic topic matches", () => {
+    const numericRow = createSearchRow({
+      description: "Grade 11 try-out set 11 question 11.",
+      route: "try-out/indonesia/snbt/2027/set-11/general-reasoning",
+      sourcePath: "try-out/indonesia/snbt/2027/set-11/general-reasoning",
+      text: "general reasoning practice",
+      title: "General Reasoning 11",
+    });
+    const topicRow = createSearchRow({
+      route: "try-out/indonesia/tka/mathematics/set-1",
+      sourcePath: "try-out/indonesia/tka/mathematics/set-1",
+      text: "rational functions for grade 11",
+      title: "TKA Mathematics",
+    });
+
+    expect(
+      rankContentSearchDocuments(
+        [numericRow, topicRow],
+        "rational functions grade 11"
+      )
+    ).toEqual([topicRow]);
+  });
 });

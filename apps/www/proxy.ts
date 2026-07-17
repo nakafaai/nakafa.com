@@ -18,14 +18,21 @@ import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source"
 
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
+const UNSUPPORTED_ROOT_FILE_PATTERN =
+  /^\/[^/]+\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$/i;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
 const LOCALE_BYPASS_PATHS = new Set([
   "/mcp",
   "/llms.txt",
-  "/llms-full.txt",
+  "/logo.svg",
+  "/manifest.webmanifest",
+  "/robots.txt",
+  "/rss.xml",
+  "/sitemap.txt",
+  "/sitemap.xml",
   "/skill.md",
+  "/e22d548f7fd2482a9022e3b84e944901.txt",
   "/.well-known/llms.txt",
-  "/.well-known/llms-full.txt",
   "/.well-known/agent-skills/index.json",
   "/.well-known/agent-skills/nakafa/SKILL.md",
 ]);
@@ -35,8 +42,8 @@ const LOCALE_BYPASS_PATHS = new Set([
  *
  * The proxy keeps platform concerns here: PostHog bypasses, canonical slash
  * redirects, public discovery bypasses, locale middleware, and response
- * rewrites. Markdown support and content existence live behind the llms routes
- * seam so route capability knowledge does not accumulate in this adapter.
+ * rewrites. The llms route seam handles Markdown negotiation, while the route
+ * handler owns content lookup and final response status.
  *
  * References:
  * https://nextjs.org/docs/app/api-reference/file-conventions/proxy
@@ -60,20 +67,23 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const routeDecision = await Effect.runPromise(
-    resolveLlmsProxyRoute({
-      acceptHeader: request.headers.get("accept"),
-      method: request.method,
-      pathname,
-    })
-  );
+  if (isUnsupportedRootFilePath(pathname)) {
+    return new Response("Not Found\n", {
+      status: 404,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Robots-Tag": "noindex",
+      },
+    });
+  }
+
+  const routeDecision = resolveLlmsProxyRoute({
+    acceptHeader: request.headers.get("accept"),
+    pathname,
+  });
 
   if (routeDecision.kind === "rewrite-markdown") {
     return rewriteToLlmsMdx(request, routeDecision.localizedRoute);
-  }
-
-  if (routeDecision.kind === "content-not-found") {
-    return rewriteToContentNotFound(request, routeDecision.locale);
   }
 
   const urlMigrationRedirect = await Effect.runPromise(
@@ -101,12 +111,12 @@ export async function proxy(request: NextRequest) {
     return rewriteToContentNotFound(request, sourceBackedRouteRejection);
   }
 
-  const projectedRouteLocale = await Effect.runPromise(
+  const projectedRouteRejection = await Effect.runPromise(
     readProjectedHtmlRouteRejection(pathname)
   );
 
-  if (projectedRouteLocale) {
-    return rewriteToContentNotFound(request, projectedRouteLocale);
+  if (projectedRouteRejection) {
+    return rewriteToContentNotFound(request, projectedRouteRejection);
   }
 
   request.cookies.set(AUTH_REDIRECT_PATH_COOKIE, pathname);
@@ -120,9 +130,12 @@ export async function proxy(request: NextRequest) {
 
 /** Returns whether one public AI/system path should skip locale routing. */
 function isLocaleBypassPath(pathname: string) {
-  return (
-    LOCALE_BYPASS_PATHS.has(pathname) || pathname.startsWith("/llms-full/")
-  );
+  return LOCALE_BYPASS_PATHS.has(pathname);
+}
+
+/** Rejects unsupported root files before they become invalid locales. */
+function isUnsupportedRootFilePath(pathname: string) {
+  return UNSUPPORTED_ROOT_FILE_PATTERN.test(pathname);
 }
 
 /** Rewrites a localized route to the source-backed markdown handler. */
@@ -154,5 +167,6 @@ function rewriteToContentNotFound(
 export const config: ProxyConfig = {
   matcher: [
     "/((?!_next/static|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
+    "/:rootFile([^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
   ],
 };

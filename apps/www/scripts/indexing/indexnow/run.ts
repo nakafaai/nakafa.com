@@ -27,9 +27,9 @@ import { logger } from "@/scripts/utils";
 /**
  * Runs sitemap-derived URL notifications for IndexNow and Bing.
  *
- * Sitemap entries remain the canonical discovery source. This runner only
- * de-duplicates them, submits the supported notification adapters, and records
- * successful notifications in ignored local history.
+ * Sitemap entries remain the canonical discovery source. This runner filters
+ * already-submitted URLs, invokes supported adapters, and records successful
+ * notifications in ignored local history.
  */
 export const runIndexNow = Effect.fn("scripts.indexing.indexNow.run")(
   function* () {
@@ -210,10 +210,8 @@ function logManifestSummary(
   summary: SiteIndexManifestSummary
 ) {
   logger.stats(`${service} sitemap batches processed`, summary.batchCount);
-  logger.stats(`${service} sitemap entries inspected`, summary.totalEntryCount);
   logger.stats(
     `${service} canonical URLs inspected`,
     summary.canonicalUrlCount
   );
-  logger.stats(`${service} duplicate URLs skipped`, summary.duplicateCount);
 }

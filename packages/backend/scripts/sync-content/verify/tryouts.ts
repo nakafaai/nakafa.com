@@ -1,5 +1,4 @@
 import path from "node:path";
-import type { SyncOptions } from "@repo/backend/scripts/sync-content/contract/types";
 import { CONTENTS_DIR } from "@repo/backend/scripts/sync-content/runtime/paths";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { locales } from "@repo/utilities/locales";
@@ -70,15 +69,12 @@ function countTryoutSectionFiles({
 export function getTryoutFileCounts({
   answerFiles,
   choicesFiles,
-  options,
   questionFiles,
 }: {
   answerFiles: readonly string[];
   choicesFiles: readonly string[];
-  options: SyncOptions;
   questionFiles: readonly string[];
 }): TryoutFileCounts {
-  const selectedLocales = getSelectedLocales(options);
   const answerFileSet = new Set(answerFiles);
   const choicesFileSet = new Set(choicesFiles);
   const questionFileSet = new Set(questionFiles);
@@ -99,7 +95,7 @@ export function getTryoutFileCounts({
             questionCount: section.questionCount,
             questionFileSet,
             questionSourcePath: section.questionSourcePath,
-            selectedLocales,
+            selectedLocales: locales,
           });
 
           activeAnswerFiles += sectionFileCounts.activeAnswerFiles;
@@ -112,20 +108,14 @@ export function getTryoutFileCounts({
     }
   }
 
-  const localizedQuestionFiles =
-    questionSourceDirectories * selectedLocales.length;
+  const localizedQuestionFiles = questionSourceDirectories * locales.length;
 
   return {
     activeAnswerFiles,
     activeChoicesFiles,
     activeQuestionFiles,
     localizedQuestionFiles,
-    localizedQuestionSets: questionSetPlacements * selectedLocales.length,
+    localizedQuestionSets: questionSetPlacements * locales.length,
     questionSourceDirectories,
   };
-}
-
-/** Returns the exact locale list that this verifier invocation should inspect. */
-function getSelectedLocales(options: SyncOptions) {
-  return options.locale ? [options.locale] : locales;
 }

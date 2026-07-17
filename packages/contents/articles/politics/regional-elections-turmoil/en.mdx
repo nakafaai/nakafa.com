@@ -1,41 +1,4 @@
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { RulingTable } from "./table";
-
-export const tableData = [
-  {
-    category: "Candidacy Threshold",
-    electionLaw: (
-      <>
-        <InlineMath math="20\%" /> of DPRD seats or <InlineMath math="25\%" /> of valid votes
-      </>
-    ),
-    courtDecision: (
-      <>
-        <InlineMath math="6.5\%\text{-}10\%" /> based on population
-      </>
-    ),
-    dprDecision: "Only applies to parties without DPRD seats",
-  },
-  {
-    category: "Governor Age Requirement",
-    electionLaw: <>Minimum <InlineMath math="30 \text{ years}" /> old</>,
-    courtDecision: <>At least <InlineMath math="30 \text{ years}" /> when registered as candidate</>,
-    dprDecision: <>At least <InlineMath math="30 \text{ years}" /> when appointed</>,
-  },
-  {
-    category: "Regent/Mayor Age Requirement",
-    electionLaw: <>Minimum <InlineMath math="25 \text{ years}" /> old</>,
-    courtDecision: <>At least <InlineMath math="25 \text{ years}" /> when registered as candidate</>,
-    dprDecision: <>At least <InlineMath math="25 \text{ years}" /> when appointed</>,
-  },
-];
-
-export const tableHeaders = {
-  category: "Regulation Category",
-  electionLaw: "Election Law",
-  courtDecision: "Constitutional Court Decision",
-  dprDecision: "DPR Decision",
-};
 
 export const metadata = {
   title:
@@ -136,11 +99,13 @@ against the Constitutional Court's decision, aimed at creating a shadow democrac
 of the elite. To further explain the debate between the DPR’s decision and the Constitutional
 Court’s ruling, the following table outlines the differences between the two:
 
-<RulingTable
-  caption="Differences in Pilkada rulings according to the Pilkada Law, the Constitutional Court, and the DPR"
-  tableData={tableData}
-  headers={tableHeaders}
-/>
+*Differences in Pilkada rulings according to the Pilkada Law, the Constitutional Court, and the DPR.*
+
+| Regulation Category | Election Law | Constitutional Court Decision | DPR Decision |
+| --- | --- | --- | --- |
+| Candidacy Threshold | <InlineMath math="20\%" /> of DPRD seats or <InlineMath math="25\%" /> of valid votes | <InlineMath math="6.5\%\text{-}10\%" /> based on population | Only applies to parties without DPRD seats |
+| Governor Age Requirement | Minimum <InlineMath math="30 \text{ years}" /> old | At least <InlineMath math="30 \text{ years}" /> when registered as candidate | At least <InlineMath math="30 \text{ years}" /> when appointed |
+| Regent/Mayor Age Requirement | Minimum <InlineMath math="25 \text{ years}" /> old | At least <InlineMath math="25 \text{ years}" /> when registered as candidate | At least <InlineMath math="25 \text{ years}" /> when appointed |
 
 The differences between the three give several agreements as the final result of this issue. The Indonesian
 House of Representatives (DPR RI) has officially approved the revision of the General Election Commission

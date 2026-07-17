@@ -380,7 +380,7 @@ const readQuestion = Effect.fn("sync.readQuestion")(function* (
     );
   }
 
-  const localeChoices = choices[source.locale] ?? [];
+  const localeChoices = choices[source.locale];
   const date = yield* parseDateToEpoch(question.metadata.date);
 
   return {

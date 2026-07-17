@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import type { LlmsEntry } from "@/lib/llms/entries";
 import {
-  buildRootLlmsIndexText,
   getCachedLlmsSectionIndexText,
   getLlmsSectionIndexText,
 } from "@/lib/llms/indexes";
@@ -13,7 +12,25 @@ const mockCacheLife = vi.hoisted(() => vi.fn());
 const mockCacheTag = vi.hoisted(() => vi.fn());
 const mockGetContentListingLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetContentPageLlmsEntries = vi.hoisted(() => vi.fn());
+const mockGetRuntimeContentRouteCounts = vi.hoisted(() => vi.fn());
 const mockGetSiteLlmsEntries = vi.hoisted(() => vi.fn());
+
+const articleEntry: LlmsEntry = {
+  description: "Fixture description",
+  href: `${BASE_URL}/en/articles/politics/dynastic-politics.md`,
+  route: "/articles/politics/dynastic-politics",
+  section: "articles",
+  segments: ["articles", "politics", "dynastic-politics"],
+  title: "Dynastic Politics",
+};
+const siteEntry: LlmsEntry = {
+  description: "Fixture description",
+  href: `${BASE_URL}/en/search`,
+  route: "/search",
+  section: "site",
+  segments: ["site", "search"],
+  title: "Search",
+};
 
 vi.mock("next/cache", () => ({
   cacheLife: mockCacheLife,
@@ -36,32 +53,8 @@ vi.mock("@/lib/llms/entries", async () => {
   };
 });
 
-vi.mock("@/lib/sitemap/routes", () => ({
-  readSitemapPageDescriptors: () =>
-    Effect.succeed([
-      { id: "base" },
-      {
-        id: "content_en_articles_0",
-        kind: "content",
-        locale: "en",
-        page: 0,
-        section: "articles",
-      },
-      {
-        id: "content_en_articles_1",
-        kind: "content",
-        locale: "en",
-        page: 1,
-        section: "articles",
-      },
-      {
-        id: "content_id_articles_0",
-        kind: "content",
-        locale: "id",
-        page: 0,
-        section: "articles",
-      },
-    ]),
+vi.mock("@/lib/content/runtime/routes", () => ({
+  getRuntimeContentRouteCounts: mockGetRuntimeContentRouteCounts,
 }));
 
 beforeEach(() => {
@@ -69,86 +62,51 @@ beforeEach(() => {
   mockCacheTag.mockClear();
   mockGetContentListingLlmsEntries.mockReset();
   mockGetContentPageLlmsEntries.mockReset();
+  mockGetRuntimeContentRouteCounts.mockReset();
   mockGetSiteLlmsEntries.mockReset();
   mockGetContentListingLlmsEntries.mockReturnValue(Effect.succeed(null));
-  mockGetContentPageLlmsEntries.mockReturnValue(
+  mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([articleEntry]));
+  mockGetSiteLlmsEntries.mockReturnValue([siteEntry]);
+  mockGetRuntimeContentRouteCounts.mockReturnValue(
     Effect.succeed([
-      createFixtureEntry({
-        route: "/articles/politics/dynastic-politics",
-        title: "Dynastic Politics",
-      }),
-    ])
-  );
-  mockGetSiteLlmsEntries.mockReturnValue(
-    Effect.succeed([
-      createFixtureEntry({
-        route: "/search",
-        title: "Search",
-      }),
+      { count: 250, locale: "en", section: "articles", syncedAt: 1 },
+      { count: 100, locale: "en", section: "material", syncedAt: 1 },
+      { count: 114, locale: "en", section: "quran", syncedAt: 1 },
     ])
   );
 });
 
 describe("llms indexes", () => {
-  it("builds a small root index with locale links and references", () => {
-    const text = buildRootLlmsIndexText();
-
-    expect(text.startsWith("# Nakafa\n\n> ")).toBe(true);
-    expect(text).toContain(`${BASE_URL}/llms/en/llms.txt`);
-    expect(text).toContain(`${BASE_URL}/llms/en/articles/llms.txt`);
-    expect(text).toContain(`${BASE_URL}/llms/en/pages/llms.txt`);
-    expect(text).toContain(`${BASE_URL}/llms/id/llms.txt`);
-    expect(text).toContain(`${BASE_URL}/llms/id/site/llms.txt`);
-    expect(text).toContain(`${BASE_URL}/llms/id/pages/llms.txt`);
-    expect(text).toContain("https://nakafa.com/mcp");
-    expect(text).toContain(`${BASE_URL}/skill.md`);
-    expect(text).toContain(`${BASE_URL}/llms-full.txt`);
-    expect(text).toContain(`${BASE_URL}/llms-full/index.json`);
-  });
-
   it("builds locale indexes with direct starter pages", async () => {
     const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
 
     expect(text).toContain("# Nakafa English Content");
-    expect(text).toContain("## Catalog");
-    expect(text).toContain(`${BASE_URL}/llms/en/pages/llms.txt`);
     expect(text).toContain("## Sections");
     expect(text).toContain("## Starter Pages");
+    for (const prefix of [
+      "articles",
+      "subjects",
+      "curriculum",
+      "try-out",
+      "quran",
+    ]) {
+      expect(text).toContain(`${BASE_URL}/en/${prefix}/llms.txt`);
+    }
+    expect(text).toContain(`${BASE_URL}/en/search`);
     expect(text).toContain(
       `- [Dynastic Politics](${BASE_URL}/en/articles/politics/dynastic-politics.md)`
     );
     expect(mockGetContentPageLlmsEntries).toHaveBeenCalled();
   });
 
-  it("omits the starter page section when locale page entries are empty", async () => {
-    mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([]));
+  it("omits missing locale page artifacts from starter pages", async () => {
+    mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed(null));
+    mockGetSiteLlmsEntries.mockReturnValue([]);
 
     const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
 
     expect(text).toContain("# Nakafa English Content");
     expect(text).not.toContain("## Starter Pages");
-  });
-
-  it("builds locale page catalogs from source-backed public routes", async () => {
-    mockGetContentPageLlmsEntries.mockClear();
-
-    const text = await Effect.runPromise(
-      getLlmsSectionIndexText("llms/en/pages/llms.txt")
-    );
-
-    expect(text).toContain("# Nakafa English Page Catalog");
-    expect(text).toContain(
-      `${BASE_URL}/en/articles/politics/dynastic-politics-asian-values.md`
-    );
-    expect(text).toContain(
-      `${BASE_URL}/en/subjects/ai-ds/ai-programming/markdown-cli.md`
-    );
-    expect(text).not.toContain(`${BASE_URL}/en/try-out/`);
-    expect(text).toContain(`${BASE_URL}/en/quran/1.md`);
-    expect(text).not.toContain(
-      "This English page catalog currently has no markdown entries."
-    );
-    expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
   });
 
   it("builds section page-map indexes without reading content pages", async () => {
@@ -163,20 +121,41 @@ describe("llms indexes", () => {
       `${BASE_URL}/llms/en/articles/page/0/llms.txt`
     );
     expect(sectionIndex).toContain(
+      `${BASE_URL}/llms/en/articles/page/2/llms.txt`
+    );
+    expect(sectionIndex).toContain(
+      `${BASE_URL}/llms/en/articles/page/{page}/llms.txt`
+    );
+    expect(sectionIndex).not.toContain(
       `${BASE_URL}/llms/en/articles/page/1/llms.txt`
     );
+    expect(sectionIndex).toContain("250 English articles routes");
     expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
+  });
+
+  it("keeps empty and single-page section maps constant", async () => {
+    const singlePageIndex = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/material")
+    );
+
+    expect(singlePageIndex).toContain(
+      `${BASE_URL}/llms/en/material/page/0/llms.txt`
+    );
+    expect(singlePageIndex).not.toContain("last bounded route-catalog page");
+
+    mockGetRuntimeContentRouteCounts.mockReturnValueOnce(Effect.succeed([]));
+
+    const emptyIndex = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/articles")
+    );
+
+    expect(emptyIndex).toContain("0 English articles routes");
+    expect(emptyIndex).not.toContain("/page/0/llms.txt");
   });
 
   it("builds one bounded content page index from the page reader", async () => {
     mockGetContentPageLlmsEntries.mockReturnValueOnce(
-      Effect.succeed([
-        createFixtureEntry({
-          description: "",
-          route: "/articles/politics/dynastic-politics",
-          title: "Dynastic Politics",
-        }),
-      ])
+      Effect.succeed([{ ...articleEntry, description: "" }])
     );
 
     const text = await Effect.runPromise(
@@ -196,12 +175,7 @@ describe("llms indexes", () => {
 
   it("builds one content listing index from route-catalog entries", async () => {
     mockGetContentListingLlmsEntries.mockReturnValueOnce(
-      Effect.succeed([
-        createFixtureEntry({
-          route: "/articles/politics/dynastic-politics",
-          title: "Dynastic Politics",
-        }),
-      ])
+      Effect.succeed([articleEntry])
     );
 
     const text = await Effect.runPromise(
@@ -218,7 +192,7 @@ describe("llms indexes", () => {
     });
   });
 
-  it("renders an explicit empty content listing index", async () => {
+  it("renders explicit empty listing and page indexes", async () => {
     mockGetContentListingLlmsEntries.mockReturnValueOnce(Effect.succeed([]));
 
     const text = await Effect.runPromise(
@@ -229,19 +203,26 @@ describe("llms indexes", () => {
     expect(text).toContain(
       "This English articles listing currently has no markdown entries."
     );
-  });
-
-  it("renders an explicit empty bounded content page index", async () => {
     mockGetContentPageLlmsEntries.mockReturnValueOnce(Effect.succeed([]));
 
-    const text = await Effect.runPromise(
+    const pageText = await Effect.runPromise(
       getLlmsSectionIndexText("llms/en/articles/page/99/llms.txt")
     );
 
-    expect(text).toContain("# Nakafa English Articles Page 99");
-    expect(text).toContain(
+    expect(pageText).toContain("# Nakafa English Articles Page 99");
+    expect(pageText).toContain(
       "This bounded articles route-catalog page is currently empty."
     );
+  });
+
+  it("returns null when a bounded page artifact is missing", async () => {
+    mockGetContentPageLlmsEntries.mockReturnValueOnce(Effect.succeed(null));
+
+    await expect(
+      Effect.runPromise(
+        getLlmsSectionIndexText("llms/en/articles/page/999/llms.txt")
+      )
+    ).resolves.toBeNull();
   });
 
   it("builds the site index from static site entries only", async () => {
@@ -256,23 +237,21 @@ describe("llms indexes", () => {
   });
 
   it("does not generate indexes for unknown or malformed llms paths", async () => {
-    await expect(
-      Effect.runPromise(getLlmsSectionIndexText("docs"))
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(getLlmsSectionIndexText("llms/fr"))
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(getLlmsSectionIndexText("llms/en/unknown"))
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(getLlmsSectionIndexText("llms/en/articles/shard/999"))
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(
-        getLlmsSectionIndexText("llms/en/articles/page/not-a-number/llms.txt")
-      )
-    ).resolves.toBeNull();
+    const paths = [
+      "docs",
+      "llms/fr",
+      "llms/en/unknown",
+      "llms/en/articles/shard/999",
+      "llms/en/articles/page/not-a-number/llms.txt",
+      "llms/en/articles/page/7junk/llms.txt",
+      "llms/en/articles/page/07/llms.txt",
+    ];
+
+    for (const path of paths) {
+      await expect(
+        Effect.runPromise(getLlmsSectionIndexText(path))
+      ).resolves.toBeNull();
+    }
   });
 
   it("uses the Next cache boundary without changing section output", async () => {
@@ -284,33 +263,3 @@ describe("llms indexes", () => {
     expect(mockCacheLife).toHaveBeenCalledWith("contentRuntime");
   });
 });
-
-/** Creates one sitemap-shaped llms entry without reading the content corpus. */
-function createFixtureEntry({
-  description = "Fixture description",
-  route,
-  title,
-}: {
-  description?: string;
-  route: string;
-  title: string;
-}): LlmsEntry {
-  const routeSegments = route.split("/").filter(Boolean);
-  const section = routeSegments[0] ?? "site";
-  const entrySection = section === "articles" ? "articles" : "site";
-  const segments =
-    entrySection === "site" ? ["site", ...routeSegments] : routeSegments;
-  const href =
-    entrySection === "site"
-      ? `${BASE_URL}/en${route === "/" ? "" : route}`
-      : `${BASE_URL}/en${route}.md`;
-
-  return {
-    description,
-    href,
-    route,
-    section: entrySection,
-    segments,
-    title,
-  };
-}

@@ -128,7 +128,7 @@ describe("article content API route", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({
-      error: "Invalid locale. Must be 'en' or 'id'.",
+      error: "Invalid locale. Supported locales: en, id.",
     });
     expect(runtimeMocks.getArticleApiContentPage).not.toHaveBeenCalled();
   });

@@ -112,10 +112,10 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - `pnpm --filter @repo/contents typecheck`
 - `pnpm --filter @repo/design-system typecheck`
 - Preferred single-test pattern: `pnpm --filter <workspace> exec vitest run <relative-test-path>`
-- `pnpm --filter www exec vitest run __tests__/pages.test.tsx`
-- `pnpm --filter api exec vitest run lib/__tests__/proxy.test.ts`
+- `pnpm --filter www exec vitest run lib/routing/public/source.test.ts`
+- `pnpm --filter api exec vitest run proxy.test.ts`
 - `pnpm --filter @repo/backend exec vitest run helpers/chunk.test.ts`
-- `pnpm --filter @repo/contents exec vitest run _lib/content.test.ts`
+- `pnpm --filter @repo/contents exec vitest run _lib/public-route.test.ts`
 - Some workspaces enforce per-file 100% coverage, so use the full workspace test for the coverage gate.
 - Add `-t "test name"` to run one named test.
 - Use `pnpm --filter <workspace> test` for the whole workspace suite.
@@ -253,19 +253,21 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 ## Testing Rules
 
 - Vitest is the standard test runner.
-- Existing tests live in `__tests__/`, `__test__/`, and `*.test.ts(x)` files.
-- `packages/contents` uses colocated `{filename}.test.ts` files and architecture tests reject nested test folders.
+- Every `name.test.ts` or `name.test.tsx` file must be colocated with and test the real `name.ts` or `name.tsx` Module. Do not add orphan concept, corpus, integration, or regression test filenames. Move essential assertions into the owning Module's test, and delete redundant assertions instead of creating a fake production Module to justify a test name.
+- Keep tests colocated as `*.test.ts` or `*.test.tsx`; do not create `__test__` or `__tests__` folders.
+- The root `check:tests` gate rejects orphan test names and nested test folders across every app and package.
 - Do not add final-code React component `.test.tsx` shell tests that mock child components just to render static markup. For app UI behavior, prefer route, data, or domain seams, or production-mode Browser/e2e checks. Existing historical `.test.tsx` files are not a mandate to delete unrelated tests outside the current PR scope.
 - Use `describe`, `it`/`test`, and focused assertions.
 - Keep tests readable and behavior-oriented.
 - Do not leave `.only` or `.skip` in committed code.
 - When changing business logic, add or update the nearest relevant test.
 - After risky changes, run the affected workspace suite, not just one file.
-- For React Doctor, use `pnpm run doctor --verbose --diff`. Do not invoke `pnpm run doctor -- --verbose --diff` or plain `npx react-doctor@latest`, since those paths use the wrong argument/runtime behavior in this repo.
+- For the React Doctor PR gate, use `pnpm run doctor --verbose --scope changed --base main --include-untracked`. Use `pnpm run doctor --verbose --scope full` when auditing whole-codebase health. The legacy `--diff` alias is deprecated; do not use it or invoke plain `npx react-doctor@latest`.
 
 ## MDX And Content Rules
 
 - Content is primarily Indonesian unless context requires English.
+- Locale variants of language-subject exams preserve the language being assessed; for example, Indonesian-language questions remain Indonesian and English-language questions remain English in every UI locale. Localize the surrounding shell and explanations without adding redundant per-section language override metadata.
 - Subject lesson headings start at `h2`; keep lesson depth at `h3`.
 - Exercise answer MDX is rendered under the app-provided `h3` answer heading, so answer sections start at `h4` and may use `h5` for real nested analysis.
 - Use inline code for programming syntax.
@@ -274,6 +276,7 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 - `NumberLine` and `LineEquation` require explicit imports from the design system.
 - Keep list formatting simple with hyphen bullets.
 - Leave blank lines between prose paragraphs and math blocks.
+- `packages/contents/_lib/module.ts` intentionally follows Next.js' documented variable dynamic-import pattern for locale MDX. Keep its narrow React Doctor override; do not replace it with a manual import map.
 
 ## Git And Final Verification
 

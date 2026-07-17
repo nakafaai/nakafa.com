@@ -70,6 +70,16 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "content route rows",
   },
   {
+    label: "Deleting public sitemap count rows...",
+    mutation: reset.deletePublicRouteSitemapCountsBatch,
+    resultLabel: "public sitemap count rows",
+  },
+  {
+    label: "Deleting public sitemap artifact pages...",
+    mutation: reset.deletePublicRouteSitemapPagesBatch,
+    resultLabel: "public sitemap artifact pages",
+  },
+  {
     label: "Deleting public route sync state...",
     mutation: reset.deletePublicRouteSyncStateBatch,
     resultLabel: "public route sync state rows",
@@ -143,11 +153,6 @@ export const RESET_STEPS: ResetStep[] = [
     label: "Deleting try-out section attempts...",
     mutation: reset.deleteTryoutSectionAttemptsBatch,
     resultLabel: "try-out section attempts",
-  },
-  {
-    label: "Deleting try-out runtime rows...",
-    mutation: reset.deleteTryoutRuntimeBatch,
-    resultLabel: "try-out runtime rows",
   },
   {
     label: "Deleting try-out scores...",

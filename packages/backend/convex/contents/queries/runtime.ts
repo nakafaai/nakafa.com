@@ -17,7 +17,6 @@ import {
   listLatestContentRoutesImpl,
   listPublicRoutesByMaterialImpl,
   listPublicRoutesByParentImpl,
-  listSitemapPublicRoutesImpl,
 } from "@repo/backend/convex/contents/runtime/catalog";
 import { getCurriculumPageImpl } from "@repo/backend/convex/contents/runtime/curriculum";
 import {
@@ -33,8 +32,6 @@ import {
   listPublicRoutesByMaterialReturnValidator,
   listPublicRoutesByParentArgsValidator,
   listPublicRoutesPageReturnValidator,
-  listSitemapPublicRoutesArgsValidator,
-  listSitemapPublicRoutesReturnValidator,
 } from "@repo/backend/convex/contents/runtime/routes";
 import {
   getArticlePageArgsValidator,
@@ -69,6 +66,20 @@ import {
   listMaterialApiContentPageReturnValidator,
   listQuranSurahsReturnValidator,
 } from "@repo/backend/convex/contents/runtime/spec";
+import {
+  getContentSitemapPageImpl,
+  getPublicSitemapCountImpl,
+  getPublicSitemapPageImpl,
+} from "@repo/backend/convex/contents/sitemap/impl";
+import {
+  getContentSitemapPageArgsValidator,
+  getContentSitemapPageReturnValidator,
+  getPublicSitemapCountArgsValidator,
+  getPublicSitemapCountReturnValidator,
+  getPublicSitemapPageArgsValidator,
+  getPublicSitemapPageReturnValidator,
+} from "@repo/backend/convex/contents/sitemap/spec";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
 /**
  * Loads one published article page from the durable content read model.
@@ -154,11 +165,27 @@ export const listPublicRoutesByMaterial = query({
   handler: (ctx, args) => listPublicRoutesByMaterialImpl(ctx, args),
 });
 
-/** Lists bounded sitemap-eligible public route rows by locale. */
-export const listSitemapPublicRoutes = query({
-  args: listSitemapPublicRoutesArgsValidator,
-  returns: listSitemapPublicRoutesReturnValidator,
-  handler: (ctx, args) => listSitemapPublicRoutesImpl(ctx, args),
+/** Reads one sitemap-sized group of bounded content route artifacts. */
+export const getContentSitemapPage = query({
+  args: getContentSitemapPageArgsValidator,
+  returns: getContentSitemapPageReturnValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(getContentSitemapPageImpl(ctx, args)),
+});
+
+/** Reads one locale's committed public sitemap route and page counts. */
+export const getPublicSitemapCount = query({
+  args: getPublicSitemapCountArgsValidator,
+  returns: getPublicSitemapCountReturnValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(getPublicSitemapCountImpl(ctx, args)),
+});
+
+/** Reads one bounded public sitemap page by its stable numeric identity. */
+export const getPublicSitemapPage = query({
+  args: getPublicSitemapPageArgsValidator,
+  returns: getPublicSitemapPageReturnValidator,
+  handler: (ctx, args) => runConvexProgram(getPublicSitemapPageImpl(ctx, args)),
 });
 
 /** Loads one concrete content route from the durable route catalog. */

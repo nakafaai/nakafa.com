@@ -1,14 +1,15 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { contentCountTables } from "@repo/backend/convex/contentSync/tables";
 import { reset } from "@repo/backend/scripts/sync-content/cleanup/reset";
 import {
   log,
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import type { ContentCountsSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
+import { ContentCountsSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/convex/counts";
 import { getFunctionName } from "convex/server";
-import { Effect, type Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@repo/backend/scripts/sync-content/convex/counts", () => ({
@@ -37,66 +38,25 @@ const config = {
   url: "https://example.convex.cloud",
 };
 
-const emptyCounts = {
-  articleReferences: 0,
-  articles: 0,
-  audioContentSources: 0,
-  audioGenerationQueue: 0,
-  authors: 0,
-  contentAnalyticsPartitions: 0,
-  contentAuthors: 0,
-  contentAudios: 0,
-  contentRouteCounts: 0,
-  contentRoutePages: 0,
-  contentRoutes: 0,
-  publicRoutes: 0,
-  publicRouteSyncState: 0,
-  contentSearch: 0,
-  learningEngagementQueue: 0,
-  learningViews: 0,
-  learningProgramCoverage: 0,
-  learningPlanItems: 0,
-  learningProgramSources: 0,
-  learningPrograms: 0,
-  learningPopularityCounters: 0,
-  learningPopularitySignals: 0,
-  learningPopularityViewerSignals: 0,
-  userLearningRecents: 0,
-  irtCalibrationAttempts: 0,
-  irtCalibrationCacheStats: 0,
-  irtCalibrationQueue: 0,
-  irtCalibrationRuns: 0,
-  irtScaleItems: 0,
-  irtScalePublicationQueue: 0,
-  irtScaleQualityChecks: 0,
-  irtScaleQualityRefreshQueue: 0,
-  irtScaleVersions: 0,
-  quranSurahs: 0,
-  quranVerses: 0,
-  questionChoices: 0,
-  questions: 0,
-  questionSets: 0,
-  curriculumLessons: 0,
-  curriculumTopics: 0,
-  tryoutAccessCampaigns: 0,
-  tryoutAccessGrants: 0,
-  tryoutAccessLinks: 0,
-  tryoutAccessTargets: 0,
-  tryoutAttemptPlacements: 0,
-  tryoutAttempts: 0,
-  tryoutLeaderboardEntries: 0,
-  tryoutLeaderboardScopes: 0,
-  tryoutLeaderboardUserStats: 0,
-  tryoutCountries: 0,
-  tryoutExams: 0,
-  tryoutTracks: 0,
-  tryoutResponses: 0,
-  tryoutScores: 0,
-  tryoutSectionAttempts: 0,
-  tryoutSections: 0,
-  tryoutSets: 0,
-  tryoutEntitlements: 0,
-} satisfies Schema.Schema.Type<typeof ContentCountsSchema>;
+const emptyCounts = Schema.decodeUnknownSync(ContentCountsSchema)(
+  Object.fromEntries(contentCountTables.map(({ field }) => [field, 0]))
+);
+
+/** Runs reset against exact count overrides. */
+async function runReset(overrides: Partial<typeof emptyCounts>, force = false) {
+  vi.mocked(getContentCounts).mockReturnValue(
+    Effect.succeed({ ...emptyCounts, ...overrides })
+  );
+
+  await Effect.runPromise(reset(config, { force }));
+}
+
+/** Returns the ordered names of mutations requested by reset. */
+function mutationNames() {
+  return vi
+    .mocked(callConvexMutation)
+    .mock.calls.map(([, mutation]) => getFunctionName(mutation));
+}
 
 describe("sync-content reset", () => {
   beforeEach(() => {
@@ -106,80 +66,30 @@ describe("sync-content reset", () => {
     );
   });
 
-  it("does not treat contentSearch-only data as an empty database", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({ ...emptyCounts, contentSearch: 1 })
-    );
+  it("counts every reset-managed read model before deletion", async () => {
+    await runReset({
+      contentRouteCounts: 1,
+      contentRoutePages: 2,
+      contentRoutes: 1,
+      contentSearch: 1,
+      learningPlanItems: 3,
+      learningProgramCoverage: 2,
+      publicRouteSitemapCounts: 1,
+      publicRouteSitemapPages: 2,
+      quranSurahs: 1,
+      quranVerses: 7,
+    });
 
-    await Effect.runPromise(reset(config, { force: false }));
-
-    expect(log).toHaveBeenCalledWith("  Content Search:        1");
-    expect(log).toHaveBeenCalledWith("  Total derived items:  1");
+    expect(log).toHaveBeenCalledWith("  Public Sitemap Counts: 1");
+    expect(log).toHaveBeenCalledWith("  Public Sitemap Pages:  2");
+    expect(log).toHaveBeenCalledWith("  Total derived items:  21");
     expect(log).toHaveBeenCalledWith("\nTo delete all content, run:");
     expect(logSuccess).not.toHaveBeenCalled();
   });
 
-  it("does not treat route and Quran runtime data as an empty database", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({
-        ...emptyCounts,
-        contentRouteCounts: 1,
-        contentRoutePages: 2,
-        contentRoutes: 1,
-        quranSurahs: 1,
-        quranVerses: 7,
-      })
-    );
+  it("keeps the empty shortcut when every managed count is zero", async () => {
+    await runReset({});
 
-    await Effect.runPromise(reset(config, { force: false }));
-
-    expect(log).toHaveBeenCalledWith("  Content Routes:        1");
-    expect(log).toHaveBeenCalledWith("  Content Route Counts:  1");
-    expect(log).toHaveBeenCalledWith("  Content Route Pages:   2");
-    expect(log).toHaveBeenCalledWith("  Quran Surahs:          1");
-    expect(log).toHaveBeenCalledWith("  Quran Verses:          7");
-    expect(log).toHaveBeenCalledWith("  Total derived items:  12");
-    expect(log).toHaveBeenCalledWith("\nTo delete all content, run:");
-    expect(logSuccess).not.toHaveBeenCalled();
-  });
-
-  it("does not treat program coverage rows as an empty database", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({ ...emptyCounts, learningProgramCoverage: 2 })
-    );
-
-    await Effect.runPromise(reset(config, { force: false }));
-
-    expect(log).toHaveBeenCalledWith("  Learning Program Cov:  2");
-    expect(log).toHaveBeenCalledWith("  Total derived items:  2");
-    expect(log).toHaveBeenCalledWith("\nTo delete all content, run:");
-    expect(logSuccess).not.toHaveBeenCalled();
-  });
-
-  it("does not treat generated learning plan items as an empty database", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({ ...emptyCounts, learningPlanItems: 3 })
-    );
-
-    await Effect.runPromise(reset(config, { force: false }));
-
-    expect(log).toHaveBeenCalledWith("  Learning Plan Items:   3");
-    expect(log).toHaveBeenCalledWith("  Total derived items:  3");
-    expect(log).toHaveBeenCalledWith("\nTo delete all content, run:");
-    expect(logSuccess).not.toHaveBeenCalled();
-  });
-
-  it("keeps the empty shortcut when every reset-managed count is zero", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(Effect.succeed(emptyCounts));
-
-    await Effect.runPromise(reset(config, { force: false }));
-
-    expect(log).toHaveBeenCalledWith("  Content Search:        0");
-    expect(log).toHaveBeenCalledWith("  Content Routes:        0");
-    expect(log).toHaveBeenCalledWith("  Content Route Counts:  0");
-    expect(log).toHaveBeenCalledWith("  Content Route Pages:   0");
-    expect(log).toHaveBeenCalledWith("  Quran Surahs:          0");
-    expect(log).toHaveBeenCalledWith("  Quran Verses:          0");
     expect(log).toHaveBeenCalledWith("  Total derived items:  0");
     expect(logSuccess).toHaveBeenCalledWith(
       "\nReset-managed content is already empty. Nothing to delete."
@@ -187,119 +97,87 @@ describe("sync-content reset", () => {
     expect(log).not.toHaveBeenCalledWith("\nTo delete all content, run:");
   });
 
-  it("preserves selected program catalog rows when reset-managed content is empty", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({
-        ...emptyCounts,
+  it("preserves program catalog and learner history rows", async () => {
+    await runReset(
+      {
         learningProgramSources: 5,
         learningPrograms: 4,
-      })
-    );
-
-    await Effect.runPromise(reset(config, { force: false }));
-
-    expect(log).toHaveBeenCalledWith("  Learning Programs:     4");
-    expect(log).toHaveBeenCalledWith("  Learning Program Srcs: 5");
-    expect(log).toHaveBeenCalledWith("  Total derived items:  0");
-    expect(log).toHaveBeenCalledWith("  Total preserved items: 9");
-    expect(logSuccess).toHaveBeenCalledWith(
-      "\nReset-managed content is already empty. Nothing to delete."
-    );
-    expect(log).not.toHaveBeenCalledWith("\nTo delete all content, run:");
-  });
-
-  it("preserves learner history when reset-managed content is empty", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({
-        ...emptyCounts,
         learningViews: 20_000,
         userLearningRecents: 500,
-      })
+      },
+      true
     );
 
-    await Effect.runPromise(reset(config, { force: true }));
-
-    expect(log).toHaveBeenCalledWith("  Total derived items:  0");
-    expect(log).toHaveBeenCalledWith("  Total preserved items: 20500");
+    expect(log).toHaveBeenCalledWith("  Total preserved items: 20509");
     expect(logSuccess).toHaveBeenCalledWith(
       "\nReset-managed content is already empty. Nothing to delete."
     );
     expect(callConvexMutation).not.toHaveBeenCalled();
   });
 
-  it("deletes generated plan items before program coverage during forced reset", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({
-        ...emptyCounts,
-        learningPlanItems: 3,
-        learningProgramCoverage: 2,
-      })
+  it("deletes generated plan items before program coverage", async () => {
+    await runReset({ learningPlanItems: 3, learningProgramCoverage: 2 }, true);
+
+    const mutations = mutationNames();
+    const planItems = getFunctionName(
+      internal.contentSync.reset.internal.deleteLearningPlanItemsBatch
+    );
+    const coverage = getFunctionName(
+      internal.contentSync.reset.internal.deleteLearningProgramCoverageBatch
     );
 
-    await Effect.runPromise(reset(config, { force: true }));
-
-    const mutations = vi
-      .mocked(callConvexMutation)
-      .mock.calls.map(([, mutation]) => getFunctionName(mutation));
-    const planItemsIndex = mutations.indexOf(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteLearningPlanItemsBatch
-      )
+    expect(mutations.indexOf(planItems)).toBeGreaterThanOrEqual(0);
+    expect(mutations.indexOf(coverage)).toBeGreaterThan(
+      mutations.indexOf(planItems)
     );
-    const coverageIndex = mutations.indexOf(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteLearningProgramCoverageBatch
-      )
-    );
-
-    expect(planItemsIndex).toBeGreaterThanOrEqual(0);
-    expect(coverageIndex).toBeGreaterThan(planItemsIndex);
   });
 
-  it("invalidates public route sync state before deleting route rows", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({
-        ...emptyCounts,
-        publicRoutes: 1,
-        publicRouteSyncState: 1,
-      })
+  it("invalidates public route state before deleting route rows", async () => {
+    await runReset({ publicRoutes: 1, publicRouteSyncState: 1 }, true);
+
+    const mutations = mutationNames();
+    const syncState = getFunctionName(
+      internal.contentSync.reset.internal.deletePublicRouteSyncStateBatch
+    );
+    const routes = getFunctionName(
+      internal.contentSync.reset.internal.deletePublicRoutesBatch
     );
 
-    await Effect.runPromise(reset(config, { force: true }));
-
-    const mutations = vi
-      .mocked(callConvexMutation)
-      .mock.calls.map(([, mutation]) => getFunctionName(mutation));
-    const syncStateIndex = mutations.indexOf(
-      getFunctionName(
-        internal.contentSync.reset.internal.deletePublicRouteSyncStateBatch
-      )
+    expect(mutations.indexOf(syncState)).toBeGreaterThanOrEqual(0);
+    expect(mutations.indexOf(routes)).toBeGreaterThan(
+      mutations.indexOf(syncState)
     );
-    const routeRowsIndex = mutations.indexOf(
-      getFunctionName(
-        internal.contentSync.reset.internal.deletePublicRoutesBatch
-      )
-    );
-
-    expect(syncStateIndex).toBeGreaterThanOrEqual(0);
-    expect(routeRowsIndex).toBeGreaterThan(syncStateIndex);
   });
 
-  it("does not delete selected program catalog rows during forced reset", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({
-        ...emptyCounts,
+  it("unpublishes sitemap counts before deleting their artifact pages", async () => {
+    await runReset(
+      { publicRouteSitemapCounts: 1, publicRouteSitemapPages: 2 },
+      true
+    );
+
+    const mutations = mutationNames();
+    const counts = getFunctionName(
+      internal.contentSync.reset.internal.deletePublicRouteSitemapCountsBatch
+    );
+    const pages = getFunctionName(
+      internal.contentSync.reset.internal.deletePublicRouteSitemapPagesBatch
+    );
+
+    expect(mutations.indexOf(counts)).toBeGreaterThanOrEqual(0);
+    expect(mutations.indexOf(pages)).toBeGreaterThan(mutations.indexOf(counts));
+  });
+
+  it("does not delete selected program catalog rows", async () => {
+    await runReset(
+      {
         learningProgramCoverage: 1,
         learningProgramSources: 1,
         learningPrograms: 1,
-      })
+      },
+      true
     );
 
-    await Effect.runPromise(reset(config, { force: true }));
-
-    const mutations = vi
-      .mocked(callConvexMutation)
-      .mock.calls.map(([, mutation]) => getFunctionName(mutation));
+    const mutations = mutationNames();
 
     expect(mutations).toContain(
       getFunctionName(

@@ -1,9 +1,4 @@
-import { getContentsMetadata } from "@repo/contents/_lib/metadata";
-import { formatContentDateISO } from "@repo/contents/_shared/date";
-import type { Article, Locale } from "@repo/contents/_types/content";
 import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
-import { teams } from "@repo/contents/team/source";
-import { Effect, Option } from "effect";
 
 /**
  * Builds the public URL path for an article detail page.
@@ -15,73 +10,3 @@ import { Effect, Option } from "effect";
 export function getSlugPath(category: ArticleCategory, slug: string) {
   return `/articles/${category}/${slug}` as const;
 }
-
-/**
- * Loads article summaries for one category and sorts them newest-first.
- *
- * Metadata is read through the metadata-only listing path so category pages do
- * not import every article MDX module just to render article cards.
- *
- * @param category - Article category slug
- * @param locale - Locale to read article metadata for
- * @returns Article card summaries with metadata and official-author status
- *
- * @example
- * ```ts
- * const articles = await Effect.runPromise(getArticleSummaries("politics", "en"));
- * // Returns: [{ title, description, date, slug, official }, ...]
- * ```
- */
-export const getArticleSummaries = Effect.fn("Contents.Articles.getSummaries")(
-  function* (category: string, locale: Locale) {
-    // Extract the actual category name if a full path is provided
-    const categoryName = category.includes("/")
-      ? category.split("/").pop()
-      : category;
-
-    if (!categoryName) {
-      return [];
-    }
-
-    const categoryPrefix = `articles/${categoryName}/`;
-
-    const entries = yield* getContentsMetadata({
-      locale,
-      basePath: categoryPrefix,
-    });
-
-    const articlesBySlug = new Map<string, Article>();
-
-    for (const entry of entries) {
-      if (!entry.slug.startsWith(categoryPrefix)) {
-        continue;
-      }
-
-      const relativePath = entry.slug.slice(categoryPrefix.length);
-      const slug = relativePath.split("/")[0];
-
-      if (!slug || articlesBySlug.has(slug)) {
-        continue;
-      }
-
-      const publishedAt = formatContentDateISO(entry.metadata.date);
-      if (Option.isNone(publishedAt)) {
-        continue;
-      }
-
-      const authors = entry.metadata.authors.map((author) => author.name);
-
-      articlesBySlug.set(slug, {
-        title: entry.metadata.title,
-        description: entry.metadata.description ?? "",
-        date: publishedAt.value,
-        slug,
-        official: authors.some((author) => teams.has(author)),
-      });
-    }
-
-    return Array.from(articlesBySlug.values()).sort((a, b) =>
-      b.date.localeCompare(a.date)
-    );
-  }
-);

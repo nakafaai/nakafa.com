@@ -1,3 +1,4 @@
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -29,9 +30,8 @@ export const PublicRoutePathSchema = Schema.String.pipe(
 
 export type PublicRoutePath = SchemaType<typeof PublicRoutePathSchema>;
 
-export const PublicRouteSlugMapSchema = Schema.Struct({
-  en: PublicRouteSegmentSchema,
-  id: PublicRouteSegmentSchema,
-});
+export const PublicRouteSlugMapSchema = Schema.Struct(
+  fieldsForEveryLocale(PublicRouteSegmentSchema)
+);
 
 export type PublicRouteSlugMap = SchemaType<typeof PublicRouteSlugMapSchema>;

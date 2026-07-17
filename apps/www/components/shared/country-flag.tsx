@@ -1,10 +1,11 @@
 import { cn } from "@repo/design-system/lib/utils";
+import DE from "country-flag-icons/react/3x2/DE";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
 import SG from "country-flag-icons/react/3x2/SG";
 import US from "country-flag-icons/react/3x2/US";
 
-/** Renders one supported provider-country flag without dynamic component lookup. */
+/** Renders one supported country flag without dynamic component lookup. */
 export function CountryFlagIcon({
   className,
   countryCode,
@@ -15,6 +16,8 @@ export function CountryFlagIcon({
   const flagClassName = cn("size-4 shrink-0", className);
 
   switch (countryCode) {
+    case "DE":
+      return <DE aria-hidden className={flagClassName} />;
     case "GB":
       return <GB aria-hidden className={flagClassName} />;
     case "ID":

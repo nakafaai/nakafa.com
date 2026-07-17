@@ -9,10 +9,12 @@ import {
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
 import { getLlmsMarkdownText } from "@/lib/llms/content";
 import { stripLlmsRouteExtension } from "@/lib/llms/format";
+import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
 import {
+  buildPublicLlmsAppSectionIndexText,
   buildRootLlmsIndexText,
-  getCachedLlmsSectionIndexText,
-} from "@/lib/llms/indexes";
+  resolvePublicLlmsSectionIndex,
+} from "@/lib/llms/public-index";
 import { buildUnsupportedMarkdownRouteText } from "@/lib/llms/unsupported";
 
 const MARKDOWN_HEADERS = {
@@ -52,6 +54,47 @@ export async function GET(
   const slugParts = hasLocalePrefix ? slug.slice(1) : slug;
   const cleanSlug = stripLlmsRouteExtension(slugParts.join("/"));
 
+  const isPublicLocaleIndex =
+    hasLocalePrefix && (cleanSlug === "" || cleanSlug === "llms");
+  if (isPublicLocaleIndex) {
+    const localeIndexText = await getCachedLlmsSectionIndexText({
+      cleanSlug: `llms/${locale}`,
+    });
+
+    return new Response(localeIndexText, {
+      headers: MARKDOWN_HEADERS,
+    });
+  }
+
+  if (cleanSlug === "llms") {
+    return new Response(buildRootLlmsIndexText(), {
+      headers: MARKDOWN_HEADERS,
+    });
+  }
+
+  const publicSectionIndex = hasLocalePrefix
+    ? resolvePublicLlmsSectionIndex({ cleanSlug, locale })
+    : null;
+  if (publicSectionIndex) {
+    if (!publicSectionIndex.section) {
+      return new Response(
+        buildPublicLlmsAppSectionIndexText({
+          index: publicSectionIndex,
+          locale,
+        }),
+        { headers: MARKDOWN_HEADERS }
+      );
+    }
+
+    const publicIndexText = await getCachedLlmsSectionIndexText({
+      cleanSlug: `llms/${locale}/${publicSectionIndex.section}`,
+    });
+
+    return new Response(publicIndexText, {
+      headers: MARKDOWN_HEADERS,
+    });
+  }
+
   const sectionIndexText = await getCachedLlmsSectionIndexText({ cleanSlug });
   if (sectionIndexText) {
     return new Response(sectionIndexText, {
@@ -71,12 +114,6 @@ export async function GET(
   );
   if (markdownText) {
     return new Response(markdownText, {
-      headers: MARKDOWN_HEADERS,
-    });
-  }
-
-  if (cleanSlug === "llms") {
-    return new Response(buildRootLlmsIndexText(), {
       headers: MARKDOWN_HEADERS,
     });
   }

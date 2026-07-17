@@ -58,11 +58,6 @@ export const decodeOnboardingRoleValue = Schema.decodeUnknown(
   onboardingRoleValueSchema
 );
 
-/** Decodes untrusted focus-step form values before the profile is saved. */
-export const decodeOnboardingFocusValue = Schema.decodeUnknown(
-  onboardingFocusValueSchema
-);
-
 /** Result state shown by the onboarding form when profile selection fails. */
 export interface OnboardingState {
   messageKey?: "onboarding.invalid-selection" | "onboarding.save-error";

@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 const config = defineConfig({
   test: {
     environment: "node",
-    setupFiles: ["./lib/__tests__/setup.ts"],
+    setupFiles: ["./lib/test-setup.ts"],
     coverage: {
       enabled: true,
       provider: "istanbul",

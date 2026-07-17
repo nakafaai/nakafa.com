@@ -12,6 +12,8 @@ const config = defineConfig({
       provider: "istanbul",
       reportsDirectory: "./coverage",
     },
+    // Keep CPU available for Convex Edge VMs when Turbo runs package tests together.
+    maxWorkers: "50%",
     setupFiles: ["./vitest.setup.ts"],
     projects: [
       {

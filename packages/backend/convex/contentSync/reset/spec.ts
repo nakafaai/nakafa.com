@@ -22,6 +22,8 @@ export const resettableTableNames = [
   "contentRouteCounts",
   "contentRoutePages",
   "contentRoutes",
+  "publicRouteSitemapCounts",
+  "publicRouteSitemapPages",
   "publicRoutes",
   "publicRouteSyncState",
   "contentSearch",

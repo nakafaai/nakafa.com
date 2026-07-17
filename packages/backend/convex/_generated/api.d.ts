@@ -120,6 +120,7 @@ import type * as contentSync_mutations_curriculum from "../contentSync/mutations
 import type * as contentSync_mutations_quran from "../contentSync/mutations/quran.js";
 import type * as contentSync_mutations_routes from "../contentSync/mutations/routes.js";
 import type * as contentSync_mutations_tryouts from "../contentSync/mutations/tryouts.js";
+import type * as contentSync_publicRoutes_artifacts from "../contentSync/publicRoutes/artifacts.js";
 import type * as contentSync_publicRoutes_impl from "../contentSync/publicRoutes/impl.js";
 import type * as contentSync_publicRoutes_internal from "../contentSync/publicRoutes/internal.js";
 import type * as contentSync_publicRoutes_spec from "../contentSync/publicRoutes/spec.js";
@@ -130,6 +131,7 @@ import type * as contentSync_queries_stale from "../contentSync/queries/stale.js
 import type * as contentSync_reset_impl from "../contentSync/reset/impl.js";
 import type * as contentSync_reset_internal from "../contentSync/reset/internal.js";
 import type * as contentSync_reset_spec from "../contentSync/reset/spec.js";
+import type * as contentSync_reset_tryouts from "../contentSync/reset/tryouts.js";
 import type * as contentSync_tables from "../contentSync/tables.js";
 import type * as contentSync_tryouts_impl from "../contentSync/tryouts/impl.js";
 import type * as contentSync_tryouts_irt from "../contentSync/tryouts/irt.js";
@@ -179,6 +181,8 @@ import type * as contents_runtime_quran from "../contents/runtime/quran.js";
 import type * as contents_runtime_routes from "../contents/runtime/routes.js";
 import type * as contents_runtime_shared from "../contents/runtime/shared.js";
 import type * as contents_runtime_spec from "../contents/runtime/spec.js";
+import type * as contents_sitemap_impl from "../contents/sitemap/impl.js";
+import type * as contents_sitemap_spec from "../contents/sitemap/spec.js";
 import type * as contents_validators from "../contents/validators.js";
 import type * as contents_views_context from "../contents/views/context.js";
 import type * as contents_views_impl from "../contents/views/impl.js";
@@ -441,6 +445,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/mutations/quran": typeof contentSync_mutations_quran;
   "contentSync/mutations/routes": typeof contentSync_mutations_routes;
   "contentSync/mutations/tryouts": typeof contentSync_mutations_tryouts;
+  "contentSync/publicRoutes/artifacts": typeof contentSync_publicRoutes_artifacts;
   "contentSync/publicRoutes/impl": typeof contentSync_publicRoutes_impl;
   "contentSync/publicRoutes/internal": typeof contentSync_publicRoutes_internal;
   "contentSync/publicRoutes/spec": typeof contentSync_publicRoutes_spec;
@@ -451,6 +456,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/reset/impl": typeof contentSync_reset_impl;
   "contentSync/reset/internal": typeof contentSync_reset_internal;
   "contentSync/reset/spec": typeof contentSync_reset_spec;
+  "contentSync/reset/tryouts": typeof contentSync_reset_tryouts;
   "contentSync/tables": typeof contentSync_tables;
   "contentSync/tryouts/impl": typeof contentSync_tryouts_impl;
   "contentSync/tryouts/irt": typeof contentSync_tryouts_irt;
@@ -500,6 +506,8 @@ declare const fullApi: ApiFromModules<{
   "contents/runtime/routes": typeof contents_runtime_routes;
   "contents/runtime/shared": typeof contents_runtime_shared;
   "contents/runtime/spec": typeof contents_runtime_spec;
+  "contents/sitemap/impl": typeof contents_sitemap_impl;
+  "contents/sitemap/spec": typeof contents_sitemap_spec;
   "contents/validators": typeof contents_validators;
   "contents/views/context": typeof contents_views_context;
   "contents/views/impl": typeof contents_views_impl;

@@ -188,17 +188,13 @@ export function pushViewportBackView(
 }
 
 /** Returns whether one latest-position Snapshot still matches the Transcript. */
-export function canRestoreViewportSnapshot({
+function canRestoreViewportSnapshot({
   activeTranscript,
   snapshot,
 }: {
   activeTranscript: ActiveTranscriptModel;
-  snapshot: ConversationScrollSnapshot | null;
+  snapshot: ConversationScrollSnapshot;
 }) {
-  if (!snapshot) {
-    return false;
-  }
-
   if (!(snapshot.wasAtBottom && snapshot.view.kind === "bottom")) {
     return false;
   }

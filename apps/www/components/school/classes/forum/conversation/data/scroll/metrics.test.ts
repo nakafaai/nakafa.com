@@ -1,11 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  type ConversationGeometryHandle,
   getConversationBottomDistance,
-  getConversationViewportState,
   isConversationAtBottom,
   isConversationAtTop,
 } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
-import { createConversationTestHandle } from "@/components/school/classes/forum/conversation/fixtures/data";
 
 /** Creates a minimal virtualizer geometry handle for scroll metric tests. */
 function createHandle({
@@ -17,11 +16,14 @@ function createHandle({
   scrollSize?: number;
   viewportSize?: number;
 }) {
-  return createConversationTestHandle({
+  return {
+    findItemIndex: vi.fn().mockReturnValue(0),
+    getItemOffset: vi.fn().mockReturnValue(0),
+    getItemSize: vi.fn().mockReturnValue(0),
     scrollOffset,
     scrollSize,
     viewportSize,
-  }).handle;
+  } satisfies ConversationGeometryHandle;
 }
 
 describe("conversation/data/scroll/metrics", () => {
@@ -58,64 +60,5 @@ describe("conversation/data/scroll/metrics", () => {
         })
       )
     ).toBe(true);
-  });
-
-  it("waits for a measured viewport before deriving jump-bar state", () => {
-    expect(
-      getConversationViewportState(
-        createHandle({
-          scrollOffset: 0,
-          scrollSize: 300,
-          viewportSize: 0,
-        })
-      )
-    ).toBeNull();
-  });
-
-  it("derives jump-bar state from measured virtualizer metrics", () => {
-    expect(
-      getConversationViewportState(
-        createHandle({
-          scrollOffset: 0,
-          scrollSize: 300,
-          viewportSize: 500,
-        })
-      )
-    ).toEqual({
-      hasOverflow: false,
-      isAtBottom: true,
-    });
-
-    expect(
-      getConversationViewportState(
-        createHandle({
-          scrollOffset: 100,
-          scrollSize: 800,
-          viewportSize: 500,
-        })
-      )
-    ).toEqual({
-      hasOverflow: true,
-      isAtBottom: false,
-    });
-  });
-
-  it("keeps latest-edge state tied to bottom distance only", () => {
-    const nearBottomHandle = createHandle({
-      scrollOffset: 298,
-    });
-    const awayFromBottomHandle = createHandle({
-      scrollOffset: 294,
-    });
-
-    expect(getConversationViewportState(nearBottomHandle)).toEqual({
-      hasOverflow: true,
-      isAtBottom: true,
-    });
-
-    expect(getConversationViewportState(awayFromBottomHandle)).toEqual({
-      hasOverflow: true,
-      isAtBottom: false,
-    });
   });
 });

@@ -1,13 +1,11 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers/search/constants";
-import { readContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/read";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   getPublicSearchPath,
   insertContentSearch,
   searchContentId,
 } from "@repo/backend/test/search";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
 
 describe("contents/queries/search:search", () => {
@@ -121,79 +119,6 @@ describe("contents/queries/search:search", () => {
     ]);
     expect(result.items[0].excerpt).not.toContain("material/lesson");
     expect(result.items[0].excerpt).not.toContain("exponential-logarithm");
-  });
-
-  it("resolves exact routes through persisted route catalog content IDs", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const sourcePath =
-      "material/lesson/mathematics/exponential-logarithm/logarithm-definition";
-    const route = getPublicSearchPath("id", sourcePath);
-    const identity = createLearningGraphIdentityFromRoute({
-      locale: "id",
-      route: sourcePath,
-    });
-
-    if (!identity) {
-      expect.fail(`Expected graph identity for ${sourcePath}.`);
-    }
-
-    const catalogAssetId = `${identity.assetId}:catalog`;
-    const catalogGraph = {
-      ...identity,
-      assetId: catalogAssetId,
-    };
-
-    await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentRoutes", {
-        ...catalogGraph,
-        authors: [],
-        contentHash: "hash-logarithm",
-        content_id: catalogAssetId,
-        kind: "curriculum-lesson",
-        locale: "id",
-        markdown: true,
-        route,
-        section: "material",
-        sourcePath,
-        syncedAt: 1,
-        title: "Definisi Logaritma",
-      });
-      await ctx.db.insert("contentSearch", {
-        ...catalogGraph,
-        contentHash: "hash-logarithm",
-        content_id: catalogAssetId,
-        description: "Memahami bentuk dasar logaritma.",
-        locale: "id",
-        markdown_url: `https://nakafa.com/id/${route}.md`,
-        route,
-        section: "material",
-        sourcePath,
-        syncedAt: 1,
-        text: "Definisi Logaritma menjelaskan pangkat yang dibutuhkan.",
-        title: "Definisi Logaritma",
-        url: `https://nakafa.com/id/${route}`,
-      });
-    });
-
-    const documents = await t.query(
-      async (ctx) =>
-        await readContentSearchDocuments(
-          ctx,
-          {
-            limit: 1,
-            locale: "id",
-            offset: 0,
-            queries: [route],
-            section: "material",
-          },
-          [route],
-          0
-        )
-    );
-
-    expect(documents.map((document) => document.content_id)).toEqual([
-      catalogAssetId,
-    ]);
   });
 
   it("searches multiple unique query variants in one bounded request", async () => {

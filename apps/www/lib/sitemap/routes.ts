@@ -1,31 +1,20 @@
 import type { api } from "@repo/backend/convex/_generated/api";
-import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
-import { findPublicContentRouteBySourcePath } from "@repo/contents/_types/route/content";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
+import { CONTENT_SITEMAP_ROUTE_PAGE_SIZE } from "@repo/backend/convex/contents/sitemap/spec";
 import { routing } from "@repo/internationalization/src/routing";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { Effect, Option } from "effect";
+import type { FunctionArgs } from "convex/server";
+import { Data, Effect } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 import {
-  getRuntimeContentRouteArtifactPage,
   getRuntimeContentRouteCounts,
-  getRuntimeSitemapPublicRoutes,
+  getRuntimeContentSitemapPage,
+  getRuntimePublicSitemapCount,
+  getRuntimePublicSitemapPage,
 } from "@/lib/content/runtime/routes";
+import { buildSitemapContentPageRoutes } from "@/lib/sitemap/content";
 
 type RuntimeContentSection = FunctionArgs<
   typeof api.contents.queries.runtime.listContentRoutesByPrefix
 >["section"];
-type RuntimeContentRoute = NonNullable<
-  FunctionReturnType<
-    typeof api.contents.queries.runtime.getContentRouteArtifactPage
-  >
->["routes"][number];
-type RuntimeSitemapPublicRoute = FunctionReturnType<
-  typeof api.contents.queries.runtime.listSitemapPublicRoutes
->["page"][number];
-type RuntimeSitemapPublicRoutePage = FunctionReturnType<
-  typeof api.contents.queries.runtime.listSitemapPublicRoutes
->;
 const contentSections: readonly RuntimeContentSection[] = [
   "articles",
   "material",
@@ -48,27 +37,30 @@ type SitemapPage =
       id: string;
       kind: "public";
       locale: Locale;
+      page: number;
     };
 
 /** Descriptor for one graph-backed sitemap artifact page. */
-export type ContentSitemapPage = Extract<SitemapPage, { kind: "content" }>;
+type ContentSitemapPage = Extract<SitemapPage, { kind: "content" }>;
 
-/** Static top-level routes that should always be present in the sitemap. */
-export const baseRoutes = [
+/** A canonical sitemap page id whose materialized route page does not exist. */
+export class SitemapPageNotFoundError extends Data.TaggedError(
+  "SitemapPageNotFoundError"
+)<{
+  readonly pageId: string;
+}> {}
+
+/** Static top-level routes in canonical lexical order. */
+export const baseRoutes: readonly string[] = [
   "/",
-  "/search",
   "/contributor",
   "/curricula",
-  quranRootRoute,
-  "/terms-of-service",
   "/privacy-policy",
+  quranRootRoute,
+  "/search",
   "/security-policy",
+  "/terms-of-service",
 ];
-
-/** Lists stable sitemap page ids from materialized route counts. */
-export function getSitemapPageDescriptors() {
-  return Effect.runPromise(readSitemapPageDescriptors());
-}
 
 /** Reads sitemap page descriptors without loading route rows. */
 export const readSitemapPageDescriptors = Effect.fn(
@@ -77,18 +69,29 @@ export const readSitemapPageDescriptors = Effect.fn(
   const descriptors: SitemapPage[] = [{ id: sitemapBasePageId }];
 
   for (const locale of routing.locales) {
-    descriptors.push({
-      id: formatPublicSitemapPageId(locale),
-      kind: "public",
-      locale,
-    });
+    const [counts, publicCount] = yield* Effect.all(
+      [
+        getRuntimeContentRouteCounts({ locale }),
+        getRuntimePublicSitemapCount({ locale }),
+      ],
+      { concurrency: "unbounded" }
+    );
 
-    const counts = yield* getRuntimeContentRouteCounts({ locale });
+    if (publicCount) {
+      for (let page = 0; page < publicCount.pageCount; page++) {
+        descriptors.push({
+          id: formatPublicSitemapPageId({ locale, page }),
+          kind: "public",
+          locale,
+          page,
+        });
+      }
+    }
 
     for (const count of counts) {
       const section = count.section;
       const pageCount = Math.ceil(
-        count.count / CONTENT_ROUTE_ARTIFACT_PAGE_SIZE
+        count.count / CONTENT_SITEMAP_ROUTE_PAGE_SIZE
       );
 
       for (let page = 0; page < pageCount; page++) {
@@ -107,31 +110,47 @@ export const readSitemapPageDescriptors = Effect.fn(
 });
 
 /** Resolves one sitemap page id into the route artifact page it represents. */
-export function getSitemapPageDescriptor(id: string | undefined) {
-  if (!id || id === sitemapBasePageId) {
-    return { id: sitemapBasePageId } satisfies SitemapPage;
+export function getSitemapPageDescriptor(id: string): SitemapPage | null {
+  if (id === sitemapBasePageId) {
+    return { id: sitemapBasePageId };
   }
 
-  const [prefix, locale, section, rawPage] = id.split("_");
+  const segments = id.split("_");
+  const [prefix, locale] = segments;
 
-  if (prefix === "public" && hasLocale(routing.locales, locale) && !section) {
+  if (!hasLocale(routing.locales, locale)) {
+    return null;
+  }
+
+  if (prefix === "public") {
+    if (segments.length !== 3) {
+      return null;
+    }
+
+    const page = parsePageNumber(segments[2]);
+    if (page === null) {
+      return null;
+    }
+
     return {
       id,
       kind: "public",
       locale,
-    } satisfies SitemapPage;
+      page,
+    };
   }
 
-  if (prefix !== "content" || !hasLocale(routing.locales, locale)) {
+  if (prefix !== "content" || segments.length !== 4) {
     return null;
   }
 
+  const section = segments[2];
   if (!isRuntimeContentSection(section)) {
     return null;
   }
 
-  const page = Number.parseInt(rawPage ?? "", 10);
-  if (!Number.isInteger(page) || page < 0) {
+  const page = parsePageNumber(segments[3]);
+  if (page === null) {
     return null;
   }
 
@@ -141,36 +160,55 @@ export function getSitemapPageDescriptor(id: string | undefined) {
     locale,
     page,
     section,
-  } satisfies SitemapPage;
+  };
 }
 
-/** Runs the sitemap route Effect at the Next metadata boundary. */
-export function getSitemapRoutes(pageId?: string) {
-  return Effect.runPromise(readSitemapRoutes(pageId));
-}
+/** Reads the bounded routes and shared metadata for one sitemap page. */
+export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
+  function* (pageId: string) {
+    const page = getSitemapPageDescriptor(pageId);
 
-/** Builds the deduplicated route list for one sitemap page. */
-export const readSitemapRoutes = Effect.fn("www.sitemap.routes")(function* (
-  pageId?: string
-) {
-  const page = getSitemapPageDescriptor(pageId);
+    if (!page) {
+      return yield* Effect.fail(new SitemapPageNotFoundError({ pageId }));
+    }
 
-  if (!page) {
-    return [];
+    if (isPublicSitemapPage(page)) {
+      const artifact = yield* getRuntimePublicSitemapPage({
+        locale: page.locale,
+        page: page.page,
+      });
+
+      if (!artifact) {
+        return yield* Effect.fail(new SitemapPageNotFoundError({ pageId }));
+      }
+
+      return {
+        routes: artifact.paths.map((path) => ({
+          lastModified: artifact.syncedAt,
+          path: routeToPath(path),
+        })),
+      };
+    }
+
+    if (!isContentSitemapPage(page)) {
+      return {
+        routes: baseRoutes.map((path) => ({ lastModified: undefined, path })),
+      };
+    }
+
+    const artifact = yield* getRuntimeContentSitemapPage({
+      locale: page.locale,
+      page: page.page,
+      section: page.section,
+    });
+
+    if (!artifact) {
+      return yield* Effect.fail(new SitemapPageNotFoundError({ pageId }));
+    }
+
+    return { routes: yield* buildSitemapContentPageRoutes(artifact.routes) };
   }
-
-  if (isPublicSitemapPage(page)) {
-    return yield* readSitemapPublicRoutes(page.locale);
-  }
-
-  if (!isContentSitemapPage(page)) {
-    return sortRoutes(baseRoutes);
-  }
-
-  const rows = yield* getRuntimeContentRoutePageRows(page);
-  const routes = yield* buildSitemapContentPageRoutes(rows);
-  return sortRoutes(routes);
-});
+);
 
 /** Formats one materialized content route page id for Next.js sitemap generation. */
 function formatContentSitemapPageId({
@@ -185,9 +223,30 @@ function formatContentSitemapPageId({
   return `content_${locale}_${section}_${page}`;
 }
 
-/** Formats the public-context route sitemap page id for one locale. */
-function formatPublicSitemapPageId(locale: Locale) {
-  return `public_${locale}`;
+/** Formats one bounded public-context sitemap page id. */
+function formatPublicSitemapPageId({
+  locale,
+  page,
+}: {
+  locale: Locale;
+  page: number;
+}) {
+  return `public_${locale}_${page}`;
+}
+
+/** Parses one canonical non-negative sitemap page number. */
+function parsePageNumber(segment: string | undefined) {
+  if (!segment) {
+    return null;
+  }
+
+  const page = Number(segment);
+
+  if (!Number.isSafeInteger(page) || page < 0 || String(page) !== segment) {
+    return null;
+  }
+
+  return page;
 }
 
 /** Checks whether a raw route page segment is a content section. */
@@ -209,124 +268,7 @@ function isPublicSitemapPage(
   return "kind" in page && page.kind === "public";
 }
 
-/** Reads one materialized content route page through the Convex route catalog. */
-function getRuntimeContentRoutePageRows(page: ContentSitemapPage) {
-  return getRuntimeContentRouteArtifactPage({
-    locale: page.locale,
-    page: page.page,
-    section: page.section,
-  }).pipe(
-    Effect.map((artifactPage) => {
-      if (!artifactPage) {
-        return [];
-      }
-
-      return artifactPage.routes;
-    })
-  );
-}
-
-/** Builds sitemap page routes from concrete route catalog rows. */
-export const buildSitemapContentPageRoutes = Effect.fn(
-  "www.sitemap.contentPageRoutes"
-)(function* (rows: readonly RuntimeContentRoute[]) {
-  const routes = new Set<string>();
-
-  for (const row of rows) {
-    yield* addContentPageRoutes(routes, row);
-  }
-
-  return sortRoutes(routes);
-});
-
-/** Reads sitemap-eligible public context routes through bounded Convex pages. */
-const readSitemapPublicRoutes = Effect.fn("www.sitemap.publicRoutes")(
-  function* (locale: Locale) {
-    const routes = new Set<string>();
-    let cursor: string | null = null;
-
-    while (true) {
-      const page: RuntimeSitemapPublicRoutePage =
-        yield* getRuntimeSitemapPublicRoutes({
-          cursor,
-          limit: CONTENT_ROUTE_ARTIFACT_PAGE_SIZE,
-          locale,
-        });
-
-      for (const route of page.page) {
-        if (isSitemapPublicContextRoute(route)) {
-          routes.add(routeToPath(route.publicPath));
-        }
-      }
-
-      if (page.isDone) {
-        return sortRoutes(routes);
-      }
-
-      cursor = page.continueCursor;
-    }
-  }
-);
-
-/** Adds the concrete route and supported parent index routes. */
-function addContentPageRoutes(routes: Set<string>, row: RuntimeContentRoute) {
-  return Effect.gen(function* () {
-    if (row.section === "articles") {
-      addArticleRoutes(routes, row.route);
-      return;
-    }
-
-    if (row.section === "quran") {
-      routes.add(routeToPath(row.route));
-      return;
-    }
-
-    if (row.section === "tryout") {
-      routes.add(routeToPath(row.route));
-      return;
-    }
-
-    const route = yield* findPublicContentRouteBySourcePath(
-      row.sourcePath,
-      row.locale
-    );
-
-    if (Option.isNone(route)) {
-      return;
-    }
-
-    addProjectedContentRoutes(routes, route.value);
-  });
-}
-
-/** Adds article category and detail routes. */
-function addArticleRoutes(routes: Set<string>, route: string) {
-  const [, category] = route.split("/");
-  routes.add(`/articles/${category}`);
-  routes.add(routeToPath(route));
-}
-
-/** Adds projected public content routes plus their useful listing parents. */
-function addProjectedContentRoutes(
-  routes: Set<string>,
-  route: PublicContentRoute
-) {
-  if (route.kind === "subject-lesson") {
-    routes.add(routeToPath(route.publicPath));
-  }
-}
-
-/** Keeps public-route sitemap rows scoped to rendered app context pages. */
-function isSitemapPublicContextRoute(route: RuntimeSitemapPublicRoute) {
-  return route.kind === "curriculum-context";
-}
-
 /** Converts one route string into an app-level HTTP path string. */
 function routeToPath(route: string) {
   return `/${route}`;
-}
-
-/** Returns routes in stable lexical order for deterministic artifacts. */
-function sortRoutes(routes: Iterable<string>) {
-  return Array.from(new Set(routes)).sort((a, b) => a.localeCompare(b));
 }

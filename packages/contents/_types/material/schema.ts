@@ -2,6 +2,7 @@ import { LocaleSchema } from "@repo/contents/_types/content";
 import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import { MaterialCardDescriptionSchema } from "@repo/contents/_types/material/description";
 import { PublicRouteSlugMapSchema } from "@repo/contents/_types/route/segment";
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -47,15 +48,13 @@ const LocalizedDescriptionSchema = Schema.Struct({
   title: Schema.String,
 });
 
-const LocaleTitleMapSchema = Schema.Struct({
-  en: LocalizedTitleSchema,
-  id: LocalizedTitleSchema,
-});
+const LocaleTitleMapSchema = Schema.Struct(
+  fieldsForEveryLocale(LocalizedTitleSchema)
+);
 
-const LocaleDescriptionMapSchema = Schema.Struct({
-  en: LocalizedDescriptionSchema,
-  id: LocalizedDescriptionSchema,
-});
+const LocaleDescriptionMapSchema = Schema.Struct(
+  fieldsForEveryLocale(LocalizedDescriptionSchema)
+);
 
 export const LessonMaterialSectionSchema = Schema.Struct({
   routeSlugs: PublicRouteSlugMapSchema,

@@ -17,7 +17,7 @@ export function filterOnboardingPrograms(catalog: LearningProgramCatalog) {
 }
 
 /** Decides whether a locale can require first-run learning-profile onboarding. */
-export function hasOnboardingPrograms(catalog: LearningProgramCatalog) {
+function hasOnboardingPrograms(catalog: LearningProgramCatalog) {
   return catalog.some(isProgramReadyForOnboarding);
 }
 

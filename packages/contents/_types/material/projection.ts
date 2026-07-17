@@ -1,7 +1,4 @@
-import {
-  type MaterialList,
-  MaterialSchema,
-} from "@repo/contents/_types/curriculum/material";
+import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import { MaterialCardDescriptionSchema } from "@repo/contents/_types/material/description";
 import type {
   LessonMaterialSource,
@@ -13,6 +10,7 @@ import {
   MaterialLocaleSchema,
 } from "@repo/contents/_types/material/schema";
 import { cleanSlug } from "@repo/utilities/helper";
+import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -43,33 +41,16 @@ export type LessonMaterialProjection = SchemaType<
   typeof LessonMaterialProjectionSchema
 >;
 
-/** Returns the localized lesson navigation list expected by material pages. */
-export function toLessonMaterialList(
-  material: LessonMaterialSource,
-  locale: MaterialLocale
-): MaterialList {
-  return [
-    {
-      ...readDescriptionTranslation(material, locale),
-      href: `/${material.assetRoot}`,
-      items: material.sections.map((section) => ({
-        href: `/${material.assetRoot}/${section.slug}`,
-        title: section.translations[locale].title,
-      })),
-    },
-  ];
-}
-
 /** Projects all lesson material sources into sync-ready rows. */
 export function listLessonMaterials(
   materials: readonly MaterialSource[],
   locale?: MaterialLocale
 ) {
   return materials.flatMap((material) => {
-    const locales: MaterialLocale[] =
-      locale === undefined ? ["en", "id"] : [locale];
+    const materialLocales: readonly MaterialLocale[] =
+      locale === undefined ? locales : [locale];
 
-    return locales.map((materialLocale) =>
+    return materialLocales.map((materialLocale) =>
       toLessonMaterialProjection(material, materialLocale)
     );
   });
@@ -119,21 +100,5 @@ function toLessonMaterialProjection(
     slug: material.assetRoot,
     title: material.translations[locale].title,
     topic: material.slug,
-  };
-}
-
-/**
- * Reads localized display copy from material sources without inventing fallback
- * descriptions, so missing copy remains visible to source audits.
- */
-function readDescriptionTranslation(
-  item: Pick<LessonMaterialSource, "translations">,
-  locale: MaterialLocale
-) {
-  const translation = item.translations[locale];
-
-  return {
-    description: translation.description,
-    title: translation.title,
   };
 }

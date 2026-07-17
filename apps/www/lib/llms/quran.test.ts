@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getQuranLlmsText, getQuranRouteMetadata } from "@/lib/llms/quran";
+import { getQuranLlmsText } from "@/lib/llms/quran";
 
 const runtimeMocks = vi.hoisted(() => ({
   getRuntimeQuranSurahPage: vi.fn(),
@@ -25,42 +25,19 @@ beforeEach(() => {
 });
 
 describe("quran llms text", () => {
-  it("builds quran route metadata for list, known surah, and unknown surah routes", async () => {
-    await expect(
-      Effect.runPromise(
-        getQuranRouteMetadata({ locale: "en", route: "/quran" })
-      )
-    ).resolves.toEqual({
-      description: "List of all 114 Surahs in the Holy Quran.",
-      hasMarkdown: true,
-      title: "Al-Quran",
-    });
-
-    await expect(
-      Effect.runPromise(
-        getQuranRouteMetadata({ locale: "id", route: "/quran/1" })
-      )
-    ).resolves.toMatchObject({
-      hasMarkdown: true,
-      title: "1. Al-Fatihah",
-    });
-
-    await expect(
-      Effect.runPromise(
-        getQuranRouteMetadata({ locale: "en", route: "/quran/999" })
-      )
-    ).resolves.toEqual({
-      description: undefined,
-      hasMarkdown: false,
-      title: "999",
-    });
-  });
-
   it("returns null for non-quran and malformed quran markdown routes", async () => {
     await expect(
       Effect.runPromise(
         getQuranLlmsText({
           cleanSlug: "articles/politics/dynastic-politics-asian-values",
+          locale: "en",
+        })
+      )
+    ).resolves.toBe(null);
+    await expect(
+      Effect.runPromise(
+        getQuranLlmsText({
+          cleanSlug: "quran-afdocs-nonexistent-8f3a",
           locale: "en",
         })
       )
@@ -109,6 +86,7 @@ describe("quran llms text", () => {
     );
 
     expect(secondSurahText).toContain("## Al-Baqarah");
+    expect(secondSurahText).toContain("**Revelation:** Makkah");
     expect(secondSurahText).not.toContain("### Pre-Bismillah");
     expect(secondSurahText).toContain("#### Verse 80");
     expect(secondSurahText).not.toContain("#### Verse 81");

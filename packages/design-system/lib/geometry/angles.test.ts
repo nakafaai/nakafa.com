@@ -1,7 +1,6 @@
 // @vitest-environment node
 import {
   getCos,
-  getDegrees,
   getRadians,
   getSin,
   getTan,
@@ -9,9 +8,8 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("math degree helpers", () => {
-  it("converts between degrees and radians", () => {
+  it("converts degrees to radians", () => {
     expect(getRadians(180)).toBe(Math.PI);
-    expect(getDegrees(Math.PI / 2)).toBe(90);
   });
 
   it("evaluates trigonometry from degree measures", () => {

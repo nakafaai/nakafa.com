@@ -1,4 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
+import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import { clean } from "@repo/backend/scripts/sync-content/cleanup/clean";
 import {
   formatDuration,
@@ -29,13 +31,17 @@ import type {
   SyncResult,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
-import { syncContentRouteArtifactPages } from "@repo/backend/scripts/sync-content/routes/artifacts";
+import {
+  createContentRouteArtifactTargets,
+  syncContentRouteArtifactPages,
+} from "@repo/backend/scripts/sync-content/routes/artifacts";
 import { readRoutePageOptionsAfterCleanup } from "@repo/backend/scripts/sync-content/routes/options";
 import { syncPublicRoutes } from "@repo/backend/scripts/sync-content/routes/sync";
 import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/runtime/cache";
 import {
   getChangedFilesSince,
   getCurrentGitCommit,
+  getDeletedFilesSince,
   loadSyncState,
   saveSyncState,
 } from "@repo/backend/scripts/sync-content/runtime/files";
@@ -49,6 +55,22 @@ import {
 import { readIncrementalSyncPlan } from "@repo/backend/scripts/sync-content/workflow/plan";
 import { logSyncSummary } from "@repo/backend/scripts/sync-content/workflow/summary";
 import { Effect } from "effect";
+
+/** Rejects locale scoping that could advance shared incremental sync state incompletely. */
+export const validateIncrementalSyncOptions = Effect.fn(
+  "sync.validateIncrementalOptions"
+)(function* (options: SyncOptions) {
+  if (!options.locale) {
+    return;
+  }
+
+  return yield* Effect.fail(
+    new ScriptFailureError({
+      message:
+        "Incremental sync does not support --locale because sync state is shared across locales",
+    })
+  );
+});
 
 /** Runs the complete content sync in dependency-safe phases. */
 export const syncAll = Effect.fn("sync.all")(function* (
@@ -122,7 +144,10 @@ export const syncAll = Effect.fn("sync.all")(function* (
     );
 
     const routePagePhase = startPhase(metrics, "Route Pages");
-    routePageResult = yield* syncContentRouteArtifactPages(config, options);
+    routePageResult = yield* syncContentRouteArtifactPages(
+      config,
+      createContentRouteArtifactTargets(options.locale)
+    );
     endPhase(
       routePagePhase,
       routePageResult.created +
@@ -180,7 +205,10 @@ export const syncAll = Effect.fn("sync.all")(function* (
 
     log("Phase 5: Materializing route artifact pages...");
     const phase5Start = performance.now();
-    routePageResult = yield* syncContentRouteArtifactPages(config, options);
+    routePageResult = yield* syncContentRouteArtifactPages(
+      config,
+      createContentRouteArtifactTargets(options.locale)
+    );
     log(`  Route Pages:         ${formatSyncResult(routePageResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase5Start)}`);
 
@@ -222,6 +250,8 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   config: ConvexConfig,
   options: SyncOptions
 ) {
+  yield* validateIncrementalSyncOptions(options);
+
   const metrics = createMetrics();
   log("=== INCREMENTAL SYNC ===\n");
 
@@ -250,7 +280,15 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   log(`Last commit: ${syncState.lastSyncCommit.slice(0, 8)}`);
   log(`Current commit: ${currentCommit.slice(0, 8)}\n`);
 
-  const changedFiles = yield* getChangedFilesSince(syncState.lastSyncCommit);
+  const [changedFiles, deletedFiles] = yield* Effect.all([
+    getChangedFilesSince(syncState.lastSyncCommit),
+    getDeletedFilesSince(syncState.lastSyncCommit),
+  ]);
+
+  for (const deletedFile of deletedFiles) {
+    changedFiles.add(deletedFile);
+  }
+
   if (changedFiles.size === 0) {
     logSuccess(
       "No tracked or untracked content files changed. Skipping Convex sync."
@@ -296,6 +334,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   }
 
   const syncPlan = readIncrementalSyncPlan(changedFilesArray);
+  const contentFilesWereDeleted = deletedFiles.size > 0;
 
   let articleResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   let curriculumTopicResult: SyncResult = {
@@ -325,6 +364,30 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     unchanged: 0,
     updated: 0,
   };
+
+  let routePageOptions = options;
+  let routeArtifactTargets = syncPlan.routeArtifactTargets;
+
+  if (routeArtifactTargets.length > 0 && contentFilesWereDeleted) {
+    log("Cleaning stale content before syncing replacement rows...");
+    const cleanResult = yield* clean(config, {
+      ...options,
+      force: true,
+    });
+    routePageOptions = readRoutePageOptionsAfterCleanup(options, cleanResult);
+
+    if (cleanResult.deleted > 0) {
+      const affectedSections = NAKAFA_CONTENT_SECTIONS.filter((section) =>
+        syncPlan.routeArtifactTargets.some(
+          (target) => target.section === section
+        )
+      );
+      routeArtifactTargets = createContentRouteArtifactTargets(
+        undefined,
+        affectedSections
+      );
+    }
+  }
 
   const plannedRowPhases = new Set(syncPlan.rowPhases);
 
@@ -360,36 +423,35 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     log("Tryouts: no changes");
   }
 
-  let routePageOptions = options;
-
-  if (syncPlan.cleanBeforeRouteArtifacts) {
-    log("Cleaning stale content before route artifact pages...");
-    const cleanResult = yield* clean(config, {
+  if (syncPlan.refreshQuran) {
+    quranResult = yield* syncQuran(config, {
       ...options,
-      force: true,
+      quiet: true,
     });
-    routePageOptions = readRoutePageOptionsAfterCleanup(options, cleanResult);
+    addPhaseMetrics(metrics, "Quran", quranResult);
+  } else {
+    log("Quran: no changes");
   }
 
-  quranResult = yield* syncQuran(config, {
-    ...options,
-    quiet: true,
-  });
-  addPhaseMetrics(metrics, "Quran", quranResult);
-
-  routePageResult = yield* syncContentRouteArtifactPages(
-    config,
-    routePageOptions
-  );
-  addPhaseMetrics(metrics, "Route Pages", routePageResult);
+  if (routeArtifactTargets.length > 0) {
+    routePageResult = yield* syncContentRouteArtifactPages(
+      config,
+      routeArtifactTargets
+    );
+    addPhaseMetrics(metrics, "Route Pages", routePageResult);
+  }
 
   if (syncPlan.refreshPublicRoutes) {
     publicRouteResult = yield* syncPublicRoutes(config, routePageOptions);
     addPhaseMetrics(metrics, "Public Routes", publicRouteResult);
+    learningProgramResult = yield* syncLearningPrograms(
+      config,
+      routePageOptions
+    );
+    addPhaseMetrics(metrics, "Learning Programs", learningProgramResult);
+  } else {
+    log("Learning Programs: no changes");
   }
-
-  learningProgramResult = yield* syncLearningPrograms(config, routePageOptions);
-  addPhaseMetrics(metrics, "Learning Programs", learningProgramResult);
 
   finalizeMetrics(metrics);
   log("\n=== SUMMARY ===\n");

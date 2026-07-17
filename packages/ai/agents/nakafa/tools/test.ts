@@ -5,10 +5,7 @@ import {
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import {
-  normalizeNakafaContentInput,
-  parseNakafaContentRef,
-} from "@repo/contents/_lib/agent/refs";
+import { normalizeNakafaContentInput } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { defaultLocale, locales } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
@@ -152,14 +149,13 @@ const nakafaTestRefs = [
 
 /** Resolves graph content IDs and public URL projections for injected tests. */
 function resolveNakafaTestContentRef(input: string) {
-  const parsed = parseNakafaContentRef(input);
-
-  if (Option.isSome(parsed)) {
-    return parsed;
-  }
-
   const normalized = normalizeNakafaContentInput(input);
-  const ref = nakafaTestRefs.find((item) => item.content_id === normalized);
+  const ref = nakafaTestRefs.find(
+    (item) =>
+      item.content_id === normalized ||
+      normalizeNakafaContentInput(item.url) === normalized ||
+      normalizeNakafaContentInput(item.markdown_url) === normalized
+  );
 
   if (!ref) {
     return Option.none();

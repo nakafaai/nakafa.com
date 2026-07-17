@@ -3,6 +3,7 @@ import { PublicRouteSlugMapSchema } from "@repo/contents/_types/route/segment";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
+type SchemaEncoded<T extends Schema.Schema.Any> = Schema.Schema.Encoded<T>;
 
 export const MaterialRouteDomainSchema = Schema.Struct({
   domain: MaterialSchema,
@@ -12,7 +13,9 @@ export const MaterialRouteDomainSchema = Schema.Struct({
 
 export type MaterialRouteDomain = SchemaType<typeof MaterialRouteDomainSchema>;
 
-const materialRouteDomainInput = [
+const materialRouteDomainInput: readonly SchemaEncoded<
+  typeof MaterialRouteDomainSchema
+>[] = [
   { domain: "ai-ds", kind: "lesson", routeSlugs: { en: "ai-ds", id: "ai-ds" } },
   {
     domain: "biology",

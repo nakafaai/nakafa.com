@@ -1,29 +1,31 @@
 import {
-  createBatchDeleteMutation,
+  deleteBatchFromTable,
   deleteContentAudioRows,
   deleteContentSearchRows,
+} from "@repo/backend/convex/contentSync/reset/impl";
+import {
+  batchDeleteResultValidator,
+  type ResettableTableName,
+} from "@repo/backend/convex/contentSync/reset/spec";
+import {
   deleteQuestionRows,
   deleteTryoutContentRouteCountRows,
   deleteTryoutContentRoutePageRows,
   deleteTryoutContentRouteRows,
   deleteTryoutContentSearchRows,
   deleteTryoutEntitlementRows,
-  deleteTryoutRuntimeRows,
-} from "@repo/backend/convex/contentSync/reset/impl";
-import { batchDeleteResultValidator } from "@repo/backend/convex/contentSync/reset/spec";
+} from "@repo/backend/convex/contentSync/reset/tryouts";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
-/**
- * Delete one bounded batch of section attempts owned by tryout attempts.
- *
- * This is intentionally narrower than the full content reset path so operators
- * can wipe tryout runtime data in dependency order.
- */
-export const deleteTryoutRuntimeBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: deleteTryoutRuntimeRows,
-});
+/** Creates one internal mutation that runs a bounded table reset program. */
+function createBatchDeleteMutation(tableName: ResettableTableName) {
+  return internalMutation({
+    args: {},
+    returns: batchDeleteResultValidator,
+    handler: (ctx) => runConvexProgram(deleteBatchFromTable(ctx, tableName)),
+  });
+}
 
 export const deleteContentAuthorsBatch =
   createBatchDeleteMutation("contentAuthors");
@@ -31,7 +33,7 @@ export const deleteContentAuthorsBatch =
 export const deleteContentSearchBatch = internalMutation({
   args: {},
   returns: batchDeleteResultValidator,
-  handler: deleteContentSearchRows,
+  handler: (ctx) => runConvexProgram(deleteContentSearchRows(ctx)),
 });
 /** Delete one bounded batch of queued learning engagement events. */
 export const deleteLearningEngagementQueueBatch = createBatchDeleteMutation(
@@ -71,6 +73,12 @@ export const deletePublicRoutesBatch =
 export const deletePublicRouteSyncStateBatch = createBatchDeleteMutation(
   "publicRouteSyncState"
 );
+export const deletePublicRouteSitemapCountsBatch = createBatchDeleteMutation(
+  "publicRouteSitemapCounts"
+);
+export const deletePublicRouteSitemapPagesBatch = createBatchDeleteMutation(
+  "publicRouteSitemapPages"
+);
 export const deleteContentRouteCountsBatch =
   createBatchDeleteMutation("contentRouteCounts");
 export const deleteContentRoutePagesBatch =
@@ -79,25 +87,25 @@ export const deleteContentRoutePagesBatch =
 export const deleteTryoutContentRoutesBatch = internalMutation({
   args: {},
   returns: batchDeleteResultValidator,
-  handler: deleteTryoutContentRouteRows,
+  handler: (ctx) => runConvexProgram(deleteTryoutContentRouteRows(ctx)),
 });
 /** Delete one bounded batch of try-out search projection rows. */
 export const deleteTryoutContentSearchBatch = internalMutation({
   args: {},
   returns: batchDeleteResultValidator,
-  handler: deleteTryoutContentSearchRows,
+  handler: (ctx) => runConvexProgram(deleteTryoutContentSearchRows(ctx)),
 });
 /** Delete one bounded batch of try-out route count rows. */
 export const deleteTryoutContentRouteCountsBatch = internalMutation({
   args: {},
   returns: batchDeleteResultValidator,
-  handler: deleteTryoutContentRouteCountRows,
+  handler: (ctx) => runConvexProgram(deleteTryoutContentRouteCountRows(ctx)),
 });
 /** Delete one bounded batch of try-out route artifact pages. */
 export const deleteTryoutContentRoutePagesBatch = internalMutation({
   args: {},
   returns: batchDeleteResultValidator,
-  handler: deleteTryoutContentRoutePageRows,
+  handler: (ctx) => runConvexProgram(deleteTryoutContentRoutePageRows(ctx)),
 });
 export const deleteQuranVersesBatch = createBatchDeleteMutation("quranVerses");
 export const deleteQuranSurahsBatch = createBatchDeleteMutation("quranSurahs");
@@ -120,7 +128,7 @@ export const deleteAudioContentSourcesBatch = createBatchDeleteMutation(
 export const deleteContentAudiosBatch = internalMutation({
   args: {},
   returns: batchDeleteResultValidator,
-  handler: deleteContentAudioRows,
+  handler: (ctx) => runConvexProgram(deleteContentAudioRows(ctx)),
 });
 export const deleteTryoutSectionAttemptsBatch = createBatchDeleteMutation(
   "tryoutSectionAttempts"
@@ -192,7 +200,7 @@ export const deleteQuestionsBatch = createBatchDeleteMutation("questions");
 export const deleteQuestionsWithDependentsBatch = internalMutation({
   args: {},
   returns: batchDeleteResultValidator,
-  handler: deleteQuestionRows,
+  handler: (ctx) => runConvexProgram(deleteQuestionRows(ctx)),
 });
 export const deleteQuestionSetsBatch =
   createBatchDeleteMutation("questionSets");
@@ -207,5 +215,5 @@ export const deleteAuthorsBatch = createBatchDeleteMutation("authors");
 export const deleteTryoutEntitlementsBatch = internalMutation({
   args: {},
   returns: batchDeleteResultValidator,
-  handler: deleteTryoutEntitlementRows,
+  handler: (ctx) => runConvexProgram(deleteTryoutEntitlementRows(ctx)),
 });

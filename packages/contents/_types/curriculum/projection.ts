@@ -11,12 +11,10 @@ import {
   findMaterialSourceByRoute,
   normalizeMaterialRoute,
 } from "@repo/contents/_types/material/projection";
-import type {
-  MaterialLocale,
-  MaterialSource,
-} from "@repo/contents/_types/material/schema";
+import type { MaterialSource } from "@repo/contents/_types/material/schema";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
+import { locales } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
 
 export class CurriculumProjectionError extends Schema.TaggedError<CurriculumProjectionError>()(
@@ -71,19 +69,6 @@ export function listCurriculumNodes({
   }
 
   return result.nodes;
-}
-
-/** Returns projection issues without throwing so architecture tests can report them. */
-export function getCurriculumProjectionIssues({
-  curricula = CURRICULUM_SOURCES,
-  materials = MATERIAL_SOURCES,
-}: {
-  curricula?: readonly CurriculumSource[];
-  materials?: readonly MaterialSource[];
-} = {}) {
-  return projectCurricula({ curricula, materials }).failures.map(
-    (failure) => failure.message
-  );
 }
 
 /** Finds canonical program keys whose curriculum mapping includes this material route. */
@@ -359,12 +344,12 @@ function readMaterialTranslations(
 ): CurriculumNodeTranslationMap {
   return {
     en: {
-      title: material.translations.en.title,
       routeSlug: material.routeSlugs.en,
+      title: material.translations.en.title,
     },
     id: {
-      title: material.translations.id.title,
       routeSlug: material.routeSlugs.id,
+      title: material.translations.id.title,
     },
   };
 }
@@ -374,8 +359,6 @@ function isDuplicatedDisplay(
   override: CurriculumNodeTranslationMap,
   materialTranslations: CurriculumNodeTranslationMap
 ) {
-  const locales: readonly MaterialLocale[] = ["en", "id"];
-
   return locales.every((locale) => {
     const overrideTranslation = override[locale];
     const materialTranslation = materialTranslations[locale];

@@ -1,9 +1,12 @@
-import type { Locale } from "next-intl";
+import { LLMS_TEXT_PATH } from "@/lib/agent-discovery";
 import {
   BASE_URL,
   ENGLISH_LANGUAGE_NAMES,
   MARKDOWN_EXTENSIONS,
 } from "@/lib/llms/constants";
+
+/** Canonical discovery directive shown near the top of agent-facing markdown. */
+export const AGENT_MARKDOWN_DIRECTIVE = `> For AI agents: use [llms.txt](${BASE_URL}${LLMS_TEXT_PATH}) for the site index. Markdown versions are available by appending \`.md\` to content URLs or sending \`Accept: text/markdown\`.`;
 
 /** Builds the common markdown header used by page-level llms output. */
 export function buildHeader({
@@ -18,7 +21,7 @@ export function buildHeader({
   const header = [
     "# Nakafa Learning Content",
     "",
-    `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt) for the site index. Markdown versions are available by appending \`.md\` to content URLs or sending \`Accept: text/markdown\`.`,
+    AGENT_MARKDOWN_DIRECTIVE,
     "",
     `URL: ${url}`,
   ];
@@ -30,14 +33,6 @@ export function buildHeader({
   header.push("", description, "", "---", "");
 
   return header;
-}
-
-/** Resolves a localized Quran translation with English as the fallback. */
-export function getTranslation(
-  translations: Record<Locale, string>,
-  locale: Locale
-) {
-  return translations[locale] || translations.en;
 }
 
 /** Removes markdown-style route suffixes before content lookup. */
@@ -60,7 +55,7 @@ export function formatRouteTitle(route: string) {
 }
 
 /** Converts one kebab-case route segment into title case. */
-export function formatSegmentTitle(segment: string) {
+function formatSegmentTitle(segment: string) {
   return segment
     .split("-")
     .filter(Boolean)

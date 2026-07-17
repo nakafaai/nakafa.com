@@ -1,47 +1,23 @@
-import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
+import {
+  InvalidPublicRouteSourceError,
+  MissingPublicSlugError,
+} from "@repo/contents/_types/route/error";
 import {
   comparePublicRouteOrder,
-  decodeRouteDomains,
   getParentPath,
-  getPublicRouteNamespace,
+  lookupNamespaceSegment,
   makePath,
   readPathWithoutNamespace,
 } from "@repo/contents/_types/route/path";
-import { Effect, Exit } from "effect";
-import { describe, expect, it } from "vitest";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import { Effect } from "effect";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("public route path helpers", () => {
-  it("decodes source-owned domain rows and localized namespace segments", () => {
-    const domains = Effect.runSync(decodeRouteDomains(MATERIAL_ROUTE_DOMAINS));
-
-    expect(domains.length).toBeGreaterThan(0);
-    expect(Effect.runSync(getPublicRouteNamespace("subject", "id"))).toBe(
-      "materi"
-    );
-  });
-
-  it("fails with typed route source errors for invalid domain rows", () => {
-    const exit = Effect.runSyncExit(
-      decodeRouteDomains([
-        {
-          domain: "mathematics",
-          kind: "lesson",
-          routeSlugs: { en: "Mathematics", id: "matematika" },
-        },
-      ])
-    );
-
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
-
-  it("fails with typed route source errors for unknown namespaces", () => {
-    const exit = Effect.runSyncExit(
-      getPublicRouteNamespace(JSON.parse('"missing-surface"'), "en")
-    );
-
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
-
   it("reads route hierarchy and deterministic ordering from decoded paths", () => {
     expect(getParentPath("materi/matematika/integral/jumlahan-riemann")).toBe(
       "materi/matematika/integral"
@@ -67,5 +43,21 @@ describe("public route path helpers", () => {
         { publicPath: Effect.runSync(makePath(["materi", "a"])) }
       )
     ).toBeGreaterThan(0);
+  });
+
+  it("maps invalid route segments to the typed route error", () => {
+    const error = Effect.runSync(Effect.flip(makePath(["Not A Segment"])));
+
+    expect(error).toBeInstanceOf(InvalidPublicRouteSourceError);
+  });
+
+  it("fails with a typed error when a namespace source is missing", async () => {
+    vi.spyOn(PUBLIC_ROUTE_SURFACES, "find").mockReturnValueOnce(undefined);
+
+    const error = await Effect.runPromise(
+      Effect.flip(lookupNamespaceSegment("subject", "en"))
+    );
+
+    expect(error).toBeInstanceOf(MissingPublicSlugError);
   });
 });

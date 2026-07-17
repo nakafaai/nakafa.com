@@ -21,14 +21,23 @@ type ContentRouteArtifactPageArgs = FunctionArgs<
 type ContentRouteCountsArgs = FunctionArgs<
   typeof api.contents.queries.runtime.listContentRouteCounts
 >;
-type SitemapPublicRoutesArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.listSitemapPublicRoutes
+type ContentSitemapPageArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.getContentSitemapPage
+>;
+type PublicSitemapCountArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.getPublicSitemapCount
+>;
+type PublicSitemapPageArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.getPublicSitemapPage
 >;
 type LatestContentRoutesArgs = FunctionArgs<
   typeof api.contents.queries.runtime.listLatestContentRoutes
 >;
 type ContentRouteArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getContentRoute
+>;
+type PublicRouteArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.getPublicRouteByPath
 >;
 type LatestContentRoutes = FunctionReturnType<
   typeof api.contents.queries.runtime.listLatestContentRoutes
@@ -80,10 +89,26 @@ export function fetchRuntimeContentRouteCounts(args: ContentRouteCountsArgs) {
   );
 }
 
-/** Reads one bounded sitemap public-route page from the Convex runtime model. */
-export function fetchRuntimeSitemapPublicRoutes(args: SitemapPublicRoutesArgs) {
+/** Reads one sitemap-sized group of content route artifacts. */
+function fetchRuntimeContentSitemapPage(args: ContentSitemapPageArgs) {
   return fetchRuntimeQuery(
-    api.contents.queries.runtime.listSitemapPublicRoutes,
+    api.contents.queries.runtime.getContentSitemapPage,
+    args
+  );
+}
+
+/** Reads one locale's bounded public sitemap page count. */
+function fetchRuntimePublicSitemapCount(args: PublicSitemapCountArgs) {
+  return fetchRuntimeQuery(
+    api.contents.queries.runtime.getPublicSitemapCount,
+    args
+  );
+}
+
+/** Reads one exact bounded public sitemap page. */
+function fetchRuntimePublicSitemapPage(args: PublicSitemapPageArgs) {
+  return fetchRuntimeQuery(
+    api.contents.queries.runtime.getPublicSitemapPage,
     args
   );
 }
@@ -99,6 +124,14 @@ export function fetchRuntimeLatestContentRoutes(args: LatestContentRoutesArgs) {
 /** Reads one exact route-catalog row from the Convex content runtime model. */
 export function fetchRuntimeContentRoute(args: ContentRouteArgs) {
   return fetchRuntimeQuery(api.contents.queries.runtime.getContentRoute, args);
+}
+
+/** Reads one exact public route from the indexed Convex route projection. */
+function fetchRuntimePublicRoute(args: PublicRouteArgs) {
+  return fetchRuntimeQuery(
+    api.contents.queries.runtime.getPublicRouteByPath,
+    args
+  );
 }
 
 /** Reads one bounded route-catalog page matching a locale, section, and prefix. */
@@ -146,12 +179,30 @@ export const getRuntimeContentRouteCounts = Effect.fn(
   );
 });
 
-/** Reads one bounded page of sitemap-eligible public context routes. */
-export const getRuntimeSitemapPublicRoutes = Effect.fn(
-  "www.contentRuntime.sitemapPublicRoutes"
-)(function* (args: SitemapPublicRoutesArgs) {
-  return yield* readRuntimeQuery("listSitemapPublicRoutes", () =>
-    fetchRuntimeSitemapPublicRoutes(args)
+/** Reads one sitemap-sized group of content route artifacts. */
+export const getRuntimeContentSitemapPage = Effect.fn(
+  "www.contentRuntime.contentSitemapPage"
+)(function* (args: ContentSitemapPageArgs) {
+  return yield* readRuntimeQuery("getContentSitemapPage", () =>
+    fetchRuntimeContentSitemapPage(args)
+  );
+});
+
+/** Reads one locale's bounded public sitemap page count. */
+export const getRuntimePublicSitemapCount = Effect.fn(
+  "www.contentRuntime.publicSitemapCount"
+)(function* (args: PublicSitemapCountArgs) {
+  return yield* readRuntimeQuery("getPublicSitemapCount", () =>
+    fetchRuntimePublicSitemapCount(args)
+  );
+});
+
+/** Reads one exact bounded public sitemap page. */
+export const getRuntimePublicSitemapPage = Effect.fn(
+  "www.contentRuntime.publicSitemapPage"
+)(function* (args: PublicSitemapPageArgs) {
+  return yield* readRuntimeQuery("getPublicSitemapPage", () =>
+    fetchRuntimePublicSitemapPage(args)
   );
 });
 
@@ -173,5 +224,14 @@ export const getRuntimeContentRoute = Effect.fn(
 )(function* (args: ContentRouteArgs) {
   return yield* readRuntimeQuery("getContentRoute", () =>
     fetchRuntimeContentRoute(args)
+  );
+});
+
+/** Reads one exact public route through its locale and localized public path. */
+export const getRuntimePublicRoute = Effect.fn(
+  "www.contentRuntime.publicRoute"
+)(function* (args: PublicRouteArgs) {
+  return yield* readRuntimeQuery("getPublicRouteByPath", () =>
+    fetchRuntimePublicRoute(args)
   );
 });

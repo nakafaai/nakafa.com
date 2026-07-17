@@ -11,6 +11,10 @@ import {
 } from "@repo/backend/convex/contents/popularity";
 import { storedPublicRouteValidator } from "@repo/backend/convex/contents/publicRoutes/spec";
 import {
+  publicRouteSitemapCountValidator,
+  publicRouteSitemapPageValidator,
+} from "@repo/backend/convex/contents/sitemap/spec";
+import {
   localeValidator,
   materialValidator,
   nakafaSectionValidator,
@@ -293,7 +297,6 @@ const tables = {
   contentRoutes: defineTable({
     ...learningGraphIdentityValidator.fields,
     authors: v.array(v.object({ name: v.string() })),
-    countedAt: v.optional(v.number()),
     contentHash: v.string(),
     content_id: graphContentIdValidator,
     date: v.optional(v.number()),
@@ -343,7 +346,7 @@ const tables = {
     .index("by_kind", ["kind"])
     .index("by_section", ["section"]),
 
-  /** Bounded route pages materialized by sync for sitemap and LLMS artifacts. */
+  /** Immutable route pages keyed by locale, section, generation, and page. */
   contentRoutePages: defineTable({
     locale: localeValidator,
     page: v.number(),
@@ -351,11 +354,14 @@ const tables = {
     routes: v.array(contentRoutePageItemValidator),
     section: nakafaSectionValidator,
     syncedAt: v.number(),
-  })
-    .index("by_locale_and_section", ["locale", "section"])
-    .index("by_locale_and_section_and_page", ["locale", "section", "page"]),
+  }).index("by_locale_and_section_and_syncedAt_and_page", [
+    "locale",
+    "section",
+    "syncedAt",
+    "page",
+  ]),
 
-  /** Materialized route counts used by agent taxonomy without route scans. */
+  /** Committed route counts and generation pointers for public artifacts. */
   contentRouteCounts: defineTable({
     count: v.number(),
     locale: localeValidator,
@@ -364,6 +370,16 @@ const tables = {
   })
     .index("by_locale", ["locale"])
     .index("by_locale_and_section", ["locale", "section"]),
+
+  /** Locale totals used to discover bounded public sitemap pages. */
+  publicRouteSitemapCounts: defineTable(
+    publicRouteSitemapCountValidator.fields
+  ).index("by_locale", ["locale"]),
+
+  /** Immutable exact paths keyed by locale, generation, and page. */
+  publicRouteSitemapPages: defineTable(
+    publicRouteSitemapPageValidator.fields
+  ).index("by_locale_and_syncedAt_and_page", ["locale", "syncedAt", "page"]),
 
   /**
    * Source-owned public route projection for material, curriculum, and
@@ -418,11 +434,6 @@ const tables = {
       "materialContextNodeKey",
     ])
     .index("by_locale_and_sourcePath", ["locale", "sourcePath"])
-    .index("by_locale_and_sitemap_and_publicPath", [
-      "locale",
-      "sitemap",
-      "publicPath",
-    ])
     .index("by_syncShard", ["syncShard"]),
 };
 

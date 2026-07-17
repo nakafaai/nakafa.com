@@ -174,6 +174,7 @@ export async function insertTryoutQuestionSource(
 export async function insertTryoutSection(
   ctx: MutationCtx,
   args: {
+    order?: number;
     publicPath?: string;
     questionCount?: number;
     questionSetId: Id<"questionSets">;
@@ -190,7 +191,7 @@ export async function insertTryoutSection(
     countryKey: "indonesia",
     examKey: "snbt",
     locale: "id",
-    order: 1,
+    order: args.order ?? 1,
     publicPath: args.publicPath,
     questionCount: args.questionCount ?? 1,
     questionSetId: args.questionSetId,

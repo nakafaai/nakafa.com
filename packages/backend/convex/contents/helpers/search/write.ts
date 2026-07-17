@@ -6,38 +6,49 @@ import {
 } from "@repo/backend/convex/contents/helpers/search/documents";
 import { ConvexError } from "convex/values";
 
-const duplicateSearchRepairLimit = 6;
-
 /** Upserts one search row derived from canonical synced content. */
 export async function syncContentSearch(
   ctx: MutationCtx,
   source: ContentSearchSource
 ) {
   const nextValues = buildContentSearchDocument(source);
-  const existing = await ctx.db
+  const contentRows = await ctx.db
     .query("contentSearch")
     .withIndex("by_content_id", (q) =>
       q.eq("content_id", nextValues.content_id)
     )
-    .unique();
+    .take(2);
   const routeRows = await ctx.db
     .query("contentSearch")
     .withIndex("by_locale_and_route", (q) =>
       q.eq("locale", nextValues.locale).eq("route", nextValues.route)
     )
-    .take(duplicateSearchRepairLimit);
-  const routeExisting = existing ?? routeRows[0] ?? null;
-  const deletedDuplicates = await deleteDuplicateContentSearchRows(ctx, {
-    primary: routeExisting,
-    rows: routeRows,
+    .take(2);
+  const sourceRows = await ctx.db
+    .query("contentSearch")
+    .withIndex("by_locale_and_sourcePath", (q) =>
+      q.eq("locale", nextValues.locale).eq("sourcePath", nextValues.sourcePath)
+    )
+    .take(2);
+
+  assertContentSearchIdentity({
+    contentId: nextValues.content_id,
+    contentRows,
+    locale: nextValues.locale,
+    route: nextValues.route,
+    routeRows,
+    sourcePath: nextValues.sourcePath,
+    sourceRows,
   });
 
-  if (isSameContentSearch(routeExisting, nextValues)) {
-    return deletedDuplicates > 0 ? "updated" : "unchanged";
+  const existing = contentRows[0] ?? null;
+
+  if (isSameContentSearch(existing, nextValues)) {
+    return "unchanged";
   }
 
-  if (routeExisting) {
-    await ctx.db.patch("contentSearch", routeExisting._id, nextValues);
+  if (existing) {
+    await ctx.db.patch("contentSearch", existing._id, nextValues);
     return "updated";
   }
 
@@ -47,10 +58,19 @@ export async function syncContentSearch(
 
 /** Deletes the search row attached to one canonical content ID. */
 export async function deleteContentSearch(ctx: MutationCtx, contentId: string) {
-  const existing = await ctx.db
+  const rows = await ctx.db
     .query("contentSearch")
     .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
-    .unique();
+    .take(2);
+
+  if (rows.length > 1) {
+    throw new ConvexError({
+      code: "CONTENT_SEARCH_IDENTITY_COLLISION",
+      message: `Multiple search documents use content ID ${contentId}.`,
+    });
+  }
+
+  const existing = rows[0];
 
   if (!existing) {
     return;
@@ -59,7 +79,7 @@ export async function deleteContentSearch(ctx: MutationCtx, contentId: string) {
   await ctx.db.delete(existing._id);
 }
 
-/** Deletes every search row attached to one source route projection. */
+/** Deletes the search row attached to one source route projection. */
 export async function deleteContentSearchBySourcePath(
   ctx: MutationCtx,
   args: { locale: Doc<"contentSearch">["locale"]; sourcePath: string }
@@ -69,73 +89,75 @@ export async function deleteContentSearchBySourcePath(
     .withIndex("by_locale_and_sourcePath", (q) =>
       q.eq("locale", args.locale).eq("sourcePath", args.sourcePath)
     )
-    .take(duplicateSearchRepairLimit);
+    .take(2);
 
-  if (rows.length >= duplicateSearchRepairLimit) {
+  if (rows.length > 1) {
     throw new ConvexError({
-      code: "CONTENT_SEARCH_DELETE_LIMIT_EXCEEDED",
-      message:
-        "Content search route has too many projections to delete safely.",
+      code: "CONTENT_SEARCH_SOURCE_COLLISION",
+      message: `Multiple search documents use source path ${args.locale}/${args.sourcePath}.`,
     });
   }
 
-  for (const row of rows) {
-    await ctx.db.delete(row._id);
+  const existing = rows[0];
+
+  if (!existing) {
+    return;
   }
+
+  await ctx.db.delete(existing._id);
 }
 
-/** Deletes every search row attached to one public route projection. */
-export async function deleteContentSearchByRoute(
-  ctx: MutationCtx,
-  args: { locale: Doc<"contentSearch">["locale"]; route: string }
-) {
-  const rows = await ctx.db
-    .query("contentSearch")
-    .withIndex("by_locale_and_route", (q) =>
-      q.eq("locale", args.locale).eq("route", args.route)
-    )
-    .take(duplicateSearchRepairLimit);
-
-  if (rows.length >= duplicateSearchRepairLimit) {
+/** Rejects content IDs, public paths, or source paths with conflicting owners. */
+function assertContentSearchIdentity(args: {
+  contentId: string;
+  contentRows: Doc<"contentSearch">[];
+  locale: Doc<"contentSearch">["locale"];
+  route: string;
+  routeRows: Doc<"contentSearch">[];
+  sourcePath: string;
+  sourceRows: Doc<"contentSearch">[];
+}) {
+  if (args.contentRows.length > 1) {
     throw new ConvexError({
-      code: "CONTENT_SEARCH_DELETE_LIMIT_EXCEEDED",
-      message:
-        "Content search route has too many projections to delete safely.",
+      code: "CONTENT_SEARCH_IDENTITY_COLLISION",
+      message: `Multiple search documents use content ID ${args.contentId}.`,
     });
   }
 
-  for (const row of rows) {
-    await ctx.db.delete(row._id);
-  }
-}
-
-/** Removes duplicate search rows before one route projection is inserted. */
-async function deleteDuplicateContentSearchRows(
-  ctx: MutationCtx,
-  source: {
-    primary: Doc<"contentSearch"> | null;
-    rows: Doc<"contentSearch">[];
-  }
-) {
-  if (source.rows.length >= duplicateSearchRepairLimit) {
+  if (args.routeRows.length > 1) {
     throw new ConvexError({
-      code: "CONTENT_SEARCH_DUPLICATE_LIMIT_EXCEEDED",
-      message: "Content search route has too many duplicate projections.",
+      code: "CONTENT_SEARCH_PUBLIC_PATH_COLLISION",
+      message: `Multiple search documents use public path ${args.locale}/${args.route}.`,
     });
   }
 
-  let deleted = 0;
-
-  for (const row of source.rows) {
-    if (row._id === source.primary?._id) {
-      continue;
-    }
-
-    await ctx.db.delete(row._id);
-    deleted += 1;
+  if (args.sourceRows.length > 1) {
+    throw new ConvexError({
+      code: "CONTENT_SEARCH_SOURCE_COLLISION",
+      message: `Multiple search documents use source path ${args.locale}/${args.sourcePath}.`,
+    });
   }
 
-  return deleted;
+  const contentRow = args.contentRows[0];
+  const routeRow = args.routeRows[0];
+  const sourceRow = args.sourceRows[0];
+
+  if (
+    routeRow &&
+    (routeRow.content_id !== args.contentId || routeRow._id !== contentRow?._id)
+  ) {
+    throw new ConvexError({
+      code: "CONTENT_SEARCH_PUBLIC_PATH_COLLISION",
+      message: `Public path ${args.locale}/${args.route} belongs to another search document.`,
+    });
+  }
+
+  if (sourceRow && sourceRow._id !== contentRow?._id) {
+    throw new ConvexError({
+      code: "CONTENT_SEARCH_SOURCE_COLLISION",
+      message: `Source path ${args.locale}/${args.sourcePath} belongs to another search document.`,
+    });
+  }
 }
 
 /** Checks whether an existing read-model row already matches the next payload. */

@@ -6,6 +6,7 @@ import {
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
+type SchemaEncoded<T extends Schema.Schema.Any> = Schema.Schema.Encoded<T>;
 
 export const PublicRouteSurfaceKeySchema = Schema.Literal(
   "curriculum",
@@ -25,7 +26,9 @@ export const PublicRouteSurfaceSchema = Schema.Struct({
 
 export type PublicRouteSurface = SchemaType<typeof PublicRouteSurfaceSchema>;
 
-const publicRouteSurfaceInput = [
+const publicRouteSurfaceInput: readonly SchemaEncoded<
+  typeof PublicRouteSurfaceSchema
+>[] = [
   {
     appSegment: "curricula",
     key: "curriculum",

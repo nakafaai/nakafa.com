@@ -7,11 +7,6 @@ export function getRadians(angle: number) {
   return angle * DEGREES_TO_RADIANS;
 }
 
-/** Converts a radian value to degrees for curriculum-facing geometry. */
-export function getDegrees(angle: number) {
-  return angle / DEGREES_TO_RADIANS;
-}
-
 /** Calculates sine from an angle expressed in degrees. */
 export function getSin(angle: number) {
   return Math.sin(getRadians(angle));

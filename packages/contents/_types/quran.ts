@@ -1,14 +1,17 @@
+import { fieldsForEveryLocale, type Locale } from "@repo/utilities/locales";
 import { Schema } from "effect";
+
+/** Locales whose Quran tafsir corpus is complete and safe to expose. */
+export const QURAN_TAFSIR_LOCALES: readonly Locale[] = ["id"];
 
 const VerseNumberSchema = Schema.Struct({
   inSurah: Schema.Number,
   inQuran: Schema.Number,
 }).pipe(Schema.mutable);
 
-const LocalizedTextSchema = Schema.Struct({
-  en: Schema.String,
-  id: Schema.String,
-}).pipe(Schema.mutable);
+const LocalizedTextSchema = Schema.Struct(
+  fieldsForEveryLocale(Schema.String)
+).pipe(Schema.mutable);
 
 const VerseTextSchema = Schema.Struct({
   arab: Schema.String,
@@ -20,6 +23,16 @@ const VerseTextSchema = Schema.Struct({
 const VerseAudioSchema = Schema.Struct({
   primary: Schema.String,
   secondary: Schema.Array(Schema.String).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
+
+const VerseTafsirTextSchema = Schema.Struct({
+  short: Schema.String,
+  long: Schema.String,
+}).pipe(Schema.mutable);
+
+const VerseTafsirSchema = Schema.Struct({
+  ...fieldsForEveryLocale(Schema.optional(VerseTafsirTextSchema)),
+  id: VerseTafsirTextSchema,
 }).pipe(Schema.mutable);
 
 const VerseSchema = Schema.Struct({
@@ -38,12 +51,7 @@ const VerseSchema = Schema.Struct({
   text: VerseTextSchema,
   translation: LocalizedTextSchema,
   audio: VerseAudioSchema,
-  tafsir: Schema.Struct({
-    id: Schema.Struct({
-      short: Schema.String,
-      long: Schema.String,
-    }).pipe(Schema.mutable),
-  }).pipe(Schema.mutable),
+  tafsir: VerseTafsirSchema,
 }).pipe(Schema.mutable);
 export type Verse = Schema.Schema.Type<typeof VerseSchema>;
 
@@ -62,8 +70,7 @@ const SurahNameSchema = Schema.Struct({
 
 const RevelationSchema = Schema.Struct({
   arab: Schema.String,
-  en: Schema.String,
-  id: Schema.String,
+  ...fieldsForEveryLocale(Schema.String),
 }).pipe(Schema.mutable);
 
 const surahMetadataFields = {

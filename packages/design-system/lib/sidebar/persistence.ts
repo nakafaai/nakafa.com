@@ -9,7 +9,7 @@ const DAYS_PER_WEEK = 7;
 export const SIDEBAR_COOKIE_NAME = "sidebar_state";
 
 /** One-week lifetime for the persisted sidebar state cookie. */
-export const SIDEBAR_COOKIE_MAX_AGE =
+const SIDEBAR_COOKIE_MAX_AGE =
   SECONDS_PER_MINUTE * MINUTES_PER_HOUR * HOURS_PER_DAY * DAYS_PER_WEEK;
 
 /** Runtime contract for a sidebar state cookie write. */

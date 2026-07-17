@@ -15,6 +15,7 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { appViewport } from "@/lib/theme/viewport";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
 /**
  * Builds locale-scoped root metadata for every page under `[locale]`.
@@ -50,14 +51,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL("https://nakafa.com"),
     classification: t("classification"),
     generator: "Next.js",
-    alternates: {
-      canonical: `/${locale}`,
-      languages: {
-        id: "https://nakafa.com/id",
-        en: "https://nakafa.com/en",
-        "x-default": "https://nakafa.com/en",
-      },
-    },
+    alternates: createLocalizedAlternates(`/${locale}`),
     icons: {
       icon: [
         { url: "/favicon.ico", sizes: "16x16", type: "image/x-icon" },

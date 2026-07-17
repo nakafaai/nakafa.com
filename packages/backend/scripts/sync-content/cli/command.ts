@@ -17,6 +17,11 @@ import { syncTryouts } from "@repo/backend/scripts/sync-content/content/tryouts"
 import { validate } from "@repo/backend/scripts/sync-content/content/validate";
 import type { SyncOptions } from "@repo/backend/scripts/sync-content/contract/types";
 import { getConvexConfig } from "@repo/backend/scripts/sync-content/convex/client";
+import {
+  createContentRouteArtifactTargets,
+  syncContentRouteArtifactPages,
+} from "@repo/backend/scripts/sync-content/routes/artifacts";
+import { readRoutePageOptionsAfterCleanup } from "@repo/backend/scripts/sync-content/routes/options";
 import { syncPublicRoutes } from "@repo/backend/scripts/sync-content/routes/sync";
 import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/runtime/cache";
 import { verify } from "@repo/backend/scripts/sync-content/verify/sync";
@@ -24,23 +29,35 @@ import { syncFull } from "@repo/backend/scripts/sync-content/workflow/full";
 import {
   syncAll,
   syncIncremental,
+  validateIncrementalSyncOptions,
 } from "@repo/backend/scripts/sync-content/workflow/run";
+import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
-/** Parses one sync-content CLI invocation into a command and option bag. */
-const parseArgs = Effect.fn("sync.parseArgs")(function* () {
-  const args = yield* Effect.sync(() => process.argv.slice(2));
+/** Parses explicit sync-content arguments into a command and option bag. */
+export const parseSyncArgs = Effect.fn("sync.parseArgs")(function* (
+  args: readonly string[]
+) {
   const type = args[0] || "all";
   const options: SyncOptions = {};
 
   for (let index = 1; index < args.length; index++) {
     const arg = args[index];
-    if (arg === "--locale" && args[index + 1]) {
-      const locale = args[index + 1];
-      if (locale === "en" || locale === "id") {
-        options.locale = locale;
-        index++;
+    if (arg === "--locale") {
+      const localeArgument = args[index + 1];
+      const locale = locales.find((candidate) => candidate === localeArgument);
+
+      if (!locale) {
+        return yield* Effect.fail(
+          new ScriptFailureError({
+            message: `Invalid locale: ${localeArgument ?? "missing"}`,
+          })
+        );
       }
+
+      options.locale = locale;
+      index++;
+      continue;
     }
     if (arg === "--force") {
       options.force = true;
@@ -57,6 +74,10 @@ const parseArgs = Effect.fn("sync.parseArgs")(function* () {
     if (arg === "--prod") {
       options.prod = true;
     }
+  }
+
+  if (type === "incremental") {
+    yield* validateIncrementalSyncOptions(options);
   }
 
   return { type, options };
@@ -107,7 +128,9 @@ const printUsage = (): void => {
     "  sync:prod:reset:tryouts - Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync"
   );
   log("\nOptions:");
-  log("  --locale en|id  - Sync specific locale only");
+  log(
+    `  --locale ${locales.join("|")}  - Sync specific locale only (not incremental)`
+  );
   log("  --force         - Actually delete content (for clean/reset)");
   log("  --authors       - Also delete authors (for clean/reset)");
   log("  --sequential    - Run sync phases sequentially (for debugging)");
@@ -137,33 +160,68 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
     case "articles":
       yield* syncAuthors(config, options);
       yield* syncArticles(config, options);
+      yield* syncContentRouteArtifactPages(
+        config,
+        createContentRouteArtifactTargets(options.locale, ["articles"])
+      );
+      yield* invalidateContentRuntimeCache(options);
       return;
     case "quran":
       yield* syncQuran(config, options);
+      yield* syncContentRouteArtifactPages(
+        config,
+        createContentRouteArtifactTargets(options.locale, ["quran"])
+      );
+      yield* invalidateContentRuntimeCache(options);
       return;
     case "subjects":
       yield* syncAuthors(config, options);
       yield* syncCurriculumTopics(config, options);
       yield* syncCurriculumLessons(config, options);
+      yield* syncContentRouteArtifactPages(
+        config,
+        createContentRouteArtifactTargets(options.locale, ["material"])
+      );
       yield* syncPublicRoutes(config, options);
+      yield* syncLearningPrograms(config, options);
+      yield* invalidateContentRuntimeCache(options);
       return;
     case "curriculum-topics":
       yield* syncAuthors(config, options);
       yield* syncCurriculumTopics(config, options);
+      yield* syncContentRouteArtifactPages(
+        config,
+        createContentRouteArtifactTargets(options.locale, ["material"])
+      );
       yield* syncPublicRoutes(config, options);
+      yield* syncLearningPrograms(config, options);
+      yield* invalidateContentRuntimeCache(options);
       return;
     case "curriculum-lessons":
       yield* syncAuthors(config, options);
       yield* syncCurriculumLessons(config, options);
+      yield* syncContentRouteArtifactPages(
+        config,
+        createContentRouteArtifactTargets(options.locale, ["material"])
+      );
       yield* syncPublicRoutes(config, options);
+      yield* syncLearningPrograms(config, options);
+      yield* invalidateContentRuntimeCache(options);
       return;
     case "tryouts":
       yield* syncAuthors(config, options);
       yield* syncTryouts(config, options);
+      yield* syncContentRouteArtifactPages(
+        config,
+        createContentRouteArtifactTargets(options.locale, ["tryout"])
+      );
       yield* syncPublicRoutes(config, options);
+      yield* syncLearningPrograms(config, options);
+      yield* invalidateContentRuntimeCache(options);
       return;
     case "public-routes":
       yield* syncPublicRoutes(config, options);
+      yield* invalidateContentRuntimeCache(options);
       return;
     case "learning-programs":
       yield* syncLearningPrograms(config, options);
@@ -171,6 +229,7 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       return;
     case "all":
       yield* syncAll(config, options);
+      yield* invalidateContentRuntimeCache(options);
       return;
     case "incremental":
       yield* syncIncremental(config, options);
@@ -178,14 +237,33 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
     case "verify":
       yield* verify(config, options);
       return;
-    case "clean":
-      yield* clean(config, options);
+    case "clean": {
+      const cleanResult = yield* clean(config, options);
+
+      if (cleanResult.deleted > 0) {
+        const routePageOptions = readRoutePageOptionsAfterCleanup(
+          options,
+          cleanResult
+        );
+        yield* syncContentRouteArtifactPages(
+          config,
+          createContentRouteArtifactTargets(routePageOptions.locale)
+        );
+        yield* syncPublicRoutes(config, routePageOptions);
+        yield* syncLearningPrograms(config, routePageOptions);
+        yield* invalidateContentRuntimeCache(routePageOptions);
+      }
+
       return;
+    }
     case "full":
       yield* syncFull(config, options);
       return;
     case "reset":
       yield* reset(config, options);
+      if (options.force) {
+        yield* invalidateContentRuntimeCache(options);
+      }
       return;
     case "reset-analytics":
       yield* resetAnalytics(config, options);
@@ -195,6 +273,9 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       return;
     case "reset-tryouts":
       yield* resetTryouts(config, options);
+      if (options.force) {
+        yield* invalidateContentRuntimeCache(options);
+      }
       return;
     default:
       logError(`Unknown command: ${type}`);
@@ -207,6 +288,7 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
 
 /** Parses process arguments and runs the selected sync-content workflow. */
 export const parseAndRun = Effect.fn("sync.parseAndRun")(function* () {
-  const { type, options } = yield* parseArgs();
+  const args = yield* Effect.sync(() => process.argv.slice(2));
+  const { type, options } = yield* parseSyncArgs(args);
   yield* runCommand(type, options);
 });

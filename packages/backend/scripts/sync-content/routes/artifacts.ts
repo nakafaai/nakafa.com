@@ -10,46 +10,110 @@ import {
 } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
-  SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import {
   callConvexMutation,
   callConvexQuery,
 } from "@repo/backend/scripts/sync-content/convex/client";
-import { locales } from "@repo/utilities/locales";
+import { type Locale, locales } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
 
 const DeleteStaleRoutePagesResultSchema = Schema.Struct({
   deleted: Schema.Number,
 });
+const RuntimeContentRouteCountSchema = Schema.Struct({
+  count: Schema.Number,
+  locale: Schema.Literal(...locales),
+  section: Schema.Literal(...NAKAFA_CONTENT_SECTIONS),
+  syncedAt: Schema.Number,
+});
+const RuntimeContentRouteCountsSchema = Schema.mutable(
+  Schema.Array(RuntimeContentRouteCountSchema)
+);
 type RuntimeContentRoutePage = Schema.Schema.Type<
   typeof RuntimeContentRoutePageSchema
 >;
 
-/** Rebuilds bounded route artifact pages from the synced route catalog. */
+/** One locale and section whose bounded route artifacts must be rebuilt. */
+export interface ContentRouteArtifactTarget {
+  readonly locale: Locale;
+  readonly section: NakafaSection;
+}
+
+/** Builds deterministic route artifact targets for full or section-scoped syncs. */
+export function createContentRouteArtifactTargets(
+  locale?: Locale,
+  sections: readonly NakafaSection[] = NAKAFA_CONTENT_SECTIONS
+): ContentRouteArtifactTarget[] {
+  const targetLocales = locale ? [locale] : locales;
+
+  return sections.flatMap((section) =>
+    targetLocales.map((targetLocale) => ({
+      locale: targetLocale,
+      section,
+    }))
+  );
+}
+
+/** Rebuilds only the requested bounded route artifact targets. */
 export const syncContentRouteArtifactPages = Effect.fn(
   "sync.contentRouteArtifactPages"
-)(function* (config: ConvexConfig, options: SyncOptions) {
-  const syncedAt = Date.now();
+)(function* (
+  config: ConvexConfig,
+  targets: readonly ContentRouteArtifactTarget[]
+) {
   const totals: SyncResult = { created: 0, unchanged: 0, updated: 0 };
-  const syncLocales = options.locale ? [options.locale] : locales;
+  const committedGenerations = yield* readCommittedGenerations(config, targets);
 
-  for (const locale of syncLocales) {
-    for (const section of NAKAFA_CONTENT_SECTIONS) {
-      const result = yield* syncRouteArtifactPagesForSection(config, {
-        locale,
-        section,
-        syncedAt,
-      });
-      totals.created += result.created;
-      totals.unchanged += result.unchanged;
-      totals.updated += result.updated;
-    }
+  for (const target of targets) {
+    const committedGeneration =
+      committedGenerations.get(readTargetKey(target)) ?? 0;
+    const syncedAt = Math.max(Date.now(), committedGeneration + 1);
+    const result = yield* syncRouteArtifactPagesForSection(config, {
+      ...target,
+      syncedAt,
+    });
+    totals.created += result.created;
+    totals.unchanged += result.unchanged;
+    totals.updated += result.updated;
   }
 
   return totals;
 });
+
+/** Reads committed generations once per locale before staging replacement pages. */
+function readCommittedGenerations(
+  config: ConvexConfig,
+  targets: readonly ContentRouteArtifactTarget[]
+) {
+  return Effect.gen(function* () {
+    const generations = new Map<string, number>();
+    const targetLocales = locales.filter((locale) =>
+      targets.some((target) => target.locale === locale)
+    );
+
+    for (const locale of targetLocales) {
+      const counts = yield* callConvexQuery(
+        config,
+        api.contents.queries.runtime.listContentRouteCounts,
+        { locale },
+        RuntimeContentRouteCountsSchema
+      );
+
+      for (const count of counts) {
+        generations.set(readTargetKey(count), count.syncedAt);
+      }
+    }
+
+    return generations;
+  });
+}
+
+/** Builds the stable lookup key for one locale and section pointer. */
+function readTargetKey(target: ContentRouteArtifactTarget) {
+  return `${target.locale}:${target.section}`;
+}
 
 /** Rebuilds all route artifact pages for one locale and content section. */
 function syncRouteArtifactPagesForSection(
@@ -108,16 +172,16 @@ function syncRouteArtifactPagesForSection(
       cursor = routePage.continueCursor;
     }
 
-    yield* deleteStaleRouteArtifactPages(config, {
-      firstStalePage: pageNumber,
-      locale: args.locale,
-      section: args.section,
-    });
     yield* syncRouteArtifactCount(config, {
       count: routeCount,
       locale: args.locale,
       section: args.section,
       syncedAt: args.syncedAt,
+    });
+    yield* deleteStaleRouteArtifactPages(config, {
+      committedSyncedAt: args.syncedAt,
+      locale: args.locale,
+      section: args.section,
     });
 
     return totals;
@@ -146,7 +210,7 @@ function syncRouteArtifactCount(
 function deleteStaleRouteArtifactPages(
   config: ConvexConfig,
   args: {
-    firstStalePage: number;
+    committedSyncedAt: number;
     locale: (typeof locales)[number];
     section: NakafaSection;
   }

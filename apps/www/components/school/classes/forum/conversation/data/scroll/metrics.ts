@@ -32,20 +32,3 @@ export function isConversationAtBottom(handle: ConversationGeometryHandle) {
 export function isConversationAtTop(handle: ConversationGeometryHandle) {
   return handle.scrollOffset <= CONVERSATION_EDGE_TOLERANCE;
 }
-
-/**
- * Returns stable viewport booleans after Virtua has measured its viewport.
- */
-export function getConversationViewportState(
-  handle: ConversationGeometryHandle
-) {
-  if (handle.viewportSize <= 0) {
-    return null;
-  }
-
-  return {
-    hasOverflow:
-      handle.scrollSize - handle.viewportSize > CONVERSATION_EDGE_TOLERANCE,
-    isAtBottom: isConversationAtBottom(handle),
-  };
-}

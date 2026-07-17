@@ -10,6 +10,7 @@ import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import en from "@repo/internationalization/dictionaries/en.json";
 import id from "@repo/internationalization/dictionaries/id.json";
 import { routing } from "@repo/internationalization/src/routing";
+import type { Locale } from "@repo/utilities/locales";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
 /** Global 404 viewport contract shared with localized app documents. */
 export const viewport = appViewport;
 
-const dictionaries = { en, id };
+const dictionaries = { en, id } satisfies Record<Locale, typeof en>;
 const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
 
 /** Resolves the locale that the proxy/middleware selected for this request. */

@@ -1,10 +1,8 @@
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
-const localizedTextValidator = v.object({
-  en: v.string(),
-  id: v.string(),
-});
+const localizedTextValidator = v.object(fieldsForEveryLocale(v.string()));
 
 const quranTextValidator = v.object({
   arab: v.string(),
@@ -16,6 +14,16 @@ const quranTextValidator = v.object({
 const quranAudioValidator = v.object({
   primary: v.string(),
   secondary: v.array(v.string()),
+});
+
+const quranTafsirTextValidator = v.object({
+  short: v.string(),
+});
+
+/** Locale-indexed Quran tafsir fields stored in the runtime corpus. */
+export const quranTafsirValidator = v.object({
+  ...fieldsForEveryLocale(v.optional(quranTafsirTextValidator)),
+  id: quranTafsirTextValidator,
 });
 
 const preBismillahValidator = v.object({
@@ -33,8 +41,7 @@ const quranNameValidator = v.object({
 
 const quranRevelationValidator = v.object({
   arab: v.string(),
-  en: v.string(),
-  id: v.string(),
+  ...fieldsForEveryLocale(v.string()),
 });
 
 const tables = {
@@ -64,11 +71,7 @@ const tables = {
     sajdaRecommended: v.boolean(),
     surahNumber: v.number(),
     syncedAt: v.number(),
-    tafsir: v.object({
-      id: v.object({
-        short: v.string(),
-      }),
-    }),
+    tafsir: quranTafsirValidator,
     text: quranTextValidator,
     translation: localizedTextValidator,
     verseNumber: v.number(),

@@ -1,5 +1,4 @@
 import { listPublicTryoutRoutes } from "@repo/contents/_types/route/tryout";
-import { readStaticPublicTryoutRoutes } from "@repo/contents/_types/route/tryout/static";
 import { defineTryoutExamSource } from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { Effect } from "effect";
@@ -49,7 +48,6 @@ describe("public try-out routes", () => {
         publicPath: "try-out/indonesia/tka/matematika/set-1/matematika",
       })
     );
-    expect(readStaticPublicTryoutRoutes()).toEqual(routes);
   });
 
   it("uses caller-provided try-out sources without falling back to defaults", () => {
@@ -96,15 +94,10 @@ describe("public try-out routes", () => {
     const routes = Effect.runSync(
       listPublicTryoutRoutes({ tryouts: [unreadySource] })
     );
-    const staticRoutes = readStaticPublicTryoutRoutes({
-      tryouts: [unreadySource],
-    });
-
     expect(routes.some((route) => route.kind === "tryout-country")).toBe(true);
     expect(routes.some((route) => route.kind === "tryout-exam")).toBe(true);
     expect(routes.some((route) => route.kind === "tryout-track")).toBe(false);
     expect(routes.some((route) => route.kind === "tryout-set")).toBe(false);
     expect(routes.some((route) => route.kind === "tryout-section")).toBe(false);
-    expect(staticRoutes).toEqual(routes);
   });
 });

@@ -13,11 +13,61 @@ afterEach(() => {
     delete process.env.CONVEX_URL;
   }
 
+  vi.doUnmock("node:child_process");
   vi.resetModules();
   vi.restoreAllMocks();
 });
 
 describe("sync-content runtime", () => {
+  it("reads the deleted side of renames without relying on path existence", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "nakafa-sync-"));
+    const commands: string[] = [];
+
+    try {
+      vi.doMock("node:child_process", () => ({
+        execSync: (command: string) => {
+          commands.push(command);
+
+          if (command.includes("previous-commit HEAD")) {
+            return "articles/politics/old-slug/id.mdx\n";
+          }
+
+          return "";
+        },
+      }));
+      vi.doMock(
+        "@repo/backend/scripts/sync-content/runtime/paths",
+        async () => {
+          const actual = await vi.importActual<
+            typeof import("@repo/backend/scripts/sync-content/runtime/paths")
+          >("@repo/backend/scripts/sync-content/runtime/paths");
+
+          return { ...actual, CONTENTS_DIR: directory };
+        }
+      );
+
+      const { getDeletedFilesSince } = await import(
+        "@repo/backend/scripts/sync-content/runtime/files"
+      );
+      const deletedFiles = await Effect.runPromise(
+        getDeletedFilesSince("previous-commit")
+      );
+
+      expect([...deletedFiles]).toEqual([
+        join(directory, "articles/politics/old-slug/id.mdx"),
+      ]);
+      expect(commands).toHaveLength(3);
+      expect(
+        commands.every((command) => command.includes("--no-renames"))
+      ).toBe(true);
+      expect(
+        commands.every((command) => command.includes("--diff-filter=D"))
+      ).toBe(true);
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
   it.each([
     {
       content: "CONVEX_URL=file-url\n",
