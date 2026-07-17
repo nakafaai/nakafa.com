@@ -20,8 +20,6 @@ jobs:
     env:
       INTERNAL_CONTENT_API_KEY: ci-agent-docs
       NEXT_PUBLIC_APP_URL: http://localhost:3000
-      NEXT_PUBLIC_CONVEX_SITE_URL: https://dapper-antelope-269.convex.site
-      NEXT_PUBLIC_CONVEX_URL: https://dapper-antelope-269.convex.cloud
       NEXT_PUBLIC_MCP_URL: https://mcp.nakafa.com
       NEXT_PUBLIC_POSTHOG_KEY: phc_agent_docs_ci
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
@@ -54,6 +52,18 @@ jobs:
         run: |
           app_version="$(node -p 'require("./package.json").version')"
           echo "NEXT_PUBLIC_VERSION=$app_version" >> "$GITHUB_ENV"
+
+      - name: Select pull request Convex deployment
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "NEXT_PUBLIC_CONVEX_SITE_URL=https://cheerful-ocelot-306.convex.site" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_CONVEX_URL=https://cheerful-ocelot-306.convex.cloud" >> "$GITHUB_ENV"
+
+      - name: Select main Convex deployment
+        if: github.event_name == 'push'
+        run: |
+          echo "NEXT_PUBLIC_CONVEX_SITE_URL=https://dapper-antelope-269.convex.site" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_CONVEX_URL=https://dapper-antelope-269.convex.cloud" >> "$GITHUB_ENV"
 
       - name: Build production app
         run: pnpm build
