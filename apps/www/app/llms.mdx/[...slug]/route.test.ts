@@ -181,12 +181,14 @@ describe("llms.mdx route", () => {
     expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
   });
 
-  it("keeps missing llms index routes as plain 404s", async () => {
+  it("returns a plain 404 for a missing bounded page artifact", async () => {
     const response = await GET(
-      new NextRequest("https://nakafa.com/llms.mdx/en/llms/missing"),
+      new NextRequest(
+        "https://nakafa.com/llms.mdx/llms/en/articles/page/999/llms.txt"
+      ),
       {
         params: Promise.resolve({
-          slug: ["en", "llms", "missing"],
+          slug: ["llms", "en", "articles", "page", "999", "llms.txt"],
         }),
       }
     );
@@ -196,6 +198,9 @@ describe("llms.mdx route", () => {
     expect(response.headers.get("content-type")).toBe(
       "text/plain; charset=utf-8"
     );
+    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
+      cleanSlug: "llms/en/articles/page/999/llms",
+    });
     expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
   });
 

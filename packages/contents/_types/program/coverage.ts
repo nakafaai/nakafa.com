@@ -11,6 +11,7 @@ import {
   type CoverageStatus,
   type LearningProgram,
   type LearningProgramCoverageAlignment,
+  type LearningProgramCoverageInput,
   LearningProgramCoverageInputSchema,
   type LearningProgramCoverageRoute,
 } from "@repo/contents/_types/program/schema";
@@ -156,23 +157,32 @@ function createCoverageInputsFromProgramKeys({
     }
   }
 
-  return [...rowsByKey.values()]
-    .map((row) => {
-      const program = findLearningProgramByKey(row.programKey, programs);
-      const fallbackStatus = program?.defaultCoverageStatus ?? "planned";
+  const coverageRows: LearningProgramCoverageInput[] = [];
 
-      return Schema.decodeUnknownSync(LearningProgramCoverageInputSchema)({
-        contentCount: row.contentCount,
-        coverageStatus: getCoverageStatus(fallbackStatus),
-        lensId: row.route.lensId,
-        lensScope: getCurriculumLensScopeForKind(row.route.kind),
-        locale: row.route.locale,
-        programKey: row.programKey,
-        sampleContentId: row.sampleContentId,
-        syncedAt,
-      });
-    })
-    .filter((row) => row.coverageStatus !== "hidden");
+  for (const row of rowsByKey.values()) {
+    const program = findLearningProgramByKey(row.programKey, programs);
+    const fallbackStatus = program?.defaultCoverageStatus ?? "planned";
+    const coverageRow = Schema.decodeUnknownSync(
+      LearningProgramCoverageInputSchema
+    )({
+      contentCount: row.contentCount,
+      coverageStatus: getCoverageStatus(fallbackStatus),
+      lensId: row.route.lensId,
+      lensScope: getCurriculumLensScopeForKind(row.route.kind),
+      locale: row.route.locale,
+      programKey: row.programKey,
+      sampleContentId: row.sampleContentId,
+      syncedAt,
+    });
+
+    if (coverageRow.coverageStatus === "hidden") {
+      continue;
+    }
+
+    coverageRows.push(coverageRow);
+  }
+
+  return coverageRows;
 }
 
 /** Selects program keys that own the given source-registry route input. */

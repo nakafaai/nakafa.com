@@ -12,7 +12,8 @@ export const NakafaAgentQuranReferenceOptionsSchema = Schema.Struct({
   include_tafsir: Schema.optionalWith(Schema.Boolean, {
     default: () => false,
   }).annotations({
-    description: "Whether to include concise Indonesian tafsir text.",
+    description:
+      "Whether to include concise tafsir text for the requested locale when available.",
   }),
   locale: Schema.optionalWith(LocaleSchema, {
     default: () => routing.defaultLocale,

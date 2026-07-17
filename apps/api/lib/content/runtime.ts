@@ -146,12 +146,18 @@ export async function listApiStaticParams({
   section: RuntimeContentSection;
 }) {
   const params: Array<{ locale: Locale; slug: string[] }> = [];
+  const localePages = await Effect.runPromise(
+    Effect.forEach(
+      locales,
+      (locale) =>
+        getContentRoutePage({ locale, prefix, section }).pipe(
+          Effect.map((routePage) => ({ locale, routePage }))
+        ),
+      { concurrency: "unbounded" }
+    )
+  );
 
-  for (const locale of locales) {
-    const routePage = await Effect.runPromise(
-      getContentRoutePage({ locale, prefix, section })
-    );
-
+  for (const { locale, routePage } of localePages) {
     for (const route of routePage.page) {
       params.push({
         locale,

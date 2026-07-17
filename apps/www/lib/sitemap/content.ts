@@ -1,72 +1,58 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { compareSitemapPaths } from "@repo/backend/convex/contents/sitemap/spec";
 import type { FunctionReturnType } from "convex/server";
+import { Data, Effect } from "effect";
 
 type RuntimeContentRoute = NonNullable<
   FunctionReturnType<typeof api.contents.queries.runtime.getContentSitemapPage>
 >["routes"][number];
 
-/** Builds sitemap routes and existing modification dates from catalog rows. */
-export function buildSitemapContentPageRoutes(
-  rows: readonly RuntimeContentRoute[]
-) {
-  const routes = new Map<string, number | undefined>();
+/** Two durable content rows claim the same canonical sitemap path. */
+export class DuplicateSitemapContentRouteError extends Data.TaggedError(
+  "DuplicateSitemapContentRouteError"
+)<{
+  readonly path: string;
+}> {}
+
+/** Builds exact sitemap routes and modification dates from one bounded page. */
+export const buildSitemapContentPageRoutes = Effect.fn(
+  "www.sitemap.buildContentPageRoutes"
+)(function* (rows: readonly RuntimeContentRoute[]) {
+  const paths = new Set<string>();
+  const routes: { lastModified: number | undefined; path: string }[] = [];
 
   for (const row of rows) {
-    addContentPageRoutes(routes, row);
+    const route = toSitemapContentRoute(row);
+
+    if (!route) {
+      continue;
+    }
+
+    if (paths.has(route.path)) {
+      return yield* Effect.fail(
+        new DuplicateSitemapContentRouteError({ path: route.path })
+      );
+    }
+
+    paths.add(route.path);
+    routes.push(route);
   }
 
-  return [...routes.entries()]
-    .sort(([left], [right]) => compareSitemapPaths(left, right))
-    .map(([path, lastModified]) => ({ lastModified, path }));
-}
+  return routes.sort((left, right) =>
+    compareSitemapPaths(left.path, right.path)
+  );
+});
 
-/** Adds the concrete route and supported parent index routes. */
-function addContentPageRoutes(
-  routes: Map<string, number | undefined>,
-  row: RuntimeContentRoute
-) {
-  const lastModified = getRouteLastModified(row);
-
-  if (row.section === "articles") {
-    addArticleRoutes(routes, row.route, lastModified);
-    return;
-  }
-
+/** Converts one durable content row to its exact sitemap route. */
+function toSitemapContentRoute(row: RuntimeContentRoute) {
   if (row.section === "material" && row.kind !== "curriculum-lesson") {
     return;
   }
 
-  addRoute(routes, routeToPath(row.route), lastModified);
-}
-
-/** Adds article category and detail routes. */
-function addArticleRoutes(
-  routes: Map<string, number | undefined>,
-  route: string,
-  lastModified: number | undefined
-) {
-  const [, category] = route.split("/");
-  addRoute(routes, `/articles/${category}`, lastModified);
-  addRoute(routes, routeToPath(route), lastModified);
-}
-
-/** Keeps the newest known timestamp when parent routes are shared. */
-function addRoute(
-  routes: Map<string, number | undefined>,
-  path: string,
-  lastModified: number | undefined
-) {
-  const current = routes.get(path);
-
-  if (current !== undefined && lastModified !== undefined) {
-    routes.set(path, Math.max(current, lastModified));
-    return;
-  }
-
-  if (!routes.has(path) || lastModified !== undefined) {
-    routes.set(path, lastModified);
-  }
+  return {
+    lastModified: getRouteLastModified(row),
+    path: routeToPath(row.route),
+  };
 }
 
 /** Uses source dates first and stable sync dates for undated non-Quran rows. */

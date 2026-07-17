@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
-import { BASE_URL, ENGLISH_LANGUAGE_NAMES } from "@/lib/llms/constants";
+import { ENGLISH_LANGUAGE_NAMES } from "@/lib/llms/constants";
 import {
+  AGENT_MARKDOWN_DIRECTIVE,
   buildHeader,
   formatRouteTitle,
   getLocaleLabel,
@@ -20,7 +21,7 @@ describe("llms formatting helpers", () => {
     ).toStrictEqual([
       "# Nakafa Learning Content",
       "",
-      `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt) for the site index. Markdown versions are available by appending \`.md\` to content URLs or sending \`Accept: text/markdown\`.`,
+      AGENT_MARKDOWN_DIRECTIVE,
       "",
       "URL: https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
       "Source: packages/contents/articles/politics/dynastic-politics-asian-values/en.mdx",

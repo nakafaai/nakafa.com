@@ -18,11 +18,20 @@ import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source"
 
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
+const UNSUPPORTED_ROOT_FILE_PATTERN =
+  /^\/[^/]+\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$/i;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
 const LOCALE_BYPASS_PATHS = new Set([
   "/mcp",
   "/llms.txt",
+  "/logo.svg",
+  "/manifest.webmanifest",
+  "/robots.txt",
+  "/rss.xml",
+  "/sitemap.txt",
+  "/sitemap.xml",
   "/skill.md",
+  "/e22d548f7fd2482a9022e3b84e944901.txt",
   "/.well-known/llms.txt",
   "/.well-known/agent-skills/index.json",
   "/.well-known/agent-skills/nakafa/SKILL.md",
@@ -56,6 +65,16 @@ export async function proxy(request: NextRequest) {
 
   if (isLocaleBypassPath(pathname)) {
     return NextResponse.next();
+  }
+
+  if (isUnsupportedRootFilePath(pathname)) {
+    return new Response("Not Found\n", {
+      status: 404,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Robots-Tag": "noindex",
+      },
+    });
   }
 
   const routeDecision = resolveLlmsProxyRoute({
@@ -114,6 +133,11 @@ function isLocaleBypassPath(pathname: string) {
   return LOCALE_BYPASS_PATHS.has(pathname);
 }
 
+/** Rejects unsupported root files before they become invalid locales. */
+function isUnsupportedRootFilePath(pathname: string) {
+  return UNSUPPORTED_ROOT_FILE_PATTERN.test(pathname);
+}
+
 /** Rewrites a localized route to the source-backed markdown handler. */
 function rewriteToLlmsMdx(
   request: NextRequest,
@@ -143,5 +167,6 @@ function rewriteToContentNotFound(
 export const config: ProxyConfig = {
   matcher: [
     "/((?!_next/static|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
+    "/:rootFile([^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
   ],
 };

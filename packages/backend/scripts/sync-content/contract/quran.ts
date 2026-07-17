@@ -42,6 +42,19 @@ const QuranAudioSchema = Schema.mutable(
   })
 );
 
+const QuranTafsirTextSchema = Schema.mutable(
+  Schema.Struct({
+    short: Schema.String,
+  })
+);
+
+const QuranTafsirSchema = Schema.mutable(
+  Schema.Struct({
+    ...fieldsForEveryLocale(Schema.optional(QuranTafsirTextSchema)),
+    id: QuranTafsirTextSchema,
+  })
+);
+
 const QuranPreBismillahSchema = Schema.mutable(
   Schema.Struct({
     audio: QuranAudioSchema,
@@ -99,15 +112,7 @@ const QuranVerseSchema = Schema.mutable(
         inSurah: Schema.Number,
       })
     ),
-    tafsir: Schema.mutable(
-      Schema.Struct({
-        id: Schema.mutable(
-          Schema.Struct({
-            short: Schema.String,
-          })
-        ),
-      })
-    ),
+    tafsir: QuranTafsirSchema,
     text: QuranTextSchema,
     translation: QuranLocalizedTextSchema,
   })

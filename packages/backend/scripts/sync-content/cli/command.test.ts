@@ -1,8 +1,11 @@
+import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
+import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
 import type {
   ConvexConfig,
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/contract/types";
+import type { ContentRouteArtifactTarget } from "@repo/backend/scripts/sync-content/routes/artifacts";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -18,21 +21,28 @@ const syncResult: SyncResult = {
   updated: 0,
 };
 
+interface CliTestOptions {
+  cleanDeleted?: number;
+  learningProgramFails?: boolean;
+}
+
 /** Loads the CLI with mocked sync dependencies and records command ordering. */
-const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
+const loadCli = async (options: CliTestOptions = {}) => {
+  const artifactTargets: (readonly ContentRouteArtifactTarget[])[] = [];
   const events: string[] = [];
   const invalidatedOptions: SyncOptions[] = [];
 
-  /** Records commands that are not exercised by this focused CLI test. */
-  const unusedCommand = () => Effect.void;
+  /** Builds a successful sync command that records when it runs. */
+  const recordSync = (event: string) => () => {
+    events.push(event);
+    return Effect.succeed(syncResult);
+  };
 
   vi.doMock("@repo/backend/scripts/sync-content/content/articles", () => ({
-    /** Records article sync calls if a test accidentally reaches them. */
-    syncArticles: unusedCommand,
+    syncArticles: recordSync("syncArticles"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/content/authors", () => ({
-    /** Records author sync calls if a test accidentally reaches them. */
-    syncAuthors: unusedCommand,
+    syncAuthors: recordSync("syncAuthors"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/runtime/cache", () => ({
     /** Records content-runtime invalidation after successful program sync. */
@@ -43,8 +53,10 @@ const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
     },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/cleanup/clean", () => ({
-    /** Records cleanup calls if a test accidentally reaches them. */
-    clean: unusedCommand,
+    clean: () => {
+      events.push("clean");
+      return Effect.succeed({ deleted: options.cleanDeleted ?? 0 });
+    },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/convex/client", () => ({
     /** Supplies deterministic Convex config without reading environment. */
@@ -54,8 +66,7 @@ const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
     },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/content/tryouts", () => ({
-    /** Records try-out sync calls if a test accidentally reaches them. */
-    syncTryouts: unusedCommand,
+    syncTryouts: recordSync("syncTryouts"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/content/programs", () => ({
     /** Records targeted learning-program sync calls and optional failures. */
@@ -70,8 +81,7 @@ const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
     },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/content/quran", () => ({
-    /** Records Quran sync calls if a test accidentally reaches them. */
-    syncQuran: unusedCommand,
+    syncQuran: recordSync("syncQuran"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/cli/logging", () => ({
     /** Suppresses normal CLI usage logs. */
@@ -80,53 +90,76 @@ const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
     logError: () => undefined,
   }));
   vi.doMock("@repo/backend/scripts/sync-content/cleanup/reset", () => ({
-    /** Records reset calls if a test accidentally reaches them. */
-    reset: unusedCommand,
+    reset: recordSync("reset"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/cleanup/analytics", () => ({
-    /** Records analytics reset calls if a test accidentally reaches them. */
-    resetAnalytics: unusedCommand,
+    resetAnalytics: recordSync("resetAnalytics"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/cleanup/audio", () => ({
-    /** Records audio reset calls if a test accidentally reaches them. */
-    resetAudio: unusedCommand,
+    resetAudio: recordSync("resetAudio"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/cleanup/tryouts", () => ({
-    /** Records tryout reset calls if a test accidentally reaches them. */
-    resetTryouts: unusedCommand,
+    resetTryouts: recordSync("resetTryouts"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/content/curriculum", () => ({
-    /** Records curriculum lesson sync calls if a test accidentally reaches them. */
-    syncCurriculumLessons: unusedCommand,
-    /** Records curriculum topic sync calls if a test accidentally reaches them. */
-    syncCurriculumTopics: unusedCommand,
+    syncCurriculumLessons: recordSync("syncCurriculumLessons"),
+    syncCurriculumTopics: recordSync("syncCurriculumTopics"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/content/validate", () => ({
-    /** Records validation calls if a test accidentally reaches them. */
-    validate: unusedCommand,
+    validate: recordSync("validate"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/verify/sync", () => ({
-    /** Records verification calls if a test accidentally reaches them. */
-    verify: unusedCommand,
+    verify: recordSync("verify"),
+  }));
+  vi.doMock("@repo/backend/scripts/sync-content/routes/artifacts", () => ({
+    createContentRouteArtifactTargets: (
+      locale?: (typeof locales)[number],
+      sections: readonly NakafaSection[] = NAKAFA_CONTENT_SECTIONS
+    ) => {
+      const targetLocales = locale ? [locale] : locales;
+
+      return sections.flatMap((section) =>
+        targetLocales.map((targetLocale) => ({
+          locale: targetLocale,
+          section,
+        }))
+      );
+    },
+    syncContentRouteArtifactPages: (
+      _config: ConvexConfig,
+      targets: readonly ContentRouteArtifactTarget[]
+    ) => {
+      events.push("syncContentRouteArtifactPages");
+      artifactTargets.push(targets);
+      return Effect.succeed(syncResult);
+    },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/routes/sync", () => ({
-    /** Records public-route sync calls if a test accidentally reaches them. */
-    syncPublicRoutes: unusedCommand,
+    syncPublicRoutes: recordSync("syncPublicRoutes"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/workflow/full", () => ({
-    /** Records full sync calls if a test accidentally reaches them. */
-    syncFull: unusedCommand,
+    syncFull: recordSync("syncFull"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/workflow/run", () => ({
-    /** Records full all-content sync calls if a test accidentally reaches them. */
-    syncAll: unusedCommand,
-    /** Records incremental sync calls if a test accidentally reaches them. */
-    syncIncremental: unusedCommand,
+    syncAll: recordSync("syncAll"),
+    syncIncremental: recordSync("syncIncremental"),
+    /** Mirrors the workflow boundary so parser tests exercise its shared validation call. */
+    validateIncrementalSyncOptions: (syncOptions: SyncOptions) => {
+      if (!syncOptions.locale) {
+        return Effect.void;
+      }
+
+      return Effect.fail(
+        new Error(
+          "Incremental sync does not support --locale because sync state is shared across locales"
+        )
+      );
+    },
   }));
 
   const cli = await import("@repo/backend/scripts/sync-content/cli/command");
 
-  return { cli, events, invalidatedOptions };
+  return { artifactTargets, cli, events, invalidatedOptions };
 };
 
 afterEach(() => {
@@ -158,6 +191,33 @@ describe("sync-content cli", () => {
     ).rejects.toThrow("Invalid locale: unsupported");
   });
 
+  it("rejects locale-scoped incremental sync before its workflow can advance shared state", async () => {
+    const { cli, events } = await loadCli();
+    const program = cli
+      .parseSyncArgs(["incremental", "--locale", "id"])
+      .pipe(
+        Effect.flatMap(({ options, type }) => cli.runCommand(type, options))
+      );
+
+    await expect(Effect.runPromise(program)).rejects.toThrow(
+      "Incremental sync does not support --locale because sync state is shared across locales"
+    );
+    expect(events).toEqual([]);
+  });
+
+  it.each([
+    "full",
+    "reset",
+  ])("keeps locale scoping available for %s sync", async (command) => {
+    const { cli } = await loadCli();
+
+    const result = await Effect.runPromise(
+      cli.parseSyncArgs([command, "--locale", "id"])
+    );
+
+    expect(result.options.locale).toBe("id");
+  });
+
   it("invalidates content runtime cache after targeted learning-program sync", async () => {
     const { cli, events, invalidatedOptions } = await loadCli();
     const options: SyncOptions = { locale: "id" };
@@ -180,5 +240,130 @@ describe("sync-content cli", () => {
     ).rejects.toThrow("learning program sync failed");
 
     expect(events).toEqual(["getConvexConfig", "syncLearningPrograms"]);
+  });
+
+  it.each([
+    [
+      "articles",
+      ["syncAuthors", "syncArticles", "syncContentRouteArtifactPages"],
+    ],
+    ["quran", ["syncQuran", "syncContentRouteArtifactPages"]],
+    [
+      "subjects",
+      [
+        "syncAuthors",
+        "syncCurriculumTopics",
+        "syncCurriculumLessons",
+        "syncContentRouteArtifactPages",
+        "syncPublicRoutes",
+        "syncLearningPrograms",
+      ],
+    ],
+    [
+      "curriculum-topics",
+      [
+        "syncAuthors",
+        "syncCurriculumTopics",
+        "syncContentRouteArtifactPages",
+        "syncPublicRoutes",
+        "syncLearningPrograms",
+      ],
+    ],
+    [
+      "curriculum-lessons",
+      [
+        "syncAuthors",
+        "syncCurriculumLessons",
+        "syncContentRouteArtifactPages",
+        "syncPublicRoutes",
+        "syncLearningPrograms",
+      ],
+    ],
+    [
+      "tryouts",
+      [
+        "syncAuthors",
+        "syncTryouts",
+        "syncContentRouteArtifactPages",
+        "syncPublicRoutes",
+        "syncLearningPrograms",
+      ],
+    ],
+    ["public-routes", ["syncPublicRoutes"]],
+    ["all", ["syncAll"]],
+  ])("refreshes derived data and cache after %s", async (command, steps) => {
+    const { cli, events, invalidatedOptions } = await loadCli();
+    const options: SyncOptions = { locale: "id" };
+
+    await Effect.runPromise(cli.runCommand(command, options));
+
+    expect(events).toEqual([
+      "getConvexConfig",
+      ...steps,
+      "invalidateContentRuntimeCache",
+    ]);
+    expect(invalidatedOptions).toEqual([options]);
+  });
+
+  it.each([
+    ["articles", "articles"],
+    ["quran", "quran"],
+    ["subjects", "material"],
+    ["curriculum-topics", "material"],
+    ["curriculum-lessons", "material"],
+    ["tryouts", "tryout"],
+  ] as const)("limits %s route artifacts to its owning section", async (command, section) => {
+    const { artifactTargets, cli } = await loadCli();
+
+    await Effect.runPromise(cli.runCommand(command, { locale: "id" }));
+
+    expect(artifactTargets).toEqual([[{ locale: "id", section }]]);
+  });
+
+  it.each([
+    ["reset", "reset"],
+    ["reset-tryouts", "resetTryouts"],
+  ])("invalidates cache after forced %s", async (command, resetEvent) => {
+    const { cli, events } = await loadCli();
+
+    await Effect.runPromise(cli.runCommand(command, { force: true }));
+
+    expect(events).toEqual([
+      "getConvexConfig",
+      resetEvent,
+      "invalidateContentRuntimeCache",
+    ]);
+  });
+
+  it("rebuilds every locale and invalidates after forced cleanup deletes rows", async () => {
+    const { artifactTargets, cli, events, invalidatedOptions } = await loadCli({
+      cleanDeleted: 2,
+    });
+    const options: SyncOptions = { force: true, locale: "id" };
+    const expectedOptions: SyncOptions = { force: true, locale: undefined };
+
+    await Effect.runPromise(cli.runCommand("clean", options));
+
+    expect(events).toEqual([
+      "getConvexConfig",
+      "clean",
+      "syncContentRouteArtifactPages",
+      "syncPublicRoutes",
+      "syncLearningPrograms",
+      "invalidateContentRuntimeCache",
+    ]);
+    expect(artifactTargets[0]).toHaveLength(8);
+    expect(new Set(artifactTargets[0]?.map((target) => target.locale))).toEqual(
+      new Set(locales)
+    );
+    expect(invalidatedOptions).toEqual([expectedOptions]);
+  });
+
+  it("does not rebuild or invalidate when cleanup deletes no rows", async () => {
+    const { cli, events } = await loadCli();
+
+    await Effect.runPromise(cli.runCommand("clean", { force: true }));
+
+    expect(events).toEqual(["getConvexConfig", "clean"]);
   });
 });

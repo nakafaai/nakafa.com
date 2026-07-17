@@ -1,6 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
+import type { QuranReferenceVerse } from "@repo/backend/convex/contents/runtime/spec";
 import type {
   Locale,
   NakafaSection,
@@ -143,13 +144,40 @@ export async function getQuranReferenceImpl(
     url: ref.url,
     verses: verses
       .sort((left, right) => left.verseNumber - right.verseNumber)
-      .map((verse) => ({
-        arabic: verse.text.arab,
-        number: verse.verseNumber,
-        ...(args.includeTafsir ? { tafsir: verse.tafsir.id.short } : {}),
-        translation: verse.translation[args.locale],
-        transliteration: verse.text.transliteration.en,
-      })),
+      .map((verse) =>
+        toQuranReferenceVerse(verse, {
+          includeTafsir: args.includeTafsir,
+          locale: args.locale,
+        })
+      ),
+  };
+}
+
+/** Projects one Quran verse and includes tafsir only for the requested locale. */
+function toQuranReferenceVerse(
+  verse: Doc<"quranVerses">,
+  options: { includeTafsir: boolean; locale: Locale }
+): QuranReferenceVerse {
+  const reference = {
+    arabic: verse.text.arab,
+    number: verse.verseNumber,
+    translation: verse.translation[options.locale],
+    transliteration: verse.text.transliteration.en,
+  };
+
+  if (!options.includeTafsir) {
+    return reference;
+  }
+
+  const tafsir = verse.tafsir[options.locale];
+
+  if (!tafsir) {
+    return reference;
+  }
+
+  return {
+    ...reference,
+    tafsir: tafsir.short,
   };
 }
 

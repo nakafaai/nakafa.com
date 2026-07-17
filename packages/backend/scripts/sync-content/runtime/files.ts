@@ -176,6 +176,28 @@ export const getChangedFilesSince = Effect.fn("scripts.getChangedFilesSince")(
   }
 );
 
+/** Returns deleted paths, including the old side of file renames. */
+export const getDeletedFilesSince = Effect.fn("scripts.getDeletedFilesSince")(
+  function* (commit: string) {
+    const deletedFiles = new Set<string>();
+
+    yield* addGitOutputFiles(
+      deletedFiles,
+      `git diff --no-renames --diff-filter=D --name-only ${commit} HEAD -- .`
+    );
+    yield* addGitOutputFiles(
+      deletedFiles,
+      "git diff --no-renames --diff-filter=D --name-only -- ."
+    );
+    yield* addGitOutputFiles(
+      deletedFiles,
+      "git diff --no-renames --diff-filter=D --name-only --cached -- ."
+    );
+
+    return deletedFiles;
+  }
+);
+
 /** Adds content-root relative files from one git command into a shared set. */
 const addGitOutputFiles = Effect.fn("scripts.addGitOutputFiles")(function* (
   changedFiles: Set<string>,

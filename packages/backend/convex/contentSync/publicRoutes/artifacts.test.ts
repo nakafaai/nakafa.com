@@ -9,17 +9,14 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const firstPage: PublicRouteSitemapPage = {
-  endPath: "curriculum/fixture/topic-b",
-  hash: "page-hash",
   locale: "en",
   page: 0,
-  routeCount: 2,
-  startPath: "curriculum/fixture/topic-a",
+  paths: ["curriculum/fixture/topic-a", "curriculum/fixture/topic-b"],
   syncedAt: 1,
 };
 
 describe("contentSync public sitemap artifacts", () => {
-  it("creates, preserves, updates, and deletes bounded page metadata", async () => {
+  it("keeps generation pages immutable and deletes only older generations", async () => {
     const t = convexTest(schema, convexModules);
 
     const created = await t.mutation(
@@ -30,37 +27,52 @@ describe("contentSync public sitemap artifacts", () => {
       internal.contentSync.publicRoutes.internal.syncSitemapPages,
       { pages: [firstPage] }
     );
-    const updated = await t.mutation(
-      internal.contentSync.publicRoutes.internal.syncSitemapPages,
-      {
+    await expect(
+      t.mutation(internal.contentSync.publicRoutes.internal.syncSitemapPages, {
         pages: [
           {
             ...firstPage,
-            endPath: "curriculum/fixture/topic-c",
-            hash: "updated-page-hash",
+            paths: ["curriculum/fixture/topic-a", "curriculum/fixture/topic-c"],
           },
         ],
-      }
+      })
+    ).rejects.toMatchObject({
+      data: { code: "PUBLIC_SITEMAP_GENERATION_COLLISION" },
+    });
+    const nextGeneration = { ...firstPage, syncedAt: 2 };
+    const futureGeneration = { ...firstPage, syncedAt: 3 };
+    const nextCreated = await t.mutation(
+      internal.contentSync.publicRoutes.internal.syncSitemapPages,
+      { pages: [nextGeneration, futureGeneration] }
     );
     const removed = await t.mutation(
-      internal.contentSync.publicRoutes.internal.deleteStaleSitemapPages,
-      { firstStalePage: 0, locale: "en" }
+      internal.contentSync.publicRoutes.internal.deleteOlderSitemapPages,
+      { committedSyncedAt: 2, locale: "en" }
+    );
+    const remaining = await t.run((ctx) =>
+      ctx.db
+        .query("publicRouteSitemapPages")
+        .withIndex("by_locale_and_syncedAt_and_page", (query) =>
+          query.eq("locale", "en")
+        )
+        .collect()
     );
 
     expect(created).toEqual({ created: 1, unchanged: 0, updated: 0 });
     expect(unchanged).toEqual({ created: 0, unchanged: 1, updated: 0 });
-    expect(updated).toEqual({ created: 0, unchanged: 0, updated: 1 });
+    expect(nextCreated).toEqual({ created: 2, unchanged: 0, updated: 0 });
     expect(removed).toEqual({ deleted: 1 });
+    expect(remaining.map((page) => page.syncedAt)).toEqual([2, 3]);
   });
 
-  it("commits counts only when count and page count agree", async () => {
+  it("commits only valid monotonic generation pointers", async () => {
     const t = convexTest(schema, convexModules);
     const count: PublicRouteSitemapCount = {
       count: 1001,
       hash: "count-hash",
       locale: "en",
       pageCount: 2,
-      syncedAt: 1,
+      syncedAt: 2,
     };
 
     const created = await t.mutation(
@@ -75,6 +87,28 @@ describe("contentSync public sitemap artifacts", () => {
     expect(created).toEqual({ created: 1, unchanged: 0, updated: 0 });
     expect(stored).toEqual(count);
 
+    const unchanged = await t.mutation(
+      internal.contentSync.publicRoutes.internal.saveSitemapCount,
+      count
+    );
+    expect(unchanged).toEqual({ created: 0, unchanged: 1, updated: 0 });
+
+    await expect(
+      t.mutation(internal.contentSync.publicRoutes.internal.saveSitemapCount, {
+        ...count,
+        syncedAt: 1,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "PUBLIC_SITEMAP_GENERATION_STALE" },
+    });
+    await expect(
+      t.mutation(internal.contentSync.publicRoutes.internal.saveSitemapCount, {
+        ...count,
+        hash: "different-hash",
+      })
+    ).rejects.toMatchObject({
+      data: { code: "PUBLIC_SITEMAP_GENERATION_COLLISION" },
+    });
     await expect(
       t.mutation(internal.contentSync.publicRoutes.internal.saveSitemapCount, {
         ...count,
@@ -82,6 +116,51 @@ describe("contentSync public sitemap artifacts", () => {
       })
     ).rejects.toMatchObject({
       data: { code: "PUBLIC_SITEMAP_COUNT_INVALID" },
+    });
+
+    const updated = await t.mutation(
+      internal.contentSync.publicRoutes.internal.saveSitemapCount,
+      { ...count, hash: "new-hash", syncedAt: 3 }
+    );
+    expect(updated).toEqual({ created: 0, unchanged: 0, updated: 1 });
+  });
+
+  it("rejects invalid and oversized exact-path pages", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.mutation(internal.contentSync.publicRoutes.internal.syncSitemapPages, {
+        pages: [
+          {
+            ...firstPage,
+            paths: ["curriculum/fixture/topic-b", "curriculum/fixture/topic-a"],
+          },
+        ],
+      })
+    ).rejects.toMatchObject({
+      data: { code: "PUBLIC_SITEMAP_PAGE_INVALID" },
+    });
+
+    const oversizedPaths = Array.from(
+      { length: 1000 },
+      (_, index) =>
+        `curriculum/${index.toString().padStart(4, "0")}-${"a".repeat(1100)}`
+    );
+    await expect(
+      t.mutation(internal.contentSync.publicRoutes.internal.syncSitemapPages, {
+        pages: [{ ...firstPage, paths: oversizedPaths }],
+      })
+    ).rejects.toMatchObject({
+      data: { code: "PUBLIC_SITEMAP_PAGE_INVALID" },
+    });
+
+    await expect(
+      t.mutation(
+        internal.contentSync.publicRoutes.internal.deleteOlderSitemapPages,
+        { committedSyncedAt: 0, locale: "en" }
+      )
+    ).rejects.toMatchObject({
+      data: { code: "PUBLIC_SITEMAP_PAGE_INVALID" },
     });
   });
 });

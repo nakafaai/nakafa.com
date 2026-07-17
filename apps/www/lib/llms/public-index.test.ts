@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
+import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
 import {
   buildPublicLlmsAppSectionIndexText,
   buildRootLlmsIndexText,
@@ -72,5 +73,6 @@ describe("public llms discovery indexes", () => {
     expect(text).toContain("# Nakafa English Curriculum");
     expect(text).toContain(`${BASE_URL}/en/curriculum`);
     expect(text).toContain(`${BASE_URL}/skill.md`);
+    expect(text).toContain(AGENT_MARKDOWN_DIRECTIVE);
   });
 });

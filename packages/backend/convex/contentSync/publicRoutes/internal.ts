@@ -2,7 +2,7 @@ import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
-  deleteStalePublicSitemapPages,
+  deleteOlderPublicSitemapPages,
   getPublicSitemapCountState,
   savePublicSitemapCount,
   syncPublicSitemapPages,
@@ -88,7 +88,7 @@ export const getSitemapCountState = internalQuery({
     runConvexProgram(getPublicSitemapCountState(ctx, args.locale)),
 });
 
-/** Upserts one bounded batch of public sitemap page boundaries. */
+/** Writes one bounded batch of immutable public sitemap artifact pages. */
 export const syncSitemapPages = internalMutation({
   args: { pages: v.array(publicRouteSitemapPageValidator) },
   returns: publicSitemapSyncResultValidator,
@@ -104,15 +104,15 @@ export const syncSitemapPages = internalMutation({
   },
 });
 
-/** Deletes one bounded batch of obsolete public sitemap pages. */
-export const deleteStaleSitemapPages = internalMutation({
+/** Deletes one bounded batch of pages older than a committed generation. */
+export const deleteOlderSitemapPages = internalMutation({
   args: {
-    firstStalePage: v.number(),
+    committedSyncedAt: v.number(),
     locale: localeValidator,
   },
   returns: publicSitemapDeleteResultValidator,
   handler: (ctx, args) =>
-    runConvexProgram(deleteStalePublicSitemapPages(ctx, args)),
+    runConvexProgram(deleteOlderPublicSitemapPages(ctx, args)),
 });
 
 /** Commits a locale count after all of its public sitemap pages are ready. */

@@ -1,4 +1,5 @@
 import {
+  deleteAudioContentSourceByRoute,
   getAudioContentSourceByContentId,
   getAudioContentSourceByLocale,
   syncAudioContentSource,
@@ -20,6 +21,17 @@ const localizedArticleSource = getTestAudioContent({
   locale: "id",
   route: articleSource.route,
 });
+
+const conflictingArticleSource = {
+  ...articleSource,
+  alignmentId: `${articleSource.alignmentId}:conflict`,
+  assetId: `${articleSource.assetId}:conflict`,
+  conceptId: `${articleSource.conceptId}:conflict`,
+  contentHash: "conflicting-hash",
+  content_id: `${articleSource.content_id}:conflict`,
+  learningObjectId: `${articleSource.learningObjectId}:conflict`,
+  lensId: `${articleSource.lensId}:conflict`,
+};
 
 describe("audioStudies/helpers/sources", () => {
   it("syncs and reads compact audio metadata by graph content ID and locale", async () => {
@@ -114,28 +126,25 @@ describe("audioStudies/helpers/sources", () => {
     });
   });
 
-  it("updates a route-indexed source when graph content ID changes", async () => {
+  it("rejects a route owned by another content ID without changing it", async () => {
     const t = convexTest(schema, convexModules);
-    const detachedArticleSource = {
-      ...articleSource,
-      alignmentId: `${articleSource.alignmentId}:catalog`,
-      assetId: `${articleSource.assetId}:catalog`,
-      conceptId: `${articleSource.conceptId}:catalog`,
-      contentHash: "detached-hash",
-      content_id: `${articleSource.content_id}:catalog`,
-      learningObjectId: `${articleSource.learningObjectId}:catalog`,
-      lensId: `${articleSource.lensId}:catalog`,
-    };
 
     await t.mutation(async (ctx) => {
       await syncAudioContentSource(ctx, {
-        ...detachedArticleSource,
+        ...conflictingArticleSource,
         syncedAt: 1,
       });
-      await syncAudioContentSource(ctx, {
-        ...articleSource,
-        syncedAt: 2,
-      });
+    });
+
+    await expect(
+      t.mutation(async (ctx) =>
+        syncAudioContentSource(ctx, {
+          ...articleSource,
+          syncedAt: 2,
+        })
+      )
+    ).rejects.toMatchObject({
+      data: { code: "AUDIO_CONTENT_SOURCE_ROUTE_COLLISION" },
     });
 
     const snapshot = await t.query(async (ctx) => {
@@ -143,9 +152,9 @@ describe("audioStudies/helpers/sources", () => {
         ctx,
         articleSource.content_id
       );
-      const detached = await getAudioContentSourceByContentId(
+      const conflicting = await getAudioContentSourceByContentId(
         ctx,
-        detachedArticleSource.content_id
+        conflictingArticleSource.content_id
       );
       const routeRows = await ctx.db
         .query("audioContentSources")
@@ -155,100 +164,110 @@ describe("audioStudies/helpers/sources", () => {
             .eq("route", articleSource.route)
             .eq("locale", articleSource.locale)
         )
-        .take(2);
+        .collect();
 
-      return { canonical, detached, routeRows };
+      return { canonical, conflicting, routeRows };
     });
 
-    expect(snapshot.canonical).toEqual({
-      alignmentId: articleSource.alignmentId,
-      assetId: articleSource.assetId,
-      conceptId: articleSource.conceptId,
-      contentHash: articleSource.contentHash,
-      content_id: articleSource.content_id,
-      contentType: articleSource.contentType,
-      learningObjectId: articleSource.learningObjectId,
-      lensId: articleSource.lensId,
-      locale: articleSource.locale,
-      route: articleSource.route,
+    expect(snapshot.canonical).toBeNull();
+    expect(snapshot.conflicting).toMatchObject({
+      contentHash: conflictingArticleSource.contentHash,
+      content_id: conflictingArticleSource.content_id,
     });
-    expect(snapshot.detached).toBeNull();
     expect(snapshot.routeRows).toHaveLength(1);
     expect(snapshot.routeRows[0]).toMatchObject({
-      contentHash: articleSource.contentHash,
-      content_id: articleSource.content_id,
+      contentHash: conflictingArticleSource.contentHash,
+      content_id: conflictingArticleSource.content_id,
       route: articleSource.route,
     });
   });
 
-  it("collapses route duplicates when the canonical graph row already exists", async () => {
+  it("rejects duplicate content IDs without changing either row", async () => {
     const t = convexTest(schema, convexModules);
-    const detachedArticleSource = {
-      ...articleSource,
-      alignmentId: `${articleSource.alignmentId}:detached`,
-      assetId: `${articleSource.assetId}:detached`,
-      conceptId: `${articleSource.conceptId}:detached`,
-      contentHash: "detached-hash",
-      content_id: `${articleSource.content_id}:detached`,
-      learningObjectId: `${articleSource.learningObjectId}:detached`,
-      lensId: `${articleSource.lensId}:detached`,
-    };
 
     await t.mutation(async (ctx) => {
-      await syncAudioContentSource(ctx, {
+      await ctx.db.insert("audioContentSources", {
         ...articleSource,
         syncedAt: 1,
       });
       await ctx.db.insert("audioContentSources", {
-        ...detachedArticleSource,
+        ...articleSource,
+        route: `${articleSource.route}/duplicate`,
         syncedAt: 1,
       });
-      await syncAudioContentSource(ctx, {
+    });
+
+    await expect(
+      t.mutation(async (ctx) =>
+        syncAudioContentSource(ctx, {
+          ...articleSource,
+          syncedAt: 2,
+        })
+      )
+    ).rejects.toMatchObject({
+      data: { code: "AUDIO_CONTENT_SOURCE_IDENTITY_COLLISION" },
+    });
+
+    const rows = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("audioContentSources")
+          .withIndex("by_content_id", (q) =>
+            q.eq("content_id", articleSource.content_id)
+          )
+          .collect()
+    );
+
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row.route)).toEqual(
+      expect.arrayContaining([
+        articleSource.route,
+        `${articleSource.route}/duplicate`,
+      ])
+    );
+  });
+
+  it("rejects deleting a duplicated route without deleting either row", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("audioContentSources", {
         ...articleSource,
-        syncedAt: 2,
+        syncedAt: 1,
+      });
+      await ctx.db.insert("audioContentSources", {
+        ...conflictingArticleSource,
+        syncedAt: 1,
       });
     });
 
-    const snapshot = await t.query(async (ctx) => {
-      const canonical = await getAudioContentSourceByContentId(
-        ctx,
-        articleSource.content_id
-      );
-      const detached = await getAudioContentSourceByContentId(
-        ctx,
-        detachedArticleSource.content_id
-      );
-      const routeRows = await ctx.db
-        .query("audioContentSources")
-        .withIndex("by_contentType_and_route_and_locale", (q) =>
-          q
-            .eq("contentType", articleSource.contentType)
-            .eq("route", articleSource.route)
-            .eq("locale", articleSource.locale)
-        )
-        .take(3);
-
-      return { canonical, detached, routeRows };
+    await expect(
+      t.mutation(async (ctx) =>
+        deleteAudioContentSourceByRoute(ctx, articleSource)
+      )
+    ).rejects.toMatchObject({
+      data: { code: "AUDIO_CONTENT_SOURCE_ROUTE_COLLISION" },
     });
 
-    expect(snapshot.canonical).toEqual({
-      alignmentId: articleSource.alignmentId,
-      assetId: articleSource.assetId,
-      conceptId: articleSource.conceptId,
-      contentHash: articleSource.contentHash,
-      content_id: articleSource.content_id,
-      contentType: articleSource.contentType,
-      learningObjectId: articleSource.learningObjectId,
-      lensId: articleSource.lensId,
-      locale: articleSource.locale,
-      route: articleSource.route,
-    });
-    expect(snapshot.detached).toBeNull();
-    expect(snapshot.routeRows).toHaveLength(1);
-    expect(snapshot.routeRows[0]).toMatchObject({
-      contentHash: articleSource.contentHash,
-      content_id: articleSource.content_id,
-      route: articleSource.route,
-    });
+    const rows = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("audioContentSources")
+          .withIndex("by_contentType_and_route_and_locale", (q) =>
+            q
+              .eq("contentType", articleSource.contentType)
+              .eq("route", articleSource.route)
+              .eq("locale", articleSource.locale)
+          )
+          .collect()
+    );
+
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row.content_id)).toEqual(
+      expect.arrayContaining([
+        articleSource.content_id,
+        conflictingArticleSource.content_id,
+      ])
+    );
   });
 });

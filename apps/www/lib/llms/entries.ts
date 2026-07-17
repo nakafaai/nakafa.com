@@ -2,8 +2,7 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import {
   getPublicContentRouteCheck,
   type PublicContentRouteCheck,
-} from "@repo/contents/_lib/manifest/public-route";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+} from "@repo/contents/_lib/public-route";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -18,9 +17,14 @@ import {
 } from "@/lib/llms/constants";
 import { formatRouteTitle } from "@/lib/llms/format";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
-import { baseRoutes } from "@/lib/sitemap/routes";
 
 const LLMS_LISTING_ENTRY_LIMIT = 100;
+const sourceBackedSiteRoutes = [
+  "/curricula",
+  "/privacy-policy",
+  "/security-policy",
+  "/terms-of-service",
+] as const;
 type RuntimeContentRoute = NonNullable<
   FunctionReturnType<
     typeof api.contents.queries.runtime.getContentRouteArtifactPage
@@ -31,25 +35,14 @@ type ParentListingRowsArgs = Omit<
   "cursor" | "limit"
 >;
 
-const materialRouteNamespaces = new Set<string>(
-  PUBLIC_ROUTE_SURFACES.filter((surface) => surface.key === "subject").flatMap(
-    (surface) => Object.values(surface.routeSlugs)
-  )
-);
-
-/** Classifies a sitemap route into the llms section that owns it. */
-function getRouteSection(route: string): LlmsSection {
-  const firstSegment = route.split("/").filter(Boolean)[0];
-
-  if (isLlmsSection(firstSegment) && firstSegment !== "site") {
-    return firstSegment;
-  }
-
-  if (materialRouteNamespaces.has(firstSegment ?? "")) {
-    return "material";
-  }
-
-  return "site";
+/** One localized link advertised by a Nakafa llms index. */
+export interface LlmsEntry {
+  description: string | undefined;
+  href: string;
+  route: string;
+  section: LlmsSection;
+  segments: string[];
+  title: string;
 }
 
 /** Checks whether a route segment is a supported llms section. */
@@ -68,18 +61,17 @@ export function getLlmsSections() {
 export function getSiteLlmsEntries(locale: Locale) {
   const entries: LlmsEntry[] = [];
 
-  for (const route of baseRoutes) {
-    if (getRouteSection(route) !== "site") {
-      continue;
-    }
-
+  for (const route of sourceBackedSiteRoutes) {
     entries.push(buildLocalizedSiteLlmsEntry({ locale, route }));
   }
 
   return entries;
 }
 
-/** Builds entries for one materialized route-catalog page without global reads. */
+/**
+ * Builds entries for one materialized route-catalog page without global reads.
+ * Returns null when the requested artifact page has not been materialized.
+ */
 export const getContentPageLlmsEntries = Effect.fn(
   "www.llms.contentPageEntries"
 )(function* ({
@@ -98,12 +90,13 @@ export const getContentPageLlmsEntries = Effect.fn(
   });
 
   if (!artifactPage) {
-    return [];
+    return null;
   }
 
   return buildLocalizedLlmsEntriesFromRows({
     locale,
     rows: artifactPage.routes,
+    section,
   });
 });
 
@@ -128,6 +121,7 @@ export const getContentListingLlmsEntries = Effect.fn(
   return buildLocalizedLlmsEntriesFromRows({
     locale,
     rows,
+    section: "articles",
   });
 });
 
@@ -135,9 +129,11 @@ export const getContentListingLlmsEntries = Effect.fn(
 function buildLocalizedLlmsEntriesFromRows({
   locale,
   rows,
+  section,
 }: {
   locale: Locale;
   rows: readonly RuntimeContentRoute[];
+  section: Exclude<LlmsSection, "site">;
 }) {
   const entries: ReturnType<typeof buildLocalizedLlmsEntryFromRow>[] = [];
 
@@ -146,7 +142,7 @@ function buildLocalizedLlmsEntriesFromRows({
       continue;
     }
 
-    const entry = buildLocalizedLlmsEntryFromRow({ locale, row });
+    const entry = buildLocalizedLlmsEntryFromRow({ locale, row, section });
 
     entries.push(entry);
   }
@@ -158,15 +154,16 @@ function buildLocalizedLlmsEntriesFromRows({
 function buildLocalizedLlmsEntryFromRow({
   locale,
   row,
+  section,
 }: {
   locale: Locale;
   row: RuntimeContentRoute;
+  section: Exclude<LlmsSection, "site">;
 }) {
   const route = routeToPath(row.route);
   const publicRoute =
     getLocalizedMappedRoutePathname({ locale, route }) ?? route;
   const hrefBase = `${BASE_URL}/${locale}${publicRoute}`;
-  const section = getRouteSection(publicRoute);
   const routeSegments = publicRoute.slice(1).split("/").filter(Boolean);
 
   return {
@@ -235,8 +232,7 @@ function buildLocalizedSiteLlmsEntry({
 }) {
   const publicRoute =
     getLocalizedMappedRoutePathname({ locale, route }) ?? route;
-  const publicPath = publicRoute === "/" ? "" : publicRoute;
-  const hrefBase = `${BASE_URL}/${locale}${publicPath}`;
+  const hrefBase = `${BASE_URL}/${locale}${publicRoute}`;
   const routePath = publicRoute.slice(1);
   const routeSegments = ["site", ...routePath.split("/").filter(Boolean)];
   const section: LlmsSection = "site";
@@ -250,7 +246,3 @@ function buildLocalizedSiteLlmsEntry({
     title: formatRouteTitle(publicRoute),
   };
 }
-
-export type LlmsEntry =
-  | ReturnType<typeof buildLocalizedSiteLlmsEntry>
-  | ReturnType<typeof buildLocalizedLlmsEntryFromRow>;

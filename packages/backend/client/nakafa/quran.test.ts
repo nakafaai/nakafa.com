@@ -26,6 +26,7 @@ const QuranReferenceArgsSchema = Schema.Struct({
   surah: Schema.Number,
   toVerse: Schema.optional(Schema.Number),
 });
+type QuranReferenceArgs = Schema.Schema.Type<typeof QuranReferenceArgsSchema>;
 const QuranSurahArgsSchema = Schema.Struct({
   surah: Schema.Number,
 });
@@ -53,6 +54,20 @@ describe("Quran Nakafa reader", () => {
       "Tafsir pendek."
     );
     expect(Option.getOrUndefined(reference)?.name).toBe("Al-Fatihah");
+  });
+
+  it("does not fall back to tafsir from another locale", async () => {
+    const reference = await Effect.runPromise(
+      readNakafaQuranReference(convexUrl, {
+        from_verse: 1,
+        include_tafsir: true,
+        locale: "en",
+        surah: 1,
+        to_verse: 1,
+      })
+    );
+
+    expect(Option.getOrUndefined(reference)?.verses[0]?.tafsir).toBeUndefined();
   });
 
   it("maps invalid references to input errors and missing rows to none", async () => {
@@ -150,15 +165,26 @@ function readQuranReference(args: unknown) {
     name: input.locale === "id" ? "Al-Fatihah" : "Al-Faatiha",
     revelation: input.locale === "id" ? "Makkah" : "Mecca",
     translation: input.locale === "id" ? "Pembukaan" : "The Opening",
-    verses: [
-      {
-        arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-        number: input.fromVerse,
-        ...(input.includeTafsir ? { tafsir: "Tafsir pendek." } : {}),
-        translation: "Dengan nama Allah.",
-        transliteration: "Bismillahirrahmanirrahim",
-      },
-    ],
+    verses: [quranReferenceVerse(input)],
+  };
+}
+
+/** Builds one locale-aware Quran reference verse fixture. */
+function quranReferenceVerse(input: QuranReferenceArgs) {
+  const verse = {
+    arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+    number: input.fromVerse,
+    translation: "Dengan nama Allah.",
+    transliteration: "Bismillahirrahmanirrahim",
+  };
+
+  if (!input.includeTafsir || input.locale !== "id") {
+    return verse;
+  }
+
+  return {
+    ...verse,
+    tafsir: "Tafsir pendek.",
   };
 }
 

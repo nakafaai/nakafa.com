@@ -8,8 +8,6 @@ const DEFAULT_SITE_INDEX_BATCH_SIZE = 500;
 export interface SiteIndexManifestSummary {
   batchCount: number;
   canonicalUrlCount: number;
-  duplicateCount: number;
-  totalEntryCount: number;
 }
 
 /** One bounded set of canonical sitemap URLs for indexing adapters. */
@@ -21,9 +19,8 @@ export interface SiteIndexUrlBatch {
 /**
  * Processes canonical sitemap URLs from sitemap pages without exposing one list.
  *
- * The processor owns global de-duplication and summary counts. Adapters receive
- * bounded URL batches so IndexNow/Google flows do not depend on materializing
- * every Nakafa public URL as one array.
+ * Adapters receive bounded URL batches, while the manifest retains counters
+ * only and never materializes every Nakafa public URL in memory.
  */
 export function forEachSiteIndexUrlBatch<Success, Failure, Requirements>(
   process: (
@@ -34,24 +31,15 @@ export function forEachSiteIndexUrlBatch<Success, Failure, Requirements>(
   return Effect.gen(function* () {
     const batchSize = options.batchSize ?? DEFAULT_SITE_INDEX_BATCH_SIZE;
     const descriptors = yield* readSitemapPageDescriptors();
-    const seenUrls = new Set<string>();
     let batchIndex = 0;
+    let canonicalUrlCount = 0;
     let currentBatch: string[] = [];
-    let duplicateCount = 0;
-    let totalEntryCount = 0;
 
     for (const descriptor of descriptors) {
       const entries = yield* getSitemapEntries({ pageId: descriptor.id });
 
       for (const entry of entries) {
-        totalEntryCount++;
-
-        if (seenUrls.has(entry.url)) {
-          duplicateCount++;
-          continue;
-        }
-
-        seenUrls.add(entry.url);
+        canonicalUrlCount++;
         currentBatch.push(entry.url);
 
         if (currentBatch.length >= batchSize) {
@@ -69,9 +57,7 @@ export function forEachSiteIndexUrlBatch<Success, Failure, Requirements>(
 
     return {
       batchCount: batchIndex,
-      canonicalUrlCount: seenUrls.size,
-      duplicateCount,
-      totalEntryCount,
-    } satisfies SiteIndexManifestSummary;
+      canonicalUrlCount,
+    };
   });
 }

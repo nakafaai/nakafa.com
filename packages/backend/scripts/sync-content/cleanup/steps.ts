@@ -75,9 +75,9 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "public sitemap count rows",
   },
   {
-    label: "Deleting public sitemap boundary pages...",
+    label: "Deleting public sitemap artifact pages...",
     mutation: reset.deletePublicRouteSitemapPagesBatch,
-    resultLabel: "public sitemap boundary pages",
+    resultLabel: "public sitemap artifact pages",
   },
   {
     label: "Deleting public route sync state...",

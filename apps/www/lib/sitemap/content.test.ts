@@ -4,6 +4,7 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import type { SourceRegistryRoot } from "@repo/contents/_types/graph/schema";
 import type { FunctionReturnType } from "convex/server";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import { buildSitemapContentPageRoutes } from "@/lib/sitemap/content";
 
@@ -13,26 +14,27 @@ type RuntimeContentRoute = NonNullable<
 
 describe("sitemap content routes", () => {
   it("derives rendered paths and preserves existing modification dates", () => {
-    const routes = buildSitemapContentPageRoutes([
-      routeRow("articles/politics/article", "articles", 30),
-      routeRow(
-        "subjects/chemistry/topic/lesson",
-        "material",
-        20,
-        "material/lesson/chemistry/topic/lesson"
-      ),
-      routeRow(
-        "subjects/chemistry/topic",
-        "material",
-        10,
-        "material/topic/chemistry/topic",
-        "curriculum-topic"
-      ),
-      routeRow("quran/1", "quran", 40),
-    ]);
+    const routes = Effect.runSync(
+      buildSitemapContentPageRoutes([
+        routeRow("articles/politics/article", "articles", 30),
+        routeRow(
+          "subjects/chemistry/topic/lesson",
+          "material",
+          20,
+          "material/lesson/chemistry/topic/lesson"
+        ),
+        routeRow(
+          "subjects/chemistry/topic",
+          "material",
+          10,
+          "material/topic/chemistry/topic",
+          "curriculum-topic"
+        ),
+        routeRow("quran/1", "quran", 40),
+      ])
+    );
 
     expect(routes).toEqual([
-      { lastModified: 30, path: "/articles/politics" },
       { lastModified: 30, path: "/articles/politics/article" },
       { lastModified: undefined, path: "/quran/1" },
       {
@@ -42,7 +44,7 @@ describe("sitemap content routes", () => {
     ]);
   });
 
-  it("deduplicates durable paths and keeps the newest known date", () => {
+  it("fails when durable rows claim the same exact path", () => {
     const first = routeRow(
       "subjects/chemistry/topic/lesson",
       "material",
@@ -56,22 +58,26 @@ describe("sitemap content routes", () => {
       "material/lesson/chemistry/topic/alternate"
     );
 
-    expect(buildSitemapContentPageRoutes([first, second])).toEqual([
-      {
-        lastModified: 20,
-        path: "/subjects/chemistry/topic/lesson",
-      },
-    ]);
+    const failure = Effect.runSync(
+      Effect.flip(buildSitemapContentPageRoutes([first, second]))
+    );
+
+    expect(failure).toMatchObject({
+      _tag: "DuplicateSitemapContentRouteError",
+      path: "/subjects/chemistry/topic/lesson",
+    });
   });
 
-  it("uses sync dates for undated content and deduplicates undated Quran paths", () => {
+  it("uses sync dates for undated content and leaves Quran undated", () => {
     const undated = {
       ...routeRow("try-out/indonesia/snbt/2027/set-1", "tryout", 50),
       date: undefined,
     };
     const quran = routeRow("quran/1", "quran", 40);
 
-    expect(buildSitemapContentPageRoutes([undated, quran, quran])).toEqual([
+    expect(
+      Effect.runSync(buildSitemapContentPageRoutes([undated, quran]))
+    ).toEqual([
       { lastModified: undefined, path: "/quran/1" },
       {
         lastModified: 50,

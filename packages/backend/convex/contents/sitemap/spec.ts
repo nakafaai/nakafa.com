@@ -15,8 +15,11 @@ export const PUBLIC_SITEMAP_PAGE_SIZE = 1000;
 export const CONTENT_SITEMAP_ARTIFACT_PAGE_COUNT =
   CONTENT_SITEMAP_ROUTE_PAGE_SIZE / CONTENT_ROUTE_ARTIFACT_PAGE_SIZE;
 
-/** Public route kind owned by the dedicated context sitemap pages. */
-export const PUBLIC_SITEMAP_ROUTE_KIND = "curriculum-context";
+/** Durable route kinds owned by the dedicated public sitemap pages. */
+export const PUBLIC_SITEMAP_ROUTE_KINDS = [
+  "article-category",
+  "curriculum-context",
+] as const;
 
 /** Matches Convex UTF-8 index order for route boundary construction. */
 export function compareSitemapPaths(left: string, right: string) {
@@ -51,14 +54,11 @@ export const publicRouteSitemapCountValidator = v.object({
   syncedAt: v.number(),
 });
 
-/** Stored lexical boundaries for one bounded public sitemap page. */
+/** Immutable exact paths for one generation-scoped public sitemap page. */
 export const publicRouteSitemapPageValidator = v.object({
-  endPath: v.string(),
-  hash: v.string(),
   locale: localeValidator,
   page: v.number(),
-  routeCount: v.number(),
-  startPath: v.string(),
+  paths: v.array(v.string()),
   syncedAt: v.number(),
 });
 
@@ -91,7 +91,7 @@ export type GetContentSitemapPageArgs = Infer<
   typeof getContentSitemapPageArgsObjectValidator
 >;
 
-export const contentSitemapRouteValidator = v.object({
+const contentSitemapRouteValidator = v.object({
   date: runtimeContentRouteValidator.fields.date,
   kind: runtimeContentRouteValidator.fields.kind,
   route: runtimeContentRouteValidator.fields.route,

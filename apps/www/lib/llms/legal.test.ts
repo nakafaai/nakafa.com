@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
 import { getLlmsLegalPageText } from "@/lib/llms/legal";
 
 const mockReadFile = vi.hoisted(() => vi.fn());
@@ -30,6 +31,7 @@ describe("legal llms markdown", () => {
 
     expect(text).toContain("# Terms of Service");
     expect(text).toContain("Last updated:");
+    expect(text).toContain(`# Terms of Service\n\n${AGENT_MARKDOWN_DIRECTIVE}`);
   });
 
   it("returns null when the route has no legal MDX source", async () => {

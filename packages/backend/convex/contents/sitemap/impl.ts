@@ -4,11 +4,11 @@ import {
   CONTENT_SITEMAP_ARTIFACT_PAGE_COUNT,
   CONTENT_SITEMAP_ROUTE_PAGE_SIZE,
   type ContentSitemapRoute,
+  compareSitemapPaths,
   type GetContentSitemapPageArgs,
   type GetPublicSitemapCountArgs,
   type GetPublicSitemapPageArgs,
   PUBLIC_SITEMAP_PAGE_SIZE,
-  PUBLIC_SITEMAP_ROUTE_KIND,
 } from "@repo/backend/convex/contents/sitemap/spec";
 import { Effect, Schema } from "effect";
 
@@ -51,10 +51,14 @@ export const getContentSitemapPageImpl = Effect.fn(
     return null;
   }
 
-  if (!Number.isSafeInteger(count.count) || count.count < 0) {
+  const countIsValid = Number.isSafeInteger(count.count) && count.count >= 0;
+  const generationIsValid =
+    Number.isSafeInteger(count.syncedAt) && count.syncedAt > 0;
+
+  if (!(countIsValid && generationIsValid)) {
     return yield* contentSitemapError(
       "CONTENT_SITEMAP_PAGE_INTEGRITY",
-      `Content sitemap count for ${args.locale}/${args.section} is invalid.`
+      `Content sitemap count metadata for ${args.locale}/${args.section} is invalid.`
     );
   }
 
@@ -74,10 +78,11 @@ export const getContentSitemapPageImpl = Effect.fn(
   const pages = yield* Effect.promise(() =>
     ctx.db
       .query("contentRoutePages")
-      .withIndex("by_locale_and_section_and_page", (query) =>
+      .withIndex("by_locale_and_section_and_syncedAt_and_page", (query) =>
         query
           .eq("locale", args.locale)
           .eq("section", args.section)
+          .eq("syncedAt", count.syncedAt)
           .gte("page", firstArtifactPage)
           .lt("page", firstArtifactPage + expectedArtifactCount)
       )
@@ -156,10 +161,12 @@ export const getPublicSitemapCountImpl = Effect.fn(
 
   if (
     !Number.isSafeInteger(count.pageCount) ||
-    count.pageCount !== expectedPageCount
+    count.pageCount !== expectedPageCount ||
+    !Number.isSafeInteger(count.syncedAt) ||
+    count.syncedAt <= 0
   ) {
     return yield* integrityError(
-      `Public sitemap count for ${args.locale} has an invalid page count.`
+      `Public sitemap count for ${args.locale} has invalid committed metadata.`
     );
   }
 
@@ -169,7 +176,7 @@ export const getPublicSitemapCountImpl = Effect.fn(
   };
 });
 
-/** Reads one exact public sitemap page through persisted lexical boundaries. */
+/** Reads one exact page from the locale's committed sitemap generation. */
 export const getPublicSitemapPageImpl = Effect.fn(
   "contents.publicSitemap.getPage"
 )(function* (ctx: QueryCtx, args: GetPublicSitemapPageArgs) {
@@ -193,9 +200,14 @@ export const getPublicSitemapPageImpl = Effect.fn(
     return null;
   }
 
-  if (!Number.isSafeInteger(count.pageCount) || count.pageCount < 0) {
+  if (
+    !Number.isSafeInteger(count.pageCount) ||
+    count.pageCount < 0 ||
+    !Number.isSafeInteger(count.syncedAt) ||
+    count.syncedAt <= 0
+  ) {
     return yield* integrityError(
-      `Public sitemap page count for ${args.locale} is invalid.`
+      `Public sitemap generation metadata for ${args.locale} is invalid.`
     );
   }
 
@@ -206,8 +218,11 @@ export const getPublicSitemapPageImpl = Effect.fn(
   const page = yield* Effect.promise(() =>
     ctx.db
       .query("publicRouteSitemapPages")
-      .withIndex("by_locale_and_page", (query) =>
-        query.eq("locale", args.locale).eq("page", args.page)
+      .withIndex("by_locale_and_syncedAt_and_page", (query) =>
+        query
+          .eq("locale", args.locale)
+          .eq("syncedAt", count.syncedAt)
+          .eq("page", args.page)
       )
       .unique()
   );
@@ -218,56 +233,34 @@ export const getPublicSitemapPageImpl = Effect.fn(
     );
   }
 
-  if (
-    !Number.isSafeInteger(page.routeCount) ||
-    page.routeCount < 1 ||
-    page.routeCount > PUBLIC_SITEMAP_PAGE_SIZE
-  ) {
-    return yield* Effect.fail(
-      new SitemapRuntimeError({
-        code: "PUBLIC_SITEMAP_PAGE_OVERFLOW",
-        message: `Public sitemap page ${args.locale}/${args.page} exceeds its safe route bound.`,
-      })
-    );
-  }
-
-  const routes = yield* Effect.promise(() =>
-    ctx.db
-      .query("publicRoutes")
-      .withIndex("by_locale_and_sitemap_and_kind_and_publicPath", (query) =>
-        query
-          .eq("locale", args.locale)
-          .eq("sitemap", true)
-          .eq("kind", PUBLIC_SITEMAP_ROUTE_KIND)
-          .gte("publicPath", page.startPath)
-          .lte("publicPath", page.endPath)
-      )
-      .take(PUBLIC_SITEMAP_PAGE_SIZE + 1)
+  const expectedPathCount = Math.min(
+    PUBLIC_SITEMAP_PAGE_SIZE,
+    count.count - args.page * PUBLIC_SITEMAP_PAGE_SIZE
   );
 
-  if (routes.length > PUBLIC_SITEMAP_PAGE_SIZE) {
+  if (page.paths.length !== expectedPathCount) {
     return yield* Effect.fail(
       new SitemapRuntimeError({
         code: "PUBLIC_SITEMAP_PAGE_OVERFLOW",
-        message: `Public sitemap page ${args.locale}/${args.page} returned too many routes.`,
+        message: `Public sitemap page ${args.locale}/${args.page} has an invalid path count.`,
       })
     );
   }
 
-  const firstPath = routes.at(0)?.publicPath;
-  const lastPath = routes.at(-1)?.publicPath;
-  const matchesBoundaries =
-    firstPath === page.startPath && lastPath === page.endPath;
+  const pathsAreSorted = page.paths.every((path, index) => {
+    const previous = page.paths[index - 1];
+    return previous === undefined || compareSitemapPaths(previous, path) < 0;
+  });
 
-  if (routes.length !== page.routeCount || !matchesBoundaries) {
+  if (!pathsAreSorted) {
     return yield* integrityError(
-      `Public sitemap page ${args.locale}/${args.page} does not match its committed boundaries.`
+      `Public sitemap page ${args.locale}/${args.page} is not strictly sorted.`
     );
   }
 
   return {
-    paths: routes.map((route) => route.publicPath),
-    syncedAt: page.syncedAt,
+    paths: page.paths,
+    syncedAt: count.syncedAt,
   };
 });
 

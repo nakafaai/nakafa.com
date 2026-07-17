@@ -206,7 +206,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       return yield* Effect.fail(new SitemapPageNotFoundError({ pageId }));
     }
 
-    return { routes: buildSitemapContentPageRoutes(artifact.routes) };
+    return { routes: yield* buildSitemapContentPageRoutes(artifact.routes) };
   }
 );
 

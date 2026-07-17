@@ -1,41 +1,4 @@
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { RulingTable } from "./table";
-
-export const tableData = [
-  {
-    category: "Ambang Batas Pencalonan",
-    electionLaw: (
-      <>
-        <InlineMath math="20\%" /> kursi DPRD atau <InlineMath math="25\%" /> suara sah
-      </>
-    ),
-    courtDecision: (
-      <>
-        <InlineMath math="6{,}5\%\text{-}10\%" /> berdasarkan populasi
-      </>
-    ),
-    dprDecision: "Hanya berlaku untuk partai tanpa kursi DPRD",
-  },
-  {
-    category: "Persyaratan Usia Gubernur",
-    electionLaw: <>Minimal <InlineMath math="30 \text{ tahun}" /></>,
-    courtDecision: <>Minimal <InlineMath math="30 \text{ tahun}" /> saat terdaftar sebagai calon</>,
-    dprDecision: <>Minimal <InlineMath math="30 \text{ tahun}" /> saat dilantik</>,
-  },
-  {
-    category: "Persyaratan Usia Bupati/Walikota",
-    electionLaw: <>Minimal <InlineMath math="25 \text{ tahun}" /></>,
-    courtDecision: <>Minimal <InlineMath math="25 \text{ tahun}" /> saat terdaftar sebagai calon</>,
-    dprDecision: <>Minimal <InlineMath math="25 \text{ tahun}" /> saat dilantik</>,
-  },
-];
-
-export const tableHeaders = {
-  category: "Kategori Regulasi",
-  electionLaw: "Undang-Undang Pemilu",
-  courtDecision: "Keputusan Mahkamah Konstitusi",
-  dprDecision: "Keputusan DPR",
-};
 
 export const metadata = {
   title:
@@ -136,11 +99,13 @@ Mahkamah Konstitusi, yang bertujuan menciptakan demokrasi bayangan untuk kepenti
 menjelaskan perdebatan antara keputusan DPR dan putusan Mahkamah Konstitusi, tabel berikut menguraikan
 perbedaan antara keduanya:
 
-<RulingTable
-  caption="Perbedaan putusan Pilkada menurut Undang-Undang Pilkada, Mahkamah Konstitusi, dan DPR"
-  tableData={tableData}
-  headers={tableHeaders}
-/>
+*Perbedaan putusan Pilkada menurut Undang-Undang Pilkada, Mahkamah Konstitusi, dan DPR.*
+
+| Kategori Regulasi | Undang-Undang Pemilu | Keputusan Mahkamah Konstitusi | Keputusan DPR |
+| --- | --- | --- | --- |
+| Ambang Batas Pencalonan | <InlineMath math="20\%" /> kursi DPRD atau <InlineMath math="25\%" /> suara sah | <InlineMath math="6{,}5\%\text{-}10\%" /> berdasarkan populasi | Hanya berlaku untuk partai tanpa kursi DPRD |
+| Persyaratan Usia Gubernur | Minimal <InlineMath math="30 \text{ tahun}" /> | Minimal <InlineMath math="30 \text{ tahun}" /> saat terdaftar sebagai calon | Minimal <InlineMath math="30 \text{ tahun}" /> saat dilantik |
+| Persyaratan Usia Bupati/Walikota | Minimal <InlineMath math="25 \text{ tahun}" /> | Minimal <InlineMath math="25 \text{ tahun}" /> saat terdaftar sebagai calon | Minimal <InlineMath math="25 \text{ tahun}" /> saat dilantik |
 
 Perbedaan antara ketiganya memberikan beberapa kesepakatan sebagai hasil akhir dari masalah ini.
 Dewan Perwakilan Rakyat Republik Indonesia (DPR RI) telah secara resmi menyetujui revisi Peraturan

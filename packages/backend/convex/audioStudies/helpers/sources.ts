@@ -12,8 +12,6 @@ type AudioSourceRoute = Pick<
   "contentType" | "locale" | "route"
 >;
 
-const duplicateAudioSourceRepairLimit = 6;
-
 /** Projects an audio source document into the compact graph lookup contract. */
 function toAudioContentLookup(
   source: Doc<"audioContentSources">
@@ -94,10 +92,20 @@ export async function syncAudioContentSource(
   ctx: MutationCtx,
   source: AudioContentLookup & { syncedAt: number }
 ) {
-  const existing = await ctx.db
+  const contentRows = await ctx.db
     .query("audioContentSources")
     .withIndex("by_content_id", (q) => q.eq("content_id", source.content_id))
-    .unique();
+    .take(2);
+  const routeRows = await readAudioContentSourcesByRoute(ctx, source);
+
+  assertAudioContentSourceIdentity({
+    contentId: source.content_id,
+    contentRows,
+    route: source,
+    routeRows,
+  });
+
+  const existing = contentRows[0] ?? null;
 
   const nextValues = {
     alignmentId: source.alignmentId,
@@ -112,35 +120,28 @@ export async function syncAudioContentSource(
     route: source.route,
     syncedAt: source.syncedAt,
   };
-  const routeRows = await readAudioContentSourcesByRoute(ctx, source);
-  const primary = existing ?? routeRows[0] ?? null;
 
-  await deleteDuplicateAudioContentSources(ctx, {
-    primary,
-    rows: routeRows,
-  });
-
-  if (!primary) {
+  if (!existing) {
     await ctx.db.insert("audioContentSources", nextValues);
     return;
   }
 
   if (
-    primary.alignmentId === nextValues.alignmentId &&
-    primary.assetId === nextValues.assetId &&
-    primary.conceptId === nextValues.conceptId &&
-    primary.contentHash === nextValues.contentHash &&
-    primary.content_id === nextValues.content_id &&
-    primary.contentType === nextValues.contentType &&
-    primary.learningObjectId === nextValues.learningObjectId &&
-    primary.lensId === nextValues.lensId &&
-    primary.locale === nextValues.locale &&
-    primary.route === nextValues.route
+    existing.alignmentId === nextValues.alignmentId &&
+    existing.assetId === nextValues.assetId &&
+    existing.conceptId === nextValues.conceptId &&
+    existing.contentHash === nextValues.contentHash &&
+    existing.content_id === nextValues.content_id &&
+    existing.contentType === nextValues.contentType &&
+    existing.learningObjectId === nextValues.learningObjectId &&
+    existing.lensId === nextValues.lensId &&
+    existing.locale === nextValues.locale &&
+    existing.route === nextValues.route
   ) {
     return;
   }
 
-  await ctx.db.patch("audioContentSources", primary._id, nextValues);
+  await ctx.db.patch("audioContentSources", existing._id, nextValues);
 }
 
 /** Removes compact audio metadata by its persisted source-route projection. */
@@ -150,20 +151,23 @@ export async function deleteAudioContentSourceByRoute(
 ) {
   const rows = await readAudioContentSourcesByRoute(ctx, source);
 
-  if (rows.length >= duplicateAudioSourceRepairLimit) {
+  if (rows.length > 1) {
     throw new ConvexError({
-      code: "AUDIO_CONTENT_SOURCE_DELETE_LIMIT_EXCEEDED",
-      message:
-        "Audio content source route has too many projections to delete safely.",
+      code: "AUDIO_CONTENT_SOURCE_ROUTE_COLLISION",
+      message: `Multiple audio content sources use route ${source.locale}/${source.contentType}/${source.route}.`,
     });
   }
 
-  for (const row of rows) {
-    await ctx.db.delete(row._id);
+  const existing = rows[0];
+
+  if (!existing) {
+    return;
   }
+
+  await ctx.db.delete(existing._id);
 }
 
-/** Reads every bounded audio source projection for one source route. */
+/** Reads enough audio source projections to detect a route collision. */
 async function readAudioContentSourcesByRoute(
   ctx: Pick<MutationCtx, "db">,
   source: AudioSourceRoute
@@ -176,29 +180,37 @@ async function readAudioContentSourcesByRoute(
         .eq("route", source.route)
         .eq("locale", source.locale)
     )
-    .take(duplicateAudioSourceRepairLimit);
+    .take(2);
 }
 
-/** Removes duplicate route projections while preserving one canonical source row. */
-async function deleteDuplicateAudioContentSources(
-  ctx: MutationCtx,
-  source: {
-    primary: Doc<"audioContentSources"> | null;
-    rows: Doc<"audioContentSources">[];
-  }
-) {
-  if (source.rows.length >= duplicateAudioSourceRepairLimit) {
+/** Rejects content IDs or source routes with conflicting audio owners. */
+function assertAudioContentSourceIdentity(args: {
+  contentId: AudioContentLookup["content_id"];
+  contentRows: Doc<"audioContentSources">[];
+  route: AudioSourceRoute;
+  routeRows: Doc<"audioContentSources">[];
+}) {
+  if (args.contentRows.length > 1) {
     throw new ConvexError({
-      code: "AUDIO_CONTENT_SOURCE_DUPLICATE_LIMIT_EXCEEDED",
-      message: "Audio content source route has too many duplicate projections.",
+      code: "AUDIO_CONTENT_SOURCE_IDENTITY_COLLISION",
+      message: `Multiple audio content sources use content ID ${args.contentId}.`,
     });
   }
 
-  for (const row of source.rows) {
-    if (row._id === source.primary?._id) {
-      continue;
-    }
+  if (args.routeRows.length > 1) {
+    throw new ConvexError({
+      code: "AUDIO_CONTENT_SOURCE_ROUTE_COLLISION",
+      message: `Multiple audio content sources use route ${args.route.locale}/${args.route.contentType}/${args.route.route}.`,
+    });
+  }
 
-    await ctx.db.delete(row._id);
+  const contentRow = args.contentRows[0];
+  const routeRow = args.routeRows[0];
+
+  if (routeRow && routeRow._id !== contentRow?._id) {
+    throw new ConvexError({
+      code: "AUDIO_CONTENT_SOURCE_ROUTE_COLLISION",
+      message: `Audio content source route ${args.route.locale}/${args.route.contentType}/${args.route.route} belongs to another content ID.`,
+    });
   }
 }

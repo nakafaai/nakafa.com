@@ -8,6 +8,7 @@ import type { QuranControlLabels } from "@/components/shared/quran-controls";
 import { QuranText } from "@/components/shared/quran-text";
 
 interface Props {
+  hasInterpretation: boolean;
   id: string;
   index: number;
   isLast: boolean;
@@ -88,6 +89,7 @@ function QuranInterpretationButton({
  * Renders one Quran verse as SEO-visible server content with delegated controls.
  */
 export function QuranVerse({
+  hasInterpretation,
   id,
   index,
   isLast,
@@ -122,7 +124,7 @@ export function QuranVerse({
 
         <div className="flex items-center gap-2">
           <QuranAudioButton index={index} labels={labels} />
-          {locale === "id" && (
+          {hasInterpretation && (
             <QuranInterpretationButton
               index={index}
               label={labels.interpretation}

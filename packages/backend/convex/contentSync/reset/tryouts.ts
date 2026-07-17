@@ -136,7 +136,7 @@ export const deleteTryoutContentRoutePageRows = Effect.fn(
     const docs = yield* Effect.promise(() =>
       ctx.db
         .query("contentRoutePages")
-        .withIndex("by_locale_and_section", (query) =>
+        .withIndex("by_locale_and_section_and_syncedAt_and_page", (query) =>
           query.eq("locale", locale).eq("section", TRYOUT_SECTION)
         )
         .take(resetBatchSize - deleted)
@@ -226,7 +226,7 @@ const hasTryoutContentRoutePageRows = Effect.fn(
     const row = yield* Effect.promise(() =>
       ctx.db
         .query("contentRoutePages")
-        .withIndex("by_locale_and_section", (query) =>
+        .withIndex("by_locale_and_section_and_syncedAt_and_page", (query) =>
           query.eq("locale", locale).eq("section", TRYOUT_SECTION)
         )
         .first()

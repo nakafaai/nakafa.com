@@ -1,4 +1,4 @@
-import { getPublicContentRouteCheck } from "@repo/contents/_lib/manifest/public-route";
+import { getPublicContentRouteCheck } from "@repo/contents/_lib/public-route";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
@@ -153,9 +153,6 @@ function readMissingArticleHtmlLocale({
   }
 
   return getRuntimeContentRoute({ locale, route }).pipe(
-    Effect.match({
-      onFailure: () => locale,
-      onSuccess: (contentRoute) => (contentRoute ? null : locale),
-    })
+    Effect.map((contentRoute) => (contentRoute ? null : locale))
   );
 }

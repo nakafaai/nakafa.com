@@ -6,6 +6,7 @@ import {
   materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { quranTafsirValidator } from "@repo/backend/convex/quran/schema";
 import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { type Infer, v } from "convex/values";
 import { literals, nullable } from "convex-helpers/validators";
@@ -94,11 +95,7 @@ const quranVerseValidator = v.object({
     inQuran: v.number(),
     inSurah: v.number(),
   }),
-  tafsir: v.object({
-    id: v.object({
-      short: v.string(),
-    }),
-  }),
+  tafsir: quranTafsirValidator,
   text: quranTextValidator,
   translation: localizedTextValidator,
 });
@@ -373,6 +370,16 @@ export const getQuranReferenceArgsValidator = {
   toVerse: v.optional(v.number()),
 };
 
+const quranReferenceVerseValidator = v.object({
+  arabic: v.string(),
+  number: v.number(),
+  tafsir: v.optional(v.string()),
+  translation: v.string(),
+  transliteration: v.string(),
+});
+
+export type QuranReferenceVerse = Infer<typeof quranReferenceVerseValidator>;
+
 export const getQuranReferenceReturnValidator = nullable(
   v.object({
     ...learningGraphIdentityValidator.fields,
@@ -385,14 +392,6 @@ export const getQuranReferenceReturnValidator = nullable(
     section: v.literal("quran"),
     translation: v.string(),
     url: v.string(),
-    verses: v.array(
-      v.object({
-        arabic: v.string(),
-        number: v.number(),
-        tafsir: v.optional(v.string()),
-        translation: v.string(),
-        transliteration: v.string(),
-      })
-    ),
+    verses: v.array(quranReferenceVerseValidator),
   })
 );

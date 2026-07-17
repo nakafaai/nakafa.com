@@ -55,6 +55,8 @@ npx convex deploy
 | `sync:verify` | Verify database matches filesystem |
 | `sync:clean` | Find and remove stale content |
 | `sync:reset` | Delete synced content/runtime rows (authors optional, requires --force) |
+| `sync:reset:analytics` | Delete rebuildable analytics projections |
+| `sync:reset:audio` | Delete rebuildable audio projections |
 | `sync:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data, then run a full sync |
 
 ### Production
@@ -66,6 +68,7 @@ npx convex deploy
 | `sync:prod:verify` | Verify production database |
 | `sync:prod:clean` | Clean stale content in production |
 | `sync:prod:reset` | Delete synced content/runtime rows in production (authors optional, requires --force) |
+| `sync:prod:reset:analytics` | Delete production analytics projections |
 | `sync:prod:reset:audio` | Delete production audio source, generated audio, and audio queue rows |
 | `sync:prod:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync |
 
@@ -73,22 +76,14 @@ npx convex deploy
 
 | Command | Description |
 |---------|-------------|
-| `tryout:verify:access` | Verify campaign/grant/entitlement time-state integrity and competition overlap integrity in development |
-| `tryout:sweep:access` | Sweep overdue campaign/grant states and overdue competition finalization in development |
-| `tryout:verify:access:prod` | Verify campaign/grant/entitlement time-state integrity and competition overlap integrity in production |
-| `tryout:sweep:access:prod` | Sweep overdue campaign/grant states and overdue competition finalization in production |
 | `customers:verify` | Verify user/customer/subscription cohesion in development |
 | `customers:verify:prod` | Verify user/customer/subscription cohesion in production |
-| `irt:verify:cache` | Verify cached IRT calibration state in development |
-| `irt:verify:scale` | Verify frozen IRT scale coverage in development |
-| `irt:prod:verify:cache` | Verify cached IRT calibration state in production |
-| `irt:prod:verify:scale` | Verify frozen IRT scale coverage in production |
 
 ### Options
 
 | Flag | Description |
 |------|-------------|
-| `--locale en\|id` | Sync specific locale only |
+| `--locale en\|id` | Sync specific locale only (not supported by incremental sync) |
 | `--force` | Actually delete content (for clean/reset) |
 | `--authors` | Also delete authors (for clean/reset) |
 | `--sequential` | Run phases sequentially (debugging) |
@@ -244,6 +239,7 @@ pnpm --filter @repo/backend sync:prod
 ## Content Structure
 
 ### Articles
+
 ```
 packages/contents/articles/{category}/{slug}/
   en.mdx       # English
@@ -251,27 +247,31 @@ packages/contents/articles/{category}/{slug}/
   ref.ts       # References
 ```
 
-### Subjects
+### Materials
+
 ```
-packages/contents/curriculum/{category}/{grade}/{material}/{topic}/{section}/
-  en.mdx
-  id.mdx
+packages/contents/material/lesson/{subject}/{material}/
+  source.ts
+  {lesson}/
+    en.mdx
+    id.mdx
 ```
 
-### Exercises
+### Question Bank
+
 ```
-packages/contents/assessment/{category}/{type}/{material}/
-  {exerciseType}/{year?}/{set}/{number}/
-    _question/en.mdx
-    _question/id.mdx
-    _answer/en.mdx
-    _answer/id.mdx
+packages/contents/question-bank/tryout/{country}/{exam}/{section}/{set}/
+  question-{number}/
+    question.en.mdx
+    question.id.mdx
+    answer.en.mdx
+    answer.id.mdx
     choices.ts
 ```
 
 **⚠️ IMPORTANT**: When adding new try-out questions, you MUST attach the question-bank source to the typed try-out source:
 
-1. Create question directories under `question-bank/tryout/{country}/{exam}/{section}/{set}/{number}/`
+1. Create question directories under `question-bank/tryout/{country}/{exam}/{section}/{set}/question-{number}/`
 2. Add MDX files and choices
 3. **Add track, set, and section placement** to `packages/contents/tryout/{country}/{exam}/source.ts`:
 
@@ -319,19 +319,6 @@ packages/contents/assessment/{category}/{type}/{material}/
 
 If you forget step 3, sync verification reports missing question-bank source paths. Add the missing paths to the typed try-out source before syncing.
 
-## Performance
-
-| Content | Items | Time | Rate |
-|---------|-------|------|------|
-| Articles | 14 | ~2s | ~7/sec |
-| Subject Topics | 260 | ~3s | ~96/sec |
-| Subject Sections | 606 | ~12s | ~49/sec |
-| Exercise Sets | 50 | ~0.8s | ~62/sec |
-| Exercise Questions | 920 | ~12s | ~79/sec |
-| **Total** | **1850** | **~15s** | **~122/sec** |
-
-Incremental sync is much faster when only a few files changed.
-
 ## Troubleshooting
 
 ### "CONVEX_URL not set"
@@ -355,8 +342,6 @@ Content hash unchanged. This is normal for `sync:incremental`.
 |--------|---------|
 | `sync-content.ts` | Sync MDX content to Convex database |
 | `customers/verify.ts` | Verify user/customer/subscription cohesion |
-| `tryout/access.ts` | Verify campaign/grant/entitlement time-state and competition overlap integrity |
-| `irt-verify.ts` | Verify IRT cache and scale integrity |
 
 ## Files
 
@@ -366,9 +351,6 @@ Content hash unchanged. This is normal for `sync:incremental`.
 | `sync-content/` | Shared sync-content helpers, validation, and workflows |
 | `customers/` | Customer cohesion verification scripts |
 | `customers/verify.ts` | Dev/prod verification for user/customer/subscription cohesion |
-| `tryout/` | Tryout-specific integrity scripts split by concern |
-| `tryout/access.ts` | Dev/prod integrity verification for campaigns, grants, entitlements, and competition overlap |
-| `irt-verify.ts` | Dev/prod integrity verification for IRT cache and scale state |
 | `../convex/contentSync/mutations/` | Convex sync mutations split by concern |
 | `../convex/contentSync/queries/` | Convex verification queries split by concern |
 | `../.sync-state.json` | Dev incremental sync state (gitignored) |
@@ -389,5 +371,8 @@ Each state file contains:
 When you run `sync:incremental`, it:
 1. Loads the state file for the target environment
 2. Uses `git diff` to find files changed since `lastSyncCommit`
-3. Only syncs content types that have changes (articles, subjects, exercises)
-4. Saves the new commit hash after successful sync
+3. Syncs affected article, curriculum, and tryout rows
+4. Runs the global stale-content cleanup only when a changed source path was deleted or renamed
+5. Rebuilds route artifacts only for affected locale and section targets
+6. Syncs Quran, public routes, and learning programs only when their sources changed
+7. Saves the new commit hash after successful sync

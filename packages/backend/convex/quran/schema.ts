@@ -16,6 +16,16 @@ const quranAudioValidator = v.object({
   secondary: v.array(v.string()),
 });
 
+const quranTafsirTextValidator = v.object({
+  short: v.string(),
+});
+
+/** Locale-indexed Quran tafsir fields stored in the runtime corpus. */
+export const quranTafsirValidator = v.object({
+  ...fieldsForEveryLocale(v.optional(quranTafsirTextValidator)),
+  id: quranTafsirTextValidator,
+});
+
 const preBismillahValidator = v.object({
   audio: quranAudioValidator,
   text: quranTextValidator,
@@ -61,11 +71,7 @@ const tables = {
     sajdaRecommended: v.boolean(),
     surahNumber: v.number(),
     syncedAt: v.number(),
-    tafsir: v.object({
-      id: v.object({
-        short: v.string(),
-      }),
-    }),
+    tafsir: quranTafsirValidator,
     text: quranTextValidator,
     translation: localizedTextValidator,
     verseNumber: v.number(),

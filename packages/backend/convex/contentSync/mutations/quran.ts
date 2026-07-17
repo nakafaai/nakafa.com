@@ -10,6 +10,7 @@ import {
   type Locale,
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { quranTafsirValidator } from "@repo/backend/convex/quran/schema";
 import { fieldsForEveryLocale, locales } from "@repo/utilities/locales";
 import { ConvexError, v } from "convex/values";
 
@@ -83,11 +84,7 @@ const syncedQuranVerseValidator = v.object({
   sajdaObligatory: v.boolean(),
   sajdaRecommended: v.boolean(),
   surahNumber: v.number(),
-  tafsir: v.object({
-    id: v.object({
-      short: v.string(),
-    }),
-  }),
+  tafsir: quranTafsirValidator,
   text: quranTextValidator,
   translation: localizedTextValidator,
   verseNumber: v.number(),

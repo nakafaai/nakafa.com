@@ -44,4 +44,4 @@ Use this reference when work touches content metadata, search snippets, sitemap 
 - Page metadata and structured data: `apps/www/app/[locale]/(app)/(shared)/(main)/(learn)/`.
 - Site metadata and global JSON-LD: `apps/www/app/[locale]/layout.tsx`, `apps/www/app/manifest.ts`, and `packages/seo/json-ld/`.
 - Sitemap discovery: `apps/www/lib/sitemap/`.
-- Content metadata schema and readers: `packages/contents/_types/content.ts` and `packages/contents/_lib/metadata.ts`.
+- Content metadata schema and readers: `packages/contents/_types/content.ts` and `packages/contents/_lib/io/content.ts`.

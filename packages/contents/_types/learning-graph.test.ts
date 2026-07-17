@@ -1,4 +1,5 @@
 import {
+  createLearningGraphIdentityFromProjection,
   createLearningGraphIdentityFromRoute,
   getLearningGraphIdentity,
   type LearningGraphIdentity,
@@ -143,6 +144,28 @@ describe("learning graph identity", () => {
     expect(normalizeGraphRoute("//articles//politics/example/")).toBe(
       "articles/politics/example"
     );
+  });
+
+  it("omits empty segments from stable graph IDs", () => {
+    const identity = createLearningGraphIdentityFromProjection({
+      locale: "en",
+      projection: {
+        conceptSegments: ["article", "politics", ""],
+        depth: 3,
+        kind: "article",
+        learningObjectSegments: ["article", "politics", "example", ""],
+        lensScope: "article-domain",
+        lensSegments: ["article", "politics", ""],
+        parentRoute: "articles/politics",
+        route: "articles/politics/example",
+        sourceRoot: "articles",
+      },
+    });
+
+    expect(identity.assetId).toBe(
+      "asset:en:article:politics:article:politics:example"
+    );
+    expect(identity.conceptId).toBe("concept:article:politics");
   });
 
   it("creates identity from route projections when kind is inferable", () => {

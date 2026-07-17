@@ -31,10 +31,7 @@ describe("forEachSiteIndexUrlBatch", () => {
         ])
       )
       .mockReturnValueOnce(
-        Effect.succeed([
-          { url: "https://nakafa.com/id/home" },
-          { url: "https://nakafa.com/en/home" },
-        ])
+        Effect.succeed([{ url: "https://nakafa.com/en/home" }])
       );
     const { forEachSiteIndexUrlBatch } = await import(
       "@/scripts/indexing/manifest"
@@ -54,8 +51,6 @@ describe("forEachSiteIndexUrlBatch", () => {
     expect(summary).toEqual({
       batchCount: 2,
       canonicalUrlCount: 3,
-      duplicateCount: 1,
-      totalEntryCount: 4,
     });
     expect(batches).toEqual([
       ["https://nakafa.com/id/home", "https://nakafa.com/id/search"],
@@ -80,8 +75,6 @@ describe("forEachSiteIndexUrlBatch", () => {
     expect(summary).toEqual({
       batchCount: 0,
       canonicalUrlCount: 0,
-      duplicateCount: 0,
-      totalEntryCount: 0,
     });
     expect(processBatch).not.toHaveBeenCalled();
   });

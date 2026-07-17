@@ -72,7 +72,15 @@ export function normalizeGraphRoute(route: string) {
 
 /** Builds a stable graph ID from clean hierarchy segments. */
 function buildGraphId(prefix: string, segments: readonly string[]) {
-  const cleanSegments = segments.map(cleanGraphSegment).filter(Boolean);
+  const cleanSegments: string[] = [];
+
+  for (const segment of segments) {
+    const cleanSegment = cleanGraphSegment(segment);
+
+    if (cleanSegment) {
+      cleanSegments.push(cleanSegment);
+    }
+  }
 
   return `${prefix}:${cleanSegments.join(":")}`;
 }

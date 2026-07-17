@@ -4,19 +4,15 @@ import {
 } from "@repo/backend/scripts/lib/errors";
 import { clean } from "@repo/backend/scripts/sync-content/cleanup/clean";
 import {
-  formatSyncResult,
   log,
   logError,
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/content/programs";
 import type {
   ConvexConfig,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/contract/types";
-import { syncContentRouteArtifactPages } from "@repo/backend/scripts/sync-content/routes/artifacts";
 import { readRoutePageOptionsAfterCleanup } from "@repo/backend/scripts/sync-content/routes/options";
-import { syncPublicRoutes } from "@repo/backend/scripts/sync-content/routes/sync";
 import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/runtime/cache";
 import {
   getCurrentGitCommit,
@@ -26,54 +22,38 @@ import { verify } from "@repo/backend/scripts/sync-content/verify/sync";
 import { syncAll } from "@repo/backend/scripts/sync-content/workflow/run";
 import { Effect } from "effect";
 
-/** Runs sync, stale cleanup, verification, cache invalidation, and sync-state save. */
+/** Runs stale cleanup, sync, verification, cache invalidation, and state save. */
 export const syncFull = Effect.fn("sync.full")(function* (
   config: ConvexConfig,
   options: SyncOptions = {}
 ) {
   log("=== FULL SYNC ===\n");
   log(
-    "This command will: sync all content, clean stale content, verify data\n"
+    "This command will: clean stale content, sync all content, verify data\n"
   );
 
   const currentCommit = yield* getCurrentGitCommit();
   const result = yield* Effect.either(
     Effect.gen(function* () {
-      yield* syncAll(config, options);
-      log("\n");
-
       const cleanResult = yield* clean(config, {
         ...options,
         authors: true,
         force: true,
       });
-      if (cleanResult.hasStale && cleanResult.deleted) {
+      const syncOptions = readRoutePageOptionsAfterCleanup(
+        options,
+        cleanResult
+      );
+
+      if (cleanResult.deleted > 0) {
         log("\nStale content was found and deleted.");
-        log("Rebuilding route artifact pages after stale cleanup...");
-        const routePageOptions = readRoutePageOptionsAfterCleanup(
-          options,
-          cleanResult
-        );
-        const routePageResult = yield* syncContentRouteArtifactPages(
-          config,
-          routePageOptions
-        );
-        log(`  Route Pages: ${formatSyncResult(routePageResult)}`);
-        const publicRouteResult = yield* syncPublicRoutes(
-          config,
-          routePageOptions
-        );
-        log(`  Public Routes: ${formatSyncResult(publicRouteResult)}`);
-        const learningProgramResult = yield* syncLearningPrograms(
-          config,
-          routePageOptions
-        );
-        log(`  Learning Programs: ${formatSyncResult(learningProgramResult)}`);
       }
 
       log("\n");
-      yield* verify(config, options);
-      yield* invalidateContentRuntimeCache(options);
+      yield* syncAll(config, syncOptions);
+      log("\n");
+      yield* verify(config, syncOptions);
+      yield* invalidateContentRuntimeCache(syncOptions);
       yield* saveSyncState(
         { lastSyncCommit: currentCommit, lastSyncTimestamp: Date.now() },
         options.prod ?? false

@@ -99,8 +99,8 @@ describe("llms indexes", () => {
     expect(mockGetContentPageLlmsEntries).toHaveBeenCalled();
   });
 
-  it("omits the starter page section when locale page entries are empty", async () => {
-    mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([]));
+  it("omits missing locale page artifacts from starter pages", async () => {
+    mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed(null));
     mockGetSiteLlmsEntries.mockReturnValue([]);
 
     const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
@@ -213,6 +213,16 @@ describe("llms indexes", () => {
     expect(pageText).toContain(
       "This bounded articles route-catalog page is currently empty."
     );
+  });
+
+  it("returns null when a bounded page artifact is missing", async () => {
+    mockGetContentPageLlmsEntries.mockReturnValueOnce(Effect.succeed(null));
+
+    await expect(
+      Effect.runPromise(
+        getLlmsSectionIndexText("llms/en/articles/page/999/llms.txt")
+      )
+    ).resolves.toBeNull();
   });
 
   it("builds the site index from static site entries only", async () => {

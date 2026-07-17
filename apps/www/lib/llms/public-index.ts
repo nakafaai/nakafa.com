@@ -16,7 +16,7 @@ import { renderLlmsIndexText } from "@/lib/llms/index-text";
 type LlmsContentSection = Exclude<LlmsSection, "site">;
 
 /** One public-prefix index in the locale discovery hierarchy. */
-export interface PublicLlmsSectionIndex {
+interface PublicLlmsSectionIndex {
   label: string;
   prefix: string;
   section?: LlmsContentSection;

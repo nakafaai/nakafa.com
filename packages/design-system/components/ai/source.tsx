@@ -69,7 +69,7 @@ export function Source({ href, children }: SourceProps) {
 export interface SourceTriggerProps {
   className?: string;
   faviconUrl?: string;
-  label?: string | number;
+  label?: React.ReactNode;
   showFavicon?: boolean;
 }
 

@@ -4,6 +4,7 @@ import {
   readQuranMetadata,
 } from "@repo/contents/_lib/quran";
 import { SurahNotFoundError } from "@repo/contents/_shared/error";
+import { QURAN_TAFSIR_LOCALES } from "@repo/contents/_types/quran";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -61,6 +62,24 @@ describe("surah queries", () => {
       numberOfVerses: 7,
     });
     expect(surah.verses).toHaveLength(7);
+  });
+
+  it("keeps every enabled tafsir locale complete", async () => {
+    const metadata = await Effect.runPromise(readQuranMetadata());
+
+    for (const summary of metadata) {
+      const surah = await Effect.runPromise(getSurah(summary.number));
+
+      for (const locale of QURAN_TAFSIR_LOCALES) {
+        const tafsirComplete = surah.verses.every((verse) => {
+          const tafsir = verse.tafsir[locale];
+
+          return Boolean(tafsir?.short.trim() && tafsir.long.trim());
+        });
+
+        expect(tafsirComplete).toBe(true);
+      }
+    }
   });
 
   it.each([0, 1.5])("rejects invalid surah number %s", async (id) => {

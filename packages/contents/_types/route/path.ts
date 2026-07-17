@@ -6,6 +6,7 @@ import {
   MissingPublicSlugError,
 } from "@repo/contents/_types/route/error";
 import {
+  PublicArticleRouteSchema,
   PublicContentRouteSchema,
   PublicCurriculumRouteSchema,
   type PublicRoute,
@@ -97,6 +98,15 @@ export function decodeContentRoute(
   input: Schema.Schema.Encoded<typeof PublicContentRouteSchema>
 ) {
   return Schema.decodeUnknown(PublicContentRouteSchema)(input).pipe(
+    Effect.mapError(toInvalidSourceError)
+  );
+}
+
+/** Decodes one generated article category route row. */
+export function decodeArticleRoute(
+  input: Schema.Schema.Encoded<typeof PublicArticleRouteSchema>
+) {
+  return Schema.decodeUnknown(PublicArticleRouteSchema)(input).pipe(
     Effect.mapError(toInvalidSourceError)
   );
 }

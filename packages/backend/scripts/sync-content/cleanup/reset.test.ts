@@ -149,6 +149,24 @@ describe("sync-content reset", () => {
     );
   });
 
+  it("unpublishes sitemap counts before deleting their artifact pages", async () => {
+    await runReset(
+      { publicRouteSitemapCounts: 1, publicRouteSitemapPages: 2 },
+      true
+    );
+
+    const mutations = mutationNames();
+    const counts = getFunctionName(
+      internal.contentSync.reset.internal.deletePublicRouteSitemapCountsBatch
+    );
+    const pages = getFunctionName(
+      internal.contentSync.reset.internal.deletePublicRouteSitemapPagesBatch
+    );
+
+    expect(mutations.indexOf(counts)).toBeGreaterThanOrEqual(0);
+    expect(mutations.indexOf(pages)).toBeGreaterThan(mutations.indexOf(counts));
+  });
+
   it("does not delete selected program catalog rows", async () => {
     await runReset(
       {

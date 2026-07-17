@@ -1,4 +1,5 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
+import type { RuntimeQuranSurah } from "@repo/backend/client/nakafa/types";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -36,6 +37,26 @@ import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 
 const QURAN_INITIAL_VERSE_SSR_COUNT = 80;
+
+/** Returns complete localized tafsir controls only when every surah verse has data. */
+function getSurahInterpretations(
+  verses: RuntimeQuranSurah["verses"],
+  locale: Locale
+) {
+  const interpretations: string[] = [];
+
+  for (const verse of verses) {
+    const tafsir = verse.tafsir[locale];
+
+    if (!tafsir?.short.trim()) {
+      return;
+    }
+
+    interpretations.push(tafsir.short);
+  }
+
+  return interpretations;
+}
 
 /** Builds localized Quran surah metadata only after the runtime catalog confirms the surah exists. */
 export async function generateMetadata({
@@ -241,10 +262,7 @@ async function CachedSurahShell({
     ...verse.audio.secondary,
   ]);
 
-  const interpretations =
-    locale === "id"
-      ? surahData.verses.map((verse) => verse.tafsir.id.short)
-      : undefined;
+  const interpretations = getSurahInterpretations(surahData.verses, locale);
 
   return (
     <VirtualProvider>
@@ -282,6 +300,7 @@ async function CachedSurahShell({
 
                 return (
                   <QuranVerse
+                    hasInterpretation={interpretations !== undefined}
                     id={slugify(verseLabel)}
                     index={index}
                     isLast={index === surahData.verses.length - 1}

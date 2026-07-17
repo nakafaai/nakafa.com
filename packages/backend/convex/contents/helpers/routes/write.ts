@@ -12,8 +12,6 @@ import { getSourceRouteProjection } from "@repo/contents/_types/graph/projection
 import { ConvexError, type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-const duplicateRouteRepairLimit = 6;
-
 /** Convex validator for source rows used to upsert route projections. */
 const contentRouteSourceValidator = v.object({
   ...learningGraphIdentityValidator.fields,
@@ -79,76 +77,74 @@ export async function syncContentRoute(
     syncedAt: source.syncedAt,
     title: source.title,
   };
-  const existing = await ctx.db
+  const contentRows = await ctx.db
     .query("contentRoutes")
     .withIndex("by_content_id", (q) =>
       q.eq("content_id", nextValues.content_id)
     )
-    .unique();
+    .take(2);
   const routeRows = await ctx.db
     .query("contentRoutes")
     .withIndex("by_locale_and_route", (q) =>
       q.eq("locale", nextValues.locale).eq("route", nextValues.route)
     )
-    .take(duplicateRouteRepairLimit);
-  const routeExisting = existing ?? routeRows[0] ?? null;
-  const deletedDuplicates = await deleteDuplicateContentRoutes(ctx, {
-    primary: routeExisting,
-    rows: routeRows,
+    .take(2);
+  const sourceRows = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_sourcePath", (q) =>
+      q.eq("locale", nextValues.locale).eq("sourcePath", nextValues.sourcePath)
+    )
+    .take(2);
+
+  assertContentRouteIdentity({
+    contentId: nextValues.content_id,
+    contentRows,
+    locale: nextValues.locale,
+    route: nextValues.route,
+    routeRows,
+    sourcePath: nextValues.sourcePath,
+    sourceRows,
   });
 
-  if (isSameContentRoute(routeExisting, nextValues)) {
-    if (routeExisting && routeExisting.countedAt === undefined) {
-      await incrementContentRouteCount(ctx, routeExisting, source.syncedAt);
-      await ctx.db.patch("contentRoutes", routeExisting._id, {
-        countedAt: source.syncedAt,
-      });
-    }
+  const existing = contentRows[0] ?? null;
 
-    return deletedDuplicates > 0 ? "updated" : "unchanged";
+  if (isSameContentRoute(existing, nextValues)) {
+    return "unchanged";
   }
 
-  if (routeExisting) {
-    const countedAt = routeExisting.countedAt ?? source.syncedAt;
-
-    if (routeExisting.countedAt === undefined) {
-      await incrementContentRouteCount(ctx, routeExisting, source.syncedAt);
-    }
-
-    await ctx.db.patch("contentRoutes", routeExisting._id, {
-      ...nextValues,
-      countedAt,
-    });
+  if (existing) {
+    await ctx.db.patch("contentRoutes", existing._id, nextValues);
     return "updated";
   }
 
-  await ctx.db.insert("contentRoutes", {
-    ...nextValues,
-    countedAt: source.syncedAt,
-  });
-  await incrementContentRouteCount(ctx, nextValues, source.syncedAt);
+  await ctx.db.insert("contentRoutes", nextValues);
   return "created";
 }
 
 /** Deletes the route catalog row attached to one canonical content ID. */
 export async function deleteContentRoute(ctx: MutationCtx, contentId: string) {
-  const existing = await ctx.db
+  const rows = await ctx.db
     .query("contentRoutes")
     .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
-    .unique();
+    .take(2);
+
+  if (rows.length > 1) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_IDENTITY_COLLISION",
+      message: `Multiple content routes use content ID ${contentId}.`,
+    });
+  }
+
+  const existing = rows[0];
 
   if (!existing) {
     return;
   }
 
-  if (existing.countedAt !== undefined) {
-    await decrementContentRouteCount(ctx, existing);
-  }
-
   await ctx.db.delete(existing._id);
 }
 
-/** Deletes every route catalog row attached to one source route projection. */
+/** Deletes the route catalog row attached to one source route projection. */
 export async function deleteContentRoutesBySourcePath(
   ctx: MutationCtx,
   args: { locale: Locale; sourcePath: string }
@@ -158,125 +154,81 @@ export async function deleteContentRoutesBySourcePath(
     .withIndex("by_locale_and_sourcePath", (q) =>
       q.eq("locale", args.locale).eq("sourcePath", args.sourcePath)
     )
-    .take(duplicateRouteRepairLimit);
+    .take(2);
 
-  if (rows.length >= duplicateRouteRepairLimit) {
+  if (rows.length > 1) {
     throw new ConvexError({
-      code: "CONTENT_ROUTE_DELETE_LIMIT_EXCEEDED",
-      message: "Content route has too many route projections to delete safely.",
+      code: "CONTENT_ROUTE_SOURCE_COLLISION",
+      message: `Multiple content routes use source path ${args.locale}/${args.sourcePath}.`,
     });
   }
 
-  for (const row of rows) {
-    if (row.countedAt !== undefined) {
-      await decrementContentRouteCount(ctx, row);
-    }
+  const existing = rows[0];
 
-    await ctx.db.delete(row._id);
-  }
-}
-
-/** Increments the materialized route count for one synced catalog row. */
-async function incrementContentRouteCount(
-  ctx: MutationCtx,
-  route: Pick<Doc<"contentRoutes">, "locale" | "section">,
-  syncedAt: number
-) {
-  await adjustContentRouteCount(ctx, {
-    delta: 1,
-    locale: route.locale,
-    section: route.section,
-    syncedAt,
-  });
-}
-
-/** Decrements the materialized route count for one deleted catalog row. */
-async function decrementContentRouteCount(
-  ctx: MutationCtx,
-  route: Pick<Doc<"contentRoutes">, "locale" | "section" | "syncedAt">
-) {
-  await adjustContentRouteCount(ctx, {
-    delta: -1,
-    locale: route.locale,
-    section: route.section,
-    syncedAt: route.syncedAt,
-  });
-}
-
-/** Removes duplicate route projections before one route is inserted or patched. */
-async function deleteDuplicateContentRoutes(
-  ctx: MutationCtx,
-  source: {
-    primary: Doc<"contentRoutes"> | null;
-    rows: Doc<"contentRoutes">[];
-  }
-) {
-  if (source.rows.length >= duplicateRouteRepairLimit) {
-    throw new ConvexError({
-      code: "CONTENT_ROUTE_DUPLICATE_LIMIT_EXCEEDED",
-      message: "Content route has too many duplicate route projections.",
-    });
-  }
-
-  let deleted = 0;
-
-  for (const row of source.rows) {
-    if (row._id === source.primary?._id) {
-      continue;
-    }
-
-    if (row.countedAt !== undefined) {
-      await decrementContentRouteCount(ctx, row);
-    }
-
-    await ctx.db.delete(row._id);
-    deleted += 1;
-  }
-
-  return deleted;
-}
-
-/** Applies one idempotent count delta to the route-count read model. */
-async function adjustContentRouteCount(
-  ctx: MutationCtx,
-  source: {
-    delta: 1 | -1;
-    locale: Locale;
-    section: ContentRouteSource["section"];
-    syncedAt: number;
-  }
-) {
-  const existing = await ctx.db
-    .query("contentRouteCounts")
-    .withIndex("by_locale_and_section", (q) =>
-      q.eq("locale", source.locale).eq("section", source.section)
-    )
-    .unique();
-
-  if (existing) {
-    await ctx.db.patch("contentRouteCounts", existing._id, {
-      count: Math.max(0, existing.count + source.delta),
-      syncedAt: source.syncedAt,
-    });
+  if (!existing) {
     return;
   }
 
-  if (source.delta < 0) {
-    return;
+  await ctx.db.delete(existing._id);
+}
+
+/** Rejects content IDs, public paths, or source paths with conflicting owners. */
+function assertContentRouteIdentity(args: {
+  contentId: string;
+  contentRows: Doc<"contentRoutes">[];
+  locale: Locale;
+  route: string;
+  routeRows: Doc<"contentRoutes">[];
+  sourcePath: string;
+  sourceRows: Doc<"contentRoutes">[];
+}) {
+  if (args.contentRows.length > 1) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_IDENTITY_COLLISION",
+      message: `Multiple content routes use content ID ${args.contentId}.`,
+    });
   }
 
-  await ctx.db.insert("contentRouteCounts", {
-    count: source.delta,
-    locale: source.locale,
-    section: source.section,
-    syncedAt: source.syncedAt,
-  });
+  if (args.routeRows.length > 1) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_PUBLIC_PATH_COLLISION",
+      message: `Multiple content routes use public path ${args.locale}/${args.route}.`,
+    });
+  }
+
+  if (args.sourceRows.length > 1) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_SOURCE_COLLISION",
+      message: `Multiple content routes use source path ${args.locale}/${args.sourcePath}.`,
+    });
+  }
+
+  const contentRow = args.contentRows[0];
+  const routeRow = args.routeRows[0];
+  const sourceRow = args.sourceRows[0];
+
+  if (
+    routeRow &&
+    (routeRow.content_id !== args.contentId || routeRow._id !== contentRow?._id)
+  ) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_PUBLIC_PATH_COLLISION",
+      message: `Public path ${args.locale}/${args.route} belongs to another content route.`,
+    });
+  }
+
+  if (sourceRow && sourceRow._id !== contentRow?._id) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_SOURCE_COLLISION",
+      message: `Source path ${args.locale}/${args.sourcePath} belongs to another content route.`,
+    });
+  }
 }
 
 /** Checks whether one catalog row already matches the next sync payload. */
 function isSameContentRoute(
   existing: Doc<"contentRoutes"> | null,
-  next: Omit<Doc<"contentRoutes">, "_creationTime" | "_id" | "countedAt">
+  next: Omit<Doc<"contentRoutes">, "_creationTime" | "_id">
 ) {
   if (!existing) {
     return false;

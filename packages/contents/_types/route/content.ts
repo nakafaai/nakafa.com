@@ -159,9 +159,9 @@ export function readMaterialPagination(
   }
 
   const siblings = routes
-    .filter(isMaterialLessonRoute)
     .filter(
       (candidate) =>
+        isMaterialLessonRoute(candidate) &&
         candidate.locale === route.locale &&
         candidate.parentPath === route.parentPath
     )

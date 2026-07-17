@@ -39,21 +39,6 @@ describe("contents/mutations/search", () => {
         syncedAt: 1,
         title: "1. Al-Fatihah",
       });
-      await ctx.db.insert("contentSearch", {
-        ...identity,
-        contentHash: "old-hash-fatihah",
-        content_id: identity.assetId,
-        description: "Old Pembukaan",
-        locale: "id",
-        markdown_url: `https://nakafa.com/id/${route}.md`,
-        route,
-        section: "quran",
-        sourcePath: route,
-        syncedAt: 1,
-        text: "old stale search row",
-        title: "Old Al-Fatihah",
-        url: `https://nakafa.com/id/${route}`,
-      });
     });
 
     const summary = await t.mutation(

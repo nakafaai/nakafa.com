@@ -90,7 +90,7 @@ export function fetchRuntimeContentRouteCounts(args: ContentRouteCountsArgs) {
 }
 
 /** Reads one sitemap-sized group of content route artifacts. */
-export function fetchRuntimeContentSitemapPage(args: ContentSitemapPageArgs) {
+function fetchRuntimeContentSitemapPage(args: ContentSitemapPageArgs) {
   return fetchRuntimeQuery(
     api.contents.queries.runtime.getContentSitemapPage,
     args
@@ -98,7 +98,7 @@ export function fetchRuntimeContentSitemapPage(args: ContentSitemapPageArgs) {
 }
 
 /** Reads one locale's bounded public sitemap page count. */
-export function fetchRuntimePublicSitemapCount(args: PublicSitemapCountArgs) {
+function fetchRuntimePublicSitemapCount(args: PublicSitemapCountArgs) {
   return fetchRuntimeQuery(
     api.contents.queries.runtime.getPublicSitemapCount,
     args
@@ -106,7 +106,7 @@ export function fetchRuntimePublicSitemapCount(args: PublicSitemapCountArgs) {
 }
 
 /** Reads one exact bounded public sitemap page. */
-export function fetchRuntimePublicSitemapPage(args: PublicSitemapPageArgs) {
+function fetchRuntimePublicSitemapPage(args: PublicSitemapPageArgs) {
   return fetchRuntimeQuery(
     api.contents.queries.runtime.getPublicSitemapPage,
     args
@@ -127,7 +127,7 @@ export function fetchRuntimeContentRoute(args: ContentRouteArgs) {
 }
 
 /** Reads one exact public route from the indexed Convex route projection. */
-export function fetchRuntimePublicRoute(args: PublicRouteArgs) {
+function fetchRuntimePublicRoute(args: PublicRouteArgs) {
   return fetchRuntimeQuery(
     api.contents.queries.runtime.getPublicRouteByPath,
     args

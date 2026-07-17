@@ -77,6 +77,10 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
         section,
       });
 
+      if (entries === null) {
+        return null;
+      }
+
       return buildLlmsPageIndexText({
         entries,
         locale,
@@ -203,12 +207,19 @@ function getLocaleIndexEntries(locale: Locale) {
       })
     )
   ).pipe(
-    Effect.map((sectionEntries) =>
-      [...siteEntries, ...sectionEntries.flat()].slice(
-        0,
-        LOCALE_INDEX_ENTRY_LIMIT
-      )
-    )
+    Effect.map((sectionEntries) => {
+      const entries = [...siteEntries];
+
+      for (const pageEntries of sectionEntries) {
+        if (pageEntries === null) {
+          continue;
+        }
+
+        entries.push(...pageEntries);
+      }
+
+      return entries.slice(0, LOCALE_INDEX_ENTRY_LIMIT);
+    })
   );
 }
 

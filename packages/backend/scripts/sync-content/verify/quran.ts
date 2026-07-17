@@ -16,6 +16,8 @@ import type {
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexQuery } from "@repo/backend/scripts/sync-content/convex/client";
+import { readQuranMetadata } from "@repo/contents/_lib/quran";
+import { QURAN_TAFSIR_LOCALES } from "@repo/contents/_types/quran";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
@@ -53,6 +55,16 @@ export function verifyQuranRuntime(config: ConvexConfig, options: SyncOptions) {
 
       if (reference?.verses.length !== 1) {
         logError(`Quran reference missing for ${locale} surah 1 verse 1`);
+        return false;
+      }
+
+      const tafsirEnabled = QURAN_TAFSIR_LOCALES.some(
+        (tafsirLocale) => tafsirLocale === locale
+      );
+      const referenceHasTafsir = reference.verses[0]?.tafsir !== undefined;
+
+      if (referenceHasTafsir !== tafsirEnabled) {
+        logError(`Quran reference tafsir locale mismatch for ${locale}`);
         return false;
       }
 
@@ -114,6 +126,39 @@ export function verifyQuranRuntime(config: ConvexConfig, options: SyncOptions) {
     }
 
     logSuccess("Quran surah runtime page available for surah 1");
+
+    const surahMetadata = yield* readQuranMetadata();
+
+    for (const locale of QURAN_TAFSIR_LOCALES) {
+      for (const surah of surahMetadata) {
+        const page = yield* callConvexQuery(
+          config,
+          api.contents.queries.runtime.getQuranSurahPage,
+          { surah: surah.number },
+          QuranSurahPageSchema
+        );
+
+        if (page?.surahData.verses.length !== surah.numberOfVerses) {
+          logError(`Quran tafsir corpus missing surah ${surah.number}`);
+          return false;
+        }
+
+        const tafsirMissing = page.surahData.verses.some((verse) => {
+          const tafsir = verse.tafsir[locale];
+          return !tafsir?.short.trim();
+        });
+
+        if (tafsirMissing) {
+          logError(
+            `Quran tafsir corpus incomplete for ${locale} surah ${surah.number}`
+          );
+          return false;
+        }
+      }
+
+      logSuccess(`Complete ${locale} Quran tafsir corpus available`);
+    }
+
     return true;
   });
 }

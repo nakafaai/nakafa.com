@@ -1,5 +1,8 @@
-import { fieldsForEveryLocale } from "@repo/utilities/locales";
+import { fieldsForEveryLocale, type Locale } from "@repo/utilities/locales";
 import { Schema } from "effect";
+
+/** Locales whose Quran tafsir corpus is complete and safe to expose. */
+export const QURAN_TAFSIR_LOCALES: readonly Locale[] = ["id"];
 
 const VerseNumberSchema = Schema.Struct({
   inSurah: Schema.Number,
@@ -22,6 +25,16 @@ const VerseAudioSchema = Schema.Struct({
   secondary: Schema.Array(Schema.String).pipe(Schema.mutable),
 }).pipe(Schema.mutable);
 
+const VerseTafsirTextSchema = Schema.Struct({
+  short: Schema.String,
+  long: Schema.String,
+}).pipe(Schema.mutable);
+
+const VerseTafsirSchema = Schema.Struct({
+  ...fieldsForEveryLocale(Schema.optional(VerseTafsirTextSchema)),
+  id: VerseTafsirTextSchema,
+}).pipe(Schema.mutable);
+
 const VerseSchema = Schema.Struct({
   number: VerseNumberSchema,
   meta: Schema.Struct({
@@ -38,12 +51,7 @@ const VerseSchema = Schema.Struct({
   text: VerseTextSchema,
   translation: LocalizedTextSchema,
   audio: VerseAudioSchema,
-  tafsir: Schema.Struct({
-    id: Schema.Struct({
-      short: Schema.String,
-      long: Schema.String,
-    }).pipe(Schema.mutable),
-  }).pipe(Schema.mutable),
+  tafsir: VerseTafsirSchema,
 }).pipe(Schema.mutable);
 export type Verse = Schema.Schema.Type<typeof VerseSchema>;
 

@@ -92,7 +92,7 @@ describe("source-backed public html route rejection", () => {
     ).resolves.toBe(null);
   });
 
-  it("fails closed when an exact article detail lookup is unavailable", async () => {
+  it("propagates exact article lookup failures", async () => {
     runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
       Effect.fail(new Error("runtime unavailable"))
     );
@@ -104,7 +104,7 @@ describe("source-backed public html route rejection", () => {
           pathname: "/en/articles/politics/nepotism-in-political-governance",
         })
       )
-    ).resolves.toBe("en");
+    ).rejects.toThrow("runtime unavailable");
   });
 
   it("delegates source-backed index, category, and non-read paths", async () => {

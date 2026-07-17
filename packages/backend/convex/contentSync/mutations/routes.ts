@@ -9,9 +9,10 @@ import {
   materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { ConvexError, v } from "convex/values";
+import { ConvexError, getDocumentSize, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
+const maximumContentRoutePageDocumentBytes = 1024 * 1024;
 const routeKindValidator = literals(...CONTENT_ROUTE_KINDS);
 const staleRoutePageDeleteBatchSize = 500;
 
@@ -46,7 +47,7 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
-/** Upserts one materialized route count from rebuilt artifact pages. */
+/** Commits one route count as the visible artifact generation pointer. */
 export const syncContentRouteArtifactCount = internalMutation({
   args: {
     count: v.number(),
@@ -57,6 +58,9 @@ export const syncContentRouteArtifactCount = internalMutation({
   returns: syncContentRouteArtifactPageResultValidator,
   /** Stores the section route count produced by the artifact-page rebuild. */
   handler: async (ctx, args) => {
+    assertValidArtifactCount(args.count);
+    assertValidArtifactGeneration(args.syncedAt);
+
     const existing = await ctx.db
       .query("contentRouteCounts")
       .withIndex("by_locale_and_section", (q) =>
@@ -64,7 +68,23 @@ export const syncContentRouteArtifactCount = internalMutation({
       )
       .unique();
 
-    if (existing?.count === args.count) {
+    if (existing && args.syncedAt < existing.syncedAt) {
+      throw new ConvexError({
+        code: "CONTENT_ROUTE_ARTIFACT_GENERATION_STALE",
+        message:
+          "An older content route generation cannot replace the committed generation.",
+      });
+    }
+
+    if (existing?.syncedAt === args.syncedAt) {
+      if (existing.count !== args.count) {
+        throw new ConvexError({
+          code: "CONTENT_ROUTE_ARTIFACT_GENERATION_CONFLICT",
+          message:
+            "One content route generation cannot commit different counts.",
+        });
+      }
+
       return { created: 0, unchanged: 1, updated: 0 };
     }
 
@@ -76,7 +96,7 @@ export const syncContentRouteArtifactCount = internalMutation({
     };
 
     if (existing) {
-      await ctx.db.patch("contentRouteCounts", existing._id, next);
+      await ctx.db.replace("contentRouteCounts", existing._id, next);
       return { created: 0, unchanged: 0, updated: 1 };
     }
 
@@ -85,7 +105,7 @@ export const syncContentRouteArtifactCount = internalMutation({
   },
 });
 
-/** Upserts one bounded sitemap/LLMS route artifact page from sync. */
+/** Inserts one immutable sitemap/LLMS route page for a sync generation. */
 export const syncContentRouteArtifactPage = internalMutation({
   args: {
     locale: localeValidator,
@@ -97,19 +117,33 @@ export const syncContentRouteArtifactPage = internalMutation({
   returns: syncContentRouteArtifactPageResultValidator,
   /** Stores one route artifact page that public SEO/LLMS surfaces can read exactly. */
   handler: async (ctx, args) => {
-    if (args.routes.length > CONTENT_ROUTE_ARTIFACT_PAGE_SIZE) {
+    assertValidArtifactGeneration(args.syncedAt);
+
+    if (
+      args.routes.length < 1 ||
+      args.routes.length > CONTENT_ROUTE_ARTIFACT_PAGE_SIZE
+    ) {
       throw new ConvexError({
-        code: "CONTENT_ROUTE_ARTIFACT_PAGE_TOO_LARGE",
-        message: `Content route artifact pages must contain at most ${CONTENT_ROUTE_ARTIFACT_PAGE_SIZE} routes.`,
+        code: "CONTENT_ROUTE_ARTIFACT_PAGE_SIZE_INVALID",
+        message: `Content route artifact pages must contain between 1 and ${CONTENT_ROUTE_ARTIFACT_PAGE_SIZE} routes.`,
+      });
+    }
+
+    if (!Number.isSafeInteger(args.page) || args.page < 0) {
+      throw new ConvexError({
+        code: "CONTENT_ROUTE_ARTIFACT_PAGE_INVALID",
+        message:
+          "Content route artifact page numbers must be non-negative integers.",
       });
     }
 
     const existing = await ctx.db
       .query("contentRoutePages")
-      .withIndex("by_locale_and_section_and_page", (q) =>
+      .withIndex("by_locale_and_section_and_syncedAt_and_page", (q) =>
         q
           .eq("locale", args.locale)
           .eq("section", args.section)
+          .eq("syncedAt", args.syncedAt)
           .eq("page", args.page)
       )
       .unique();
@@ -122,13 +156,24 @@ export const syncContentRouteArtifactPage = internalMutation({
       syncedAt: args.syncedAt,
     };
 
+    if (getDocumentSize(next) >= maximumContentRoutePageDocumentBytes) {
+      throw new ConvexError({
+        code: "CONTENT_ROUTE_ARTIFACT_DOCUMENT_SIZE_INVALID",
+        message:
+          "Content route artifact pages must remain below the Convex 1 MiB document limit.",
+      });
+    }
+
     if (isSameRouteArtifactPage(existing, next)) {
       return { created: 0, unchanged: 1, updated: 0 };
     }
 
     if (existing) {
-      await ctx.db.patch("contentRoutePages", existing._id, next);
-      return { created: 0, unchanged: 0, updated: 1 };
+      throw new ConvexError({
+        code: "CONTENT_ROUTE_ARTIFACT_GENERATION_CONFLICT",
+        message:
+          "One content route generation cannot contain different page payloads.",
+      });
     }
 
     await ctx.db.insert("contentRoutePages", next);
@@ -136,23 +181,25 @@ export const syncContentRouteArtifactPage = internalMutation({
   },
 });
 
-/** Deletes materialized route artifact pages no longer produced by sync. */
+/** Deletes bounded pages older than the committed artifact generation. */
 export const deleteStaleContentRouteArtifactPages = internalMutation({
   args: {
-    firstStalePage: v.number(),
+    committedSyncedAt: v.number(),
     locale: localeValidator,
     section: nakafaSectionValidator,
   },
   returns: deleteResultValidator,
-  /** Removes stale route artifact pages after the current page range. */
+  /** Removes older generations without touching a newer concurrent staging run. */
   handler: async (ctx, args) => {
+    assertValidArtifactGeneration(args.committedSyncedAt);
+
     const pages = await ctx.db
       .query("contentRoutePages")
-      .withIndex("by_locale_and_section_and_page", (q) =>
+      .withIndex("by_locale_and_section_and_syncedAt_and_page", (q) =>
         q
           .eq("locale", args.locale)
           .eq("section", args.section)
-          .gte("page", args.firstStalePage)
+          .lt("syncedAt", args.committedSyncedAt)
       )
       .take(staleRoutePageDeleteBatchSize);
     let deleted = 0;
@@ -165,6 +212,30 @@ export const deleteStaleContentRouteArtifactPages = internalMutation({
     return { deleted };
   },
 });
+
+/** Rejects counts that cannot represent an exact bounded route total. */
+function assertValidArtifactCount(count: number) {
+  if (Number.isSafeInteger(count) && count >= 0) {
+    return;
+  }
+
+  throw new ConvexError({
+    code: "CONTENT_ROUTE_ARTIFACT_COUNT_INVALID",
+    message: "Content route artifact counts must be non-negative integers.",
+  });
+}
+
+/** Rejects generation timestamps that cannot be ordered exactly. */
+function assertValidArtifactGeneration(syncedAt: number) {
+  if (Number.isSafeInteger(syncedAt) && syncedAt > 0) {
+    return;
+  }
+
+  throw new ConvexError({
+    code: "CONTENT_ROUTE_ARTIFACT_GENERATION_INVALID",
+    message: "Content route artifact generations must be positive integers.",
+  });
+}
 
 /** Checks whether a materialized route page already matches the next payload. */
 function isSameRouteArtifactPage(

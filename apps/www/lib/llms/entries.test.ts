@@ -8,6 +8,7 @@ import {
   getLlmsSections,
   getSiteLlmsEntries,
   isLlmsSection,
+  type LlmsEntry,
 } from "@/lib/llms/entries";
 
 const mockGetArtifactPage = vi.hoisted(() => vi.fn());
@@ -92,10 +93,12 @@ describe("llms entries", () => {
   });
 
   it("localizes static site routes", () => {
-    const englishCurriculum = getSiteLlmsEntries("en").find(
+    const englishEntries = getSiteLlmsEntries("en");
+    const indonesianEntries = getSiteLlmsEntries("id");
+    const englishCurriculum = englishEntries.find(
       (entry) => entry.route === "/curriculum"
     );
-    const indonesianCurriculum = getSiteLlmsEntries("id").find(
+    const indonesianCurriculum = indonesianEntries.find(
       (entry) => entry.route === "/kurikulum"
     );
 
@@ -109,10 +112,23 @@ describe("llms entries", () => {
       section: "site",
       title: "Kurikulum",
     });
+    expect(englishEntries.map((entry) => entry.route)).toEqual([
+      "/curriculum",
+      "/privacy-policy",
+      "/security-policy",
+      "/terms-of-service",
+    ]);
+    expect(englishEntries.some((entry) => entry.route === "/")).toBe(false);
+    expect(englishEntries.some((entry) => entry.route === "/contributor")).toBe(
+      false
+    );
+    expect(englishEntries.some((entry) => entry.route === "/search")).toBe(
+      false
+    );
   });
 
   it("builds sorted page entries from markdown route rows", async () => {
-    const entries = await Effect.runPromise(
+    const entryGroups = await Effect.runPromise(
       Effect.all([
         getContentPageLlmsEntries({
           locale: "en",
@@ -129,8 +145,19 @@ describe("llms entries", () => {
           page: 0,
           section: "quran",
         }),
-      ]).pipe(Effect.map((groups) => groups.flat()))
+      ])
     );
+    const entries: LlmsEntry[] = [];
+
+    for (const group of entryGroups) {
+      expect(group).not.toBeNull();
+
+      if (group === null) {
+        continue;
+      }
+
+      entries.push(...group);
+    }
 
     expect(entries.map((entry) => entry.route)).toEqual([
       "/articles/politics/aaa-short-fixture",
@@ -191,7 +218,28 @@ describe("llms entries", () => {
     expect(mockGetParentPage).not.toHaveBeenCalled();
   });
 
-  it("returns no entries when an artifact page is missing", async () => {
+  it("distinguishes empty artifact pages from missing pages", async () => {
+    mockGetArtifactPage.mockReturnValueOnce(
+      Effect.succeed({
+        locale: "en",
+        page: 99,
+        routeCount: 0,
+        routes: [],
+        section: "articles",
+        syncedAt: 1,
+      })
+    );
+
+    await expect(
+      Effect.runPromise(
+        getContentPageLlmsEntries({
+          locale: "en",
+          page: 99,
+          section: "articles",
+        })
+      )
+    ).resolves.toEqual([]);
+
     mockGetArtifactPage.mockReturnValueOnce(Effect.succeed(null));
 
     await expect(
@@ -202,6 +250,6 @@ describe("llms entries", () => {
           section: "articles",
         })
       )
-    ).resolves.toEqual([]);
+    ).resolves.toBeNull();
   });
 });

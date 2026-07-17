@@ -7,6 +7,7 @@ describe("public route projection", () => {
     const routes = Effect.runSync(listPublicRoutes());
     const kinds = new Set<string>(routes.map((route) => route.kind));
 
+    expect(kinds.has("article-category")).toBe(true);
     expect(kinds.has("subject-lesson")).toBe(true);
     expect(kinds.has("curriculum-context")).toBe(true);
     expect(kinds.has("assessment-context")).toBe(false);

@@ -248,7 +248,23 @@ function buildQuranVersePayload(
   surahNumber: number,
   verse: Verse
 ): QuranVersePayload {
-  const tafsir = { id: { short: verse.tafsir.id.short } };
+  const tafsir: QuranVersePayload["tafsir"] = {
+    id: { short: verse.tafsir.id.short },
+  };
+
+  for (const locale of locales) {
+    if (locale === "id") {
+      continue;
+    }
+
+    const localizedTafsir = verse.tafsir[locale];
+
+    if (!localizedTafsir) {
+      continue;
+    }
+
+    tafsir[locale] = { short: localizedTafsir.short };
+  }
 
   return {
     audio: verse.audio,
