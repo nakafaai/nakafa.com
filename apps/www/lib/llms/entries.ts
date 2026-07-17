@@ -66,10 +66,17 @@ export function getLlmsSections() {
 
 /** Builds site-page entries without reading the content route catalog. */
 export function getSiteLlmsEntries(locale: Locale) {
-  return buildLocalizedLlmsEntriesFromRoutes({
-    locale,
-    routes: baseRoutes.filter((route) => getRouteSection(route) === "site"),
-  });
+  const entries: LlmsEntry[] = [];
+
+  for (const route of baseRoutes) {
+    if (getRouteSection(route) !== "site") {
+      continue;
+    }
+
+    entries.push(buildLocalizedSiteLlmsEntry({ locale, route }));
+  }
+
+  return entries;
 }
 
 /** Builds entries for one materialized route-catalog page without global reads. */
@@ -123,19 +130,6 @@ export const getContentListingLlmsEntries = Effect.fn(
     rows,
   });
 });
-
-/** Builds locale-specific llms entries from already scoped route strings. */
-function buildLocalizedLlmsEntriesFromRoutes({
-  locale,
-  routes,
-}: {
-  locale: Locale;
-  routes: readonly string[];
-}) {
-  return [...routes]
-    .sort((a, b) => a.localeCompare(b))
-    .map((route) => buildLocalizedSiteLlmsEntry({ locale, route }));
-}
 
 /** Builds locale-specific llms entries directly from materialized route rows. */
 function buildLocalizedLlmsEntriesFromRows({

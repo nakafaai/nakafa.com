@@ -1,8 +1,5 @@
 import type { api } from "@repo/backend/convex/_generated/api";
-import {
-  CONTENT_SITEMAP_ROUTE_PAGE_SIZE,
-  compareSitemapPaths,
-} from "@repo/backend/convex/contents/sitemap/spec";
+import { CONTENT_SITEMAP_ROUTE_PAGE_SIZE } from "@repo/backend/convex/contents/sitemap/spec";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs } from "convex/server";
 import { Data, Effect } from "effect";
@@ -53,16 +50,16 @@ export class SitemapPageNotFoundError extends Data.TaggedError(
   readonly pageId: string;
 }> {}
 
-/** Static top-level routes that should always be present in the sitemap. */
-export const baseRoutes = [
+/** Static top-level routes in canonical lexical order. */
+export const baseRoutes: readonly string[] = [
   "/",
-  "/search",
   "/contributor",
   "/curricula",
-  quranRootRoute,
-  "/terms-of-service",
   "/privacy-policy",
+  quranRootRoute,
+  "/search",
   "/security-policy",
+  "/terms-of-service",
 ];
 
 /** Reads sitemap page descriptors without loading route rows. */
@@ -195,9 +192,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
 
     if (!isContentSitemapPage(page)) {
       return {
-        routes: [...baseRoutes]
-          .sort(compareSitemapPaths)
-          .map((path) => ({ lastModified: undefined, path })),
+        routes: baseRoutes.map((path) => ({ lastModified: undefined, path })),
       };
     }
 
