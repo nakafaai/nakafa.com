@@ -1,3 +1,4 @@
+import { NAKAFA_CONTENT_BASE_URL } from "@repo/backend/convex/contents/constants";
 import { getUnknownMessage } from "@repo/backend/scripts/lib/errors";
 import {
   logSuccess,
@@ -57,15 +58,26 @@ function readConfigValue(name: string, message: string) {
 }
 
 /**
+ * Uses the canonical public app for production and the configured local app for development.
+ */
+function readContentRuntimeCacheSiteUrl(options: SyncOptions) {
+  if (options.prod) {
+    return Effect.succeed(NAKAFA_CONTENT_BASE_URL);
+  }
+
+  return readConfigValue(
+    "SITE_URL",
+    "SITE_URL is required to invalidate the content runtime cache."
+  );
+}
+
+/**
  * Invalidates Next.js content runtime cache after the Convex read model is synced.
  */
 export const invalidateContentRuntimeCache = Effect.fn(
   "sync.invalidateContentRuntimeCache"
 )(function* (options: SyncOptions) {
-  const siteUrl = yield* readConfigValue(
-    "SITE_URL",
-    "SITE_URL is required to invalidate the content runtime cache."
-  );
+  const siteUrl = yield* readContentRuntimeCacheSiteUrl(options);
   const internalKey = yield* readConfigValue(
     "INTERNAL_CONTENT_API_KEY",
     "INTERNAL_CONTENT_API_KEY is required to invalidate the content runtime cache."
