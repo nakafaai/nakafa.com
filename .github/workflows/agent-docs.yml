@@ -65,6 +65,9 @@ jobs:
           echo "NEXT_PUBLIC_CONVEX_SITE_URL=https://dapper-antelope-269.convex.site" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_CONVEX_URL=https://dapper-antelope-269.convex.cloud" >> "$GITHUB_ENV"
 
+      - name: Run tests
+        run: pnpm test
+
       - name: Build production app
         run: pnpm build
         env:
