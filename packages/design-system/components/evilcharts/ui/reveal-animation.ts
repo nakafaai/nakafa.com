@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 
 const BAR_REVEAL_DURATION_MS = 500;
 const BAR_REVEAL_STAGGER_MS = 50;
@@ -62,14 +62,11 @@ function useOrderedReveal(
   dataLength: number
 ) {
   const canReveal = animationType !== "none" && dataLength > 0;
-  const hasStartedReveal = useRef(false);
   const revealDuration = canReveal
     ? getOrderedRevealDurationMs(animationType, dataLength)
     : 0;
-  const revealDurationRef = useRef(revealDuration);
+  const getRevealDuration = useEffectEvent(() => revealDuration);
   const [isRevealing, setIsRevealing] = useState(() => canReveal);
-
-  revealDurationRef.current = revealDuration;
 
   useEffect(() => {
     if (!canReveal) {
@@ -77,20 +74,14 @@ function useOrderedReveal(
       return;
     }
 
-    if (hasStartedReveal.current) {
-      return;
-    }
-
-    hasStartedReveal.current = true;
     setIsRevealing(true);
     const timeout = window.setTimeout(
       () => setIsRevealing(false),
-      revealDurationRef.current
+      getRevealDuration()
     );
 
     return () => {
       window.clearTimeout(timeout);
-      hasStartedReveal.current = false;
     };
   }, [canReveal]);
 
