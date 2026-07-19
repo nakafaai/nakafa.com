@@ -7,6 +7,7 @@ import {
   type DragEvent,
   type InputHTMLAttributes,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -64,6 +65,7 @@ export interface FileUploadActions {
   removeFile: (id: string) => void;
 }
 
+/** Manages file validation, selection state, and browser preview lifetimes. */
 export const useFileUpload = (
   options: FileUploadOptions = {}
 ): [FileUploadState, FileUploadActions] => {
@@ -91,6 +93,7 @@ export const useFileUpload = (
   });
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const objectUrlsRef = useRef(new Set<string>());
 
   const validateFile = useCallback(
     (file: File | FileMetadata): string | null => {
@@ -152,13 +155,51 @@ export const useFileUpload = (
 
   const createPreview = useCallback(
     (file: File | FileMetadata): string | undefined => {
-      if (file instanceof File) {
-        return URL.createObjectURL(file);
+      if (!(file instanceof File)) {
+        return file.url;
       }
-      return file.url;
+
+      if (!file.type.startsWith("image/")) {
+        return;
+      }
+
+      const preview = URL.createObjectURL(file);
+      objectUrlsRef.current.add(preview);
+      return preview;
     },
     []
   );
+
+  const revokePreview = useCallback((file: FileWithPreview) => {
+    if (!(file.file instanceof File && file.preview)) {
+      return;
+    }
+
+    if (!objectUrlsRef.current.delete(file.preview)) {
+      return;
+    }
+
+    URL.revokeObjectURL(file.preview);
+  }, []);
+
+  useEffect(() => {
+    const objectUrls = objectUrlsRef.current;
+
+    return () => {
+      for (const objectUrl of objectUrls) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      objectUrls.clear();
+    };
+  }, []);
+
+  const resetInput = useCallback(() => {
+    if (!inputRef.current) {
+      return;
+    }
+
+    inputRef.current.value = "";
+  }, []);
 
   const generateUniqueId = useCallback((file: File | FileMetadata): string => {
     if (file instanceof File) {
@@ -168,32 +209,18 @@ export const useFileUpload = (
   }, []);
 
   const clearFiles = useCallback(() => {
-    setState((prev) => {
-      // Clean up object URLs
-      for (const file of prev.files) {
-        if (
-          file.preview &&
-          file.file instanceof File &&
-          file.file.type.startsWith("image/")
-        ) {
-          URL.revokeObjectURL(file.preview);
-        }
-      }
+    for (const file of state.files) {
+      revokePreview(file);
+    }
 
-      if (inputRef.current) {
-        inputRef.current.value = "";
-      }
-
-      const newState = {
-        ...prev,
-        files: [],
-        errors: [],
-      };
-
-      onFilesChange?.(newState.files);
-      return newState;
-    });
-  }, [onFilesChange]);
+    resetInput();
+    setState((prev) => ({
+      ...prev,
+      files: [],
+      errors: [],
+    }));
+    onFilesChange?.([]);
+  }, [onFilesChange, resetInput, revokePreview, state.files]);
 
   const addFiles = useCallback(
     (newFiles: FileList | File[]) => {
@@ -207,11 +234,6 @@ export const useFileUpload = (
       // Clear existing errors when new files are uploaded
       setState((prev) => ({ ...prev, errors: [] }));
 
-      // In single file mode, clear existing files first
-      if (!multiple) {
-        clearFiles();
-      }
-
       // Check if adding these files would exceed maxFiles (only in multiple mode)
       if (
         multiple &&
@@ -221,6 +243,7 @@ export const useFileUpload = (
         errors.push(t("max-files-exceeded", { maxFiles: maxFiles.toString() }));
         setState((prev) => ({ ...prev, errors }));
         onError?.(errors);
+        resetInput();
         return;
       }
 
@@ -269,20 +292,24 @@ export const useFileUpload = (
 
       // Only update state if we have valid files to add
       if (validFiles.length > 0) {
+        if (!multiple) {
+          for (const file of state.files) {
+            revokePreview(file);
+          }
+        }
+
         // Call the onFilesAdded callback with the newly added valid files
         onFilesAdded?.(validFiles);
 
-        setState((prev) => {
-          const updatedFiles = multiple
-            ? [...prev.files, ...validFiles]
-            : validFiles;
-          onFilesChange?.(updatedFiles);
-          return {
-            ...prev,
-            files: updatedFiles,
-            errors,
-          };
-        });
+        const updatedFiles = multiple
+          ? [...state.files, ...validFiles]
+          : validFiles;
+        setState((prev) => ({
+          ...prev,
+          files: updatedFiles,
+          errors,
+        }));
+        onFilesChange?.(updatedFiles);
 
         // Call onError if there were any errors (even with some valid files)
         if (errors.length > 0) {
@@ -297,9 +324,7 @@ export const useFileUpload = (
       }
 
       // Reset input value after handling files
-      if (inputRef.current) {
-        inputRef.current.value = "";
-      }
+      resetInput();
     },
     [
       state.files,
@@ -309,37 +334,32 @@ export const useFileUpload = (
       validateFile,
       createPreview,
       generateUniqueId,
-      clearFiles,
+      revokePreview,
       onFilesChange,
       onFilesAdded,
       onError,
+      resetInput,
       t,
     ]
   );
 
   const removeFile = useCallback(
     (id: string) => {
-      setState((prev) => {
-        const fileToRemove = prev.files.find((file) => file.id === id);
-        if (
-          fileToRemove?.preview &&
-          fileToRemove.file instanceof File &&
-          fileToRemove.file.type.startsWith("image/")
-        ) {
-          URL.revokeObjectURL(fileToRemove.preview);
-        }
+      const fileToRemove = state.files.find((file) => file.id === id);
+      if (!fileToRemove) {
+        return;
+      }
 
-        const newFiles = prev.files.filter((file) => file.id !== id);
-        onFilesChange?.(newFiles);
-
-        return {
-          ...prev,
-          files: newFiles,
-          errors: [],
-        };
-      });
+      revokePreview(fileToRemove);
+      const newFiles = state.files.filter((file) => file.id !== id);
+      setState((prev) => ({
+        ...prev,
+        files: newFiles,
+        errors: [],
+      }));
+      onFilesChange?.(newFiles);
     },
-    [onFilesChange]
+    [onFilesChange, revokePreview, state.files]
   );
 
   const clearErrors = useCallback(() => {
@@ -359,7 +379,10 @@ export const useFileUpload = (
     e.preventDefault();
     e.stopPropagation();
 
-    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+    if (
+      e.relatedTarget instanceof Node &&
+      e.currentTarget.contains(e.relatedTarget)
+    ) {
       return;
     }
 
@@ -440,7 +463,7 @@ export const useFileUpload = (
   ];
 };
 
-// Helper function to format bytes to human-readable format
+/** Formats a byte count for file validation messages. */
 export const formatBytes = (bytes: number, decimals = 2): string => {
   if (bytes === 0) {
     return "0 Bytes";
