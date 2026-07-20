@@ -8,9 +8,11 @@ import {
   DrawerPopup,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
-import { Effect } from "effect";
-import { useEffectEvent, useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 
+import { useQuranAudioControls } from "./quran-audio-controls";
+
+/** Localized labels used by the page-level Quran controls island. */
 export interface QuranControlLabels {
   interpretation: string;
   playAudio: string;
@@ -23,74 +25,24 @@ interface Props {
   labels: QuranControlLabels;
 }
 
-type AudioButtonState = "idle" | "playing";
-
-const AUDIO_BUTTON_SELECTOR = "[data-quran-audio-index]";
-const AUDIO_LABEL_SELECTOR = "[data-quran-audio-label]";
 const INTERPRETATION_BUTTON_SELECTOR = "[data-quran-interpretation-index]";
 const EMPTY_INTERPRETATIONS: string[] = [];
 
-/**
- * Reads the fallback audio source list for one server-rendered verse button.
- */
-function getAudioSources({
-  audioSources,
-  button,
-}: {
-  audioSources: string[][];
-  button: HTMLButtonElement;
-}) {
-  const index = Number(button.dataset.quranAudioIndex);
-
-  if (!Number.isInteger(index)) {
-    return [];
-  }
-
-  return audioSources[index] ?? [];
-}
-
-/**
- * Finds a delegated Quran control button from a browser click event.
- */
-function getDelegatedButton(event: MouseEvent, selector: string) {
+/** Finds a delegated tafsir button from a browser click event. */
+function getInterpretationButton(event: MouseEvent) {
   const target = event.target;
 
   if (!(target instanceof Element)) {
     return null;
   }
 
-  const button = target.closest(selector);
+  const button = target.closest(INTERPRETATION_BUTTON_SELECTOR);
 
   if (!(button instanceof HTMLButtonElement)) {
     return null;
   }
 
   return button;
-}
-
-/**
- * Updates the visible and screen-reader state for one audio button.
- */
-function setAudioButtonState({
-  button,
-  label,
-  state,
-}: {
-  button: HTMLButtonElement;
-  label: string;
-  state: AudioButtonState;
-}) {
-  button.dataset.state = state;
-  button.setAttribute("aria-label", label);
-  button.setAttribute("aria-pressed", state === "playing" ? "true" : "false");
-
-  const visibleLabel = button.querySelector(AUDIO_LABEL_SELECTOR);
-
-  if (!visibleLabel) {
-    return;
-  }
-
-  visibleLabel.textContent = label;
 }
 
 /**
@@ -120,161 +72,13 @@ export function QuranPageControls({
   interpretations = EMPTY_INTERPRETATIONS,
   labels,
 }: Props) {
-  const activeAudioObserverRef = useRef<MutationObserver | null>(null);
-  const activeAudioButtonRef = useRef<HTMLButtonElement | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  useQuranAudioControls({ audioSources, labels });
+
   const [
     isInterpretationOpen,
-    {
-      close: closeInterpretation,
-      open: openInterpretationDrawer,
-      set: setInterpretationOpen,
-    },
+    { open: openInterpretationDrawer, set: setInterpretationOpen },
   ] = useDisclosure(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
-
-  /**
-   * Stops watching the active verse button after playback ends or changes.
-   */
-  const disconnectActiveAudioObserver = () => {
-    const observer = activeAudioObserverRef.current;
-
-    if (!observer) {
-      return;
-    }
-
-    observer.disconnect();
-    activeAudioObserverRef.current = null;
-  };
-
-  const stopAudio = () => {
-    disconnectActiveAudioObserver();
-
-    const audio = audioRef.current;
-
-    if (audio) {
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
-      audio.onended = null;
-      audio.onerror = null;
-      audioRef.current = null;
-    }
-
-    const activeAudioButton = activeAudioButtonRef.current;
-
-    if (!activeAudioButton) {
-      return;
-    }
-
-    setAudioButtonState({
-      button: activeAudioButton,
-      label: labels.playAudio,
-      state: "idle",
-    });
-    activeAudioButtonRef.current = null;
-  };
-
-  const playAudio = (button: HTMLButtonElement) => {
-    const sources = getAudioSources({ audioSources, button });
-
-    if (sources.length === 0) {
-      return;
-    }
-
-    if (activeAudioButtonRef.current === button) {
-      stopAudio();
-      return;
-    }
-
-    stopAudio();
-
-    const audio = new Audio();
-    audio.preload = "none";
-    audioRef.current = audio;
-    activeAudioButtonRef.current = button;
-
-    setAudioButtonState({
-      button,
-      label: labels.stopAudio,
-      state: "playing",
-    });
-
-    const activeAudioObserver = new MutationObserver(() => {
-      if (button.isConnected) {
-        return;
-      }
-
-      stopAudio();
-    });
-
-    activeAudioObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-    activeAudioObserverRef.current = activeAudioObserver;
-
-    let sourceIndex = 0;
-
-    /**
-     * Stops this playback request only while it is still the active request.
-     */
-    function stopThisAudio() {
-      if (audioRef.current !== audio) {
-        return;
-      }
-
-      stopAudio();
-    }
-
-    /**
-     * Attempts the next available recitation source for this verse.
-     */
-    function playNextSource() {
-      if (audioRef.current !== audio) {
-        return;
-      }
-
-      const source = sources[sourceIndex];
-      sourceIndex += 1;
-
-      if (!source) {
-        stopThisAudio();
-        return;
-      }
-
-      let hasFailed = false;
-
-      /**
-       * Moves to the next source once for a failed playback attempt.
-       */
-      function handlePlaybackFailure() {
-        if (audioRef.current !== audio) {
-          return;
-        }
-
-        if (hasFailed) {
-          return;
-        }
-
-        hasFailed = true;
-        playNextSource();
-      }
-
-      audio.src = source;
-      audio.onerror = handlePlaybackFailure;
-      audio.onended = stopThisAudio;
-
-      Effect.runFork(
-        Effect.tryPromise({
-          try: () => audio.play(),
-          catch: (error) => error,
-        }).pipe(Effect.catchAll(() => Effect.sync(handlePlaybackFailure)))
-      );
-    }
-
-    playNextSource();
-  };
 
   const openInterpretation = (button: HTMLButtonElement) => {
     const interpretation = getInterpretationText({
@@ -290,24 +94,8 @@ export function QuranPageControls({
     openInterpretationDrawer();
   };
 
-  const cleanupControls = useEffectEvent(() => {
-    stopAudio();
-    closeInterpretation();
-    setSelectedInterpretation("");
-  });
-
   useWindowEvent("click", (event) => {
-    const audioButton = getDelegatedButton(event, AUDIO_BUTTON_SELECTOR);
-
-    if (audioButton) {
-      playAudio(audioButton);
-      return;
-    }
-
-    const interpretationButton = getDelegatedButton(
-      event,
-      INTERPRETATION_BUTTON_SELECTOR
-    );
+    const interpretationButton = getInterpretationButton(event);
 
     if (!interpretationButton) {
       return;
@@ -315,13 +103,6 @@ export function QuranPageControls({
 
     openInterpretation(interpretationButton);
   });
-
-  useLayoutEffect(
-    () => () => {
-      cleanupControls();
-    },
-    []
-  );
 
   return (
     <Drawer onOpenChange={setInterpretationOpen} open={isInterpretationOpen}>

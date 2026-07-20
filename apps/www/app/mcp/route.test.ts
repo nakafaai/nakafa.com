@@ -33,11 +33,13 @@ describe("MCP route proxy", () => {
         headers: {
           accept: "application/json, text/event-stream",
           authorization: "Bearer user-token",
+          connection: "mcp-name",
           cookie: "session=user-session",
           "content-encoding": "gzip",
           "content-length": body.byteLength.toString(),
           "content-type": "application/json",
           "mcp-method": "initialize",
+          "mcp-name": "nakafa",
           "mcp-param-region": "us-west1",
           "mcp-protocol-version": "2025-06-18",
           "mcp-session-id": "session-1",
@@ -70,10 +72,12 @@ describe("MCP route proxy", () => {
       "application/json, text/event-stream"
     );
     expect(upstreamHeaders.get("authorization")).toBeNull();
+    expect(upstreamHeaders.get("connection")).toBeNull();
     expect(upstreamHeaders.get("cookie")).toBeNull();
     expect(upstreamHeaders.get("content-encoding")).toBe("gzip");
     expect(upstreamHeaders.get("content-length")).toBeNull();
     expect(upstreamHeaders.get("mcp-method")).toBe("initialize");
+    expect(upstreamHeaders.get("mcp-name")).toBeNull();
     expect(upstreamHeaders.get("mcp-param-region")).toBe("us-west1");
     expect(upstreamHeaders.get("mcp-protocol-version")).toBe("2025-06-18");
     expect(upstreamHeaders.get("mcp-session-id")).toBe("session-1");
@@ -127,16 +131,19 @@ describe("MCP route proxy", () => {
     expect(upstreamHeaders.get("origin")).toBe("https://agent.example.com");
   });
 
-  it("removes stale decoded response encoding headers from fetch responses", async () => {
+  it("removes hop-by-hop and stale decoded response headers", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(() =>
         Promise.resolve(
           new Response("decoded", {
             headers: {
+              connection: "keep-alive, , x-upstream-hop",
               "content-encoding": "gzip",
               "content-length": "37",
               "content-type": "text/plain",
+              "proxy-connection": "keep-alive",
+              "x-upstream-hop": "remove-me",
             },
           })
         )
@@ -151,9 +158,12 @@ describe("MCP route proxy", () => {
       })
     );
 
+    expect(response.headers.get("connection")).toBeNull();
     expect(response.headers.get("content-encoding")).toBeNull();
     expect(response.headers.get("content-length")).toBeNull();
     expect(response.headers.get("content-type")).toBe("text/plain");
+    expect(response.headers.get("proxy-connection")).toBeNull();
+    expect(response.headers.get("x-upstream-hop")).toBeNull();
     await expect(response.text()).resolves.toBe("decoded");
   });
 
