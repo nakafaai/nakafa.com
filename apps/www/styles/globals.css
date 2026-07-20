@@ -6,3 +6,9 @@
 html:has([data-marketing-page]) {
   scroll-behavior: smooth;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  html:has([data-marketing-page]) {
+    scroll-behavior: auto;
+  }
+}

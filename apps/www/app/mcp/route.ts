@@ -31,6 +31,7 @@ const CONNECTION_HEADERS = new Set([
   "keep-alive",
   "proxy-authenticate",
   "proxy-authorization",
+  "proxy-connection",
   "te",
   "trailer",
   "transfer-encoding",
@@ -79,8 +80,13 @@ function shouldForwardRequestHeader(header: string) {
 /** Copies protocol and CORS negotiation headers without leaking browser credentials upstream. */
 function getForwardHeaders(request: Request) {
   const headers = new Headers();
+  const connectionHeaderNames = getConnectionHeaderNames(request.headers);
 
   for (const [header, value] of request.headers) {
+    if (connectionHeaderNames.has(header.toLowerCase())) {
+      continue;
+    }
+
     if (!shouldForwardRequestHeader(header)) {
       continue;
     }
@@ -89,6 +95,42 @@ function getForwardHeaders(request: Request) {
   }
 
   return headers;
+}
+
+/** Returns every hop-by-hop field named by HTTP and a message's Connection field. */
+function getConnectionHeaderNames(headers: Headers) {
+  const headerNames = new Set(CONNECTION_HEADERS);
+  const connection = headers.get("connection");
+
+  if (!connection) {
+    return headerNames;
+  }
+
+  for (const header of connection.split(",")) {
+    const normalizedHeader = header.trim().toLowerCase();
+
+    if (normalizedHeader) {
+      headerNames.add(normalizedHeader);
+    }
+  }
+
+  return headerNames;
+}
+
+/** Copies upstream response headers that remain valid after fetch decodes the body. */
+function getForwardResponseHeaders(upstreamHeaders: Headers) {
+  const connectionHeaderNames = getConnectionHeaderNames(upstreamHeaders);
+  const forwardHeaders = Array.from(upstreamHeaders).filter(([header]) => {
+    const normalizedHeader = header.toLowerCase();
+
+    if (connectionHeaderNames.has(normalizedHeader)) {
+      return false;
+    }
+
+    return !FETCH_DECODED_RESPONSE_HEADERS.has(normalizedHeader);
+  });
+
+  return new Headers(forwardHeaders);
 }
 
 /** Serves crawler-friendly MCP discovery without opening an SSE stream. */
@@ -129,17 +171,8 @@ function proxyMcpRequest(request: Request) {
             message: MCP_UPSTREAM_UNAVAILABLE_MESSAGE,
           }),
       });
-      const headers = new Headers(upstream.headers);
-
-      for (const header of [
-        ...CONNECTION_HEADERS,
-        ...FETCH_DECODED_RESPONSE_HEADERS,
-      ]) {
-        headers.delete(header);
-      }
-
       return new Response(upstream.body, {
-        headers,
+        headers: getForwardResponseHeaders(upstream.headers),
         status: upstream.status,
         statusText: upstream.statusText,
       });
