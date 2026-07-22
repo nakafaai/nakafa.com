@@ -128,15 +128,15 @@ export function StartTryoutButton({
     }
 
     if (dialogKind === "upgrade-required") {
-      runCheckout();
+      runAttemptStart(createCheckoutProgram);
       return;
     }
 
-    runAttemptStart();
+    runAttemptStart(createPaywallProgram);
   }
 
-  /** Starts a new attempt and turns a stale access response into the paywall. */
-  function runAttemptStart() {
+  /** Starts authoritatively before either showing or continuing to checkout. */
+  function runAttemptStart(onDenied: () => Effect.Effect<void>) {
     const program = startAttemptProgram({
       args: {
         countryKey: request.countryKey,
@@ -150,31 +150,36 @@ export function StartTryoutButton({
       },
       failureMessage: t("start-error"),
       mutation: startAttempt,
-      onSuccess: () => {
-        dialog.close();
-        toast.success(
-          directEntry ? t("start-entry-success") : t("start-success"),
-          { position: "bottom-center" }
-        );
-      },
-      onUpgrade: () => {
-        setForceUpgrade(true);
-        recordPaywallView("start-mutation");
-      },
+      onSuccess: () =>
+        Effect.sync(() => {
+          dialog.close();
+          toast.success(
+            directEntry ? t("start-entry-success") : t("start-success"),
+            { position: "bottom-center" }
+          );
+        }),
+      onUpgrade: onDenied,
     });
 
     startTransition(() => Effect.runPromise(program));
   }
 
-  /** Creates the existing Pro checkout session without changing billing APIs. */
-  function runCheckout() {
-    const program = checkoutProgram({
+  /** Builds the existing Pro checkout program after authoritative denial. */
+  function createCheckoutProgram() {
+    return checkoutProgram({
       action: generateCheckout,
       failureMessage: t("checkout-error"),
       locale: request.locale,
     });
+  }
 
-    startTransition(() => Effect.runPromise(program));
+  /** Replaces a stale advisory start decision with the authoritative paywall. */
+  function createPaywallProgram() {
+    return Effect.sync(() => setForceUpgrade(true)).pipe(
+      Effect.zipRight(
+        paywallViewProgram({ mutation: trackPaywall, source: "start-mutation" })
+      )
+    );
   }
 
   /** Starts an internal entry section for an already-active attempt. */

@@ -20,6 +20,7 @@ import {
   tryoutRouteKeyValidator,
   tryoutScoreStatusValidator,
 } from "@repo/backend/convex/tryouts/schema";
+import { tryoutPaywallSourceValidator } from "@repo/backend/convex/tryouts/start/spec";
 import { userPlanValidator } from "@repo/backend/convex/users/schema";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -82,7 +83,7 @@ export const productAnalyticsEventValidator = v.union(
   v.object({
     name: v.literal("tryout paywall viewed"),
     properties: v.object({
-      source: v.union(v.literal("access-query"), v.literal("start-mutation")),
+      source: tryoutPaywallSourceValidator,
     }),
   }),
   v.object({

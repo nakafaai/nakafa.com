@@ -18,8 +18,8 @@ interface StartAttemptProgramInput {
   readonly args: StartAttemptArgs;
   readonly failureMessage: string;
   readonly mutation: (args: StartAttemptArgs) => Promise<unknown>;
-  readonly onSuccess: () => void;
-  readonly onUpgrade: () => void;
+  readonly onSuccess: () => Effect.Effect<void>;
+  readonly onUpgrade: () => Effect.Effect<void>;
 }
 
 /** Runs a start mutation and converts authoritative access denial to upgrade UI. */
@@ -28,10 +28,10 @@ export function startAttemptProgram(input: StartAttemptProgramInput) {
     try: () => input.mutation(input.args),
     catch: toTryoutClientRequestError,
   }).pipe(
-    Effect.tap(() => Effect.sync(input.onSuccess)),
+    Effect.tap(() => input.onSuccess()),
     Effect.catchAll((error) => {
       if (isTryoutAccessRequired(error)) {
-        return Effect.sync(input.onUpgrade);
+        return input.onUpgrade();
       }
 
       return reportRequestFailure(error, "tryout-start", input.failureMessage);
