@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { hasLocale } from "next-intl";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/sidebar/app-shell";
+import { TryoutPageLoading } from "@/components/tryout/shell/loading";
 
 /** Locks the app shell while the current try-out attempt is running. */
 export function TryoutShell({ children }: { children: ReactNode }) {
@@ -15,6 +16,7 @@ export function TryoutShell({ children }: { children: ReactNode }) {
   const locale = getRouteParam(params.locale);
   const country = getRouteParam(params.country);
   const exam = getRouteParam(params.exam);
+  const section = getRouteParam(params.section);
   const set = getRouteParam(params.set);
   const track = getRouteParam(params.track);
   const setPath = getSetPath({
@@ -39,9 +41,14 @@ export function TryoutShell({ children }: { children: ReactNode }) {
       : "skip"
   );
   const locked = attempt?.status === "in-progress";
+  const loadingKind = section ? "section" : "route";
 
   if (shouldLoadAttempt && attempt === undefined) {
-    return null;
+    return (
+      <AppShell locked>
+        <TryoutPageLoading kind={loadingKind} />
+      </AppShell>
+    );
   }
 
   return <AppShell locked={locked}>{children}</AppShell>;

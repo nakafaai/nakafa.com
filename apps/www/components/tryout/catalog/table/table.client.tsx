@@ -36,6 +36,7 @@ import type {
 } from "@/components/tryout/catalog/table/types";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { TryoutRouteContentLoading } from "@/components/tryout/shell/loading";
 
 const EMPTY_ROWS: TryoutSetRow[] = [];
 
@@ -142,7 +143,7 @@ export function TryoutSetTable({
   });
 
   if (data.pending && visibleRows.length === 0) {
-    return null;
+    return <TryoutRouteContentLoading />;
   }
 
   return (

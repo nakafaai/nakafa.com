@@ -10,6 +10,7 @@ import { RefContent } from "@/components/shared/ref-content";
 import { TryoutHubClient } from "@/components/tryout/catalog/hub.client";
 import { readTryoutHubPage } from "@/components/tryout/catalog/server";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
+import { TryoutPageLoading } from "@/components/tryout/shell/loading";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -61,7 +62,7 @@ export async function generateMetadata({
  */
 export default function Page(props: PageProps<"/[locale]/try-out">) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<TryoutPageLoading kind="route" />}>
       <TryoutHubRoute params={props.params} />
     </Suspense>
   );

@@ -26,6 +26,7 @@ import {
 } from "@/components/tryout/section/finished";
 import { TryoutVisibleSummary } from "@/components/tryout/section/summary.client";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
+import { TryoutPageLoading } from "@/components/tryout/shell/loading";
 import { TryoutMeta } from "@/components/tryout/shell/meta";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
@@ -74,7 +75,7 @@ export function TryoutSectionPageClient({
   );
 
   if (attempt === undefined || runtime === undefined) {
-    return null;
+    return <TryoutPageLoading kind="section" />;
   }
 
   const currentAttempt = attempt;
@@ -94,11 +95,16 @@ export function TryoutSectionPageClient({
   });
 
   if (hasActiveSection && runtimeState.kind === "none") {
-    return null;
+    return <TryoutPageLoading kind="section" />;
   }
 
   if (runtimeState.kind !== "none" && content.questions.length === 0) {
-    return <TryoutContentRefresh />;
+    return (
+      <>
+        <TryoutContentRefresh />
+        <TryoutPageLoading kind="section" />
+      </>
+    );
   }
 
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);

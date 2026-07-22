@@ -12,6 +12,7 @@ import {
 import { TryoutTrackPageClient } from "@/components/tryout/catalog/track.client";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
+import { TryoutPageLoading } from "@/components/tryout/shell/loading";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export const unstable_instant = {
@@ -38,7 +39,7 @@ export default function Page(props: {
   }>;
 }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<TryoutPageLoading kind="route" />}>
       <TryoutTrackRoute params={props.params} />
     </Suspense>
   );
