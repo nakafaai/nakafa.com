@@ -11,7 +11,6 @@ import {
 } from "@/components/tryout/content/load";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
-import { TryoutPageLoading } from "@/components/tryout/shell/loading";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -41,7 +40,7 @@ export default function Page(props: {
   }>;
 }) {
   return (
-    <Suspense fallback={<TryoutPageLoading kind="route" />}>
+    <Suspense fallback={null}>
       <TryoutSetRoute params={props.params} />
     </Suspense>
   );

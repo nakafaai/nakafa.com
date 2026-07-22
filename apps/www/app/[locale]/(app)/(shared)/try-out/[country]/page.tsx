@@ -12,7 +12,6 @@ import { readTryoutCountryPage } from "@/components/tryout/catalog/server";
 import { readStaticTryoutCountryOptions } from "@/components/tryout/catalog/static";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
-import { TryoutPageLoading } from "@/components/tryout/shell/loading";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 
@@ -26,7 +25,7 @@ export default function Page(props: {
   params: Promise<{ country: string; locale: string }>;
 }) {
   return (
-    <Suspense fallback={<TryoutPageLoading kind="route" />}>
+    <Suspense fallback={null}>
       <TryoutCountryRoute params={props.params} />
     </Suspense>
   );

@@ -22,7 +22,6 @@ import type {
   TryoutSetView,
 } from "@/components/tryout/set/model";
 import { TryoutSetOverview } from "@/components/tryout/set/overview";
-import { TryoutPageLoading } from "@/components/tryout/shell/loading";
 
 interface TryoutSetPageClientProps {
   content: TryoutSetContent;
@@ -64,11 +63,11 @@ export function TryoutSetPageClient({
   const activeAttempt = getActiveTryoutAttempt(currentAttempt ?? null, now);
 
   if (currentAttempt === undefined) {
-    return <TryoutPageLoading kind={isInternalEntry ? "section" : "route"} />;
+    return null;
   }
 
   if (shouldLoadRuntime && runtime === undefined) {
-    return <TryoutPageLoading kind="section" />;
+    return null;
   }
 
   const actionAttempt =
@@ -138,24 +137,14 @@ function TryoutInternalSet({
     runtimeState.kind !== "none" &&
     value.content.entryQuestions.length === 0
   ) {
-    return (
-      <>
-        <TryoutContentRefresh />
-        <TryoutPageLoading kind="section" />
-      </>
-    );
+    return <TryoutContentRefresh />;
   }
 
   if (
     runtimeState.kind === "review" &&
     value.content.entryAnswers.length === 0
   ) {
-    return (
-      <>
-        <TryoutContentRefresh />
-        <TryoutPageLoading kind="section" />
-      </>
-    );
+    return <TryoutContentRefresh />;
   }
 
   return (

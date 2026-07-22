@@ -12,7 +12,6 @@ import {
 } from "@/components/tryout/catalog/static";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
-import { TryoutPageLoading } from "@/components/tryout/shell/loading";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export const unstable_instant = {
@@ -25,7 +24,7 @@ export default function Page(props: {
   params: Promise<{ country: string; exam: string; locale: string }>;
 }) {
   return (
-    <Suspense fallback={<TryoutPageLoading kind="route" />}>
+    <Suspense fallback={null}>
       <TryoutExamRoute params={props.params} />
     </Suspense>
   );
