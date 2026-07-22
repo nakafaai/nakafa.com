@@ -23,9 +23,12 @@ describe("tryouts/progress", () => {
       }
 
       const firstAttemptId = await ctx.db.insert("tryoutAttempts", {
+        accessEndsAt: TRYOUT_TEST_NOW + 1000,
+        accessSourceKind: "free",
         attemptNumber: 1,
         completedAt: null,
         completedSectionKeys: [],
+        countsForCompetition: false,
         endReason: null,
         expiresAt: TRYOUT_TEST_NOW + 1000,
         lastActivityAt: TRYOUT_TEST_NOW,
@@ -61,9 +64,12 @@ describe("tryouts/progress", () => {
       });
 
       const latestAttemptId = await ctx.db.insert("tryoutAttempts", {
+        accessEndsAt: TRYOUT_TEST_NOW + 2000,
+        accessSourceKind: "free",
         attemptNumber: 2,
         completedAt: null,
         completedSectionKeys: [],
+        countsForCompetition: false,
         endReason: null,
         expiresAt: TRYOUT_TEST_NOW + 2000,
         lastActivityAt: TRYOUT_TEST_NOW + 2,
@@ -137,9 +143,12 @@ describe("tryouts/progress", () => {
         const tryoutSetId = await insertTryoutSet(ctx);
         const set = await ctx.db.get(tryoutSetId);
         const attemptId = await ctx.db.insert("tryoutAttempts", {
+          accessEndsAt: TRYOUT_TEST_NOW + 1000,
+          accessSourceKind: "free",
           attemptNumber: 1,
           completedAt: null,
           completedSectionKeys: [],
+          countsForCompetition: false,
           endReason: null,
           expiresAt: TRYOUT_TEST_NOW + 1000,
           lastActivityAt: TRYOUT_TEST_NOW,

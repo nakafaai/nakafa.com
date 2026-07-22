@@ -47,9 +47,12 @@ async function insertHistoryAttempt(
   }
 ) {
   const attemptId = await ctx.db.insert("tryoutAttempts", {
+    accessEndsAt: args.startedAt + 3_600_000,
+    accessSourceKind: "free",
     attemptNumber: args.attemptNumber,
     completedAt: args.startedAt + 1000,
     completedSectionKeys: [],
+    countsForCompetition: false,
     endReason: "submitted",
     expiresAt: args.startedAt + 3_600_000,
     lastActivityAt: args.startedAt + 1000,

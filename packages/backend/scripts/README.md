@@ -227,7 +227,9 @@ pnpm --filter @repo/backend sync
 
 `sync:reset:tryouts` clears incremental sync state on purpose. Do not follow it
 with `sync:incremental`; run a full sync so Convex rebuilds the deleted tryout
-and IRT tables coherently.
+and IRT tables coherently. It intentionally preserves
+`tryoutFreeAttemptClaims`: the one-free-tryout allowance belongs to the account,
+not to rebuildable try-out content or runtime rows.
 
 For production (use with caution):
 

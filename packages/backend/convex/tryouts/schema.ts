@@ -48,6 +48,21 @@ export type TryoutScoreResult = Infer<typeof tryoutScoreResultValidator>;
 export const tryoutRouteKeyValidator = v.string();
 export type TryoutRouteKey = Infer<typeof tryoutRouteKeyValidator>;
 
+export const tryoutAttemptAccessSourceKindFree = "free";
+export const tryoutAttemptAccessSourceKindCompetition = "competition";
+export const tryoutAttemptAccessSourceKindAccessPass = "access-pass";
+export const tryoutAttemptAccessSourceKindSubscription = "subscription";
+
+export const tryoutAttemptAccessSourceKindValidator = literals(
+  tryoutAttemptAccessSourceKindFree,
+  tryoutAttemptAccessSourceKindCompetition,
+  tryoutAttemptAccessSourceKindAccessPass,
+  tryoutAttemptAccessSourceKindSubscription
+);
+export type TryoutAttemptAccessSourceKind = Infer<
+  typeof tryoutAttemptAccessSourceKindValidator
+>;
+
 export const tryoutTrackKindValidator = literals("subject", "year");
 export type TryoutTrackKind = Infer<typeof tryoutTrackKindValidator>;
 
@@ -248,8 +263,9 @@ const tables = {
     accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
     accessGrantId: v.optional(v.id("tryoutAccessGrants")),
     accessSubscriptionId: v.optional(v.string()),
-    accessEndsAt: v.optional(v.number()),
-    countsForCompetition: v.optional(v.boolean()),
+    accessEndsAt: v.number(),
+    accessSourceKind: tryoutAttemptAccessSourceKindValidator,
+    countsForCompetition: v.boolean(),
     scoreStatus: tryoutScoreStatusValidator,
     scoringStrategy: tryoutScoringStrategyValidator,
     status: tryoutStatusValidator,

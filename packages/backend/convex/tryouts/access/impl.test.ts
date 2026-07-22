@@ -1,12 +1,13 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   tryoutEntitlementSourceKindCompetition,
   tryoutEntitlementSourceKindSubscription,
 } from "@repo/backend/convex/tryoutAccess/schema";
-import { requireActiveEntitlement } from "@repo/backend/convex/tryouts/runtime/access";
+import { getIncludedAttemptAccess } from "@repo/backend/convex/tryouts/access/impl";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -72,7 +73,25 @@ async function insertSubscription(
   });
 }
 
-describe("tryouts/runtime/access", () => {
+/** Resolves included access for one test scope through the Effect boundary. */
+function resolveAccess(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  args: { setKey?: string; trackKey?: string } = {}
+) {
+  return runConvexProgram(
+    getIncludedAttemptAccess(ctx, {
+      countryKey: "indonesia",
+      examKey: "snbt",
+      now: NOW,
+      setKey: args.setKey ?? "set-1",
+      trackKey: args.trackKey ?? "2027",
+      userId,
+    })
+  );
+}
+
+describe("tryouts/access/impl", () => {
   it("creates an exam entitlement from an active Pro subscription", async () => {
     const t = convexTest(schema, convexModules);
 
@@ -84,29 +103,25 @@ describe("tryouts/runtime/access", () => {
         subscriptionId: "sub-active-pro",
       });
 
-      const entitlement = await requireActiveEntitlement(ctx, {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        now: NOW,
-        setKey: "set-1",
-        trackKey: "2027",
-        userId,
-      });
+      const access = await resolveAccess(ctx, userId);
       const entitlements = await ctx.db.query("tryoutEntitlements").collect();
 
-      return { entitlement, entitlements };
+      return { access, entitlements };
     });
 
-    expect(result.entitlement).toMatchObject({
+    expect(result.access).toEqual({
+      accessEndsAt: PERIOD_END,
+      accessSourceKind: tryoutEntitlementSourceKindSubscription,
+      accessSubscriptionId: "sub-active-pro",
+      countsForCompetition: false,
+    });
+    expect(result.entitlements).toHaveLength(1);
+    expect(result.entitlements[0]).toMatchObject({
       countryKey: "indonesia",
-      endsAt: PERIOD_END,
       examKey: "snbt",
       sourceKind: tryoutEntitlementSourceKindSubscription,
-      startsAt: NOW,
       subscriptionId: "sub-active-pro",
     });
-    expect(result.entitlement).not.toHaveProperty("setKey");
-    expect(result.entitlements).toHaveLength(1);
   });
 
   it("rejects a cached subscription entitlement when the subscription is not active", async () => {
@@ -130,16 +145,9 @@ describe("tryouts/runtime/access", () => {
           userId,
         });
 
-        await requireActiveEntitlement(ctx, {
-          countryKey: "indonesia",
-          examKey: "snbt",
-          now: NOW,
-          setKey: "set-1",
-          trackKey: "2027",
-          userId,
-        });
+        return await resolveAccess(ctx, userId);
       })
-    ).rejects.toThrow("Try-out access is required for this set.");
+    ).resolves.toBeNull();
   });
 
   it("creates an unbounded entitlement from an active Pro subscription without a period end", async () => {
@@ -154,23 +162,14 @@ describe("tryouts/runtime/access", () => {
         subscriptionId: "sub-active-pro-without-period",
       });
 
-      return await requireActiveEntitlement(ctx, {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        now: NOW,
-        setKey: "set-1",
-        trackKey: "2027",
-        userId,
-      });
+      return await resolveAccess(ctx, userId);
     });
 
-    expect(result).toMatchObject({
-      countryKey: "indonesia",
-      endsAt: Number.MAX_SAFE_INTEGER,
-      examKey: "snbt",
-      sourceKind: tryoutEntitlementSourceKindSubscription,
-      startsAt: NOW,
-      subscriptionId: "sub-active-pro-without-period",
+    expect(result).toEqual({
+      accessEndsAt: Number.MAX_SAFE_INTEGER,
+      accessSourceKind: tryoutEntitlementSourceKindSubscription,
+      accessSubscriptionId: "sub-active-pro-without-period",
+      countsForCompetition: false,
     });
   });
 
@@ -187,16 +186,9 @@ describe("tryouts/runtime/access", () => {
           subscriptionId: "sub-active-pro-invalid-period",
         });
 
-        await requireActiveEntitlement(ctx, {
-          countryKey: "indonesia",
-          examKey: "snbt",
-          now: NOW,
-          setKey: "set-1",
-          trackKey: "2027",
-          userId,
-        });
+        return await resolveAccess(ctx, userId);
       })
-    ).rejects.toThrow("Try-out access is required for this set.");
+    ).resolves.toBeNull();
   });
 
   it("rejects set entitlements from a different track", async () => {
@@ -217,33 +209,15 @@ describe("tryouts/runtime/access", () => {
 
       return insertedUserId;
     });
-    const matching = await t.mutation(async (ctx) =>
-      requireActiveEntitlement(ctx, {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        now: NOW,
-        setKey: "set-1",
-        trackKey: "2027",
-        userId,
-      })
-    );
+    const matching = await t.mutation((ctx) => resolveAccess(ctx, userId));
 
     expect(matching).toMatchObject({
-      setKey: "set-1",
-      trackKey: "2027",
+      accessSourceKind: tryoutEntitlementSourceKindCompetition,
+      countsForCompetition: true,
     });
     await expect(
-      t.mutation(async (ctx) =>
-        requireActiveEntitlement(ctx, {
-          countryKey: "indonesia",
-          examKey: "snbt",
-          now: NOW,
-          setKey: "set-1",
-          trackKey: "2028",
-          userId,
-        })
-      )
-    ).rejects.toThrow("Try-out access is required for this set.");
+      t.mutation((ctx) => resolveAccess(ctx, userId, { trackKey: "2028" }))
+    ).resolves.toBeNull();
   });
 
   it("accepts track entitlements for sets in the same track", async () => {
@@ -263,32 +237,21 @@ describe("tryouts/runtime/access", () => {
 
       return insertedUserId;
     });
-    const matching = await t.mutation(async (ctx) =>
-      requireActiveEntitlement(ctx, {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        now: NOW,
-        setKey: "set-2",
-        trackKey: "2027",
-        userId,
-      })
+    const matching = await t.mutation((ctx) =>
+      resolveAccess(ctx, userId, { setKey: "set-2" })
     );
 
     expect(matching).toMatchObject({
-      trackKey: "2027",
+      accessSourceKind: tryoutEntitlementSourceKindCompetition,
+      countsForCompetition: true,
     });
-    expect(matching).not.toHaveProperty("setKey");
     await expect(
-      t.mutation(async (ctx) =>
-        requireActiveEntitlement(ctx, {
-          countryKey: "indonesia",
-          examKey: "snbt",
-          now: NOW,
+      t.mutation((ctx) =>
+        resolveAccess(ctx, userId, {
           setKey: "set-2",
           trackKey: "2028",
-          userId,
         })
       )
-    ).rejects.toThrow("Try-out access is required for this set.");
+    ).resolves.toBeNull();
   });
 });

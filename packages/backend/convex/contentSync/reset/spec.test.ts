@@ -12,5 +12,6 @@ describe("contentSync/reset spec", () => {
     expect(resettableTableNames).not.toContain("learningProgramSources");
     expect(resettableTableNames).not.toContain("learningViews");
     expect(resettableTableNames).not.toContain("userLearningRecents");
+    expect(resettableTableNames).not.toContain("tryoutFreeAttemptClaims");
   });
 });

@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted. Amended on 2026-07-08 to insert the canonical try-out track layer.
+Accepted. Amended on 2026-07-08 to insert the canonical try-out track layer and
+on 2026-07-22 to define freemium attempt access.
 
 ## Context
 
@@ -38,7 +39,27 @@ Use these Convex table families:
 - `tryoutCountries`, `tryoutExams`, `tryoutTracks`, `tryoutSets`, `tryoutSections` for public catalog routes.
 - `tryoutAttempts`, `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`, `tryoutScores` for realtime runtime state.
 - `tryoutAccessCampaigns`, `tryoutAccessTargets`, `tryoutAccessLinks`, `tryoutAccessGrants`, `tryoutEntitlements` for premium access.
+- `tryoutFreeAttemptClaims` for the one lifetime free attempt claimed by each account.
 - `irtCalibration*` and `irtScale*` for scoring calibration and immutable scale versions.
+
+### Freemium Access
+
+Every account can start one complete try-out for free. The claim is global to the
+account, not one claim per exam, track, or set. Starting through a live
+subscription, competition grant, or access pass does not consume it.
+
+The start mutation is authoritative. It resumes a live attempt before checking
+new access, then resolves premium access before the free claim. A successful free
+start inserts the claim and attempt in the same transaction, so a failed start
+consumes nothing and concurrent starts cannot create two free attempts. The
+catalog access query is advisory UI state only; a structured
+`TRYOUT_ACCESS_REQUIRED` mutation failure opens the upgrade dialog instead of a
+generic retry error.
+
+The free claim is durable account state. Content and try-out reset commands must
+preserve it, while deleted-user cleanup removes it with the local user row.
+Attempts record the access source used at creation for support, analytics, and
+future policy changes.
 
 Delete public standalone practice/exercise routes and tool surfaces. Do not keep aliases, compatibility readers, or old product/package/part vocabulary in touched code.
 
