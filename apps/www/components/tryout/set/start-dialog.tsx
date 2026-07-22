@@ -71,22 +71,17 @@ function PaywallBenefits() {
   const t = useTranslations("Tryouts");
 
   return (
-    <div className="space-y-4">
-      <ul className="space-y-3 text-sm">
-        {paywallBenefitKeys.map((key) => (
-          <li className="flex items-start gap-3" key={key}>
-            <HugeIcons
-              className="mt-0.5 size-4 text-primary"
-              icon={CheckmarkCircle02Icon}
-            />
-            <span>{t(key)}</span>
-          </li>
-        ))}
-      </ul>
-      <p className="text-muted-foreground text-xs">
-        {t("paywall-reassurance")}
-      </p>
-    </div>
+    <ul className="space-y-3 text-sm">
+      {paywallBenefitKeys.map((key) => (
+        <li className="flex items-start gap-3" key={key}>
+          <HugeIcons
+            className="mt-0.5 size-4 text-primary"
+            icon={CheckmarkCircle02Icon}
+          />
+          <span>{t(key)}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
