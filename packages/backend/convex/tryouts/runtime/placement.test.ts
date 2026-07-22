@@ -109,9 +109,12 @@ async function insertRuntime(
     visibility: "visible",
   });
   const attemptId = await ctx.db.insert("tryoutAttempts", {
+    accessEndsAt: NOW + 86_400_000,
+    accessSourceKind: "free",
     attemptNumber: 1,
     completedAt: null,
     completedSectionKeys: [],
+    countsForCompetition: false,
     endReason: null,
     expiresAt: NOW + 86_400_000,
     lastActivityAt: NOW,

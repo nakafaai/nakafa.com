@@ -71,9 +71,12 @@ async function insertScoredProgress(
 ) {
   const completedAt = TRYOUT_TEST_NOW + args.attemptNumber * 1000;
   const attemptId = await ctx.db.insert("tryoutAttempts", {
+    accessEndsAt: TRYOUT_TEST_NOW + 86_400_000,
+    accessSourceKind: "free",
     attemptNumber: args.attemptNumber,
     completedAt,
     completedSectionKeys: [TRYOUT_SECTION_KEY],
+    countsForCompetition: false,
     endReason: "submitted",
     expiresAt: TRYOUT_TEST_NOW + 86_400_000,
     lastActivityAt: completedAt,

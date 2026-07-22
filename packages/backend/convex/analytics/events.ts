@@ -16,9 +16,11 @@ import {
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import {
+  tryoutAttemptAccessSourceKindValidator,
   tryoutRouteKeyValidator,
   tryoutScoreStatusValidator,
 } from "@repo/backend/convex/tryouts/schema";
+import { tryoutPaywallSourceValidator } from "@repo/backend/convex/tryouts/start/spec";
 import { userPlanValidator } from "@repo/backend/convex/users/schema";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -52,6 +54,7 @@ export const productAnalyticsEventValidator = v.union(
   v.object({
     name: v.literal("tryout attempt started"),
     properties: v.object({
+      access_source: tryoutAttemptAccessSourceKindValidator,
       attempt_number: v.number(),
       country_key: tryoutRouteKeyValidator,
       exam_key: tryoutRouteKeyValidator,
@@ -75,6 +78,12 @@ export const productAnalyticsEventValidator = v.union(
       total_correct: v.number(),
       total_questions: v.number(),
       track_key: tryoutRouteKeyValidator,
+    }),
+  }),
+  v.object({
+    name: v.literal("tryout paywall viewed"),
+    properties: v.object({
+      source: tryoutPaywallSourceValidator,
     }),
   }),
   v.object({

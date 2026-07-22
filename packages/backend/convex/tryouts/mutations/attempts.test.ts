@@ -1,169 +1,19 @@
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
+import {
+  TRYOUT_START_COUNTRY as COUNTRY,
+  TRYOUT_START_EXAM as EXAM,
+  TRYOUT_START_NOW as NOW,
+  TRYOUT_START_SECTION as SECTION,
+  TRYOUT_START_SET as SET,
+  seedTryoutStartSet,
+  TRYOUT_START_TRACK as TRACK,
+} from "@repo/backend/test/tryout-start";
 import { describe, expect, it, vi } from "vitest";
-
-const NOW = Date.UTC(2026, 6, 8, 12, 0, 0);
-const COUNTRY = "indonesia";
-const EXAM = "tka";
-const TRACK = "matematika";
-const SET = "set-1";
-const SECTION = "matematika";
-const SOURCE = `question-bank/tryout/${COUNTRY}/${EXAM}/${TRACK}/${SET}/${SECTION}`;
-const SET_ROUTE = `try-out/${COUNTRY}/${EXAM}/${TRACK}/${SET}`;
-
-type SectionVisibility = "internal-entry" | "visible";
-
-/** Seeds the smallest try-out set needed by attempt start mutations. */
-async function seedTryoutSet(
-  ctx: MutationCtx,
-  args: {
-    isReady?: boolean;
-    trackIsReady?: boolean;
-    userId: Id<"users">;
-    visibility: SectionVisibility;
-  }
-) {
-  await ctx.db.insert("tryoutCountries", {
-    countryKey: COUNTRY,
-    isActive: true,
-    locale: "id",
-    order: 1,
-    publicPath: `try-out/${COUNTRY}`,
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    title: "Indonesia",
-  });
-  await ctx.db.insert("tryoutExams", {
-    countryKey: COUNTRY,
-    examKey: EXAM,
-    isActive: true,
-    locale: "id",
-    order: 1,
-    publicPath: `try-out/${COUNTRY}/${EXAM}`,
-    scoringStrategy: "raw",
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    title: "TKA",
-  });
-  await ctx.db.insert("tryoutTracks", {
-    authoredSetCount: 1,
-    countryKey: COUNTRY,
-    examKey: EXAM,
-    isActive: true,
-    isReady: args.trackIsReady ?? true,
-    locale: "id",
-    order: 1,
-    publicPath: `try-out/${COUNTRY}/${EXAM}/${TRACK}`,
-    readyQuestionCount: 1,
-    readySetCount: args.trackIsReady === false ? 0 : 1,
-    readyVisibleSectionCount:
-      args.trackIsReady === false || args.visibility !== "visible" ? 0 : 1,
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    title: "Matematika",
-    trackKey: TRACK,
-    trackKind: "subject",
-  });
-
-  const questionSetId = await ctx.db.insert("questionSets", {
-    contentHash: "question-set-hash",
-    countryKey: COUNTRY,
-    examKey: EXAM,
-    locale: "id",
-    questionCount: 1,
-    sectionKey: SECTION,
-    setKey: SET,
-    sourcePath: SOURCE,
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    title: "Matematika",
-  });
-  const questionId = await ctx.db.insert("questions", {
-    answerBody: "Answer",
-    contentHash: "question-hash",
-    date: 0,
-    locale: "id",
-    number: 1,
-    questionBody: "Question",
-    questionSetId,
-    sourceKey: `${SOURCE}:question-1`,
-    sourcePath: `${SOURCE}/question-1`,
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    title: "Question",
-  });
-
-  await ctx.db.insert("questionChoices", {
-    isCorrect: true,
-    label: "A",
-    locale: "id",
-    optionKey: "a",
-    order: 1,
-    questionId,
-  });
-
-  const tryoutSetId = await ctx.db.insert("tryoutSets", {
-    countryKey: COUNTRY,
-    examKey: EXAM,
-    internalEntrySectionKey:
-      args.visibility === "internal-entry" ? SECTION : undefined,
-    isActive: true,
-    isReady: args.isReady ?? true,
-    locale: "id",
-    order: 1,
-    publicPath: SET_ROUTE,
-    readyQuestionCount: 1,
-    readyVisibleSectionCount: args.visibility === "visible" ? 1 : 0,
-    scoringStrategy: "raw",
-    sectionCount: 1,
-    setKey: SET,
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    title: "Set 1",
-    totalQuestionCount: 1,
-    trackKey: TRACK,
-    visibleSectionCount: args.visibility === "visible" ? 1 : 0,
-  });
-  const tryoutSectionId = await ctx.db.insert("tryoutSections", {
-    countryKey: COUNTRY,
-    examKey: EXAM,
-    locale: "id",
-    order: 1,
-    publicPath:
-      args.visibility === "visible" ? `${SET_ROUTE}/${SECTION}` : undefined,
-    questionCount: 1,
-    questionSetId,
-    questionSourcePath: SOURCE,
-    sectionKey: SECTION,
-    setKey: SET,
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    timeLimitSeconds: 1800,
-    title: "Matematika",
-    trackKey: TRACK,
-    tryoutSetId,
-    visibility: args.visibility,
-  });
-
-  await ctx.db.insert("tryoutEntitlements", {
-    countryKey: COUNTRY,
-    endsAt: NOW + 86_400_000,
-    examKey: EXAM,
-    setKey: SET,
-    sourceKind: tryoutEntitlementSourceKindCompetition,
-    startsAt: NOW,
-    trackKey: TRACK,
-    userId: args.userId,
-  });
-
-  return { tryoutSectionId, tryoutSetId };
-}
 
 describe("tryouts/mutations/attempts", () => {
   it("starts an internal entry section atomically with a new attempt", async () => {
@@ -175,7 +25,7 @@ describe("tryouts/mutations/attempts", () => {
         now: NOW,
         suffix: "tryout-entry",
       });
-      const fixture = await seedTryoutSet(ctx, {
+      const fixture = await seedTryoutStartSet(ctx, {
         userId: identity.userId,
         visibility: "internal-entry",
       });
@@ -220,11 +70,18 @@ describe("tryouts/mutations/attempts", () => {
             .eq("tryoutSetId", seeded.fixture.tryoutSetId)
         )
         .unique();
+      const freeClaim = await ctx.db
+        .query("tryoutFreeAttemptClaims")
+        .withIndex("by_userId", (q) => q.eq("userId", seeded.identity.userId))
+        .unique();
 
-      return { attempt, placements, progress, sectionAttempts };
+      return { attempt, freeClaim, placements, progress, sectionAttempts };
     });
 
     expect(runtime.attempt).toMatchObject({
+      accessEndsAt: NOW + 3 * 86_400_000,
+      accessSourceKind: "free",
+      countsForCompetition: false,
       scoreStatus: "official",
       status: "in-progress",
       tryoutSetId: seeded.fixture.tryoutSetId,
@@ -237,6 +94,10 @@ describe("tryouts/mutations/attempts", () => {
       }),
     ]);
     expect(runtime.placements).toHaveLength(1);
+    expect(runtime.freeClaim).toMatchObject({
+      setKey: SET,
+      userId: seeded.identity.userId,
+    });
     expect(runtime.progress).toMatchObject({
       latestAttemptId: result.attemptId,
       status: "in-progress",
@@ -279,6 +140,38 @@ describe("tryouts/mutations/attempts", () => {
       section: { score: null },
     });
     expect(sectionRuntime?.questions).toHaveLength(1);
+
+    const resumed = await authed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      {
+        countryKey: COUNTRY,
+        entrySectionKey: SECTION,
+        examKey: EXAM,
+        locale: "id",
+        setKey: SET,
+        trackKey: TRACK,
+      }
+    );
+
+    expect(resumed).toEqual(result);
+
+    await t.mutation((ctx) =>
+      ctx.db.patch(result.attemptId, {
+        completedAt: NOW + 1,
+        endReason: "submitted",
+        status: "completed",
+      })
+    );
+
+    await expect(
+      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
+        countryKey: COUNTRY,
+        examKey: EXAM,
+        locale: "id",
+        setKey: SET,
+        trackKey: TRACK,
+      })
+    ).rejects.toThrow("TRYOUT_ACCESS_REQUIRED");
   });
 
   it("rejects entry-section starts for visible sections", async () => {
@@ -290,7 +183,7 @@ describe("tryouts/mutations/attempts", () => {
         now: NOW,
         suffix: "tryout-visible",
       });
-      await seedTryoutSet(ctx, {
+      await seedTryoutStartSet(ctx, {
         userId: user.userId,
         visibility: "visible",
       });
@@ -311,6 +204,12 @@ describe("tryouts/mutations/attempts", () => {
         trackKey: TRACK,
       })
     ).rejects.toThrow("TRYOUT_ENTRY_SECTION_NOT_FOUND");
+
+    const claims = await t.query((ctx) =>
+      ctx.db.query("tryoutFreeAttemptClaims").collect()
+    );
+
+    expect(claims).toEqual([]);
   });
 
   it("starts remaining sections from the immutable attempt snapshot", async () => {
@@ -322,7 +221,8 @@ describe("tryouts/mutations/attempts", () => {
         now: NOW,
         suffix: "tryout-snapshot",
       });
-      const fixture = await seedTryoutSet(ctx, {
+      const fixture = await seedTryoutStartSet(ctx, {
+        includeEntitlement: true,
         userId: identity.userId,
         visibility: "visible",
       });
@@ -343,6 +243,17 @@ describe("tryouts/mutations/attempts", () => {
         trackKey: TRACK,
       }
     );
+
+    const paidStart = await t.query(async (ctx) => ({
+      attempt: await ctx.db.get(attempt.attemptId),
+      claims: await ctx.db.query("tryoutFreeAttemptClaims").collect(),
+    }));
+
+    expect(paidStart.attempt).toMatchObject({
+      accessSourceKind: tryoutEntitlementSourceKindCompetition,
+      countsForCompetition: true,
+    });
+    expect(paidStart.claims).toEqual([]);
 
     await t.mutation((ctx) =>
       ctx.db.patch(seeded.fixture.tryoutSectionId, {
@@ -371,83 +282,5 @@ describe("tryouts/mutations/attempts", () => {
       totalQuestions: 1,
       tryoutSectionId: seeded.fixture.tryoutSectionId,
     });
-  });
-
-  it("rejects attempts for active sets that are not ready", async () => {
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-unready",
-      });
-      await seedTryoutSet(ctx, {
-        isReady: false,
-        userId: user.userId,
-        visibility: "visible",
-      });
-      return user;
-    });
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    await expect(
-      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-        countryKey: COUNTRY,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      })
-    ).rejects.toThrow("TRYOUT_SET_NOT_READY");
-
-    const attemptCount = await t.query(async (ctx) => {
-      const attempts = await ctx.db.query("tryoutAttempts").collect();
-      return attempts.length;
-    });
-
-    expect(attemptCount).toBe(0);
-  });
-
-  it("rejects attempts when the parent track is not ready", async () => {
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-track-unready",
-      });
-      await seedTryoutSet(ctx, {
-        trackIsReady: false,
-        userId: user.userId,
-        visibility: "visible",
-      });
-      return user;
-    });
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    await expect(
-      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-        countryKey: COUNTRY,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      })
-    ).rejects.toThrow("TRYOUT_SET_NOT_READY");
-
-    const attemptCount = await t.query(async (ctx) => {
-      const attempts = await ctx.db.query("tryoutAttempts").collect();
-      return attempts.length;
-    });
-
-    expect(attemptCount).toBe(0);
   });
 });

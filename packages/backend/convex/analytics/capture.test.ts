@@ -63,6 +63,7 @@ describe("analytics/capture", () => {
       validate(productAnalyticsEventValidator, {
         name: "tryout attempt started",
         properties: {
+          access_source: "free",
           attempt_number: 1,
           country_key: "indonesia",
           exam_key: "snbt",
@@ -71,6 +72,12 @@ describe("analytics/capture", () => {
           set_key: "set-1",
           track_key: "2027",
         },
+      })
+    ).toBe(true);
+    expect(
+      validate(productAnalyticsEventValidator, {
+        name: "tryout paywall viewed",
+        properties: { source: "access-query" },
       })
     ).toBe(true);
     expect(

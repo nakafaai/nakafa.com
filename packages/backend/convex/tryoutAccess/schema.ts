@@ -55,6 +55,15 @@ const tryoutSetScopeFields = {
   setKey: v.string(),
 };
 
+export const tryoutFreeAttemptClaimValidator = v.object({
+  claimedAt: v.number(),
+  countryKey: v.string(),
+  examKey: v.string(),
+  setKey: v.string(),
+  trackKey: v.string(),
+  userId: v.id("users"),
+});
+
 export const tryoutAccessCampaignValidator = v.object({
   slug: v.string(),
   name: v.string(),
@@ -172,6 +181,11 @@ const tables = {
     .index("by_campaignId_and_redeemedAt", ["campaignId", "redeemedAt"])
     .index("by_userId_and_campaignId", ["userId", "campaignId"])
     .index("by_status_and_endsAt", ["status", "endsAt"]),
+
+  tryoutFreeAttemptClaims: defineTable(tryoutFreeAttemptClaimValidator).index(
+    "by_userId",
+    ["userId"]
+  ),
 
   tryoutEntitlements: defineTable(tryoutEntitlementValidator)
     .index("by_accessGrantId", ["accessGrantId"])

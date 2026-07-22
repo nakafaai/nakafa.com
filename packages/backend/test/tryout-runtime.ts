@@ -1,9 +1,88 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import type { TryoutStatus } from "@repo/backend/convex/tryouts/schema";
 import {
+  insertTryoutQuestionSource,
+  insertTryoutSection,
+  insertTryoutSet,
   TRYOUT_SECTION_KEY,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
+
+/** Returns the coherent terminal reason for one fixture status. */
+function getEndReason(status: TryoutStatus) {
+  if (status === "in-progress") {
+    return null;
+  }
+
+  if (status === "expired") {
+    return "time-expired" as const;
+  }
+
+  return "submitted" as const;
+}
+
+/** Inserts one attempt and section state used by content access tests. */
+export async function seedTryoutContentAccessState(
+  ctx: MutationCtx,
+  args: {
+    attemptStatus: TryoutStatus;
+    sectionStatus: TryoutStatus;
+    suffix: string;
+  }
+) {
+  const identity = await seedAuthenticatedUser(ctx, {
+    now: TRYOUT_TEST_NOW,
+    suffix: args.suffix,
+  });
+  const tryoutSetId = await insertTryoutSet(ctx);
+  const questionSetId = await insertTryoutQuestionSource(ctx);
+  const tryoutSectionId = await insertTryoutSection(ctx, {
+    questionSetId,
+    tryoutSetId,
+  });
+  const attemptTerminal = args.attemptStatus !== "in-progress";
+  const sectionTerminal = args.sectionStatus !== "in-progress";
+  const attemptId = await ctx.db.insert("tryoutAttempts", {
+    accessEndsAt: TRYOUT_TEST_NOW + 3_600_000,
+    accessSourceKind: "free",
+    attemptNumber: 1,
+    completedAt: attemptTerminal ? TRYOUT_TEST_NOW : null,
+    completedSectionKeys: sectionTerminal ? [TRYOUT_SECTION_KEY] : [],
+    countsForCompetition: false,
+    endReason: getEndReason(args.attemptStatus),
+    expiresAt: TRYOUT_TEST_NOW + 3_600_000,
+    lastActivityAt: TRYOUT_TEST_NOW,
+    scoreStatus: "official",
+    scoringStrategy: "irt",
+    sectionSnapshots: [],
+    startedAt: TRYOUT_TEST_NOW,
+    status: args.attemptStatus,
+    totalCorrect: 0,
+    totalQuestions: 1,
+    tryoutSetId,
+    userId: identity.userId,
+  });
+
+  const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
+    answeredCount: 0,
+    completedAt: sectionTerminal ? TRYOUT_TEST_NOW : null,
+    correctAnswers: 0,
+    endReason: getEndReason(args.sectionStatus),
+    expiresAt: TRYOUT_TEST_NOW + 1_800_000,
+    lastActivityAt: TRYOUT_TEST_NOW,
+    sectionKey: TRYOUT_SECTION_KEY,
+    sectionOrder: 1,
+    startedAt: TRYOUT_TEST_NOW,
+    status: args.sectionStatus,
+    totalQuestions: 1,
+    tryoutAttemptId: attemptId,
+    tryoutSectionId,
+  });
+
+  return { identity, sectionAttemptId };
+}
 
 /** Builds the immutable section shape stored on an attempt. */
 export function tryoutSectionSnapshot(args: {
@@ -41,13 +120,17 @@ export async function insertTryoutAttempt(
   }
 ) {
   const scoringStrategy = args.scoringStrategy ?? "irt";
+  const accessEndsAt = args.expiresAt ?? TRYOUT_TEST_NOW + 86_400_000;
 
   return await ctx.db.insert("tryoutAttempts", {
+    accessEndsAt,
+    accessSourceKind: "free",
     attemptNumber: 1,
     completedAt: null,
     completedSectionKeys: [],
     endReason: null,
-    expiresAt: args.expiresAt ?? TRYOUT_TEST_NOW + 86_400_000,
+    countsForCompetition: false,
+    expiresAt: accessEndsAt,
     lastActivityAt: TRYOUT_TEST_NOW - 10_000,
     scaleVersionId: args.scaleVersionId,
     scoreStatus: scoringStrategy === "irt" ? "provisional" : "official",

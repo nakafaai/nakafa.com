@@ -3,21 +3,28 @@
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useConvexAuth, useMutation } from "convex/react";
+import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
+import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import { TryoutStartDialog } from "@/components/tryout/set/start-dialog";
+import {
+  checkoutProgram,
+  paywallViewProgram,
+  startAttemptProgram,
+  startEntrySectionProgram,
+} from "@/components/tryout/set/start-program";
+import { getTryoutStartDialogKind } from "@/lib/tryout/access";
 
 type CurrentAttempt = FunctionReturnType<
   typeof api.tryouts.queries.attempt.getCurrent
@@ -40,7 +47,7 @@ interface StartTryoutButtonProps {
   request: StartTryoutRequest;
 }
 
-/** Starts or resumes a Convex-owned try-out attempt from the current page. */
+/** Starts, resumes, or clearly upgrades one try-out from the current page. */
 export function StartTryoutButton({
   attempt,
   request,
@@ -50,116 +57,161 @@ export function StartTryoutButton({
   const { isAuthenticated, isLoading } = useConvexAuth();
   const startAttempt = useMutation(api.tryouts.mutations.attempts.startAttempt);
   const startSection = useMutation(api.tryouts.mutations.sections.start);
-  const tTryouts = useTranslations("Tryouts");
+  const trackPaywall = useMutation(
+    api.tryouts.mutations.access.trackPaywallView
+  );
+  const generateCheckout = useAction(
+    api.customers.actions.public.generateCheckoutLink
+  );
+  const t = useTranslations("Tryouts");
+  const now = useTryoutClock(false);
   const [isPending, startTransition] = useTransition();
-  const [isDialogOpen, { close: closeDialog, open: openDialog }] =
-    useDisclosure(false);
-  const authRedirectHref = `/${request.locale}${request.authRedirectHref}`;
-  const hasActiveAttempt = attempt?.status === "in-progress";
-  const hasFinishedAttempt = Boolean(attempt && !hasActiveAttempt);
-  const isAttemptLoading = isAuthenticated && attempt === undefined;
-  const isBusy = isLoading || isPending || isAttemptLoading;
-  const isDirectEntry = Boolean(request.entrySectionKey);
-  let buttonLabel = tTryouts("start-cta");
-  let dialogDescription = isDirectEntry
-    ? tTryouts("start-entry-dialog-description")
-    : tTryouts("start-dialog-description");
-  let dialogTitle = tTryouts("start-dialog-title");
-  let confirmLabel = tTryouts("start-cta");
+  const [forceUpgrade, setForceUpgrade] = useState(false);
+  const [dialogOpen, dialog] = useDisclosure(false);
+  const activeAttempt = attempt?.status === "in-progress";
+  const finishedAttempt = Boolean(attempt && !activeAttempt);
+  const directEntry = Boolean(request.entrySectionKey);
+  const access = useQuery(
+    api.tryouts.queries.access.getStartAccess,
+    isAuthenticated && !activeAttempt
+      ? {
+          countryKey: request.countryKey,
+          examKey: request.examKey,
+          locale: request.locale,
+          now,
+          setKey: request.setKey,
+          trackKey: request.trackKey,
+        }
+      : "skip"
+  );
+  const accessLoading = isAuthenticated && !activeAttempt && !access;
+  const attemptLoading = isAuthenticated && attempt === undefined;
+  const resolvingAccess = isLoading || accessLoading || attemptLoading;
+  const busy = isPending || resolvingAccess;
+  const dialogKind = getTryoutStartDialogKind(access, forceUpgrade);
+  const buttonLabel = getButtonLabel({
+    activeAttempt,
+    dialogKind,
+    finishedAttempt,
+    resolvingAccess,
+    t,
+  });
+  const authRedirect = `/${request.locale}${request.authRedirectHref}`;
 
-  if (hasFinishedAttempt) {
-    buttonLabel = tTryouts("restart-cta");
-    confirmLabel = tTryouts("restart-cta");
-    dialogDescription = tTryouts("restart-dialog-description");
-    dialogTitle = tTryouts("restart-dialog-title");
-  }
-
-  if (hasActiveAttempt) {
-    buttonLabel = tTryouts("continue-cta");
-  }
-
-  /** Start, continue, authenticate, or open confirmation for this set. */
+  /** Opens the correct decision or continues an already-active runtime. */
   function onStart() {
-    if (isBusy) {
+    if (busy) {
       return;
     }
 
     if (!isAuthenticated) {
-      router.push(`/auth?redirect=${encodeURIComponent(authRedirectHref)}`);
+      router.push(`/auth?redirect=${encodeURIComponent(authRedirect)}`);
       return;
     }
 
-    if (hasActiveAttempt && request.entrySectionKey) {
-      const entrySectionKey = request.entrySectionKey;
-
-      startTransition(async () => {
-        await Effect.runPromise(
-          startEntrySection({
-            attemptId: attempt.attemptId,
-            sectionKey: entrySectionKey,
-            startSection,
-            successMessage: tTryouts("start-entry-success"),
-            tTryouts,
-          })
-        );
-      });
+    if (activeAttempt && request.entrySectionKey) {
+      runEntrySection(request.entrySectionKey);
       return;
     }
 
-    openDialog();
+    if (dialogKind === "upgrade-required") {
+      recordPaywallView("access-query");
+    }
+
+    dialog.open();
   }
 
-  /** Confirm a fresh or restarted attempt through the transactional mutation. */
-  function onConfirm() {
-    if (isBusy) {
+  /** Runs the dialog's authoritative start or checkout action. */
+  function onPrimary() {
+    if (busy) {
       return;
     }
 
-    if (!isAuthenticated) {
-      closeDialog();
-      router.push(`/auth?redirect=${encodeURIComponent(authRedirectHref)}`);
+    if (dialogKind === "upgrade-required") {
+      runAttemptStart(createCheckoutProgram);
       return;
     }
 
-    startTransition(async () => {
-      await Effect.runPromise(
-        Effect.tryPromise({
-          try: () =>
-            startAttempt({
-              countryKey: request.countryKey,
-              ...(request.entrySectionKey
-                ? { entrySectionKey: request.entrySectionKey }
-                : {}),
-              examKey: request.examKey,
-              locale: request.locale,
-              setKey: request.setKey,
-              trackKey: request.trackKey,
-            }),
-          catch: (cause) => cause,
-        }).pipe(
-          Effect.tap(() =>
-            Effect.sync(() => {
-              closeDialog();
-              const successMessage = isDirectEntry
-                ? tTryouts("start-entry-success")
-                : tTryouts("start-success");
+    runAttemptStart(createPaywallProgram);
+  }
 
-              toast.success(successMessage, { position: "bottom-center" });
-            })
-          ),
-          Effect.catchAll(() =>
-            Effect.sync(() => {
-              toast.error(tTryouts("start-error"), {
-                position: "bottom-center",
-              });
-            })
-          )
-        )
-      );
+  /** Starts authoritatively before either showing or continuing to checkout. */
+  function runAttemptStart(onDenied: () => Effect.Effect<void>) {
+    const program = startAttemptProgram({
+      args: {
+        countryKey: request.countryKey,
+        ...(request.entrySectionKey
+          ? { entrySectionKey: request.entrySectionKey }
+          : {}),
+        examKey: request.examKey,
+        locale: request.locale,
+        setKey: request.setKey,
+        trackKey: request.trackKey,
+      },
+      failureMessage: t("start-error"),
+      mutation: startAttempt,
+      onSuccess: () =>
+        Effect.sync(() => {
+          dialog.close();
+          toast.success(
+            directEntry ? t("start-entry-success") : t("start-success"),
+            { position: "bottom-center" }
+          );
+        }),
+      onUpgrade: onDenied,
+    });
+
+    startTransition(() => Effect.runPromise(program));
+  }
+
+  /** Builds the existing Pro checkout program after authoritative denial. */
+  function createCheckoutProgram() {
+    return checkoutProgram({
+      action: generateCheckout,
+      failureMessage: t("checkout-error"),
+      locale: request.locale,
     });
   }
 
-  if (hasActiveAttempt && !isDirectEntry) {
+  /** Shows the authoritative paywall before recording its detached impression. */
+  function createPaywallProgram() {
+    return Effect.sync(() => setForceUpgrade(true)).pipe(
+      Effect.tap(() =>
+        Effect.forkDaemon(
+          paywallViewProgram({
+            mutation: trackPaywall,
+            source: "start-mutation",
+          })
+        )
+      )
+    );
+  }
+
+  /** Starts an internal entry section for an already-active attempt. */
+  function runEntrySection(sectionKey: string) {
+    if (!attempt) {
+      return;
+    }
+
+    startTransition(() =>
+      Effect.runPromise(
+        startEntrySectionProgram({
+          attemptId: attempt.attemptId,
+          failureMessage: t("start-part-error"),
+          mutation: startSection,
+          sectionKey,
+          successMessage: t("start-entry-success"),
+        })
+      )
+    );
+  }
+
+  /** Records a non-blocking paywall impression from its authoritative source. */
+  function recordPaywallView(source: "access-query" | "start-mutation") {
+    Effect.runPromise(paywallViewProgram({ mutation: trackPaywall, source }));
+  }
+
+  if (activeAttempt && !directEntry) {
     return (
       <TryoutIntentLink
         className={buttonVariants()}
@@ -184,88 +236,55 @@ export function StartTryoutButton({
 
   return (
     <>
-      <Button disabled={isBusy} onClick={onStart}>
-        <Spinner
-          data-icon="inline-start"
-          icon={Rocket01Icon}
-          isLoading={isPending}
-        />
+      <Button disabled={busy} onClick={onStart}>
+        <Spinner icon={Rocket01Icon} isLoading={isPending || resolvingAccess} />
         {buttonLabel}
       </Button>
-
-      <ResponsiveDialog
-        description={dialogDescription}
-        footer={
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              disabled={isPending}
-              onClick={closeDialog}
-              type="button"
-              variant="outline"
-            >
-              {tTryouts("cancel-cta")}
-            </Button>
-            <Button disabled={isBusy} onClick={onConfirm} type="button">
-              <Spinner
-                data-icon="inline-start"
-                icon={Rocket01Icon}
-                isLoading={isPending}
-              />
-              {confirmLabel}
-            </Button>
-          </div>
-        }
-        open={isDialogOpen}
+      <TryoutStartDialog
+        busy={isPending}
+        directEntry={directEntry}
+        finishedAttempt={finishedAttempt}
+        kind={dialogKind}
+        onCancel={dialog.close}
+        onPrimary={onPrimary}
+        open={dialogOpen}
         setOpen={(open) => {
           if (open) {
-            openDialog();
+            onStart();
             return;
           }
-
-          closeDialog();
+          dialog.close();
         }}
-        title={dialogTitle}
       />
     </>
   );
 }
 
-/** Starts the internal entry section for an already-active attempt. */
-function startEntrySection({
-  attemptId,
-  sectionKey,
-  startSection,
-  successMessage,
-  tTryouts,
+/** Selects the CTA that explains free, included, active, or paid access. */
+function getButtonLabel({
+  activeAttempt,
+  dialogKind,
+  finishedAttempt,
+  resolvingAccess,
+  t,
 }: {
-  attemptId: Id<"tryoutAttempts">;
-  sectionKey: string;
-  startSection: (args: {
-    attemptId: Id<"tryoutAttempts">;
-    sectionKey: string;
-  }) => Promise<unknown>;
-  successMessage: string;
-  tTryouts: ReturnType<typeof useTranslations>;
+  activeAttempt: boolean;
+  dialogKind: ReturnType<typeof getTryoutStartDialogKind>;
+  finishedAttempt: boolean;
+  resolvingAccess: boolean;
+  t: ReturnType<typeof useTranslations<"Tryouts">>;
 }) {
-  return Effect.tryPromise({
-    try: () =>
-      startSection({
-        attemptId,
-        sectionKey,
-      }),
-    catch: (cause) => cause,
-  }).pipe(
-    Effect.tap(() =>
-      Effect.sync(() => {
-        toast.success(successMessage, { position: "bottom-center" });
-      })
-    ),
-    Effect.catchAll(() =>
-      Effect.sync(() => {
-        toast.error(tTryouts("start-part-error"), {
-          position: "bottom-center",
-        });
-      })
-    )
-  );
+  if (activeAttempt) {
+    return t("continue-cta");
+  }
+  if (resolvingAccess) {
+    return t(finishedAttempt ? "restart-cta" : "start-cta");
+  }
+  if (dialogKind === "upgrade-required") {
+    return t(finishedAttempt ? "restart-pro-cta" : "start-pro-cta");
+  }
+  if (dialogKind === "free-attempt") {
+    return t("free-cta");
+  }
+  return t(finishedAttempt ? "restart-cta" : "start-cta");
 }

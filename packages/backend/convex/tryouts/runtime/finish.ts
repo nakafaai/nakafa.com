@@ -15,7 +15,7 @@ type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
 
 /** Returns the earliest timestamp that can end an attempt. */
 export function getAttemptExpiresAt(attempt: TryoutAttempt) {
-  return Math.min(attempt.expiresAt, attempt.accessEndsAt ?? attempt.expiresAt);
+  return Math.min(attempt.expiresAt, attempt.accessEndsAt);
 }
 
 /** Expires an attempt using its entitlement-bounded timer. */
