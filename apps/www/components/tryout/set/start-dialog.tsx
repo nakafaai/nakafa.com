@@ -108,7 +108,9 @@ function getDialogCopy(
 
   if (props.kind === "free-attempt") {
     return {
-      description: t("free-dialog-description"),
+      description: props.directEntry
+        ? t("free-entry-dialog-description")
+        : t("free-dialog-description"),
       primary: t("free-cta"),
       title: t("free-dialog-title"),
     };
@@ -116,7 +118,9 @@ function getDialogCopy(
 
   if (props.finishedAttempt) {
     return {
-      description: t("restart-dialog-description"),
+      description: props.directEntry
+        ? t("restart-entry-dialog-description")
+        : t("restart-dialog-description"),
       primary: t("restart-cta"),
       title: t("restart-dialog-title"),
     };

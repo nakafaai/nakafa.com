@@ -173,11 +173,16 @@ export function StartTryoutButton({
     });
   }
 
-  /** Replaces a stale advisory start decision with the authoritative paywall. */
+  /** Shows the authoritative paywall before recording its detached impression. */
   function createPaywallProgram() {
     return Effect.sync(() => setForceUpgrade(true)).pipe(
-      Effect.zipRight(
-        paywallViewProgram({ mutation: trackPaywall, source: "start-mutation" })
+      Effect.tap(() =>
+        Effect.forkDaemon(
+          paywallViewProgram({
+            mutation: trackPaywall,
+            source: "start-mutation",
+          })
+        )
       )
     );
   }
