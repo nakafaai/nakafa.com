@@ -67,7 +67,7 @@ export function ResponsiveDialog({
           )}
         </DrawerHeader>
         <DrawerPanel
-          className={cn("flex-1 overflow-y-auto p-4", !children && "hidden")}
+          className={cn("flex-1 overflow-y-auto", !children && "hidden")}
         >
           {children}
         </DrawerPanel>
