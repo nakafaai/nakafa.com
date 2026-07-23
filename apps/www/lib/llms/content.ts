@@ -1,15 +1,64 @@
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
+import { readActiveMaterialRoute } from "@/lib/content/published/route";
 import { getRuntimePublicRoute } from "@/lib/content/runtime/routes";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
 import { getLlmsLegalPageText } from "@/lib/llms/legal";
 import { getCachedLlmsMdxText } from "@/lib/llms/mdx";
+import { getCachedPublishedText } from "@/lib/llms/published";
 import { getQuranLlmsText } from "@/lib/llms/quran";
 
 const PROJECTED_PUBLIC_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
   PUBLIC_ROUTE_SURFACES.flatMap((surface) => Object.values(surface.routeSlugs))
 );
+
+const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
+  PUBLIC_ROUTE_SURFACES.filter((surface) => surface.key === "subject").flatMap(
+    (surface) => Object.values(surface.routeSlugs)
+  )
+);
+
+type MarkdownSource =
+  | { readonly kind: "published"; readonly publicPath: string }
+  | {
+      readonly cleanSlug: string;
+      readonly kind: "source";
+      readonly publicSlug?: string;
+    };
+
+/** One rejected Next cache read with its exact content owner preserved. */
+class CacheFailure extends Schema.TaggedError<CacheFailure>()("CacheFailure", {
+  cause: Schema.Unknown,
+  owner: Schema.Literal("index", "published", "source"),
+}) {}
+
+/** Reads cached markdown from the one explicit owner selected for a route. */
+const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
+  source: MarkdownSource,
+  locale: Locale
+) {
+  if (source.kind === "published") {
+    return yield* Effect.tryPromise({
+      catch: (cause) => new CacheFailure({ cause, owner: "published" }),
+      try: () =>
+        getCachedPublishedText({
+          locale,
+          publicPath: source.publicPath,
+        }),
+    });
+  }
+
+  return yield* Effect.tryPromise({
+    catch: (cause) => new CacheFailure({ cause, owner: "source" }),
+    try: () =>
+      getCachedLlmsMdxText({
+        cleanSlug: source.cleanSlug,
+        locale,
+        publicSlug: source.publicSlug,
+      }),
+  });
+});
 
 /**
  * Resolves cached markdown for one agent-facing route.
@@ -30,15 +79,7 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
       return null;
     }
 
-    const mdxText = yield* Effect.tryPromise({
-      try: () =>
-        getCachedLlmsMdxText({
-          cleanSlug: source.cleanSlug,
-          locale,
-          publicSlug: source.publicSlug,
-        }),
-      catch: (error) => error,
-    });
+    const mdxText = yield* readCachedMarkdown(source, locale);
     if (mdxText) {
       return mdxText;
     }
@@ -53,7 +94,7 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
         getCachedLlmsSectionIndexText({
           cleanSlug: `llms/${locale}/${cleanSlug}`,
         }),
-      catch: (error) => error,
+      catch: (cause) => new CacheFailure({ cause, owner: "index" }),
     });
   }
 );
@@ -61,8 +102,27 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
 /** Resolves projected public content paths to the internal markdown source path. */
 const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
-    if (!isProjectedPublicMarkdownRoute(cleanSlug)) {
-      return { cleanSlug };
+    const routeSegment = readRouteSegment(cleanSlug);
+    if (!PROJECTED_PUBLIC_ROUTE_SEGMENTS.has(routeSegment)) {
+      const source: MarkdownSource = { cleanSlug, kind: "source" };
+      return source;
+    }
+
+    if (MATERIAL_ROUTE_SEGMENTS.has(routeSegment)) {
+      const activeRoute = yield* readActiveMaterialRoute({
+        locale,
+        publicPath: cleanSlug,
+      });
+      if (activeRoute.kind === "found") {
+        const source: MarkdownSource = {
+          kind: "published",
+          publicPath: cleanSlug,
+        };
+        return source;
+      }
+      if (activeRoute.kind === "missing") {
+        return null;
+      }
     }
 
     const publicRoute = yield* getRuntimePublicRoute({
@@ -78,16 +138,16 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
       return null;
     }
 
-    return {
+    const source: MarkdownSource = {
       cleanSlug: publicRoute.sourcePath,
+      kind: "source",
       publicSlug: cleanSlug,
     };
+    return source;
   }
 );
 
-/** Limits public-to-source projection lookups to projected route namespaces. */
-function isProjectedPublicMarkdownRoute(cleanSlug: string) {
-  const [segment] = cleanSlug.split("/").filter(Boolean);
-
-  return PROJECTED_PUBLIC_ROUTE_SEGMENTS.has(segment ?? "");
+/** Reads the first non-empty route namespace without accepting missing input. */
+function readRouteSegment(cleanSlug: string) {
+  return cleanSlug.split("/").find(Boolean) ?? "";
 }

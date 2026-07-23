@@ -1,5 +1,6 @@
 import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import { PublicRouteSlugMapSchema } from "@repo/contents/_types/route/segment";
+import { materialSegments } from "@repo/internationalization/src/segments";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -25,12 +26,18 @@ const materialRouteDomainInput: readonly SchemaEncoded<
   {
     domain: "chemistry",
     kind: "lesson",
-    routeSlugs: { en: "chemistry", id: "kimia" },
+    routeSlugs: {
+      en: materialSegments.en.chemistry,
+      id: materialSegments.id.chemistry,
+    },
   },
   {
     domain: "mathematics",
     kind: "lesson",
-    routeSlugs: { en: "mathematics", id: "matematika" },
+    routeSlugs: {
+      en: materialSegments.en.mathematics,
+      id: materialSegments.id.mathematics,
+    },
   },
   {
     domain: "physics",

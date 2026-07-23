@@ -22,7 +22,7 @@
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "convex": "^1.42.1",
-    "effect": "^3.21.4",
+    "effect": "3.22.0",
     "express": "^5.2.1",
     "next": "16.2.10",
     "react": "^19.2.7",

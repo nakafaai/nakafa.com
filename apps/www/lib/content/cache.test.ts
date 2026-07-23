@@ -29,14 +29,28 @@ describe("content runtime cache", () => {
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
 
-  it("invalidates the shared tag immediately after sync", async () => {
+  it("applies both shared tags to published material caches", async () => {
     const cache = await import("@/lib/content/cache");
 
-    const tags = cache.revalidateContentRuntimeCache();
+    cache.applyPublishedContentCache();
 
-    expect(tags).toEqual(["content-runtime"]);
-    expect(revalidateTagMock).toHaveBeenCalledWith("content-runtime", {
-      expire: 0,
-    });
+    expect(cacheTagMock).toHaveBeenCalledWith(
+      "content-runtime",
+      "content-family:material"
+    );
+    expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
+  });
+
+  it("invalidates the exact shared material tags immediately", async () => {
+    const cache = await import("@/lib/content/cache");
+
+    expect(cache.revalidateMaterialCache()).toEqual([
+      "content-runtime",
+      "content-family:material",
+    ]);
+    expect(revalidateTagMock.mock.calls).toEqual([
+      ["content-runtime", { expire: 0 }],
+      ["content-family:material", { expire: 0 }],
+    ]);
   });
 });

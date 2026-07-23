@@ -3,6 +3,7 @@ import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
 const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
+const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS = 24;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
@@ -44,6 +45,14 @@ crons.interval(
   "schedule content analytics partitions",
   { minutes: CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES },
   internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
+  {}
+);
+
+/** Compacts unreachable content release history in persisted bounded pages. */
+crons.interval(
+  "compact content release history",
+  { minutes: CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES },
+  internal.contentRelease.compact.run,
   {}
 );
 

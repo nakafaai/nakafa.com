@@ -1,35 +1,30 @@
+import { MATERIAL_CACHE_TAGS } from "@nakafa/aksara-contracts/cache/material";
 import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 
-export const CONTENT_RUNTIME_CACHE_PROFILE = "contentRuntime";
-export const CONTENT_RUNTIME_CACHE_TAG = "content-runtime";
-
+const CONTENT_RUNTIME_CACHE_PROFILE = "contentRuntime";
 const CONTENT_RUNTIME_REVALIDATION = { expire: 0 };
-
-/**
- * Returns the cache tags shared by Convex-backed content runtime reads.
- */
-export function getContentRuntimeCacheTags() {
-  return [CONTENT_RUNTIME_CACHE_TAG];
-}
 
 /**
  * Applies the content runtime cache profile and invalidation tags to one cached read.
  */
 export function applyContentRuntimeCache() {
-  for (const tag of getContentRuntimeCacheTags()) {
-    cacheTag(tag);
-  }
+  cacheTag(MATERIAL_CACHE_TAGS[0]);
+  cacheLife(CONTENT_RUNTIME_CACHE_PROFILE);
+}
 
+/** Applies the exact shared material tags to one published-content cache. */
+export function applyPublishedContentCache() {
+  cacheTag(...MATERIAL_CACHE_TAGS);
   cacheLife(CONTENT_RUNTIME_CACHE_PROFILE);
 }
 
 /**
- * Immediately invalidates the content runtime cache after the Convex read model is synced.
+ * Immediately invalidates every cache owned by the published material runtime.
  */
-export function revalidateContentRuntimeCache() {
-  for (const tag of getContentRuntimeCacheTags()) {
+export function revalidateMaterialCache() {
+  for (const tag of MATERIAL_CACHE_TAGS) {
     revalidateTag(tag, CONTENT_RUNTIME_REVALIDATION);
   }
 
-  return getContentRuntimeCacheTags();
+  return MATERIAL_CACHE_TAGS;
 }

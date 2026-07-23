@@ -1,289 +1,63 @@
-import type { LearningContextInput } from "@repo/backend/convex/contents/context";
-import { getHeadings } from "@repo/contents/_lib/toc";
-import { formatContentDateISO } from "@repo/contents/_shared/date";
-import { toLocalizedContentHref } from "@repo/contents/_types/route/content";
-import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
-import { ArticleJsonLd } from "@repo/seo/json-ld/article";
-import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { Option } from "effect";
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
-import { getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
+import { importAiDsMaterial } from "@repo/contents/_lib/material/ai-ds";
+import { importBiologyMaterial } from "@repo/contents/_lib/material/biology";
+import { MaterialModuleImportError } from "@repo/contents/_lib/material/error";
+import { importPhysicsMaterial } from "@repo/contents/_lib/material/physics";
+import { mdxComponents } from "@repo/design-system/lib/markdown/registry";
+import { Effect } from "effect";
+import { listGenericMaterialStaticParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/data";
 import {
-  getProjectedMaterialIcon,
-  listMaterialStaticParams,
-  readMaterialHeaderLink,
-  readMaterialPagePagination,
-  readMaterialRoutes,
-  requireParentMaterialRoute,
-  resolveMaterialRoute,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
-import { getMaterialPageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/runtime";
-import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
-import { DeferredComments } from "@/components/comments/deferred";
-import { ComingSoon } from "@/components/shared/coming-soon";
-import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
-import { LayoutContent } from "@/components/shared/layout-content";
-import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialToc } from "@/components/shared/material/toc";
-import { PaginationContent } from "@/components/shared/pagination-content";
-import { ContentViewTracker } from "@/components/tracking/tracker";
-import { importContentModuleOrNull } from "@/lib/content/module";
-import { getContentViewId } from "@/lib/content/views";
-import { readMaterialContextQuery } from "@/lib/routing/material/query";
-import { getGithubUrl } from "@/lib/utils/github";
-import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
+  generateMaterialMetadata,
+  type MaterialPageConfig,
+  type MaterialPageProps,
+  renderMaterialPage,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/view";
+import type { MaterialModuleImporter } from "@/lib/content/material";
 
-type MaterialPageProps =
-  PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">;
-type RuntimeLessonPage = NonNullable<
-  Awaited<ReturnType<typeof getMaterialPageData>>
->;
-type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
-type ArticleJsonLdAuthor = ArrayItem<
-  Parameters<typeof ArticleJsonLd>[0]["author"]
->;
+/** Selects one bounded base-registry material import context. */
+const importGenericMaterial: MaterialModuleImporter = (
+  sourcePath,
+  locale,
+  rendererDomain
+) => {
+  if (rendererDomain === "ai-ds") {
+    return importAiDsMaterial(sourcePath, locale);
+  }
+  if (rendererDomain === "biology") {
+    return importBiologyMaterial(sourcePath, locale);
+  }
+  if (rendererDomain === "physics") {
+    return importPhysicsMaterial(sourcePath, locale);
+  }
 
-/** Builds material topic and lesson params from projected public route rows. */
+  return Promise.reject(
+    new MaterialModuleImportError({
+      domain: rendererDomain,
+      sourcePath,
+    })
+  );
+};
+
+const config = {
+  components: mdxComponents,
+  importer: importGenericMaterial,
+  target: "generic",
+} satisfies MaterialPageConfig;
+
+/** Builds bounded params for material domains that only need the base registry. */
 export function generateStaticParams({
   params,
 }: {
   params: { locale: string };
 }) {
-  return listMaterialStaticParams(params.locale);
+  return Effect.runSync(listGenericMaterialStaticParams(params.locale));
 }
 
-/**
- * Generates SEO metadata for canonical material topic and lesson pages.
- *
- * Public route rows own the localized path, while the runtime row owns the
- * richer authored metadata when the route is a concrete lesson body.
- */
-export async function generateMetadata({
-  params,
-}: MaterialPageProps): Promise<Metadata> {
-  const { locale, route } = await resolveMaterialRoute(params);
-  const path = toLocalizedContentHref(route);
-  const runtimeLesson = await getMaterialPageData({
-    locale,
-    sourcePath: route.sourcePath,
-  });
-  const title = runtimeLesson?.metadata.title ?? route.title;
-  const description =
-    runtimeLesson?.metadata.description ?? route.description ?? route.title;
-
-  return {
-    title: { absolute: title },
-    description,
-    authors: runtimeLesson?.metadata.authors,
-    alternates: createProjectedRouteAlternates(route, readMaterialRoutes(), {
-      types: { "text/markdown": `${path}.md` },
-    }),
-    ...getSocialMetadata({
-      title,
-      description,
-      locale,
-      path,
-      image: getOgUrl(locale, route.publicPath),
-      type: "article",
-    }),
-  };
+/** Generates metadata through the shared material page implementation. */
+export function generateMetadata(props: Pick<MaterialPageProps, "params">) {
+  return generateMaterialMetadata(props, config);
 }
 
-/**
- * Renders the canonical material lesson page.
- *
- * Topic rows are grouping data for curriculum card pages. They intentionally
- * do not render public pages, so the learner opens concrete material content
- * directly from a collapsible card.
- */
-export default async function Page({
-  params,
-  searchParams,
-}: MaterialPageProps) {
-  const [{ locale, route }, query] = await Promise.all([
-    resolveMaterialRoute(params),
-    searchParams,
-  ]);
-
-  const [runtimeLesson, content] = await Promise.all([
-    getMaterialPageData({
-      locale,
-      sourcePath: route.sourcePath,
-    }),
-    importContentModuleOrNull({
-      filePath: route.sourcePath,
-      locale,
-      source: "material-public-route",
-    }),
-  ]);
-
-  if (!runtimeLesson) {
-    notFound();
-  }
-
-  if (!content?.default) {
-    notFound();
-  }
-
-  const Content = content.default;
-  const parentRoute = requireParentMaterialRoute(route);
-  const materialContext = readMaterialContextQuery(query ?? {});
-  const trackerContext: LearningContextInput | undefined = materialContext
-    ? {
-        mode: "placement",
-        nodeKey: materialContext.nodeKey,
-        programKey: materialContext.programKey,
-      }
-    : undefined;
-  const contentId = getContentViewId({
-    locale,
-    route: route.sourcePath,
-  });
-
-  return (
-    <ContentViewTracker
-      contentId={contentId}
-      context={trackerContext}
-      locale={locale}
-    >
-      <MaterialLessonPage
-        content={runtimeLesson}
-        footer={<DeferredComments slug={route.sourcePath} />}
-        headerLink={readMaterialHeaderLink(route, materialContext)}
-        locale={locale}
-        materialContext={materialContext}
-        parentTitle={parentRoute.title}
-        route={route}
-        toolbar={
-          <DeferredAiSheetOpen
-            audio={{
-              contentType: "material",
-              locale,
-              slug: route.sourcePath,
-            }}
-            contextTitle={runtimeLesson.metadata.title}
-          />
-        }
-      >
-        <Content />
-      </MaterialLessonPage>
-    </ContentViewTracker>
-  );
-}
-
-/**
- * Wraps a concrete material lesson in the established rich lesson shell.
- *
- * Runtime content supplies body, metadata, and graph-backed source identity;
- * route projection supplies the canonical localized URL and sibling links.
- */
-async function MaterialLessonPage({
-  children,
-  content,
-  footer,
-  headerLink,
-  locale,
-  materialContext,
-  parentTitle,
-  route,
-  toolbar,
-}: {
-  children: ReactNode;
-  content: RuntimeLessonPage;
-  footer: ReactNode;
-  headerLink?: {
-    href: string;
-    label: string;
-  };
-  locale: Locale;
-  materialContext: MaterialContextIdentity | undefined;
-  parentTitle: string;
-  route: PublicContentRoute;
-  toolbar: ReactNode;
-}) {
-  const tCommon = await getTranslations({ locale, namespace: "Common" });
-  const icon = getProjectedMaterialIcon(route);
-  const raw = content.body;
-  const headings = getHeadings(raw);
-  const metadata = content.metadata;
-  const pagination = readMaterialPagePagination(route, materialContext);
-  const publishedAt = Option.getOrElse(
-    formatContentDateISO(metadata.date),
-    () => metadata.date
-  );
-  const authorJsonLd: ArticleJsonLdAuthor[] = metadata.authors.map(
-    (author) => ({
-      "@type": "Person",
-      name: author.name,
-      url: `https://nakafa.com/${locale}/contributor`,
-    })
-  );
-
-  return (
-    <>
-      <BreadcrumbJsonLd
-        breadcrumbItems={createBreadcrumbItems(locale, [
-          { name: tCommon("home"), path: "" },
-          { name: metadata.title, path: toLocalizedContentHref(route) },
-        ])}
-      />
-      <ArticleJsonLd
-        author={authorJsonLd}
-        datePublished={publishedAt}
-        description={metadata.description ?? metadata.subject ?? ""}
-        headline={metadata.title}
-        image={getOgUrl(locale, route.publicPath)}
-        url={toLocalizedContentHref(route)}
-      />
-      <LearningResourceJsonLd
-        author={authorJsonLd}
-        datePublished={publishedAt}
-        description={metadata.description ?? metadata.subject ?? ""}
-        educationalLevel={parentTitle}
-        name={metadata.title}
-      />
-      <LayoutMaterial>
-        <LayoutMaterialContent>
-          <HeaderContent
-            content={raw}
-            icon={icon}
-            link={headerLink ?? { href: "/home", label: tCommon("home") }}
-            slug={toLocalizedContentHref(route)}
-            title={metadata.title}
-          />
-          <LayoutContent>
-            {headings.length === 0 && <ComingSoon />}
-            {headings.length > 0 ? children : null}
-          </LayoutContent>
-          <PaginationContent pagination={pagination} />
-          <FooterContent>{footer}</FooterContent>
-          {toolbar}
-        </LayoutMaterialContent>
-        <LayoutMaterialToc
-          chapters={{
-            label: tCommon("on-this-page"),
-            data: headings,
-          }}
-          githubUrl={getGithubUrl({
-            path: `/packages/contents/${route.sourcePath}`,
-          })}
-          header={{
-            title: metadata.title,
-            href: toLocalizedContentHref(route),
-            description: metadata.description ?? metadata.subject,
-          }}
-          showComments
-        />
-      </LayoutMaterial>
-    </>
-  );
+/** Renders a base-registry material route without rich domain implementations. */
+export default function Page(props: MaterialPageProps) {
+  return renderMaterialPage(props, config);
 }

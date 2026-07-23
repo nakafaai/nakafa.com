@@ -10,7 +10,7 @@ import {
   getRuntimeCurriculumPage,
 } from "@/lib/content/runtime/pages";
 import { BASE_URL } from "@/lib/llms/constants";
-import { buildHeader } from "@/lib/llms/format";
+import { buildHeader, getMdxDescription } from "@/lib/llms/format";
 import { getRawGithubUrl } from "@/lib/utils/github";
 
 /** Runs the cached MDX markdown Effect at the Next cache boundary. */
@@ -56,7 +56,7 @@ export const getLlmsMdxText = Effect.fn("www.llms.mdx.text")(function* ({
   const scanned = [
     ...buildHeader({
       url: `${BASE_URL}/${locale}/${publicSlug ?? cleanSlug}`,
-      description: getPageDescription(content),
+      description: getMdxDescription(content.metadata),
       source: getRawGithubUrl(`/packages/contents/${cleanSlug}/${locale}.mdx`),
     }),
     body,
@@ -92,23 +92,3 @@ const getMdxRuntimePage = Effect.fn("www.llms.mdx.runtimePage")(function* ({
 
   return null;
 });
-
-type RuntimeMdxPage = NonNullable<
-  Effect.Effect.Success<ReturnType<typeof getMdxRuntimePage>>
->;
-
-/** Returns the best available markdown header description for one content page. */
-function getPageDescription(content: RuntimeMdxPage) {
-  if (content.metadata.description) {
-    return content.metadata.description;
-  }
-
-  if ("subject" in content.metadata) {
-    return (
-      content.metadata.subject ??
-      "Output docs content for large language models."
-    );
-  }
-
-  return "Output docs content for large language models.";
-}

@@ -1,0 +1,205 @@
+import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
+import { ContentDeliveryClassSchema } from "@nakafa/aksara-contracts/delivery";
+import {
+  ContentDeleteSchema,
+  ContentUpsertSchema,
+} from "@nakafa/aksara-contracts/release";
+import {
+  ContentRouteBindSchema,
+  ContentRouteDeleteSchema,
+} from "@nakafa/aksara-contracts/release/route";
+import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
+import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
+
+/** Eight body-bearing transitions preserve headroom under transaction limits. */
+export const RELEASE_PAGE_LIMIT = 8;
+
+/** Maximum body-bearing records returned by one proof query. */
+export const PROOF_PAGE_LIMIT = 8;
+
+/** Maximum complete proof-page response below Convex action limits. */
+export const PROOF_PAGE_BYTES = 4 * 1024 * 1024;
+
+/** Minimum retention after an artifact stops being active or recoverable. */
+export const ROLLBACK_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** Durable backend-owned publication phases. */
+export const releaseStatusValidator = literals(
+  "staging",
+  "verifying",
+  "verified",
+  "completed",
+  "aborting",
+  "aborted"
+);
+
+/** Publication role controls which singleton state slot a release may own. */
+export const releaseRoleValidator = literals("candidate", "recovery");
+
+/** Ordered durable phases for one crash-safe history compaction cycle. */
+export const compactionPhaseValidator = literals(
+  "heads",
+  "bindings",
+  "items",
+  "artifacts",
+  "releases"
+);
+
+/** V1 projection families are added only when a real caller exists. */
+export const contentFamilyValidator = literals("material");
+
+/** Stable delivery policies copied into immutable head versions. */
+export const deliveryValidator = literals(
+  ...ContentDeliveryClassSchema.literals
+);
+
+/** Exact locale values owned by the shared Aksara contract. */
+export const localeValidator = literals(...ContentLocaleSchema.literals);
+
+/** Exact physical renderer domains owned by the shared Aksara contract. */
+export const rendererDomainValidator = literals(
+  ...RendererDomainSchema.literals
+);
+
+/** Immutable content-version operations owned by the release contract. */
+export const headOperationValidator = literals(
+  ...ContentUpsertSchema.fields.operation.literals,
+  ...ContentDeleteSchema.fields.operation.literals
+);
+
+/** Immutable route-version operations owned by the route contract. */
+export const bindingOperationValidator = literals(
+  ...ContentRouteBindSchema.fields.operation.literals,
+  ...ContentRouteDeleteSchema.fields.operation.literals
+);
+
+/** Resumable progress returned by bounded verification mutations. */
+export const progressValidator = v.object({
+  done: v.boolean(),
+  nextIndex: v.number(),
+  processed: v.number(),
+});
+
+/** Idempotent staging counts returned by bounded batch mutations. */
+export const stageReceiptValidator = v.object({
+  batchIndex: v.number(),
+  created: v.number(),
+  releaseId: v.string(),
+  unchanged: v.number(),
+});
+
+/** Completed publication evidence stored and returned without body replay. */
+export const publicationReceiptValidator = v.object({
+  activatedHeads: v.number(),
+  deletedHeads: v.number(),
+  manifestHash: v.string(),
+  projectionDigest: v.string(),
+  releaseId: v.string(),
+  resultCount: v.number(),
+  resultDigest: v.string(),
+  routeDigest: v.string(),
+  stagedArtifacts: v.number(),
+  stagedItems: v.number(),
+  stagedProjections: v.number(),
+  stagedRoutes: v.number(),
+});
+
+/** Durable release status returned to the resumable publisher. */
+export const statusValidator = v.union(
+  v.object({
+    manifestHash: v.string(),
+    phase: literals(
+      "missing",
+      "staging",
+      "verifying",
+      "verified",
+      "aborting",
+      "aborted"
+    ),
+    releaseId: v.string(),
+  }),
+  v.object({
+    manifestHash: v.string(),
+    phase: v.literal("completed"),
+    receipt: publicationReceiptValidator,
+    releaseId: v.string(),
+  })
+);
+
+const storedBundleValidator = v.object({
+  releaseJson: v.string(),
+  rendererJson: v.string(),
+});
+
+const stagedPhaseValidator = literals(
+  "staging",
+  "verifying",
+  "verified",
+  "aborting"
+);
+
+/** Authenticated release bundles used for exact crash recovery. */
+export const currentValidator = v.object({
+  active: v.union(
+    v.null(),
+    storedBundleValidator.extend({ receipt: publicationReceiptValidator })
+  ),
+  candidate: v.union(
+    v.null(),
+    storedBundleValidator.extend({ phase: stagedPhaseValidator })
+  ),
+  recovery: v.union(
+    v.null(),
+    storedBundleValidator.extend({ phase: stagedPhaseValidator })
+  ),
+});
+
+/** Cumulative abort progress with a server-owned continuation cursor. */
+export const abortReceiptValidator = v.object({
+  complete: v.boolean(),
+  processedItems: v.number(),
+  releaseId: v.string(),
+  totalItems: v.number(),
+});
+
+/** Resumable cleanup evidence matching the public contract. */
+export const cleanupReceiptValidator = v.object({
+  complete: v.boolean(),
+  deletedArtifacts: v.number(),
+  releaseId: v.string(),
+  retryAt: v.optional(v.number()),
+});
+
+/** Bounded compaction progress returned to its scheduled action. */
+export const compactionReceiptValidator = v.object({
+  complete: v.boolean(),
+  deleted: v.number(),
+  floor: v.number(),
+  phase: compactionPhaseValidator,
+});
+
+/** One compact material head shared by publication and proof pages. */
+export const materialHeadValidator = v.object({
+  artifactHash: v.string(),
+  compilerConfigHash: v.string(),
+  contentKey: v.string(),
+  delivery: deliveryValidator,
+  locale: localeValidator,
+  projectionHash: v.string(),
+  publicPath: v.optional(v.string()),
+  rendererDomain: rendererDomainValidator,
+  sourceHash: v.string(),
+  sourcePath: v.string(),
+});
+
+/** Compact active material inventory used for exact source diffing. */
+export const headPageValidator = v.object({
+  activeManifestHash: v.string(),
+  activeReleaseId: v.string(),
+  cursor: v.union(v.string(), v.null()),
+  done: v.boolean(),
+  family: v.literal("material"),
+  heads: v.array(materialHeadValidator),
+  nextCursor: v.union(v.string(), v.null()),
+});

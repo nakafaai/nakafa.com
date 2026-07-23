@@ -3,6 +3,7 @@ import {
   PublicRouteSegmentSchema,
   PublicRouteSlugMapSchema,
 } from "@repo/contents/_types/route/segment";
+import { materialSegments } from "@repo/internationalization/src/segments";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -37,7 +38,10 @@ const publicRouteSurfaceInput: readonly SchemaEncoded<
   {
     appSegment: "materials",
     key: "subject",
-    routeSlugs: { en: "subjects", id: "materi" },
+    routeSlugs: {
+      en: materialSegments.en.namespace,
+      id: materialSegments.id.namespace,
+    },
   },
   {
     appSegment: "try-out",

@@ -1,0 +1,81 @@
+// @vitest-environment node
+
+import { Effect } from "effect";
+import { renderToStaticMarkup } from "react-dom/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderPublishedChemistry } from "@/lib/content/published/chemistry";
+import { readPublishedMaterial } from "@/lib/content/published/exchange";
+import { renderPublishedMaterial } from "@/lib/content/published/material";
+import {
+  previewMetadata,
+  previewPublicRoute,
+  previewWireArtifact,
+} from "@/test/content-preview";
+
+const cacheLifeMock = vi.hoisted(() => vi.fn());
+const cacheTagMock = vi.hoisted(() => vi.fn());
+const dataMock = vi.hoisted(() => vi.fn());
+const renderMock = vi.hoisted(() => vi.fn());
+const components = vi.hoisted(() => ({}));
+const input = {
+  locale: "en" as const,
+  publicPath: "subjects/chemistry/structure-matter/atom-shell",
+};
+const data = {
+  artifact: previewWireArtifact,
+  metadata: previewMetadata,
+  rendererManifest: { rendererContractVersion: "1.0.0" },
+  route: previewPublicRoute,
+};
+
+vi.mock("server-only", () => ({}));
+vi.mock("next/cache", () => ({
+  cacheLife: cacheLifeMock,
+  cacheTag: cacheTagMock,
+}));
+vi.mock("@repo/design-system/lib/markdown/domain/chemistry", () => ({
+  chemistryComponents: components,
+}));
+vi.mock("@/lib/content/published/exchange", () => ({
+  readPublishedMaterial: dataMock,
+}));
+vi.mock("@/lib/content/published/material", () => ({
+  renderPublishedMaterial: renderMock,
+}));
+
+beforeEach(() => {
+  cacheLifeMock.mockReset();
+  cacheTagMock.mockReset();
+  dataMock.mockReset();
+  renderMock.mockReset();
+  dataMock.mockReturnValue(Effect.succeed(data));
+  renderMock.mockReturnValue(
+    Effect.succeed({
+      body: <h2>Shells as Energy Levels</h2>,
+      metadata: previewMetadata,
+      rawMdx: previewWireArtifact.payload.rawMdx,
+      route: previewPublicRoute,
+    })
+  );
+});
+
+describe("published chemistry renderer", () => {
+  it("caches the exact artifact and supplies only its physical registry", async () => {
+    const content = await renderPublishedChemistry(input);
+
+    expect(renderToStaticMarkup(content.body)).toBe(
+      "<h2>Shells as Energy Levels</h2>"
+    );
+    expect(readPublishedMaterial).toHaveBeenCalledWith(input);
+    expect(renderPublishedMaterial).toHaveBeenCalledWith({
+      components,
+      data,
+      rendererDomain: "chemistry",
+    });
+    expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
+    expect(cacheTagMock).toHaveBeenCalledWith(
+      "content-runtime",
+      "content-family:material"
+    );
+  });
+});
