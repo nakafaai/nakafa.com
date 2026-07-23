@@ -40,7 +40,7 @@ Bayangkan tali menarik kotak dengan gaya <InlineMath math="\vec{F}" /> miring ke
   vectors={(() => {
     const fx = [4, 0, 0];
     const fy = [0, 3, 0];
-    const resultant = fx.map((component, index) => component + fy[index]);
+    const resultant = fx.map((component, index) => component + fy.at(index));
 
     return [
       {

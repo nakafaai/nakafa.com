@@ -34,7 +34,7 @@ The triangle method is used to add two vectors. Draw the first vector, then plac
   vectors={(() => {
     const a = [4, 1, 0];
     const b = [2, 3, 0];
-    const resultant = a.map((component, index) => component + b[index]);
+    const resultant = a.map((component, index) => component + b.at(index));
 
     return [
       {

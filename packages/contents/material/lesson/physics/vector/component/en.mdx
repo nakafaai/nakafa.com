@@ -57,13 +57,13 @@ The unit vector <InlineMath math="\hat{k}" /> points along the <InlineMath math=
     const points = components.reduce(
       (path, component) => [
         ...path,
-        path.at(-1).map((value, index) => value + component[index]),
+        path.at(-1).map((value, index) => value + component.at(index)),
       ],
       [[0, 0, 0]]
     );
     const resultant = components.reduce(
       (sum, component) =>
-        sum.map((value, index) => value + component[index]),
+        sum.map((value, index) => value + component.at(index)),
       [0, 0, 0]
     );
 

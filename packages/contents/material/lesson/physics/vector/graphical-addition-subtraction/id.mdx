@@ -34,7 +34,7 @@ Metode segitiga dipakai untuk menjumlahkan dua vektor. Buat panah vektor pertama
   vectors={(() => {
     const a = [4, 1, 0];
     const b = [2, 3, 0];
-    const resultant = a.map((component, index) => component + b[index]);
+    const resultant = a.map((component, index) => component + b.at(index));
 
     return [
       {
