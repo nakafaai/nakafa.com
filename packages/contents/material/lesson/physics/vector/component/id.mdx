@@ -57,13 +57,13 @@ Vektor satuan <InlineMath math="\hat{k}" /> menunjukkan arah sumbu <InlineMath m
     const points = components.reduce(
       (path, component) => [
         ...path,
-        path.at(-1).map((value, index) => value + component[index]),
+        path.at(-1).map((value, index) => value + component.at(index)),
       ],
       [[0, 0, 0]]
     );
     const resultant = components.reduce(
       (sum, component) =>
-        sum.map((value, index) => value + component[index]),
+        sum.map((value, index) => value + component.at(index)),
       [0, 0, 0]
     );
 

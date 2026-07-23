@@ -29,9 +29,9 @@ Dua vektor dikatakan sama jika besar dan arahnya sama. Letak panahnya boleh berb
     const a = [4, 2, 0];
     const bShift = [0, 0, 2];
     const negativeShift = [0, 0, -2];
-    const b = a.map((component, index) => component + bShift[index]);
+    const b = a.map((component, index) => component + bShift.at(index));
     const negativeA = a.map(
-      (component, index) => -component + negativeShift[index]
+      (component, index) => -component + negativeShift.at(index)
     );
 
     return [

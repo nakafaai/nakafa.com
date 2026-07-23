@@ -29,9 +29,9 @@ Two vectors are equal if they have the same magnitude and the same direction. Th
     const a = [4, 2, 0];
     const bShift = [0, 0, 2];
     const negativeShift = [0, 0, -2];
-    const b = a.map((component, index) => component + bShift[index]);
+    const b = a.map((component, index) => component + bShift.at(index));
     const negativeA = a.map(
-      (component, index) => -component + negativeShift[index]
+      (component, index) => -component + negativeShift.at(index)
     );
 
     return [

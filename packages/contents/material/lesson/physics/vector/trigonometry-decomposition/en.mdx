@@ -40,7 +40,7 @@ Imagine a rope pulling a box with force <InlineMath math="\vec{F}" /> up and to 
   vectors={(() => {
     const fx = [4, 0, 0];
     const fy = [0, 3, 0];
-    const resultant = fx.map((component, index) => component + fy[index]);
+    const resultant = fx.map((component, index) => component + fy.at(index));
 
     return [
       {
