@@ -1,7 +1,7 @@
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { GET } from "./route";
+import { GET } from "@/app/contents/graph/[contentId]/route";
 
 const runtimeMocks = vi.hoisted(() => ({
   getApiContentRouteByContentId: vi.fn(),
@@ -21,14 +21,11 @@ vi.mock("@repo/utilities/logging/effect", async () => {
   };
 });
 
-vi.mock("@/lib/content/runtime", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/content/runtime")>();
-
-  return {
-    ...actual,
-    getApiContentRouteByContentId: runtimeMocks.getApiContentRouteByContentId,
-  };
-});
+vi.mock("@/lib/content/runtime", () => ({
+  getApiContentRouteByContentId: runtimeMocks.getApiContentRouteByContentId,
+  parseApiContentId: (contentId: string) =>
+    contentId.startsWith("asset:") ? contentId : null,
+}));
 
 const articleRef = readNakafaContentRefFixture(
   "en",

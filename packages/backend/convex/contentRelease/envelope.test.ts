@@ -1,12 +1,12 @@
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
-  insertTestRelease,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";

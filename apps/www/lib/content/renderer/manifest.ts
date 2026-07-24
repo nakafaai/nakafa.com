@@ -2,9 +2,18 @@ import "server-only";
 
 import { createRendererManifest } from "@nakafa/aksara-contracts/renderer/manifest";
 import {
+  aiDsComponentNames,
   baseComponentNames,
+  biologyComponentNames,
   chemistryComponentNames,
   mathematicsComponentNames,
+  physicsComponentNames,
+  politicsComponentNames,
+  snbtGeneralComponentNames,
+  snbtMathComponentNames,
+  snbtPlainComponentNames,
+  snbtQuantComponentNames,
+  tkaMathComponentNames,
 } from "@repo/design-system/lib/markdown/names";
 import {
   createComponentCapability,
@@ -47,8 +56,11 @@ function createCurrentDomainCapability(
 export const rendererManifest = createRendererManifest({
   base: createCurrentCapability(Object.values(baseComponentNames)),
   domains: [
-    createCurrentDomainCapability("ai-ds", []),
-    createCurrentDomainCapability("biology", []),
+    createCurrentDomainCapability("ai-ds", Object.values(aiDsComponentNames)),
+    createCurrentDomainCapability(
+      "biology",
+      Object.values(biologyComponentNames)
+    ),
     createCurrentDomainCapability(
       "chemistry",
       Object.values(chemistryComponentNames)
@@ -57,12 +69,33 @@ export const rendererManifest = createRendererManifest({
       "mathematics",
       Object.values(mathematicsComponentNames)
     ),
-    createCurrentDomainCapability("physics", []),
-    createCurrentDomainCapability("politics", []),
-    createCurrentDomainCapability("snbt-general", []),
-    createCurrentDomainCapability("snbt-math", []),
-    createCurrentDomainCapability("snbt-plain", []),
-    createCurrentDomainCapability("snbt-quant", []),
-    createCurrentDomainCapability("tka-math", []),
+    createCurrentDomainCapability(
+      "physics",
+      Object.values(physicsComponentNames)
+    ),
+    createCurrentDomainCapability(
+      "politics",
+      Object.values(politicsComponentNames)
+    ),
+    createCurrentDomainCapability(
+      "snbt-general",
+      Object.values(snbtGeneralComponentNames)
+    ),
+    createCurrentDomainCapability(
+      "snbt-math",
+      Object.values(snbtMathComponentNames)
+    ),
+    createCurrentDomainCapability(
+      "snbt-plain",
+      Object.values(snbtPlainComponentNames)
+    ),
+    createCurrentDomainCapability(
+      "snbt-quant",
+      Object.values(snbtQuantComponentNames)
+    ),
+    createCurrentDomainCapability(
+      "tka-math",
+      Object.values(tkaMathComponentNames)
+    ),
   ],
 });

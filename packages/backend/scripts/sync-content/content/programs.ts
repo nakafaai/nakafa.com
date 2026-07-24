@@ -69,7 +69,7 @@ export const syncLearningPrograms = Effect.fn("sync.learningPrograms")(
     });
     const coverageResult = yield* callConvexMutation(
       config,
-      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      internal.learningPrograms.coverage.syncLearningProgramCoverage,
       { coverageRows },
       LearningProgramSyncResultSchema
     );
@@ -154,7 +154,7 @@ function deleteStaleCoverageRows(
       while (true) {
         const result = yield* callConvexMutation(
           config,
-          internal.learningPrograms.sync.deleteStaleLearningProgramCoverage,
+          internal.learningPrograms.coverage.deleteStaleLearningProgramCoverage,
           {
             limit: COVERAGE_DELETE_BATCH_SIZE,
             locale,

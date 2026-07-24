@@ -1,6 +1,13 @@
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  TryoutCatalogRowSchema,
+  TryoutPlacementSchema,
+} from "@nakafa/aksara-contracts/tryout/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
+import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
+import { Schema } from "effect";
 
 export const TRYOUT_START_NOW = Date.UTC(2026, 6, 8, 12, 0, 0);
 export const TRYOUT_START_COUNTRY = "indonesia";
@@ -11,11 +18,13 @@ export const TRYOUT_START_SECTION = "matematika";
 
 const sourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}/${TRYOUT_START_SECTION}`;
 const setRoute = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
+const artifactHash = Sha256HashSchema.make(`sha256:${"7".repeat(64)}`);
 
 /** Seeds the smallest coherent catalog used by attempt start tests. */
 export async function seedTryoutStartSet(
   ctx: MutationCtx,
   args: {
+    activateSnapshot?: boolean;
     includeEntitlement?: boolean;
     isReady?: boolean;
     trackIsReady?: boolean;
@@ -97,7 +106,7 @@ export async function seedTryoutStartSet(
     isCorrect: true,
     label: "A",
     locale: "id",
-    optionKey: "a",
+    optionKey: "option-1",
     order: 1,
     questionId,
   });
@@ -160,5 +169,96 @@ export async function seedTryoutStartSet(
     });
   }
 
-  return { tryoutSectionId, tryoutSetId };
+  const snapshotId =
+    args.activateSnapshot === false
+      ? null
+      : await activateTryoutSnapshot(ctx, {
+          catalog: buildCatalog(args.visibility),
+          placements: [buildPlacement()],
+        });
+
+  return { snapshotId, tryoutSectionId, tryoutSetId };
+}
+
+/** Builds the exact set and section rows consumed by the start fixture. */
+function buildCatalog(visibility: "internal-entry" | "visible") {
+  const graph = {
+    alignmentId: "alignment:tryout:start",
+    assetId: "asset:id:tryout:start",
+    conceptId: "concept:tryout:start",
+    learningObjectId: "lo:tryout-start",
+    lensId: "lens:tryout:start",
+  };
+  return [
+    Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+      countryKey: TRYOUT_START_COUNTRY,
+      examKey: TRYOUT_START_EXAM,
+      graph,
+      internalEntrySectionKey:
+        visibility === "internal-entry" ? TRYOUT_START_SECTION : undefined,
+      kind: "set",
+      locale: "id",
+      order: 1,
+      publicPath: setRoute,
+      questionCount: 1,
+      scoringStrategy: "raw",
+      sectionCount: 1,
+      setKey: TRYOUT_START_SET,
+      sourceRevision: "2026",
+      title: "Set 1",
+      trackKey: TRYOUT_START_TRACK,
+      visibleSectionCount: visibility === "visible" ? 1 : 0,
+    }),
+    Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+      countryKey: TRYOUT_START_COUNTRY,
+      examKey: TRYOUT_START_EXAM,
+      graph,
+      kind: "section",
+      locale: "id",
+      order: 1,
+      publicPath:
+        visibility === "visible"
+          ? `${setRoute}/${TRYOUT_START_SECTION}`
+          : undefined,
+      questionCount: 1,
+      questionSourcePath: `packages/corpus/${sourcePath}`,
+      sectionKey: TRYOUT_START_SECTION,
+      setKey: TRYOUT_START_SET,
+      sourceRevision: "2026",
+      timeLimitSeconds: 1800,
+      title: "Matematika",
+      trackKey: TRYOUT_START_TRACK,
+      visibility,
+    }),
+  ];
+}
+
+/** Builds the signed placement matching the synchronized start question. */
+function buildPlacement() {
+  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+    answerArtifactHash: artifactHash,
+    answerContentKey: `${sourcePath}/question-1/answer`,
+    choices: [
+      {
+        isCorrect: true,
+        label: "A",
+        optionKey: "option-1",
+        order: 1,
+      },
+    ],
+    countryKey: TRYOUT_START_COUNTRY,
+    examKey: TRYOUT_START_EXAM,
+    locale: "id",
+    questionArtifactHash: artifactHash,
+    questionContentKey: `${sourcePath}/question-1/question`,
+    questionOrder: 1,
+    questionSourcePath: `packages/corpus/${sourcePath}/question-1`,
+    rendererDomain: "tka-math",
+    scope: "server",
+    sectionKey: TRYOUT_START_SECTION,
+    setKey: TRYOUT_START_SET,
+    sourceRevision: "2026",
+    title: "Question",
+    trackKey: TRYOUT_START_TRACK,
+  });
 }

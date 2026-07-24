@@ -1,3 +1,4 @@
+import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -30,7 +31,8 @@ const beginProgram = Effect.fn("contentRelease.beginVerify")(function* (
     release.stagedUpserts === signed.manifest.upsertCount &&
     release.stagedArtifacts === signed.manifest.upsertCount &&
     release.stagedProjections === signed.manifest.projectionCount &&
-    release.stagedRoutes === signed.manifest.routeCount;
+    release.stagedRoutes === signed.manifest.routeCount &&
+    release.stagedSnapshotRows === snapshotRowCount(signed.manifest.snapshots);
   if (!complete) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",

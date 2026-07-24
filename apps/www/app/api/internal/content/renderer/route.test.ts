@@ -16,9 +16,9 @@ const manifest = {
 };
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/env", () => ({
-  /** Provides a deterministic internal key for the route handler. */
-  env: { INTERNAL_CONTENT_API_KEY: "test-key" },
+vi.mock("@repo/next-config/keys", () => ({
+  /** Provides the renderer route's narrow internal authentication contract. */
+  contentApiKeys: () => ({ INTERNAL_CONTENT_API_KEY: "test-key" }),
 }));
 
 vi.mock("@/lib/content/renderer/manifest", () => ({

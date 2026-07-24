@@ -6,7 +6,10 @@ import { getRuntimePublicRoute } from "@/lib/content/runtime/routes";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
 import { getLlmsLegalPageText } from "@/lib/llms/legal";
 import { getCachedLlmsMdxText } from "@/lib/llms/mdx";
-import { getCachedPublishedText } from "@/lib/llms/published";
+import {
+  getCachedPublishedArticleText,
+  getCachedPublishedMaterialText,
+} from "@/lib/llms/published";
 import { getQuranLlmsText } from "@/lib/llms/quran";
 
 const PROJECTED_PUBLIC_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
@@ -14,13 +17,17 @@ const PROJECTED_PUBLIC_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
 );
 
 const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
-  PUBLIC_ROUTE_SURFACES.filter((surface) => surface.key === "subject").flatMap(
-    (surface) => Object.values(surface.routeSlugs)
+  PUBLIC_ROUTE_SURFACES.flatMap((surface) =>
+    surface.key === "subject" ? Object.values(surface.routeSlugs) : []
   )
 );
 
 type MarkdownSource =
-  | { readonly kind: "published"; readonly publicPath: string }
+  | {
+      readonly family: "article" | "material";
+      readonly kind: "published";
+      readonly publicPath: string;
+    }
   | {
       readonly cleanSlug: string;
       readonly kind: "source";
@@ -41,11 +48,7 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
   if (source.kind === "published") {
     return yield* Effect.tryPromise({
       catch: (cause) => new CacheFailure({ cause, owner: "published" }),
-      try: () =>
-        getCachedPublishedText({
-          locale,
-          publicPath: source.publicPath,
-        }),
+      try: () => readPublishedMarkdown(source, locale),
     });
   }
 
@@ -102,6 +105,15 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
 /** Resolves projected public content paths to the internal markdown source path. */
 const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
+    if (isArticleContentPath(cleanSlug)) {
+      const source: MarkdownSource = {
+        family: "article",
+        kind: "published",
+        publicPath: cleanSlug,
+      };
+      return source;
+    }
+
     const routeSegment = readRouteSegment(cleanSlug);
     if (!PROJECTED_PUBLIC_ROUTE_SEGMENTS.has(routeSegment)) {
       const source: MarkdownSource = { cleanSlug, kind: "source" };
@@ -115,6 +127,7 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
       });
       if (activeRoute.kind === "found") {
         const source: MarkdownSource = {
+          family: "material",
           kind: "published",
           publicPath: cleanSlug,
         };
@@ -150,4 +163,22 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
 /** Reads the first non-empty route namespace without accepting missing input. */
 function readRouteSegment(cleanSlug: string) {
   return cleanSlug.split("/").find(Boolean) ?? "";
+}
+
+/** Reads one family-specific published markdown cache without source fallback. */
+function readPublishedMarkdown(
+  source: Extract<MarkdownSource, { readonly kind: "published" }>,
+  locale: Locale
+) {
+  const input = { locale, publicPath: source.publicPath };
+  if (source.family === "article") {
+    return getCachedPublishedArticleText(input);
+  }
+  return getCachedPublishedMaterialText(input);
+}
+
+/** Identifies an article body path without treating category indexes as bodies. */
+function isArticleContentPath(cleanSlug: string) {
+  const segments = cleanSlug.split("/").filter(Boolean);
+  return segments.length === 3 && segments[0] === "articles";
 }

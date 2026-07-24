@@ -170,7 +170,7 @@ export async function finalizeAttemptScore(
 async function loadAttemptResponses(ctx: MutationCtx, attempt: TryoutAttempt) {
   const responses = await ctx.db
     .query("tryoutResponses")
-    .withIndex("by_tryoutAttemptId_and_questionId", (q) =>
+    .withIndex("by_tryoutAttemptId", (q) =>
       q.eq("tryoutAttemptId", attempt._id)
     )
     .take(attempt.totalQuestions + 1);

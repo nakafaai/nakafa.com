@@ -4,16 +4,16 @@ import {
   MAX_PROJECTION_BATCH_BYTES,
   MAX_PUBLICATION_REQUEST_BYTES,
   MAX_ROUTE_BATCH_BYTES,
+  MAX_SNAPSHOT_BATCH_BYTES,
 } from "@nakafa/aksara-contracts/transport/limits";
 import {
   decodePublicationRequest,
-  type PublicationOperationSchema,
   type PublicationRequest,
 } from "@nakafa/aksara-contracts/transport/request";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 
-type PublicationOperation = typeof PublicationOperationSchema.Type;
+type PublicationOperation = PublicationRequest["operation"];
 
 const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   accept: MAX_PUBLICATION_REQUEST_BYTES,
@@ -32,6 +32,8 @@ const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   stageRecovery: MAX_PUBLICATION_REQUEST_BYTES,
   stageRelease: MAX_PUBLICATION_REQUEST_BYTES,
   stageRouteBatch: MAX_ROUTE_BATCH_BYTES,
+  stageSnapshot: MAX_PUBLICATION_REQUEST_BYTES,
+  stageSnapshotBatch: MAX_SNAPSHOT_BATCH_BYTES,
   status: MAX_PUBLICATION_REQUEST_BYTES,
   verify: MAX_PUBLICATION_REQUEST_BYTES,
 };

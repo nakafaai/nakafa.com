@@ -68,13 +68,6 @@ export const publicTryoutSectionValidator = v.object({
   visibility: tryoutSectionVisibilityValidator,
 });
 
-export const publicTryoutQuestionContentValidator = v.object({
-  contentHash: v.string(),
-  questionOrder: v.number(),
-  sourcePath: v.string(),
-  sourceRevision: v.string(),
-});
-
 /** Returns the source-owned ISO country code for a try-out country key. */
 export function readSourceCountryCode(countryKey: string) {
   const countryCode = readTryoutCountryCode(countryKey);
@@ -156,33 +149,6 @@ export function toPublicTryoutSection(section: Doc<"tryoutSections">) {
     title: section.title,
     visibility: section.visibility,
   };
-}
-
-/** Loads bounded public question content keys for server-side MDX rendering. */
-export async function loadQuestionContentRows(
-  ctx: QueryCtx,
-  section: Doc<"tryoutSections">
-) {
-  const questions = await ctx.db
-    .query("questions")
-    .withIndex("by_questionSetId_and_number", (q) =>
-      q.eq("questionSetId", section.questionSetId)
-    )
-    .take(section.questionCount + 1);
-
-  if (questions.length !== section.questionCount) {
-    throw new ConvexError({
-      code: "TRYOUT_QUESTION_COUNT_MISMATCH",
-      message: "Try-out section question count is not synced.",
-    });
-  }
-
-  return questions.map((question) => ({
-    contentHash: question.contentHash,
-    questionOrder: question.number,
-    sourcePath: question.sourcePath,
-    sourceRevision: question.sourceRevision,
-  }));
 }
 
 /** Returns ordered section rows only when they match the set snapshot. */

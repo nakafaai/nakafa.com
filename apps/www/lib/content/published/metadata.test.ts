@@ -2,7 +2,7 @@
 
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { readPublishedMaterial } from "@/lib/content/published/exchange";
+import { readPublishedMaterial } from "@/lib/content/published/material";
 import { getPublishedMaterialMetadata } from "@/lib/content/published/metadata";
 import {
   previewMetadata,
@@ -29,7 +29,7 @@ vi.mock("next/cache", () => ({
   cacheLife: cacheLifeMock,
   cacheTag: cacheTagMock,
 }));
-vi.mock("@/lib/content/published/exchange", () => ({
+vi.mock("@/lib/content/published/material", () => ({
   readPublishedMaterial: readMaterialMock,
 }));
 
@@ -50,7 +50,8 @@ describe("published material metadata", () => {
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
     expect(cacheTagMock).toHaveBeenCalledWith(
       "content-runtime",
-      "content-family:material"
+      "content-family:material",
+      `content-artifact:${previewWireArtifact.artifactHash}`
     );
   });
 });

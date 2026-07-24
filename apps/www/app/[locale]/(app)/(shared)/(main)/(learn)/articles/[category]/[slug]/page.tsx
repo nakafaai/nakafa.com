@@ -1,17 +1,17 @@
-import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
+import {
+  type ArticleCategory,
+  ArticleCategorySchema,
+} from "@nakafa/aksara-contracts/projection/article";
 import { getHeadings } from "@repo/contents/_lib/toc";
-import { formatContentDateISO } from "@repo/contents/_shared/date";
-import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { Option } from "effect";
+import { Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
-import { getArticlePageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/runtime";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
@@ -21,15 +21,19 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
-import { importContentModuleOrNull } from "@/lib/content/module";
+import { getPublishedArticlePage } from "@/lib/content/articles";
+import {
+  getPublishedArticle,
+  type PublishedArticleContent,
+  renderPublishedArticle,
+} from "@/lib/content/published/article";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getGithubUrl } from "@/lib/utils/github";
+import { getAksaraUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
-import { getStaticParams } from "@/lib/utils/system";
 
 type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
 type ArticleJsonLdAuthor = ArrayItem<
@@ -42,15 +46,12 @@ async function getResolvedParams(
 ) {
   const { locale: rawLocale, category: rawCategory, slug } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const parsedCategory = parseArticleCategory(rawCategory);
 
-  if (Option.isNone(parsedCategory)) {
+  if (!Schema.is(ArticleCategorySchema)(rawCategory)) {
     notFound();
   }
-
-  const category = parsedCategory.value;
-
-  return { category, locale, slug };
+  const publicPath = `articles/${rawCategory}/${slug}`;
+  return { category: rawCategory, locale, publicPath, slug };
 }
 
 /** Builds article metadata from the projected article route and runtime content row. */
@@ -59,27 +60,22 @@ export async function generateMetadata({
 }: {
   params: PageProps<"/[locale]/articles/[category]/[slug]">["params"];
 }): Promise<Metadata> {
-  const { locale, category, slug } = await getResolvedParams(params);
-  const [t, { content, filePath }] = await Promise.all([
+  const { locale, category, publicPath } = await getResolvedParams(params);
+  const [t, article] = await Promise.all([
     getTranslations({ locale, namespace: "Articles" }),
-    getArticlePageData({
+    getPublishedArticle({
       locale,
-      category,
-      slug,
+      publicPath,
     }),
   ]);
-
-  if (!content) {
-    notFound();
-  }
-
+  const filePath = `/${publicPath}`;
   const path = `/${locale}${filePath}`;
   const alternates = createLocalizedAlternates(path, {
     types: {
       "text/markdown": `${path}.md`,
     },
   });
-  const { metadata } = content;
+  const { metadata } = article.projection;
 
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
   // Source: https://developers.google.com/search/docs/appearance/title-link
@@ -110,66 +106,46 @@ export async function generateMetadata({
     title: { absolute: title },
     description,
     alternates,
-    authors: metadata.authors,
+    authors: metadata.authors.map(({ name }) => ({ name })),
     category: t(category),
     keywords,
     ...socialMetadata,
   };
 }
 
-type ArticleRuntimePage = NonNullable<
-  Awaited<ReturnType<typeof getArticlePageData>>["content"]
->;
-
-/** Prebuilds article pages from the runtime route catalog instead of filesystem-only slugs. */
-export function generateStaticParams({
+/** Prebuilds article pages from the active Aksara article catalog. */
+export async function generateStaticParams({
   params,
 }: {
   params: { locale: string };
 }) {
-  return getStaticParams({
-    basePath: "articles",
-    locale: getLocaleOrThrow(params.locale),
-    paramNames: ["category", "slug"],
-  });
+  const locale = getLocaleOrThrow(params.locale);
+  const catalog = await getPublishedArticlePage({ cursor: null, locale });
+  return catalog.articles.map((article) => ({
+    category: article.category,
+    slug: article.slug,
+  }));
 }
 
 /** Renders an article after Convex confirms the published route exists. */
 export default async function Page({
   params,
 }: PageProps<"/[locale]/articles/[category]/[slug]">) {
-  const { locale, category, slug } = await getResolvedParams(params);
-  const { content: article, filePath } = await getArticlePageData({
-    category,
+  const { locale, category, publicPath } = await getResolvedParams(params);
+  const article = await renderPublishedArticle({
     locale,
-    slug,
+    publicPath,
   });
-
-  if (!article) {
-    notFound();
-  }
-
-  const content = await importContentModuleOrNull({
-    filePath,
-    locale,
-    source: "article-content-module",
-  });
-
-  if (!content?.default) {
-    notFound();
-  }
-
-  const Content = content.default;
+  const filePath = `/${publicPath}`;
   const contentMetadata = article.metadata;
 
   const [tCommon, tArticles] = await Promise.all([
     getTranslations("Common"),
     getTranslations("Articles"),
   ]);
-  const publishedAt = Option.getOrElse(
-    formatContentDateISO(contentMetadata.date),
-    () => contentMetadata.date
-  );
+  const publishedAt = new Date(
+    `${contentMetadata.date}T00:00:00.000Z`
+  ).toISOString();
   const authorJsonLd: ArticleJsonLdAuthor[] = contentMetadata.authors.map(
     (author) => ({
       "@type": "Person",
@@ -223,7 +199,7 @@ export default async function Page({
           />
         }
       >
-        <Content />
+        {article.body}
       </ArticleShell>
     </>
   );
@@ -242,7 +218,7 @@ async function ArticleShell({
   locale: Locale;
   category: ArticleCategory;
   filePath: string;
-  content: ArticleRuntimePage;
+  content: PublishedArticleContent;
   children: ReactNode;
   footer: ReactNode;
   toolbar: ReactNode;
@@ -252,9 +228,14 @@ async function ArticleShell({
     getTranslations("Articles"),
   ]);
   const metadata = content.metadata;
-  const raw = content.body;
-
+  const raw = content.rawMdx;
   const headings = getHeadings(raw);
+  const sourceUrl = content.sourceRevision
+    ? getAksaraUrl({
+        path: content.sourcePath,
+        revision: content.sourceRevision,
+      })
+    : null;
 
   return (
     <LayoutMaterial>
@@ -267,6 +248,7 @@ async function ArticleShell({
             label: tArticles(category),
           }}
           slug={`/${locale}${filePath}`}
+          sourceUrl={sourceUrl}
           title={metadata.title}
         />
         <LayoutContent>
@@ -281,9 +263,7 @@ async function ArticleShell({
           label: tCommon("on-this-page"),
           data: headings,
         }}
-        githubUrl={getGithubUrl({
-          path: `/packages/contents${filePath}`,
-        })}
+        githubUrl={sourceUrl ?? undefined}
         header={{
           title: metadata.title,
           href: filePath,
@@ -291,7 +271,7 @@ async function ArticleShell({
         }}
         references={{
           title: metadata.title,
-          data: content.references,
+          data: content.references.map((reference) => ({ ...reference })),
         }}
         showComments
       />

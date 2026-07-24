@@ -1,4 +1,4 @@
-import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import {
   type ContentChange,
   ContentUpsertSchema,
@@ -80,11 +80,12 @@ const validateVersion = Effect.fn("contentRelease.validateRollbackVersion")(
     identity: string
   ) {
     const projectionHash = yield* hashText(
-      "the rollback material projection",
-      canonicalizeMaterialProjection(state.projection)
+      "the rollback content projection",
+      canonicalizeContentProjection(state.projection)
     );
     if (
       head.operation !== "upsert" ||
+      head.family !== state.change.family ||
       head.artifactHash !== state.change.artifactHash ||
       head.compilerConfigHash !== state.artifact.payload.compilerConfigHash ||
       head.delivery !== state.change.delivery ||
@@ -156,6 +157,7 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
     snapshot.index !== row.index ||
     snapshot.releaseId !== row.releaseId ||
     priorIdentity.contentKey !== item.change.contentKey ||
+    priorIdentity.family !== item.change.family ||
     priorIdentity.locale !== item.change.locale
   ) {
     return yield* releaseFail(
@@ -167,6 +169,7 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
     return {
       change: {
         contentKey: snapshot.snapshot.contentKey,
+        family: snapshot.snapshot.family,
         locale: snapshot.snapshot.locale,
         operation: "delete",
       },
@@ -195,6 +198,7 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
     artifactHash: prior.artifactHash,
     contentKey: prior.contentKey,
     delivery: prior.delivery,
+    family: prior.family,
     locale: prior.locale,
     operation: "upsert",
     rendererDomain: prior.rendererDomain,

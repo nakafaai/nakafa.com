@@ -1,14 +1,15 @@
-import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { abortProgram } from "@repo/backend/convex/contentRelease/abort";
+import {
+  validateCandidateBase,
+  validateExistingSnapshots,
+  validateRecoveryBase,
+} from "@repo/backend/convex/contentRelease/base";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import {
-  ensureState,
-  loadRelease,
-} from "@repo/backend/convex/contentRelease/model";
+import { ensureState } from "@repo/backend/convex/contentRelease/model";
 import {
   decodeReleaseJson,
   decodeRendererJson,
@@ -48,80 +49,6 @@ const releaseStatus = Effect.fn("contentRelease.releaseStatus")(function* (
     releaseId: release.releaseId,
   } satisfies ReleaseStatus;
 });
-
-/** Proves a candidate manifest extends the exact completed active release. */
-const validateCandidateBase = Effect.fn("contentRelease.validateCandidateBase")(
-  function* (
-    ctx: MutationCtx,
-    manifest: ContentReleaseManifest,
-    state: Doc<"contentState">
-  ) {
-    if (
-      (state.activeReleaseId ?? null) !== manifest.baseReleaseId ||
-      (state.activeManifestHash ?? null) !== manifest.baseManifestHash
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_STALE_BASE",
-        `Content release ${manifest.releaseId} does not extend the active release.`
-      );
-    }
-    if (manifest.baseReleaseId === null) {
-      return;
-    }
-    const base = yield* loadRelease(ctx, manifest.baseReleaseId);
-    const signed = yield* decodeReleaseJson(base.releaseJson);
-    if (
-      base.status !== "completed" ||
-      base.sequence !== state.activeSequence ||
-      signed.manifestHash !== manifest.baseManifestHash ||
-      signed.manifest.resultCount !== manifest.baseResultCount ||
-      signed.manifest.resultDigest !== manifest.baseResultDigest
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_STALE_BASE",
-        `Content release ${manifest.releaseId} does not bind the active catalog.`
-      );
-    }
-  }
-);
-
-/** Proves an inverse manifest targets the exact verified candidate. */
-const validateRecoveryBase = Effect.fn("contentRelease.validateRecoveryBase")(
-  function* (
-    ctx: MutationCtx,
-    manifest: ContentReleaseManifest,
-    rendererJson: string,
-    state: Doc<"contentState">
-  ) {
-    if (!(state.candidateReleaseId && state.candidateManifestHash)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_STATE",
-        "A recovery release requires one verified candidate."
-      );
-    }
-    const candidate = yield* loadRelease(ctx, state.candidateReleaseId);
-    const signed = yield* decodeReleaseJson(candidate.releaseJson);
-    if (
-      candidate.role !== "candidate" ||
-      candidate.status !== "verified" ||
-      candidate.sequence !== state.candidateSequence ||
-      rendererJson !== candidate.rendererJson ||
-      manifest.origin.kind !== "rollback" ||
-      manifest.origin.releaseId !== candidate.releaseId ||
-      manifest.baseReleaseId !== candidate.releaseId ||
-      manifest.baseManifestHash !== state.candidateManifestHash ||
-      manifest.baseResultCount !== signed.manifest.resultCount ||
-      manifest.baseResultDigest !== signed.manifest.resultDigest ||
-      manifest.resultCount !== signed.manifest.baseResultCount ||
-      manifest.resultDigest !== signed.manifest.baseResultDigest
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_CONFLICT",
-        `Recovery ${manifest.releaseId} does not invert the verified candidate.`
-      );
-    }
-  }
-);
 
 /** Confirms an idempotent release still owns the same immutable role slot. */
 const validateExisting = Effect.fn("contentRelease.validateExisting")(
@@ -220,6 +147,7 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     }
     yield* validateRecoveryBase(ctx, signed.manifest, canonicalRenderer, state);
   }
+  yield* validateExistingSnapshots(ctx, signed.manifest);
   const now = Date.now();
   const sequence = state.nextSequence;
   const row = {
@@ -236,6 +164,8 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     stagedItems: 0,
     stagedProjections: 0,
     stagedRoutes: 0,
+    stagedSnapshotBatches: 0,
+    stagedSnapshotRows: 0,
     stagedUpserts: 0,
     status: "staging",
     updatedAt: now,

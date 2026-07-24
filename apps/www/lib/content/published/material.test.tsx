@@ -9,16 +9,21 @@ import { Effect } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { executeSignedArtifact } from "@/lib/content/published/artifact";
-import { renderPublishedMaterial } from "@/lib/content/published/material";
+import {
+  readPublishedMaterial,
+  renderPublishedMaterial,
+} from "@/lib/content/published/material";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import {
   previewMetadata,
+  previewProjection,
   previewPublicRoute,
   previewSourcePath,
   previewWireArtifact,
 } from "@/test/content-preview";
 
 const executeMock = vi.hoisted(() => vi.fn());
+const readContentMock = vi.hoisted(() => vi.fn());
 const components = {};
 const liveRenderer = await Effect.runPromise(rendererManifest);
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
@@ -36,9 +41,23 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/content/published/artifact", () => ({
   executeSignedArtifact: executeMock,
 }));
+vi.mock("@/lib/content/published/exchange", () => ({
+  readPublishedContent: readContentMock,
+}));
 
 beforeEach(() => {
   executeMock.mockReset();
+  readContentMock.mockReset();
+  readContentMock.mockReturnValue(
+    Effect.succeed({
+      activeReleaseId: data.activeReleaseId,
+      artifact: data.artifact,
+      projection: previewProjection,
+      rendererManifest: data.rendererManifest,
+      sourcePath: data.sourcePath,
+      sourceRevision: data.sourceRevision,
+    })
+  );
   executeMock.mockImplementation(
     ({ artifact }: { readonly artifact: unknown }) =>
       ContentVerificationKeyResolver.pipe(
@@ -52,6 +71,17 @@ beforeEach(() => {
 });
 
 describe("published material renderer", () => {
+  it("adapts only an exact material projection to the current route shell", async () => {
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterial({
+          locale: "en",
+          publicPath: previewProjection.publicPath,
+        })
+      )
+    ).resolves.toEqual(data);
+  });
+
   it("returns JSX and plain projections without exposing the module function", async () => {
     const content = await Effect.runPromise(
       renderPublishedMaterial({

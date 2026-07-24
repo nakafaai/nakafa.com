@@ -110,13 +110,11 @@ export function createNakafaContentRefFromGraphProjection(input: unknown) {
     return Option.none<NakafaAgentContentRef>();
   }
 
-  const sourceRoute = graph.sourcePath ?? graph.route;
-
   return Schema.decodeUnknownOption(NakafaAgentContentRefSchema)(
     createNakafaContentRefInput({
       ...graph,
       publicRoute: graph.route,
-      route: sourceRoute,
+      route: graph.route,
     })
   );
 }

@@ -1,8 +1,12 @@
-import type { MaterialHead } from "@nakafa/aksara-contracts/release/head";
+import {
+  familyForProjection,
+  isQuestionProjection,
+} from "@nakafa/aksara-contracts/projection/spec";
+import type { ContentHead } from "@nakafa/aksara-contracts/release/head";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { resolveMaterialHead } from "@repo/backend/convex/contentRelease/catalog";
+import { resolveContentHead } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   loadRelease,
@@ -19,7 +23,7 @@ import {
   stagedEvidence,
 } from "@repo/backend/convex/contentRelease/receipt";
 import {
-  materialHeadValidator,
+  contentHeadValidator,
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -28,7 +32,7 @@ import { Effect } from "effect";
 
 const catalogPageValidator = v.object({
   done: v.boolean(),
-  heads: v.array(materialHeadValidator),
+  heads: v.array(contentHeadValidator),
   nextCursor: v.union(v.string(), v.null()),
 });
 const routeCatalogValidator = v.object({
@@ -39,7 +43,7 @@ const routeCatalogValidator = v.object({
 
 export interface CatalogPage {
   readonly done: boolean;
-  readonly heads: readonly MaterialHead[];
+  readonly heads: readonly ContentHead[];
   readonly nextCursor: null | string;
 }
 
@@ -146,9 +150,7 @@ const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(function* (
   const stored = yield* Effect.promise(() =>
     ctx.db
       .query("contentKeys")
-      .withIndex("by_family_and_contentKey_and_locale", (query) =>
-        query.eq("family", "material")
-      )
+      .withIndex("by_contentKey_and_locale")
       .order("asc")
       .paginate({
         cursor,
@@ -156,9 +158,9 @@ const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(function* (
         numItems: PROOF_PAGE_LIMIT,
       })
   );
-  const heads: MaterialHead[] = [];
+  const heads: ContentHead[] = [];
   for (const key of stored.page) {
-    const head = yield* resolveMaterialHead(
+    const head = yield* resolveContentHead(
       ctx,
       key.contentKey,
       key.locale,
@@ -232,7 +234,9 @@ const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(function* (
     const projection = yield* decodeProjectionJson(head.projectionJson);
     if (
       projection.contentKey !== binding.contentKey ||
+      familyForProjection(projection) !== head.family ||
       projection.locale !== path.locale ||
+      isQuestionProjection(projection) ||
       projection.publicPath !== path.publicPath
     ) {
       return yield* releaseFail(

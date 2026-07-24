@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/progress";
@@ -5,6 +6,7 @@ import {
   loadReadySections,
   toPublicTryoutSet,
 } from "@repo/backend/convex/tryouts/queries/catalogModel";
+import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import type {
   ListArgs,
   StatusArgs,
@@ -67,8 +69,10 @@ export async function readSetProgress(
 ) {
   return await ctx.db
     .query("tryoutSetProgress")
-    .withIndex("by_userId_and_tryoutSetId", (q) =>
-      q.eq("userId", user._id).eq("tryoutSetId", set._id)
+    .withIndex("by_userId_and_setIdentity", (q) =>
+      q
+        .eq("userId", user._id)
+        .eq("setIdentity", tryoutCatalogIdentity({ ...set, kind: "set" }))
     )
     .unique();
 }
@@ -188,7 +192,7 @@ export async function listSetsByStatus(
     .paginate(args.paginationOpts);
   const rows = await Promise.all(
     page.page.map(async (progress) => {
-      const set = await ctx.db.get(progress.tryoutSetId);
+      const set = await getActiveTryoutSet(ctx, progress);
 
       if (!isReadyTrackSet(set, args)) {
         return null;

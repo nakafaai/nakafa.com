@@ -31,13 +31,7 @@ export const resettableTableNames = [
   "questionChoices",
   "questions",
   "questionSets",
-  "irtCalibrationAttempts",
-  "irtCalibrationCacheStats",
-  "irtCalibrationQueue",
   "irtCalibrationRuns",
-  "irtScalePublicationQueue",
-  "irtScaleQualityChecks",
-  "irtScaleQualityRefreshQueue",
   "irtScaleItems",
   "irtScaleVersions",
   "learningPopularityCounters",
@@ -64,9 +58,6 @@ export const resettableTableNames = [
   "tryoutAttemptPlacements",
   "tryoutResponses",
   "tryoutScores",
-  "tryoutLeaderboardScopes",
-  "tryoutLeaderboardEntries",
-  "tryoutLeaderboardUserStats",
 ] as const satisfies readonly TableNames[];
 
 export type ResettableTableName = (typeof resettableTableNames)[number];

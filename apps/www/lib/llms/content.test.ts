@@ -8,7 +8,8 @@ const PUBLISHED_PATH =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetCachedLlmsMdxText = vi.hoisted(() => vi.fn());
-const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
+const mockGetCachedPublishedArticleText = vi.hoisted(() => vi.fn());
+const mockGetCachedPublishedMaterialText = vi.hoisted(() => vi.fn());
 const mockGetLlmsLegalPageText = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
 const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
@@ -35,7 +36,8 @@ vi.mock("@/lib/llms/mdx", () => ({
 }));
 
 vi.mock("@/lib/llms/published", () => ({
-  getCachedPublishedText: mockGetCachedPublishedText,
+  getCachedPublishedArticleText: mockGetCachedPublishedArticleText,
+  getCachedPublishedMaterialText: mockGetCachedPublishedMaterialText,
 }));
 
 vi.mock("@/lib/llms/quran", () => ({
@@ -72,7 +74,8 @@ describe("llms markdown content resolver", () => {
   beforeEach(() => {
     mockGetCachedLlmsSectionIndexText.mockReset().mockResolvedValue(null);
     mockGetCachedLlmsMdxText.mockReset().mockResolvedValue(null);
-    mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
+    mockGetCachedPublishedArticleText.mockReset().mockResolvedValue(null);
+    mockGetCachedPublishedMaterialText.mockReset().mockResolvedValue(null);
     mockGetLlmsLegalPageText.mockReset().mockReturnValue(Effect.succeed(null));
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
     mockGetRuntimePublicRoute.mockReset();
@@ -111,11 +114,11 @@ describe("llms markdown content resolver", () => {
   });
 
   it("reads migrated public material markdown only from Aksara", async () => {
-    mockGetCachedPublishedText.mockResolvedValue("Aksara markdown");
+    mockGetCachedPublishedMaterialText.mockResolvedValue("Aksara markdown");
 
     await expect(readMarkdown(PUBLISHED_PATH)).resolves.toBe("Aksara markdown");
 
-    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+    expect(mockGetCachedPublishedMaterialText).toHaveBeenCalledWith({
       locale: "en",
       publicPath: PUBLISHED_PATH,
     });
@@ -125,7 +128,7 @@ describe("llms markdown content resolver", () => {
 
   it("types cached Aksara markdown failures", async () => {
     const error = new Error("Aksara markdown failed");
-    mockGetCachedPublishedText.mockRejectedValue(error);
+    mockGetCachedPublishedMaterialText.mockRejectedValue(error);
 
     await expectCacheFailure(PUBLISHED_PATH, error, "published");
   });
@@ -135,11 +138,11 @@ describe("llms markdown content resolver", () => {
     mockReadActiveMaterialRoute.mockReturnValueOnce(
       Effect.succeed({ kind: "found" })
     );
-    mockGetCachedPublishedText.mockResolvedValue("New markdown");
+    mockGetCachedPublishedMaterialText.mockResolvedValue("New markdown");
 
     await expect(readMarkdown(publicPath)).resolves.toBe("New markdown");
 
-    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+    expect(mockGetCachedPublishedMaterialText).toHaveBeenCalledWith({
       locale: "en",
       publicPath,
     });
@@ -156,7 +159,34 @@ describe("llms markdown content resolver", () => {
 
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
-    expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+    expect(mockGetCachedPublishedMaterialText).not.toHaveBeenCalled();
+  });
+
+  it("reads article bodies only from their signed Aksara artifact", async () => {
+    const publicPath = "articles/politics/dynastic-politics-asian-values";
+    mockGetCachedPublishedArticleText.mockResolvedValue("Article markdown");
+
+    await expect(readMarkdown(publicPath)).resolves.toBe("Article markdown");
+
+    expect(mockGetCachedPublishedArticleText).toHaveBeenCalledWith({
+      locale: "en",
+      publicPath,
+    });
+    expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+  });
+
+  it("types published article failures without old-source fallback", async () => {
+    const error = new Error("Published article failed");
+    mockGetCachedPublishedArticleText.mockRejectedValue(error);
+
+    await expectCacheFailure(
+      "articles/politics/dynastic-politics-asian-values",
+      error,
+      "published"
+    );
+
+    expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
   });
 
   it("returns Quran markdown before checking other content sources", async () => {

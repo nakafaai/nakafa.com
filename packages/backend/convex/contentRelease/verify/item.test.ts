@@ -10,6 +10,11 @@ import {
   testRollbackJson,
 } from "@repo/backend/test/content-release";
 import {
+  TEST_ARTICLE_KEY,
+  TEST_ARTICLE_SOURCE,
+} from "@repo/backend/test/content-runtime";
+import {
+  beginFixture,
   stageDeleteFixture,
   stageUpsertFixture,
 } from "@repo/backend/test/content-verify";
@@ -39,6 +44,49 @@ describe("contentRelease/verify/item", () => {
       operation: "upsert",
       releaseId: TEST_RELEASE_ID,
       sequence: 1,
+    });
+  });
+
+  it("verifies an article upsert and preserves its family through deletion", async () => {
+    const upsert = convexTest(schema, convexModules);
+    await stageUpsertFixture(upsert, "article");
+    await beginFixture(upsert);
+
+    await expect(upsert.mutation(verifyOnly)).resolves.toBeNull();
+    await expect(
+      upsert.run((ctx) => ctx.db.query("contentHeads").unique())
+    ).resolves.toMatchObject({
+      contentKey: TEST_ARTICLE_KEY,
+      family: "article",
+      operation: "upsert",
+      rendererDomain: "politics",
+      sourcePath: TEST_ARTICLE_SOURCE,
+    });
+
+    const deletion = convexTest(schema, convexModules);
+    await stageDeleteFixture(deletion, "article");
+    const staged = await deletion.run((ctx) =>
+      ctx.db.query("contentItems").unique()
+    );
+    expect(JSON.parse(staged?.rollbackJson ?? "{}")).toMatchObject({
+      snapshot: {
+        head: {
+          contentKey: TEST_ARTICLE_KEY,
+          family: "article",
+          sourcePath: TEST_ARTICLE_SOURCE,
+        },
+        state: "article",
+      },
+    });
+    await beginFixture(deletion);
+    await expect(deletion.mutation(verifyOnly)).resolves.toBeNull();
+    const heads = await deletion.run((ctx) =>
+      ctx.db.query("contentHeads").take(3)
+    );
+    expect(heads.find(({ sequence }) => sequence === 2)).toMatchObject({
+      contentKey: TEST_ARTICLE_KEY,
+      family: "article",
+      operation: "delete",
     });
   });
 

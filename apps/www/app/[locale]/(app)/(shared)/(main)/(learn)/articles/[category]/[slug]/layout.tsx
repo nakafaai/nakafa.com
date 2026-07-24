@@ -1,7 +1,5 @@
-import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
-import { getSlugPath } from "@repo/contents/_lib/articles/slug";
-import { cleanSlug } from "@repo/utilities/helper";
-import { Option } from "effect";
+import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
+import { Schema } from "effect";
 import { notFound } from "next/navigation";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { getContentViewId } from "@/lib/content/views";
@@ -14,18 +12,14 @@ export default async function Layout(
   const { children, params } = props;
   const { locale: rawLocale, category: rawCategory, slug } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const parsedCategory = parseArticleCategory(rawCategory);
 
-  if (Option.isNone(parsedCategory)) {
+  if (!Schema.is(ArticleCategorySchema)(rawCategory)) {
     notFound();
   }
 
-  const category = parsedCategory.value;
-  const filePath = getSlugPath(category, slug);
-  const cleanedSlug = cleanSlug(filePath);
   const contentId = getContentViewId({
     locale,
-    route: cleanedSlug,
+    route: `articles/${rawCategory}/${slug}`,
   });
 
   if (!contentId) {

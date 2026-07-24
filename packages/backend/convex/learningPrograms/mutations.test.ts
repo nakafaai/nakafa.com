@@ -1,51 +1,45 @@
-import { api, internal } from "@repo/backend/convex/_generated/api";
-import { getLearningProgramCatalogInputs } from "@repo/backend/convex/learningPrograms/catalog";
+import { api } from "@repo/backend/convex/_generated/api";
+import {
+  getTestGraphIdentity,
+  seedLearningProgramCatalog,
+  seedTestContentRoute,
+  syncTestGraphCoverage,
+  TEST_NOW,
+} from "@repo/backend/convex/learningPrograms/testing";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
 
-const NOW = 1_798_752_000_000;
-const subjectGraph = getGraphIdentity(
+const subjectGraph = getTestGraphIdentity(
   "material/lesson/chemistry/atomic-structure"
 );
-const englishSubjectGraph = getGraphIdentity(
+const englishSubjectGraph = getTestGraphIdentity(
   "material/lesson/chemistry/atomic-structure",
   "en"
 );
-const snbtGraph = getGraphIdentity("try-out/indonesia/snbt/2027/set-1");
+const snbtGraph = getTestGraphIdentity("try-out/indonesia/snbt/2027/set-1");
 
 describe("learningPrograms/mutations", () => {
   it("creates an authenticated profile and graph-backed first plan", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
+      seedAuthenticatedUser(ctx, { now: TEST_NOW })
     );
 
-    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
-      programs: getLearningProgramCatalogInputs(),
-      syncedAt: NOW,
+    await seedLearningProgramCatalog(t);
+    await seedTestContentRoute(t, {
+      graph: subjectGraph,
+      route: "material/lesson/chemistry/atomic-structure",
+      title: "Atomic Structure",
     });
-    await seedContentRoute(t);
-    await t.mutation(
-      internal.learningPrograms.sync.syncLearningProgramCoverage,
-      {
-        coverageRows: [
-          {
-            contentCount: 1,
-            coverageStatus: "partial",
-            lensId: subjectGraph.lensId,
-            lensScope: "curriculum",
-            locale: "id",
-            programKey: "merdeka",
-            sampleContentId: subjectGraph.assetId,
-            syncedAt: NOW,
-          },
-        ],
-      }
-    );
+    await syncTestGraphCoverage(t, {
+      graph: subjectGraph,
+      lensScope: "curriculum",
+      locale: "id",
+      programKey: "merdeka",
+    });
 
     const result = await t
       .withIdentity({
@@ -70,6 +64,17 @@ describe("learningPrograms/mutations", () => {
       program: { key: "merdeka" },
       stage: "grade-10",
     });
+    const persistedKeys = await t.query(async (ctx) =>
+      (
+        await Promise.all([
+          ctx.db.query("learningProfiles").first(),
+          ctx.db.query("learningPlans").first(),
+          ctx.db.query("learningPlanItems").first(),
+        ])
+      ).map((row) => row?.programKey)
+    );
+
+    expect(persistedKeys).toEqual(Array.from({ length: 3 }, () => "merdeka"));
     await expect(
       t
         .withIdentity({
@@ -86,14 +91,11 @@ describe("learningPrograms/mutations", () => {
   it("stores unique interests and rejects unrelated primary programs", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
+      seedAuthenticatedUser(ctx, { now: TEST_NOW })
     );
 
-    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
-      programs: getLearningProgramCatalogInputs(),
-      syncedAt: NOW,
-    });
-    await syncProgramCoverage(t, {
+    await seedLearningProgramCatalog(t);
+    await syncTestGraphCoverage(t, {
       graph: snbtGraph,
       lensScope: "exam",
       locale: "id",
@@ -126,20 +128,17 @@ describe("learningPrograms/mutations", () => {
   it("selects the same canonical program from Indonesian and English UI", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
+      seedAuthenticatedUser(ctx, { now: TEST_NOW })
     );
 
-    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
-      programs: getLearningProgramCatalogInputs(),
-      syncedAt: NOW,
-    });
-    await syncProgramCoverage(t, {
+    await seedLearningProgramCatalog(t);
+    await syncTestGraphCoverage(t, {
       graph: subjectGraph,
       lensScope: "curriculum",
       locale: "id",
       programKey: "merdeka",
     });
-    await syncProgramCoverage(t, {
+    await syncTestGraphCoverage(t, {
       graph: englishSubjectGraph,
       lensScope: "curriculum",
       locale: "en",
@@ -187,13 +186,10 @@ describe("learningPrograms/mutations", () => {
   it("rejects selections without content-language coverage before profile writes", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
+      seedAuthenticatedUser(ctx, { now: TEST_NOW })
     );
 
-    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
-      programs: getLearningProgramCatalogInputs(),
-      syncedAt: NOW,
-    });
+    await seedLearningProgramCatalog(t);
 
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
@@ -216,13 +212,10 @@ describe("learningPrograms/mutations", () => {
   it("rejects planned program selections before profile writes", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
+      seedAuthenticatedUser(ctx, { now: TEST_NOW })
     );
 
-    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
-      programs: getLearningProgramCatalogInputs(),
-      syncedAt: NOW,
-    });
+    await seedLearningProgramCatalog(t);
 
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
@@ -242,70 +235,3 @@ describe("learningPrograms/mutations", () => {
     ).resolves.toBeNull();
   });
 });
-
-/** Returns graph identity for a route fixture and fails fast on invalid fixtures. */
-function getGraphIdentity(route: string, locale: "en" | "id" = "id") {
-  const identity = createLearningGraphIdentityFromRoute({
-    locale,
-    route,
-  });
-
-  if (!identity) {
-    throw new Error(`Expected graph identity for ${route}.`);
-  }
-
-  return identity;
-}
-
-/** Seeds one program coverage row so locale-specific selection can proceed. */
-async function syncProgramCoverage(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>,
-  {
-    graph,
-    lensScope,
-    locale,
-    programKey,
-  }: {
-    graph: ReturnType<typeof getGraphIdentity>;
-    lensScope: "curriculum" | "exam";
-    locale: "en" | "id";
-    programKey: string;
-  }
-) {
-  await t.mutation(internal.learningPrograms.sync.syncLearningProgramCoverage, {
-    coverageRows: [
-      {
-        contentCount: 1,
-        coverageStatus: "partial",
-        lensId: graph.lensId,
-        lensScope,
-        locale,
-        programKey,
-        sampleContentId: graph.assetId,
-        syncedAt: NOW,
-      },
-    ],
-  });
-}
-
-/** Seeds the content route used to decorate generated learning plan items. */
-async function seedContentRoute(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>
-) {
-  await t.mutation(async (ctx) => {
-    await ctx.db.insert("contentRoutes", {
-      ...subjectGraph,
-      authors: [],
-      contentHash: "chemistry-hash",
-      content_id: subjectGraph.assetId,
-      kind: "curriculum-topic",
-      locale: "id",
-      markdown: true,
-      route: "material/lesson/chemistry/atomic-structure",
-      section: "material",
-      sourcePath: "material/lesson/chemistry/atomic-structure",
-      syncedAt: NOW,
-      title: "Atomic Structure",
-    });
-  });
-}

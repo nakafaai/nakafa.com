@@ -23,14 +23,19 @@ import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/ro
 import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
 import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route";
 import { digestRoutes } from "@nakafa/aksara-contracts/release/route-digest";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  emptyContentSnapshots,
+  invertContentSnapshots,
+} from "@nakafa/aksara-contracts/release/snapshot";
 import {
   TEST_PROOF_RENDERER,
-  testEmptyManifest,
   testSignedArtifact,
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
-import { testTextHash } from "@repo/backend/test/content-release";
+import {
+  testMaterialGraph,
+  testTextHash,
+} from "@repo/backend/test/content-release";
 import { Effect, Stream } from "effect";
 
 export const ingressReleaseId = ReleaseIdSchema.make("release-ingress");
@@ -45,6 +50,7 @@ export const ingressItem = ContentReleaseItemSchema.make({
     artifactHash: ingressArtifact.artifactHash,
     contentKey: ingressArtifact.payload.contentKey,
     delivery: "public",
+    family: "material",
     locale: ingressArtifact.payload.locale,
     operation: "upsert",
     rendererDomain: ingressArtifact.payload.rendererDomain,
@@ -67,9 +73,10 @@ export const ingressRoute = ContentRouteItemSchema.make({
 
 export const ingressProjection = MaterialLessonProjectionSchema.make({
   contentKey: ingressArtifact.payload.contentKey,
+  graph: testMaterialGraph("head-0", "head-0"),
   kind: "subject-lesson",
   locale: "en",
-  materialKey: MaterialKeySchema.make("test.0"),
+  materialKey: MaterialKeySchema.make("lesson.test.head-0"),
   metadata: {
     authors: [{ name: "Nakafa" }],
     date: "2026-07-22",
@@ -97,6 +104,7 @@ const rollbackDigest = Effect.runSync(
         releaseId: ingressReleaseId,
         snapshot: {
           contentKey: ingressItem.change.contentKey,
+          family: "material",
           locale: ingressItem.change.locale,
           state: "absent",
         },
@@ -112,6 +120,7 @@ const ingressHead = MaterialHeadSchema.make({
   compilerConfigHash: ingressArtifact.payload.compilerConfigHash,
   contentKey: ingressItem.change.contentKey,
   delivery: "public",
+  family: "material",
   locale: ingressArtifact.payload.locale,
   projectionHash: testTextHash(
     canonicalizeMaterialProjection(ingressProjection)
@@ -146,6 +155,7 @@ export const ingressRelease = testSignedRelease(
     rollbackDigest: rollbackDigest.digest,
     routeCount: 1,
     routeDigest: routeDigest.digest,
+    snapshots: emptyContentSnapshots(),
     upsertCount: 1,
   })
 );
@@ -154,6 +164,7 @@ export const ingressRecoveryId = ReleaseIdSchema.make("release-recovery");
 export const ingressRecoveryItem = ContentReleaseItemSchema.make({
   change: {
     contentKey: ingressItem.change.contentKey,
+    family: "material",
     locale: ingressItem.change.locale,
     operation: "delete",
   },
@@ -212,90 +223,7 @@ export const ingressRecovery = testSignedRelease(
     rollbackDigest: recoveryRollback.digest,
     routeCount: 1,
     routeDigest: recoveryRoutes.digest,
+    snapshots: invertContentSnapshots(ingressRelease.manifest.snapshots),
     upsertCount: 0,
   })
 );
-
-/** Inserts one detached terminal release for cleanup dispatch coverage. */
-export async function insertAbortedRelease(ctx: MutationCtx) {
-  const now = Date.UTC(2026, 6, 22, 12);
-  await ctx.db.insert("contentReleases", {
-    abortedAt: now,
-    abortedRows: 0,
-    abortingAt: now,
-    checkedIndex: -1,
-    checkedItems: 0,
-    createdAt: now,
-    releaseId: "release-cleanup-dispatch",
-    releaseJson: "{}",
-    rendererJson: "{}",
-    role: "candidate",
-    sequence: 1,
-    stagedArtifacts: 0,
-    stagedDeletes: 0,
-    stagedItems: 0,
-    stagedProjections: 0,
-    stagedRoutes: 0,
-    stagedUpserts: 0,
-    status: "aborted",
-    updatedAt: now,
-  });
-}
-
-/** Inserts one authoritative active pointer used to reject a stale base. */
-export async function insertActiveRelease(
-  ctx: MutationCtx,
-  activeReleaseId: string,
-  signedReleaseId = activeReleaseId
-) {
-  const activeId = ReleaseIdSchema.make(signedReleaseId);
-  const active = testSignedRelease(testEmptyManifest(activeId));
-  const manifest = active.manifest;
-  const now = Date.UTC(2026, 6, 22, 12);
-  const receipt = {
-    activatedHeads: 0,
-    deletedHeads: 0,
-    manifestHash: active.manifestHash,
-    projectionDigest: manifest.projectionDigest,
-    releaseId: activeReleaseId,
-    resultCount: 0,
-    resultDigest: EMPTY_RESULT_CATALOG_DIGEST,
-    routeDigest: manifest.routeDigest,
-    stagedArtifacts: 0,
-    stagedItems: 0,
-    stagedProjections: 0,
-    stagedRoutes: 0,
-  };
-  await ctx.db.insert("contentReleases", {
-    checkedIndex: -1,
-    checkedItems: 0,
-    completedAt: now,
-    createdAt: now,
-    proofAt: now,
-    proofJson: "{}",
-    receiptJson: JSON.stringify(receipt),
-    releaseId: activeReleaseId,
-    releaseJson: JSON.stringify(active),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
-    role: "candidate",
-    sequence: 1,
-    stagedArtifacts: 0,
-    stagedDeletes: 0,
-    stagedItems: 0,
-    stagedProjections: 0,
-    stagedRoutes: 0,
-    stagedUpserts: 0,
-    status: "completed",
-    updatedAt: now,
-    verifiedAt: now,
-  });
-  await ctx.db.insert("contentState", {
-    activeManifestHash: active.manifestHash,
-    activeReleaseId,
-    activeSequence: 1,
-    key: "primary",
-    nextSequence: 2,
-    updatedAt: now,
-  });
-  return active.manifestHash;
-}

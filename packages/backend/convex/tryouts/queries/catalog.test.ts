@@ -159,7 +159,6 @@ describe("tryouts/queries/catalog", () => {
       visibility: "internal-entry",
     });
     expect(page?.entrySection?.publicPath).toBeUndefined();
-    expect(page?.entryQuestions).toHaveLength(1);
   });
 
   it("hides direct set and section pages when their country is inactive", async () => {

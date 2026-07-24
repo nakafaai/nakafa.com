@@ -1,11 +1,18 @@
 import { createHash } from "node:crypto";
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
+import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
+import {
+  type ContentSnapshotSet,
+  emptyContentSnapshots,
+} from "@nakafa/aksara-contracts/release/snapshot";
+import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { Effect } from "effect";
 
 export const TEST_DIGEST = Sha256HashSchema.make(`sha256:${"0".repeat(64)}`);
 export const TEST_MANIFEST_HASH = Sha256HashSchema.make(
@@ -15,6 +22,37 @@ export const TEST_ARTIFACT_HASH = Sha256HashSchema.make(
   `sha256:${"2".repeat(64)}`
 );
 export const TEST_RELEASE_ID = ReleaseIdSchema.make("release-test");
+
+/** Creates the exact graph identity derived from one article source key. */
+export function testArticleGraph(
+  articleSlug: string,
+  locale: "en" | "id" = "en"
+) {
+  return Effect.runSync(
+    makeLearningGraphIdentity({
+      concept: ["article", "politics"],
+      learningObject: ["article", "politics", articleSlug],
+      lens: ["article", "politics"],
+      locale,
+    })
+  );
+}
+
+/** Creates the exact graph identity derived from one material source key. */
+export function testMaterialGraph(
+  topic: string,
+  section: string,
+  locale: "en" | "id" = "en"
+) {
+  return Effect.runSync(
+    makeLearningGraphIdentity({
+      concept: ["material", "lesson", "test", topic],
+      learningObject: ["material-section", "test", topic, section],
+      lens: ["material", "lesson", "test"],
+      locale,
+    })
+  );
+}
 
 /** Hashes one canonical technical wire value with the production algorithm. */
 export function testTextHash(value: string) {
@@ -59,6 +97,7 @@ interface ReleaseOptions {
   readonly rollbackDigest?: string;
   readonly routeCount?: number;
   readonly routeDigest?: string;
+  readonly snapshots?: ContentSnapshotSet;
   readonly upsertCount?: number;
 }
 
@@ -99,6 +138,7 @@ export function testReleaseJson(options?: ReleaseOptions) {
       rollbackDigest: options?.rollbackDigest ?? TEST_DIGEST,
       routeCount: options?.routeCount ?? upsertCount,
       routeDigest: options?.routeDigest ?? TEST_DIGEST,
+      snapshots: options?.snapshots ?? emptyContentSnapshots(),
       upsertCount,
     },
     manifestHash: options?.manifestHash ?? TEST_MANIFEST_HASH,
@@ -109,6 +149,7 @@ export function testReleaseJson(options?: ReleaseOptions) {
 /** Creates one canonical snapshot for a previously absent head. */
 export function testRollbackJson(options?: {
   readonly contentKey?: string;
+  readonly family?: ContentFamily;
   readonly index?: number;
   readonly locale?: "en" | "id";
   readonly releaseId?: string;
@@ -119,6 +160,7 @@ export function testRollbackJson(options?: {
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
     snapshot: {
       contentKey: options?.contentKey ?? `test:head-${index}`,
+      family: options?.family ?? "material",
       locale: options?.locale ?? "en",
       state: "absent",
     },
@@ -129,9 +171,11 @@ export function testRollbackJson(options?: {
 export function testUpsertJson(options?: {
   readonly artifactHash?: string;
   readonly contentKey?: string;
+  readonly family?: ContentFamily;
   readonly index?: number;
   readonly locale?: "en" | "id";
   readonly releaseId?: string;
+  readonly rendererDomain?: RendererDomain;
   readonly sourcePath?: string;
 }) {
   const index = options?.index ?? 0;
@@ -141,9 +185,10 @@ export function testUpsertJson(options?: {
       artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
       contentKey: options?.contentKey ?? `test:head-${index}`,
       delivery: "public",
+      family: options?.family ?? "material",
       locale,
       operation: "upsert",
-      rendererDomain: "mathematics",
+      rendererDomain: options?.rendererDomain ?? "mathematics",
       sourcePath:
         options?.sourcePath ??
         `packages/corpus/test/head-${index}/${locale}.mdx`,
@@ -181,6 +226,7 @@ export function testRouteJson(options?: {
 /** Creates one canonical technical delete item. */
 export function testDeleteJson(options?: {
   readonly contentKey?: string;
+  readonly family?: ContentFamily;
   readonly index?: number;
   readonly locale?: "en" | "id";
   readonly releaseId?: string;
@@ -188,6 +234,7 @@ export function testDeleteJson(options?: {
   return JSON.stringify({
     change: {
       contentKey: options?.contentKey ?? "test:deleted",
+      family: options?.family ?? "material",
       locale: options?.locale ?? "en",
       operation: "delete",
     },
@@ -205,11 +252,14 @@ export function testProjectionJson(options?: {
   readonly title?: string;
 }) {
   const index = options?.index ?? 0;
+  const locale = options?.locale ?? "en";
+  const topic = `head-${index}`;
   return JSON.stringify({
     contentKey: options?.contentKey ?? `test:head-${index}`,
+    graph: testMaterialGraph(topic, topic, locale),
     kind: "subject-lesson",
-    locale: options?.locale ?? "en",
-    materialKey: `test.${index}`,
+    locale,
+    materialKey: `lesson.test.${topic}`,
     metadata: {
       authors: [{ name: "Nakafa" }],
       date: "2026-07-22",
@@ -218,79 +268,7 @@ export function testProjectionJson(options?: {
     order: index + 1,
     parentPath: "test",
     publicPath: options?.publicPath ?? `test/head-${index}`,
-    sectionKey: `head-${index}`,
+    sectionKey: topic,
     sitemap: true,
-  });
-}
-
-/** Inserts one pending release with exact sequence-slot ownership. */
-export async function insertTestRelease(
-  ctx: MutationCtx,
-  options?: {
-    readonly checkedIndex?: number;
-    readonly checkedItems?: number;
-    readonly deleteCount?: number;
-    readonly itemCount?: number;
-    readonly projectionCount?: number;
-    readonly releaseId?: string;
-    readonly role?: "candidate" | "recovery";
-    readonly routeCount?: number;
-    readonly sequence?: number;
-    readonly stagedArtifacts?: number;
-    readonly stagedDeletes?: number;
-    readonly stagedItems?: number;
-    readonly stagedProjections?: number;
-    readonly stagedRoutes?: number;
-    readonly stagedUpserts?: number;
-    readonly status?: "staging" | "verified" | "verifying";
-    readonly upsertCount?: number;
-  }
-) {
-  const now = Date.UTC(2026, 6, 22, 12);
-  const releaseId = options?.releaseId ?? TEST_RELEASE_ID;
-  const role = options?.role ?? "candidate";
-  const sequence = options?.sequence ?? 1;
-  const itemCount = options?.itemCount ?? 1;
-  const upsertCount = options?.upsertCount ?? itemCount;
-  await ctx.db.insert("contentReleases", {
-    checkedIndex: options?.checkedIndex ?? -1,
-    checkedItems: options?.checkedItems ?? 0,
-    createdAt: now,
-    releaseId,
-    releaseJson: testReleaseJson({
-      deleteCount: options?.deleteCount ?? itemCount - upsertCount,
-      itemCount,
-      projectionCount: options?.projectionCount ?? upsertCount,
-      releaseId,
-      routeCount: options?.routeCount ?? upsertCount,
-      upsertCount,
-    }),
-    rendererJson: testRendererJson(),
-    role,
-    sequence,
-    stagedArtifacts: options?.stagedArtifacts ?? 0,
-    stagedDeletes: options?.stagedDeletes ?? 0,
-    stagedItems: options?.stagedItems ?? 0,
-    stagedProjections: options?.stagedProjections ?? 0,
-    stagedRoutes: options?.stagedRoutes ?? 0,
-    stagedUpserts: options?.stagedUpserts ?? 0,
-    status: options?.status ?? "staging",
-    updatedAt: now,
-  });
-  await ctx.db.insert("contentState", {
-    ...(role === "candidate"
-      ? {
-          candidateManifestHash: TEST_MANIFEST_HASH,
-          candidateReleaseId: releaseId,
-          candidateSequence: sequence,
-        }
-      : {
-          recoveryManifestHash: TEST_MANIFEST_HASH,
-          recoveryReleaseId: releaseId,
-          recoverySequence: sequence,
-        }),
-    key: "primary",
-    nextSequence: sequence + 1,
-    updatedAt: now,
   });
 }

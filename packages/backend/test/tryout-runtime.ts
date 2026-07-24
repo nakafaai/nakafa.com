@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
@@ -9,6 +10,33 @@ import {
   TRYOUT_SECTION_KEY,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
+
+/** Replaces one catalog row while preserving its stable source identity. */
+export async function replaceTryoutSet(
+  ctx: MutationCtx,
+  tryoutSetId: Id<"tryoutSets">
+) {
+  const set = await ctx.db.get(tryoutSetId);
+  if (!set) {
+    throw new Error("Expected one try-out set before catalog replacement.");
+  }
+  const sections = await ctx.db
+    .query("tryoutSections")
+    .withIndex("by_tryoutSetId_and_order", (query) =>
+      query.eq("tryoutSetId", tryoutSetId)
+    )
+    .take(101);
+  if (sections.length > 100) {
+    throw new Error("Catalog replacement fixture exceeded 100 sections.");
+  }
+  const { _creationTime: _creation, _id, ...fields } = set;
+  await ctx.db.delete(_id);
+  const replacementId = await ctx.db.insert("tryoutSets", fields);
+  for (const section of sections) {
+    await ctx.db.patch(section._id, { tryoutSetId: replacementId });
+  }
+  return replacementId;
+}
 
 /** Returns the coherent terminal reason for one fixture status. */
 function getEndReason(status: TryoutStatus) {
@@ -37,6 +65,7 @@ export async function seedTryoutContentAccessState(
     suffix: args.suffix,
   });
   const tryoutSetId = await insertTryoutSet(ctx);
+  const stableSet = await loadStableSetFields(ctx, tryoutSetId);
   const questionSetId = await insertTryoutQuestionSource(ctx);
   const tryoutSectionId = await insertTryoutSection(ctx, {
     questionSetId,
@@ -45,6 +74,7 @@ export async function seedTryoutContentAccessState(
   const attemptTerminal = args.attemptStatus !== "in-progress";
   const sectionTerminal = args.sectionStatus !== "in-progress";
   const attemptId = await ctx.db.insert("tryoutAttempts", {
+    ...stableSet,
     accessEndsAt: TRYOUT_TEST_NOW + 3_600_000,
     accessSourceKind: "free",
     attemptNumber: 1,
@@ -62,6 +92,7 @@ export async function seedTryoutContentAccessState(
     totalCorrect: 0,
     totalQuestions: 1,
     tryoutSetId,
+    tryoutSnapshotId: "snapshot:tryout:runtime",
     userId: identity.userId,
   });
 
@@ -114,6 +145,7 @@ export async function insertTryoutAttempt(
     scaleVersionId?: Id<"irtScaleVersions">;
     scoringStrategy?: Doc<"tryoutAttempts">["scoringStrategy"];
     sectionSnapshots: Doc<"tryoutAttempts">["sectionSnapshots"];
+    snapshotId?: string;
     status?: Doc<"tryoutAttempts">["status"];
     tryoutSetId: Id<"tryoutSets">;
     userId: Id<"users">;
@@ -121,8 +153,10 @@ export async function insertTryoutAttempt(
 ) {
   const scoringStrategy = args.scoringStrategy ?? "irt";
   const accessEndsAt = args.expiresAt ?? TRYOUT_TEST_NOW + 86_400_000;
+  const stableSet = await loadStableSetFields(ctx, args.tryoutSetId);
 
   return await ctx.db.insert("tryoutAttempts", {
+    ...stableSet,
     accessEndsAt,
     accessSourceKind: "free",
     attemptNumber: 1,
@@ -144,8 +178,28 @@ export async function insertTryoutAttempt(
       0
     ),
     tryoutSetId: args.tryoutSetId,
+    tryoutSnapshotId: args.snapshotId ?? "snapshot:tryout:runtime",
     userId: args.userId,
   });
+}
+
+/** Loads the exact set identity copied into one post-migration attempt. */
+async function loadStableSetFields(
+  ctx: MutationCtx,
+  tryoutSetId: Id<"tryoutSets">
+) {
+  const set = await ctx.db.get(tryoutSetId);
+  if (!set) {
+    throw new Error("Expected one try-out set for the runtime attempt.");
+  }
+  return {
+    countryKey: set.countryKey,
+    examKey: set.examKey,
+    locale: set.locale,
+    setIdentity: tryoutCatalogIdentity({ ...set, kind: "set" }),
+    setKey: set.setKey,
+    trackKey: set.trackKey,
+  };
 }
 
 /** Inserts the active section row used while testing attempt finalization. */

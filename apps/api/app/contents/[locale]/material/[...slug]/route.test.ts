@@ -1,15 +1,16 @@
+import { PublicContentMissingError } from "@repo/backend/client/content/errors";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import * as route from "./route";
+import * as route from "@/app/contents/[locale]/material/[...slug]/route";
 
 const runtimeMocks = vi.hoisted(() => ({
-  getMaterialApiContentPage: vi.fn(),
-  listApiStaticParams: vi.fn(),
+  getApiPublishedContent: vi.fn(),
 }));
 const loggingMocks = vi.hoisted(() => ({
   logError: vi.fn(),
 }));
 
+vi.mock("server-only", () => ({}));
 vi.mock("@repo/utilities/logging/effect", async () => {
   const { Effect } = await import("effect");
 
@@ -21,23 +22,17 @@ vi.mock("@repo/utilities/logging/effect", async () => {
   };
 });
 
-vi.mock("@/lib/content/runtime", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/content/runtime")>();
+vi.mock("@/lib/content/runtime", () => ({
+  getApiPublishedContent: runtimeMocks.getApiPublishedContent,
+  invalidApiLocaleMessage: "Invalid locale. Supported locales: en, id.",
+  parseApiLocale: (locale: string) =>
+    locale === "en" || locale === "id" ? locale : null,
+}));
 
-  return {
-    ...actual,
-    getMaterialApiContentPage: runtimeMocks.getMaterialApiContentPage,
-    listApiStaticParams: runtimeMocks.listApiStaticParams,
-  };
-});
-
-const materialRow = {
-  description: "Logarithm lesson.",
-  locale: "id",
-  route:
-    "material/lesson/mathematics/exponential-logarithm/logarithm-definition",
-  slug: "logarithm-definition",
-  title: "Definisi Logaritma",
+const material = {
+  artifactHash: `sha256:${"b".repeat(64)}`,
+  raw: "# Signed lesson",
+  releaseId: "release-material",
 };
 
 describe("material content API route", () => {
@@ -45,90 +40,42 @@ describe("material content API route", () => {
     vi.clearAllMocks();
   });
 
-  it("generates static params from the Convex route catalog", async () => {
-    const params = [
-      { locale: "id", slug: ["high-school", "10", "mathematics"] },
-    ];
-    runtimeMocks.listApiStaticParams.mockResolvedValue(params);
-
-    await expect(route.generateStaticParams()).resolves.toEqual(params);
-    expect(runtimeMocks.listApiStaticParams).toHaveBeenCalledWith({
-      prefix: "material/",
-      section: "material",
-    });
-  });
-
-  it("returns the pagination envelope for default material requests", async () => {
-    const page = {
-      continueCursor: "",
-      isDone: true,
-      page: [materialRow],
-    };
-
-    runtimeMocks.getMaterialApiContentPage.mockReturnValue(
-      Effect.succeed(page)
-    );
-
-    const response = await route.GET(
-      new Request("http://localhost/contents/id/material/lesson/mathematics"),
-      {
-        params: Promise.resolve({
-          locale: "id",
-          slug: ["lesson", "mathematics"],
-        }),
-      }
-    );
-
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual(page);
-    expect(runtimeMocks.getMaterialApiContentPage).toHaveBeenCalledWith({
-      cursor: null,
-      limit: 100,
-      locale: "id",
-      prefix: "material/lesson/mathematics",
-    });
-  });
-
-  it("returns the pagination envelope for explicit material pagination", async () => {
-    const page = {
-      continueCursor: "next-cursor",
-      isDone: false,
-      page: [materialRow],
-    };
-
-    runtimeMocks.getMaterialApiContentPage.mockReturnValue(
-      Effect.succeed(page)
+  it("returns one exact signed material body", async () => {
+    expect(route.dynamic).toBe("force-dynamic");
+    runtimeMocks.getApiPublishedContent.mockReturnValue(
+      Effect.succeed(material)
     );
 
     const response = await route.GET(
       new Request(
-        "http://localhost/contents/id/material/lesson/mathematics?cursor=page-1&limit=1"
+        "http://localhost/contents/id/material/lesson/mathematics/function-concept"
       ),
       {
         params: Promise.resolve({
           locale: "id",
-          slug: ["lesson", "mathematics"],
+          slug: ["lesson", "mathematics", "function-concept"],
         }),
       }
     );
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual(page);
-    expect(runtimeMocks.getMaterialApiContentPage).toHaveBeenCalledWith({
-      cursor: "page-1",
-      limit: 1,
+    expect(await response.json()).toEqual(material);
+    expect(runtimeMocks.getApiPublishedContent).toHaveBeenCalledWith({
+      expected: "subject-lesson",
       locale: "id",
-      prefix: "material/lesson/mathematics",
+      publicPath: "material/lesson/mathematics/function-concept",
     });
   });
 
-  it("rejects invalid locales before reading Convex", async () => {
+  it("rejects invalid locales before reading content", async () => {
     const response = await route.GET(
-      new Request("http://localhost/contents/fr/material/lesson/mathematics"),
+      new Request(
+        "http://localhost/contents/fr/material/lesson/mathematics/function-concept"
+      ),
       {
         params: Promise.resolve({
           locale: "fr",
-          slug: ["lesson", "mathematics"],
+          slug: ["lesson", "mathematics", "function-concept"],
         }),
       }
     );
@@ -137,41 +84,48 @@ describe("material content API route", () => {
     expect(await response.json()).toEqual({
       error: "Invalid locale. Supported locales: en, id.",
     });
-    expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
+    expect(runtimeMocks.getApiPublishedContent).not.toHaveBeenCalled();
   });
 
-  it("rejects invalid pagination before reading Convex", async () => {
+  it("returns 404 only for a verified missing public route", async () => {
+    runtimeMocks.getApiPublishedContent.mockReturnValue(
+      Effect.fail(
+        new PublicContentMissingError({
+          locale: "id",
+          publicPath: "material/lesson/mathematics/missing",
+        })
+      )
+    );
+
     const response = await route.GET(
       new Request(
-        "http://localhost/contents/id/material/lesson/mathematics?limit=0"
+        "http://localhost/contents/id/material/lesson/mathematics/missing"
       ),
       {
         params: Promise.resolve({
           locale: "id",
-          slug: ["lesson", "mathematics"],
+          slug: ["lesson", "mathematics", "missing"],
         }),
       }
     );
 
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      error: "Invalid pagination. Limit must be between 1 and 100.",
-    });
-    expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Content not found." });
+    expect(loggingMocks.logError).not.toHaveBeenCalled();
   });
 
-  it("logs Convex read failures and returns an API error", async () => {
-    const readError = new Error("Convex unavailable");
-    runtimeMocks.getMaterialApiContentPage.mockReturnValue(
-      Effect.fail(readError)
-    );
+  it("logs signed-read failures and returns an API error", async () => {
+    const readError = new Error("Signed runtime unavailable");
+    runtimeMocks.getApiPublishedContent.mockReturnValue(Effect.fail(readError));
 
     const response = await route.GET(
-      new Request("http://localhost/contents/id/material/lesson/mathematics"),
+      new Request(
+        "http://localhost/contents/id/material/lesson/mathematics/failure"
+      ),
       {
         params: Promise.resolve({
           locale: "id",
-          slug: ["lesson", "mathematics"],
+          slug: ["lesson", "mathematics", "failure"],
         }),
       }
     );
@@ -183,32 +137,20 @@ describe("material content API route", () => {
     expect(loggingMocks.logError).toHaveBeenCalledWith(readError, {
       service: "api-contents",
       locale: "id",
-      basePath: "lesson/mathematics",
-      slugLength: 2,
+      basePath: "lesson/mathematics/failure",
+      slugLength: 3,
       message: "Failed to fetch contents.",
     });
   });
 
-  it("logs root material prefix failures with a readable base path", async () => {
-    const readError = new Error("Convex unavailable");
-    runtimeMocks.getMaterialApiContentPage.mockReturnValue(
-      Effect.fail(readError)
-    );
+  it("logs a root-path failure with readable context", async () => {
+    const readError = new Error("Signed runtime unavailable");
+    runtimeMocks.getApiPublishedContent.mockReturnValue(Effect.fail(readError));
 
-    const response = await route.GET(
-      new Request("http://localhost/contents/id/material"),
-      {
-        params: Promise.resolve({
-          locale: "id",
-          slug: [],
-        }),
-      }
-    );
-
-    expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({
-      error: "Failed to fetch contents.",
+    await route.GET(new Request("http://localhost/contents/id/material"), {
+      params: Promise.resolve({ locale: "id", slug: [] }),
     });
+
     expect(loggingMocks.logError).toHaveBeenCalledWith(readError, {
       service: "api-contents",
       locale: "id",

@@ -15,8 +15,8 @@ import {
 } from "@nakafa/aksara-contracts/release/rollback";
 import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { trustedKeyResolver } from "@repo/backend/convex/contentRelease/proof/trust";
 import { recomputeProgram } from "@repo/backend/convex/contentRelease/proof/verify";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -68,6 +68,8 @@ async function insertRelease(ctx: MutationCtx) {
     stagedItems: 0,
     stagedProjections: 0,
     stagedRoutes: 0,
+    stagedSnapshotBatches: 0,
+    stagedSnapshotRows: 0,
     stagedUpserts: 0,
     status: "staging",
     updatedAt: now,
@@ -88,6 +90,7 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
     ContentReleaseItemSchema.make({
       change: {
         contentKey: ContentKeySchema.make(`test:proof-${index}`),
+        family: "material",
         locale: "en",
         operation: "delete",
       },
@@ -104,6 +107,7 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
       releaseId,
       snapshot: {
         contentKey: item.change.contentKey,
+        family: item.change.family,
         locale: item.change.locale,
         state: "absent",
       },
@@ -137,6 +141,8 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
     stagedItems: count,
     stagedProjections: 0,
     stagedRoutes: 0,
+    stagedSnapshotBatches: 0,
+    stagedSnapshotRows: 0,
     stagedUpserts: 0,
     status: "staging",
     updatedAt: now,
@@ -198,7 +204,7 @@ describe("contentRelease/proof/verify", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(insertRelease);
 
-    await expect(runProof(t, manifestHash, trustedKeyResolver)).rejects.toThrow(
+    await expect(runProof(t, manifestHash, contentKeyResolver)).rejects.toThrow(
       "Content release verification failed with SigningKeyNotFoundError."
     );
   });

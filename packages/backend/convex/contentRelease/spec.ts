@@ -1,4 +1,7 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
+import {
+  ContentFamilySchema,
+  ContentLocaleSchema,
+} from "@nakafa/aksara-contracts/content";
 import { ContentDeliveryClassSchema } from "@nakafa/aksara-contracts/delivery";
 import {
   ContentDeleteSchema,
@@ -8,6 +11,7 @@ import {
   ContentRouteBindSchema,
   ContentRouteDeleteSchema,
 } from "@nakafa/aksara-contracts/release/route";
+import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -42,12 +46,19 @@ export const compactionPhaseValidator = literals(
   "heads",
   "bindings",
   "items",
+  "batches",
   "artifacts",
+  "snapshots",
   "releases"
 );
 
-/** V1 projection families are added only when a real caller exists. */
-export const contentFamilyValidator = literals("material");
+/** Implemented content families owned by the shared release contract. */
+export const contentFamilyValidator = literals(...ContentFamilySchema.literals);
+
+/** Fixed structured families selected by the global release pointer. */
+export const snapshotFamilyValidator = literals(
+  ...ContentSnapshotKindSchema.literals
+);
 
 /** Stable delivery policies copied into immutable head versions. */
 export const deliveryValidator = literals(
@@ -89,6 +100,33 @@ export const stageReceiptValidator = v.object({
   unchanged: v.number(),
 });
 
+/** Snapshot batch outcome bound to its family and immutable identity. */
+export const snapshotBatchReceiptValidator = v.object({
+  batchIndex: v.number(),
+  created: v.number(),
+  family: snapshotFamilyValidator,
+  releaseId: v.string(),
+  snapshotId: v.string(),
+  unchanged: v.number(),
+});
+
+/** Idempotent outcome for staging one immutable family manifest. */
+export const snapshotReceiptValidator = v.object({
+  created: literals(0, 1),
+  family: snapshotFamilyValidator,
+  releaseId: v.string(),
+  snapshotId: v.string(),
+  unchanged: literals(0, 1),
+});
+
+const snapshotStateValidator = v.object({
+  baseSnapshotId: v.union(v.string(), v.null()),
+  mode: literals("inherit", "replace", "restore"),
+  resultSnapshotId: v.union(v.string(), v.null()),
+  rowCount: v.number(),
+  rowDigest: v.string(),
+});
+
 /** Completed publication evidence stored and returned without body replay. */
 export const publicationReceiptValidator = v.object({
   activatedHeads: v.number(),
@@ -99,10 +137,16 @@ export const publicationReceiptValidator = v.object({
   resultCount: v.number(),
   resultDigest: v.string(),
   routeDigest: v.string(),
+  snapshots: v.object({
+    program: snapshotStateValidator,
+    quran: snapshotStateValidator,
+    tryout: snapshotStateValidator,
+  }),
   stagedArtifacts: v.number(),
   stagedItems: v.number(),
   stagedProjections: v.number(),
   stagedRoutes: v.number(),
+  stagedSnapshotRows: v.number(),
 });
 
 /** Durable release status returned to the resumable publisher. */
@@ -179,12 +223,13 @@ export const compactionReceiptValidator = v.object({
   phase: compactionPhaseValidator,
 });
 
-/** One compact material head shared by publication and proof pages. */
-export const materialHeadValidator = v.object({
+/** One compact content head shared by publication and proof pages. */
+export const contentHeadValidator = v.object({
   artifactHash: v.string(),
   compilerConfigHash: v.string(),
   contentKey: v.string(),
   delivery: deliveryValidator,
+  family: contentFamilyValidator,
   locale: localeValidator,
   projectionHash: v.string(),
   publicPath: v.optional(v.string()),
@@ -193,13 +238,13 @@ export const materialHeadValidator = v.object({
   sourcePath: v.string(),
 });
 
-/** Compact active material inventory used for exact source diffing. */
+/** Compact active family inventory used for exact source diffing. */
 export const headPageValidator = v.object({
   activeManifestHash: v.string(),
   activeReleaseId: v.string(),
   cursor: v.union(v.string(), v.null()),
   done: v.boolean(),
-  family: v.literal("material"),
-  heads: v.array(materialHeadValidator),
+  family: contentFamilyValidator,
+  heads: v.array(contentHeadValidator),
   nextCursor: v.union(v.string(), v.null()),
 });

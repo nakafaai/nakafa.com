@@ -1,15 +1,17 @@
 import {
-  type HeadPage,
+  type ContentHead,
   HeadPageRequestSchema,
   HeadPageSchema,
-  type MaterialHead,
 } from "@nakafa/aksara-contracts/release/head";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { resolveMaterialHead } from "@repo/backend/convex/contentRelease/catalog";
+import { resolveContentHead } from "@repo/backend/convex/contentRelease/catalog";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { loadReadableSnapshot } from "@repo/backend/convex/contentRelease/snapshot";
-import { headPageValidator } from "@repo/backend/convex/contentRelease/spec";
+import {
+  contentFamilyValidator,
+  headPageValidator,
+} from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
@@ -25,7 +27,7 @@ const decodeRequest = Effect.fn("contentRelease.decodeHeadPage")(function* (
       () =>
         new ReleaseError({
           code: "CONTENT_RELEASE_LIMIT",
-          message: "Material head page request violates its bounded contract.",
+          message: "Content head page request violates its bounded contract.",
         })
     )
   );
@@ -43,7 +45,7 @@ const snapshotSequence = Effect.fn("contentRelease.snapshotSequence")(
   }
 );
 
-/** Reads one canonical material directory page from an immutable sequence. */
+/** Reads one canonical family directory page from an immutable sequence. */
 const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
   ctx: QueryCtx,
   input: unknown
@@ -67,9 +69,9 @@ const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
         numItems: request.limit,
       })
   );
-  const heads: MaterialHead[] = [];
+  const heads: ContentHead[] = [];
   for (const key of stored.page) {
-    const head = yield* resolveMaterialHead(
+    const head = yield* resolveContentHead(
       ctx,
       key.contentKey,
       key.locale,
@@ -79,7 +81,7 @@ const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
       heads.push(head);
     }
   }
-  const page: HeadPage = {
+  const page = {
     activeManifestHash: request.activeManifestHash,
     activeReleaseId: request.activeReleaseId,
     cursor: request.cursor,
@@ -95,20 +97,23 @@ const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
       () =>
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Material head page for ${request.activeReleaseId} is inconsistent.`,
+          message: `Content head page for ${request.activeReleaseId} is inconsistent.`,
         })
     ),
-    Effect.map((decoded) => ({ ...decoded, heads: [...decoded.heads] }))
+    Effect.map((decoded) => ({
+      ...decoded,
+      heads: decoded.heads.map((head) => ({ ...head })),
+    }))
   );
 });
 
-/** Returns one exact active material inventory page for source diffing. */
+/** Returns one exact active family inventory page for source diffing. */
 export const page = internalQuery({
   args: {
     activeManifestHash: v.string(),
     activeReleaseId: v.string(),
     cursor: v.union(v.string(), v.null()),
-    family: v.literal("material"),
+    family: contentFamilyValidator,
     limit: v.number(),
   },
   returns: headPageValidator,

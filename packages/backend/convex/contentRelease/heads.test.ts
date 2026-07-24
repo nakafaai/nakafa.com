@@ -1,3 +1,4 @@
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import {
   type HeadPage,
   HeadPageSchema,
@@ -20,17 +21,27 @@ import {
 } from "@repo/backend/test/content-release";
 import { activateRollbackFixture } from "@repo/backend/test/content-rollback";
 import {
+  TEST_ARTICLE_KEY,
+  TEST_ARTICLE_PATH,
+  TEST_ARTICLE_SOURCE,
+} from "@repo/backend/test/content-runtime";
+import {
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
+import {
+  beginFixture,
+  stageUpsertFixture,
+} from "@repo/backend/test/content-verify";
 import { getConvexSize } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect, Either, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const headPage = internal.contentRelease.heads.page;
-/** Requests one exact material directory page. */
+const verifyItems = internal.contentRelease.verify.verifyItems;
+/** Requests one exact family directory page. */
 function readPage(
   t: TestConvex<typeof schema>,
   cursor: null | string,
@@ -39,15 +50,18 @@ function readPage(
     releaseId: TEST_RELEASE_ID,
     sequence: 1,
   },
-  limit = 2
+  limit = 2,
+  family: ContentFamily = "material"
 ): Promise<HeadPage> {
-  return t.query(headPage, {
-    activeManifestHash: identity.manifestHash,
-    activeReleaseId: identity.releaseId,
-    cursor,
-    family: "material",
-    limit,
-  });
+  return t
+    .query(headPage, {
+      activeManifestHash: identity.manifestHash,
+      activeReleaseId: identity.releaseId,
+      cursor,
+      family,
+      limit,
+    })
+    .then(Schema.decodeUnknownSync(HeadPageSchema));
 }
 
 /** Selects the ordered content keys returned by one head page. */
@@ -76,6 +90,45 @@ describe("contentRelease/heads", () => {
     expect(headKeys(first)).toEqual(["test:alpha", "test:beta"]);
     expect(second).toMatchObject({ done: true, nextCursor: null });
     expect(headKeys(second)).toEqual(["test:zeta"]);
+  });
+
+  it("pages one verified immutable article head", async () => {
+    const t = convexTest(schema, convexModules);
+    await stageUpsertFixture(t, "article");
+    await beginFixture(t);
+    await t.mutation(verifyItems, {
+      afterIndex: -1,
+      releaseId: TEST_RELEASE_ID,
+    });
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected verified article release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        proofAt: 1,
+        proofJson: "{}",
+        status: "verified",
+        verifiedAt: 1,
+      });
+    });
+
+    const page = await readPage(t, null, undefined, 2, "article");
+
+    expect(page).toMatchObject({
+      done: true,
+      family: "article",
+      heads: [
+        {
+          contentKey: TEST_ARTICLE_KEY,
+          family: "article",
+          publicPath: TEST_ARTICLE_PATH,
+          rendererDomain: "politics",
+          sourcePath: TEST_ARTICLE_SOURCE,
+        },
+      ],
+      nextCursor: null,
+    });
   });
 
   it("reads an exact verified candidate against its completed base", async () => {

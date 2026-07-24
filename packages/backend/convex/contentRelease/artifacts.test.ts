@@ -4,7 +4,6 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import {
-  insertTestRelease,
   TEST_ARTIFACT_HASH,
   TEST_RELEASE_ID,
   testDeleteJson,
@@ -12,6 +11,7 @@ import {
   testRollbackJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { convexTest, type TestConvex } from "convex-test";
 import { describe, expect, it } from "vitest";
 

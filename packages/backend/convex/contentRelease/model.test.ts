@@ -16,7 +16,6 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
-  insertTestRelease,
   TEST_ARTIFACT_HASH,
   TEST_DIGEST,
   TEST_RELEASE_ID,
@@ -25,6 +24,7 @@ import {
   testRouteJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 

@@ -4,8 +4,10 @@ import { Effect } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderPublishedChemistry } from "@/lib/content/published/chemistry";
-import { readPublishedMaterial } from "@/lib/content/published/exchange";
-import { renderPublishedMaterial } from "@/lib/content/published/material";
+import {
+  readPublishedMaterial,
+  renderPublishedMaterial,
+} from "@/lib/content/published/material";
 import {
   previewMetadata,
   previewPublicRoute,
@@ -36,10 +38,8 @@ vi.mock("next/cache", () => ({
 vi.mock("@repo/design-system/lib/markdown/domain/chemistry", () => ({
   chemistryComponents: components,
 }));
-vi.mock("@/lib/content/published/exchange", () => ({
-  readPublishedMaterial: dataMock,
-}));
 vi.mock("@/lib/content/published/material", () => ({
+  readPublishedMaterial: dataMock,
   renderPublishedMaterial: renderMock,
 }));
 
@@ -75,7 +75,8 @@ describe("published chemistry renderer", () => {
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
     expect(cacheTagMock).toHaveBeenCalledWith(
       "content-runtime",
-      "content-family:material"
+      "content-family:material",
+      `content-artifact:${previewWireArtifact.artifactHash}`
     );
   });
 });

@@ -3,15 +3,9 @@ import {
   RendererDomainSchema,
 } from "@nakafa/aksara-contracts/renderer/domain";
 import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
-import {
-  isMaterialLessonRoute,
-  readMaterialPagination,
-  readParentMaterialRoute,
-  toLocalizedContentHref,
-} from "@repo/contents/_types/route/content";
+import { isMaterialLessonRoute } from "@repo/contents/_types/route/content";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
-import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import { readNamespaceSegment } from "@repo/contents/_types/route/path";
 import type {
   PublicContentRoute,
@@ -285,63 +279,8 @@ export function resolveMaterial(
   );
 }
 
-/** Resolves the topic route without starting a timestamped Effect fiber. */
-export function resolveParent(
-  route: PublicContentRoute
-): MaterialResult<PublicContentRoute> {
-  const parent = readParentMaterialRoute(route, readMaterialRoutes());
-
-  if (parent?.kind !== "subject-topic") {
-    return Either.left(
-      new MaterialRouteError({
-        reason: "parent-route",
-        value: route.publicPath,
-      })
-    );
-  }
-
-  return Either.right(parent);
-}
-
 /** Resolves localized params through the typed public route projection. */
 export const readMaterialRoute = Effect.fn("NakafaContent.readMaterialRoute")(
   (routeParams: MaterialRouteParams, target: MaterialRouteTarget) =>
     toEffect(resolveMaterial(routeParams, target))
 );
-
-/** Resolves the topic route that structurally owns one lesson route. */
-export const requireParentMaterialRoute = Effect.fn(
-  "NakafaContent.requireParentMaterialRoute"
-)((route: PublicContentRoute) => toEffect(resolveParent(route)));
-
-/** Resolves the material header link from an explicit curriculum context. */
-export function readMaterialHeaderLink(
-  route: PublicContentRoute,
-  context: MaterialContextIdentity | undefined
-) {
-  return readStaticPublicLearningIndex().resolveMaterialHeaderLink({
-    context,
-    route,
-  });
-}
-
-/** Builds sibling pagination while preserving a validated source context. */
-export function readMaterialPagePagination(
-  route: PublicContentRoute,
-  context: MaterialContextIdentity | undefined
-) {
-  const index = readStaticPublicLearningIndex();
-
-  if (!(context && index.resolveMaterialHeaderLink({ context, route }))) {
-    return readMaterialPagination(route, readMaterialRoutes());
-  }
-
-  return readMaterialPagination(route, readMaterialRoutes(), {
-    toHref: (targetRoute) =>
-      index.toContextualMaterialHref({
-        context,
-        href: toLocalizedContentHref(targetRoute),
-        route: targetRoute,
-      }),
-  });
-}

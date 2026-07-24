@@ -2,30 +2,18 @@ import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
 import {
-  getArticleApiContentPage,
+  getApiPublishedContent,
   invalidApiLocaleMessage,
-  listApiStaticParams,
   parseApiLocale,
-  parseApiPageParams,
 } from "@/lib/content/runtime";
 
-export const revalidate = false;
+export const dynamic = "force-dynamic";
 
 /**
- * Generates all locale-aware article API paths from the Convex route catalog.
- */
-export function generateStaticParams() {
-  return listApiStaticParams({
-    prefix: "articles/",
-    section: "articles",
-  });
-}
-
-/**
- * Returns article content lists for `/contents/:locale/articles/*`.
+ * Returns one exact signed article for `/contents/:locale/articles/*`.
  */
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ locale: string; slug: string[] }> }
 ): Promise<Response> {
   const { locale, slug } = await params;
@@ -38,25 +26,20 @@ export async function GET(
     );
   }
 
-  const searchParams = new URL(request.url).searchParams;
-  const pageParams = parseApiPageParams(searchParams);
-
-  if (!pageParams) {
-    return NextResponse.json(
-      { error: "Invalid pagination. Limit must be between 1 and 100." },
-      { status: 400 }
-    );
-  }
-
-  const prefix = `articles/${slug.join("/")}`;
+  const publicPath = `articles/${slug.join("/")}`;
 
   return Effect.runPromise(
-    getArticleApiContentPage({
-      ...pageParams,
+    getApiPublishedContent({
+      expected: "article",
       locale: validLocale,
-      prefix,
+      publicPath,
     }).pipe(
       Effect.map((data): Response => NextResponse.json(data)),
+      Effect.catchTag("PublicContentMissingError", () =>
+        Effect.succeed(
+          NextResponse.json({ error: "Content not found." }, { status: 404 })
+        )
+      ),
       Effect.catchAll((error) =>
         Effect.gen(function* () {
           yield* logError(error, {

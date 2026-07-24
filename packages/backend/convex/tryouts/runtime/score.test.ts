@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { finalizeAttemptScore } from "@repo/backend/convex/tryouts/runtime/score";
@@ -98,7 +99,9 @@ describe("tryouts/runtime/score", () => {
         completedAt: null,
         completedSectionKeys: [SECTION_KEY],
         countsForCompetition: false,
+        countryKey: "indonesia",
         endReason: null,
+        examKey: "snbt",
         expiresAt: NOW + 86_400_000,
         lastActivityAt: NOW,
         scoreStatus: "official",
@@ -116,11 +119,23 @@ describe("tryouts/runtime/score", () => {
             tryoutSectionId: sectionId,
           },
         ],
+        setIdentity: tryoutCatalogIdentity({
+          countryKey: "indonesia",
+          examKey: "snbt",
+          kind: "set",
+          locale: "id",
+          setKey: "set-1",
+          trackKey: TRACK_KEY,
+        }),
+        setKey: "set-1",
         startedAt: NOW - 20_000,
         status: "in-progress",
         totalCorrect: 0,
         totalQuestions: 1,
+        trackKey: TRACK_KEY,
         tryoutSetId,
+        tryoutSnapshotId: "snapshot:tryout:score",
+        locale: "id",
         userId,
       });
       const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {

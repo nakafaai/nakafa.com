@@ -5,23 +5,20 @@ import {
   MAX_RUNTIME_REQUEST_BYTES,
   MAX_RUNTIME_RESPONSE_BYTES,
 } from "@nakafa/aksara-contracts/runtime/spec";
-import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { contentKeyResolver } from "@repo/backend/content/trust";
+import { verifyContentEnvelope } from "@repo/backend/content/verify";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { trustedKeyResolver } from "@repo/backend/convex/contentRelease/proof/trust";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { testProjectionJson } from "@repo/backend/test/content-release";
 import {
-  insertRuntimeHead,
   insertRuntimeRelease,
   runtimeCases,
+  runtimeContentKey,
   runtimeRequest,
-  TEST_RUNTIME_NOW,
   TEST_RUNTIME_PATH,
 } from "@repo/backend/test/content-runtime";
+import { insertRuntimeHead } from "@repo/backend/test/runtime-head";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -53,23 +50,14 @@ function expectPrivate(response: Response) {
   expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 }
 
-/** Seeds one active route and optionally one Better Auth user. */
+/** Seeds one active route for an exact stored delivery class. */
 function seedRuntime(
   t: RuntimeTest,
-  delivery: "authenticated" | "entitled" | "public",
-  plan?: "free" | "pro"
+  delivery: "authenticated" | "entitled" | "public"
 ) {
   return t.mutation(async (ctx) => {
     await insertRuntimeRelease(ctx);
-    await insertRuntimeHead(ctx, delivery, `test:${delivery}`);
-    if (!plan) {
-      return null;
-    }
-    return seedAuthenticatedUser(ctx, {
-      now: TEST_RUNTIME_NOW,
-      plan,
-      suffix: `${delivery}-${plan}`,
-    });
+    await insertRuntimeHead(ctx, delivery, runtimeContentKey(delivery));
   });
 }
 
@@ -189,71 +177,35 @@ describe("content runtime HTTP route", () => {
     );
     for (const [reason, candidate] of runtimeCases(row)) {
       const result = await Effect.runPromise(
-        verifyContentRuntimeExchange({
-          rendererManifest: candidate.rendererManifest,
+        verifyContentEnvelope({
           request,
           response: candidate,
         }).pipe(
           Effect.provideService(
             ContentVerificationKeyResolver,
-            trustedKeyResolver
+            contentKeyResolver
           ),
           Effect.either
         )
       );
       expect(result, reason).toMatchObject({
         _tag: "Left",
-        left: { _tag: "ContentRuntimeMismatchError", reason },
+        left: { _tag: "ContentEnvelopeMismatchError", reason },
       });
     }
   });
 
-  it("requires Better Auth for non-public content", async () => {
+  it("rejects non-public delivery even when its stored head exists", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await seedRuntime(t, "authenticated", "free");
-    if (!identity) {
-      throw new Error("Expected an authenticated runtime identity.");
-    }
+    await seedRuntime(t, "authenticated");
 
-    const anonymous = await post(t, runtimeRequest("authenticated"));
-    const authenticated = await post(
-      t.withIdentity({
-        sessionId: identity.sessionId,
-        subject: identity.authUserId,
-      }),
-      runtimeRequest("authenticated")
-    );
+    const response = await post(t, runtimeRequest("authenticated"));
 
-    expect(anonymous.status).toBe(401);
-    expect(authenticated.status).toBe(500);
-  });
-
-  it("requires a Pro entitlement for entitled content", async () => {
-    const free = createConvexTestWithBetterAuth();
-    const freeIdentity = await seedRuntime(free, "entitled", "free");
-    const pro = createConvexTestWithBetterAuth();
-    const proIdentity = await seedRuntime(pro, "entitled", "pro");
-    if (!(freeIdentity && proIdentity)) {
-      throw new Error("Expected entitled runtime identities.");
-    }
-
-    const forbidden = await post(
-      free.withIdentity({
-        sessionId: freeIdentity.sessionId,
-        subject: freeIdentity.authUserId,
-      }),
-      runtimeRequest("entitled")
-    );
-    const entitled = await post(
-      pro.withIdentity({
-        sessionId: proIdentity.sessionId,
-        subject: proIdentity.authUserId,
-      }),
-      runtimeRequest("entitled")
-    );
-
-    expect(forbidden.status).toBe(403);
-    expect(entitled.status).toBe(500);
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      code: "CONTENT_RUNTIME_INVALID",
+      kind: "failure",
+    });
   });
 
   it("fails closed for corrupt or oversized runtime state", async () => {
@@ -272,10 +224,10 @@ describe("content runtime HTTP route", () => {
     const oversized = createConvexTestWithBetterAuth();
     await oversized.mutation(async (ctx) => {
       await insertRuntimeRelease(ctx);
-      await insertRuntimeHead(ctx, "public", "test:public", {
+      await insertRuntimeHead(ctx, "public", runtimeContentKey("public"), {
         compiledCode: "x".repeat(MAX_RUNTIME_RESPONSE_BYTES / 2 + 1),
         projectionJson: testProjectionJson({
-          contentKey: "test:public",
+          contentKey: runtimeContentKey("public"),
           publicPath: TEST_RUNTIME_PATH,
           title: "x".repeat(MAX_RUNTIME_RESPONSE_BYTES / 2 + 1),
         }),

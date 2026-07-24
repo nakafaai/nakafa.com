@@ -12,12 +12,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   listDomainMaterialStaticParams,
   listGenericMaterialStaticParams,
-  readMaterialHeaderLink,
-  readMaterialPagePagination,
   readMaterialRendererDomain,
   readMaterialRoute,
   readMaterialRoutes,
-  requireParentMaterialRoute,
   resolveMaterial,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/data";
 import type { MaterialRouteParams } from "@/lib/content/material";
@@ -171,52 +168,13 @@ describe("material route data", () => {
     expect(resolutions.every(Option.isNone)).toBe(true);
   });
 
-  it("preserves parent, header, and pagination context from real projections", () => {
-    const route = readMaterialRoutes().find(
-      (candidate) =>
-        candidate.locale === "id" &&
-        candidate.publicPath ===
-          "materi/matematika/eksponen-dan-logaritma/konsep-eksponen"
-    );
-    if (!route) {
-      throw new Error(
-        "Expected the real Indonesian exponential concept route."
-      );
-    }
-    const context = {
-      nodeKey: "class-10-mathematics-exponential-logarithm",
-      programKey: "merdeka",
-    };
-    const header = readMaterialHeaderLink(route, context);
-    const direct = readMaterialPagePagination(route, undefined);
-    const stale = readMaterialPagePagination(route, {
-      nodeKey: "class-10-biology-virus-role",
-      programKey: "merdeka",
-    });
-    const contextual = readMaterialPagePagination(route, context);
-
-    expect(Effect.runSync(requireParentMaterialRoute(route)).kind).toBe(
-      "subject-topic"
-    );
-    expect(header?.href).toContain("/id/kurikulum/merdeka/");
-    expect(readMaterialHeaderLink(route, undefined)).toBeUndefined();
-    expect(stale).toEqual(direct);
-    expect([contextual.prev.href, contextual.next.href].join(" ")).toContain(
-      "ctx=merdeka~class-10-mathematics-exponential-logarithm"
-    );
-  });
-
-  it("keeps missing parent and invalid locale failures typed", () => {
-    const topic = requireRoute("physics", "en", "subject-topic");
+  it("keeps invalid locale failures typed", () => {
     const lesson = requireRoute("physics", "en");
     const invalid = resolveMaterial(
       { ...toRouteParams(lesson), locale: "invalid" },
       "generic"
     );
 
-    expect(
-      Effect.runSync(requireParentMaterialRoute(topic).pipe(Effect.flip))
-    ).toMatchObject({ reason: "parent-route", value: topic.publicPath });
     expect(
       Effect.runSync(
         listGenericMaterialStaticParams("invalid").pipe(Effect.flip)

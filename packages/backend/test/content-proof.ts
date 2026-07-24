@@ -22,14 +22,16 @@ import { digestProjections } from "@nakafa/aksara-contracts/projection/digest";
 import {
   type ContentReleaseManifest,
   ContentReleaseManifestSchema,
-  canonicalizeContentReleaseSigningInput,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
 import { digestItems } from "@nakafa/aksara-contracts/release/digest";
 import { hashContentReleaseManifest } from "@nakafa/aksara-contracts/release/hash";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
+import { emptyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
 import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
 import { digestRoutes } from "@nakafa/aksara-contracts/release/route-digest";
+import { canonicalizeContentReleaseSigningInput } from "@nakafa/aksara-contracts/release/signing";
+import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { createRendererManifest } from "@nakafa/aksara-contracts/renderer/manifest";
 import {
@@ -170,6 +172,7 @@ export function testEmptyManifest(releaseId: ReleaseId) {
     rollbackDigest: rollback.digest,
     routeCount: 0,
     routeDigest: routes.digest,
+    snapshots: emptyContentSnapshots(),
     upsertCount: 0,
   });
 }
@@ -186,7 +189,7 @@ export const TEST_KEY_RESOLVER = ContentVerificationKeyResolver.of({
 
 /** Produces one fully authenticated technical artifact. */
 export function testSignedArtifact(
-  rendererDomain: "chemistry" | "mathematics" = "mathematics",
+  rendererDomain: RendererDomain = "mathematics",
   options?: {
     readonly compiledCode?: string;
     readonly contentKey?: string;

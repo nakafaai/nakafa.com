@@ -87,6 +87,7 @@ export const selectLearningProgram = mutation({
       (await ctx.db.insert("learningProfiles", {
         interests,
         programId: program._id,
+        programKey: program.key,
         stage: args.stage,
         updatedAt: now,
         userId: user.appUser._id,
@@ -98,6 +99,7 @@ export const selectLearningProgram = mutation({
       await ctx.db.replace(existingProfile._id, {
         interests,
         programId: program._id,
+        programKey: program.key,
         stage: args.stage,
         updatedAt: now,
         userId: user.appUser._id,
@@ -108,6 +110,7 @@ export const selectLearningProgram = mutation({
       createdAt: now,
       profileId,
       programId: program._id,
+      programKey: program.key,
       status: "active",
       updatedAt: now,
       userId: user.appUser._id,
@@ -118,6 +121,7 @@ export const selectLearningProgram = mutation({
       locale: args.locale,
       planId,
       programId: program._id,
+      programKey: program.key,
       userId: user.appUser._id,
     });
     await ctx.db.patch(profileId, { activePlanId: planId, updatedAt: now });

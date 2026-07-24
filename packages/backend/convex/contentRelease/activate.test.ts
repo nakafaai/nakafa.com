@@ -1,4 +1,5 @@
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
+import { emptyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -60,10 +61,12 @@ function expectedReceipt(identity: TestIdentity) {
     resultCount: 0,
     resultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     routeDigest: TEST_DIGEST,
+    snapshots: emptyContentSnapshots(),
     stagedArtifacts: 0,
     stagedItems: 0,
     stagedProjections: 0,
     stagedRoutes: 0,
+    stagedSnapshotRows: 0,
   };
 }
 

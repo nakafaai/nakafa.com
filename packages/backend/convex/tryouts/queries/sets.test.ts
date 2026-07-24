@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -8,7 +9,10 @@ import {
 } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/progress";
-import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
+import {
+  insertTryoutAttempt,
+  replaceTryoutSet,
+} from "@repo/backend/test/tryout-runtime";
 import {
   insertTryoutCountry,
   insertTryoutExam,
@@ -117,7 +121,7 @@ async function insertSetGraph(
   });
 
   if (!(args.status && args.userId)) {
-    return;
+    return tryoutSetId;
   }
 
   const attemptId = await insertTryoutAttempt(ctx, {
@@ -134,6 +138,14 @@ async function insertSetGraph(
     latestAttemptId: attemptId,
     locale: "id",
     publishedScore: args.status === "in-progress" ? null : args.order * 10,
+    setIdentity: tryoutCatalogIdentity({
+      countryKey: "indonesia",
+      examKey: "snbt",
+      kind: "set",
+      locale: "id",
+      setKey,
+      trackKey: "2027",
+    }),
     setKey,
     status: args.status,
     statusRank: getTryoutStatusRank(args.status),
@@ -142,6 +154,7 @@ async function insertSetGraph(
     updatedAt: TRYOUT_TEST_NOW,
     userId: args.userId,
   });
+  return tryoutSetId;
 }
 
 /** Inserts the ready parent catalog shared by set query tests. */
@@ -328,6 +341,40 @@ describe("tryouts/queries/sets", () => {
       "set-3",
       "set-4",
       "set-5",
+    ]);
+  });
+
+  it("retains attempted state after a catalog set row is replaced", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now: TRYOUT_TEST_NOW,
+        suffix: "tryout-replaced-progress",
+      });
+      await insertReadyParents(ctx);
+      const tryoutSetId = await insertSetGraph(ctx, {
+        order: 1,
+        status: "completed",
+        userId: user.userId,
+      });
+      await replaceTryoutSet(ctx, tryoutSetId);
+      return user;
+    });
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    const [list, completed] = await Promise.all([
+      authed.query(api.tryouts.queries.sets.list, listArgs()),
+      authed.query(api.tryouts.queries.sets.byStatus, statusArgs("completed")),
+    ]);
+
+    expect(list.page).toMatchObject([
+      { attemptStatus: "completed", setKey: "set-1" },
+    ]);
+    expect(completed.page).toMatchObject([
+      { attemptStatus: "completed", setKey: "set-1" },
     ]);
   });
 });

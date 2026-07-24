@@ -6,7 +6,8 @@ import {
   deleteContentProjectionsBySourcePath,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
-import { syncIrtScaleForSet } from "@repo/backend/convex/contentSync/tryouts/irt";
+import type { IrtSyncProof } from "@repo/backend/convex/contentSync/tryouts/irt/spec";
+import { syncIrtScaleForSet } from "@repo/backend/convex/contentSync/tryouts/irt/sync";
 import {
   getQuestionSet,
   syncQuestion,
@@ -47,7 +48,8 @@ export interface BulkSyncTryoutsArgs {
 /** Upserts one bounded try-out catalog and question-bank batch. */
 export async function bulkSyncTryoutsImpl(
   ctx: MutationCtx,
-  args: BulkSyncTryoutsArgs
+  args: BulkSyncTryoutsArgs,
+  proof: IrtSyncProof
 ) {
   assertTryoutBatchSizes(args);
 
@@ -88,7 +90,7 @@ export async function bulkSyncTryoutsImpl(
   for (const section of args.sections) {
     addOutcome(totals, await syncSection(ctx, section, now));
   }
-  await syncIrtScalesForSections(ctx, args.sections, now);
+  await syncIrtScalesForSections(ctx, args.sections, now, proof);
 
   return totals;
 }
@@ -306,7 +308,8 @@ async function syncSection(
 async function syncIrtScalesForSections(
   ctx: MutationCtx,
   sections: SyncedTryoutSection[],
-  syncedAt: number
+  syncedAt: number,
+  proof: IrtSyncProof
 ) {
   const syncedSetIds = new Set<string>();
 
@@ -318,7 +321,7 @@ async function syncIrtScalesForSections(
     }
 
     syncedSetIds.add(set._id);
-    await syncIrtScaleForSet(ctx, { set, syncedAt });
+    await syncIrtScaleForSet(ctx, { proof, set, syncedAt });
   }
 }
 

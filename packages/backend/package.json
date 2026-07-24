@@ -42,7 +42,7 @@
     "@convex-dev/resend": "^0.2.5",
     "@convex-dev/workflow": "^0.4.4",
     "@convex-dev/workpool": "^0.4.7",
-    "@nakafa/aksara-contracts": "file:/tmp/aksara-contracts-current.L3oUUF/aksara-contracts.tgz",
+    "@nakafa/aksara-contracts": "file:/private/tmp/aksara-contracts-final.BstN44/nakafa-aksara-contracts-0.1.0.tgz",
     "@polar-sh/sdk": "^0.48.1",
     "@posthog/convex": "2.0.32",
     "@repo/ai": "workspace:*",
@@ -59,6 +59,7 @@
     "hono": "^4.12.29",
     "jsonrepair": "^3.15.0",
     "nanoid": "^6.0.0",
+    "server-only": "0.0.1",
     "strip-ansi": "^7.2.0"
   },
   "devDependencies": {

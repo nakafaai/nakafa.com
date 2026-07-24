@@ -11,6 +11,7 @@ import {
   Sha256HashSchema,
   SigningKeyIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
 import {
   LOCAL_PREVIEW_FORMAT,
   LocalPreviewManifestSchema,
@@ -21,9 +22,9 @@ import {
   makeMaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
 import { PublicContentRouteSchema } from "@repo/contents/_types/route/schema";
-import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Redacted, Schema } from "effect";
+import { Effect, Redacted, Schema } from "effect";
 import { NextRequest } from "next/server";
+import type { MaterialRuntimeResolver } from "@/lib/content/material";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import type { MaterialPreviewInput } from "@/lib/content/preview/material";
 
@@ -41,11 +42,34 @@ const configHash = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
 /** Ephemeral key identity used only by local preview tests. */
 export const previewKeyId = SigningKeyIdSchema.make("local-preview");
 
+/** Derives the exact graph identity for one real material lesson fixture. */
+export function makeMaterialGraph(
+  domain: string,
+  topic: string,
+  section: string,
+  locale: "en" | "id"
+) {
+  return Effect.runSync(
+    makeLearningGraphIdentity({
+      concept: ["material", "lesson", domain, topic],
+      learningObject: ["material-section", domain, topic, section],
+      lens: ["material", "lesson", domain],
+      locale,
+    })
+  );
+}
+
 /** Exact English route owned by the real Function Concept source. */
 export const previewRoute = Schema.decodeUnknownSync(MaterialLessonRouteSchema)(
   {
     contentKey: ContentKeySchema.make(
       "material/lesson/mathematics/function-composition-inverse-function/function-concept"
+    ),
+    graph: makeMaterialGraph(
+      "mathematics",
+      "function-composition-inverse-function",
+      "function-concept",
+      "en"
     ),
     locale: "en",
     materialKey: "lesson.mathematics.function-composition-inverse-function",
@@ -98,6 +122,18 @@ export const previewSourcePath = CorpusSourcePathSchema.make(
 export const previewPathname =
   "/en/materials/mathematics/function-composition-inverse-function/function-concept";
 
+/** Derives the exact graph identity for one real politics article fixture. */
+export function makeArticleGraph(articleSlug: string, locale: "en" | "id") {
+  return Effect.runSync(
+    makeLearningGraphIdentity({
+      concept: ["article", "politics"],
+      learningObject: ["article", "politics", articleSlug],
+      lens: ["article", "politics"],
+      locale,
+    })
+  );
+}
+
 /** Route evidence expected by the internal preview matcher. */
 export const previewRouteEvidence = {
   localeHint: "en",
@@ -116,15 +152,15 @@ export const previewConfig: PreviewConfig = {
 
 /** Builds the real Function Concept route input for one physical registry. */
 export function makePreviewInput(
-  components: MDXComponents
+  resolveRuntime: MaterialRuntimeResolver
 ): MaterialPreviewInput {
   return {
-    components,
     params: {
       lesson: ["function-concept"],
       locale: previewRoute.locale,
       topic: "function-composition-inverse-function",
     },
+    resolveRuntime,
     target: "mathematics",
   };
 }

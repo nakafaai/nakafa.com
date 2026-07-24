@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -6,6 +7,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/progress";
+import { replaceTryoutSet } from "@repo/backend/test/tryout-runtime";
 import {
   insertTryoutCountry,
   insertTryoutExam,
@@ -70,6 +72,14 @@ async function insertScoredProgress(
   }
 ) {
   const completedAt = TRYOUT_TEST_NOW + args.attemptNumber * 1000;
+  const setIdentity = tryoutCatalogIdentity({
+    countryKey: "indonesia",
+    examKey: "snbt",
+    kind: "set",
+    locale: "id",
+    setKey: args.set.setKey,
+    trackKey: "2027",
+  });
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: TRYOUT_TEST_NOW + 86_400_000,
     accessSourceKind: "free",
@@ -77,7 +87,9 @@ async function insertScoredProgress(
     completedAt,
     completedSectionKeys: [TRYOUT_SECTION_KEY],
     countsForCompetition: false,
+    countryKey: "indonesia",
     endReason: "submitted",
+    examKey: "snbt",
     expiresAt: TRYOUT_TEST_NOW + 86_400_000,
     lastActivityAt: completedAt,
     scoreStatus: "official",
@@ -95,11 +107,15 @@ async function insertScoredProgress(
         tryoutSectionId: args.set.sectionId,
       },
     ],
+    setIdentity,
+    setKey: args.set.setKey,
     startedAt: TRYOUT_TEST_NOW,
     status: "completed",
     totalCorrect: 1,
     totalQuestions: 1,
+    trackKey: "2027",
     tryoutSetId: args.set.setId,
+    locale: "id",
     userId: args.userId,
   });
 
@@ -122,6 +138,7 @@ async function insertScoredProgress(
     latestAttemptId: attemptId,
     locale: "id",
     publishedScore: args.score,
+    setIdentity,
     setKey: args.set.setKey,
     status: "completed",
     statusRank: getTryoutStatusRank("completed"),
@@ -175,6 +192,8 @@ describe("tryouts/sets/score", () => {
         set: low,
         userId: identity.userId,
       });
+      await replaceTryoutSet(ctx, high.setId);
+      await replaceTryoutSet(ctx, low.setId);
 
       return identity;
     });

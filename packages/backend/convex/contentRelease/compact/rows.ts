@@ -9,6 +9,7 @@ import {
   isArtifactReferenced,
   retainOrphanedArtifacts,
 } from "@repo/backend/convex/contentRelease/retention";
+import { compactSnapshots } from "@repo/backend/convex/contentRelease/snapshot/cleanup";
 import { Effect } from "effect";
 
 const COMPACTION_PAGE_COUNT = 32;
@@ -177,6 +178,33 @@ const compactItems = Effect.fn("contentRelease.compactItems")(function* (
   } satisfies RowPage;
 });
 
+/** Deletes one bounded obsolete snapshot-ledger page. */
+const compactBatches = Effect.fn("contentRelease.compactSnapshotBatches")(
+  function* (
+    ctx: MutationCtx,
+    from: number,
+    floor: number,
+    cursor: null | string
+  ) {
+    const page = yield* Effect.promise(() =>
+      ctx.db
+        .query("snapshotBatches")
+        .withIndex("by_sequence_and_family_and_batchIndex", (query) =>
+          query.gte("sequence", from).lt("sequence", floor)
+        )
+        .paginate({ cursor, numItems: COMPACTION_PAGE_COUNT })
+    );
+    for (const row of page.page) {
+      yield* Effect.promise(() => ctx.db.delete("snapshotBatches", row._id));
+    }
+    return {
+      cursor: page.isDone ? null : page.continueCursor,
+      deleted: page.page.length,
+      done: page.isDone,
+    } satisfies RowPage;
+  }
+);
+
 /** Deletes one bounded expired artifact page after reference proof. */
 const compactArtifacts = Effect.fn("contentRelease.compactArtifacts")(
   function* (ctx: MutationCtx, cursor: null | string, cutoff: number) {
@@ -249,8 +277,14 @@ export const compactRows = Effect.fn("contentRelease.compactRows")(function* (
   if (phase === "items") {
     return yield* compactItems(ctx, from, floor, cursor);
   }
+  if (phase === "batches") {
+    return yield* compactBatches(ctx, from, floor, cursor);
+  }
   if (phase === "artifacts") {
     return yield* compactArtifacts(ctx, cursor, startedAt);
+  }
+  if (phase === "snapshots") {
+    return yield* compactSnapshots(ctx, startedAt);
   }
   return yield* compactReleases(ctx, from, floor, cursor);
 });

@@ -1,15 +1,16 @@
+import { PublicContentMissingError } from "@repo/backend/client/content/errors";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import * as route from "./route";
+import * as route from "@/app/contents/[locale]/articles/[...slug]/route";
 
 const runtimeMocks = vi.hoisted(() => ({
-  getArticleApiContentPage: vi.fn(),
-  listApiStaticParams: vi.fn(),
+  getApiPublishedContent: vi.fn(),
 }));
 const loggingMocks = vi.hoisted(() => ({
   logError: vi.fn(),
 }));
 
+vi.mock("server-only", () => ({}));
 vi.mock("@repo/utilities/logging/effect", async () => {
   const { Effect } = await import("effect");
 
@@ -21,22 +22,17 @@ vi.mock("@repo/utilities/logging/effect", async () => {
   };
 });
 
-vi.mock("@/lib/content/runtime", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/content/runtime")>();
+vi.mock("@/lib/content/runtime", () => ({
+  getApiPublishedContent: runtimeMocks.getApiPublishedContent,
+  invalidApiLocaleMessage: "Invalid locale. Supported locales: en, id.",
+  parseApiLocale: (locale: string) =>
+    locale === "en" || locale === "id" ? locale : null,
+}));
 
-  return {
-    ...actual,
-    getArticleApiContentPage: runtimeMocks.getArticleApiContentPage,
-    listApiStaticParams: runtimeMocks.listApiStaticParams,
-  };
-});
-
-const articleRow = {
-  description: "Political dynasty article.",
-  locale: "en",
-  route: "articles/politics/dynastic-politics-asian-values",
-  slug: "dynastic-politics-asian-values",
-  title: "Dynastic Politics",
+const article = {
+  artifactHash: `sha256:${"a".repeat(64)}`,
+  raw: "# Signed article",
+  releaseId: "release-article",
 };
 
 describe("article content API route", () => {
@@ -44,84 +40,42 @@ describe("article content API route", () => {
     vi.clearAllMocks();
   });
 
-  it("generates static params from the Convex route catalog", async () => {
-    const params = [{ locale: "en", slug: ["politics"] }];
-    runtimeMocks.listApiStaticParams.mockResolvedValue(params);
-
-    await expect(route.generateStaticParams()).resolves.toEqual(params);
-    expect(runtimeMocks.listApiStaticParams).toHaveBeenCalledWith({
-      prefix: "articles/",
-      section: "articles",
-    });
-  });
-
-  it("returns the pagination envelope for default article requests", async () => {
-    const page = {
-      continueCursor: "",
-      isDone: true,
-      page: [articleRow],
-    };
-
-    runtimeMocks.getArticleApiContentPage.mockReturnValue(Effect.succeed(page));
-
-    const response = await route.GET(
-      new Request("http://localhost/contents/en/articles/politics"),
-      {
-        params: Promise.resolve({
-          locale: "en",
-          slug: ["politics"],
-        }),
-      }
+  it("returns one exact signed article", async () => {
+    expect(route.dynamic).toBe("force-dynamic");
+    runtimeMocks.getApiPublishedContent.mockReturnValue(
+      Effect.succeed(article)
     );
-
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual(page);
-    expect(runtimeMocks.getArticleApiContentPage).toHaveBeenCalledWith({
-      cursor: null,
-      limit: 100,
-      locale: "en",
-      prefix: "articles/politics",
-    });
-  });
-
-  it("returns the pagination envelope for explicit article pagination", async () => {
-    const page = {
-      continueCursor: "next-cursor",
-      isDone: false,
-      page: [articleRow],
-    };
-
-    runtimeMocks.getArticleApiContentPage.mockReturnValue(Effect.succeed(page));
 
     const response = await route.GET(
       new Request(
-        "http://localhost/contents/en/articles/politics?cursor=page-1&limit=1"
+        "http://localhost/contents/en/articles/politics/signed-article"
       ),
       {
         params: Promise.resolve({
           locale: "en",
-          slug: ["politics"],
+          slug: ["politics", "signed-article"],
         }),
       }
     );
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual(page);
-    expect(runtimeMocks.getArticleApiContentPage).toHaveBeenCalledWith({
-      cursor: "page-1",
-      limit: 1,
+    expect(await response.json()).toEqual(article);
+    expect(runtimeMocks.getApiPublishedContent).toHaveBeenCalledWith({
+      expected: "article",
       locale: "en",
-      prefix: "articles/politics",
+      publicPath: "articles/politics/signed-article",
     });
   });
 
-  it("rejects invalid locales before reading Convex", async () => {
+  it("rejects invalid locales before reading content", async () => {
     const response = await route.GET(
-      new Request("http://localhost/contents/fr/articles/politics"),
+      new Request(
+        "http://localhost/contents/fr/articles/politics/signed-article"
+      ),
       {
         params: Promise.resolve({
           locale: "fr",
-          slug: ["politics"],
+          slug: ["politics", "signed-article"],
         }),
       }
     );
@@ -130,39 +84,44 @@ describe("article content API route", () => {
     expect(await response.json()).toEqual({
       error: "Invalid locale. Supported locales: en, id.",
     });
-    expect(runtimeMocks.getArticleApiContentPage).not.toHaveBeenCalled();
+    expect(runtimeMocks.getApiPublishedContent).not.toHaveBeenCalled();
   });
 
-  it("rejects invalid pagination before reading Convex", async () => {
+  it("returns 404 only for a verified missing public route", async () => {
+    runtimeMocks.getApiPublishedContent.mockReturnValue(
+      Effect.fail(
+        new PublicContentMissingError({
+          locale: "en",
+          publicPath: "articles/politics/missing",
+        })
+      )
+    );
+
     const response = await route.GET(
-      new Request("http://localhost/contents/en/articles/politics?limit=101"),
+      new Request("http://localhost/contents/en/articles/politics/missing"),
       {
         params: Promise.resolve({
           locale: "en",
-          slug: ["politics"],
+          slug: ["politics", "missing"],
         }),
       }
     );
 
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      error: "Invalid pagination. Limit must be between 1 and 100.",
-    });
-    expect(runtimeMocks.getArticleApiContentPage).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Content not found." });
+    expect(loggingMocks.logError).not.toHaveBeenCalled();
   });
 
-  it("logs Convex read failures and returns an API error", async () => {
-    const readError = new Error("Convex unavailable");
-    runtimeMocks.getArticleApiContentPage.mockReturnValue(
-      Effect.fail(readError)
-    );
+  it("logs signed-read failures and returns an API error", async () => {
+    const readError = new Error("Signed runtime unavailable");
+    runtimeMocks.getApiPublishedContent.mockReturnValue(Effect.fail(readError));
 
     const response = await route.GET(
-      new Request("http://localhost/contents/en/articles/politics"),
+      new Request("http://localhost/contents/en/articles/politics/failure"),
       {
         params: Promise.resolve({
           locale: "en",
-          slug: ["politics"],
+          slug: ["politics", "failure"],
         }),
       }
     );
@@ -174,32 +133,20 @@ describe("article content API route", () => {
     expect(loggingMocks.logError).toHaveBeenCalledWith(readError, {
       service: "api-contents",
       locale: "en",
-      basePath: "politics",
-      slugLength: 1,
+      basePath: "politics/failure",
+      slugLength: 2,
       message: "Failed to fetch contents.",
     });
   });
 
-  it("logs root article prefix failures with a readable base path", async () => {
-    const readError = new Error("Convex unavailable");
-    runtimeMocks.getArticleApiContentPage.mockReturnValue(
-      Effect.fail(readError)
-    );
+  it("logs a root-path failure with readable context", async () => {
+    const readError = new Error("Signed runtime unavailable");
+    runtimeMocks.getApiPublishedContent.mockReturnValue(Effect.fail(readError));
 
-    const response = await route.GET(
-      new Request("http://localhost/contents/en/articles"),
-      {
-        params: Promise.resolve({
-          locale: "en",
-          slug: [],
-        }),
-      }
-    );
-
-    expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({
-      error: "Failed to fetch contents.",
+    await route.GET(new Request("http://localhost/contents/en/articles"), {
+      params: Promise.resolve({ locale: "en", slug: [] }),
     });
+
     expect(loggingMocks.logError).toHaveBeenCalledWith(readError, {
       service: "api-contents",
       locale: "en",

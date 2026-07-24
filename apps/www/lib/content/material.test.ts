@@ -4,8 +4,16 @@ import {
   MaterialModuleImportError,
   MaterialModulePathError,
 } from "@repo/contents/_lib/material/error";
+import { Effect, Either } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { importMaterialModule } from "@/lib/content/material";
+import {
+  createFixedMaterialRuntimeResolver,
+  importMaterialModule,
+  MaterialRegistryMissingError,
+  type MaterialRouteRuntime,
+  matchesMaterialRouteTarget,
+  resolveMaterialRuntime,
+} from "@/lib/content/material";
 
 const captureServerException = vi.hoisted(() => vi.fn());
 
@@ -15,6 +23,68 @@ vi.mock("@repo/analytics/posthog/server", () => ({
 
 afterEach(() => {
   captureServerException.mockReset();
+});
+
+describe("material registry runtime", () => {
+  const unusedError = new MaterialRegistryMissingError({
+    rendererDomain: "mathematics",
+  });
+  const runtime = {
+    components: {},
+    importer: () => Promise.reject(unusedError),
+    published: () => Promise.reject(unusedError),
+    rendererDomain: "mathematics",
+  } satisfies MaterialRouteRuntime;
+
+  it("assigns every renderer to only its physical material route", () => {
+    expect([
+      matchesMaterialRouteTarget("biology", "generic"),
+      matchesMaterialRouteTarget("chemistry", "generic"),
+      matchesMaterialRouteTarget("mathematics", "generic"),
+      matchesMaterialRouteTarget("chemistry", "chemistry"),
+      matchesMaterialRouteTarget("biology", "chemistry"),
+    ]).toEqual([true, false, false, true, false]);
+  });
+
+  it("returns the exact fixed-domain runtime", () => {
+    const resolver = createFixedMaterialRuntimeResolver(runtime);
+
+    expect(resolveMaterialRuntime(resolver, "mathematics")).toEqual(
+      Either.right(runtime)
+    );
+  });
+
+  it("rejects a fixed registry returned for another domain", () => {
+    const resolver = createFixedMaterialRuntimeResolver(runtime);
+
+    expect(resolveMaterialRuntime(resolver, "chemistry")).toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "MaterialRegistryMissingError",
+        rendererDomain: "chemistry",
+      },
+    });
+  });
+
+  it("preserves an adapter's typed missing-registry failure", () => {
+    const error = new MaterialRegistryMissingError({
+      rendererDomain: "physics",
+    });
+
+    expect(resolveMaterialRuntime(() => Either.left(error), "physics")).toEqual(
+      Either.left(error)
+    );
+  });
+
+  it("composes a missing registry in the Effect error channel", async () => {
+    const error = new MaterialRegistryMissingError({
+      rendererDomain: "biology",
+    });
+
+    await expect(
+      Effect.runPromise(Effect.fail(error).pipe(Effect.flip))
+    ).resolves.toBe(error);
+  });
 });
 
 describe("bounded material module import", () => {

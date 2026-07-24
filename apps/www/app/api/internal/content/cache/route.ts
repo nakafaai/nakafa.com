@@ -1,20 +1,19 @@
 import {
-  MaterialCacheReceiptSchema,
-  MaterialCacheRequestSchema,
-} from "@nakafa/aksara-contracts/cache/material";
+  ContentCacheReceiptSchema,
+  ContentCacheRequestSchema,
+} from "@nakafa/aksara-contracts/cache/content";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
 import { Effect, Schema } from "effect";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { env } from "@/env";
-import { revalidateMaterialCache } from "@/lib/content/cache";
+import { revalidateContentCache } from "@/lib/content/cache";
 import { isInternalContentAuthorized } from "@/lib/content/internal/authorization";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
 const MAX_CACHE_REQUEST_BYTES = 32 * 1024;
-
 /** A bounded cache invalidation request cannot be safely decoded. */
 class CacheRequestError extends Schema.TaggedError<CacheRequestError>()(
   "CacheRequestError",
@@ -33,7 +32,7 @@ function cacheRequestStatus(error: CacheRequestError) {
   return 400;
 }
 
-/** Reads one exact material request while preserving current catalog sync calls. */
+/** Reads one exact release-bound content-family invalidation request. */
 const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
   request: NextRequest
 ) {
@@ -42,10 +41,7 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
     MAX_CACHE_REQUEST_BYTES
   ).pipe(Effect.mapError(() => new CacheRequestError({ reason: "size" })));
   if (!request.body) {
-    if (declaredLength !== null && declaredLength !== 0) {
-      return yield* new CacheRequestError({ reason: "body" });
-    }
-    return null;
+    return yield* new CacheRequestError({ reason: "body" });
   }
   if (!isJsonContentType(request.headers.get("content-type"))) {
     return yield* new CacheRequestError({ reason: "content-type" });
@@ -65,7 +61,7 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
     return yield* new CacheRequestError({ reason: "body" });
   }
   if (bytes.byteLength === 0) {
-    return null;
+    return yield* new CacheRequestError({ reason: "body" });
   }
   const source = yield* Effect.try({
     catch: () => new CacheRequestError({ reason: "body" }),
@@ -75,7 +71,7 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
     catch: () => new CacheRequestError({ reason: "body" }),
     try: (): unknown => JSON.parse(source),
   });
-  return yield* Schema.decodeUnknown(MaterialCacheRequestSchema)(input, {
+  return yield* Schema.decodeUnknown(ContentCacheRequestSchema)(input, {
     onExcessProperty: "error",
   }).pipe(Effect.mapError(() => new CacheRequestError({ reason: "body" })));
 });
@@ -108,13 +104,6 @@ export const POST = (request: NextRequest) =>
           }
         );
       }
-      if (decoded.right === null) {
-        const tags = revalidateMaterialCache();
-        return NextResponse.json(
-          { revalidated: true, tags },
-          { headers: PRIVATE_RESPONSE_HEADERS }
-        );
-      }
       const active = yield* readActiveContentIdentity();
       if (active?.releaseId !== decoded.right.releaseId) {
         return NextResponse.json(
@@ -122,10 +111,11 @@ export const POST = (request: NextRequest) =>
           { headers: PRIVATE_RESPONSE_HEADERS, status: 409 }
         );
       }
-      const tags = revalidateMaterialCache();
+      const tags = revalidateContentCache(decoded.right.tags);
 
       return NextResponse.json(
-        MaterialCacheReceiptSchema.make({
+        ContentCacheReceiptSchema.make({
+          family: decoded.right.family,
           releaseId: decoded.right.releaseId,
           revalidated: true,
           tags,

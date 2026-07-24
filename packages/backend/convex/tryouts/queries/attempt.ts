@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
@@ -61,14 +62,14 @@ async function loadCurrentAttempt(
   ctx: QueryCtx,
   args: {
     sectionKey?: string;
-    set: Doc<"tryoutSets">;
+    setIdentity: string;
     userId: Doc<"users">["_id"];
   }
 ) {
   const attempt = await ctx.db
     .query("tryoutAttempts")
-    .withIndex("by_userId_and_tryoutSetId_and_startedAt", (q) =>
-      q.eq("userId", args.userId).eq("tryoutSetId", args.set._id)
+    .withIndex("by_userId_and_setIdentity_and_startedAt", (q) =>
+      q.eq("userId", args.userId).eq("setIdentity", args.setIdentity)
     )
     .order("desc")
     .first();
@@ -162,7 +163,7 @@ export const getCurrent = query({
 
     return await loadCurrentAttempt(ctx, {
       sectionKey: args.sectionKey,
-      set,
+      setIdentity: tryoutCatalogIdentity({ ...set, kind: "set" }),
       userId: auth.appUser._id,
     });
   },
@@ -189,7 +190,7 @@ export const getCurrentByPublicPath = query({
     }
 
     return await loadCurrentAttempt(ctx, {
-      set,
+      setIdentity: tryoutCatalogIdentity({ ...set, kind: "set" }),
       userId: auth.appUser._id,
     });
   },

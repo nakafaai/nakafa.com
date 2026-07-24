@@ -8,10 +8,10 @@ import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
 } from "@nakafa/aksara-contracts/release/rollback";
+import { emptyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import {
-  insertTestRelease,
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
@@ -21,6 +21,7 @@ import {
   testTextHash,
   testUpsertJson,
 } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 
 const NOW = Date.UTC(2026, 6, 23, 12);
 
@@ -100,10 +101,12 @@ export async function activateRollbackFixture(
     resultCount: itemCount,
     resultDigest: TEST_DIGEST,
     routeDigest: TEST_DIGEST,
+    snapshots: emptyContentSnapshots(),
     stagedArtifacts: itemCount,
     stagedItems: itemCount,
     stagedProjections: itemCount,
     stagedRoutes: routeCount,
+    stagedSnapshotRows: 0,
   };
   await ctx.db.patch("contentReleases", release._id, {
     completedAt: NOW,
@@ -202,6 +205,7 @@ export async function insertRollbackItem(
               compilerConfigHash: Sha256HashSchema.make(TEST_DIGEST),
               contentKey,
               delivery: "public",
+              family: "material",
               locale: "en",
               projectionHash: Sha256HashSchema.make(
                 testTextHash(priorProjection)

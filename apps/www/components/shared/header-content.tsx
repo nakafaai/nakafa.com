@@ -30,10 +30,13 @@ interface Props {
   };
   /** The slug of the content */
   slug?: string;
+  /** Exact reviewed source URL, null when no immutable source exists */
+  sourceUrl?: null | string;
   /** The title of the content */
   title: string;
 }
 
+/** Renders one content heading with its metadata and reviewed source actions. */
 export function HeaderContent({
   title,
   link,
@@ -43,6 +46,7 @@ export function HeaderContent({
   authors,
   date,
   slug,
+  sourceUrl,
   content,
 }: Props) {
   const showFooter = authors || date;
@@ -121,7 +125,9 @@ export function HeaderContent({
           </div>
         )}
 
-        {!!slug && <OpenContent content={content} slug={slug} />}
+        {!!slug && (
+          <OpenContent content={content} slug={slug} sourceUrl={sourceUrl} />
+        )}
       </div>
     </header>
   );

@@ -1,5 +1,9 @@
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
-import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import {
+  canonicalizeContentProjection,
+  familyForProjection,
+  isQuestionProjection,
+} from "@nakafa/aksara-contracts/projection/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
@@ -125,8 +129,8 @@ const resolveRoute = Effect.fn("contentRelease.resolveRoute")(function* (
   const decodedArtifact = yield* decodeArtifactJson(artifact.artifactJson);
   const projection = yield* decodeProjectionJson(head.projectionJson);
   const projectionHash = yield* hashText(
-    "the published material projection",
-    canonicalizeMaterialProjection(projection)
+    "the published content projection",
+    canonicalizeContentProjection(projection)
   );
   if (
     decodedArtifact.artifactHash !== head.artifactHash ||
@@ -135,6 +139,8 @@ const resolveRoute = Effect.fn("contentRelease.resolveRoute")(function* (
     decodedArtifact.payload.locale !== locale ||
     decodedArtifact.payload.rendererDomain !== head.rendererDomain ||
     decodedArtifact.payload.sourceHash !== head.sourceHash ||
+    familyForProjection(projection) !== head.family ||
+    isQuestionProjection(projection) ||
     projectionHash !== head.projectionHash ||
     projection.contentKey !== head.contentKey ||
     projection.locale !== locale ||
@@ -166,24 +172,4 @@ export const readPublic = internalQuery({
   returns: routeResultValidator,
   handler: (ctx, args) =>
     runConvexProgram(resolveRoute(ctx, args.locale, args.publicPath, "public")),
-});
-
-/** Returns one authenticated artifact after the HTTP adapter validates auth. */
-export const readAuthenticated = internalQuery({
-  args: routeArgs,
-  returns: routeResultValidator,
-  handler: (ctx, args) =>
-    runConvexProgram(
-      resolveRoute(ctx, args.locale, args.publicPath, "authenticated")
-    ),
-});
-
-/** Returns one entitled artifact after the HTTP adapter validates entitlement. */
-export const readEntitled = internalQuery({
-  args: routeArgs,
-  returns: routeResultValidator,
-  handler: (ctx, args) =>
-    runConvexProgram(
-      resolveRoute(ctx, args.locale, args.publicPath, "entitled")
-    ),
 });

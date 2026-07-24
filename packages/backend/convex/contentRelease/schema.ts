@@ -1,3 +1,4 @@
+import snapshotSchema from "@repo/backend/convex/contentRelease/snapshot/schema";
 import {
   bindingOperationValidator,
   compactionPhaseValidator,
@@ -20,6 +21,8 @@ const releaseProgress = {
   stagedItems: v.number(),
   stagedProjections: v.number(),
   stagedRoutes: v.number(),
+  stagedSnapshotBatches: v.number(),
+  stagedSnapshotRows: v.number(),
   stagedUpserts: v.number(),
 };
 
@@ -46,6 +49,12 @@ const tables = {
       "family",
       "contentKey",
       "locale",
+    ])
+    .index("by_family_and_locale_and_createdSequence_and_contentKey", [
+      "family",
+      "locale",
+      "createdSequence",
+      "contentKey",
     ]),
 
   /** Permanent public-route identities used for bounded MVCC validation. */
@@ -189,6 +198,8 @@ const tables = {
     ])
     .index("by_artifactHash", ["artifactHash"])
     .index("by_sequence", ["sequence"]),
+
+  ...snapshotSchema,
 
   /** Singleton identities selecting active, candidate, and recovery sequences. */
   contentState: defineTable({

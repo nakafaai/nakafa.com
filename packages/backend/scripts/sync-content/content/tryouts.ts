@@ -53,7 +53,8 @@ export const syncTryouts = Effect.fn("sync.tryouts")(function* (
   const rows = yield* projectTryoutRows(selectedLocales);
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
 
-  for (const batch of chunkTryoutRows(rows)) {
+  const batches = yield* chunkTryoutRows(rows);
+  for (const batch of batches) {
     const result = yield* callConvexMutation(
       config,
       internal.contentSync.mutations.tryouts.bulkSyncTryouts,

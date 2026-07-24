@@ -1,4 +1,4 @@
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -6,6 +6,10 @@ import {
   finalizeSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import {
+  activateRuntimeSnapshot,
+  insertRuntimeSectionSource,
+} from "@repo/backend/test/runtime-snapshot";
 import {
   insertIrtScaleItem,
   insertTryoutAttempt,
@@ -27,38 +31,6 @@ const SET_PATH = "try-out/indonesia/snbt/2027/set-1";
 const FIRST_SECTION = "pengetahuan-kuantitatif";
 const SECOND_SECTION = "penalaran-matematika";
 
-async function insertSectionSource(ctx: MutationCtx, sectionKey: string) {
-  const sourcePath = `question-bank/tryout/indonesia/snbt/2027/set-1/${sectionKey}`;
-  const questionSetId = await insertTryoutQuestionSource(ctx, {
-    sectionKey,
-    sourcePath,
-  });
-  const question = await ctx.db
-    .query("questions")
-    .withIndex("by_questionSetId_and_number", (q) =>
-      q.eq("questionSetId", questionSetId).eq("number", 1)
-    )
-    .unique();
-
-  if (!question) {
-    throw new ConvexError({
-      code: "TRYOUT_QUESTION_NOT_FOUND",
-      message: "Expected try-out question fixture.",
-    });
-  }
-
-  await ctx.db.insert("questionChoices", {
-    isCorrect: true,
-    label: "A",
-    locale: "id",
-    optionKey: "a",
-    order: 1,
-    questionId: question._id,
-  });
-
-  return { questionId: question._id, questionSetId, sourcePath };
-}
-
 describe("tryouts/runtime/finish", () => {
   it("expires opened and unopened IRT sections before scoring", async () => {
     const t = convexTest(schema, convexModules);
@@ -72,8 +44,11 @@ describe("tryouts/runtime/finish", () => {
         name: "Expire IRT",
         plan: "pro",
       });
-      const firstSource = await insertSectionSource(ctx, FIRST_SECTION);
-      const secondSource = await insertSectionSource(ctx, SECOND_SECTION);
+      const firstSource = await insertRuntimeSectionSource(ctx, FIRST_SECTION);
+      const secondSource = await insertRuntimeSectionSource(
+        ctx,
+        SECOND_SECTION
+      );
       const tryoutSetId = await insertTryoutSet(ctx, {
         sectionCount: 2,
         totalQuestionCount: 2,
@@ -94,6 +69,20 @@ describe("tryouts/runtime/finish", () => {
         sectionKey: SECOND_SECTION,
         tryoutSetId,
       });
+      const snapshotId = await activateRuntimeSnapshot(ctx, [
+        {
+          order: 1,
+          publicPath: `${SET_PATH}/${FIRST_SECTION}`,
+          sectionKey: FIRST_SECTION,
+          sourcePath: firstSource.sourcePath,
+        },
+        {
+          order: 2,
+          publicPath: `${SET_PATH}/${SECOND_SECTION}`,
+          sectionKey: SECOND_SECTION,
+          sourcePath: secondSource.sourcePath,
+        },
+      ]);
       const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
         model: "2pl",
         publishedAt: NOW,
@@ -136,6 +125,7 @@ describe("tryouts/runtime/finish", () => {
             tryoutSectionId: secondSectionId,
           }),
         ],
+        snapshotId,
         tryoutSetId,
         userId,
       });
@@ -154,7 +144,7 @@ describe("tryouts/runtime/finish", () => {
         });
       }
 
-      await createAttemptPlacements(ctx, { attempt });
+      await runConvexProgram(createAttemptPlacements(ctx, { attempt }));
 
       const placement = await ctx.db
         .query("tryoutAttemptPlacements")
@@ -179,7 +169,7 @@ describe("tryouts/runtime/finish", () => {
         isCorrect: true,
         placementId: placement._id,
         questionId: firstSource.questionId,
-        selectedOptionId: "a",
+        selectedOptionId: "option-1",
         timeSpent: 1000,
         tryoutAttemptId: attemptId,
         tryoutSectionAttemptId: sectionAttemptId,

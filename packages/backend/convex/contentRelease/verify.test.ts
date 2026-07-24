@@ -3,12 +3,12 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import {
-  insertTestRelease,
   TEST_RELEASE_ID,
   testProjectionJson,
   testRouteJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import {
   beginFixture,
   stageUpsertFixture,

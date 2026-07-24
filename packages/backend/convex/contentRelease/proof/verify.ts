@@ -21,6 +21,7 @@ import { verifyArtifacts } from "@repo/backend/convex/contentRelease/proof/artif
 import type { RouteCatalogPage } from "@repo/backend/convex/contentRelease/proof/catalog";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import type { ProofState } from "@repo/backend/convex/contentRelease/proof/read";
+import { verifyReleaseSnapshots } from "@repo/backend/convex/contentRelease/proof/snapshot";
 import {
   readProofStream,
   readResultStream,
@@ -156,6 +157,13 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       entries: rollbackStream,
       manifest: release.manifest,
     }).pipe(Effect.mapError(contractFailure));
+    const snapshots = yield* verifyReleaseSnapshots(
+      ctx,
+      release,
+      state.role,
+      state.stagedSnapshotBatches,
+      state.stagedSnapshotRows
+    );
     const routes = yield* verifyContentRoutes({
       manifest: release.manifest,
       routes: readRouteStream(ctx, releaseId),
@@ -187,6 +195,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       state.stagedProjections === items.upsertCount &&
       state.stagedRoutes === routes.count &&
       state.stagedRoutes === release.manifest.routeCount &&
+      state.stagedSnapshotRows === snapshots.stagedRows &&
       rollback.count === release.manifest.rollbackCount &&
       result.count === release.manifest.resultCount;
     if (!countersMatch) {
@@ -215,8 +224,10 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       rollbackDigest: rollback.digest,
       routeCount: routes.count,
       routeDigest: release.manifest.routeDigest,
+      snapshots: snapshots.snapshots,
       stagedArtifacts: artifactCount,
       stagedRoutes: routes.count,
+      stagedSnapshotRows: snapshots.stagedRows,
       upsertHeads: items.upsertCount,
     };
     yield* callInternal(() =>

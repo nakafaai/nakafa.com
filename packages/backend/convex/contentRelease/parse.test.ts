@@ -1,4 +1,5 @@
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
+import { emptyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
 import {
   decodeArtifactJson,
   decodeItemJson,
@@ -48,8 +49,10 @@ function testProofJson() {
     rollbackDigest: TEST_DIGEST,
     routeCount: 1,
     routeDigest: TEST_DIGEST,
+    snapshots: emptyContentSnapshots(),
     stagedArtifacts: 1,
     stagedRoutes: 1,
+    stagedSnapshotRows: 0,
     upsertHeads: 1,
   });
 }

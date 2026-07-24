@@ -3,9 +3,9 @@ import {
   SignedContentArtifactSchema,
 } from "@nakafa/aksara-contracts/content";
 import {
-  canonicalizeMaterialProjection,
-  MaterialLessonProjectionSchema,
-} from "@nakafa/aksara-contracts/projection/material";
+  ContentProjectionSchema,
+  canonicalizeContentProjection,
+} from "@nakafa/aksara-contracts/projection/spec";
 import {
   ContentReleaseItemSchema,
   canonicalizeContentReleaseItem,
@@ -18,6 +18,12 @@ import {
   ContentRouteItemSchema,
   canonicalizeContentRouteItem,
 } from "@nakafa/aksara-contracts/release/route";
+import {
+  ContentSnapshotManifestSchema,
+  ContentSnapshotRowSchema,
+  canonicalizeContentSnapshotManifest,
+  canonicalizeContentSnapshotRow,
+} from "@nakafa/aksara-contracts/release/snapshot-data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Schema } from "effect";
@@ -112,13 +118,13 @@ export const decodeArtifactJson = Effect.fn(
   )
 );
 
-/** Strictly decodes one material projection from canonical storage JSON. */
+/** Strictly decodes one content projection from canonical storage JSON. */
 export const decodeProjectionJson = Effect.fn(
   "contentRelease.decodeProjectionJson"
 )((source: string) =>
-  parseStoredJson(source, "Material projection").pipe(
+  parseStoredJson(source, "Content projection").pipe(
     Effect.flatMap(
-      Schema.decodeUnknown(MaterialLessonProjectionSchema, {
+      Schema.decodeUnknown(ContentProjectionSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -126,7 +132,7 @@ export const decodeProjectionJson = Effect.fn(
       () =>
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Material projection does not satisfy its exact contract.",
+          message: "Content projection does not satisfy its exact contract.",
         })
     )
   )
@@ -190,6 +196,46 @@ export const decodeRollbackJson = Effect.fn(
   )
 );
 
+/** Strictly decodes one immutable structured-family manifest. */
+export const decodeSnapshotJson = Effect.fn(
+  "contentRelease.decodeSnapshotJson"
+)((source: string) =>
+  parseStoredJson(source, "Content snapshot").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknown(ContentSnapshotManifestSchema, {
+        onExcessProperty: "error",
+      })
+    ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "Content snapshot does not satisfy its exact contract.",
+        })
+    )
+  )
+);
+
+/** Strictly decodes one immutable structured-family row. */
+export const decodeSnapshotRowJson = Effect.fn(
+  "contentRelease.decodeSnapshotRowJson"
+)((source: string) =>
+  parseStoredJson(source, "Content snapshot row").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknown(ContentSnapshotRowSchema, {
+        onExcessProperty: "error",
+      })
+    ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "Content snapshot row does not satisfy its exact contract.",
+        })
+    )
+  )
+);
+
 /** Strictly decodes one trusted renderer snapshot from canonical JSON. */
 export const decodeRendererJson = Effect.fn(
   "contentRelease.decodeRendererJson"
@@ -236,9 +282,23 @@ export function encodeArtifactJson(
 
 /** Stores one projection using the canonicalizer owned by Aksara contracts. */
 export function encodeProjectionJson(
-  projection: typeof MaterialLessonProjectionSchema.Type
+  projection: typeof ContentProjectionSchema.Type
 ) {
-  return canonicalizeMaterialProjection(projection);
+  return canonicalizeContentProjection(projection);
+}
+
+/** Stores one family manifest through the contract-owned canonicalizer. */
+export function encodeSnapshotJson(
+  snapshot: typeof ContentSnapshotManifestSchema.Type
+) {
+  return canonicalizeContentSnapshotManifest(snapshot);
+}
+
+/** Stores one structured row through the contract-owned canonicalizer. */
+export function encodeSnapshotRowJson(
+  row: typeof ContentSnapshotRowSchema.Type
+) {
+  return canonicalizeContentSnapshotRow(row);
 }
 
 /** Stores one already-canonical renderer envelope without a mirror schema. */

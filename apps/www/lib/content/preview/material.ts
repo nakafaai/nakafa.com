@@ -10,8 +10,12 @@ import {
   SigningKeyNotFoundError,
 } from "@nakafa/aksara-contracts/signature/spec";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Effect, Option } from "effect";
-import type { ResolvedMaterialRoute } from "@/lib/content/material";
+import { Effect, Either, Option } from "effect";
+import {
+  type MaterialRuntimeResolver,
+  type ResolvedMaterialRoute,
+  resolveMaterialRuntime,
+} from "@/lib/content/material";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import {
   PreviewCompileError,
@@ -33,7 +37,7 @@ import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 /** Exact material route identity requested by one Next server boundary. */
 export interface MaterialPreviewInput extends MaterialPreviewRouteInput {
-  readonly components: MDXComponents;
+  readonly resolveRuntime: MaterialRuntimeResolver;
 }
 
 /** Authenticated local body plus metadata rendered by the actual Nakafa app. */
@@ -154,7 +158,14 @@ export const readMaterialPreview = Effect.fn(
       revision: manifest.revision,
     });
   }
+  const runtime = resolveMaterialRuntime(
+    input.resolveRuntime,
+    manifest.document.rendererDomain
+  );
+  if (Either.isLeft(runtime)) {
+    return yield* new PreviewIntegrityError({ check: "domain" });
+  }
   return Option.some(
-    yield* readReadyContent(manifest, config, input.components)
+    yield* readReadyContent(manifest, config, runtime.right.components)
   );
 });

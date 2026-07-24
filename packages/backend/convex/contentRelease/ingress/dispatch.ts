@@ -4,6 +4,7 @@ import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import { contentKeyResolver } from "@repo/backend/content/trust";
 import {
   type ActionCtx,
   internalAction,
@@ -22,7 +23,6 @@ import {
   publicationSuccess,
 } from "@repo/backend/convex/contentRelease/ingress/response";
 import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/stage";
-import { trustedKeyResolver } from "@repo/backend/convex/contentRelease/proof/trust";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
 import { Effect, Either } from "effect";
@@ -47,7 +47,9 @@ const performRequest = Effect.fn("contentRelease.performRequest")(function* (
     request.operation === "stageItemBatch" ||
     request.operation === "stageRouteBatch" ||
     request.operation === "stageProjectionBatch" ||
-    request.operation === "stageArtifactBatch"
+    request.operation === "stageArtifactBatch" ||
+    request.operation === "stageSnapshot" ||
+    request.operation === "stageSnapshotBatch"
   ) {
     return yield* stagePublication(ctx, request, activeKeyId);
   }
@@ -108,7 +110,7 @@ export const dispatchPublication = Effect.fn(
 export function dispatchHandler(ctx: ActionCtx, input: DispatchInput) {
   return runConvexProgram(
     dispatchPublication(ctx, input).pipe(
-      Effect.provideService(ContentVerificationKeyResolver, trustedKeyResolver)
+      Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver)
     )
   );
 }

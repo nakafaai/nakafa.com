@@ -17,8 +17,14 @@ function abortTotal(release: {
   readonly checkedItems: number;
   readonly stagedItems: number;
   readonly stagedRoutes: number;
+  readonly stagedSnapshotBatches: number;
 }) {
-  return release.checkedItems + release.stagedItems + release.stagedRoutes;
+  return (
+    release.checkedItems +
+    release.stagedItems +
+    release.stagedRoutes +
+    release.stagedSnapshotBatches
+  );
 }
 
 /** Validates durable progress for one still-invisible abort operation. */
@@ -29,6 +35,7 @@ export const abortEvidence = Effect.fn("contentRelease.abortEvidence")(
     readonly checkedItems: number;
     readonly stagedItems: number;
     readonly stagedRoutes: number;
+    readonly stagedSnapshotBatches: number;
     readonly status: string;
   }) {
     const processed = release.abortedRows ?? 0;
@@ -59,6 +66,14 @@ export const validateAbortedRelease = Effect.fn(
       ctx.db
         .query("contentHeads")
         .withIndex("by_releaseId_and_index", (query) =>
+          query.eq("releaseId", releaseId)
+        )
+        .first()
+    ),
+    Effect.promise(() =>
+      ctx.db
+        .query("snapshotBatches")
+        .withIndex("by_releaseId_and_family_and_batchIndex", (query) =>
           query.eq("releaseId", releaseId)
         )
         .first()
@@ -135,6 +150,18 @@ const deleteRows = Effect.fn("contentRelease.deleteAbortRows")(function* (
             )
             .take(remaining)
         );
+  remaining -= items.length;
+  const snapshotBatches =
+    remaining === 0
+      ? []
+      : yield* Effect.promise(() =>
+          ctx.db
+            .query("snapshotBatches")
+            .withIndex("by_releaseId_and_family_and_batchIndex", (query) =>
+              query.eq("releaseId", releaseId)
+            )
+            .take(remaining)
+        );
   yield* Effect.forEach(heads, (row) =>
     Effect.promise(() => ctx.db.delete("contentHeads", row._id))
   );
@@ -144,13 +171,16 @@ const deleteRows = Effect.fn("contentRelease.deleteAbortRows")(function* (
   yield* Effect.forEach(items, (row) =>
     Effect.promise(() => ctx.db.delete("contentItems", row._id))
   );
+  yield* Effect.forEach(snapshotBatches, (row) =>
+    Effect.promise(() => ctx.db.delete("snapshotBatches", row._id))
+  );
   yield* retainOrphanedArtifacts(
     ctx,
     [...heads, ...items].flatMap(({ artifactHash }) =>
       artifactHash === undefined ? [] : [artifactHash]
     )
   );
-  return heads.length + bindings.length + items.length;
+  return heads.length + bindings.length + items.length + snapshotBatches.length;
 });
 
 /** Abandons only an invisible candidate or retained recovery slot. */

@@ -1,6 +1,5 @@
 // @vitest-environment node
 
-import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Effect, Option } from "effect";
 import { connection } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,6 +10,10 @@ import {
   getMaterialRouteData,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/runtime";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
+import {
+  createFixedMaterialRuntimeResolver,
+  MaterialRegistryMissingError,
+} from "@/lib/content/material";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readMaterialPreview } from "@/lib/content/preview/material";
 import { fetchRuntimeCurriculumPage } from "@/lib/content/runtime/pages";
@@ -47,13 +50,22 @@ const configMock = vi.mocked(hasPreviewConfig);
 const previewMock = vi.mocked(readMaterialPreview);
 const runtimeMock = vi.mocked(fetchRuntimeCurriculumPage);
 const routeMock = vi.mocked(readMaterialRequestRoute);
+const unusedRuntimeError = new MaterialRegistryMissingError({
+  rendererDomain: "mathematics",
+});
+const resolveRuntime = createFixedMaterialRuntimeResolver({
+  components: {},
+  importer: () => Promise.reject(unusedRuntimeError),
+  published: () => Promise.reject(unusedRuntimeError),
+  rendererDomain: "mathematics",
+});
 const input = {
-  components: {} satisfies MDXComponents,
   params: {
     lesson: ["function-concept"],
     locale: "en",
     topic: "function-composition-inverse-function",
   },
+  resolveRuntime,
   target: "mathematics",
 } satisfies Parameters<typeof getMaterialPreviewData>[0];
 

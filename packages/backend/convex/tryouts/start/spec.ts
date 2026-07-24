@@ -67,7 +67,8 @@ export const tryoutStartErrorCode = {
   attemptNotFound: "TRYOUT_ATTEMPT_NOT_FOUND",
   sectionCountMismatch: "TRYOUT_SECTION_COUNT_MISMATCH",
   sectionSnapshotMismatch: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-} as const;
+  snapshotUnavailable: "TRYOUT_SNAPSHOT_UNAVAILABLE",
+};
 
 /** Expected domain failure raised while starting a try-out attempt. */
 export class TryoutStartError
@@ -103,5 +104,15 @@ export function toTryoutStartError(error: unknown) {
   return new TryoutStartError({
     code: tryoutStartErrorCode.failed,
     message: error instanceof Error ? error.message : String(error),
+  });
+}
+
+/** Maps one signed-snapshot failure into the stable start contract. */
+export function toTryoutSnapshotStartError(error: {
+  readonly message: string;
+}) {
+  return new TryoutStartError({
+    code: tryoutStartErrorCode.snapshotUnavailable,
+    message: error.message,
   });
 }

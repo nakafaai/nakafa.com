@@ -136,6 +136,13 @@ describe("contentRelease/compact", () => {
     ).resolves.toMatchObject({
       complete: false,
       deleted: 1,
+      phase: "snapshots",
+    });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactProgram(ctx)))
+    ).resolves.toMatchObject({
+      complete: false,
+      floor: 1,
       phase: "releases",
     });
     await expect(

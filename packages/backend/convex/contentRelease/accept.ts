@@ -20,7 +20,10 @@ import { Effect } from "effect";
 /** Builds the cumulative terminal receipt retained by an aborted recovery. */
 function terminalReceipt(recovery: Doc<"contentReleases">) {
   const total =
-    recovery.checkedItems + recovery.stagedItems + recovery.stagedRoutes;
+    recovery.checkedItems +
+    recovery.stagedItems +
+    recovery.stagedRoutes +
+    recovery.stagedSnapshotBatches;
   return {
     complete: true,
     processedItems: total,

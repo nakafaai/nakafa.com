@@ -28,7 +28,7 @@ describe("renderer manifest", () => {
     const manifest = await Effect.runPromise(rendererManifest);
 
     expect(manifest.hash).toBe(
-      "sha256:34ea7de14176a37239db20f0bd2ef28515413054b9af3f869c596c796a427b3a"
+      "sha256:95cabccf9b57b18feed3953276855244fe67452f9faa06a5b171e8dc63d5c2f6"
     );
     expect(manifest.domains.map(({ name }) => name)).toEqual(RENDERER_DOMAINS);
   });
@@ -37,32 +37,60 @@ describe("renderer manifest", () => {
     const [
       { rendererManifest },
       { mdxComponents },
+      { aiDsRegistry },
+      { biologyRegistry },
       { chemistryRegistry },
       { mathematicsRegistry },
+      { physicsRegistry },
+      { politicsRegistry },
+      { snbtGeneralRegistry },
+      { snbtMathRegistry },
+      { snbtPlainRegistry },
+      { snbtQuantRegistry },
+      { tkaMathRegistry },
     ] = await Promise.all([
       import("@/lib/content/renderer/manifest"),
       import("@repo/design-system/lib/markdown/registry"),
+      import("@repo/design-system/lib/markdown/domain/ai-ds"),
+      import("@repo/design-system/lib/markdown/domain/biology"),
       import("@repo/design-system/lib/markdown/domain/chemistry"),
       import("@repo/design-system/lib/markdown/domain/mathematics"),
+      import("@repo/design-system/lib/markdown/domain/physics"),
+      import("@repo/design-system/lib/markdown/domain/politics"),
+      import("@repo/design-system/lib/markdown/domain/snbt/general"),
+      import("@repo/design-system/lib/markdown/domain/snbt/mathematics"),
+      import("@repo/design-system/lib/markdown/domain/snbt/plain"),
+      import("@repo/design-system/lib/markdown/domain/snbt/quantitative"),
+      import("@repo/design-system/lib/markdown/domain/tka/mathematics"),
     ]);
     const manifest = await Effect.runPromise(rendererManifest);
     const registryNames = new Map<string, readonly string[]>([
+      ["ai-ds", sortedKeys(aiDsRegistry)],
+      ["biology", sortedKeys(biologyRegistry)],
       ["chemistry", sortedKeys(chemistryRegistry)],
       ["mathematics", sortedKeys(mathematicsRegistry)],
+      ["physics", sortedKeys(physicsRegistry)],
+      ["politics", sortedKeys(politicsRegistry)],
+      ["snbt-general", sortedKeys(snbtGeneralRegistry)],
+      ["snbt-math", sortedKeys(snbtMathRegistry)],
+      ["snbt-plain", sortedKeys(snbtPlainRegistry)],
+      ["snbt-quant", sortedKeys(snbtQuantRegistry)],
+      ["tka-math", sortedKeys(tkaMathRegistry)],
     ]);
 
     expect(manifest.base.authoringComponents.map(({ name }) => name)).toEqual(
       sortedKeys(mdxComponents)
     );
     for (const capability of manifest.domains) {
-      const expectedNames = registryNames.get(capability.name) ?? [];
+      const expectedNames = registryNames.get(capability.name);
+      expect(expectedNames).toBeDefined();
       expect(capability.authoringComponents.map(({ name }) => name)).toEqual(
         expectedNames
       );
       expect([
         ...new Set(capability.supportedComponents.map(({ name }) => name)),
       ]).toEqual(expectedNames);
-      if (expectedNames.length === 0) {
+      if (expectedNames?.length === 0) {
         expect(capability.supportedComponents).toEqual([]);
       }
     }

@@ -1,4 +1,5 @@
 import { bulkSyncTryoutsImpl } from "@repo/backend/convex/contentSync/tryouts/impl";
+import { resolveIrtSyncProof } from "@repo/backend/convex/contentSync/tryouts/irt/proof";
 import {
   bulkSyncTryoutsResultValidator,
   deleteResultValidator,
@@ -21,6 +22,7 @@ import {
   deleteStaleTryoutTracksImpl,
 } from "@repo/backend/convex/contentSync/tryouts/stale";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 
 /** Upserts one bounded try-out catalog and question-bank batch. */
@@ -36,7 +38,10 @@ export const bulkSyncTryouts = internalMutation({
     sections: v.array(syncedTryoutSectionValidator),
   },
   returns: bulkSyncTryoutsResultValidator,
-  handler: async (ctx, args) => await bulkSyncTryoutsImpl(ctx, args),
+  handler: async (ctx, args) => {
+    const proof = await runConvexProgram(resolveIrtSyncProof(ctx, args));
+    return await bulkSyncTryoutsImpl(ctx, args, proof);
+  },
 });
 
 /** Deletes one bounded stale question batch with sync-owned choice rows. */

@@ -81,9 +81,16 @@ describe("tryouts/mutations/attempts", () => {
     expect(runtime.attempt).toMatchObject({
       accessEndsAt: NOW + 3 * 86_400_000,
       accessSourceKind: "free",
+      countryKey: COUNTRY,
       countsForCompetition: false,
+      examKey: EXAM,
+      locale: "id",
       scoreStatus: "official",
+      setIdentity: expect.any(String),
+      setKey: SET,
       status: "in-progress",
+      trackKey: TRACK,
+      tryoutSnapshotId: seeded.fixture.snapshotId,
       tryoutSetId: seeded.fixture.tryoutSetId,
     });
     expect(runtime.sectionAttempts).toEqual([
@@ -93,13 +100,25 @@ describe("tryouts/mutations/attempts", () => {
         tryoutSectionId: seeded.fixture.tryoutSectionId,
       }),
     ]);
-    expect(runtime.placements).toHaveLength(1);
+    expect(runtime.placements).toEqual([
+      expect.objectContaining({
+        answerArtifactHash: expect.any(String),
+        answerContentKey: expect.any(String),
+        placementIdentity: expect.any(String),
+        placementRowHash: expect.any(String),
+        questionArtifactHash: expect.any(String),
+        questionContentKey: expect.any(String),
+        rendererDomain: "tka-math",
+        sectionKey: SECTION,
+      }),
+    ]);
     expect(runtime.freeClaim).toMatchObject({
       setKey: SET,
       userId: seeded.identity.userId,
     });
     expect(runtime.progress).toMatchObject({
       latestAttemptId: result.attemptId,
+      setIdentity: expect.any(String),
       status: "in-progress",
       statusRank: 1,
     });

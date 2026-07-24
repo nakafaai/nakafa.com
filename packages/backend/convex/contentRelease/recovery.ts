@@ -1,3 +1,7 @@
+import {
+  hasSameContentSnapshots,
+  invertContentSnapshots,
+} from "@nakafa/aksara-contracts/release/snapshot";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
@@ -47,7 +51,11 @@ export const validateRecoveryRelation = Effect.fn(
     recoverySigned.manifest.resultCount !==
       candidateSigned.manifest.baseResultCount ||
     recoverySigned.manifest.resultDigest !==
-      candidateSigned.manifest.baseResultDigest
+      candidateSigned.manifest.baseResultDigest ||
+    !hasSameContentSnapshots(
+      recoverySigned.manifest.snapshots,
+      invertContentSnapshots(candidateSigned.manifest.snapshots)
+    )
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

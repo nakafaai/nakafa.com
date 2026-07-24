@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import type {
   SyncedQuestion,
@@ -9,6 +10,18 @@ import type {
   SyncedTryoutSet,
   SyncedTryoutTrack,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
+import { Effect, Schema } from "effect";
+
+/** Reports one stable try-out set that cannot fit in a section mutation. */
+export class TryoutSectionBatchOverflowError extends Schema.TaggedError<TryoutSectionBatchOverflowError>()(
+  "TryoutSectionBatchOverflowError",
+  {
+    limit: Schema.Number,
+    message: Schema.String,
+    sectionCount: Schema.Number,
+    setIdentity: Schema.String,
+  }
+) {}
 
 /** Carries one Convex try-out sync mutation payload across all related tables. */
 export interface TryoutSyncArgs {
@@ -22,16 +35,20 @@ export interface TryoutSyncArgs {
   tracks: SyncedTryoutTrack[];
 }
 
-/** Groups try-out sync rows so Convex receives parents before dependents. */
-export function chunkTryoutRows(rows: TryoutSyncArgs): TryoutSyncArgs[] {
+/** Groups try-out sync rows while keeping every stable set indivisible. */
+export const chunkTryoutRows = Effect.fn("sync.tryouts.chunkRows")(function* (
+  rows: TryoutSyncArgs
+) {
+  const sectionBatches = yield* chunkSections(rows.sections);
+
   return [
     ...chunkRoutes(rows.routes),
     ...chunkCatalogRows(rows),
     ...chunkQuestionSets(rows.questionSets),
     ...chunkQuestions(rows.questions),
-    ...chunkSections(rows.sections),
+    ...sectionBatches,
   ];
-}
+});
 
 /** Split route projections into independently bounded mutation payloads. */
 function chunkRoutes(routes: SyncedTryoutRoute[]) {
@@ -146,26 +163,67 @@ function chunkQuestions(questions: SyncedQuestion[]) {
   return batches;
 }
 
-/** Split section rows at the configured transactional limit. */
-function chunkSections(sections: SyncedTryoutSection[]) {
+/** Packs complete stable-set section groups within the transaction limit. */
+const chunkSections = Effect.fn("sync.tryouts.chunkSections")(function* (
+  sections: SyncedTryoutSection[]
+) {
   const batches: TryoutSyncArgs[] = [];
+  const groups = groupSections(sections);
+  let batch = createBatch({});
 
-  for (
-    let index = 0;
-    index < sections.length;
-    index += CONTENT_SYNC_BATCH_LIMITS.tryoutSets
-  ) {
-    batches.push(
-      createBatch({
-        sections: sections.slice(
-          index,
-          index + CONTENT_SYNC_BATCH_LIMITS.tryoutSets
-        ),
-      })
-    );
+  for (const [setIdentity, group] of groups) {
+    if (group.length > CONTENT_SYNC_BATCH_LIMITS.tryoutSets) {
+      return yield* new TryoutSectionBatchOverflowError({
+        limit: CONTENT_SYNC_BATCH_LIMITS.tryoutSets,
+        message: `Try-out set ${setIdentity} has ${group.length} sections; the mutation limit is ${CONTENT_SYNC_BATCH_LIMITS.tryoutSets}.`,
+        sectionCount: group.length,
+        setIdentity,
+      });
+    }
+
+    if (
+      batch.sections.length > 0 &&
+      batch.sections.length + group.length >
+        CONTENT_SYNC_BATCH_LIMITS.tryoutSets
+    ) {
+      batches.push(batch);
+      batch = createBatch({});
+    }
+
+    batch.sections.push(...group);
+  }
+
+  if (batch.sections.length > 0) {
+    batches.push(batch);
   }
 
   return batches;
+});
+
+/** Groups section rows by the canonical locale-specific set identity. */
+function groupSections(sections: readonly SyncedTryoutSection[]) {
+  const groups = new Map<string, SyncedTryoutSection[]>();
+
+  for (const section of sections) {
+    const setIdentity = tryoutCatalogIdentity({
+      countryKey: section.countryKey,
+      examKey: section.examKey,
+      kind: "set",
+      locale: section.locale,
+      setKey: section.setKey,
+      trackKey: section.trackKey,
+    });
+    const group = groups.get(setIdentity);
+
+    if (group) {
+      group.push(section);
+      continue;
+    }
+
+    groups.set(setIdentity, [section]);
+  }
+
+  return groups;
 }
 
 /** Fill omitted try-out sync collections with empty arrays. */

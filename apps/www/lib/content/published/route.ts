@@ -5,7 +5,7 @@ import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
-import { decodePublishedRoute } from "@/lib/content/published/projection";
+import { decodePublishedMaterial } from "@/lib/content/published/projection";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
@@ -52,7 +52,7 @@ export const readActiveMaterialRoute = Effect.fn(
       }),
     try: (): unknown => JSON.parse(result.projectionJson),
   });
-  const route = yield* decodePublishedRoute(projectionInput, args);
+  const { route } = yield* decodePublishedMaterial(projectionInput, args);
 
   return {
     activeReleaseId: result.activeReleaseId,

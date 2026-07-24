@@ -1,10 +1,12 @@
 import type { ContentReleaseItem } from "@nakafa/aksara-contracts/release";
+import type { ContentHead } from "@nakafa/aksara-contracts/release/head";
 import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
+  type RollbackSnapshotState,
 } from "@nakafa/aksara-contracts/release/rollback";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { resolveMaterialHead } from "@repo/backend/convex/contentRelease/catalog";
+import { resolveContentHead } from "@repo/backend/convex/contentRelease/catalog";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
@@ -13,6 +15,22 @@ import {
   loadVersion,
 } from "@repo/backend/convex/contentRelease/model";
 import { Effect } from "effect";
+
+type PresentRollbackState = Exclude<
+  RollbackSnapshotState,
+  { readonly state: "absent" }
+>;
+
+/** Binds one discriminated content head to its exact rollback state. */
+function presentRollback(head: ContentHead): PresentRollbackState {
+  if (head.family === "article") {
+    return { head, state: "article" };
+  }
+  if (head.family === "material") {
+    return { head, state: "material" };
+  }
+  return { head, state: "question" };
+}
 
 /** Encodes one exact absent prior state for rollback replay. */
 function absentRollback(
@@ -24,6 +42,7 @@ function absentRollback(
     releaseId: item.releaseId,
     snapshot: {
       contentKey: item.change.contentKey,
+      family: item.change.family,
       locale: item.change.locale,
       state: "absent",
     },
@@ -53,7 +72,7 @@ const rollbackEvidence = Effect.fn("contentRelease.rollbackEvidence")(
     if (!prior || prior.operation === "delete") {
       return absentRollback(item, prior?.sequence);
     }
-    const head = yield* resolveMaterialHead(
+    const head = yield* resolveContentHead(
       ctx,
       item.change.contentKey,
       item.change.locale,
@@ -68,7 +87,7 @@ const rollbackEvidence = Effect.fn("contentRelease.rollbackEvidence")(
     const entry = RollbackSnapshotEntrySchema.make({
       index: item.index,
       releaseId: item.releaseId,
-      snapshot: { head, state: "material" },
+      snapshot: presentRollback(head),
     });
     return {
       priorSequence: prior.sequence,
@@ -91,7 +110,7 @@ const ensureContentKey = Effect.fn("contentRelease.ensureContentKey")(
         .unique()
     );
     if (existing) {
-      if (existing.family !== "material") {
+      if (existing.family !== item.change.family) {
         return yield* releaseFail(
           "CONTENT_RELEASE_INTEGRITY",
           `Content key ${item.change.contentKey}/${item.change.locale} changed family.`
@@ -103,7 +122,7 @@ const ensureContentKey = Effect.fn("contentRelease.ensureContentKey")(
       ctx.db.insert("contentKeys", {
         contentKey: item.change.contentKey,
         createdSequence: sequence,
-        family: "material",
+        family: item.change.family,
         locale: item.change.locale,
       })
     );

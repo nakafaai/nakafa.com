@@ -1,7 +1,14 @@
-import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
-import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { hashMaterialProjection } from "@nakafa/aksara-contracts/projection/hash";
-import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
+import {
+  ContentKeySchema,
+  CorpusSourcePathSchema,
+  PublicPathSchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  ArticleProjectionSchema,
+  ArticleSlugSchema,
+  canonicalizeArticleProjection,
+} from "@nakafa/aksara-contracts/projection/article";
 import type { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
@@ -9,13 +16,10 @@ import {
   testSignedRelease as signRelease,
   TEST_PROOF_RENDERER,
   testEmptyManifest,
-  testSignedArtifact,
 } from "@repo/backend/test/content-proof";
 import {
-  TEST_DIGEST,
+  testArticleGraph,
   testProjectionJson,
-  testRouteJson,
-  testTextHash,
 } from "@repo/backend/test/content-release";
 import {
   insertTestState,
@@ -23,7 +27,6 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content-state";
 import type { FunctionReturnType } from "convex/server";
-import { Schema } from "effect";
 
 type RuntimeRow = Exclude<
   FunctionReturnType<typeof internal.contentRelease.runtime.readPublic>,
@@ -32,6 +35,34 @@ type RuntimeRow = Exclude<
 
 export const TEST_RUNTIME_NOW = Date.UTC(2026, 6, 23, 12);
 export const TEST_RUNTIME_PATH = "test/runtime";
+export const TEST_ARTICLE_KEY = ContentKeySchema.make(
+  "articles/politics/dynastic-politics-asian-values"
+);
+export const TEST_ARTICLE_PATH = PublicPathSchema.make(TEST_ARTICLE_KEY);
+export const TEST_ARTICLE_SOURCE = CorpusSourcePathSchema.make(
+  "packages/corpus/articles/politics/dynastic-politics/asian-values/en.mdx"
+);
+export const TEST_ARTICLE_PROJECTION = ArticleProjectionSchema.make({
+  articleSlug: ArticleSlugSchema.make("dynastic-politics-asian-values"),
+  category: "politics",
+  contentKey: TEST_ARTICLE_KEY,
+  graph: testArticleGraph("dynastic-politics-asian-values"),
+  kind: "article",
+  locale: "en",
+  metadata: {
+    authors: [{ name: "Nakafa" }],
+    date: "2026-07-23",
+    title: "Article runtime verification",
+  },
+  official: false,
+  parentPath: PublicPathSchema.make("articles/politics"),
+  publicPath: TEST_ARTICLE_PATH,
+  references: [],
+  sitemap: true,
+});
+export const TEST_ARTICLE_PROJECTION_JSON = canonicalizeArticleProjection(
+  TEST_ARTICLE_PROJECTION
+);
 const runtimeReleaseId = ReleaseIdSchema.make("release-runtime");
 const signedRuntimeRelease = signRelease(testEmptyManifest(runtimeReleaseId));
 export const TEST_RUNTIME_RELEASE = {
@@ -39,6 +70,13 @@ export const TEST_RUNTIME_RELEASE = {
   releaseId: runtimeReleaseId,
   sequence: 3,
 } satisfies TestIdentity;
+
+/** Builds one realistic material identity for a delivery-specific fixture. */
+export function runtimeContentKey(
+  delivery: "authenticated" | "entitled" | "public"
+) {
+  return `material/lesson/test/${delivery}`;
+}
 
 /** Creates one exact runtime request body for an access class. */
 export function runtimeRequest(
@@ -48,6 +86,15 @@ export function runtimeRequest(
     delivery,
     locale: "en",
     publicPath: TEST_RUNTIME_PATH,
+  });
+}
+
+/** Creates the exact public runtime request for the real pair-grouped article. */
+export function articleRuntimeRequest() {
+  return JSON.stringify({
+    delivery: "public",
+    locale: "en",
+    publicPath: TEST_ARTICLE_PATH,
   });
 }
 
@@ -67,7 +114,7 @@ export function runtimeCases(row: RuntimeRow) {
   };
   const idArtifact = testArtifactJson({
     artifactHash: `sha256:${"3".repeat(64)}`,
-    contentKey: "test:public",
+    contentKey: runtimeContentKey("public"),
     locale: "id",
   });
   return [
@@ -79,7 +126,7 @@ export function runtimeCases(row: RuntimeRow) {
         artifact: JSON.parse(idArtifact),
         projection: JSON.parse(
           testProjectionJson({
-            contentKey: "test:public",
+            contentKey: runtimeContentKey("public"),
             locale: "id",
             publicPath: TEST_RUNTIME_PATH,
           })
@@ -92,7 +139,7 @@ export function runtimeCases(row: RuntimeRow) {
         ...response,
         projection: JSON.parse(
           testProjectionJson({
-            contentKey: "test:public",
+            contentKey: runtimeContentKey("public"),
             publicPath: "test/foreign",
           })
         ),
@@ -135,171 +182,4 @@ export async function insertSignedRelease(ctx: MutationCtx) {
     releaseJson: JSON.stringify(signedRuntimeRelease),
     rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
   });
-}
-
-/** Inserts one complete immutable artifact used by a selected route binding. */
-export async function insertRuntimeArtifact(
-  ctx: MutationCtx,
-  artifactHash: string,
-  contentKey: string,
-  compiledCode?: string
-) {
-  await ctx.db.insert("contentArtifacts", {
-    artifactHash,
-    artifactJson: testArtifactJson({
-      artifactHash,
-      compiledCode,
-      contentKey,
-    }),
-    createdAt: TEST_RUNTIME_NOW,
-    retainUntil: Number.MAX_SAFE_INTEGER,
-  });
-}
-
-export interface RuntimeHeadOptions {
-  readonly artifactHash?: string;
-  readonly bindingReleaseId?: string;
-  readonly bindingSequence?: number;
-  readonly compiledCode?: string;
-  readonly headReleaseId?: string;
-  readonly headSequence?: number;
-  readonly projectionJson?: string;
-  readonly publicPath?: string;
-}
-
-/** Inserts one immutable content version and its signed artifact. */
-export async function insertRuntimeVersion(
-  ctx: MutationCtx,
-  delivery: ContentDeliveryClass,
-  contentKey: string,
-  options?: RuntimeHeadOptions
-) {
-  const publicPath = options?.publicPath ?? TEST_RUNTIME_PATH;
-  const artifactHash = options?.artifactHash ?? `sha256:${"3".repeat(64)}`;
-  const projectionJson =
-    options?.projectionJson ?? testProjectionJson({ contentKey, publicPath });
-  const headSequence = options?.headSequence ?? TEST_RUNTIME_RELEASE.sequence;
-  const headReleaseId =
-    options?.headReleaseId ?? TEST_RUNTIME_RELEASE.releaseId;
-  await ctx.db.insert("contentHeads", {
-    artifactHash,
-    compilerConfigHash: TEST_DIGEST,
-    contentKey,
-    delivery,
-    family: "material",
-    index: 0,
-    locale: "en",
-    operation: "upsert",
-    projectionHash: testTextHash(projectionJson),
-    projectionJson,
-    releaseId: headReleaseId,
-    rendererDomain: "mathematics",
-    sequence: headSequence,
-    sourceHash: TEST_DIGEST,
-    sourcePath: `packages/corpus/material/lesson/test/${contentKey.slice(5)}/en.mdx`,
-  });
-  await insertRuntimeArtifact(
-    ctx,
-    artifactHash,
-    contentKey,
-    options?.compiledCode
-  );
-}
-
-/** Inserts one immutable route version plus its permanent path identity. */
-export async function insertRuntimeBinding(
-  ctx: MutationCtx,
-  contentKey: null | string,
-  options?: Pick<
-    RuntimeHeadOptions,
-    "bindingReleaseId" | "bindingSequence" | "publicPath"
-  >
-) {
-  const publicPath = options?.publicPath ?? TEST_RUNTIME_PATH;
-  const bindingSequence =
-    options?.bindingSequence ?? TEST_RUNTIME_RELEASE.sequence;
-  const bindingReleaseId =
-    options?.bindingReleaseId ?? TEST_RUNTIME_RELEASE.releaseId;
-  const operation = contentKey === null ? "delete" : "bind";
-  await ctx.db.insert("contentBindings", {
-    batchHash: TEST_DIGEST,
-    batchIndex: 0,
-    ...(contentKey === null ? {} : { contentKey }),
-    index: 0,
-    locale: "en",
-    operation,
-    publicPath,
-    releaseId: bindingReleaseId,
-    routeJson: testRouteJson({
-      ...(contentKey === null ? {} : { contentKey }),
-      operation,
-      publicPath,
-      releaseId: bindingReleaseId,
-    }),
-    sequence: bindingSequence,
-  });
-  const path = await ctx.db
-    .query("contentPaths")
-    .withIndex("by_locale_and_publicPath", (index) =>
-      index.eq("locale", "en").eq("publicPath", publicPath)
-    )
-    .unique();
-  if (!path) {
-    await ctx.db.insert("contentPaths", {
-      createdSequence: bindingSequence,
-      locale: "en",
-      publicPath,
-    });
-  }
-}
-
-/** Inserts one immutable head, route binding, path, and signed artifact. */
-export async function insertRuntimeHead(
-  ctx: MutationCtx,
-  delivery: ContentDeliveryClass,
-  contentKey: string,
-  options?: RuntimeHeadOptions
-) {
-  await insertRuntimeVersion(ctx, delivery, contentKey, options);
-  await insertRuntimeBinding(ctx, contentKey, options);
-}
-
-/** Inserts one route whose release and artifact pass real signature checks. */
-export async function insertSignedHead(
-  ctx: MutationCtx,
-  delivery: ContentDeliveryClass,
-  contentKey: string,
-  options?: Pick<RuntimeHeadOptions, "compiledCode" | "projectionJson">
-) {
-  const projectionJson =
-    options?.projectionJson ??
-    testProjectionJson({ contentKey, publicPath: TEST_RUNTIME_PATH });
-  const projection = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)(
-    JSON.parse(projectionJson)
-  );
-  const artifact = testSignedArtifact("mathematics", {
-    compiledCode: options?.compiledCode,
-    contentKey,
-  });
-  await insertRuntimeHead(ctx, delivery, contentKey, {
-    artifactHash: artifact.artifactHash,
-    compiledCode: options?.compiledCode,
-    projectionJson,
-  });
-  const [head, storedArtifact] = await Promise.all([
-    ctx.db.query("contentHeads").unique(),
-    ctx.db.query("contentArtifacts").unique(),
-  ]);
-  if (!(head && storedArtifact)) {
-    throw new Error("Expected one complete runtime head.");
-  }
-  await Promise.all([
-    ctx.db.patch("contentHeads", head._id, {
-      projectionHash: hashMaterialProjection(projection),
-      sourceHash: artifact.payload.sourceHash,
-    }),
-    ctx.db.patch("contentArtifacts", storedArtifact._id, {
-      artifactJson: JSON.stringify(artifact),
-    }),
-  ]);
 }

@@ -1,3 +1,4 @@
+import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import {
   TEST_ARTIFACT_HASH,
   TEST_DIGEST,
@@ -10,7 +11,7 @@ export function testArtifactJson(options?: {
   readonly contentKey?: string;
   readonly locale?: "en" | "id";
   readonly plainText?: string;
-  readonly rendererDomain?: "chemistry" | "mathematics";
+  readonly rendererDomain?: RendererDomain;
 }) {
   const compiledCode = options?.compiledCode ?? "return {};";
   return JSON.stringify({

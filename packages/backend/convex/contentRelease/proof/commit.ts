@@ -2,6 +2,10 @@ import type {
   ReleaseVerificationEvidence,
   SignedContentRelease,
 } from "@nakafa/aksara-contracts/release";
+import {
+  ContentSnapshotKindSchema,
+  hasSameContentSnapshots,
+} from "@nakafa/aksara-contracts/release/snapshot";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
@@ -12,7 +16,10 @@ import {
   decodeProofJson,
   decodeReleaseJson,
 } from "@repo/backend/convex/contentRelease/parse";
-import { statusValidator } from "@repo/backend/convex/contentRelease/spec";
+import {
+  ROLLBACK_RETENTION_MS,
+  statusValidator,
+} from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
@@ -46,9 +53,49 @@ function matchesManifest(
     manifest.rollbackCount === proof.rollbackCount &&
     manifest.rollbackDigest === proof.rollbackDigest &&
     manifest.deleteCount === proof.deleteHeads &&
-    manifest.upsertCount === proof.upsertHeads
+    manifest.upsertCount === proof.upsertHeads &&
+    manifest.upsertCount === proof.stagedArtifacts &&
+    hasSameContentSnapshots(manifest.snapshots, proof.snapshots)
   );
 }
+
+/** Marks every authenticated replacement manifest as verified and retained. */
+const verifySnapshots = Effect.fn("contentRelease.commitSnapshots")(function* (
+  ctx: MutationCtx,
+  release: SignedContentRelease,
+  now: number
+) {
+  for (const family of ContentSnapshotKindSchema.literals) {
+    const state = release.manifest.snapshots[family];
+    if (state.mode !== "replace" || state.resultSnapshotId === null) {
+      continue;
+    }
+    const snapshotId = state.resultSnapshotId;
+    const snapshot = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentSnapshots")
+        .withIndex("by_family_and_snapshotId", (query) =>
+          query.eq("family", family).eq("snapshotId", snapshotId)
+        )
+        .unique()
+    );
+    if (!snapshot) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_MISSING",
+        `Verified release lost ${family} snapshot ${snapshotId}.`
+      );
+    }
+    yield* Effect.promise(() =>
+      ctx.db.patch("contentSnapshots", snapshot._id, {
+        retainUntil: Math.max(
+          snapshot.retainUntil,
+          now + ROLLBACK_RETENTION_MS
+        ),
+        verifiedAt: snapshot.verifiedAt ?? now,
+      })
+    );
+  }
+});
 
 /** Commits server evidence only after every staged stream passed verification. */
 const commitProgram = Effect.fn("contentRelease.commitProof")(function* (
@@ -63,6 +110,7 @@ const commitProgram = Effect.fn("contentRelease.commitProof")(function* (
     release.stagedItems === signed.manifest.itemCount &&
     release.stagedProjections === signed.manifest.projectionCount &&
     release.stagedRoutes === signed.manifest.routeCount &&
+    release.stagedSnapshotRows === proof.stagedSnapshotRows &&
     release.stagedArtifacts === proof.stagedArtifacts &&
     release.stagedDeletes === proof.deleteHeads &&
     release.stagedUpserts === proof.upsertHeads;
@@ -106,6 +154,7 @@ const commitProgram = Effect.fn("contentRelease.commitProof")(function* (
     ...release,
     ...patch,
   });
+  yield* verifySnapshots(ctx, signed, now);
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", release._id, patch)
   );

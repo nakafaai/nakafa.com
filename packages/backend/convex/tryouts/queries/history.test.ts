@@ -5,10 +5,19 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { replaceTryoutSet } from "@repo/backend/test/tryout-runtime";
 import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 12, 12, 0, 0);
 const SET_PATH = "try-out/indonesia/tka/matematika/set-1";
+const SET_IDENTITY = tryoutCatalogIdentity({
+  countryKey: "indonesia",
+  examKey: "tka",
+  kind: "set",
+  locale: "id",
+  setKey: "set-1",
+  trackKey: "matematika",
+});
 
 /** Inserts the active direct-entry set resolved by the history query. */
 async function insertHistorySet(ctx: MutationCtx) {
@@ -53,17 +62,23 @@ async function insertHistoryAttempt(
     completedAt: args.startedAt + 1000,
     completedSectionKeys: [],
     countsForCompetition: false,
+    countryKey: "indonesia",
     endReason: "submitted",
+    examKey: "tka",
     expiresAt: args.startedAt + 3_600_000,
     lastActivityAt: args.startedAt + 1000,
     scoreStatus: "official",
     scoringStrategy: "raw",
     sectionSnapshots: [],
+    setIdentity: SET_IDENTITY,
+    setKey: "set-1",
     startedAt: args.startedAt,
     status: "completed",
     totalCorrect: args.publishedScore / 10,
     totalQuestions: 10,
+    trackKey: "matematika",
     tryoutSetId: args.tryoutSetId,
+    locale: "id",
     userId: args.userId,
   });
 
@@ -84,7 +99,7 @@ async function insertHistoryAttempt(
 }
 
 describe("tryouts/queries/history", () => {
-  it("returns authenticated score snapshots newest first", async () => {
+  it("returns stable score history after the catalog row is replaced", async () => {
     vi.setSystemTime(new Date(NOW));
 
     const t = createConvexTestWithBetterAuth();
@@ -108,6 +123,7 @@ describe("tryouts/queries/history", () => {
         tryoutSetId,
         userId: identity.userId,
       });
+      await replaceTryoutSet(ctx, tryoutSetId);
 
       return { firstAttemptId, identity, secondAttemptId };
     });
@@ -202,3 +218,5 @@ describe("tryouts/queries/history", () => {
     expect(history.page.at(0)?.attemptNumber).toBe(26);
   });
 });
+
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";

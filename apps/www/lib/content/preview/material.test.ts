@@ -13,8 +13,12 @@ import {
   ContentVerificationKeyResolver,
   SigningKeyNotFoundError,
 } from "@nakafa/aksara-contracts/signature/spec";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Either, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  createFixedMaterialRuntimeResolver,
+  MaterialRegistryMissingError,
+} from "@/lib/content/material";
 import { readPreviewConfig } from "@/lib/content/preview/config";
 import {
   type MaterialPreviewInput,
@@ -29,6 +33,7 @@ import {
   previewConfig as config,
   previewKeyId as keyId,
   makeFailedManifest,
+  makeMaterialGraph,
   makePendingManifest,
   makePreviewInput,
   makeReadyManifest,
@@ -67,7 +72,17 @@ vi.mock("@/lib/content/published/artifact", () => ({
   executeSignedArtifact: vi.fn(),
 }));
 
-const input: MaterialPreviewInput = makePreviewInput({});
+const components = {};
+const unusedRuntimeError = new MaterialRegistryMissingError({
+  rendererDomain: "mathematics",
+});
+const resolveRuntime = createFixedMaterialRuntimeResolver({
+  components,
+  importer: () => Promise.reject(unusedRuntimeError),
+  published: () => Promise.reject(unusedRuntimeError),
+  rendererDomain: "mathematics",
+});
+const input: MaterialPreviewInput = makePreviewInput(resolveRuntime);
 
 const configMock = vi.mocked(readPreviewConfig);
 const fetchMock = vi.mocked(fetchPreviewJson);
@@ -164,8 +179,25 @@ describe("local material preview", () => {
       expect.any(Number)
     );
     expect(executeMock).toHaveBeenCalledWith(
-      expect.objectContaining({ components: input.components })
+      expect.objectContaining({ components })
     );
+  });
+
+  it("fails before artifact fetch when the physical registry is unavailable", async () => {
+    const error = new MaterialRegistryMissingError({
+      rendererDomain: "mathematics",
+    });
+    fetchMock.mockReturnValueOnce(Effect.succeed(readyManifest()));
+
+    await expectPreviewFailure({
+      ...input,
+      resolveRuntime: () => Either.left(error),
+    }).toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "domain",
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(executeMock).not.toHaveBeenCalled();
   });
 
   it("renders a ready lesson route absent from the static catalog", async () => {
@@ -173,6 +205,12 @@ describe("local material preview", () => {
       ...route,
       contentKey: ContentKeySchema.make(
         "material/lesson/mathematics/function-composition-inverse-function/new-concept"
+      ),
+      graph: makeMaterialGraph(
+        "mathematics",
+        "function-composition-inverse-function",
+        "new-concept",
+        "en"
       ),
       order: 6,
       publicPath:
@@ -211,10 +249,12 @@ describe("local material preview", () => {
   it.each([
     [
       "delivery",
+      "delivery",
       { document: { ...readyManifest().document, delivery: "entitled" } },
     ],
-    ["renderer", { rendererManifestHash: manifestHash }],
+    ["renderer", "renderer", { rendererManifestHash: manifestHash }],
     [
+      "projection",
       "projection",
       {
         projection: {
@@ -223,25 +263,28 @@ describe("local material preview", () => {
         },
       },
     ],
-    ["projection", { projection: { ...projection, locale: "id" } }],
+    ["projection locale", "manifest", { projection: { ...projection, locale: "id" } }],
     [
-      "projection",
+      "projection material key",
+      "manifest",
       {
         projection: { ...projection, materialKey: "lesson.mathematics.other" },
       },
     ],
-    ["projection", { projection: { ...projection, order: 6 } }],
+    ["projection order", "projection", { projection: { ...projection, order: 6 } }],
     [
+      "projection path",
       "projection",
       {
         projection: { ...projection, publicPath: `${route.publicPath}-other` },
       },
     ],
     [
-      "projection",
+      "projection section",
+      "manifest",
       { projection: { ...projection, sectionKey: "other-section" } },
     ],
-  ])("rejects an incoherent %s field", async (check, change) => {
+  ])("rejects an incoherent %s field", async (_label, check, change) => {
     fetchMock.mockReturnValueOnce(
       Effect.succeed({ ...readyManifest(), ...change })
     );

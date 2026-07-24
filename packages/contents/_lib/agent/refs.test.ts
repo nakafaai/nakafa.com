@@ -50,6 +50,18 @@ describe("Nakafa agent references", () => {
     });
   });
 
+  it("keeps the canonical public route when a source path is present", () => {
+    const ref = createNakafaContentRefFromGraphProjection({
+      ...graphProjection,
+      sourcePath: "packages/corpus/articles/politics/example/en.mdx",
+    });
+
+    expect(Option.getOrUndefined(ref)).toMatchObject({
+      route: graphProjection.route,
+      url: "https://nakafa.com/en/articles/politics/example",
+    });
+  });
+
   it("rejects inconsistent or malformed persisted graph projections", () => {
     expect(
       Option.isNone(

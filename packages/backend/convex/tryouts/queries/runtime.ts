@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
@@ -26,13 +27,10 @@ const runtimeResponseValidator = v.object({
 
 const runtimeQuestionValidator = v.object({
   choices: v.array(runtimeChoiceValidator),
-  contentHash: v.string(),
   placementId: v.id("tryoutAttemptPlacements"),
   questionId: v.id("questions"),
   questionOrder: v.number(),
   response: v.union(runtimeResponseValidator, v.null()),
-  sourcePath: v.string(),
-  sourceRevision: v.string(),
   title: v.string(),
 });
 
@@ -50,7 +48,7 @@ async function loadRuntimeResponses(
 ) {
   const responses = await ctx.db
     .query("tryoutResponses")
-    .withIndex("by_tryoutSectionAttemptId_and_questionId", (q) =>
+    .withIndex("by_tryoutSectionAttemptId", (q) =>
       q.eq("tryoutSectionAttemptId", section._id)
     )
     .take(section.totalQuestions + 1);
@@ -91,8 +89,10 @@ export const getSection = query({
 
     const attempt = await ctx.db
       .query("tryoutAttempts")
-      .withIndex("by_userId_and_tryoutSetId_and_startedAt", (q) =>
-        q.eq("userId", auth.appUser._id).eq("tryoutSetId", set._id)
+      .withIndex("by_userId_and_setIdentity_and_startedAt", (q) =>
+        q
+          .eq("userId", auth.appUser._id)
+          .eq("setIdentity", tryoutCatalogIdentity({ ...set, kind: "set" }))
       )
       .order("desc")
       .first();
@@ -153,7 +153,6 @@ export const getSection = query({
           optionKey: choice.optionKey,
           order: choice.order,
         })),
-        contentHash: placement.contentHash,
         placementId: placement._id,
         questionId: placement.questionId,
         questionOrder: placement.questionOrder,
@@ -164,8 +163,6 @@ export const getSection = query({
               updatedAt: response.updatedAt,
             }
           : null,
-        sourcePath: placement.sourcePath,
-        sourceRevision: placement.sourceRevision,
         title: placement.title,
       };
     });

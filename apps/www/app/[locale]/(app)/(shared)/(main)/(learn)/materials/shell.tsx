@@ -13,7 +13,7 @@ import { Option } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
-import { readMaterialPagePagination } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/data";
+import { readMaterialPagePagination } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/navigation";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";

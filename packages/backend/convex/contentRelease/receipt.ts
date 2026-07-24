@@ -2,6 +2,7 @@ import type {
   ContentReleaseManifest,
   SignedContentRelease,
 } from "@nakafa/aksara-contracts/release";
+import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeReceiptJson } from "@repo/backend/convex/contentRelease/parse";
@@ -15,6 +16,8 @@ function hasStageCounters(release: Doc<"contentReleases">) {
     release.stagedItems,
     release.stagedProjections,
     release.stagedRoutes,
+    release.stagedSnapshotBatches,
+    release.stagedSnapshotRows,
     release.stagedUpserts,
   ].every((value) => Number.isSafeInteger(value) && value >= 0);
 }
@@ -45,10 +48,12 @@ export function makePublicationReceipt(
     resultCount: manifest.resultCount,
     resultDigest: manifest.resultDigest,
     routeDigest: manifest.routeDigest,
+    snapshots: manifest.snapshots,
     stagedArtifacts: release.stagedArtifacts,
     stagedItems: release.stagedItems,
     stagedProjections: release.stagedProjections,
     stagedRoutes: release.stagedRoutes,
+    stagedSnapshotRows: release.stagedSnapshotRows,
   };
 }
 
@@ -65,7 +70,9 @@ export const publicationReceipt = Effect.fn(
     release.stagedProjections === manifest.projectionCount &&
     release.stagedUpserts === manifest.upsertCount &&
     release.stagedRoutes === manifest.routeCount;
-  if (!bound) {
+  const snapshotsBound =
+    release.stagedSnapshotRows === snapshotRowCount(manifest.snapshots);
+  if (!(bound && snapshotsBound)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Content release ${release.releaseId} lost signed count evidence.`
@@ -94,6 +101,8 @@ export const stagedEvidence = Effect.fn("contentRelease.stagedEvidence")(
       release.stagedArtifacts <= release.stagedUpserts &&
       release.stagedProjections <= release.stagedUpserts &&
       release.stagedRoutes <= manifest.routeCount &&
+      release.stagedSnapshotBatches >= 0 &&
+      release.stagedSnapshotRows <= snapshotRowCount(manifest.snapshots) &&
       release.completedAt === undefined &&
       release.receiptJson === undefined &&
       (staging || checking || verified);

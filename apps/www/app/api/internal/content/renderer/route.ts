@@ -1,12 +1,13 @@
+import { contentApiKeys } from "@repo/next-config/keys";
 import { Effect, Option, Redacted } from "effect";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { env } from "@/env";
 import { isInternalContentAuthorized } from "@/lib/content/internal/authorization";
 import { readPreviewConfig } from "@/lib/content/preview/config";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
+const rendererAuth = contentApiKeys();
 
 /** Returns the exact renderer envelope to authenticated Aksara tooling. */
 export const GET = (request: NextRequest) =>
@@ -16,7 +17,7 @@ export const GET = (request: NextRequest) =>
       const previewConfig = yield* readPreviewConfig();
       const isInternalAuthorized = isInternalContentAuthorized(
         authorization,
-        env.INTERNAL_CONTENT_API_KEY
+        rendererAuth.INTERNAL_CONTENT_API_KEY
       );
       const isPreviewAuthorized = Option.exists(previewConfig, (config) =>
         isInternalContentAuthorized(authorization, Redacted.value(config.token))

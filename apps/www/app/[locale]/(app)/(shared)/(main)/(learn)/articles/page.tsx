@@ -1,20 +1,23 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
-import { getCategoryPath } from "@repo/contents/_lib/articles/category";
-import { getCategoryIcon } from "@repo/contents/_lib/articles/icons";
-import { ARTICLE_CATEGORIES } from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
+import { getArticleCategoryIcon } from "@/components/articles/category";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem } from "@/components/shared/subject-item";
 import { SubjectList } from "@/components/shared/subject-list";
+import {
+  getArticleSourceDirectory,
+  getPublishedArticlePage,
+  selectArticleCategories,
+} from "@/lib/content/articles";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
@@ -60,10 +63,13 @@ export default function Page(props: PageProps<"/[locale]/articles">) {
 
 /** Renders the category chooser with the established subject-list row pattern. */
 async function PageContent({ locale }: { locale: Locale }) {
-  const [tCommon, tArticles] = await Promise.all([
+  const [catalog, tCommon, tArticles] = await Promise.all([
+    getPublishedArticlePage({ cursor: null, locale }),
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Articles" }),
   ]);
+  const categories = selectArticleCategories(catalog.articles);
+  const sourceUrl = getArticleRootUrl(categories[0]);
 
   return (
     <>
@@ -80,21 +86,34 @@ async function PageContent({ locale }: { locale: Locale }) {
       />
       <LayoutContent>
         <SubjectList>
-          {ARTICLE_CATEGORIES.map((category) => (
+          {categories.map((article) => (
             <SubjectItem
-              href={getCategoryPath(category)}
-              icon={getCategoryIcon(category)}
-              key={category}
-              label={tArticles(category)}
+              href={`/${article.parentPath}`}
+              icon={getArticleCategoryIcon(article.category)}
+              key={article.category}
+              label={tArticles(article.category)}
             />
           ))}
         </SubjectList>
       </LayoutContent>
-      <FooterContent className="mt-0">
-        <RefContent
-          githubUrl={getGithubUrl({ path: "/packages/contents/articles" })}
-        />
-      </FooterContent>
+      {sourceUrl ? (
+        <FooterContent className="mt-0">
+          <RefContent githubUrl={sourceUrl} />
+        </FooterContent>
+      ) : null}
     </>
   );
+}
+
+/** Resolves the immutable Aksara article root only when Git provenance exists. */
+function getArticleRootUrl(
+  article: ReturnType<typeof selectArticleCategories>[number] | undefined
+) {
+  if (!article?.sourceRevision) {
+    return null;
+  }
+  return getAksaraTreeUrl({
+    path: getArticleSourceDirectory(article, "root"),
+    revision: article.sourceRevision,
+  });
 }

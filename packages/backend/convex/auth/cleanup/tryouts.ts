@@ -8,8 +8,6 @@ import { Effect } from "effect";
 
 const ATTEMPT_BATCH_SIZE = 10;
 const PROGRESS_BATCH_SIZE = 25;
-const LEADERBOARD_BATCH_SIZE = 25;
-const STATS_BATCH_SIZE = 25;
 const ENTITLEMENT_BATCH_SIZE = 25;
 const ACCESS_GRANT_BATCH_SIZE = 25;
 
@@ -36,7 +34,7 @@ const deleteAttemptRuntime = Effect.fn("auth.cleanup.deleteAttemptRuntime")(
       const responses = yield* tryUserCleanup(() =>
         ctx.db
           .query("tryoutResponses")
-          .withIndex("by_tryoutSectionAttemptId_and_questionId", (query) =>
+          .withIndex("by_tryoutSectionAttemptId", (query) =>
             query.eq("tryoutSectionAttemptId", section._id)
           )
           .take(section.totalQuestions + 1)
@@ -133,45 +131,6 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
     }
 
     if (attempts.length === ATTEMPT_BATCH_SIZE) {
-      return true;
-    }
-
-    const leaderboard = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("tryoutLeaderboardEntries")
-        .withIndex(
-          "by_userId_and_leaderboardScopeId_and_completedAt",
-          (query) => query.eq("userId", userId)
-        )
-        .take(LEADERBOARD_BATCH_SIZE)
-    );
-
-    for (const row of leaderboard) {
-      yield* tryUserCleanup(() =>
-        ctx.db.delete("tryoutLeaderboardEntries", row._id)
-      );
-    }
-
-    if (leaderboard.length === LEADERBOARD_BATCH_SIZE) {
-      return true;
-    }
-
-    const stats = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("tryoutLeaderboardUserStats")
-        .withIndex("by_userId_and_leaderboardScopeId", (query) =>
-          query.eq("userId", userId)
-        )
-        .take(STATS_BATCH_SIZE)
-    );
-
-    for (const row of stats) {
-      yield* tryUserCleanup(() =>
-        ctx.db.delete("tryoutLeaderboardUserStats", row._id)
-      );
-    }
-
-    if (stats.length === STATS_BATCH_SIZE) {
       return true;
     }
 

@@ -10,7 +10,6 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
-  insertTestRelease,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testRollbackJson,
@@ -21,6 +20,7 @@ import {
   insertRoute,
   rollbackArtifactHash,
 } from "@repo/backend/test/content-rollback";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { convexTest, type TestConvex } from "convex-test";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";

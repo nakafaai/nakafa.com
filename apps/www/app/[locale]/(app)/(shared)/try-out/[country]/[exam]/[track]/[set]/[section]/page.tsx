@@ -2,13 +2,8 @@ import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { readTryoutSectionPage } from "@/components/tryout/catalog/server";
-import { readTryoutContentAccess } from "@/components/tryout/content/access";
-import {
-  loadTryoutAnswerContent,
-  loadTryoutQuestionContent,
-  type TryoutAnswerContent,
-  type TryoutQuestionContent,
-} from "@/components/tryout/content/load";
+import type { TryoutRenderedContent } from "@/components/tryout/content/model";
+import { loadTryoutContent } from "@/components/tryout/content/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
 import { getToken } from "@/lib/auth/server";
@@ -86,11 +81,11 @@ async function TryoutSectionRoute({
     notFound();
   }
 
-  let contentAccess = { answers: false, questions: false };
+  let content: TryoutRenderedContent = { answers: [], questions: [] };
 
   if (token) {
-    contentAccess = await Effect.runPromise(
-      readTryoutContentAccess(token, {
+    content = await Effect.runPromise(
+      loadTryoutContent(token, {
         countryKey: page.set.countryKey,
         examKey: page.set.examKey,
         locale,
@@ -101,38 +96,9 @@ async function TryoutSectionRoute({
     );
   }
 
-  let questions: readonly TryoutQuestionContent[] = [];
-  let answers: readonly TryoutAnswerContent[] = [];
-
-  if (contentAccess.questions) {
-    const questionContent = await loadTryoutQuestionContent({
-      locale,
-      questions: page.questions,
-    });
-
-    if (!questionContent) {
-      notFound();
-    }
-
-    questions = questionContent;
-  }
-
-  if (contentAccess.answers) {
-    const answerContent = await loadTryoutAnswerContent({
-      locale,
-      questions: page.questions,
-    });
-
-    if (!answerContent) {
-      notFound();
-    }
-
-    answers = answerContent;
-  }
-
   return (
     <TryoutSectionPageClient
-      content={{ answers, questions }}
+      content={content}
       page={page}
       route={{ country, exam, locale, section, set, track }}
     />

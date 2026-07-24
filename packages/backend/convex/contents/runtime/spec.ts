@@ -1,7 +1,6 @@
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
 import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
 import {
-  articleCategoryValidator,
   localeValidator,
   materialValidator,
   nakafaSectionValidator,
@@ -21,16 +20,6 @@ const contentMetadataValidator = v.object({
   description: v.optional(v.string()),
   subject: v.optional(v.string()),
   title: v.string(),
-});
-
-const articleReferenceValidator = v.object({
-  authors: v.string(),
-  citation: v.optional(v.string()),
-  details: v.optional(v.string()),
-  publication: v.optional(v.string()),
-  title: v.string(),
-  url: v.optional(v.string()),
-  year: v.number(),
 });
 
 const runtimeContentBaseValidator = v.object({
@@ -149,36 +138,6 @@ const runtimeContentRouteArtifactPageValidator = v.object({
   section: nakafaSectionValidator,
   syncedAt: v.number(),
 });
-
-const apiContentItemValidator = v.object({
-  ...learningGraphIdentityValidator.fields,
-  locale: localeValidator,
-  metadata: contentMetadataValidator,
-  raw: v.string(),
-  slug: v.string(),
-  sourcePath: v.string(),
-  url: v.string(),
-});
-
-const paginatedApiContentValidator = v.object({
-  continueCursor: v.string(),
-  isDone: v.boolean(),
-  page: v.array(apiContentItemValidator),
-});
-
-export const getArticlePageArgsValidator = {
-  locale: localeValidator,
-  slug: v.string(),
-};
-
-export const getArticlePageReturnValidator = nullable(
-  v.object({
-    ...runtimeContentBaseValidator.fields,
-    articleSlug: v.string(),
-    category: articleCategoryValidator,
-    references: v.array(articleReferenceValidator),
-  })
-);
 
 export const getCurriculumPageArgsValidator = {
   locale: localeValidator,
@@ -317,26 +276,6 @@ export type GetContentRouteBySourcePathArgs = Infer<
 export const getContentRouteBySourcePathReturnValidator = nullable(
   runtimeContentRouteValidator
 );
-
-export const listArticleApiContentPageArgsValidator = {
-  cursor: v.union(v.string(), v.null()),
-  limit: v.number(),
-  locale: localeValidator,
-  prefix: v.string(),
-};
-
-export const listArticleApiContentPageReturnValidator =
-  paginatedApiContentValidator;
-
-export const listMaterialApiContentPageArgsValidator = {
-  cursor: v.union(v.string(), v.null()),
-  limit: v.number(),
-  locale: localeValidator,
-  prefix: v.string(),
-};
-
-export const listMaterialApiContentPageReturnValidator =
-  paginatedApiContentValidator;
 
 export const listQuranSurahsReturnValidator = v.array(
   quranSurahMetadataValidator

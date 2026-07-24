@@ -1,12 +1,10 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
-  loadQuestionContentRows,
   loadReadySections,
   publicTryoutCountryValidator,
   publicTryoutCountryWithExamCountValidator,
   publicTryoutExamValidator,
-  publicTryoutQuestionContentValidator,
   publicTryoutSectionValidator,
   publicTryoutSetValidator,
   publicTryoutTrackValidator,
@@ -229,7 +227,6 @@ export const getSetPage = query({
     v.null(),
     v.object({
       exam: publicTryoutExamValidator,
-      entryQuestions: v.array(publicTryoutQuestionContentValidator),
       entrySection: v.union(publicTryoutSectionValidator, v.null()),
       set: publicTryoutSetValidator,
       sections: v.array(publicTryoutSectionValidator),
@@ -270,14 +267,8 @@ export const getSetPage = query({
       ) ??
       visibleSections[0] ??
       null;
-    const entryQuestions =
-      entrySection?.visibility === "internal-entry"
-        ? await loadQuestionContentRows(ctx, entrySection)
-        : [];
-
     return {
       exam: toPublicTryoutExam(parents.exam),
-      entryQuestions,
       entrySection: entrySection ? toPublicTryoutSection(entrySection) : null,
       set: toPublicTryoutSet(set),
       sections: visibleSections.map(toPublicTryoutSection),
@@ -296,7 +287,6 @@ export const getSectionPage = query({
     v.null(),
     v.object({
       exam: publicTryoutExamValidator,
-      questions: v.array(publicTryoutQuestionContentValidator),
       section: publicTryoutSectionValidator,
       set: publicTryoutSetValidator,
       track: publicTryoutTrackValidator,
@@ -337,11 +327,8 @@ export const getSectionPage = query({
       return null;
     }
 
-    const questions = await loadQuestionContentRows(ctx, readySection);
-
     return {
       exam: toPublicTryoutExam(parents.exam),
-      questions,
       section: toPublicTryoutSection(section),
       set: toPublicTryoutSet(set),
       track: toPublicTryoutTrack(parents.track),

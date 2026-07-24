@@ -3,7 +3,7 @@
 import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
-} from "@/components/tryout/content/load";
+} from "@/components/tryout/content/model";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
 import { TryoutRuntimeQuestion } from "@/components/tryout/runtime/question.client";
@@ -22,22 +22,17 @@ export interface TryoutRuntimeValue {
 export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
   const { answers, expired, questions, runtime } = value;
   const isActive = runtime.section.status === "in-progress";
-  const questionBySnapshot = new Map(
-    questions.map((question) => [getQuestionContentKey(question), question])
+  const questionByPlacement = new Map(
+    questions.map((question) => [question.placementId, question.content])
   );
-  const answerBySnapshot = new Map(
-    answers.map((answer) => [getQuestionContentKey(answer), answer.answer])
+  const answerByPlacement = new Map(
+    answers.map((answer) => [answer.placementId, answer.answer])
   );
-  const runtimeQuestions = runtime.questions.map((question) => {
-    const key = getQuestionContentKey(question);
-    const content = questionBySnapshot.get(key);
-
-    return {
-      answer: answerBySnapshot.get(key) ?? null,
-      content: content?.content ?? null,
-      question,
-    };
-  });
+  const runtimeQuestions = runtime.questions.map((question) => ({
+    answer: answerByPlacement.get(question.placementId) ?? null,
+    content: questionByPlacement.get(question.placementId) ?? null,
+    question,
+  }));
 
   if (runtimeQuestions.some(({ content }) => content === null)) {
     return null;
@@ -101,17 +96,4 @@ function useRemainingSeconds(expiresAt: number, isActive: boolean) {
   }
 
   return Math.max(0, Math.ceil((expiresAt - now) / 1000));
-}
-
-/** Builds the stable content identity captured when the attempt was created. */
-function getQuestionContentKey({
-  contentHash,
-  sourcePath,
-  sourceRevision,
-}: {
-  contentHash: string;
-  sourcePath: string;
-  sourceRevision: string;
-}) {
-  return `${sourcePath}:${contentHash}:${sourceRevision}`;
 }

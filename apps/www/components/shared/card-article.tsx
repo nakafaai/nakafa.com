@@ -1,4 +1,3 @@
-import type { Article } from "@repo/contents/_types/content";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   Card,
@@ -15,13 +14,14 @@ import {
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
+import type { PublishedArticleSummary } from "@/lib/content/articles";
 
 interface Props {
-  article: Article;
-  category: string;
+  article: PublishedArticleSummary;
 }
 
-export function CardArticle({ category, article }: Props) {
+/** Renders one active published article summary as a localized card link. */
+export function CardArticle({ article }: Props) {
   const t = useTranslations("Articles");
 
   const id = slugify(article.title);
@@ -29,7 +29,7 @@ export function CardArticle({ category, article }: Props) {
   return (
     <NavigationLink
       className="group"
-      href={`/articles/${category}/${article.slug}`}
+      href={`/${article.publicPath}`}
       key={article.slug}
       title={article.title}
     >

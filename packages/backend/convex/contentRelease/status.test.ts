@@ -3,12 +3,12 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
-  insertTestRelease,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import {
   insertTestState,
   insertZeroRelease,

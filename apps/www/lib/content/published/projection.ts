@@ -1,11 +1,30 @@
+import {
+  type ArticleProjection,
+  ArticleProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/article";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { PublicContentRouteSchema } from "@repo/contents/_types/route/schema";
 import { Effect, Schema } from "effect";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
-/** Adapts one exact Aksara projection to Nakafa's material route contract. */
-export const decodePublishedRoute = Effect.fn(
-  "NakafaContent.decodePublishedRoute"
+/** Decodes one exact article projection for the current public identity. */
+export const decodePublishedArticle: (
+  input: unknown,
+  identity: { readonly locale: "en" | "id"; readonly publicPath: string }
+) => Effect.Effect<ArticleProjection, PublishedProjectionError> = Effect.fn(
+  "NakafaContent.decodePublishedArticle"
+)(function* (
+  input: unknown,
+  identity: { readonly locale: "en" | "id"; readonly publicPath: string }
+) {
+  return yield* Schema.decodeUnknown(ArticleProjectionSchema)(input, {
+    onExcessProperty: "error",
+  }).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
+});
+
+/** Decodes one exact material projection and adapts its Nakafa route. */
+export const decodePublishedMaterial = Effect.fn(
+  "NakafaContent.decodePublishedMaterial"
 )(function* (
   input: unknown,
   identity: { readonly locale: "en" | "id"; readonly publicPath: string }
@@ -16,7 +35,7 @@ export const decodePublishedRoute = Effect.fn(
     Effect.mapError(() => new PublishedProjectionError(identity))
   );
 
-  return yield* Schema.decodeUnknown(PublicContentRouteSchema)(
+  const route = yield* Schema.decodeUnknown(PublicContentRouteSchema)(
     {
       description: projection.metadata.description,
       kind: projection.kind,
@@ -32,4 +51,5 @@ export const decodePublishedRoute = Effect.fn(
     },
     { onExcessProperty: "error" }
   ).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
+  return { projection, route };
 });

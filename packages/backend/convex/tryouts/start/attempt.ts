@@ -4,12 +4,14 @@ import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
+import type { ActiveTryoutSet } from "@repo/backend/convex/tryouts/snapshot/spec";
 import type {
   AttemptAccessFields,
   StartAttemptArgs,
 } from "@repo/backend/convex/tryouts/start/spec";
 import {
   TryoutStartError,
+  toTryoutSnapshotStartError,
   toTryoutStartError,
   tryoutStartErrorCode,
 } from "@repo/backend/convex/tryouts/start/spec";
@@ -33,6 +35,7 @@ interface CreateTryoutAttemptInput {
   readonly scaleVersion: Doc<"irtScaleVersions"> | null;
   readonly sections: Doc<"tryoutSections">[];
   readonly set: Doc<"tryoutSets">;
+  readonly snapshot: ActiveTryoutSet;
   readonly userId: Id<"users">;
 }
 
@@ -67,14 +70,19 @@ function buildAttemptValues(
     attemptNumber: input.attemptNumber,
     completedAt: null,
     completedSectionKeys: [],
+    countryKey: input.snapshot.set.countryKey,
     endReason: null,
+    examKey: input.snapshot.set.examKey,
     expiresAt: Math.min(
       input.now + 3 * 24 * 60 * 60 * 1000,
       input.access.accessEndsAt
     ),
     lastActivityAt: input.now,
+    locale: input.snapshot.set.locale,
     scoreStatus: input.scaleVersion?.status ?? "official",
     scoringStrategy: input.set.scoringStrategy,
+    setIdentity: input.snapshot.set.identity,
+    setKey: input.snapshot.set.setKey,
     sectionSnapshots: input.sections.map((section) => ({
       publicPath: section.publicPath,
       questionCount: section.questionCount,
@@ -90,6 +98,8 @@ function buildAttemptValues(
     status: "in-progress",
     totalCorrect: 0,
     totalQuestions: input.set.totalQuestionCount,
+    trackKey: input.snapshot.set.trackKey,
+    tryoutSnapshotId: input.snapshot.snapshotId,
     tryoutSetId: input.set._id,
     userId: input.userId,
     ...(input.scaleVersion ? { scaleVersionId: input.scaleVersion._id } : {}),
@@ -113,7 +123,9 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
         updatedAt: input.now,
       })
     );
-    yield* tryStartPromise(() => createAttemptPlacements(ctx, { attempt }));
+    yield* createAttemptPlacements(ctx, { attempt }).pipe(
+      Effect.mapError(toTryoutSnapshotStartError)
+    );
 
     if (input.args.entrySectionKey) {
       yield* tryStartPromise(() =>

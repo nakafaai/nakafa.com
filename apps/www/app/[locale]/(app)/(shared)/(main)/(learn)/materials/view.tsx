@@ -1,15 +1,14 @@
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import { toLocalizedContentHref } from "@repo/contents/_types/route/content";
-import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Effect, Either, Option } from "effect";
+import { Either, Option } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { readMaterialRoutes } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/data";
 import {
   readMaterialHeaderLink,
-  readMaterialRoutes,
   resolveParent,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/data";
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/navigation";
 import {
   getMaterialPageData,
   getMaterialPreviewData,
@@ -24,14 +23,14 @@ import { DeferredComments } from "@/components/comments/deferred";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import {
   importMaterialModule,
-  type MaterialModuleImporter,
   type MaterialRouteParams,
+  type MaterialRouteRuntime,
   type MaterialRouteTarget,
-  type PublishedMaterialRenderer,
+  type MaterialRuntimeResolver,
   type ResolvedMaterialRoute,
+  resolveMaterialRuntime,
 } from "@/lib/content/material";
 import type { MaterialPreviewContent } from "@/lib/content/preview/material";
-import { PublishedRendererMissingError } from "@/lib/content/published/errors";
 import { getPublishedMaterialMetadata } from "@/lib/content/published/metadata";
 import { getContentViewId } from "@/lib/content/views";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
@@ -47,9 +46,7 @@ export interface MaterialPageProps {
 
 /** Route-owned dependencies that keep rich registries physically isolated. */
 export interface MaterialPageConfig {
-  readonly components: MDXComponents;
-  readonly importer: MaterialModuleImporter;
-  readonly published?: PublishedMaterialRenderer;
+  readonly resolveRuntime: MaterialRuntimeResolver;
   readonly target: MaterialRouteTarget;
 }
 
@@ -57,6 +54,7 @@ export interface MaterialPageConfig {
 interface MaterialPageResolution extends ResolvedMaterialRoute {
   readonly owner: "preview" | "published" | "source";
   readonly preview: Option.Option<MaterialPreviewContent>;
+  readonly runtime: MaterialRouteRuntime;
 }
 
 /**
@@ -73,18 +71,27 @@ async function resolveMaterialPage(
 ): Promise<MaterialPageResolution> {
   const routeParams = await params;
   const preview = await getMaterialPreviewData({
-    components: config.components,
     params: routeParams,
+    resolveRuntime: config.resolveRuntime,
     target: config.target,
   });
 
   if (Option.isSome(preview)) {
+    const runtime = resolveMaterialRuntime(
+      config.resolveRuntime,
+      preview.value.rendererDomain
+    );
+    if (Either.isLeft(runtime)) {
+      return await Promise.reject(runtime.left);
+    }
+
     return {
       locale: preview.value.locale,
       owner: "preview",
       preview,
       rendererDomain: preview.value.rendererDomain,
       route: preview.value.route,
+      runtime: runtime.right,
     };
   }
 
@@ -96,8 +103,15 @@ async function resolveMaterialPage(
   if (Option.isNone(resolved)) {
     notFound();
   }
+  const runtime = resolveMaterialRuntime(
+    config.resolveRuntime,
+    resolved.value.rendererDomain
+  );
+  if (Either.isLeft(runtime)) {
+    return await Promise.reject(runtime.left);
+  }
 
-  return { ...resolved.value, preview };
+  return { ...resolved.value, preview, runtime: runtime.right };
 }
 
 /** Reads preview or synchronized metadata without reconnecting another registry. */
@@ -175,7 +189,7 @@ export async function renderMaterialPage(
     resolveMaterialPage(params, config),
     searchParams,
   ]);
-  const { locale, preview, rendererDomain } = resolution;
+  const { locale, preview, rendererDomain, runtime } = resolution;
   let route = resolution.route;
   let children: ReactNode;
   let pageContent: MaterialPageContent;
@@ -190,12 +204,7 @@ export async function renderMaterialPage(
     };
     sourceUrl = undefined;
   } else if (resolution.owner === "published") {
-    if (!config.published) {
-      return await Effect.runPromise(
-        Effect.fail(new PublishedRendererMissingError({ rendererDomain }))
-      );
-    }
-    const published = await config.published({
+    const published = await runtime.published({
       locale,
       publicPath: route.publicPath,
     });
@@ -212,10 +221,10 @@ export async function renderMaterialPage(
       : undefined;
     route = published.route;
   } else {
-    const [runtime, localModule] = await Promise.all([
+    const [pageData, localModule] = await Promise.all([
       getMaterialPageData({ locale, sourcePath: route.sourcePath }),
       importMaterialModule({
-        importer: config.importer,
+        importer: runtime.importer,
         locale,
         rendererDomain,
         sourcePath: route.sourcePath,
@@ -223,7 +232,7 @@ export async function renderMaterialPage(
     ]);
     const Content = localModule.default;
     children = <Content />;
-    pageContent = { body: runtime.body, metadata: runtime.metadata };
+    pageContent = { body: pageData.body, metadata: pageData.metadata };
     sourceUrl = getGithubUrl({
       path: `/packages/contents/${route.sourcePath}`,
     });

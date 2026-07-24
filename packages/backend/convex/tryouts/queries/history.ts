@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
@@ -46,8 +47,10 @@ export const list = query({
 
     const history = await ctx.db
       .query("tryoutAttempts")
-      .withIndex("by_userId_and_tryoutSetId_and_startedAt", (q) =>
-        q.eq("userId", appUser._id).eq("tryoutSetId", set._id)
+      .withIndex("by_userId_and_setIdentity_and_startedAt", (q) =>
+        q
+          .eq("userId", appUser._id)
+          .eq("setIdentity", tryoutCatalogIdentity({ ...set, kind: "set" }))
       )
       .order("desc")
       .paginate({

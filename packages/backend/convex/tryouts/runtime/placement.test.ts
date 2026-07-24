@@ -1,8 +1,11 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import { activateTryoutIdentitySnapshot } from "@repo/backend/test/tryout-identity";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -59,7 +62,8 @@ async function insertSource(ctx: MutationCtx) {
 /** Insert an attempt runtime required by placement scenarios. */
 async function insertRuntime(
   ctx: MutationCtx,
-  questionSetId: Id<"questionSets">
+  questionSetId: Id<"questionSets">,
+  snapshotId: string
 ) {
   const userId = await ctx.db.insert("users", {
     authId: "auth-placement",
@@ -108,18 +112,30 @@ async function insertRuntime(
     tryoutSetId,
     visibility: "visible",
   });
+  const set = await ctx.db.get(tryoutSetId);
+  if (!set) {
+    throw new ConvexError({
+      code: "TRYOUT_FIXTURE_NOT_FOUND",
+      message: "Expected try-out set fixture.",
+    });
+  }
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: NOW + 86_400_000,
     accessSourceKind: "free",
     attemptNumber: 1,
     completedAt: null,
     completedSectionKeys: [],
+    countryKey: set.countryKey,
     countsForCompetition: false,
     endReason: null,
+    examKey: set.examKey,
     expiresAt: NOW + 86_400_000,
     lastActivityAt: NOW,
+    locale: set.locale,
     scoreStatus: "provisional",
     scoringStrategy: "irt",
+    setIdentity: tryoutCatalogIdentity({ ...set, kind: "set" }),
+    setKey: set.setKey,
     sectionSnapshots: [
       {
         publicPath: ROUTE,
@@ -137,6 +153,8 @@ async function insertRuntime(
     status: "in-progress",
     totalCorrect: 0,
     totalQuestions: 1,
+    trackKey: set.trackKey,
+    tryoutSnapshotId: snapshotId,
     tryoutSetId,
     userId,
   });
@@ -158,10 +176,11 @@ describe("tryouts/runtime/placement", () => {
 
     await expect(
       t.mutation(async (ctx) => {
+        const snapshotId = await activateTryoutIdentitySnapshot(ctx);
         const questionSetId = await insertSource(ctx);
-        const attempt = await insertRuntime(ctx, questionSetId);
+        const attempt = await insertRuntime(ctx, questionSetId, snapshotId);
 
-        await createAttemptPlacements(ctx, { attempt });
+        await runConvexProgram(createAttemptPlacements(ctx, { attempt }));
       })
     ).rejects.toThrow("TRYOUT_QUESTION_SNAPSHOT_MISMATCH");
   });

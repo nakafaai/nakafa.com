@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
   compactPage,
   isReadyTrackSet,
@@ -57,7 +58,7 @@ async function readScoredSets(
     .paginate({ ...args.paginationOpts, cursor });
   const rows = await Promise.all(
     page.page.map(async (progress) => {
-      const set = await ctx.db.get(progress.tryoutSetId);
+      const set = await getActiveTryoutSet(ctx, progress);
 
       if (!isReadyTrackSet(set, args)) {
         return null;

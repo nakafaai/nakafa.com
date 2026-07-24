@@ -7,8 +7,8 @@ import type { PublishedMaterialContent } from "@/lib/content/material";
 import {
   type PublishedMaterialInput,
   readPublishedMaterial,
-} from "@/lib/content/published/exchange";
-import { renderPublishedMaterial } from "@/lib/content/published/material";
+  renderPublishedMaterial,
+} from "@/lib/content/published/material";
 
 /** Renders one verified mathematics artifact through its physical registry. */
 export async function renderPublishedMathematics(
@@ -16,8 +16,8 @@ export async function renderPublishedMathematics(
 ): Promise<PublishedMaterialContent> {
   "use cache";
 
-  applyPublishedContentCache();
   const data = await Effect.runPromise(readPublishedMaterial(input));
+  applyPublishedContentCache("material", data.artifact.artifactHash);
 
   return Effect.runPromise(
     renderPublishedMaterial({

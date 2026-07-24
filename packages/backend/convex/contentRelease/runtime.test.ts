@@ -3,13 +3,19 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testProjectionJson } from "@repo/backend/test/content-release";
 import {
-  insertRuntimeBinding,
-  insertRuntimeHead,
   insertRuntimeRelease,
-  insertRuntimeVersion,
+  TEST_ARTICLE_KEY,
+  TEST_ARTICLE_PATH,
+  TEST_ARTICLE_PROJECTION_JSON,
+  TEST_ARTICLE_SOURCE,
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/content-runtime";
+import {
+  insertRuntimeBinding,
+  insertRuntimeHead,
+  insertRuntimeVersion,
+} from "@repo/backend/test/runtime-head";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -18,11 +24,9 @@ const routeArgs = {
   publicPath: TEST_RUNTIME_PATH,
 } satisfies { readonly locale: "en" | "id"; readonly publicPath: string };
 const readPublic = internal.contentRelease.runtime.readPublic;
-const readAuthenticated = internal.contentRelease.runtime.readAuthenticated;
-const readEntitled = internal.contentRelease.runtime.readEntitled;
 
 describe("contentRelease/runtime", () => {
-  it("separates public, authenticated, and entitled reads", async () => {
+  it("returns public heads without exposing restricted delivery classes", async () => {
     for (const delivery of ["public", "authenticated", "entitled"] as const) {
       const t = convexTest(schema, convexModules);
       await t.mutation(async (ctx) => {
@@ -30,21 +34,41 @@ describe("contentRelease/runtime", () => {
         await insertRuntimeHead(ctx, delivery, `test:${delivery}`);
       });
 
-      const reads = {
-        authenticated: await t.query(readAuthenticated, routeArgs),
-        entitled: await t.query(readEntitled, routeArgs),
-        public: await t.query(readPublic, routeArgs),
-      };
-      expect(reads[delivery]).toMatchObject({
-        activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-        delivery,
-      });
-      for (const [kind, result] of Object.entries(reads)) {
-        if (kind !== delivery) {
-          expect(result).toBeNull();
-        }
+      const result = await t.query(readPublic, routeArgs);
+      if (delivery === "public") {
+        expect(result).toMatchObject({
+          activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+          delivery,
+        });
+      } else {
+        expect(result).toBeNull();
       }
     }
+  });
+
+  it("returns the exact pair-grouped article through the public read", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx);
+      await insertRuntimeHead(ctx, "public", TEST_ARTICLE_KEY, {
+        projectionJson: TEST_ARTICLE_PROJECTION_JSON,
+        publicPath: TEST_ARTICLE_PATH,
+        rendererDomain: "politics",
+        sourcePath: TEST_ARTICLE_SOURCE,
+      });
+    });
+
+    const found = await t.query(readPublic, {
+      locale: "en",
+      publicPath: TEST_ARTICLE_PATH,
+    });
+
+    expect(found).toMatchObject({
+      activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+      delivery: "public",
+      projectionJson: TEST_ARTICLE_PROJECTION_JSON,
+      sourcePath: TEST_ARTICLE_SOURCE,
+    });
   });
 
   it("reuses an older binding with the latest active content head", async () => {
@@ -125,11 +149,6 @@ describe("contentRelease/runtime", () => {
       await insertRuntimeVersion(ctx, "entitled", "test:delivery");
     });
     await expect(changed.query(readPublic, routeArgs)).resolves.toBeNull();
-    await expect(changed.query(readEntitled, routeArgs)).resolves.toMatchObject(
-      {
-        delivery: "entitled",
-      }
-    );
   });
 
   it("makes a canonical rename visible only at its new projection path", async () => {

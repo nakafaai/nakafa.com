@@ -83,6 +83,7 @@ export function maximumTestHead(index: number) {
     compilerConfigHash: `sha256:${"b".repeat(64)}`,
     contentKey: "a".repeat(512 - suffix.length) + suffix,
     delivery: "authenticated",
+    family: "material",
     locale: "en",
     projectionHash: `sha256:${"c".repeat(64)}`,
     publicPath: "a".repeat(2048 - suffix.length) + suffix,

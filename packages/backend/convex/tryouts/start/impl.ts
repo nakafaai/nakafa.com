@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getIncludedAttemptAccess } from "@repo/backend/convex/tryouts/access/impl";
@@ -11,6 +12,11 @@ import {
   startSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/convex/tryouts/schema";
+import {
+  hasStableAttemptSet,
+  loadActiveTryoutSet,
+} from "@repo/backend/convex/tryouts/snapshot/catalog";
+import type { ActiveTryoutSet } from "@repo/backend/convex/tryouts/snapshot/spec";
 import { createTryoutAttempt } from "@repo/backend/convex/tryouts/start/attempt";
 import type {
   AttemptAccessFields,
@@ -18,6 +24,7 @@ import type {
 } from "@repo/backend/convex/tryouts/start/spec";
 import {
   TryoutStartError,
+  toTryoutSnapshotStartError,
   toTryoutStartError,
   tryoutStartErrorCode,
 } from "@repo/backend/convex/tryouts/start/spec";
@@ -65,13 +72,24 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
     );
 
     if (resumed) {
+      if (!hasStableAttemptSet(resumed, input.set)) {
+        return yield* new TryoutStartError({
+          code: tryoutStartErrorCode.snapshotUnavailable,
+          message: "Try-out attempt does not have a signed snapshot identity.",
+        });
+      }
       return { attemptId: resumed._id };
     }
 
+    const snapshot = yield* loadActiveTryoutSet(
+      ctx,
+      input.set,
+      loaded.sections
+    ).pipe(Effect.mapError(toTryoutSnapshotStartError));
     const [attemptNumber, scaleVersion, access] = yield* Effect.all(
       [
         getNextAttemptNumber(ctx, input),
-        loadAttemptScaleVersion(ctx, input.set),
+        loadAttemptScaleVersion(ctx, input.set, snapshot),
         requireAttemptAccess(ctx, input),
       ],
       { concurrency: "unbounded" }
@@ -84,6 +102,7 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
       scaleVersion,
       sections: loaded.sections,
       set: input.set,
+      snapshot,
       userId: input.userId,
     });
   }
@@ -213,11 +232,12 @@ const requireAttemptAccess = Effect.fn("tryouts.start.requireAttemptAccess")(
 /** Returns the latest bounded attempt for one user and set. */
 const loadLatestAttempt = Effect.fn("tryouts.start.loadLatestAttempt")(
   function* (ctx: MutationCtx, input: StartTryoutAttemptInput) {
+    const setIdentity = getSetIdentity(input.set);
     const attempts = yield* tryStartPromise(() =>
       ctx.db
         .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutSetId_and_startedAt", (query) =>
-          query.eq("userId", input.userId).eq("tryoutSetId", input.set._id)
+        .withIndex("by_userId_and_setIdentity_and_startedAt", (query) =>
+          query.eq("userId", input.userId).eq("setIdentity", setIdentity)
         )
         .order("desc")
         .take(1)
@@ -230,11 +250,12 @@ const loadLatestAttempt = Effect.fn("tryouts.start.loadLatestAttempt")(
 /** Returns the next bounded attempt number for one user and set. */
 const getNextAttemptNumber = Effect.fn("tryouts.start.getNextAttemptNumber")(
   function* (ctx: MutationCtx, input: StartTryoutAttemptInput) {
+    const setIdentity = getSetIdentity(input.set);
     const attempts = yield* tryStartPromise(() =>
       ctx.db
         .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutSetId_and_startedAt", (query) =>
-          query.eq("userId", input.userId).eq("tryoutSetId", input.set._id)
+        .withIndex("by_userId_and_setIdentity_and_startedAt", (query) =>
+          query.eq("userId", input.userId).eq("setIdentity", setIdentity)
         )
         .take(MAX_ATTEMPTS_PER_USER_SET)
     );
@@ -250,17 +271,40 @@ const getNextAttemptNumber = Effect.fn("tryouts.start.getNextAttemptNumber")(
   }
 );
 
+/** Derives the canonical locale-specific identity shared by set attempts. */
+function getSetIdentity(set: TryoutSet) {
+  return tryoutCatalogIdentity({
+    countryKey: set.countryKey,
+    examKey: set.examKey,
+    kind: "set",
+    locale: set.locale,
+    setKey: set.setKey,
+    trackKey: set.trackKey,
+  });
+}
+
 /** Loads the immutable score scale required by an IRT attempt. */
 const loadAttemptScaleVersion = Effect.fn(
   "tryouts.start.loadAttemptScaleVersion"
-)(function* (ctx: MutationCtx, set: TryoutSet) {
+)(function* (ctx: MutationCtx, set: TryoutSet, snapshot: ActiveTryoutSet) {
   if (set.scoringStrategy !== "irt") {
     return null;
   }
 
-  return yield* tryStartPromise(() =>
+  const scale = yield* tryStartPromise(() =>
     requireIrtScaleVersion(ctx, { tryoutSetId: set._id })
   );
+  if (
+    scale.tryoutSnapshotId !== snapshot.snapshotId ||
+    scale.setIdentity !== snapshot.set.identity
+  ) {
+    return yield* new TryoutStartError({
+      code: tryoutStartErrorCode.snapshotUnavailable,
+      message:
+        "Published IRT scale does not match the active try-out snapshot.",
+    });
+  }
+  return scale;
 });
 
 /** Lifts one Convex promise into the typed start failure channel. */

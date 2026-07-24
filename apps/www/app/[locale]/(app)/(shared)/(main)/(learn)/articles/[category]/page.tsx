@@ -1,31 +1,32 @@
 import {
-  getCategoryPath,
-  parseArticleCategory,
-} from "@repo/contents/_lib/articles/category";
-import { getCategoryIcon } from "@repo/contents/_lib/articles/icons";
-import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
+  type ArticleCategory,
+  ArticleCategorySchema,
+} from "@nakafa/aksara-contracts/projection/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { Effect, Option } from "effect";
+import { Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { use } from "react";
+import { getArticleCategoryIcon } from "@/components/articles/category";
 import { CardArticle } from "@/components/shared/card-article";
 import { ContainerList } from "@/components/shared/container-list";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
-import { getRuntimeArticleSummaries } from "@/lib/content/articles";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
+import {
+  getArticleSourceDirectory,
+  getPublishedArticlePage,
+  selectArticleCategories,
+  selectCategoryArticles,
+} from "@/lib/content/articles";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
-import { getStaticParams } from "@/lib/utils/system";
 
 /** Validates article category params once so metadata and page rendering share the same 404 behavior. */
 async function getResolvedParams(
@@ -33,24 +34,12 @@ async function getResolvedParams(
 ) {
   const { locale: rawLocale, category: rawCategory } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const parsedCategory = parseArticleCategory(rawCategory);
 
-  if (Option.isNone(parsedCategory)) {
+  if (!Schema.is(ArticleCategorySchema)(rawCategory)) {
     notFound();
   }
 
-  const category = parsedCategory.value;
-
-  return { category, locale };
-}
-
-/** Reads the cached Convex-backed article cards for one category page. */
-async function getCategoryArticles(category: ArticleCategory, locale: Locale) {
-  "use cache";
-
-  applyContentRuntimeCache();
-
-  return Effect.runPromise(getRuntimeArticleSummaries(category, locale));
+  return { category: rawCategory, locale };
 }
 
 /** Builds metadata for one article category from the same validated route params as the page. */
@@ -62,17 +51,17 @@ export async function generateMetadata({
   const { locale, category } = await getResolvedParams(params);
   const t = await getTranslations({ locale, namespace: "Articles" });
 
-  const FilePath = getCategoryPath(category);
+  const categoryPath = `/articles/${category}`;
 
   const title = t(category);
   const description = t("description");
-  const path = `/${locale}${FilePath}`;
+  const path = `/${locale}${categoryPath}`;
   const socialMetadata = getSocialMetadata({
     title,
     description,
     locale,
     path,
-    image: getOgUrl(locale, FilePath),
+    image: getOgUrl(locale, categoryPath),
   });
 
   return {
@@ -83,67 +72,72 @@ export async function generateMetadata({
   };
 }
 
-/** Generates localized article category paths from the system route catalog. */
-export function generateStaticParams({
+/** Generates localized article categories from the active Aksara catalog. */
+export async function generateStaticParams({
   params,
 }: {
   params: { locale: string };
 }) {
-  return getStaticParams({
-    basePath: "articles",
-    locale: getLocaleOrThrow(params.locale),
-    paramNames: ["category"],
-  });
+  const locale = getLocaleOrThrow(params.locale);
+  const catalog = await getPublishedArticlePage({ cursor: null, locale });
+  return selectArticleCategories(catalog.articles).map((article) => ({
+    category: article.category,
+  }));
 }
 
 /** Renders one article category page after validating the localized category slug. */
-export default function Page(
-  props: PageProps<"/[locale]/articles/[category]">
-) {
-  const { params } = props;
-  const { locale: rawLocale, category: rawCategory } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-  const parsedCategory = parseArticleCategory(rawCategory);
-
-  if (Option.isNone(parsedCategory)) {
+export default async function Page({
+  params,
+}: PageProps<"/[locale]/articles/[category]">) {
+  const { category, locale } = await getResolvedParams(params);
+  const catalog = await getPublishedArticlePage({ cursor: null, locale });
+  const articles = selectCategoryArticles(catalog.articles, category);
+  const source = articles[0];
+  if (!source) {
     notFound();
   }
-
-  const category = parsedCategory.value;
-  const FilePath = getCategoryPath(category);
+  const categoryPath = `/${source.parentPath}`;
+  const sourceUrl = source.sourceRevision
+    ? getAksaraTreeUrl({
+        path: getArticleSourceDirectory(source, "category"),
+        revision: source.sourceRevision,
+      })
+    : null;
 
   return (
     <>
       <PageArticles
+        articles={articles}
         category={category}
-        FilePath={FilePath}
+        categoryPath={categoryPath}
         header={<PageHeader category={category} />}
         locale={locale}
       />
 
-      <FooterContent className="mt-0">
-        <RefContent
-          githubUrl={getGithubUrl({ path: `/packages/contents${FilePath}` })}
-        />
-      </FooterContent>
+      {sourceUrl ? (
+        <FooterContent className="mt-0">
+          <RefContent githubUrl={sourceUrl} />
+        </FooterContent>
+      ) : null}
     </>
   );
 }
 
 /** Renders the cached article card list plus list-level JSON-LD for one category. */
 async function PageArticles({
+  articles,
   locale,
   category,
-  FilePath,
+  categoryPath,
   header,
 }: {
+  articles: ReturnType<typeof selectCategoryArticles>;
   locale: Locale;
   category: ArticleCategory;
-  FilePath: string;
+  categoryPath: string;
   header: React.ReactNode;
 }) {
-  const [articles, t, tCommon] = await Promise.all([
-    getCategoryArticles(category, locale),
+  const [t, tCommon] = await Promise.all([
     getTranslations({ locale, namespace: "Articles" }),
     getTranslations({ locale, namespace: "Common" }),
   ]);
@@ -154,17 +148,17 @@ async function PageArticles({
         breadcrumbItems={createBreadcrumbItems(locale, [
           { name: tCommon("home"), path: "" },
           { name: tCommon("articles"), path: "/articles" },
-          { name: t(category), path: FilePath },
+          { name: t(category), path: categoryPath },
         ])}
       />
       <CollectionPageJsonLd
         description={t("description")}
         items={articles.map((article) => ({
-          url: `https://nakafa.com/${locale}${FilePath}/${article.slug}`,
+          url: `https://nakafa.com/${locale}/${article.publicPath}`,
           name: article.title,
         }))}
         name={t(category)}
-        url={`https://nakafa.com/${locale}${FilePath}`}
+        url={`https://nakafa.com/${locale}${categoryPath}`}
       />
 
       {header}
@@ -172,11 +166,7 @@ async function PageArticles({
       <LayoutContent>
         <ContainerList>
           {articles.map((article) => (
-            <CardArticle
-              article={article}
-              category={category}
-              key={article.slug}
-            />
+            <CardArticle article={article} key={article.slug} />
           ))}
         </ContainerList>
       </LayoutContent>
@@ -184,14 +174,14 @@ async function PageArticles({
   );
 }
 
-/** Renders the category heading with the source-owned article icon. */
+/** Renders the category heading with the route-owned article icon. */
 function PageHeader({ category }: { category: ArticleCategory }) {
   const t = useTranslations("Articles");
 
   return (
     <HeaderContent
       description={t("description")}
-      icon={getCategoryIcon(category)}
+      icon={getArticleCategoryIcon(category)}
       title={t(category)}
     />
   );

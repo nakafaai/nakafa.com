@@ -2,13 +2,8 @@ import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { readTryoutSetPage } from "@/components/tryout/catalog/server";
-import { readTryoutContentAccess } from "@/components/tryout/content/access";
-import {
-  loadTryoutAnswerContent,
-  loadTryoutQuestionContent,
-  type TryoutAnswerContent,
-  type TryoutQuestionContent,
-} from "@/components/tryout/content/load";
+import type { TryoutRenderedContent } from "@/components/tryout/content/model";
+import { loadTryoutContent } from "@/components/tryout/content/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import { getToken } from "@/lib/auth/server";
@@ -72,11 +67,11 @@ async function TryoutSetRoute({
   }
 
   const entrySection = page.entrySection;
-  let contentAccess = { answers: false, questions: false };
+  let content: TryoutRenderedContent = { answers: [], questions: [] };
 
   if (token && entrySection?.visibility === "internal-entry") {
-    contentAccess = await Effect.runPromise(
-      readTryoutContentAccess(token, {
+    content = await Effect.runPromise(
+      loadTryoutContent(token, {
         countryKey: page.set.countryKey,
         examKey: page.set.examKey,
         locale,
@@ -87,38 +82,12 @@ async function TryoutSetRoute({
     );
   }
 
-  let questions: readonly TryoutQuestionContent[] = [];
-  let answers: readonly TryoutAnswerContent[] = [];
-
-  if (contentAccess.questions) {
-    const questionContent = await loadTryoutQuestionContent({
-      locale,
-      questions: page.entryQuestions,
-    });
-
-    if (!questionContent) {
-      notFound();
-    }
-
-    questions = questionContent;
-  }
-
-  if (contentAccess.answers) {
-    const answerContent = await loadTryoutAnswerContent({
-      locale,
-      questions: page.entryQuestions,
-    });
-
-    if (!answerContent) {
-      notFound();
-    }
-
-    answers = answerContent;
-  }
-
   return (
     <TryoutSetPageClient
-      content={{ entryAnswers: answers, entryQuestions: questions }}
+      content={{
+        entryAnswers: content.answers,
+        entryQuestions: content.questions,
+      }}
       page={page}
       route={{ country, exam, locale, set, track }}
     />

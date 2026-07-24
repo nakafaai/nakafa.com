@@ -1,4 +1,5 @@
-import { convexKeys } from "@repo/backend/keys";
+import { convexKeys, convexSiteKeys } from "@repo/backend/keys";
+import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
@@ -7,7 +8,7 @@ const optionalStringSchema = Schema.standardSchemaV1(
 );
 
 export const env = createEnv({
-  extends: [convexKeys()],
+  extends: [contentRuntimeKeys(), convexKeys(), convexSiteKeys()],
   server: {
     MCP_ALLOWED_ORIGINS: optionalStringSchema,
   },

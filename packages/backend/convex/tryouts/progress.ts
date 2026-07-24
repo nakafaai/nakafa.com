@@ -4,6 +4,7 @@ import type {
   TryoutStatus,
   TryoutStatusRank,
 } from "@repo/backend/convex/tryouts/schema";
+import { hasStableAttemptSet } from "@repo/backend/convex/tryouts/snapshot/catalog";
 import { ConvexError } from "convex/values";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
@@ -34,11 +35,20 @@ export async function writeTryoutSetProgress(
   }
 ) {
   assertProgressScore(args.status, args.publishedScore);
+  if (!hasStableAttemptSet(args.attempt, args.set)) {
+    throw new ConvexError({
+      code: "TRYOUT_PROGRESS_IDENTITY_REQUIRED",
+      message:
+        "Try-out progress requires a complete signed attempt set identity.",
+    });
+  }
 
   const current = await ctx.db
     .query("tryoutSetProgress")
-    .withIndex("by_userId_and_tryoutSetId", (q) =>
-      q.eq("userId", args.attempt.userId).eq("tryoutSetId", args.set._id)
+    .withIndex("by_userId_and_setIdentity", (q) =>
+      q
+        .eq("userId", args.attempt.userId)
+        .eq("setIdentity", args.attempt.setIdentity)
     )
     .unique();
 
@@ -48,15 +58,16 @@ export async function writeTryoutSetProgress(
 
   const values = {
     attemptNumber: args.attempt.attemptNumber,
-    countryKey: args.set.countryKey,
-    examKey: args.set.examKey,
+    countryKey: args.attempt.countryKey,
+    examKey: args.attempt.examKey,
     latestAttemptId: args.attempt._id,
-    locale: args.set.locale,
+    locale: args.attempt.locale,
     publishedScore: args.publishedScore,
-    setKey: args.set.setKey,
+    setIdentity: args.attempt.setIdentity,
+    setKey: args.attempt.setKey,
     status: args.status,
     statusRank: getTryoutStatusRank(args.status),
-    trackKey: args.set.trackKey,
+    trackKey: args.attempt.trackKey,
     tryoutSetId: args.set._id,
     updatedAt: args.updatedAt,
     userId: args.attempt.userId,

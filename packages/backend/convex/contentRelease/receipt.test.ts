@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/convex/contentRelease/receipt";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertTestRelease } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";

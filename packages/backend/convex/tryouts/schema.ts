@@ -1,3 +1,4 @@
+import { rendererDomainValidator } from "@repo/backend/convex/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
@@ -259,6 +260,14 @@ const tables = {
   tryoutAttempts: defineTable({
     userId: v.id("users"),
     tryoutSetId: v.id("tryoutSets"),
+    /** Optional only during the stable Aksara identity backfill. */
+    tryoutSnapshotId: v.optional(v.string()),
+    setIdentity: v.optional(v.string()),
+    countryKey: v.optional(tryoutRouteKeyValidator),
+    examKey: v.optional(tryoutRouteKeyValidator),
+    trackKey: v.optional(tryoutRouteKeyValidator),
+    setKey: v.optional(tryoutRouteKeyValidator),
+    locale: v.optional(localeValidator),
     scaleVersionId: v.optional(v.id("irtScaleVersions")),
     accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
     accessGrantId: v.optional(v.id("tryoutAccessGrants")),
@@ -294,6 +303,11 @@ const tables = {
       "tryoutSetId",
       "startedAt",
     ])
+    .index("by_userId_and_setIdentity_and_startedAt", [
+      "userId",
+      "setIdentity",
+      "startedAt",
+    ])
     .index("by_accessCampaignId_and_startedAt", [
       "accessCampaignId",
       "startedAt",
@@ -303,11 +317,19 @@ const tables = {
       "scoreStatus",
       "status",
       "startedAt",
+    ])
+    .index("by_setIdentity_and_scoreStatus_and_status_and_startedAt", [
+      "setIdentity",
+      "scoreStatus",
+      "status",
+      "startedAt",
     ]),
 
   tryoutSetProgress: defineTable({
     userId: v.id("users"),
     tryoutSetId: v.id("tryoutSets"),
+    /** Optional only during the stable Aksara identity backfill. */
+    setIdentity: v.optional(v.string()),
     latestAttemptId: v.id("tryoutAttempts"),
     countryKey: tryoutRouteKeyValidator,
     examKey: tryoutRouteKeyValidator,
@@ -321,6 +343,7 @@ const tables = {
     updatedAt: v.number(),
   })
     .index("by_userId_and_tryoutSetId", ["userId", "tryoutSetId"])
+    .index("by_userId_and_setIdentity", ["userId", "setIdentity"])
     .index("by_userId_and_track_and_publishedScore_and_setKey", [
       "userId",
       "countryKey",
@@ -371,6 +394,15 @@ const tables = {
     .index("by_status_and_expiresAt", ["status", "expiresAt"]),
 
   tryoutAttemptPlacements: defineTable({
+    /** Optional only during the additive artifact-reference migration. */
+    answerArtifactHash: v.optional(v.string()),
+    answerContentKey: v.optional(v.string()),
+    placementIdentity: v.optional(v.string()),
+    placementRowHash: v.optional(v.string()),
+    questionArtifactHash: v.optional(v.string()),
+    questionContentKey: v.optional(v.string()),
+    rendererDomain: v.optional(rendererDomainValidator),
+    sectionKey: v.optional(tryoutRouteKeyValidator),
     tryoutAttemptId: v.id("tryoutAttempts"),
     tryoutSectionId: v.id("tryoutSections"),
     questionId: v.id("questions"),
@@ -391,6 +423,13 @@ const tables = {
       "tryoutSectionId",
       "questionOrder",
     ])
+    .index("by_tryoutAttemptId_and_sectionKey_and_questionOrder", [
+      "tryoutAttemptId",
+      "sectionKey",
+      "questionOrder",
+    ])
+    .index("by_questionArtifactHash", ["questionArtifactHash"])
+    .index("by_answerArtifactHash", ["answerArtifactHash"])
     .index("by_questionId", ["questionId"]),
 
   tryoutResponses: defineTable({
@@ -409,10 +448,12 @@ const tables = {
       "tryoutSectionAttemptId",
       "questionId",
     ])
+    .index("by_tryoutSectionAttemptId", ["tryoutSectionAttemptId"])
     .index("by_tryoutAttemptId_and_questionId", [
       "tryoutAttemptId",
       "questionId",
     ])
+    .index("by_tryoutAttemptId", ["tryoutAttemptId"])
     .index("by_placementId", ["placementId"]),
 
   tryoutScores: defineTable({
@@ -437,56 +478,6 @@ const tables = {
       "finalizedAt",
     ])
     .index("by_userId_and_finalizedAt", ["userId", "finalizedAt"]),
-
-  tryoutLeaderboardScopes: defineTable({
-    countryKey: tryoutRouteKeyValidator,
-    examKey: tryoutRouteKeyValidator,
-    setKey: v.optional(tryoutRouteKeyValidator),
-    locale: localeValidator,
-    sourceRevision: v.string(),
-    syncedAt: v.number(),
-  }).index("by_countryKey_and_examKey_and_setKey_and_locale", [
-    "countryKey",
-    "examKey",
-    "setKey",
-    "locale",
-  ]),
-
-  tryoutLeaderboardUserStats: defineTable({
-    userId: v.id("users"),
-    leaderboardScopeId: v.id("tryoutLeaderboardScopes"),
-    totalTryoutsCompleted: v.number(),
-    averageScore: v.number(),
-    bestScore: v.number(),
-    averageRawScore: v.number(),
-    lastTryoutAt: v.number(),
-    updatedAt: v.number(),
-  }).index("by_userId_and_leaderboardScopeId", [
-    "userId",
-    "leaderboardScopeId",
-  ]),
-
-  tryoutLeaderboardEntries: defineTable({
-    tryoutSetId: v.id("tryoutSets"),
-    userId: v.id("users"),
-    leaderboardScopeId: v.id("tryoutLeaderboardScopes"),
-    publishedScore: v.number(),
-    theta: v.optional(v.number()),
-    thetaSE: v.optional(v.number()),
-    rawScore: v.number(),
-    completedAt: v.number(),
-    attemptId: v.id("tryoutAttempts"),
-  })
-    .index("by_tryoutSetId_and_userId", ["tryoutSetId", "userId"])
-    .index("by_userId_and_leaderboardScopeId_and_completedAt", [
-      "userId",
-      "leaderboardScopeId",
-      "completedAt",
-    ])
-    .index("by_leaderboardScopeId_and_publishedScore", [
-      "leaderboardScopeId",
-      "publishedScore",
-    ]),
 };
 
 export default tables;

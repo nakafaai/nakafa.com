@@ -1,4 +1,8 @@
-import { MaterialHeadSchema } from "@nakafa/aksara-contracts/release/head";
+import {
+  familyForProjection,
+  isQuestionProjection,
+} from "@nakafa/aksara-contracts/projection/spec";
+import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
@@ -18,7 +22,7 @@ import { Effect, Schema } from "effect";
 type ReadCtx = MutationCtx | QueryCtx;
 
 /** Converts one complete immutable upsert version into a compact head. */
-export const materialHead = Effect.fn("contentRelease.materialHead")(function* (
+export const contentHead = Effect.fn("contentRelease.contentHead")(function* (
   head: Doc<"contentHeads">,
   publicPath?: string
 ) {
@@ -38,11 +42,12 @@ export const materialHead = Effect.fn("contentRelease.materialHead")(function* (
       `Content version ${head.contentKey}/${head.locale}/${head.sequence} is incomplete.`
     );
   }
-  return yield* Schema.decodeUnknown(MaterialHeadSchema)({
+  return yield* Schema.decodeUnknown(ContentHeadSchema)({
     artifactHash: head.artifactHash,
     compilerConfigHash: head.compilerConfigHash,
     contentKey: head.contentKey,
     delivery: head.delivery,
+    family: head.family,
     locale: head.locale,
     projectionHash: head.projectionHash,
     ...(publicPath === undefined ? {} : { publicPath }),
@@ -54,13 +59,13 @@ export const materialHead = Effect.fn("contentRelease.materialHead")(function* (
       () =>
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Content version ${head.contentKey}/${head.locale}/${head.sequence} violates the material-head contract.`,
+          message: `Content version ${head.contentKey}/${head.locale}/${head.sequence} violates the content-head contract.`,
         })
     )
   );
 });
 
-/** Resolves and validates one material head's canonical published route. */
+/** Resolves and validates one content head's canonical published route. */
 const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
   function* (ctx: ReadCtx, head: Doc<"contentHeads">, activeSequence: number) {
     if (!head.projectionJson) {
@@ -70,6 +75,15 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
       );
     }
     const projection = yield* decodeProjectionJson(head.projectionJson);
+    if (familyForProjection(projection) !== head.family) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content ${head.contentKey}/${head.locale} changed projection family.`
+      );
+    }
+    if (isQuestionProjection(projection)) {
+      return;
+    }
     const binding = yield* loadRouteBinding(
       ctx,
       head.locale,
@@ -99,8 +113,8 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
 );
 
 /** Resolves one effective immutable head from a frozen sequence snapshot. */
-export const resolveMaterialHead = Effect.fn(
-  "contentRelease.resolveMaterialHead"
+export const resolveContentHead = Effect.fn(
+  "contentRelease.resolveContentHead"
 )(function* (
   ctx: ReadCtx,
   contentKey: string,
@@ -112,5 +126,5 @@ export const resolveMaterialHead = Effect.fn(
     return null;
   }
   const publicPath = yield* resolvePublicPath(ctx, head, sequence);
-  return yield* materialHead(head, publicPath);
+  return yield* contentHead(head, publicPath);
 });

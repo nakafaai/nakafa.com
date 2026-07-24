@@ -42,6 +42,8 @@ async function insertRelease(ctx: MutationCtx, rendererJson: string) {
     stagedItems: 0,
     stagedProjections: 0,
     stagedRoutes: 0,
+    stagedSnapshotBatches: 0,
+    stagedSnapshotRows: 0,
     stagedUpserts: 0,
     status: "verified",
     updatedAt: now,

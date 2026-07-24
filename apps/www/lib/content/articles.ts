@@ -1,84 +1,193 @@
-import type { Article, Locale } from "@repo/contents/_types/content";
-import { cleanSlug } from "@repo/utilities/helper";
-import { Effect } from "effect";
+import "server-only";
 
-import { getRuntimeContentRouteParentPage } from "@/lib/content/runtime/routes";
+import type {
+  CorpusSourcePath,
+  GitCommitSha,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  CorpusSourcePathSchema,
+  GitCommitShaSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  type ArticleCategory,
+  type ArticleProjection,
+  ArticleProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/article";
+import { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { Effect, Schema } from "effect";
+import { applyPublishedCatalogCache } from "@/lib/content/cache";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
+import {
+  fetchRuntimeQuery,
+  readRuntimeQuery,
+} from "@/lib/content/runtime/query";
 
-const articleSummaryPageLimit = 100;
-const trailingSlashPattern = /\/$/;
+type ArticlePageArgs = FunctionArgs<typeof api.contentRelease.article.page>;
+type ArticlePageResult = FunctionReturnType<
+  typeof api.contentRelease.article.page
+>;
+type ArticlePageItem = ArticlePageResult["items"][number];
 
-/** Reads article card summaries from Convex route catalog rows. */
-export const getRuntimeArticleSummaries = Effect.fn(
-  "www.contentArticles.summaries"
-)(function* (category: string, locale: Locale) {
-  const rows = yield* readArticleRouteParentPage(category, locale);
-  const articles = new Map<string, Article>();
+/** One verified article card selected from the active Aksara release. */
+export interface PublishedArticleSummary {
+  readonly category: ArticleProjection["category"];
+  readonly date: ArticleProjection["metadata"]["date"];
+  readonly description: ArticleProjection["metadata"]["description"];
+  readonly official: ArticleProjection["official"];
+  readonly parentPath: ArticleProjection["parentPath"];
+  readonly publicPath: ArticleProjection["publicPath"];
+  readonly slug: ArticleProjection["articleSlug"];
+  readonly sourcePath: CorpusSourcePath;
+  readonly sourceRevision: GitCommitSha | null;
+  readonly title: ArticleProjection["metadata"]["title"];
+}
 
-  for (const row of rows) {
-    const slug = getDirectChildSegment(row.route, `articles/${category}/`);
+/** One bounded active article catalog page with immutable provenance. */
+export interface PublishedArticlePage {
+  readonly activeReleaseId: null | string;
+  readonly articles: readonly PublishedArticleSummary[];
+  readonly done: boolean;
+  readonly nextCursor: null | string;
+}
 
-    if (!(slug && row.date) || articles.has(slug)) {
-      continue;
+/** Decodes an optional source revision from the active signed release. */
+const decodeSourceRevision = Effect.fn("www.articles.decodeSourceRevision")(
+  function* (
+    revision: ArticlePageResult["sourceRevision"],
+    locale: "en" | "id"
+  ) {
+    if (revision === null) {
+      return null;
     }
+    return yield* Schema.decodeUnknown(GitCommitShaSchema)(revision).pipe(
+      Effect.mapError(
+        () => new PublishedProjectionError({ locale, publicPath: "articles" })
+      )
+    );
+  }
+);
 
-    articles.set(slug, {
-      date: new Date(row.date).toISOString(),
-      description: row.description ?? "",
-      official: row.official ?? false,
-      slug,
-      title: row.title,
+/** Strictly decodes one backend-verified article catalog row. */
+const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
+  item: ArticlePageItem,
+  locale: "en" | "id",
+  sourceRevision: GitCommitSha | null
+) {
+  const input = yield* Effect.try({
+    catch: () =>
+      new PublishedProjectionError({ locale, publicPath: "articles" }),
+    try: (): unknown => JSON.parse(item.projectionJson),
+  });
+  const projection = yield* Schema.decodeUnknown(ArticleProjectionSchema)(
+    input,
+    { onExcessProperty: "error" }
+  ).pipe(
+    Effect.mapError(
+      () => new PublishedProjectionError({ locale, publicPath: "articles" })
+    )
+  );
+  const sourcePath = yield* Schema.decodeUnknown(CorpusSourcePathSchema)(
+    item.sourcePath
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new PublishedProjectionError({
+          locale,
+          publicPath: projection.publicPath,
+        })
+    )
+  );
+  if (
+    projection.locale !== locale ||
+    !sourcePath.startsWith(`packages/corpus/articles/${projection.category}/`)
+  ) {
+    return yield* new PublishedProjectionError({
+      locale,
+      publicPath: projection.publicPath,
     });
   }
 
-  return Array.from(articles.values()).sort((a, b) =>
-    b.date.localeCompare(a.date)
-  );
+  return {
+    category: projection.category,
+    date: projection.metadata.date,
+    description: projection.metadata.description,
+    official: projection.official,
+    parentPath: projection.parentPath,
+    publicPath: projection.publicPath,
+    slug: projection.articleSlug,
+    sourcePath,
+    sourceRevision,
+    title: projection.metadata.title,
+  } satisfies PublishedArticleSummary;
 });
 
-/**
- * Reads one category page from the runtime route catalog so article listings
- * follow the same parent-route ordering as sitemap and search.
- */
-function readArticleRouteParentPage(category: string, locale: Locale) {
-  return getRuntimeContentRouteParentPage({
-    cursor: null,
-    kind: "article",
-    limit: articleSummaryPageLimit,
-    locale,
-    order: "date-desc",
-    parentRoute: `articles/${category}`,
-    section: "articles",
-  }).pipe(Effect.map((page) => page.page));
+/** Reads one public article catalog page through the official Convex client. */
+function fetchArticlePage(args: ArticlePageArgs) {
+  return fetchRuntimeQuery(api.contentRelease.article.page, args);
 }
 
-/**
- * Extracts the immediate child segment under a category route; deeper article
- * slugs are intentionally collapsed to their first visible grouping segment.
- */
-function getDirectChildSegment(route: string, prefix: string) {
-  const [segment] = getRelativeRouteParts(
-    route,
-    prefix.replace(trailingSlashPattern, "")
+/** Reads and decodes one bounded active article catalog page. */
+export const readPublishedArticlePage = Effect.fn(
+  "www.articles.readPublishedPage"
+)(function* (args: ArticlePageArgs) {
+  const result = yield* readRuntimeQuery("contentRelease.article.page", () =>
+    fetchArticlePage(args)
   );
-  return segment;
-}
-
-/**
- * Returns route segments below one normalized parent path, or an empty list
- * when the runtime row is outside that parent.
- */
-function getRelativeRouteParts(route: string, basePath: string) {
-  const normalizedRoute = cleanContentPath(route);
-  const normalizedBase = cleanContentPath(basePath);
-
-  if (!normalizedRoute.startsWith(`${normalizedBase}/`)) {
-    return [];
+  const sourceRevision = yield* decodeSourceRevision(
+    result.sourceRevision,
+    args.locale
+  );
+  const articles: PublishedArticleSummary[] = [];
+  for (const item of result.items) {
+    articles.push(yield* decodeArticleItem(item, args.locale, sourceRevision));
   }
 
-  return normalizedRoute.slice(normalizedBase.length + 1).split("/");
+  return {
+    activeReleaseId: result.activeReleaseId,
+    articles,
+    done: result.done,
+    nextCursor: result.nextCursor,
+  } satisfies PublishedArticlePage;
+});
+
+/** Caches one bounded article catalog page under article release tags. */
+export async function getPublishedArticlePage(args: ArticlePageArgs) {
+  "use cache";
+
+  const page = await Effect.runPromise(readPublishedArticlePage(args));
+  applyPublishedCatalogCache("article");
+  return page;
 }
 
-/** Normalizes runtime route strings before parent/child route comparisons. */
-function cleanContentPath(path: string) {
-  return cleanSlug(path.startsWith("/") ? path.slice(1) : path);
+/** Selects one category's active articles in newest-first order. */
+export function selectCategoryArticles(
+  articles: readonly PublishedArticleSummary[],
+  category: ArticleCategory
+) {
+  return articles
+    .filter((article) => article.category === category)
+    .sort((left, right) => right.date.localeCompare(left.date));
+}
+
+/** Selects one representative active article for every published category. */
+export function selectArticleCategories(
+  articles: readonly PublishedArticleSummary[]
+) {
+  const categories = new Map<ArticleCategory, PublishedArticleSummary>();
+  for (const article of articles) {
+    if (!categories.has(article.category)) {
+      categories.set(article.category, article);
+    }
+  }
+  return [...categories.values()];
+}
+
+/** Resolves an exact Aksara source directory from a verified article row. */
+export function getArticleSourceDirectory(
+  article: PublishedArticleSummary,
+  scope: "category" | "root"
+) {
+  const categoryRoot = `packages/corpus/articles/${article.category}`;
+  return scope === "root" ? "packages/corpus/articles" : categoryRoot;
 }

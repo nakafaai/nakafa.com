@@ -1,4 +1,5 @@
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import { isMaterialProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
@@ -111,6 +112,12 @@ const resolveMaterialRoute = Effect.fn("contentRelease.resolveMaterialRoute")(
       );
     }
     const projection = yield* decodeProjectionJson(head.projectionJson);
+    if (!isMaterialProjection(projection)) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Material route ${locale}/${publicPath} has a non-material projection.`
+      );
+    }
     const projectionHash = yield* hashText(
       "the active material projection",
       canonicalizeMaterialProjection(projection)

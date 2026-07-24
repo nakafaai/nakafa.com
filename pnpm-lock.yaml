@@ -231,8 +231,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@nakafa/aksara-contracts':
-        specifier: file:/tmp/aksara-contracts-current.L3oUUF/aksara-contracts.tgz
-        version: file:../../../../tmp/aksara-contracts-current.L3oUUF/aksara-contracts.tgz(effect@3.22.0)
+        specifier: file:/private/tmp/aksara-contracts-final.BstN44/nakafa-aksara-contracts-0.1.0.tgz
+        version: file:../../../../private/tmp/aksara-contracts-final.BstN44/nakafa-aksara-contracts-0.1.0.tgz(effect@3.22.0)
       '@next/env':
         specifier: 16.2.10
         version: 16.2.10
@@ -549,8 +549,8 @@ importers:
         specifier: ^0.4.7
         version: 0.4.7(convex-helpers@0.1.120(@standard-schema/spec@1.1.0)(convex@1.42.1(react@19.2.7))(hono@4.12.29)(react@19.2.7)(typescript@6.0.3)(zod@4.4.3))(convex@1.42.1(react@19.2.7))
       '@nakafa/aksara-contracts':
-        specifier: file:/tmp/aksara-contracts-current.L3oUUF/aksara-contracts.tgz
-        version: file:../../../../tmp/aksara-contracts-current.L3oUUF/aksara-contracts.tgz(effect@3.22.0)
+        specifier: file:/private/tmp/aksara-contracts-final.BstN44/nakafa-aksara-contracts-0.1.0.tgz
+        version: file:../../../../private/tmp/aksara-contracts-final.BstN44/nakafa-aksara-contracts-0.1.0.tgz(effect@3.22.0)
       '@polar-sh/sdk':
         specifier: ^0.48.1
         version: 0.48.1
@@ -599,6 +599,9 @@ importers:
       nanoid:
         specifier: ^6.0.0
         version: 6.0.0
+      server-only:
+        specifier: 0.0.1
+        version: 0.0.1
       strip-ansi:
         specifier: ^7.2.0
         version: 7.2.0
@@ -2861,8 +2864,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@nakafa/aksara-contracts@file:../../../../tmp/aksara-contracts-current.L3oUUF/aksara-contracts.tgz':
-    resolution: {integrity: sha512-TYI9Muig1p+KTKSxmOmQrC5mJPgEUInrsCu6AaHhIj5R+v/XIEeF5PnmL4cmS9Hqf3OvAKdO/JWDVk75FzoLdA==, tarball: file:../../../../tmp/aksara-contracts-current.L3oUUF/aksara-contracts.tgz}
+  '@nakafa/aksara-contracts@file:../../../../private/tmp/aksara-contracts-final.BstN44/nakafa-aksara-contracts-0.1.0.tgz':
+    resolution: {integrity: sha512-J1x7N1oeV/scOZ9ZKx2TieMHSD3vlrro3XUx5smmIbBmWcZo0zrxQpZra9koJYOb8lJbdA+w+zEPJ7VNwRFF7Q==, tarball: file:../../../../private/tmp/aksara-contracts-final.BstN44/nakafa-aksara-contracts-0.1.0.tgz}
     version: 0.1.0
     engines: {node: '>=24.0.0 <25.0.0'}
     peerDependencies:
@@ -9998,7 +10001,7 @@ snapshots:
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4':
     optional: true
 
-  '@nakafa/aksara-contracts@file:../../../../tmp/aksara-contracts-current.L3oUUF/aksara-contracts.tgz(effect@3.22.0)':
+  '@nakafa/aksara-contracts@file:../../../../private/tmp/aksara-contracts-final.BstN44/nakafa-aksara-contracts-0.1.0.tgz(effect@3.22.0)':
     dependencies:
       effect: 3.22.0
 

@@ -2,6 +2,7 @@ import { MAX_CLEANUP_PAGE_COUNT } from "@nakafa/aksara-contracts/release/lifecyc
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_ARTIFACT_HASH,
@@ -14,6 +15,10 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
+import {
+  requireFixtureValue,
+  seedTryoutArtifactState,
+} from "@repo/backend/test/tryout-content";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -160,6 +165,48 @@ describe("contentRelease/cleanup", () => {
     await expect(
       t.run((ctx) => ctx.db.query("contentArtifacts").unique())
     ).resolves.toMatchObject({ artifactHash: TEST_ARTIFACT_HASH });
+  });
+
+  it("retains question and answer artifacts frozen by attempt placements", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const fixture = await t.mutation(async (ctx) => {
+      await insertRelease(ctx);
+      return seedTryoutArtifactState(ctx, {
+        attemptStatus: "completed",
+        sectionStatus: "completed",
+        suffix: "cleanup-placement",
+      });
+    });
+    const questionHash = requireFixtureValue(fixture.questionHashes);
+    const answerHash = requireFixtureValue(fixture.answerHashes);
+
+    await expect(
+      t.mutation(cleanup, { releaseId: RELEASE.releaseId })
+    ).resolves.toEqual({
+      complete: true,
+      deletedArtifacts: 0,
+      releaseId: RELEASE.releaseId,
+    });
+    await expect(
+      t.run((ctx) =>
+        ctx.db
+          .query("contentArtifacts")
+          .withIndex("by_artifactHash", (query) =>
+            query.eq("artifactHash", questionHash)
+          )
+          .unique()
+      )
+    ).resolves.toMatchObject({ artifactHash: questionHash });
+    await expect(
+      t.run((ctx) =>
+        ctx.db
+          .query("contentArtifacts")
+          .withIndex("by_artifactHash", (query) =>
+            query.eq("artifactHash", answerHash)
+          )
+          .unique()
+      )
+    ).resolves.toMatchObject({ artifactHash: answerHash });
   });
 
   it("returns an exact retry deadline for retained future artifacts", async () => {

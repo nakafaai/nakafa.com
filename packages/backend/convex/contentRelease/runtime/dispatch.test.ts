@@ -4,23 +4,25 @@ import {
   decodeContentRuntimeRequest,
   MAX_RUNTIME_REQUEST_BYTES,
 } from "@nakafa/aksara-contracts/runtime/spec";
-import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { verifyContentEnvelope } from "@repo/backend/content/verify";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/dispatch";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content-proof";
 import {
-  insertSignedHead,
+  articleRuntimeRequest,
   insertSignedRelease,
+  runtimeContentKey,
   runtimeRequest,
-  TEST_RUNTIME_NOW,
+  TEST_ARTICLE_KEY,
+  TEST_ARTICLE_PATH,
+  TEST_ARTICLE_PROJECTION_JSON,
+  TEST_ARTICLE_SOURCE,
   TEST_RUNTIME_PATH,
 } from "@repo/backend/test/content-runtime";
+import { insertSignedHead } from "@repo/backend/test/runtime-head";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -39,23 +41,14 @@ function runDispatch(t: RuntimeAction, source: string) {
   );
 }
 
-/** Seeds one authenticated active route and optional application identity. */
+/** Seeds one active route for the requested stored delivery class. */
 function seedSigned(
   t: RuntimeTest,
-  delivery: "authenticated" | "entitled" | "public",
-  plan?: "free" | "pro"
+  delivery: "authenticated" | "entitled" | "public"
 ) {
   return t.mutation(async (ctx) => {
     await insertSignedRelease(ctx);
-    await insertSignedHead(ctx, delivery, `test:${delivery}`);
-    if (!plan) {
-      return null;
-    }
-    return seedAuthenticatedUser(ctx, {
-      now: TEST_RUNTIME_NOW,
-      plan,
-      suffix: `signed-${delivery}-${plan}`,
-    });
+    await insertSignedHead(ctx, delivery, runtimeContentKey(delivery));
   });
 }
 
@@ -74,8 +67,7 @@ describe("contentRelease/runtime/dispatch", () => {
       decodeContentRuntimeRequest(JSON.parse(runtimeRequest("public")))
     );
     const verified = await Effect.runPromise(
-      verifyContentRuntimeExchange({
-        rendererManifest: JSON.parse(row.rendererJson),
+      verifyContentEnvelope({
         request,
         response: {
           activeManifestHash: row.activeManifestHash,
@@ -111,60 +103,60 @@ describe("contentRelease/runtime/dispatch", () => {
 
     expect(found.status).toBe(200);
     expect(JSON.parse(found.body)).toMatchObject({
-      artifact: { payload: { contentKey: "test:public" } },
+      artifact: {
+        payload: { contentKey: runtimeContentKey("public") },
+      },
       delivery: "public",
       kind: "found",
       projection: { publicPath: TEST_RUNTIME_PATH },
-      sourcePath: "packages/corpus/material/lesson/test/public/en.mdx",
+      sourcePath: `packages/corpus/${runtimeContentKey("public")}/en.mdx`,
     });
     expect(missing).toEqual({ body: '{"kind":"missing"}', status: 404 });
   });
 
-  it("enforces authentication before returning authenticated content", async () => {
+  it("authenticates the real pair-grouped article source end to end", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await seedSigned(t, "authenticated", "free");
-    if (!identity) {
-      throw new Error("Expected one authenticated runtime identity.");
-    }
-    const authenticated = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
+    await t.mutation(async (ctx) => {
+      await insertSignedRelease(ctx);
+      await insertSignedHead(ctx, "public", TEST_ARTICLE_KEY, {
+        projectionJson: TEST_ARTICLE_PROJECTION_JSON,
+        publicPath: TEST_ARTICLE_PATH,
+        rendererDomain: "politics",
+        sourcePath: TEST_ARTICLE_SOURCE,
+      });
     });
+
+    const found = await runDispatch(t, articleRuntimeRequest());
+
+    expect(found.status).toBe(200);
+    expect(JSON.parse(found.body)).toMatchObject({
+      artifact: {
+        payload: {
+          contentKey: TEST_ARTICLE_KEY,
+          rendererDomain: "politics",
+        },
+      },
+      delivery: "public",
+      kind: "found",
+      projection: {
+        contentKey: TEST_ARTICLE_KEY,
+        kind: "article",
+        publicPath: TEST_ARTICLE_PATH,
+      },
+      sourcePath: TEST_ARTICLE_SOURCE,
+    });
+  });
+
+  it("rejects non-public delivery before reading restricted heads", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedSigned(t, "authenticated");
 
     await expect(
       runDispatch(t, runtimeRequest("authenticated"))
-    ).resolves.toMatchObject({ status: 401 });
-    await expect(
-      runDispatch(authenticated, runtimeRequest("authenticated"))
-    ).resolves.toMatchObject({ status: 200 });
-  });
-
-  it("enforces the Pro plan before returning entitled content", async () => {
-    const free = createConvexTestWithBetterAuth();
-    const freeIdentity = await seedSigned(free, "entitled", "free");
-    const pro = createConvexTestWithBetterAuth();
-    const proIdentity = await seedSigned(pro, "entitled", "pro");
-    if (!(freeIdentity && proIdentity)) {
-      throw new Error("Expected both entitled runtime identities.");
-    }
-
-    const forbidden = await runDispatch(
-      free.withIdentity({
-        sessionId: freeIdentity.sessionId,
-        subject: freeIdentity.authUserId,
-      }),
-      runtimeRequest("entitled")
-    );
-    const entitled = await runDispatch(
-      pro.withIdentity({
-        sessionId: proIdentity.sessionId,
-        subject: proIdentity.authUserId,
-      }),
-      runtimeRequest("entitled")
-    );
-
-    expect(forbidden.status).toBe(403);
-    expect(entitled.status).toBe(200);
+    ).resolves.toEqual({
+      body: '{"code":"CONTENT_RUNTIME_INVALID","kind":"failure"}',
+      status: 400,
+    });
   });
 
   it("rejects malformed, mismatched, and oversized request bytes", async () => {

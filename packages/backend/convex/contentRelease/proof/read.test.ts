@@ -7,10 +7,10 @@ import {
   insertProofRoute,
 } from "@repo/backend/test/content-proof";
 import {
-  insertTestRelease,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 

@@ -6,6 +6,7 @@ import { registerContentReleaseRoutes } from "@repo/backend/convex/contentReleas
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
 import v1 from "@repo/backend/convex/routes/v1";
+import { registerTryoutContentRoute } from "@repo/backend/convex/tryouts/content/route";
 import {
   type HonoWithConvex,
   HttpRouterWithHono,
@@ -52,5 +53,8 @@ registerContentReleaseRoutes(app);
 
 // Register server-authenticated executable content reads.
 registerContentRuntimeRoute(app);
+
+// Register server-and-user-authenticated try-out content reads.
+registerTryoutContentRoute(app);
 
 export default new HttpRouterWithHono(app);

@@ -39,9 +39,15 @@ function nextPhase(
     return "items";
   }
   if (phase === "items") {
+    return "batches";
+  }
+  if (phase === "batches") {
     return "artifacts";
   }
   if (phase === "artifacts") {
+    return "snapshots";
+  }
+  if (phase === "snapshots") {
     return "releases";
   }
   return null;

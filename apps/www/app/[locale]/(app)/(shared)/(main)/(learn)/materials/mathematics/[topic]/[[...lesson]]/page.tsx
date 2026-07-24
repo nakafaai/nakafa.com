@@ -8,12 +8,16 @@ import {
   type MaterialPageProps,
   renderMaterialPage,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/view";
+import { createFixedMaterialRuntimeResolver } from "@/lib/content/material";
 import { renderPublishedMathematics } from "@/lib/content/published/mathematics";
 
 const config = {
-  components: mathematicsComponents,
-  importer: importMathematicsMaterial,
-  published: renderPublishedMathematics,
+  resolveRuntime: createFixedMaterialRuntimeResolver({
+    components: mathematicsComponents,
+    importer: importMathematicsMaterial,
+    published: renderPublishedMathematics,
+    rendererDomain: "mathematics",
+  }),
   target: "mathematics",
 } satisfies MaterialPageConfig;
 

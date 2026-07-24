@@ -1,4 +1,7 @@
-import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import {
+  type ContentProjection,
+  familyForProjection,
+} from "@nakafa/aksara-contracts/projection/spec";
 import {
   MAX_PROJECTION_BATCH_BYTES,
   MAX_PROJECTION_BATCH_COUNT,
@@ -74,7 +77,7 @@ const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
   releaseId: string,
   batchIndex: number,
   batchHash: string,
-  projection: MaterialLessonProjection,
+  projection: ContentProjection,
   projectionJson: string
 ) {
   const item = yield* loadIdentityItem(
@@ -96,7 +99,10 @@ const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
     );
   }
   const decodedItem = yield* decodeItemJson(item.itemJson);
-  if (decodedItem.change.operation !== "upsert") {
+  if (
+    decodedItem.change.operation !== "upsert" ||
+    decodedItem.change.family !== familyForProjection(projection)
+  ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Projection ${projection.contentKey}/${projection.locale} does not match its staged upsert.`

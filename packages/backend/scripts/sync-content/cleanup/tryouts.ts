@@ -53,54 +53,9 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "try-out scores",
   },
   {
-    label: "Deleting try-out leaderboard entries...",
-    mutation: reset.deleteTryoutLeaderboardEntriesBatch,
-    resultLabel: "try-out leaderboard entries",
-  },
-  {
-    label: "Deleting try-out leaderboard user stats...",
-    mutation: reset.deleteTryoutLeaderboardUserStatsBatch,
-    resultLabel: "try-out leaderboard user stats",
-  },
-  {
-    label: "Deleting try-out leaderboard scopes...",
-    mutation: reset.deleteTryoutLeaderboardScopesBatch,
-    resultLabel: "try-out leaderboard scopes",
-  },
-  {
-    label: "Deleting IRT scale publication queue...",
-    mutation: reset.deleteIrtScalePublicationQueueBatch,
-    resultLabel: "IRT scale publication queue entries",
-  },
-  {
     label: "Deleting IRT scale items...",
     mutation: reset.deleteIrtScaleItemsBatch,
     resultLabel: "IRT scale items",
-  },
-  {
-    label: "Deleting IRT scale quality checks...",
-    mutation: reset.deleteIrtScaleQualityChecksBatch,
-    resultLabel: "IRT scale quality checks",
-  },
-  {
-    label: "Deleting IRT scale quality refresh queue...",
-    mutation: reset.deleteIrtScaleQualityRefreshQueueBatch,
-    resultLabel: "IRT scale quality refresh queue entries",
-  },
-  {
-    label: "Deleting IRT calibration queue...",
-    mutation: reset.deleteIrtCalibrationQueueBatch,
-    resultLabel: "IRT calibration queue entries",
-  },
-  {
-    label: "Deleting IRT calibration attempts...",
-    mutation: reset.deleteIrtCalibrationAttemptsBatch,
-    resultLabel: "IRT calibration attempts",
-  },
-  {
-    label: "Deleting IRT calibration cache stats...",
-    mutation: reset.deleteIrtCalibrationCacheStatsBatch,
-    resultLabel: "IRT calibration cache stats",
   },
   {
     label: "Deleting IRT calibration runs...",
@@ -293,16 +248,7 @@ export const resetTryouts = Effect.fn("sync.resetTryouts")(function* (
   log(`  Tryout Placements:      ${counts.tryoutAttemptPlacements}`);
   log(`  Tryout Responses:       ${counts.tryoutResponses}`);
   log(`  Tryout Scores:          ${counts.tryoutScores}`);
-  log(`  Tryout Leaderboards:    ${counts.tryoutLeaderboardScopes}`);
-  log(`  Tryout Leaderboard Rows:${counts.tryoutLeaderboardEntries}`);
-  log(`  Tryout Leaderboard Stats:${counts.tryoutLeaderboardUserStats}`);
-  log(`  IRT Calibration Queue: ${counts.irtCalibrationQueue}`);
-  log(`  IRT Calibration Rows:  ${counts.irtCalibrationAttempts}`);
-  log(`  IRT Cache Stats:       ${counts.irtCalibrationCacheStats}`);
   log(`  IRT Calibration Runs:  ${counts.irtCalibrationRuns}`);
-  log(`  IRT Scale Quality:     ${counts.irtScaleQualityChecks}`);
-  log(`  IRT Scale Quality Q:   ${counts.irtScaleQualityRefreshQueue}`);
-  log(`  IRT Scale Queue:       ${counts.irtScalePublicationQueue}`);
   log(`  IRT Scale Versions:    ${counts.irtScaleVersions}`);
   log(`  IRT Scale Items:       ${counts.irtScaleItems}`);
 
@@ -325,16 +271,7 @@ export const resetTryouts = Effect.fn("sync.resetTryouts")(function* (
     counts.tryoutAttemptPlacements +
     counts.tryoutResponses +
     counts.tryoutScores +
-    counts.tryoutLeaderboardScopes +
-    counts.tryoutLeaderboardEntries +
-    counts.tryoutLeaderboardUserStats +
-    counts.irtCalibrationQueue +
-    counts.irtCalibrationAttempts +
-    counts.irtCalibrationCacheStats +
     counts.irtCalibrationRuns +
-    counts.irtScaleQualityChecks +
-    counts.irtScaleQualityRefreshQueue +
-    counts.irtScalePublicationQueue +
     counts.irtScaleVersions +
     counts.irtScaleItems;
 

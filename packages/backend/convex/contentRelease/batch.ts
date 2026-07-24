@@ -6,7 +6,8 @@ const BatchKindSchema = Schema.Literal(
   "artifact",
   "item",
   "projection",
-  "route"
+  "route",
+  "snapshot"
 );
 
 /** Computes the exact ordered request identity for idempotent batch retries. */

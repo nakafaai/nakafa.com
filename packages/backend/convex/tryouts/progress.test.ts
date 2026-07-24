@@ -1,3 +1,5 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -23,6 +25,7 @@ describe("tryouts/progress", () => {
       }
 
       const firstAttemptId = await ctx.db.insert("tryoutAttempts", {
+        ...stableAttemptFields(set),
         accessEndsAt: TRYOUT_TEST_NOW + 1000,
         accessSourceKind: "free",
         attemptNumber: 1,
@@ -64,6 +67,7 @@ describe("tryouts/progress", () => {
       });
 
       const latestAttemptId = await ctx.db.insert("tryoutAttempts", {
+        ...stableAttemptFields(set),
         accessEndsAt: TRYOUT_TEST_NOW + 2000,
         accessSourceKind: "free",
         attemptNumber: 2,
@@ -115,9 +119,56 @@ describe("tryouts/progress", () => {
     expect(progress).toMatchObject({
       attemptNumber: 2,
       publishedScore: 50,
+      setIdentity: expect.any(String),
       status: "expired",
       statusRank: 3,
     });
+  });
+
+  it("rejects progress without one complete signed set identity", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await expect(
+      t.mutation(async (ctx) => {
+        const user = await seedAuthenticatedUser(ctx, {
+          now: TRYOUT_TEST_NOW,
+          suffix: "tryout-progress-identity",
+        });
+        const tryoutSetId = await insertTryoutSet(ctx);
+        const set = await ctx.db.get(tryoutSetId);
+        const attemptId = await ctx.db.insert("tryoutAttempts", {
+          accessEndsAt: TRYOUT_TEST_NOW + 1000,
+          accessSourceKind: "free",
+          attemptNumber: 1,
+          completedAt: null,
+          completedSectionKeys: [],
+          countsForCompetition: false,
+          endReason: null,
+          expiresAt: TRYOUT_TEST_NOW + 1000,
+          lastActivityAt: TRYOUT_TEST_NOW,
+          scoreStatus: "official",
+          scoringStrategy: "raw",
+          sectionSnapshots: [],
+          startedAt: TRYOUT_TEST_NOW,
+          status: "in-progress",
+          totalCorrect: 0,
+          totalQuestions: 0,
+          tryoutSetId,
+          userId: user.userId,
+        });
+        const attempt = await ctx.db.get(attemptId);
+        if (!(attempt && set)) {
+          throw new Error("Expected progress identity fixtures.");
+        }
+        await writeTryoutSetProgress(ctx, {
+          attempt,
+          publishedScore: null,
+          set,
+          status: "in-progress",
+          updatedAt: TRYOUT_TEST_NOW,
+        });
+      })
+    ).rejects.toThrow("TRYOUT_PROGRESS_IDENTITY_REQUIRED");
   });
 
   it.each([
@@ -179,3 +230,16 @@ describe("tryouts/progress", () => {
     ).rejects.toThrow(scenario.message);
   });
 });
+
+/** Builds the stable set root copied into every post-migration attempt. */
+function stableAttemptFields(set: Doc<"tryoutSets">) {
+  return {
+    countryKey: set.countryKey,
+    examKey: set.examKey,
+    locale: set.locale,
+    setIdentity: tryoutCatalogIdentity({ ...set, kind: "set" }),
+    setKey: set.setKey,
+    trackKey: set.trackKey,
+    tryoutSnapshotId: "snapshot:tryout:progress",
+  };
+}

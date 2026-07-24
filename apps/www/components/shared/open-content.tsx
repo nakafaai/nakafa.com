@@ -46,9 +46,11 @@ import { getGithubUrl } from "@/lib/utils/github";
 export function OpenContent({
   slug,
   content,
+  sourceUrl,
 }: {
   slug: string;
   content?: string;
+  sourceUrl?: null | string;
 }) {
   const t = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 500 });
@@ -56,6 +58,7 @@ export function OpenContent({
 
   useLayoutEffect(() => close, [close]);
 
+  /** Copies the available raw content and reports the localized result. */
   const handleCopy = () => {
     if (!content) {
       toast.error(t("copy-error"), { position: "bottom-center" });
@@ -70,16 +73,25 @@ export function OpenContent({
   const markdownUrl = new URL(`${slug}.mdx`, "https://nakafa.com");
   const q = `I'm looking at this ${markdownUrl}, help me understand.`;
 
-  const githubUrl = getGithubUrl({
-    path: `/packages/contents${path}/${locale}.mdx`,
-  });
-
-  const links = [
-    {
-      title: t("open-in-github"),
+  const githubUrl =
+    sourceUrl === undefined
+      ? getGithubUrl({
+          path: `/packages/contents${path}/${locale}.mdx`,
+        })
+      : sourceUrl;
+  const links: {
+    href: string;
+    logo: BrandLogoName;
+    title: string;
+  }[] = [];
+  if (githubUrl) {
+    links.push({
       href: githubUrl,
       logo: "github",
-    },
+      title: t("open-in-github"),
+    });
+  }
+  links.push(
     {
       title: t("open-in-chatgpt"),
       href: `https://chatgpt.com/?${new URLSearchParams({ hints: "search", q })}`,
@@ -94,12 +106,8 @@ export function OpenContent({
       title: t("open-in-claude"),
       href: `https://claude.ai/new?${new URLSearchParams({ q })}`,
       logo: "claude",
-    },
-  ] as const satisfies readonly {
-    href: string;
-    logo: BrandLogoName;
-    title: string;
-  }[];
+    }
+  );
 
   return (
     <ButtonGroup>

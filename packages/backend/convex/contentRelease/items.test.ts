@@ -3,16 +3,16 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
-  insertTestRelease,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testDeleteJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import {
   insertRuntimeBinding,
   insertRuntimeVersion,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/runtime-head";
 import { convexTest, type TestConvex } from "convex-test";
 import { describe, expect, it } from "vitest";
 

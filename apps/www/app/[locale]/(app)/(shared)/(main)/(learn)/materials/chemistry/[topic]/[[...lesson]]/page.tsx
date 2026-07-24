@@ -8,12 +8,16 @@ import {
   type MaterialPageProps,
   renderMaterialPage,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/view";
+import { createFixedMaterialRuntimeResolver } from "@/lib/content/material";
 import { renderPublishedChemistry } from "@/lib/content/published/chemistry";
 
 const config = {
-  components: chemistryComponents,
-  importer: importChemistryMaterial,
-  published: renderPublishedChemistry,
+  resolveRuntime: createFixedMaterialRuntimeResolver({
+    components: chemistryComponents,
+    importer: importChemistryMaterial,
+    published: renderPublishedChemistry,
+    rendererDomain: "chemistry",
+  }),
   target: "chemistry",
 } satisfies MaterialPageConfig;
 

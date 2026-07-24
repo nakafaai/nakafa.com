@@ -1,3 +1,7 @@
+import {
+  hasSameContentSnapshots,
+  invertContentSnapshots,
+} from "@nakafa/aksara-contracts/release/snapshot";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
@@ -130,7 +134,12 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
       recoverySigned.manifest.baseReleaseId !== releaseId ||
       recoverySigned.manifest.baseManifestHash !== manifestHash ||
       recoverySigned.manifest.resultCount !== signed.manifest.baseResultCount ||
-      recoverySigned.manifest.resultDigest !== signed.manifest.baseResultDigest
+      recoverySigned.manifest.resultDigest !==
+        signed.manifest.baseResultDigest ||
+      !hasSameContentSnapshots(
+        recoverySigned.manifest.snapshots,
+        invertContentSnapshots(signed.manifest.snapshots)
+      )
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

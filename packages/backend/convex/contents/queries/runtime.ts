@@ -1,10 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import {
-  listArticleApiContentPageImpl,
-  listMaterialApiContentPageImpl,
-} from "@repo/backend/convex/contents/runtime/api";
-import { getArticlePageImpl } from "@repo/backend/convex/contents/runtime/articles";
-import {
   getContentRouteArtifactPageImpl,
   getContentRouteByContentIdImpl,
   getContentRouteBySourcePathImpl,
@@ -34,8 +29,6 @@ import {
   listPublicRoutesPageReturnValidator,
 } from "@repo/backend/convex/contents/runtime/routes";
 import {
-  getArticlePageArgsValidator,
-  getArticlePageReturnValidator,
   getContentRouteArgsValidator,
   getContentRouteArtifactPageArgsValidator,
   getContentRouteArtifactPageReturnValidator,
@@ -52,8 +45,6 @@ import {
   getQuranSurahMetadataReturnValidator,
   getQuranSurahPageArgsValidator,
   getQuranSurahPageReturnValidator,
-  listArticleApiContentPageArgsValidator,
-  listArticleApiContentPageReturnValidator,
   listContentRouteCountsArgsValidator,
   listContentRouteCountsReturnValidator,
   listContentRoutesByKindPrefixArgsValidator,
@@ -62,8 +53,6 @@ import {
   listContentRoutesPageReturnValidator,
   listLatestContentRoutesArgsValidator,
   listLatestContentRoutesReturnValidator,
-  listMaterialApiContentPageArgsValidator,
-  listMaterialApiContentPageReturnValidator,
   listQuranSurahsReturnValidator,
 } from "@repo/backend/convex/contents/runtime/spec";
 import {
@@ -80,15 +69,6 @@ import {
   getPublicSitemapPageReturnValidator,
 } from "@repo/backend/convex/contents/sitemap/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-
-/**
- * Loads one published article page from the durable content read model.
- */
-export const getArticlePage = query({
-  args: getArticlePageArgsValidator,
-  returns: getArticlePageReturnValidator,
-  handler: getArticlePageImpl,
-});
 
 /**
  * Loads one published curriculum lesson from the durable content read model.
@@ -207,22 +187,6 @@ export const getContentRouteBySourcePath = query({
   args: getContentRouteBySourcePathArgsValidator,
   returns: getContentRouteBySourcePathReturnValidator,
   handler: getContentRouteBySourcePathImpl,
-});
-
-/** Lists article API rows matching one route prefix. */
-export const listArticleApiContentPage = query({
-  args: listArticleApiContentPageArgsValidator,
-  returns: listArticleApiContentPageReturnValidator,
-  /** Runs a bounded article API content page query with generated argument typing. */
-  handler: (ctx, args) => listArticleApiContentPageImpl(ctx, args),
-});
-
-/** Lists material API rows matching one route prefix. */
-export const listMaterialApiContentPage = query({
-  args: listMaterialApiContentPageArgsValidator,
-  returns: listMaterialApiContentPageReturnValidator,
-  /** Runs a bounded material API content page query with generated argument typing. */
-  handler: (ctx, args) => listMaterialApiContentPageImpl(ctx, args),
 });
 
 /** Lists synced Quran surah metadata rows. */

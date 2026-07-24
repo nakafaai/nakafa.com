@@ -10,6 +10,10 @@ import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import {
+  stageSnapshot,
+  stageSnapshotBatch,
+} from "@repo/backend/convex/contentRelease/ingress/snapshot";
+import {
   decodeReleaseJson,
   decodeRendererJson,
   encodeArtifactJson,
@@ -38,7 +42,9 @@ type StageRequest = Extract<
       | "stageProjectionBatch"
       | "stageRecovery"
       | "stageRelease"
-      | "stageRouteBatch";
+      | "stageRouteBatch"
+      | "stageSnapshot"
+      | "stageSnapshotBatch";
   }
 >;
 
@@ -93,7 +99,6 @@ const artifactBatchReference = makeFunctionReference<
   { artifactJson: string[]; batchIndex: number; releaseId: string },
   StageReceipt
 >("contentRelease/artifacts:stageArtifactBatch");
-
 /** Rejects new publication bytes signed by a retained but inactive key. */
 const requireActiveKey = Effect.fn("contentRelease.requireActiveKey")(
   function* (keyId: string, activeKeyId: string, subject: string) {
@@ -226,6 +231,14 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
       const value = yield* stageRelease(ctx, request, activeKeyId);
       return { ok: true, operation: request.operation, value };
     }
+    if (request.operation === "stageSnapshot") {
+      const value = yield* stageSnapshot(ctx, request);
+      return { ok: true, operation: request.operation, value };
+    }
+    if (request.operation === "stageSnapshotBatch") {
+      const value = yield* stageSnapshotBatch(ctx, request);
+      return { ok: true, operation: request.operation, value };
+    }
     if (request.operation === "stageItemBatch") {
       const value = yield* callInternal(() =>
         ctx.runMutation(itemBatchReference, {
@@ -256,14 +269,20 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
       );
       return { ok: true, operation: request.operation, value };
     }
-    yield* verifyArtifactBatch(ctx, request, activeKeyId);
-    const value = yield* callInternal(() =>
-      ctx.runMutation(artifactBatchReference, {
-        artifactJson: request.artifacts.map(encodeArtifactJson),
-        batchIndex: request.batchIndex,
-        releaseId: request.releaseId,
-      })
+    if (request.operation === "stageArtifactBatch") {
+      yield* verifyArtifactBatch(ctx, request, activeKeyId);
+      const value = yield* callInternal(() =>
+        ctx.runMutation(artifactBatchReference, {
+          artifactJson: request.artifacts.map(encodeArtifactJson),
+          batchIndex: request.batchIndex,
+          releaseId: request.releaseId,
+        })
+      );
+      return { ok: true, operation: request.operation, value };
+    }
+    return yield* releaseFail(
+      "CONTENT_RELEASE_UNSUPPORTED",
+      "Publication staging operation is not implemented."
     );
-    return { ok: true, operation: request.operation, value };
   }
 );

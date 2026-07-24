@@ -160,54 +160,9 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "try-out scores",
   },
   {
-    label: "Deleting try-out leaderboard entries...",
-    mutation: reset.deleteTryoutLeaderboardEntriesBatch,
-    resultLabel: "try-out leaderboard entries",
-  },
-  {
-    label: "Deleting try-out leaderboard user stats...",
-    mutation: reset.deleteTryoutLeaderboardUserStatsBatch,
-    resultLabel: "try-out leaderboard user stats",
-  },
-  {
-    label: "Deleting try-out leaderboard scopes...",
-    mutation: reset.deleteTryoutLeaderboardScopesBatch,
-    resultLabel: "try-out leaderboard scopes",
-  },
-  {
-    label: "Deleting IRT scale publication queue...",
-    mutation: reset.deleteIrtScalePublicationQueueBatch,
-    resultLabel: "IRT scale publication queue entries",
-  },
-  {
     label: "Deleting IRT scale items...",
     mutation: reset.deleteIrtScaleItemsBatch,
     resultLabel: "IRT scale items",
-  },
-  {
-    label: "Deleting IRT scale quality checks...",
-    mutation: reset.deleteIrtScaleQualityChecksBatch,
-    resultLabel: "IRT scale quality checks",
-  },
-  {
-    label: "Deleting IRT scale quality refresh queue...",
-    mutation: reset.deleteIrtScaleQualityRefreshQueueBatch,
-    resultLabel: "IRT scale quality refresh queue entries",
-  },
-  {
-    label: "Deleting IRT calibration queue...",
-    mutation: reset.deleteIrtCalibrationQueueBatch,
-    resultLabel: "IRT calibration queue entries",
-  },
-  {
-    label: "Deleting IRT calibration attempts...",
-    mutation: reset.deleteIrtCalibrationAttemptsBatch,
-    resultLabel: "IRT calibration attempts",
-  },
-  {
-    label: "Deleting IRT calibration cache stats...",
-    mutation: reset.deleteIrtCalibrationCacheStatsBatch,
-    resultLabel: "IRT calibration cache stats",
   },
   {
     label: "Deleting IRT calibration runs...",

@@ -15,7 +15,7 @@ describe("contentSync/tryouts/impl", () => {
 
     await t.mutation(seedOldTrack);
     await t.mutation(async (ctx) => {
-      await bulkSyncTryoutsImpl(ctx, buildPayload());
+      await bulkSyncTryoutsImpl(ctx, buildPayload(), { sets: [] });
     });
 
     const snapshot = await t.query(async (ctx) => {

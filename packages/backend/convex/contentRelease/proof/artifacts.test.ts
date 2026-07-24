@@ -31,6 +31,7 @@ function upsertJson(
       artifactHash: values?.artifactHash ?? artifact.artifactHash,
       contentKey: values?.contentKey ?? "test:head-0",
       delivery: "public",
+      family: "material",
       locale: values?.locale ?? "en",
       operation: "upsert",
       rendererDomain: values?.rendererDomain ?? "mathematics",
