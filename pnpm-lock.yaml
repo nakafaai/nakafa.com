@@ -636,15 +636,9 @@ importers:
       '@effect/platform-node':
         specifier: 0.107.0
         version: 0.107.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
-      '@effect/workflow':
-        specifier: 0.18.2
-        version: 0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@hugeicons/core-free-icons':
         specifier: ^4.2.2
         version: 4.2.2
-      '@mantine/hooks':
-        specifier: ^9.4.1
-        version: 9.4.1(react@19.2.7)
       '@repo/design-system':
         specifier: workspace:*
         version: link:../design-system
@@ -654,24 +648,12 @@ importers:
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
-      date-fns:
-        specifier: 4.4.0
-        version: 4.4.0
       effect:
         specifier: ^3.21.4
         version: 3.21.4
-      motion:
-        specifier: ^12.42.2
-        version: 12.42.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      next-intl:
-        specifier: ^4.13.2
-        version: 4.13.2(@swc/helpers@0.5.21)(@typescript/typescript6@6.0.2)(next@16.2.10(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
       react:
         specifier: 19.2.7
         version: 19.2.7
-      react-aria-components:
-        specifier: ^1.19.0
-        version: 1.19.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       remark-mdx:
         specifier: 3.1.1
         version: 3.1.1
