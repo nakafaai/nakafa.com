@@ -10,7 +10,7 @@
     "@repo/design-system": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "class-variance-authority": "^0.7.1",
-    "effect": "3.22.0",
+    "effect": "catalog:",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-email": "6.9.1",

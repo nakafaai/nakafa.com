@@ -22,7 +22,7 @@
     "@t3-oss/env-nextjs": "^0.13.11",
     "better-auth": "1.6.25",
     "convex": "^1.42.3",
-    "effect": "3.22.0",
+    "effect": "catalog:",
     "next": "16.2.11",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

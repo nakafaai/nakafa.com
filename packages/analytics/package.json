@@ -10,7 +10,7 @@
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.13.11",
     "@vercel/analytics": "^2.0.1",
-    "effect": "3.22.0",
+    "effect": "catalog:",
     "posthog-js": "^1.407.2",
     "posthog-node": "^5.46.1",
     "react": "^19.2.8",

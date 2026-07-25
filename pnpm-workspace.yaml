@@ -2,6 +2,9 @@ packages:
   - apps/*
   - packages/*
 
+catalog:
+  effect: 3.22.0
+
 overrides:
   "@ai-sdk/devtools@1.0.7>@hono/node-server": "2.0.11"
   "@changesets/parse@0.4.3>js-yaml": "4.3.0"

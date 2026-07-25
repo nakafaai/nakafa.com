@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    effect:
+      specifier: 3.22.0
+      version: 3.22.0
+
 overrides:
   '@ai-sdk/devtools@1.0.7>@hono/node-server': 2.0.11
   '@changesets/parse@0.4.3>js-yaml': 4.3.0
@@ -62,7 +68,7 @@ importers:
         specifier: ^1.4.7
         version: 1.4.7
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
       node:
         specifier: runtime:^24.0.0
@@ -107,7 +113,7 @@ importers:
         specifier: ^1.42.3
         version: 1.42.3(react@19.2.8)
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
       next:
         specifier: 16.2.11
@@ -193,7 +199,7 @@ importers:
         specifier: ^1.42.3
         version: 1.42.3(react@19.2.8)
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
       express:
         specifier: ^5.2.1
@@ -344,7 +350,7 @@ importers:
         specifier: 4.4.0
         version: 4.4.0
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
       feed:
         specifier: ^6.0.0
@@ -480,7 +486,7 @@ importers:
         specifier: ^1.7.2
         version: 1.7.2
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
       gpt-tokenizer:
         specifier: ^3.4.0
@@ -520,7 +526,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(next@16.2.11(@opentelemetry/api@1.9.1)(@playwright/test@1.62.0)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
       posthog-js:
         specifier: ^1.407.2
@@ -611,7 +617,7 @@ importers:
         specifier: ^0.1.120
         version: 0.1.120(@standard-schema/spec@1.1.0)(convex@1.42.3(react@19.2.8))(hono@4.12.32)(react@19.2.8)(typescript@6.0.3)(zod@4.4.3)
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
       hono:
         specifier: ^4.12.32
@@ -681,7 +687,7 @@ importers:
         specifier: workspace:*
         version: link:../utilities
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
       react:
         specifier: 19.2.8
@@ -772,7 +778,7 @@ importers:
         specifier: 4.4.0
         version: 4.4.0
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
       embla-carousel-react:
         specifier: ^8.6.0
@@ -926,7 +932,7 @@ importers:
         specifier: ^0.7.1
         version: 0.7.1
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
       react:
         specifier: 19.2.8
@@ -973,7 +979,7 @@ importers:
         specifier: ^0.13.11
         version: 0.13.11(typescript@7.0.2)(zod@4.4.3)
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
     devDependencies:
       '@repo/typescript-config':
@@ -1001,7 +1007,7 @@ importers:
         specifier: ^0.13.11
         version: 0.13.11(typescript@7.0.2)(zod@4.4.3)
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
     devDependencies:
       '@next/mdx':
@@ -1074,7 +1080,7 @@ importers:
   packages/utilities:
     dependencies:
       effect:
-        specifier: 3.22.0
+        specifier: 'catalog:'
         version: 3.22.0
     devDependencies:
       '@repo/typescript-config':

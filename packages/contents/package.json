@@ -16,7 +16,7 @@
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
-    "effect": "3.22.0",
+    "effect": "catalog:",
     "react": "19.2.8",
     "remark-mdx": "3.1.1",
     "remark-parse": "11.0.0",

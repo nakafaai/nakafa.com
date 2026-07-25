@@ -23,7 +23,7 @@
     "ai": "^7.0.37",
     "convex": "^1.42.3",
     "dedent": "^1.7.2",
-    "effect": "3.22.0",
+    "effect": "catalog:",
     "gpt-tokenizer": "^3.4.0",
     "ipaddr.js": "^2.4.0",
     "ky": "^2.0.2",

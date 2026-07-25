@@ -19,6 +19,6 @@
     "@mdx-js/react": "^3.1.1",
     "@next/bundle-analyzer": "16.2.11",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "effect": "3.22.0"
+    "effect": "catalog:"
   }
 }
