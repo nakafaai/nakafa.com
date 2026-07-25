@@ -28,6 +28,7 @@ interface TestReleaseOptions extends TestIdentity {
 
 interface TestStateOptions {
   readonly active?: TestIdentity;
+  readonly article?: TestIdentity;
   readonly candidate?: TestIdentity;
   readonly nextSequence: number;
   readonly recovery?: TestIdentity;
@@ -132,6 +133,13 @@ export async function insertTestState(
           candidateManifestHash: options.candidate.manifestHash,
           candidateReleaseId: options.candidate.releaseId,
           candidateSequence: options.candidate.sequence,
+        }
+      : {}),
+    ...(options.article
+      ? {
+          articleManifestHash: options.article.manifestHash,
+          articleReleaseId: options.article.releaseId,
+          articleSequence: options.article.sequence,
         }
       : {}),
     key: "primary",

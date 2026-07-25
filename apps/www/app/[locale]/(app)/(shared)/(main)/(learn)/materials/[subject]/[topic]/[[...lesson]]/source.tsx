@@ -23,10 +23,12 @@ import {
   type ActiveContentReleaseId,
   getActiveContentIdentity,
 } from "@/lib/content/published/active";
-import { PublishedRendererMissingError } from "@/lib/content/published/errors";
-import { renderPublishedMathematics } from "@/lib/content/published/mathematics";
-import { getPublishedMaterialMetadata } from "@/lib/content/published/metadata";
-import { readActiveMaterialRoute } from "@/lib/content/published/route";
+import {
+  getPublishedMaterial,
+  renderPublishedMaterial,
+} from "@/lib/content/published/material";
+import { decodePublishedMaterial } from "@/lib/content/published/projection";
+import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getAksaraUrl, getGithubUrl } from "@/lib/utils/github";
 
 interface PreviewOwner {
@@ -67,8 +69,9 @@ async function readPublishedOwner(locale: Locale, publicPath: string) {
 
   const active = await getActiveContentIdentity();
   return await Effect.runPromise(
-    readActiveMaterialRoute({
+    readActiveContentRoute({
       activeReleaseId: active?.releaseId ?? null,
+      family: "material",
       locale,
       publicPath,
     })
@@ -101,8 +104,8 @@ async function readPreviewOwner(
 /**
  * Selects one exclusive body owner before any static source lookup.
  *
- * Permanently owned deletions and unsupported renderer domains never reach the
- * filesystem source, so an old MDX body cannot reappear after migration.
+ * Permanently owned deletions never reach the filesystem source, so an old MDX
+ * body cannot reappear after migration.
  */
 async function resolveMaterialOwner(params: MaterialParams) {
   const routeParams = await params;
@@ -125,21 +128,18 @@ async function resolveMaterialOwner(params: MaterialParams) {
     notFound();
   }
   if (published.kind === "found") {
-    if (published.rendererDomain !== "mathematics") {
-      return await Effect.runPromise(
-        Effect.fail(
-          new PublishedRendererMissingError({
-            rendererDomain: published.rendererDomain,
-          })
-        )
-      );
-    }
+    const { route } = await Effect.runPromise(
+      decodePublishedMaterial(published.projection, {
+        locale: request.locale,
+        publicPath: request.publicPath,
+      })
+    );
 
     return {
       activeReleaseId: published.activeReleaseId,
       kind: "published",
       locale: request.locale,
-      route: published.route,
+      route,
     } satisfies PublishedOwner;
   }
 
@@ -166,7 +166,7 @@ export async function readMaterialMetadata(params: MaterialParams) {
     };
   }
   if (owner.kind === "published") {
-    const published = await getPublishedMaterialMetadata({
+    const published = await getPublishedMaterial({
       activeReleaseId: owner.activeReleaseId,
       locale: owner.locale,
       publicPath: owner.route.publicPath,
@@ -209,7 +209,7 @@ export async function readMaterialPage(
     };
   }
   if (owner.kind === "published") {
-    const published = await renderPublishedMathematics({
+    const published = await renderPublishedMaterial({
       activeReleaseId: owner.activeReleaseId,
       locale: owner.locale,
       publicPath: owner.route.publicPath,

@@ -1,12 +1,14 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
+import { validateReleaseCursor } from "@repo/backend/convex/contentRelease/cursor";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadState } from "@repo/backend/convex/contentRelease/model";
 import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
 import {
   contentFamilyValidator,
   localeValidator,
+  rendererDomainValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
@@ -29,7 +31,9 @@ const projectionValidator = v.object({
   projectionJson: v.string(),
   publicPath: v.string(),
   releaseId: v.string(),
+  rendererDomain: rendererDomainValidator,
   sequence: v.number(),
+  sourcePath: v.string(),
 });
 
 const searchValidator = v.object({
@@ -103,39 +107,6 @@ const loadSearchIdentity = Effect.fn("contentRelease.loadSearchIdentity")(
   }
 );
 
-/** Rejects native continuation cursors from another active release. */
-const validateSearchCursor = Effect.fn("contentRelease.validateSearchCursor")(
-  function* (
-    cursor: null | string,
-    expectedManifestHash: null | string,
-    expectedReleaseId: null | string,
-    active: {
-      readonly manifestHash: string;
-      readonly releaseId: string;
-    } | null
-  ) {
-    if (cursor === null) {
-      if (expectedManifestHash !== null || expectedReleaseId !== null) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_LIMIT",
-          "An initial search page cannot claim a release cursor."
-        );
-      }
-      return;
-    }
-    if (
-      !active ||
-      expectedManifestHash !== active.manifestHash ||
-      expectedReleaseId !== active.releaseId
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_STALE_BASE",
-        "The active content release changed during search pagination."
-      );
-    }
-  }
-);
-
 /** Searches one relevance page from the active-only public search model. */
 const searchPage = Effect.fn("contentRelease.searchProjectionPage")(function* (
   ctx: QueryCtx,
@@ -163,7 +134,7 @@ const searchPage = Effect.fn("contentRelease.searchProjectionPage")(function* (
       "Search pages accept only their server-owned continuation cursor."
     );
   }
-  yield* validateSearchCursor(
+  yield* validateReleaseCursor(
     options.cursor,
     expectedManifestHash,
     expectedReleaseId,

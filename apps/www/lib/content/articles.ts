@@ -1,13 +1,12 @@
 import type { Article, Locale } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect } from "effect";
-
 import { getRuntimeContentRouteParentPage } from "@/lib/content/runtime/routes";
 
 const articleSummaryPageLimit = 100;
 const trailingSlashPattern = /\/$/;
 
-/** Reads article card summaries from Convex route catalog rows. */
+/** Reads native article card summaries while Aksara does not own the family. */
 export const getRuntimeArticleSummaries = Effect.fn(
   "www.contentArticles.summaries"
 )(function* (category: string, locale: Locale) {
@@ -16,7 +15,6 @@ export const getRuntimeArticleSummaries = Effect.fn(
 
   for (const row of rows) {
     const slug = getDirectChildSegment(row.route, `articles/${category}/`);
-
     if (!(slug && row.date) || articles.has(slug)) {
       continue;
     }
@@ -30,15 +28,12 @@ export const getRuntimeArticleSummaries = Effect.fn(
     });
   }
 
-  return Array.from(articles.values()).sort((a, b) =>
-    b.date.localeCompare(a.date)
+  return Array.from(articles.values()).sort((left, right) =>
+    right.date.localeCompare(left.date)
   );
 });
 
-/**
- * Reads one category page from the runtime route catalog so article listings
- * follow the same parent-route ordering as sitemap and search.
- */
+/** Reads one bounded category page from the native runtime route catalog. */
 function readArticleRouteParentPage(category: string, locale: Locale) {
   return getRuntimeContentRouteParentPage({
     cursor: null,
@@ -51,10 +46,7 @@ function readArticleRouteParentPage(category: string, locale: Locale) {
   }).pipe(Effect.map((page) => page.page));
 }
 
-/**
- * Extracts the immediate child segment under a category route; deeper article
- * slugs are intentionally collapsed to their first visible grouping segment.
- */
+/** Extracts the immediate child segment below one article category. */
 function getDirectChildSegment(route: string, prefix: string) {
   const [segment] = getRelativeRouteParts(
     route,
@@ -63,10 +55,7 @@ function getDirectChildSegment(route: string, prefix: string) {
   return segment;
 }
 
-/**
- * Returns route segments below one normalized parent path, or an empty list
- * when the runtime row is outside that parent.
- */
+/** Returns route segments below one normalized parent path. */
 function getRelativeRouteParts(route: string, basePath: string) {
   const normalizedRoute = cleanContentPath(route);
   const normalizedBase = cleanContentPath(basePath);
@@ -78,7 +67,7 @@ function getRelativeRouteParts(route: string, basePath: string) {
   return normalizedRoute.slice(normalizedBase.length + 1).split("/");
 }
 
-/** Normalizes runtime route strings before parent/child route comparisons. */
+/** Normalizes runtime route strings before parent comparisons. */
 function cleanContentPath(path: string) {
   return cleanSlug(path.startsWith("/") ? path.slice(1) : path);
 }

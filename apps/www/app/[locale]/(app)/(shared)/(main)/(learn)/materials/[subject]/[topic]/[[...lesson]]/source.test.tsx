@@ -18,6 +18,7 @@ import {
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import {
   previewMetadata,
+  previewProjection,
   previewPublicRoute,
   previewSourcePath,
 } from "@/test/content-preview";
@@ -28,17 +29,17 @@ const mocks = vi.hoisted(() => ({
   getAksaraUrl: vi.fn(),
   getGithubUrl: vi.fn(),
   getMaterialPageData: vi.fn(),
-  getPublishedMaterialMetadata: vi.fn(),
+  getPublishedMaterial: vi.fn(),
   getActiveContentIdentity: vi.fn(),
   hasPreviewConfig: vi.fn(),
   importContentModuleOrNull: vi.fn(),
   isMaterialLessonRoute: vi.fn(),
   notFound: vi.fn(),
-  readActiveMaterialRoute: vi.fn(),
+  readActiveContentRoute: vi.fn(),
   readMaterialPreview: vi.fn(),
   readMaterialRequest: vi.fn(),
   readMaterialRoute: vi.fn(),
-  renderPublishedMathematics: vi.fn(),
+  renderPublishedMaterial: vi.fn(),
 }));
 
 vi.mock("@repo/contents/_types/route/content", () => ({
@@ -69,17 +70,15 @@ vi.mock("@/lib/content/preview/config", () => ({
 vi.mock("@/lib/content/preview/material", () => ({
   readMaterialPreview: mocks.readMaterialPreview,
 }));
-vi.mock("@/lib/content/published/metadata", () => ({
-  getPublishedMaterialMetadata: mocks.getPublishedMaterialMetadata,
+vi.mock("@/lib/content/published/material", () => ({
+  getPublishedMaterial: mocks.getPublishedMaterial,
+  renderPublishedMaterial: mocks.renderPublishedMaterial,
 }));
 vi.mock("@/lib/content/published/active", () => ({
   getActiveContentIdentity: mocks.getActiveContentIdentity,
 }));
-vi.mock("@/lib/content/published/mathematics", () => ({
-  renderPublishedMathematics: mocks.renderPublishedMathematics,
-}));
 vi.mock("@/lib/content/published/route", () => ({
-  readActiveMaterialRoute: mocks.readActiveMaterialRoute,
+  readActiveContentRoute: mocks.readActiveContentRoute,
 }));
 vi.mock("@/lib/utils/github", () => ({
   getAksaraUrl: mocks.getAksaraUrl,
@@ -166,7 +165,7 @@ beforeEach(() => {
     publicPath,
   });
   mocks.getActiveContentIdentity.mockResolvedValue(null);
-  mocks.readActiveMaterialRoute.mockReturnValue(
+  mocks.readActiveContentRoute.mockReturnValue(
     Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
   );
   mocks.readMaterialRoute.mockResolvedValue({
@@ -215,7 +214,7 @@ describe("material page source", () => {
     });
     expect(mocks.connection).toHaveBeenCalledTimes(2);
     expect(mocks.readMaterialRequest).not.toHaveBeenCalled();
-    expect(mocks.readActiveMaterialRoute).not.toHaveBeenCalled();
+    expect(mocks.readActiveContentRoute).not.toHaveBeenCalled();
     expect(mocks.getActiveContentIdentity).not.toHaveBeenCalled();
     expect(mocks.readMaterialRoute).not.toHaveBeenCalled();
   });
@@ -239,18 +238,18 @@ describe("material page source", () => {
   });
 
   it("uses published ownership when preview is disabled", async () => {
-    mocks.readActiveMaterialRoute.mockReturnValue(
+    mocks.readActiveContentRoute.mockReturnValue(
       Effect.succeed({
         activeReleaseId,
         kind: "found",
+        projection: previewProjection,
         rendererDomain: "mathematics",
-        route: previewPublicRoute,
       })
     );
     mocks.getActiveContentIdentity.mockResolvedValue({
       releaseId: activeReleaseId,
     });
-    mocks.getPublishedMaterialMetadata.mockResolvedValue({
+    mocks.getPublishedMaterial.mockResolvedValue({
       metadata: previewMetadata,
       route: previewPublicRoute,
     });
@@ -262,12 +261,13 @@ describe("material page source", () => {
     });
     expect(mocks.readMaterialPreview).not.toHaveBeenCalled();
     expect(mocks.applyContentRuntimeCache).toHaveBeenCalledOnce();
-    expect(mocks.readActiveMaterialRoute).toHaveBeenCalledWith({
+    expect(mocks.readActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId,
+      family: "material",
       locale: "en",
       publicPath,
     });
-    expect(mocks.getPublishedMaterialMetadata).toHaveBeenCalledWith({
+    expect(mocks.getPublishedMaterial).toHaveBeenCalledWith({
       activeReleaseId,
       locale: "en",
       publicPath,
@@ -285,12 +285,12 @@ describe("material page source", () => {
     });
     expect(mocks.connection).toHaveBeenCalledOnce();
     expect(mocks.readMaterialPreview).toHaveBeenCalledOnce();
-    expect(mocks.readActiveMaterialRoute).toHaveBeenCalledOnce();
+    expect(mocks.readActiveContentRoute).toHaveBeenCalledOnce();
     expect(mocks.readMaterialRoute).toHaveBeenCalledOnce();
   });
 
   it("hard-fails an owned deletion without reading the native source", async () => {
-    mocks.readActiveMaterialRoute.mockReturnValue(
+    mocks.readActiveContentRoute.mockReturnValue(
       Effect.succeed({ activeReleaseId, kind: "missing" })
     );
     mocks.getActiveContentIdentity.mockResolvedValue({
@@ -308,7 +308,7 @@ describe("material page source", () => {
       actualReleaseId: activeReleaseId,
       expectedReleaseId: null,
     });
-    mocks.readActiveMaterialRoute.mockReturnValue(Effect.fail(mismatch));
+    mocks.readActiveContentRoute.mockReturnValue(Effect.fail(mismatch));
 
     await expect(
       readRejectedFailure(() => readMaterialPage(params()))
@@ -318,26 +318,37 @@ describe("material page source", () => {
     expect(mocks.importContentModuleOrNull).not.toHaveBeenCalled();
   });
 
-  it("preserves the typed failure for an unsupported published renderer", async () => {
-    mocks.readActiveMaterialRoute.mockReturnValue(
+  it("routes every published material domain through the shared renderer", async () => {
+    const body = <p>Chemistry body</p>;
+    mocks.readActiveContentRoute.mockReturnValue(
       Effect.succeed({
         activeReleaseId,
         kind: "found",
+        projection: previewProjection,
         rendererDomain: "chemistry",
-        route: previewPublicRoute,
       })
     );
     mocks.getActiveContentIdentity.mockResolvedValue({
       releaseId: activeReleaseId,
     });
-
-    await expect(
-      readRejectedFailure(() => readMaterialPage(params()))
-    ).resolves.toMatchObject({
-      _tag: "PublishedRendererMissingError",
-      rendererDomain: "chemistry",
+    mocks.renderPublishedMaterial.mockResolvedValue({
+      body,
+      metadata: previewMetadata,
+      rawMdx: "## Chemistry concept",
+      route: previewPublicRoute,
+      sourcePath: previewSourcePath,
+      sourceRevision: null,
     });
-    expect(mocks.renderPublishedMathematics).not.toHaveBeenCalled();
+
+    await expect(readMaterialPage(params())).resolves.toMatchObject({
+      body: "## Chemistry concept",
+      children: body,
+    });
+    expect(mocks.renderPublishedMaterial).toHaveBeenCalledWith({
+      activeReleaseId,
+      locale: "en",
+      publicPath,
+    });
     expect(mocks.readMaterialRoute).not.toHaveBeenCalled();
   });
 
@@ -348,18 +359,18 @@ describe("material page source", () => {
     "renders published body and metadata with %s",
     async (_label, revision, expectedSourceUrl) => {
       const body = <p>Published body</p>;
-      mocks.readActiveMaterialRoute.mockReturnValue(
+      mocks.readActiveContentRoute.mockReturnValue(
         Effect.succeed({
           activeReleaseId,
           kind: "found",
+          projection: previewProjection,
           rendererDomain: "mathematics",
-          route: previewPublicRoute,
         })
       );
       mocks.getActiveContentIdentity.mockResolvedValue({
         releaseId: activeReleaseId,
       });
-      mocks.renderPublishedMathematics.mockResolvedValue({
+      mocks.renderPublishedMaterial.mockResolvedValue({
         body,
         metadata: previewMetadata,
         rawMdx: "## Published function concept",
@@ -387,7 +398,7 @@ describe("material page source", () => {
         expect(mocks.getAksaraUrl).not.toHaveBeenCalled();
       }
       expect(mocks.readMaterialRoute).not.toHaveBeenCalled();
-      expect(mocks.renderPublishedMathematics).toHaveBeenCalledWith({
+      expect(mocks.renderPublishedMaterial).toHaveBeenCalledWith({
         activeReleaseId,
         locale: "en",
         publicPath,
@@ -465,7 +476,7 @@ describe("material page source", () => {
     });
 
     await expect(readMaterialPage(params())).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(mocks.readActiveMaterialRoute).not.toHaveBeenCalled();
+    expect(mocks.readActiveContentRoute).not.toHaveBeenCalled();
     expect(mocks.getActiveContentIdentity).not.toHaveBeenCalled();
     expect(mocks.readMaterialRoute).not.toHaveBeenCalled();
   });

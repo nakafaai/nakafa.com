@@ -35,7 +35,7 @@ function getDisplayNameFromContext(context: SEOContext): string {
     return context.material;
   }
   if (context.type === "article") {
-    return context.category;
+    return context.categoryLabel;
   }
   if (context.type === "curriculum-context") {
     return context.program ?? context.parent ?? "";

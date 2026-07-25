@@ -1,9 +1,5 @@
 import { getGradeNonNumeric } from "@repo/contents/_lib/curriculum/grade";
-import type {
-  ArticleCategory,
-  Grade,
-  Material,
-} from "@repo/contents/_types/taxonomy";
+import type { Grade, Material } from "@repo/contents/_types/taxonomy";
 import { Effect, Option } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
@@ -26,10 +22,6 @@ const fetchMetadataTranslations = (locale: Locale) =>
 /** Fetches translations for the Subject namespace. */
 const fetchSubjectTranslations = (locale: Locale) =>
   fetchSEOTranslationsNamespace(locale, "Subject");
-
-/** Fetches translations for the Articles namespace. */
-const fetchArticlesTranslations = (locale: Locale) =>
-  fetchSEOTranslationsNamespace(locale, "Articles");
 
 /** Fetches translations for the SEO namespace. */
 const fetchSEOTranslations = (locale: Locale) =>
@@ -84,17 +76,6 @@ const translateSubjectMaterial = Effect.fn("SEO.translateSubjectMaterial")(
     Effect.gen(function* () {
       const tSubject = yield* fetchSubjectTranslations(locale);
       return tSubject(material);
-    })
-);
-
-/**
- * Translates category name from Articles namespace.
- */
-const translateArticleCategory = Effect.fn("SEO.translateArticleCategory")(
-  (category: ArticleCategory, locale: Locale) =>
-    Effect.gen(function* () {
-      const tArticles = yield* fetchArticlesTranslations(locale);
-      return tArticles(category);
     })
 );
 
@@ -204,29 +185,28 @@ const generateCurriculumMetadata = Effect.fn("SEO.generateCurriculumMetadata")(
 const generateArticleMetadata = Effect.fn("SEO.generateArticleMetadata")(
   (context: Extract<SEOContext, { type: "article" }>, locale: Locale) =>
     Effect.gen(function* () {
-      const { data, category } = context;
+      const { data, categoryLabel } = context;
 
-      const [t, effectiveTitle, categoryDisplayName] = yield* Effect.all([
+      const [t, effectiveTitle] = yield* Effect.all([
         fetchSEOTranslations(locale),
         getEffectiveTitle(data, locale),
-        translateArticleCategory(category, locale),
       ]);
 
       return {
         title: t("article.title", {
           title: effectiveTitle,
-          category: categoryDisplayName,
+          category: categoryLabel,
         }),
         description:
           getContentDescription(data) ??
           t("article.description", {
             title: effectiveTitle,
-            category: categoryDisplayName,
+            category: categoryLabel,
           }),
         keywords: createSEOKeywords(
           t("article.keywords", {
             title: effectiveTitle,
-            category: categoryDisplayName,
+            category: categoryLabel,
           })
         ),
       };

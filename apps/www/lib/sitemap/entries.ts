@@ -5,11 +5,8 @@ import { Effect } from "effect";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
-import {
-  baseRoutes,
-  getSitemapPageDescriptor,
-  readSitemapRoutePage,
-} from "@/lib/sitemap/routes";
+import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
+import { baseRoutes, readSitemapRoutePage } from "@/lib/sitemap/routes";
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
 type SitemapChangeFrequency = NonNullable<SitemapEntry["changeFrequency"]>;

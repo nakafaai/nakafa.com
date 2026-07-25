@@ -40,7 +40,7 @@ interface StoredEnvelope {
 }
 type AbortReceipt = Infer<typeof abortReceiptValidator>;
 type PublicationReceipt = Infer<typeof publicationReceiptValidator>;
-interface SearchSyncResult {
+interface ReadModelSyncResult {
   readonly complete: boolean;
   readonly processed: number;
 }
@@ -70,10 +70,15 @@ const recoveryReference = makeFunctionReference<
   { manifestHash: string; releaseId: string; rendererJson: string },
   PublicationReceipt
 >("contentRelease/activate:activateRecovery");
+const articleSyncReference = makeFunctionReference<
+  "mutation",
+  { releaseId: string },
+  ReadModelSyncResult
+>("contentRelease/article/sync:sync");
 const searchSyncReference = makeFunctionReference<
   "mutation",
   { releaseId: string },
-  SearchSyncResult
+  ReadModelSyncResult
 >("contentRelease/search/sync:sync");
 
 /** Authenticates one lifecycle request and its immutable release identity. */
@@ -107,25 +112,28 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
   return envelope.rendererJson;
 });
 
-/** Resumes active-only search updates until the activated release is complete. */
-const syncActiveSearch = Effect.fn("contentRelease.syncActiveSearch")(
-  function* (ctx: ActionCtx, releaseId: string) {
-    while (true) {
-      const result = yield* callInternal(() =>
-        ctx.runMutation(searchSyncReference, { releaseId })
+/** Resumes one active-only read model until the release is fully indexed. */
+const syncActiveModel = Effect.fn("contentRelease.syncActiveModel")(function* (
+  ctx: ActionCtx,
+  releaseId: string,
+  label: string,
+  reference: typeof articleSyncReference
+) {
+  while (true) {
+    const result = yield* callInternal(() =>
+      ctx.runMutation(reference, { releaseId })
+    );
+    if (result.complete) {
+      return;
+    }
+    if (result.processed === 0) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `${label} sync ${releaseId} stopped without progress.`
       );
-      if (result.complete) {
-        return;
-      }
-      if (result.processed === 0) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Search sync ${releaseId} stopped without progress.`
-        );
-      }
     }
   }
-);
+});
 
 /** Executes authenticated verification, activation, or recovery activation. */
 export const advancePublication = Effect.fn(
@@ -163,7 +171,8 @@ export const advancePublication = Effect.fn(
         rendererJson,
       })
     );
-    yield* syncActiveSearch(ctx, releaseId);
+    yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
+    yield* syncActiveModel(ctx, releaseId, "Article", articleSyncReference);
     return { ok: true, operation: request.operation, value };
   }
   const value = yield* callInternal(() =>
@@ -173,6 +182,7 @@ export const advancePublication = Effect.fn(
       rendererJson,
     })
   );
-  yield* syncActiveSearch(ctx, releaseId);
+  yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
+  yield* syncActiveModel(ctx, releaseId, "Article", articleSyncReference);
   return { ok: true, operation: request.operation, value };
 });

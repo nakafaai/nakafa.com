@@ -20,4 +20,14 @@ describe("learning route prerender selection", () => {
       slug: "route-511",
     });
   });
+
+  it("uses an explicit build placeholder only for an empty inventory", () => {
+    const placeholder = { slug: "build-placeholder" };
+
+    expect(selectLearningStaticParams([], placeholder)).toEqual([placeholder]);
+    expect(
+      selectLearningStaticParams([{ slug: "real-route" }], placeholder)
+    ).toEqual([{ slug: "real-route" }]);
+    expect(selectLearningStaticParams([])).toEqual([]);
+  });
 });

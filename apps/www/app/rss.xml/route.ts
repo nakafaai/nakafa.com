@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
 import { listRuntimeLatestContentRoutes } from "@/lib/content/runtime/routes";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
@@ -97,11 +98,7 @@ function getFeedContentRoutes() {
         routing.locales,
         (locale) =>
           Effect.all([
-            listRuntimeLatestContentRoutes({
-              limit: RSS_CONTENT_ROUTE_LIMIT,
-              locale,
-              section: "articles",
-            }),
+            readFeedArticles(locale),
             listRuntimeLatestContentRoutes({
               limit: RSS_CONTENT_ROUTE_LIMIT,
               locale,
@@ -118,3 +115,29 @@ function getFeedContentRoutes() {
     })
   );
 }
+
+/** Selects published articles after cutover and source-backed rows before it. */
+const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
+  locale: (typeof routing.locales)[number]
+) {
+  const published = yield* readPublishedLatestArticles(
+    locale,
+    RSS_CONTENT_ROUTE_LIMIT
+  );
+  if (!published.managed) {
+    return yield* listRuntimeLatestContentRoutes({
+      limit: RSS_CONTENT_ROUTE_LIMIT,
+      locale,
+      section: "articles",
+    });
+  }
+
+  return published.articles.map((article) => ({
+    authors: article.authors,
+    date: Date.parse(`${article.date}T00:00:00.000Z`),
+    description: article.description,
+    locale,
+    route: article.publicPath,
+    title: article.title,
+  }));
+});

@@ -4,23 +4,18 @@ import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
-  loadRelease,
-  loadState,
+  loadReleaseItems,
   loadVersion,
 } from "@repo/backend/convex/contentRelease/model";
 import {
   decodeArtifactJson,
   decodeProjectionJson,
-  decodeReleaseJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import {
   deleteSearchEntry,
   writeSearchEntry,
 } from "@repo/backend/convex/contentRelease/search/write";
-import {
-  COMPACTION_PAGE_BYTES,
-  RELEASE_PAGE_LIMIT,
-} from "@repo/backend/convex/contentRelease/spec";
+import { loadSyncRelease } from "@repo/backend/convex/contentRelease/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect } from "effect";
@@ -104,57 +99,12 @@ const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (
   yield* writeSearchEntry(ctx, head, decoded, artifact.payload.plainText);
 });
 
-/** Loads one byte- and row-bounded page of changed release identities. */
-const loadSearchItems = Effect.fn("contentRelease.loadSearchItems")(function* (
-  ctx: MutationCtx,
-  releaseId: string,
-  afterIndex: number
-) {
-  return yield* Effect.promise(() =>
-    ctx.db
-      .query("contentItems")
-      .withIndex("by_releaseId_and_index", (index) =>
-        index.eq("releaseId", releaseId).gt("index", afterIndex)
-      )
-      .paginate({
-        cursor: null,
-        maximumBytesRead: COMPACTION_PAGE_BYTES,
-        maximumRowsRead: RELEASE_PAGE_LIMIT,
-        numItems: RELEASE_PAGE_LIMIT,
-      })
-  );
-});
-
 /** Advances the active-only search model through one durable release page. */
 export const syncSearch = Effect.fn("contentRelease.syncSearch")(function* (
   ctx: MutationCtx,
   releaseId: string
 ) {
-  const [release, state] = yield* Effect.all([
-    loadRelease(ctx, releaseId),
-    loadState(ctx),
-  ]);
-  if (
-    !state ||
-    release.status !== "completed" ||
-    state.activeReleaseId !== releaseId ||
-    state.activeSequence !== release.sequence
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_STATE",
-      `Search sync ${releaseId} is not the active completed release.`
-    );
-  }
-  const signed = yield* decodeReleaseJson(release.releaseJson);
-  if (
-    signed.manifestHash !== state.activeManifestHash ||
-    signed.manifest.itemCount < 0
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Search sync ${releaseId} lost its active manifest.`
-    );
-  }
+  const { release, signed, state } = yield* loadSyncRelease(ctx, releaseId);
   if (
     state.searchManifestHash === signed.manifestHash &&
     state.searchReleaseId === releaseId &&
@@ -163,7 +113,7 @@ export const syncSearch = Effect.fn("contentRelease.syncSearch")(function* (
     return { complete: true, processed: 0 };
   }
   const afterIndex = release.searchIndex ?? -1;
-  const page = yield* loadSearchItems(ctx, releaseId, afterIndex);
+  const page = yield* loadReleaseItems(ctx, releaseId, afterIndex);
   for (const [offset, row] of page.page.entries()) {
     if (row.index !== afterIndex + offset + 1) {
       return yield* releaseFail(

@@ -13,6 +13,7 @@ const mockCacheTag = vi.hoisted(() => vi.fn());
 const mockGetContentListingLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetContentPageLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetRuntimeContentRouteCounts = vi.hoisted(() => vi.fn());
+const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
 const mockGetSiteLlmsEntries = vi.hoisted(() => vi.fn());
 
 const articleEntry: LlmsEntry = {
@@ -57,16 +58,24 @@ vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRouteCounts: mockGetRuntimeContentRouteCounts,
 }));
 
+vi.mock("@/lib/content/article/sitemap", () => ({
+  readPublishedArticleBuckets: mockReadPublishedArticleBuckets,
+}));
+
 beforeEach(() => {
   mockCacheLife.mockClear();
   mockCacheTag.mockClear();
   mockGetContentListingLlmsEntries.mockReset();
   mockGetContentPageLlmsEntries.mockReset();
   mockGetRuntimeContentRouteCounts.mockReset();
+  mockReadPublishedArticleBuckets.mockReset();
   mockGetSiteLlmsEntries.mockReset();
   mockGetContentListingLlmsEntries.mockReturnValue(Effect.succeed(null));
   mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([articleEntry]));
   mockGetSiteLlmsEntries.mockReturnValue([siteEntry]);
+  mockReadPublishedArticleBuckets.mockReturnValue(
+    Effect.succeed({ articleCount: 0, buckets: [], managed: false })
+  );
   mockGetRuntimeContentRouteCounts.mockReturnValue(
     Effect.succeed([
       { count: 250, locale: "en", section: "articles", syncedAt: 1 },
@@ -131,6 +140,24 @@ describe("llms indexes", () => {
     );
     expect(sectionIndex).toContain("250 English articles routes");
     expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
+  });
+
+  it("builds article page maps from published ownership", async () => {
+    mockReadPublishedArticleBuckets.mockReturnValue(
+      Effect.succeed({
+        articleCount: 42,
+        buckets: ["000", "abc"],
+        managed: true,
+      })
+    );
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/articles")
+    );
+
+    expect(text).toContain("42 English articles routes");
+    expect(text).toContain("2 bounded published partitions");
+    expect(text).toContain(`${BASE_URL}/llms/en/articles/page/1/llms.txt`);
   });
 
   it("keeps empty and single-page section maps constant", async () => {
@@ -211,7 +238,7 @@ describe("llms indexes", () => {
 
     expect(pageText).toContain("# Nakafa English Articles Page 99");
     expect(pageText).toContain(
-      "This bounded articles route-catalog page is currently empty."
+      "This bounded articles content page is currently empty."
     );
   });
 

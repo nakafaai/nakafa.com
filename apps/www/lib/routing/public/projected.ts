@@ -4,7 +4,7 @@ import { Effect } from "effect";
 import { hasLocale } from "next-intl";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
-import { readActiveMaterialRoute } from "@/lib/content/published/route";
+import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getRuntimePublicRoute } from "@/lib/content/runtime/routes";
 
 /**
@@ -51,8 +51,9 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   }
   if (surface.key === "subject") {
     const identity = yield* readActiveContentIdentity();
-    const ownership = yield* readActiveMaterialRoute({
+    const ownership = yield* readActiveContentRoute({
       activeReleaseId: identity?.releaseId ?? null,
+      family: "material",
       locale,
       publicPath,
     });

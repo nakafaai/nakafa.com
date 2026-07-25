@@ -8,6 +8,10 @@ import type {
   localeValidator,
   releaseRoleValidator,
 } from "@repo/backend/convex/contentRelease/spec";
+import {
+  COMPACTION_PAGE_BYTES,
+  RELEASE_PAGE_LIMIT,
+} from "@repo/backend/convex/contentRelease/spec";
 import type { Infer } from "convex/values";
 import { Effect } from "effect";
 
@@ -198,6 +202,25 @@ export const loadItem = Effect.fn("contentRelease.loadItem")(function* (
       .unique()
   );
 });
+
+/** Reads one byte- and row-bounded page of changed release identities. */
+export const loadReleaseItems = Effect.fn("contentRelease.loadReleaseItems")(
+  function* (ctx: ReadCtx, releaseId: string, afterIndex: number) {
+    return yield* Effect.promise(() =>
+      ctx.db
+        .query("contentItems")
+        .withIndex("by_releaseId_and_index", (index) =>
+          index.eq("releaseId", releaseId).gt("index", afterIndex)
+        )
+        .paginate({
+          cursor: null,
+          maximumBytesRead: COMPACTION_PAGE_BYTES,
+          maximumRowsRead: RELEASE_PAGE_LIMIT,
+          numItems: RELEASE_PAGE_LIMIT,
+        })
+    );
+  }
+);
 
 /** Reads one item through its stable locale-specific content identity. */
 export const loadIdentityItem = Effect.fn("contentRelease.loadIdentityItem")(

@@ -3,16 +3,16 @@ import { syncSearch } from "@repo/backend/convex/contentRelease/search/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import {
-  TEST_DIGEST,
-  testProjectionJson,
-  testReleaseJson,
-} from "@repo/backend/test/content-release";
+import { testProjectionJson } from "@repo/backend/test/content-release";
 import {
   insertTestState,
-  insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
+import {
+  insertCompletedRelease,
+  insertReleaseItem,
+  selectActiveRelease,
+} from "@repo/backend/test/content-sync";
 import {
   insertRuntimeBinding,
   insertRuntimeVersion,
@@ -30,65 +30,6 @@ const NEXT = {
   releaseId: "release-search-sync-next",
   sequence: 2,
 } satisfies TestIdentity;
-
-/** Inserts one terminal release with an exact changed-item count. */
-async function insertCompletedRelease(
-  ctx: MutationCtx,
-  identity: TestIdentity,
-  itemCount: number,
-  base?: TestIdentity
-) {
-  await insertZeroRelease(ctx, {
-    ...identity,
-    base,
-    role: "candidate",
-    status: "completed",
-  });
-  const release = await ctx.db
-    .query("contentReleases")
-    .withIndex("by_releaseId", (index) =>
-      index.eq("releaseId", identity.releaseId)
-    )
-    .unique();
-  if (!release) {
-    throw new Error("Expected completed search release.");
-  }
-  await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: testReleaseJson({
-      baseManifestHash: base?.manifestHash,
-      baseReleaseId: base?.releaseId,
-      itemCount,
-      manifestHash: identity.manifestHash,
-      projectionCount: itemCount,
-      releaseId: identity.releaseId,
-      resultCount: itemCount,
-      upsertCount: itemCount,
-    }),
-  });
-}
-
-/** Inserts one release-owned identity consumed by active search synchronization. */
-function insertItem(
-  ctx: MutationCtx,
-  identity: TestIdentity,
-  contentKey: string,
-  index: number
-) {
-  return ctx.db.insert("contentItems", {
-    artifactReady: false,
-    contentKey,
-    index,
-    itemBatchHash: TEST_DIGEST,
-    itemBatchIndex: 0,
-    itemJson: "{}",
-    locale: "en",
-    projectionReady: false,
-    releaseId: identity.releaseId,
-    rollbackJson: "{}",
-    sequence: identity.sequence,
-    stagedAt: 0,
-  });
-}
 
 /** Inserts one public head selected by the active release sequence. */
 async function insertPublicHead(
@@ -116,19 +57,6 @@ async function insertPublicHead(
   });
 }
 
-/** Selects one completed release before its search model catches up. */
-async function selectActive(ctx: MutationCtx, identity: TestIdentity) {
-  const state = await ctx.db.query("contentState").unique();
-  if (!state) {
-    throw new Error("Expected search synchronization state.");
-  }
-  await ctx.db.patch("contentState", state._id, {
-    activeManifestHash: identity.manifestHash,
-    activeReleaseId: identity.releaseId,
-    activeSequence: identity.sequence,
-  });
-}
-
 describe("contentRelease/search/sync", () => {
   it("resumes bounded pages and publishes the generation only when complete", async () => {
     const t = convexTest(schema, convexModules);
@@ -137,7 +65,7 @@ describe("contentRelease/search/sync", () => {
       await insertTestState(ctx, { active: BASE, nextSequence: 2 });
       for (let index = 0; index < 9; index += 1) {
         const contentKey = `test:sync-${index}`;
-        await insertItem(ctx, BASE, contentKey, index);
+        await insertReleaseItem(ctx, BASE, contentKey, index);
         await insertPublicHead(ctx, BASE, contentKey, index, "search body");
       }
     });
@@ -179,7 +107,7 @@ describe("contentRelease/search/sync", () => {
       await insertTestState(ctx, { active: BASE, nextSequence: 3 });
       for (let index = 0; index < 3; index += 1) {
         const contentKey = `test:change-${index}`;
-        await insertItem(ctx, BASE, contentKey, index);
+        await insertReleaseItem(ctx, BASE, contentKey, index);
         await insertPublicHead(ctx, BASE, contentKey, index, "old body");
       }
     });
@@ -189,7 +117,7 @@ describe("contentRelease/search/sync", () => {
     await t.mutation(async (ctx) => {
       await insertCompletedRelease(ctx, NEXT, 3, BASE);
       for (let index = 0; index < 3; index += 1) {
-        await insertItem(ctx, NEXT, `test:change-${index}`, index);
+        await insertReleaseItem(ctx, NEXT, `test:change-${index}`, index);
       }
       await insertPublicHead(ctx, NEXT, "test:change-0", 0, "new body");
       await ctx.db.insert("contentHeads", {
@@ -210,7 +138,7 @@ describe("contentRelease/search/sync", () => {
         }),
         publicPath: "test/sync-2",
       });
-      await selectActive(ctx, NEXT);
+      await selectActiveRelease(ctx, NEXT);
     });
 
     await expect(

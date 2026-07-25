@@ -29,7 +29,7 @@ describe("generateFallbackMetadata", () => {
       generateFallbackMetadata(
         {
           type: "article",
-          category: "politics",
+          categoryLabel: "Politics",
           data: {
             title: "Regional Elections",
             description: "Article fallback.",
@@ -38,7 +38,7 @@ describe("generateFallbackMetadata", () => {
         "en"
       )
     ).toStrictEqual({
-      title: "Regional Elections - politics - Nakafa",
+      title: "Regional Elections - Politics - Nakafa",
       description: "Article fallback. Regional Elections",
       keywords: [],
     });

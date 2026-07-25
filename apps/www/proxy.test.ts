@@ -39,6 +39,7 @@ const mockLocaleRouting = vi.hoisted(() => ({
 const runtimeMocks = vi.hoisted(() => ({
   readActive: vi.fn(),
   readActiveIdentity: vi.fn(),
+  readArticleCategory: vi.fn(),
   readContent: vi.fn(),
   readPublic: vi.fn(),
 }));
@@ -72,8 +73,11 @@ vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: runtimeMocks.readContent,
   getRuntimePublicRoute: runtimeMocks.readPublic,
 }));
+vi.mock("@/lib/content/article/ownership", () => ({
+  readPublishedArticleCategory: runtimeMocks.readArticleCategory,
+}));
 vi.mock("@/lib/content/published/route", () => ({
-  readActiveMaterialRoute: runtimeMocks.readActive,
+  readActiveContentRoute: runtimeMocks.readActive,
 }));
 vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: runtimeMocks.readActiveIdentity,
@@ -98,6 +102,9 @@ describe("proxy", () => {
     runtimeMocks.readActiveIdentity
       .mockReset()
       .mockReturnValue(Effect.succeed({ releaseId: "release-active" }));
+    runtimeMocks.readArticleCategory
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ exists: false, managed: false }));
     previewMocks.configured.mockReset().mockReturnValue(false);
     previewMocks.internal.mockReset().mockReturnValue(Effect.succeed(false));
     previewMocks.route.mockReset().mockReturnValue(Effect.succeed(false));

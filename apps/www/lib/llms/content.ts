@@ -5,12 +5,15 @@ import {
   type ActiveContentReleaseId,
   readActiveContentIdentity,
 } from "@/lib/content/published/active";
-import { readActiveMaterialRoute } from "@/lib/content/published/route";
+import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getRuntimePublicRoute } from "@/lib/content/runtime/routes";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
 import { getLlmsLegalPageText } from "@/lib/llms/legal";
 import { getCachedLlmsMdxText } from "@/lib/llms/mdx";
-import { getCachedPublishedMaterialText } from "@/lib/llms/published";
+import {
+  getCachedPublishedText,
+  type PublishedMarkdownInput,
+} from "@/lib/llms/published";
 import { getQuranLlmsText } from "@/lib/llms/quran";
 
 const PROJECTED_PUBLIC_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
@@ -26,6 +29,7 @@ const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
 type MarkdownSource =
   | {
       readonly activeReleaseId: ActiveContentReleaseId;
+      readonly family: PublishedMarkdownInput["family"];
       readonly kind: "published";
       readonly publicPath: string;
     }
@@ -107,21 +111,19 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
 const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
     const routeSegment = readRouteSegment(cleanSlug);
-    if (!PROJECTED_PUBLIC_ROUTE_SEGMENTS.has(routeSegment)) {
-      const source: MarkdownSource = { cleanSlug, kind: "source" };
-      return source;
-    }
-
-    if (MATERIAL_ROUTE_SEGMENTS.has(routeSegment)) {
+    const publishedFamily = readPublishedFamily(routeSegment);
+    if (publishedFamily) {
       const active = yield* readActiveContentIdentity();
-      const activeRoute = yield* readActiveMaterialRoute({
+      const activeRoute = yield* readActiveContentRoute({
         activeReleaseId: active?.releaseId ?? null,
+        family: publishedFamily,
         locale,
         publicPath: cleanSlug,
       });
       if (activeRoute.kind === "found") {
         const source: MarkdownSource = {
           activeReleaseId: activeRoute.activeReleaseId,
+          family: publishedFamily,
           kind: "published",
           publicPath: cleanSlug,
         };
@@ -130,6 +132,11 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
       if (activeRoute.kind === "missing") {
         return null;
       }
+    }
+
+    if (!PROJECTED_PUBLIC_ROUTE_SEGMENTS.has(routeSegment)) {
+      const source: MarkdownSource = { cleanSlug, kind: "source" };
+      return source;
     }
 
     const publicRoute = yield* getRuntimePublicRoute({
@@ -159,6 +166,19 @@ function readRouteSegment(cleanSlug: string) {
   return cleanSlug.split("/").find(Boolean) ?? "";
 }
 
+/** Maps one stable public route namespace to its body-bearing family. */
+function readPublishedFamily(
+  routeSegment: string
+): PublishedMarkdownInput["family"] | null {
+  if (routeSegment === "articles") {
+    return "article";
+  }
+  if (MATERIAL_ROUTE_SEGMENTS.has(routeSegment)) {
+    return "material";
+  }
+  return null;
+}
+
 /** Reads one family-specific published markdown cache without source fallback. */
 function readPublishedMarkdown(
   source: Extract<MarkdownSource, { readonly kind: "published" }>,
@@ -166,8 +186,9 @@ function readPublishedMarkdown(
 ) {
   const input = {
     activeReleaseId: source.activeReleaseId,
+    family: source.family,
     locale,
     publicPath: source.publicPath,
   };
-  return getCachedPublishedMaterialText(input);
+  return getCachedPublishedText(input);
 }

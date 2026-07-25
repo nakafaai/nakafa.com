@@ -2,6 +2,7 @@
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { describe, expect, it } from "vitest";
 import {
+  getAksaraTreeUrl,
   getAksaraUrl,
   getGithubUrl,
   getRawAksaraUrl,
@@ -34,6 +35,11 @@ describe("GitHub URL utilities", () => {
       getAksaraUrl({ path: "packages/corpus/test/en.mdx", revision })
     ).toBe(
       `https://github.com/nakafaai/aksara/blob/${revision}/packages/corpus/test/en.mdx`
+    );
+    expect(
+      getAksaraTreeUrl({ path: "packages/corpus/articles", revision })
+    ).toBe(
+      `https://github.com/nakafaai/aksara/tree/${revision}/packages/corpus/articles`
     );
     expect(
       getRawAksaraUrl({

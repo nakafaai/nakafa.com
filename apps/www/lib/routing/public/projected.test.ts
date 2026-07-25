@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 
 const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
-const mockReadActiveMaterialRoute = vi.hoisted(() => vi.fn());
+const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockMatchesPreviewRoute = vi.hoisted(() => vi.fn());
 const activeReleaseId = "release-active";
@@ -16,7 +16,7 @@ vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimePublicRoute: mockGetRuntimePublicRoute,
 }));
 vi.mock("@/lib/content/published/route", () => ({
-  readActiveMaterialRoute: mockReadActiveMaterialRoute,
+  readActiveContentRoute: mockReadActiveContentRoute,
 }));
 vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: mockReadActiveContentIdentity,
@@ -25,8 +25,8 @@ vi.mock("@/lib/content/published/active", () => ({
 describe("projected public html route rejection", () => {
   beforeEach(() => {
     mockGetRuntimePublicRoute.mockReset();
-    mockReadActiveMaterialRoute.mockReset();
-    mockReadActiveMaterialRoute.mockReturnValue(
+    mockReadActiveContentRoute.mockReset();
+    mockReadActiveContentRoute.mockReturnValue(
       Effect.succeed({ activeReleaseId, kind: "unmanaged" })
     );
     mockReadActiveContentIdentity
@@ -89,12 +89,12 @@ describe("projected public html route rejection", () => {
         "subjects/mathematics/function-composition-inverse-function/function-concept",
     });
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
-    expect(mockReadActiveMaterialRoute).not.toHaveBeenCalled();
+    expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
   });
 
   it("uses active ownership for new routes and permanent tombstones", async () => {
     const pathname = "/en/subjects/mathematics/new-topic/new-published-lesson";
-    mockReadActiveMaterialRoute
+    mockReadActiveContentRoute
       .mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId,
@@ -112,8 +112,9 @@ describe("projected public html route rejection", () => {
     await expect(
       Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
     ).resolves.toBe("en");
-    expect(mockReadActiveMaterialRoute).toHaveBeenCalledWith({
+    expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId,
+      family: "material",
       locale: "en",
       publicPath: "subjects/mathematics/new-topic/new-published-lesson",
     });
@@ -122,7 +123,7 @@ describe("projected public html route rejection", () => {
 
   it("keys unmanaged ownership to the absence of an active release", async () => {
     mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
-    mockReadActiveMaterialRoute.mockReturnValueOnce(
+    mockReadActiveContentRoute.mockReturnValueOnce(
       Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
     );
     mockGetRuntimePublicRoute.mockReturnValueOnce(
@@ -136,8 +137,9 @@ describe("projected public html route rejection", () => {
         )
       )
     ).resolves.toBeNull();
-    expect(mockReadActiveMaterialRoute).toHaveBeenCalledWith({
+    expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId: null,
+      family: "material",
       locale: "en",
       publicPath: "subjects/chemistry/green-chemistry/definition",
     });
@@ -187,7 +189,7 @@ describe("projected public html route rejection", () => {
     }
 
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
-    expect(mockReadActiveMaterialRoute).not.toHaveBeenCalled();
+    expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
     expect(mockReadActiveContentIdentity).not.toHaveBeenCalled();
   });
 });

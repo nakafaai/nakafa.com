@@ -36,6 +36,17 @@ export function getAksaraUrl({
   return `https://github.com${AKSARA_URL}/blob/${revision}${normalizeGithubPath(path)}` as const;
 }
 
+/** Builds one immutable Aksara directory browser URL at an exact Git commit. */
+export function getAksaraTreeUrl({
+  path,
+  revision,
+}: {
+  readonly path: string;
+  readonly revision: GitCommitSha;
+}) {
+  return `https://github.com${AKSARA_URL}/tree/${revision}${normalizeGithubPath(path)}` as const;
+}
+
 /** Builds one immutable raw Aksara source URL at an exact Git commit. */
 export function getRawAksaraUrl({
   path,

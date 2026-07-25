@@ -1,14 +1,8 @@
-import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { getRuntimeContentRouteCounts } from "@/lib/content/runtime/routes";
-import {
-  BASE_URL,
-  type LlmsSection,
-  SECTION_LABELS,
-} from "@/lib/llms/constants";
+import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
 import {
   getContentListingLlmsEntries,
   getContentPageLlmsEntries,
@@ -17,16 +11,18 @@ import {
   isLlmsSection,
   type LlmsEntry,
 } from "@/lib/llms/entries";
-import {
-  formatRouteTitle,
-  getLocaleLabel,
-  stripLlmsRouteExtension,
-} from "@/lib/llms/format";
+import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
 import {
   formatLlmsEntryLine,
   renderLlmsIndexText,
 } from "@/lib/llms/index-text";
 import { getPublicLlmsSectionIndexLines } from "@/lib/llms/public-index";
+import {
+  buildLlmsListingIndexText,
+  buildLlmsPageIndexText,
+  buildLlmsSectionPageMapText,
+  getLlmsSectionPages,
+} from "@/lib/llms/section";
 
 const LOCALE_INDEX_ENTRY_LIMIT = 60;
 
@@ -104,14 +100,13 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
     }
 
     if (prefixParts.length === 1) {
-      const { pageCount, routeCount } = yield* getLlmsSectionPages({
+      const pages = yield* getLlmsSectionPages({
         locale,
         section,
       });
       return buildLlmsSectionPageMapText({
         locale,
-        pageCount,
-        routeCount,
+        ...pages,
         section,
       });
     }
@@ -230,135 +225,6 @@ function isContentLlmsSection(
   return section !== "site";
 }
 
-/** Builds a bounded section index that links to materialized route pages. */
-function buildLlmsSectionPageMapText({
-  locale,
-  pageCount,
-  routeCount,
-  section,
-}: {
-  locale: Locale;
-  pageCount: number;
-  routeCount: number;
-  section: Exclude<LlmsSection, "site">;
-}) {
-  const localeLabel = getLocaleLabel(locale);
-  const sectionLabel = SECTION_LABELS[section];
-  const lines = buildSectionPageMapLines({
-    locale,
-    pageCount,
-    section,
-    sectionLabel,
-  });
-
-  return renderLlmsIndexText({
-    lines,
-    summary: `For AI agents: ${routeCount} ${localeLabel} ${sectionLabel.toLowerCase()} routes are split across ${pageCount} bounded catalog pages of at most ${CONTENT_ROUTE_ARTIFACT_PAGE_SIZE} routes. Follow the page pattern, then its page-level \`.md\` links.`,
-    title: `Nakafa ${localeLabel} ${sectionLabel} Pages`,
-  });
-}
-
-/** Builds constant-size navigation for a bounded catalog page range. */
-function buildSectionPageMapLines({
-  locale,
-  pageCount,
-  section,
-  sectionLabel,
-}: {
-  locale: Locale;
-  pageCount: number;
-  section: Exclude<LlmsSection, "site">;
-  sectionLabel: string;
-}) {
-  if (pageCount === 0) {
-    return [];
-  }
-
-  const pagePath = `${BASE_URL}/llms/${locale}/${section}/page`;
-  const lastPage = pageCount - 1;
-  const lines = [
-    `- [${sectionLabel} page 0](${pagePath}/0/llms.txt): first bounded route-catalog page.`,
-  ];
-
-  if (lastPage > 0) {
-    lines.push(
-      `- [${sectionLabel} page ${lastPage}](${pagePath}/${lastPage}/llms.txt): last bounded route-catalog page.`
-    );
-  }
-
-  lines.push(
-    `- Page URL pattern: \`${pagePath}/{page}/llms.txt\`, where \`page\` is an integer from 0 through ${lastPage}.`
-  );
-
-  return lines;
-}
-
-/**
- * Builds a markdown index for one content listing page.
- *
- * Empty listings render an explicit empty index, while null listing lookups are
- * handled before this function and mean the route is unsupported.
- */
-function buildLlmsListingIndexText({
-  entries,
-  locale,
-  route,
-  section,
-}: {
-  entries: LlmsEntry[];
-  locale: Locale;
-  route: string;
-  section: Exclude<LlmsSection, "site">;
-}) {
-  const localeLabel = getLocaleLabel(locale);
-  const sectionLabel = SECTION_LABELS[section];
-  const title = `${formatRouteTitle(route)} ${sectionLabel}`;
-
-  if (entries.length === 0) {
-    return renderLlmsIndexText({
-      lines: [],
-      summary: `This ${localeLabel} ${sectionLabel.toLowerCase()} listing currently has no markdown entries.`,
-      title,
-    });
-  }
-
-  return renderLlmsIndexText({
-    lines: entries.map(formatLlmsEntryLine),
-    summary: `For AI agents: source-backed ${localeLabel} ${sectionLabel.toLowerCase()} links for ${route}. Follow page-level \`.md\` links for clean markdown content.`,
-    title,
-  });
-}
-
-/** Builds one bounded page index from materialized route entries. */
-function buildLlmsPageIndexText({
-  entries,
-  locale,
-  page,
-  section,
-}: {
-  entries: LlmsEntry[];
-  locale: Locale;
-  page: number;
-  section: Exclude<LlmsSection, "site">;
-}) {
-  const localeLabel = getLocaleLabel(locale);
-  const sectionLabel = SECTION_LABELS[section];
-
-  if (entries.length === 0) {
-    return renderLlmsIndexText({
-      lines: [],
-      summary: `This bounded ${sectionLabel.toLowerCase()} route-catalog page is currently empty.`,
-      title: `Nakafa ${localeLabel} ${sectionLabel} Page ${page}`,
-    });
-  }
-
-  return renderLlmsIndexText({
-    lines: entries.map(formatLlmsEntryLine),
-    summary: `For AI agents: bounded sitemap-derived links for ${localeLabel} ${sectionLabel.toLowerCase()} page ${page}. Use \`.md\` links when available for agent-friendly markdown.`,
-    title: `Nakafa ${localeLabel} ${sectionLabel} Page ${page}`,
-  });
-}
-
 /** Parses `/:section/page/:id` index routes into a materialized page id. */
 function parsePageIndex(prefixParts: readonly string[]) {
   if (prefixParts.length !== 3 || prefixParts[1] !== "page") {
@@ -372,25 +238,4 @@ function parsePageIndex(prefixParts: readonly string[]) {
   }
 
   return page;
-}
-
-/** Reads one constant-size count row for a locale and content section. */
-function getLlmsSectionPages({
-  locale,
-  section,
-}: {
-  locale: Locale;
-  section: Exclude<LlmsSection, "site">;
-}) {
-  return getRuntimeContentRouteCounts({ locale }).pipe(
-    Effect.map((counts) => {
-      const routeCount =
-        counts.find((count) => count.section === section)?.count ?? 0;
-
-      return {
-        pageCount: Math.ceil(routeCount / CONTENT_ROUTE_ARTIFACT_PAGE_SIZE),
-        routeCount,
-      };
-    })
-  );
 }
