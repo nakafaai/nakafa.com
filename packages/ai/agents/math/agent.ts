@@ -10,6 +10,7 @@ import {
   mathSeries,
   mathStatistics,
 } from "@repo/ai/agents/math/descriptions";
+import { makeMathGenerationError } from "@repo/ai/agents/math/error";
 import { mathPrompt } from "@repo/ai/agents/math/prompt";
 import { repairMathToolCall } from "@repo/ai/agents/math/repair";
 import {
@@ -208,7 +209,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           }),
         },
       }),
-    catch: (error) => error,
+    catch: makeMathGenerationError,
   });
 
   return {

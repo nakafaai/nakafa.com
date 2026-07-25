@@ -4,6 +4,7 @@ import {
   nakafaSearch,
   nakafaTaxonomy,
 } from "@repo/ai/agents/nakafa/descriptions";
+import { makeNakafaGenerationError } from "@repo/ai/agents/nakafa/error";
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
@@ -160,7 +161,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
         stopWhen: isStepCount(10),
         timeout: subAgentGenerationTimeout,
       }),
-    catch: (error) => error,
+    catch: makeNakafaGenerationError,
   });
 
   return {

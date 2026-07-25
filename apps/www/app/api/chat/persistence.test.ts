@@ -7,6 +7,7 @@ import type {
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 import {
   createChatWithMessage,
   loadMessages,
@@ -135,6 +136,26 @@ describe("app/api/chat/persistence", () => {
     );
   });
 
+  it("maps chat creation failures into the mutation error contract", async () => {
+    const cause = new Error("mutation unavailable");
+    mocks.fetchMutation.mockRejectedValueOnce(cause);
+
+    const error = await Effect.runPromise(
+      createChatWithMessage({
+        message,
+        modelId,
+        ...withNinaContext(),
+        token: "session-token",
+      }).pipe(Effect.flip)
+    );
+
+    expect(error).toBeInstanceOf(ChatMutationError);
+    expect(error).toMatchObject({
+      cause,
+      operation: "create-chat",
+    });
+  });
+
   it("passes the selected model when saving a message to an existing chat", async () => {
     const chatId = await savedChatId();
     mocks.fetchQuery.mockResolvedValue(null);
@@ -165,6 +186,28 @@ describe("app/api/chat/persistence", () => {
       },
       { token: "session-token" }
     );
+  });
+
+  it("maps message save failures into the mutation error contract", async () => {
+    const chatId = await savedChatId();
+    const cause = new Error("mutation unavailable");
+    mocks.fetchMutation.mockRejectedValueOnce(cause);
+
+    const error = await Effect.runPromise(
+      saveChatMessage({
+        chatId,
+        message,
+        modelId,
+        ...withNinaContext(),
+        token: "session-token",
+      }).pipe(Effect.flip)
+    );
+
+    expect(error).toBeInstanceOf(ChatMutationError);
+    expect(error).toMatchObject({
+      cause,
+      operation: "save-message",
+    });
   });
 
   it("loads the newest stored Nina context for pinned-chat continuation", async () => {
@@ -200,6 +243,26 @@ describe("app/api/chat/persistence", () => {
     );
 
     expect(result).toBeUndefined();
+  });
+
+  it("maps pinned-context failures into the query error contract", async () => {
+    const chatId = await savedChatId();
+    const cause = new Error("query unavailable");
+    mocks.fetchQuery.mockRejectedValueOnce(cause);
+
+    const error = await Effect.runPromise(
+      loadPinnedNinaContext({
+        chatId,
+        messageIdentifier: message.id,
+        token: "session-token",
+      }).pipe(Effect.flip)
+    );
+
+    expect(error).toBeInstanceOf(ChatQueryError);
+    expect(error).toMatchObject({
+      cause,
+      operation: "load-context",
+    });
   });
 
   it("saves an existing chat rewrite through one atomic Convex mutation", async () => {
@@ -306,6 +369,22 @@ describe("app/api/chat/persistence", () => {
       },
       { token: "session-token" }
     );
+  });
+
+  it("maps message page failures into the query error contract", async () => {
+    const chatId = await savedChatId();
+    const cause = new Error("query unavailable");
+    mocks.fetchQuery.mockRejectedValueOnce(cause);
+
+    const error = await Effect.runPromise(
+      loadMessages({ chatId, token: "session-token" }).pipe(Effect.flip)
+    );
+
+    expect(error).toBeInstanceOf(ChatQueryError);
+    expect(error).toMatchObject({
+      cause,
+      operation: "load-messages",
+    });
   });
 
   it("stops loading when compression trims the retained transcript", async () => {

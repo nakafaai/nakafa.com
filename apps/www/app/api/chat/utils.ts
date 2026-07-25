@@ -3,6 +3,7 @@ import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Locale } from "@repo/utilities/locales";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
+import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
 
 /**
@@ -24,15 +25,22 @@ export const getVerified = Effect.fn("chat.getVerified")(function* (
 export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
   token: string
 ) {
-  return yield* Effect.tryPromise(() =>
-    fetchMutation(
-      convexApi.users.mutations.syncUserInfoForChat,
-      {},
-      {
-        token,
-      }
-    )
-  );
+  return yield* Effect.tryPromise({
+    try: () =>
+      fetchMutation(
+        convexApi.users.mutations.syncUserInfoForChat,
+        {},
+        {
+          token,
+        }
+      ),
+    catch: (cause) =>
+      new ChatMutationError({
+        cause,
+        message: "Unable to synchronize the chat user.",
+        operation: "sync-user",
+      }),
+  });
 });
 
 /**
@@ -43,15 +51,22 @@ export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
  */
 export const getLearningProfile = Effect.fn("chat.getLearningProfile")(
   function* (token: string, locale: Locale) {
-    const profile = yield* Effect.tryPromise(() =>
-      fetchQuery(
-        convexApi.learningPrograms.queries.getActiveProfile,
-        { locale },
-        {
-          token,
-        }
-      )
-    );
+    const profile = yield* Effect.tryPromise({
+      try: () =>
+        fetchQuery(
+          convexApi.learningPrograms.queries.getActiveProfile,
+          { locale },
+          {
+            token,
+          }
+        ),
+      catch: (cause) =>
+        new ChatQueryError({
+          cause,
+          message: "Unable to load the active learning profile.",
+          operation: "load-profile",
+        }),
+    });
 
     return yield* Schema.decodeUnknown(
       Schema.NullOr(AgentLearningProfileSchema)
