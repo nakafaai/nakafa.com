@@ -9,8 +9,8 @@ import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref
 import { Effect, Option } from "effect";
 
 /** Reads full markdown for one normalized Nakafa content reference. */
-export function readNakafaMarkdown(convexUrl: string, input: string) {
-  return Effect.gen(function* () {
+export const readNakafaMarkdown = Effect.fn("NakafaContent.readMarkdown")(
+  function* (convexUrl: string, input: string) {
     const ref = yield* resolveNakafaContentRef(convexUrl, input);
 
     if (Option.isNone(ref)) {
@@ -22,12 +22,12 @@ export function readNakafaMarkdown(convexUrl: string, input: string) {
     }
 
     return yield* readMdxMarkdown(convexUrl, ref.value);
-  });
-}
+  }
+);
 
-/** Reads article or lesson material markdown from Convex runtime rows. */
-export function readMdxMarkdown(convexUrl: string, ref: NakafaAgentContentRef) {
-  return Effect.gen(function* () {
+/** Reads article or lesson material markdown from active Convex runtime rows. */
+export const readMdxMarkdown = Effect.fn("NakafaContent.readMdxMarkdown")(
+  function* (convexUrl: string, ref: NakafaAgentContentRef) {
     const page = yield* getMdxRuntimePage(convexUrl, ref);
 
     if (!page) {
@@ -42,10 +42,10 @@ export function readMdxMarkdown(convexUrl: string, ref: NakafaAgentContentRef) {
     });
 
     return Option.some(markdown);
-  });
-}
+  }
+);
 
-/** Reads one article or lesson material page from the Convex runtime model. */
+/** Reads one article or lesson material page from the active Convex model. */
 export function getMdxRuntimePage(
   convexUrl: string,
   ref: NakafaAgentContentRef

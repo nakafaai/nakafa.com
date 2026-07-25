@@ -1,10 +1,10 @@
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
-import type { TryoutStatus } from "@repo/backend/convex/tryouts/schema";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
+import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
 import {
-  tryoutRouteKeyValidator,
-  tryoutScoreResultValidator,
+  type TryoutStatus,
   tryoutStatusValidator,
-} from "@repo/backend/convex/tryouts/schema";
+} from "@repo/backend/convex/tryouts/status";
 import { v } from "convex/values";
 
 export const tryoutCurrentSectionValidator = v.object({

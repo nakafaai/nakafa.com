@@ -35,6 +35,18 @@ export function buildHeader({
   return header;
 }
 
+/** Returns one stable agent-facing description from authored MDX metadata. */
+export function getMdxDescription(metadata: {
+  readonly description?: string;
+  readonly subject?: string;
+}) {
+  return (
+    metadata.description ??
+    metadata.subject ??
+    "Output docs content for large language models."
+  );
+}
+
 /** Removes markdown-style route suffixes before content lookup. */
 export function stripLlmsRouteExtension(slug: string) {
   return slug.replace(MARKDOWN_EXTENSIONS, "");

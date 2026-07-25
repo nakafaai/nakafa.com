@@ -1,6 +1,6 @@
 "use client";
 
-import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/schema";
+import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/score";
 import type { ReactNode } from "react";
 import {
   TryoutSummaryAction,

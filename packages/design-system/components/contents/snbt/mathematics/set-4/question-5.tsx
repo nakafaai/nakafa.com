@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -10,21 +11,6 @@ interface GraphProps {
 const common = { showPoints: false, color: getColor("INDIGO") };
 const labelColor = getColor("INDIGO");
 const highlightColor = getColor("CYAN");
-
-interface GraphPoint {
-  x: number;
-  y: number;
-  z: number;
-}
-
-/** Returns the midpoint used for stable edge labels. */
-function getMidpoint(firstPoint: GraphPoint, secondPoint: GraphPoint) {
-  return {
-    x: (firstPoint.x + secondPoint.x) / 2,
-    y: (firstPoint.y + secondPoint.y) / 2,
-    z: (firstPoint.z + secondPoint.z) / 2,
-  };
-}
 
 /** Renders the coordinate graph for SNBT set 4 question 5. */
 export function Graph({ title, description }: GraphProps) {

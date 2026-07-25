@@ -6,6 +6,7 @@ import {
   buildHeader,
   formatRouteTitle,
   getLocaleLabel,
+  getMdxDescription,
   stripLlmsRouteExtension,
 } from "@/lib/llms/format";
 
@@ -38,6 +39,19 @@ describe("llms formatting helpers", () => {
         url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
       })
     ).not.toContain("Source:");
+  });
+
+  it("selects authored MDX descriptions without inventing content", () => {
+    expect(
+      getMdxDescription({
+        description: "Authored description",
+        subject: "Math",
+      })
+    ).toBe("Authored description");
+    expect(getMdxDescription({ subject: "Math" })).toBe("Math");
+    expect(getMdxDescription({})).toBe(
+      "Output docs content for large language models."
+    );
   });
 
   it("formats locale labels, route titles, and markdown route slugs", () => {

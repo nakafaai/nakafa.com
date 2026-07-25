@@ -15,11 +15,9 @@ import {
   contentTypeValidator,
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import {
-  tryoutAttemptAccessSourceKindValidator,
-  tryoutRouteKeyValidator,
-  tryoutScoreStatusValidator,
-} from "@repo/backend/convex/tryouts/schema";
+import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/convex/tryouts/access/source";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
+import { tryoutScoreStatusValidator } from "@repo/backend/convex/tryouts/score";
 import { tryoutPaywallSourceValidator } from "@repo/backend/convex/tryouts/start/spec";
 import { userPlanValidator } from "@repo/backend/convex/users/schema";
 import type { Infer } from "convex/values";

@@ -1,9 +1,7 @@
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { publicTryoutSetValidator } from "@repo/backend/convex/tryouts/queries/catalogModel";
-import {
-  tryoutRouteKeyValidator,
-  tryoutStatusValidator,
-} from "@repo/backend/convex/tryouts/schema";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
+import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
 import { paginationOptsValidator } from "convex/server";
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";

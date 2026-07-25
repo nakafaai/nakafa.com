@@ -1,7 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { tryoutScoringStrategyValidator } from "@repo/backend/convex/tryouts/schema";
+import { tryoutScoringStrategyValidator } from "@repo/backend/convex/tryouts/score";
 import { v } from "convex/values";
 
 export const tryoutScaleIntegrityItemValidator = v.object({

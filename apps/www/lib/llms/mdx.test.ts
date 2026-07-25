@@ -33,26 +33,26 @@ describe("getLlmsMdxText", () => {
 
   it("loads cached markdown at the Next cache boundary", async () => {
     const { getCachedLlmsMdxText } = await import("@/lib/llms/mdx");
-    runtimeMocks.getRuntimeArticlePage.mockReturnValue(
+    runtimeMocks.getRuntimeCurriculumPage.mockReturnValue(
       Effect.succeed({
-        body: "Article body",
+        body: "Lesson body",
         metadata: {
-          description: "Article description",
-          title: "Article title",
+          description: "Lesson description",
+          title: "Lesson title",
         },
       })
     );
 
     const text = await getCachedLlmsMdxText({
-      cleanSlug: "articles/politics/example",
+      cleanSlug: "material/lesson/mathematics/example",
       locale: "en",
     });
 
     expect(runtimeMocks.applyContentRuntimeCache).toHaveBeenCalledTimes(1);
-    expect(text).toContain("Article body");
+    expect(text).toContain("Lesson body");
   });
 
-  it("returns article markdown from source article slugs", async () => {
+  it("loads article source slugs through the runtime article reader", async () => {
     runtimeMocks.getRuntimeArticlePage.mockReturnValue(
       Effect.succeed({
         body: "Article body",

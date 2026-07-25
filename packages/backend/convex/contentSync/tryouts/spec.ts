@@ -1,5 +1,10 @@
 import { syncedAuthorValidator } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import {
+  tryoutSectionVisibilityValidator,
+  tryoutTrackKindValidator,
+} from "@repo/backend/convex/tryouts/catalog/spec";
+import { tryoutScoringStrategyValidator } from "@repo/backend/convex/tryouts/score";
 import { TRYOUT_ROUTE_KIND_VALUES } from "@repo/contents/_types/tryout/schema";
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -14,22 +19,6 @@ const tryoutCatalogRowValidator = v.object({
   sourceRevision: v.string(),
   title: v.string(),
 });
-
-const tryoutScoringStrategyValidator = v.union(
-  v.literal("irt"),
-  v.literal("raw"),
-  v.literal("weighted")
-);
-
-const tryoutTrackKindValidator = v.union(
-  v.literal("subject"),
-  v.literal("year")
-);
-
-const tryoutSectionVisibilityValidator = v.union(
-  v.literal("internal-entry"),
-  v.literal("visible")
-);
 
 export const syncedTryoutCountryValidator = tryoutCatalogRowValidator;
 

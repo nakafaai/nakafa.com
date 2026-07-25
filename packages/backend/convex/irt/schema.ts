@@ -94,16 +94,30 @@ const tables = {
     .index("by_tryoutSetId_and_enqueuedAt", ["tryoutSetId", "enqueuedAt"]),
 
   irtScaleVersions: defineTable({
+    /** Optional only during the additive immutable-snapshot migration. */
+    tryoutSnapshotId: v.optional(v.string()),
+    /** Optional only during the additive immutable-snapshot migration. */
+    setIdentity: v.optional(v.string()),
     tryoutSetId: v.id("tryoutSets"),
     model: irtOperationalModelValidator,
     status: irtScaleVersionStatusValidator,
     questionCount: v.number(),
     publishedAt: v.number(),
-  }).index("by_tryoutSetId_and_publishedAt", ["tryoutSetId", "publishedAt"]),
+  })
+    .index("by_tryoutSetId_and_publishedAt", ["tryoutSetId", "publishedAt"])
+    .index("by_tryoutSnapshotId_and_setIdentity_and_publishedAt", [
+      "tryoutSnapshotId",
+      "setIdentity",
+      "publishedAt",
+    ]),
 
   irtScaleItems: defineTable({
     scaleVersionId: v.id("irtScaleVersions"),
     calibrationRunId: v.id("irtCalibrationRuns"),
+    /** Optional only during the additive immutable-placement migration. */
+    placementIdentity: v.optional(v.string()),
+    /** Optional only during the additive immutable-placement migration. */
+    placementRowHash: v.optional(v.string()),
     questionId: v.id("questions"),
     questionSourceKey: v.string(),
     sourceRevision: v.string(),
@@ -122,9 +136,17 @@ const tables = {
       "questionSourceKey",
       "sourceRevision",
     ])
-    .index("by_calibrationStatus", ["calibrationStatus"]),
+    .index("by_calibrationStatus", ["calibrationStatus"])
+    .index("by_scaleVersionId_and_placementIdentity", [
+      "scaleVersionId",
+      "placementIdentity",
+    ]),
 
   irtCalibrationRuns: defineTable({
+    /** Optional only during the additive immutable-snapshot migration. */
+    scaleVersionId: v.optional(v.id("irtScaleVersions")),
+    /** Optional only during the additive immutable-snapshot migration. */
+    sectionIdentity: v.optional(v.string()),
     tryoutSectionId: v.id("tryoutSections"),
     model: irtOperationalModelValidator,
     status: irtCalibrationRunStatusValidator,
@@ -142,6 +164,11 @@ const tables = {
     .index("by_tryoutSectionId_and_status_and_startedAt", [
       "tryoutSectionId",
       "status",
+      "startedAt",
+    ])
+    .index("by_scaleVersionId_and_sectionIdentity_and_startedAt", [
+      "scaleVersionId",
+      "sectionIdentity",
       "startedAt",
     ]),
 };

@@ -3,7 +3,7 @@ import type {
   TryoutScoreResult,
   TryoutScoringStrategy,
   TryoutSectionScore,
-} from "@repo/backend/convex/tryouts/schema";
+} from "@repo/backend/convex/tryouts/score";
 import { ConvexError } from "convex/values";
 
 /** Stores the complete score snapshot produced before finalizing an attempt. */

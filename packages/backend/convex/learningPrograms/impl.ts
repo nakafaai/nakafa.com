@@ -108,11 +108,13 @@ export async function createInitialLearningPlanItems(
     locale,
     planId,
     programId,
+    programKey,
     userId,
   }: {
     locale: Doc<"learningProgramCoverage">["locale"];
     planId: Id<"learningPlans">;
     programId: Id<"learningPrograms">;
+    programKey: Doc<"learningPrograms">["key"];
     userId: Id<"users">;
   }
 ) {
@@ -135,6 +137,7 @@ export async function createInitialLearningPlanItems(
       planId,
       position,
       programId,
+      programKey,
       reason: "program-alignment",
       ...(route ? { route: route.route, title: route.title } : {}),
       status: "ready",

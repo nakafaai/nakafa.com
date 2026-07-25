@@ -3,5 +3,8 @@
     "skills": {
       "agents": []
     }
+  },
+  "node": {
+    "nodeVersion": "24"
   }
 }

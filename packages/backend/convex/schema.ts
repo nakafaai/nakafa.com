@@ -6,6 +6,7 @@ import bookmarksSchema from "@repo/backend/convex/bookmarks/schema";
 import chatsSchema from "@repo/backend/convex/chats/schema";
 import classesSchema from "@repo/backend/convex/classes/schema";
 import commentsSchema from "@repo/backend/convex/comments/schema";
+import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
 import contentSyncSchema from "@repo/backend/convex/contentSync/schema";
 import contentsSchema from "@repo/backend/convex/contents/schema";
 import creditsSchema from "@repo/backend/convex/credits/schema";
@@ -21,7 +22,9 @@ import quranSchema from "@repo/backend/convex/quran/schema";
 import schoolsSchema from "@repo/backend/convex/schools/schema";
 import subscriptionsSchema from "@repo/backend/convex/subscriptions/schema";
 import tryoutAccessSchema from "@repo/backend/convex/tryoutAccess/schema";
-import tryoutsSchema from "@repo/backend/convex/tryouts/schema";
+import tryoutCatalogSchema from "@repo/backend/convex/tryouts/catalog/schema";
+import tryoutLeaderboardSchema from "@repo/backend/convex/tryouts/leaderboard/schema";
+import tryoutRuntimeSchema from "@repo/backend/convex/tryouts/runtime/schema";
 import usersSchema from "@repo/backend/convex/users/schema";
 import { defineSchema } from "convex/server";
 
@@ -30,6 +33,7 @@ export default defineSchema(
     ...usersSchema,
     ...chatsSchema,
     ...commentsSchema,
+    ...contentReleaseSchema,
     ...contentSyncSchema,
     ...customersSchema,
     ...subscriptionsSchema,
@@ -51,7 +55,9 @@ export default defineSchema(
     ...learningPreferencesSchema,
     ...learningProgramsSchema,
     ...tryoutAccessSchema,
-    ...tryoutsSchema,
+    ...tryoutCatalogSchema,
+    ...tryoutRuntimeSchema,
+    ...tryoutLeaderboardSchema,
   },
   {
     schemaValidation: true,

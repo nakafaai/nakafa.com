@@ -17,7 +17,7 @@ import { notFound } from "next/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
-type MaterialParams =
+export type MaterialParams =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">["params"];
 
 let materialRouteCache: readonly PublicContentRoute[] | undefined;
@@ -33,6 +33,21 @@ export function readMaterialRoutes() {
   return materialRouteCache;
 }
 
+/** Builds the exact localized path without consulting either content owner. */
+export async function readMaterialRequest(params: MaterialParams) {
+  const { locale: rawLocale, subject, topic, lesson } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
+  const namespace = readNamespaceSegment("subject", locale);
+
+  if (!namespace) {
+    return { locale, publicPath: undefined };
+  }
+
+  const publicPath = [namespace, subject, topic, ...(lesson ?? [])].join("/");
+
+  return { locale, publicPath };
+}
+
 /**
  * Resolves localized material params through the contents route projection.
  *
@@ -40,15 +55,11 @@ export function readMaterialRoutes() {
  * route Module only matches the framework params to one decoded row.
  */
 export async function readMaterialRoute(params: MaterialParams) {
-  const { locale: rawLocale, subject, topic, lesson } = await params;
-  const locale = getLocaleOrThrow(rawLocale);
-  const namespace = readNamespaceSegment("subject", locale);
-
-  if (!namespace) {
+  const { locale, publicPath } = await readMaterialRequest(params);
+  if (!publicPath) {
     return { locale, route: undefined };
   }
 
-  const publicPath = [namespace, subject, topic, ...(lesson ?? [])].join("/");
   const route = readStaticPublicLearningIndex().resolveRouteByPath(
     publicPath,
     locale
@@ -94,14 +105,17 @@ export async function resolveMaterialRoute(params: MaterialParams) {
 export function listMaterialStaticParams(rawLocale?: string) {
   const locale = rawLocale ? getLocaleOrThrow(rawLocale) : undefined;
 
-  const params = readMaterialRoutes()
-    .filter((route) => !locale || route.locale === locale)
-    .filter(isMaterialLessonRoute)
-    .map((route) => {
-      const [, subject, topic, ...lesson] = route.publicPath.split("/");
+  const params = readMaterialRoutes().flatMap((route) => {
+    if (locale && route.locale !== locale) {
+      return [];
+    }
+    if (!isMaterialLessonRoute(route)) {
+      return [];
+    }
 
-      return { subject, topic, lesson };
-    });
+    const [, subject, topic, ...lesson] = route.publicPath.split("/");
+    return [{ subject, topic, lesson }];
+  });
 
   return selectLearningStaticParams(params);
 }

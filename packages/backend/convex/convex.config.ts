@@ -13,6 +13,8 @@ const app = defineApp({
   // https://github.com/PostHog/posthog-js/tree/main/packages/convex#-migrating-from-v1
   // https://docs.convex.dev/components/authoring#environment-variables
   env: {
+    AKSARA_PUBLICATION_TOKEN: v.string(),
+    CONTENT_RUNTIME_TOKEN: v.string(),
     POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS: v.optional(v.string()),
     POSTHOG_HOST: v.optional(v.string()),
     POSTHOG_PERSONAL_API_KEY: v.optional(v.string()),

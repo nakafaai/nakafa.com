@@ -9,7 +9,6 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Option } from "effect";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -20,9 +19,12 @@ import {
   readMaterialPagePagination,
   readMaterialRoutes,
   requireParentMaterialRoute,
-  resolveMaterialRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
-import { getMaterialPageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/runtime";
+import {
+  type MaterialPageSource,
+  readMaterialMetadata,
+  readMaterialPage,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
@@ -34,19 +36,15 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { ContentViewTracker } from "@/components/tracking/tracker";
-import { importContentModuleOrNull } from "@/lib/content/module";
 import { getContentViewId } from "@/lib/content/views";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
-import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 type MaterialPageProps =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">;
-type RuntimeLessonPage = NonNullable<
-  Awaited<ReturnType<typeof getMaterialPageData>>
->;
+type MaterialPageContent = Pick<MaterialPageSource, "body" | "metadata">;
 type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
 type ArticleJsonLdAuthor = ArrayItem<
   Parameters<typeof ArticleJsonLd>[0]["author"]
@@ -70,20 +68,15 @@ export function generateStaticParams({
 export async function generateMetadata({
   params,
 }: MaterialPageProps): Promise<Metadata> {
-  const { locale, route } = await resolveMaterialRoute(params);
+  const { locale, metadata, route } = await readMaterialMetadata(params);
   const path = toLocalizedContentHref(route);
-  const runtimeLesson = await getMaterialPageData({
-    locale,
-    sourcePath: route.sourcePath,
-  });
-  const title = runtimeLesson?.metadata.title ?? route.title;
-  const description =
-    runtimeLesson?.metadata.description ?? route.description ?? route.title;
+  const title = metadata?.title ?? route.title;
+  const description = metadata?.description ?? route.description ?? route.title;
 
   return {
     title: { absolute: title },
     description,
-    authors: runtimeLesson?.metadata.authors,
+    authors: metadata?.authors.map(({ name }) => ({ name })),
     alternates: createProjectedRouteAlternates(route, readMaterialRoutes(), {
       types: { "text/markdown": `${path}.md` },
     }),
@@ -109,32 +102,11 @@ export default async function Page({
   params,
   searchParams,
 }: MaterialPageProps) {
-  const [{ locale, route }, query] = await Promise.all([
-    resolveMaterialRoute(params),
+  const [page, query] = await Promise.all([
+    readMaterialPage(params),
     searchParams,
   ]);
-
-  const [runtimeLesson, content] = await Promise.all([
-    getMaterialPageData({
-      locale,
-      sourcePath: route.sourcePath,
-    }),
-    importContentModuleOrNull({
-      filePath: route.sourcePath,
-      locale,
-      source: "material-public-route",
-    }),
-  ]);
-
-  if (!runtimeLesson) {
-    notFound();
-  }
-
-  if (!content?.default) {
-    notFound();
-  }
-
-  const Content = content.default;
+  const { locale, route } = page;
   const parentRoute = requireParentMaterialRoute(route);
   const materialContext = readMaterialContextQuery(query ?? {});
   const trackerContext: LearningContextInput | undefined = materialContext
@@ -156,13 +128,14 @@ export default async function Page({
       locale={locale}
     >
       <MaterialLessonPage
-        content={runtimeLesson}
+        content={{ body: page.body, metadata: page.metadata }}
         footer={<DeferredComments slug={route.sourcePath} />}
         headerLink={readMaterialHeaderLink(route, materialContext)}
         locale={locale}
         materialContext={materialContext}
         parentTitle={parentRoute.title}
         route={route}
+        sourceUrl={page.sourceUrl}
         toolbar={
           <DeferredAiSheetOpen
             audio={{
@@ -170,11 +143,11 @@ export default async function Page({
               locale,
               slug: route.sourcePath,
             }}
-            contextTitle={runtimeLesson.metadata.title}
+            contextTitle={page.metadata.title}
           />
         }
       >
-        <Content />
+        {page.children}
       </MaterialLessonPage>
     </ContentViewTracker>
   );
@@ -195,10 +168,11 @@ async function MaterialLessonPage({
   materialContext,
   parentTitle,
   route,
+  sourceUrl,
   toolbar,
 }: {
   children: ReactNode;
-  content: RuntimeLessonPage;
+  content: MaterialPageContent;
   footer: ReactNode;
   headerLink?: {
     href: string;
@@ -208,6 +182,7 @@ async function MaterialLessonPage({
   materialContext: MaterialContextIdentity | undefined;
   parentTitle: string;
   route: PublicContentRoute;
+  sourceUrl: null | string;
   toolbar: ReactNode;
 }) {
   const tCommon = await getTranslations({ locale, namespace: "Common" });
@@ -258,6 +233,7 @@ async function MaterialLessonPage({
             icon={icon}
             link={headerLink ?? { href: "/home", label: tCommon("home") }}
             slug={toLocalizedContentHref(route)}
+            sourceUrl={sourceUrl}
             title={metadata.title}
           />
           <LayoutContent>
@@ -273,9 +249,7 @@ async function MaterialLessonPage({
             label: tCommon("on-this-page"),
             data: headings,
           }}
-          githubUrl={getGithubUrl({
-            path: `/packages/contents/${route.sourcePath}`,
-          })}
+          githubUrl={sourceUrl ?? undefined}
           header={{
             title: metadata.title,
             href: toLocalizedContentHref(route),

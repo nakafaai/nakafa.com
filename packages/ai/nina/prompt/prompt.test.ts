@@ -245,19 +245,17 @@ describe("createNinaPrompt", () => {
     );
   });
 
-  it.each([
-    "teacher",
-    "student",
-    "parent",
-    "administrator",
-  ] as const)("includes compact role guidance for %s", (userRole) => {
-    expect(
-      createNinaPrompt({
-        ...base,
-        userRole,
-      })
-    ).toContain("User is");
-  });
+  it.each(["teacher", "student", "parent", "administrator"] as const)(
+    "includes compact role guidance for %s",
+    (userRole) => {
+      expect(
+        createNinaPrompt({
+          ...base,
+          userRole,
+        })
+      ).toContain("User is");
+    }
+  );
 
   it("includes selected learning program context without table-shaped prose", () => {
     const prompt = createNinaPrompt({

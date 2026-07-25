@@ -83,6 +83,7 @@ const DEFAULT_THEME_STYLE_SOURCE_PATHS: ThemeStyleSourcePaths = {
   globals: fileURLToPath(new URL("../../styles/globals.css", import.meta.url)),
 };
 
+/** Builds one typed stylesheet read failure with its exact source path. */
 function sourceLoadError(path: string, cause: unknown) {
   return new ThemeStyleSourceLoadError({
     cause,
@@ -185,11 +186,33 @@ export function readCustomThemeNames(root: Root) {
   });
 }
 
+/** Rejects an omitted color channel before numeric theme calculations. */
+function requireColorChannel(channel: null | number, value: string) {
+  if (channel === null) {
+    throw new Error(`Theme color "${value}" has a missing channel.`);
+  }
+
+  return channel;
+}
+
+/** Reads complete OKLCH channels from one canonical theme color. */
+export function readOklchChannels(value: string) {
+  const [lightness, chroma, hue] = new Color(value).oklch;
+
+  return {
+    chroma: requireColorChannel(chroma, value),
+    hue: requireColorChannel(hue, value),
+    lightness: requireColorChannel(lightness, value),
+  };
+}
+
 /** Projects canonical OKLCH into the required comma-form 8-bit sRGB value. */
 export function toRgbProjection(value: string) {
   const channels = new Color(value)
     .to("srgb")
-    .coords.map((channel) => Math.round(channel * 255));
+    .coords.map((channel) =>
+      Math.round(requireColorChannel(channel, value) * 255)
+    );
 
   return `rgb(${channels.join(", ")})`;
 }

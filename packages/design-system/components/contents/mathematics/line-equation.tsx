@@ -1,5 +1,10 @@
 // CoordinateSystem renders a dynamic WebGL canvas with SSR disabled.
 // https://nextjs.org/docs/app/guides/lazy-loading#skipping-ssr
+
+import {
+  type AuthoredLine,
+  resolveAuthoredLines,
+} from "@repo/design-system/components/contents/mathematics/circle-lines";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { LineEquation as LineEquation3D } from "@repo/design-system/components/three/line-equation";
 import {
@@ -9,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 const DEFAULT_CAMERA_POSITION_X = 10;
 const DEFAULT_CAMERA_POSITION_Y = 6;
@@ -17,7 +22,7 @@ const DEFAULT_CAMERA_POSITION_Z = 10;
 
 interface Props {
   cameraPosition?: [number, number, number];
-  data: ComponentProps<typeof LineEquation3D>[];
+  data: readonly AuthoredLine[];
   description: ReactNode;
   showZAxis?: boolean;
   title: ReactNode;
@@ -37,6 +42,8 @@ export function LineEquation({
   ],
   showZAxis = true,
 }: Props) {
+  const lines = resolveAuthoredLines(data);
+
   return (
     <Card className="content-auto-card">
       <CardHeader>
@@ -45,7 +52,7 @@ export function LineEquation({
       </CardHeader>
       <CardContent>
         <CoordinateSystem cameraPosition={cameraPosition} showZAxis={showZAxis}>
-          {data.map((item) => (
+          {lines.map((item) => (
             <LineEquation3D
               key={`line-${item.points.map((p) => `${p.x},${p.y},${p.z}`).join(";")}`}
               {...item}

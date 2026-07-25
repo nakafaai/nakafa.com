@@ -2,6 +2,9 @@ import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale } from "next-intl";
+import { matchesPreviewRoute } from "@/lib/content/preview/route";
+import { readActiveContentIdentity } from "@/lib/content/published/active";
+import { readActiveMaterialRoute } from "@/lib/content/published/route";
 import { getRuntimePublicRoute } from "@/lib/content/runtime/routes";
 
 /**
@@ -40,6 +43,27 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   }
 
   const publicPath = [namespace, ...pathSegments].join("/");
+  if (
+    surface.key === "subject" &&
+    (yield* matchesPreviewRoute({ locale, publicPath }))
+  ) {
+    return null;
+  }
+  if (surface.key === "subject") {
+    const identity = yield* readActiveContentIdentity();
+    const ownership = yield* readActiveMaterialRoute({
+      activeReleaseId: identity?.releaseId ?? null,
+      locale,
+      publicPath,
+    });
+    if (ownership.kind === "found") {
+      return null;
+    }
+    if (ownership.kind === "missing") {
+      return locale;
+    }
+  }
+
   const route = yield* getRuntimePublicRoute({ locale, publicPath });
 
   if (!route) {

@@ -1,35 +1,48 @@
+import {
+  CONTENT_CACHE_GLOBAL_TAG,
+  type ContentCacheTags,
+  makeArtifactCacheTag,
+  makeContentFamilyCacheTag,
+} from "@nakafa/aksara-contracts/cache/content";
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
 import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 
-export const CONTENT_RUNTIME_CACHE_PROFILE = "contentRuntime";
-export const CONTENT_RUNTIME_CACHE_TAG = "content-runtime";
-
+const CONTENT_RUNTIME_CACHE_PROFILE = "contentRuntime";
 const CONTENT_RUNTIME_REVALIDATION = { expire: 0 };
-
-/**
- * Returns the cache tags shared by Convex-backed content runtime reads.
- */
-export function getContentRuntimeCacheTags() {
-  return [CONTENT_RUNTIME_CACHE_TAG];
-}
 
 /**
  * Applies the content runtime cache profile and invalidation tags to one cached read.
  */
 export function applyContentRuntimeCache() {
-  for (const tag of getContentRuntimeCacheTags()) {
-    cacheTag(tag);
-  }
-
+  cacheTag(CONTENT_CACHE_GLOBAL_TAG);
   cacheLife(CONTENT_RUNTIME_CACHE_PROFILE);
 }
 
-/**
- * Immediately invalidates the content runtime cache after the Convex read model is synced.
- */
-export function revalidateContentRuntimeCache() {
-  for (const tag of getContentRuntimeCacheTags()) {
+/** Applies global and family tags to one published catalog cache. */
+export function applyPublishedCatalogCache(family: ContentFamily) {
+  cacheTag(CONTENT_CACHE_GLOBAL_TAG, makeContentFamilyCacheTag(family));
+  cacheLife(CONTENT_RUNTIME_CACHE_PROFILE);
+}
+
+/** Applies global, family, and exact artifact tags to one published cache. */
+export function applyPublishedContentCache(
+  family: ContentFamily,
+  artifactHash: Sha256Hash
+) {
+  cacheTag(
+    CONTENT_CACHE_GLOBAL_TAG,
+    makeContentFamilyCacheTag(family),
+    makeArtifactCacheTag(artifactHash)
+  );
+  cacheLife(CONTENT_RUNTIME_CACHE_PROFILE);
+}
+
+/** Immediately invalidates one exact decoded content-family cache request. */
+export function revalidateContentCache(tags: ContentCacheTags) {
+  for (const tag of tags) {
     revalidateTag(tag, CONTENT_RUNTIME_REVALIDATION);
   }
 
-  return getContentRuntimeCacheTags();
+  return tags;
 }

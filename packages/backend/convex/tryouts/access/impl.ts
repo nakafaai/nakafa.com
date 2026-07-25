@@ -7,13 +7,13 @@ import {
   tryoutEntitlementSourceKindCompetition,
   tryoutEntitlementSourceKindSubscription,
 } from "@repo/backend/convex/tryoutAccess/schema";
+import { tryoutAttemptAccessSourceKindSubscription } from "@repo/backend/convex/tryouts/access/source";
 import {
   ensureSubscriptionEntitlement,
   getSubscriptionEntitlementEndsAt,
   isActiveProSubscription,
   loadActiveProSubscription,
 } from "@repo/backend/convex/tryouts/access/subscription";
-import { tryoutAttemptAccessSourceKindSubscription } from "@repo/backend/convex/tryouts/schema";
 import type {
   AttemptAccessFields,
   TryoutStartAccess,

@@ -3,7 +3,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type {
   TryoutStatus,
   TryoutStatusRank,
-} from "@repo/backend/convex/tryouts/schema";
+} from "@repo/backend/convex/tryouts/status";
 import { ConvexError } from "convex/values";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;

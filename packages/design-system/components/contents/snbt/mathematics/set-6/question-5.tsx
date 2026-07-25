@@ -29,7 +29,7 @@ export function Graph({ title, description }: GraphProps) {
   const COLOR_HELPER = getColor("ORANGE");
   const COLOR_LABEL = getColor("SLATE");
 
-  // Helper to generate circle points in XZ plane (Base on ground y=0)
+  /** Samples one horizontal cone base in the XZ plane. */
   const createCircle = (cx: number, cz: number, r: number) =>
     Array.from({ length: SEGMENTS + 1 }, (_, i) => {
       const angle = (i / SEGMENTS) * Math.PI * 2;

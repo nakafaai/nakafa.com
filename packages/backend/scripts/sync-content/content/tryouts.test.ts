@@ -180,31 +180,30 @@ describe("syncTryouts", () => {
       ],
       ready: true,
     },
-  ])("reconciles catalog routes when ready is $ready", async ({
-    cleanupKinds,
-    publishedKinds,
-    ready,
-  }) => {
-    const { calls, tryouts } = await loadTryoutSync(ready);
+  ])(
+    "reconciles catalog routes when ready is $ready",
+    async ({ cleanupKinds, publishedKinds, ready }) => {
+      const { calls, tryouts } = await loadTryoutSync(ready);
 
-    await Effect.runPromise(
-      tryouts.syncTryouts(config, { locale: "id", quiet: true })
-    );
+      await Effect.runPromise(
+        tryouts.syncTryouts(config, { locale: "id", quiet: true })
+      );
 
-    const routes = calls.flatMap((call) => call.routes);
-    expect(
-      routes
-        .filter((route) => route.isReady)
-        .map((route) => route.kind)
-        .sort()
-    ).toEqual(publishedKinds);
-    expect(
-      routes
-        .filter((route) => !route.isReady)
-        .map((route) => route.kind)
-        .sort()
-    ).toEqual(cleanupKinds);
-  });
+      const routes = calls.flatMap((call) => call.routes);
+      expect(
+        routes
+          .filter((route) => route.isReady)
+          .map((route) => route.kind)
+          .sort()
+      ).toEqual(publishedKinds);
+      expect(
+        routes
+          .filter((route) => !route.isReady)
+          .map((route) => route.kind)
+          .sort()
+      ).toEqual(cleanupKinds);
+    }
+  );
 
   it("rejects duplicate localized routes before the first mutation", async () => {
     const { calls, tryouts } = await loadTryoutSync(true, true);

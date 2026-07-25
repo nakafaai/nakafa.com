@@ -23,13 +23,16 @@ describe("try-out finished section state", () => {
     [false, true, "part-head-completed-time-expired-pending-review"],
     [true, false, "part-head-completed"],
     [false, false, "part-head-completed-pending-review"],
-  ] as const)("selects the finished description for attempt=%s expired=%s", (attemptFinished, sectionTimeExpired, expected) => {
-    expect(
-      getTryoutFinishedSectionDescription({
-        attemptFinished,
-        sectionTimeExpired,
-        tTryouts: (key) => key,
-      })
-    ).toBe(expected);
-  });
+  ] as const)(
+    "selects the finished description for attempt=%s expired=%s",
+    (attemptFinished, sectionTimeExpired, expected) => {
+      expect(
+        getTryoutFinishedSectionDescription({
+          attemptFinished,
+          sectionTimeExpired,
+          tTryouts: (key) => key,
+        })
+      ).toBe(expected);
+    }
+  );
 });

@@ -4,11 +4,11 @@ import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { getTryoutStartAccess } from "@repo/backend/convex/tryouts/access/impl";
 import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import {
   getTryoutSectionContentAccess,
   tryoutSectionContentAccessValidator,
 } from "@repo/backend/convex/tryouts/runtime/content";
-import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import {
   startAccessArgsValidator,
   toTryoutStartError,

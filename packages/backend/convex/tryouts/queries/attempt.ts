@@ -10,12 +10,10 @@ import {
   getActiveTryoutSet,
   getActiveTryoutSetByPublicPath,
 } from "@repo/backend/convex/tryouts/read";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutCurrentSectionValidator } from "@repo/backend/convex/tryouts/runtime/content";
-import {
-  tryoutRouteKeyValidator,
-  tryoutScoreResultValidator,
-  tryoutStatusValidator,
-} from "@repo/backend/convex/tryouts/schema";
+import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
+import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
 import { ConvexError, v } from "convex/values";
 
 const currentAttemptValidator = v.object({

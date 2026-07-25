@@ -9,9 +9,12 @@ describe("getTryoutChoiceVariant", () => {
     [true, false, true, "destructive-outline"],
     [false, true, true, "success-outline"],
     [true, true, true, "success-outline"],
-  ] as const)("maps checked=%s correct=%s review=%s to %s", (checked, isCorrect, reviewMode, expected) => {
-    expect(getTryoutChoiceVariant({ checked, isCorrect, reviewMode })).toBe(
-      expected
-    );
-  });
+  ] as const)(
+    "maps checked=%s correct=%s review=%s to %s",
+    (checked, isCorrect, reviewMode, expected) => {
+      expect(getTryoutChoiceVariant({ checked, isCorrect, reviewMode })).toBe(
+        expected
+      );
+    }
+  );
 });

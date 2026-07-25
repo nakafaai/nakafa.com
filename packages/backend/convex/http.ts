@@ -1,6 +1,8 @@
 import "@repo/backend/convex/polyfills";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { createAuth } from "@repo/backend/convex/auth/runtime";
+import { registerContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime";
+import { registerContentReleaseRoutes } from "@repo/backend/convex/contentRelease/ingress/route";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
 import v1 from "@repo/backend/convex/routes/v1";
@@ -44,5 +46,11 @@ app.route("/v1", v1);
 
 // Register webhook routes (internal - called by external services)
 registerPolarRoutes(app);
+
+// Register authenticated content publication routes.
+registerContentReleaseRoutes(app);
+
+// Register server-authenticated executable content reads.
+registerContentRuntimeRoute(app);
 
 export default new HttpRouterWithHono(app);

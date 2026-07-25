@@ -4,14 +4,36 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 
 const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
+const mockReadActiveMaterialRoute = vi.hoisted(() => vi.fn());
+const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
+const mockMatchesPreviewRoute = vi.hoisted(() => vi.fn());
+const activeReleaseId = "release-active";
 
+vi.mock("@/lib/content/preview/route", () => ({
+  matchesPreviewRoute: mockMatchesPreviewRoute,
+}));
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimePublicRoute: mockGetRuntimePublicRoute,
+}));
+vi.mock("@/lib/content/published/route", () => ({
+  readActiveMaterialRoute: mockReadActiveMaterialRoute,
+}));
+vi.mock("@/lib/content/published/active", () => ({
+  readActiveContentIdentity: mockReadActiveContentIdentity,
 }));
 
 describe("projected public html route rejection", () => {
   beforeEach(() => {
     mockGetRuntimePublicRoute.mockReset();
+    mockReadActiveMaterialRoute.mockReset();
+    mockReadActiveMaterialRoute.mockReturnValue(
+      Effect.succeed({ activeReleaseId, kind: "unmanaged" })
+    );
+    mockReadActiveContentIdentity
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
+    mockMatchesPreviewRoute.mockReset();
+    mockMatchesPreviewRoute.mockReturnValue(Effect.succeed(false));
   });
 
   it("rejects missing projected routes through one indexed lookup", async () => {
@@ -49,6 +71,76 @@ describe("projected public html route rejection", () => {
         Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
       ).resolves.toBe(null);
     }
+  });
+
+  it("accepts the exact local preview route before the Convex lookup", async () => {
+    mockMatchesPreviewRoute.mockReturnValueOnce(Effect.succeed(true));
+
+    await expect(
+      Effect.runPromise(
+        readProjectedHtmlRouteRejection(
+          "/en/subjects/mathematics/function-composition-inverse-function/function-concept"
+        )
+      )
+    ).resolves.toBe(null);
+    expect(mockMatchesPreviewRoute).toHaveBeenCalledWith({
+      locale: "en",
+      publicPath:
+        "subjects/mathematics/function-composition-inverse-function/function-concept",
+    });
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+    expect(mockReadActiveMaterialRoute).not.toHaveBeenCalled();
+  });
+
+  it("uses active ownership for new routes and permanent tombstones", async () => {
+    const pathname = "/en/subjects/mathematics/new-topic/new-published-lesson";
+    mockReadActiveMaterialRoute
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId,
+          kind: "found",
+          rendererDomain: "mathematics",
+        })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({ activeReleaseId, kind: "missing" })
+      );
+
+    await expect(
+      Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
+    ).resolves.toBeNull();
+    await expect(
+      Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
+    ).resolves.toBe("en");
+    expect(mockReadActiveMaterialRoute).toHaveBeenCalledWith({
+      activeReleaseId,
+      locale: "en",
+      publicPath: "subjects/mathematics/new-topic/new-published-lesson",
+    });
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+  });
+
+  it("keys unmanaged ownership to the absence of an active release", async () => {
+    mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
+    mockReadActiveMaterialRoute.mockReturnValueOnce(
+      Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
+    );
+    mockGetRuntimePublicRoute.mockReturnValueOnce(
+      Effect.succeed({ kind: "subject-lesson", sitemap: true })
+    );
+
+    await expect(
+      Effect.runPromise(
+        readProjectedHtmlRouteRejection(
+          "/en/subjects/chemistry/green-chemistry/definition"
+        )
+      )
+    ).resolves.toBeNull();
+    expect(mockReadActiveMaterialRoute).toHaveBeenCalledWith({
+      activeReleaseId: null,
+      locale: "en",
+      publicPath: "subjects/chemistry/green-chemistry/definition",
+    });
   });
 
   it("rejects route rows that do not own the requested HTML surface", async () => {
@@ -95,5 +187,7 @@ describe("projected public html route rejection", () => {
     }
 
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+    expect(mockReadActiveMaterialRoute).not.toHaveBeenCalled();
+    expect(mockReadActiveContentIdentity).not.toHaveBeenCalled();
   });
 });

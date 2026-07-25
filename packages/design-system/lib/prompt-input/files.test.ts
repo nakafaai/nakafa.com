@@ -12,6 +12,8 @@ const BLOB_URL = "blob:https://nakafa.test/attachment";
 const DATA_URL = "data:text/plain;base64,bmFrYWZh";
 const image = new File(["image"], "lesson.png", { type: "image/png" });
 const text = new File(["lesson"], "lesson.txt", { type: "text/plain" });
+
+/** Builds one existing prompt attachment with an overridable source URL. */
 function createPromptFile(url = BLOB_URL): PromptInputFile {
   return {
     filename: "lesson.txt",
@@ -24,6 +26,8 @@ function createPromptFile(url = BLOB_URL): PromptInputFile {
 
 class SuccessfulFileReader extends EventTarget {
   result: string | ArrayBuffer | null = null;
+
+  /** Completes a file read with a valid data URL. */
   readAsDataURL() {
     this.result = DATA_URL;
     this.dispatchEvent(new Event("loadend"));
@@ -32,6 +36,8 @@ class SuccessfulFileReader extends EventTarget {
 
 class InvalidResultFileReader extends EventTarget {
   result: string | ArrayBuffer | null = new ArrayBuffer(0);
+
+  /** Completes a file read with an unsupported result shape. */
   readAsDataURL() {
     this.dispatchEvent(new Event("loadend"));
   }
@@ -40,6 +46,8 @@ class InvalidResultFileReader extends EventTarget {
 class FailedFileReader extends EventTarget {
   error = new DOMException("Attachment could not be read.");
   result: string | ArrayBuffer | null = null;
+
+  /** Emits the browser file-reader failure event. */
   readAsDataURL() {
     this.dispatchEvent(new Event("error"));
   }
@@ -48,11 +56,14 @@ class FailedFileReader extends EventTarget {
 class EmptyErrorFileReader extends EventTarget {
   error: DOMException | null = null;
   result: string | ArrayBuffer | null = null;
+
+  /** Emits a failure without an accompanying browser error value. */
   readAsDataURL() {
     this.dispatchEvent(new Event("error"));
   }
 }
 
+/** Installs successful fetch and FileReader boundaries for conversion tests. */
 function stubSuccessfulConversion() {
   const blob = new Blob(["nakafa"], { type: "text/plain" });
   const readBlob = vi.fn().mockResolvedValue(blob);
@@ -225,6 +236,7 @@ describe("prompt input attachment conversion", () => {
     vi.stubGlobal(
       "FileReader",
       class {
+        /** Simulates a browser that cannot construct a FileReader. */
         constructor() {
           throw cause;
         }
@@ -270,31 +282,38 @@ describe("prompt input attachment conversion", () => {
   it.each([
     [1, 1],
     [2, 0],
-  ])("cleans up FileReader state %s when interrupted", async (readyState, expectedAbortCalls) => {
-    let reader: PendingFileReader | undefined;
-    class PendingFileReader extends EventTarget {
-      static LOADING = 1;
-      error: DOMException | null = null;
-      result: string | ArrayBuffer | null = null;
-      readyState = readyState;
-      abort = vi.fn();
+  ])(
+    "cleans up FileReader state %s when interrupted",
+    async (readyState, expectedAbortCalls) => {
+      let reader: PendingFileReader | undefined;
+      class PendingFileReader extends EventTarget {
+        static LOADING = 1;
+        error: DOMException | null = null;
+        result: string | ArrayBuffer | null = null;
+        readyState = readyState;
+        abort = vi.fn();
 
-      constructor() {
-        super();
-        reader = this;
+        /** Exposes the pending reader instance to the interruption assertion. */
+        constructor() {
+          super();
+          reader = this;
+        }
+
+        /** Keeps the read pending until the Effect fiber is interrupted. */
+        readAsDataURL() {
+          return;
+        }
       }
 
-      readAsDataURL() {
-        return;
-      }
+      stubSuccessfulConversion();
+      vi.stubGlobal("FileReader", PendingFileReader);
+      const fiber = Effect.runFork(
+        convertPromptInputFiles([createPromptFile()])
+      );
+      await vi.waitFor(() => expect(reader).toBeDefined());
+      await Effect.runPromise(Fiber.interrupt(fiber));
+
+      expect(reader?.abort).toHaveBeenCalledTimes(expectedAbortCalls);
     }
-
-    stubSuccessfulConversion();
-    vi.stubGlobal("FileReader", PendingFileReader);
-    const fiber = Effect.runFork(convertPromptInputFiles([createPromptFile()]));
-    await vi.waitFor(() => expect(reader).toBeDefined());
-    await Effect.runPromise(Fiber.interrupt(fiber));
-
-    expect(reader?.abort).toHaveBeenCalledTimes(expectedAbortCalls);
-  });
+  );
 });
