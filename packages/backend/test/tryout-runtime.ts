@@ -1,7 +1,7 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
-import type { TryoutStatus } from "@repo/backend/convex/tryouts/schema";
+import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
 import {
   insertTryoutQuestionSource,
   insertTryoutSection,

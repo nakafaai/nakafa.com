@@ -25,23 +25,26 @@ describe("tryouts/read", () => {
   it.each([
     ["set", { isReady: false }],
     ["parent track", { trackIsReady: false }],
-  ] as const)("rejects a ready lookup when the %s is not ready", async (_, readiness) => {
-    const t = createConvexTestWithBetterAuth();
+  ] as const)(
+    "rejects a ready lookup when the %s is not ready",
+    async (_, readiness) => {
+      const t = createConvexTestWithBetterAuth();
 
-    await expect(
-      t.mutation(async (ctx) => {
-        const user = await seedAuthenticatedUser(ctx, {
-          now: TRYOUT_START_NOW,
-          suffix: `tryout-unready-${_}`,
-        });
-        await seedTryoutStartSet(ctx, {
-          ...readiness,
-          userId: user.userId,
-          visibility: "visible",
-        });
+      await expect(
+        t.mutation(async (ctx) => {
+          const user = await seedAuthenticatedUser(ctx, {
+            now: TRYOUT_START_NOW,
+            suffix: `tryout-unready-${_}`,
+          });
+          await seedTryoutStartSet(ctx, {
+            ...readiness,
+            userId: user.userId,
+            visibility: "visible",
+          });
 
-        return await requireActiveReadyTryoutSet(ctx, setIdentity);
-      })
-    ).rejects.toThrow("TRYOUT_SET_NOT_READY");
-  });
+          return await requireActiveReadyTryoutSet(ctx, setIdentity);
+        })
+      ).rejects.toThrow("TRYOUT_SET_NOT_READY");
+    }
+  );
 });

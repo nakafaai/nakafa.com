@@ -3,6 +3,28 @@ import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.j
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { config, proxy } from "@/proxy";
+import {
+  makePreviewRequest,
+  previewRouteEvidence,
+} from "@/test/content-preview";
+
+type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
+
+/** Creates a local request without repeating the test origin. */
+function makeRequest(pathname: string, init?: NextRequestInit) {
+  return new NextRequest(`http://localhost:3000${pathname}`, init);
+}
+
+/** Runs one local request through the proxy boundary. */
+function requestProxy(pathname: string, init?: NextRequestInit) {
+  return proxy(makeRequest(pathname, init));
+}
+
+/** Verifies that next-intl handled one request. */
+function expectLocaleProxy(response: Response) {
+  expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
+  expect(response.headers.get("x-locale-proxy")).toBe("1");
+}
 
 const mockLocaleRouting = vi.hoisted(() => ({
   localeMiddleware: vi.fn(
@@ -15,8 +37,15 @@ const mockLocaleRouting = vi.hoisted(() => ({
   ),
 }));
 const runtimeMocks = vi.hoisted(() => ({
+  readActive: vi.fn(),
+  readActiveIdentity: vi.fn(),
   readContent: vi.fn(),
   readPublic: vi.fn(),
+}));
+const previewMocks = vi.hoisted(() => ({
+  configured: vi.fn(),
+  internal: vi.fn(),
+  route: vi.fn(),
 }));
 
 vi.mock("@repo/internationalization/src/routing", () => ({
@@ -30,300 +59,266 @@ vi.mock("next-intl/middleware", () => ({
   default: vi.fn(() => mockLocaleRouting.localeMiddleware),
 }));
 
+vi.mock("@/lib/content/preview/config", () => ({
+  hasPreviewConfig: previewMocks.configured,
+}));
+
+vi.mock("@/lib/content/preview/route", () => ({
+  matchesInternalPreviewRoute: previewMocks.internal,
+  matchesPreviewRoute: previewMocks.route,
+}));
+
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: runtimeMocks.readContent,
   getRuntimePublicRoute: runtimeMocks.readPublic,
 }));
+vi.mock("@/lib/content/published/route", () => ({
+  readActiveMaterialRoute: runtimeMocks.readActive,
+}));
+vi.mock("@/lib/content/published/active", () => ({
+  readActiveContentIdentity: runtimeMocks.readActiveIdentity,
+}));
 
 describe("proxy", () => {
   beforeEach(() => {
-    runtimeMocks.readContent.mockReset();
-    runtimeMocks.readPublic.mockReset();
-    runtimeMocks.readContent.mockReturnValue(
-      Effect.succeed({ route: "fixture" })
+    runtimeMocks.readContent
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ route: "fixture" }));
+    runtimeMocks.readPublic
+      .mockReset()
+      .mockReturnValue(
+        Effect.succeed({ kind: "subject-lesson", sitemap: true })
+      );
+    runtimeMocks.readActive.mockReset().mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: "release-active",
+        kind: "unmanaged",
+      })
     );
-    runtimeMocks.readPublic.mockReturnValue(
-      Effect.succeed({ kind: "subject-lesson", sitemap: true })
-    );
+    runtimeMocks.readActiveIdentity
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ releaseId: "release-active" }));
+    previewMocks.configured.mockReset().mockReturnValue(false);
+    previewMocks.internal.mockReset().mockReturnValue(Effect.succeed(false));
+    previewMocks.route.mockReset().mockReturnValue(Effect.succeed(false));
     mockLocaleRouting.localeMiddleware.mockClear();
   });
 
-  it("bypasses locale routing for PostHog proxy requests", async () => {
-    const response = await proxy(
-      new NextRequest("http://localhost:3000/_nakafa/i/v0/e/", {
-        method: "POST",
-      })
-    );
+  it.each([
+    ["/_nakafa/i/v0/e/", { method: "POST" }],
+    ["/llms.txt", undefined],
+  ])("bypasses locale routing for %s", async (path, init) => {
+    const response = await requestProxy(path, init);
 
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
     expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
   });
 
-  it("keeps canonical no-slash URLs for application routes", async () => {
-    const response = await proxy(
-      new NextRequest("http://localhost:3000/en/search/")
-    );
+  it.each([
+    ["/en/search/", "http://localhost:3000/en/search"],
+    [
+      "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle?utm=test",
+      "http://localhost:3000/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling?utm=test",
+    ],
+  ])("redirects %s to its canonical URL", async (path, expected) => {
+    const response = await requestProxy(path);
 
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
     expect(response.status).toBe(308);
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/en/search"
-    );
-  });
-
-  it("bypasses locale routing for public discovery endpoints", async () => {
-    const paths = [
-      "/mcp",
-      "/llms.txt",
-      "/logo.svg",
-      "/manifest.webmanifest",
-      "/robots.txt",
-      "/rss.xml",
-      "/sitemap.txt",
-      "/sitemap.xml",
-      "/skill.md",
-      "/e22d548f7fd2482a9022e3b84e944901.txt",
-      "/.well-known/llms.txt",
-      "/.well-known/agent-skills/index.json",
-      "/.well-known/agent-skills/nakafa/SKILL.md",
-    ];
-
-    for (const path of paths) {
-      const response = await proxy(
-        new NextRequest(`http://localhost:3000${path}`)
-      );
-
-      expect(response.headers.get("x-middleware-next")).toBe("1");
-    }
-
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.headers.get("location")).toBe(expected);
   });
 
   it("runs only unsupported root files through the locale proxy", () => {
+    /** Evaluates one URL against the exported proxy matcher. */
     const doesProxyMatch = (url: string) =>
       unstable_doesMiddlewareMatch({ config, url });
-    const rootFileExtensions = [
-      "svg",
-      "jpg",
-      "jpeg",
-      "gif",
-      "webp",
-      "glb",
-      "gltf",
-      "bin",
-      "ktx2",
-      "hdr",
-      "exr",
-      "js",
-      "css",
-      "xml",
-      "webmanifest",
-      "txt",
+    const rootFileExtensions =
+      "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt".split(
+        " "
+      );
+
+    const matched = rootFileExtensions.map(
+      (extension) => `/missing.${extension}`
+    );
+    const bypassed = [
+      "/.well-known/llms.txt",
+      "/sitemap/base.xml",
+      "/llms/en/articles/page/0/llms.txt",
+      "/_next/static/chunks/app.js",
+      "/models/physics/kinematics/car.svg",
+      "/models/physics/kinematics/kenney-car-kit/LICENSE.txt",
+      "/models/physics/kinematics/car.glb",
+      "/missing.png",
     ];
-
-    for (const extension of rootFileExtensions) {
-      expect(doesProxyMatch(`/missing.${extension}`)).toBe(true);
-    }
-
-    expect(doesProxyMatch("/MISSING.XML")).toBe(true);
-    expect(doesProxyMatch("/llms.txt")).toBe(true);
-    expect(doesProxyMatch("/.well-known/llms.txt")).toBe(false);
-    expect(doesProxyMatch("/sitemap/base.xml")).toBe(false);
-    expect(doesProxyMatch("/llms/en/articles/page/0/llms.txt")).toBe(false);
-    expect(doesProxyMatch("/_next/static/chunks/app.js")).toBe(false);
-    expect(doesProxyMatch("/models/physics/kinematics/car.svg")).toBe(false);
     expect(
-      doesProxyMatch("/models/physics/kinematics/kenney-car-kit/LICENSE.txt")
-    ).toBe(false);
-    expect(doesProxyMatch("/models/physics/kinematics/car.glb")).toBe(false);
-    expect(doesProxyMatch("/missing.png")).toBe(false);
+      [...matched, "/MISSING.XML", "/llms.txt"].every(doesProxyMatch)
+    ).toBe(true);
+    expect(bypassed.some(doesProxyMatch)).toBe(false);
   });
 
   it("returns a clean 404 for unsupported root files", async () => {
-    const paths = [
-      "/llms-full.txt",
-      "/missing.js",
-      "/missing.svg",
-      "/missing.webmanifest",
-      "/missing.glb",
-      "/missing-machine-document.xml",
-      "/MISSING-MACHINE-DOCUMENT.XML",
-    ];
-
-    for (const path of paths) {
-      const response = await proxy(
-        new NextRequest(`http://localhost:3000${path}`)
-      );
-
-      expect(response.status).toBe(404);
-      expect(response.headers.get("content-type")).toBe(
-        "text/plain; charset=utf-8"
-      );
-      expect(response.headers.get("x-robots-tag")).toBe("noindex");
-    }
-
+    const response = await requestProxy("/missing-machine-document.xml");
+    expect(response.status).toBe(404);
+    expect(response.headers.get("content-type")).toBe(
+      "text/plain; charset=utf-8"
+    );
+    expect(response.headers.get("x-robots-tag")).toBe("noindex");
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
   });
 
   it("delegates regular routes to the locale middleware", async () => {
-    const response = await proxy(
-      new NextRequest("http://localhost:3000/en/search")
-    );
+    const response = await requestProxy("/en/search");
 
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
+    expectLocaleProxy(response);
     expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
     expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
   });
 
-  it("rewrites markdown requests through the llms route adapter", async () => {
-    const response = await proxy(
-      new NextRequest("http://localhost:3000/en/terms-of-service", {
-        headers: {
-          accept: "text/markdown",
-        },
-      })
-    );
+  it("lets the selected next-intl preview rewrite reach the actual page", async () => {
+    previewMocks.configured.mockReturnValueOnce(true);
+    previewMocks.internal.mockReturnValueOnce(Effect.succeed(true));
 
+    const response = await proxy(makePreviewRequest());
+
+    expect(response.headers.get("x-middleware-next")).toBe("1");
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(response.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/llms.mdx/en/terms-of-service"
-    );
+    expect(previewMocks.internal).toHaveBeenCalledWith(previewRouteEvidence);
   });
 
-  it("lets explicit markdown suffixes reach the llms route adapter", async () => {
-    const response = await proxy(
-      new NextRequest("http://localhost:3000/en/quran/1.md")
-    );
+  it.each([
+    [
+      "accept header",
+      "/en/terms-of-service",
+      { headers: { accept: "text/markdown" } },
+      "http://localhost:3000/llms.mdx/en/terms-of-service",
+    ],
+    [
+      "explicit suffix",
+      "/en/quran/1.md",
+      undefined,
+      "http://localhost:3000/llms.mdx/en/quran/1",
+    ],
+  ])(
+    "rewrites markdown requests with an %s",
+    async (_kind, path, init, expected) => {
+      const response = await requestProxy(path, init);
 
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(response.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/llms.mdx/en/quran/1"
-    );
+      expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+      expect(response.headers.get("x-middleware-rewrite")).toBe(expected);
+    }
+  );
+
+  it.each([
+    ["/id/quran/999", "http://localhost:3000/id/_not-found", null],
+    [
+      "/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
+      "http://localhost:3000/en/_not-found",
+      "curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
+    ],
+  ])(
+    "returns a hard 404 for missing HTML route %s",
+    async (path, rewrite, projectedPath) => {
+      if (projectedPath) {
+        runtimeMocks.readPublic.mockReturnValueOnce(Effect.succeed(null));
+      }
+      const response = await requestProxy(path);
+
+      expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+      expect(response.status).toBe(404);
+      expect(response.headers.get("x-middleware-rewrite")).toBe(rewrite);
+      if (projectedPath) {
+        expect(runtimeMocks.readPublic).toHaveBeenCalledWith({
+          locale: "en",
+          publicPath: projectedPath,
+        });
+      }
+    }
+  );
+
+  it.each([
+    ["unsupported locale paths", "/fr/quran/1"],
+    ["curriculum index routes", "/id/kurikulum"],
+  ])("delegates %s to the locale middleware", async (_kind, path) => {
+    const response = await requestProxy(path);
+
+    expectLocaleProxy(response);
   });
 
-  it("redirects previous material lesson URLs to the canonical architecture", async () => {
-    const response = await proxy(
-      new NextRequest(
-        "http://localhost:3000/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle?utm=test"
+  it.each([
+    [
+      "en",
+      "/en/subjects/chemistry/green-chemistry/definition",
+      "subjects/chemistry/green-chemistry/definition",
+      "subject-lesson",
+    ],
+    [
+      "id",
+      "/id/kurikulum/merdeka/kelas-10/biologi",
+      "kurikulum/merdeka/kelas-10/biologi",
+      "curriculum-context",
+    ],
+  ])(
+    "delegates %s/%s to the locale middleware",
+    async (locale, path, publicPath, kind) => {
+      runtimeMocks.readPublic.mockReturnValueOnce(
+        Effect.succeed({ kind, sitemap: true })
+      );
+      const response = await requestProxy(path);
+
+      expectLocaleProxy(response);
+      expect(runtimeMocks.readContent).not.toHaveBeenCalled();
+      expect(runtimeMocks.readPublic).toHaveBeenCalledWith({
+        locale,
+        publicPath,
+      });
+    }
+  );
+
+  it("routes active material additions and rejects owned tombstones", async () => {
+    const path = "/en/subjects/mathematics/new-topic/new-published-lesson";
+    runtimeMocks.readActive
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-active",
+          kind: "found",
+        })
       )
-    );
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-active",
+          kind: "missing",
+        })
+      );
 
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(response.status).toBe(308);
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling?utm=test"
-    );
-  });
+    const found = await requestProxy(path);
+    expectLocaleProxy(found);
+    expect(runtimeMocks.readPublic).not.toHaveBeenCalled();
 
-  it("returns real 404 responses for invalid finite source-backed HTML routes", async () => {
-    const response = await proxy(
-      new NextRequest("http://localhost:3000/id/quran/999")
-    );
-
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(response.status).toBe(404);
-    expect(response.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/id/_not-found"
-    );
-  });
-
-  it("returns a hard 404 for missing projected HTML routes", async () => {
-    runtimeMocks.readPublic.mockReturnValueOnce(Effect.succeed(null));
-
-    const response = await proxy(
-      new NextRequest(
-        "http://localhost:3000/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a"
-      )
-    );
-
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(response.status).toBe(404);
-    expect(response.headers.get("x-middleware-rewrite")).toBe(
+    mockLocaleRouting.localeMiddleware.mockClear();
+    const missing = await requestProxy(path);
+    expect(missing.status).toBe(404);
+    expect(missing.headers.get("x-middleware-rewrite")).toBe(
       "http://localhost:3000/en/_not-found"
     );
-    expect(runtimeMocks.readPublic).toHaveBeenCalledWith({
-      locale: "en",
-      publicPath: "curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
-    });
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(runtimeMocks.readPublic).not.toHaveBeenCalled();
   });
 
-  it("delegates unsupported locale paths to the locale middleware", async () => {
-    const response = await proxy(
-      new NextRequest("http://localhost:3000/fr/quran/1")
-    );
-
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
-  });
-
-  it("delegates real public content routes to the locale middleware", async () => {
-    const response = await proxy(
-      new NextRequest(
-        "http://localhost:3000/en/subjects/chemistry/green-chemistry/definition"
-      )
-    );
-
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
-    expect(runtimeMocks.readContent).not.toHaveBeenCalled();
-    expect(runtimeMocks.readPublic).toHaveBeenCalledWith({
-      locale: "en",
-      publicPath: "subjects/chemistry/green-chemistry/definition",
-    });
-  });
-
-  it("delegates curriculum app routes to the locale middleware", async () => {
-    runtimeMocks.readPublic.mockReturnValueOnce(
-      Effect.succeed({ kind: "curriculum-context", sitemap: true })
-    );
-
-    const response = await proxy(
-      new NextRequest(
-        "http://localhost:3000/id/kurikulum/merdeka/kelas-10/biologi"
-      )
-    );
-
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
-    expect(runtimeMocks.readContent).not.toHaveBeenCalled();
-    expect(runtimeMocks.readPublic).toHaveBeenCalledWith({
-      locale: "id",
-      publicPath: "kurikulum/merdeka/kelas-10/biologi",
-    });
-  });
-
-  it("delegates curriculum index routes to the locale middleware", async () => {
-    const response = await proxy(
-      new NextRequest("http://localhost:3000/id/kurikulum")
-    );
-
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
-  });
-
-  it("delegates non-read content requests without an exact route lookup", async () => {
-    const response = await proxy(
-      new NextRequest(
-        "http://localhost:3000/en/articles/politics/not-a-read-check",
-        {
-          method: "POST",
-        }
-      )
-    );
+  it.each([
+    {
+      init: { method: "POST" },
+      kind: "non-read content requests without a route lookup",
+      path: "/en/articles/politics/not-a-read-check",
+    },
+    {
+      init: undefined,
+      kind: "defensive content roots without a route shape",
+      path: "/en/unknown-content-root/example",
+    },
+  ])("delegates $kind", async ({ init, path }) => {
+    const response = await requestProxy(path, init);
 
     expect(runtimeMocks.readContent).not.toHaveBeenCalled();
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
-  });
-
-  it("delegates defensive public content roots without an exact route shape", async () => {
-    const response = await proxy(
-      new NextRequest("http://localhost:3000/en/unknown-content-root/example")
-    );
-
-    expect(runtimeMocks.readContent).not.toHaveBeenCalled();
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
+    expectLocaleProxy(response);
   });
 });

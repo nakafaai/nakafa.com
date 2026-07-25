@@ -205,18 +205,18 @@ describe("sync-content cli", () => {
     expect(events).toEqual([]);
   });
 
-  it.each([
-    "full",
-    "reset",
-  ])("keeps locale scoping available for %s sync", async (command) => {
-    const { cli } = await loadCli();
+  it.each(["full", "reset"])(
+    "keeps locale scoping available for %s sync",
+    async (command) => {
+      const { cli } = await loadCli();
 
-    const result = await Effect.runPromise(
-      cli.parseSyncArgs([command, "--locale", "id"])
-    );
+      const result = await Effect.runPromise(
+        cli.parseSyncArgs([command, "--locale", "id"])
+      );
 
-    expect(result.options.locale).toBe("id");
-  });
+      expect(result.options.locale).toBe("id");
+    }
+  );
 
   it("invalidates content runtime cache after targeted learning-program sync", async () => {
     const { cli, events, invalidatedOptions } = await loadCli();
@@ -312,13 +312,16 @@ describe("sync-content cli", () => {
     ["curriculum-topics", "material"],
     ["curriculum-lessons", "material"],
     ["tryouts", "tryout"],
-  ] as const)("limits %s route artifacts to its owning section", async (command, section) => {
-    const { artifactTargets, cli } = await loadCli();
+  ] as const)(
+    "limits %s route artifacts to its owning section",
+    async (command, section) => {
+      const { artifactTargets, cli } = await loadCli();
 
-    await Effect.runPromise(cli.runCommand(command, { locale: "id" }));
+      await Effect.runPromise(cli.runCommand(command, { locale: "id" }));
 
-    expect(artifactTargets).toEqual([[{ locale: "id", section }]]);
-  });
+      expect(artifactTargets).toEqual([[{ locale: "id", section }]]);
+    }
+  );
 
   it.each([
     ["reset", "reset"],

@@ -37,20 +37,20 @@
     "doctor": "pnpm dlx react-doctor@latest"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.2",
+    "@biomejs/biome": "2.5.5",
     "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.31.0",
-    "@effect/language-service": "^0.86.6",
+    "@changesets/cli": "^2.31.1",
+    "@effect/language-service": "^0.87.1",
     "@repo/typescript-config": "workspace:*",
-    "@turbo/gen": "^2.10.4",
+    "@turbo/gen": "^2.10.6",
     "@types/node": "^24.13.3",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vercel/config": "^0.5.5",
     "afdocs": "0.18.7",
     "depcheck": "^1.4.7",
-    "turbo": "^2.10.4",
+    "turbo": "^2.10.6",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "ultracite": "^7.9.3"
+    "ultracite": "^7.9.4"
   },
   "devEngines": {
     "runtime": {

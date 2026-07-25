@@ -1,11 +1,11 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
-  tryoutRouteKeyValidator,
-  tryoutScoringStrategyValidator,
   tryoutSectionVisibilityValidator,
   tryoutTrackKindValidator,
-} from "@repo/backend/convex/tryouts/schema";
+} from "@repo/backend/convex/tryouts/catalog/spec";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
+import { tryoutScoringStrategyValidator } from "@repo/backend/convex/tryouts/score";
 import { readTryoutCountryCode } from "@repo/contents/_types/tryout/countries";
 import { ConvexError, v } from "convex/values";
 

@@ -2,16 +2,15 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
 
 interface Props {
-  as?: React.ElementType;
   children: ReactNode;
   className?: string;
 }
 
-export function LayoutContent({ children, className, as = "article" }: Props) {
-  const Component = as || "article";
+/** Renders the shared article-width content surface. */
+export function LayoutContent({ children, className }: Props) {
   return (
-    <Component className={cn("mx-auto max-w-3xl px-6", className)}>
+    <article className={cn("mx-auto max-w-3xl px-6", className)}>
       {children}
-    </Component>
+    </article>
   );
 }

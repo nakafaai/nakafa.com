@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -22,15 +23,6 @@ const hiddenPoints = { showPoints: false };
 interface GraphProps {
   description: ReactNode;
   title: ReactNode;
-}
-
-/** Returns the midpoint between two cube points. */
-function getMidpoint(pointA: typeof cubePointA, pointB: typeof cubePointA) {
-  return {
-    x: (pointA.x + pointB.x) / 2,
-    y: (pointA.y + pointB.y) / 2,
-    z: (pointA.z + pointB.z) / 2,
-  };
 }
 
 /** Renders the coordinate graph for SNBT set 2 question 6. */

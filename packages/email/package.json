@@ -10,11 +10,11 @@
     "@repo/design-system": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "class-variance-authority": "^0.7.1",
-    "effect": "^3.21.4",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
-    "react-email": "6.7.0",
-    "resend": "^6.17.2"
+    "effect": "3.22.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-email": "6.9.1",
+    "resend": "^6.18.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

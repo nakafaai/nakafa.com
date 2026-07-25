@@ -14,6 +14,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { PreviewRefresh } from "@/components/dev/preview-refresh";
+import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { appViewport } from "@/lib/theme/viewport";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
@@ -152,6 +154,7 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
         <ThemeBootstrap />
       </head>
       <body className="relative">
+        {hasPreviewConfig() ? <PreviewRefresh /> : null}
         <p className="sr-only">
           For AI agents: use <Link href="/llms.txt">/llms.txt</Link> for the
           Nakafa content index.

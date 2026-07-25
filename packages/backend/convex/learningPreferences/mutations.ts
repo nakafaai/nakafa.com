@@ -14,7 +14,7 @@ import {
 import { getLearningProgramByKey } from "@repo/backend/convex/learningPrograms/impl";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { ConvexError, v } from "convex/values";
 
 /** Saves the authenticated user's preferred school curriculum program. */

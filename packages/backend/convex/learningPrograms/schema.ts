@@ -50,6 +50,9 @@ export const learningPlanItemStatusValidator = literals(
   ...LEARNING_PLAN_ITEM_STATUS_VALUES
 );
 
+/** Stable Aksara-owned program identity stored beside its Convex document ID. */
+export const learningProgramKeyValidator = v.string();
+
 export const programSourceInputValidator = v.object({
   label: v.string(),
   retrievedAt: v.string(),
@@ -179,6 +182,7 @@ const tables = {
     lensScope: curriculumLensScopeValidator,
     locale: localeValidator,
     programId: v.id("learningPrograms"),
+    programKey: v.optional(learningProgramKeyValidator),
     sampleContentId: graphContentIdValidator,
     syncedAt: v.number(),
   })
@@ -192,23 +196,36 @@ const tables = {
       "locale",
       "coverageStatus",
     ])
+    .index("by_programKey_and_locale_and_lensId", [
+      "programKey",
+      "locale",
+      "lensId",
+    ])
+    .index("by_programKey_and_locale_and_coverageStatus", [
+      "programKey",
+      "locale",
+      "coverageStatus",
+    ])
     .index("by_locale_and_syncedAt", ["locale", "syncedAt"]),
 
   learningProfiles: defineTable({
     activePlanId: v.optional(v.id("learningPlans")),
     interests: v.array(learningInterestValidator),
     programId: v.id("learningPrograms"),
+    programKey: v.optional(learningProgramKeyValidator),
     stage: v.optional(learningStageValidator),
     updatedAt: v.number(),
     userId: v.id("users"),
   })
     .index("by_userId", ["userId"])
-    .index("by_programId", ["programId"]),
+    .index("by_programId", ["programId"])
+    .index("by_programKey", ["programKey"]),
 
   learningPlans: defineTable({
     createdAt: v.number(),
     profileId: v.id("learningProfiles"),
     programId: v.id("learningPrograms"),
+    programKey: v.optional(learningProgramKeyValidator),
     status: literals("active", "archived", "superseded"),
     updatedAt: v.number(),
     userId: v.id("users"),
@@ -216,7 +233,8 @@ const tables = {
   })
     .index("by_profileId_and_status", ["profileId", "status"])
     .index("by_userId_and_status", ["userId", "status"])
-    .index("by_programId", ["programId"]),
+    .index("by_programId", ["programId"])
+    .index("by_programKey", ["programKey"]),
 
   learningPlanItems: defineTable({
     content_id: graphContentIdValidator,
@@ -227,6 +245,7 @@ const tables = {
     planId: v.id("learningPlans"),
     position: v.number(),
     programId: v.id("learningPrograms"),
+    programKey: v.optional(learningProgramKeyValidator),
     reason: learningPlanItemReasonValidator,
     route: v.optional(v.string()),
     status: learningPlanItemStatusValidator,
@@ -242,6 +261,17 @@ const tables = {
     ])
     .index("by_programId_and_lensId_and_content_id_and_updatedAt", [
       "programId",
+      "lensId",
+      "content_id",
+      "updatedAt",
+    ])
+    .index("by_programKey_and_lensId_and_content_id", [
+      "programKey",
+      "lensId",
+      "content_id",
+    ])
+    .index("by_programKey_and_lensId_and_content_id_and_updatedAt", [
+      "programKey",
       "lensId",
       "content_id",
       "updatedAt",

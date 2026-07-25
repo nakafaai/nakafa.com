@@ -34,9 +34,7 @@ interface Props {
   title: ReactNode;
 }
 
-/**
- * Renders the function-machine lesson card.
- */
+/** Renders the interactive function-machine lesson card. */
 export function FunctionMachine({ title, description, inputLabel }: Props) {
   return (
     <Card className="content-auto-card">
@@ -53,13 +51,9 @@ interface MachineProps {
   inputLabel: string;
 }
 
-/**
- * Provides the interactive linear-function input/output controls.
- */
+/** Provides the interactive linear-function input and output controls. */
 function Machine({ inputLabel }: MachineProps) {
   const [input, setInput] = useState<number>(DEFAULT_INPUT);
-
-  // y = 2x + 1
   const output = 2 * input + 1;
 
   return (

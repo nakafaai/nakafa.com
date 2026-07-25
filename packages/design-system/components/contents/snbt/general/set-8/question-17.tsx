@@ -69,6 +69,7 @@ export function ProfitChart({
     [capitalLabel, revenueLabel]
   );
 
+  /** Formats one chart year with its MDX-owned localized prefix. */
   const formatYear = (value: string) => `${yearLabel}${value}`;
 
   return (

@@ -8,34 +8,23 @@ import {
   AGENT_DISCOVERY_LINK_HEADER,
   LLMS_TEXT_PATH,
 } from "@/lib/agent-discovery";
+import { hasPreviewConfig } from "@/lib/content/preview/config";
+import { matchesInternalPreviewRoute } from "@/lib/content/preview/route";
 import {
   type LocalizedLlmsRoute,
   resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
+import {
+  isLocaleBypassPath,
+  isUnsupportedRootFilePath,
+} from "@/lib/routing/bypass";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
-const UNSUPPORTED_ROOT_FILE_PATTERN =
-  /^\/[^/]+\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$/i;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
-const LOCALE_BYPASS_PATHS = new Set([
-  "/mcp",
-  "/llms.txt",
-  "/logo.svg",
-  "/manifest.webmanifest",
-  "/robots.txt",
-  "/rss.xml",
-  "/sitemap.txt",
-  "/sitemap.xml",
-  "/skill.md",
-  "/e22d548f7fd2482a9022e3b84e944901.txt",
-  "/.well-known/llms.txt",
-  "/.well-known/agent-skills/index.json",
-  "/.well-known/agent-skills/nakafa/SKILL.md",
-]);
 
 /**
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
@@ -75,6 +64,18 @@ export async function proxy(request: NextRequest) {
         "X-Robots-Tag": "noindex",
       },
     });
+  }
+
+  if (
+    hasPreviewConfig() &&
+    (await Effect.runPromise(
+      matchesInternalPreviewRoute({
+        localeHint: request.headers.get("x-next-intl-locale"),
+        pathname,
+      })
+    ))
+  ) {
+    return NextResponse.next();
   }
 
   const routeDecision = resolveLlmsProxyRoute({
@@ -121,21 +122,16 @@ export async function proxy(request: NextRequest) {
 
   request.cookies.set(AUTH_REDIRECT_PATH_COOKIE, pathname);
 
+  return routeLocalizedRequest(request);
+}
+
+/** Applies next-intl routing and Nakafa discovery headers once per pass. */
+function routeLocalizedRequest(request: NextRequest) {
   const response = handleLocalizedRequest(request);
   response.headers.append("Link", AGENT_DISCOVERY_LINK_HEADER);
   response.headers.set("X-Llms-Txt", LLMS_TEXT_PATH);
 
   return response;
-}
-
-/** Returns whether one public AI/system path should skip locale routing. */
-function isLocaleBypassPath(pathname: string) {
-  return LOCALE_BYPASS_PATHS.has(pathname);
-}
-
-/** Rejects unsupported root files before they become invalid locales. */
-function isUnsupportedRootFilePath(pathname: string) {
-  return UNSUPPORTED_ROOT_FILE_PATTERN.test(pathname);
 }
 
 /** Rewrites a localized route to the source-backed markdown handler. */

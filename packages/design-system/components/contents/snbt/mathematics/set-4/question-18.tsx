@@ -1,16 +1,14 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import {
+  getArcPoints,
+  getMidpoint,
+} from "@repo/design-system/components/contents/snbt/geometry";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps, ReactNode } from "react";
 
 interface GraphProps {
   description: ReactNode;
   title: ReactNode;
-}
-
-interface GraphPoint {
-  x: number;
-  y: number;
-  z: number;
 }
 
 const DISTANCE_AC = 12;
@@ -116,35 +114,6 @@ const graphData = [
 /** Scales real-world distances into the chart coordinate space. */
 function scaleDistance(value: number) {
   return value / SCALE;
-}
-
-/** Returns the midpoint used for stable visual labels. */
-function getMidpoint(firstPoint: GraphPoint, secondPoint: GraphPoint) {
-  return {
-    x: (firstPoint.x + secondPoint.x) / 2,
-    y: (firstPoint.y + secondPoint.y) / 2,
-    z: (firstPoint.z + secondPoint.z) / 2,
-  };
-}
-
-/** Generates an arc from a start angle to an end angle. */
-function getArcPoints(
-  center: GraphPoint,
-  radius: number,
-  startAngleRad: number,
-  endAngleRad: number,
-  segments = 20
-) {
-  return Array.from({ length: segments + 1 }, (_, index) => {
-    const t = index / segments;
-    const angle = startAngleRad + t * (endAngleRad - startAngleRad);
-
-    return {
-      x: center.x + radius * Math.cos(angle),
-      y: center.y + radius * Math.sin(angle),
-      z: center.z,
-    };
-  });
 }
 
 /** Renders the coordinate graph for SNBT set 4 question 18. */

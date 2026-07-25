@@ -4,7 +4,7 @@ import { Schema } from "effect";
 const optionalStringSchema = Schema.standardSchemaV1(
   Schema.UndefinedOr(Schema.String)
 );
-const requiredStringSchema = Schema.standardSchemaV1(Schema.String);
+const requiredStringSchema = Schema.standardSchemaV1(Schema.NonEmptyString);
 const optionalUrlSchema = Schema.standardSchemaV1(
   Schema.UndefinedOr(
     Schema.String.pipe(
@@ -33,7 +33,7 @@ export const analyzeKeys = () =>
     },
   });
 
-/** Defines the internal content API secret shared by app-to-app cache calls. */
+/** Defines the shared secret accepted by internal content cache routes. */
 export const contentApiKeys = () =>
   createEnv({
     server: {
@@ -41,6 +41,17 @@ export const contentApiKeys = () =>
     },
     runtimeEnv: {
       INTERNAL_CONTENT_API_KEY: process.env.INTERNAL_CONTENT_API_KEY,
+    },
+  });
+
+/** Defines the private token used only by executable-content runtime reads. */
+export const contentRuntimeKeys = () =>
+  createEnv({
+    server: {
+      CONTENT_RUNTIME_TOKEN: requiredStringSchema,
+    },
+    runtimeEnv: {
+      CONTENT_RUNTIME_TOKEN: process.env.CONTENT_RUNTIME_TOKEN,
     },
   });
 
@@ -81,6 +92,7 @@ export const publicAppKeys = () =>
     },
   });
 
+/** Defines the common environment contract inherited by every Next app. */
 export const keys = () =>
   createEnv({
     extends: [analyzeKeys(), contentApiKeys(), publicAppKeys(), mcpKeys()],

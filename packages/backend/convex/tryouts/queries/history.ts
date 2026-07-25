@@ -3,10 +3,8 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { loadAttemptScoreResult } from "@repo/backend/convex/tryouts/queries/score";
 import { getActiveTryoutSetByPublicPath } from "@repo/backend/convex/tryouts/read";
-import {
-  tryoutScoreResultValidator,
-  tryoutStatusValidator,
-} from "@repo/backend/convex/tryouts/schema";
+import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
+import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
 import {
   paginationOptsValidator,
   paginationResultValidator,

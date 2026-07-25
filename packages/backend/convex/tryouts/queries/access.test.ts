@@ -208,25 +208,28 @@ describe("tryouts/queries/access", () => {
     ["completed", "in-progress", { answers: false, questions: false }],
     ["completed", "completed", { answers: true, questions: true }],
     ["expired", "expired", { answers: true, questions: true }],
-  ] as const)("authorizes attempt=%s section=%s", async (attemptStatus, sectionStatus, expected) => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation((ctx) =>
-      seedTryoutContentAccessState(ctx, {
-        attemptStatus,
-        sectionStatus,
-        suffix: `content-${attemptStatus}-${sectionStatus}`,
-      })
-    );
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
+  ] as const)(
+    "authorizes attempt=%s section=%s",
+    async (attemptStatus, sectionStatus, expected) => {
+      const t = createConvexTestWithBetterAuth();
+      const seeded = await t.mutation((ctx) =>
+        seedTryoutContentAccessState(ctx, {
+          attemptStatus,
+          sectionStatus,
+          suffix: `content-${attemptStatus}-${sectionStatus}`,
+        })
+      );
+      const authed = t.withIdentity({
+        sessionId: seeded.identity.sessionId,
+        subject: seeded.identity.authUserId,
+      });
 
-    expect(
-      await authed.query(
-        api.tryouts.queries.access.getSectionContent,
-        contentArgs
-      )
-    ).toEqual(expected);
-  });
+      expect(
+        await authed.query(
+          api.tryouts.queries.access.getSectionContent,
+          contentArgs
+        )
+      ).toEqual(expected);
+    }
+  );
 });

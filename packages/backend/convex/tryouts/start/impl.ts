@@ -1,16 +1,16 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getIncludedAttemptAccess } from "@repo/backend/convex/tryouts/access/impl";
+import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/convex/tryouts/access/source";
 import {
   expireAttemptAtEffectiveTime,
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
-import { requireIrtScaleVersion } from "@repo/backend/convex/tryouts/runtime/irt";
+import { requireIrtScaleVersion } from "@repo/backend/convex/tryouts/runtime/irt/items";
 import {
   requireInternalEntrySection,
   startSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
-import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/convex/tryouts/schema";
 import { createTryoutAttempt } from "@repo/backend/convex/tryouts/start/attempt";
 import type {
   AttemptAccessFields,

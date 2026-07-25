@@ -2,6 +2,20 @@ packages:
   - apps/*
   - packages/*
 
+overrides:
+  "@ai-sdk/devtools@1.0.7>@hono/node-server": "2.0.11"
+  "@changesets/parse@0.4.3>js-yaml": "4.3.0"
+  "@modelcontextprotocol/sdk@1.29.0>@hono/node-server": "2.0.11"
+  "@vitest/coverage-istanbul@4.1.10>@babel/core": "7.29.7"
+  "auth@1.6.23>@babel/core": "7.29.7"
+  "depcheck@1.4.7>js-yaml": "3.15.0"
+  "minimatch@3.1.5>brace-expansion": "1.1.16"
+  "minimatch@10.2.5>brace-expansion": "5.0.8"
+  "minimatch@7.4.9>brace-expansion": "2.1.2"
+  "next@16.2.11>postcss": "8.5.23"
+  "next@16.2.11>sharp": "0.35.3"
+  "read-yaml-file@1.1.0>js-yaml": "3.15.0"
+
 allowBuilds:
   '@parcel/watcher': true
   '@swc/core': true

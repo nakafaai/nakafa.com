@@ -8,17 +8,17 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
-    "@next/mdx": "^16.2.10",
+    "@next/mdx": "16.2.11",
     "@repo/typescript-config": "workspace:*",
     "@vitest/coverage-istanbul": "^4.1.10",
-    "next": "16.2.10",
+    "next": "16.2.11",
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@next/bundle-analyzer": "16.2.10",
-    "@t3-oss/env-nextjs": "^0.13.11",
-    "effect": "^3.21.4",
     "@mdx-js/loader": "^3.1.1",
-    "@mdx-js/react": "^3.1.1"
+    "@mdx-js/react": "^3.1.1",
+    "@next/bundle-analyzer": "16.2.11",
+    "@t3-oss/env-nextjs": "^0.13.11",
+    "effect": "3.22.0"
   }
 }

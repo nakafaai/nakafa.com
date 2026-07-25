@@ -11,7 +11,7 @@ interface ConvexNakafaOptions {
 /** Creates the Convex-backed Nakafa read model adapter for apps and MCP. */
 export function makeConvexNakafa({ convexUrl }: ConvexNakafaOptions) {
   return Nakafa.make({
-    /** Reads markdown from Convex runtime rows instead of package files. */
+    /** Reads markdown from the active Convex runtime model. */
     read: (input) => readNakafaMarkdown(convexUrl, input),
     /** Reads Quran references from Convex Quran runtime rows. */
     quran: (input) => readNakafaQuranReference(convexUrl, input),

@@ -3,7 +3,7 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import type {
   TryoutScoreResult,
   TryoutSectionScore,
-} from "@repo/backend/convex/tryouts/schema";
+} from "@repo/backend/convex/tryouts/score";
 import { ConvexError } from "convex/values";
 
 /** Loads the immutable attempt score exposed after terminal completion. */

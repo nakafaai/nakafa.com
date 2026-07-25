@@ -1,10 +1,8 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import {
-  type TryoutAttemptAccessSourceKind,
-  tryoutRouteKeyValidator,
-} from "@repo/backend/convex/tryouts/schema";
+import type { TryoutAttemptAccessSourceKind } from "@repo/backend/convex/tryouts/access/source";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { ConvexError, type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 import { Schema } from "effect";

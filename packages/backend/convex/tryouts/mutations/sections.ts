@@ -2,6 +2,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import {
   expireAttemptAtEffectiveTime,
   finalizeSectionAttempt,
@@ -9,7 +10,6 @@ import {
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireOwnedAttempt } from "@repo/backend/convex/tryouts/runtime/score";
 import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
-import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 
 const SECTION_COMPLETED_RESULT = "completed";

@@ -14,7 +14,7 @@ import {
   type AttemptScore,
   scoreRawAnswers,
 } from "@repo/backend/convex/tryouts/runtime/result";
-import type { TryoutScoringStrategy } from "@repo/backend/convex/tryouts/schema";
+import type { TryoutScoringStrategy } from "@repo/backend/convex/tryouts/score";
 import { ConvexError } from "convex/values";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;

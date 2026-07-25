@@ -60,30 +60,29 @@ describe("preprocessLaTeX", () => {
     expect(preprocessLaTeX(markdown)).toContain("   ```math\n   x\n   ```");
   });
 
-  it.each([
-    "-",
-    "*",
-    "+",
-  ])("keeps display math inside %s bullet lists aligned with following prose", (marker) => {
-    const markdown = [
-      `${marker}   **Penyederhanaan:**`,
-      "    \\[\\frac{x^2 - 9}{x - 3} = x + 3\\]",
-      "    *Ingat:* Domainnya adalah \\(x \\neq 3\\), karena penyebut tidak boleh nol.",
-    ].join("\n");
+  it.each(["-", "*", "+"])(
+    "keeps display math inside %s bullet lists aligned with following prose",
+    (marker) => {
+      const markdown = [
+        `${marker}   **Penyederhanaan:**`,
+        "    \\[\\frac{x^2 - 9}{x - 3} = x + 3\\]",
+        "    *Ingat:* Domainnya adalah \\(x \\neq 3\\), karena penyebut tidak boleh nol.",
+      ].join("\n");
 
-    const output = preprocessLaTeX(markdown);
+      const output = preprocessLaTeX(markdown);
 
-    expect(output).toContain(
-      "    ```math\n    \\frac{x^2 - 9}{x - 3} = x + 3\n    ```"
-    );
-    expect(output).toContain(
-      "    *Ingat:* Domainnya adalah $$x \\neq 3$$, karena penyebut tidak boleh nol."
-    );
-    expect(output).not.toContain("\n\n```math");
-    expect(JSON.stringify(Lexer.lex(output, { gfm: true }))).not.toContain(
-      '"codeBlockStyle":"indented"'
-    );
-  });
+      expect(output).toContain(
+        "    ```math\n    \\frac{x^2 - 9}{x - 3} = x + 3\n    ```"
+      );
+      expect(output).toContain(
+        "    *Ingat:* Domainnya adalah $$x \\neq 3$$, karena penyebut tidak boleh nol."
+      );
+      expect(output).not.toContain("\n\n```math");
+      expect(JSON.stringify(Lexer.lex(output, { gfm: true }))).not.toContain(
+        '"codeBlockStyle":"indented"'
+      );
+    }
+  );
 
   it("normalizes dollar math inside plain code fences into math fences", () => {
     const markdown = ["```", "$x^2$", "```"].join("\n");

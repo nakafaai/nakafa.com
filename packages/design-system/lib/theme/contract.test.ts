@@ -9,6 +9,7 @@ import {
   REQUIRED_THEME_TOKENS,
   readCustomThemeNames,
   readDirectValue,
+  readOklchChannels,
   readThemeStyleSources,
   SEMANTIC_COLOR_TOKENS,
   THEME_METADATA_PROPERTIES,
@@ -114,6 +115,12 @@ describe("theme profile contract", () => {
     expect(new Set(SEMANTIC_COLOR_TOKENS).size).toBe(38);
     expect(REQUIRED_THEME_TOKENS).toHaveLength(47);
     expect(new Set(REQUIRED_THEME_TOKENS).size).toBe(47);
+  });
+
+  it("rejects an OKLCH color with an omitted numeric channel", () => {
+    expect(() => readOklchChannels("oklch(none 0.1 240)")).toThrow(
+      'Theme color "oklch(none 0.1 240)" has a missing channel.'
+    );
   });
 
   it("registers exactly 31 concrete profiles plus system preference", () => {

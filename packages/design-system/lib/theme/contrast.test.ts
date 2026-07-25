@@ -5,6 +5,7 @@ import {
   createThemeProfiles,
   findTopLevelRule,
   readDirectValue,
+  readOklchChannels,
   readThemeStyleSources,
   SEMANTIC_COLOR_TOKENS,
 } from "@repo/design-system/lib/theme/contract";
@@ -90,6 +91,7 @@ const nonTextPairs = NON_TEXT_ROLE_PAIRS.map(
   })
 );
 
+/** Finds text or non-text semantic tokens below their contrast requirement. */
 function findContrastViolations(pairs: readonly ContrastPair[]) {
   return profiles.flatMap((profile) => {
     const rule = findTopLevelRule(profile.root, profile.selector);
@@ -112,6 +114,7 @@ function findContrastViolations(pairs: readonly ContrastPair[]) {
   });
 }
 
+/** Finds missing, invalid, translucent, or out-of-gamut semantic colors. */
 function findThemeColorViolations() {
   const violations: ThemeColorViolation[] = [];
 
@@ -160,10 +163,12 @@ function findThemeColorViolations() {
   return violations;
 }
 
+/** Returns the shortest angular distance between two hue values. */
 function getHueDistance(first: number, second: number) {
   return Math.abs(((first - second + 540) % 360) - 180);
 }
 
+/** Finds border and input colors that no longer form one visual family. */
 function findBorderInputFamilyViolations() {
   const violations: ThemeCohesionViolation[] = [];
 
@@ -180,8 +185,8 @@ function findBorderInputFamilyViolations() {
       continue;
     }
 
-    const [, borderChroma, borderHue] = new Color(border).oklch;
-    const [, inputChroma, inputHue] = new Color(input).oklch;
+    const { chroma: borderChroma, hue: borderHue } = readOklchChannels(border);
+    const { chroma: inputChroma, hue: inputHue } = readOklchChannels(input);
     const perceptualDistance = new Color(border).deltaE(new Color(input), "OK");
     const chromaDifference = Math.abs(borderChroma - inputChroma);
     const hueDifference = getHueDistance(borderHue, inputHue);
@@ -209,6 +214,7 @@ function findBorderInputFamilyViolations() {
   return violations;
 }
 
+/** Finds semantic borders that disappear against their owning surfaces. */
 function findErasedBoundaries() {
   const violations: ThemeCohesionViolation[] = [];
 
@@ -239,6 +245,7 @@ function findErasedBoundaries() {
   return violations;
 }
 
+/** Finds status colors outside their declared chroma and hue families. */
 function findStatusColorFamilyViolations() {
   const violations: ThemeCohesionViolation[] = [];
 
@@ -255,7 +262,7 @@ function findStatusColorFamilyViolations() {
         continue;
       }
 
-      const [, chroma, hue] = new Color(value).oklch;
+      const { chroma, hue } = readOklchChannels(value);
       if (
         chroma < family.minimumChroma ||
         hue < family.minimumHue ||

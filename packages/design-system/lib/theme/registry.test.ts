@@ -72,16 +72,12 @@ describe("getThemeAppearance", () => {
     expect(getThemeAppearance("dark")).toBe("dark");
   });
 
-  it.each([
-    "light",
-    "darkmatter",
-    "cosmic",
-    "system",
-    undefined,
-    "unknown",
-  ])("resolves %s to the light default", (theme) => {
-    expect(getThemeAppearance(theme)).toBe("light");
-  });
+  it.each(["light", "darkmatter", "cosmic", "system", undefined, "unknown"])(
+    "resolves %s to the light default",
+    (theme) => {
+      expect(getThemeAppearance(theme)).toBe("light");
+    }
+  );
 });
 
 describe("getThemeShaderColor", () => {
@@ -93,10 +89,10 @@ describe("getThemeShaderColor", () => {
     expect(getThemeShaderColor("system")).toBe(getThemeShaderColor("light"));
   });
 
-  it.each([
-    undefined,
-    "unknown",
-  ])("falls back to the official light projection for %s", (theme) => {
-    expect(getThemeShaderColor(theme)).toBe(getThemeShaderColor("light"));
-  });
+  it.each([undefined, "unknown"])(
+    "falls back to the official light projection for %s",
+    (theme) => {
+      expect(getThemeShaderColor(theme)).toBe(getThemeShaderColor("light"));
+    }
+  );
 });
