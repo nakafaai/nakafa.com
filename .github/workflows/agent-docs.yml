@@ -68,6 +68,14 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Load main content runtime token
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          CONTENT_RUNTIME_TOKEN: ${{ secrets.CONTENT_RUNTIME_TOKEN }}
+        run: |
+          test -n "$CONTENT_RUNTIME_TOKEN"
+          echo "CONTENT_RUNTIME_TOKEN=$CONTENT_RUNTIME_TOKEN" >> "$GITHUB_ENV"
+
       - name: Build production app
         run: pnpm build
         env:
