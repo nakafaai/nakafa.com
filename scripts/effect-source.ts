@@ -84,6 +84,12 @@ const runGit = Effect.fn("EffectSource.runGit")((args: readonly string[]) =>
   )
 );
 
+/** Runs Git and trims one scalar value from its successful output. */
+const readGitValue = Effect.fn("EffectSource.readGitValue")(
+  (args: readonly string[]) =>
+    runGit(args).pipe(Effect.map((output) => output.trim()))
+);
+
 /** Reads and validates one package version through the platform filesystem. */
 const readVersion = Effect.fn("EffectSource.readVersion")(function* (
   path: string
@@ -134,6 +140,30 @@ const inspectSource = Effect.fn("EffectSource.inspect")(function* (
 
   const installedVersion = yield* readVersion(config.installedManifest);
   const vendoredVersion = yield* readVersion(config.vendoredManifest);
+  const referenceCommit = yield* readGitValue([
+    "log",
+    "-1",
+    "--format=%H",
+    "--fixed-strings",
+    `--grep=git-subtree-dir: ${config.sourcePath}`,
+    "HEAD",
+  ]);
+  if (!referenceCommit) {
+    return yield* new EffectSourceMismatch({
+      detail: `${config.sourcePath} has no valid Git subtree identity.`,
+    });
+  }
+
+  const [currentTree, referenceTree] = yield* Effect.all([
+    readGitValue(["rev-parse", `HEAD:${config.sourcePath}`]),
+    readGitValue(["rev-parse", `${referenceCommit}:${config.sourcePath}`]),
+  ]);
+  if (currentTree !== referenceTree) {
+    return yield* new EffectSourceMismatch({
+      detail: `${config.sourcePath} differs from its recorded read-only subtree.`,
+    });
+  }
+
   return { installedVersion, vendoredVersion };
 });
 
@@ -158,9 +188,7 @@ const checkSource = Effect.fn("EffectSource.check")(function* (
 /** Requires a named branch and clean worktree before Git subtree commits. */
 const requireCleanWorktree = Effect.fn("EffectSource.requireClean")(
   function* () {
-    const branchRef = yield* runGit(["symbolic-ref", "--quiet", "HEAD"]).pipe(
-      Effect.map((output) => output.trim())
-    );
+    const branchRef = yield* readGitValue(["symbolic-ref", "--quiet", "HEAD"]);
     const status = yield* runGit(["status", "--porcelain"]);
 
     if (status.trim()) {
@@ -189,9 +217,7 @@ const updateSource = Effect.fn("EffectSource.update")(function* (
   }
 
   const tag = `effect@${state.installedVersion}`;
-  const previousHead = yield* runGit(["rev-parse", "HEAD"]).pipe(
-    Effect.map((output) => output.trim())
-  );
+  const previousHead = yield* readGitValue(["rev-parse", "HEAD"]);
   yield* runGit([
     "subtree",
     "pull",
@@ -200,16 +226,10 @@ const updateSource = Effect.fn("EffectSource.update")(function* (
     tag,
     "--squash",
   ]);
-  const mergeHead = yield* runGit(["rev-parse", "HEAD"]).pipe(
-    Effect.map((output) => output.trim())
-  );
-  const tree = yield* runGit(["rev-parse", "HEAD^{tree}"]).pipe(
-    Effect.map((output) => output.trim())
-  );
-  const split = yield* runGit(["rev-parse", "FETCH_HEAD^{commit}"]).pipe(
-    Effect.map((output) => output.trim())
-  );
-  const linearHead = yield* runGit([
+  const mergeHead = yield* readGitValue(["rev-parse", "HEAD"]);
+  const tree = yield* readGitValue(["rev-parse", "HEAD^{tree}"]);
+  const split = yield* readGitValue(["rev-parse", "FETCH_HEAD^{commit}"]);
+  const linearHead = yield* readGitValue([
     "commit-tree",
     tree,
     "-p",
@@ -218,7 +238,7 @@ const updateSource = Effect.fn("EffectSource.update")(function* (
     `build(effect): update source to ${state.installedVersion}`,
     "-m",
     `git-subtree-dir: ${config.sourcePath}\ngit-subtree-split: ${split}`,
-  ]).pipe(Effect.map((output) => output.trim()));
+  ]);
   yield* runGit([
     "update-ref",
     "-m",
