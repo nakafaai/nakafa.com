@@ -17,7 +17,9 @@ export function createComponentRequirements(
   componentNames: readonly string[],
   version: number
 ) {
-  return [...componentNames].sort().map((name) => ({ name, version }));
+  return Array.from(componentNames)
+    .sort()
+    .map((name) => ({ name, version }));
 }
 
 /** Canonicalizes independent authoring and supported renderer versions. */
