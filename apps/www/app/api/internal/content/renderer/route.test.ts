@@ -1,15 +1,28 @@
 // @vitest-environment node
 
-import { Effect } from "effect";
+import {
+  PreviewRendererNonceSchema,
+  PreviewRendererResponseSchema,
+  PreviewRendererSecretSchema,
+  verifyPreviewRendererProof,
+} from "@nakafa/aksara-contracts/preview/auth";
+import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
+import { Effect, Schema } from "effect";
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const nonce = PreviewRendererNonceSchema.make("n".repeat(43));
+const secret = PreviewRendererSecretSchema.make("s".repeat(43));
 const manifest = {
   base: {
     authoringComponents: [{ name: "BlockMath", version: 1 }],
     supportedComponents: [{ name: "BlockMath", version: 1 }],
   },
-  domains: [],
+  domains: RENDERER_DOMAINS.map((name) => ({
+    authoringComponents: [],
+    name,
+    supportedComponents: [],
+  })),
   format: "nakafa-mdx-renderer-v1",
   hash: `sha256:${"a".repeat(64)}`,
   publishedDomains: ["mathematics"],
@@ -30,12 +43,17 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-/** Creates one renderer request with an optional authorization header. */
-function createRequest(authorization?: string) {
+/** Creates one renderer request with optional local authentication values. */
+function createRequest(
+  input: { readonly authorization?: string; readonly nonce?: string } = {}
+) {
   const headers = new Headers();
 
-  if (authorization) {
-    headers.set("Authorization", authorization);
+  if (input.authorization) {
+    headers.set("Authorization", input.authorization);
+  }
+  if (input.nonce) {
+    headers.set("x-aksara-preview-nonce", input.nonce);
   }
 
   return new NextRequest("https://nakafa.com/api/internal/content/renderer", {
@@ -43,18 +61,11 @@ function createRequest(authorization?: string) {
   });
 }
 
-/** Installs the complete ephemeral environment expected from the CLI child. */
-function stubPreviewEnvironment() {
+/** Installs independent local renderer credentials from the CLI child. */
+function stubRendererEnvironment() {
   vi.stubEnv("NODE_ENV", "development");
-  vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/v1/events");
-  vi.stubEnv("AKSARA_PREVIEW_KEY_ID", "local-preview");
-  vi.stubEnv("AKSARA_PREVIEW_MANIFEST_PATH", "/v1/manifest");
-  vi.stubEnv("AKSARA_PREVIEW_ORIGIN", "http://127.0.0.1:4000/");
-  vi.stubEnv(
-    "AKSARA_PREVIEW_PUBLIC_KEY",
-    "-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----\n"
-  );
-  vi.stubEnv("AKSARA_PREVIEW_TOKEN", "ephemeral-token");
+  vi.stubEnv("AKSARA_PREVIEW_RENDERER_SECRET", secret);
+  vi.stubEnv("AKSARA_PREVIEW_RENDERER_TOKEN", "renderer-token");
 }
 
 describe("renderer manifest route", () => {
@@ -63,8 +74,8 @@ describe("renderer manifest route", () => {
 
     const responses = await Promise.all([
       GET(createRequest()),
-      GET(createRequest("Basic test-key")),
-      GET(createRequest("Bearer wrong-key")),
+      GET(createRequest({ authorization: "Basic test-key" })),
+      GET(createRequest({ authorization: "Bearer wrong-key" })),
     ]);
 
     for (const response of responses) {
@@ -75,19 +86,67 @@ describe("renderer manifest route", () => {
 
   it("returns the exact private no-store envelope", async () => {
     const { GET } = await import("@/app/api/internal/content/renderer/route");
-    const response = await GET(createRequest("Bearer test-key"));
+    const response = await GET(
+      createRequest({ authorization: "Bearer test-key" })
+    );
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     await expect(response.json()).resolves.toEqual(manifest);
   });
 
-  it("accepts only the ephemeral token in the development child", async () => {
-    stubPreviewEnvironment();
+  it("requires both local renderer credentials and a valid nonce", async () => {
+    stubRendererEnvironment();
     const { GET } = await import("@/app/api/internal/content/renderer/route");
 
-    expect((await GET(createRequest("Bearer ephemeral-token"))).status).toBe(
-      200
+    const responses = await Promise.all([
+      GET(
+        createRequest({
+          authorization: "Bearer renderer-token",
+        })
+      ),
+      GET(
+        createRequest({
+          authorization: "Bearer renderer-token",
+          nonce: "invalid",
+        })
+      ),
+      GET(
+        createRequest({
+          authorization: "Bearer wrong-token",
+          nonce,
+        })
+      ),
+    ]);
+
+    expect(responses.map(({ status }) => status)).toEqual([401, 401, 401]);
+  });
+
+  it("returns a challenge-bound local renderer proof", async () => {
+    stubRendererEnvironment();
+    const { GET } = await import("@/app/api/internal/content/renderer/route");
+    const response = await GET(
+      createRequest({
+        authorization: "Bearer renderer-token",
+        nonce,
+      })
     );
+    const body = Schema.decodeUnknownSync(PreviewRendererResponseSchema)(
+      await response.json()
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(body.manifest).toEqual(manifest);
+    await expect(
+      Effect.runPromise(
+        verifyPreviewRendererProof({
+          manifestHash: body.manifest.hash,
+          nonce,
+          proof: body.proof,
+          secret,
+        })
+      )
+    ).resolves.toBeUndefined();
   });
 });

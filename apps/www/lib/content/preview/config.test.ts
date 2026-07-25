@@ -6,6 +6,7 @@ import {
   hasPreviewConfig,
   previewUrl,
   readPreviewConfig,
+  readPreviewRendererConfig,
 } from "@/lib/content/preview/config";
 import { previewConfig } from "@/test/content-preview";
 
@@ -20,6 +21,11 @@ function readConfig() {
   return Effect.runPromise(readPreviewConfig());
 }
 
+/** Runs the independent local renderer environment boundary. */
+function readRendererConfig() {
+  return Effect.runPromise(readPreviewRendererConfig());
+}
+
 /** Installs one complete test-only child environment. */
 function stubPreviewEnvironment() {
   vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/v1/events");
@@ -30,16 +36,22 @@ function stubPreviewEnvironment() {
     "AKSARA_PREVIEW_PUBLIC_KEY",
     "-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----\n"
   );
-  vi.stubEnv("AKSARA_PREVIEW_TOKEN", "ephemeral-token");
+  vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", "provider-token");
+}
+
+/** Installs complete test-only local renderer credentials. */
+function stubRendererEnvironment() {
+  vi.stubEnv("AKSARA_PREVIEW_RENDERER_SECRET", "s".repeat(43));
+  vi.stubEnv("AKSARA_PREVIEW_RENDERER_TOKEN", "renderer-token");
 }
 
 describe("local preview configuration", () => {
   it("gates Effect startup to a configured development child", () => {
     vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("AKSARA_PREVIEW_TOKEN", undefined);
+    vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", undefined);
     expect(hasPreviewConfig()).toBe(false);
 
-    vi.stubEnv("AKSARA_PREVIEW_TOKEN", "partial-token");
+    vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", "partial-token");
     expect(hasPreviewConfig()).toBe(true);
 
     vi.stubEnv("NODE_ENV", "production");
@@ -52,7 +64,7 @@ describe("local preview configuration", () => {
     const config = await readConfig();
 
     expect(Option.map(config, ({ token }) => Redacted.value(token))).toEqual(
-      Option.some("ephemeral-token")
+      Option.some("provider-token")
     );
     expect(Option.map(config, ({ origin }) => origin.toString())).toEqual(
       Option.some("http://127.0.0.1:4000/")
@@ -61,7 +73,7 @@ describe("local preview configuration", () => {
 
   it("ignores absent and non-development preview configuration", async () => {
     vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("AKSARA_PREVIEW_TOKEN", undefined);
+    vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", undefined);
     await expect(readConfig()).resolves.toEqual(Option.none());
 
     vi.stubEnv("NODE_ENV", "production");
@@ -71,12 +83,56 @@ describe("local preview configuration", () => {
 
   it("fails closed for an invalid development token", async () => {
     vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("AKSARA_PREVIEW_TOKEN", " ");
+    vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", " ");
     const error = await Effect.runPromise(
       readPreviewConfig().pipe(Effect.flip)
     );
 
     expect(error._tag).toBe("PreviewConfigError");
+  });
+
+  it("keeps provider and renderer credentials independent", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    stubPreviewEnvironment();
+    stubRendererEnvironment();
+
+    const [provider, renderer] = await Promise.all([
+      readConfig(),
+      readRendererConfig(),
+    ]);
+
+    expect(Option.map(provider, ({ token }) => Redacted.value(token))).toEqual(
+      Option.some("provider-token")
+    );
+    expect(Option.map(renderer, ({ token }) => Redacted.value(token))).toEqual(
+      Option.some("renderer-token")
+    );
+    expect(Option.map(renderer, ({ secret }) => secret)).toEqual(
+      Option.some("s".repeat(43))
+    );
+  });
+
+  it("ignores absent or production renderer credentials", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    await expect(readRendererConfig()).resolves.toEqual(Option.none());
+
+    vi.stubEnv("NODE_ENV", "production");
+    stubRendererEnvironment();
+    await expect(readRendererConfig()).resolves.toEqual(Option.none());
+  });
+
+  it("fails closed for partial or invalid renderer credentials", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("AKSARA_PREVIEW_RENDERER_TOKEN", "renderer-token");
+    await expect(
+      Effect.runPromise(readPreviewRendererConfig().pipe(Effect.flip))
+    ).resolves.toMatchObject({ _tag: "PreviewRendererConfigError" });
+
+    stubRendererEnvironment();
+    vi.stubEnv("AKSARA_PREVIEW_RENDERER_SECRET", "invalid");
+    await expect(
+      Effect.runPromise(readPreviewRendererConfig().pipe(Effect.flip))
+    ).resolves.toMatchObject({ _tag: "PreviewRendererConfigError" });
   });
 
   it("requires each environment field to use its exact provider endpoint", async () => {

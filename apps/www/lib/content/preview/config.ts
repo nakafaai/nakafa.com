@@ -4,6 +4,10 @@ import {
   type SigningKeyId,
   SigningKeyIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import {
+  type PreviewRendererSecret,
+  PreviewRendererSecretSchema,
+} from "@nakafa/aksara-contracts/preview/auth";
 import { Effect, Option, Redacted, Schema } from "effect";
 
 const PreviewTokenSchema = Schema.NonEmptyTrimmedString.pipe(
@@ -35,6 +39,10 @@ const PreviewEnvironmentSchema = Schema.Struct({
   publicKey: PreviewPublicKeySchema,
   token: PreviewTokenSchema,
 });
+const PreviewRendererEnvironmentSchema = Schema.Struct({
+  secret: PreviewRendererSecretSchema,
+  token: PreviewTokenSchema,
+});
 
 /** Reads the one dedicated process-environment boundary without exposing it. */
 function readEnvironment() {
@@ -44,7 +52,15 @@ function readEnvironment() {
     manifestPath: process.env.AKSARA_PREVIEW_MANIFEST_PATH,
     origin: process.env.AKSARA_PREVIEW_ORIGIN,
     publicKey: process.env.AKSARA_PREVIEW_PUBLIC_KEY,
-    token: process.env.AKSARA_PREVIEW_TOKEN,
+    token: process.env.AKSARA_PREVIEW_PROVIDER_TOKEN,
+  };
+}
+
+/** Reads only the ephemeral renderer authentication fields. */
+function readRendererEnvironment() {
+  return {
+    secret: process.env.AKSARA_PREVIEW_RENDERER_SECRET,
+    token: process.env.AKSARA_PREVIEW_RENDERER_TOKEN,
   };
 }
 
@@ -58,10 +74,22 @@ export interface PreviewConfig {
   readonly token: Redacted.Redacted<string>;
 }
 
+/** Ephemeral credentials accepted only by the local renderer endpoint. */
+export interface PreviewRendererConfig {
+  readonly secret: PreviewRendererSecret;
+  readonly token: Redacted.Redacted<string>;
+}
+
 /** Local preview configuration exists but does not satisfy its strict shape. */
 export class PreviewConfigError extends Schema.TaggedError<PreviewConfigError>()(
   "PreviewConfigError",
   { name: Schema.Literal("AKSARA_PREVIEW") }
+) {}
+
+/** Local renderer credentials exist but do not satisfy their strict shape. */
+export class PreviewRendererConfigError extends Schema.TaggedError<PreviewRendererConfigError>()(
+  "PreviewRendererConfigError",
+  { name: Schema.Literal("AKSARA_PREVIEW_RENDERER") }
 ) {}
 
 /** Builds one validated preview URL without allowing its origin to change. */
@@ -128,3 +156,31 @@ export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(
     );
   }
 );
+
+/** Reads independent local renderer credentials only in the development child. */
+export const readPreviewRendererConfig = Effect.fn(
+  "NakafaContent.readPreviewRendererConfig"
+)(() => {
+  if (process.env.NODE_ENV !== "development") {
+    return Effect.succeed(Option.none<PreviewRendererConfig>());
+  }
+
+  const environment = readRendererEnvironment();
+  if (Object.values(environment).every((value) => value === undefined)) {
+    return Effect.succeed(Option.none<PreviewRendererConfig>());
+  }
+
+  return Schema.decodeUnknown(PreviewRendererEnvironmentSchema)(environment, {
+    onExcessProperty: "error",
+  }).pipe(
+    Effect.map((value) =>
+      Option.some<PreviewRendererConfig>({
+        secret: value.secret,
+        token: Redacted.make(value.token),
+      })
+    ),
+    Effect.mapError(
+      () => new PreviewRendererConfigError({ name: "AKSARA_PREVIEW_RENDERER" })
+    )
+  );
+});
