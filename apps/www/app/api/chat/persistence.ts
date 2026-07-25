@@ -14,6 +14,7 @@ import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Option, Schema } from "effect";
+import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 
 /** Generated Convex page shape returned by the chat-message pagination query. */
 type ChatMessagesPage = FunctionReturnType<
@@ -57,22 +58,29 @@ export const createChatWithMessage = Effect.fn("chat.createChatWithMessage")(
     readonly token: string;
   }) {
     const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
-    const result = yield* Effect.tryPromise(() =>
-      fetchMutation(
-        convexApi.chats.mutations.createChatWithMessage,
-        {
-          type: "study",
-          message: createPersistedMessage({
-            message,
-            modelId,
-            ninaContextSnapshot,
-            ninaContextTransition,
-          }),
-          parts: dbParts,
-        },
-        { token }
-      )
-    );
+    const result = yield* Effect.tryPromise({
+      try: () =>
+        fetchMutation(
+          convexApi.chats.mutations.createChatWithMessage,
+          {
+            type: "study",
+            message: createPersistedMessage({
+              message,
+              modelId,
+              ninaContextSnapshot,
+              ninaContextTransition,
+            }),
+            parts: dbParts,
+          },
+          { token }
+        ),
+      catch: (cause) =>
+        new ChatMutationError({
+          cause,
+          message: "Unable to create the chat.",
+          operation: "create-chat",
+        }),
+    });
 
     return result.chatId;
   }
@@ -101,24 +109,31 @@ export const saveChatMessage = Effect.fn("chat.saveChatMessage")(function* ({
 }) {
   const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
 
-  yield* Effect.tryPromise(() =>
-    fetchMutation(
-      convexApi.chats.mutations.saveMessage,
-      {
-        message: {
-          chatId,
-          ...createPersistedMessage({
-            message,
-            modelId,
-            ninaContextSnapshot,
-            ninaContextTransition,
-          }),
+  yield* Effect.tryPromise({
+    try: () =>
+      fetchMutation(
+        convexApi.chats.mutations.saveMessage,
+        {
+          message: {
+            chatId,
+            ...createPersistedMessage({
+              message,
+              modelId,
+              ninaContextSnapshot,
+              ninaContextTransition,
+            }),
+          },
+          parts: dbParts,
         },
-        parts: dbParts,
-      },
-      { token }
-    )
-  );
+        { token }
+      ),
+    catch: (cause) =>
+      new ChatMutationError({
+        cause,
+        message: "Unable to save the chat message.",
+        operation: "save-message",
+      }),
+  });
 
   return chatId;
 });
@@ -140,13 +155,20 @@ export const loadPinnedNinaContext = Effect.fn("chat.loadPinnedNinaContext")(
     readonly messageIdentifier: string;
     readonly token: string;
   }) {
-    const storedContext = yield* Effect.tryPromise(() =>
-      fetchQuery(
-        convexApi.chats.queries.getPinnedNinaContextForTurn,
-        { chatId, messageIdentifier },
-        { token }
-      )
-    );
+    const storedContext = yield* Effect.tryPromise({
+      try: () =>
+        fetchQuery(
+          convexApi.chats.queries.getPinnedNinaContextForTurn,
+          { chatId, messageIdentifier },
+          { token }
+        ),
+      catch: (cause) =>
+        new ChatQueryError({
+          cause,
+          message: "Unable to load the pinned Nina context.",
+          operation: "load-context",
+        }),
+    });
 
     const decoded = Schema.decodeUnknownOption(NinaContextSnapshotSchema)(
       storedContext
@@ -177,19 +199,26 @@ export const loadMessages = Effect.fn("chat.loadMessages")(function* ({
   let messages: MyUIMessage[] = [];
 
   while (true) {
-    const page: ChatMessagesPage = yield* Effect.tryPromise(() =>
-      fetchQuery(
-        convexApi.chats.queries.loadMessagesPage,
-        {
-          chatId,
-          paginationOpts: {
-            cursor,
-            numItems: CHAT_MESSAGES_PAGE_SIZE,
+    const page: ChatMessagesPage = yield* Effect.tryPromise({
+      try: () =>
+        fetchQuery(
+          convexApi.chats.queries.loadMessagesPage,
+          {
+            chatId,
+            paginationOpts: {
+              cursor,
+              numItems: CHAT_MESSAGES_PAGE_SIZE,
+            },
           },
-        },
-        { token }
-      )
-    );
+          { token }
+        ),
+      catch: (cause) =>
+        new ChatQueryError({
+          cause,
+          message: "Unable to load the chat messages.",
+          operation: "load-messages",
+        }),
+    });
     const nextMessages = mapDBMessagesToUIMessages([...page.page].reverse());
     messages = [...nextMessages, ...messages];
 

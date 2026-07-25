@@ -3,6 +3,7 @@ import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 import {
   getLearningProfile,
   getUserInfo,
@@ -84,6 +85,21 @@ describe("app/api/chat/utils", () => {
     );
   });
 
+  it("maps user synchronization failures into the mutation error contract", async () => {
+    const cause = new Error("mutation unavailable");
+    vi.mocked(fetchMutation).mockRejectedValueOnce(cause);
+
+    const error = await Effect.runPromise(
+      getUserInfo("test-token").pipe(Effect.flip)
+    );
+
+    expect(error).toBeInstanceOf(ChatMutationError);
+    expect(error).toMatchObject({
+      cause,
+      operation: "sync-user",
+    });
+  });
+
   it("fetches active learning profile through the shared Convex query", async () => {
     const learningProfile = {
       interests: ["exam-prep", "assessment-prep"],
@@ -147,5 +163,20 @@ describe("app/api/chat/utils", () => {
         token: "test-token",
       }
     );
+  });
+
+  it("maps learning-profile failures into the query error contract", async () => {
+    const cause = new Error("query unavailable");
+    vi.mocked(fetchQuery).mockRejectedValueOnce(cause);
+
+    const error = await Effect.runPromise(
+      getLearningProfile("test-token", "en").pipe(Effect.flip)
+    );
+
+    expect(error).toBeInstanceOf(ChatQueryError);
+    expect(error).toMatchObject({
+      cause,
+      operation: "load-profile",
+    });
   });
 });

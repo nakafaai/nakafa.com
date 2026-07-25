@@ -26,5 +26,5 @@ export function verifyNakafaContent(convexUrl: string, input: string) {
     }
 
     return true;
-  }).pipe(Effect.catchAll(() => Effect.succeed(false)));
+  });
 }

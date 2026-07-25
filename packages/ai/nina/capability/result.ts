@@ -125,10 +125,11 @@ export const recoverSpecialistFailure = Effect.fn("nina.specialist.recover")(
     readonly reporter: Context.Tag.Service<typeof NinaReporter>;
   }) {
     const normalizedError = normalizeError(error);
+    const diagnosticError = getDiagnosticError(normalizedError);
 
     yield* Effect.annotateCurrentSpan("component", component);
     yield* Effect.annotateCurrentSpan("errorLocation", errorLocation);
-    yield* reporter.report({ error: normalizedError, source: errorLocation });
+    yield* reporter.report({ error: diagnosticError, source: errorLocation });
 
     return {
       ...capabilityResult({
@@ -149,6 +150,11 @@ function normalizeError(error: unknown) {
   }
 
   return new SpecialistUnknownFailure({ message: String(error) });
+}
+
+/** Preserves provider diagnostics stored by a typed capability error. */
+function getDiagnosticError(error: Error) {
+  return error.cause instanceof Error ? error.cause : error;
 }
 
 /** Builds a compact model-facing status for a failed LearningCapability call. */

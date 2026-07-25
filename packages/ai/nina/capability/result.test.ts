@@ -165,6 +165,25 @@ describe("nina/capability/result", () => {
     expect(result.text).toContain("Specialist: nakafa");
     expect(result.text).toContain("Do not invent facts");
   });
+
+  it("reports the provider cause preserved by a typed capability error", async () => {
+    const reported: unknown[] = [];
+    const providerError = new Error("gateway unavailable");
+
+    const result = await Effect.runPromise(
+      recoverSpecialistFailure({
+        component: "math",
+        error: new Error("Math generation failed.", {
+          cause: providerError,
+        }),
+        errorLocation: "runMathAgent",
+        reporter: createReporter(reported),
+      })
+    );
+
+    expect(reported).toEqual([providerError]);
+    expect(result.evidence.limitations).toEqual(["Math generation failed."]);
+  });
 });
 
 /** Creates the diagnostics service used by specialist recovery tests. */
