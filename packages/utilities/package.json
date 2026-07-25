@@ -10,7 +10,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "effect": "3.22.0"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

@@ -53,7 +53,7 @@
     "convex": "^1.42.3",
     "country-flag-icons": "^1.6.20",
     "date-fns": "4.4.0",
-    "effect": "3.22.0",
+    "effect": "catalog:",
     "feed": "^6.0.0",
     "immer": "^11.1.11",
     "ky": "^2.0.2",
