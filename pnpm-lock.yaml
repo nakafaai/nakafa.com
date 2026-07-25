@@ -34,6 +34,12 @@ importers:
       '@effect/language-service':
         specifier: ^0.87.1
         version: 0.87.1
+      '@effect/platform':
+        specifier: 0.97.0
+        version: 0.97.0(effect@3.22.0)
+      '@effect/platform-node':
+        specifier: 0.108.0
+        version: 0.108.0(@effect/cluster@0.60.0(@effect/platform@0.97.0(effect@3.22.0))(@effect/rpc@0.76.0(@effect/platform@0.97.0(effect@3.22.0))(effect@3.22.0))(@effect/sql@0.52.0(@effect/experimental@0.61.0(@effect/platform@0.97.0(effect@3.22.0))(effect@3.22.0))(@effect/platform@0.97.0(effect@3.22.0))(effect@3.22.0))(@effect/workflow@0.19.0(@effect/experimental@0.61.0(@effect/platform@0.97.0(effect@3.22.0))(effect@3.22.0))(@effect/platform@0.97.0(effect@3.22.0))(@effect/rpc@0.76.0(@effect/platform@0.97.0(effect@3.22.0))(effect@3.22.0))(effect@3.22.0))(effect@3.22.0))(@effect/platform@0.97.0(effect@3.22.0))(@effect/rpc@0.76.0(@effect/platform@0.97.0(effect@3.22.0))(effect@3.22.0))(@effect/sql@0.52.0(@effect/experimental@0.61.0(@effect/platform@0.97.0(effect@3.22.0))(effect@3.22.0))(@effect/platform@0.97.0(effect@3.22.0))(effect@3.22.0))(effect@3.22.0)
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:packages/typescript-config
@@ -55,6 +61,9 @@ importers:
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
+      effect:
+        specifier: 3.22.0
+        version: 3.22.0
       node:
         specifier: runtime:^24.0.0
         version: runtime:24.18.0
