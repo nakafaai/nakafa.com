@@ -158,7 +158,9 @@ const checkSource = Effect.fn("EffectSource.check")(function* (
 /** Requires a named branch and clean worktree before Git subtree commits. */
 const requireCleanWorktree = Effect.fn("EffectSource.requireClean")(
   function* () {
-    yield* runGit(["symbolic-ref", "--quiet", "--short", "HEAD"]);
+    const branchRef = yield* runGit(["symbolic-ref", "--quiet", "HEAD"]).pipe(
+      Effect.map((output) => output.trim())
+    );
     const status = yield* runGit(["status", "--porcelain"]);
 
     if (status.trim()) {
@@ -167,14 +169,16 @@ const requireCleanWorktree = Effect.fn("EffectSource.requireClean")(
           "Effect source updates require a clean worktree. Commit dependency changes first.",
       });
     }
+
+    return branchRef;
   }
 );
 
-/** Pulls the release tag matching the installed Effect package. */
+/** Pulls the matching release tag and collapses subtree's merge into one commit. */
 const updateSource = Effect.fn("EffectSource.update")(function* (
   config: EffectSourceConfig
 ) {
-  yield* requireCleanWorktree();
+  const branchRef = yield* requireCleanWorktree();
   const state = yield* inspectSource(config);
 
   if (state.installedVersion === state.vendoredVersion) {
@@ -185,6 +189,9 @@ const updateSource = Effect.fn("EffectSource.update")(function* (
   }
 
   const tag = `effect@${state.installedVersion}`;
+  const previousHead = yield* runGit(["rev-parse", "HEAD"]).pipe(
+    Effect.map((output) => output.trim())
+  );
   yield* runGit([
     "subtree",
     "pull",
@@ -192,6 +199,33 @@ const updateSource = Effect.fn("EffectSource.update")(function* (
     config.repository,
     tag,
     "--squash",
+  ]);
+  const mergeHead = yield* runGit(["rev-parse", "HEAD"]).pipe(
+    Effect.map((output) => output.trim())
+  );
+  const tree = yield* runGit(["rev-parse", "HEAD^{tree}"]).pipe(
+    Effect.map((output) => output.trim())
+  );
+  const split = yield* runGit(["rev-parse", "FETCH_HEAD^{commit}"]).pipe(
+    Effect.map((output) => output.trim())
+  );
+  const linearHead = yield* runGit([
+    "commit-tree",
+    tree,
+    "-p",
+    previousHead,
+    "-m",
+    `build(effect): update source to ${state.installedVersion}`,
+    "-m",
+    `git-subtree-dir: ${config.sourcePath}\ngit-subtree-split: ${split}`,
+  ]).pipe(Effect.map((output) => output.trim()));
+  yield* runGit([
+    "update-ref",
+    "-m",
+    "linearize Effect source update",
+    branchRef,
+    linearHead,
+    mergeHead,
   ]);
   yield* checkSource(config);
 });
