@@ -30,7 +30,7 @@ import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/r
 import { NakafaAgentSearchOptionsSchema } from "@repo/contents/_lib/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { generateText, isStepCount, tool } from "ai";
-import { Effect } from "effect";
+import { Effect, Runtime } from "effect";
 
 const nakafaSearchInputSchema = createEffectSchema(
   NakafaAgentSearchOptionsSchema
@@ -53,6 +53,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   nakafa,
 }: NakafaAgentParams) {
   const searchService = yield* NakafaSearch;
+  const runPromise = Runtime.runPromise(yield* Effect.runtime());
   let hasPendingContentRead = false;
   const result = yield* Effect.tryPromise({
     /** Runs the AI SDK Nakafa specialist loop with MCP-equivalent tools. */
@@ -73,7 +74,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             outputSchema: textOutputSchema,
             /** Runs content search and records whether the next step should read. */
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 search({ input, locale, toolCallId, writer }).pipe(
                   Effect.provideService(NakafaSearch, searchService),
                   Effect.tap((output) =>
@@ -96,7 +97,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             execute: (input, { toolCallId }) => {
               hasPendingContentRead = false;
 
-              return Effect.runPromise(
+              return runPromise(
                 read({ input, toolCallId, writer }).pipe(provideNakafa(nakafa))
               );
             },
@@ -107,7 +108,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             outputSchema: textOutputSchema,
             /** Reads Quran references through the injected Nakafa service. */
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 quran({ input, locale, toolCallId, writer }).pipe(
                   provideNakafa(nakafa)
                 )
@@ -119,7 +120,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             outputSchema: textOutputSchema,
             /** Lists content taxonomy through the injected Nakafa service. */
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 taxonomy({ input, locale, toolCallId, writer }).pipe(
                   provideNakafa(nakafa)
                 )

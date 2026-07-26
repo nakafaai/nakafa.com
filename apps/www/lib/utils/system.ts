@@ -52,24 +52,24 @@ export function getStaticParams(config: ParamConfig): Promise<StaticParam[]> {
 }
 
 /** Builds static params from route catalog paths as a native Effect program. */
-function buildStaticParams(config: ParamConfig) {
-  return Effect.gen(function* () {
-    const routes = yield* getStaticParamRoutes(config);
-    const params = new Map<string, StaticParam>();
+const buildStaticParams = Effect.fn("www.system.getStaticParams")(function* (
+  config: ParamConfig
+) {
+  const routes = yield* getStaticParamRoutes(config);
+  const params = new Map<string, StaticParam>();
 
-    for (const route of routes) {
-      const param = routeToStaticParam(route, config);
+  for (const route of routes) {
+    const param = routeToStaticParam(route, config);
 
-      if (!param) {
-        continue;
-      }
-
-      params.set(JSON.stringify(param), param);
+    if (!param) {
+      continue;
     }
 
-    return Array.from(params.values());
-  }).pipe(Effect.withSpan("www.system.getStaticParams"));
-}
+    params.set(JSON.stringify(param), param);
+  }
+
+  return Array.from(params.values());
+});
 
 /** Reads deliberate latest-content candidates for one static params generator. */
 function getStaticParamRoutes(config: ParamConfig) {

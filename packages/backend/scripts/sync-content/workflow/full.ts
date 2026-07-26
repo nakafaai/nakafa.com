@@ -63,9 +63,7 @@ export const syncFull = Effect.fn("sync.full")(function* (
 
   if (result._tag === "Left") {
     logError(`Full sync failed: ${getUnknownMessage(result.left)}`);
-    return yield* Effect.fail(
-      new ScriptFailureError({ message: "Full sync failed." })
-    );
+    return yield* new ScriptFailureError({ message: "Full sync failed." });
   }
 
   log("\n=== FULL SYNC COMPLETE ===");

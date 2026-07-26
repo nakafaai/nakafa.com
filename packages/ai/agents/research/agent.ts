@@ -55,7 +55,7 @@ import {
   tool,
   wrapLanguageModel,
 } from "ai";
-import { Effect } from "effect";
+import { Effect, Runtime } from "effect";
 
 // Keep exact user source scraping parallel without allowing unlimited fan-out.
 const exactSourceScrapeConcurrency = 3;
@@ -75,6 +75,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     toolCallId,
     writer,
   }: ResearchAgentParams) {
+    const runPromise = Runtime.runPromise(yield* Effect.runtime());
     let triedGoogleGrounding = false;
     const sourceReferences = getUniqueSourceReferences([
       ...messageSourceReferences,
@@ -108,7 +109,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
               inputSchema: webSearchInputSchema,
               outputSchema: textOutputSchema,
               execute: ({ queries, sourcePreference }, { toolCallId }) =>
-                Effect.runPromise(
+                runPromise(
                   searchWeb({
                     queries,
                     sourcePreference,
@@ -134,7 +135,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
               inputSchema: scrapeInputSchema,
               outputSchema: textOutputSchema,
               execute: ({ urlToCrawl }, { toolCallId }) =>
-                Effect.runPromise(
+                runPromise(
                   scrapeUrl({
                     toolCallId,
                     url: urlToCrawl,

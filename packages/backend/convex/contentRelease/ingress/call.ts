@@ -23,10 +23,10 @@ function decodeExpectedFailure(cause: unknown) {
 
 /** Invokes one internal Convex capability without sanitizing unknown defects. */
 export function callInternal<A>(invoke: () => Promise<A>) {
-  return Effect.tryPromise({ catch: (cause) => cause, try: invoke }).pipe(
-    Effect.catchAll((cause) => {
-      const expected = decodeExpectedFailure(cause);
-      return expected ? Effect.fail(expected) : Effect.die(cause);
+  return Effect.tryPromise(invoke).pipe(
+    Effect.catchTag("UnknownException", ({ error }) => {
+      const expected = decodeExpectedFailure(error);
+      return expected ? Effect.fail(expected) : Effect.die(error);
     })
   );
 }

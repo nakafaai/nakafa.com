@@ -66,12 +66,10 @@ const readEligibleGoogleIndexingUrl = Effect.fn(
   });
 
   if (!ok) {
-    return yield* Effect.fail(
-      new GoogleIndexPageFetchError({
-        message: `Google Indexing API eligibility fetch returned HTTP ${status}.`,
-        url,
-      })
-    );
+    return yield* new GoogleIndexPageFetchError({
+      message: `Google Indexing API eligibility fetch returned HTTP ${status}.`,
+      url,
+    });
   }
 
   const blocks = readJsonLdScriptBodies(html);

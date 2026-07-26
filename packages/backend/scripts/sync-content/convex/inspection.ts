@@ -292,7 +292,7 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     ),
   ]);
 
-  return Schema.decodeUnknownSync(StaleContentSchema)({
+  return yield* Schema.decodeUnknown(StaleContentSchema)({
     staleArticles: articles.filter(
       (item) => !articleSlugSet.has(item.sourcePath)
     ),
@@ -395,7 +395,7 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
     references.map((reference) => reference.articleId)
   );
 
-  return Schema.decodeUnknownSync(DataIntegritySchema)({
+  return yield* Schema.decodeUnknown(DataIntegritySchema)({
     orphanQuestionChoiceIds: Array.from(
       new Set(
         choices
@@ -447,7 +447,7 @@ export const getGraphIdentityIntegrity = Effect.fn(
     );
   }
 
-  return Schema.decodeUnknownSync(GraphIdentityIntegritySchema)(total);
+  return yield* Schema.decodeUnknown(GraphIdentityIntegritySchema)(total);
 });
 
 /** Returns authors that have no content-author links after sync. */
@@ -472,7 +472,7 @@ export const getUnusedAuthors = Effect.fn("sync.getUnusedAuthors")(function* (
     contentAuthors.map((authorLink) => authorLink.authorId)
   );
 
-  return Schema.decodeUnknownSync(UnusedAuthorsSchema)({
+  return yield* Schema.decodeUnknown(UnusedAuthorsSchema)({
     unusedAuthors: authors.filter(
       (author) => !authorIdsWithContent.has(author.id)
     ),

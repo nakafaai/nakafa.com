@@ -43,22 +43,22 @@ export const downloadFile = Effect.fn("designSystem.files.download")(
 
         return { anchor, objectUrl: URL.createObjectURL(blob) };
       },
-      catch: (cause) => cause,
+      catch: (cause) => downloadError(filename, cause),
     }).pipe(Effect.either);
 
     if (Either.isLeft(preparation)) {
-      return yield* Effect.fail(downloadError(filename, preparation.left));
+      return yield* preparation.left;
     }
 
     const { anchor, objectUrl } = preparation.right;
-    const failures: unknown[] = [];
+    const failures: BrowserFileDownloadError[] = [];
     const attachment = yield* Effect.try({
       try: () => {
         anchor.href = objectUrl;
         anchor.download = filename;
         document.body.append(anchor);
       },
-      catch: (cause) => cause,
+      catch: (cause) => downloadError(filename, cause),
     }).pipe(Effect.either);
 
     if (Either.isLeft(attachment)) {
@@ -66,7 +66,7 @@ export const downloadFile = Effect.fn("designSystem.files.download")(
     } else {
       const activation = yield* Effect.try({
         try: () => anchor.click(),
-        catch: (cause) => cause,
+        catch: (cause) => downloadError(filename, cause),
       }).pipe(Effect.either);
 
       if (Either.isLeft(activation)) {
@@ -76,11 +76,11 @@ export const downloadFile = Effect.fn("designSystem.files.download")(
 
     const anchorCleanup = yield* Effect.try({
       try: () => anchor.remove(),
-      catch: (cause) => cause,
+      catch: (cause) => downloadError(filename, cause),
     }).pipe(Effect.either);
     const objectUrlCleanup = yield* Effect.try({
       try: () => URL.revokeObjectURL(objectUrl),
-      catch: (cause) => cause,
+      catch: (cause) => downloadError(filename, cause),
     }).pipe(Effect.either);
 
     if (Either.isLeft(anchorCleanup)) {
@@ -89,8 +89,9 @@ export const downloadFile = Effect.fn("designSystem.files.download")(
     if (Either.isLeft(objectUrlCleanup)) {
       failures.push(objectUrlCleanup.left);
     }
-    if (failures.length > 0) {
-      return yield* Effect.fail(downloadError(filename, failures[0]));
+    const firstFailure = failures[0];
+    if (firstFailure) {
+      return yield* firstFailure;
     }
   }
 );

@@ -38,12 +38,10 @@ export const normalizeStoredCustomer: (
   "customers.polar.normalizeStoredCustomer"
 )(function* (customer: PolarCustomerSource) {
   if (typeof customer.email !== "string") {
-    return yield* Effect.fail(
-      new PolarCustomerError({
-        code: polarCustomerErrorCode,
-        message: `Polar customer ${customer.id} is missing a valid email address.`,
-      })
-    );
+    return yield* new PolarCustomerError({
+      code: polarCustomerErrorCode,
+      message: `Polar customer ${customer.id} is missing a valid email address.`,
+    });
   }
 
   return {
@@ -74,15 +72,13 @@ export const syncExistingCustomer: (
     storedCustomer.externalId !== null &&
     storedCustomer.externalId !== input.externalId
   ) {
-    return yield* Effect.fail(
-      new PolarCustomerEmailConflict({
-        code: polarCustomerEmailConflictCode,
-        existingExternalId: storedCustomer.externalId,
-        message:
-          "This email is already linked to a different Polar customer identity.",
-        polarCustomerId: storedCustomer.id,
-      })
-    );
+    return yield* new PolarCustomerEmailConflict({
+      code: polarCustomerEmailConflictCode,
+      existingExternalId: storedCustomer.externalId,
+      message:
+        "This email is already linked to a different Polar customer identity.",
+      polarCustomerId: storedCustomer.id,
+    });
   }
 
   const currentMetadata = JSON.stringify(storedCustomer.metadata);
@@ -173,10 +169,8 @@ export const ensureCustomer: (
     return yield* syncExistingCustomer(gateway, racedCustomer, input);
   }
 
-  return yield* Effect.fail(
-    new PolarCustomerError({
-      code: polarCustomerErrorCode,
-      message: createAttempt.left.message,
-    })
-  );
+  return yield* new PolarCustomerError({
+    code: polarCustomerErrorCode,
+    message: createAttempt.left.message,
+  });
 });

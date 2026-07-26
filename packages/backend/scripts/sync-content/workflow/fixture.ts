@@ -1,5 +1,6 @@
 import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
 import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
+import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import type {
   ConvexConfig,
   SyncMetrics,
@@ -85,7 +86,11 @@ export async function loadWorkflow(
   vi.doMock("@repo/backend/scripts/sync-content/convex/client", () => ({
     /** Fails if direct incremental-only mutation calls are reached by this workflow test. */
     callConvexMutation: () =>
-      Effect.fail(new Error("Unexpected Convex mutation call.")),
+      Effect.fail(
+        new ScriptFailureError({
+          message: "Unexpected Convex mutation call.",
+        })
+      ),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/cli/logging", () => ({
     /** Suppresses duration formatting noise in workflow tests. */
@@ -192,7 +197,9 @@ export async function loadWorkflow(
     verify: () => {
       events.push("verify");
       if (options.verifyFails) {
-        return Effect.fail(new Error("verify failed"));
+        return Effect.fail(
+          new ScriptFailureError({ message: "verify failed" })
+        );
       }
 
       return Effect.void;

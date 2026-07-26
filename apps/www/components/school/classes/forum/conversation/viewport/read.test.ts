@@ -78,12 +78,10 @@ describe("conversation/viewport/read", () => {
             readAttempts.push(postId);
 
             if (readAttempts.length === 1) {
-              return yield* Effect.fail(
-                new ViewportReadError({
-                  cause: "test",
-                  message: "First read sync failed in test.",
-                })
-              );
+              return yield* new ViewportReadError({
+                cause: "test",
+                message: "First read sync failed in test.",
+              });
             }
 
             rig.readPostIds.push(postId);

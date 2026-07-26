@@ -34,7 +34,7 @@ minimumReleaseAgeExclude:
   - '@ai-sdk/gateway@3.0.118'
   - '@ai-sdk/google@3.0.78'
   - '@ai-sdk/react@3.0.190'
-  - '@effect/language-service@0.86.2'
+  - '@effect/language-service@0.87.1'
   - '@posthog/convex'
   - '@posthog/core'
   - '@posthog/types'

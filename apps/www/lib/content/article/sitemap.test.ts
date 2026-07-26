@@ -10,14 +10,13 @@ import {
 const fetchMock = vi.hoisted(() => vi.fn());
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/content/runtime/query", () => ({
-  fetchRuntimeQuery: fetchMock,
-  readRuntimeQuery: (_name: string, read: () => Promise<unknown>) =>
-    Effect.tryPromise({
-      catch: (cause) => cause,
-      try: read,
-    }),
-}));
+vi.mock("@/lib/content/runtime/query", async () => {
+  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  return {
+    fetchRuntimeQuery: fetchMock,
+    readRuntimeQuery: readTestRuntimeQuery,
+  };
+});
 
 describe("published article sitemap", () => {
   beforeEach(() => {

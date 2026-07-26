@@ -39,7 +39,7 @@ import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/sche
 import type { Locale } from "@repo/contents/_types/content";
 import type { LogContext } from "@repo/utilities/logging/types";
 import { tool, type UIMessageStreamWriter } from "ai";
-import { Effect } from "effect";
+import { Effect, Runtime } from "effect";
 
 type NinaUsage = Effect.Effect.Success<ReturnType<typeof trackUsage>>;
 
@@ -73,6 +73,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
     const search = yield* NakafaSearch;
     const reporter = yield* NinaReporter;
     const store = yield* NinaStore;
+    const runPromise = Runtime.runPromise(yield* Effect.runtime());
 
     return {
       [NAKAFA_CAPABILITY]: tool({
@@ -81,7 +82,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
         inputSchema: nakafaToolInputSchema,
         /** Runs the Nakafa specialist with one-time current-page fetch support. */
         execute: (input, { toolCallId }) =>
-          Effect.runPromise(
+          runPromise(
             traceLearningCapability({
               capability: NAKAFA_CAPABILITY,
               responseMessageIdentifier,
@@ -109,17 +110,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                     },
                     toolCallId,
                     writer,
-                  }).pipe(
-                    Effect.provideService(Nakafa, nakafa),
-                    Effect.catchAll((error) =>
-                      recoverSpecialistFailure({
-                        component: NAKAFA_CAPABILITY,
-                        error,
-                        errorLocation: "readNakafaCurrentPage",
-                        reporter,
-                      })
-                    )
-                  );
+                  }).pipe(Effect.provideService(Nakafa, nakafa));
 
                   if (typeof text !== "string") {
                     return text;
@@ -180,7 +171,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
         inputSchema: researchToolInputSchema,
         /** Runs the external research specialist and records its token usage. */
         execute: (input, { messages, toolCallId }) =>
-          Effect.runPromise(
+          runPromise(
             traceLearningCapability({
               capability: RESEARCH_CAPABILITY,
               responseMessageIdentifier,
@@ -245,7 +236,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
         inputSchema: mathToolInputSchema,
         /** Runs the deterministic math specialist and records its token usage. */
         execute: (input, { toolCallId }) =>
-          Effect.runPromise(
+          runPromise(
             traceLearningCapability({
               capability: MATH_CAPABILITY,
               responseMessageIdentifier,

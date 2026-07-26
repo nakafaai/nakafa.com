@@ -36,11 +36,9 @@ export const parseDateToEpoch = Effect.fn("mdx.parseDateToEpoch")(function* (
   const date = parseContentDate(dateStr);
 
   if (Option.isNone(date)) {
-    return yield* Effect.fail(
-      new MdxReadError({
-        message: `Invalid date format: ${dateStr}. Expected YYYY-MM-DD`,
-      })
-    );
+    return yield* new MdxReadError({
+      message: `Invalid date format: ${dateStr}. Expected YYYY-MM-DD`,
+    });
   }
 
   return date.value.getTime();
@@ -53,9 +51,9 @@ export const parseMdxContent = Effect.fn("mdx.parseMdxContent")(function* (
   const match = content.match(METADATA_REGEX);
 
   if (!match) {
-    return yield* Effect.fail(
-      new MdxReadError({ message: "No metadata export found in MDX file" })
-    );
+    return yield* new MdxReadError({
+      message: "No metadata export found in MDX file",
+    });
   }
 
   const metadataObject = yield* Effect.try({

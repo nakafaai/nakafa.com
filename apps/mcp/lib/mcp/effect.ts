@@ -61,14 +61,18 @@ export function toMcpToolOutputJsonSchema(schema: Schema.Schema.AnyNoContext) {
 export function decodeNakafaMcpToolInput<
   TSchema extends Schema.Schema.AnyNoContext,
 >(schema: TSchema, input: unknown, message: string) {
-  return Effect.try({
-    try: () => Schema.decodeUnknownSync(schema, MCP_PARSE_OPTIONS)(input),
-    catch: (error) =>
-      new NakafaAgentInputError({
-        cause: getUnknownErrorMessage(error),
-        message,
-      }),
-  });
+  return Schema.decodeUnknown(
+    schema,
+    MCP_PARSE_OPTIONS
+  )(input).pipe(
+    Effect.mapError(
+      (error) =>
+        new NakafaAgentInputError({
+          cause: getUnknownErrorMessage(error),
+          message,
+        })
+    )
+  );
 }
 
 /** Validates successful structured tool output against its Effect schema. */

@@ -33,7 +33,7 @@ import {
   pruneMessages,
   type UIMessageStreamWriter,
 } from "ai";
-import { Effect, Schema } from "effect";
+import { Effect, Runtime, Schema } from "effect";
 
 /** Raised when NinaHarness cannot prepare or stream one turn. */
 export class NinaStreamError extends Schema.TaggedError<NinaStreamError>()(
@@ -51,6 +51,9 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
     const reporter = yield* NinaReporter;
     const nakafa = yield* Nakafa;
     const search = yield* NakafaSearch;
+    const effectRuntime = yield* Effect.runtime();
+    const runFork = Runtime.runFork(effectRuntime);
+    const runPromise = Runtime.runPromise(effectRuntime);
     const messages = yield* store.loadMessages();
     const logContext = createNinaLogContext(turn);
     const originalMessageCount = messages.length;
@@ -102,7 +105,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
       }
 
       failureScheduled = true;
-      Effect.runFork(
+      runFork(
         Effect.all(
           [
             reporter.report({ error, source }),
@@ -123,7 +126,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
     const stream = createUIMessageStream<MyUIMessage>({
       /** Runs Nina's Effect program at the AI SDK stream callback boundary. */
       execute: ({ writer }) =>
-        Effect.runPromise(
+        runPromise(
           runNinaWriterTurn({
             finalMessages,
             logContext,
@@ -168,7 +171,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
         }
 
         if (isFirstMessage) {
-          Effect.runFork(
+          runFork(
             store
               .saveTitle({ messages: updatedMessages })
               .pipe(
@@ -179,7 +182,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
           );
         }
 
-        Effect.runFork(
+        runFork(
           store
             .saveAssistant({
               context: page.nina,
@@ -221,6 +224,9 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
   readonly user: NinaTurn["user"];
   readonly writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
+  const effectRuntime = yield* Effect.runtime();
+  const runPromise = Runtime.runPromise(effectRuntime);
+  const runSync = Runtime.runSync(effectRuntime);
   const usage = yield* trackUsage();
   const context = createNinaAgentContext({ page, runtime, user });
   const pageFetch = createPageFetchState(context.needsPageFetch);
@@ -242,7 +248,7 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
     runtime,
     settings: {
       repairToolCall: (options) =>
-        Effect.runPromise(
+        runPromise(
           repairNinaToolCall({
             ...options,
             reporter,
@@ -262,7 +268,7 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
         }),
       onError: onStreamError,
       readFinishMetadata: (mainUsage) =>
-        Effect.runSync(
+        runSync(
           usage.metadata({
             mainUsage,
             modelId: runtime.modelId,

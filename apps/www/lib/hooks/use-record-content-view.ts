@@ -86,18 +86,16 @@ export function useRecordContentView({
 
     const timeoutId = window.setTimeout(() => {
       Effect.runFork(
-        Effect.tryPromise({
-          try: () =>
-            recordView({
-              contentId,
-              ...(context ? { context } : {}),
-              locale,
-              deviceId,
-            }),
-          catch: (error) => error,
-        }).pipe(
+        Effect.tryPromise(() =>
+          recordView({
+            contentId,
+            ...(context ? { context } : {}),
+            locale,
+            deviceId,
+          })
+        ).pipe(
           Effect.tap(() => Effect.sync(() => markAsViewed(viewKey))),
-          Effect.catchAll((error) =>
+          Effect.catchTag("UnknownException", ({ error }) =>
             Effect.sync(() =>
               captureException(error, {
                 contentId,

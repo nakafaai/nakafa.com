@@ -18,11 +18,9 @@ export const readPublicContentRoute = Effect.fn("sync.readPublicContentRoute")(
       return routeOption.value;
     }
 
-    return yield* Effect.fail(
-      new ScriptFailureError({
-        message: `Missing public route projection for ${locale}:${sourcePath}.`,
-      })
-    );
+    return yield* new ScriptFailureError({
+      message: `Missing public route projection for ${locale}:${sourcePath}.`,
+    });
   }
 );
 

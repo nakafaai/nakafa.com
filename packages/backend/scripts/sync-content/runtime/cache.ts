@@ -85,11 +85,9 @@ export const invalidateContentRuntimeCache = Effect.fn(
   const endpoint = getContentRuntimeCacheRevalidationUrl(siteUrl);
 
   if (!endpoint) {
-    return yield* Effect.fail(
-      new ContentRuntimeCacheConfigError({
-        message: `SITE_URL must be a valid URL: ${siteUrl}`,
-      })
-    );
+    return yield* new ContentRuntimeCacheConfigError({
+      message: `SITE_URL must be a valid URL: ${siteUrl}`,
+    });
   }
 
   const response = yield* Effect.either(
@@ -117,7 +115,7 @@ export const invalidateContentRuntimeCache = Effect.fn(
       return;
     }
 
-    return yield* Effect.fail(response.left);
+    return yield* response.left;
   }
 
   if (response.right.ok) {
@@ -136,9 +134,7 @@ export const invalidateContentRuntimeCache = Effect.fn(
   );
   const responseBody = body._tag === "Right" ? body.right : "";
 
-  return yield* Effect.fail(
-    new ContentRuntimeCacheInvalidationError({
-      message: `Content runtime cache invalidation failed with ${response.right.status}: ${responseBody}`,
-    })
-  );
+  return yield* new ContentRuntimeCacheInvalidationError({
+    message: `Content runtime cache invalidation failed with ${response.right.status}: ${responseBody}`,
+  });
 });

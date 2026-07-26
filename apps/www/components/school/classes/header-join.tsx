@@ -51,16 +51,13 @@ export function SchoolClassesHeaderJoin() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: async () => {
-            const { classId } = await joinClass(value);
-            router.push(`${pathname}/${classId}`);
-            openHandlers.close();
-            form.reset();
-          },
-          catch: (error) => error,
+        Effect.tryPromise(async () => {
+          const { classId } = await joinClass(value);
+          router.push(`${pathname}/${classId}`);
+          openHandlers.close();
+          form.reset();
         }).pipe(
-          Effect.catchAll((error) =>
+          Effect.catchTag("UnknownException", ({ error }) =>
             reportClientException(error, {
               source: "school-class-join-header",
             }).pipe(

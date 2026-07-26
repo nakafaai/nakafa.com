@@ -36,14 +36,11 @@ export function SchoolOnboardingJoinForm() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: async () => {
-            const { slug } = await joinSchool(value);
-            router.push(`/school/${slug}`);
-          },
-          catch: (error) => error,
+        Effect.tryPromise(async () => {
+          const { slug } = await joinSchool(value);
+          router.push(`/school/${slug}`);
         }).pipe(
-          Effect.catchAll((error) =>
+          Effect.catchTag("UnknownException", ({ error }) =>
             reportClientException(error, {
               source: "school-onboarding-join",
             }).pipe(

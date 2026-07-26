@@ -32,11 +32,9 @@ export const addTryoutCountry = Effect.fn("sync.addTryoutCountry")(function* (
       return;
     }
 
-    return yield* Effect.fail(
-      new ScriptFailureError({
-        message: `Conflicting shared try-out country: ${row.locale}:${row.countryKey}.`,
-      })
-    );
+    return yield* new ScriptFailureError({
+      message: `Conflicting shared try-out country: ${row.locale}:${row.countryKey}.`,
+    });
   }
 
   countries.set(identity, row);
@@ -51,11 +49,9 @@ export const addTryoutRoute = Effect.fn("sync.addTryoutRoute")(function* (
   const identity = JSON.stringify([source.locale, source.publicPath]);
 
   if (routes.has(identity)) {
-    return yield* Effect.fail(
-      new ScriptFailureError({
-        message: `Duplicate try-out route: ${source.locale}:${source.publicPath}.`,
-      })
-    );
+    return yield* new ScriptFailureError({
+      message: `Duplicate try-out route: ${source.locale}:${source.publicPath}.`,
+    });
   }
 
   const sourcePath = source.publicPath;

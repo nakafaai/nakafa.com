@@ -5,9 +5,18 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { logError } from "@repo/utilities/logging/effect";
 import type { LogContext } from "@repo/utilities/logging/types";
 import { waitUntil } from "@vercel/functions";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const source = "chat-api";
+
+/** PostHog capture failure at the chat streaming observability boundary. */
+class ChatErrorCaptureFailure extends Schema.TaggedError<ChatErrorCaptureFailure>()(
+  "ChatErrorCaptureFailure",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+  }
+) {}
 
 /** Preserves real Error details while giving non-Error failures a stable shape. */
 function toError(error: unknown) {
@@ -66,10 +75,14 @@ export function createChatErrorReporter({
             Effect.tryPromise({
               try: () =>
                 captureServerException(normalizedError, userId, errorContext),
-              catch: toError,
+              catch: (cause) =>
+                new ChatErrorCaptureFailure({
+                  cause,
+                  message: "Unable to capture the chat stream failure.",
+                }),
             }).pipe(
               Effect.catchAll((captureError) =>
-                logError(captureError, {
+                logError(toError(captureError.cause), {
                   ...errorContext,
                   errorLocation: "posthog-capture",
                 })

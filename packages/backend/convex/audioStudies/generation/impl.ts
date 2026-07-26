@@ -104,12 +104,10 @@ const verifyContentHash = Effect.fn(
     })
   );
 
-  return yield* Effect.fail(
-    new AudioContentChangedError({
-      code: audioContentChangedCode,
-      message: input.errorMessage,
-    })
-  );
+  return yield* new AudioContentChangedError({
+    code: audioContentChangedCode,
+    message: input.errorMessage,
+  });
 });
 
 /** Runs the provider and persistence steps after script generation is claimed. */
@@ -126,12 +124,10 @@ const runClaimedScriptGeneration = Effect.fn(
   });
 
   if (!data) {
-    return yield* Effect.fail(
-      new AudioSourceNotFoundError({
-        code: audioSourceNotFoundCode,
-        message: "Audio or content not found",
-      })
-    );
+    return yield* new AudioSourceNotFoundError({
+      code: audioSourceNotFoundCode,
+      message: "Audio or content not found",
+    });
   }
 
   yield* verifyContentHash(store, {
@@ -233,12 +229,10 @@ const runClaimedSpeechGeneration = Effect.fn(
   });
 
   if (!audio) {
-    return yield* Effect.fail(
-      new AudioSourceNotFoundError({
-        code: audioSourceNotFoundCode,
-        message: "No script found for audio generation",
-      })
-    );
+    return yield* new AudioSourceNotFoundError({
+      code: audioSourceNotFoundCode,
+      message: "No script found for audio generation",
+    });
   }
 
   yield* verifyContentHash(store, {
@@ -252,12 +246,10 @@ const runClaimedSpeechGeneration = Effect.fn(
   const chunks = chunkScript(audio.script, DEFAULT_CHUNK_CONFIG);
 
   if (chunks.length === 0) {
-    return yield* Effect.fail(
-      new AudioScriptEmptyError({
-        code: audioScriptEmptyCode,
-        message: "Script chunking returned no content for speech generation.",
-      })
-    );
+    return yield* new AudioScriptEmptyError({
+      code: audioScriptEmptyCode,
+      message: "Script chunking returned no content for speech generation.",
+    });
   }
 
   yield* Effect.sync(() =>

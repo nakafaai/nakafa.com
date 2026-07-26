@@ -55,7 +55,7 @@ export const getContentCounts = Effect.fn("sync.getContentCounts")(function* (
     ]);
   }
 
-  return Schema.decodeUnknownSync(ContentCountsSchema)(
+  return yield* Schema.decodeUnknown(ContentCountsSchema)(
     Object.fromEntries(entries)
   );
 });

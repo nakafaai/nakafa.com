@@ -33,14 +33,12 @@ export function StartSectionButton({
 
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: () =>
-            startSection({
-              attemptId,
-              sectionKey,
-            }),
-          catch: (cause) => cause,
-        }).pipe(
+        Effect.tryPromise(() =>
+          startSection({
+            attemptId,
+            sectionKey,
+          })
+        ).pipe(
           Effect.tap(() =>
             Effect.sync(() => {
               toast.success(tTryouts("start-part-success"), {

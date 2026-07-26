@@ -186,12 +186,10 @@ export const requireCustomer: (
   const [user, localCustomer] = yield* loadCustomerSyncState(ctx, userId);
 
   if (!user) {
-    return yield* Effect.fail(
-      new UserNotFound({
-        code: userNotFoundCode,
-        message: `User not found for userId: ${userId}`,
-      })
-    );
+    return yield* new UserNotFound({
+      code: userNotFoundCode,
+      message: `User not found for userId: ${userId}`,
+    });
   }
 
   return yield* syncCustomerForUser(ctx, {

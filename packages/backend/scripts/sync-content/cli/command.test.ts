@@ -1,5 +1,6 @@
 import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
 import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
+import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -74,7 +75,9 @@ const loadCli = async (options: CliTestOptions = {}) => {
       events.push("syncLearningPrograms");
 
       if (options.learningProgramFails) {
-        return Effect.fail(new Error("learning program sync failed"));
+        return Effect.fail(
+          new ScriptFailureError({ message: "learning program sync failed" })
+        );
       }
 
       return Effect.succeed(syncResult);
@@ -150,9 +153,10 @@ const loadCli = async (options: CliTestOptions = {}) => {
       }
 
       return Effect.fail(
-        new Error(
-          "Incremental sync does not support --locale because sync state is shared across locales"
-        )
+        new ScriptFailureError({
+          message:
+            "Incremental sync does not support --locale because sync state is shared across locales",
+        })
       );
     },
   }));

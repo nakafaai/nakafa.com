@@ -10,6 +10,7 @@ import {
   getActiveContentIdentity,
   readActiveContentIdentity,
 } from "@/lib/content/published/active";
+import { readTestRuntimeQuery } from "@/test/runtime-query";
 
 const applyContentRuntimeCacheMock = vi.hoisted(() => vi.fn());
 const fetchQueryMock = vi.hoisted(() => vi.fn());
@@ -28,10 +29,7 @@ beforeEach(() => {
   applyContentRuntimeCacheMock.mockReset();
   fetchQueryMock.mockReset();
   readQueryMock.mockReset();
-  readQueryMock.mockImplementation(
-    (_name: string, read: () => Promise<unknown>) =>
-      Effect.tryPromise({ catch: () => new Error("read"), try: read })
-  );
+  readQueryMock.mockImplementation(readTestRuntimeQuery);
 });
 
 describe("published active identity", () => {

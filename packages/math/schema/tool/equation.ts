@@ -134,15 +134,13 @@ const MathEquationSystemInputSchema = MathEquationSystemStructSchema.pipe(
   Schema.filter((value) => hasBoundedDomainVariable(value), {
     message: () =>
       "Expected bounded system solves to include the bounded variable in variables.",
-  })
-)
-  .pipe(
-    Schema.filter((value) => hasSolvedVariableInEveryBoundedExpression(value), {
-      message: () =>
-        "Expected every bounded-system expression to include a solved variable.",
-    })
-  )
-  .pipe(Schema.mutable);
+  }),
+  Schema.filter((value) => hasSolvedVariableInEveryBoundedExpression(value), {
+    message: () =>
+      "Expected every bounded-system expression to include a solved variable.",
+  }),
+  Schema.mutable
+);
 
 export const MathEquationInputSchema = Schema.Union(
   MathEquationRootInputSchema,

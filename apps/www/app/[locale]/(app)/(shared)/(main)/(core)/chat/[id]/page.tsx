@@ -28,20 +28,15 @@ export async function generateMetadata({
   const { id } = await params;
   const defaultMetadata = {};
   const title = await Effect.runPromise(
-    Effect.tryPromise({
-      try: () => getChatTitle(id as Id<"chats">),
-      catch: (error) => error,
-    }).pipe(
-      Effect.catchAll((error) =>
+    Effect.tryPromise(() => getChatTitle(id as Id<"chats">)).pipe(
+      Effect.catchTag("UnknownException", ({ error }) =>
         Effect.gen(function* () {
-          yield* Effect.tryPromise({
-            try: () =>
-              captureServerException(error, undefined, {
-                chat_id: id,
-                source: "chat-page-metadata",
-              }),
-            catch: (cause) => cause,
-          }).pipe(Effect.ignore);
+          yield* Effect.tryPromise(() =>
+            captureServerException(error, undefined, {
+              chat_id: id,
+              source: "chat-page-metadata",
+            })
+          ).pipe(Effect.ignore);
 
           return null;
         })

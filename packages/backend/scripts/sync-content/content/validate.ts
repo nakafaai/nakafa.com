@@ -126,11 +126,9 @@ const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
           const choices = yield* readQuestionChoices(path.dirname(file));
 
           if (!choices) {
-            return yield* Effect.fail(
-              new ScriptFailureError({
-                message: `Missing or invalid try-out choices for ${file}. Add exactly one correct option for every supported locale in choices.ts.`,
-              })
-            );
+            return yield* new ScriptFailureError({
+              message: `Missing or invalid try-out choices for ${file}. Add exactly one correct option for every supported locale in choices.ts.`,
+            });
           }
         })
       );
@@ -291,7 +289,7 @@ export const validate = Effect.fn("sync.validate")(function* () {
   if (allErrors.length > 20) {
     log(`... and ${allErrors.length - 20} more errors`);
   }
-  return yield* Effect.fail(
-    new ScriptFailureError({ message: "Content validation failed." })
-  );
+  return yield* new ScriptFailureError({
+    message: "Content validation failed.",
+  });
 });

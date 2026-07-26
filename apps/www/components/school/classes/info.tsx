@@ -77,15 +77,13 @@ function InfoCustomizeButton() {
   const handleImageClick = (image: SchoolClassImage) => {
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: () =>
-            updateClassImage({
-              classId,
-              image,
-            }),
-          catch: (error) => error,
-        }).pipe(
-          Effect.catchAll((error) =>
+        Effect.tryPromise(() =>
+          updateClassImage({
+            classId,
+            image,
+          })
+        ).pipe(
+          Effect.catchTag("UnknownException", ({ error }) =>
             reportClientException(error, {
               image,
               source: "school-class-image-update",

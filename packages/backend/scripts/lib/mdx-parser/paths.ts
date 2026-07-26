@@ -20,11 +20,9 @@ export const parseArticlePath = Effect.fn("mdx.parseArticlePath")(function* (
   const match = normalized.match(ARTICLE_PATH_REGEX);
 
   if (!match) {
-    return yield* Effect.fail(
-      new MdxPathValidationError({
-        message: `Invalid article path: ${filePath}`,
-      })
-    );
+    return yield* new MdxPathValidationError({
+      message: `Invalid article path: ${filePath}`,
+    });
   }
 
   const [, rawCategory, articleSlug, rawLocale] = match;
@@ -50,11 +48,9 @@ export const parseMaterialLessonPath = Effect.fn("mdx.parseMaterialLessonPath")(
     const match = normalized.match(MATERIAL_LESSON_PATH_REGEX);
 
     if (!match) {
-      return yield* Effect.fail(
-        new MdxPathValidationError({
-          message: `Invalid material lesson path: ${filePath}`,
-        })
-      );
+      return yield* new MdxPathValidationError({
+        message: `Invalid material lesson path: ${filePath}`,
+      });
     }
 
     const [, rawMaterial, topic, section, rawLocale] = match;

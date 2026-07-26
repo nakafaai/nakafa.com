@@ -64,12 +64,10 @@ export const validateIncrementalSyncOptions = Effect.fn(
     return;
   }
 
-  return yield* Effect.fail(
-    new ScriptFailureError({
-      message:
-        "Incremental sync does not support --locale because sync state is shared across locales",
-    })
-  );
+  return yield* new ScriptFailureError({
+    message:
+      "Incremental sync does not support --locale because sync state is shared across locales",
+  });
 });
 
 /** Runs the complete content sync in dependency-safe phases. */

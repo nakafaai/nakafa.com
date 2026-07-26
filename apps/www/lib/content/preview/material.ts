@@ -41,9 +41,9 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
   config: PreviewConfig
 ) {
   const previewArtifact = manifest.artifacts[0];
-  const projection = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)(
-    previewArtifact.projection
-  );
+  const projection = yield* Schema.decodeUnknown(
+    MaterialLessonProjectionSchema
+  )(previewArtifact.projection);
 
   const route = yield* decodeMaterialPreviewRoute(projection);
   const rendered = yield* executePreviewArtifact({

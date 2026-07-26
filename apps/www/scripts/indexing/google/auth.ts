@@ -143,12 +143,10 @@ export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
     });
 
     if (!tokenResponse.ok) {
-      return yield* Effect.fail(
-        new GoogleTokenRequestError({
-          message: "Google token request failed.",
-          responseText: tokenResponse.responseText,
-        })
-      );
+      return yield* new GoogleTokenRequestError({
+        message: "Google token request failed.",
+        responseText: tokenResponse.responseText,
+      });
     }
 
     return (yield* decodeGoogleTokenResponse(tokenResponse.responseText))

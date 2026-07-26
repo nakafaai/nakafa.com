@@ -51,7 +51,6 @@ export const MathCalculusInputSchema = MathCalculusStructSchema.pipe(
   }),
   Schema.filter((value) => hasValidCalculusOrder(value), {
     message: () => "Expected derivative order only for differentiate.",
-  })
-)
-  .pipe(Schema.mutable)
-  .annotations({ description: "Calculus tool input." });
+  }),
+  Schema.mutable
+).annotations({ description: "Calculus tool input." });

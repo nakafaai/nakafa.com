@@ -207,11 +207,9 @@ function assertCoverageAlignments() {
       return;
     }
 
-    return yield* Effect.fail(
-      new LearningProgramCoverageAlignmentError({
-        message: `Invalid learning program coverage alignment: ${issues[0]}`,
-      })
-    );
+    return yield* new LearningProgramCoverageAlignmentError({
+      message: `Invalid learning program coverage alignment: ${issues[0]}`,
+    });
   });
 }
 

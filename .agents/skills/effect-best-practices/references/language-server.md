@@ -2,6 +2,11 @@
 
 The Effect Language Service is a TypeScript language plugin that provides Effect-specific diagnostics, completions, refactors, and hover information. It catches errors that TypeScript alone cannot detect.
 
+The current `@effect/language-service` package is the JavaScript TypeScript language-plugin
+path. Its README directs TypeScript 7 users to `@effect/tsgo`, which remains an alpha,
+Effect-4-primary tool that also supports Effect 3. Treat that switch as a toolchain migration,
+not as an automatic dependency bump.
+
 ## Installation
 
 ```bash
@@ -28,6 +33,27 @@ Add to `tsconfig.json`:
 ### JetBrains (WebStorm, IntelliJ)
 
 Settings → Languages & Frameworks → TypeScript → Select workspace `node_modules/typescript`
+
+### Zed
+
+Zed defaults to `vtsls` for TypeScript. Nakafa pins that server in `.zed/settings.json` so it
+loads the workspace JavaScript TypeScript API and the configured Effect plugin:
+
+```json
+{
+  "languages": {
+    "TypeScript": {
+      "language_servers": ["vtsls", "!typescript-language-server", "..."]
+    },
+    "TSX": {
+      "language_servers": ["vtsls", "!typescript-language-server", "..."]
+    }
+  }
+}
+```
+
+Zed's `tsgo` extension installs Microsoft's upstream native TypeScript server. It does not
+automatically install or select the Effect-enhanced `@effect/tsgo` fork.
 
 ### Neovim (nvim-lspconfig)
 

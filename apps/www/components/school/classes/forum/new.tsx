@@ -104,23 +104,20 @@ function SchoolClassesForumNewContent() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: async () => {
-            const forumId = await createForum({ ...value, classId });
-            const href = getSchoolClassesForumHref({
-              classRouteId: routeParams.id,
-              forumId,
-              queryString: searchParams.toString(),
-              slug: routeParams.slug,
-            });
+        Effect.tryPromise(async () => {
+          const forumId = await createForum({ ...value, classId });
+          const href = getSchoolClassesForumHref({
+            classRouteId: routeParams.id,
+            forumId,
+            queryString: searchParams.toString(),
+            slug: routeParams.slug,
+          });
 
-            dialog.close();
-            form.reset();
-            router.push(href);
-          },
-          catch: (error) => error,
+          dialog.close();
+          form.reset();
+          router.push(href);
         }).pipe(
-          Effect.catchAll((error) =>
+          Effect.catchTag("UnknownException", ({ error }) =>
             reportClientException(error, {
               source: "school-forum-create",
             }).pipe(

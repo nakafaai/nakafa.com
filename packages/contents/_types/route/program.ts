@@ -13,13 +13,11 @@ export function findProgram(
     const program = programs.find((candidate) => candidate.key === programKey);
 
     if (!program) {
-      return yield* Effect.fail(
-        new MissingPublicSlugError({
-          locale: "en",
-          source: "program",
-          value: programKey,
-        })
-      );
+      return yield* new MissingPublicSlugError({
+        locale: "en",
+        source: "program",
+        value: programKey,
+      });
     }
 
     return program;

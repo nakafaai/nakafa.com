@@ -16,11 +16,7 @@ vi.mock("@repo/contents/_lib/io/content", async () => {
       readDirectory: (
         directoryPath: string,
         options?: { recursive?: boolean }
-      ) =>
-        Effect.try({
-          catch: (cause) => cause,
-          try: () => mockReadDirectory(directoryPath, options),
-        }),
+      ) => Effect.try(() => mockReadDirectory(directoryPath, options)),
     },
   };
 });

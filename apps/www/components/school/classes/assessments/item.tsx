@@ -170,15 +170,12 @@ function AssessmentActions({
   function handleDelete() {
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: async () => {
-            await deleteAssessment({
-              schoolId: assessment.schoolId,
-              assessmentId: assessment._id,
-            });
-            toast.success(schoolT("assessment-deleted"));
-          },
-          catch: (error) => error,
+        Effect.tryPromise(async () => {
+          await deleteAssessment({
+            schoolId: assessment.schoolId,
+            assessmentId: assessment._id,
+          });
+          toast.success(schoolT("assessment-deleted"));
         }).pipe(
           Effect.catchAll(() =>
             Effect.sync(() => {

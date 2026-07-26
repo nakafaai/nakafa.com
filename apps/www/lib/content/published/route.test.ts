@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { testArticleProjection } from "@/test/content-article";
 import { previewProjection } from "@/test/content-preview";
+import { readTestRuntimeQuery } from "@/test/runtime-query";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const readQueryMock = vi.hoisted(() => vi.fn());
@@ -26,10 +27,7 @@ vi.mock("@/lib/content/runtime/query", () => ({
 beforeEach(() => {
   fetchQueryMock.mockReset();
   readQueryMock.mockReset();
-  readQueryMock.mockImplementation(
-    (_name: string, read: () => Promise<unknown>) =>
-      Effect.tryPromise({ catch: () => new Error("read"), try: read })
-  );
+  readQueryMock.mockImplementation(readTestRuntimeQuery);
 });
 
 describe("published content route", () => {

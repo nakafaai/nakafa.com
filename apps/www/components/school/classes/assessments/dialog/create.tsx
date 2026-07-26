@@ -167,15 +167,12 @@ function AssessmentDialogShell({
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: async () => {
-            await onSubmit(value);
-            form.reset();
-            setOpenAction(false);
-          },
-          catch: (error) => error,
+        Effect.tryPromise(async () => {
+          await onSubmit(value);
+          form.reset();
+          setOpenAction(false);
         }).pipe(
-          Effect.catchAll((error) =>
+          Effect.catchTag("UnknownException", ({ error }) =>
             reportClientException(error, {
               source: "school-assessment-create",
             }).pipe(

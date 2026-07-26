@@ -125,11 +125,9 @@ export const buildPublicSitemapArtifacts = Effect.fn(
       const pagePaths = paths.slice(offset, offset + PUBLIC_SITEMAP_PAGE_SIZE);
 
       if (pagePaths.length === 0) {
-        return yield* Effect.fail(
-          new PublicSitemapProjectionError({
-            message: `Public sitemap page ${locale}/${pages.length} has no paths.`,
-          })
-        );
+        return yield* new PublicSitemapProjectionError({
+          message: `Public sitemap page ${locale}/${pages.length} has no paths.`,
+        });
       }
 
       pages.push({

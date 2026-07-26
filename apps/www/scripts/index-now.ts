@@ -16,7 +16,7 @@ Effect.runPromise(
     Effect.catchAll((error) =>
       Effect.sync(() => {
         logger.error(`Error running indexing script: ${error}`);
-        process.exit(1);
+        process.exitCode = 1;
       })
     )
   )

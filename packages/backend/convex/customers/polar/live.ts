@@ -153,15 +153,13 @@ export const polarGateway: PolarCustomerGateway = {
     ),
 
   deleteCustomer: (polarCustomerId) =>
-    Effect.tryPromise({
-      try: () =>
-        customersDelete(polarClient, {
-          anonymize: true,
-          id: polarCustomerId,
-        }),
-      catch: (error) => error,
-    }).pipe(
-      Effect.catchAll((error) => {
+    Effect.tryPromise(() =>
+      customersDelete(polarClient, {
+        anonymize: true,
+        id: polarCustomerId,
+      })
+    ).pipe(
+      Effect.catchTag("UnknownException", ({ error }) => {
         if (isMissingPolarCustomer(error)) {
           return Effect.succeed(null);
         }
@@ -219,14 +217,12 @@ export const polarGateway: PolarCustomerGateway = {
     ),
 
   getCustomerByExternalId: (externalId) =>
-    Effect.tryPromise({
-      try: () =>
-        customersGetExternal(polarClient, {
-          externalId,
-        }),
-      catch: (error) => error,
-    }).pipe(
-      Effect.catchAll((error) => {
+    Effect.tryPromise(() =>
+      customersGetExternal(polarClient, {
+        externalId,
+      })
+    ).pipe(
+      Effect.catchTag("UnknownException", ({ error }) => {
         if (isMissingPolarCustomer(error)) {
           return Effect.succeed(null);
         }
@@ -261,14 +257,12 @@ export const polarGateway: PolarCustomerGateway = {
     ),
 
   getCustomerById: (polarCustomerId) =>
-    Effect.tryPromise({
-      try: () =>
-        customersGet(polarClient, {
-          id: polarCustomerId,
-        }),
-      catch: (error) => error,
-    }).pipe(
-      Effect.catchAll((error) => {
+    Effect.tryPromise(() =>
+      customersGet(polarClient, {
+        id: polarCustomerId,
+      })
+    ).pipe(
+      Effect.catchTag("UnknownException", ({ error }) => {
         if (isMissingPolarCustomer(error)) {
           return Effect.succeed(null);
         }

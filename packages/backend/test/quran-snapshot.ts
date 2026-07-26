@@ -24,7 +24,7 @@ import { Effect, Schema } from "effect";
 export const makeQuranSnapshotRow = Effect.fn(
   "backendTest.makeQuranSnapshotRow"
 )(function* (snapshotId: Sha256Hash) {
-  const payload = Schema.decodeUnknownSync(QuranSearchRowSchema)({
+  const payload = yield* Schema.decodeUnknown(QuranSearchRowSchema)({
     description: "Technical Quran search row",
     graph: {
       alignmentId: "alignment:quran:quran-surah:1",

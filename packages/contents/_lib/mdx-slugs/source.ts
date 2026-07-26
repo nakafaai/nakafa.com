@@ -80,14 +80,12 @@ const validateMdxSlugParity = Effect.fn("contents.mdxSlugs.validateParity")(
         continue;
       }
 
-      return yield* Effect.fail(
-        new MdxLocaleParityError({
-          locale,
-          message: `MDX paths for ${locale} do not match ${defaultLocale}.`,
-          missingSlugs,
-          unexpectedSlugs,
-        })
-      );
+      return yield* new MdxLocaleParityError({
+        locale,
+        message: `MDX paths for ${locale} do not match ${defaultLocale}.`,
+        missingSlugs,
+        unexpectedSlugs,
+      });
     }
   }
 );

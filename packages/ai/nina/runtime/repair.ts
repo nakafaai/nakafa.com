@@ -88,35 +88,30 @@ export const repairNinaToolCall = Effect.fn("nina.repair.toolCall")(function* ({
     return null;
   }
 
-  const schema = yield* Effect.tryPromise({
-    try: () => inputSchema(toolCall),
-    catch: (cause) => cause,
-  }).pipe(
-    Effect.tapError((cause) =>
-      reporter.report({ error: cause, source: "repair.inputSchema" })
+  const schema = yield* Effect.tryPromise(() => inputSchema(toolCall)).pipe(
+    Effect.tapError(({ error }) =>
+      reporter.report({ error, source: "repair.inputSchema" })
     )
   );
-  const { output: recoveredArgs } = yield* Effect.tryPromise({
-    try: () =>
-      generateText({
-        model: provider.languageModel(defaultModel),
-        output: Output.object({ schema: tool.inputSchema }),
-        prompt: [
-          `The model tried to call the tool "${toolCall.toolName}"` +
-            " with the following arguments:",
-          JSON.stringify(toolCall.input, null, 2),
-          "The tool accepts the following schema:",
-          JSON.stringify(schema, null, 2),
-          "Please fix the arguments.",
-        ].join("\n"),
-        providerOptions: {
-          gateway: gatewayProviderOptions,
-          google: getFastModelProviderOptions(defaultModel),
-        },
-        timeout: backgroundGenerationTimeout,
-      }),
-    catch: (cause) => cause,
-  });
+  const { output: recoveredArgs } = yield* Effect.tryPromise(() =>
+    generateText({
+      model: provider.languageModel(defaultModel),
+      output: Output.object({ schema: tool.inputSchema }),
+      prompt: [
+        `The model tried to call the tool "${toolCall.toolName}"` +
+          " with the following arguments:",
+        JSON.stringify(toolCall.input, null, 2),
+        "The tool accepts the following schema:",
+        JSON.stringify(schema, null, 2),
+        "Please fix the arguments.",
+      ].join("\n"),
+      providerOptions: {
+        gateway: gatewayProviderOptions,
+        google: getFastModelProviderOptions(defaultModel),
+      },
+      timeout: backgroundGenerationTimeout,
+    })
+  );
 
   yield* Effect.logInfo("Tool call successfully recovered").pipe(
     Effect.annotateLogs(sessionLogger)
