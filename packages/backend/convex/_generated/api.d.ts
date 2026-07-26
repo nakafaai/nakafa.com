@@ -134,6 +134,7 @@ import type * as contentRelease_catalog from "../contentRelease/catalog.js";
 import type * as contentRelease_cleanup from "../contentRelease/cleanup.js";
 import type * as contentRelease_compact from "../contentRelease/compact.js";
 import type * as contentRelease_compact_artifacts from "../contentRelease/compact/artifacts.js";
+import type * as contentRelease_compact_owners from "../contentRelease/compact/owners.js";
 import type * as contentRelease_compact_rows from "../contentRelease/compact/rows.js";
 import type * as contentRelease_compact_state from "../contentRelease/compact/state.js";
 import type * as contentRelease_cursor from "../contentRelease/cursor.js";
@@ -189,6 +190,7 @@ import type * as contentRelease_runtime_snapshot from "../contentRelease/runtime
 import type * as contentRelease_scope_family from "../contentRelease/scope/family.js";
 import type * as contentRelease_scope_history from "../contentRelease/scope/history.js";
 import type * as contentRelease_scope_migrate from "../contentRelease/scope/migrate.js";
+import type * as contentRelease_scope_owner from "../contentRelease/scope/owner.js";
 import type * as contentRelease_search from "../contentRelease/search.js";
 import type * as contentRelease_search_sync from "../contentRelease/search/sync.js";
 import type * as contentRelease_search_write from "../contentRelease/search/write.js";
@@ -573,6 +575,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/cleanup": typeof contentRelease_cleanup;
   "contentRelease/compact": typeof contentRelease_compact;
   "contentRelease/compact/artifacts": typeof contentRelease_compact_artifacts;
+  "contentRelease/compact/owners": typeof contentRelease_compact_owners;
   "contentRelease/compact/rows": typeof contentRelease_compact_rows;
   "contentRelease/compact/state": typeof contentRelease_compact_state;
   "contentRelease/cursor": typeof contentRelease_cursor;
@@ -628,6 +631,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/scope/family": typeof contentRelease_scope_family;
   "contentRelease/scope/history": typeof contentRelease_scope_history;
   "contentRelease/scope/migrate": typeof contentRelease_scope_migrate;
+  "contentRelease/scope/owner": typeof contentRelease_scope_owner;
   "contentRelease/search": typeof contentRelease_search;
   "contentRelease/search/sync": typeof contentRelease_search_sync;
   "contentRelease/search/write": typeof contentRelease_search_write;
