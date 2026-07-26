@@ -68,12 +68,23 @@ async function readPublishedOwner(locale: Locale, publicPath: string) {
   applyContentRuntimeCache();
 
   const active = await getActiveContentIdentity();
-  return await Effect.runPromise(
-    readActiveContentRoute({
-      activeReleaseId: active?.releaseId ?? null,
-      family: "material",
-      locale,
-      publicPath,
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const published = yield* readActiveContentRoute({
+        activeReleaseId: active?.releaseId ?? null,
+        family: "material",
+        locale,
+        publicPath,
+      });
+      if (published.kind !== "found") {
+        return published;
+      }
+
+      const { route } = yield* decodePublishedMaterial(published.projection, {
+        locale,
+        publicPath,
+      });
+      return { ...published, route };
     })
   );
 }
@@ -128,18 +139,11 @@ async function resolveMaterialOwner(params: MaterialParams) {
     notFound();
   }
   if (published.kind === "found") {
-    const { route } = await Effect.runPromise(
-      decodePublishedMaterial(published.projection, {
-        locale: request.locale,
-        publicPath: request.publicPath,
-      })
-    );
-
     return {
       activeReleaseId: published.activeReleaseId,
       kind: "published",
       locale: request.locale,
-      route,
+      route: published.route,
     } satisfies PublishedOwner;
   }
 
