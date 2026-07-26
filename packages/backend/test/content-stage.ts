@@ -7,6 +7,7 @@ import type {
 } from "@nakafa/aksara-contracts/release/snapshot";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  TEST_DIGEST,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testPublicationScope,
@@ -20,6 +21,7 @@ interface StagedReleaseOptions {
   readonly checkedItems?: number;
   readonly deleteCount?: number;
   readonly itemCount?: number;
+  readonly originReleaseId?: string;
   readonly projectionCount?: number;
   readonly releaseId?: string;
   readonly resultFamilies?: readonly ContentFamily[];
@@ -103,8 +105,11 @@ export async function insertTestRelease(
     createdAt: now,
     releaseId,
     releaseJson: testReleaseJson({
+      baseManifestHash: options?.originReleaseId ? TEST_DIGEST : null,
+      baseReleaseId: options?.originReleaseId ?? null,
       deleteCount: options?.deleteCount ?? itemCount - upsertCount,
       itemCount,
+      originReleaseId: options?.originReleaseId,
       projectionCount: options?.projectionCount ?? upsertCount,
       releaseId,
       routeCount: options?.routeCount ?? upsertCount,

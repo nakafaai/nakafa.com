@@ -40,12 +40,12 @@ import {
 } from "@nakafa/aksara-contracts/signature/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testDeleteJson,
-  testProjectionJson,
   testPublicationScope,
   testRollbackJson,
   testRouteJson,

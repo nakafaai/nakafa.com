@@ -40,6 +40,7 @@ interface TestStateOptions {
   readonly active?: TestIdentity;
   readonly article?: TestIdentity;
   readonly candidate?: TestIdentity;
+  readonly material?: TestIdentity;
   readonly nextSequence: number;
   readonly recovery?: TestIdentity;
   readonly search?: TestIdentity;
@@ -153,6 +154,13 @@ export async function insertTestState(
           articleManifestHash: options.article.manifestHash,
           articleReleaseId: options.article.releaseId,
           articleSequence: options.article.sequence,
+        }
+      : {}),
+    ...(options.material
+      ? {
+          materialManifestHash: options.material.manifestHash,
+          materialReleaseId: options.material.releaseId,
+          materialSequence: options.material.sequence,
         }
       : {}),
     key: "primary",

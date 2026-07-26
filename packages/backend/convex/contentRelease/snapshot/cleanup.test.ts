@@ -3,8 +3,8 @@ import { compactSnapshots } from "@repo/backend/convex/contentRelease/snapshot/c
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeProgramSnapshotData } from "@repo/backend/test/content-snapshot";
 import { insertTestRelease } from "@repo/backend/test/content-stage";
+import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -25,8 +25,10 @@ async function insertExpiredProgram(
     snapshotJson: "{}",
   });
   for (let index = 0; index < rowCount; index += 1) {
-    await ctx.db.insert("programRows", {
+    await ctx.db.insert("programCatalog", {
+      displayOrder: index,
       index,
+      programKey: `program-${index}`,
       rowHash: `sha256:${index.toString(16).padStart(64, "0")}`,
       rowJson: "{}",
       snapshotId,
@@ -59,20 +61,45 @@ describe("contentRelease/snapshot/cleanup", () => {
   it("deletes expired snapshots through resumable bounded pages", async () => {
     const snapshotId = `sha256:${"7".repeat(64)}`;
     const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertExpiredProgram(ctx, snapshotId, 3));
+    await t.mutation(async (ctx) => {
+      await insertExpiredProgram(ctx, snapshotId, 3);
+      await ctx.db.insert("curriculumRoutes", {
+        index: 3,
+        level: "track",
+        locale: "en",
+        nodeKey: "program-0:root",
+        order: 0,
+        programKey: "program-0",
+        path: "curriculum/program-0",
+        rowHash: `sha256:${"3".padStart(64, "0")}`,
+        rowJson: "{}",
+        snapshotId,
+        sourcePath: "packages/corpus/curriculum/program-0",
+      });
+    });
 
     await expect(
       t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
     ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
     await expect(
       t.run(async (ctx) => ({
-        rows: await ctx.db.query("programRows").collect(),
+        curriculum: await ctx.db.query("curriculumRoutes").collect(),
+        programs: await ctx.db.query("programCatalog").collect(),
         snapshot: await ctx.db.query("contentSnapshots").unique(),
       }))
     ).resolves.toMatchObject({
-      rows: [{ index: 2 }],
-      snapshot: { cleanupAt: 0, cleanupIndex: 1, cleanupRetryAt: 0 },
+      curriculum: [{ index: 3 }],
+      programs: [{ index: 2 }],
+      snapshot: {
+        cleanupAt: 0,
+        cleanupIndex: 1,
+        cleanupPart: "program",
+        cleanupRetryAt: 0,
+      },
     });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
     await expect(
       t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
     ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
@@ -87,8 +114,10 @@ describe("contentRelease/snapshot/cleanup", () => {
     await t.mutation(async (ctx) => {
       await insertExpiredProgram(ctx, snapshotId, 0);
       for (let index = 0; index < 3; index += 1) {
-        await ctx.db.insert("programRows", {
+        await ctx.db.insert("programCatalog", {
+          displayOrder: index,
           index,
+          programKey: `program-${index}`,
           rowHash: `sha256:${index.toString(16).padStart(64, "0")}`,
           rowJson: "x".repeat(450_000),
           snapshotId,
@@ -100,7 +129,7 @@ describe("contentRelease/snapshot/cleanup", () => {
       runConvexProgram(compactSnapshots(ctx, 0))
     );
     const pending = await t.run(async (ctx) => ({
-      rows: await ctx.db.query("programRows").take(3),
+      rows: await ctx.db.query("programCatalog").take(3),
       snapshot: await ctx.db.query("contentSnapshots").unique(),
     }));
     expect(first).toEqual({ cursor: null, deleted: 2, done: false });
@@ -108,7 +137,10 @@ describe("contentRelease/snapshot/cleanup", () => {
     expect(pending.snapshot).toMatchObject({ cleanupIndex: 1 });
     await expect(
       t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
+    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
   });
 
   it("cleans try-out tables in separate durable physical phases", async () => {

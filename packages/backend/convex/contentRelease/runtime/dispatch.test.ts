@@ -10,6 +10,12 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/dispatch";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import {
+  FUNCTION_MATERIAL_KEY,
+  FUNCTION_MATERIAL_PATH,
+  FUNCTION_MATERIAL_SOURCE,
+  FUNCTION_MATERIAL_V2_JSON,
+} from "@repo/backend/test/content-material";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content-proof";
 import {
   articleRuntimeRequest,
@@ -20,9 +26,9 @@ import {
   TEST_ARTICLE_PATH,
   TEST_ARTICLE_PROJECTION_JSON,
   TEST_ARTICLE_SOURCE,
-  TEST_RUNTIME_PATH,
 } from "@repo/backend/test/content-runtime";
 import { insertSignedHead } from "@repo/backend/test/runtime-head";
+import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime-values";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -145,6 +151,43 @@ describe("contentRelease/runtime/dispatch", () => {
       },
       sourcePath: TEST_ARTICLE_SOURCE,
     });
+  });
+
+  it("authenticates the exact active v2 material through the current runtime", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(async (ctx) => {
+      await insertSignedRelease(ctx);
+      await insertSignedHead(ctx, "public", FUNCTION_MATERIAL_KEY, {
+        projectionJson: FUNCTION_MATERIAL_V2_JSON,
+        publicPath: FUNCTION_MATERIAL_PATH,
+        rendererDomain: "mathematics",
+        sourcePath: FUNCTION_MATERIAL_SOURCE,
+      });
+    });
+
+    const found = await runDispatch(
+      t,
+      JSON.stringify({
+        delivery: "public",
+        locale: "en",
+        publicPath: FUNCTION_MATERIAL_PATH,
+      })
+    );
+
+    expect(found.status).toBe(200);
+    const body = JSON.parse(found.body);
+    expect(body).toMatchObject({
+      artifact: { payload: { contentKey: FUNCTION_MATERIAL_KEY } },
+      kind: "found",
+      projection: {
+        contentKey: FUNCTION_MATERIAL_KEY,
+        kind: "subject-lesson",
+      },
+      projectionHash:
+        "sha256:1d80cfc727a8d84ad952b34c79e437acc2ab73360addd1c9d7eea78791eea21d",
+      sourcePath: FUNCTION_MATERIAL_SOURCE,
+    });
+    expect(body.projection).not.toHaveProperty("topicTitle");
   });
 
   it("rejects non-public delivery before reading restricted heads", async () => {

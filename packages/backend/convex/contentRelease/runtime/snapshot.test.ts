@@ -12,13 +12,13 @@ import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import {
-  makeBlockedQuranSnapshot,
   makeProgramSnapshotData,
   type ProgramSnapshotData,
   stageProgramSnapshot,
-} from "@repo/backend/test/content-snapshot";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/program-snapshot";
+import { makeBlockedQuranSnapshot } from "@repo/backend/test/quran-snapshot";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";

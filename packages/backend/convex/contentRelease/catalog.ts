@@ -17,7 +17,7 @@ import {
   loadRouteBinding,
   loadVersion,
 } from "@repo/backend/convex/contentRelease/model";
-import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
+import { decodeProjectionWireJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect, Schema } from "effect";
 
 type ReadCtx = MutationCtx | QueryCtx;
@@ -75,7 +75,7 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
         `Content ${head.contentKey}/${head.locale} lost its projection.`
       );
     }
-    const projection = yield* decodeProjectionJson(head.projectionJson);
+    const projection = yield* decodeProjectionWireJson(head.projectionJson);
     if (familyForProjection(projection) !== head.family) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -132,7 +132,7 @@ export const resolvePublicProjection = Effect.fn(
       `Public content ${contentKey}/${locale} lost its projection.`
     );
   }
-  const projection = yield* decodeProjectionJson(head.projectionJson);
+  const projection = yield* decodeProjectionWireJson(head.projectionJson);
   if (projection.kind === "question-body") {
     return null;
   }

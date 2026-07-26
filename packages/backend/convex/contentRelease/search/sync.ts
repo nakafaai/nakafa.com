@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/convex/contentRelease/model";
 import {
   decodeArtifactJson,
-  decodeProjectionJson,
+  decodeProjectionWireJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import {
   deleteSearchEntry,
@@ -100,7 +100,7 @@ const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (
   }
   const [artifact, decoded] = yield* Effect.all([
     loadSearchArtifact(ctx, head, head.artifactHash),
-    decodeProjectionJson(projection.projectionJson),
+    decodeProjectionWireJson(projection.projectionJson),
   ]);
   yield* writeSearchEntry(ctx, head, decoded, artifact.payload.plainText);
 });

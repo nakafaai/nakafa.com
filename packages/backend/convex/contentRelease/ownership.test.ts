@@ -1,17 +1,17 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testProjectionJson } from "@repo/backend/test/content-release";
-import {
-  insertRuntimeRelease,
-  TEST_RUNTIME_PATH,
-  TEST_RUNTIME_RELEASE,
-} from "@repo/backend/test/content-runtime";
+import { testProjectionJson } from "@repo/backend/test/content-material";
+import { insertRuntimeRelease } from "@repo/backend/test/content-runtime";
 import {
   insertRuntimeBinding,
   insertRuntimeHead,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime-head";
+import {
+  TEST_RUNTIME_PATH,
+  TEST_RUNTIME_RELEASE,
+} from "@repo/backend/test/runtime-values";
 import type { FunctionArgs } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";

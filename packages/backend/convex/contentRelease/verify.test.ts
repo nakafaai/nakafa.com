@@ -2,9 +2,9 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_RELEASE_ID,
-  testProjectionJson,
   testRouteJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";

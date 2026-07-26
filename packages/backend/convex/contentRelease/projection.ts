@@ -1,5 +1,5 @@
 import {
-  type ContentProjection,
+  type ContentProjectionWire,
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import {
@@ -24,6 +24,7 @@ import {
 import {
   decodeItemJson,
   decodeProjectionJson,
+  decodeProjectionWireJson,
   decodeReleaseJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { encodeProjectionJson } from "@repo/backend/convex/contentRelease/wire";
@@ -35,7 +36,8 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
   function* (
     releaseId: string,
     batchIndex: number,
-    projectionJson: readonly string[]
+    projectionJson: readonly string[],
+    usePublishedWire: boolean
   ) {
     if (
       projectionJson.length === 0 ||
@@ -51,9 +53,10 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
         `Projection batch ${batchIndex} exceeds its bounded transport contract.`
       );
     }
-    const projections = yield* Effect.forEach(
-      projectionJson,
-      decodeProjectionJson
+    const projections = yield* Effect.forEach(projectionJson, (source) =>
+      usePublishedWire
+        ? decodeProjectionWireJson(source)
+        : decodeProjectionJson(source)
     );
     return yield* Schema.decodeUnknown(StageProjectionBatchInputSchema)({
       batchIndex,
@@ -77,7 +80,7 @@ const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
   releaseId: string,
   batchIndex: number,
   batchHash: string,
-  projection: ContentProjection,
+  projection: ContentProjectionWire,
   projectionJson: string
 ) {
   const item = yield* loadIdentityItem(
@@ -135,7 +138,20 @@ export const stageProjectionProgram = Effect.fn(
   batchIndex: number,
   sources: readonly string[]
 ) {
-  const { projections } = yield* decodeBatch(releaseId, batchIndex, sources);
+  const { release } = yield* loadStaged(ctx, releaseId);
+  const signed = yield* decodeReleaseJson(release.releaseJson);
+  if (release.status !== "staging" || release.abortingAt !== undefined) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      `Content release ${releaseId} no longer accepts projection batches.`
+    );
+  }
+  const { projections } = yield* decodeBatch(
+    releaseId,
+    batchIndex,
+    sources,
+    signed.manifest.origin.kind === "rollback"
+  );
   const entries = projections.map((projection) => ({
     projection,
     projectionJson: encodeProjectionJson(projection),
@@ -156,14 +172,6 @@ export const stageProjectionProgram = Effect.fn(
     batchIndex,
     values
   );
-  const { release } = yield* loadStaged(ctx, releaseId);
-  const signed = yield* decodeReleaseJson(release.releaseJson);
-  if (release.status !== "staging" || release.abortingAt !== undefined) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_STATE",
-      `Content release ${releaseId} no longer accepts projection batches.`
-    );
-  }
   const existing = yield* Effect.promise(() =>
     ctx.db
       .query("contentItems")

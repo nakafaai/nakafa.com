@@ -12,7 +12,11 @@ const CLEANUP_PAGE_BYTES = CONTENT_DOCUMENT_LIMIT * CLEANUP_PAGE_COUNT;
 
 type CleanupPart = NonNullable<Doc<"contentSnapshots">["cleanupPart"]>;
 type SnapshotChild =
-  | { readonly row: Doc<"programRows">; readonly table: "programRows" }
+  | { readonly row: Doc<"programCatalog">; readonly table: "programCatalog" }
+  | {
+      readonly row: Doc<"curriculumRoutes">;
+      readonly table: "curriculumRoutes";
+    }
   | { readonly row: Doc<"quranRows">; readonly table: "quranRows" }
   | { readonly row: Doc<"tryoutCatalog">; readonly table: "tryoutCatalog" }
   | {
@@ -71,15 +75,33 @@ const loadChildren = Effect.fn("contentRelease.loadSnapshotChildren")(
     part?: CleanupPart
   ) {
     if (family === "program") {
-      if (part !== undefined) {
+      const selected = part ?? "program";
+      if (selected !== "program" && selected !== "curriculum") {
         return yield* releaseFail(
           "CONTENT_RELEASE_INTEGRITY",
-          `Program snapshot ${snapshotId} has a try-out cleanup part.`
+          `Program snapshot ${snapshotId} has an invalid cleanup part.`
         );
+      }
+      if (selected === "program") {
+        const page = yield* Effect.promise(() =>
+          ctx.db
+            .query("programCatalog")
+            .withIndex("by_snapshotId_and_index", (query) =>
+              query.eq("snapshotId", snapshotId).gt("index", afterIndex)
+            )
+            .paginate(cleanupPage())
+        );
+        return {
+          children: page.page.map(
+            (row): SnapshotChild => ({ row, table: "programCatalog" })
+          ),
+          done: page.isDone,
+          part: selected,
+        } satisfies ChildPage;
       }
       const page = yield* Effect.promise(() =>
         ctx.db
-          .query("programRows")
+          .query("curriculumRoutes")
           .withIndex("by_snapshotId_and_index", (query) =>
             query.eq("snapshotId", snapshotId).gt("index", afterIndex)
           )
@@ -87,9 +109,10 @@ const loadChildren = Effect.fn("contentRelease.loadSnapshotChildren")(
       );
       return {
         children: page.page.map(
-          (row): SnapshotChild => ({ row, table: "programRows" })
+          (row): SnapshotChild => ({ row, table: "curriculumRoutes" })
         ),
         done: page.isDone,
+        part: selected,
       } satisfies ChildPage;
     }
     if (family === "quran") {
@@ -155,8 +178,14 @@ const deleteChild = Effect.fn("contentRelease.deleteSnapshotChild")(function* (
   ctx: MutationCtx,
   child: SnapshotChild
 ) {
-  if (child.table === "programRows") {
-    yield* Effect.promise(() => ctx.db.delete("programRows", child.row._id));
+  if (child.table === "programCatalog") {
+    yield* Effect.promise(() => ctx.db.delete("programCatalog", child.row._id));
+    return;
+  }
+  if (child.table === "curriculumRoutes") {
+    yield* Effect.promise(() =>
+      ctx.db.delete("curriculumRoutes", child.row._id)
+    );
     return;
   }
   if (child.table === "quranRows") {
@@ -241,6 +270,14 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
         last.row.index,
         children.part
       );
+      return {
+        cursor: null,
+        deleted: children.children.length,
+        done: false,
+      };
+    }
+    if (snapshot.family === "program" && children.part === "program") {
+      yield* persistCleanup(ctx, snapshot, cutoff, undefined, "curriculum");
       return {
         cursor: null,
         deleted: children.children.length,

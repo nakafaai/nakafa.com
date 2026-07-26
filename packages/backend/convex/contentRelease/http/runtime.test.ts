@@ -10,15 +10,15 @@ import { contentKeyResolver } from "@repo/backend/content/trust";
 import { verifyContentEnvelope } from "@repo/backend/content/verify";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { testProjectionJson } from "@repo/backend/test/content-release";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   insertRuntimeRelease,
   runtimeCases,
   runtimeContentKey,
   runtimeRequest,
-  TEST_RUNTIME_PATH,
 } from "@repo/backend/test/content-runtime";
 import { insertRuntimeHead } from "@repo/backend/test/runtime-head";
+import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime-values";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 

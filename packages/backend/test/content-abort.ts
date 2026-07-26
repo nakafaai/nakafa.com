@@ -76,6 +76,12 @@ export async function seedAbortRelease(ctx: MutationCtx) {
   });
   for (let index = 0; index < ABORT_ITEM_COUNT; index += 1) {
     const contentKey = abortContentKey(index);
+    await ctx.db.insert("contentKeys", {
+      contentKey,
+      createdSequence: 1,
+      family: "material",
+      locale: "en",
+    });
     await ctx.db.insert("contentItems", {
       artifactReady: false,
       contentKey,
@@ -93,6 +99,14 @@ export async function seedAbortRelease(ctx: MutationCtx) {
       }),
       sequence: 1,
       stagedAt: now,
+    });
+    await ctx.db.insert("contentOwners", {
+      contentKey,
+      family: "material",
+      locale: "en",
+      managed: true,
+      releaseId: ABORT_RELEASE_ID,
+      sequence: 1,
     });
   }
 }

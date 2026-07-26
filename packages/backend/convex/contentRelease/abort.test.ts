@@ -15,11 +15,8 @@ import {
   abortContentKey,
   seedAbortRelease,
 } from "@repo/backend/test/content-abort";
-import {
-  TEST_DIGEST,
-  testProjectionJson,
-  testTextHash,
-} from "@repo/backend/test/content-release";
+import { testProjectionJson } from "@repo/backend/test/content-material";
+import { TEST_DIGEST, testTextHash } from "@repo/backend/test/content-release";
 import {
   insertZeroRelease,
   type TestIdentity,
@@ -35,26 +32,7 @@ function abort(ctx: MutationCtx, releaseId = ABORT_RELEASE_ID) {
 describe("contentRelease/abort", () => {
   it("resumes durable deletion and accepts terminal response-loss retries", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await seedAbortRelease(ctx);
-      for (let index = 0; index < ABORT_ITEM_COUNT; index += 1) {
-        const contentKey = abortContentKey(index);
-        await ctx.db.insert("contentKeys", {
-          contentKey,
-          createdSequence: 1,
-          family: "material",
-          locale: "en",
-        });
-        await ctx.db.insert("contentOwners", {
-          contentKey,
-          family: "material",
-          locale: "en",
-          managed: true,
-          releaseId: ABORT_RELEASE_ID,
-          sequence: 1,
-        });
-      }
-    });
+    await t.mutation(seedAbortRelease);
 
     const first = await t.mutation((ctx) => abort(ctx));
     const completed = await t.mutation((ctx) => abort(ctx));

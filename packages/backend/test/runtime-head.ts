@@ -1,7 +1,9 @@
+import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import {
   ContentProjectionSchema,
+  ContentProjectionWireSchema,
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
@@ -9,10 +11,10 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { writeSearchEntry } from "@repo/backend/convex/contentRelease/search/write";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import { testSignedArtifact } from "@repo/backend/test/content-proof";
 import {
   TEST_DIGEST,
-  testProjectionJson,
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content-release";
@@ -20,7 +22,7 @@ import {
   TEST_RUNTIME_NOW,
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/runtime-values";
 import { Schema } from "effect";
 
 /** Optional identities used to shape immutable runtime head fixtures. */
@@ -31,6 +33,7 @@ export interface RuntimeHeadOptions {
   readonly compiledCode?: string;
   readonly headReleaseId?: string;
   readonly headSequence?: number;
+  readonly locale?: ContentLocale;
   readonly plainText?: string;
   readonly projectionJson?: string;
   readonly publicPath?: string;
@@ -73,18 +76,19 @@ export async function insertRuntimeVersion(
   const artifactHash = options?.artifactHash ?? `sha256:${"3".repeat(64)}`;
   const projectionJson =
     options?.projectionJson ?? testProjectionJson({ contentKey, publicPath });
-  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
+  const projection = Schema.decodeUnknownSync(ContentProjectionWireSchema)(
     JSON.parse(projectionJson)
   );
   const headSequence = options?.headSequence ?? TEST_RUNTIME_RELEASE.sequence;
   const headReleaseId =
     options?.headReleaseId ?? TEST_RUNTIME_RELEASE.releaseId;
+  const locale = options?.locale ?? "en";
   const rendererDomain = options?.rendererDomain ?? "mathematics";
   const sourcePath =
     options?.sourcePath ??
     (contentKey.startsWith("material/")
-      ? `packages/corpus/${contentKey}/en.mdx`
-      : `packages/corpus/material/lesson/test/${contentKey.slice(5)}/en.mdx`);
+      ? `packages/corpus/${contentKey}/${locale}.mdx`
+      : `packages/corpus/material/lesson/test/${contentKey.slice(5)}/${locale}.mdx`);
   await ctx.db.insert("contentHeads", {
     artifactHash,
     compilerConfigHash: TEST_DIGEST,
@@ -92,7 +96,7 @@ export async function insertRuntimeVersion(
     delivery,
     family: familyForProjection(projection),
     index: 0,
-    locale: "en",
+    locale,
     operation: "upsert",
     projectionHash: testTextHash(projectionJson),
     projectionJson,
@@ -109,18 +113,21 @@ export async function insertRuntimeVersion(
 export async function insertRuntimeKey(
   ctx: MutationCtx,
   contentKey: string,
-  options?: Pick<RuntimeHeadOptions, "headSequence" | "projectionJson">
+  options?: Pick<
+    RuntimeHeadOptions,
+    "headSequence" | "locale" | "projectionJson"
+  >
 ) {
   const projectionJson =
     options?.projectionJson ?? testProjectionJson({ contentKey });
-  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
+  const projection = Schema.decodeUnknownSync(ContentProjectionWireSchema)(
     JSON.parse(projectionJson)
   );
   await ctx.db.insert("contentKeys", {
     contentKey,
     createdSequence: options?.headSequence ?? TEST_RUNTIME_RELEASE.sequence,
     family: familyForProjection(projection),
-    locale: projection.locale,
+    locale: options?.locale ?? projection.locale,
   });
 }
 
@@ -128,15 +135,16 @@ export async function insertRuntimeKey(
 export async function insertRuntimeIndex(
   ctx: MutationCtx,
   contentKey: string,
-  options?: Pick<RuntimeHeadOptions, "headSequence" | "plainText">
+  options?: Pick<RuntimeHeadOptions, "headSequence" | "locale" | "plainText">
 ) {
   const sequence = options?.headSequence ?? TEST_RUNTIME_RELEASE.sequence;
+  const locale = options?.locale ?? "en";
   const head = await ctx.db
     .query("contentHeads")
     .withIndex("by_contentKey_and_locale_and_sequence", (index) =>
       index
         .eq("contentKey", contentKey)
-        .eq("locale", "en")
+        .eq("locale", locale)
         .eq("sequence", sequence)
     )
     .unique();
@@ -162,10 +170,11 @@ export async function insertRuntimeBinding(
   contentKey: null | string,
   options?: Pick<
     RuntimeHeadOptions,
-    "bindingReleaseId" | "bindingSequence" | "publicPath"
+    "bindingReleaseId" | "bindingSequence" | "locale" | "publicPath"
   >
 ) {
   const publicPath = options?.publicPath ?? TEST_RUNTIME_PATH;
+  const locale = options?.locale ?? "en";
   const bindingSequence =
     options?.bindingSequence ?? TEST_RUNTIME_RELEASE.sequence;
   const bindingReleaseId =
@@ -179,7 +188,7 @@ export async function insertRuntimeBinding(
             "by_locale_and_publicPath_and_sequence_and_index",
             (index) =>
               index
-                .eq("locale", "en")
+                .eq("locale", locale)
                 .eq("publicPath", publicPath)
                 .lt("sequence", bindingSequence)
           )
@@ -192,7 +201,7 @@ export async function insertRuntimeBinding(
     batchIndex: 0,
     ...(ownerKey ? { contentKey: ownerKey } : {}),
     index: 0,
-    locale: "en",
+    locale,
     operation,
     publicPath,
     releaseId: bindingReleaseId,
@@ -207,13 +216,13 @@ export async function insertRuntimeBinding(
   const path = await ctx.db
     .query("contentPaths")
     .withIndex("by_locale_and_publicPath", (index) =>
-      index.eq("locale", "en").eq("publicPath", publicPath)
+      index.eq("locale", locale).eq("publicPath", publicPath)
     )
     .unique();
   if (!path) {
     await ctx.db.insert("contentPaths", {
       createdSequence: bindingSequence,
-      locale: "en",
+      locale,
       publicPath,
     });
   }
@@ -247,7 +256,7 @@ export async function insertSignedHead(
   const projectionJson =
     options?.projectionJson ??
     testProjectionJson({ contentKey, publicPath: TEST_RUNTIME_PATH });
-  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
+  const projection = Schema.decodeUnknownSync(ContentProjectionWireSchema)(
     JSON.parse(projectionJson)
   );
   const rendererDomain = options?.rendererDomain ?? "mathematics";

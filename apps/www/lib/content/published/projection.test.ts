@@ -7,7 +7,11 @@ import {
   decodePublishedMaterial,
 } from "@/lib/content/published/projection";
 import { testArticleProjection } from "@/test/content-article";
-import { previewProjection, previewPublicRoute } from "@/test/content-preview";
+import {
+  previewProjection,
+  previewPublicRoute,
+  previewV2Projection,
+} from "@/test/content-preview";
 
 const identity = {
   locale: "en" as const,
@@ -50,12 +54,14 @@ describe("published projection", () => {
   });
 
   it("adapts the exact signed projection to the current route shell", async () => {
-    await expect(
-      Effect.runPromise(decodePublishedMaterial(previewProjection, identity))
-    ).resolves.toEqual({
-      projection: previewProjection,
-      route: previewPublicRoute,
-    });
+    for (const projection of [previewV2Projection, previewProjection]) {
+      await expect(
+        Effect.runPromise(decodePublishedMaterial(projection, identity))
+      ).resolves.toEqual({
+        projection,
+        route: previewPublicRoute,
+      });
+    }
   });
 
   it("keeps invalid projection data in the typed error channel", async () => {

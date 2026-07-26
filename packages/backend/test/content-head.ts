@@ -1,9 +1,9 @@
 import { MaterialHeadSchema } from "@nakafa/aksara-contracts/release/head";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_DIGEST,
   TEST_RELEASE_ID,
-  testProjectionJson,
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content-release";

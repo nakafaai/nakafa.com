@@ -96,7 +96,20 @@ describe("contentRelease/activate", () => {
     const pending = await t.run((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
     );
-    expect(pending).toHaveLength(2);
+    expect(pending).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: expect.stringContaining("contentRelease/article/sync:resume"),
+        }),
+        expect.objectContaining({
+          name: expect.stringContaining("contentRelease/material/sync:resume"),
+        }),
+        expect.objectContaining({
+          name: expect.stringContaining("contentRelease/search/sync:resume"),
+        }),
+      ])
+    );
+    expect(pending).toHaveLength(3);
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
     const repeated = await t.mutation(activate, {

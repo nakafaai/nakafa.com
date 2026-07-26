@@ -1,5 +1,5 @@
 import {
-  type ContentProjection,
+  type ContentProjectionWire,
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
@@ -13,7 +13,7 @@ import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
 type PublicProjection = Exclude<
-  ContentProjection,
+  ContentProjectionWire,
   { readonly kind: "question-body" }
 >;
 
@@ -48,7 +48,7 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
   function* (
     ctx: MutationCtx,
     head: WithoutSystemFields<Doc<"contentHeads">>,
-    projection: ContentProjection,
+    projection: ContentProjectionWire,
     plainText: string
   ) {
     if (

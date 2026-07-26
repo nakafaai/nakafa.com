@@ -4,9 +4,9 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertRuntimeArticles,
   insertRuntimeRelease,
-  TEST_RUNTIME_RELEASE,
   testArticleProjection,
 } from "@repo/backend/test/content-runtime";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 

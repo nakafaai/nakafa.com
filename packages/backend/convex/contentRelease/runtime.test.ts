@@ -1,21 +1,30 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testProjectionJson } from "@repo/backend/test/content-release";
+import {
+  FUNCTION_MATERIAL_KEY,
+  FUNCTION_MATERIAL_PATH,
+  FUNCTION_MATERIAL_SOURCE,
+  FUNCTION_MATERIAL_V2_JSON,
+  testProjectionJson,
+} from "@repo/backend/test/content-material";
+
 import {
   insertRuntimeRelease,
   TEST_ARTICLE_KEY,
   TEST_ARTICLE_PATH,
   TEST_ARTICLE_PROJECTION_JSON,
   TEST_ARTICLE_SOURCE,
-  TEST_RUNTIME_PATH,
-  TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/content-runtime";
 import {
   insertRuntimeBinding,
   insertRuntimeHead,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime-head";
+import {
+  TEST_RUNTIME_PATH,
+  TEST_RUNTIME_RELEASE,
+} from "@repo/backend/test/runtime-values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -68,6 +77,31 @@ describe("contentRelease/runtime", () => {
       delivery: "public",
       projectionJson: TEST_ARTICLE_PROJECTION_JSON,
       sourcePath: TEST_ARTICLE_SOURCE,
+    });
+  });
+
+  it("returns the exact active v2 material without changing its wire hash", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx);
+      await insertRuntimeHead(ctx, "public", FUNCTION_MATERIAL_KEY, {
+        projectionJson: FUNCTION_MATERIAL_V2_JSON,
+        publicPath: FUNCTION_MATERIAL_PATH,
+        rendererDomain: "mathematics",
+        sourcePath: FUNCTION_MATERIAL_SOURCE,
+      });
+    });
+
+    await expect(
+      t.query(readPublic, {
+        locale: "en",
+        publicPath: FUNCTION_MATERIAL_PATH,
+      })
+    ).resolves.toMatchObject({
+      projectionHash:
+        "sha256:1d80cfc727a8d84ad952b34c79e437acc2ab73360addd1c9d7eea78791eea21d",
+      projectionJson: FUNCTION_MATERIAL_V2_JSON,
+      sourcePath: FUNCTION_MATERIAL_SOURCE,
     });
   });
 

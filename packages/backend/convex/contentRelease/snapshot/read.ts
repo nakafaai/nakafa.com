@@ -57,16 +57,32 @@ const loadRows = Effect.fn("contentRelease.loadSnapshotRows")(function* (
   rowCount: number
 ) {
   if (family === "program") {
-    const rows = yield* Effect.promise(() =>
-      ctx.db
-        .query("programRows")
-        .withIndex("by_snapshotId_and_index", (range) =>
-          range
-            .eq("snapshotId", snapshotId)
-            .gte("index", firstIndex)
-            .lte("index", firstIndex + rowCount - 1)
-        )
-        .take(rowCount + 1)
+    const [catalog, curriculum] = yield* Effect.all([
+      Effect.promise(() =>
+        ctx.db
+          .query("programCatalog")
+          .withIndex("by_snapshotId_and_index", (range) =>
+            range
+              .eq("snapshotId", snapshotId)
+              .gte("index", firstIndex)
+              .lte("index", firstIndex + rowCount - 1)
+          )
+          .take(rowCount + 1)
+      ),
+      Effect.promise(() =>
+        ctx.db
+          .query("curriculumRoutes")
+          .withIndex("by_snapshotId_and_index", (range) =>
+            range
+              .eq("snapshotId", snapshotId)
+              .gte("index", firstIndex)
+              .lte("index", firstIndex + rowCount - 1)
+          )
+          .take(rowCount + 1)
+      ),
+    ]);
+    const rows = [...catalog, ...curriculum].sort(
+      (left, right) => left.index - right.index
     );
     return yield* exactRowJson(rows, family, snapshotId, firstIndex, rowCount);
   }

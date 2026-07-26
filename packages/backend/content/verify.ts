@@ -1,6 +1,6 @@
 import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
-import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
+import type { RoutedContentProjectionWire } from "@nakafa/aksara-contracts/projection/spec";
 import { verifyContentReleaseBundle } from "@nakafa/aksara-contracts/release/verify";
 import { verifyContentRendererCompatibility } from "@nakafa/aksara-contracts/renderer/compatibility";
 import {
@@ -29,7 +29,10 @@ export class ContentEnvelopeMismatchError extends Schema.TaggedError<ContentEnve
 
 /** Checks one article path preserves its pair-grouped corpus identity. */
 function hasArticleSourcePath(
-  projection: Extract<ContentProjection, { readonly kind: "article" }>,
+  projection: Extract<
+    RoutedContentProjectionWire,
+    { readonly kind: "article" }
+  >,
   sourcePath: string
 ) {
   const prefix = `packages/corpus/articles/${projection.category}/`;
@@ -46,7 +49,7 @@ function hasArticleSourcePath(
 
 /** Checks one source path exactly matches its projected content family. */
 function hasProjectionSourcePath(
-  projection: ContentProjection,
+  projection: RoutedContentProjectionWire,
   sourcePath: string
 ) {
   if (projection.kind === "article") {

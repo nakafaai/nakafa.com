@@ -2,10 +2,10 @@ import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type schema from "@repo/backend/convex/schema";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_RELEASE_ID,
   testDeleteJson,
-  testProjectionJson,
   testRouteJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";

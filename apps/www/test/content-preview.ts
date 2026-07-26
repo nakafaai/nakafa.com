@@ -23,10 +23,11 @@ import {
 import {
   MaterialLessonRouteSchema,
   MaterialMetadataSchema,
+  MaterialProjectionV2Schema,
   makeMaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
 import { PublicContentRouteSchema } from "@repo/contents/_types/route/schema";
-import { Effect, Redacted, Schema } from "effect";
+import { Effect, Redacted, Schema, Struct } from "effect";
 import { NextRequest } from "next/server";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import type { MaterialPreviewInput } from "@/lib/content/preview/material";
@@ -80,6 +81,7 @@ export const previewRoute = Schema.decodeUnknownSync(MaterialLessonRouteSchema)(
     publicPath:
       "subjects/mathematics/function-composition-inverse-function/function-concept",
     sectionKey: "function-concept",
+    topicTitle: "Function Composition and Inverse Function",
   }
 );
 
@@ -98,6 +100,11 @@ export const previewProjection = makeMaterialLessonProjection(
   previewRoute,
   previewMetadata
 );
+
+/** Retained v2 wire sample used to prove migration-safe runtime decoding. */
+export const previewV2Projection = Schema.decodeUnknownSync(
+  MaterialProjectionV2Schema
+)(Struct.omit(previewProjection, "topicTitle"));
 
 /** Exact Nakafa public route adapted from the real preview projection. */
 export const previewPublicRoute = Schema.decodeUnknownSync(

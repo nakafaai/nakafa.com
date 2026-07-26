@@ -10,6 +10,11 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  FUNCTION_MATERIAL_KEY,
+  FUNCTION_MATERIAL_SOURCE,
+  FUNCTION_MATERIAL_V2_JSON,
+} from "@repo/backend/test/content-material";
+import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testRollbackJson,
@@ -148,6 +153,29 @@ describe("contentRelease/rollback", () => {
       ],
       total: 2,
     });
+  });
+
+  it("returns the exact retained v2 material state for forward rollback", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 1);
+      await insertRollbackItem(ctx, 0, true, "return {};", {
+        contentKey: FUNCTION_MATERIAL_KEY,
+        priorProjectionJson: FUNCTION_MATERIAL_V2_JSON,
+        priorSourcePath: FUNCTION_MATERIAL_SOURCE,
+      });
+    });
+
+    const page = await readPage(t, -1, 1);
+    expect(page.records[0]?.prior).toMatchObject({
+      change: {
+        contentKey: FUNCTION_MATERIAL_KEY,
+        operation: "upsert",
+        sourcePath: FUNCTION_MATERIAL_SOURCE,
+      },
+      projection: JSON.parse(FUNCTION_MATERIAL_V2_JSON),
+    });
+    expect(page.records[0]?.prior).not.toHaveProperty("projection.topicTitle");
   });
 
   it("rejects invalid identity, unreadable state, and cursor drift", async () => {

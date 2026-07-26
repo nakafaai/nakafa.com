@@ -1,7 +1,7 @@
 import {
   CONTENT_DOCUMENT_LIMIT,
   ensureDocumentSize,
-  HEAD_DOCUMENT_LIMIT,
+  READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -30,8 +30,8 @@ describe("contentRelease/document", () => {
     const headFailure = await Effect.runPromise(
       ensureDocumentSize(
         "Large head",
-        { sourcePath: "x".repeat(HEAD_DOCUMENT_LIMIT) },
-        HEAD_DOCUMENT_LIMIT
+        { sourcePath: "x".repeat(READ_MODEL_DOCUMENT_LIMIT) },
+        READ_MODEL_DOCUMENT_LIMIT
       ).pipe(Effect.flip)
     );
     expect(headFailure).toMatchObject({

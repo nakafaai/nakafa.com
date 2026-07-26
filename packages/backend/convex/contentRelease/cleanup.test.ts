@@ -4,10 +4,10 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { ARTIFACT_PAGE_COUNT } from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_ARTIFACT_HASH,
   TEST_DIGEST,
-  testProjectionJson,
   testRollbackJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";

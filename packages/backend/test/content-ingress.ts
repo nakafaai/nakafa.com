@@ -27,13 +27,13 @@ import {
   inheritContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot";
+import { testMaterialGraph } from "@repo/backend/test/content-material";
 import {
   TEST_PROOF_RENDERER,
   testSignedArtifact,
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
 import {
-  testMaterialGraph,
   testPublicationScope,
   testTextHash,
 } from "@repo/backend/test/content-release";
@@ -88,6 +88,7 @@ export const ingressProjection = MaterialLessonProjectionSchema.make({
   publicPath,
   sectionKey: MaterialSectionSchema.make("head-0"),
   sitemap: true,
+  topicTitle: "Technical Head",
 });
 
 const itemDigest = Effect.runSync(

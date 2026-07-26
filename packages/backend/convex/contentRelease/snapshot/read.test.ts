@@ -5,7 +5,7 @@ import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
 import {
   makeProgramSnapshotData,
   stageProgramSnapshot,
-} from "@repo/backend/test/content-snapshot";
+} from "@repo/backend/test/program-snapshot";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
@@ -111,7 +111,7 @@ describe("contentRelease/snapshot/read", () => {
     await stageProgramSnapshot(missing, data);
     await missing.mutation(async (ctx) => {
       const row = await ctx.db
-        .query("programRows")
+        .query("curriculumRoutes")
         .withIndex("by_snapshotId_and_index", (query) =>
           query.eq("snapshotId", data.snapshotId).eq("index", 2)
         )
@@ -119,7 +119,7 @@ describe("contentRelease/snapshot/read", () => {
       if (!row) {
         throw new Error("Expected staged program row.");
       }
-      await ctx.db.delete("programRows", row._id);
+      await ctx.db.delete("curriculumRoutes", row._id);
     });
     await expect(
       missing.query(readRows, {

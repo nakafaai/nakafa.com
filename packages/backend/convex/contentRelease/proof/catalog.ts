@@ -12,7 +12,7 @@ import {
   loadVersion,
 } from "@repo/backend/convex/contentRelease/model";
 import {
-  decodeProjectionJson,
+  decodeProjectionWireJson,
   decodeReleaseJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import {
@@ -228,7 +228,7 @@ const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(function* (
         `Route ${path.locale}/${path.publicPath} lost its projection.`
       );
     }
-    const projection = yield* decodeProjectionJson(head.projectionJson);
+    const projection = yield* decodeProjectionWireJson(head.projectionJson);
     if (
       projection.contentKey !== binding.contentKey ||
       familyForProjection(projection) !== head.family ||

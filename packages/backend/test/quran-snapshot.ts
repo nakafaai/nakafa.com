@@ -1,4 +1,7 @@
-import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
+import {
+  type Sha256Hash,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
 import { bindQuranRow } from "@nakafa/aksara-contracts/quran/row-hash";
 import {
   QURAN_SNAPSHOT_FORMAT,
@@ -19,6 +22,39 @@ import type {
 } from "@nakafa/aksara-contracts/release/snapshot-data";
 import { TEST_DIGEST } from "@repo/backend/test/content-release";
 import { Effect, Schema } from "effect";
+
+/** Builds one schema-valid blocked Quran manifest without authored text. */
+export function makeBlockedQuranSnapshot(): Extract<
+  ContentSnapshotManifest,
+  { readonly family: "quran" }
+> {
+  const chunkCount = 1085;
+  const runtimeCount = QURAN_ATTRIBUTION_COUNT + QURAN_SURAH_COUNT + chunkCount;
+  return {
+    family: "quran",
+    manifest: {
+      attributionCount: QURAN_ATTRIBUTION_COUNT,
+      chunkCount,
+      format: QURAN_SNAPSHOT_FORMAT,
+      locales: ["en", "id"],
+      projectionCount: runtimeCount + QURAN_SEARCH_COUNT,
+      projectionDigest: TEST_DIGEST,
+      provenanceDigest: TEST_DIGEST,
+      provenanceStatus: "blocked",
+      runtimeCount,
+      runtimeDigest: TEST_DIGEST,
+      searchCount: QURAN_SEARCH_COUNT,
+      searchDigest: TEST_DIGEST,
+      snapshotId: Sha256HashSchema.make(`sha256:${"4".repeat(64)}`),
+      sourceBytes: 1,
+      sourceDigest: TEST_DIGEST,
+      sourceFileCount: QURAN_SOURCE_FILE_COUNT,
+      surahCount: QURAN_SURAH_COUNT,
+      tafsirLocales: ["id"],
+      verseCount: 6236,
+    },
+  };
+}
 
 /** Creates one snapshot-bound technical Quran search row. */
 export const makeQuranSnapshotRow = Effect.fn(

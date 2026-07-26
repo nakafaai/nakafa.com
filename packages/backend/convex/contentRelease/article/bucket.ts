@@ -1,6 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { HEAD_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
+import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   TRANSACTION_READ_HEADROOM,
@@ -22,7 +22,7 @@ export const ARTICLE_BUCKET_LIMIT = 16 ** BUCKET_LENGTH;
  */
 export const ARTICLE_BUCKET_SIZE = Math.floor(
   (TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM) /
-    (MAXIMUM_HEAD_READS_PER_ROUTE * HEAD_DOCUMENT_LIMIT)
+    (MAXIMUM_HEAD_READS_PER_ROUTE * READ_MODEL_DOCUMENT_LIMIT)
 );
 
 type ArticleLocale = Doc<"articleBuckets">["locale"];

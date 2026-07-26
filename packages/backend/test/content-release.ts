@@ -45,22 +45,6 @@ export function testArticleGraph(
   );
 }
 
-/** Creates the exact graph identity derived from one material source key. */
-export function testMaterialGraph(
-  topic: string,
-  section: string,
-  locale: ContentLocale = "en"
-) {
-  return Effect.runSync(
-    makeLearningGraphIdentity({
-      concept: ["material", "lesson", "test", topic],
-      learningObject: ["material-section", "test", topic, section],
-      lens: ["material", "lesson", "test"],
-      locale,
-    })
-  );
-}
-
 /** Hashes one canonical technical wire value with the production algorithm. */
 export function testTextHash(value: string) {
   return Sha256HashSchema.make(
@@ -267,35 +251,5 @@ export function testDeleteJson(options?: {
     },
     index: options?.index ?? 0,
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
-  });
-}
-
-/** Creates one canonical technical material projection. */
-export function testProjectionJson(options?: {
-  readonly contentKey?: string;
-  readonly index?: number;
-  readonly locale?: ContentLocale;
-  readonly publicPath?: string;
-  readonly title?: string;
-}) {
-  const index = options?.index ?? 0;
-  const locale = options?.locale ?? "en";
-  const topic = `head-${index}`;
-  return JSON.stringify({
-    contentKey: options?.contentKey ?? `test:head-${index}`,
-    graph: testMaterialGraph(topic, topic, locale),
-    kind: "subject-lesson",
-    locale,
-    materialKey: `lesson.test.${topic}`,
-    metadata: {
-      authors: [{ name: "Nakafa" }],
-      date: "2026-07-22",
-      title: options?.title ?? `Technical Head ${index}`,
-    },
-    order: index + 1,
-    parentPath: "test",
-    publicPath: options?.publicPath ?? `test/head-${index}`,
-    sectionKey: topic,
-    sitemap: true,
   });
 }

@@ -4,9 +4,9 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_RELEASE_ID,
-  testProjectionJson,
   testRollbackJson,
 } from "@repo/backend/test/content-release";
 import {

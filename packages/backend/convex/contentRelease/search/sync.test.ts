@@ -3,7 +3,7 @@ import { syncSearch } from "@repo/backend/convex/contentRelease/search/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testProjectionJson } from "@repo/backend/test/content-release";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   insertTestState,
   type TestIdentity,

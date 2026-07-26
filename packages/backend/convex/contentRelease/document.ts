@@ -6,8 +6,8 @@ import { Effect } from "effect";
 /** Application ceiling that leaves headroom below Convex's 1 MiB limit. */
 export const CONTENT_DOCUMENT_LIMIT = 512 * 1024;
 
-/** Compact head ceiling used to prove bounded inventory pagination. */
-export const HEAD_DOCUMENT_LIMIT = 16 * 1024;
+/** Compact read-model ceiling used to prove bounded indexed queries. */
+export const READ_MODEL_DOCUMENT_LIMIT = 16 * 1024;
 
 /** Search-row ceiling that keeps a 32-hit scan below transaction budgets. */
 export const SEARCH_DOCUMENT_LIMIT = 2 * MAX_PLAIN_TEXT_BYTES;

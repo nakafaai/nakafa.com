@@ -5,7 +5,7 @@ import {
   deleteArticle,
   writeArticle,
 } from "@repo/backend/convex/contentRelease/article/write";
-import { HEAD_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
+import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -196,7 +196,7 @@ describe("contentRelease/article/write", () => {
       invalid.mutation((ctx) =>
         write(ctx, testHead(), {
           ...TEST_ARTICLE_PROJECTION,
-          categoryTitle: "x".repeat(HEAD_DOCUMENT_LIMIT),
+          categoryTitle: "x".repeat(READ_MODEL_DOCUMENT_LIMIT),
         })
       )
     ).rejects.toMatchObject({

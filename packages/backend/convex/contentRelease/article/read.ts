@@ -1,9 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import {
-  getSourceRevision,
-  loadArticleOwner,
-} from "@repo/backend/convex/contentRelease/article/owner";
+import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
 import {
   decodeCategory,
   verifyArticle,
@@ -15,6 +12,7 @@ import {
 } from "@repo/backend/convex/contentRelease/cursor";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
+import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect } from "effect";
 
 /** Returns a stable empty page when Aksara does not own articles yet. */
@@ -61,7 +59,7 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
         activeReleaseId: active?.releaseId ?? null,
         managed: owner.managed,
         result: emptyPage(),
-        sourceRevision: active ? getSourceRevision(active) : null,
+        sourceRevision: active ? readSourceRevision(active) : null,
         stale: true,
       };
     }
@@ -100,7 +98,7 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
       activeReleaseId: owner.active.releaseId,
       managed: true,
       result: { ...stored, page },
-      sourceRevision: getSourceRevision(owner.active),
+      sourceRevision: readSourceRevision(owner.active),
       stale: false,
     };
   }
@@ -140,7 +138,7 @@ export const readCategoryPage = Effect.fn(
       activeReleaseId: active?.releaseId ?? null,
       managed: owner.managed,
       result: emptyPage(),
-      sourceRevision: active ? getSourceRevision(active) : null,
+      sourceRevision: active ? readSourceRevision(active) : null,
       stale: true,
     };
   }
@@ -176,7 +174,7 @@ export const readCategoryPage = Effect.fn(
     activeReleaseId: owner.active.releaseId,
     managed: true,
     result: { ...stored, page },
-    sourceRevision: getSourceRevision(owner.active),
+    sourceRevision: readSourceRevision(owner.active),
     stale: false,
   };
 });

@@ -11,11 +11,11 @@ import {
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
-  testProjectionJson,
   testRollbackJson,
   testRouteJson,
   testTextHash,
@@ -174,9 +174,15 @@ export async function insertRollbackItem(
   ctx: MutationCtx,
   index: number,
   previousExists: boolean,
-  compiledCode = "return {};"
+  compiledCode = "return {};",
+  options?: {
+    readonly contentKey?: typeof ContentKeySchema.Type;
+    readonly priorProjectionJson?: string;
+    readonly priorSourcePath?: typeof CorpusSourcePathSchema.Type;
+  }
 ) {
-  const contentKey = ContentKeySchema.make(`test:head-${index}`);
+  const contentKey =
+    options?.contentKey ?? ContentKeySchema.make(`test:head-${index}`);
   const currentHash = rollbackArtifactHash(index, "current");
   const currentPath = `test/head-${index}`;
   const currentProjection = testProjectionJson({
@@ -186,14 +192,12 @@ export async function insertRollbackItem(
   });
   const priorHash = rollbackArtifactHash(index, "prior");
   const priorPath = PublicPathSchema.make(`test/prior-${index}`);
-  const priorProjection = testProjectionJson({
-    contentKey,
-    index,
-    publicPath: priorPath,
-  });
-  const priorSourcePath = CorpusSourcePathSchema.make(
-    `packages/corpus/test/prior-${index}/en.mdx`
-  );
+  const priorProjection =
+    options?.priorProjectionJson ??
+    testProjectionJson({ contentKey, index, publicPath: priorPath });
+  const priorSourcePath =
+    options?.priorSourcePath ??
+    CorpusSourcePathSchema.make(`packages/corpus/test/prior-${index}/en.mdx`);
   const rollbackJson = previousExists
     ? canonicalizeRollbackSnapshotEntry(
         RollbackSnapshotEntrySchema.make({
