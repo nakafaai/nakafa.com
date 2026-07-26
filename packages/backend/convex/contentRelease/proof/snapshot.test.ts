@@ -43,6 +43,7 @@ function insertCompletedRelease(
   release: ReturnType<typeof programRelease>
 ) {
   return ctx.db.insert("contentReleases", {
+    baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,
     completedAt: 1,
@@ -52,6 +53,7 @@ function insertCompletedRelease(
     releaseId: release.manifest.releaseId,
     releaseJson: JSON.stringify(release),
     rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    resultFamilies: [...release.manifest.scope.families],
     role: "candidate",
     sequence: 1,
     stagedArtifacts: 0,

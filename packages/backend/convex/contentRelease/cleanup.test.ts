@@ -1,3 +1,4 @@
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { ARTIFACT_PAGE_COUNT } from "@repo/backend/convex/contentRelease/spec";
@@ -29,6 +30,10 @@ const NOW = Date.UTC(2026, 6, 23, 12);
 function insertRelease(ctx: MutationCtx) {
   return insertZeroRelease(ctx, {
     ...RELEASE,
+    ownership: {
+      base: [],
+      result: ContentFamilySchema.literals,
+    },
     role: "candidate",
     status: "aborted",
   });

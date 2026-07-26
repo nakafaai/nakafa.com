@@ -1,3 +1,4 @@
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -36,6 +37,10 @@ describe("contentRelease/recovery", () => {
         ...RECOVERY,
         base: CANDIDATE,
         originReleaseId: CANDIDATE.releaseId,
+        ownership: {
+          base: ContentFamilySchema.literals,
+          result: [],
+        },
         role: "recovery",
         status: "verified",
       });
@@ -53,6 +58,10 @@ describe("contentRelease/recovery", () => {
     await t.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...CANDIDATE,
+        ownership: {
+          base: [],
+          result: ContentFamilySchema.literals,
+        },
         role: "candidate",
         status: "completed",
       });
@@ -60,6 +69,10 @@ describe("contentRelease/recovery", () => {
         ...RECOVERY,
         base: CANDIDATE,
         originReleaseId: CANDIDATE.releaseId,
+        ownership: {
+          base: ContentFamilySchema.literals,
+          result: [],
+        },
         role: "recovery",
         status: "completed",
       });
@@ -81,6 +94,10 @@ describe("contentRelease/recovery", () => {
     await t.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...CANDIDATE,
+        ownership: {
+          base: [],
+          result: ContentFamilySchema.literals,
+        },
         role: "candidate",
         status: "completed",
       });
@@ -88,6 +105,10 @@ describe("contentRelease/recovery", () => {
         ...RECOVERY,
         base: CANDIDATE,
         originReleaseId: "release-other",
+        ownership: {
+          base: ContentFamilySchema.literals,
+          result: [],
+        },
         role: "recovery",
         status: "completed",
       });

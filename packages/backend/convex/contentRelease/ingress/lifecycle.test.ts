@@ -27,6 +27,7 @@ const release = testSignedRelease(testEmptyManifest(releaseId));
 async function insertRelease(ctx: MutationCtx, rendererJson: string) {
   const now = Date.UTC(2026, 6, 22, 12, 0, 0);
   await ctx.db.insert("contentReleases", {
+    baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,
@@ -35,6 +36,7 @@ async function insertRelease(ctx: MutationCtx, rendererJson: string) {
     releaseId,
     releaseJson: JSON.stringify(release),
     rendererJson,
+    resultFamilies: [...release.manifest.scope.families],
     role: "candidate",
     sequence: 1,
     stagedArtifacts: 0,

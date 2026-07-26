@@ -80,6 +80,7 @@ describe("contentRelease/items", () => {
     const state = await t.run(async (ctx) => ({
       items: await ctx.db.query("contentItems").take(3),
       keys: await ctx.db.query("contentKeys").take(3),
+      owners: await ctx.db.query("contentOwners").take(3),
       release: await ctx.db.query("contentReleases").unique(),
     }));
 
@@ -87,6 +88,7 @@ describe("contentRelease/items", () => {
     expect(repeated).toMatchObject({ created: 0, unchanged: 2 });
     expect(state.items).toHaveLength(2);
     expect(state.keys).toHaveLength(2);
+    expect(state.owners).toHaveLength(0);
     expect(state.release).toMatchObject({
       stagedDeletes: 1,
       stagedItems: 2,

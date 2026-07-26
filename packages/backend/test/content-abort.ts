@@ -1,3 +1,4 @@
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { RELEASE_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import {
@@ -38,6 +39,7 @@ export function abortItemJson(index: number) {
 export async function seedAbortRelease(ctx: MutationCtx) {
   const now = Date.UTC(2026, 6, 23, 12);
   await ctx.db.insert("contentReleases", {
+    baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,
@@ -50,6 +52,7 @@ export async function seedAbortRelease(ctx: MutationCtx) {
       upsertCount: ABORT_ITEM_COUNT,
     }),
     rendererJson: testRendererJson(),
+    resultFamilies: [...ContentFamilySchema.literals],
     role: "candidate",
     sequence: 1,
     stagedArtifacts: 0,

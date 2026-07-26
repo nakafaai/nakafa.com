@@ -32,7 +32,7 @@ describe("contentRelease/ownership", () => {
     });
 
     const unmanaged = convexTest(schema, convexModules);
-    await unmanaged.mutation((ctx) => insertRuntimeRelease(ctx));
+    await unmanaged.mutation((ctx) => insertRuntimeRelease(ctx, ["article"]));
     await expect(unmanaged.query(resolve, routeArgs)).resolves.toEqual({
       activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
       kind: "unmanaged",
@@ -52,7 +52,7 @@ describe("contentRelease/ownership", () => {
   it("keeps candidate-only ownership unmanaged before activation", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
-      await insertRuntimeRelease(ctx);
+      await insertRuntimeRelease(ctx, ["article"]);
       await ctx.db.insert("contentPaths", {
         createdSequence: TEST_RUNTIME_RELEASE.sequence + 1,
         locale: "en",
@@ -61,6 +61,44 @@ describe("contentRelease/ownership", () => {
     });
 
     await expect(t.query(resolve, routeArgs)).resolves.toEqual({
+      activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+      kind: "unmanaged",
+    });
+  });
+
+  it("uses exact active ownership instead of permanent route history", async () => {
+    const managed = convexTest(schema, convexModules);
+    await managed.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx, ["article"]);
+      await insertRuntimeHead(ctx, "public", "test:exact");
+      await ctx.db.insert("contentOwners", {
+        contentKey: "test:exact",
+        family: "material",
+        locale: "en",
+        managed: true,
+        releaseId: TEST_RUNTIME_RELEASE.releaseId,
+        sequence: TEST_RUNTIME_RELEASE.sequence,
+      });
+    });
+    await expect(managed.query(resolve, routeArgs)).resolves.toMatchObject({
+      activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+      kind: "found",
+    });
+
+    const restored = convexTest(schema, convexModules);
+    await restored.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx, ["article"]);
+      await insertRuntimeHead(ctx, "public", "test:restored");
+      await ctx.db.insert("contentOwners", {
+        contentKey: "test:restored",
+        family: "material",
+        locale: "en",
+        managed: false,
+        releaseId: TEST_RUNTIME_RELEASE.releaseId,
+        sequence: TEST_RUNTIME_RELEASE.sequence,
+      });
+    });
+    await expect(restored.query(resolve, routeArgs)).resolves.toEqual({
       activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
       kind: "unmanaged",
     });
@@ -167,16 +205,23 @@ describe("contentRelease/ownership", () => {
   it("fails visibly for duplicate ownership and mismatched projections", async () => {
     const duplicate = convexTest(schema, convexModules);
     await duplicate.mutation(async (ctx) => {
-      await insertRuntimeRelease(ctx);
-      await ctx.db.insert("contentPaths", {
-        createdSequence: 1,
+      await insertRuntimeRelease(ctx, ["article"]);
+      await insertRuntimeHead(ctx, "public", "test:duplicate");
+      await ctx.db.insert("contentOwners", {
+        contentKey: "test:duplicate",
+        family: "material",
         locale: "en",
-        publicPath: TEST_RUNTIME_PATH,
+        managed: true,
+        releaseId: "release-owner-one",
+        sequence: TEST_RUNTIME_RELEASE.sequence,
       });
-      await ctx.db.insert("contentPaths", {
-        createdSequence: 2,
+      await ctx.db.insert("contentOwners", {
+        contentKey: "test:duplicate",
+        family: "material",
         locale: "en",
-        publicPath: TEST_RUNTIME_PATH,
+        managed: true,
+        releaseId: "release-owner-two",
+        sequence: TEST_RUNTIME_RELEASE.sequence,
       });
     });
     await expect(duplicate.query(resolve, routeArgs)).rejects.toMatchObject({

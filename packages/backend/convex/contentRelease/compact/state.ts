@@ -196,37 +196,6 @@ const retainedFloor = Effect.fn("contentRelease.retainedFloor")(function* (
   return boundary ? Math.min(boundary.sequence, ceiling) : from;
 });
 
-/** Blocks every cycle transaction until its removable releases own their scope. */
-const requireOwnedReleases = Effect.fn("contentRelease.requireOwnedReleases")(
-  function* (ctx: MutationCtx, from: number, floor: number) {
-    const releases = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentReleases")
-        .withIndex("by_sequence", (query) =>
-          query.gte("sequence", from).lt("sequence", floor)
-        )
-        .take(RELEASE_SCAN_COUNT + 2)
-    );
-    if (releases.length > RELEASE_SCAN_COUNT + 1) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Content compaction exceeded its bounded ownership range."
-      );
-    }
-    const incomplete = releases.find(
-      (release) =>
-        release.baseFamilies === undefined ||
-        release.resultFamilies === undefined
-    );
-    if (incomplete) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_STATE",
-        `Release ${incomplete.releaseId} requires ownership migration before compaction.`
-      );
-    }
-  }
-);
-
 /** Validates and returns a previously persisted compaction cycle. */
 const activeCycle = Effect.fn("contentRelease.activeCompaction")(function* (
   state: Doc<"contentState">,
@@ -292,7 +261,6 @@ export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
     }
     const existing = yield* activeCycle(state, compactedFloor);
     if (existing) {
-      yield* requireOwnedReleases(ctx, existing.from, existing.floor);
       return existing;
     }
     const ceiling = yield* protectedFloor(ctx, state);
@@ -300,7 +268,6 @@ export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
     if (floor <= compactedFloor) {
       return null;
     }
-    yield* requireOwnedReleases(ctx, compactedFloor, floor);
     const now = Date.now();
     yield* Effect.promise(() =>
       ctx.db.patch("contentState", state._id, {

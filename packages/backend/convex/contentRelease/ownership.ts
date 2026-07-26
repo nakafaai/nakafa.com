@@ -4,6 +4,8 @@ import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/cat
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
+import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
+import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
 import {
   contentFamilyValidator,
   localeValidator,
@@ -33,29 +35,6 @@ type ContentFamily = Infer<typeof contentFamilyValidator>;
 type ContentLocale = Infer<typeof localeValidator>;
 type RouteResult = Infer<typeof routeResultValidator>;
 
-/** Reads one permanent route identity without exposing artifact code. */
-const loadContentPath = Effect.fn("contentRelease.loadContentPath")(function* (
-  ctx: QueryCtx,
-  locale: ContentLocale,
-  publicPath: string
-) {
-  const rows = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentPaths")
-      .withIndex("by_locale_and_publicPath", (index) =>
-        index.eq("locale", locale).eq("publicPath", publicPath)
-      )
-      .take(2)
-  );
-  if (rows.length > 1) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Route ${locale}/${publicPath} has duplicate ownership.`
-    );
-  }
-  return rows[0] ?? null;
-});
-
 /** Resolves one public route from the exact active publication sequence. */
 const resolveActiveRoute = Effect.fn("contentRelease.resolveActiveRoute")(
   function* (
@@ -71,19 +50,34 @@ const resolveActiveRoute = Effect.fn("contentRelease.resolveActiveRoute")(
         kind: "unmanaged",
       } satisfies RouteResult;
     }
-    const path = yield* loadContentPath(ctx, locale, publicPath);
-    if (!path || path.createdSequence > active.sequence) {
-      return {
-        activeReleaseId: active.releaseId,
-        kind: "unmanaged",
-      } satisfies RouteResult;
-    }
+    const families = yield* loadReleaseFamilies(active.release);
     const binding = yield* loadRouteBinding(
       ctx,
       locale,
       publicPath,
       active.sequence
     );
+    const owner = binding?.contentKey
+      ? yield* loadContentOwner(
+          ctx,
+          binding.contentKey,
+          locale,
+          active.sequence
+        )
+      : null;
+    if (owner && owner.family !== family) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Route ${locale}/${publicPath} changed its ${family} ownership family.`
+      );
+    }
+    const managed = families.result.includes(family) || owner?.managed === true;
+    if (!managed) {
+      return {
+        activeReleaseId: active.releaseId,
+        kind: "unmanaged",
+      } satisfies RouteResult;
+    }
     if (!binding || binding.operation === "delete") {
       return {
         activeReleaseId: active.releaseId,

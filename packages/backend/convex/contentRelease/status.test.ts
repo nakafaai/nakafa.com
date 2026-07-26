@@ -1,3 +1,4 @@
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
@@ -155,6 +156,10 @@ describe("contentRelease/status", () => {
     await t.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...ACTIVE,
+        ownership: {
+          base: [],
+          result: ContentFamilySchema.literals,
+        },
         role: "candidate",
         status: "completed",
       });

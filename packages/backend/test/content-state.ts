@@ -21,16 +21,19 @@ export interface TestIdentity {
   readonly sequence: number;
 }
 
-interface TestReleaseOptions extends TestIdentity {
+interface TestReleaseEnvelope extends TestIdentity {
   readonly base?: TestIdentity;
   readonly originReleaseId?: string;
-  readonly ownership?: {
-    readonly base: readonly ContentFamily[];
-    readonly result: readonly ContentFamily[];
-  };
   readonly role: "candidate" | "recovery";
   readonly scope?: PublicationScope;
   readonly status: "aborted" | "completed" | "verified";
+}
+
+interface TestReleaseOptions extends TestReleaseEnvelope {
+  readonly ownership: {
+    readonly base: readonly ContentFamily[];
+    readonly result: readonly ContentFamily[];
+  };
 }
 
 interface TestStateOptions {
@@ -43,7 +46,7 @@ interface TestStateOptions {
 }
 
 /** Creates the exact zero-item signed envelope used by lifecycle tests. */
-export function zeroReleaseJson(options: TestReleaseOptions) {
+export function zeroReleaseJson(options: TestReleaseEnvelope) {
   return testReleaseJson({
     baseManifestHash: options.base?.manifestHash ?? null,
     baseReleaseId: options.base?.releaseId ?? null,
@@ -101,18 +104,14 @@ export async function insertZeroRelease(
           receiptJson: JSON.stringify(receipt),
         }
       : {}),
-    ...(options.ownership
-      ? {
-          baseFamilies: [...options.ownership.base],
-          resultFamilies: [...options.ownership.result],
-        }
-      : {}),
+    baseFamilies: [...options.ownership.base],
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,
     releaseId: options.releaseId,
     releaseJson,
     rendererJson: testRendererJson(),
+    resultFamilies: [...options.ownership.result],
     role: options.role,
     sequence: options.sequence,
     stagedArtifacts: 0,

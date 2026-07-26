@@ -1,3 +1,4 @@
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_DIGEST,
@@ -18,6 +19,10 @@ export async function insertCompletedRelease(
   await insertZeroRelease(ctx, {
     ...identity,
     base,
+    ownership: {
+      base: base ? ContentFamilySchema.literals : [],
+      result: ContentFamilySchema.literals,
+    },
     role: "candidate",
     status: "completed",
   });
