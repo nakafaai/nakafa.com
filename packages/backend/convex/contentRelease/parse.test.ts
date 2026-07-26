@@ -1,9 +1,12 @@
+import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
+import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
 import {
   decodeArtifactJson,
   decodeItemJson,
   decodeProjectionJson,
+  decodeProjectionWireJson,
   decodeProofJson,
   decodeReleaseJson,
   decodeRendererJson,
@@ -18,14 +21,18 @@ import {
 } from "@repo/backend/convex/contentRelease/wire";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import {
+  FUNCTION_MATERIAL_V2_JSON,
+  testProjectionJson,
+} from "@repo/backend/test/content-material";
+import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
-  testProjectionJson,
   testReleaseJson,
   testRendererJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";
+
 import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -100,6 +107,24 @@ describe("contentRelease/parse", () => {
     expect(
       failures.every(({ code }) => code === "CONTENT_RELEASE_INTEGRITY")
     ).toBe(true);
+  });
+
+  it("preserves the exact active v2 material wire and its published hash", async () => {
+    const projection = await Effect.runPromise(
+      decodeProjectionWireJson(FUNCTION_MATERIAL_V2_JSON)
+    );
+
+    expect(canonicalizeContentProjection(projection)).toBe(
+      FUNCTION_MATERIAL_V2_JSON
+    );
+    expect(hashContentProjection(projection)).toBe(
+      "sha256:1d80cfc727a8d84ad952b34c79e437acc2ab73360addd1c9d7eea78791eea21d"
+    );
+    await expect(
+      Effect.runPromise(
+        decodeProjectionJson(FUNCTION_MATERIAL_V2_JSON).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
   });
 
   it("parses unknown stored JSON once and maps invalid bytes", async () => {

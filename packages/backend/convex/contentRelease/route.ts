@@ -2,7 +2,7 @@ import type { ContentRouteItem } from "@nakafa/aksara-contracts/release/route";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   ensureDocumentSize,
-  HEAD_DOCUMENT_LIMIT,
+  READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
@@ -165,7 +165,7 @@ export const stageRouteVersion = Effect.fn("contentRelease.stageRouteVersion")(
     yield* ensureDocumentSize(
       `Release route ${route.index}`,
       row,
-      HEAD_DOCUMENT_LIMIT
+      READ_MODEL_DOCUMENT_LIMIT
     );
     yield* Effect.promise(() => ctx.db.insert("contentBindings", row));
   }

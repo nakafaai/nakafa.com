@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/convex/contentRelease/article/bucket";
 import {
   ensureDocumentSize,
-  HEAD_DOCUMENT_LIMIT,
+  READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type { WithoutSystemFields } from "convex/server";
@@ -82,7 +82,7 @@ const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
     yield* ensureDocumentSize(
       "Active article category",
       row,
-      HEAD_DOCUMENT_LIMIT
+      READ_MODEL_DOCUMENT_LIMIT
     );
     if (existing) {
       if (existing.bucket !== row.bucket) {
@@ -181,7 +181,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
   yield* ensureDocumentSize(
     "Active article catalog entry",
     entry,
-    HEAD_DOCUMENT_LIMIT
+    READ_MODEL_DOCUMENT_LIMIT
   );
   const existing = yield* loadArticle(ctx, head.contentKey, head.locale);
   if (existing) {

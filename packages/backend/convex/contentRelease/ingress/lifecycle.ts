@@ -77,6 +77,11 @@ const searchSyncReference = makeFunctionReference<
   { releaseId: string },
   ModelProgress
 >("contentRelease/search/sync:page");
+const materialSyncReference = makeFunctionReference<
+  "mutation",
+  { releaseId: string },
+  ModelProgress
+>("contentRelease/material/sync:page");
 
 /** Authenticates one lifecycle request and its immutable release identity. */
 function verifyRequest(request: SignedRequest) {
@@ -170,6 +175,7 @@ export const advancePublication = Effect.fn(
     );
     yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
     yield* syncActiveModel(ctx, releaseId, "Article", articleSyncReference);
+    yield* syncActiveModel(ctx, releaseId, "Material", materialSyncReference);
     return { ok: true, operation: request.operation, value };
   }
   const value = yield* callInternal(() =>
@@ -181,5 +187,6 @@ export const advancePublication = Effect.fn(
   );
   yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
   yield* syncActiveModel(ctx, releaseId, "Article", articleSyncReference);
+  yield* syncActiveModel(ctx, releaseId, "Material", materialSyncReference);
   return { ok: true, operation: request.operation, value };
 });

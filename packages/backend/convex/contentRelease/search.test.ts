@@ -2,7 +2,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testProjectionJson } from "@repo/backend/test/content-release";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   insertTestState,
   type TestIdentity,

@@ -1,3 +1,5 @@
+import articleSchema from "@repo/backend/convex/contentRelease/article/schema";
+import materialSchema from "@repo/backend/convex/contentRelease/material/schema";
 import scopeSchema from "@repo/backend/convex/contentRelease/scope/schema";
 import snapshotSchema from "@repo/backend/convex/contentRelease/snapshot/schema";
 import {
@@ -125,64 +127,8 @@ const tables = {
       filterFields: ["family", "locale"],
     }),
 
-  /** Active public articles ordered independently from the search index. */
-  articleCatalog: defineTable({
-    bucket: v.string(),
-    category: v.string(),
-    categoryTitle: v.string(),
-    contentKey: v.string(),
-    date: v.string(),
-    locale: localeValidator,
-    projectionHash: v.string(),
-    publicPath: v.string(),
-    releaseId: v.string(),
-    rendererDomain: rendererDomainValidator,
-    sequence: v.number(),
-  })
-    .index("by_contentKey_and_locale", ["contentKey", "locale"])
-    .index("by_locale_and_date_and_contentKey", [
-      "locale",
-      "date",
-      "contentKey",
-    ])
-    .index("by_locale_and_category_and_date_and_contentKey", [
-      "locale",
-      "category",
-      "date",
-      "contentKey",
-    ])
-    .index("by_locale_and_bucket_and_publicPath", [
-      "locale",
-      "bucket",
-      "publicPath",
-    ]),
-
-  /** One active localized title and representative per article category. */
-  articleCategories: defineTable({
-    bucket: v.string(),
-    category: v.string(),
-    contentKey: v.string(),
-    locale: localeValidator,
-    projectionHash: v.string(),
-    releaseId: v.string(),
-    rendererDomain: rendererDomainValidator,
-    sequence: v.number(),
-    title: v.string(),
-  })
-    .index("by_locale_and_category", ["locale", "category"])
-    .index("by_locale_and_bucket_and_category", [
-      "locale",
-      "bucket",
-      "category",
-    ]),
-
-  /** Non-empty deterministic partitions for bounded article sitemaps. */
-  articleBuckets: defineTable({
-    articleCount: v.number(),
-    bucket: v.string(),
-    categoryCount: v.number(),
-    locale: localeValidator,
-  }).index("by_locale_and_bucket", ["locale", "bucket"]),
+  ...articleSchema,
+  ...materialSchema,
 
   /** Immutable route versions resolved before access policy enforcement. */
   contentBindings: defineTable({
@@ -227,6 +173,9 @@ const tables = {
     cleanupRetryAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
     createdAt: v.number(),
+    materialCursor: v.optional(v.string()),
+    materialIndex: v.optional(v.number()),
+    materialSyncedAt: v.optional(v.number()),
     proofAt: v.optional(v.number()),
     proofJson: v.optional(v.string()),
     receiptJson: v.optional(v.string()),
@@ -308,6 +257,9 @@ const tables = {
     compactStartedAt: v.optional(v.number()),
     compactedFloor: v.optional(v.number()),
     key: v.literal("primary"),
+    materialManifestHash: v.optional(v.string()),
+    materialReleaseId: v.optional(v.string()),
+    materialSequence: v.optional(v.number()),
     nextSequence: v.number(),
     recoveryManifestHash: v.optional(v.string()),
     recoveryReleaseId: v.optional(v.string()),

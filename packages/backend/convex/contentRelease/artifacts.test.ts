@@ -3,11 +3,11 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_ARTIFACT_HASH,
   TEST_RELEASE_ID,
   testDeleteJson,
-  testProjectionJson,
   testRollbackJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";

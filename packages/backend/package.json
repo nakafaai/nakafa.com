@@ -42,7 +42,7 @@
     "@convex-dev/resend": "^0.2.5",
     "@convex-dev/workflow": "^0.4.4",
     "@convex-dev/workpool": "^0.4.8",
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.2.0/nakafa-aksara-contracts-0.2.0.tgz",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.3.1/nakafa-aksara-contracts-0.3.1.tgz",
     "@polar-sh/sdk": "^0.49.0",
     "@posthog/convex": "2.0.32",
     "@repo/ai": "workspace:*",

@@ -2,7 +2,7 @@ import "server-only";
 
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
-import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
+import type { ContentProjectionWire } from "@nakafa/aksara-contracts/projection/spec";
 import type { ContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
 import { readPublicContent } from "@repo/backend/client/content/read";
 import { verifyContentRenderer } from "@repo/backend/content/verify";
@@ -27,7 +27,7 @@ export interface PublishedContentInput {
 export interface PublishedContentData {
   readonly activeReleaseId: ContentRuntimeFound["activeReleaseId"];
   readonly artifact: ContentRuntimeFound["artifact"];
-  readonly projection: ContentProjection;
+  readonly projection: ContentProjectionWire;
   readonly rendererManifest: ContentRuntimeFound["rendererManifest"];
   readonly sourcePath: ContentRuntimeFound["sourcePath"];
   readonly sourceRevision: GitCommitSha | null;

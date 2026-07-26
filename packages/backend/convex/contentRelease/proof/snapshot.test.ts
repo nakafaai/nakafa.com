@@ -17,11 +17,11 @@ import {
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
 import { testPublicationScope } from "@repo/backend/test/content-release";
-import type { ProgramSnapshotData } from "@repo/backend/test/content-snapshot";
+import type { ProgramSnapshotData } from "@repo/backend/test/program-snapshot";
 import {
   makeProgramSnapshotData,
   stageProgramSnapshot,
-} from "@repo/backend/test/content-snapshot";
+} from "@repo/backend/test/program-snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -104,7 +104,7 @@ describe("contentRelease/proof/snapshot", () => {
     }
     await t.mutation(async (ctx) => {
       const first = await ctx.db
-        .query("programRows")
+        .query("programCatalog")
         .withIndex("by_snapshotId_and_index", (query) =>
           query.eq("snapshotId", data.snapshotId).eq("index", 0)
         )
@@ -112,7 +112,7 @@ describe("contentRelease/proof/snapshot", () => {
       if (!first) {
         throw new Error("Expected first program row.");
       }
-      await ctx.db.patch("programRows", first._id, {
+      await ctx.db.patch("programCatalog", first._id, {
         rowJson: secondRow,
       });
     });

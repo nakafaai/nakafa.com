@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/convex/contentRelease/model";
 import {
   decodeItemJson,
-  decodeProjectionJson,
+  decodeProjectionWireJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { Effect } from "effect";
 
@@ -26,7 +26,7 @@ const checkDeletedRoute = Effect.fn("contentRelease.checkDeletedRoute")(
     if (!prior?.projectionJson || prior.operation === "delete") {
       return;
     }
-    const projection = yield* decodeProjectionJson(prior.projectionJson);
+    const projection = yield* decodeProjectionWireJson(prior.projectionJson);
     if (projection.kind === "question-body") {
       return;
     }

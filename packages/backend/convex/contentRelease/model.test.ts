@@ -15,11 +15,11 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_ARTIFACT_HASH,
   TEST_DIGEST,
   TEST_RELEASE_ID,
-  testProjectionJson,
   testRollbackJson,
   testRouteJson,
   testUpsertJson,

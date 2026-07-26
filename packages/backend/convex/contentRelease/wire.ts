@@ -3,7 +3,7 @@ import {
   type SignedContentArtifactSchema,
 } from "@nakafa/aksara-contracts/content";
 import {
-  type ContentProjectionSchema,
+  type ContentProjectionWireSchema,
   canonicalizeContentProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import {
@@ -48,7 +48,7 @@ export function encodeArtifactJson(
 
 /** Stores one projection using the canonicalizer owned by Aksara contracts. */
 export function encodeProjectionJson(
-  projection: typeof ContentProjectionSchema.Type
+  projection: typeof ContentProjectionWireSchema.Type
 ) {
   return canonicalizeContentProjection(projection);
 }

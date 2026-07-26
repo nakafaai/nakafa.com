@@ -1,13 +1,15 @@
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
 import {
   makeProgramSnapshotData,
   stageProgramSnapshot,
+} from "@repo/backend/test/program-snapshot";
+import {
   TEST_STAGE_SNAPSHOT,
   TEST_STAGE_SNAPSHOT_BATCH,
-} from "@repo/backend/test/content-snapshot";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/snapshot-routes";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -36,11 +38,13 @@ describe("contentRelease/snapshot/batch", () => {
     });
     const stored = await t.run(async (ctx) => ({
       batches: await ctx.db.query("snapshotBatches").collect(),
+      curriculum: await ctx.db.query("curriculumRoutes").collect(),
+      programs: await ctx.db.query("programCatalog").collect(),
       release: await ctx.db.query("contentReleases").unique(),
-      rows: await ctx.db.query("programRows").collect(),
     }));
     expect(stored.batches).toHaveLength(1);
-    expect(stored.rows).toHaveLength(6);
+    expect(stored.programs).toHaveLength(2);
+    expect(stored.curriculum).toHaveLength(4);
     expect(stored.release).toMatchObject({
       stagedSnapshotBatches: 1,
       stagedSnapshotRows: 6,

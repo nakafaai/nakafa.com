@@ -7,7 +7,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import {
   ensureDocumentSize,
-  HEAD_DOCUMENT_LIMIT,
+  READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
@@ -17,7 +17,7 @@ import {
 import {
   decodeArtifactJson,
   decodeItemJson,
-  decodeProjectionJson,
+  decodeProjectionWireJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
@@ -56,7 +56,7 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
     );
   }
   const artifact = yield* decodeArtifactJson(artifactRow.artifactJson);
-  const projection = yield* decodeProjectionJson(row.projectionJson);
+  const projection = yield* decodeProjectionWireJson(row.projectionJson);
   const projectionHash = yield* hashText(
     "the content projection",
     canonicalizeContentProjection(projection)
@@ -160,7 +160,7 @@ export const writeUpsert = Effect.fn("contentRelease.writeUpsert")(function* (
     yield* ensureDocumentSize(
       "Immutable content head",
       version,
-      HEAD_DOCUMENT_LIMIT
+      READ_MODEL_DOCUMENT_LIMIT
     );
     yield* Effect.promise(() => ctx.db.insert("contentHeads", version));
   }

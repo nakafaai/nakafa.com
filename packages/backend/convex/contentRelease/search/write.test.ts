@@ -9,10 +9,8 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import {
-  TEST_DIGEST,
-  testProjectionJson,
-} from "@repo/backend/test/content-release";
+import { testProjectionJson } from "@repo/backend/test/content-material";
+import { TEST_DIGEST } from "@repo/backend/test/content-release";
 import type { WithoutSystemFields } from "convex/server";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";

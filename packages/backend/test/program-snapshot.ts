@@ -1,6 +1,17 @@
-import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
+import {
+  CorpusSourcePathSchema,
+  PublicPathSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  CURRICULUM_NAMESPACES,
+  CurriculumRouteSchema,
+} from "@nakafa/aksara-contracts/program/curriculum";
 import { digestProgramRows } from "@nakafa/aksara-contracts/program/row-digest";
-import { makeProgramSnapshotRow } from "@nakafa/aksara-contracts/program/row-hash";
+import {
+  makeCurriculumSnapshotRow,
+  makeProgramSnapshotRow,
+} from "@nakafa/aksara-contracts/program/row-hash";
 import {
   PROGRAM_SNAPSHOT_FORMAT,
   type ProgramSnapshotInput,
@@ -11,13 +22,6 @@ import {
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
-import { QURAN_SNAPSHOT_FORMAT } from "@nakafa/aksara-contracts/quran/snapshot";
-import { QURAN_SOURCE_FILE_COUNT } from "@nakafa/aksara-contracts/quran/source";
-import {
-  QURAN_ATTRIBUTION_COUNT,
-  QURAN_SEARCH_COUNT,
-  QURAN_SURAH_COUNT,
-} from "@nakafa/aksara-contracts/quran/spec";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,
@@ -30,89 +34,16 @@ import {
 import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
 import type schema from "@repo/backend/convex/schema";
 import {
-  TEST_DIGEST,
+  TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
 import { insertTestRelease } from "@repo/backend/test/content-stage";
-import { makeFunctionReference } from "convex/server";
+import {
+  TEST_STAGE_SNAPSHOT,
+  TEST_STAGE_SNAPSHOT_BATCH,
+} from "@repo/backend/test/snapshot-routes";
 import type { TestConvex } from "convex-test";
 import { Effect, Stream } from "effect";
-
-interface SnapshotArgs extends Record<string, string> {
-  readonly releaseId: string;
-  readonly snapshotJson: string;
-}
-
-interface SnapshotReceipt {
-  readonly created: number;
-  readonly family: "program" | "quran" | "tryout";
-  readonly releaseId: string;
-  readonly snapshotId: string;
-  readonly unchanged: number;
-}
-
-interface SnapshotBatchArgs
-  extends Record<string, number | readonly string[] | string> {
-  readonly batchIndex: number;
-  readonly family: "program" | "quran" | "tryout";
-  readonly releaseId: string;
-  readonly rowJson: readonly string[];
-  readonly snapshotId: string;
-}
-
-interface SnapshotBatchReceipt {
-  readonly batchIndex: number;
-  readonly created: number;
-  readonly family: "program" | "quran" | "tryout";
-  readonly releaseId: string;
-  readonly snapshotId: string;
-  readonly unchanged: number;
-}
-
-export const TEST_STAGE_SNAPSHOT = makeFunctionReference<
-  "mutation",
-  SnapshotArgs,
-  SnapshotReceipt
->("contentRelease/snapshot/manifest:stageSnapshot");
-
-export const TEST_STAGE_SNAPSHOT_BATCH = makeFunctionReference<
-  "mutation",
-  SnapshotBatchArgs,
-  SnapshotBatchReceipt
->("contentRelease/snapshot/batch:stageSnapshotBatch");
-
-/** Builds one schema-valid blocked Quran manifest without authored text. */
-export function makeBlockedQuranSnapshot(): Extract<
-  ContentSnapshotManifest,
-  { readonly family: "quran" }
-> {
-  const chunkCount = 1085;
-  const runtimeCount = QURAN_ATTRIBUTION_COUNT + QURAN_SURAH_COUNT + chunkCount;
-  return {
-    family: "quran",
-    manifest: {
-      attributionCount: QURAN_ATTRIBUTION_COUNT,
-      chunkCount,
-      format: QURAN_SNAPSHOT_FORMAT,
-      locales: ["en", "id"],
-      projectionCount: runtimeCount + QURAN_SEARCH_COUNT,
-      projectionDigest: TEST_DIGEST,
-      provenanceDigest: TEST_DIGEST,
-      provenanceStatus: "blocked",
-      runtimeCount,
-      runtimeDigest: TEST_DIGEST,
-      searchCount: QURAN_SEARCH_COUNT,
-      searchDigest: TEST_DIGEST,
-      snapshotId: Sha256HashSchema.make(`sha256:${"4".repeat(64)}`),
-      sourceBytes: 1,
-      sourceDigest: TEST_DIGEST,
-      sourceFileCount: QURAN_SOURCE_FILE_COUNT,
-      surahCount: QURAN_SURAH_COUNT,
-      tafsirLocales: ["id"],
-      verseCount: 6236,
-    },
-  };
-}
 
 /** Builds one explicit technical program row for backend protocol tests. */
 function technicalProgram(index: number) {
@@ -124,7 +55,7 @@ function technicalProgram(index: number) {
     kind: "school-curriculum",
     navigation: {
       levels: ["track", "topic"],
-      model: "track-topic",
+      model: "curriculum-tree",
     },
     provider: { kind: "nakafa", name: "Nakafa protocol tests" },
     sources: [
@@ -149,13 +80,46 @@ function technicalProgram(index: number) {
   });
 }
 
+/** Builds one locale-specific root for a technical program contract row. */
+function technicalCurriculum(
+  program: ReturnType<typeof technicalProgram>,
+  locale: "en" | "id"
+) {
+  const translation = program.translations[locale];
+  return CurriculumRouteSchema.make({
+    iconKey: program.iconKey,
+    kind: "curriculum-context",
+    level: "track",
+    locale,
+    nodeKey: `${program.key}:root`,
+    order: program.displayOrder,
+    programKey: program.key,
+    publicPath: PublicPathSchema.make(
+      `${CURRICULUM_NAMESPACES[locale]}/${translation.publicSlug}`
+    ),
+    sitemap: true,
+    sourcePath: CorpusSourcePathSchema.make(
+      `packages/corpus/curriculum/${program.key}`
+    ),
+    title: translation.title,
+  });
+}
+
 /** Prepares one complete six-row program snapshot and its signed transition. */
 export const makeProgramSnapshotData = Effect.fn(
   "backendTest.makeProgramSnapshotData"
 )(function* () {
-  const records = yield* Effect.forEach([1, 2, 3, 4, 5, 6], (index) =>
-    makeProgramSnapshotRow(technicalProgram(index))
+  const programs = [technicalProgram(1), technicalProgram(2)];
+  const catalog = yield* Effect.forEach(programs, makeProgramSnapshotRow);
+  const curriculum = yield* Effect.forEach(
+    programs.flatMap((program) =>
+      ContentLocaleSchema.literals.map((locale) =>
+        technicalCurriculum(program, locale)
+      )
+    ),
+    makeCurriculumSnapshotRow
   );
+  const records = [...catalog, ...curriculum];
   const evidence = yield* digestProgramRows(Stream.fromIterable(records));
   const input: ProgramSnapshotInput = {
     ...evidence,
@@ -167,10 +131,21 @@ export const makeProgramSnapshotData = Effect.fn(
     family: "program",
     manifest: ProgramSnapshotSchema.make({ ...input, snapshotId }),
   };
-  const rows: readonly ContentSnapshotRow[] = records.map((record) => ({
-    family: "program",
-    record,
-  }));
+  const catalogRows = catalog.map(
+    (record) =>
+      ({
+        family: "program",
+        record,
+      }) satisfies ContentSnapshotRow
+  );
+  const curriculumRows = curriculum.map(
+    (record) =>
+      ({
+        family: "program",
+        record,
+      }) satisfies ContentSnapshotRow
+  );
+  const rows = [...catalogRows, ...curriculumRows];
   const snapshots = {
     ...inheritContentSnapshots(null),
     program: replaceContentSnapshot({
@@ -220,4 +195,38 @@ export async function stageProgramSnapshot(
       snapshotId: data.snapshotId,
     });
   }
+}
+
+/** Selects one verified program snapshot with a coherent material owner. */
+export async function activateProgramSnapshot(
+  t: TestConvex<typeof schema>,
+  data: ProgramSnapshotData
+) {
+  await stageProgramSnapshot(t, data);
+  await t.mutation(async (ctx) => {
+    const [release, snapshot, state] = await Promise.all([
+      ctx.db.query("contentReleases").unique(),
+      ctx.db.query("contentSnapshots").unique(),
+      ctx.db.query("contentState").unique(),
+    ]);
+    if (!(release && snapshot && state)) {
+      throw new Error("Expected one staged program snapshot.");
+    }
+    await ctx.db.patch("contentReleases", release._id, {
+      completedAt: 1,
+      status: "completed",
+    });
+    await ctx.db.patch("contentSnapshots", snapshot._id, { verifiedAt: 1 });
+    await ctx.db.patch("contentState", state._id, {
+      activeManifestHash: TEST_MANIFEST_HASH,
+      activeReleaseId: TEST_RELEASE_ID,
+      activeSequence: 1,
+      candidateManifestHash: undefined,
+      candidateReleaseId: undefined,
+      candidateSequence: undefined,
+      materialManifestHash: TEST_MANIFEST_HASH,
+      materialReleaseId: TEST_RELEASE_ID,
+      materialSequence: 1,
+    });
+  });
 }

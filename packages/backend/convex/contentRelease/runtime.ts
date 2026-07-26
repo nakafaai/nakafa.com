@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/convex/contentRelease/model";
 import {
   decodeArtifactJson,
-  decodeProjectionJson,
+  decodeProjectionWireJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import {
@@ -126,7 +126,7 @@ const resolveRoute = Effect.fn("contentRelease.resolveRoute")(function* (
     );
   }
   const decodedArtifact = yield* decodeArtifactJson(artifact.artifactJson);
-  const projection = yield* decodeProjectionJson(head.projectionJson);
+  const projection = yield* decodeProjectionWireJson(head.projectionJson);
   const projectionHash = yield* hashText(
     "the published content projection",
     canonicalizeContentProjection(projection)

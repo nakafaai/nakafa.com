@@ -19,7 +19,7 @@ import {
 } from "@repo/backend/convex/_generated/server";
 import {
   decodeArtifactJson,
-  decodeProjectionJson,
+  decodeProjectionWireJson,
   decodeReleaseJson,
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
@@ -89,7 +89,7 @@ const verifyRuntimeFound = Effect.fn("contentRelease.verifyRuntimeFound")(
     const [artifact, projection, storedRelease, storedRenderer, sourcePath] =
       yield* Effect.all([
         decodeArtifactJson(row.artifactJson),
-        decodeProjectionJson(row.projectionJson),
+        decodeProjectionWireJson(row.projectionJson),
         decodeReleaseJson(row.releaseJson),
         decodeRendererJson(row.rendererJson),
         Schema.decodeUnknown(CorpusSourcePathSchema)(row.sourcePath),

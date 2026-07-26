@@ -5,17 +5,6 @@ import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import { Effect } from "effect";
 
-type ActiveIdentity = NonNullable<
-  Effect.Effect.Success<ReturnType<typeof loadActiveIdentity>>
->;
-
-/** Returns Git provenance only when the active release owns source bytes. */
-export function getSourceRevision(active: ActiveIdentity) {
-  return active.signed.manifest.origin.kind === "git"
-    ? active.signed.manifest.origin.sha
-    : null;
-}
-
 /** Loads article ownership only after its active read model is complete. */
 export const loadArticleOwner = Effect.fn("contentRelease.loadArticleOwner")(
   function* (ctx: QueryCtx, locale: Doc<"contentKeys">["locale"]) {

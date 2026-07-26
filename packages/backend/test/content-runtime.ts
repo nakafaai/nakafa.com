@@ -6,7 +6,6 @@ import {
   ContentKeySchema,
   CorpusSourcePathSchema,
   PublicPathSchema,
-  ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
   ArticleCategorySchema,
@@ -19,26 +18,26 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { writeArticle } from "@repo/backend/convex/contentRelease/article/write";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
-import {
-  testSignedRelease as signRelease,
-  TEST_PROOF_RENDERER,
-  testEmptyManifest,
-} from "@repo/backend/test/content-proof";
+import { testProjectionJson } from "@repo/backend/test/content-material";
+import { TEST_PROOF_RENDERER } from "@repo/backend/test/content-proof";
 import {
   testArticleGraph,
-  testProjectionJson,
   testPublicationScope,
 } from "@repo/backend/test/content-release";
 import {
   insertTestState,
   insertZeroRelease,
-  type TestIdentity,
 } from "@repo/backend/test/content-state";
 import {
   insertRuntimeBinding,
   insertRuntimeKey,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime-head";
+import {
+  TEST_RUNTIME_ENVELOPE,
+  TEST_RUNTIME_PATH,
+  TEST_RUNTIME_RELEASE,
+} from "@repo/backend/test/runtime-values";
 import type { FunctionReturnType } from "convex/server";
 
 type RuntimeRow = Exclude<
@@ -46,8 +45,6 @@ type RuntimeRow = Exclude<
   null
 >;
 
-export const TEST_RUNTIME_NOW = Date.UTC(2026, 6, 23, 12);
-export const TEST_RUNTIME_PATH = "test/runtime";
 export const TEST_ARTICLE_KEY = ContentKeySchema.make(
   "articles/politics/dynastic-politics-asian-values"
 );
@@ -77,13 +74,6 @@ export const TEST_ARTICLE_PROJECTION = ArticleProjectionSchema.make({
 export const TEST_ARTICLE_PROJECTION_JSON = canonicalizeArticleProjection(
   TEST_ARTICLE_PROJECTION
 );
-const runtimeReleaseId = ReleaseIdSchema.make("release-runtime");
-const signedRuntimeRelease = signRelease(testEmptyManifest(runtimeReleaseId));
-export const TEST_RUNTIME_RELEASE = {
-  manifestHash: signedRuntimeRelease.manifestHash,
-  releaseId: runtimeReleaseId,
-  sequence: 3,
-} satisfies TestIdentity;
 
 /** Builds one exact article projection for a synchronization identity. */
 export function testArticleProjection(
@@ -263,7 +253,7 @@ export async function insertSignedRelease(ctx: MutationCtx) {
     throw new Error("Expected one runtime release.");
   }
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: JSON.stringify(signedRuntimeRelease),
+    releaseJson: JSON.stringify(TEST_RUNTIME_ENVELOPE),
     rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
   });
 }

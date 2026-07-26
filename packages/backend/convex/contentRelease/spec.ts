@@ -3,6 +3,7 @@ import {
   ContentLocaleSchema,
 } from "@nakafa/aksara-contracts/content";
 import { ContentDeliveryClassSchema } from "@nakafa/aksara-contracts/delivery";
+import { ProgramNavigationLevelSchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   ContentDeleteSchema,
   ContentUpsertSchema,
@@ -95,6 +96,11 @@ export const deliveryValidator = literals(
 
 /** Exact locale values owned by the shared Aksara contract. */
 export const localeValidator = literals(...ContentLocaleSchema.literals);
+
+/** Exact curriculum levels owned by the shared Aksara program contract. */
+export const curriculumLevelValidator = literals(
+  ...ProgramNavigationLevelSchema.literals
+);
 
 /** Exact physical renderer domains owned by the shared Aksara contract. */
 export const rendererDomainValidator = literals(

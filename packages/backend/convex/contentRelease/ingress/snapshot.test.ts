@@ -6,7 +6,7 @@ import {
   verifySnapshotBatch,
   verifySnapshotManifest,
 } from "@repo/backend/convex/contentRelease/ingress/snapshot";
-import { makeProgramSnapshotData } from "@repo/backend/test/content-snapshot";
+import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
 import {
   makeQuranSnapshot,
   makeQuranSnapshotRow,

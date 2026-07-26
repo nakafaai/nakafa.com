@@ -25,11 +25,11 @@ import {
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
 import { testPublicationScope } from "@repo/backend/test/content-release";
+import { insertSignedCandidate } from "@repo/backend/test/content-stage";
 import {
   makeProgramSnapshotData,
   type ProgramSnapshotData,
-} from "@repo/backend/test/content-snapshot";
-import { insertSignedCandidate } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/program-snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -276,9 +276,10 @@ describe("content release staging ingress", () => {
     await expect(
       t.run(async (ctx) => ({
         batches: await ctx.db.query("snapshotBatches").collect(),
-        rows: await ctx.db.query("programRows").collect(),
+        curriculum: await ctx.db.query("curriculumRoutes").collect(),
+        programs: await ctx.db.query("programCatalog").collect(),
       }))
-    ).resolves.toEqual({ batches: [], rows: [] });
+    ).resolves.toEqual({ batches: [], curriculum: [], programs: [] });
     await expect(
       t.action((ctx) =>
         Effect.runPromise(

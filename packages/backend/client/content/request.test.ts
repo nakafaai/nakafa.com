@@ -3,11 +3,11 @@
 import { MAX_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import { fetchPublicContentRuntime } from "@repo/backend/client/content/request";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
-  testProjectionJson,
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content-release";

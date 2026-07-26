@@ -18,8 +18,14 @@ const searchSyncReference = makeFunctionReference<
   ModelProgress
 >("contentRelease/search/sync:resume");
 
+const materialSyncReference = makeFunctionReference<
+  "mutation",
+  { releaseId: string },
+  ModelProgress
+>("contentRelease/material/sync:resume");
+
 /**
- * Durably starts both release-bound read-model synchronizers.
+ * Durably starts every release-bound read-model synchronizer.
  *
  * Scheduling from the activation mutation is atomic with its pointer commit.
  * Each scheduled mutation persists one bounded page and schedules its own next
@@ -33,5 +39,8 @@ export const scheduleReadModels = Effect.fn(
   );
   yield* Effect.promise(() =>
     ctx.scheduler.runAfter(0, articleSyncReference, { releaseId })
+  );
+  yield* Effect.promise(() =>
+    ctx.scheduler.runAfter(0, materialSyncReference, { releaseId })
   );
 });

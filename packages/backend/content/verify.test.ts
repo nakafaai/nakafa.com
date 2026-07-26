@@ -12,15 +12,17 @@ import {
   ArticleSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
-import {
-  MaterialLessonRouteSchema,
-  makeMaterialLessonProjection,
-} from "@nakafa/aksara-contracts/projection/material";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
+import type {
+  ContentRuntimeFound,
+  ContentRuntimeRequest,
+} from "@nakafa/aksara-contracts/runtime/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   verifyContentEnvelope,
   verifyContentRenderer,
 } from "@repo/backend/content/verify";
+import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,
@@ -29,32 +31,14 @@ import {
   testSignedArtifact,
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
-import {
-  testArticleGraph,
-  testMaterialGraph,
-} from "@repo/backend/test/content-release";
-import { Effect, Schema } from "effect";
+import { testArticleGraph } from "@repo/backend/test/content-release";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const release = testSignedRelease(
   testEmptyManifest(ReleaseIdSchema.make("release-envelope"))
 );
-const materialProjection = makeMaterialLessonProjection(
-  Schema.decodeUnknownSync(MaterialLessonRouteSchema)({
-    contentKey: "material/lesson/test/example",
-    graph: testMaterialGraph("example", "example"),
-    locale: "en",
-    materialKey: "lesson.test.example",
-    order: 1,
-    publicPath: "subjects/test/example",
-    sectionKey: "example",
-  }),
-  {
-    authors: [{ name: "Nakafa" }],
-    date: "2026-07-24",
-    title: "Technical lesson",
-  }
-);
+const materialProjection = makeMaterialProjection("en", 1);
 const materialArtifact = testSignedArtifact("mathematics", {
   contentKey: materialProjection.contentKey,
 });
@@ -62,7 +46,7 @@ const materialRequest = {
   delivery: "public",
   locale: "en",
   publicPath: materialProjection.publicPath,
-} as const;
+} satisfies ContentRuntimeRequest;
 const materialFound = {
   activeManifestHash: release.manifestHash,
   activeReleaseId: release.manifest.releaseId,
@@ -76,7 +60,7 @@ const materialFound = {
   sourcePath: CorpusSourcePathSchema.make(
     `packages/corpus/${materialProjection.contentKey}/en.mdx`
   ),
-} as const;
+} satisfies ContentRuntimeFound;
 
 /** Runs envelope verification with the isolated test signing authority. */
 function verify(request: unknown, response: unknown) {
@@ -179,10 +163,13 @@ describe("content envelope verification", () => {
       "publicPath",
       {
         ...materialFound,
-        projection: {
+        projection: MaterialLessonProjectionSchema.make({
           ...materialProjection,
-          publicPath: PublicPathSchema.make("subjects/test/other"),
-        },
+          parentPath: PublicPathSchema.make("subjects/test/other-topic"),
+          publicPath: PublicPathSchema.make(
+            "subjects/test/other-topic/section-1"
+          ),
+        }),
       },
     ],
     [
@@ -215,7 +202,7 @@ describe("content envelope verification", () => {
         projectionHash: materialArtifact.artifactHash,
       },
     ],
-  ] as const)("rejects an exact %s mismatch", async (reason, response) => {
+  ])("rejects an exact %s mismatch", async (reason, response) => {
     await expect(reject(materialRequest, response)).resolves.toMatchObject({
       _tag: "ContentEnvelopeMismatchError",
       reason,
