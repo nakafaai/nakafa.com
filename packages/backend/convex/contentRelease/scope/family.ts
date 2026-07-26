@@ -69,12 +69,6 @@ export const loadReleaseFamilies = Effect.fn(
     "baseFamilies" | "releaseId" | "resultFamilies"
   >
 ) {
-  if (!(release.baseFamilies && release.resultFamilies)) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_STATE",
-      `Release ${release.releaseId} has not completed its ownership migration.`
-    );
-  }
   const base = mergeManagedFamilies([], release.baseFamilies);
   const result = mergeManagedFamilies([], release.resultFamilies);
   if (

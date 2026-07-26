@@ -1,4 +1,8 @@
 import {
+  type ContentFamily,
+  ContentFamilySchema,
+} from "@nakafa/aksara-contracts/content";
+import {
   ContentKeySchema,
   CorpusSourcePathSchema,
   PublicPathSchema,
@@ -23,6 +27,7 @@ import {
 import {
   testArticleGraph,
   testProjectionJson,
+  testPublicationScope,
 } from "@repo/backend/test/content-release";
 import {
   insertTestState,
@@ -194,16 +199,18 @@ export function runtimeCases(row: RuntimeRow) {
 /** Inserts the exact completed active release required by runtime reads. */
 export async function insertRuntimeRelease(
   ctx: MutationCtx,
-  identity = TEST_RUNTIME_RELEASE
+  families: readonly ContentFamily[] = ContentFamilySchema.literals
 ) {
   await insertZeroRelease(ctx, {
-    ...identity,
+    ...TEST_RUNTIME_RELEASE,
+    ownership: { base: [], result: families },
     role: "candidate",
+    scope: testPublicationScope({ families }),
     status: "completed",
   });
   await insertTestState(ctx, {
-    active: identity,
-    nextSequence: identity.sequence + 1,
+    active: TEST_RUNTIME_RELEASE,
+    nextSequence: TEST_RUNTIME_RELEASE.sequence + 1,
   });
 }
 

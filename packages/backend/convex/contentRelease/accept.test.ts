@@ -1,3 +1,4 @@
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -29,6 +30,10 @@ async function seedAcceptedState(
 ) {
   await insertZeroRelease(ctx, {
     ...CANDIDATE,
+    ownership: {
+      base: [],
+      result: ContentFamilySchema.literals,
+    },
     role: "candidate",
     status: "completed",
   });
@@ -36,6 +41,10 @@ async function seedAcceptedState(
     ...recovery,
     base: CANDIDATE,
     originReleaseId: CANDIDATE.releaseId,
+    ownership: {
+      base: ContentFamilySchema.literals,
+      result: [],
+    },
     role: "recovery",
     status: "verified",
   });
@@ -118,6 +127,10 @@ describe("contentRelease/accept", () => {
     await t.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...CANDIDATE,
+        ownership: {
+          base: [],
+          result: ContentFamilySchema.literals,
+        },
         role: "candidate",
         status: "completed",
       });
@@ -125,6 +138,10 @@ describe("contentRelease/accept", () => {
         ...unrelated,
         base: CANDIDATE,
         originReleaseId: "release-other",
+        ownership: {
+          base: ContentFamilySchema.literals,
+          result: [],
+        },
         role: "recovery",
         status: "aborted",
       });

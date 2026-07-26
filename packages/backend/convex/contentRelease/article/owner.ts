@@ -2,6 +2,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
+import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import { Effect } from "effect";
 
 type ActiveIdentity = NonNullable<
@@ -22,20 +23,8 @@ export const loadArticleOwner = Effect.fn("contentRelease.loadArticleOwner")(
     if (!active) {
       return { active: null, managed: false };
     }
-    const owned = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentKeys")
-        .withIndex(
-          "by_family_and_locale_and_createdSequence_and_contentKey",
-          (index) =>
-            index
-              .eq("family", "article")
-              .eq("locale", locale)
-              .lte("createdSequence", active.sequence)
-        )
-        .take(1)
-    );
-    if (owned.length === 0) {
+    const families = yield* loadReleaseFamilies(active.release);
+    if (!families.result.includes("article")) {
       return { active, managed: false };
     }
     if (
@@ -45,7 +34,7 @@ export const loadArticleOwner = Effect.fn("contentRelease.loadArticleOwner")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
-        `Articles for active release ${active.releaseId} are still synchronizing.`
+        `Articles for ${locale} in active release ${active.releaseId} are still synchronizing.`
       );
     }
     return { active, managed: true };

@@ -1,4 +1,3 @@
-import { internal } from "@repo/backend/convex/_generated/api";
 import {
   compactProgram,
   runProgram,
@@ -125,74 +124,6 @@ describe("contentRelease/compact", () => {
     expect(sequences.sort()).toEqual([2, 3, 4, 5]);
   });
 
-  it("does not persist a compaction cycle before ownership migration", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      const first = compactionIdentity(1);
-      const base = compactionIdentity(2);
-      const active = compactionIdentity(3);
-      await insertZeroRelease(ctx, {
-        ...first,
-        role: "candidate",
-        status: "completed",
-      });
-      await insertZeroRelease(ctx, {
-        ...base,
-        base: first,
-        role: "candidate",
-        status: "completed",
-      });
-      await insertZeroRelease(ctx, {
-        ...active,
-        base,
-        role: "candidate",
-        status: "completed",
-      });
-      await insertTestState(ctx, { active, nextSequence: 4 });
-      const firstRelease = await ctx.db
-        .query("contentReleases")
-        .withIndex("by_releaseId", (query) =>
-          query.eq("releaseId", first.releaseId)
-        )
-        .unique();
-      expect(firstRelease).toBeDefined();
-      if (!firstRelease) {
-        return;
-      }
-      await ctx.db.patch("contentReleases", firstRelease._id, {
-        createdAt: COMPACTION_OLD_TIME,
-      });
-    });
-
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactProgram(ctx)))
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_STATE" },
-    });
-    const blocked = await t.run((ctx) => ctx.db.query("contentState").unique());
-    expect(blocked).toMatchObject({ nextSequence: 4 });
-    expect(blocked?.compactCursor).toBeUndefined();
-    expect(blocked?.compactFloor).toBeUndefined();
-    expect(blocked?.compactFrom).toBeUndefined();
-    expect(blocked?.compactPhase).toBeUndefined();
-    expect(blocked?.compactStartedAt).toBeUndefined();
-
-    await expect(
-      t.mutation(internal.contentRelease.scope.migrate.migrateOwnership, {
-        apply: true,
-        expectedOwners: 0,
-        expectedReleases: 3,
-      })
-    ).resolves.toMatchObject({
-      pendingOwners: 0,
-      pendingReleases: 3,
-      updatedReleases: 3,
-    });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactProgram(ctx)))
-    ).resolves.toMatchObject({ complete: false, floor: 2, phase: "heads" });
-  });
-
   it("freezes artifact expiry at the durable cycle start", async () => {
     const t = convexTest(schema, convexModules);
     const expiredHash = `sha256:${"1".repeat(64)}`;
@@ -207,15 +138,15 @@ describe("contentRelease/compact", () => {
         nextSequence: 2,
         updatedAt: 0,
       });
-      for (const [artifactHash, retainUntil] of [
-        [expiredHash, 0],
-        [futureHash, 1],
-      ] as const) {
+      for (const artifact of [
+        { artifactHash: expiredHash, retainUntil: 0 },
+        { artifactHash: futureHash, retainUntil: 1 },
+      ]) {
         await ctx.db.insert("contentArtifacts", {
-          artifactHash,
+          artifactHash: artifact.artifactHash,
           artifactJson: "{}",
           createdAt: 0,
-          retainUntil,
+          retainUntil: artifact.retainUntil,
         });
       }
     });
@@ -299,6 +230,10 @@ describe("contentRelease/compact", () => {
       await insertZeroRelease(ctx, {
         ...candidate,
         base: active,
+        ownership: {
+          base: ["material"],
+          result: ["material"],
+        },
         role: "candidate",
         status: "verified",
       });
@@ -306,6 +241,10 @@ describe("contentRelease/compact", () => {
         ...recovery,
         base: candidate,
         originReleaseId: candidate.releaseId,
+        ownership: {
+          base: ["material"],
+          result: ["material"],
+        },
         role: "recovery",
         status: "verified",
       });

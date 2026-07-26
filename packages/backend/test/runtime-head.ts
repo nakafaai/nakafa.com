@@ -171,10 +171,26 @@ export async function insertRuntimeBinding(
   const bindingReleaseId =
     options?.bindingReleaseId ?? TEST_RUNTIME_RELEASE.releaseId;
   const operation = contentKey === null ? "delete" : "bind";
+  const prior =
+    contentKey === null
+      ? await ctx.db
+          .query("contentBindings")
+          .withIndex(
+            "by_locale_and_publicPath_and_sequence_and_index",
+            (index) =>
+              index
+                .eq("locale", "en")
+                .eq("publicPath", publicPath)
+                .lt("sequence", bindingSequence)
+          )
+          .order("desc")
+          .first()
+      : null;
+  const ownerKey = contentKey ?? prior?.contentKey;
   await ctx.db.insert("contentBindings", {
     batchHash: TEST_DIGEST,
     batchIndex: 0,
-    ...(contentKey === null ? {} : { contentKey }),
+    ...(ownerKey ? { contentKey: ownerKey } : {}),
     index: 0,
     locale: "en",
     operation,

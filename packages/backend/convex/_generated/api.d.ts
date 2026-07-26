@@ -188,8 +188,6 @@ import type * as contentRelease_runtime_dispatch from "../contentRelease/runtime
 import type * as contentRelease_runtime_result from "../contentRelease/runtime/result.js";
 import type * as contentRelease_runtime_snapshot from "../contentRelease/runtime/snapshot.js";
 import type * as contentRelease_scope_family from "../contentRelease/scope/family.js";
-import type * as contentRelease_scope_history from "../contentRelease/scope/history.js";
-import type * as contentRelease_scope_migrate from "../contentRelease/scope/migrate.js";
 import type * as contentRelease_scope_owner from "../contentRelease/scope/owner.js";
 import type * as contentRelease_search from "../contentRelease/search.js";
 import type * as contentRelease_search_sync from "../contentRelease/search/sync.js";
@@ -629,8 +627,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/runtime/result": typeof contentRelease_runtime_result;
   "contentRelease/runtime/snapshot": typeof contentRelease_runtime_snapshot;
   "contentRelease/scope/family": typeof contentRelease_scope_family;
-  "contentRelease/scope/history": typeof contentRelease_scope_history;
-  "contentRelease/scope/migrate": typeof contentRelease_scope_migrate;
   "contentRelease/scope/owner": typeof contentRelease_scope_owner;
   "contentRelease/search": typeof contentRelease_search;
   "contentRelease/search/sync": typeof contentRelease_search_sync;

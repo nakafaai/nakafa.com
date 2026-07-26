@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { dispatchHandler } from "@repo/backend/convex/contentRelease/ingress/dispatch";
 import schema from "@repo/backend/convex/schema";
@@ -121,6 +122,10 @@ describe("content publication Node dispatch", () => {
     await t.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...active,
+        ownership: {
+          base: [],
+          result: ContentFamilySchema.literals,
+        },
         role: "candidate",
         status: "completed",
       });
@@ -128,6 +133,10 @@ describe("content publication Node dispatch", () => {
         ...recovery,
         base: active,
         originReleaseId: active.releaseId,
+        ownership: {
+          base: ContentFamilySchema.literals,
+          result: [],
+        },
         role: "recovery",
         status: "verified",
       });

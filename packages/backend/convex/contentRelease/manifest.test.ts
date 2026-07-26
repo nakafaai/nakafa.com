@@ -1,3 +1,4 @@
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -108,7 +109,7 @@ describe("contentRelease/manifest", () => {
     });
     expect(stored.release).toMatchObject({
       baseFamilies: [],
-      resultFamilies: ["article", "material", "question"],
+      resultFamilies: ContentFamilySchema.literals,
     });
     await expect(
       t.mutation(stageRelease, {
@@ -155,10 +156,10 @@ describe("contentRelease/manifest", () => {
     ).toEqual([
       {
         baseFamilies: [],
-        resultFamilies: ["article", "material", "question"],
+        resultFamilies: ContentFamilySchema.literals,
       },
       {
-        baseFamilies: ["article", "material", "question"],
+        baseFamilies: ContentFamilySchema.literals,
         resultFamilies: [],
       },
     ]);
@@ -242,6 +243,10 @@ describe("contentRelease/manifest", () => {
     await stale.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...base,
+        ownership: {
+          base: [],
+          result: ContentFamilySchema.literals,
+        },
         role: "candidate",
         status: "completed",
       });
@@ -275,7 +280,7 @@ describe("contentRelease/manifest", () => {
         ...CANDIDATE,
         ownership: {
           base: [],
-          result: ["article", "material", "question"],
+          result: ContentFamilySchema.literals,
         },
         role: "candidate",
         status: "completed",

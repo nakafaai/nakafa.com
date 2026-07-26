@@ -1,4 +1,7 @@
-import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import {
+  type ContentFamily,
+  ContentFamilySchema,
+} from "@nakafa/aksara-contracts/content";
 import {
   type HeadPage,
   HeadPageSchema,
@@ -146,12 +149,20 @@ describe("contentRelease/heads", () => {
     await t.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...active,
+        ownership: {
+          base: [],
+          result: ContentFamilySchema.literals,
+        },
         role: "candidate",
         status: "completed",
       });
       await insertZeroRelease(ctx, {
         ...candidate,
         base: active,
+        ownership: {
+          base: ContentFamilySchema.literals,
+          result: ContentFamilySchema.literals,
+        },
         role: "candidate",
         status: "verified",
       });

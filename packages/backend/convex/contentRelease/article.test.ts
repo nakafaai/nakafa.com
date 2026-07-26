@@ -98,7 +98,9 @@ describe("contentRelease/article", () => {
     ).resolves.toEqual({ exists: false, managed: false });
 
     const materialOnly = convexTest(schema, convexModules);
-    await materialOnly.mutation((ctx) => insertRuntimeRelease(ctx));
+    await materialOnly.mutation((ctx) =>
+      insertRuntimeRelease(ctx, ["material"])
+    );
     await expect(
       materialOnly.query(categories, {
         expectedManifestHash: null,

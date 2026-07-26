@@ -1,3 +1,4 @@
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { abortProgram } from "@repo/backend/convex/contentRelease/abort";
 import {
@@ -141,6 +142,10 @@ describe("contentRelease/abort", () => {
         ...recovery,
         base: candidate,
         originReleaseId: candidate.releaseId,
+        ownership: {
+          base: ContentFamilySchema.literals,
+          result: [],
+        },
         role: "recovery",
         status: "verified",
       });
@@ -270,6 +275,10 @@ describe("contentRelease/abort", () => {
     await active.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...identity,
+        ownership: {
+          base: [],
+          result: ContentFamilySchema.literals,
+        },
         role: "candidate",
         status: "completed",
       });

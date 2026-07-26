@@ -199,17 +199,23 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
     sequence: first.sequence,
     stagedAt: COMPACTION_OLD_TIME,
   });
-  for (const [artifactHash, retainUntil] of [
-    [staleHash, COMPACTION_OLD_TIME],
-    [retainedHash, COMPACTION_OLD_TIME],
-    [`sha256:${"e".repeat(64)}`, COMPACTION_OLD_TIME],
-    [`sha256:${"f".repeat(64)}`, Date.now() + ROLLBACK_RETENTION_MS],
-  ] as const) {
+  for (const artifact of [
+    { artifactHash: staleHash, retainUntil: COMPACTION_OLD_TIME },
+    { artifactHash: retainedHash, retainUntil: COMPACTION_OLD_TIME },
+    {
+      artifactHash: `sha256:${"e".repeat(64)}`,
+      retainUntil: COMPACTION_OLD_TIME,
+    },
+    {
+      artifactHash: `sha256:${"f".repeat(64)}`,
+      retainUntil: Date.now() + ROLLBACK_RETENTION_MS,
+    },
+  ]) {
     await ctx.db.insert("contentArtifacts", {
-      artifactHash,
-      artifactJson: testArtifactJson({ artifactHash }),
+      artifactHash: artifact.artifactHash,
+      artifactJson: testArtifactJson({ artifactHash: artifact.artifactHash }),
       createdAt: COMPACTION_OLD_TIME,
-      retainUntil,
+      retainUntil: artifact.retainUntil,
     });
   }
 }

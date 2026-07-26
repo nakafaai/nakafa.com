@@ -1,3 +1,4 @@
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -34,6 +35,10 @@ const activateRecovery = internal.contentRelease.activate.activateRecovery;
 async function seedVerifiedPair(ctx: Parameters<typeof insertTestState>[0]) {
   await insertZeroRelease(ctx, {
     ...CANDIDATE,
+    ownership: {
+      base: [],
+      result: ContentFamilySchema.literals,
+    },
     role: "candidate",
     status: "verified",
   });
@@ -41,6 +46,10 @@ async function seedVerifiedPair(ctx: Parameters<typeof insertTestState>[0]) {
     ...RECOVERY,
     base: CANDIDATE,
     originReleaseId: CANDIDATE.releaseId,
+    ownership: {
+      base: ContentFamilySchema.literals,
+      result: [],
+    },
     role: "recovery",
     status: "verified",
   });
@@ -216,6 +225,10 @@ describe("contentRelease/activate", () => {
       await insertZeroRelease(ctx, {
         ...candidate,
         base,
+        ownership: {
+          base: ContentFamilySchema.literals,
+          result: ContentFamilySchema.literals,
+        },
         role: "candidate",
         status: "verified",
       });
@@ -223,6 +236,10 @@ describe("contentRelease/activate", () => {
         ...recovery,
         base: candidate,
         originReleaseId: candidate.releaseId,
+        ownership: {
+          base: ContentFamilySchema.literals,
+          result: ContentFamilySchema.literals,
+        },
         role: "recovery",
         status: "verified",
       });
