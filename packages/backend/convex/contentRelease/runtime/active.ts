@@ -66,6 +66,7 @@ export const loadActiveIdentity = Effect.fn(
     releaseId: state.activeReleaseId,
     sequence: state.activeSequence,
     signed,
+    state,
   };
 });
 

@@ -57,9 +57,12 @@ vi.mock("next/navigation", () => ({
   usePathname: vi.fn(),
   useRouter: vi.fn(),
 }));
-const components = vi.hoisted(() => ({}));
-vi.mock("@repo/design-system/lib/markdown/domain/mathematics", () => ({
-  mathematicsComponents: components,
+const rendererMocks = vi.hoisted(() => ({
+  components: {},
+  getRendererComponents: vi.fn(),
+}));
+vi.mock("@/lib/content/renderer/components", () => ({
+  getRendererComponents: rendererMocks.getRendererComponents,
 }));
 vi.mock("@/lib/content/preview/config", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -104,6 +107,8 @@ beforeEach(() => {
   configMock.mockReset();
   fetchMock.mockReset();
   executeMock.mockReset();
+  rendererMocks.getRendererComponents.mockReset();
+  rendererMocks.getRendererComponents.mockReturnValue(rendererMocks.components);
   configMock.mockReturnValue(Effect.succeed(Option.some(config)));
   executeMock.mockImplementation(() =>
     Effect.gen(function* () {
@@ -160,25 +165,6 @@ describe("local material preview", () => {
     });
   });
 
-  it("fails closed when the selected route requires another renderer", async () => {
-    const manifest = makePendingManifest();
-    fetchMock.mockReturnValueOnce(
-      Effect.succeed({
-        ...manifest,
-        document: {
-          ...manifest.document,
-          rendererDomain: "physics",
-        },
-      })
-    );
-
-    await expectPreviewFailure().toMatchObject({
-      _tag: "PreviewIntegrityError",
-      check: "domain",
-    });
-    expect(executeMock).not.toHaveBeenCalled();
-  });
-
   it("renders the authenticated ready artifact and its exact metadata", async () => {
     fetchMock
       .mockReturnValueOnce(Effect.succeed(readyManifest()))
@@ -196,7 +182,10 @@ describe("local material preview", () => {
       expect.any(Number)
     );
     expect(executeMock).toHaveBeenCalledWith(
-      expect.objectContaining({ components })
+      expect.objectContaining({ components: rendererMocks.components })
+    );
+    expect(rendererMocks.getRendererComponents).toHaveBeenCalledWith(
+      "mathematics"
     );
   });
 

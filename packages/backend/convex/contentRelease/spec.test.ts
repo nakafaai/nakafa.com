@@ -1,4 +1,5 @@
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
+import { ARTICLE_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/article/bucket";
 import {
   CONTENT_DOCUMENT_LIMIT,
   HEAD_DOCUMENT_LIMIT,
@@ -12,11 +13,10 @@ import {
   COMPACTION_ITEM_COUNT,
   COMPACTION_PAGE_BYTES,
   RELEASE_PAGE_LIMIT,
+  TRANSACTION_READ_HEADROOM,
+  TRANSACTION_READ_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
 import { describe, expect, it } from "vitest";
-
-const TRANSACTION_LIMIT = 16 * 1024 * 1024;
-const TRANSACTION_HEADROOM = 4 * 1024 * 1024;
 
 describe("contentRelease/spec", () => {
   it("preserves four MiB around worst-case lifecycle pages", () => {
@@ -25,7 +25,7 @@ describe("contentRelease/spec", () => {
       (2 * CONTENT_DOCUMENT_LIMIT + 5 * HEAD_DOCUMENT_LIMIT);
 
     expect(maximumPageBytes).toBeLessThanOrEqual(
-      TRANSACTION_LIMIT - TRANSACTION_HEADROOM
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
     );
   });
 
@@ -45,16 +45,24 @@ describe("contentRelease/spec", () => {
       ARTIFACT_PAGE_BYTES
     );
     expect(maximumArtifactWork).toBeLessThanOrEqual(
-      TRANSACTION_LIMIT - TRANSACTION_HEADROOM
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
     );
     expect(maximumHeadWork).toBeLessThanOrEqual(
-      TRANSACTION_LIMIT - TRANSACTION_HEADROOM
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
     );
     expect(maximumItemWork).toBeLessThanOrEqual(
-      TRANSACTION_LIMIT - TRANSACTION_HEADROOM
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
     );
     expect(maximumSearchWork).toBeLessThanOrEqual(
-      TRANSACTION_LIMIT - TRANSACTION_HEADROOM
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+  });
+
+  it("bounds article partitions by their worst-case verified reads", () => {
+    const maximumArticleWork = ARTICLE_BUCKET_SIZE * 6 * HEAD_DOCUMENT_LIMIT;
+
+    expect(maximumArticleWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
     );
   });
 });

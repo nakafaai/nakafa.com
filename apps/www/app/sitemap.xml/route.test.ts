@@ -6,7 +6,7 @@ import { GET } from "@/app/sitemap.xml/route";
 const mockReadSitemapPageDescriptors = vi.hoisted(() => vi.fn());
 const mockCaptureServerException = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/sitemap/routes", () => ({
+vi.mock("@/lib/sitemap/catalog", () => ({
   readSitemapPageDescriptors: mockReadSitemapPageDescriptors,
 }));
 

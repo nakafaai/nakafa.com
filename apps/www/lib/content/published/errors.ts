@@ -3,7 +3,6 @@ import {
   ContentKeySchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { Schema } from "effect";
 
 /** Authenticated MDX code could not produce its expected React module. */
@@ -29,14 +28,6 @@ export class PublishedProjectionError extends Schema.TaggedError<PublishedProjec
   {
     locale: ContentLocaleSchema,
     publicPath: Schema.String,
-  }
-) {}
-
-/** A selected published route has no matching physical renderer implementation. */
-export class PublishedRendererMissingError extends Schema.TaggedError<PublishedRendererMissingError>()(
-  "PublishedRendererMissingError",
-  {
-    rendererDomain: RendererDomainSchema,
   }
 ) {}
 

@@ -3,14 +3,16 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { readActiveMaterialRoute } from "@/lib/content/published/route";
-import { previewProjection, previewPublicRoute } from "@/test/content-preview";
+import { readActiveContentRoute } from "@/lib/content/published/route";
+import { testArticleProjection } from "@/test/content-article";
+import { previewProjection } from "@/test/content-preview";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const readQueryMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-active");
 const input = {
   activeReleaseId,
+  family: "material" as const,
   locale: "en" as const,
   publicPath: previewProjection.publicPath,
 };
@@ -30,12 +32,13 @@ beforeEach(() => {
   );
 });
 
-describe("published material route", () => {
+describe("published content route", () => {
   it("skips route lookup when no content release is active", async () => {
     await expect(
       Effect.runPromise(
-        readActiveMaterialRoute({
+        readActiveContentRoute({
           activeReleaseId: null,
+          family: input.family,
           locale: input.locale,
           publicPath: input.publicPath,
         })
@@ -60,13 +63,13 @@ describe("published material route", () => {
       });
 
     await expect(
-      Effect.runPromise(readActiveMaterialRoute(input))
+      Effect.runPromise(readActiveContentRoute(input))
     ).resolves.toEqual({
       activeReleaseId: input.activeReleaseId,
       kind: "unmanaged",
     });
     await expect(
-      Effect.runPromise(readActiveMaterialRoute(input))
+      Effect.runPromise(readActiveContentRoute(input))
     ).resolves.toEqual({
       activeReleaseId: input.activeReleaseId,
       kind: "missing",
@@ -86,14 +89,14 @@ describe("published material route", () => {
       });
 
     await expect(
-      Effect.runPromise(readActiveMaterialRoute(input).pipe(Effect.flip))
+      Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
     ).resolves.toMatchObject({
       _tag: "PublishedReleaseMismatchError",
       actualReleaseId: "release-next",
       expectedReleaseId: activeReleaseId,
     });
     await expect(
-      Effect.runPromise(readActiveMaterialRoute(input).pipe(Effect.flip))
+      Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
     ).resolves.toMatchObject({
       _tag: "PublishedReleaseMismatchError",
       actualReleaseId: "release-next",
@@ -106,23 +109,22 @@ describe("published material route", () => {
       activeReleaseId,
       kind: "found",
       projectionJson: JSON.stringify(previewProjection),
-      rendererDomain: "mathematics",
     });
 
     await expect(
-      Effect.runPromise(readActiveMaterialRoute(input))
+      Effect.runPromise(readActiveContentRoute(input))
     ).resolves.toEqual({
       activeReleaseId,
       kind: "found",
-      rendererDomain: "mathematics",
-      route: previewPublicRoute,
+      projection: previewProjection,
     });
     expect(fetchQueryMock).toHaveBeenCalledWith(expect.anything(), {
+      family: input.family,
       locale: input.locale,
       publicPath: input.publicPath,
     });
     expect(readQueryMock).toHaveBeenCalledWith(
-      "contentRelease.material.resolve",
+      "contentRelease.ownership.resolve",
       expect.any(Function)
     );
   });
@@ -135,11 +137,23 @@ describe("published material route", () => {
         ...previewProjection,
         publicPath: "subjects/mathematics/unrelated",
       }),
-      rendererDomain: "mathematics",
     });
 
     await expect(
-      Effect.runPromise(readActiveMaterialRoute(input).pipe(Effect.flip))
+      Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
+    ).resolves.toMatchObject({
+      _tag: "PublishedProjectionError",
+      locale: input.locale,
+      publicPath: input.publicPath,
+    });
+
+    fetchQueryMock.mockResolvedValue({
+      activeReleaseId,
+      kind: "found",
+      projectionJson: JSON.stringify(testArticleProjection),
+    });
+    await expect(
+      Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
     ).resolves.toMatchObject({
       _tag: "PublishedProjectionError",
       locale: input.locale,
@@ -150,10 +164,9 @@ describe("published material route", () => {
       activeReleaseId,
       kind: "found",
       projectionJson: "{",
-      rendererDomain: "mathematics",
     });
     await expect(
-      Effect.runPromise(readActiveMaterialRoute(input).pipe(Effect.flip))
+      Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
     ).resolves.toMatchObject({
       _tag: "PublishedProjectionError",
       locale: input.locale,

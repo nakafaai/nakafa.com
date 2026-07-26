@@ -12,13 +12,18 @@ import {
   insertRuntimeHead,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime-head";
+import type { FunctionArgs } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-const routeArgs = { locale: "en" as const, publicPath: TEST_RUNTIME_PATH };
-const resolve = api.contentRelease.material.resolve;
+const resolve = api.contentRelease.ownership.resolve;
+const routeArgs: FunctionArgs<typeof resolve> = {
+  family: "material",
+  locale: "en",
+  publicPath: TEST_RUNTIME_PATH,
+};
 
-describe("contentRelease/material", () => {
+describe("contentRelease/ownership", () => {
   it("distinguishes unmanaged paths from active published material", async () => {
     const empty = convexTest(schema, convexModules);
     await expect(empty.query(resolve, routeArgs)).resolves.toEqual({
@@ -41,7 +46,6 @@ describe("contentRelease/material", () => {
     await expect(published.query(resolve, routeArgs)).resolves.toMatchObject({
       activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
       kind: "found",
-      rendererDomain: "mathematics",
     });
   });
 
@@ -150,7 +154,7 @@ describe("contentRelease/material", () => {
     });
 
     await expect(
-      t.query(resolve, { locale: "en", publicPath: oldPath })
+      t.query(resolve, { ...routeArgs, publicPath: oldPath })
     ).resolves.toEqual({
       activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
       kind: "missing",
@@ -190,7 +194,7 @@ describe("contentRelease/material", () => {
       });
     });
     await expect(drift.query(resolve, routeArgs)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      data: { code: "CONTENT_RELEASE_ROUTE" },
     });
   });
 });

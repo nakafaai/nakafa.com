@@ -125,6 +125,7 @@ describe("content envelope verification", () => {
     const projection = ArticleProjectionSchema.make({
       articleSlug: ArticleSlugSchema.make("dynastic-politics-asian-values"),
       category: ArticleCategorySchema.make("politics"),
+      categoryTitle: "Politics",
       contentKey: articleKey,
       graph: testArticleGraph("dynastic-politics-asian-values"),
       kind: "article",

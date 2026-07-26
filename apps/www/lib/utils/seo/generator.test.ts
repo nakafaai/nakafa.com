@@ -232,7 +232,7 @@ describe("generateSEOMetadata", () => {
     const result = await generateSEOMetadata(
       {
         type: "article",
-        category: "politics",
+        categoryLabel: "Politics",
         data: {
           title: "Regional Elections",
           description: "Hand-written article summary.",
@@ -249,7 +249,7 @@ describe("generateSEOMetadata", () => {
     const result = await generateSEOMetadata(
       {
         type: "article",
-        category: "politics",
+        categoryLabel: "Politics",
         data: {
           title: "Regional Elections",
         },

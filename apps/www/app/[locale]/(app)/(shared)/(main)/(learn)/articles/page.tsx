@@ -1,25 +1,37 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
-import { getCategoryPath } from "@repo/contents/_lib/articles/category";
-import { getCategoryIcon } from "@repo/contents/_lib/articles/icons";
+import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
 import { ARTICLE_CATEGORIES } from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Option } from "effect";
 import type { Metadata } from "next";
+import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { use } from "react";
+import { Suspense } from "react";
+import { getArticleCategoryIcon } from "@/components/articles/category";
+import { ArticleNext } from "@/components/articles/next";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem } from "@/components/shared/subject-item";
 import { SubjectList } from "@/components/shared/subject-list";
+import {
+  ARTICLE_SOURCE_ROOT,
+  type ArticlePageCursor,
+  getPublishedCategories,
+} from "@/lib/content/article/catalog";
+import {
+  getArticleNextHref,
+  readArticlePageCursor,
+} from "@/lib/content/article/query";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
-/** Builds locale-specific article index metadata from the article namespace copy. */
+/** Builds locale-specific article index metadata from article copy. */
 export async function generateMetadata({
   params,
 }: {
@@ -50,20 +62,76 @@ export async function generateMetadata({
   };
 }
 
-/** Adapts the localized Next route params to the article index surface. */
-export default function Page(props: PageProps<"/[locale]/articles">) {
-  const { locale: rawLocale } = use(props.params);
-  const locale = getLocaleOrThrow(rawLocale);
-
-  return <PageContent locale={locale} />;
+/** Adapts localized route params to the article index surface. */
+export default function Page({
+  params,
+  searchParams,
+}: PageProps<"/[locale]/articles">) {
+  return (
+    <Suspense fallback={null}>
+      <PageContent params={params} searchParams={searchParams} />
+    </Suspense>
+  );
 }
 
-/** Renders the category chooser with the established subject-list row pattern. */
-async function PageContent({ locale }: { locale: Locale }) {
-  const [tCommon, tArticles] = await Promise.all([
+/** Reads request-time pagination below the route Suspense boundary. */
+async function PageContent({
+  params,
+  searchParams,
+}: PageProps<"/[locale]/articles">) {
+  const [{ locale: rawLocale }, query] = await Promise.all([
+    params,
+    searchParams,
+  ]);
+  const locale = getLocaleOrThrow(rawLocale);
+  const cursor = readArticlePageCursor(query ?? {});
+  if (Option.isNone(cursor)) {
+    notFound();
+  }
+
+  return <ArticleCatalog cursor={cursor.value} locale={locale} />;
+}
+
+/** Renders categories from their exclusive published or source owner. */
+async function ArticleCatalog({
+  cursor,
+  locale,
+}: {
+  cursor: ArticlePageCursor;
+  locale: Locale;
+}) {
+  const [catalog, tCommon, tArticles] = await Promise.all([
+    getPublishedCategories({
+      ...cursor,
+      locale,
+    }),
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Articles" }),
   ]);
+  if (catalog.stale) {
+    redirect(`/${locale}/articles`);
+  }
+  const sourceCategories = ARTICLE_CATEGORIES.map((sourceCategory) => {
+    const category = ArticleCategorySchema.make(sourceCategory);
+    return {
+      category,
+      title: tArticles(sourceCategory),
+    };
+  });
+  const categories = catalog.managed ? catalog.categories : sourceCategories;
+  if (!catalog.managed && cursor.cursor !== null) {
+    notFound();
+  }
+  const nextHref = getArticleNextHref("/articles", catalog);
+  let sourceUrl: null | string = null;
+  if (!catalog.managed) {
+    sourceUrl = getGithubUrl({ path: "/packages/contents/articles" });
+  } else if (catalog.sourceRevision) {
+    sourceUrl = getAksaraTreeUrl({
+      path: ARTICLE_SOURCE_ROOT,
+      revision: catalog.sourceRevision,
+    });
+  }
 
   return (
     <>
@@ -80,21 +148,22 @@ async function PageContent({ locale }: { locale: Locale }) {
       />
       <LayoutContent>
         <SubjectList>
-          {ARTICLE_CATEGORIES.map((category) => (
+          {categories.map(({ category, title }) => (
             <SubjectItem
-              href={getCategoryPath(category)}
-              icon={getCategoryIcon(category)}
+              href={`/articles/${category}`}
+              icon={getArticleCategoryIcon(category)}
               key={category}
-              label={tArticles(category)}
+              label={title}
             />
           ))}
         </SubjectList>
       </LayoutContent>
-      <FooterContent className="mt-0">
-        <RefContent
-          githubUrl={getGithubUrl({ path: "/packages/contents/articles" })}
-        />
-      </FooterContent>
+      {nextHref ? <ArticleNext href={nextHref} /> : null}
+      {sourceUrl ? (
+        <FooterContent className="mt-0">
+          <RefContent githubUrl={sourceUrl} />
+        </FooterContent>
+      ) : null}
     </>
   );
 }

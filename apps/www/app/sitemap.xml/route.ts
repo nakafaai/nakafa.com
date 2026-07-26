@@ -1,7 +1,7 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
-import { readSitemapPageDescriptors } from "@/lib/sitemap/routes";
+import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { buildSitemapIndexXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
 
 const sitemapIndexError = "Internal Server Error";

@@ -10,7 +10,7 @@ vi.mock("@/lib/sitemap/entries", () => ({
   getSitemapEntries: sitemapMocks.getSitemapEntries,
 }));
 
-vi.mock("@/lib/sitemap/routes", () => ({
+vi.mock("@/lib/sitemap/catalog", () => ({
   readSitemapPageDescriptors: sitemapMocks.readSitemapPageDescriptors,
 }));
 

@@ -12,6 +12,8 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import type { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { writeArticle } from "@repo/backend/convex/contentRelease/article/write";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import {
   testSignedRelease as signRelease,
@@ -27,6 +29,11 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
+import {
+  insertRuntimeBinding,
+  insertRuntimeKey,
+  insertRuntimeVersion,
+} from "@repo/backend/test/runtime-head";
 import type { FunctionReturnType } from "convex/server";
 
 type RuntimeRow = Exclude<
@@ -46,6 +53,7 @@ export const TEST_ARTICLE_SOURCE = CorpusSourcePathSchema.make(
 export const TEST_ARTICLE_PROJECTION = ArticleProjectionSchema.make({
   articleSlug: ArticleSlugSchema.make("dynastic-politics-asian-values"),
   category: ArticleCategorySchema.make("politics"),
+  categoryTitle: "Politics",
   contentKey: TEST_ARTICLE_KEY,
   graph: testArticleGraph("dynastic-politics-asian-values"),
   kind: "article",
@@ -71,6 +79,33 @@ export const TEST_RUNTIME_RELEASE = {
   releaseId: runtimeReleaseId,
   sequence: 3,
 } satisfies TestIdentity;
+
+/** Builds one exact article projection for a synchronization identity. */
+export function testArticleProjection(
+  index: number,
+  date = `2026-07-${index + 10}`
+) {
+  const articleSlug = ArticleSlugSchema.make(`article-${index}`);
+  const contentKey = ContentKeySchema.make(`articles/politics/${articleSlug}`);
+  const publicPath = PublicPathSchema.make(contentKey);
+  return ArticleProjectionSchema.make({
+    ...TEST_ARTICLE_PROJECTION,
+    articleSlug,
+    contentKey,
+    graph: {
+      ...TEST_ARTICLE_PROJECTION.graph,
+      alignmentId: `alignment:article:politics:article:politics:${articleSlug}`,
+      assetId: `asset:en:article:politics:article:politics:${articleSlug}`,
+      learningObjectId: `lo:article:politics:${articleSlug}`,
+    },
+    metadata: {
+      ...TEST_ARTICLE_PROJECTION.metadata,
+      date,
+      title: `Article ${index}`,
+    },
+    publicPath,
+  });
+}
 
 /** Builds one realistic material identity for a delivery-specific fixture. */
 export function runtimeContentKey(
@@ -170,6 +205,47 @@ export async function insertRuntimeRelease(
     active: identity,
     nextSequence: identity.sequence + 1,
   });
+}
+
+/** Inserts active indexed articles through the production writer. */
+export async function insertRuntimeArticles(ctx: MutationCtx, count: number) {
+  await insertRuntimeRelease(ctx);
+  const state = await ctx.db.query("contentState").unique();
+  if (!state) {
+    throw new Error("Expected one active content state.");
+  }
+  await ctx.db.patch("contentState", state._id, {
+    articleManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+    articleReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+    articleSequence: TEST_RUNTIME_RELEASE.sequence,
+  });
+
+  for (let index = 0; index < count; index += 1) {
+    const projection = testArticleProjection(index);
+    const projectionJson = canonicalizeArticleProjection(projection);
+    await insertRuntimeKey(ctx, projection.contentKey, { projectionJson });
+    await insertRuntimeVersion(ctx, "public", projection.contentKey, {
+      projectionJson,
+      publicPath: projection.publicPath,
+      rendererDomain: "politics",
+    });
+    await insertRuntimeBinding(ctx, projection.contentKey, {
+      publicPath: projection.publicPath,
+    });
+    const head = await ctx.db
+      .query("contentHeads")
+      .withIndex("by_contentKey_and_locale_and_sequence", (query) =>
+        query
+          .eq("contentKey", projection.contentKey)
+          .eq("locale", projection.locale)
+          .eq("sequence", TEST_RUNTIME_RELEASE.sequence)
+      )
+      .unique();
+    if (!head) {
+      throw new Error("Expected one active article head.");
+    }
+    await runConvexProgram(writeArticle(ctx, head, projection));
+  }
 }
 
 /** Inserts a completed release authenticated by the isolated test key. */

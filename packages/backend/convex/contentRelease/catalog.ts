@@ -159,6 +159,13 @@ export const resolvePublicProjection = Effect.fn(
       `Public content ${contentKey}/${locale} has mismatched projection data.`
     );
   }
+  if (!(head.rendererDomain && head.sourcePath)) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Public content ${contentKey}/${locale} lost its renderer provenance.`
+    );
+  }
+
   return {
     contentKey: head.contentKey,
     family: head.family,
@@ -167,7 +174,9 @@ export const resolvePublicProjection = Effect.fn(
     projectionJson: head.projectionJson,
     publicPath,
     releaseId: head.releaseId,
+    rendererDomain: head.rendererDomain,
     sequence: head.sequence,
+    sourcePath: head.sourcePath,
   };
 });
 

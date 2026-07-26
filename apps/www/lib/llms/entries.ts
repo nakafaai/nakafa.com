@@ -1,11 +1,14 @@
+import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
 import type { api } from "@repo/backend/convex/_generated/api";
-import {
-  getPublicContentRouteCheck,
-  type PublicContentRouteCheck,
-} from "@repo/contents/_lib/public-route";
 import type { FunctionReturnType } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
+import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
+import {
+  readPublishedArticleBucket,
+  readPublishedCategoryArticles,
+} from "@/lib/content/article/discovery";
+import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import {
   getRuntimeContentRouteArtifactPage,
   getRuntimeContentRouteParentPage,
@@ -83,6 +86,24 @@ export const getContentPageLlmsEntries = Effect.fn(
   page: number;
   section: Exclude<LlmsSection, "site">;
 }) {
+  if (section === "articles") {
+    const published = yield* readPublishedArticleBuckets(locale);
+    if (published.managed) {
+      const bucket = published.buckets[page];
+      if (!bucket) {
+        return null;
+      }
+      const partition = yield* readPublishedArticleBucket(locale, bucket);
+      if (!(partition.managed && partition.articles)) {
+        return null;
+      }
+      return buildPublishedArticleEntries({
+        articles: partition.articles,
+        locale,
+      });
+    }
+  }
+
   const artifactPage = yield* getRuntimeContentRouteArtifactPage({
     locale,
     page,
@@ -105,25 +126,78 @@ export const getContentPageLlmsEntries = Effect.fn(
  *
  * Unsupported route shapes return null instead of fabricated entries. Supported
  * shapes read one bounded catalog page and reuse the same entry formatter as
- * normal llms indexes, so listing pages advertise only source-backed routes.
+ * normal llms indexes, so listing pages advertise only verified routes.
  */
 export const getContentListingLlmsEntries = Effect.fn(
   "www.llms.contentListingEntries"
 )(function* ({ locale, route }: { locale: Locale; route: string }) {
   const cleanRoute = route.replace(/^\/+|\/+$/g, "");
-  const routeCheck = getPublicContentRouteCheck(cleanRoute);
-  const rows = yield* readContentListingRows({ locale, routeCheck });
-
-  if (rows === null) {
+  const category = readArticleListingCategory(cleanRoute);
+  if (!category) {
     return null;
   }
 
+  const published = yield* readPublishedCategoryArticles(
+    locale,
+    category,
+    LLMS_LISTING_ENTRY_LIMIT
+  );
+  if (published.managed) {
+    return buildPublishedArticleEntries({
+      articles: published.articles,
+      locale,
+    });
+  }
+  const rows = yield* readParentListingRows({
+    kind: "article",
+    locale,
+    order: "date-desc",
+    parentRoute: cleanRoute,
+    section: "articles",
+  });
   return buildLocalizedLlmsEntriesFromRows({
     locale,
     rows,
     section: "articles",
   });
 });
+
+/** Parses one exact article listing through the current Aksara contract. */
+function readArticleListingCategory(route: string) {
+  const [root, category, ...remaining] = route.split("/").filter(Boolean);
+  if (
+    root !== "articles" ||
+    remaining.length > 0 ||
+    !Schema.is(ArticleCategorySchema)(category)
+  ) {
+    return null;
+  }
+
+  return category;
+}
+
+/** Builds agent-facing entries from compact verified article summaries. */
+function buildPublishedArticleEntries({
+  articles,
+  locale,
+}: {
+  articles: readonly PublishedArticleSummary[];
+  locale: Locale;
+}) {
+  return articles
+    .map((article) => {
+      const route = `/${article.publicPath}`;
+      return {
+        description: article.description,
+        href: `${BASE_URL}/${locale}${route}.md`,
+        route,
+        section: "articles" as const,
+        segments: article.publicPath.split("/"),
+        title: article.title,
+      };
+    })
+    .sort((left, right) => left.route.localeCompare(right.route));
+}
 
 /** Builds locale-specific llms entries directly from materialized route rows. */
 function buildLocalizedLlmsEntriesFromRows({
@@ -179,32 +253,6 @@ function buildLocalizedLlmsEntryFromRow({
 /** Converts one route string into an app-level HTTP path string. */
 function routeToPath(route: string) {
   return `/${route}`;
-}
-
-/**
- * Reads one bounded route-catalog page for supported listing route shapes.
- *
- * The resolver returns null when the route is not a listing. Every supported
- * branch delegates to an indexed kind or parent page read with a fixed limit.
- */
-function readContentListingRows({
-  locale,
-  routeCheck,
-}: {
-  locale: Locale;
-  routeCheck: PublicContentRouteCheck;
-}) {
-  if (routeCheck.mode === "article-category") {
-    return readParentListingRows({
-      kind: "article",
-      locale,
-      order: "date-desc",
-      parentRoute: routeCheck.parentRoute,
-      section: "articles",
-    });
-  }
-
-  return Effect.succeed(null);
 }
 
 /**

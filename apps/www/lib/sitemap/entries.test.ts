@@ -43,8 +43,11 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/privacy-policy",
     "/security-policy",
   ],
-  getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
   readSitemapRoutePage: mockReadSitemapRoutePage,
+}));
+
+vi.mock("@/lib/sitemap/identity", () => ({
+  getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
 }));
 
 beforeEach(() => {

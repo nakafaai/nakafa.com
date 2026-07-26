@@ -12,6 +12,7 @@ import { recomputeProgram } from "@repo/backend/convex/contentRelease/proof/veri
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import type {
   abortReceiptValidator,
+  progressValidator,
   publicationReceiptValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { makeFunctionReference } from "convex/server";
@@ -39,12 +40,8 @@ interface StoredEnvelope {
   readonly rendererJson: string;
 }
 type AbortReceipt = Infer<typeof abortReceiptValidator>;
+type ModelProgress = Infer<typeof progressValidator>;
 type PublicationReceipt = Infer<typeof publicationReceiptValidator>;
-interface SearchSyncResult {
-  readonly complete: boolean;
-  readonly processed: number;
-}
-
 const envelopeReference = makeFunctionReference<
   "query",
   { manifestHash: string; releaseId: string },
@@ -70,11 +67,16 @@ const recoveryReference = makeFunctionReference<
   { manifestHash: string; releaseId: string; rendererJson: string },
   PublicationReceipt
 >("contentRelease/activate:activateRecovery");
+const articleSyncReference = makeFunctionReference<
+  "mutation",
+  { releaseId: string },
+  ModelProgress
+>("contentRelease/article/sync:page");
 const searchSyncReference = makeFunctionReference<
   "mutation",
   { releaseId: string },
-  SearchSyncResult
->("contentRelease/search/sync:sync");
+  ModelProgress
+>("contentRelease/search/sync:page");
 
 /** Authenticates one lifecycle request and its immutable release identity. */
 function verifyRequest(request: SignedRequest) {
@@ -107,25 +109,28 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
   return envelope.rendererJson;
 });
 
-/** Resumes active-only search updates until the activated release is complete. */
-const syncActiveSearch = Effect.fn("contentRelease.syncActiveSearch")(
-  function* (ctx: ActionCtx, releaseId: string) {
-    while (true) {
-      const result = yield* callInternal(() =>
-        ctx.runMutation(searchSyncReference, { releaseId })
+/** Drains one active read model while its scheduled resume remains durable. */
+const syncActiveModel = Effect.fn("contentRelease.syncActiveModel")(function* (
+  ctx: ActionCtx,
+  releaseId: string,
+  label: string,
+  reference: typeof articleSyncReference
+) {
+  while (true) {
+    const result = yield* callInternal(() =>
+      ctx.runMutation(reference, { releaseId })
+    );
+    if (result.done) {
+      return;
+    }
+    if (result.processed === 0) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `${label} sync ${releaseId} stopped without progress.`
       );
-      if (result.complete) {
-        return;
-      }
-      if (result.processed === 0) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Search sync ${releaseId} stopped without progress.`
-        );
-      }
     }
   }
-);
+});
 
 /** Executes authenticated verification, activation, or recovery activation. */
 export const advancePublication = Effect.fn(
@@ -163,7 +168,8 @@ export const advancePublication = Effect.fn(
         rendererJson,
       })
     );
-    yield* syncActiveSearch(ctx, releaseId);
+    yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
+    yield* syncActiveModel(ctx, releaseId, "Article", articleSyncReference);
     return { ok: true, operation: request.operation, value };
   }
   const value = yield* callInternal(() =>
@@ -173,6 +179,7 @@ export const advancePublication = Effect.fn(
       rendererJson,
     })
   );
-  yield* syncActiveSearch(ctx, releaseId);
+  yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
+  yield* syncActiveModel(ctx, releaseId, "Article", articleSyncReference);
   return { ok: true, operation: request.operation, value };
 });

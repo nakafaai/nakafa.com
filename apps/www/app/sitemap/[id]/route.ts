@@ -1,7 +1,7 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
 import { Effect } from "effect";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
-import { getSitemapPageDescriptor } from "@/lib/sitemap/routes";
+import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 import { buildSitemapUrlSetXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
 
 const sitemapPageError = "Internal Server Error";

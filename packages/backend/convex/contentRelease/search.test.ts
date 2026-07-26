@@ -1,3 +1,4 @@
+import { api } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -11,42 +12,9 @@ import {
   insertRuntimeIndex,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime-head";
-import { makeFunctionReference, type PaginationResult } from "convex/server";
-import type { Value } from "convex/values";
+import type { FunctionArgs } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
-
-interface ProjectionRow {
-  readonly contentKey: string;
-  readonly family: "material";
-  readonly locale: "en";
-  readonly projectionHash: string;
-  readonly projectionJson: string;
-  readonly publicPath: string;
-  readonly releaseId: string;
-  readonly sequence: number;
-}
-
-interface SearchArgs extends Record<string, Value> {
-  readonly expectedManifestHash: null | string;
-  readonly expectedReleaseId: null | string;
-  readonly family: "material";
-  readonly locale: "en";
-  readonly paginationOpts: {
-    readonly cursor: null | string;
-    readonly endCursor?: null | string;
-    readonly maximumBytesRead?: number;
-    readonly maximumRowsRead: number;
-    readonly numItems: number;
-  };
-  readonly query: string;
-}
-
-interface SearchResult {
-  readonly activeManifestHash: null | string;
-  readonly activeReleaseId: null | string;
-  readonly result: PaginationResult<ProjectionRow>;
-}
 
 const BASE = {
   manifestHash: `sha256:${"5".repeat(64)}`,
@@ -58,9 +26,8 @@ const NEXT = {
   releaseId: "release-search-next",
   sequence: 2,
 } satisfies TestIdentity;
-const find = makeFunctionReference<"query", SearchArgs, SearchResult>(
-  "contentRelease/search:find"
-);
+const find = api.contentRelease.search.find;
+type SearchArgs = FunctionArgs<typeof find>;
 
 /** Creates one native page request bound to an optional prior release page. */
 function searchArgs(
@@ -217,13 +184,23 @@ describe("contentRelease/search", () => {
     });
   });
 
-  it("fails closed while an activated release is still synchronizing", async () => {
+  it("fails closed while an active search model synchronizes", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertTestState(ctx, {
         active: BASE,
         nextSequence: 3,
         search: BASE,
+      });
+      await insertSearchEntry(ctx, BASE, "test:pending", "pending needle");
+      await ctx.db.insert("contentHeads", {
+        contentKey: "test:pending",
+        family: "material",
+        index: 0,
+        locale: "en",
+        operation: "delete",
+        releaseId: NEXT.releaseId,
+        sequence: NEXT.sequence,
       });
       await selectIdentity(ctx, NEXT);
       const state = await ctx.db.query("contentState").unique();

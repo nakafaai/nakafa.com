@@ -6,9 +6,29 @@ import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source"
 const runtimeMocks = vi.hoisted(() => ({
   getRuntimeContentRoute: vi.fn(),
 }));
+const publishedMocks = vi.hoisted(() => ({
+  readActiveContentIdentity: vi.fn(),
+  readActiveContentRoute: vi.fn(),
+  readPublishedArticleCategory: vi.fn(),
+}));
+const previewMocks = vi.hoisted(() => ({
+  matchesPreviewRoute: vi.fn(),
+}));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: runtimeMocks.getRuntimeContentRoute,
+}));
+vi.mock("@/lib/content/published/active", () => ({
+  readActiveContentIdentity: publishedMocks.readActiveContentIdentity,
+}));
+vi.mock("@/lib/content/published/route", () => ({
+  readActiveContentRoute: publishedMocks.readActiveContentRoute,
+}));
+vi.mock("@/lib/content/article/ownership", () => ({
+  readPublishedArticleCategory: publishedMocks.readPublishedArticleCategory,
+}));
+vi.mock("@/lib/content/preview/route", () => ({
+  matchesPreviewRoute: previewMocks.matchesPreviewRoute,
 }));
 
 describe("source-backed public html route rejection", () => {
@@ -17,6 +37,23 @@ describe("source-backed public html route rejection", () => {
     runtimeMocks.getRuntimeContentRoute.mockReturnValue(
       Effect.succeed({ kind: "article", route: "fixture" })
     );
+    publishedMocks.readActiveContentIdentity.mockReset();
+    publishedMocks.readActiveContentIdentity.mockReturnValue(
+      Effect.succeed({ releaseId: "release-active" })
+    );
+    publishedMocks.readActiveContentRoute.mockReset();
+    publishedMocks.readActiveContentRoute.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: "release-active",
+        kind: "unmanaged",
+      })
+    );
+    publishedMocks.readPublishedArticleCategory.mockReset();
+    publishedMocks.readPublishedArticleCategory.mockReturnValue(
+      Effect.succeed({ exists: false, managed: false })
+    );
+    previewMocks.matchesPreviewRoute.mockReset();
+    previewMocks.matchesPreviewRoute.mockReturnValue(Effect.succeed(false));
   });
 
   it("rejects stale public namespaces and invisible route groups", async () => {
@@ -46,6 +83,8 @@ describe("source-backed public html route rejection", () => {
       "/id/quran/abc",
       "/id/quran/01",
       "/id/quran/1/extra",
+      "/en/articles/Invalid_Category",
+      "/en/articles/politics/Invalid_Slug",
       "/en/articles/politics/nepotism-in-political-governance/extra",
       "/en/articles/politics-afdocs-nonexistent-8f3a",
     ];
@@ -90,6 +129,102 @@ describe("source-backed public html route rejection", () => {
         })
       )
     ).resolves.toBe(null);
+
+    publishedMocks.readActiveContentIdentity.mockReturnValueOnce(
+      Effect.succeed(null)
+    );
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/en/articles/politics/source-owned-article",
+        })
+      )
+    ).resolves.toBeNull();
+    expect(publishedMocks.readActiveContentRoute).toHaveBeenLastCalledWith({
+      activeReleaseId: null,
+      family: "article",
+      locale: "en",
+      publicPath: "articles/politics/source-owned-article",
+    });
+  });
+
+  it("accepts published-only articles and rejects active tombstones", async () => {
+    publishedMocks.readActiveContentRoute
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-active",
+          kind: "found",
+          rendererDomain: "politics",
+        })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-active",
+          kind: "missing",
+        })
+      );
+
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/en/articles/public-affairs/new-article",
+        })
+      )
+    ).resolves.toBeNull();
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/en/articles/public-affairs/deleted-article",
+        })
+      )
+    ).resolves.toBe("en");
+    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("accepts the exact selected local article before persistent lookup", async () => {
+    previewMocks.matchesPreviewRoute.mockReturnValueOnce(Effect.succeed(true));
+
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/en/articles/public-affairs/new-preview",
+        })
+      )
+    ).resolves.toBeNull();
+    expect(previewMocks.matchesPreviewRoute).toHaveBeenCalledWith({
+      locale: "en",
+      publicPath: "articles/public-affairs/new-preview",
+    });
+    expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
+    expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
+    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("uses exact ownership for published-only category pages", async () => {
+    publishedMocks.readPublishedArticleCategory
+      .mockReturnValueOnce(Effect.succeed({ exists: true, managed: true }))
+      .mockReturnValueOnce(Effect.succeed({ exists: false, managed: true }));
+
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/en/articles/public-affairs",
+        })
+      )
+    ).resolves.toBeNull();
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/en/articles/deleted-category",
+        })
+      )
+    ).resolves.toBe("en");
   });
 
   it("propagates exact article lookup failures", async () => {
@@ -126,5 +261,10 @@ describe("source-backed public html route rejection", () => {
       ).resolves.toBe(null);
     }
     expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+    expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
+    expect(publishedMocks.readPublishedArticleCategory).toHaveBeenCalledWith(
+      "politics",
+      "en"
+    );
   });
 });

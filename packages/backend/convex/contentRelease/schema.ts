@@ -124,6 +124,65 @@ const tables = {
       filterFields: ["family", "locale"],
     }),
 
+  /** Active public articles ordered independently from the search index. */
+  articleCatalog: defineTable({
+    bucket: v.string(),
+    category: v.string(),
+    categoryTitle: v.string(),
+    contentKey: v.string(),
+    date: v.string(),
+    locale: localeValidator,
+    projectionHash: v.string(),
+    publicPath: v.string(),
+    releaseId: v.string(),
+    rendererDomain: rendererDomainValidator,
+    sequence: v.number(),
+  })
+    .index("by_contentKey_and_locale", ["contentKey", "locale"])
+    .index("by_locale_and_date_and_contentKey", [
+      "locale",
+      "date",
+      "contentKey",
+    ])
+    .index("by_locale_and_category_and_date_and_contentKey", [
+      "locale",
+      "category",
+      "date",
+      "contentKey",
+    ])
+    .index("by_locale_and_bucket_and_publicPath", [
+      "locale",
+      "bucket",
+      "publicPath",
+    ]),
+
+  /** One active localized title and representative per article category. */
+  articleCategories: defineTable({
+    bucket: v.string(),
+    category: v.string(),
+    contentKey: v.string(),
+    locale: localeValidator,
+    projectionHash: v.string(),
+    releaseId: v.string(),
+    rendererDomain: rendererDomainValidator,
+    sequence: v.number(),
+    title: v.string(),
+  })
+    .index("by_locale_and_category", ["locale", "category"])
+    .index("by_locale_and_bucket_and_category", [
+      "locale",
+      "bucket",
+      "category",
+    ]),
+
+  /** Non-empty deterministic partitions for bounded article sitemaps. */
+  articleBuckets: defineTable({
+    articleCount: v.number(),
+    bucket: v.string(),
+    categoryCount: v.number(),
+    locale: localeValidator,
+  }).index("by_locale_and_bucket", ["locale", "bucket"]),
+
   /** Immutable route versions resolved before access policy enforcement. */
   contentBindings: defineTable({
     batchHash: v.string(),
@@ -157,6 +216,8 @@ const tables = {
     abortedAt: v.optional(v.number()),
     abortedRows: v.optional(v.number()),
     abortingAt: v.optional(v.number()),
+    articleIndex: v.optional(v.number()),
+    articleSyncedAt: v.optional(v.number()),
     cleanupAt: v.optional(v.number()),
     cleanupDeletedArtifacts: v.optional(v.number()),
     cleanupFutureAt: v.optional(v.number()),
@@ -230,6 +291,9 @@ const tables = {
     activeManifestHash: v.optional(v.string()),
     activeReleaseId: v.optional(v.string()),
     activeSequence: v.optional(v.number()),
+    articleManifestHash: v.optional(v.string()),
+    articleReleaseId: v.optional(v.string()),
+    articleSequence: v.optional(v.number()),
     candidateManifestHash: v.optional(v.string()),
     candidateReleaseId: v.optional(v.string()),
     candidateSequence: v.optional(v.number()),

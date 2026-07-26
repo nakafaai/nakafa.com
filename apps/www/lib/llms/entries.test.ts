@@ -13,6 +13,18 @@ import {
 
 const mockGetArtifactPage = vi.hoisted(() => vi.fn());
 const mockGetParentPage = vi.hoisted(() => vi.fn());
+const mockReadPublishedArticleBucket = vi.hoisted(() => vi.fn());
+const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
+const mockReadPublishedCategoryArticles = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/content/article/discovery", () => ({
+  readPublishedArticleBucket: mockReadPublishedArticleBucket,
+  readPublishedCategoryArticles: mockReadPublishedCategoryArticles,
+}));
+
+vi.mock("@/lib/content/article/sitemap", () => ({
+  readPublishedArticleBuckets: mockReadPublishedArticleBuckets,
+}));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRouteArtifactPage: mockGetArtifactPage,
@@ -60,6 +72,15 @@ const routeRows = [
 beforeEach(() => {
   mockGetArtifactPage.mockReset();
   mockGetParentPage.mockReset();
+  mockReadPublishedArticleBucket.mockReset();
+  mockReadPublishedArticleBuckets.mockReset();
+  mockReadPublishedCategoryArticles.mockReset();
+  mockReadPublishedArticleBuckets.mockReturnValue(
+    Effect.succeed({ articleCount: 0, buckets: [], managed: false })
+  );
+  mockReadPublishedCategoryArticles.mockReturnValue(
+    Effect.succeed({ articles: [], managed: false })
+  );
   mockGetArtifactPage.mockImplementation(({ locale, page, section }) =>
     Effect.succeed({
       locale,
@@ -203,9 +224,119 @@ describe("llms entries", () => {
     });
   });
 
+  it("uses published article partitions after ownership activates", async () => {
+    mockReadPublishedArticleBuckets.mockReturnValue(
+      Effect.succeed({
+        articleCount: 1,
+        buckets: ["abc"],
+        managed: true,
+      })
+    );
+    mockReadPublishedArticleBucket.mockReturnValue(
+      Effect.succeed({
+        articles: [
+          {
+            authors: [{ name: "Nakafa" }],
+            category: "politics",
+            categoryTitle: "Politics",
+            date: "2026-07-24",
+            description: "Published article",
+            official: true,
+            publicPath: "articles/politics/published",
+            slug: "published",
+            title: "Published",
+          },
+          {
+            authors: [{ name: "Nakafa" }],
+            category: "politics",
+            categoryTitle: "Politics",
+            date: "2026-07-23",
+            description: "Earlier article",
+            official: false,
+            publicPath: "articles/politics/aaa-earlier",
+            slug: "aaa-earlier",
+            title: "Earlier",
+          },
+        ],
+        managed: true,
+      })
+    );
+
+    await expect(
+      Effect.runPromise(
+        getContentPageLlmsEntries({
+          locale: "en",
+          page: 0,
+          section: "articles",
+        })
+      )
+    ).resolves.toEqual([
+      {
+        description: "Earlier article",
+        href: `${BASE_URL}/en/articles/politics/aaa-earlier.md`,
+        route: "/articles/politics/aaa-earlier",
+        section: "articles",
+        segments: ["articles", "politics", "aaa-earlier"],
+        title: "Earlier",
+      },
+      {
+        description: "Published article",
+        href: `${BASE_URL}/en/articles/politics/published.md`,
+        route: "/articles/politics/published",
+        section: "articles",
+        segments: ["articles", "politics", "published"],
+        title: "Published",
+      },
+    ]);
+    expect(mockGetArtifactPage).not.toHaveBeenCalled();
+  });
+
+  it("uses contract-valid published categories outside the source taxonomy", async () => {
+    mockReadPublishedCategoryArticles.mockReturnValue(
+      Effect.succeed({
+        articles: [
+          {
+            authors: [{ name: "Nakafa" }],
+            category: "public-affairs",
+            categoryTitle: "Public Affairs",
+            date: "2026-07-24",
+            description: "",
+            official: true,
+            publicPath: "articles/public-affairs/published",
+            slug: "published",
+            title: "Published",
+          },
+        ],
+        managed: true,
+      })
+    );
+
+    await expect(
+      Effect.runPromise(
+        getContentListingLlmsEntries({
+          locale: "en",
+          route: "articles/public-affairs",
+        })
+      )
+    ).resolves.toEqual([
+      expect.objectContaining({
+        route: "/articles/public-affairs/published",
+        title: "Published",
+      }),
+    ]);
+    expect(mockReadPublishedCategoryArticles).toHaveBeenCalledWith(
+      "en",
+      "public-affairs",
+      100
+    );
+    expect(mockGetParentPage).not.toHaveBeenCalled();
+  });
+
   it("rejects unsupported listing routes without catalog reads", async () => {
     const routes = [
       "articles",
+      "articles/Invalid_Category",
+      "articles/politics/extra",
       "curriculum/merdeka/class-10/mathematics/integral",
     ];
 
@@ -251,5 +382,52 @@ describe("llms entries", () => {
         })
       )
     ).resolves.toBeNull();
+  });
+
+  it("rejects absent or changed published partitions without source fallback", async () => {
+    mockReadPublishedArticleBuckets.mockReturnValue(
+      Effect.succeed({
+        articleCount: 1,
+        buckets: ["abc"],
+        managed: true,
+      })
+    );
+
+    await expect(
+      Effect.runPromise(
+        getContentPageLlmsEntries({
+          locale: "en",
+          page: 1,
+          section: "articles",
+        })
+      )
+    ).resolves.toBeNull();
+
+    mockReadPublishedArticleBucket.mockReturnValue(
+      Effect.succeed({ articles: null, managed: true })
+    );
+    await expect(
+      Effect.runPromise(
+        getContentPageLlmsEntries({
+          locale: "en",
+          page: 0,
+          section: "articles",
+        })
+      )
+    ).resolves.toBeNull();
+
+    mockReadPublishedArticleBucket.mockReturnValue(
+      Effect.succeed({ articles: [], managed: false })
+    );
+    await expect(
+      Effect.runPromise(
+        getContentPageLlmsEntries({
+          locale: "en",
+          page: 0,
+          section: "articles",
+        })
+      )
+    ).resolves.toBeNull();
+    expect(mockGetArtifactPage).not.toHaveBeenCalled();
   });
 });

@@ -10,6 +10,7 @@ import {
   loadRelease,
   loadState,
 } from "@repo/backend/convex/contentRelease/model";
+import { scheduleReadModels } from "@repo/backend/convex/contentRelease/models";
 import {
   decodeReleaseJson,
   decodeRendererJson,
@@ -96,7 +97,14 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
       manifestHash
     );
     if (release.status === "completed") {
-      return yield* completedRetry(ctx, releaseId, release.sequence, release);
+      const receipt = yield* completedRetry(
+        ctx,
+        releaseId,
+        release.sequence,
+        release
+      );
+      yield* scheduleReadModels(ctx, releaseId);
+      return receipt;
     }
     const state = yield* loadState(ctx);
     if (
@@ -169,6 +177,7 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
         updatedAt: now,
       })
     );
+    yield* scheduleReadModels(ctx, releaseId);
     return receipt;
   }
 );
@@ -190,7 +199,14 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
       manifestHash
     );
     if (release.status === "completed") {
-      return yield* completedRetry(ctx, releaseId, release.sequence, release);
+      const receipt = yield* completedRetry(
+        ctx,
+        releaseId,
+        release.sequence,
+        release
+      );
+      yield* scheduleReadModels(ctx, releaseId);
+      return receipt;
     }
     const state = yield* loadState(ctx);
     if (
@@ -231,6 +247,7 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
         updatedAt: now,
       })
     );
+    yield* scheduleReadModels(ctx, releaseId);
     return receipt;
   }
 );

@@ -7,6 +7,14 @@ const LEARNING_STATIC_PARAM_LIMIT = 512;
  * inventory. This only limits which dynamic learning pages Next prerenders at
  * build time; long-tail URLs remain renderable on demand.
  */
-export function selectLearningStaticParams<Param>(params: readonly Param[]) {
-  return params.slice(0, LEARNING_STATIC_PARAM_LIMIT);
+export function selectLearningStaticParams<Param>(
+  params: readonly Param[],
+  placeholder?: Param
+) {
+  const selected = params.slice(0, LEARNING_STATIC_PARAM_LIMIT);
+  if (selected.length > 0 || placeholder === undefined) {
+    return selected;
+  }
+
+  return [placeholder];
 }

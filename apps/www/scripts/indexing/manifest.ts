@@ -1,6 +1,6 @@
 import { Effect } from "effect";
+import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
-import { readSitemapPageDescriptors } from "@/lib/sitemap/routes";
 
 const DEFAULT_SITE_INDEX_BATCH_SIZE = 500;
 

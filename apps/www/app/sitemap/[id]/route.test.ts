@@ -11,7 +11,7 @@ vi.mock("@/lib/sitemap/entries", () => ({
   getSitemapEntries: mockGetSitemapEntries,
 }));
 
-vi.mock("@/lib/sitemap/routes", () => ({
+vi.mock("@/lib/sitemap/identity", () => ({
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
 }));
 

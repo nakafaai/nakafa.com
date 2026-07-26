@@ -1,8 +1,16 @@
-import { getPublicContentRouteCheck } from "@repo/contents/_lib/public-route";
+import {
+  ArticleCategorySchema,
+  ArticleSlugSchema,
+} from "@nakafa/aksara-contracts/projection/article";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import { ARTICLE_CATEGORIES } from "@repo/contents/_types/taxonomy";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { hasLocale } from "next-intl";
+import { readPublishedArticleCategory } from "@/lib/content/article/ownership";
+import { matchesPreviewRoute } from "@/lib/content/preview/route";
+import { readActiveContentIdentity } from "@/lib/content/published/active";
+import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getRuntimeContentRoute } from "@/lib/content/runtime/routes";
 
 const REJECTED_PUBLIC_ROOTS = new Set(["/learn"]);
@@ -125,7 +133,7 @@ function isRenderableQuranPath(segments: readonly string[]) {
   );
 }
 
-/** Verifies article detail paths against the runtime content route catalog. */
+/** Verifies article paths against their exclusive published or source owner. */
 function readMissingArticleHtmlLocale({
   locale,
   segments,
@@ -137,22 +145,52 @@ function readMissingArticleHtmlLocale({
     return Effect.succeed(null);
   }
 
-  const route = ["articles", ...segments].join("/");
-  const routeCheck = getPublicContentRouteCheck(route);
-
-  if (routeCheck.mode === "article-category") {
-    return Effect.succeed(null);
-  }
-
-  if (routeCheck.mode !== "exact") {
+  const [category, slug] = segments;
+  if (!Schema.is(ArticleCategorySchema)(category)) {
     return Effect.succeed(locale);
   }
 
-  if (segments.length !== 2) {
+  if (segments.length === 1) {
+    return readPublishedArticleCategory(category, locale).pipe(
+      Effect.map((ownership) => {
+        if (ownership.managed) {
+          return ownership.exists ? null : locale;
+        }
+        return ARTICLE_CATEGORIES.some((item) => item === category)
+          ? null
+          : locale;
+      })
+    );
+  }
+
+  if (segments.length !== 2 || !Schema.is(ArticleSlugSchema)(slug)) {
     return Effect.succeed(locale);
   }
 
-  return getRuntimeContentRoute({ locale, route }).pipe(
-    Effect.map((contentRoute) => (contentRoute ? null : locale))
-  );
+  const publicPath = `articles/${category}/${slug}`;
+  return Effect.gen(function* () {
+    const previewOwnsRoute = yield* matchesPreviewRoute({ locale, publicPath });
+    if (previewOwnsRoute) {
+      return null;
+    }
+
+    const identity = yield* readActiveContentIdentity();
+    const ownership = yield* readActiveContentRoute({
+      activeReleaseId: identity?.releaseId ?? null,
+      family: "article",
+      locale,
+      publicPath,
+    });
+    if (ownership.kind === "found") {
+      return null;
+    }
+    if (ownership.kind === "missing") {
+      return locale;
+    }
+    const contentRoute = yield* getRuntimeContentRoute({
+      locale,
+      route: publicPath,
+    });
+    return contentRoute ? null : locale;
+  });
 }
