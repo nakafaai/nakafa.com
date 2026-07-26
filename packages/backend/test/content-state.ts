@@ -1,5 +1,7 @@
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
+import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -22,7 +24,12 @@ export interface TestIdentity {
 interface TestReleaseOptions extends TestIdentity {
   readonly base?: TestIdentity;
   readonly originReleaseId?: string;
+  readonly ownership?: {
+    readonly base: readonly ContentFamily[];
+    readonly result: readonly ContentFamily[];
+  };
   readonly role: "candidate" | "recovery";
+  readonly scope?: PublicationScope;
   readonly status: "aborted" | "completed" | "verified";
 }
 
@@ -50,6 +57,7 @@ export function zeroReleaseJson(options: TestReleaseOptions) {
     resultCount: 0,
     resultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     routeCount: 0,
+    scope: options.scope,
     upsertCount: 0,
   });
 }
@@ -91,6 +99,12 @@ export async function insertZeroRelease(
       ? {
           completedAt: now,
           receiptJson: JSON.stringify(receipt),
+        }
+      : {}),
+    ...(options.ownership
+      ? {
+          baseFamilies: [...options.ownership.base],
+          resultFamilies: [...options.ownership.result],
         }
       : {}),
     checkedIndex: -1,
@@ -169,12 +183,14 @@ export async function insertAbortedRelease(ctx: MutationCtx) {
     abortedAt: now,
     abortedRows: 0,
     abortingAt: now,
+    baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,
     releaseId: "release-cleanup-dispatch",
     releaseJson: "{}",
     rendererJson: "{}",
+    resultFamilies: [],
     role: "candidate",
     sequence: 1,
     stagedArtifacts: 0,
@@ -217,6 +233,7 @@ export async function insertActiveRelease(
     stagedSnapshotRows: 0,
   };
   await ctx.db.insert("contentReleases", {
+    baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,
     completedAt: now,
@@ -227,6 +244,7 @@ export async function insertActiveRelease(
     releaseId: activeReleaseId,
     releaseJson: JSON.stringify(active),
     rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    resultFamilies: [],
     role: "candidate",
     sequence: 1,
     stagedArtifacts: 0,

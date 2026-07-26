@@ -55,12 +55,14 @@ function runProof(
 async function insertRelease(ctx: MutationCtx) {
   const now = Date.UTC(2026, 6, 22, 12, 0, 0);
   await ctx.db.insert("contentReleases", {
+    baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,
     releaseId,
     releaseJson: JSON.stringify(signedRelease),
     rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    resultFamilies: [...signedRelease.manifest.scope.families],
     role: "candidate",
     sequence: 1,
     stagedArtifacts: 0,
@@ -128,12 +130,14 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
   const signed = testSignedRelease(nextManifest);
   const now = Date.UTC(2026, 6, 22, 12, 0, 0);
   await ctx.db.insert("contentReleases", {
+    baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,
     releaseId,
     releaseJson: JSON.stringify(signed),
     rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    resultFamilies: [...signed.manifest.scope.families],
     role: "candidate",
     sequence: 1,
     stagedArtifacts: 0,

@@ -105,18 +105,20 @@ interface ReleaseOptions {
   readonly rollbackDigest?: string;
   readonly routeCount?: number;
   readonly routeDigest?: string;
+  readonly scope?: PublicationScope;
   readonly snapshots?: ContentSnapshotSet;
   readonly upsertCount?: number;
 }
 
 /** Creates canonical broad test scope plus every replaced snapshot family. */
 export function testPublicationScope(options?: {
+  readonly content?: PublicationScope["content"];
   readonly families?: PublicationScope["families"];
   readonly snapshots?: ContentSnapshotSet;
 }) {
   const snapshots = options?.snapshots ?? inheritContentSnapshots(null);
   return PublicationScopeSchema.make({
-    content: [],
+    content: options?.content ?? [],
     families: options?.families ?? ContentFamilySchema.literals,
     snapshots: ContentSnapshotKindSchema.literals.filter(
       (family) => snapshots[family].mode !== "inherit"
@@ -162,7 +164,7 @@ export function testReleaseJson(options?: ReleaseOptions) {
       rollbackDigest: options?.rollbackDigest ?? TEST_DIGEST,
       routeCount: options?.routeCount ?? upsertCount,
       routeDigest: options?.routeDigest ?? TEST_DIGEST,
-      scope: testPublicationScope({ snapshots }),
+      scope: options?.scope ?? testPublicationScope({ snapshots }),
       snapshots,
       upsertCount,
     },

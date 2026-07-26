@@ -1,3 +1,4 @@
+import scopeSchema from "@repo/backend/convex/contentRelease/scope/schema";
 import snapshotSchema from "@repo/backend/convex/contentRelease/snapshot/schema";
 import {
   bindingOperationValidator,
@@ -218,6 +219,7 @@ const tables = {
     abortingAt: v.optional(v.number()),
     articleIndex: v.optional(v.number()),
     articleSyncedAt: v.optional(v.number()),
+    baseFamilies: v.optional(v.array(contentFamilyValidator)),
     cleanupAt: v.optional(v.number()),
     cleanupDeletedArtifacts: v.optional(v.number()),
     cleanupFutureAt: v.optional(v.number()),
@@ -231,6 +233,7 @@ const tables = {
     releaseId: v.string(),
     releaseJson: v.string(),
     rendererJson: v.string(),
+    resultFamilies: v.optional(v.array(contentFamilyValidator)),
     role: releaseRoleValidator,
     searchIndex: v.optional(v.number()),
     searchSyncedAt: v.optional(v.number()),
@@ -284,6 +287,7 @@ const tables = {
     .index("by_artifactHash", ["artifactHash"])
     .index("by_sequence", ["sequence"]),
 
+  ...scopeSchema,
   ...snapshotSchema,
 
   /** Singleton identities selecting active, candidate, and recovery sequences. */

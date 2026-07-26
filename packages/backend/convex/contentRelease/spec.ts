@@ -25,6 +25,9 @@ export const TRANSACTION_READ_HEADROOM = 4 * 1024 * 1024;
 /** Eight body-bearing transitions preserve headroom under transaction limits. */
 export const RELEASE_PAGE_LIMIT = 8;
 
+/** Maximum exact identities owned atomically by one narrow release scope. */
+export const EXACT_SCOPE_LIMIT = 64;
+
 /** Maximum history rows considered by one compaction transaction. */
 export const COMPACTION_PAGE_COUNT = 32;
 
@@ -68,6 +71,7 @@ export const releaseRoleValidator = literals("candidate", "recovery");
 /** Ordered durable phases for one crash-safe history compaction cycle. */
 export const compactionPhaseValidator = literals(
   "heads",
+  "owners",
   "bindings",
   "items",
   "batches",

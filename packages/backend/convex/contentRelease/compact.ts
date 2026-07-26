@@ -33,6 +33,9 @@ function nextPhase(
   phase: CompactionCycle["phase"]
 ): CompactionCycle["phase"] | null {
   if (phase === "heads") {
+    return "owners";
+  }
+  if (phase === "owners") {
     return "bindings";
   }
   if (phase === "bindings") {

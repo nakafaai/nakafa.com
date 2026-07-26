@@ -5,7 +5,7 @@ import type {
 import {
   abortRowCount,
   deleteAbortRows,
-  hasAbortDirectories,
+  hasAbortResidue,
 } from "@repo/backend/convex/contentRelease/abort/rows";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
@@ -49,7 +49,7 @@ export const validateAbortedRelease = Effect.fn(
 )(function* (ctx: MutationCtx | QueryCtx, releaseId: string) {
   const release = yield* loadRelease(ctx, releaseId);
   const state = yield* loadState(ctx);
-  const [rows, ownsDirectory] = yield* Effect.all([
+  const [rows, residue] = yield* Effect.all([
     Effect.all([
       Effect.promise(() =>
         ctx.db
@@ -84,7 +84,7 @@ export const validateAbortedRelease = Effect.fn(
           .first()
       ),
     ]),
-    hasAbortDirectories(ctx, release.sequence),
+    hasAbortResidue(ctx, releaseId, release.sequence),
   ]);
   if (
     release.status !== "aborted" ||
@@ -94,7 +94,7 @@ export const validateAbortedRelease = Effect.fn(
     state?.activeReleaseId === releaseId ||
     state?.candidateReleaseId === releaseId ||
     state?.recoveryReleaseId === releaseId ||
-    ownsDirectory ||
+    residue ||
     rows.some((row) => row !== null)
   ) {
     return yield* releaseFail(
@@ -160,10 +160,10 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
     );
   }
   const complete = processed === total;
-  if (complete && (yield* hasAbortDirectories(ctx, release.sequence))) {
+  if (complete && (yield* hasAbortResidue(ctx, releaseId, release.sequence))) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Release ${releaseId} retained staged directory ownership.`
+      `Release ${releaseId} retained staged publication ownership.`
     );
   }
   const now = Date.now();

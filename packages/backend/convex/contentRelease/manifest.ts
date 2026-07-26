@@ -1,3 +1,4 @@
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
@@ -16,6 +17,15 @@ import {
 } from "@repo/backend/convex/contentRelease/parse";
 import { completedReceipt } from "@repo/backend/convex/contentRelease/receipt";
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
+import {
+  deriveReleaseFamilies,
+  hasExactFamilies,
+  loadReleaseFamilies,
+} from "@repo/backend/convex/contentRelease/scope/family";
+import {
+  stageContentOwners,
+  validateContentOwners,
+} from "@repo/backend/convex/contentRelease/scope/owner";
 import {
   abortReceiptValidator,
   statusValidator,
@@ -55,10 +65,12 @@ const releaseStatus = Effect.fn("contentRelease.releaseStatus")(function* (
 /** Confirms an idempotent release still owns the same immutable role slot. */
 const validateExisting = Effect.fn("contentRelease.validateExisting")(
   function* (
+    ctx: MutationCtx,
     release: Doc<"contentReleases">,
     role: ReleaseRole,
     releaseJson: string,
     rendererJson: string,
+    signed: SignedContentRelease,
     state: Doc<"contentState">
   ) {
     if (
@@ -69,6 +81,21 @@ const validateExisting = Effect.fn("contentRelease.validateExisting")(
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
         `Content release ${release.releaseId} already has different authenticated bytes.`
+      );
+    }
+    const [derivedFamilies, storedFamilies] = yield* Effect.all([
+      deriveReleaseFamilies(ctx, signed.manifest),
+      loadReleaseFamilies(release),
+    ]);
+    if (
+      !(
+        hasExactFamilies(derivedFamilies.base, storedFamilies.base) &&
+        hasExactFamilies(derivedFamilies.result, storedFamilies.result)
+      )
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${release.releaseId} changed ownership.`
       );
     }
     if (release.status === "completed") {
@@ -87,6 +114,7 @@ const validateExisting = Effect.fn("contentRelease.validateExisting")(
       role === "candidate" ? state.candidateReleaseId : state.recoveryReleaseId;
     const slotSequence =
       role === "candidate" ? state.candidateSequence : state.recoverySequence;
+    yield* validateContentOwners(ctx, release, signed.manifest);
     if (slotId !== release.releaseId || slotSequence !== release.sequence) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
@@ -124,10 +152,12 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
   );
   if (existing) {
     yield* validateExisting(
+      ctx,
       existing,
       role,
       canonicalRelease,
       canonicalRenderer,
+      signed,
       state
     );
     return yield* releaseStatus(existing);
@@ -150,15 +180,18 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     yield* validateRecoveryBase(ctx, signed.manifest, canonicalRenderer, state);
   }
   yield* validateExistingSnapshots(ctx, signed.manifest);
+  const families = yield* deriveReleaseFamilies(ctx, signed.manifest);
   const now = Date.now();
   const sequence = state.nextSequence;
   const row = {
+    baseFamilies: families.base,
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,
     releaseId: signed.manifest.releaseId,
     releaseJson: canonicalRelease,
     rendererJson: canonicalRenderer,
+    resultFamilies: families.result,
     role,
     sequence,
     stagedArtifacts: 0,
@@ -174,6 +207,7 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
   } satisfies WithoutSystemFields<Doc<"contentReleases">>;
   yield* ensureDocumentSize(`Content release ${row.releaseId}`, row);
   yield* Effect.promise(() => ctx.db.insert("contentReleases", row));
+  yield* stageContentOwners(ctx, row, signed.manifest);
   const slot =
     role === "candidate"
       ? {

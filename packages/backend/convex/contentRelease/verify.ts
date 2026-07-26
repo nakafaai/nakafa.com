@@ -4,6 +4,7 @@ import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadStaged } from "@repo/backend/convex/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
+import { validateContentOwners } from "@repo/backend/convex/contentRelease/scope/owner";
 import {
   progressValidator,
   RELEASE_PAGE_LIMIT,
@@ -23,6 +24,7 @@ const beginProgram = Effect.fn("contentRelease.beginVerify")(function* (
     return release.checkedIndex;
   }
   const signed = yield* decodeReleaseJson(release.releaseJson);
+  yield* validateContentOwners(ctx, release, signed.manifest);
   const complete =
     release.status === "staging" &&
     release.abortingAt === undefined &&

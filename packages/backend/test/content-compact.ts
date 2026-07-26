@@ -4,6 +4,7 @@ import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import {
   TEST_DIGEST,
   testProjectionJson,
+  testPublicationScope,
   testRollbackJson,
   testRouteJson,
   testUpsertJson,
@@ -35,7 +36,9 @@ export async function insertCompletedRelease(
   await insertZeroRelease(ctx, {
     ...identity,
     base,
+    ownership: { base: base ? ["material"] : [], result: ["material"] },
     role: "candidate",
+    scope: testPublicationScope({ families: ["material"] }),
     status: "completed",
   });
   const release = await ctx.db
@@ -104,6 +107,22 @@ async function insertBinding(
   });
 }
 
+/** Inserts one immutable exact-content ownership version. */
+async function insertOwner(
+  ctx: MutationCtx,
+  identity: TestIdentity,
+  managed: boolean
+) {
+  await ctx.db.insert("contentOwners", {
+    contentKey: "test:owner",
+    family: "material",
+    locale: "en",
+    managed,
+    releaseId: identity.releaseId,
+    sequence: identity.sequence,
+  });
+}
+
 /** Seeds old versions, release rows, and artifacts around a protected floor. */
 export async function seedCompactionHistory(ctx: MutationCtx) {
   const releases = Array.from({ length: 5 }, (_, index) =>
@@ -148,6 +167,8 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
   await insertBinding(ctx, fourth, "test:route", 0, "test/route");
   await insertBinding(ctx, first, "test:path-anchor", 1, "test/path-anchor");
   await insertBinding(ctx, third, "test:path-anchor", 0, "test/path-anchor");
+  await insertOwner(ctx, first, false);
+  await insertOwner(ctx, third, true);
   const staleHash = `sha256:${"c".repeat(64)}`;
   const retainedHash = `sha256:${"d".repeat(64)}`;
   await insertHead(ctx, fourth, "test:retained", 41, retainedHash);

@@ -3,8 +3,12 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { retainOrphanedArtifacts } from "@repo/backend/convex/contentRelease/retention";
-import { RELEASE_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
+import {
+  EXACT_SCOPE_LIMIT,
+  RELEASE_PAGE_LIMIT,
+} from "@repo/backend/convex/contentRelease/spec";
 import { Effect } from "effect";
 
 interface AbortCounts {
@@ -64,34 +68,66 @@ const deleteOwnedPath = Effect.fn("contentRelease.deleteAbortPath")(function* (
   }
 });
 
-/** Checks whether an aborted sequence still owns a directory identity. */
-export const hasAbortDirectories = Effect.fn(
-  "contentRelease.hasAbortDirectories"
-)(function* (ctx: MutationCtx | QueryCtx, sequence: number) {
-  const [key, path] = yield* Effect.all([
-    Effect.promise(() =>
+/** Removes every bounded exact ownership transition for one invisible release. */
+const deleteOwnedOwners = Effect.fn("contentRelease.deleteAbortOwners")(
+  function* (ctx: MutationCtx, releaseId: string) {
+    const owners = yield* Effect.promise(() =>
       ctx.db
-        .query("contentKeys")
-        .withIndex("by_createdSequence_and_contentKey_and_locale", (query) =>
-          query.eq("createdSequence", sequence)
+        .query("contentOwners")
+        .withIndex("by_releaseId_and_contentKey_and_locale", (query) =>
+          query.eq("releaseId", releaseId)
         )
-        .first()
-    ),
-    Effect.promise(() =>
-      ctx.db
-        .query("contentPaths")
-        .withIndex("by_createdSequence_and_locale_and_publicPath", (query) =>
-          query.eq("createdSequence", sequence)
-        )
-        .first()
-    ),
-  ]);
-  return key !== null || path !== null;
-});
+        .take(EXACT_SCOPE_LIMIT + 1)
+    );
+    if (owners.length > EXACT_SCOPE_LIMIT) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_LIMIT",
+        `Release ${releaseId} exceeds the exact ownership abort limit.`
+      );
+    }
+    for (const owner of owners) {
+      yield* Effect.promise(() => ctx.db.delete("contentOwners", owner._id));
+    }
+  }
+);
+
+/** Checks whether an aborted release still owns auxiliary publication state. */
+export const hasAbortResidue = Effect.fn("contentRelease.hasAbortResidue")(
+  function* (ctx: MutationCtx | QueryCtx, releaseId: string, sequence: number) {
+    const [key, owner, path] = yield* Effect.all([
+      Effect.promise(() =>
+        ctx.db
+          .query("contentKeys")
+          .withIndex("by_createdSequence_and_contentKey_and_locale", (query) =>
+            query.eq("createdSequence", sequence)
+          )
+          .first()
+      ),
+      Effect.promise(() =>
+        ctx.db
+          .query("contentOwners")
+          .withIndex("by_releaseId_and_contentKey_and_locale", (query) =>
+            query.eq("releaseId", releaseId)
+          )
+          .first()
+      ),
+      Effect.promise(() =>
+        ctx.db
+          .query("contentPaths")
+          .withIndex("by_createdSequence_and_locale_and_publicPath", (query) =>
+            query.eq("createdSequence", sequence)
+          )
+          .first()
+      ),
+    ]);
+    return key !== null || owner !== null || path !== null;
+  }
+);
 
 /** Deletes one bounded release-owned page and its staged directory identities. */
 export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
   function* (ctx: MutationCtx, releaseId: string, sequence: number) {
+    yield* deleteOwnedOwners(ctx, releaseId);
     const heads = yield* Effect.promise(() =>
       ctx.db
         .query("contentHeads")
