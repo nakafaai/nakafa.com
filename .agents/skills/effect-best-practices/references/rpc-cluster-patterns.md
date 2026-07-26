@@ -365,10 +365,18 @@ const createOrderHandler = Effect.gen(function* () {
 ### From Backend Service
 
 ```typescript
-export class MessageService extends Effect.Service<MessageService>()("MessageService", {
-    accessors: true,
-    dependencies: [MessageRepo.Default, WorkflowClient.Default],
-    effect: Effect.gen(function* () {
+export class MessageService extends Context.Tag("MessageService")<
+    MessageService,
+    {
+        readonly create: (
+            input: CreateMessageInput,
+        ) => Effect.Effect<Message, MessageCreateError>
+    }
+>() {}
+
+export const MessageServiceLive = Layer.effect(
+    MessageService,
+    Effect.gen(function* () {
         const repo = yield* MessageRepo
         const workflows = yield* WorkflowClient
 
@@ -386,9 +394,13 @@ export class MessageService extends Effect.Service<MessageService>()("MessageSer
             return message
         })
 
-        return { create }
+        return MessageService.of({ create })
     }),
-}) {}
+)
+
+export const MessageServiceAppLive = MessageServiceLive.pipe(
+    Layer.provide(Layer.mergeAll(MessageRepoLive, WorkflowClientLive)),
+)
 ```
 
 ## Workflow HTTP API

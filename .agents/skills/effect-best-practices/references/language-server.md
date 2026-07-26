@@ -254,7 +254,7 @@ await Effect.runPromise(Effect.succeed(42))
 // ERROR: UserService is required but not provided
 const program = UserService.findById(id)
 // FIX: Add to Layer composition
-const MainLive = Layer.provide(program, UserService.Default)
+const runnable = Effect.provide(program, UserServiceLive)
 ```
 
 ### Yield Non-Effect
