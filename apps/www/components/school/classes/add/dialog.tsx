@@ -48,20 +48,17 @@ export function CreateSchoolClassDialog({
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: async () => {
-            const classId = await createClass({
-              ...value,
-              schoolId,
-            });
+        Effect.tryPromise(async () => {
+          const classId = await createClass({
+            ...value,
+            schoolId,
+          });
 
-            router.push(`${pathname}/${classId}`);
-            setOpenAction(false);
-            form.reset();
-          },
-          catch: (error) => error,
+          router.push(`${pathname}/${classId}`);
+          setOpenAction(false);
+          form.reset();
         }).pipe(
-          Effect.catchAll((error) =>
+          Effect.catchTag("UnknownException", ({ error }) =>
             reportClientException(error, {
               source: "school-class-create",
             }).pipe(

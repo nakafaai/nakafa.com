@@ -37,22 +37,22 @@ const readLocaleRouteResponse = Effect.fn("www.routing.locale.route")(
       locale,
     }).pipe(
       Effect.map((localizedHref) => NextResponse.json({ href: localizedHref })),
-      Effect.catchTag("InvalidLocalizedHrefError", () =>
-        Effect.succeed(
-          NextResponse.json({ error: "Invalid href" }, { status: 400 })
-        )
-      ),
-      Effect.catchTag("MissingLocalizedRouteProjectionError", (error) =>
-        Effect.succeed(
-          NextResponse.json(
-            {
-              error: "Missing localized route projection",
-              path: error.publicPath,
-            },
-            { status: 404 }
-          )
-        )
-      )
+      Effect.catchTags({
+        InvalidLocalizedHrefError: () =>
+          Effect.succeed(
+            NextResponse.json({ error: "Invalid href" }, { status: 400 })
+          ),
+        MissingLocalizedRouteProjectionError: (error) =>
+          Effect.succeed(
+            NextResponse.json(
+              {
+                error: "Missing localized route projection",
+                path: error.publicPath,
+              },
+              { status: 404 }
+            )
+          ),
+      })
     );
   }
 );

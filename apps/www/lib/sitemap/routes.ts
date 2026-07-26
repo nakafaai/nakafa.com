@@ -39,7 +39,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
   function* (pageId: string) {
     const page = getSitemapPageDescriptor(pageId);
     if (!page) {
-      return yield* Effect.fail(new SitemapPageNotFoundError({ pageId }));
+      return yield* new SitemapPageNotFoundError({ pageId });
     }
 
     if (isPublicSitemapPage(page)) {
@@ -48,7 +48,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
         page: page.page,
       });
       if (!artifact) {
-        return yield* Effect.fail(new SitemapPageNotFoundError({ pageId }));
+        return yield* new SitemapPageNotFoundError({ pageId });
       }
       return {
         routes: artifact.paths.map((path) => ({
@@ -64,7 +64,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
         page.bucket
       );
       if (!artifact) {
-        return yield* Effect.fail(new SitemapPageNotFoundError({ pageId }));
+        return yield* new SitemapPageNotFoundError({ pageId });
       }
       return {
         routes: artifact.routes
@@ -89,7 +89,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       section: page.section,
     });
     if (!artifact) {
-      return yield* Effect.fail(new SitemapPageNotFoundError({ pageId }));
+      return yield* new SitemapPageNotFoundError({ pageId });
     }
     return { routes: yield* buildSitemapContentPageRoutes(artifact.routes) };
   }

@@ -80,19 +80,18 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
     onSome: (input) => JSON.stringify(input, null, 2),
   });
 
-  const repaired = yield* Effect.tryPromise({
-    try: () =>
-      generateText({
-        model: provider.languageModel(modelId),
-        output: Output.object({ schema: tool.inputSchema }),
-        prompt: createPrompt({
-          taskContext: `
+  const repaired = yield* Effect.tryPromise(() =>
+    generateText({
+      model: provider.languageModel(modelId),
+      output: Output.object({ schema: tool.inputSchema }),
+      prompt: createPrompt({
+        taskContext: `
         # Repair Task
 
         Repair the math tool arguments without changing the selected tool.
       `,
 
-          toolUsageGuidelines: `
+        toolUsageGuidelines: `
         # Repair Rules
 
         - Keep the operation field exactly the same as the failed arguments.
@@ -111,7 +110,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         - Include the requested probability point or event bounds.
       `,
 
-          backgroundData: `
+        backgroundData: `
         # Selected Tool
 
         ${toolCall.toolName}
@@ -132,16 +131,15 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
 
         ${error.message}
       `,
-        }),
-        providerOptions: {
-          gateway: gatewayProviderOptions,
-          google: getFastModelProviderOptions(modelId),
-        },
-        instructions,
-        timeout: backgroundGenerationTimeout,
       }),
-    catch: (error) => error,
-  }).pipe(Effect.option);
+      providerOptions: {
+        gateway: gatewayProviderOptions,
+        google: getFastModelProviderOptions(modelId),
+      },
+      instructions,
+      timeout: backgroundGenerationTimeout,
+    })
+  ).pipe(Effect.option);
 
   if (Option.isNone(repaired)) {
     return null;

@@ -63,7 +63,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     {
       nativeMarkdown: safeUrl.right.nativeFetchUrl
         ? fetchSourceMarkdown(safeUrl.right.nativeFetchUrl)
-        : Effect.succeed(undefined),
+        : Effect.as(Effect.void, undefined),
       scrapeResult: Effect.tryPromise({
         try: () =>
           readFirecrawlApp().scrape(publicUrl, {

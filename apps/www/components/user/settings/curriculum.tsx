@@ -113,6 +113,11 @@ function UserSettingsCurriculumForm({
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
+      const handleMutationError = (error: CurriculumPreferenceMutationError) =>
+        reportClientException(error, {
+          source: "user-settings-curriculum",
+        }).pipe(Effect.as(false));
+      const handleValidationError = () => Effect.succeed(false);
       const didSave = await Effect.runPromise(
         submitCurriculumPreference({
           locale,
@@ -121,14 +126,10 @@ function UserSettingsCurriculumForm({
           value,
         }).pipe(
           Effect.as(true),
-          Effect.catchTag("CurriculumPreferenceMutationError", (error) =>
-            reportClientException(error, {
-              source: "user-settings-curriculum",
-            }).pipe(Effect.as(false))
-          ),
-          Effect.catchTag("CurriculumPreferenceValidationError", () =>
-            Effect.succeed(false)
-          )
+          Effect.catchTags({
+            CurriculumPreferenceMutationError: handleMutationError,
+            CurriculumPreferenceValidationError: handleValidationError,
+          })
         )
       );
 
@@ -243,11 +244,9 @@ function submitCurriculumPreference({
     );
 
     if (!program) {
-      return yield* Effect.fail(
-        new CurriculumPreferenceValidationError({
-          cause: formValue.preferredCurriculumProgramKey,
-        })
-      );
+      return yield* new CurriculumPreferenceValidationError({
+        cause: formValue.preferredCurriculumProgramKey,
+      });
     }
 
     yield* Effect.tryPromise({

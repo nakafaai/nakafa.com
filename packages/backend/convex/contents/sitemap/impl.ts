@@ -181,12 +181,10 @@ export const getPublicSitemapPageImpl = Effect.fn(
   "contents.publicSitemap.getPage"
 )(function* (ctx: QueryCtx, args: GetPublicSitemapPageArgs) {
   if (!Number.isSafeInteger(args.page) || args.page < 0) {
-    return yield* Effect.fail(
-      new SitemapRuntimeError({
-        code: "PUBLIC_SITEMAP_PAGE_INVALID",
-        message: "Public sitemap page must be a non-negative integer.",
-      })
-    );
+    return yield* new SitemapRuntimeError({
+      code: "PUBLIC_SITEMAP_PAGE_INVALID",
+      message: "Public sitemap page must be a non-negative integer.",
+    });
   }
 
   const count = yield* Effect.promise(() =>
@@ -239,12 +237,10 @@ export const getPublicSitemapPageImpl = Effect.fn(
   );
 
   if (page.paths.length !== expectedPathCount) {
-    return yield* Effect.fail(
-      new SitemapRuntimeError({
-        code: "PUBLIC_SITEMAP_PAGE_OVERFLOW",
-        message: `Public sitemap page ${args.locale}/${args.page} has an invalid path count.`,
-      })
-    );
+    return yield* new SitemapRuntimeError({
+      code: "PUBLIC_SITEMAP_PAGE_OVERFLOW",
+      message: `Public sitemap page ${args.locale}/${args.page} has an invalid path count.`,
+    });
   }
 
   const pathsAreSorted = page.paths.every((path, index) => {

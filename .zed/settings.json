@@ -35,11 +35,14 @@
         }
       }
     },
-    "typescript-language-server": {
+    "vtsls": {
       "settings": {
         "typescript": {
           "preferences": {
             "includePackageJsonAutoImports": "on"
+          },
+          "tsserver": {
+            "maxTsServerMemory": 8192
           }
         }
       }
@@ -47,6 +50,7 @@
   },
   "languages": {
     "JavaScript": {
+      "language_servers": ["vtsls", "!typescript-language-server", "..."],
       "formatter": {
         "language_server": {
           "name": "biome"
@@ -58,6 +62,7 @@
       }
     },
     "TypeScript": {
+      "language_servers": ["vtsls", "!typescript-language-server", "..."],
       "formatter": {
         "language_server": {
           "name": "biome"
@@ -69,6 +74,7 @@
       }
     },
     "TSX": {
+      "language_servers": ["vtsls", "!typescript-language-server", "..."],
       "formatter": {
         "language_server": {
           "name": "biome"

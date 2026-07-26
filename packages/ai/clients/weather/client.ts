@@ -113,18 +113,18 @@ const fetchGeoData = Effect.fn("weather.fetchGeoData")(function* (
     url: `${GEO_BASE_URL}/reverse`,
   }).pipe(
     Effect.flatMap(Schema.decodeUnknown(ReverseGeocodeSchema)),
-    Effect.catchTag("WeatherClientRequestError", (error) =>
-      logError(new Error(error.message), {
-        ...context,
-        operation: "fetchGeoData",
-      }).pipe(Effect.as([]))
-    ),
-    Effect.catchTag("ParseError", (error) =>
-      Effect.logWarning("Geocoding validation failed").pipe(
-        Effect.annotateLogs({ ...context, cause: error.message }),
-        Effect.as([])
-      )
-    )
+    Effect.catchTags({
+      WeatherClientRequestError: (error) =>
+        logError(new Error(error.message), {
+          ...context,
+          operation: "fetchGeoData",
+        }).pipe(Effect.as([])),
+      ParseError: (error) =>
+        Effect.logWarning("Geocoding validation failed").pipe(
+          Effect.annotateLogs({ ...context, cause: error.message }),
+          Effect.as([])
+        ),
+    })
   );
 
   const location = locations.at(0);
@@ -164,18 +164,18 @@ const fetchWeatherForecast = Effect.fn("weather.fetchWeatherForecast")(
       url: `${WEATHER_BASE_URL}/forecast`,
     }).pipe(
       Effect.flatMap(Schema.decodeUnknown(WeatherResponseSchema)),
-      Effect.catchTag("WeatherClientRequestError", (error) =>
-        logError(new Error(error.message), {
-          ...context,
-          operation: "fetchWeatherForecast",
-        }).pipe(Effect.as(null))
-      ),
-      Effect.catchTag("ParseError", (error) =>
-        Effect.logWarning("Weather forecast validation failed").pipe(
-          Effect.annotateLogs({ ...context, cause: error.message }),
-          Effect.as(null)
-        )
-      )
+      Effect.catchTags({
+        WeatherClientRequestError: (error) =>
+          logError(new Error(error.message), {
+            ...context,
+            operation: "fetchWeatherForecast",
+          }).pipe(Effect.as(null)),
+        ParseError: (error) =>
+          Effect.logWarning("Weather forecast validation failed").pipe(
+            Effect.annotateLogs({ ...context, cause: error.message }),
+            Effect.as(null)
+          ),
+      })
     );
   }
 );
@@ -202,18 +202,18 @@ const fetchAirPollution = Effect.fn("weather.fetchAirPollution")(function* (
     url: `${WEATHER_BASE_URL}/air_pollution`,
   }).pipe(
     Effect.flatMap(Schema.decodeUnknown(AirPollutionResponseSchema)),
-    Effect.catchTag("WeatherClientRequestError", (error) =>
-      logError(new Error(error.message), {
-        ...context,
-        operation: "fetchAirPollution",
-      }).pipe(Effect.as(emptyAirPollution(latitude, longitude)))
-    ),
-    Effect.catchTag("ParseError", (error) =>
-      Effect.logWarning("Air pollution validation failed").pipe(
-        Effect.annotateLogs({ ...context, cause: error.message }),
-        Effect.as(emptyAirPollution(latitude, longitude))
-      )
-    )
+    Effect.catchTags({
+      WeatherClientRequestError: (error) =>
+        logError(new Error(error.message), {
+          ...context,
+          operation: "fetchAirPollution",
+        }).pipe(Effect.as(emptyAirPollution(latitude, longitude))),
+      ParseError: (error) =>
+        Effect.logWarning("Air pollution validation failed").pipe(
+          Effect.annotateLogs({ ...context, cause: error.message }),
+          Effect.as(emptyAirPollution(latitude, longitude))
+        ),
+    })
   );
 });
 
@@ -237,18 +237,18 @@ const fetchAirPollutionForecast = Effect.fn(
     url: `${WEATHER_BASE_URL}/air_pollution/forecast`,
   }).pipe(
     Effect.flatMap(Schema.decodeUnknown(AirPollutionResponseSchema)),
-    Effect.catchTag("WeatherClientRequestError", (error) =>
-      logError(new Error(error.message), {
-        ...context,
-        operation: "fetchAirPollutionForecast",
-      }).pipe(Effect.as(emptyAirPollution(latitude, longitude)))
-    ),
-    Effect.catchTag("ParseError", (error) =>
-      Effect.logWarning("Air pollution forecast validation failed").pipe(
-        Effect.annotateLogs({ ...context, cause: error.message }),
-        Effect.as(emptyAirPollution(latitude, longitude))
-      )
-    )
+    Effect.catchTags({
+      WeatherClientRequestError: (error) =>
+        logError(new Error(error.message), {
+          ...context,
+          operation: "fetchAirPollutionForecast",
+        }).pipe(Effect.as(emptyAirPollution(latitude, longitude))),
+      ParseError: (error) =>
+        Effect.logWarning("Air pollution forecast validation failed").pipe(
+          Effect.annotateLogs({ ...context, cause: error.message }),
+          Effect.as(emptyAirPollution(latitude, longitude))
+        ),
+    })
   );
 });
 

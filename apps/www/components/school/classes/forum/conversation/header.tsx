@@ -106,14 +106,13 @@ function ForumReactions() {
   const handleToggleReaction = (emoji: string) => {
     startTransition(() =>
       Effect.runPromise(
-        Effect.tryPromise({
-          try: () => toggleReaction({ forumId: forum._id, emoji }),
-          catch: (cause) => cause,
-        }).pipe(
+        Effect.tryPromise(() =>
+          toggleReaction({ forumId: forum._id, emoji })
+        ).pipe(
           Effect.asVoid,
-          Effect.catchAll((cause) =>
+          Effect.catchTag("UnknownException", ({ error }) =>
             Effect.sync(() => {
-              captureException(cause, {
+              captureException(error, {
                 source: "forum-reaction-toggle",
               });
             })
@@ -187,14 +186,13 @@ function ForumActions() {
   const handleToggleReaction = (emoji: string) => {
     startTransition(() =>
       Effect.runPromise(
-        Effect.tryPromise({
-          try: () => toggleReaction({ forumId: forum._id, emoji }),
-          catch: (cause) => cause,
-        }).pipe(
+        Effect.tryPromise(() =>
+          toggleReaction({ forumId: forum._id, emoji })
+        ).pipe(
           Effect.asVoid,
-          Effect.catchAll((cause) =>
+          Effect.catchTag("UnknownException", ({ error }) =>
             Effect.sync(() => {
-              captureException(cause, {
+              captureException(error, {
                 source: "forum-reaction-picker",
               });
             })

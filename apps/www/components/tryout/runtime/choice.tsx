@@ -72,10 +72,11 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
     });
 
     Effect.runPromise(
-      Effect.tryPromise({
-        try: () => saveRequest,
-        catch: (cause) => cause,
-      }).pipe(Effect.catchAll((error) => handleSubmitError(error, tExercises)))
+      Effect.tryPromise(() => saveRequest).pipe(
+        Effect.catchTag("UnknownException", ({ error }) =>
+          handleSubmitError(error, tExercises)
+        )
+      )
     );
   }
 

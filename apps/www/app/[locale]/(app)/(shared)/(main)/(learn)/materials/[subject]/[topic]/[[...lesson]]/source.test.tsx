@@ -112,10 +112,9 @@ function params() {
 /** Extracts the typed Effect failure preserved by a framework promise boundary. */
 async function readRejectedFailure(read: () => Promise<unknown>) {
   const rejected = await Effect.runPromise(
-    Effect.tryPromise({
-      try: read,
-      catch: (cause) => cause,
-    }).pipe(Effect.flip)
+    Effect.tryPromise(read).pipe(
+      Effect.catchTag("UnknownException", ({ error }) => Effect.succeed(error))
+    )
   );
   if (!Runtime.isFiberFailure(rejected)) {
     throw new Error("Expected an Effect FiberFailure.");

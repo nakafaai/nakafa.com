@@ -210,17 +210,19 @@ export const prepareAudioPlayerItem = Effect.fn(
 /** Starts playback once and returns an Effect that awaits that exact request. */
 export const beginAudioPlayerPlayback = Effect.fn(
   "designSystem.audioPlayer.beginPlayback"
-)(function* (audio: HTMLAudioElement) {
-  const playback = yield* Effect.try({
+)((audio: HTMLAudioElement) =>
+  Effect.try({
     try: () => audio.play(),
     catch: (cause) => operationError("play", cause),
-  });
-
-  return Effect.tryPromise({
-    try: () => playback,
-    catch: (cause) => operationError("play", cause),
-  });
-});
+  }).pipe(
+    Effect.map((playback) =>
+      Effect.tryPromise({
+        try: () => playback,
+        catch: (cause) => operationError("play", cause),
+      })
+    )
+  )
+);
 
 /** Pauses the browser media element through the typed error channel. */
 export const pauseAudioPlayer = Effect.fn("designSystem.audioPlayer.pause")(

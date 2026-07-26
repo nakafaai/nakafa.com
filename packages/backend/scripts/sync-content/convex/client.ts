@@ -99,11 +99,9 @@ const parseConvexResponse = <A, I>(
     );
 
     if (response.status === "error") {
-      return yield* Effect.fail(
-        new ConvexResponseError({
-          message: `${functionPath}: ${response.errorMessage || "Unknown Convex error"}`,
-        })
-      );
+      return yield* new ConvexResponseError({
+        message: `${functionPath}: ${response.errorMessage || "Unknown Convex error"}`,
+      });
     }
 
     return yield* Schema.decodeUnknown(valueSchema)(response.value).pipe(
@@ -180,11 +178,9 @@ const callConvexFunction = Effect.fn("scripts.callConvexFunction")(function* <
 
   if (!response.ok) {
     const body = yield* readFailedResponseBody(response);
-    return yield* Effect.fail(
-      new ConvexRequestError({
-        message: `${functionPath}: HTTP ${response.status} ${body}`,
-      })
-    );
+    return yield* new ConvexRequestError({
+      message: `${functionPath}: HTTP ${response.status} ${body}`,
+    });
   }
 
   const json = yield* Effect.tryPromise({
@@ -237,11 +233,9 @@ export const getConvexConfig = Effect.fn("scripts.getConvexConfig")(function* (
   );
 
   if (!parsed.accessToken) {
-    return yield* Effect.fail(
-      new ConvexAuthError({
-        message: "No access token. Run: npx convex dev",
-      })
-    );
+    return yield* new ConvexAuthError({
+      message: "No access token. Run: npx convex dev",
+    });
   }
 
   if (options.prod) {

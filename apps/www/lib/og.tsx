@@ -27,10 +27,9 @@ async function getLogoDataUrl() {
   cacheLife("max");
 
   return await Effect.runPromise(
-    Effect.tryPromise({
-      try: () => readFile(join(process.cwd(), "public", "logo.svg"), "utf8"),
-      catch: (error) => error,
-    }).pipe(
+    Effect.tryPromise(() =>
+      readFile(join(process.cwd(), "public", "logo.svg"), "utf8")
+    ).pipe(
       Effect.map(
         (logo) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logo)}`
       )
@@ -43,10 +42,7 @@ export function generateOGImage(options: GenerateOGImageOptions) {
   return Effect.runPromise(
     Effect.gen(function* () {
       const { height = 630, icon, width = 1200, ...imageProps } = options;
-      const logoDataUrl = yield* Effect.tryPromise({
-        try: getLogoDataUrl,
-        catch: (error) => error,
-      });
+      const logoDataUrl = yield* Effect.tryPromise(getLogoDataUrl);
 
       return new ImageResponse(
         <OgImage

@@ -57,11 +57,9 @@ export const buildPublicRouteProjection = Effect.fn(
     const identity = getRouteIdentity(values);
 
     if (identities.has(identity)) {
-      return yield* Effect.fail(
-        new PublicRouteProjectionError({
-          message: `Duplicate public route identity: ${identity}.`,
-        })
-      );
+      return yield* new PublicRouteProjectionError({
+        message: `Duplicate public route identity: ${identity}.`,
+      });
     }
 
     identities.add(identity);
@@ -78,22 +76,18 @@ export const buildPublicRouteProjection = Effect.fn(
         values.materialContextPublicPath
       )
     ) {
-      return yield* Effect.fail(
-        new PublicRouteProjectionError({
-          message: `Incomplete material context ownership: ${identity}.`,
-        })
-      );
+      return yield* new PublicRouteProjectionError({
+        message: `Incomplete material context ownership: ${identity}.`,
+      });
     }
 
     if (
       materialContextIdentity &&
       materialContextIdentities.has(materialContextIdentity)
     ) {
-      return yield* Effect.fail(
-        new PublicRouteProjectionError({
-          message: `Duplicate material context identity: ${materialContextIdentity}.`,
-        })
-      );
+      return yield* new PublicRouteProjectionError({
+        message: `Duplicate material context identity: ${materialContextIdentity}.`,
+      });
     }
 
     if (materialContextIdentity) {

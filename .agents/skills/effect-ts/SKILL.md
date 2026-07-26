@@ -10,13 +10,31 @@ resource safety.
 
 ## When to Apply
 
-- Writing or reviewing TypeScript code that imports from `effect`, `@effect/schema`, or `@effect/platform`
+- Writing or reviewing TypeScript code that imports from `effect`, `effect/*`, or `@effect/*`
 - Implementing typed error handling with `Effect<Success, Error, Requirements>`
 - Building services and layers for dependency injection
 - Working with Schema for data validation, decoding, and transformation
 - Using fiber-based concurrency (queues, semaphores, PubSub, deferred)
 - Processing data with Stream and Sink
 - Migrating from Promises, fp-ts, neverthrow, or ZIO to Effect
+
+## Source and Version Discipline
+
+- Verify the installed Effect version before prescribing APIs. Prefer the installed declarations,
+  official docs at <https://effect.website/docs>, and a repository-pinned Effect source checkout.
+- Treat `@effect/schema` as a legacy migration signal. Current Effect 3 code imports `Schema` from
+  `"effect"` unless the installed version says otherwise.
+- Do not import from, build, lint, or test a vendored Effect source checkout as application code.
+  It is a read-only reference, and its exact commit must be mechanically verifiable.
+- `Context.Tag` plus `Layer` is the documented service pattern. `Effect.Service` combines a tag
+  and default layer for projects that adopt it, but Effect 3.22.0 marks that API experimental;
+  follow the repository's architecture and verify the installed declaration before using it.
+- Treat a major prerelease as a separate migration, not an automatic update. Check npm dist-tags,
+  every installed `@effect/*` peer range, official migration guidance, and the repository's full
+  verification surface before proposing it. A stable submodule does not make a beta runtime
+  production-stable.
+- This entrypoint was last reconciled on 2026-07-25 against Effect 3.22.0. Re-check current
+  installed docs and declarations because Effect evolves quickly.
 
 ## How to Use
 
@@ -93,29 +111,44 @@ Effect<Success, Error, Requirements>
 
 ### Creating Effects
 ```ts
-import { Effect } from "effect"
+import { Data, Effect } from "effect"
 
 // From sync values
 const succeed = Effect.succeed(42)
-const fail = Effect.fail(new Error("oops"))
 
-// From sync code that may throw
-const sync = Effect.try(() => JSON.parse(data))
+class JsonParseError extends Data.TaggedError("JsonParseError")<{
+  readonly cause: unknown
+}> {}
 
-// From promises
-const async = Effect.tryPromise(() => fetch(url))
+class RequestError extends Data.TaggedError("RequestError")<{
+  readonly cause: unknown
+}> {}
+
+// Map thrown exceptions into the typed error channel
+const sync = Effect.try({
+  try: () => JSON.parse(data),
+  catch: (cause) => new JsonParseError({ cause })
+})
+
+// Map Promise rejection into the typed error channel
+const request = Effect.tryPromise({
+  try: () => fetch(url),
+  catch: (cause) => new RequestError({ cause })
+})
 
 // From generators (recommended for complex flows)
-const program = Effect.gen(function* () {
+const loadTodos = Effect.fn("Todos.load")(function* (id: string) {
   const user = yield* getUser(id)
   const todos = yield* getTodos(user.id)
   return { user, todos }
 })
+
+const program = loadTodos("1")
 ```
 
 ### Running Effects
 ```ts
-// Async (returns Promise)
+// Run only at framework, CLI, test, or event boundaries.
 Effect.runPromise(program)
 
 // With full Exit information
@@ -127,12 +160,14 @@ Effect.runSync(program)
 
 ### Typed Errors
 ```ts
-import { Data, Effect } from "effect"
+import { Data, Effect, Schema } from "effect"
 
-class NotFound extends Data.TaggedError("NotFound")<{
-  readonly id: string
-}> {}
+// Prefer Schema.TaggedError for serializable/schema-derived domain contracts.
+class NotFound extends Schema.TaggedError<NotFound>()("NotFound", {
+  id: Schema.String
+}) {}
 
+// Data.TaggedError remains appropriate for in-memory-only failures.
 class Unauthorized extends Data.TaggedError("Unauthorized")<{}> {}
 
 // Error type is tracked: Effect<User, NotFound | Unauthorized>
@@ -146,25 +181,25 @@ const getUser = (id: string) =>
 ```ts
 import { Context, Effect, Layer } from "effect"
 
-// Define a service
+// Define a service contract.
 class UserRepo extends Context.Tag("UserRepo")<
   UserRepo,
   { readonly findById: (id: string) => Effect.Effect<User, NotFound> }
 >() {}
 
-// Use in effects — adds to Requirements channel
+// Use in effects — adds UserRepo to the Requirements channel.
 const program = Effect.gen(function* () {
   const repo = yield* UserRepo
   return yield* repo.findById("1")
 })
 
-// Implement with a Layer
+// Provide an implementation with a Layer.
 const UserRepoLive = Layer.succeed(UserRepo, {
   findById: (id) => Effect.succeed({ id, name: "Alice" })
 })
 
-// Provide and run
-program.pipe(Effect.provide(UserRepoLive), Effect.runPromise)
+// Effect.Service may combine the contract and default Layer when the repository
+// explicitly adopts its experimental API and the installed version supports it.
 ```
 
 ### Schema Validation

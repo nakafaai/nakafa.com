@@ -113,9 +113,9 @@ const MathProbabilityDistributionInputSchema = Schema.extend(
     Schema.filter((value) => hasRequiredProbabilityParameters(value), {
       message: () =>
         "Expected required distribution parameters for the selected probability distribution.",
-    })
+    }),
+    Schema.mutable
   )
-  .pipe(Schema.mutable)
   .annotations({ description: "Named distribution summary input." });
 
 const MathProbabilityMomentInputSchema = Schema.extend(
@@ -140,15 +140,13 @@ const MathProbabilityMomentInputSchema = Schema.extend(
     Schema.filter((value) => hasRequiredProbabilityParameters(value), {
       message: () =>
         "Expected required distribution parameters for the selected probability distribution.",
-    })
-  )
-  .pipe(
+    }),
     Schema.filter((value) => hasConsistentMomentExpression(value), {
       message: () =>
         "Expected the moment expression to contain exactly one random variable, matching variable when provided.",
-    })
+    }),
+    Schema.mutable
   )
-  .pipe(Schema.mutable)
   .annotations({
     description: "Named distribution expected value or variance input.",
   });
@@ -168,9 +166,9 @@ const MathProbabilityPointInputSchema = Schema.extend(
     Schema.filter((value) => hasRequiredProbabilityParameters(value), {
       message: () =>
         "Expected required distribution parameters for the selected probability distribution.",
-    })
+    }),
+    Schema.mutable
   )
-  .pipe(Schema.mutable)
   .annotations({ description: "Exact-value probability input." });
 
 const MathProbabilityCumulativeInputSchema = Schema.extend(
@@ -189,9 +187,9 @@ const MathProbabilityCumulativeInputSchema = Schema.extend(
     Schema.filter((value) => hasRequiredProbabilityParameters(value), {
       message: () =>
         "Expected required distribution parameters for the selected probability distribution.",
-    })
+    }),
+    Schema.mutable
   )
-  .pipe(Schema.mutable)
   .annotations({ description: "Cumulative probability input." });
 
 const MathProbabilityTailInputSchema = Schema.extend(
@@ -210,9 +208,9 @@ const MathProbabilityTailInputSchema = Schema.extend(
     Schema.filter((value) => hasRequiredProbabilityParameters(value), {
       message: () =>
         "Expected required distribution parameters for the selected probability distribution.",
-    })
+    }),
+    Schema.mutable
   )
-  .pipe(Schema.mutable)
   .annotations({ description: "Tail probability input." });
 
 const MathProbabilityIntervalInputSchema = Schema.extend(
@@ -236,9 +234,9 @@ const MathProbabilityIntervalInputSchema = Schema.extend(
     Schema.filter((value) => hasRequiredProbabilityParameters(value), {
       message: () =>
         "Expected required distribution parameters for the selected probability distribution.",
-    })
+    }),
+    Schema.mutable
   )
-  .pipe(Schema.mutable)
   .annotations({ description: "Interval probability input." });
 
 export const MathProbabilityInputSchema = Schema.Union(

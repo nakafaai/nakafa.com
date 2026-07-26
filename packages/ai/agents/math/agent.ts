@@ -36,7 +36,7 @@ import type { MathAgentParams } from "@repo/ai/types/agents";
 import { mathOperations } from "@repo/math/schema/operations";
 import { MathService } from "@repo/math/service";
 import { generateText, isStepCount, tool } from "ai";
-import { Effect } from "effect";
+import { Effect, Runtime } from "effect";
 
 const MAX_MATH_STEPS = mathOperations.length;
 
@@ -54,6 +54,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   context,
   writer,
 }: MathAgentParams) {
+  const runPromise = Runtime.runPromise(yield* Effect.runtime());
   const result = yield* Effect.tryPromise({
     try: () =>
       generateText({
@@ -64,7 +65,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           google: getFastModelProviderOptions(modelId),
         },
         repairToolCall: (options) =>
-          Effect.runPromise(
+          runPromise(
             repairMathToolCall({
               ...options,
               modelId,
@@ -80,7 +81,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           algebra: tool({
             description: mathAlgebra,
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 compute({
                   input,
                   toolCallId,
@@ -93,7 +94,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           arithmetic: tool({
             description: mathArithmetic,
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 compute({
                   input,
                   toolCallId,
@@ -106,7 +107,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           calculus: tool({
             description: mathCalculus,
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 compute({
                   input,
                   toolCallId,
@@ -119,7 +120,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           discrete: tool({
             description: mathDiscrete,
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 compute({
                   input,
                   toolCallId,
@@ -132,7 +133,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           equation: tool({
             description: mathEquation,
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 compute({
                   input,
                   toolCallId,
@@ -145,7 +146,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           geometry: tool({
             description: mathGeometry,
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 compute({
                   input,
                   toolCallId,
@@ -158,7 +159,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           matrix: tool({
             description: mathMatrix,
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 compute({
                   input,
                   toolCallId,
@@ -171,7 +172,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           probability: tool({
             description: mathProbability,
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 compute({
                   input,
                   toolCallId,
@@ -184,7 +185,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           series: tool({
             description: mathSeries,
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 compute({
                   input,
                   toolCallId,
@@ -197,7 +198,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           statistics: tool({
             description: mathStatistics,
             execute: (input, { toolCallId }) =>
-              Effect.runPromise(
+              runPromise(
                 compute({
                   input,
                   toolCallId,

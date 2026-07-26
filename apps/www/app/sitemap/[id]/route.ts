@@ -73,8 +73,7 @@ const buildSitemapPageResponse = Effect.fn("www.sitemap.page.response")(
 
 /** Reports sitemap route failures without exposing implementation details. */
 function reportSitemapRouteError(error: unknown, source: string) {
-  return Effect.tryPromise({
-    try: () => captureServerException(error, undefined, { source }),
-    catch: (cause) => cause,
-  }).pipe(Effect.ignore);
+  return Effect.tryPromise(() =>
+    captureServerException(error, undefined, { source })
+  ).pipe(Effect.ignore);
 }

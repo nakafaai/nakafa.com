@@ -53,12 +53,10 @@ export const resolveUniqueGeneratedUsername = Effect.fn(
     }
   }
 
-  return yield* Effect.fail(
-    new GeneratedUsernameExhaustedError({
-      message: "Unable to create a unique generated username",
-      username: input.username,
-    })
-  );
+  return yield* new GeneratedUsernameExhaustedError({
+    message: "Unable to create a unique generated username",
+    username: input.username,
+  });
 });
 
 /**

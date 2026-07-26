@@ -84,12 +84,10 @@ const requireContentAudio = Effect.fn(
     return audio;
   }
 
-  return yield* Effect.fail(
-    new ContentAudioNotFoundError({
-      code: contentAudioNotFoundCode,
-      message: "Content audio record not found.",
-    })
-  );
+  return yield* new ContentAudioNotFoundError({
+    code: contentAudioNotFoundCode,
+    message: "Content audio record not found.",
+  });
 });
 
 /** Loads canonical rows for one content reference and locale. */
@@ -111,12 +109,10 @@ const loadContentAudioRecords = Effect.fn(
     return records;
   }
 
-  return yield* Effect.fail(
-    new ContentAudioDuplicateLimitExceededError({
-      code: contentAudioDuplicateLimitExceededCode,
-      message: "Content audio duplicate limit exceeded.",
-    })
-  );
+  return yield* new ContentAudioDuplicateLimitExceededError({
+    code: contentAudioDuplicateLimitExceededCode,
+    message: "Content audio duplicate limit exceeded.",
+  });
 });
 
 /** Keeps the earliest content-audio row and deletes duplicate rows. */
@@ -126,12 +122,10 @@ const collapseDuplicateContentAudioRecords = Effect.fn(
   const [keeper, ...duplicates] = records;
 
   if (!keeper) {
-    return yield* Effect.fail(
-      new ContentAudioNotFoundError({
-        code: contentAudioNotFoundCode,
-        message: "Content audio record not found.",
-      })
-    );
+    return yield* new ContentAudioNotFoundError({
+      code: contentAudioNotFoundCode,
+      message: "Content audio record not found.",
+    });
   }
 
   for (const duplicate of duplicates) {

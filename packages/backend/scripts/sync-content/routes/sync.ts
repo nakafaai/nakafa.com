@@ -175,11 +175,9 @@ const buildShardBatches = Effect.fn("sync.buildPublicRouteShardBatches")(
 
     for (const shard of shards) {
       if (shard.routes.length > CONTENT_SYNC_BATCH_LIMITS.publicRouteRows) {
-        return yield* Effect.fail(
-          new PublicRouteShardOverflowError({
-            message: `Public route shard ${shard.shard} has ${shard.routes.length} rows; limit is ${CONTENT_SYNC_BATCH_LIMITS.publicRouteRows}.`,
-          })
-        );
+        return yield* new PublicRouteShardOverflowError({
+          message: `Public route shard ${shard.shard} has ${shard.routes.length} rows; limit is ${CONTENT_SYNC_BATCH_LIMITS.publicRouteRows}.`,
+        });
       }
 
       const exceedsRows =

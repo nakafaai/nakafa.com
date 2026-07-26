@@ -48,7 +48,7 @@ export const projectCurriculumNodes = Effect.fn(
   const result = projectCurricula({ curricula, materials });
 
   if (result.failures.length > 0) {
-    return yield* Effect.fail(toProjectionError(result.failures));
+    return yield* toProjectionError(result.failures);
   }
 
   return result.nodes;

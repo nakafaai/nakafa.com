@@ -242,7 +242,7 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
       uploadIds: attachmentUploadIds,
     });
 
-    return yield* Effect.fail(failedUpload.left);
+    return yield* failedUpload.left;
   }
 
   yield* Effect.tryPromise({

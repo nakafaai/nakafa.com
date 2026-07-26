@@ -1,10 +1,15 @@
 // @vitest-environment node
-import { Effect } from "effect";
+import { Data, Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/sitemap.xml/route";
 
 const mockReadSitemapPageDescriptors = vi.hoisted(() => vi.fn());
 const mockCaptureServerException = vi.hoisted(() => vi.fn());
+
+/** Test-only typed sitemap failure. */
+class TestSitemapIndexError extends Data.TaggedError("TestSitemapIndexError")<{
+  readonly message: string;
+}> {}
 
 vi.mock("@/lib/sitemap/catalog", () => ({
   readSitemapPageDescriptors: mockReadSitemapPageDescriptors,
@@ -36,16 +41,17 @@ describe("sitemap index route", () => {
   });
 
   it("reports descriptor failures and returns a plain error response", async () => {
-    mockReadSitemapPageDescriptors.mockReturnValueOnce(
-      Effect.fail(new Error("descriptor read failed"))
-    );
+    const failure = new TestSitemapIndexError({
+      message: "descriptor read failed",
+    });
+    mockReadSitemapPageDescriptors.mockReturnValueOnce(Effect.fail(failure));
 
     const response = await GET();
 
     expect(response.status).toBe(500);
     expect(await response.text()).toBe("Internal Server Error");
     expect(mockCaptureServerException).toHaveBeenCalledWith(
-      expect.any(Error),
+      failure,
       undefined,
       { source: "sitemap-index" }
     );

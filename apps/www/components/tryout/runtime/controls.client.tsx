@@ -77,14 +77,12 @@ export function TryoutRuntimeControls({
 
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: () =>
-            completeSection({
-              attemptId: runtime.attemptId,
-              sectionKey: runtime.section.sectionKey,
-            }),
-          catch: (cause) => cause,
-        }).pipe(
+        Effect.tryPromise(() =>
+          completeSection({
+            attemptId: runtime.attemptId,
+            sectionKey: runtime.section.sectionKey,
+          })
+        ).pipe(
           Effect.tap(() =>
             Effect.sync(() => {
               closeDialog();

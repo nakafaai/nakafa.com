@@ -48,11 +48,9 @@ export const parseSyncArgs = Effect.fn("sync.parseArgs")(function* (
       const locale = locales.find((candidate) => candidate === localeArgument);
 
       if (!locale) {
-        return yield* Effect.fail(
-          new ScriptFailureError({
-            message: `Invalid locale: ${localeArgument ?? "missing"}`,
-          })
-        );
+        return yield* new ScriptFailureError({
+          message: `Invalid locale: ${localeArgument ?? "missing"}`,
+        });
       }
 
       options.locale = locale;
@@ -280,9 +278,9 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
     default:
       logError(`Unknown command: ${type}`);
       printUsage();
-      return yield* Effect.fail(
-        new ScriptFailureError({ message: `Unknown command: ${type}` })
-      );
+      return yield* new ScriptFailureError({
+        message: `Unknown command: ${type}`,
+      });
   }
 });
 

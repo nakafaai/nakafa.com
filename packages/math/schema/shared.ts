@@ -153,9 +153,7 @@ const matrixRowSchema = Schema.Array(valueInputSchema).pipe(
 );
 
 export const matrixSchema = Schema.Array(matrixRowSchema)
-  .pipe(Schema.mutable)
-  .pipe(Schema.minItems(1))
-  .pipe(Schema.mutable)
+  .pipe(Schema.mutable, Schema.minItems(1), Schema.mutable)
   .annotations({
     description:
       "Matrix rows as nested arrays of exact string values, for example [[1, 2], [3, 4]].",

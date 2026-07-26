@@ -2,7 +2,7 @@ import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import { preloadedQueryResult } from "convex/nextjs";
 import { ConvexError } from "convex/values";
-import { Effect } from "effect";
+import { type Cause, Effect } from "effect";
 import { cache } from "react";
 import { fetchAuthQuery, getToken, preloadAuthQuery } from "@/lib/auth/server";
 
@@ -31,16 +31,15 @@ function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
 
 /** Captures an unexpected school route error and preserves the original failure. */
 function captureSchoolRouteError(
-  error: unknown,
+  failure: Cause.UnknownException,
   context: Record<string | number, unknown>
 ) {
   return Effect.gen(function* () {
-    yield* Effect.tryPromise({
-      try: () => captureServerException(error, undefined, context),
-      catch: (cause) => cause,
-    }).pipe(Effect.ignore);
+    yield* Effect.tryPromise(() =>
+      captureServerException(failure.error, undefined, context)
+    ).pipe(Effect.ignore);
 
-    return yield* Effect.fail(error);
+    return yield* failure;
   });
 }
 
@@ -59,16 +58,14 @@ export const getSchoolRouteSnapshot = cache(
     }
 
     return Effect.runPromise(
-      Effect.tryPromise({
-        try: () =>
-          fetchAuthQuery(api.schools.queries.getSchoolBySlug, {
-            slug,
-          }),
-        catch: (error) => error,
-      }).pipe(
+      Effect.tryPromise(() =>
+        fetchAuthQuery(api.schools.queries.getSchoolBySlug, {
+          slug,
+        })
+      ).pipe(
         Effect.catchIf(
-          (error) =>
-            hasConvexErrorCode(error, [
+          (failure) =>
+            hasConvexErrorCode(failure.error, [
               "SCHOOL_NOT_FOUND",
               "MEMBERSHIP_NOT_FOUND",
             ]),
@@ -99,18 +96,16 @@ export async function preloadClassRoute({ classId }: { classId: string }) {
   }
 
   return Effect.runPromise(
-    Effect.tryPromise({
-      try: () =>
-        preloadAuthQuery(api.classes.queries.getClassRoute, { classId }),
-      catch: (error) => error,
-    }).pipe(
+    Effect.tryPromise(() =>
+      preloadAuthQuery(api.classes.queries.getClassRoute, { classId })
+    ).pipe(
       Effect.map((preloaded) => ({
         preloaded,
         value: preloadedQueryResult(preloaded),
       })),
       Effect.catchIf(
-        (error) =>
-          hasConvexErrorCode(error, [
+        (failure) =>
+          hasConvexErrorCode(failure.error, [
             "ACCESS_DENIED",
             "CLASS_ARCHIVED",
             "CLASS_NOT_FOUND",
@@ -136,16 +131,14 @@ export async function getSchoolSwitcherPage() {
   }
 
   return Effect.runPromise(
-    Effect.tryPromise({
-      try: () =>
-        fetchAuthQuery(api.schools.queries.getMySchoolsPage, {
-          paginationOpts: {
-            cursor: null,
-            numItems: SCHOOL_SWITCHER_PAGE_SIZE,
-          },
-        }),
-      catch: (error) => error,
-    }).pipe(
+    Effect.tryPromise(() =>
+      fetchAuthQuery(api.schools.queries.getMySchoolsPage, {
+        paginationOpts: {
+          cursor: null,
+          numItems: SCHOOL_SWITCHER_PAGE_SIZE,
+        },
+      })
+    ).pipe(
       Effect.catchAll((error) =>
         captureSchoolRouteError(error, {
           source: "school-switcher-page",

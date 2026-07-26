@@ -41,15 +41,13 @@ export function PostReactions({ post }: { post: ForumPost }) {
                   onClick={() => {
                     startTransition(() =>
                       Effect.runPromise(
-                        Effect.tryPromise({
-                          try: () =>
-                            toggleReaction({ postId: post._id, emoji }),
-                          catch: (cause) => cause,
-                        }).pipe(
+                        Effect.tryPromise(() =>
+                          toggleReaction({ postId: post._id, emoji })
+                        ).pipe(
                           Effect.asVoid,
-                          Effect.catchAll((cause) =>
+                          Effect.catchTag("UnknownException", ({ error }) =>
                             Effect.sync(() => {
-                              captureException(cause, {
+                              captureException(error, {
                                 source: "post-reaction-toggle",
                               });
                             })

@@ -168,11 +168,9 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   const countsResult = yield* Effect.either(getContentCounts(config));
   if (countsResult._tag === "Left") {
-    return yield* Effect.fail(
-      new ScriptFailureError({
-        message: `Failed to query database: ${getUnknownMessage(countsResult.left)}`,
-      })
-    );
+    return yield* new ScriptFailureError({
+      message: `Failed to query database: ${getUnknownMessage(countsResult.left)}`,
+    });
   }
 
   const counts = countsResult.right;
@@ -301,11 +299,9 @@ export const verify = Effect.fn("sync.verify")(function* (
   log("\n=== DATA INTEGRITY ===\n");
   const integrityResult = yield* Effect.either(getDataIntegrity(config));
   if (integrityResult._tag === "Left") {
-    return yield* Effect.fail(
-      new ScriptFailureError({
-        message: `Failed to query database: ${getUnknownMessage(integrityResult.left)}`,
-      })
-    );
+    return yield* new ScriptFailureError({
+      message: `Failed to query database: ${getUnknownMessage(integrityResult.left)}`,
+    });
   }
 
   const integrity = integrityResult.right;
@@ -352,11 +348,9 @@ export const verify = Effect.fn("sync.verify")(function* (
     verifyGraphIdentity(config, options)
   );
   if (graphIdentityResult._tag === "Left") {
-    return yield* Effect.fail(
-      new ScriptFailureError({
-        message: `Failed to verify graph identity: ${getUnknownMessage(graphIdentityResult.left)}`,
-      })
-    );
+    return yield* new ScriptFailureError({
+      message: `Failed to verify graph identity: ${getUnknownMessage(graphIdentityResult.left)}`,
+    });
   }
 
   allMatch = graphIdentityResult.right && allMatch;
@@ -366,11 +360,9 @@ export const verify = Effect.fn("sync.verify")(function* (
     verifyQuranRuntime(config, options)
   );
   if (quranRuntimeResult._tag === "Left") {
-    return yield* Effect.fail(
-      new ScriptFailureError({
-        message: `Failed to verify Quran runtime: ${getUnknownMessage(quranRuntimeResult.left)}`,
-      })
-    );
+    return yield* new ScriptFailureError({
+      message: `Failed to verify Quran runtime: ${getUnknownMessage(quranRuntimeResult.left)}`,
+    });
   }
   allMatch = quranRuntimeResult.right && allMatch;
 
@@ -386,7 +378,7 @@ export const verify = Effect.fn("sync.verify")(function* (
   } else {
     log("\nRun 'pnpm --filter @repo/backend sync' to fix");
   }
-  return yield* Effect.fail(
-    new ScriptFailureError({ message: "Content verification failed." })
-  );
+  return yield* new ScriptFailureError({
+    message: "Content verification failed.",
+  });
 });

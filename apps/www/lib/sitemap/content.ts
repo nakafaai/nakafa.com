@@ -29,9 +29,7 @@ export const buildSitemapContentPageRoutes = Effect.fn(
     }
 
     if (paths.has(route.path)) {
-      return yield* Effect.fail(
-        new DuplicateSitemapContentRouteError({ path: route.path })
-      );
+      return yield* new DuplicateSitemapContentRouteError({ path: route.path });
     }
 
     paths.add(route.path);

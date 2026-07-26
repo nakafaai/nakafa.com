@@ -104,12 +104,10 @@ const submitBatchToIndexNow = Effect.fn(
   });
 
   if (status !== HTTP_STATUS_CODE_OK) {
-    return yield* Effect.fail(
-      new IndexNowSubmitError({
-        cause: status,
-        message: `IndexNow batch ${batchCount} failed with HTTP ${status}.`,
-      })
-    );
+    return yield* new IndexNowSubmitError({
+      cause: status,
+      message: `IndexNow batch ${batchCount} failed with HTTP ${status}.`,
+    });
   }
 
   logger.success(`Batch ${batchCount} completed (${batch.length} URLs)`);

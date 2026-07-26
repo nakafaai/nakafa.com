@@ -56,12 +56,10 @@ export class MathService extends Effect.Service<MathService>()(
             });
 
             if (!response.ok) {
-              return yield* Effect.fail(
-                new MathCasRequestError({
-                  message: yield* readResponseError(response),
-                  status: response.status,
-                })
-              );
+              return yield* new MathCasRequestError({
+                message: yield* readResponseError(response),
+                status: response.status,
+              });
             }
 
             const payload = yield* Effect.tryPromise({

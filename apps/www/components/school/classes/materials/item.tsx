@@ -190,12 +190,9 @@ function MaterialGroupActions({
   function handleDelete() {
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: async () => {
-            await deleteGroup({ groupId: group._id });
-            toast.success(schoolT("material-deleted"));
-          },
-          catch: (error) => error,
+        Effect.tryPromise(async () => {
+          await deleteGroup({ groupId: group._id });
+          toast.success(schoolT("material-deleted"));
         }).pipe(
           Effect.catchAll(() =>
             Effect.sync(() => {

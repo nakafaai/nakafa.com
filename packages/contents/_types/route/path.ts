@@ -35,13 +35,11 @@ export function lookupNamespaceSegment(
     const segment = readNamespaceSegment(namespace, locale);
 
     if (!segment) {
-      return yield* Effect.fail(
-        new MissingPublicSlugError({
-          locale,
-          source: "route-surface",
-          value: namespace,
-        })
-      );
+      return yield* new MissingPublicSlugError({
+        locale,
+        source: "route-surface",
+        value: namespace,
+      });
     }
 
     return segment;
@@ -68,13 +66,11 @@ export function lookupDomainSlug(
     const slug = readDomainSlug(domains, kind, domain, locale);
 
     if (!slug) {
-      return yield* Effect.fail(
-        new MissingPublicSlugError({
-          locale,
-          source: `${kind}-domain`,
-          value: domain,
-        })
-      );
+      return yield* new MissingPublicSlugError({
+        locale,
+        source: `${kind}-domain`,
+        value: domain,
+      });
     }
 
     return slug;
@@ -183,14 +179,12 @@ export function uniqueRoutes<TRoute extends PublicRoute>(
       const existing = byPath.get(key);
 
       if (existing) {
-        return yield* Effect.fail(
-          new DuplicatePublicRouteError({
-            duplicateKind: route.kind,
-            existingKind: existing.kind,
-            locale: route.locale,
-            publicPath: route.publicPath,
-          })
-        );
+        return yield* new DuplicatePublicRouteError({
+          duplicateKind: route.kind,
+          existingKind: existing.kind,
+          locale: route.locale,
+          publicPath: route.publicPath,
+        });
       }
 
       byPath.set(key, route);

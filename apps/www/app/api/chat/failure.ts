@@ -3,7 +3,16 @@ import type { ModelId } from "@repo/ai/config/model";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { fetchAction } from "convex/nextjs";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+/** Expected Convex boundary failure while persisting an assistant marker. */
+export class PersistAssistantFailureError extends Schema.TaggedError<PersistAssistantFailureError>()(
+  "PersistAssistantFailureError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+  }
+) {}
 
 /**
  * Schedules a durable failed assistant marker through Convex.
@@ -38,6 +47,9 @@ export const persistAssistantFailure = Effect.fn(
         { token }
       ),
     catch: (error) =>
-      error instanceof Error ? error : new Error(String(error)),
+      new PersistAssistantFailureError({
+        cause: error,
+        message: "Unable to persist the failed assistant marker.",
+      }),
   });
 });

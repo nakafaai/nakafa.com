@@ -213,10 +213,9 @@ export function useQuranAudioControls({
       audio.onended = stopThisAudio;
 
       Effect.runFork(
-        Effect.tryPromise({
-          try: () => audio.play(),
-          catch: (error) => error,
-        }).pipe(Effect.catchAll(() => Effect.sync(handlePlaybackFailure)))
+        Effect.tryPromise(() => audio.play()).pipe(
+          Effect.catchAll(() => Effect.sync(handlePlaybackFailure))
+        )
       );
     }
 

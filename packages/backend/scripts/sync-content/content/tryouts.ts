@@ -338,11 +338,9 @@ const readSectionQuestions = Effect.fn("sync.readSectionQuestions")(
         logError(error);
       }
 
-      return yield* Effect.fail(
-        new ScriptFailureError({
-          message: `Failed to parse ${errors.length} try-out question source(s).`,
-        })
-      );
+      return yield* new ScriptFailureError({
+        message: `Failed to parse ${errors.length} try-out question source(s).`,
+      });
     }
 
     return questions;
@@ -373,11 +371,9 @@ const readQuestion = Effect.fn("sync.readQuestion")(function* (
   ]);
 
   if (!choices) {
-    return yield* Effect.fail(
-      new ScriptFailureError({
-        message: `Missing or invalid choices.ts for ${questionSourcePath}.`,
-      })
-    );
+    return yield* new ScriptFailureError({
+      message: `Missing or invalid choices.ts for ${questionSourcePath}.`,
+    });
   }
 
   const localeChoices = choices[source.locale];

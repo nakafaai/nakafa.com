@@ -225,20 +225,16 @@ export const syncCurriculumLessons = Effect.fn("sync.curriculumLessons")(
               return null;
             }
 
-            return yield* Effect.fail(
-              new ScriptFailureError({
-                message: `Missing curriculum lesson order for ${pathInfo.locale}:${pathInfo.slug}. Add this section to the typed Material source before syncing the mapped curriculum topic.`,
-              })
-            );
+            return yield* new ScriptFailureError({
+              message: `Missing curriculum lesson order for ${pathInfo.locale}:${pathInfo.slug}. Add this section to the typed Material source before syncing the mapped curriculum topic.`,
+            });
           }
 
           const { metadata, body } = yield* readMdxFile(file);
           if (sectionOrder.topic !== pathInfo.topic) {
-            return yield* Effect.fail(
-              new ScriptFailureError({
-                message: `Material lesson order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topic}, expected ${pathInfo.topic}.`,
-              })
-            );
+            return yield* new ScriptFailureError({
+              message: `Material lesson order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topic}, expected ${pathInfo.topic}.`,
+            });
           }
 
           const date = yield* parseDateToEpoch(metadata.date);
@@ -398,11 +394,9 @@ const readCurriculumLessonPlacementIndex = Effect.fn(
       const key = `${topic.locale}:${section.slug}`;
 
       if (orderBySlug.has(key)) {
-        return yield* Effect.fail(
-          new ScriptFailureError({
-            message: `Duplicate curriculum lesson material order for ${key}.`,
-          })
-        );
+        return yield* new ScriptFailureError({
+          message: `Duplicate curriculum lesson material order for ${key}.`,
+        });
       }
 
       orderBySlug.set(key, {

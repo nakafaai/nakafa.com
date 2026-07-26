@@ -30,10 +30,8 @@ export const validateCheckoutRequest = Effect.fn(
   });
 
   if (successUrl.origin !== siteOrigin) {
-    return yield* Effect.fail(
-      invalidSuccessUrl(
-        "Checkout success URL must stay on the primary site origin."
-      )
+    return yield* invalidSuccessUrl(
+      "Checkout success URL must stay on the primary site origin."
     );
   }
 

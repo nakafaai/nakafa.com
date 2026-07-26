@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { Effect } from "effect";
+import { Data, Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
@@ -14,6 +14,11 @@ const publishedMocks = vi.hoisted(() => ({
 const previewMocks = vi.hoisted(() => ({
   matchesPreviewRoute: vi.fn(),
 }));
+
+/** Test-only typed runtime lookup failure. */
+class TestRuntimeRouteError extends Data.TaggedError("TestRuntimeRouteError")<{
+  readonly message: string;
+}> {}
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: runtimeMocks.getRuntimeContentRoute,
@@ -229,7 +234,7 @@ describe("source-backed public html route rejection", () => {
 
   it("propagates exact article lookup failures", async () => {
     runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
-      Effect.fail(new Error("runtime unavailable"))
+      Effect.fail(new TestRuntimeRouteError({ message: "runtime unavailable" }))
     );
 
     await expect(

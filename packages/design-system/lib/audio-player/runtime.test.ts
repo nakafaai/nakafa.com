@@ -14,7 +14,7 @@ import {
   setAudioPlayerPlaybackRate,
   stabilizeAudioPlayerSnapshot,
 } from "@repo/design-system/lib/audio-player/runtime";
-import { Effect } from "effect";
+import { Effect, Either } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const TEST_ITEM = {
@@ -195,9 +195,14 @@ describe("audio player commands", () => {
       throw synchronousCause;
     });
 
-    const synchronousError = Effect.runSync(
-      beginAudioPlayerPlayback(synchronous.audio).pipe(Effect.flip)
+    const synchronousResult = Effect.runSync(
+      Effect.either(beginAudioPlayerPlayback(synchronous.audio))
     );
+    expect(Either.isLeft(synchronousResult)).toBe(true);
+    if (Either.isRight(synchronousResult)) {
+      throw new Error("Expected synchronous playback preparation to fail.");
+    }
+    const synchronousError = synchronousResult.left;
     expect(synchronousError).toMatchObject({
       cause: synchronousCause,
       operation: "play",

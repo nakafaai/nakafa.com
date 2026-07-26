@@ -25,23 +25,19 @@ function isPositiveInteger(value: number) {
 export function getSurah(id: number): Effect.Effect<Surah, SurahNotFoundError> {
   return Effect.gen(function* () {
     if (!isPositiveInteger(id)) {
-      return yield* Effect.fail(
-        new SurahNotFoundError({
-          message: "Surah number must be a positive integer.",
-          surahNumber: id,
-        })
-      );
+      return yield* new SurahNotFoundError({
+        message: "Surah number must be a positive integer.",
+        surahNumber: id,
+      });
     }
 
     const surah = quran.find((item) => item.number === id);
     const result = Schema.decodeUnknownOption(SurahSchema)(surah);
     if (Option.isNone(result)) {
-      return yield* Effect.fail(
-        new SurahNotFoundError({
-          message: "Surah was not found.",
-          surahNumber: id,
-        })
-      );
+      return yield* new SurahNotFoundError({
+        message: "Surah was not found.",
+        surahNumber: id,
+      });
     }
 
     return result.value;

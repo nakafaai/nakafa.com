@@ -32,6 +32,20 @@ npm install @effect/language-service --save-dev
 3. Configure your editor to use workspace TypeScript:
    - **VSCode**: F1 → "TypeScript: Select TypeScript Version" → "Use Workspace Version"
    - **JetBrains**: Settings → Languages & Frameworks → TypeScript → Use workspace version
+   - **Zed**: Use the repository-pinned `vtsls` configuration in `.zed/settings.json`.
+     Nakafa intentionally resolves the JavaScript TypeScript 6 API for the Effect language
+     plugin while its `tsc` command uses native TypeScript 7. The Zed `tsgo` extension uses
+     Microsoft's upstream native server; it does not automatically substitute the
+     Effect-enhanced `@effect/tsgo` fork.
+
+### TypeScript 7 and `@effect/tsgo`
+
+The installed `@effect/language-service` README directs TypeScript 7 projects to
+`@effect/tsgo`. That fork supports Effect 3 and Effect 4, but its official project still
+labels it alpha and says it targets Effect 4 primarily. Do not replace this repository's
+stable editor path or CI compiler with it automatically. Re-evaluate it as an explicit
+toolchain migration after its release status, executable packaging, editor integration,
+and full repository gates are verified.
 
 ### Features
 

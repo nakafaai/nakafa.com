@@ -88,12 +88,10 @@ export const claimContentAnalyticsPartition = Effect.fn(
   processPartition: ProcessContentAnalyticsPartitionReference
 ) {
   if (!isContentAnalyticsPartition(args.partition)) {
-    return yield* Effect.fail(
-      new InvalidContentAnalyticsPartitionError({
-        code: invalidContentAnalyticsPartitionCode,
-        message: "Content analytics partition is out of range.",
-      })
-    );
+    return yield* new InvalidContentAnalyticsPartitionError({
+      code: invalidContentAnalyticsPartitionCode,
+      message: "Content analytics partition is out of range.",
+    });
   }
 
   const queuedItem = yield* Effect.tryPromise({
@@ -184,12 +182,10 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
   processPartition: ProcessContentAnalyticsPartitionReference
 ) {
   if (!isContentAnalyticsPartition(args.partition)) {
-    return yield* Effect.fail(
-      new InvalidContentAnalyticsPartitionError({
-        code: invalidContentAnalyticsPartitionCode,
-        message: "Content analytics partition is out of range.",
-      })
-    );
+    return yield* new InvalidContentAnalyticsPartitionError({
+      code: invalidContentAnalyticsPartitionCode,
+      message: "Content analytics partition is out of range.",
+    });
   }
 
   const now = yield* Clock.currentTimeMillis;

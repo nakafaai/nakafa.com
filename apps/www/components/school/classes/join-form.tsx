@@ -59,15 +59,12 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   function handlePublicJoin() {
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: async () => {
-            await joinPublicClass({ classId });
-            router.replace(pathname);
-            router.refresh();
-          },
-          catch: (error) => error,
+        Effect.tryPromise(async () => {
+          await joinPublicClass({ classId });
+          router.replace(pathname);
+          router.refresh();
         }).pipe(
-          Effect.catchAll((error) =>
+          Effect.catchTag("UnknownException", ({ error }) =>
             reportClientException(error, {
               source: "school-class-join-public",
             }).pipe(
@@ -90,15 +87,12 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise({
-          try: async () => {
-            await joinClass(value);
-            router.replace(pathname);
-            router.refresh();
-          },
-          catch: (error) => error,
+        Effect.tryPromise(async () => {
+          await joinClass(value);
+          router.replace(pathname);
+          router.refresh();
         }).pipe(
-          Effect.catchAll((error) =>
+          Effect.catchTag("UnknownException", ({ error }) =>
             reportClientException(error, {
               source: "school-class-join-private",
             }).pipe(

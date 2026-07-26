@@ -4,6 +4,10 @@ import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type {
+  CodeClipboardUnavailableError,
+  CodeClipboardWriteError,
+} from "@repo/design-system/lib/code-block/clipboard";
 import { writeCodeToClipboard } from "@repo/design-system/lib/code-block/clipboard";
 import { useCodeBlock } from "@repo/design-system/lib/code-block/context";
 import { cn } from "@repo/design-system/lib/utils";
@@ -50,6 +54,20 @@ export const CodeBlockCopyButton = ({
       return;
     }
 
+    const handleUnavailableError = (error: CodeClipboardUnavailableError) =>
+      Effect.sync(() => {
+        setIsCopied(false);
+        captureException(error, { source: "code-block-copy" });
+        onError?.(error);
+      });
+    const handleWriteError = (error: CodeClipboardWriteError) =>
+      Effect.sync(() => {
+        const cause = error.cause instanceof Error ? error.cause : error;
+
+        setIsCopied(false);
+        captureException(cause, { source: "code-block-copy" });
+        onError?.(cause);
+      });
     const copyProgram = Effect.gen(function* () {
       yield* writeCodeToClipboard(navigator.clipboard, code);
       yield* Effect.sync(() => {
@@ -59,22 +77,10 @@ export const CodeBlockCopyButton = ({
       yield* Effect.sleep(Duration.millis(timeout));
       yield* Effect.sync(() => setIsCopied(false));
     }).pipe(
-      Effect.catchTag("CodeClipboardUnavailableError", (error) =>
-        Effect.sync(() => {
-          setIsCopied(false);
-          captureException(error, { source: "code-block-copy" });
-          onError?.(error);
-        })
-      ),
-      Effect.catchTag("CodeClipboardWriteError", (error) =>
-        Effect.sync(() => {
-          const cause = error.cause instanceof Error ? error.cause : error;
-
-          setIsCopied(false);
-          captureException(cause, { source: "code-block-copy" });
-          onError?.(cause);
-        })
-      )
+      Effect.catchTags({
+        CodeClipboardUnavailableError: handleUnavailableError,
+        CodeClipboardWriteError: handleWriteError,
+      })
     );
     const previousFiber = copyFiberRef.current;
     const nextProgram = previousFiber
