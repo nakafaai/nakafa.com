@@ -6,6 +6,8 @@ import {
   contentSearchInputValidator,
   contentSearchResultValidator,
 } from "@repo/backend/convex/contents/helpers/search/schema";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { Effect } from "effect";
 
 /**
  * Searches synced content with stable section-aware relevance ordering.
@@ -20,16 +22,15 @@ export const search = query({
   args: contentSearchInputValidator,
   returns: contentSearchResultValidator,
   /** Runs a bounded section-aware search over the durable content read model. */
-  handler: async (ctx, args) => {
+  handler: (ctx, args) => {
     const queryTexts = validateContentSearchInput(args);
     const scanLimit = args.offset + args.limit + 1;
-    const documents = await readContentSearchDocuments(
-      ctx,
-      args,
-      queryTexts,
-      scanLimit
+    return runConvexProgram(
+      readContentSearchDocuments(ctx, args, queryTexts, scanLimit).pipe(
+        Effect.map((documents) =>
+          buildContentSearchResult(args, documents, queryTexts)
+        )
+      )
     );
-
-    return buildContentSearchResult(args, documents, queryTexts);
   },
 });

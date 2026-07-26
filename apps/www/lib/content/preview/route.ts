@@ -3,14 +3,11 @@ import "server-only";
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import { previewDocumentRoute } from "@nakafa/aksara-contracts/preview/document";
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
-import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { readNamespaceSegment } from "@repo/contents/_types/route/path";
-import { PublicContentRouteSchema } from "@repo/contents/_types/route/schema";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option } from "effect";
 import { hasLocale } from "next-intl";
-import { PreviewIntegrityError } from "@/lib/content/preview/errors";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 
 /** Exact public route identity checked before Convex route rejection. */
@@ -68,29 +65,6 @@ export function matchesMaterialPreviewRoute(
   }
 
   return true;
-}
-
-/** Derives one exact Nakafa read-model route from a ready preview projection. */
-export function decodeMaterialPreviewRoute(
-  projection: MaterialLessonProjection
-) {
-  const { metadata, ...routeProjection } = projection;
-
-  return Schema.decodeUnknown(PublicContentRouteSchema)({
-    description: metadata.description,
-    kind: routeProjection.kind,
-    locale: routeProjection.locale,
-    materialKey: routeProjection.materialKey,
-    order: routeProjection.order,
-    parentPath: routeProjection.parentPath,
-    publicPath: routeProjection.publicPath,
-    sectionKey: routeProjection.sectionKey,
-    sitemap: routeProjection.sitemap,
-    sourcePath: routeProjection.contentKey,
-    title: metadata.title,
-  }).pipe(
-    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
-  );
 }
 
 /** Resolves a next-intl material rewrite back to its canonical public path. */

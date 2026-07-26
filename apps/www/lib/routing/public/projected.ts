@@ -3,6 +3,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale } from "next-intl";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
+import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getRuntimePublicRoute } from "@/lib/content/runtime/routes";
@@ -62,6 +63,12 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     }
     if (ownership.kind === "missing") {
       return locale;
+    }
+  }
+  if (surface.key === "curriculum") {
+    const ownership = yield* readPublishedProgramPath(locale, publicPath);
+    if (ownership.managed) {
+      return ownership.route?.sitemap ? null : locale;
     }
   }
 

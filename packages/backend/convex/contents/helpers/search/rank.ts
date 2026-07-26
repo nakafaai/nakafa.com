@@ -1,8 +1,8 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { ContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/groups";
 
 /** Minimal persisted search fields required by deterministic reranking. */
 export type ContentSearchRankDocument = Pick<
-  Doc<"contentSearch">,
+  ContentSearchDocument,
   | "description"
   | "locale"
   | "route"

@@ -41,6 +41,7 @@ const runtimeMocks = vi.hoisted(() => ({
   readActiveIdentity: vi.fn(),
   readArticleCategory: vi.fn(),
   readContent: vi.fn(),
+  readProgramPath: vi.fn(),
   readPublic: vi.fn(),
 }));
 const previewMocks = vi.hoisted(() => ({
@@ -82,6 +83,9 @@ vi.mock("@/lib/content/published/route", () => ({
 vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: runtimeMocks.readActiveIdentity,
 }));
+vi.mock("@/lib/content/program/path", () => ({
+  readPublishedProgramPath: runtimeMocks.readProgramPath,
+}));
 
 describe("proxy", () => {
   beforeEach(() => {
@@ -93,6 +97,9 @@ describe("proxy", () => {
       .mockReturnValue(
         Effect.succeed({ kind: "subject-lesson", sitemap: true })
       );
+    runtimeMocks.readProgramPath
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ managed: false, route: null }));
     runtimeMocks.readActive.mockReset().mockReturnValue(
       Effect.succeed({
         activeReleaseId: "release-active",

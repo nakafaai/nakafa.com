@@ -2,7 +2,12 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { readProgramCatalog } from "@repo/backend/convex/contentRelease/program/catalog";
 import { readProgramContext } from "@repo/backend/convex/contentRelease/program/context";
 import { readProgramPage } from "@repo/backend/convex/contentRelease/program/page";
+import { readProgramPath } from "@repo/backend/convex/contentRelease/program/path";
 import { readProgramRoute } from "@repo/backend/convex/contentRelease/program/route";
+import {
+  readProgramBuckets,
+  readProgramSitemap,
+} from "@repo/backend/convex/contentRelease/program/sitemap";
 import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
@@ -10,6 +15,7 @@ import {
   paginationResultValidator,
 } from "convex/server";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const programPageValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),
@@ -50,8 +56,27 @@ const programRouteValidator = v.object({
 const programContextValidator = v.object({
   groupJson: v.union(v.string(), v.null()),
   managed: v.boolean(),
+  mappingJson: v.union(v.string(), v.null()),
   parentJson: v.union(v.string(), v.null()),
 });
+
+const programPathValidator = v.object({
+  managed: v.boolean(),
+  routeJson: v.union(v.string(), v.null()),
+});
+
+const programBucketsValidator = v.object({
+  buckets: v.array(v.string()),
+  managed: v.boolean(),
+  routeCount: v.number(),
+});
+
+const programSitemapValidator = v.union(
+  v.null(),
+  v.object({
+    routes: v.array(v.object({ publicPath: v.string() })),
+  })
+);
 
 /** Returns the bounded learning-program catalog and localized root routes. */
 export const catalog = query({
@@ -67,17 +92,26 @@ export const context = query({
     locale: localeValidator,
     materialKey: v.string(),
     nodeKey: v.string(),
+    parentPath: v.string(),
     programKey: v.string(),
+    publicPath: v.string(),
   },
   returns: programContextValidator,
   handler: (ctx, args) =>
     runConvexProgram(
-      readProgramContext(
-        ctx,
-        args.locale,
-        args.programKey,
-        args.nodeKey,
-        args.materialKey
+      readProgramContext(ctx, args.locale, {
+        materialKey: args.materialKey,
+        nodeKey: args.nodeKey,
+        parentPath: args.parentPath,
+        programKey: args.programKey,
+        publicPath: args.publicPath,
+      }).pipe(
+        Effect.map(({ context: resolved, managed }) => ({
+          groupJson: resolved?.groupJson ?? null,
+          managed,
+          mappingJson: resolved?.mappingJson ?? null,
+          parentJson: resolved?.parentJson ?? null,
+        }))
       )
     ),
 });
@@ -103,10 +137,34 @@ export const page = query({
     ),
 });
 
+/** Resolves lightweight curriculum ownership by one exact public path. */
+export const path = query({
+  args: { locale: localeValidator, publicPath: v.string() },
+  returns: programPathValidator,
+  handler: (ctx, { locale, publicPath }) =>
+    runConvexProgram(readProgramPath(ctx, locale, publicPath)),
+});
+
 /** Resolves one complete indexed curriculum page model by public path. */
 export const route = query({
   args: { locale: localeValidator, publicPath: v.string() },
   returns: programRouteValidator,
   handler: (ctx, { locale, publicPath }) =>
     runConvexProgram(readProgramRoute(ctx, locale, publicPath)),
+});
+
+/** Returns non-empty curriculum sitemap partitions for one locale. */
+export const sitemapBuckets = query({
+  args: { locale: localeValidator },
+  returns: programBucketsValidator,
+  handler: (ctx, { locale }) =>
+    runConvexProgram(readProgramBuckets(ctx, locale)),
+});
+
+/** Returns one verified curriculum sitemap partition. */
+export const sitemapPage = query({
+  args: { bucket: v.string(), locale: localeValidator },
+  returns: programSitemapValidator,
+  handler: (ctx, { bucket, locale }) =>
+    runConvexProgram(readProgramSitemap(ctx, locale, bucket)),
 });

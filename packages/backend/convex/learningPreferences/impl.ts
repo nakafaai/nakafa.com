@@ -3,32 +3,11 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import {
-  getLearningProgramByKey,
-  toLearningProgramSummary,
-} from "@repo/backend/convex/learningPrograms/impl";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { readTryoutCountryCode } from "@repo/contents/_types/tryout/countries";
 import { ConvexError } from "convex/values";
 
-const CURRICULUM_PROGRAM_LIMIT = 50;
-
 type PreferenceCtx = MutationCtx | QueryCtx;
-
-/** Converts a catalog program row into the compact curriculum option shown in UI. */
-export function toCurriculumProgramOption(
-  program: Doc<"learningPrograms">,
-  locale?: Locale
-) {
-  const summary = toLearningProgramSummary(program, locale);
-
-  return {
-    countryCode: program.providerHomeCountry,
-    key: summary.key,
-    publicSlug: summary.publicSlug,
-    title: summary.title,
-  };
-}
 
 /** Converts a try-out country row into the compact option used by navigation. */
 export function toTryoutCountryOption(country: Doc<"tryoutCountries">) {
@@ -40,6 +19,7 @@ export function toTryoutCountryOption(country: Doc<"tryoutCountries">) {
   };
 }
 
+/** Resolves the country code owned by one authored try-out country key. */
 function readSourceCountryCode(countryKey: string) {
   const countryCode = readTryoutCountryCode(countryKey);
 
@@ -53,21 +33,6 @@ function readSourceCountryCode(countryKey: string) {
   return countryCode;
 }
 
-/** Checks whether one learning program can be used as a curriculum preference. */
-export function isSchoolCurriculumProgram(program: Doc<"learningPrograms">) {
-  return program.kind === "school-curriculum";
-}
-
-/** Reads every curriculum program option from the catalog in display order. */
-export async function listSchoolCurriculumPrograms(ctx: PreferenceCtx) {
-  return await ctx.db
-    .query("learningPrograms")
-    .withIndex("by_kind_and_displayOrder", (q) =>
-      q.eq("kind", "school-curriculum")
-    )
-    .take(CURRICULUM_PROGRAM_LIMIT);
-}
-
 /** Loads the saved preference row for one app user. */
 export async function getLearningPreferenceByUserId(
   ctx: PreferenceCtx,
@@ -77,20 +42,6 @@ export async function getLearningPreferenceByUserId(
     .query("learningPreferences")
     .withIndex("by_userId", (q) => q.eq("userId", userId))
     .unique();
-}
-
-/** Loads one school-curriculum program by its stable program key. */
-export async function getSchoolCurriculumProgramByKey(
-  ctx: PreferenceCtx,
-  programKey: string
-) {
-  const program = await getLearningProgramByKey(ctx, programKey);
-
-  if (!(program && isSchoolCurriculumProgram(program))) {
-    return null;
-  }
-
-  return program;
 }
 
 /** Loads one active try-out country by source key and locale. */
@@ -115,48 +66,6 @@ export async function getActiveTryoutCountryByKey({
   }
 
   return country;
-}
-
-/** Reads the current curriculum from explicit preference, then onboarding profile. */
-export async function getCurrentCurriculumProgram(
-  ctx: PreferenceCtx,
-  userId: Id<"users">
-) {
-  const preference = await getLearningPreferenceByUserId(ctx, userId);
-
-  if (preference?.preferredCurriculumProgramKey) {
-    const program = await getSchoolCurriculumProgramByKey(
-      ctx,
-      preference.preferredCurriculumProgramKey
-    );
-
-    if (program) {
-      return {
-        preferredCurriculumProgramKey: preference.preferredCurriculumProgramKey,
-        program,
-      };
-    }
-  }
-
-  const profile = await ctx.db
-    .query("learningProfiles")
-    .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .unique();
-
-  if (!profile) {
-    return null;
-  }
-
-  const program = await ctx.db.get(profile.programId);
-
-  if (!(program && isSchoolCurriculumProgram(program))) {
-    return null;
-  }
-
-  return {
-    preferredCurriculumProgramKey: program.key,
-    program,
-  };
 }
 
 /** Reads the current explicit try-out country preference. */

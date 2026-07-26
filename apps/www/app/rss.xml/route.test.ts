@@ -6,10 +6,15 @@ import { GET } from "@/app/rss.xml/route";
 const mockFetchRuntimeQuranSurahs = vi.hoisted(() => vi.fn());
 const mockListRuntimeLatestContentRoutes = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestArticles = vi.hoisted(() => vi.fn());
+const mockReadPublishedLatestMaterials = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/discovery", () => ({
   /** Supplies deterministic published article rows for the RSS route test. */
   readPublishedLatestArticles: mockReadPublishedLatestArticles,
+}));
+vi.mock("@/lib/content/material/discovery", () => ({
+  /** Supplies deterministic published material rows for the RSS route test. */
+  readPublishedLatestMaterials: mockReadPublishedLatestMaterials,
 }));
 
 vi.mock("@/lib/content/runtime/pages", () => ({
@@ -38,6 +43,7 @@ describe("rss route", () => {
     mockFetchRuntimeQuranSurahs.mockReset();
     mockListRuntimeLatestContentRoutes.mockReset();
     mockReadPublishedLatestArticles.mockReset();
+    mockReadPublishedLatestMaterials.mockReset();
 
     mockFetchRuntimeQuranSurahs.mockResolvedValue([
       {
@@ -49,6 +55,9 @@ describe("rss route", () => {
     ]);
     mockReadPublishedLatestArticles.mockReturnValue(
       Effect.succeed({ articles: [], managed: false })
+    );
+    mockReadPublishedLatestMaterials.mockReturnValue(
+      Effect.succeed({ managed: false, materials: [] })
     );
     mockListRuntimeLatestContentRoutes.mockImplementation(({ section }) =>
       Effect.succeed(
@@ -116,6 +125,31 @@ describe("rss route", () => {
     expect(text).not.toContain("<![CDATA[Article title]]>");
     expect(mockListRuntimeLatestContentRoutes).not.toHaveBeenCalledWith(
       expect.objectContaining({ section: "articles" })
+    );
+  });
+
+  it("replaces source-backed materials after published ownership activates", async () => {
+    mockReadPublishedLatestMaterials.mockReturnValue(
+      Effect.succeed({
+        managed: true,
+        materials: [
+          {
+            authors: [{ name: "Nabil Akbarazzima Fatih" }],
+            date: "2025-04-27",
+            description: "Understand functions as input-output relationships.",
+            publicPath:
+              "subjects/mathematics/function-composition-inverse-function/function-concept",
+            title: "Function Concept",
+          },
+        ],
+      })
+    );
+
+    const text = await (await GET()).text();
+
+    expect(text).toContain("<![CDATA[Function Concept]]>");
+    expect(mockListRuntimeLatestContentRoutes).not.toHaveBeenCalledWith(
+      expect.objectContaining({ section: "material" })
     );
   });
 });

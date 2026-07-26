@@ -1,11 +1,10 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers/search/constants";
 import { buildContentSearchExcerpt } from "@repo/backend/convex/contents/helpers/search/excerpt";
+import type { ContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/groups";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import type { Infer } from "convex/values";
 
 type ContentSearchInput = Infer<typeof contentSearchInputValidator>;
-type ContentSearchDocument = Doc<"contentSearch">;
 
 /** Builds the stable paginated search response shape used by tools and UI. */
 export function buildContentSearchResult(

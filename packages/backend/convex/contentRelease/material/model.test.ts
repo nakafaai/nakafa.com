@@ -193,7 +193,10 @@ describe("contentRelease/material/model", () => {
       for (let order = 3; order <= 101; order += 1) {
         const projection = makeMaterialProjection("en", order);
         await ctx.db.insert("materialCatalog", {
+          assetId: projection.graph.assetId,
+          bucket: "abc",
           contentKey: projection.contentKey,
+          date: projection.metadata.date,
           locale: projection.locale,
           materialKey: projection.materialKey,
           order: projection.order,

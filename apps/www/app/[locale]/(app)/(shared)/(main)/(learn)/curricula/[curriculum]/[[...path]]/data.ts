@@ -244,8 +244,12 @@ function isMaterialCardListRoute(route: PublicCurriculumRoute) {
  * Root pages use these groups for SD/SMP/SMA or official pathway stages,
  * while child pages without a display group keep one unlabelled section.
  */
-function groupCurriculumChildren(routes: readonly PublicCurriculumRoute[]) {
-  const groups = new Map<string, PublicCurriculumRoute[]>();
+export function groupCurriculumChildren<
+  Route extends {
+    readonly displayGroupTitle?: string;
+  },
+>(routes: readonly Route[]) {
+  const groups = new Map<string, Route[]>();
 
   for (const route of routes) {
     const groupTitle = route.displayGroupTitle ?? "";

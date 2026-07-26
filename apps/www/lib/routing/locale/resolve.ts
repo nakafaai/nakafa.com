@@ -1,18 +1,13 @@
-import { isMaterialLessonRoute } from "@repo/contents/_types/route/content";
-import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
 import { loadStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
-import type {
-  PublicContentRoute,
-  PublicRoute,
-} from "@repo/contents/_types/route/schema";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Data, Effect } from "effect";
 import { hasLocale } from "next-intl";
 import {
-  readMaterialContextQuery,
-  toMaterialContextQueryString,
-} from "@/lib/routing/material/query";
+  MissingLocalizedRouteProjectionError,
+  readProjectedRouteSuffix,
+} from "@/lib/routing/locale/project";
+import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import { projectLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
 /** Locale values accepted by next-intl routing and public route projection. */
@@ -38,14 +33,6 @@ class InvalidLocalizedHrefError extends Data.TaggedError(
 )<{
   cause: unknown;
   href: string;
-}> {}
-
-/** Raised when a localized route exists but has no target-locale projection. */
-export class MissingLocalizedRouteProjectionError extends Data.TaggedError(
-  "MissingLocalizedRouteProjectionError"
-)<{
-  locale: Locale;
-  publicPath: string;
 }> {}
 
 const URL_BASE = "https://nakafa.com";
@@ -102,53 +89,6 @@ function isProjectedNamespace(publicPath: string, locale: Locale) {
   );
 }
 
-/** Narrows projected route rows to canonical source-backed content rows. */
-function isContentRoute(route: PublicRoute): route is PublicContentRoute {
-  return route.kind !== "curriculum-context";
-}
-
-/**
- * Preserves only validated material context state across localized projections.
- *
- * Other projected routes intentionally drop query/hash state because localized
- * source-owned slugs and heading anchors are not guaranteed to be equivalent.
- */
-function readProjectedRouteSuffix({
-  index,
-  parsed,
-  route,
-  targetRoute,
-}: {
-  index: PublicLearningIndex;
-  parsed: ParsedLocalizedHref;
-  route: PublicRoute;
-  targetRoute: PublicRoute;
-}) {
-  if (
-    !(
-      isContentRoute(route) &&
-      isContentRoute(targetRoute) &&
-      isMaterialLessonRoute(route) &&
-      isMaterialLessonRoute(targetRoute)
-    )
-  ) {
-    return "";
-  }
-
-  const context = readMaterialContextQuery(parsed.search);
-  const projectedContext = index.projectMaterialContextToLocale({
-    context,
-    currentRoute: route,
-    targetRoute,
-  });
-
-  if (!projectedContext) {
-    return "";
-  }
-
-  return toMaterialContextQueryString(projectedContext);
-}
-
 /**
  * Resolves a browser href to the target locale's route-owned navigation href.
  *
@@ -186,6 +126,16 @@ export const resolveLocalizedNavigationHref = Effect.fn(
     );
   }
 
+  const publishedHref = yield* readPublishedLocalizedHref({
+    currentLocale: parsed.currentLocale,
+    locale: input.locale,
+    publicPath: parsed.publicPath,
+    search: parsed.search,
+  });
+  if (publishedHref) {
+    return publishedHref;
+  }
+
   const index = yield* loadStaticPublicLearningIndex();
   const projectedRoute = index.resolveRouteByPath(
     parsed.publicPath,
@@ -209,8 +159,8 @@ export const resolveLocalizedNavigationHref = Effect.fn(
       targetRoute.publicPath,
       readProjectedRouteSuffix({
         index,
-        parsed,
         route: projectedRoute,
+        search: parsed.search,
         targetRoute,
       })
     );

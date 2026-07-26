@@ -1,272 +1,72 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
+import { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
+import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
+import { interleaveSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
+import {
+  getPublishedSearchFamilies,
+  readPublishedSearchDocuments,
+} from "@repo/backend/convex/contents/helpers/search/published";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
-import { cleanSlug } from "@repo/utilities/helper";
+import { readSourceSearchDocuments } from "@repo/backend/convex/contents/helpers/search/source";
+import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
 import type { Infer } from "convex/values";
+import { Effect } from "effect";
 
 type ContentSearchInput = Infer<typeof contentSearchInputValidator>;
-type ContentSearchDocument = Doc<"contentSearch">;
 
-const tryoutQuestionSourcePathPrefix = "question-bank/tryout/";
-const routeSeparatorPattern = /[/_-]+/g;
-
-/** Reads a bounded search page from the derived content search table. */
-export async function readContentSearchDocuments(
+/** Reads a bounded page across active Aksara and still-unmanaged sources. */
+export const readContentSearchDocuments = Effect.fn(
+  "contents.search.readDocuments"
+)(function* (
   ctx: QueryCtx,
   args: ContentSearchInput,
   queryTexts: readonly string[],
   scanLimit: number
 ) {
-  if (queryTexts.length === 0) {
-    return browseContent(ctx, args, scanLimit);
-  }
-
-  const queryGroups = await Promise.all(
-    queryTexts.map((queryText) =>
-      searchContent(ctx, args, queryText, scanLimit)
-    )
-  );
-
-  return interleaveDocumentGroups(queryGroups);
-}
-
-/** Runs one full-text query against title, prose, and route indexes in parallel. */
-async function searchContent(
-  ctx: QueryCtx,
-  args: ContentSearchInput,
-  queryText: string,
-  scanLimit: number
-) {
-  const routeQueryText = getRouteSearchText(queryText);
-  const [titleDocuments, textDocuments, routeDocuments, routeLookupDocument] =
-    await Promise.all([
-      ctx.db
-        .query("contentSearch")
-        .withSearchIndex("search_title", (q) => {
-          const builder = q
-            .search("title", queryText)
-            .eq("locale", args.locale);
-
-          if (!args.section) {
-            return builder;
-          }
-
-          return builder.eq("section", args.section);
-        })
-        .take(scanLimit),
-      ctx.db
-        .query("contentSearch")
-        .withSearchIndex("search_text", (q) => {
-          const builder = q.search("text", queryText).eq("locale", args.locale);
-
-          if (!args.section) {
-            return builder;
-          }
-
-          return builder.eq("section", args.section);
-        })
-        .take(scanLimit),
-      searchRoutes(ctx, args, routeQueryText, scanLimit),
-      readExactRouteContent(ctx, args, queryText),
+  if (args.section === "quran" || args.section === "tryout") {
+    return yield* readSourceSearchDocuments(ctx, args, queryTexts, scanLimit, [
+      args.section,
     ]);
-  const routeLookupDocuments = routeLookupDocument ? [routeLookupDocument] : [];
-
-  const searchGroups = [titleDocuments, textDocuments, routeDocuments];
-  const hasTryoutContext = searchGroups
-    .flat()
-    .some(
-      (document) =>
-        document.section === "tryout" ||
-        document.sourcePath.startsWith(tryoutQuestionSourcePathPrefix)
-    );
-  const documents = hasTryoutContext
-    ? appendDocumentGroups([
-        routeLookupDocuments,
-        routeDocuments,
-        textDocuments,
-        titleDocuments,
-      ])
-    : appendDocumentGroups([
-        routeLookupDocuments,
-        titleDocuments,
-        textDocuments,
-        routeDocuments,
-      ]);
-
-  if (hasTryoutContext) {
-    // Try-out question titles are often generic, so route and body text carry
-    // the discriminating country, exam, set, section, and question context.
-    return rankContentSearchDocuments(documents, queryText);
   }
+  const owner = yield* loadSearchOwner(ctx);
+  const publishedFamilies = getPublishedSearchFamilies(owner, args.section);
+  const sourceSections = getSourceSections(owner, args.section);
+  const [published, source] = yield* Effect.all(
+    [
+      owner && publishedFamilies.length > 0
+        ? readPublishedSearchDocuments(
+            ctx,
+            args,
+            queryTexts,
+            scanLimit,
+            owner,
+            publishedFamilies
+          )
+        : Effect.succeed([]),
+      readSourceSearchDocuments(
+        ctx,
+        args,
+        queryTexts,
+        scanLimit,
+        sourceSections
+      ),
+    ],
+    { concurrency: "unbounded" }
+  );
+  return interleaveSearchGroups([published, source]);
+});
 
-  return documents;
-}
-
-/** Converts path-like route queries into the token form Convex search expects. */
-function getRouteSearchText(queryText: string) {
-  return queryText.replace(routeSeparatorPattern, " ").trim();
-}
-
-/** Searches route tokens through the dedicated route search index. */
-function searchRoutes(
-  ctx: QueryCtx,
-  args: ContentSearchInput,
-  routeQueryText: string,
-  scanLimit: number
+/** Returns only sections whose source ownership remains with Nakafa. */
+function getSourceSections(
+  owner: Effect.Effect.Success<ReturnType<typeof loadSearchOwner>>,
+  section: ContentSearchInput["section"]
 ) {
-  if (!routeQueryText) {
-    return [];
-  }
-
-  return ctx.db
-    .query("contentSearch")
-    .withSearchIndex("search_route", (q) => {
-      const builder = q
-        .search("route", routeQueryText)
-        .eq("locale", args.locale);
-
-      if (!args.section) {
-        return builder;
-      }
-
-      return builder.eq("section", args.section);
-    })
-    .take(scanLimit);
-}
-
-/** Reads an exact route query through the stable content ID index. */
-async function readExactRouteContent(
-  ctx: QueryCtx,
-  args: ContentSearchInput,
-  queryText: string
-) {
-  const route = getExactRouteQuery(args.locale, queryText);
-
-  if (!route) {
-    return null;
-  }
-
-  const routeProjection = await ctx.db
-    .query("contentRoutes")
-    .withIndex("by_locale_and_route", (q) =>
-      q.eq("locale", args.locale).eq("route", route)
-    )
-    .unique();
-
-  if (!routeProjection) {
-    return null;
-  }
-
-  if (args.section && routeProjection.section !== args.section) {
-    return null;
-  }
-
-  const document = await ctx.db
-    .query("contentSearch")
-    .withIndex("by_content_id", (q) =>
-      q.eq("content_id", routeProjection.content_id)
-    )
-    .unique();
-
-  if (!document) {
-    return null;
-  }
-
-  if (args.section && document.section !== args.section) {
-    return null;
-  }
-
-  return document;
-}
-
-/** Parses exact path-like route searches without treating plain words as routes. */
-function getExactRouteQuery(
-  locale: ContentSearchInput["locale"],
-  queryText: string
-) {
-  const route = cleanSlug(queryText);
-  const localePrefix = `${locale}/`;
-
-  if (!route) {
-    return null;
-  }
-
-  if (route.startsWith(localePrefix)) {
-    return route.slice(localePrefix.length);
-  }
-
-  if (!route.includes("/")) {
-    return null;
-  }
-
-  return route;
-}
-
-/** Merges query variants fairly so one broad query cannot fill the page alone. */
-function interleaveDocumentGroups(
-  groups: readonly (readonly ContentSearchDocument[])[]
-) {
-  const ranked: ContentSearchDocument[] = [];
-  const seen = new Set<string>();
-  const maxLength = Math.max(0, ...groups.map((documents) => documents.length));
-
-  for (let index = 0; index < maxLength; index++) {
-    for (const documents of groups) {
-      const document = documents[index];
-
-      if (!document || seen.has(document.content_id)) {
-        continue;
-      }
-
-      ranked.push(document);
-      seen.add(document.content_id);
-    }
-  }
-
-  return ranked;
-}
-
-/** Browses a bounded, indexed page when the caller did not provide a query. */
-function browseContent(
-  ctx: QueryCtx,
-  args: ContentSearchInput,
-  scanLimit: number
-) {
-  if (!args.section) {
-    return ctx.db
-      .query("contentSearch")
-      .withIndex("by_locale_and_title", (q) => q.eq("locale", args.locale))
-      .take(scanLimit);
-  }
-
-  const section = args.section;
-
-  return ctx.db
-    .query("contentSearch")
-    .withIndex("by_locale_and_section_and_title", (q) =>
-      q.eq("locale", args.locale).eq("section", section)
-    )
-    .take(scanLimit);
-}
-
-/** Merges ranked result groups while preserving first-seen relevance order. */
-function appendDocumentGroups(
-  groups: readonly (readonly ContentSearchDocument[])[]
-) {
-  const ranked: ContentSearchDocument[] = [];
-  const seen = new Set<string>();
-
-  for (const documents of groups) {
-    for (const document of documents) {
-      if (seen.has(document.content_id)) {
-        continue;
-      }
-
-      ranked.push(document);
-      seen.add(document.content_id);
-    }
-  }
-
-  return ranked;
+  const requested = section ? [section] : NAKAFA_CONTENT_SECTIONS;
+  return requested.filter(
+    (candidate): candidate is NakafaSection =>
+      !(
+        (candidate === "articles" && owner?.families.includes("article")) ||
+        (candidate === "material" && owner?.families.includes("material"))
+      )
+  );
 }

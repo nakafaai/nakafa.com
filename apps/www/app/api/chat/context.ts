@@ -14,6 +14,10 @@ import { readMaterialContextHint } from "@repo/contents/_types/route/material/co
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option, Schema } from "effect";
+import {
+  isPublishedMaterialPath,
+  readPublishedNinaMaterial,
+} from "@/app/api/chat/published";
 
 const ClientNinaContextInputSchema = Schema.Struct({
   materialContextHint: Schema.optional(Schema.NullOr(Schema.String)),
@@ -133,8 +137,10 @@ function createNinaPlacementContext({
   };
 }
 
-/** Builds NinaHarness input from the current app route and validated context. */
-function createNinaLearningSessionInput({
+/** Builds NinaHarness input from the current verified publication owner. */
+const createNinaLearningSessionInput = Effect.fn(
+  "chat.createNinaLearningSessionInput"
+)(function* ({
   capturedAt,
   locale,
   pinnedContext,
@@ -142,7 +148,7 @@ function createNinaLearningSessionInput({
   slug,
   url,
   verified,
-}: ResolveNinaLearningSessionInput): NinaLearningSessionInput {
+}: ResolveNinaLearningSessionInput) {
   if (!verified && pinnedContext) {
     return createPinnedNinaLearningSessionInput({
       capturedAt,
@@ -151,11 +157,35 @@ function createNinaLearningSessionInput({
   }
 
   const cleanPath = cleanSlug(slug);
+  const clientContext = readClientNinaContextInput(rawContext);
+  if (verified && isPublishedMaterialPath(locale, cleanPath)) {
+    const published = yield* readPublishedNinaMaterial({
+      contextHint: clientContext.materialContextHint,
+      locale,
+      publicPath: cleanPath,
+      url,
+    });
+    if (published.managed && published.learning) {
+      const route = readStaticPublicLearningIndex().resolveRouteByPath(
+        cleanPath,
+        locale
+      );
+      const placement = published.programManaged
+        ? published.placement
+        : createNinaPlacementContext({ clientContext, route });
+      return {
+        capturedAt,
+        learning: published.learning,
+        source: "current-page",
+        ...(placement ? { placement } : {}),
+      } satisfies NinaLearningSessionInput;
+    }
+  }
+
   const route = readStaticPublicLearningIndex().resolveRouteByPath(
     cleanPath,
     locale
   );
-  const clientContext = readClientNinaContextInput(rawContext);
   const learning = createNinaLearningContext({
     locale,
     route,
@@ -167,14 +197,13 @@ function createNinaLearningSessionInput({
     clientContext,
     route,
   });
-
   return {
     capturedAt,
     learning,
     source: "current-page",
     ...(placement ? { placement } : {}),
-  };
-}
+  } satisfies NinaLearningSessionInput;
+});
 
 /** Builds NinaHarness input from the latest stored context in an existing chat. */
 function createPinnedNinaLearningSessionInput({
@@ -200,7 +229,6 @@ export const resolveNinaLearningSession = Effect.fn(
     ResolveNinaLearningSessionInputSchema
   )(input);
 
-  return yield* openNinaLearningSession(
-    createNinaLearningSessionInput(routeInput)
-  );
+  const sessionInput = yield* createNinaLearningSessionInput(routeInput);
+  return yield* openNinaLearningSession(sessionInput);
 });

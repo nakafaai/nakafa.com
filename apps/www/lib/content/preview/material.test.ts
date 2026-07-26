@@ -41,7 +41,6 @@ import {
 } from "@/test/content-preview";
 import { articlePendingManifest } from "@/test/preview-article";
 
-vi.mock("server-only", () => ({}));
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
   Link: vi.fn(),
@@ -234,9 +233,9 @@ describe("local material preview", () => {
       params: { ...input.params, lesson: ["new-concept"] },
     });
 
-    expect(Option.getOrUndefined(result)?.route).toMatchObject({
+    expect(Option.getOrUndefined(result)?.projection).toMatchObject({
+      contentKey: newRoute.contentKey,
       publicPath: newRoute.publicPath,
-      sourcePath: newRoute.contentKey,
     });
   });
 

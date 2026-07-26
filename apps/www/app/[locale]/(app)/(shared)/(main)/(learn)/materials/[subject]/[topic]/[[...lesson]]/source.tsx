@@ -1,6 +1,10 @@
-import type { MaterialMetadata } from "@nakafa/aksara-contracts/projection/material";
+import type {
+  MaterialMetadata,
+  MaterialProjectionWire,
+} from "@nakafa/aksara-contracts/projection/material";
+import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { isMaterialLessonRoute } from "@repo/contents/_types/route/content";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
+import type { PublicMaterialLessonRoute } from "@repo/contents/_types/route/schema";
 import { Effect, Option } from "effect";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -12,82 +16,103 @@ import {
   readMaterialRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { getMaterialPageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/runtime";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
+import {
+  getPublishedMaterialRoute,
+  type PublishedMaterialRoute,
+} from "@/lib/content/material/route";
 import { importContentModuleOrNull } from "@/lib/content/module";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   type MaterialPreviewContent,
   readMaterialPreview,
 } from "@/lib/content/preview/material";
-import {
-  type ActiveContentReleaseId,
-  getActiveContentIdentity,
-} from "@/lib/content/published/active";
-import {
-  getPublishedMaterial,
-  renderPublishedMaterial,
-} from "@/lib/content/published/material";
-import { decodePublishedMaterial } from "@/lib/content/published/projection";
-import { readActiveContentRoute } from "@/lib/content/published/route";
+import { renderPublishedMaterial } from "@/lib/content/published/material";
 import { getAksaraUrl, getGithubUrl } from "@/lib/utils/github";
+
+/** Route data accepted while one family moves from source to Aksara. */
+export type MaterialViewRoute =
+  | MaterialProjectionWire
+  | PublicMaterialLessonRoute;
 
 interface PreviewOwner {
   readonly kind: "preview";
-  readonly locale: Locale;
   readonly preview: MaterialPreviewContent;
-  readonly route: PublicContentRoute;
 }
 
 interface PublishedOwner {
-  readonly activeReleaseId: ActiveContentReleaseId;
   readonly kind: "published";
-  readonly locale: Locale;
-  readonly route: PublicContentRoute;
+  readonly model: Extract<
+    PublishedMaterialRoute,
+    { readonly projection: MaterialProjectionWire }
+  >;
 }
 
 interface SourceOwner {
   readonly kind: "source";
   readonly locale: Locale;
-  readonly route: PublicContentRoute;
+  readonly route: PublicMaterialLessonRoute;
 }
 
-/** Complete body data consumed by the existing material lesson shell. */
-export interface MaterialPageSource {
+type MaterialOwner = PreviewOwner | PublishedOwner | SourceOwner;
+
+interface MaterialPageFields {
+  readonly alternates: readonly MaterialProjectionWire[];
   readonly body: string;
   readonly children: ReactNode;
   readonly locale: Locale;
   readonly metadata: MaterialMetadata;
-  readonly route: PublicContentRoute;
+  readonly rendererDomain: RendererDomain | null;
+  readonly siblings: readonly MaterialProjectionWire[];
   readonly sourceUrl: null | string;
 }
 
-/** Caches one exact published-ownership decision under content invalidation. */
-async function readPublishedOwner(locale: Locale, publicPath: string) {
-  "use cache";
-
-  applyContentRuntimeCache();
-
-  const active = await getActiveContentIdentity();
-  return Effect.runPromise(
-    Effect.gen(function* () {
-      const published = yield* readActiveContentRoute({
-        activeReleaseId: active?.releaseId ?? null,
-        family: "material",
-        locale,
-        publicPath,
-      });
-      if (published.kind !== "found") {
-        return published;
-      }
-
-      const { route } = yield* decodePublishedMaterial(published.projection, {
-        locale,
-        publicPath,
-      });
-      return { ...published, route };
-    })
-  );
+interface PreviewPageSource extends MaterialPageFields {
+  readonly kind: "preview";
+  readonly route: MaterialProjectionWire;
 }
+
+interface PublishedPageSource extends MaterialPageFields {
+  readonly kind: "published";
+  readonly route: MaterialProjectionWire;
+}
+
+interface SourcePageSource extends MaterialPageFields {
+  readonly kind: "source";
+  readonly route: PublicMaterialLessonRoute;
+}
+
+/** Complete body and shell model consumed by the material lesson page. */
+export type MaterialPageSource =
+  | PreviewPageSource
+  | PublishedPageSource
+  | SourcePageSource;
+
+interface MaterialMetadataFields {
+  readonly alternates: readonly MaterialProjectionWire[];
+  readonly locale: Locale;
+  readonly metadata: MaterialMetadata | undefined;
+}
+
+interface PreviewMetadataSource extends MaterialMetadataFields {
+  readonly kind: "preview";
+  readonly route: MaterialProjectionWire;
+}
+
+interface PublishedMetadataSource extends MaterialMetadataFields {
+  readonly kind: "published";
+  readonly route: MaterialProjectionWire;
+}
+
+interface SourceMetadataSource extends MaterialMetadataFields {
+  readonly kind: "source";
+  readonly route: PublicMaterialLessonRoute;
+}
+
+/** Metadata and locale counterparts selected from one exclusive owner. */
+export type MaterialMetadataSource =
+  | PreviewMetadataSource
+  | PublishedMetadataSource
+  | SourceMetadataSource;
 
 /** Reads a local overlay only in the explicitly configured preview child. */
 async function readPreviewOwner(
@@ -96,135 +121,125 @@ async function readPreviewOwner(
   if (!hasPreviewConfig()) {
     return Option.none();
   }
-
   await connection();
-  const preview = await Effect.runPromise(readMaterialPreview({ params }));
-
   return Option.map(
-    preview,
-    (content) =>
-      ({
-        kind: "preview",
-        locale: content.locale,
-        preview: content,
-        route: content.route,
-      }) satisfies PreviewOwner
+    await Effect.runPromise(readMaterialPreview({ params })),
+    (preview) => ({ kind: "preview", preview })
   );
 }
 
 /**
- * Selects one exclusive body owner before any static source lookup.
+ * Selects one exclusive body owner before consulting the filesystem catalog.
  *
- * Permanently owned deletions never reach the filesystem source, so an old MDX
- * body cannot reappear after migration.
+ * An Aksara-owned deletion cannot fall through to the old source body.
  */
-async function resolveMaterialOwner(params: MaterialParams) {
+async function resolveMaterialOwner(
+  params: MaterialParams
+): Promise<MaterialOwner> {
   const routeParams = await params;
   const preview = await readPreviewOwner(routeParams);
   if (Option.isSome(preview)) {
     return preview.value;
   }
-
   const resolvedParams = Promise.resolve(routeParams);
   const request = await readMaterialRequest(resolvedParams);
   if (!request.publicPath) {
     notFound();
   }
-
-  const published = await readPublishedOwner(
+  const published = await getPublishedMaterialRoute(
     request.locale,
     request.publicPath
   );
-  if (published.kind === "missing") {
-    notFound();
+  if (published.managed) {
+    if (published.projection === null) {
+      notFound();
+    }
+    return { kind: "published", model: published };
   }
-  if (published.kind === "found") {
-    return {
-      activeReleaseId: published.activeReleaseId,
-      kind: "published",
-      locale: request.locale,
-      route: published.route,
-    } satisfies PublishedOwner;
-  }
-
   const source = await readMaterialRoute(resolvedParams);
   if (!(source.route && isMaterialLessonRoute(source.route))) {
     notFound();
   }
-
   return {
     kind: "source",
     locale: source.locale,
     route: source.route,
-  } satisfies SourceOwner;
+  };
 }
 
 /** Reads metadata through the same exclusive owner used by page rendering. */
-export async function readMaterialMetadata(params: MaterialParams) {
+export async function readMaterialMetadata(
+  params: MaterialParams
+): Promise<MaterialMetadataSource> {
   const owner = await resolveMaterialOwner(params);
   if (owner.kind === "preview") {
     return {
-      locale: owner.locale,
+      alternates: [owner.preview.projection],
+      kind: owner.kind,
+      locale: owner.preview.locale,
       metadata: owner.preview.metadata,
-      route: owner.route,
+      route: owner.preview.projection,
     };
   }
   if (owner.kind === "published") {
-    const published = await getPublishedMaterial({
-      activeReleaseId: owner.activeReleaseId,
-      locale: owner.locale,
-      publicPath: owner.route.publicPath,
-    });
-
     return {
-      locale: owner.locale,
-      metadata: published.metadata,
-      route: published.route,
+      alternates: owner.model.alternates,
+      kind: owner.kind,
+      locale: owner.model.projection.locale,
+      metadata: owner.model.projection.metadata,
+      route: owner.model.projection,
     };
   }
-
   const source = await getMaterialPageData({
     locale: owner.locale,
     sourcePath: owner.route.sourcePath,
   });
-
   return {
+    alternates: [],
+    kind: owner.kind,
     locale: owner.locale,
     metadata: source?.metadata,
     route: owner.route,
   };
 }
 
-/** Loads the body, metadata, and immutable source link from one owner only. */
+/** Loads the body, metadata, navigation model, and immutable source link. */
 export async function readMaterialPage(
   params: MaterialParams
 ): Promise<MaterialPageSource> {
   const owner = await resolveMaterialOwner(params);
   if (owner.kind === "preview") {
     const Content = owner.preview.Content;
-
     return {
+      alternates: [owner.preview.projection],
       body: owner.preview.rawMdx,
       children: <Content />,
-      locale: owner.locale,
+      kind: owner.kind,
+      locale: owner.preview.locale,
       metadata: owner.preview.metadata,
-      route: owner.route,
+      rendererDomain: owner.preview.rendererDomain,
+      route: owner.preview.projection,
+      siblings: [owner.preview.projection],
       sourceUrl: null,
     };
   }
   if (owner.kind === "published") {
+    const { model } = owner;
     const published = await renderPublishedMaterial({
-      activeReleaseId: owner.activeReleaseId,
-      locale: owner.locale,
-      publicPath: owner.route.publicPath,
+      activeReleaseId: model.activeReleaseId,
+      locale: model.projection.locale,
+      publicPath: model.projection.publicPath,
     });
-
     return {
+      alternates: model.alternates,
       body: published.rawMdx,
       children: published.body,
-      locale: owner.locale,
+      kind: owner.kind,
+      locale: model.projection.locale,
       metadata: published.metadata,
-      route: published.route,
+      rendererDomain: model.rendererDomain,
+      route: model.projection,
+      siblings: model.siblings,
       sourceUrl: published.sourceRevision
         ? getAksaraUrl({
             path: published.sourcePath,
@@ -233,7 +248,6 @@ export async function readMaterialPage(
         : null,
     };
   }
-
   const [source, content] = await Promise.all([
     getMaterialPageData({
       locale: owner.locale,
@@ -249,13 +263,16 @@ export async function readMaterialPage(
     notFound();
   }
   const Content = content.default;
-
   return {
+    alternates: [],
     body: source.body,
     children: <Content />,
+    kind: owner.kind,
     locale: owner.locale,
     metadata: source.metadata,
+    rendererDomain: null,
     route: owner.route,
+    siblings: [],
     sourceUrl: getGithubUrl({
       path: `/packages/contents/${owner.route.sourcePath}/${owner.locale}.mdx`,
     }),

@@ -11,20 +11,11 @@ import {
   type LearningPopularityScope,
 } from "@repo/backend/convex/contents/popularity";
 import {
-  ContentViewIoError,
-  contentViewIoFailedCode,
   type RecordContentViewArgs,
+  toContentViewIoError,
 } from "@repo/backend/convex/contents/views/spec";
-import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
+import type { ContentViewTarget } from "@repo/backend/convex/contents/views/target";
 import { Effect } from "effect";
-
-/** Maps thrown Convex IO failures into the content-view error channel. */
-function toSignalIoError(error: unknown) {
-  return new ContentViewIoError({
-    code: contentViewIoFailedCode,
-    message: getUnknownErrorMessage(error),
-  });
-}
 
 /** Creates one popularity signal scope from verified learning-context storage. */
 function createSignalScope(
@@ -53,7 +44,7 @@ const loadViewerSignal = Effect.fn("contents.views.loadViewerSignal")(
     db: MutationCtx["db"],
     scope: ReturnType<typeof createSignalScopes>[number],
     input: {
-      readonly contentId: Doc<"contentRoutes">["content_id"];
+      readonly contentId: ContentViewTarget["content_id"];
       readonly signalDay: number;
       readonly viewerKey: string;
     }
@@ -71,7 +62,7 @@ const loadViewerSignal = Effect.fn("contents.views.loadViewerSignal")(
               .eq("contextKey", scope.context.contextKey)
           )
           .unique(),
-      catch: toSignalIoError,
+      catch: toContentViewIoError,
     });
   }
 );
@@ -80,7 +71,7 @@ const loadViewerSignal = Effect.fn("contents.views.loadViewerSignal")(
 const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
   function* (
     db: MutationCtx["db"],
-    route: Doc<"contentRoutes">,
+    route: ContentViewTarget,
     args: RecordContentViewArgs,
     scope: ReturnType<typeof createSignalScopes>[number],
     input: {
@@ -139,7 +130,7 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
           viewedAt: input.now,
           viewerKey,
         }),
-      catch: toSignalIoError,
+      catch: toContentViewIoError,
     });
 
     yield* Effect.tryPromise({
@@ -165,7 +156,7 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
           viewedAt: input.now,
           viewerKey,
         }),
-      catch: toSignalIoError,
+      catch: toContentViewIoError,
     });
 
     return partition;
@@ -177,7 +168,7 @@ export const enqueuePopularitySignals = Effect.fn(
   "contents.views.enqueuePopularitySignals"
 )(function* (
   db: MutationCtx["db"],
-  route: Doc<"contentRoutes">,
+  route: ContentViewTarget,
   args: RecordContentViewArgs,
   context: LearningContextStorage,
   input: {

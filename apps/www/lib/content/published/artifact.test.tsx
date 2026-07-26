@@ -35,7 +35,6 @@ import { describe, expect, it, vi } from "vitest";
 import { executeSignedArtifact } from "@/lib/content/published/artifact";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
-vi.mock("server-only", () => ({}));
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
   Link: vi.fn(),

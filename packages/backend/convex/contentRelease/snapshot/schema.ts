@@ -15,6 +15,7 @@ const tables = {
       v.union(
         v.literal("program"),
         v.literal("curriculum"),
+        v.literal("bucket"),
         v.literal("catalog"),
         v.literal("placement")
       )
@@ -86,6 +87,7 @@ const tables = {
 
   /** Immutable localized curriculum routes selected by a verified snapshot. */
   curriculumRoutes: defineTable({
+    bucket: v.optional(v.string()),
     index: v.number(),
     level: curriculumLevelValidator,
     locale: localeValidator,
@@ -107,6 +109,12 @@ const tables = {
       "locale",
       "path",
     ])
+    .index("by_snapshotId_and_locale_and_bucket_and_path", [
+      "snapshotId",
+      "locale",
+      "bucket",
+      "path",
+    ])
     .index("by_snapshotId_and_locale_and_parentPath_and_order_and_path", [
       "snapshotId",
       "locale",
@@ -126,6 +134,21 @@ const tables = {
       "locale",
       "programKey",
       "nodeKey",
+    ]),
+
+  /** Non-empty deterministic sitemap partitions for one program snapshot. */
+  programBuckets: defineTable({
+    bucket: v.string(),
+    index: v.number(),
+    locale: localeValidator,
+    routeCount: v.number(),
+    snapshotId: v.string(),
+  })
+    .index("by_snapshotId_and_index", ["snapshotId", "index"])
+    .index("by_snapshotId_and_locale_and_bucket", [
+      "snapshotId",
+      "locale",
+      "bucket",
     ]),
 
   /** Immutable Quran runtime and search rows selected by a verified snapshot. */

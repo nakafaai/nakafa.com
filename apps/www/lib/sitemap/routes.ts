@@ -1,6 +1,16 @@
 import { compareSitemapPaths } from "@repo/backend/convex/contents/sitemap/spec";
+import { routing } from "@repo/internationalization/src/routing";
 import { Data, Effect } from "effect";
+import type { Locale } from "next-intl";
 import { readPublishedArticleSitemap } from "@/lib/content/article/sitemap";
+import {
+  readPublishedMaterialBuckets,
+  readPublishedMaterialSitemap,
+} from "@/lib/content/material/sitemap";
+import {
+  readPublishedProgramBuckets,
+  readPublishedProgramSitemap,
+} from "@/lib/content/program/sitemap";
 import {
   getRuntimeContentSitemapPage,
   getRuntimePublicSitemapPage,
@@ -10,6 +20,8 @@ import {
   getSitemapPageDescriptor,
   isArticleSitemapPage,
   isContentSitemapPage,
+  isMaterialSitemapPage,
+  isProgramSitemapPage,
   isPublicSitemapPage,
 } from "@/lib/sitemap/identity";
 
@@ -43,18 +55,37 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     }
 
     if (isPublicSitemapPage(page)) {
-      const artifact = yield* getRuntimePublicSitemapPage({
-        locale: page.locale,
-        page: page.page,
-      });
+      const [artifact, materialOwner, programOwner] = yield* Effect.all(
+        [
+          getRuntimePublicSitemapPage({
+            locale: page.locale,
+            page: page.page,
+          }),
+          readPublishedMaterialBuckets(page.locale),
+          readPublishedProgramBuckets(page.locale),
+        ],
+        { concurrency: "unbounded" }
+      );
       if (!artifact) {
         return yield* new SitemapPageNotFoundError({ pageId });
       }
-      return {
-        routes: artifact.paths.map((path) => ({
+      const routes: { lastModified: number; path: string }[] = [];
+      for (const path of artifact.paths) {
+        if (
+          !isSourceOwnedPublicPath(path, page.locale, {
+            material: materialOwner.managed,
+            program: programOwner.managed,
+          })
+        ) {
+          continue;
+        }
+        routes.push({
           lastModified: artifact.syncedAt,
           path: routeToPath(path),
-        })),
+        });
+      }
+      return {
+        routes,
       };
     }
 
@@ -71,6 +102,40 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
           .map(({ date, publicPath }) => ({
             lastModified:
               date === null ? undefined : Date.parse(`${date}T00:00:00.000Z`),
+            path: routeToPath(publicPath),
+          }))
+          .sort((left, right) => compareSitemapPaths(left.path, right.path)),
+      };
+    }
+    if (isMaterialSitemapPage(page)) {
+      const artifact = yield* readPublishedMaterialSitemap(
+        page.locale,
+        page.bucket
+      );
+      if (!artifact) {
+        return yield* new SitemapPageNotFoundError({ pageId });
+      }
+      return {
+        routes: artifact.routes
+          .map(({ date, publicPath }) => ({
+            lastModified: Date.parse(`${date}T00:00:00.000Z`),
+            path: routeToPath(publicPath),
+          }))
+          .sort((left, right) => compareSitemapPaths(left.path, right.path)),
+      };
+    }
+    if (isProgramSitemapPage(page)) {
+      const artifact = yield* readPublishedProgramSitemap(
+        page.locale,
+        page.bucket
+      );
+      if (!artifact) {
+        return yield* new SitemapPageNotFoundError({ pageId });
+      }
+      return {
+        routes: artifact.routes
+          .map(({ publicPath }) => ({
+            lastModified: undefined,
             path: routeToPath(publicPath),
           }))
           .sort((left, right) => compareSitemapPaths(left.path, right.path)),
@@ -98,4 +163,22 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
 /** Converts one route string into an app-level HTTP path string. */
 function routeToPath(route: string) {
   return `/${route}`;
+}
+
+/** Keeps source-owned public paths only while their family is unmanaged. */
+function isSourceOwnedPublicPath(
+  path: string,
+  locale: Locale,
+  managed: { readonly material: boolean; readonly program: boolean }
+) {
+  const materialPattern =
+    routing.pathnames["/materials/[subject]/[topic]/[[...lesson]]"][locale];
+  const programPattern =
+    routing.pathnames["/curricula/[curriculum]/[[...path]]"][locale];
+  const materialPrefix = materialPattern.slice(1, materialPattern.indexOf("["));
+  const programPrefix = programPattern.slice(1, programPattern.indexOf("["));
+  if (managed.material && path.startsWith(materialPrefix)) {
+    return false;
+  }
+  return !(managed.program && path.startsWith(programPrefix));
 }

@@ -1,9 +1,7 @@
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
-import { toLocalizedContentHref } from "@repo/contents/_types/route/content";
-import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
+import type { ContentPagination } from "@repo/contents/_types/content";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
@@ -12,16 +10,18 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { listMaterialStaticParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import {
-  getProjectedMaterialIcon,
-  listMaterialStaticParams,
-  readMaterialHeaderLink,
-  readMaterialPagePagination,
-  readMaterialRoutes,
-  requireParentMaterialRoute,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
+  readMaterialAlternates,
+  readMaterialContentKey,
+  readMaterialIcon,
+  readMaterialNavigation,
+  readMaterialParentTitle,
+  toMaterialHref,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import {
   type MaterialPageSource,
+  type MaterialViewRoute,
   readMaterialMetadata,
   readMaterialPage,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
@@ -39,7 +39,7 @@ import { ContentViewTracker } from "@/components/tracking/tracker";
 import { getContentViewId } from "@/lib/content/views";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
+import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 type MaterialPageProps =
@@ -68,18 +68,26 @@ export function generateStaticParams({
 export async function generateMetadata({
   params,
 }: MaterialPageProps): Promise<Metadata> {
-  const { locale, metadata, route } = await readMaterialMetadata(params);
-  const path = toLocalizedContentHref(route);
-  const title = metadata?.title ?? route.title;
-  const description = metadata?.description ?? route.description ?? route.title;
+  const source = await readMaterialMetadata(params);
+  const { locale, metadata, route } = source;
+  const path = toMaterialHref(route);
+  const routeTitle = "metadata" in route ? route.metadata.title : route.title;
+  const routeDescription =
+    "metadata" in route ? route.metadata.description : route.description;
+  const title = metadata?.title ?? routeTitle;
+  const description = metadata?.description ?? routeDescription ?? routeTitle;
 
   return {
     title: { absolute: title },
     description,
     authors: metadata?.authors.map(({ name }) => ({ name })),
-    alternates: createProjectedRouteAlternates(route, readMaterialRoutes(), {
-      types: { "text/markdown": `${path}.md` },
-    }),
+    alternates: createResolvedRouteAlternates(
+      route,
+      readMaterialAlternates(source),
+      {
+        types: { "text/markdown": `${path}.md` },
+      }
+    ),
     ...getSocialMetadata({
       title,
       description,
@@ -107,18 +115,19 @@ export default async function Page({
     searchParams,
   ]);
   const { locale, route } = page;
-  const parentRoute = requireParentMaterialRoute(route);
   const materialContext = readMaterialContextQuery(query ?? {});
-  const trackerContext: LearningContextInput | undefined = materialContext
+  const navigation = await readMaterialNavigation(page, materialContext);
+  const trackerContext: LearningContextInput | undefined = navigation.context
     ? {
         mode: "placement",
-        nodeKey: materialContext.nodeKey,
-        programKey: materialContext.programKey,
+        nodeKey: navigation.context.nodeKey,
+        programKey: navigation.context.programKey,
       }
     : undefined;
+  const contentKey = readMaterialContentKey(page);
   const contentId = getContentViewId({
     locale,
-    route: route.sourcePath,
+    route: contentKey,
   });
 
   return (
@@ -126,14 +135,17 @@ export default async function Page({
       contentId={contentId}
       context={trackerContext}
       locale={locale}
+      publicPath={route.publicPath}
+      section="material"
     >
       <MaterialLessonPage
         content={{ body: page.body, metadata: page.metadata }}
-        footer={<DeferredComments slug={route.sourcePath} />}
-        headerLink={readMaterialHeaderLink(route, materialContext)}
+        footer={<DeferredComments slug={contentKey} />}
+        headerLink={navigation.link}
+        icon={readMaterialIcon(page)}
         locale={locale}
-        materialContext={materialContext}
-        parentTitle={parentRoute.title}
+        pagination={navigation.pagination}
+        parentTitle={readMaterialParentTitle(page)}
         route={route}
         sourceUrl={page.sourceUrl}
         toolbar={
@@ -141,7 +153,7 @@ export default async function Page({
             audio={{
               contentType: "material",
               locale,
-              slug: route.sourcePath,
+              slug: contentKey,
             }}
             contextTitle={page.metadata.title}
           />
@@ -164,8 +176,9 @@ async function MaterialLessonPage({
   content,
   footer,
   headerLink,
+  icon,
   locale,
-  materialContext,
+  pagination,
   parentTitle,
   route,
   sourceUrl,
@@ -178,19 +191,18 @@ async function MaterialLessonPage({
     href: string;
     label: string;
   };
+  icon: ReturnType<typeof readMaterialIcon>;
   locale: Locale;
-  materialContext: MaterialContextIdentity | undefined;
+  pagination: ContentPagination;
   parentTitle: string;
-  route: PublicContentRoute;
+  route: MaterialViewRoute;
   sourceUrl: null | string;
   toolbar: ReactNode;
 }) {
   const tCommon = await getTranslations({ locale, namespace: "Common" });
-  const icon = getProjectedMaterialIcon(route);
   const raw = content.body;
   const headings = getHeadings(raw);
   const metadata = content.metadata;
-  const pagination = readMaterialPagePagination(route, materialContext);
   const publishedAt = Option.getOrElse(
     formatContentDateISO(metadata.date),
     () => metadata.date
@@ -208,7 +220,7 @@ async function MaterialLessonPage({
       <BreadcrumbJsonLd
         breadcrumbItems={createBreadcrumbItems(locale, [
           { name: tCommon("home"), path: "" },
-          { name: metadata.title, path: toLocalizedContentHref(route) },
+          { name: metadata.title, path: toMaterialHref(route) },
         ])}
       />
       <ArticleJsonLd
@@ -217,7 +229,7 @@ async function MaterialLessonPage({
         description={metadata.description ?? metadata.subject ?? ""}
         headline={metadata.title}
         image={getOgUrl(locale, route.publicPath)}
-        url={toLocalizedContentHref(route)}
+        url={toMaterialHref(route)}
       />
       <LearningResourceJsonLd
         author={authorJsonLd}
@@ -232,7 +244,7 @@ async function MaterialLessonPage({
             content={raw}
             icon={icon}
             link={headerLink ?? { href: "/home", label: tCommon("home") }}
-            slug={toLocalizedContentHref(route)}
+            slug={toMaterialHref(route)}
             sourceUrl={sourceUrl}
             title={metadata.title}
           />
@@ -252,7 +264,7 @@ async function MaterialLessonPage({
           githubUrl={sourceUrl ?? undefined}
           header={{
             title: metadata.title,
-            href: toLocalizedContentHref(route),
+            href: toMaterialHref(route),
             description: metadata.description ?? metadata.subject,
           }}
           showComments

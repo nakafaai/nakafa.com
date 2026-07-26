@@ -179,10 +179,11 @@ describe("learningPreferences", () => {
       authed.mutation(
         api.learningPreferences.mutations.setPreferredCurriculum,
         {
+          locale: "id",
           preferredCurriculumProgramKey: "snbt",
         }
       )
-    ).rejects.toThrow("CURRICULUM_PROGRAM_NOT_SUPPORTED");
+    ).rejects.toThrow("CURRICULUM_PROGRAM_NOT_FOUND");
   });
 });
 

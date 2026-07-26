@@ -2,6 +2,8 @@ import { CONTENT_SITEMAP_ROUTE_PAGE_SIZE } from "@repo/backend/convex/contents/s
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
+import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
+import { readPublishedProgramBuckets } from "@/lib/content/program/sitemap";
 import {
   getRuntimeContentRouteCounts,
   getRuntimePublicSitemapCount,
@@ -9,6 +11,8 @@ import {
 import {
   formatArticlePage,
   formatContentPage,
+  formatMaterialPage,
+  formatProgramPage,
   formatPublicPage,
   SITEMAP_BASE_ID,
   type SitemapPage,
@@ -21,10 +25,18 @@ export const readSitemapPageDescriptors = Effect.fn(
   const descriptors: SitemapPage[] = [{ id: SITEMAP_BASE_ID }];
 
   for (const locale of routing.locales) {
-    const [articleBuckets, counts, publicCount] = yield* Effect.all(
+    const [
+      articleBuckets,
+      counts,
+      materialBuckets,
+      programBuckets,
+      publicCount,
+    ] = yield* Effect.all(
       [
         readPublishedArticleBuckets(locale),
         getRuntimeContentRouteCounts({ locale }),
+        readPublishedMaterialBuckets(locale),
+        readPublishedProgramBuckets(locale),
         getRuntimePublicSitemapCount({ locale }),
       ],
       { concurrency: "unbounded" }
@@ -43,6 +55,9 @@ export const readSitemapPageDescriptors = Effect.fn(
 
     for (const count of counts) {
       if (count.section === "articles" && articleBuckets.managed) {
+        continue;
+      }
+      if (count.section === "material" && materialBuckets.managed) {
         continue;
       }
       const pageCount = Math.ceil(
@@ -64,6 +79,22 @@ export const readSitemapPageDescriptors = Effect.fn(
         bucket,
         id: formatArticlePage(bucket, locale),
         kind: "article",
+        locale,
+      });
+    }
+    for (const bucket of materialBuckets.buckets) {
+      descriptors.push({
+        bucket,
+        id: formatMaterialPage(bucket, locale),
+        kind: "material",
+        locale,
+      });
+    }
+    for (const bucket of programBuckets.buckets) {
+      descriptors.push({
+        bucket,
+        id: formatProgramPage(bucket, locale),
+        kind: "program",
         locale,
       });
     }

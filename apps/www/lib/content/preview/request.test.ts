@@ -9,8 +9,6 @@ import {
   MAX_PREVIEW_MANIFEST_BYTES,
 } from "@/lib/content/preview/request";
 
-vi.mock("server-only", () => ({}));
-
 const target = "http://127.0.0.1:4000/v1/manifest";
 const config: PreviewConfig = {
   eventsPath: "/v1/events",

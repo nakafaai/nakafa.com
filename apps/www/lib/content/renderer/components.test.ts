@@ -5,7 +5,6 @@ import { mdxComponents } from "@repo/design-system/lib/markdown/registry";
 import { describe, expect, it, vi } from "vitest";
 import { getRendererComponents } from "@/lib/content/renderer/components";
 
-vi.mock("server-only", () => ({}));
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
   Link: vi.fn(),

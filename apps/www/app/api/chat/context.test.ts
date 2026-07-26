@@ -2,8 +2,22 @@
 import type { NinaContextSnapshot } from "@repo/ai/nina/memory/pack";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveNinaLearningSession } from "@/app/api/chat/context";
+import { previewProjection, previewSourcePath } from "@/test/content-preview";
+
+const mocks = vi.hoisted(() => ({
+  materialContext: vi.fn(),
+  materialRoute: vi.fn(),
+}));
+
+vi.mock("@/lib/content/material/context", () => ({
+  readPublishedMaterialContext: mocks.materialContext,
+}));
+
+vi.mock("@/lib/content/material/route", () => ({
+  readPublishedMaterialRoute: mocks.materialRoute,
+}));
 
 const pinnedContext = {
   capturedAt: "2026-06-21T00:00:00.000Z",
@@ -38,6 +52,17 @@ const pinnedPlacementContext = {
 } satisfies NinaContextSnapshot;
 
 describe("app/api/chat/context", () => {
+  beforeEach(() => {
+    mocks.materialContext.mockReset();
+    mocks.materialRoute.mockReset();
+    mocks.materialRoute.mockReturnValue(
+      Effect.succeed({
+        managed: false,
+        projection: null,
+      })
+    );
+  });
+
   it("opens an unverified off-page turn as canonical when no pinned context exists", async () => {
     const session = await Effect.runPromise(
       resolveNinaLearningSession({
@@ -189,5 +214,98 @@ describe("app/api/chat/context", () => {
       toContextKey:
         "canonical:subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
     });
+  });
+
+  it("uses active material and program projections instead of stale static rows", async () => {
+    mocks.materialRoute.mockReturnValueOnce(
+      Effect.succeed({
+        managed: true,
+        projection: {
+          graph: {
+            assetId: "asset:en:material:function-concept",
+          },
+          kind: "subject-lesson",
+          materialKey:
+            "lesson.mathematics.function-composition-inverse-function",
+          metadata: { title: "Function Concept" },
+        },
+        sourcePath:
+          "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx",
+      })
+    );
+    mocks.materialContext.mockReturnValueOnce(
+      Effect.succeed({
+        managed: true,
+        value: {
+          context: {
+            nodeKey: "cambridge-function-concept",
+            programKey: "cambridge-international",
+          },
+          href: "/en/curriculum/cambridge-international/mathematics#functions",
+          label: "Functions",
+        },
+      })
+    );
+
+    const session = await Effect.runPromise(
+      resolveNinaLearningSession({
+        capturedAt: "2026-07-26T00:00:00.000Z",
+        locale: "en",
+        rawContext: {
+          materialContextHint:
+            "cambridge-international~cambridge-function-concept",
+        },
+        slug: "/subjects/mathematics/function-composition-inverse-function/function-concept",
+        url: "https://nakafa.com/en/subjects/mathematics/function-composition-inverse-function/function-concept",
+        verified: true,
+      })
+    );
+
+    expect(session.context.snapshot).toMatchObject({
+      learning: {
+        assetId: "asset:en:material:function-concept",
+        contentId: "asset:en:material:function-concept",
+        materialKey: "lesson.mathematics.function-composition-inverse-function",
+        sourcePath:
+          "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx",
+        title: "Function Concept",
+      },
+      placement: {
+        nodeKey: "cambridge-function-concept",
+        parentTitle: "Functions",
+        programKey: "cambridge-international",
+      },
+    });
+  });
+
+  it("keeps active material canonical when no placement hint exists", async () => {
+    mocks.materialRoute.mockReturnValueOnce(
+      Effect.succeed({
+        managed: true,
+        projection: previewProjection,
+        sourcePath: previewSourcePath,
+      })
+    );
+
+    const session = await Effect.runPromise(
+      resolveNinaLearningSession({
+        capturedAt: "2026-07-26T00:00:00.000Z",
+        locale: "en",
+        rawContext: {},
+        slug: `/${previewProjection.publicPath}`,
+        url: `https://nakafa.com/en/${previewProjection.publicPath}`,
+        verified: true,
+      })
+    );
+
+    expect(session.context.snapshot).toMatchObject({
+      learning: {
+        contentId: previewProjection.graph.assetId,
+        sourcePath: previewSourcePath,
+      },
+      source: "current-page",
+    });
+    expect(session.context.snapshot.placement).toBeUndefined();
+    expect(mocks.materialContext).not.toHaveBeenCalled();
   });
 });

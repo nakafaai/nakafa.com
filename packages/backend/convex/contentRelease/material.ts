@@ -1,6 +1,14 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import {
+  readLatestMaterials,
+  readMaterialBucket,
+} from "@repo/backend/convex/contentRelease/material/discovery";
 import { readMaterialModel } from "@repo/backend/convex/contentRelease/material/model";
 import { readMaterialPage } from "@repo/backend/convex/contentRelease/material/page";
+import {
+  readMaterialBuckets,
+  readMaterialSitemap,
+} from "@repo/backend/convex/contentRelease/material/sitemap";
 import {
   localeValidator,
   rendererDomainValidator,
@@ -20,6 +28,7 @@ const materialModelValidator = v.object({
   projectionJson: v.union(v.string(), v.null()),
   rendererDomain: v.union(rendererDomainValidator, v.null()),
   siblingJson: v.array(v.string()),
+  sourcePath: v.union(v.string(), v.null()),
   sourceRevision: v.union(v.string(), v.null()),
 });
 
@@ -32,12 +41,80 @@ const materialPageValidator = v.object({
   stale: v.boolean(),
 });
 
+const materialSummaryValidator = v.object({
+  authors: v.array(v.object({ name: v.string() })),
+  date: v.string(),
+  description: v.optional(v.string()),
+  publicPath: v.string(),
+  title: v.string(),
+});
+
+const materialDiscoveryValidator = v.object({
+  managed: v.boolean(),
+  materials: v.array(materialSummaryValidator),
+});
+
+const materialBucketValidator = v.object({
+  managed: v.boolean(),
+  materials: v.union(v.array(materialSummaryValidator), v.null()),
+});
+
+const materialBucketsValidator = v.object({
+  buckets: v.array(v.string()),
+  managed: v.boolean(),
+  materialCount: v.number(),
+});
+
+const materialSitemapValidator = v.union(
+  v.null(),
+  v.object({
+    routes: v.array(
+      v.object({
+        date: v.string(),
+        publicPath: v.string(),
+      })
+    ),
+  })
+);
+
+/** Returns one complete managed material discovery partition. */
+export const bucket = query({
+  args: { bucket: v.string(), locale: localeValidator },
+  returns: materialBucketValidator,
+  handler: (ctx, { bucket: bucketId, locale }) =>
+    runConvexProgram(readMaterialBucket(ctx, locale, bucketId)),
+});
+
+/** Returns a bounded newest-first material list for RSS discovery. */
+export const latest = query({
+  args: { limit: v.number(), locale: localeValidator },
+  returns: materialDiscoveryValidator,
+  handler: (ctx, { limit, locale }) =>
+    runConvexProgram(readLatestMaterials(ctx, locale, limit)),
+});
+
 /** Resolves one complete active material shell model by localized path. */
 export const route = query({
   args: { locale: localeValidator, publicPath: v.string() },
   returns: materialModelValidator,
   handler: (ctx, { locale, publicPath }) =>
     runConvexProgram(readMaterialModel(ctx, locale, publicPath)),
+});
+
+/** Returns non-empty material discovery partitions for one locale. */
+export const sitemapBuckets = query({
+  args: { locale: localeValidator },
+  returns: materialBucketsValidator,
+  handler: (ctx, { locale }) =>
+    runConvexProgram(readMaterialBuckets(ctx, locale)),
+});
+
+/** Returns one verified material sitemap partition. */
+export const sitemapPage = query({
+  args: { bucket: v.string(), locale: localeValidator },
+  returns: materialSitemapValidator,
+  handler: (ctx, { bucket: bucketId, locale }) =>
+    runConvexProgram(readMaterialSitemap(ctx, locale, bucketId)),
 });
 
 /** Returns one release-bound page of active localized material routes. */

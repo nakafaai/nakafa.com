@@ -12,6 +12,11 @@ interface LocalizedAlternatesOptions {
   types?: AlternateTypePath;
 }
 
+interface ResolvedAlternateRoute {
+  readonly locale: (typeof routing.locales)[number];
+  readonly publicPath: string;
+}
+
 /** Removes an existing locale prefix before building language alternates. */
 function getPathWithoutLocale(canonical: string) {
   for (const locale of routing.locales) {
@@ -77,6 +82,25 @@ export function createProjectedRouteAlternates(
     if (alternate) {
       languages[locale] = `/${locale}/${alternate.publicPath}`;
     }
+  }
+
+  return createLocalizedAlternates(`/${route.locale}/${route.publicPath}`, {
+    ...options,
+    languages,
+  });
+}
+
+/** Builds hreflang alternates from already-resolved localized counterparts. */
+export function createResolvedRouteAlternates(
+  route: ResolvedAlternateRoute,
+  alternates: readonly ResolvedAlternateRoute[],
+  options: Omit<LocalizedAlternatesOptions, "languages"> = {}
+) {
+  const languages: AlternateLanguagePath = {};
+
+  for (const alternate of alternates) {
+    languages[alternate.locale] =
+      `/${alternate.locale}/${alternate.publicPath}`;
   }
 
   return createLocalizedAlternates(`/${route.locale}/${route.publicPath}`, {

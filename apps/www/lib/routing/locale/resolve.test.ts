@@ -2,8 +2,42 @@ import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/conte
 import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
 import * as publicLearningStatic from "@repo/contents/_types/route/learning/static";
 import { Effect } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
+import {
+  previewIdProjection,
+  previewProjection,
+  previewPublicRoute,
+} from "@/test/content-preview";
+import {
+  readTestPublishedRoute,
+  testProgramSubject,
+} from "@/test/content-program";
+
+const publishedMocks = vi.hoisted(() => ({
+  materialContext: vi.fn(),
+  materialRoute: vi.fn(),
+  programRoute: vi.fn(),
+}));
+const activeMaterialRoute = {
+  alternates: [previewProjection, previewIdProjection],
+  managed: true,
+  projection: previewProjection,
+};
+const idProgramSubject = readTestPublishedRoute(
+  "kurikulum/merdeka/kelas-11/matematika",
+  "id"
+);
+
+vi.mock("@/lib/content/material/context", () => ({
+  readPublishedMaterialContext: publishedMocks.materialContext,
+}));
+vi.mock("@/lib/content/material/route", () => ({
+  readPublishedMaterialRoute: publishedMocks.materialRoute,
+}));
+vi.mock("@/lib/content/program/route", () => ({
+  readPublishedProgramRoute: publishedMocks.programRoute,
+}));
 
 /**
  * Keeps contextual hrefs unchanged in tests that isolate locale projection
@@ -19,6 +53,18 @@ function preserveContextualHref(
 function resolveHref(href: string, locale: "en" | "id") {
   return Effect.runSync(resolveLocalizedNavigationHref({ href, locale }));
 }
+
+beforeEach(() => {
+  publishedMocks.materialContext.mockReset();
+  publishedMocks.materialRoute.mockReset();
+  publishedMocks.programRoute.mockReset();
+  publishedMocks.materialRoute.mockReturnValue(
+    Effect.succeed({ managed: false, projection: null })
+  );
+  publishedMocks.programRoute.mockReturnValue(
+    Effect.succeed({ managed: false, route: null })
+  );
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -79,6 +125,135 @@ describe("resolveLocalizedNavigationHref", () => {
     expect(resolveHref("/en/curriculum/merdeka/class-10/biology", "id")).toBe(
       "/kurikulum/merdeka/kelas-10/biologi"
     );
+  });
+
+  it("projects active material and curriculum owners without static rows", () => {
+    publishedMocks.materialRoute.mockReturnValue(
+      Effect.succeed(activeMaterialRoute)
+    );
+    expect(
+      resolveHref(
+        `/${previewProjection.locale}/${previewProjection.publicPath}`,
+        "id"
+      )
+    ).toBe(`/${previewIdProjection.publicPath}`);
+
+    publishedMocks.programRoute.mockReturnValue(
+      Effect.succeed({
+        alternates: [testProgramSubject, idProgramSubject],
+        managed: true,
+        route: testProgramSubject,
+      })
+    );
+    expect(
+      resolveHref(
+        `/${testProgramSubject.locale}/${testProgramSubject.publicPath}`,
+        "id"
+      )
+    ).toBe(`/${idProgramSubject.publicPath}`);
+  });
+
+  it("fails closed for active material tombstones and missing locale rows", () => {
+    publishedMocks.materialRoute
+      .mockReturnValueOnce(Effect.succeed({ managed: true, projection: null }))
+      .mockReturnValueOnce(
+        Effect.succeed({
+          alternates: [previewProjection],
+          managed: true,
+          projection: previewProjection,
+        })
+      );
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const result = Effect.runSyncExit(
+        resolveLocalizedNavigationHref({
+          href: `/${previewProjection.locale}/${previewProjection.publicPath}`,
+          locale: "id",
+        })
+      );
+      expect(result._tag).toBe("Failure");
+    }
+  });
+
+  it("keeps material context only while the active program verifies it", () => {
+    const href = `/${previewProjection.locale}/${previewProjection.publicPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`;
+    publishedMocks.materialRoute.mockReturnValue(
+      Effect.succeed(activeMaterialRoute)
+    );
+    publishedMocks.materialContext
+      .mockReturnValueOnce(
+        Effect.succeed({
+          managed: true,
+          value: {
+            context: {
+              nodeKey:
+                "class-11-mathematics-function-composition-inverse-function",
+              programKey: "merdeka",
+            },
+          },
+        })
+      )
+      .mockReturnValueOnce(Effect.succeed({ managed: true, value: null }));
+
+    expect(resolveHref(href, "id")).toBe(
+      `/${previewIdProjection.publicPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`
+    );
+    expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);
+  });
+
+  it("uses source context only while the active program is unmanaged", () => {
+    const href = `/${previewProjection.locale}/${previewProjection.publicPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`;
+    publishedMocks.materialRoute.mockReturnValue(
+      Effect.succeed(activeMaterialRoute)
+    );
+    publishedMocks.materialContext.mockReturnValue(
+      Effect.succeed({ managed: false, value: null })
+    );
+
+    expect(resolveHref(href, "id")).toContain("?ctx=merdeka~");
+
+    const missingSourceIndex: PublicLearningIndex = {
+      projectMaterialContextToLocale: () => undefined,
+      projectRouteToLocale: () => undefined,
+      resolveMaterialHeaderLink: () => undefined,
+      resolveRouteByPath: () => undefined,
+      toContextualMaterialHref: preserveContextualHref,
+    };
+    const missingTargetIndex: PublicLearningIndex = {
+      ...missingSourceIndex,
+      resolveRouteByPath: (publicPath) =>
+        publicPath === previewProjection.publicPath
+          ? previewPublicRoute
+          : undefined,
+    };
+    vi.spyOn(publicLearningStatic, "loadStaticPublicLearningIndex")
+      .mockImplementationOnce(() => Effect.succeed(missingSourceIndex))
+      .mockImplementationOnce(() => Effect.succeed(missingTargetIndex));
+
+    expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);
+    expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);
+  });
+
+  it("fails closed for active curriculum tombstones and missing locale rows", () => {
+    publishedMocks.programRoute
+      .mockReturnValueOnce(Effect.succeed({ managed: true, route: null }))
+      .mockReturnValueOnce(
+        Effect.succeed({
+          alternates: [],
+          managed: true,
+          route: testProgramSubject,
+        })
+      );
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const result = Effect.runSyncExit(
+        resolveLocalizedNavigationHref({
+          href: `/${testProgramSubject.locale}/${testProgramSubject.publicPath}`,
+          locale: "id",
+        })
+      );
+      expect(result._tag).toBe("Failure");
+    }
   });
 
   it("projects mapped static curriculum index pathnames without learning-index rows", () => {

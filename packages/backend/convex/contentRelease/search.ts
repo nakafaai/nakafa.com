@@ -1,10 +1,11 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
-import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { validateReleaseCursor } from "@repo/backend/convex/contentRelease/cursor";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadState } from "@repo/backend/convex/contentRelease/model";
 import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
+import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
+import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
+import { resolveSearchProjection } from "@repo/backend/convex/contentRelease/search/verify";
 import {
   contentFamilyValidator,
   localeValidator,
@@ -68,41 +69,30 @@ const validateSearchQuery = Effect.fn("contentRelease.validateSearchQuery")(
   }
 );
 
-/** Loads an active release only when its search projection is fully synced. */
-const loadSearchIdentity = Effect.fn("contentRelease.loadSearchIdentity")(
+/** Loads active ownership only when its public search model is fully synced. */
+export const loadSearchOwner = Effect.fn("contentRelease.loadSearchOwner")(
   function* (ctx: QueryCtx) {
-    const state = yield* loadState(ctx);
-    if (
-      !state ||
-      (state.activeManifestHash === undefined &&
-        state.activeReleaseId === undefined &&
-        state.activeSequence === undefined)
-    ) {
+    const active = yield* loadActiveIdentity(ctx);
+    if (!active) {
       return null;
     }
+    const { state } = active;
     if (
-      !(state.activeManifestHash && state.activeReleaseId) ||
-      state.activeSequence === undefined
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Active content search has a partial release identity."
-      );
-    }
-    if (
-      state.searchManifestHash !== state.activeManifestHash ||
-      state.searchReleaseId !== state.activeReleaseId ||
-      state.searchSequence !== state.activeSequence
+      state.searchManifestHash !== active.manifestHash ||
+      state.searchReleaseId !== active.releaseId ||
+      state.searchSequence !== active.sequence
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
-        `Search for active release ${state.activeReleaseId} is still synchronizing.`
+        `Search for active release ${active.releaseId} is still synchronizing.`
       );
     }
+    const families = yield* loadReleaseFamilies(active.release);
     return {
-      manifestHash: state.activeManifestHash,
-      releaseId: state.activeReleaseId,
-      sequence: state.activeSequence,
+      families: families.result,
+      manifestHash: active.manifestHash,
+      releaseId: active.releaseId,
+      sequence: active.sequence,
     };
   }
 );
@@ -126,7 +116,7 @@ const searchPage = Effect.fn("contentRelease.searchProjectionPage")(function* (
   const [queryText, options, active] = yield* Effect.all([
     validateSearchQuery(source),
     validateProjectionPage(paginationOpts),
-    loadSearchIdentity(ctx),
+    loadSearchOwner(ctx),
   ]);
   if (options.endCursor !== undefined && options.endCursor !== null) {
     return yield* releaseFail(
@@ -166,25 +156,7 @@ const searchPage = Effect.fn("contentRelease.searchProjectionPage")(function* (
       })
   );
   const page = yield* Effect.forEach(stored.page, (hit) =>
-    resolvePublicProjection(
-      ctx,
-      hit.contentKey,
-      hit.locale,
-      active.sequence
-    ).pipe(
-      Effect.flatMap((projection) =>
-        projection &&
-        projection.projectionHash === hit.projectionHash &&
-        projection.publicPath === hit.publicPath &&
-        projection.releaseId === hit.releaseId &&
-        projection.sequence === hit.sequence
-          ? Effect.succeed(projection)
-          : releaseFail(
-              "CONTENT_RELEASE_INTEGRITY",
-              `Active search entry ${hit.contentKey}/${hit.locale} is stale.`
-            )
-      )
-    )
+    resolveSearchProjection(ctx, hit, active)
   );
   return {
     activeManifestHash: active.manifestHash,

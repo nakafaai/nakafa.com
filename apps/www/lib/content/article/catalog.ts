@@ -1,6 +1,6 @@
 import "server-only";
 
-import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import {
   type ArticleCategory,
   ArticleCategorySchema,
@@ -8,17 +8,17 @@ import {
   ArticleProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import { api } from "@repo/backend/convex/_generated/api";
+import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyPublishedCatalogCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
+import { decodeSourceRevision } from "@/lib/content/published/origin";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
-
-const articlePageSize = 32;
 
 /** Stable source root for immutable Aksara article links. */
 export const ARTICLE_SOURCE_ROOT = "packages/corpus/articles";
@@ -92,18 +92,6 @@ function projectionError(locale: Locale, publicPath = "articles") {
   return new PublishedProjectionError({ locale, publicPath });
 }
 
-/** Decodes optional Git provenance from one verified active release. */
-const decodeSourceRevision = Effect.fn("www.articles.decodeSourceRevision")(
-  function* (source: null | string, locale: Locale) {
-    if (source === null) {
-      return null;
-    }
-    return yield* Schema.decodeUnknown(GitCommitShaSchema)(source).pipe(
-      Effect.mapError(() => projectionError(locale))
-    );
-  }
-);
-
 /** Strictly decodes one backend-verified article catalog row. */
 const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
   item: ArticlePageItem,
@@ -171,7 +159,7 @@ export const readPublishedArticlePage = Effect.fn(
     locale: input.locale,
     paginationOpts: {
       cursor: input.cursor,
-      numItems: articlePageSize,
+      numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies ArticlePageArgs;
   const result = yield* readRuntimeQuery("contentRelease.article.page", () =>
@@ -180,10 +168,10 @@ export const readPublishedArticlePage = Effect.fn(
   const articles = yield* Effect.forEach(result.result.page, (item) =>
     decodeArticleItem(item, input.locale)
   );
-  const sourceRevision = yield* decodeSourceRevision(
-    result.sourceRevision,
-    input.locale
-  );
+  const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
+    locale: input.locale,
+    publicPath: "articles",
+  });
   const activeManifestHash = result.activeManifestHash;
   const activeReleaseId = result.activeReleaseId;
   const nextCursor = result.result.isDone ? null : result.result.continueCursor;
@@ -219,7 +207,7 @@ export const readPublishedCategories = Effect.fn(
     locale: input.locale,
     paginationOpts: {
       cursor: input.cursor,
-      numItems: articlePageSize,
+      numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies CategoryPageArgs;
   const result = yield* readRuntimeQuery(
@@ -229,10 +217,10 @@ export const readPublishedCategories = Effect.fn(
   const categories = yield* Effect.forEach(result.result.page, (item) =>
     decodeCategoryItem(item, input.locale)
   );
-  const sourceRevision = yield* decodeSourceRevision(
-    result.sourceRevision,
-    input.locale
-  );
+  const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
+    locale: input.locale,
+    publicPath: "articles",
+  });
   const activeManifestHash = result.activeManifestHash;
   const activeReleaseId = result.activeReleaseId;
   const nextCursor = result.result.isDone ? null : result.result.continueCursor;

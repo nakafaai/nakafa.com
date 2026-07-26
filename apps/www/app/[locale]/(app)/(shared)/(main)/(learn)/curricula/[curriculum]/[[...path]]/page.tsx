@@ -1,23 +1,22 @@
-import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import {
-  listCurriculumStaticParams,
-  readCurriculumBreadcrumbs,
-  readCurriculumHeaderLink,
-  readCurriculumRootOptions,
-  readCurriculumRouteModel,
-  readCurriculumRoutes,
-  readCurriculumTocHeader,
-  readMaterialCardChapters,
-  resolveCurriculumRoute,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
+import { readMaterialCardChapters } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import {
   CurriculumRootCards,
   CurriculumRootHeader,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
+import {
+  type CurriculumRouteModel,
+  listRuntimeCurriculumStaticParams,
+  readRuntimeCurriculumBreadcrumbs,
+  readRuntimeCurriculumCatalog,
+  readRuntimeCurriculumHeader,
+  readRuntimeCurriculumOptions,
+  readRuntimeCurriculumToc,
+  resolveRuntimeCurriculumRoute,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
 import { readCurriculumSeoContext } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/seo";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
@@ -31,49 +30,44 @@ import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem } from "@/components/shared/subject-item";
 import { SubjectList } from "@/components/shared/subject-list";
-import { getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
+import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 
 type CurriculumPageProps =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">;
-type CurriculumRouteBodyInput = ReturnType<typeof readCurriculumRouteModel>;
 
 /**
- * Builds curriculum context params from curriculum-owned route projection rows.
+ * Builds a bounded prerender subset from the exclusive curriculum owner.
  *
  * Curriculum paths are navigation context only; material bodies remain linked
  * through canonical material paths carried by the projection.
  */
-export function generateStaticParams({
+export async function generateStaticParams({
   params,
 }: {
   params: { locale: string };
 }) {
-  return listCurriculumStaticParams(params.locale);
+  return listRuntimeCurriculumStaticParams(params.locale);
 }
 
-/**
- * Generates metadata for one curriculum context node.
- *
- * Alternates come from matching projected curriculum rows so locale changes do
- * not imply a different curriculum or country identity.
- */
+/** Generates metadata from the exclusive published or source route owner. */
 export async function generateMetadata({
   params,
 }: CurriculumPageProps): Promise<Metadata> {
-  const { locale, route } = await resolveCurriculumRoute(params);
+  const model = await resolveRuntimeCurriculumRoute(params);
+  const { locale, route } = model;
   const seo = await generateSEOMetadata(
-    readCurriculumSeoContext(route),
+    readCurriculumSeoContext(route, model.ancestors),
     locale
   );
 
   return {
     title: { absolute: seo.title },
     description: seo.description,
-    alternates: createProjectedRouteAlternates(route, readCurriculumRoutes()),
+    alternates: createResolvedRouteAlternates(route, model.alternates),
     ...getSocialMetadata({
       title: seo.title,
       description: seo.description,
@@ -84,25 +78,22 @@ export async function generateMetadata({
   };
 }
 
-/**
- * Renders a curriculum navigation node and its projected child routes.
- *
- * Subject/course nodes render collapsible cards with direct canonical lesson
- * links; topic/unit rows remain grouping data and are not separate page hops.
- */
+/** Renders one curriculum navigation node from its exclusive route owner. */
 export default async function Page({ params }: CurriculumPageProps) {
-  const routeLookup = await resolveCurriculumRoute(params);
-  const { locale, route } = routeLookup;
-  const tCommon = await getTranslations({ locale, namespace: "Common" });
-  const breadcrumbs = readCurriculumBreadcrumbs(tCommon("home"), route);
+  const model = await resolveRuntimeCurriculumRoute(params);
+  const { locale, route } = model;
+  const [catalog, tCommon] = await Promise.all([
+    readRuntimeCurriculumCatalog(locale),
+    getTranslations({ locale, namespace: "Common" }),
+  ]);
+  const breadcrumbs = readRuntimeCurriculumBreadcrumbs(tCommon("home"), model);
   const selectorLabel =
     route.level === "track"
       ? (await getTranslations({ locale, namespace: "LearningPrograms" }))(
           "kind.school-curriculum"
         )
       : "";
-  const body = readCurriculumRouteModel(routeLookup);
-  const githubUrl = getCurriculumGithubUrl(route);
+  const sourceUrl = readCurriculumSourceUrl(model);
 
   return (
     <>
@@ -115,32 +106,34 @@ export default async function Page({ params }: CurriculumPageProps) {
             <CurriculumRootHeader
               currentRoute={route}
               homeLabel={tCommon("home")}
-              options={readCurriculumRootOptions(locale)}
+              options={readRuntimeCurriculumOptions(catalog, locale)}
               selectorLabel={selectorLabel}
               subjectLabel={tCommon("subject")}
             />
           ) : (
             <HeaderContent
               icon={readCurriculumRouteIcon(route)}
-              link={readCurriculumHeaderLink(locale, route)}
+              link={readRuntimeCurriculumHeader(model)}
               title={route.title}
             />
           )}
           <LayoutContent>
-            <CurriculumRouteBody {...body} />
+            <CurriculumRouteBody {...model} />
           </LayoutContent>
-          <FooterContent>
-            <RefContent githubUrl={githubUrl} />
-          </FooterContent>
+          {sourceUrl ? (
+            <FooterContent>
+              <RefContent githubUrl={sourceUrl} />
+            </FooterContent>
+          ) : null}
         </LayoutMaterialContent>
-        {body.materialCards.length > 0 && (
+        {model.materialCards.length > 0 && (
           <LayoutMaterialToc
             chapters={{
               label: route.title,
-              data: readMaterialCardChapters(body.materialCards),
+              data: readMaterialCardChapters(model.materialCards),
             }}
-            githubUrl={githubUrl}
-            header={readCurriculumTocHeader(locale, route)}
+            githubUrl={sourceUrl}
+            header={readRuntimeCurriculumToc(model)}
           />
         )}
       </LayoutMaterial>
@@ -148,20 +141,15 @@ export default async function Page({ params }: CurriculumPageProps) {
   );
 }
 
-/**
- * Renders curriculum context pages through established route-level composition.
- *
- * Root rows render direct curriculum choice cards. Lower chooser rows reuse
- * `SubjectList`, and subject/course nodes keep the established collapsible
- * material-card composition with direct canonical lesson links.
- */
+/** Renders the established curriculum chooser or material-card composition. */
 function CurriculumRouteBody({
   childGroups,
   childRoutes,
   locale,
   materialCards,
+  program,
   route,
-}: CurriculumRouteBodyInput) {
+}: CurriculumRouteModel) {
   if (materialCards.length > 0) {
     return (
       <ContainerList className="sm:grid-cols-1">
@@ -177,7 +165,15 @@ function CurriculumRouteBody({
   }
 
   if (route.level === "track") {
-    return <CurriculumRootCards locale={locale} routes={childRoutes} />;
+    return (
+      <CurriculumRootCards
+        entries={childRoutes.map((child) => ({
+          program,
+          route: child,
+        }))}
+        locale={locale}
+      />
+    );
   }
 
   return (
@@ -205,31 +201,16 @@ function CurriculumRouteBody({
   );
 }
 
-/**
- * Selects the source file directory behind the curriculum context page.
- *
- * Reference actions should point maintainers to the source-owned curriculum
- * Module, while public pages continue to use localized projected URLs.
- */
-function getCurriculumGithubUrl(route: PublicCurriculumRoute) {
-  switch (route.programKey) {
-    case "cambridge-international":
-      return getGithubUrl({
-        path: "/packages/contents/curriculum/cambridge-international",
-      });
-    case "merdeka":
-      return getGithubUrl({
-        path: "/packages/contents/curriculum/merdeka",
-      });
-    case "singapore-moe":
-      return getGithubUrl({
-        path: "/packages/contents/curriculum/singapore-moe",
-      });
-    case "united-states":
-      return getGithubUrl({
-        path: "/packages/contents/curriculum/united-states",
-      });
-    default:
-      return getGithubUrl({ path: "/packages/contents/curriculum" });
+/** Resolves one immutable source directory without hardcoded program cases. */
+function readCurriculumSourceUrl(model: CurriculumRouteModel) {
+  if (!model.managed) {
+    return getGithubUrl({ path: `/${model.sourcePath}` });
   }
+
+  return model.sourceRevision
+    ? getAksaraTreeUrl({
+        path: model.sourcePath,
+        revision: model.sourceRevision,
+      })
+    : undefined;
 }

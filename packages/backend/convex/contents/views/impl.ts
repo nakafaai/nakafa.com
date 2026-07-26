@@ -9,11 +9,13 @@ import { resolveLearningContext } from "@repo/backend/convex/contents/views/cont
 import { upsertUserRecent } from "@repo/backend/convex/contents/views/recent";
 import { enqueuePopularitySignals } from "@repo/backend/convex/contents/views/signals";
 import {
-  ContentViewIoError,
-  contentViewIoFailedCode,
   type RecordContentViewArgs,
+  toContentViewIoError,
 } from "@repo/backend/convex/contents/views/spec";
-import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
+import {
+  type ContentViewTarget,
+  loadContentTarget,
+} from "@repo/backend/convex/contents/views/target";
 import { getOptionalActiveAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
@@ -26,51 +28,11 @@ type ScheduleContentAnalyticsPartitionReference = FunctionReference<
   ScheduleContentAnalyticsPartitionResult
 >;
 
-/** Maps thrown Convex IO failures into the content-view error channel. */
-function toContentViewIoError(error: unknown) {
-  return new ContentViewIoError({
-    code: contentViewIoFailedCode,
-    message: getUnknownErrorMessage(error),
-  });
-}
-
-/** Resolves the route-catalog projection for a graph content ID. */
-const loadContentTarget = Effect.fn("contents.views.loadContentTarget")(
-  function* (db: MutationCtx["db"], args: RecordContentViewArgs) {
-    const route = yield* Effect.tryPromise({
-      try: () =>
-        db
-          .query("contentRoutes")
-          .withIndex("by_content_id", (q) => q.eq("content_id", args.contentId))
-          .unique(),
-      catch: toContentViewIoError,
-    });
-
-    if (!route) {
-      return null;
-    }
-
-    if (route.locale !== args.locale || route.content_id !== route.assetId) {
-      return null;
-    }
-
-    if (
-      route.kind === "article" ||
-      route.kind === "curriculum-lesson" ||
-      route.kind === "tryout-set"
-    ) {
-      return route;
-    }
-
-    return null;
-  }
-);
-
 /** Loads the latest view row recorded for a device/content/context tuple. */
 const loadLatestDeviceView = Effect.fn("contents.views.loadLatestDeviceView")(
   function* (
     db: MutationCtx["db"],
-    contentId: Doc<"contentRoutes">["content_id"],
+    contentId: ContentViewTarget["content_id"],
     contextKey: string,
     deviceId: string
   ) {
@@ -98,7 +60,7 @@ const loadSignedInDeviceView = Effect.fn(
   "contents.views.loadSignedInDeviceView"
 )(function* (
   db: MutationCtx["db"],
-  contentId: Doc<"contentRoutes">["content_id"],
+  contentId: ContentViewTarget["content_id"],
   contextKey: string,
   input: {
     readonly deviceId: string;
@@ -133,7 +95,7 @@ const loadSignedInDeviceView = Effect.fn(
 const loadExistingView = Effect.fn("contents.views.loadExistingView")(
   function* (
     db: MutationCtx["db"],
-    contentId: Doc<"contentRoutes">["content_id"],
+    contentId: ContentViewTarget["content_id"],
     contextKey: string,
     input: {
       readonly deviceId: string;
@@ -176,7 +138,7 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
 /** Writes the first durable view row for a viewer/content/context tuple. */
 const insertNewView = Effect.fn("contents.views.insertNewView")(function* (
   db: MutationCtx["db"],
-  route: Doc<"contentRoutes">,
+  route: ContentViewTarget,
   args: RecordContentViewArgs,
   context: LearningContextStorage,
   input: {
@@ -256,7 +218,7 @@ export const recordUniqueContentView = Effect.fn(
     try: () => getOptionalActiveAppUser(ctx),
     catch: toContentViewIoError,
   });
-  const target = yield* loadContentTarget(ctx.db, args);
+  const target = yield* loadContentTarget(ctx, args);
 
   if (!target) {
     return { alreadyViewed: false, isNewView: false, success: false };
@@ -265,7 +227,7 @@ export const recordUniqueContentView = Effect.fn(
   const now = yield* Clock.currentTimeMillis;
   const userId = authContext?.appUser._id;
   const learningContext = yield* resolveLearningContext(
-    ctx.db,
+    ctx,
     target,
     args.context
   );

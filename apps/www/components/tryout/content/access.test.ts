@@ -4,7 +4,6 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readTryoutContentAccess } from "@/components/tryout/content/access";
 
-vi.mock("server-only", () => ({}));
 vi.mock("convex/nextjs", () => ({ fetchQuery: vi.fn() }));
 
 const args = {

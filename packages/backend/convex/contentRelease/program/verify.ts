@@ -1,4 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect } from "effect";
@@ -32,6 +33,9 @@ export const verifyCurriculum = Effect.fn("contentRelease.verifyCurriculum")(
       decoded.family !== "program" ||
       decoded.record.kind !== "curriculum" ||
       decoded.record.rowHash !== row.rowHash ||
+      (decoded.record.row.sitemap
+        ? getHashBucket(decoded.record.rowHash)
+        : undefined) !== row.bucket ||
       decoded.record.row.level !== row.level ||
       decoded.record.row.locale !== row.locale ||
       decoded.record.row.materialContextParentPath !== row.contextPath ||

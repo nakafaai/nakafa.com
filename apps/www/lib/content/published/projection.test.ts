@@ -2,25 +2,13 @@
 
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-import {
-  decodePublishedArticle,
-  decodePublishedMaterial,
-} from "@/lib/content/published/projection";
+import { decodePublishedArticle } from "@/lib/content/published/projection";
 import { testArticleProjection } from "@/test/content-article";
-import {
-  previewProjection,
-  previewPublicRoute,
-  previewV2Projection,
-} from "@/test/content-preview";
 
-const identity = {
-  locale: "en" as const,
-  publicPath: previewProjection.publicPath,
-};
 const articleIdentity = {
-  locale: "en" as const,
+  locale: "en",
   publicPath: testArticleProjection.publicPath,
-};
+} satisfies Parameters<typeof decodePublishedArticle>[1];
 
 describe("published projection", () => {
   it("decodes an exact signed article projection", async () => {
@@ -51,34 +39,5 @@ describe("published projection", () => {
       _tag: "PublishedProjectionError",
       ...articleIdentity,
     });
-  });
-
-  it("adapts the exact signed projection to the current route shell", async () => {
-    for (const projection of [previewV2Projection, previewProjection]) {
-      await expect(
-        Effect.runPromise(decodePublishedMaterial(projection, identity))
-      ).resolves.toEqual({
-        projection,
-        route: previewPublicRoute,
-      });
-    }
-  });
-
-  it("keeps invalid projection data in the typed error channel", async () => {
-    const failures = [
-      { ...previewProjection, parentPath: "subjects/other" },
-      { ...previewProjection, contentKey: "test:invalid-route-source" },
-    ];
-
-    for (const input of failures) {
-      await expect(
-        Effect.runPromise(
-          decodePublishedMaterial(input, identity).pipe(Effect.flip)
-        )
-      ).resolves.toMatchObject({
-        _tag: "PublishedProjectionError",
-        ...identity,
-      });
-    }
   });
 });

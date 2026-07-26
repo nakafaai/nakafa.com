@@ -4,6 +4,7 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { toLearningContextQuery } from "@repo/backend/convex/contents/context";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { resolveLearningContext } from "@repo/backend/convex/contents/views/context";
+import { loadContentTarget } from "@repo/backend/convex/contents/views/target";
 import {
   getUnknownErrorMessage,
   runConvexProgram,
@@ -84,7 +85,7 @@ const listRecentLearning = Effect.fn("contents.recent.listRecentLearning")(
     });
 
     for (const row of recentRows) {
-      const subject = yield* toRecentlyViewedSubject(ctx.db, row);
+      const subject = yield* toRecentlyViewedSubject(ctx, row);
 
       if (subject) {
         subjects.push(subject);
@@ -131,15 +132,12 @@ function toPublicContentRef(
 /** Projects one ranked recent row to the public home-card result shape. */
 const toRecentlyViewedSubject = Effect.fn(
   "contents.recent.toRecentlyViewedSubject"
-)(function* (db: QueryCtx["db"], row: Doc<"userLearningRecents">) {
-  const route = yield* Effect.tryPromise({
-    try: () =>
-      db
-        .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", row.content_id))
-        .unique(),
-    catch: toRecentLearningIoError,
-  });
+)(function* (ctx: QueryCtx, row: Doc<"userLearningRecents">) {
+  const route = yield* loadContentTarget(ctx, {
+    contentId: row.content_id,
+    locale: row.locale,
+    section: row.section,
+  }).pipe(Effect.mapError(toRecentLearningIoError));
 
   if (
     !(
@@ -153,7 +151,7 @@ const toRecentlyViewedSubject = Effect.fn(
   }
 
   const context = yield* resolveLearningContext(
-    db,
+    ctx,
     route,
     row.contextMode === "placement" &&
       row.contextProgramKey &&

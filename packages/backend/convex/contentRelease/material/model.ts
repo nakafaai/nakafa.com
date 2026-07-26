@@ -85,6 +85,7 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
         projectionJson: null,
         rendererDomain: null,
         siblingJson: [],
+        sourcePath: null,
         sourceRevision: null,
       };
     }
@@ -105,6 +106,7 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
         projectionJson: null,
         rendererDomain: null,
         siblingJson: [],
+        sourcePath: null,
         sourceRevision: readSourceRevision(owner.active),
       };
     }
@@ -121,6 +123,7 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
       projectionJson: current.projectionJson,
       rendererDomain: row.rendererDomain,
       siblingJson: siblings.map(({ projectionJson }) => projectionJson),
+      sourcePath: row.sourcePath,
       sourceRevision: readSourceRevision(owner.active),
     };
   }

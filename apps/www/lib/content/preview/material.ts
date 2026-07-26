@@ -3,10 +3,10 @@ import "server-only";
 import type { MaterialPreviewDocument } from "@nakafa/aksara-contracts/preview/document";
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
 import {
+  type MaterialLessonProjection,
   MaterialLessonProjectionSchema,
   type MaterialMetadata,
 } from "@nakafa/aksara-contracts/projection/material";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { Effect, Option, Schema } from "effect";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import type { PreviewConfig } from "@/lib/content/preview/config";
@@ -16,7 +16,6 @@ import {
 } from "@/lib/content/preview/errors";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 import {
-  decodeMaterialPreviewRoute,
   type MaterialPreviewRouteInput,
   matchesMaterialPreviewRoute,
 } from "@/lib/content/preview/route";
@@ -30,8 +29,9 @@ export interface MaterialPreviewContent {
   readonly Content: RenderableContent["Content"];
   readonly locale: MaterialPreviewDocument["route"]["locale"];
   readonly metadata: MaterialMetadata;
+  readonly projection: MaterialLessonProjection;
   readonly rawMdx: string;
-  readonly route: PublicContentRoute;
+  readonly rendererDomain: MaterialPreviewDocument["rendererDomain"];
 }
 
 /** Authenticates and executes the exact ready material artifact. */
@@ -45,7 +45,6 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
     MaterialLessonProjectionSchema
   )(previewArtifact.projection);
 
-  const route = yield* decodeMaterialPreviewRoute(projection);
   const rendered = yield* executePreviewArtifact({
     config,
     document,
@@ -56,8 +55,9 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
     Content: rendered.Content,
     locale: projection.locale,
     metadata: projection.metadata,
+    projection,
     rawMdx: rendered.artifact.payload.rawMdx,
-    route,
+    rendererDomain: document.rendererDomain,
   } satisfies MaterialPreviewContent;
 });
 

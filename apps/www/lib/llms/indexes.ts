@@ -6,6 +6,8 @@ import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
 import {
   getContentListingLlmsEntries,
   getContentPageLlmsEntries,
+} from "@/lib/llms/content-entries";
+import {
   getLlmsSections,
   getSiteLlmsEntries,
   isLlmsSection,

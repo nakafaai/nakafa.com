@@ -4,6 +4,7 @@ import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
+import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
 import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
 import { listRuntimeLatestContentRoutes } from "@/lib/content/runtime/routes";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
@@ -97,14 +98,7 @@ function getFeedContentRoutes() {
       const routes = yield* Effect.forEach(
         routing.locales,
         (locale) =>
-          Effect.all([
-            readFeedArticles(locale),
-            listRuntimeLatestContentRoutes({
-              limit: RSS_CONTENT_ROUTE_LIMIT,
-              locale,
-              section: "material",
-            }),
-          ]),
+          Effect.all([readFeedArticles(locale), readFeedMaterials(locale)]),
         { concurrency: routing.locales.length }
       );
 
@@ -139,5 +133,30 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
     locale,
     route: article.publicPath,
     title: article.title,
+  }));
+});
+
+/** Selects published materials after cutover and source rows before it. */
+const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
+  locale: (typeof routing.locales)[number]
+) {
+  const published = yield* readPublishedLatestMaterials(
+    locale,
+    RSS_CONTENT_ROUTE_LIMIT
+  );
+  if (!published.managed) {
+    return yield* listRuntimeLatestContentRoutes({
+      limit: RSS_CONTENT_ROUTE_LIMIT,
+      locale,
+      section: "material",
+    });
+  }
+  return published.materials.map((material) => ({
+    authors: material.authors,
+    date: Date.parse(`${material.date}T00:00:00.000Z`),
+    description: material.description,
+    locale,
+    route: material.publicPath,
+    title: material.title,
   }));
 });

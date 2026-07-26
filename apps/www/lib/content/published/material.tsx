@@ -4,20 +4,22 @@ import type {
   CorpusSourcePath,
   GitCommitSha,
 } from "@nakafa/aksara-contracts/ids";
-import type { MaterialMetadata } from "@nakafa/aksara-contracts/projection/material";
+import type {
+  MaterialMetadata,
+  MaterialProjectionWire,
+} from "@nakafa/aksara-contracts/projection/material";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
-import type { PublicContentRouteSchema } from "@repo/contents/_types/route/schema";
 import { Effect } from "effect";
 import type { ReactNode } from "react";
 import { applyPublishedContentCache } from "@/lib/content/cache";
+import { decodeMaterialProjection } from "@/lib/content/material/decode";
 import { executeSignedArtifact } from "@/lib/content/published/artifact";
 import {
   type PublishedContentData,
   type PublishedContentInput,
   readPublishedContent,
 } from "@/lib/content/published/exchange";
-import { decodePublishedMaterial } from "@/lib/content/published/projection";
 import { getRendererComponents } from "@/lib/content/renderer/components";
 
 /** Exact public material identity sent to the shared runtime seam. */
@@ -27,8 +29,8 @@ export type PublishedMaterialInput = PublishedContentInput;
 export interface PublishedMaterialContent {
   readonly body: ReactNode;
   readonly metadata: MaterialMetadata;
+  readonly projection: MaterialProjectionWire;
   readonly rawMdx: string;
-  readonly route: typeof PublicContentRouteSchema.Type;
   readonly sourcePath: CorpusSourcePath;
   readonly sourceRevision: GitCommitSha | null;
 }
@@ -37,7 +39,7 @@ export interface PublishedMaterialContent {
 export interface PublishedMaterialData
   extends Omit<PublishedContentData, "projection"> {
   readonly metadata: MaterialMetadata;
-  readonly route: typeof PublicContentRouteSchema.Type;
+  readonly projection: MaterialProjectionWire;
 }
 
 /** Reads and strictly narrows one verified runtime exchange to material data. */
@@ -45,17 +47,14 @@ export const readPublishedMaterial = Effect.fn(
   "NakafaContent.readPublishedMaterial"
 )(function* (input: PublishedMaterialInput) {
   const data = yield* readPublishedContent(input);
-  const { projection, route } = yield* decodePublishedMaterial(
-    data.projection,
-    input
-  );
+  const projection = yield* decodeMaterialProjection(data.projection, input);
 
   return {
     activeReleaseId: data.activeReleaseId,
     artifact: data.artifact,
     metadata: projection.metadata,
+    projection,
     rendererManifest: data.rendererManifest,
-    route,
     sourcePath: data.sourcePath,
     sourceRevision: data.sourceRevision,
   } satisfies PublishedMaterialData;
@@ -80,8 +79,8 @@ const renderMaterialArtifact = Effect.fn(
   return {
     body: <rendered.Content />,
     metadata: data.metadata,
+    projection: data.projection,
     rawMdx: rendered.artifact.payload.rawMdx,
-    route: data.route,
     sourcePath: data.sourcePath,
     sourceRevision: data.sourceRevision,
   } satisfies PublishedMaterialContent;

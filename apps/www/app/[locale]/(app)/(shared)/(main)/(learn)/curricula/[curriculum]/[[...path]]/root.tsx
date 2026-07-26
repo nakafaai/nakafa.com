@@ -1,5 +1,3 @@
-import { findLearningProgramByKey } from "@repo/contents/_types/program/catalog";
-import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,7 +7,12 @@ import {
   BreadcrumbSeparator,
 } from "@repo/design-system/components/ui/breadcrumb";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import type { Locale } from "next-intl";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
+import type {
+  CurriculumCatalogEntry,
+  CurriculumViewRoute,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
 import {
   CurriculumSelector,
   type CurriculumSelectorOption,
@@ -62,7 +65,7 @@ export function CurriculumRootHeader({
   selectorLabel,
   subjectLabel,
 }: {
-  currentRoute: PublicCurriculumRoute;
+  currentRoute: CurriculumViewRoute;
   homeLabel: string;
   options: readonly CurriculumSelectorOption[];
   selectorLabel: string;
@@ -88,19 +91,18 @@ export function CurriculumRootHeader({
 
 /** Renders root curriculum child routes as linked onboarding-style cards. */
 export function CurriculumRootCards({
+  entries,
   locale,
-  routes,
 }: {
-  locale: PublicCurriculumRoute["locale"];
-  routes: readonly PublicCurriculumRoute[];
+  entries: readonly CurriculumCatalogEntry[];
+  locale: Locale;
 }) {
   return (
     <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
-      {routes.map((route) => {
+      {entries.map(({ program, route }) => {
         const Icon = readCurriculumRouteIcon(route);
-        const program = findLearningProgramByKey(route.programKey);
         const countryCode =
-          route.level === "track" ? program?.provider.homeCountry : undefined;
+          route.level === "track" ? program.provider.homeCountry : undefined;
 
         return (
           <NavigationLink

@@ -13,9 +13,21 @@ const runtimeMocks = vi.hoisted(() => ({
 const articleMocks = vi.hoisted(() => ({
   readPublishedArticleBuckets: vi.fn(),
 }));
+const materialMocks = vi.hoisted(() => ({
+  readPublishedMaterialBuckets: vi.fn(),
+}));
+const programMocks = vi.hoisted(() => ({
+  readPublishedProgramBuckets: vi.fn(),
+}));
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: articleMocks.readPublishedArticleBuckets,
+}));
+vi.mock("@/lib/content/material/sitemap", () => ({
+  readPublishedMaterialBuckets: materialMocks.readPublishedMaterialBuckets,
+}));
+vi.mock("@/lib/content/program/sitemap", () => ({
+  readPublishedProgramBuckets: programMocks.readPublishedProgramBuckets,
 }));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
@@ -32,6 +44,14 @@ beforeEach(() => {
   articleMocks.readPublishedArticleBuckets.mockReset();
   articleMocks.readPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
+  );
+  materialMocks.readPublishedMaterialBuckets.mockReset();
+  materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+    Effect.succeed({ buckets: [], managed: false, materialCount: 0 })
+  );
+  programMocks.readPublishedProgramBuckets.mockReset();
+  programMocks.readPublishedProgramBuckets.mockReturnValue(
+    Effect.succeed({ buckets: [], managed: false, routeCount: 0 })
   );
   runtimeMocks.getRuntimeContentRouteCounts.mockReset();
   runtimeMocks.getRuntimePublicSitemapCount.mockReset();
@@ -112,6 +132,45 @@ describe("sitemap page catalog", () => {
         kind: "content",
         locale: "en",
         section: "articles",
+      })
+    );
+  });
+
+  it("replaces material rows and adds curriculum partitions after cutover", async () => {
+    materialMocks.readPublishedMaterialBuckets.mockImplementation((locale) =>
+      Effect.succeed({
+        buckets: locale === "en" ? ["def"] : [],
+        managed: locale === "en",
+        materialCount: locale === "en" ? 2 : 0,
+      })
+    );
+    programMocks.readPublishedProgramBuckets.mockImplementation((locale) =>
+      Effect.succeed({
+        buckets: locale === "en" ? ["abc"] : [],
+        managed: locale === "en",
+        routeCount: locale === "en" ? 3 : 0,
+      })
+    );
+
+    const descriptors = await Effect.runPromise(readSitemapPageDescriptors());
+
+    expect(descriptors).toContainEqual({
+      bucket: "def",
+      id: "material_en_def",
+      kind: "material",
+      locale: "en",
+    });
+    expect(descriptors).toContainEqual({
+      bucket: "abc",
+      id: "program_en_abc",
+      kind: "program",
+      locale: "en",
+    });
+    expect(descriptors).not.toContainEqual(
+      expect.objectContaining({
+        kind: "content",
+        locale: "en",
+        section: "material",
       })
     );
   });

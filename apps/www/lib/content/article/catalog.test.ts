@@ -5,6 +5,7 @@ import {
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
 import type { api } from "@repo/backend/convex/_generated/api";
+import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -103,7 +104,6 @@ function categoryPage(overrides?: {
   };
 }
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/lib/content/cache", () => ({
   applyPublishedCatalogCache: cacheMock,
 }));
@@ -158,7 +158,7 @@ describe("published article catalog", () => {
       expectedManifestHash: null,
       expectedReleaseId: null,
       locale: "en",
-      paginationOpts: { cursor: null, numItems: 32 },
+      paginationOpts: { cursor: null, numItems: PROJECTION_PAGE_LIMIT },
     });
     expect(cacheMock).toHaveBeenCalledWith("article");
   });

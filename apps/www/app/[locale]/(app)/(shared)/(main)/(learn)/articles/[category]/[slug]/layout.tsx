@@ -33,7 +33,12 @@ export default async function Layout(
   }
 
   return (
-    <ContentViewTracker contentId={contentId} locale={locale}>
+    <ContentViewTracker
+      contentId={contentId}
+      locale={locale}
+      publicPath={cleanedSlug}
+      section="articles"
+    >
       {children}
     </ContentViewTracker>
   );

@@ -1,28 +1,29 @@
-import {
-  encodeMaterialContextHint,
-  MATERIAL_CONTEXT_QUERY_PARAM,
-  readMaterialContextHint,
-} from "@repo/contents/_types/route/material/context";
-import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
+import { Option } from "effect";
 import {
   createLoader,
   createParser,
   createSerializer,
   type LoaderInput,
 } from "nuqs/server";
+import {
+  encodeMaterialContextHint,
+  MATERIAL_CONTEXT_QUERY_PARAM,
+  type MaterialContextIdentity,
+  readMaterialContextHint,
+} from "@/lib/routing/material/context";
 
 /**
- * Parses the public `ctx` query value through the contents-owned context grammar.
+ * Parses the public `ctx` query value through the route-owned context grammar.
  *
  * nuqs treats `null` as absence, which matches the product rule that malformed
  * or mismatched material context must be ignored rather than block the page.
  */
 function parseMaterialContextQuery(value: string) {
-  return readMaterialContextHint(value) ?? null;
+  return Option.getOrNull(readMaterialContextHint(value));
 }
 
 /**
- * Serializes a validated material context identity with the source-owned codec.
+ * Serializes a validated material context identity with the route-owned codec.
  *
  * Callers only receive this identity after the material/context index proves it
  * belongs to the current source asset and target locale.

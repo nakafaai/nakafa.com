@@ -104,14 +104,7 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
     const existing = yield* loadMaterial(ctx, head.contentKey, head.locale);
     if (existing) {
       if (existing.bucket !== row.bucket) {
-        if (existing.bucket !== undefined) {
-          yield* adjustMaterialBucket(
-            ctx,
-            existing.locale,
-            existing.bucket,
-            -1
-          );
-        }
+        yield* adjustMaterialBucket(ctx, existing.locale, existing.bucket, -1);
         yield* adjustMaterialBucket(ctx, row.locale, row.bucket, 1);
       }
       yield* Effect.promise(() =>
@@ -131,9 +124,7 @@ export const deleteMaterial = Effect.fn("contentRelease.deleteMaterial")(
     if (!existing) {
       return;
     }
-    if (existing.bucket !== undefined) {
-      yield* adjustMaterialBucket(ctx, existing.locale, existing.bucket, -1);
-    }
+    yield* adjustMaterialBucket(ctx, existing.locale, existing.bucket, -1);
     yield* Effect.promise(() => ctx.db.delete("materialCatalog", existing._id));
   }
 );

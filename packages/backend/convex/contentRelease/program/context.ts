@@ -7,19 +7,43 @@ import { loadProgramOwner } from "@repo/backend/convex/contentRelease/program/ow
 import { verifyCurriculum } from "@repo/backend/convex/contentRelease/program/verify";
 import { Effect } from "effect";
 
+interface ProgramContextInput {
+  readonly materialKey: string;
+  readonly nodeKey: string;
+  readonly parentPath: string;
+  readonly programKey: string;
+  readonly publicPath: string;
+}
+
+/** Checks whether one curriculum mapping owns the exact material target. */
+function ownsMaterial(
+  context: Effect.Effect.Success<ReturnType<typeof verifyCurriculum>>,
+  group: Effect.Effect.Success<ReturnType<typeof verifyCurriculum>>,
+  parent: Effect.Effect.Success<ReturnType<typeof verifyCurriculum>>,
+  input: ProgramContextInput
+) {
+  return (
+    context.materialContextNodeKey === input.nodeKey &&
+    context.materialContextParentPath === parent.publicPath &&
+    context.materialContextPublicPath === group.publicPath &&
+    context.materialKey === input.materialKey &&
+    context.programKey === input.programKey &&
+    (context.canonicalPath === input.publicPath ||
+      context.canonicalPath === input.parentPath)
+  );
+}
+
 /** Resolves one valid curriculum return context for a material identity. */
 export const readProgramContext = Effect.fn(
   "contentRelease.readProgramContext"
 )(function* (
   ctx: QueryCtx,
   locale: Doc<"curriculumRoutes">["locale"],
-  programKey: string,
-  nodeKey: string,
-  materialKey: string
+  input: ProgramContextInput
 ) {
   const owner = yield* loadProgramOwner(ctx, locale);
   if (!(owner.managed && owner.selected)) {
-    return { groupJson: null, managed: false, parentJson: null };
+    return { context: null, managed: false };
   }
   const { snapshotId } = owner.selected;
   const storedGroup = yield* Effect.promise(() =>
@@ -31,17 +55,17 @@ export const readProgramContext = Effect.fn(
           index
             .eq("snapshotId", snapshotId)
             .eq("locale", locale)
-            .eq("programKey", programKey)
-            .eq("nodeKey", nodeKey)
+            .eq("programKey", input.programKey)
+            .eq("nodeKey", input.nodeKey)
       )
       .unique()
   );
   if (!storedGroup) {
-    return { groupJson: null, managed: true, parentJson: null };
+    return { context: null, managed: true };
   }
   const group = yield* verifyCurriculum(storedGroup, snapshotId);
   if (!group.parentPath) {
-    return { groupJson: null, managed: true, parentJson: null };
+    return { context: null, managed: true };
   }
   const storedParent = yield* loadProgramRouteRow(
     ctx,
@@ -52,12 +76,12 @@ export const readProgramContext = Effect.fn(
   if (!storedParent) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Curriculum context ${programKey}/${nodeKey} lost parent ${group.parentPath}.`
+      `Curriculum context ${input.programKey}/${input.nodeKey} lost parent ${group.parentPath}.`
     );
   }
   const parent = yield* verifyCurriculum(storedParent, snapshotId);
   if (!(parent.level === "subject" || parent.level === "course")) {
-    return { groupJson: null, managed: true, parentJson: null };
+    return { context: null, managed: true };
   }
   const storedContexts = yield* Effect.promise(() =>
     ctx.db
@@ -79,22 +103,30 @@ export const readProgramContext = Effect.fn(
     );
   }
   const contexts = yield* Effect.forEach(storedContexts, (row) =>
-    verifyCurriculum(row, snapshotId)
+    verifyCurriculum(row, snapshotId).pipe(
+      Effect.map((context) => ({ context, row }))
+    )
   );
-  const ownsMaterial = contexts.some(
-    (context) =>
-      context.materialContextNodeKey === nodeKey &&
-      context.materialContextParentPath === parent.publicPath &&
-      context.materialContextPublicPath === group.publicPath &&
-      context.materialKey === materialKey &&
-      context.programKey === programKey
+  const matches = contexts.filter(({ context }) =>
+    ownsMaterial(context, group, parent, input)
   );
-  if (!ownsMaterial) {
-    return { groupJson: null, managed: true, parentJson: null };
+  if (matches.length > 1) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Curriculum context ${input.programKey}/${input.nodeKey} has ambiguous material ownership.`
+    );
+  }
+  const match = matches[0];
+  if (!match) {
+    return { context: null, managed: true };
   }
   return {
-    groupJson: storedGroup.rowJson,
+    context: {
+      groupJson: storedGroup.rowJson,
+      mapping: match.context,
+      mappingJson: match.row.rowJson,
+      parentJson: storedParent.rowJson,
+    },
     managed: true,
-    parentJson: storedParent.rowJson,
   };
 });

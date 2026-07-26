@@ -13,7 +13,11 @@ import {
   normalizePublicPath,
   uniqueRoutes,
 } from "@repo/contents/_types/route/path";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
+import type {
+  PublicContentRoute,
+  PublicMaterialLessonRoute,
+  PublicMaterialTopicRoute,
+} from "@repo/contents/_types/route/schema";
 import { locales } from "@repo/utilities/locales";
 import { Effect, Option } from "effect";
 
@@ -21,15 +25,6 @@ type MaterialContentRoute = Extract<
   PublicContentRoute,
   { readonly kind: "subject-topic" | "subject-lesson" }
 >;
-type MaterialLessonRoute = Extract<
-  PublicContentRoute,
-  { readonly kind: "subject-lesson" }
->;
-type MaterialTopicRoute = Extract<
-  PublicContentRoute,
-  { readonly kind: "subject-topic" }
->;
-
 /** Projects reusable material sources into canonical public routes. */
 export const listPublicContentRoutes = Effect.fn("contents.route.listContent")(
   function* ({
@@ -103,14 +98,14 @@ export function isMaterialContentRoute(
 /** Checks whether one content row is a concrete canonical lesson body. */
 export function isMaterialLessonRoute(
   route: PublicContentRoute
-): route is MaterialLessonRoute {
+): route is PublicMaterialLessonRoute {
   return route.kind === "subject-lesson";
 }
 
 /** Checks whether one content row is an internal material topic grouping row. */
 function isMaterialTopicRoute(
   route: PublicContentRoute
-): route is MaterialTopicRoute {
+): route is PublicMaterialTopicRoute {
   return route.kind === "subject-topic";
 }
 

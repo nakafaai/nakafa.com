@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   createLocalizedAlternates,
   createProjectedRouteAlternates,
+  createResolvedRouteAlternates,
 } from "@/lib/utils/seo/alternates";
 
 describe("createLocalizedAlternates", () => {
@@ -82,6 +83,24 @@ describe("createLocalizedAlternates", () => {
     expect(result.languages).toEqual({
       id: "/id/materi/matematika",
       "x-default": "/en/materi/matematika",
+    });
+  });
+
+  it("builds hreflang values from already-resolved route counterparts", () => {
+    expect(
+      createResolvedRouteAlternates(
+        { locale: "id", publicPath: "kurikulum/merdeka" },
+        [
+          { locale: "en", publicPath: "curriculum/merdeka" },
+          { locale: "id", publicPath: "kurikulum/merdeka" },
+        ]
+      )
+    ).toMatchObject({
+      canonical: "/id/kurikulum/merdeka",
+      languages: {
+        en: "/en/curriculum/merdeka",
+        id: "/id/kurikulum/merdeka",
+      },
     });
   });
 

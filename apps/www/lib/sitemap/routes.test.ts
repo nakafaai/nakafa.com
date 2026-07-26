@@ -19,24 +19,45 @@ const runtimeMocks = vi.hoisted(() => ({
 const articleMocks = vi.hoisted(() => ({
   readPublishedArticleSitemap: vi.fn(),
 }));
+const materialMocks = vi.hoisted(() => ({
+  readPublishedMaterialBuckets: vi.fn(),
+  readPublishedMaterialSitemap: vi.fn(),
+}));
+const programMocks = vi.hoisted(() => ({
+  readPublishedProgramBuckets: vi.fn(),
+  readPublishedProgramSitemap: vi.fn(),
+}));
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleSitemap: articleMocks.readPublishedArticleSitemap,
 }));
+vi.mock("@/lib/content/material/sitemap", () => materialMocks);
+vi.mock("@/lib/content/program/sitemap", () => programMocks);
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentSitemapPage: runtimeMocks.getRuntimeContentSitemapPage,
   getRuntimePublicSitemapPage: runtimeMocks.getRuntimePublicSitemapPage,
 }));
 
-vi.mock("@repo/internationalization/src/routing", async () => {
-  const { defaultLocale, locales } = await import("@repo/utilities/locales");
-  return { routing: { defaultLocale, locales } };
-});
-
 beforeEach(() => {
   articleMocks.readPublishedArticleSitemap.mockReset();
   articleMocks.readPublishedArticleSitemap.mockReturnValue(
+    Effect.succeed(null)
+  );
+  materialMocks.readPublishedMaterialBuckets.mockReset();
+  materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+    Effect.succeed({ buckets: [], managed: false })
+  );
+  materialMocks.readPublishedMaterialSitemap.mockReset();
+  materialMocks.readPublishedMaterialSitemap.mockReturnValue(
+    Effect.succeed(null)
+  );
+  programMocks.readPublishedProgramBuckets.mockReset();
+  programMocks.readPublishedProgramBuckets.mockReturnValue(
+    Effect.succeed({ buckets: [], managed: false })
+  );
+  programMocks.readPublishedProgramSitemap.mockReset();
+  programMocks.readPublishedProgramSitemap.mockReturnValue(
     Effect.succeed(null)
   );
   runtimeMocks.getRuntimeContentSitemapPage.mockReset();
@@ -116,6 +137,63 @@ describe("sitemap route pages", () => {
     });
   });
 
+  it("serves release-owned material and curriculum sitemap pages", async () => {
+    materialMocks.readPublishedMaterialSitemap.mockReturnValue(
+      Effect.succeed({
+        routes: [
+          {
+            date: "2026-07-25",
+            publicPath: "subjects/mathematics/functions/concept",
+          },
+          {
+            date: "2026-07-24",
+            publicPath: "subjects/mathematics/functions/bijection",
+          },
+        ],
+      })
+    );
+    programMocks.readPublishedProgramSitemap.mockReturnValue(
+      Effect.succeed({
+        routes: [
+          { publicPath: "curriculum/merdeka/class-11/mathematics" },
+          { publicPath: "curriculum/merdeka/class-11" },
+        ],
+      })
+    );
+
+    await expect(readPaths("material_en_abc")).resolves.toEqual([
+      "/subjects/mathematics/functions/bijection",
+      "/subjects/mathematics/functions/concept",
+    ]);
+    await expect(readPaths("program_en_abc")).resolves.toEqual([
+      "/curriculum/merdeka/class-11",
+      "/curriculum/merdeka/class-11/mathematics",
+    ]);
+  });
+
+  it("removes source-owned public rows after their family owner activates", async () => {
+    runtimeMocks.getRuntimePublicSitemapPage.mockReturnValueOnce(
+      Effect.succeed({
+        paths: [
+          "curriculum/merdeka/class-10/mathematics",
+          "subjects/mathematics/functions/concept",
+          "try-out/indonesia/snbt",
+        ],
+        syncedAt: 1_735_689_600_000,
+      })
+    );
+    materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+      Effect.succeed({ buckets: ["abc"], managed: true })
+    );
+    programMocks.readPublishedProgramBuckets.mockReturnValue(
+      Effect.succeed({ buckets: ["abc"], managed: true })
+    );
+
+    await expect(readPaths("public_en_0")).resolves.toEqual([
+      "/try-out/indonesia/snbt",
+    ]);
+  });
+
   it("fails when an id or its materialized page is missing", async () => {
     await expect(readFailure("malformed")).resolves.toMatchObject({
       _tag: "SitemapPageNotFoundError",
@@ -138,6 +216,14 @@ describe("sitemap route pages", () => {
     await expect(readFailure("article_en_abc")).resolves.toMatchObject({
       _tag: "SitemapPageNotFoundError",
       pageId: "article_en_abc",
+    });
+    await expect(readFailure("material_en_abc")).resolves.toMatchObject({
+      _tag: "SitemapPageNotFoundError",
+      pageId: "material_en_abc",
+    });
+    await expect(readFailure("program_en_abc")).resolves.toMatchObject({
+      _tag: "SitemapPageNotFoundError",
+      pageId: "program_en_abc",
     });
   });
 });
