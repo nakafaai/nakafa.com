@@ -1,23 +1,31 @@
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot";
+import type {
+  ContentSnapshotSet,
+  PublicationScope,
+} from "@nakafa/aksara-contracts/release/snapshot";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
+  testPublicationScope,
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content-release";
 
 interface StagedReleaseOptions {
+  readonly baseFamilies?: readonly ContentFamily[];
   readonly checkedIndex?: number;
   readonly checkedItems?: number;
   readonly deleteCount?: number;
   readonly itemCount?: number;
   readonly projectionCount?: number;
   readonly releaseId?: string;
+  readonly resultFamilies?: readonly ContentFamily[];
   readonly role?: "candidate" | "recovery";
   readonly routeCount?: number;
+  readonly scope?: PublicationScope;
   readonly sequence?: number;
   readonly snapshots?: ContentSnapshotSet;
   readonly stagedArtifacts?: number;
@@ -41,12 +49,14 @@ export async function insertSignedCandidate(
 ) {
   const now = Date.UTC(2026, 6, 22, 12);
   await ctx.db.insert("contentReleases", {
+    baseFamilies: [],
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,
     releaseId,
     releaseJson: JSON.stringify(release),
     rendererJson,
+    resultFamilies: [...release.manifest.scope.families],
     role: "candidate",
     sequence: 1,
     stagedArtifacts: 0,
@@ -81,7 +91,13 @@ export async function insertTestRelease(
   const sequence = options?.sequence ?? 1;
   const itemCount = options?.itemCount ?? 1;
   const upsertCount = options?.upsertCount ?? itemCount;
+  const scope =
+    options?.scope ??
+    testPublicationScope({
+      snapshots: options?.snapshots,
+    });
   await ctx.db.insert("contentReleases", {
+    baseFamilies: [...(options?.baseFamilies ?? [])],
     checkedIndex: options?.checkedIndex ?? -1,
     checkedItems: options?.checkedItems ?? 0,
     createdAt: now,
@@ -92,10 +108,15 @@ export async function insertTestRelease(
       projectionCount: options?.projectionCount ?? upsertCount,
       releaseId,
       routeCount: options?.routeCount ?? upsertCount,
+      scope,
       snapshots: options?.snapshots,
       upsertCount,
     }),
     rendererJson: testRendererJson(),
+    resultFamilies: [
+      ...(options?.resultFamilies ??
+        (role === "candidate" ? scope.families : [])),
+    ],
     role,
     sequence,
     stagedArtifacts: options?.stagedArtifacts ?? 0,

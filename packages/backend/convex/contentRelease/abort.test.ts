@@ -37,11 +37,20 @@ describe("contentRelease/abort", () => {
     await t.mutation(async (ctx) => {
       await seedAbortRelease(ctx);
       for (let index = 0; index < ABORT_ITEM_COUNT; index += 1) {
+        const contentKey = abortContentKey(index);
         await ctx.db.insert("contentKeys", {
-          contentKey: abortContentKey(index),
+          contentKey,
           createdSequence: 1,
           family: "material",
           locale: "en",
+        });
+        await ctx.db.insert("contentOwners", {
+          contentKey,
+          family: "material",
+          locale: "en",
+          managed: true,
+          releaseId: ABORT_RELEASE_ID,
+          sequence: 1,
         });
       }
     });
@@ -52,6 +61,7 @@ describe("contentRelease/abort", () => {
     const stored = await t.run(async (ctx) => ({
       items: await ctx.db.query("contentItems").collect(),
       keys: await ctx.db.query("contentKeys").collect(),
+      owners: await ctx.db.query("contentOwners").collect(),
       release: await ctx.db.query("contentReleases").unique(),
       state: await ctx.db.query("contentState").unique(),
     }));
@@ -71,6 +81,7 @@ describe("contentRelease/abort", () => {
     expect(repeated).toEqual(completed);
     expect(stored.items).toHaveLength(0);
     expect(stored.keys).toHaveLength(0);
+    expect(stored.owners).toHaveLength(0);
     expect(stored.release?.status).toBe("aborted");
     expect(stored.state?.candidateReleaseId).toBeUndefined();
   });

@@ -99,6 +99,17 @@ describe("contentRelease/manifest", () => {
       releaseId: CANDIDATE.releaseId,
     });
     expect(unchanged).toEqual(created);
+    const stored = await t.run(async (ctx) => ({
+      release: await ctx.db.query("contentReleases").unique(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+    expect(stored.state).toMatchObject({
+      candidateReleaseId: CANDIDATE.releaseId,
+    });
+    expect(stored.release).toMatchObject({
+      baseFamilies: [],
+      resultFamilies: ["article", "material", "question"],
+    });
     await expect(
       t.mutation(stageRelease, {
         releaseJson: candidateJson({
@@ -125,6 +136,32 @@ describe("contentRelease/manifest", () => {
       phase: "staging",
       releaseId: RECOVERY.releaseId,
     });
+    const stored = await t.run(async (ctx) => ({
+      releases: await ctx.db
+        .query("contentReleases")
+        .withIndex("by_sequence")
+        .collect(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+    expect(stored.state).toMatchObject({
+      candidateReleaseId: CANDIDATE.releaseId,
+      recoveryReleaseId: RECOVERY.releaseId,
+    });
+    expect(
+      stored.releases.map(({ baseFamilies, resultFamilies }) => ({
+        baseFamilies,
+        resultFamilies,
+      }))
+    ).toEqual([
+      {
+        baseFamilies: [],
+        resultFamilies: ["article", "material", "question"],
+      },
+      {
+        baseFamilies: ["article", "material", "question"],
+        resultFamilies: [],
+      },
+    ]);
     await expect(
       t.mutation(stageRecovery, {
         releaseJson: recoveryJson(),
@@ -236,6 +273,10 @@ describe("contentRelease/manifest", () => {
     await t.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...CANDIDATE,
+        ownership: {
+          base: [],
+          result: ["article", "material", "question"],
+        },
         role: "candidate",
         status: "completed",
       });
