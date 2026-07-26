@@ -13,9 +13,13 @@ import {
 
 const mockGetRuntimeContentRouteCounts = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
+const mockReadPublishedMaterialBuckets = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: mockReadPublishedArticleBuckets,
+}));
+vi.mock("@/lib/content/material/sitemap", () => ({
+  readPublishedMaterialBuckets: mockReadPublishedMaterialBuckets,
 }));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
@@ -34,8 +38,12 @@ const articleEntry: LlmsEntry = {
 beforeEach(() => {
   mockGetRuntimeContentRouteCounts.mockReset();
   mockReadPublishedArticleBuckets.mockReset();
+  mockReadPublishedMaterialBuckets.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
+  );
+  mockReadPublishedMaterialBuckets.mockReturnValue(
+    Effect.succeed({ buckets: [], managed: false, materialCount: 0 })
   );
   mockGetRuntimeContentRouteCounts.mockReturnValue(
     Effect.succeed([
@@ -86,6 +94,27 @@ describe("llms section indexes", () => {
       routeCount: 100,
     });
     expect(mockReadPublishedArticleBuckets).not.toHaveBeenCalled();
+  });
+
+  it("uses material partitions after their owner activates", async () => {
+    mockReadPublishedMaterialBuckets.mockReturnValue(
+      Effect.succeed({
+        buckets: ["000", "abc"],
+        managed: true,
+        materialCount: 42,
+      })
+    );
+
+    await expect(
+      Effect.runPromise(
+        getLlmsSectionPages({ locale: "en", section: "material" })
+      )
+    ).resolves.toEqual({
+      owner: "published",
+      pageCount: 2,
+      routeCount: 42,
+    });
+    expect(mockGetRuntimeContentRouteCounts).not.toHaveBeenCalled();
   });
 
   it("renders empty, single, and multi-page navigation", () => {

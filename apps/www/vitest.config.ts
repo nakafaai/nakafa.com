@@ -18,6 +18,8 @@ export default mergeConfig(config, {
     alias: {
       /** Match the app's `@/` import alias inside tests. */
       "@": __dirname,
+      /** Replace Next's import guard with one shared server-test boundary. */
+      "server-only": path.resolve(__dirname, "./test/server-only.ts"),
     },
   },
   test: {

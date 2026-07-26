@@ -19,6 +19,7 @@ import {
 } from "@nakafa/aksara-contracts/program/snapshot";
 import { hashProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot-hash";
 import {
+  type LearningProgram,
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
@@ -46,13 +47,16 @@ import type { TestConvex } from "convex-test";
 import { Effect, Stream } from "effect";
 
 /** Builds one explicit technical program row for backend protocol tests. */
-function technicalProgram(index: number) {
+export function makeTechnicalProgram(
+  index: number,
+  kind: LearningProgram["kind"] = "school-curriculum"
+) {
   return LearningProgramSchema.make({
     defaultCoverageStatus: "planned",
     displayOrder: index * 10,
     iconKey: "school",
     key: LearningProgramKeySchema.make(`technical-program-${index}`),
-    kind: "school-curriculum",
+    kind,
     navigation: {
       levels: ["track", "topic"],
       model: "curriculum-tree",
@@ -82,7 +86,7 @@ function technicalProgram(index: number) {
 
 /** Builds one locale-specific root for a technical program contract row. */
 function technicalCurriculum(
-  program: ReturnType<typeof technicalProgram>,
+  program: ReturnType<typeof makeTechnicalProgram>,
   locale: "en" | "id"
 ) {
   const translation = program.translations[locale];
@@ -105,18 +109,38 @@ function technicalCurriculum(
   });
 }
 
+/** Orders curriculum roots by the signed stream's code-unit identity. */
+function compareCurriculum(
+  left: ReturnType<typeof technicalCurriculum>,
+  right: ReturnType<typeof technicalCurriculum>
+) {
+  const leftKey = `${left.programKey}\0${left.locale}\0${left.publicPath}`;
+  const rightKey = `${right.programKey}\0${right.locale}\0${right.publicPath}`;
+  if (leftKey < rightKey) {
+    return -1;
+  }
+  return leftKey === rightKey ? 0 : 1;
+}
+
 /** Prepares one complete six-row program snapshot and its signed transition. */
 export const makeProgramSnapshotData = Effect.fn(
   "backendTest.makeProgramSnapshotData"
-)(function* () {
-  const programs = [technicalProgram(1), technicalProgram(2)];
+)(function* (
+  programs: readonly LearningProgram[] = [
+    makeTechnicalProgram(1),
+    makeTechnicalProgram(2),
+  ]
+) {
   const catalog = yield* Effect.forEach(programs, makeProgramSnapshotRow);
-  const curriculum = yield* Effect.forEach(
-    programs.flatMap((program) =>
+  const curriculumRoutes = programs
+    .flatMap((program) =>
       ContentLocaleSchema.literals.map((locale) =>
         technicalCurriculum(program, locale)
       )
-    ),
+    )
+    .sort(compareCurriculum);
+  const curriculum = yield* Effect.forEach(
+    curriculumRoutes,
     makeCurriculumSnapshotRow
   );
   const records = [...catalog, ...curriculum];
@@ -200,9 +224,10 @@ export async function stageProgramSnapshot(
 /** Selects one verified program snapshot with a coherent material owner. */
 export async function activateProgramSnapshot(
   t: TestConvex<typeof schema>,
-  data: ProgramSnapshotData
+  data: ProgramSnapshotData,
+  batchSize = data.rowJson.length
 ) {
-  await stageProgramSnapshot(t, data);
+  await stageProgramSnapshot(t, data, batchSize);
   await t.mutation(async (ctx) => {
     const [release, snapshot, state] = await Promise.all([
       ctx.db.query("contentReleases").unique(),

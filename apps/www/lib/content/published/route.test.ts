@@ -18,7 +18,6 @@ const input = {
   publicPath: previewProjection.publicPath,
 };
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/lib/content/runtime/query", () => ({
   fetchRuntimeQuery: fetchQueryMock,
   readRuntimeQuery: readQueryMock,

@@ -14,6 +14,7 @@ const mockGetContentListingLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetContentPageLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetRuntimeContentRouteCounts = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
+const mockReadPublishedMaterialBuckets = vi.hoisted(() => vi.fn());
 const mockGetSiteLlmsEntries = vi.hoisted(() => vi.fn());
 
 const articleEntry: LlmsEntry = {
@@ -46,13 +47,16 @@ vi.mock("@/lib/llms/entries", async () => {
     Object.hasOwn(constants.SECTION_LABELS, section);
 
   return {
-    getContentListingLlmsEntries: mockGetContentListingLlmsEntries,
-    getContentPageLlmsEntries: mockGetContentPageLlmsEntries,
     getLlmsSections: () => Object.keys(constants.SECTION_LABELS),
     getSiteLlmsEntries: mockGetSiteLlmsEntries,
     isLlmsSection,
   };
 });
+
+vi.mock("@/lib/llms/content-entries", () => ({
+  getContentListingLlmsEntries: mockGetContentListingLlmsEntries,
+  getContentPageLlmsEntries: mockGetContentPageLlmsEntries,
+}));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRouteCounts: mockGetRuntimeContentRouteCounts,
@@ -60,6 +64,9 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: mockReadPublishedArticleBuckets,
+}));
+vi.mock("@/lib/content/material/sitemap", () => ({
+  readPublishedMaterialBuckets: mockReadPublishedMaterialBuckets,
 }));
 
 beforeEach(() => {
@@ -69,12 +76,16 @@ beforeEach(() => {
   mockGetContentPageLlmsEntries.mockReset();
   mockGetRuntimeContentRouteCounts.mockReset();
   mockReadPublishedArticleBuckets.mockReset();
+  mockReadPublishedMaterialBuckets.mockReset();
   mockGetSiteLlmsEntries.mockReset();
   mockGetContentListingLlmsEntries.mockReturnValue(Effect.succeed(null));
   mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([articleEntry]));
   mockGetSiteLlmsEntries.mockReturnValue([siteEntry]);
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
+  );
+  mockReadPublishedMaterialBuckets.mockReturnValue(
+    Effect.succeed({ buckets: [], managed: false, materialCount: 0 })
   );
   mockGetRuntimeContentRouteCounts.mockReturnValue(
     Effect.succeed([

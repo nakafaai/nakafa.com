@@ -64,6 +64,7 @@ describe("contentRelease/snapshot/cleanup", () => {
     await t.mutation(async (ctx) => {
       await insertExpiredProgram(ctx, snapshotId, 3);
       await ctx.db.insert("curriculumRoutes", {
+        bucket: "333",
         index: 3,
         level: "track",
         locale: "en",
@@ -75,6 +76,13 @@ describe("contentRelease/snapshot/cleanup", () => {
         rowJson: "{}",
         snapshotId,
         sourcePath: "packages/corpus/curriculum/program-0",
+      });
+      await ctx.db.insert("programBuckets", {
+        bucket: "333",
+        index: 3,
+        locale: "en",
+        routeCount: 1,
+        snapshotId,
       });
     });
 
@@ -97,6 +105,9 @@ describe("contentRelease/snapshot/cleanup", () => {
         cleanupRetryAt: 0,
       },
     });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
     await expect(
       t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
     ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
@@ -138,6 +149,9 @@ describe("contentRelease/snapshot/cleanup", () => {
     await expect(
       t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
     ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).resolves.toEqual({ cursor: null, deleted: 0, done: false });
     await expect(
       t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
     ).resolves.toEqual({ cursor: null, deleted: 1, done: false });

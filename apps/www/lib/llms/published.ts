@@ -87,7 +87,7 @@ const readPublishedTextData = Effect.fn("www.llms.published.data")(function* (
   return {
     artifactHash: data.artifact.artifactHash,
     description: getMdxDescription(data.metadata),
-    publicPath: data.route.publicPath,
+    publicPath: data.projection.publicPath,
     rawMdx: data.artifact.payload.rawMdx,
     sourcePath: data.sourcePath,
     sourceRevision: data.sourceRevision,

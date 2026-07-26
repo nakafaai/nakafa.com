@@ -23,6 +23,18 @@ describe("sitemap page identity", () => {
       kind: "article",
       locale: "en",
     });
+    expect(getSitemapPageDescriptor("material_en_def")).toEqual({
+      bucket: "def",
+      id: "material_en_def",
+      kind: "material",
+      locale: "en",
+    });
+    expect(getSitemapPageDescriptor("program_id_012")).toEqual({
+      bucket: "012",
+      id: "program_id_012",
+      kind: "program",
+      locale: "id",
+    });
   });
 
   it.each([
@@ -37,6 +49,8 @@ describe("sitemap page identity", () => {
     "pages_en_articles_1",
     "article_en_wrong",
     "article_en",
+    "material_en_wrong",
+    "program_en",
     "",
   ])("rejects malformed id %s", (id) => {
     expect(getSitemapPageDescriptor(id)).toBeNull();

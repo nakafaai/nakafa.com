@@ -9,7 +9,6 @@ import {
 import { openPreviewEvents } from "@/lib/content/preview/events";
 import { previewConfig, previewRoute } from "@/test/content-preview";
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/lib/content/preview/config", async (importOriginal) => ({
   ...(await importOriginal()),
   readPreviewConfig: vi.fn(),

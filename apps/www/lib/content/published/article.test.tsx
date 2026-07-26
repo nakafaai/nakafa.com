@@ -44,7 +44,6 @@ const data = {
   sourceRevision,
 };
 
-vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({
   cacheLife: cacheLifeMock,
   cacheTag: cacheTagMock,

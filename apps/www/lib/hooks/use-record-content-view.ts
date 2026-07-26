@@ -4,7 +4,10 @@ import { useDocumentVisibility, useLocalStorage } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type {
+  Locale,
+  NakafaSection,
+} from "@repo/backend/convex/lib/validators/contents";
 import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { nanoid } from "nanoid";
@@ -19,6 +22,8 @@ interface UseRecordContentViewOptions {
   context?: LearningContextInput;
   delay?: number;
   locale: Locale;
+  publicPath: string;
+  section: NakafaSection;
 }
 
 /**
@@ -34,6 +39,8 @@ export function useRecordContentView({
   contentId,
   context,
   locale,
+  publicPath,
+  section,
   delay = 3000,
 }: UseRecordContentViewOptions) {
   const recordView = useMutation(
@@ -92,6 +99,8 @@ export function useRecordContentView({
             ...(context ? { context } : {}),
             locale,
             deviceId,
+            publicPath,
+            section,
           })
         ).pipe(
           Effect.tap(() => Effect.sync(() => markAsViewed(viewKey))),
@@ -124,7 +133,9 @@ export function useRecordContentView({
     isVisible,
     locale,
     markAsViewed,
+    publicPath,
     recordView,
+    section,
     signedInUserId,
     viewKey,
   ]);

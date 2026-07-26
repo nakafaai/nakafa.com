@@ -1,20 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { LearningContextStorage } from "@repo/backend/convex/contents/context";
-import {
-  ContentViewIoError,
-  contentViewIoFailedCode,
-} from "@repo/backend/convex/contents/views/spec";
-import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
+import { toContentViewIoError } from "@repo/backend/convex/contents/views/spec";
+import type { ContentViewTarget } from "@repo/backend/convex/contents/views/target";
 import { Effect } from "effect";
-
-/** Maps thrown Convex IO failures into the content-view error channel. */
-function toRecentIoError(error: unknown) {
-  return new ContentViewIoError({
-    code: contentViewIoFailedCode,
-    message: getUnknownErrorMessage(error),
-  });
-}
 
 /** Builds a patch that also clears stale optional context fields. */
 function toContextPatch(context: LearningContextStorage) {
@@ -34,7 +23,7 @@ function toContextPatch(context: LearningContextStorage) {
 export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
   function* (
     db: MutationCtx["db"],
-    route: Doc<"contentRoutes">,
+    route: ContentViewTarget,
     context: LearningContextStorage,
     input: {
       readonly lastViewedAt: number;
@@ -49,7 +38,7 @@ export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
             q.eq("userId", input.userId).eq("content_id", route.content_id)
           )
           .unique(),
-      catch: toRecentIoError,
+      catch: toContentViewIoError,
     });
     const row = {
       alignmentId: route.alignmentId,
@@ -73,7 +62,7 @@ export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
     if (!existing) {
       yield* Effect.tryPromise({
         try: () => db.insert("userLearningRecents", row),
-        catch: toRecentIoError,
+        catch: toContentViewIoError,
       });
       return;
     }
@@ -84,7 +73,7 @@ export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
           ...row,
           ...toContextPatch(context),
         }),
-      catch: toRecentIoError,
+      catch: toContentViewIoError,
     });
   }
 );

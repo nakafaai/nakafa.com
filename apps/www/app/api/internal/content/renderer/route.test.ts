@@ -29,7 +29,6 @@ const manifest = {
   rendererContractVersion: "1.0.0",
 };
 
-vi.mock("server-only", () => ({}));
 vi.mock("@repo/next-config/keys", () => ({
   /** Provides the renderer route's narrow internal authentication contract. */
   contentApiKeys: () => ({ INTERNAL_CONTENT_API_KEY: "test-key" }),

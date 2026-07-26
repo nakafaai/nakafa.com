@@ -1,6 +1,5 @@
 // @vitest-environment node
 
-import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
   type LocalPreviewManifest,
   LocalPreviewManifestSchema,
@@ -10,7 +9,6 @@ import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 import {
-  decodeMaterialPreviewRoute,
   type MaterialPreviewRouteInput,
   matchesInternalPreviewRoute,
   matchesMaterialPreviewRoute,
@@ -20,13 +18,10 @@ import {
   makePendingManifest,
   previewConfig,
   previewDocument,
-  previewMetadata,
-  previewProjection,
   previewRoute,
 } from "@/test/content-preview";
 import { articlePendingManifest } from "@/test/preview-article";
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/lib/content/preview/manifest", () => ({
   readPreviewSnapshot: vi.fn(),
 }));
@@ -39,7 +34,7 @@ const materialInput = {
     subject: "mathematics",
     topic: "function-composition-inverse-function",
   },
-} as const;
+} satisfies MaterialPreviewRouteInput;
 
 /** Builds a strictly decoded pending manifest for route-matching cases. */
 function pendingRoute({
@@ -189,21 +184,6 @@ describe("local preview route matching", () => {
       ).toBe(false);
     }
   );
-
-  it("derives the exact Nakafa route and rejects an invalid source identity", () => {
-    const route = Effect.runSync(decodeMaterialPreviewRoute(previewProjection));
-    const invalidKey = ContentKeySchema.make("material:invalid");
-    const invalid = { ...previewProjection, contentKey: invalidKey };
-
-    expect(route).toMatchObject({
-      description: previewMetadata.description,
-      sourcePath: previewRoute.contentKey,
-      title: previewMetadata.title,
-    });
-    expect(
-      Effect.runSync(decodeMaterialPreviewRoute(invalid).pipe(Effect.flip))
-    ).toMatchObject({ _tag: "PreviewIntegrityError", check: "projection" });
-  });
 
   it.each([
     ["missing locale hint", null, "/en/materials/math/topic/lesson"],

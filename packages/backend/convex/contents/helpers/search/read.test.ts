@@ -1,6 +1,18 @@
 import { readContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/read";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import {
+  insertRuntimeArticles,
+  testArticleProjection,
+} from "@repo/backend/test/content-runtime";
+import {
+  activateMaterialCatalog,
+  MATERIAL_IDENTITY,
+} from "@repo/backend/test/material-catalog";
+import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
 import {
   getPublicSearchPath,
   insertContentSearch,
@@ -18,6 +30,163 @@ const searchArgs: Infer<typeof contentSearchInputValidator> = {
 };
 
 describe("readContentSearchDocuments", () => {
+  it("uses active article ownership without stale source results", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const projection = testArticleProjection(0);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeArticles(ctx, 1);
+      await insertRuntimeIndex(ctx, projection.contentKey, {
+        plainText: "release owned searchable article",
+      });
+      await insertContentSearch(ctx, {
+        contentHash: "stale-source-search",
+        description: "",
+        locale: projection.locale,
+        route: "articles/politics/stale-source",
+        section: "articles",
+        syncedAt: 1,
+        text: "release owned searchable article",
+        title: "Stale source article",
+      });
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+        searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+        searchSequence: TEST_RUNTIME_RELEASE.sequence,
+      });
+    });
+
+    const documents = await t.query((ctx) =>
+      runConvexProgram(
+        readContentSearchDocuments(
+          ctx,
+          {
+            limit: 10,
+            locale: projection.locale,
+            offset: 0,
+            queries: ["release owned searchable article"],
+            section: "articles",
+          },
+          ["release owned searchable article"],
+          10
+        )
+      )
+    );
+
+    expect(documents).toMatchObject([
+      {
+        content_id: projection.graph.assetId,
+        route: projection.publicPath,
+        section: "articles",
+        title: projection.metadata.title,
+      },
+    ]);
+  });
+
+  it("reads source-only sections while release search is synchronizing", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const fixtures: readonly {
+      readonly query: string;
+      readonly route: string;
+      readonly section: "quran" | "tryout";
+    }[] = [
+      { query: "Al-Fatihah", route: "quran/1", section: "quran" },
+      {
+        query: "Penalaran Umum",
+        route: "try-out/indonesia/snbt/2027/set-2/penalaran-umum",
+        section: "tryout",
+      },
+    ];
+    await t.mutation(async (ctx) => {
+      await insertRuntimeArticles(ctx, 1);
+      for (const fixture of fixtures) {
+        await insertContentSearch(ctx, {
+          contentHash: `hash-${fixture.section}-source-only`,
+          description: "",
+          locale: "id",
+          route: fixture.route,
+          section: fixture.section,
+          syncedAt: 1,
+          text: `${fixture.query} source-only search`,
+          title: fixture.query,
+        });
+      }
+    });
+
+    for (const fixture of fixtures) {
+      const documents = await t.query((ctx) =>
+        runConvexProgram(
+          readContentSearchDocuments(
+            ctx,
+            {
+              limit: 10,
+              locale: "id",
+              offset: 0,
+              queries: [fixture.query],
+              section: fixture.section,
+            },
+            [fixture.query],
+            10
+          )
+        )
+      );
+      expect(documents).toMatchObject([
+        { section: fixture.section, title: fixture.query },
+      ]);
+    }
+  });
+
+  it("resolves exact active material paths from the release-owned index", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const projection = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(t, [projection]);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeIndex(ctx, projection.contentKey, {
+        headSequence: MATERIAL_IDENTITY.sequence,
+        locale: projection.locale,
+        plainText: "release owned searchable material",
+      });
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        searchManifestHash: MATERIAL_IDENTITY.manifestHash,
+        searchReleaseId: MATERIAL_IDENTITY.releaseId,
+        searchSequence: MATERIAL_IDENTITY.sequence,
+      });
+    });
+
+    const documents = await t.query((ctx) =>
+      runConvexProgram(
+        readContentSearchDocuments(
+          ctx,
+          {
+            limit: 10,
+            locale: projection.locale,
+            offset: 0,
+            queries: [projection.publicPath],
+            section: "material",
+          },
+          [projection.publicPath],
+          10
+        )
+      )
+    );
+
+    expect(documents).toMatchObject([
+      {
+        content_id: projection.graph.assetId,
+        route: projection.publicPath,
+        section: "material",
+        title: projection.metadata.title,
+      },
+    ]);
+  });
+
   it("resolves exact routes through persisted catalog content IDs", async () => {
     const t = createConvexTestWithBetterAuth();
     const sourcePath =
@@ -68,17 +237,19 @@ describe("readContentSearchDocuments", () => {
     });
 
     const documents = await t.query((ctx) =>
-      readContentSearchDocuments(
-        ctx,
-        {
-          limit: 1,
-          locale: "id",
-          offset: 0,
-          queries: [route],
-          section: "material",
-        },
-        [route],
-        0
+      runConvexProgram(
+        readContentSearchDocuments(
+          ctx,
+          {
+            limit: 1,
+            locale: "id",
+            offset: 0,
+            queries: [route],
+            section: "material",
+          },
+          [route],
+          0
+        )
       )
     );
 
@@ -114,11 +285,13 @@ describe("readContentSearchDocuments", () => {
     });
 
     const documents = await t.query((ctx) =>
-      readContentSearchDocuments(
-        ctx,
-        searchArgs,
-        ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-        10
+      runConvexProgram(
+        readContentSearchDocuments(
+          ctx,
+          searchArgs,
+          ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
+          10
+        )
       )
     );
 
@@ -147,11 +320,13 @@ describe("readContentSearchDocuments", () => {
     });
 
     const documents = await t.query((ctx) =>
-      readContentSearchDocuments(
-        ctx,
-        searchArgs,
-        ["fungsi rasional kelas 11"],
-        10
+      runConvexProgram(
+        readContentSearchDocuments(
+          ctx,
+          searchArgs,
+          ["fungsi rasional kelas 11"],
+          10
+        )
       )
     );
 

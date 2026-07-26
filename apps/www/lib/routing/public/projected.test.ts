@@ -6,6 +6,7 @@ import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected"
 const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
+const mockReadPublishedProgramPath = vi.hoisted(() => vi.fn());
 const mockMatchesPreviewRoute = vi.hoisted(() => vi.fn());
 const activeReleaseId = "release-active";
 
@@ -21,6 +22,9 @@ vi.mock("@/lib/content/published/route", () => ({
 vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: mockReadActiveContentIdentity,
 }));
+vi.mock("@/lib/content/program/path", () => ({
+  readPublishedProgramPath: mockReadPublishedProgramPath,
+}));
 
 describe("projected public html route rejection", () => {
   beforeEach(() => {
@@ -32,6 +36,9 @@ describe("projected public html route rejection", () => {
     mockReadActiveContentIdentity
       .mockReset()
       .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
+    mockReadPublishedProgramPath
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ managed: false, route: null }));
     mockMatchesPreviewRoute.mockReset();
     mockMatchesPreviewRoute.mockReturnValue(Effect.succeed(false));
   });
@@ -143,6 +150,29 @@ describe("projected public html route rejection", () => {
       locale: "en",
       publicPath: "subjects/chemistry/green-chemistry/definition",
     });
+  });
+
+  it("uses active curriculum ownership for new routes and tombstones", async () => {
+    const pathname = "/en/curriculum/merdeka/class-12/mathematics";
+    mockReadPublishedProgramPath
+      .mockReturnValueOnce(
+        Effect.succeed({ managed: true, route: { sitemap: true } })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({ managed: true, route: { sitemap: false } })
+      )
+      .mockReturnValueOnce(Effect.succeed({ managed: true, route: null }));
+
+    await expect(
+      Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
+    ).resolves.toBeNull();
+    await expect(
+      Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
+    ).resolves.toBe("en");
+    await expect(
+      Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
+    ).resolves.toBe("en");
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 
   it("rejects route rows that do not own the requested HTML surface", async () => {

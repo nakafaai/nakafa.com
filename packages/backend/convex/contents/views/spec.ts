@@ -1,6 +1,10 @@
 import { learningContextInputValidator } from "@repo/backend/convex/contents/context";
 import { graphContentIdValidator } from "@repo/backend/convex/contents/graph";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
+import {
+  localeValidator,
+  nakafaSectionValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { type Infer, v } from "convex/values";
 import { Schema } from "effect";
 
@@ -11,6 +15,8 @@ export const recordContentViewArgs = {
   context: v.optional(learningContextInputValidator),
   deviceId: v.string(),
   locale: localeValidator,
+  publicPath: v.string(),
+  section: nakafaSectionValidator,
 };
 
 export const recordContentViewArgsValidator = v.object(recordContentViewArgs);
@@ -37,3 +43,11 @@ export class ContentViewIoError extends Schema.TaggedError<ContentViewIoError>()
     message: Schema.String,
   }
 ) {}
+
+/** Maps an unknown infrastructure failure into the content-view error channel. */
+export function toContentViewIoError(error: unknown) {
+  return new ContentViewIoError({
+    code: contentViewIoFailedCode,
+    message: getUnknownErrorMessage(error),
+  });
+}

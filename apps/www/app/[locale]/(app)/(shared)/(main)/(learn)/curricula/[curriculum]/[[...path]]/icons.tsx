@@ -28,13 +28,12 @@ import {
   Target01Icon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
+import type { ProgramNavigationIconKey } from "@nakafa/aksara-contracts/program/spec";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import type { ProgramNavigationIconKey } from "@repo/contents/_types/program/schema";
-import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
-import type { Material } from "@repo/contents/_types/taxonomy";
+import type { CurriculumViewRoute } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
 
 type CurriculumVisualSource =
-  | Readonly<{ kind: "material"; key: Material }>
+  | Readonly<{ kind: "material"; key: string }>
   | Readonly<{ kind: "navigation"; key: ProgramNavigationIconKey }>;
 
 const navigationIcons: {
@@ -70,7 +69,7 @@ const navigationIcons: {
 };
 
 /** Resolves a source-owned material identity to its Hugeicons card icon. */
-export function readCurriculumMaterialIcon(material: Material) {
+export function readCurriculumMaterialIcon(material: string) {
   return getMaterialIcon(material);
 }
 
@@ -80,7 +79,7 @@ export function readCurriculumNavigationIcon(key: ProgramNavigationIconKey) {
 }
 
 /** Resolves source-owned route identity to a verified Hugeicons card icon. */
-export function readCurriculumRouteIcon(route: PublicCurriculumRoute) {
+export function readCurriculumRouteIcon(route: CurriculumViewRoute) {
   const source = readCurriculumVisualSource(route);
 
   if (source.kind === "navigation") {
@@ -98,7 +97,7 @@ export function readCurriculumRouteIcon(route: PublicCurriculumRoute) {
  * course/stage keys keep their authored navigation identity.
  */
 function readCurriculumVisualSource(
-  route: PublicCurriculumRoute
+  route: CurriculumViewRoute
 ): CurriculumVisualSource {
   if (!route.materialDomain) {
     return { kind: "navigation", key: route.iconKey };

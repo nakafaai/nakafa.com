@@ -5,6 +5,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   insertTestState,
+  insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
 import {
@@ -28,6 +29,16 @@ const NEXT = {
 } satisfies TestIdentity;
 const find = api.contentRelease.search.find;
 type SearchArgs = FunctionArgs<typeof find>;
+
+/** Inserts one completed material-owning release for active search tests. */
+function insertSearchRelease(ctx: MutationCtx, identity: TestIdentity) {
+  return insertZeroRelease(ctx, {
+    ...identity,
+    ownership: { base: [], result: ["material"] },
+    role: "candidate",
+    status: "completed",
+  });
+}
 
 /** Creates one native page request bound to an optional prior release page. */
 function searchArgs(
@@ -111,6 +122,7 @@ describe("contentRelease/search", () => {
   it("returns complete active-only pages without historical empty scans", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
+      await insertSearchRelease(ctx, BASE);
       await insertTestState(ctx, {
         active: BASE,
         nextSequence: 2,
@@ -145,9 +157,77 @@ describe("contentRelease/search", () => {
     ).toBe(true);
   });
 
+  it("keeps unchanged search rows across a structurally shared release", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertSearchRelease(ctx, BASE);
+      await insertSearchRelease(ctx, NEXT);
+      await insertTestState(ctx, {
+        active: NEXT,
+        nextSequence: 3,
+        search: NEXT,
+      });
+      await insertSearchEntry(ctx, BASE, "test:shared", "shared needle");
+    });
+
+    await expect(t.query(find, searchArgs("needle"))).resolves.toMatchObject({
+      activeReleaseId: NEXT.releaseId,
+      result: {
+        page: [
+          {
+            contentKey: "test:shared",
+            releaseId: BASE.releaseId,
+            sequence: BASE.sequence,
+          },
+        ],
+      },
+    });
+  });
+
+  it("rejects unowned and stale indexed rows with typed failures", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertSearchRelease(ctx, BASE);
+      await insertTestState(ctx, {
+        active: BASE,
+        nextSequence: 2,
+        search: BASE,
+      });
+      await insertSearchEntry(ctx, BASE, "test:unowned", "unowned needle");
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected one search release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        resultFamilies: [],
+      });
+    });
+    await expect(t.query(find, searchArgs("needle"))).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      const row = await ctx.db.query("contentIndex").unique();
+      if (!(release && row)) {
+        throw new Error("Expected one release-owned search row.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        resultFamilies: ["material"],
+      });
+      await ctx.db.patch("contentIndex", row._id, {
+        publicPath: "test/tampered",
+      });
+    });
+    await expect(t.query(find, searchArgs("needle"))).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
   it("rejects a continuation cursor after active release replacement", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
+      await insertSearchRelease(ctx, BASE);
       await insertTestState(ctx, {
         active: BASE,
         nextSequence: 3,
@@ -159,6 +239,7 @@ describe("contentRelease/search", () => {
     const first = await t.query(find, searchArgs("needle", { numItems: 1 }));
 
     await t.mutation(async (ctx) => {
+      await insertSearchRelease(ctx, NEXT);
       await insertSearchEntry(ctx, NEXT, "test:first", "race needle");
       await insertSearchEntry(ctx, NEXT, "test:second", "race needle");
       await selectIdentity(ctx, NEXT);
@@ -187,6 +268,8 @@ describe("contentRelease/search", () => {
   it("fails closed while an active search model synchronizes", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
+      await insertSearchRelease(ctx, BASE);
+      await insertSearchRelease(ctx, NEXT);
       await insertTestState(ctx, {
         active: BASE,
         nextSequence: 3,

@@ -2,6 +2,7 @@ import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
+import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
 import { getRuntimeContentRouteCounts } from "@/lib/content/runtime/routes";
 import {
   BASE_URL,
@@ -34,6 +35,16 @@ export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(
           owner: "published",
           pageCount: published.buckets.length,
           routeCount: published.articleCount,
+        } satisfies LlmsSectionPages;
+      }
+    }
+    if (section === "material") {
+      const published = yield* readPublishedMaterialBuckets(locale);
+      if (published.managed) {
+        return {
+          owner: "published",
+          pageCount: published.buckets.length,
+          routeCount: published.materialCount,
         } satisfies LlmsSectionPages;
       }
     }

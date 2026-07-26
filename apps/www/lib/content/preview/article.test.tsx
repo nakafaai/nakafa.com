@@ -23,7 +23,6 @@ import {
   makeArticleReadyManifest,
 } from "@/test/preview-article";
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/lib/content/preview/artifact", () => ({
   executePreviewArtifact: vi.fn(),
 }));

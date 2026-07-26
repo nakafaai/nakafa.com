@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { executeSignedArtifact } from "@/lib/content/published/artifact";
 import {
   getPublishedMaterial,
+  type PublishedMaterialInput,
   readPublishedMaterial,
   renderPublishedMaterial,
 } from "@/lib/content/published/material";
@@ -19,7 +20,6 @@ import { rendererManifest } from "@/lib/content/renderer/manifest";
 import {
   previewMetadata,
   previewProjection,
-  previewPublicRoute,
   previewSourcePath,
   previewWireArtifact,
 } from "@/test/content-preview";
@@ -34,20 +34,19 @@ const liveRenderer = await Effect.runPromise(rendererManifest);
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
 const input = {
   activeReleaseId: ReleaseIdSchema.make("release-function-concept"),
-  locale: "en" as const,
+  locale: "en",
   publicPath: previewProjection.publicPath,
-};
+} satisfies PublishedMaterialInput;
 const data = {
   activeReleaseId: input.activeReleaseId,
   artifact: previewWireArtifact,
   metadata: previewMetadata,
+  projection: previewProjection,
   rendererManifest: liveRenderer,
-  route: previewPublicRoute,
   sourcePath: previewSourcePath,
   sourceRevision,
 };
 
-vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({
   cacheLife: cacheLifeMock,
   cacheTag: cacheTagMock,
@@ -115,8 +114,8 @@ describe("published material", () => {
     );
     expect(content).toMatchObject({
       metadata: previewMetadata,
+      projection: previewProjection,
       rawMdx: previewWireArtifact.payload.rawMdx,
-      route: previewPublicRoute,
       sourcePath: previewSourcePath,
       sourceRevision,
     });

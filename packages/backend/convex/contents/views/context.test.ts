@@ -1,10 +1,16 @@
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { FUNCTION_MATERIAL_V2 } from "@repo/backend/test/content-material";
+import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
+import { PublicCurriculumRouteSchema } from "@repo/contents/_types/route/schema";
+import { Schema } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 13, 2, 0, 0);
@@ -18,6 +24,28 @@ const CONTEXT_PUBLIC_PATH =
   "kurikulum/cambridge-international/upper-secondary/biology-0610/karakteristik-dan-klasifikasi-organisme-hidup";
 const CONTEXT_PARENT_PATH =
   "kurikulum/cambridge-international/upper-secondary/biology-0610";
+const PUBLISHED_MATERIAL = Schema.decodeUnknownSync(
+  MaterialLessonProjectionSchema
+)({
+  ...FUNCTION_MATERIAL_V2,
+  topicTitle: "Function Composition and Inverse Function",
+});
+const publishedPlacement = readStaticPublicCurriculumRoutes().find(
+  (route) =>
+    route.locale === PUBLISHED_MATERIAL.locale &&
+    route.materialKey === PUBLISHED_MATERIAL.materialKey &&
+    route.materialContextNodeKey !== undefined
+);
+if (!publishedPlacement) {
+  throw new Error("Expected the real Function Concept curriculum placement.");
+}
+const PUBLISHED_PLACEMENT = Schema.decodeUnknownSync(
+  PublicCurriculumRouteSchema
+)(publishedPlacement);
+const PUBLISHED_CONTEXT_NODE = PUBLISHED_PLACEMENT.materialContextNodeKey;
+if (!PUBLISHED_CONTEXT_NODE) {
+  throw new Error("Expected the real curriculum placement context identity.");
+}
 
 /** Inserts one production-shaped material route and its exact placement leaf. */
 async function seedMaterialPlacement(ctx: MutationCtx) {
@@ -87,6 +115,34 @@ async function seedMaterialPlacement(ctx: MutationCtx) {
   return { ...viewer, contentId: identity.assetId, placementId };
 }
 
+/** Inserts source placement rows for one material already owned by Aksara. */
+async function seedMixedPlacement(ctx: MutationCtx) {
+  await ctx.db.insert("publicRoutes", {
+    contentHash: "published-material-source-route",
+    kind: PUBLISHED_MATERIAL.kind,
+    locale: PUBLISHED_MATERIAL.locale,
+    materialDomain: "mathematics",
+    materialKey: PUBLISHED_MATERIAL.materialKey,
+    order: PUBLISHED_MATERIAL.order,
+    parentPath: PUBLISHED_MATERIAL.parentPath,
+    publicPath: PUBLISHED_MATERIAL.publicPath,
+    sectionKey: PUBLISHED_MATERIAL.sectionKey,
+    sitemap: PUBLISHED_MATERIAL.sitemap,
+    sourcePath: PUBLISHED_MATERIAL.contentKey,
+    syncShard: 0,
+    title: PUBLISHED_MATERIAL.metadata.title,
+  });
+  await ctx.db.insert("publicRoutes", {
+    ...PUBLISHED_PLACEMENT,
+    contentHash: "published-material-source-placement",
+    syncShard: 0,
+  });
+  return seedAuthenticatedUser(ctx, {
+    now: NOW,
+    suffix: "published-material-context",
+  });
+}
+
 describe("contents/views/context", () => {
   beforeEach(() => {
     vi.useFakeTimers({ now: NOW });
@@ -113,6 +169,8 @@ describe("contents/views/context", () => {
       },
       deviceId: "context-device",
       locale: "id",
+      publicPath: PUBLIC_LESSON_PATH,
+      section: "material",
     });
 
     const state = await t.query(async (ctx) => ({
@@ -163,12 +221,16 @@ describe("contents/views/context", () => {
       },
       deviceId: "placement-device",
       locale: "id",
+      publicPath: PUBLIC_LESSON_PATH,
+      section: "material",
     });
     vi.setSystemTime(NOW + 1000);
     await signedIn.mutation(api.contents.mutations.views.recordContentView, {
       contentId: fixture.contentId,
       deviceId: "direct-device",
       locale: "id",
+      publicPath: PUBLIC_LESSON_PATH,
+      section: "material",
     });
 
     const results = await signedIn.query(
@@ -201,6 +263,8 @@ describe("contents/views/context", () => {
       },
       deviceId: "unverified-context-device",
       locale: "id",
+      publicPath: PUBLIC_LESSON_PATH,
+      section: "material",
     });
 
     const state = await t.query(async (ctx) => ({
@@ -243,6 +307,8 @@ describe("contents/views/context", () => {
       },
       deviceId: "stale-device",
       locale: "id",
+      publicPath: PUBLIC_LESSON_PATH,
+      section: "material",
     });
     await t.mutation(async (ctx) => {
       await ctx.db.delete(fixture.placementId);
@@ -259,5 +325,35 @@ describe("contents/views/context", () => {
         href: `/${PUBLIC_LESSON_PATH}`,
       },
     ]);
+  });
+
+  it("uses source placement by public path while only materials are published", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await activateMaterialCatalog(t, [PUBLISHED_MATERIAL]);
+    const viewer = await t.mutation(seedMixedPlacement);
+    const signedIn = t.withIdentity({
+      sessionId: viewer.sessionId,
+      subject: viewer.authUserId,
+    });
+
+    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
+      contentId: PUBLISHED_MATERIAL.graph.assetId,
+      context: {
+        mode: "placement",
+        nodeKey: PUBLISHED_CONTEXT_NODE,
+        programKey: PUBLISHED_PLACEMENT.programKey,
+      },
+      deviceId: "published-material-context",
+      locale: PUBLISHED_MATERIAL.locale,
+      publicPath: PUBLISHED_MATERIAL.publicPath,
+      section: "material",
+    });
+
+    await expect(
+      t.query((ctx) => ctx.db.query("userLearningRecents").unique())
+    ).resolves.toMatchObject({
+      contextKey: `placement:${PUBLISHED_PLACEMENT.programKey}:${PUBLISHED_CONTEXT_NODE}`,
+      contextSourcePath: PUBLISHED_MATERIAL.contentKey,
+    });
   });
 });

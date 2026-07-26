@@ -9,7 +9,6 @@ import {
 
 const fetchMock = vi.hoisted(() => vi.fn());
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/lib/content/runtime/query", async () => {
   const { readTestRuntimeQuery } = await import("@/test/runtime-query");
   return {

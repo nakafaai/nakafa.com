@@ -3,7 +3,6 @@ import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("server-only", () => ({}));
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
   Link: vi.fn(),

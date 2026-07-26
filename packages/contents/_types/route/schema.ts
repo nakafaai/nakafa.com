@@ -72,15 +72,27 @@ const PublicContentRouteBaseSchema = Schema.extend(
   })
 );
 
+export const PublicMaterialTopicRouteSchema = Schema.extend(
+  PublicContentRouteBaseSchema,
+  Schema.Struct({ kind: Schema.Literal("subject-topic") })
+);
+
+export type PublicMaterialTopicRoute = SchemaType<
+  typeof PublicMaterialTopicRouteSchema
+>;
+
+export const PublicMaterialLessonRouteSchema = Schema.extend(
+  Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
+  Schema.Struct({ kind: Schema.Literal("subject-lesson") })
+);
+
+export type PublicMaterialLessonRoute = SchemaType<
+  typeof PublicMaterialLessonRouteSchema
+>;
+
 export const PublicContentRouteSchema = Schema.Union(
-  Schema.extend(
-    PublicContentRouteBaseSchema,
-    Schema.Struct({ kind: Schema.Literal("subject-topic") })
-  ),
-  Schema.extend(
-    Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
-    Schema.Struct({ kind: Schema.Literal("subject-lesson") })
-  )
+  PublicMaterialTopicRouteSchema,
+  PublicMaterialLessonRouteSchema
 );
 
 export type PublicContentRoute = SchemaType<typeof PublicContentRouteSchema>;

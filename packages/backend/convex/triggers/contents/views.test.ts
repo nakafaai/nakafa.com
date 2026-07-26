@@ -98,6 +98,8 @@ describe("triggers/contents/views", () => {
         contentId: ARTICLE_CONTENT_ID,
         deviceId: "device-1",
         locale: "id",
+        publicPath: ARTICLE_ROUTE,
+        section: "articles",
       });
 
     const scheduledJobs = await t.query(
@@ -164,6 +166,8 @@ describe("triggers/contents/views", () => {
         contentId: TRYOUT_CONTENT_ID,
         deviceId: "device-tryout",
         locale: "id",
+        publicPath: TRYOUT_ROUTE,
+        section: "tryout",
       });
 
     const scheduledJobs = await t.query(

@@ -1,10 +1,12 @@
 import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import {
   ensureDocumentSize,
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { addProgramBucketRoute } from "@repo/backend/convex/contentRelease/program/bucket";
 import { Effect } from "effect";
 
 type ProgramRow = Extract<ContentSnapshotRow, { readonly family: "program" }>;
@@ -150,7 +152,15 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
     }
     return true;
   }
+  const bucket = getHashBucket(record.rowHash);
+  if (record.row.sitemap && bucket === null) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Program snapshot ${snapshotId} has an invalid curriculum row hash.`
+    );
+  }
   const row = {
+    ...(record.row.sitemap && bucket !== null ? { bucket } : {}),
     index,
     level: record.row.level,
     locale: record.row.locale,
@@ -172,6 +182,15 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
     READ_MODEL_DOCUMENT_LIMIT
   );
   yield* Effect.promise(() => ctx.db.insert("curriculumRoutes", row));
+  if (record.row.sitemap && bucket !== null) {
+    yield* addProgramBucketRoute(
+      ctx,
+      snapshotId,
+      index,
+      record.row.locale,
+      bucket
+    );
+  }
   return false;
 });
 

@@ -122,6 +122,11 @@ const tables = {
     text: v.string(),
   })
     .index("by_contentKey_and_locale", ["contentKey", "locale"])
+    .index("by_locale_and_family_and_publicPath", [
+      "locale",
+      "family",
+      "publicPath",
+    ])
     .searchIndex("search_text", {
       searchField: "text",
       filterFields: ["family", "locale"],

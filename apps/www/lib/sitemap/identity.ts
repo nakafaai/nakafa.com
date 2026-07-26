@@ -26,6 +26,18 @@ export type SitemapPage =
       section: RuntimeContentSection;
     }
   | {
+      bucket: string;
+      id: string;
+      kind: "material";
+      locale: Locale;
+    }
+  | {
+      bucket: string;
+      id: string;
+      kind: "program";
+      locale: Locale;
+    }
+  | {
       id: string;
       kind: "public";
       locale: Locale;
@@ -54,6 +66,16 @@ export function formatContentPage(
   page: number
 ) {
   return `content_${locale}_${section}_${page}`;
+}
+
+/** Formats one deterministic published-material sitemap page id. */
+export function formatMaterialPage(bucket: string, locale: Locale) {
+  return `material_${locale}_${bucket}`;
+}
+
+/** Formats one deterministic published-program sitemap page id. */
+export function formatProgramPage(bucket: string, locale: Locale) {
+  return `program_${locale}_${bucket}`;
 }
 
 /** Formats one bounded public-context sitemap page id. */
@@ -89,6 +111,20 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
     }
     return { bucket, id, kind: "article", locale };
   }
+  if (prefix === "material") {
+    const bucket = segments[2];
+    if (segments.length !== 3 || !bucket || !isProjectionBucket(bucket)) {
+      return null;
+    }
+    return { bucket, id, kind: "material", locale };
+  }
+  if (prefix === "program") {
+    const bucket = segments[2];
+    if (segments.length !== 3 || !bucket || !isProjectionBucket(bucket)) {
+      return null;
+    }
+    return { bucket, id, kind: "program", locale };
+  }
 
   const section = segments[2];
   if (
@@ -114,6 +150,20 @@ export function isArticleSitemapPage(
   page: SitemapPage
 ): page is Extract<SitemapPage, { kind: "article" }> {
   return "kind" in page && page.kind === "article";
+}
+
+/** Checks whether one page targets published material rows. */
+export function isMaterialSitemapPage(
+  page: SitemapPage
+): page is Extract<SitemapPage, { kind: "material" }> {
+  return "kind" in page && page.kind === "material";
+}
+
+/** Checks whether one page targets published curriculum rows. */
+export function isProgramSitemapPage(
+  page: SitemapPage
+): page is Extract<SitemapPage, { kind: "program" }> {
+  return "kind" in page && page.kind === "program";
 }
 
 /** Checks whether one page targets public route rows. */

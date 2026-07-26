@@ -18,7 +18,7 @@ import {
 } from "@/test/content-article";
 import {
   previewMetadata,
-  previewPublicRoute,
+  previewProjection,
   previewSourcePath,
   previewWireArtifact,
 } from "@/test/content-preview";
@@ -45,8 +45,8 @@ const materialData = {
     },
   },
   metadata: previewMetadata,
+  projection: previewProjection,
   rendererManifest: liveRenderer,
-  route: previewPublicRoute,
   sourcePath: previewSourcePath,
   sourceRevision,
 };
@@ -58,7 +58,6 @@ const articleData = {
   sourcePath: testArticleSourcePath,
   sourceRevision,
 };
-vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({
   cacheLife: cacheLifeMock,
   cacheTag: cacheTagMock,
@@ -83,7 +82,7 @@ describe("published llms markdown", () => {
       activeReleaseId: materialData.activeReleaseId,
       family: "material",
       locale: "en",
-      publicPath: previewPublicRoute.publicPath,
+      publicPath: previewProjection.publicPath,
     });
 
     expect(text).toContain(previewMetadata.description);
@@ -96,7 +95,7 @@ describe("published llms markdown", () => {
       activeReleaseId: materialData.activeReleaseId,
       family: "material",
       locale: "en",
-      publicPath: previewPublicRoute.publicPath,
+      publicPath: previewProjection.publicPath,
     });
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
     expect(cacheTagMock).toHaveBeenCalledWith(
@@ -137,7 +136,7 @@ describe("published llms markdown", () => {
       activeReleaseId: materialData.activeReleaseId,
       family: "material",
       locale: "en",
-      publicPath: previewPublicRoute.publicPath,
+      publicPath: previewProjection.publicPath,
     });
 
     expect(text).not.toContain("Source:");
@@ -161,7 +160,7 @@ describe("published llms markdown", () => {
       activeReleaseId: materialData.activeReleaseId,
       family: "material",
       locale: "en",
-      publicPath: previewPublicRoute.publicPath,
+      publicPath: previewProjection.publicPath,
     });
 
     expect(text).toContain("What is a Function?");

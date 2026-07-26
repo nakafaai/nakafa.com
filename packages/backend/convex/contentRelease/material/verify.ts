@@ -1,5 +1,6 @@
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeProjectionWireJson } from "@repo/backend/convex/contentRelease/parse";
@@ -25,6 +26,9 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
     if (
       projectionJson !== row.projectionJson ||
       projectionHash !== row.projectionHash ||
+      getHashBucket(projectionHash) !== row.bucket ||
+      projection.graph.assetId !== row.assetId ||
+      projection.metadata.date !== row.date ||
       projection.contentKey !== row.contentKey ||
       projection.locale !== row.locale ||
       projection.materialKey !== row.materialKey ||

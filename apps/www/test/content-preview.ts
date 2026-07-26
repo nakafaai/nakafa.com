@@ -26,7 +26,7 @@ import {
   MaterialProjectionV2Schema,
   makeMaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
-import { PublicContentRouteSchema } from "@repo/contents/_types/route/schema";
+import { PublicMaterialLessonRouteSchema } from "@repo/contents/_types/route/schema";
 import { Effect, Redacted, Schema, Struct } from "effect";
 import { NextRequest } from "next/server";
 import type { PreviewConfig } from "@/lib/content/preview/config";
@@ -106,9 +106,83 @@ export const previewV2Projection = Schema.decodeUnknownSync(
   MaterialProjectionV2Schema
 )(Struct.omit(previewProjection, "topicTitle"));
 
+/** Exact English route owned by the next real Function Concept sibling. */
+export const previewNextRoute = Schema.decodeUnknownSync(
+  MaterialLessonRouteSchema
+)({
+  contentKey: ContentKeySchema.make(
+    "material/lesson/mathematics/function-composition-inverse-function/injective-surjective-bijective-function"
+  ),
+  graph: makeMaterialGraph(
+    "mathematics",
+    "function-composition-inverse-function",
+    "injective-surjective-bijective-function",
+    "en"
+  ),
+  locale: "en",
+  materialKey: previewRoute.materialKey,
+  order: 6,
+  publicPath:
+    "subjects/mathematics/function-composition-inverse-function/injective-surjective-bijective-function",
+  sectionKey: "injective-surjective-bijective-function",
+  topicTitle: previewRoute.topicTitle,
+});
+
+/** Exact metadata authored by the next real Function Concept sibling. */
+export const previewNextMetadata = MaterialMetadataSchema.make({
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-04-27",
+  description:
+    "Learn one-to-one, onto, and bijective function types with clear examples. Understand mapping properties and inverse function requirements.",
+  subject: "Function Composition and Inverse Function",
+  title: "Injective, Surjective, and Bijective Functions",
+});
+
+/** Exact projection for the next real Function Concept sibling. */
+export const previewNextProjection = makeMaterialLessonProjection(
+  previewNextRoute,
+  previewNextMetadata
+);
+
+/** Exact Indonesian route owned by the real Function Concept source. */
+export const previewIdRoute = Schema.decodeUnknownSync(
+  MaterialLessonRouteSchema
+)({
+  contentKey: previewRoute.contentKey,
+  graph: makeMaterialGraph(
+    "mathematics",
+    "function-composition-inverse-function",
+    "function-concept",
+    "id"
+  ),
+  locale: "id",
+  materialKey: previewRoute.materialKey,
+  order: previewRoute.order,
+  publicPath:
+    "materi/matematika/fungsi-komposisi-dan-fungsi-invers/konsep-fungsi",
+  sectionKey: previewRoute.sectionKey,
+  topicTitle: "Fungsi Komposisi dan Fungsi Invers",
+});
+
+/** Exact Indonesian metadata authored by the real Function Concept lesson. */
+export const previewIdMetadata = MaterialMetadataSchema.make({
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-04-27",
+  description:
+    "Pahami fungsi sebagai mesin ajaib dengan contoh interaktif. Pelajari notasi f(x), hubungan input-output, dan aturan tepat satu.",
+  subject: "Fungsi Komposisi dan Fungsi Invers",
+  title: "Konsep Fungsi",
+});
+
+/** Exact Indonesian projection derived from the selected real document. */
+export const previewIdProjection = makeMaterialLessonProjection(
+  previewIdRoute,
+  previewIdMetadata
+);
+
 /** Exact Nakafa public route adapted from the real preview projection. */
 export const previewPublicRoute = Schema.decodeUnknownSync(
-  PublicContentRouteSchema
+  PublicMaterialLessonRouteSchema
 )({
   description: previewProjection.metadata.description,
   kind: previewProjection.kind,

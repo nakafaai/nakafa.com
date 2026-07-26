@@ -8,10 +8,10 @@ import { v } from "convex/values";
 const tables = {
   /** Active public material lessons indexed for curriculum-card assembly. */
   materialCatalog: defineTable({
-    assetId: v.optional(v.string()),
-    bucket: v.optional(v.string()),
+    assetId: v.string(),
+    bucket: v.string(),
     contentKey: v.string(),
-    date: v.optional(v.string()),
+    date: v.string(),
     locale: localeValidator,
     materialKey: v.string(),
     order: v.number(),

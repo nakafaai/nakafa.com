@@ -10,8 +10,6 @@ import {
 } from "@/lib/content/preview/config";
 import { previewConfig } from "@/test/content-preview";
 
-vi.mock("server-only", () => ({}));
-
 afterEach(() => {
   vi.unstubAllEnvs();
 });

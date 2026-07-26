@@ -38,9 +38,22 @@ const GROUP_PATH = PublicPathSchema.make(
   "curriculum/technical-program-1/test-subject/test-group"
 );
 const GROUP_KEY = CurriculumNodeKeySchema.make("test-group");
+const MATERIAL_PARENT_PATH = PublicPathSchema.make(
+  "subjects/test/technical-topic"
+);
+const MATERIAL_PUBLIC_PATH = PublicPathSchema.make(
+  `${MATERIAL_PARENT_PATH}/technical-section`
+);
 const SOURCE_PATH = CorpusSourcePathSchema.make(
   "packages/corpus/curriculum/technical-program-1"
 );
+const CONTEXT_INPUT = {
+  materialKey: MATERIAL_KEY,
+  nodeKey: GROUP_KEY,
+  parentPath: MATERIAL_PARENT_PATH,
+  programKey: PROGRAM_KEY,
+  publicPath: MATERIAL_PUBLIC_PATH,
+};
 
 /** Creates one curriculum subject that owns the material card list. */
 function subjectRoute(): CurriculumRoute {
@@ -85,10 +98,13 @@ function groupRoute(
 }
 
 /** Creates one material mapping owned by the technical context group. */
-function mappingRoute(index = 1): CurriculumRoute {
+function mappingRoute(
+  index = 1,
+  canonicalPath = MATERIAL_PARENT_PATH
+): CurriculumRoute {
   const publicPath = PublicPathSchema.make(`${GROUP_PATH}/mapping-${index}`);
   return CurriculumRouteSchema.make({
-    canonicalPath: PublicPathSchema.make("subjects/test/technical-topic"),
+    canonicalPath,
     iconKey: "science",
     kind: "curriculum-context",
     level: "lesson",
@@ -144,14 +160,11 @@ describe("contentRelease/program/context", () => {
 
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readProgramContext(ctx, "en", PROGRAM_KEY, GROUP_KEY, MATERIAL_KEY)
-        )
+        runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
       )
     ).resolves.toEqual({
-      groupJson: null,
+      context: null,
       managed: false,
-      parentJson: null,
     });
   });
 
@@ -167,14 +180,15 @@ describe("contentRelease/program/context", () => {
 
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readProgramContext(ctx, "en", PROGRAM_KEY, GROUP_KEY, MATERIAL_KEY)
-        )
+        runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
       )
     ).resolves.toMatchObject({
-      groupJson: expect.any(String),
+      context: {
+        groupJson: expect.any(String),
+        mappingJson: expect.any(String),
+        parentJson: expect.any(String),
+      },
       managed: true,
-      parentJson: expect.any(String),
     });
   });
 
@@ -188,13 +202,15 @@ describe("contentRelease/program/context", () => {
       await expect(
         t.query((ctx) =>
           runConvexProgram(
-            readProgramContext(ctx, "en", PROGRAM_KEY, nodeKey, MATERIAL_KEY)
+            readProgramContext(ctx, "en", {
+              ...CONTEXT_INPUT,
+              nodeKey,
+            })
           )
         )
       ).resolves.toEqual({
-        groupJson: null,
+        context: null,
         managed: true,
-        parentJson: null,
       });
     }
   });
@@ -215,19 +231,15 @@ describe("contentRelease/program/context", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readProgramContext(
-            ctx,
-            "en",
-            PROGRAM_KEY,
-            "direct-group",
-            MATERIAL_KEY
-          )
+          readProgramContext(ctx, "en", {
+            ...CONTEXT_INPUT,
+            nodeKey: "direct-group",
+          })
         )
       )
     ).resolves.toEqual({
-      groupJson: null,
+      context: null,
       managed: true,
-      parentJson: null,
     });
   });
 
@@ -248,13 +260,10 @@ describe("contentRelease/program/context", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readProgramContext(
-            ctx,
-            "en",
-            PROGRAM_KEY,
-            "orphan-group",
-            MATERIAL_KEY
-          )
+          readProgramContext(ctx, "en", {
+            ...CONTEXT_INPUT,
+            nodeKey: "orphan-group",
+          })
         )
       )
     ).rejects.toMatchObject({
@@ -274,12 +283,60 @@ describe("contentRelease/program/context", () => {
 
     await expect(
       t.query((ctx) =>
-        runConvexProgram(
-          readProgramContext(ctx, "en", PROGRAM_KEY, GROUP_KEY, MATERIAL_KEY)
-        )
+        runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_LIMIT" },
+    });
+  });
+
+  it("rejects a sibling lesson when a mapping names one exact lesson", async () => {
+    const data = await Effect.runPromise(makeProgramSnapshotData());
+    const t = convexTest(schema, convexModules);
+    await activateProgramSnapshot(t, data);
+    await stageRoutes(t, data.snapshotId, [
+      subjectRoute(),
+      groupRoute(),
+      mappingRoute(1, MATERIAL_PUBLIC_PATH),
+    ]);
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
+      )
+    ).resolves.toMatchObject({
+      context: { mappingJson: expect.any(String) },
+      managed: true,
+    });
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readProgramContext(ctx, "en", {
+            ...CONTEXT_INPUT,
+            publicPath: `${MATERIAL_PARENT_PATH}/other-section`,
+          })
+        )
+      )
+    ).resolves.toEqual({ context: null, managed: true });
+  });
+
+  it("rejects ambiguous mappings for one exact material context", async () => {
+    const data = await Effect.runPromise(makeProgramSnapshotData());
+    const t = convexTest(schema, convexModules);
+    await activateProgramSnapshot(t, data);
+    await stageRoutes(t, data.snapshotId, [
+      subjectRoute(),
+      groupRoute(),
+      mappingRoute(1),
+      mappingRoute(2),
+    ]);
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });
 });

@@ -1,78 +1,98 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { readProgramContext } from "@repo/backend/convex/contentRelease/program/context";
 import {
   createCanonicalLearningContext,
   createContextKey,
   type LearningContextInput,
   type LearningContextStorage,
 } from "@repo/backend/convex/contents/context";
-import {
-  ContentViewIoError,
-  contentViewIoFailedCode,
-} from "@repo/backend/convex/contents/views/spec";
-import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
+import { toContentViewIoError } from "@repo/backend/convex/contents/views/spec";
+import type { ContentViewTarget } from "@repo/backend/convex/contents/views/target";
 import { Effect } from "effect";
 
-/** Maps thrown Convex IO failures into the content-view error channel. */
-function toContextIoError(error: unknown) {
-  return new ContentViewIoError({
-    code: contentViewIoFailedCode,
-    message: getUnknownErrorMessage(error),
-  });
+interface MaterialTarget {
+  readonly materialKey: string;
+  readonly parentPath: string;
+  readonly publicPath: string;
+  readonly sourcePath: string;
 }
 
-/** Resolves the public material route that corresponds to a graph route row. */
-const loadPublicMaterialRoute = Effect.fn(
-  "contents.views.context.loadPublicMaterialRoute"
-)(function* (db: QueryCtx["db"], route: Doc<"contentRoutes">) {
-  if (route.kind !== "curriculum-lesson") {
+/** Reads material facts already authenticated by the published target. */
+function readPublishedMaterial(target: ContentViewTarget) {
+  if (
+    target.kind !== "curriculum-lesson" ||
+    !target.materialKey ||
+    !target.parentPath
+  ) {
     return null;
   }
+  return {
+    materialKey: target.materialKey,
+    parentPath: target.parentPath,
+    publicPath: target.route,
+    sourcePath: target.sourcePath,
+  } satisfies MaterialTarget;
+}
 
-  const publicRoute = yield* Effect.tryPromise({
-    try: () =>
-      db
-        .query("publicRoutes")
-        .withIndex("by_locale_and_sourcePath", (q) =>
-          q.eq("locale", route.locale).eq("sourcePath", route.sourcePath)
-        )
-        .unique(),
-    catch: toContextIoError,
-  });
+/** Resolves the source-owned material row while programs remain unmanaged. */
+const loadSourceMaterial = Effect.fn("contents.views.loadSourceMaterial")(
+  function* (db: QueryCtx["db"], target: ContentViewTarget) {
+    if (target.kind !== "curriculum-lesson") {
+      return null;
+    }
+    const publicRoute = yield* Effect.tryPromise({
+      try: () =>
+        db
+          .query("publicRoutes")
+          .withIndex("by_locale_and_publicPath", (q) =>
+            q.eq("locale", target.locale).eq("publicPath", target.route)
+          )
+          .unique(),
+      catch: toContentViewIoError,
+    });
 
-  if (publicRoute?.kind !== "subject-lesson") {
-    return null;
+    if (
+      publicRoute?.kind !== "subject-lesson" ||
+      !publicRoute.materialKey ||
+      !publicRoute.parentPath ||
+      !publicRoute.sourcePath
+    ) {
+      return null;
+    }
+    return {
+      materialKey: publicRoute.materialKey,
+      parentPath: publicRoute.parentPath,
+      publicPath: publicRoute.publicPath,
+      sourcePath: publicRoute.sourcePath,
+    } satisfies MaterialTarget;
   }
-
-  if (!publicRoute.materialKey) {
-    return null;
-  }
-
-  return publicRoute;
-});
+);
 
 /** Checks whether a curriculum context route owns the target material route. */
 function matchesMaterialRoute(input: {
-  readonly contextRoute: Doc<"publicRoutes">;
-  readonly materialRoute: Doc<"publicRoutes">;
+  readonly canonicalPath?: string;
+  readonly material: MaterialTarget;
 }) {
-  const canonicalPath = input.contextRoute.canonicalPath;
-
-  if (!canonicalPath) {
+  if (!input.canonicalPath) {
     return false;
   }
 
   return (
-    canonicalPath === input.materialRoute.publicPath ||
-    canonicalPath === input.materialRoute.parentPath
+    input.canonicalPath === input.material.publicPath ||
+    input.canonicalPath === input.material.parentPath
   );
 }
 
 /** Projects a verified public-route context row into engagement storage fields. */
 function toLearningContextStorage(input: {
   readonly context: LearningContextInput;
-  readonly contextRoute: Doc<"publicRoutes">;
-  readonly materialRoute: Doc<"publicRoutes">;
+  readonly contextRoute: {
+    readonly materialContextNodeKey?: string;
+    readonly materialContextParentPath?: string;
+    readonly materialContextPublicPath?: string;
+    readonly programKey?: string;
+  };
+  readonly material: MaterialTarget;
 }): LearningContextStorage {
   const nodeKey = input.contextRoute.materialContextNodeKey;
   const parentPath = input.contextRoute.materialContextParentPath;
@@ -89,15 +109,49 @@ function toLearningContextStorage(input: {
       nodeKey,
       programKey,
     }),
-    contextMaterialKey: input.materialRoute.materialKey,
+    contextMaterialKey: input.material.materialKey,
     contextMode: input.context.mode,
     contextNodeKey: nodeKey,
     contextParentPath: parentPath,
     contextProgramKey: programKey,
     contextPublicPath: publicPath,
-    contextSourcePath: input.materialRoute.sourcePath,
+    contextSourcePath: input.material.sourcePath,
   };
 }
+
+/** Resolves placement from the active immutable program snapshot. */
+const resolvePublishedContext = Effect.fn(
+  "contents.views.resolvePublishedContext"
+)(function* (
+  ctx: QueryCtx,
+  target: ContentViewTarget,
+  context: LearningContextInput,
+  material: MaterialTarget,
+  programKey: string,
+  nodeKey: string
+) {
+  const resolved = yield* readProgramContext(ctx, target.locale, {
+    materialKey: material.materialKey,
+    nodeKey,
+    parentPath: material.parentPath,
+    programKey,
+    publicPath: material.publicPath,
+  }).pipe(Effect.mapError(toContentViewIoError));
+  if (!resolved.managed) {
+    return { managed: false, storage: createCanonicalLearningContext() };
+  }
+  if (!resolved.context) {
+    return { managed: true, storage: createCanonicalLearningContext() };
+  }
+  return {
+    managed: true,
+    storage: toLearningContextStorage({
+      context,
+      contextRoute: resolved.context.mapping,
+      material,
+    }),
+  };
+});
 
 /**
  * Verifies optional learning context against durable public route rows.
@@ -108,42 +162,58 @@ function toLearningContextStorage(input: {
 export const resolveLearningContext = Effect.fn(
   "contents.views.context.resolveLearningContext"
 )(function* (
-  db: QueryCtx["db"],
-  route: Doc<"contentRoutes">,
+  ctx: QueryCtx,
+  target: ContentViewTarget,
   context: LearningContextInput | undefined
 ) {
   if (!(context?.programKey && context.nodeKey)) {
     return createCanonicalLearningContext();
   }
 
-  const materialRoute = yield* loadPublicMaterialRoute(db, route);
-
-  if (!materialRoute) {
+  const publishedMaterial = readPublishedMaterial(target);
+  if (publishedMaterial) {
+    const published = yield* resolvePublishedContext(
+      ctx,
+      target,
+      context,
+      publishedMaterial,
+      context.programKey,
+      context.nodeKey
+    );
+    if (published.managed) {
+      return published.storage;
+    }
+  }
+  const material = yield* loadSourceMaterial(ctx.db, target);
+  if (!material) {
     return createCanonicalLearningContext();
   }
 
   const contextRoute = yield* Effect.tryPromise({
     try: () =>
-      db
+      ctx.db
         .query("publicRoutes")
         .withIndex(
           "by_materialKey_and_locale_and_programKey_and_contextNodeKey",
           (q) =>
             q
-              .eq("materialKey", materialRoute.materialKey)
-              .eq("locale", materialRoute.locale)
+              .eq("materialKey", material.materialKey)
+              .eq("locale", target.locale)
               .eq("programKey", context.programKey)
               .eq("materialContextNodeKey", context.nodeKey)
         )
         .unique(),
-    catch: toContextIoError,
+    catch: toContentViewIoError,
   });
 
   if (
     !(
       contextRoute &&
       contextRoute.kind === "curriculum-context" &&
-      matchesMaterialRoute({ contextRoute, materialRoute })
+      matchesMaterialRoute({
+        canonicalPath: contextRoute.canonicalPath,
+        material,
+      })
     )
   ) {
     return createCanonicalLearningContext();
@@ -152,6 +222,6 @@ export const resolveLearningContext = Effect.fn(
   return toLearningContextStorage({
     context,
     contextRoute,
-    materialRoute,
+    material,
   });
 });

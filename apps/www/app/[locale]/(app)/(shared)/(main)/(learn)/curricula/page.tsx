@@ -4,11 +4,14 @@ import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { readCurriculumRootRoutes } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import {
   CurriculumIndexHeader,
   CurriculumRootCards,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
+import {
+  type CurriculumCatalogModel,
+  readRuntimeCurriculumCatalog,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
 import { LayoutContent } from "@/components/shared/layout-content";
@@ -17,7 +20,7 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { RefContent } from "@/components/shared/ref-content";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
@@ -65,7 +68,8 @@ export default async function Page({ params }: CurriculumIndexPageProps) {
   const description = tLearningPrograms(
     "curriculum-index-metadata-description"
   );
-  const routes = readCurriculumRootRoutes(locale);
+  const catalog = await readRuntimeCurriculumCatalog(locale);
+  const sourceUrl = readCurriculumCatalogSource(catalog);
   const path = getLocalizedCurriculumIndexPath(locale);
 
   return (
@@ -78,7 +82,7 @@ export default async function Page({ params }: CurriculumIndexPageProps) {
       />
       <CollectionPageJsonLd
         description={description}
-        items={routes.map((route) => ({
+        items={catalog.entries.map(({ route }) => ({
           name: route.title,
           url: `https://nakafa.com/${locale}/${route.publicPath}`,
         }))}
@@ -89,19 +93,17 @@ export default async function Page({ params }: CurriculumIndexPageProps) {
         <LayoutMaterialContent>
           <CurriculumIndexHeader homeLabel={tCommon("home")} title={title} />
           <LayoutContent>
-            {routes.length > 0 ? (
-              <CurriculumRootCards locale={locale} routes={routes} />
+            {catalog.entries.length > 0 ? (
+              <CurriculumRootCards entries={catalog.entries} locale={locale} />
             ) : (
               <ComingSoon />
             )}
           </LayoutContent>
-          <FooterContent>
-            <RefContent
-              githubUrl={getGithubUrl({
-                path: "/packages/contents/curriculum",
-              })}
-            />
-          </FooterContent>
+          {sourceUrl ? (
+            <FooterContent>
+              <RefContent githubUrl={sourceUrl} />
+            </FooterContent>
+          ) : null}
         </LayoutMaterialContent>
       </LayoutMaterial>
     </>
@@ -122,4 +124,18 @@ function buildCurriculumIndexAlternates() {
   }
 
   return languages;
+}
+
+/** Resolves the exclusive curriculum catalog source directory. */
+function readCurriculumCatalogSource(catalog: CurriculumCatalogModel) {
+  if (!catalog.managed) {
+    return getGithubUrl({ path: "/packages/contents/curriculum" });
+  }
+
+  return catalog.sourceRevision
+    ? getAksaraTreeUrl({
+        path: "packages/corpus/curriculum",
+        revision: catalog.sourceRevision,
+      })
+    : undefined;
 }

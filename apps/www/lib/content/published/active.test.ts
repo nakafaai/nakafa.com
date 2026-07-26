@@ -16,7 +16,6 @@ const applyContentRuntimeCacheMock = vi.hoisted(() => vi.fn());
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const readQueryMock = vi.hoisted(() => vi.fn());
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: applyContentRuntimeCacheMock,
 }));

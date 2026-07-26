@@ -42,7 +42,6 @@ const input = {
   publicPath: previewProjection.publicPath,
 };
 
-vi.mock("server-only", () => ({}));
 vi.mock("@repo/backend/client/content/read", () => ({
   readPublicContent: readContentMock,
 }));
