@@ -2,6 +2,25 @@
 
 These patterns are **never acceptable** in Effect-TS code. Each is listed with rationale and the correct alternative.
 
+## Contents
+
+- [Boundary runners inside services](#forbidden-effectrunsyncrunpromise-inside-services)
+- [Thrown errors in generators](#forbidden-throw-inside-effectgen)
+- [Lost error types](#forbidden-catchall-losing-type-information)
+- [Unsafe casts](#forbidden-anyunknown-casts)
+- [Promise signatures](#forbidden-promise-in-service-signatures)
+- [Console logging](#forbidden-consolelog)
+- [Direct environment reads](#forbidden-processenv-directly)
+- [Deprecated Config.secret](#forbidden-configsecret-deprecated)
+- [Nullable domain types](#forbidden-nullundefined-in-domain-types)
+- [Throwing Option access](#forbidden-optiongetorthrow)
+- [Unjustified service defaults](#forbidden-unjustified-effectservice-defaults)
+- [Discarded error channels](#forbidden-ignoring-errors-with-ordie)
+- [Generic error remapping](#forbidden-maperror-instead-of-catchtag)
+- [Mixed Promise chains](#forbidden-mixing-effect-and-promise-chains)
+- [Unmanaged mutable state](#forbidden-mutable-state-without-ref)
+- [Direct wall-clock reads](#forbidden-using-datenow-or-new-date-directly)
+
 ## FORBIDDEN: Effect.runSync/runPromise Inside Services
 
 ```typescript
@@ -236,28 +255,32 @@ const name = Option.getOrElse(maybeName, () => "Anonymous")
 const upperName = Option.map(maybeName, (n) => n.toUpperCase())
 ```
 
-## FORBIDDEN: Context.Tag for Business Services
+## FORBIDDEN: Unjustified Effect.Service Defaults
 
 ```typescript
-// FORBIDDEN
-export class UserService extends Context.Tag("UserService")<
-    UserService,
-    { findById: (id: UserId) => Effect.Effect<User, UserNotFoundError> }
->() {
-    static Default = Layer.effect(this, Effect.gen(function* () { ... }))
-}
-```
-
-**Why:** Requires manual layer creation, no built-in accessors, more boilerplate.
-
-**Correct:**
-```typescript
+// FORBIDDEN when the module should not own a canonical default implementation
 export class UserService extends Effect.Service<UserService>()("UserService", {
-    accessors: true,
     dependencies: [...],
     effect: Effect.gen(function* () { ... }),
 }) {}
 ```
+
+**Why:** Effect 3.22 marks `Effect.Service` experimental, and it couples the
+contract to a module-owned default layer. Do not make that ownership decision
+just to save layer boilerplate.
+
+**Correct:**
+```typescript
+export class UserService extends Context.Tag("UserService")<
+    UserService,
+    { readonly findById: (id: UserId) => Effect.Effect<User, UserNotFoundError> }
+>() {}
+
+export const UserServiceLive = Layer.succeed(UserService, { findById })
+```
+
+`Effect.Service` remains allowed when the repository deliberately accepts its
+experimental API and the same module genuinely owns the canonical default.
 
 ## FORBIDDEN: Ignoring Errors with orDie
 

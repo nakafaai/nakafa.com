@@ -42,7 +42,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 - This is an Effect-native TypeScript codebase. Effect is the decomposition and composition architecture, not a wrapper around raw TypeScript.
 - Effect-native architecture gives Nakafa decomposable, composable, traceable, and type-safe behavior end to end. It prevents fragmented helper chains, duplicated maps, hidden failure paths, and source-of-truth drift.
-- Every new or touched TypeScript domain capability must start from Effect-native design: Schema contracts, branded values, tagged errors, small named `Effect.fn` programs, and `Effect.Service`/`Context.Tag` plus `Layer` only where there is a real dependency seam.
+- Every new or touched TypeScript domain capability must start from Effect-native design: Schema contracts, branded values, tagged errors, small named `Effect.fn` programs, and `Context.Tag` plus `Layer` only where there is a real dependency seam. `Effect.Service` is an optional convenience only when a module genuinely owns a default implementation and the repository deliberately accepts its experimental Effect 3.22 API.
 - Public module Interfaces must expose schema-derived data contracts and Effect-native operations for fallible, effectful, cross-source, or cross-module work. Do not build a raw TypeScript module and sprinkle Schema decoding, `Effect.succeed`, or a boundary runner around it later.
 - Source registries must decode through schemas and produce typed/branded rows. Projection modules must compose those rows through typed Effects, not raw loops with hidden failure or fallback paths.
 - Missing source data, duplicate routes, invalid slugs, invalid source rows, mismatched mappings, and route collisions are expected domain failures in the Effect error channel. Model them with `Schema.TaggedError` or `Data.TaggedError`, not `null`, generic `Error`, thrown parser errors, silent filtering, or fallback strings.
@@ -194,7 +194,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Effect-native means effectful work is modeled with Effect; pure deterministic helpers should stay pure.
 - Model expected failures with `Schema.TaggedError` and specific domain error names.
 - Prefer `Effect.fn("scope.name")` for effectful exported functions and service methods so traces are named.
-- Use `Effect.Service` with declared dependencies for business services; reserve `Context.Tag` for runtime-injected infrastructure boundaries.
+- Use the documented stable `Context.Tag` plus `Layer` pattern for dependency contracts. `Effect.Service` may combine that contract with a default layer only when the module genuinely owns the default implementation and the repository deliberately accepts its experimental Effect 3.22 API; do not choose between them based only on whether a dependency is “business” or “infrastructure.”
 - Use `@effect/platform` and `@effect/platform-node` for Node filesystem and HTTP boundaries when those packages own the IO seam.
 - Prefer `Effect.Cache` or Effect cached effects for shared effectful cache state. Plain `Map` is acceptable inside one pure algorithm for grouping, deduplication, or indexing.
 - Use `Effect.try`, `Effect.tryPromise`, `Effect.acquireRelease`, and `Effect.sync` instead of raw `try/catch`, raw async wrappers, or hidden side effects.

@@ -1,13 +1,19 @@
 ---
 name: effect-best-practices
-description: Enforces Effect-TS patterns for services, errors, layers, and atoms. Use when writing code with Effect.Service, Schema.TaggedError, Layer composition, or effect-atom React components.
-metadata:
-  version: 1.0.0
+description: Enforces Effect-TS patterns for services, errors, layers, and atoms. Use when writing code with Context.Tag, Effect.Service, Schema.TaggedError, Layer composition, or effect-atom React components.
 ---
 
 # Effect-TS Best Practices
 
 This skill enforces opinionated, consistent patterns for Effect-TS codebases. These patterns optimize for type safety, testability, observability, and maintainability.
+
+## Version And Source Gate
+
+- Run the repository's Effect source/version check before relying on an API.
+- For Effect 3.22, `Context.Tag` plus `Layer` is the documented stable service pattern.
+- `Effect.Service` is marked experimental in the pinned 3.22 source. Use it only when the
+  repository deliberately adopts it and the module genuinely owns a default implementation.
+- Do not turn `Context.Tag` versus `Effect.Service` into a business-versus-infrastructure rule.
 
 ## Effect Language Server (Required)
 
@@ -47,28 +53,16 @@ stable editor path or CI compiler with it automatically. Re-evaluate it as an ex
 toolchain migration after its release status, executable packaging, editor integration,
 and full repository gates are verified.
 
-### Features
-
-- **Diagnostics**: Detects 30+ Effect-specific issues (floating Effects, missing requirements, incorrect yield patterns)
-- **Quick Info**: Hover to see Effect type parameters (Success, Error, Requirements)
-- **Completions**: Auto-complete `Self`, Duration strings, Schema brands
-- **Refactors**: Convert async → Effect.gen, auto-compose Layers, transform to Schema
-
-### Build-Time Diagnostics
-
-For CI enforcement:
-```bash
-npx effect-language-service patch
-```
-
-See `references/language-server.md` for configuration options and CLI tools.
+The plugin adds Effect-specific diagnostics, quick info, completions, and
+refactors. For CI enforcement, run `npx effect-language-service patch`. See
+`references/language-server.md` for configuration options and CLI tools.
 
 ## Quick Reference: Critical Rules
 
 | Category | DO | DON'T |
 |----------|-----|-------|
-| Services | `Effect.Service` with `accessors: true` | `Context.Tag` for business logic |
-| Dependencies | `dependencies: [Dep.Default]` in service | Manual `Layer.provide` at usage sites |
+| Services | `Context.Tag` plus an owning `Layer` | Unversioned `Effect.Service` mandates |
+| Dependencies | Compose requirements once at the layer root | Re-providing dependencies at usage sites |
 | Layers | `Layer.mergeAll` for flat composition | Deeply nested `Layer.provide` chains |
 | Layer Chaining | `Layer.provideMerge` for incremental composition | Multiple `Layer.provide` (creates nested types) |
 | Errors | `Schema.TaggedError` with `message` field | Plain classes or generic Error |
@@ -88,50 +82,48 @@ See `references/language-server.md` for configuration options and CLI tools.
 
 ## Service Definition Pattern
 
-**Always use `Effect.Service`** for business logic services. This provides automatic accessors, built-in `Default` layer, and proper dependency declaration.
+Use `Context.Tag` plus `Layer` as the stable default. The tag owns the contract and the
+layer owns one implementation, so callers can substitute implementations without importing
+a module-selected default.
 
 ```typescript
-import { Effect } from "effect"
+import { Context, Effect, Layer, Option } from "effect"
 
-export class UserService extends Effect.Service<UserService>()("UserService", {
-    accessors: true,
-    dependencies: [UserRepo.Default, CacheService.Default],
-    effect: Effect.gen(function* () {
+export class UserService extends Context.Tag("UserService")<
+    UserService,
+    {
+        readonly register: (
+            input: CreateUserInput,
+        ) => Effect.Effect<User, EmailAlreadyRegisteredError | UserCreateError>
+    }
+>() {}
+
+export const UserServiceLive = Layer.effect(
+    UserService,
+    Effect.gen(function* () {
         const repo = yield* UserRepo
-        const cache = yield* CacheService
 
-        const findById = Effect.fn("UserService.findById")(function* (id: UserId) {
-            const cached = yield* cache.get(id)
-            if (Option.isSome(cached)) return cached.value
-
-            const user = yield* repo.findById(id)
-            yield* cache.set(id, user)
-            return user
+        const register = Effect.fn("UserService.register")(function* (
+            input: CreateUserInput,
+        ) {
+            const existing = yield* repo.findByEmail(input.email)
+            if (Option.isSome(existing)) {
+                return yield* new EmailAlreadyRegisteredError({
+                    email: input.email,
+                    message: "Email is already registered",
+                })
+            }
+            return yield* repo.create(input)
         })
 
-        const create = Effect.fn("UserService.create")(function* (data: CreateUserInput) {
-            const user = yield* repo.create(data)
-            yield* Effect.log("User created", { userId: user.id })
-            return user
-        })
-
-        return { findById, create }
+        return UserService.of({ register })
     }),
-}) {}
-
-// Usage - dependencies are already wired
-const program = Effect.gen(function* () {
-    const user = yield* UserService.findById(userId)
-    return user
-})
-
-// At app root
-const MainLive = Layer.mergeAll(UserService.Default, OtherService.Default)
+)
 ```
 
-**When `Context.Tag` is acceptable:**
-- Infrastructure with runtime injection (Cloudflare KV, worker bindings)
-- Factory patterns where resources are provided externally
+`Effect.Service` may remove boilerplate when the same module genuinely owns a canonical
+default implementation and the repository deliberately opts into its experimental 3.22 API.
+When it is used, declare its default-layer dependencies in `dependencies`.
 
 See `references/service-patterns.md` for detailed patterns.
 
@@ -298,31 +290,13 @@ const transfer = Effect.fn("AccountService.transfer")(
 
 ## Layer Composition
 
-**Declare dependencies in the service**, not at usage sites:
+Compose dependency layers once at the application boundary, not repeatedly at usage sites:
 
 ```typescript
-// CORRECT - dependencies in service definition
-export class OrderService extends Effect.Service<OrderService>()("OrderService", {
-    accessors: true,
-    dependencies: [
-        UserService.Default,
-        ProductService.Default,
-        PaymentService.Default,
-    ],
-    effect: Effect.gen(function* () {
-        const users = yield* UserService
-        const products = yield* ProductService
-        const payments = yield* PaymentService
-        // ...
-    }),
-}) {}
-
-// At app root - simple merge
 const AppLive = Layer.mergeAll(
-    OrderService.Default,
-    // Infrastructure layers (intentionally not in dependencies)
-    DatabaseLive,
-    RedisLive,
+    UserServiceLive.pipe(Layer.provide(UserRepoLive)),
+    OrderServiceLive.pipe(Layer.provide(OrderRepoLive)),
+    NotificationServiceLive,
 )
 ```
 
@@ -331,9 +305,9 @@ const AppLive = Layer.mergeAll(
 ```typescript
 // Use Layer.mergeAll for flat composition of same-level layers
 const RepoLive = Layer.mergeAll(
-    UserRepo.Default,
-    OrderRepo.Default,
-    ProductRepo.Default,
+    UserRepoLive,
+    OrderRepoLive,
+    ProductRepoLive,
 )
 
 // Use Layer.provideMerge for incremental chaining (flatter types than Layer.provide)
@@ -457,11 +431,6 @@ const isLoading = result.waiting // Updates automatically, no useState/finally n
 
 See `references/effect-atom-patterns.md` for complete patterns including families, localStorage, mutations, and anti-patterns.
 
-## RPC & Cluster Patterns
-
-For RPC contracts and cluster workflows, see:
-- `references/rpc-cluster-patterns.md` - RpcGroup, Workflow.make, Activity patterns
-
 ## Anti-Patterns (Forbidden)
 
 These patterns are **never acceptable**:
@@ -517,7 +486,7 @@ See `references/observability-patterns.md` for metrics and tracing patterns.
 For detailed patterns, consult these reference files in the `references/` directory:
 
 - `language-server.md` - Effect Language Service setup, diagnostics, refactors, CLI tools
-- `service-patterns.md` - Service definition, Effect.fn, Context.Tag exceptions
+- `service-patterns.md` - Service contracts, implementation ownership, Effect.fn
 - `error-patterns.md` - Schema.TaggedError, error remapping, retry patterns
 - `schema-patterns.md` - Branded types, transforms, Schema.Class
 - `layer-patterns.md` - Dependency composition, testing layers
