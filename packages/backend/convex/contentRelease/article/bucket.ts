@@ -1,17 +1,29 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { HEAD_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  TRANSACTION_READ_HEADROOM,
+  TRANSACTION_READ_LIMIT,
+} from "@repo/backend/convex/contentRelease/spec";
 import { Effect } from "effect";
 
 const HASH_PREFIX = "sha256:";
 const BUCKET_LENGTH = 3;
 const BUCKET_PATTERN = /^[a-f\d]{3}$/;
+const MAXIMUM_HEAD_READS_PER_ROUTE = 6;
 
 /** Maximum non-empty article sitemap buckets for one locale. */
 export const ARTICLE_BUCKET_LIMIT = 16 ** BUCKET_LENGTH;
 
-/** Maximum category and article routes emitted by one sitemap bucket. */
-export const ARTICLE_BUCKET_SIZE = 1000;
+/**
+ * Maximum routes whose catalog, head, route, and representative reads fit in
+ * one Convex transaction while preserving four MiB of platform headroom.
+ */
+export const ARTICLE_BUCKET_SIZE = Math.floor(
+  (TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM) /
+    (MAXIMUM_HEAD_READS_PER_ROUTE * HEAD_DOCUMENT_LIMIT)
+);
 
 type ArticleLocale = Doc<"articleBuckets">["locale"];
 type BucketKind = "article" | "category";

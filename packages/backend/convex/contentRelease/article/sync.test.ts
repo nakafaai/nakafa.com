@@ -57,7 +57,40 @@ async function insertArticle(
 }
 
 describe("contentRelease/article/sync", () => {
-  it("resumes bounded pages and publishes article identity when complete", async () => {
+  it("publishes one bounded article model atomically", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertCompletedRelease(ctx, BASE, 8);
+      await insertTestState(ctx, { active: BASE, nextSequence: 2 });
+      for (let index = 0; index < 8; index += 1) {
+        await insertArticle(ctx, BASE, index);
+      }
+    });
+
+    await expect(
+      t.mutation((ctx) => runConvexProgram(syncArticles(ctx, BASE.releaseId)))
+    ).resolves.toEqual({ done: false, nextIndex: 7, processed: 8 });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(syncArticles(ctx, BASE.releaseId)))
+    ).resolves.toEqual({ done: true, nextIndex: 7, processed: 0 });
+
+    const stored = await t.run(async (ctx) => ({
+      categories: await ctx.db.query("articleCategories").take(2),
+      rows: await ctx.db.query("articleCatalog").take(10),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+    expect(stored.rows).toHaveLength(8);
+    expect(stored.categories).toMatchObject([
+      { category: "politics", title: "Politics" },
+    ]);
+    expect(stored.state).toMatchObject({
+      articleManifestHash: BASE.manifestHash,
+      articleReleaseId: BASE.releaseId,
+      articleSequence: BASE.sequence,
+    });
+  });
+
+  it("continues article models larger than one transaction page", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertCompletedRelease(ctx, BASE, 9);
@@ -69,32 +102,13 @@ describe("contentRelease/article/sync", () => {
 
     await expect(
       t.mutation((ctx) => runConvexProgram(syncArticles(ctx, BASE.releaseId)))
-    ).resolves.toEqual({ complete: false, processed: 8 });
-    const pending = await t.run((ctx) => ctx.db.query("contentState").unique());
-    expect(pending?.articleReleaseId).toBeUndefined();
+    ).resolves.toEqual({ done: false, nextIndex: 7, processed: 8 });
     await expect(
       t.mutation((ctx) => runConvexProgram(syncArticles(ctx, BASE.releaseId)))
-    ).resolves.toEqual({ complete: true, processed: 1 });
-
-    const stored = await t.run(async (ctx) => ({
-      categories: await ctx.db.query("articleCategories").take(2),
-      release: await ctx.db.query("contentReleases").unique(),
-      rows: await ctx.db.query("articleCatalog").take(10),
-      state: await ctx.db.query("contentState").unique(),
-    }));
-    expect(stored.rows).toHaveLength(9);
-    expect(stored.categories).toMatchObject([
-      { category: "politics", title: "Politics" },
-    ]);
-    expect(stored.release).toMatchObject({
-      articleIndex: 8,
-      articleSyncedAt: expect.any(Number),
-    });
-    expect(stored.state).toMatchObject({
-      articleManifestHash: BASE.manifestHash,
-      articleReleaseId: BASE.releaseId,
-      articleSequence: BASE.sequence,
-    });
+    ).resolves.toEqual({ done: true, nextIndex: 8, processed: 1 });
+    await expect(
+      t.run((ctx) => ctx.db.query("articleCatalog").take(10))
+    ).resolves.toHaveLength(9);
   });
 
   it("replaces, deletes, and idempotently replays changed articles", async () => {
@@ -144,10 +158,10 @@ describe("contentRelease/article/sync", () => {
 
     await expect(
       t.mutation((ctx) => runConvexProgram(syncArticles(ctx, NEXT.releaseId)))
-    ).resolves.toEqual({ complete: true, processed: 3 });
+    ).resolves.toEqual({ done: true, nextIndex: 2, processed: 3 });
     await expect(
       t.mutation((ctx) => runConvexProgram(syncArticles(ctx, NEXT.releaseId)))
-    ).resolves.toEqual({ complete: true, processed: 0 });
+    ).resolves.toEqual({ done: true, nextIndex: 2, processed: 0 });
     const rows = await t.run((ctx) => ctx.db.query("articleCatalog").take(4));
     expect(rows).toMatchObject([
       {

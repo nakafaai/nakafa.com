@@ -12,15 +12,21 @@ import {
   loadVersion,
 } from "@repo/backend/convex/contentRelease/model";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
+import { progressValidator } from "@repo/backend/convex/contentRelease/spec";
 import { loadSyncRelease } from "@repo/backend/convex/contentRelease/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { makeFunctionReference } from "convex/server";
+import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const articleSyncValidator = v.object({
-  complete: v.boolean(),
-  processed: v.number(),
-});
+type ModelProgress = Infer<typeof progressValidator>;
+
+const resumeReference = makeFunctionReference<
+  "mutation",
+  { releaseId: string },
+  ModelProgress
+>("contentRelease/article/sync:resume");
 
 /** Synchronizes one changed identity into the active article read model. */
 const syncArticleItem = Effect.fn("contentRelease.syncArticleItem")(function* (
@@ -65,7 +71,11 @@ export const syncArticles = Effect.fn("contentRelease.syncArticles")(function* (
     state.articleReleaseId === releaseId &&
     state.articleSequence === release.sequence
   ) {
-    return { complete: true, processed: 0 };
+    return {
+      done: true,
+      nextIndex: release.articleIndex ?? signed.manifest.itemCount - 1,
+      processed: 0,
+    };
   }
   const afterIndex = release.articleIndex ?? -1;
   const page = yield* loadReleaseItems(ctx, releaseId, afterIndex);
@@ -78,23 +88,23 @@ export const syncArticles = Effect.fn("contentRelease.syncArticles")(function* (
     }
     yield* syncArticleItem(ctx, row, release.sequence);
   }
-  const lastIndex = page.page.at(-1)?.index ?? afterIndex;
-  const complete = page.isDone;
-  if (complete && lastIndex !== signed.manifest.itemCount - 1) {
+  const nextIndex = page.page.at(-1)?.index ?? afterIndex;
+  const done = page.isDone;
+  if (done && nextIndex !== signed.manifest.itemCount - 1) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Article sync ${releaseId} stopped at item ${lastIndex}.`
+      `Article sync ${releaseId} stopped at item ${nextIndex}.`
     );
   }
   const now = Date.now();
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", release._id, {
-      articleIndex: lastIndex,
-      ...(complete ? { articleSyncedAt: now } : {}),
+      articleIndex: nextIndex,
+      ...(done ? { articleSyncedAt: now } : {}),
       updatedAt: now,
     })
   );
-  if (complete) {
+  if (done) {
     yield* Effect.promise(() =>
       ctx.db.patch("contentState", state._id, {
         articleManifestHash: signed.manifestHash,
@@ -104,13 +114,31 @@ export const syncArticles = Effect.fn("contentRelease.syncArticles")(function* (
       })
     );
   }
-  return { complete, processed: page.page.length };
+  return { done, nextIndex, processed: page.page.length };
 });
 
-/** Internal bounded step resumed by the authenticated activation action. */
-export const sync = internalMutation({
+/** Runs one bounded article-model page for the authenticated lifecycle action. */
+export const page = internalMutation({
   args: { releaseId: v.string() },
-  returns: articleSyncValidator,
+  returns: progressValidator,
   handler: (ctx, { releaseId }) =>
     runConvexProgram(syncArticles(ctx, releaseId)),
+});
+
+/** Durably resumes article indexing until the active release is complete. */
+export const resume = internalMutation({
+  args: { releaseId: v.string() },
+  returns: progressValidator,
+  handler: (ctx, { releaseId }) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const result = yield* syncArticles(ctx, releaseId);
+        if (!result.done) {
+          yield* Effect.promise(() =>
+            ctx.scheduler.runAfter(0, resumeReference, { releaseId })
+          );
+        }
+        return result;
+      })
+    ),
 });

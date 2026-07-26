@@ -184,13 +184,23 @@ describe("contentRelease/search", () => {
     });
   });
 
-  it("fails closed while an activated release is still synchronizing", async () => {
+  it("fails closed while an active search model synchronizes", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertTestState(ctx, {
         active: BASE,
         nextSequence: 3,
         search: BASE,
+      });
+      await insertSearchEntry(ctx, BASE, "test:pending", "pending needle");
+      await ctx.db.insert("contentHeads", {
+        contentKey: "test:pending",
+        family: "material",
+        index: 0,
+        locale: "en",
+        operation: "delete",
+        releaseId: NEXT.releaseId,
+        sequence: NEXT.sequence,
       });
       await selectIdentity(ctx, NEXT);
       const state = await ctx.db.query("contentState").unique();

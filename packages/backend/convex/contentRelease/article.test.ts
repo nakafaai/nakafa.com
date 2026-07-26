@@ -1,4 +1,3 @@
-import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -8,15 +7,12 @@ import {
   TEST_RUNTIME_RELEASE,
   testArticleProjection,
 } from "@repo/backend/test/content-runtime";
-import { insertRuntimeKey } from "@repo/backend/test/runtime-head";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const categories = api.contentRelease.article.categories;
 const category = api.contentRelease.article.category;
 const page = api.contentRelease.article.page;
-const sitemapBuckets = api.contentRelease.article.sitemapBuckets;
-const sitemapPage = api.contentRelease.article.sitemapPage;
 
 describe("contentRelease/article", () => {
   it("returns localized categories and newest articles through exact indexes", async () => {
@@ -100,16 +96,6 @@ describe("contentRelease/article", () => {
     await expect(
       empty.query(category, { category: "politics", locale: "en" })
     ).resolves.toEqual({ exists: false, managed: false });
-    await expect(
-      empty.query(sitemapBuckets, { locale: "en" })
-    ).resolves.toEqual({
-      articleCount: 0,
-      buckets: [],
-      managed: false,
-    });
-    await expect(
-      empty.query(sitemapPage, { bucket: "abc", locale: "en" })
-    ).resolves.toBeNull();
 
     const materialOnly = convexTest(schema, convexModules);
     await materialOnly.mutation((ctx) => insertRuntimeRelease(ctx));
@@ -127,86 +113,39 @@ describe("contentRelease/article", () => {
     });
   });
 
-  it("serves complete article and category sitemap partitions", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
-    const row = await t.run((ctx) => ctx.db.query("articleCatalog").unique());
-    if (!row) {
-      throw new Error("Expected one active article row.");
-    }
-
-    await expect(t.query(sitemapBuckets, { locale: "en" })).resolves.toEqual({
-      articleCount: 1,
-      buckets: [row.bucket],
-      managed: true,
-    });
-    await expect(
-      t.query(sitemapPage, { bucket: row.bucket, locale: "en" })
-    ).resolves.toMatchObject({
-      routes: [
-        { date: null, publicPath: "articles/politics" },
-        {
-          date: testArticleProjection(0).metadata.date,
-          publicPath: testArticleProjection(0).publicPath,
-        },
-      ],
-    });
-    await expect(
-      t.query(sitemapPage, { bucket: "fff", locale: "en" })
-    ).resolves.toBeNull();
-    await expect(
-      t.query(sitemapPage, { bucket: "wrong", locale: "en" })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_LIMIT" },
-    });
-  });
-
-  it("rejects sitemap metadata outside the fixed partition space", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertRuntimeArticles(ctx, 1);
-      const existing = await ctx.db.query("articleBuckets").unique();
-      if (!existing) {
-        throw new Error("Expected one active article bucket.");
-      }
-      for (let index = 0; index < 4096; index += 1) {
-        const bucket = index.toString(16).padStart(3, "0");
-        if (bucket === existing.bucket) {
-          continue;
-        }
-        await ctx.db.insert("articleBuckets", {
-          articleCount: 1,
-          bucket,
-          categoryCount: 0,
-          locale: "en",
-        });
-      }
-      await ctx.db.insert("articleBuckets", {
-        articleCount: 1,
-        bucket: "zzz",
-        categoryCount: 0,
-        locale: "en",
-      });
-    });
-
-    await expect(
-      t.query(sitemapBuckets, { locale: "en" })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
-
-  it("fails closed for pending, stale, and malformed catalog reads", async () => {
+  it("fails closed for pending, stale, and malformed catalog models", async () => {
     const pending = convexTest(schema, convexModules);
     await pending.mutation(async (ctx) => {
-      await insertRuntimeRelease(ctx);
-      const projection = testArticleProjection(0);
-      await insertRuntimeKey(ctx, projection.contentKey, {
-        projectionJson: canonicalizeArticleProjection(projection),
+      await insertRuntimeArticles(ctx, 1);
+      const [row, state] = await Promise.all([
+        ctx.db.query("articleCatalog").unique(),
+        ctx.db.query("contentState").unique(),
+      ]);
+      if (!(row && state)) {
+        throw new Error("Expected a synchronizing article model.");
+      }
+      await ctx.db.patch("articleCatalog", row._id, {
+        categoryTitle: "Pending",
+      });
+      await ctx.db.patch("contentState", state._id, {
+        articleManifestHash: undefined,
+        articleReleaseId: undefined,
+        articleSequence: undefined,
       });
     });
     await expect(
       pending.query(categories, {
+        expectedManifestHash: null,
+        expectedReleaseId: null,
+        locale: "en",
+        paginationOpts: { cursor: null, numItems: 1 },
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
+    });
+    await expect(
+      pending.query(page, {
+        category: "politics",
         expectedManifestHash: null,
         expectedReleaseId: null,
         locale: "en",
@@ -255,35 +194,6 @@ describe("contentRelease/article", () => {
         locale: "en",
         paginationOpts: { cursor: null, numItems: 1 },
       })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-
-    const count = convexTest(schema, convexModules);
-    await count.mutation(async (ctx) => {
-      await insertRuntimeArticles(ctx, 1);
-      const bucket = await ctx.db.query("articleBuckets").unique();
-      if (!bucket) {
-        throw new Error("Expected one article sitemap bucket.");
-      }
-      await ctx.db.patch("articleBuckets", bucket._id, { articleCount: 2 });
-    });
-    const bucket = await count.run((ctx) =>
-      ctx.db.query("articleBuckets").unique()
-    );
-    if (!bucket) {
-      throw new Error("Expected one corrupted sitemap bucket.");
-    }
-    await expect(
-      count.query(sitemapPage, { bucket: bucket.bucket, locale: "en" })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-    await count.mutation((ctx) =>
-      ctx.db.patch("articleBuckets", bucket._id, { articleCount: -1 })
-    );
-    await expect(
-      count.query(sitemapBuckets, { locale: "en" })
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });

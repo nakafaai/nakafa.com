@@ -160,6 +160,7 @@ import type * as contentRelease_item from "../contentRelease/item.js";
 import type * as contentRelease_items from "../contentRelease/items.js";
 import type * as contentRelease_manifest from "../contentRelease/manifest.js";
 import type * as contentRelease_model from "../contentRelease/model.js";
+import type * as contentRelease_models from "../contentRelease/models.js";
 import type * as contentRelease_ownership from "../contentRelease/ownership.js";
 import type * as contentRelease_paging from "../contentRelease/paging.js";
 import type * as contentRelease_parse from "../contentRelease/parse.js";
@@ -595,6 +596,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/items": typeof contentRelease_items;
   "contentRelease/manifest": typeof contentRelease_manifest;
   "contentRelease/model": typeof contentRelease_model;
+  "contentRelease/models": typeof contentRelease_models;
   "contentRelease/ownership": typeof contentRelease_ownership;
   "contentRelease/paging": typeof contentRelease_paging;
   "contentRelease/parse": typeof contentRelease_parse;

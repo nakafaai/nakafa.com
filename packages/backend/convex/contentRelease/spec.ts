@@ -16,6 +16,12 @@ import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
+/** Current Convex data-read ceiling for one query or mutation transaction. */
+export const TRANSACTION_READ_LIMIT = 16 * 1024 * 1024;
+
+/** Reserved space for indexes, state, release identity, and response data. */
+export const TRANSACTION_READ_HEADROOM = 4 * 1024 * 1024;
+
 /** Eight body-bearing transitions preserve headroom under transaction limits. */
 export const RELEASE_PAGE_LIMIT = 8;
 
@@ -103,7 +109,7 @@ export const bindingOperationValidator = literals(
   ...ContentRouteDeleteSchema.fields.operation.literals
 );
 
-/** Resumable progress returned by bounded verification mutations. */
+/** Resumable progress returned by bounded release-processing mutations. */
 export const progressValidator = v.object({
   done: v.boolean(),
   nextIndex: v.number(),

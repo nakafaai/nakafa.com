@@ -15,15 +15,21 @@ import {
   deleteSearchEntry,
   writeSearchEntry,
 } from "@repo/backend/convex/contentRelease/search/write";
+import { progressValidator } from "@repo/backend/convex/contentRelease/spec";
 import { loadSyncRelease } from "@repo/backend/convex/contentRelease/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { makeFunctionReference } from "convex/server";
+import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const searchSyncValidator = v.object({
-  complete: v.boolean(),
-  processed: v.number(),
-});
+type ModelProgress = Infer<typeof progressValidator>;
+
+const resumeReference = makeFunctionReference<
+  "mutation",
+  { releaseId: string },
+  ModelProgress
+>("contentRelease/search/sync:resume");
 
 /** Loads the signed artifact selected by one active public projection. */
 const loadSearchArtifact = Effect.fn("contentRelease.loadSearchArtifact")(
@@ -110,7 +116,11 @@ export const syncSearch = Effect.fn("contentRelease.syncSearch")(function* (
     state.searchReleaseId === releaseId &&
     state.searchSequence === release.sequence
   ) {
-    return { complete: true, processed: 0 };
+    return {
+      done: true,
+      nextIndex: release.searchIndex ?? signed.manifest.itemCount - 1,
+      processed: 0,
+    };
   }
   const afterIndex = release.searchIndex ?? -1;
   const page = yield* loadReleaseItems(ctx, releaseId, afterIndex);
@@ -123,23 +133,23 @@ export const syncSearch = Effect.fn("contentRelease.syncSearch")(function* (
     }
     yield* syncSearchItem(ctx, row, release.sequence);
   }
-  const lastIndex = page.page.at(-1)?.index ?? afterIndex;
-  const complete = page.isDone;
-  if (complete && lastIndex !== signed.manifest.itemCount - 1) {
+  const nextIndex = page.page.at(-1)?.index ?? afterIndex;
+  const done = page.isDone;
+  if (done && nextIndex !== signed.manifest.itemCount - 1) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Search sync ${releaseId} stopped at item ${lastIndex}.`
+      `Search sync ${releaseId} stopped at item ${nextIndex}.`
     );
   }
   const now = Date.now();
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", release._id, {
-      searchIndex: lastIndex,
-      ...(complete ? { searchSyncedAt: now } : {}),
+      searchIndex: nextIndex,
+      ...(done ? { searchSyncedAt: now } : {}),
       updatedAt: now,
     })
   );
-  if (complete) {
+  if (done) {
     yield* Effect.promise(() =>
       ctx.db.patch("contentState", state._id, {
         searchManifestHash: signed.manifestHash,
@@ -149,12 +159,30 @@ export const syncSearch = Effect.fn("contentRelease.syncSearch")(function* (
       })
     );
   }
-  return { complete, processed: page.page.length };
+  return { done, nextIndex, processed: page.page.length };
 });
 
-/** Internal bounded step resumed by the authenticated activation action. */
-export const sync = internalMutation({
+/** Runs one bounded search-model page for the authenticated lifecycle action. */
+export const page = internalMutation({
   args: { releaseId: v.string() },
-  returns: searchSyncValidator,
+  returns: progressValidator,
   handler: (ctx, { releaseId }) => runConvexProgram(syncSearch(ctx, releaseId)),
+});
+
+/** Durably resumes search indexing until the active release is complete. */
+export const resume = internalMutation({
+  args: { releaseId: v.string() },
+  returns: progressValidator,
+  handler: (ctx, { releaseId }) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const result = yield* syncSearch(ctx, releaseId);
+        if (!result.done) {
+          yield* Effect.promise(() =>
+            ctx.scheduler.runAfter(0, resumeReference, { releaseId })
+          );
+        }
+        return result;
+      })
+    ),
 });

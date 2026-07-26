@@ -1,4 +1,5 @@
 import {
+  ARTICLE_BUCKET_SIZE,
   adjustArticleBucket,
   getArticleBucket,
   isArticleBucket,
@@ -63,7 +64,7 @@ describe("contentRelease/article/bucket", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       ctx.db.insert("articleBuckets", {
-        articleCount: 1000,
+        articleCount: ARTICLE_BUCKET_SIZE,
         bucket: "abc",
         categoryCount: 0,
         locale: "en",

@@ -64,7 +64,7 @@ export const verifyArticle = Effect.fn("contentRelease.verifyArticle")(
   }
 );
 
-/** Authenticates one category representative against its active article. */
+/** Authenticates one category representative in a complete article model. */
 export const verifyCategory = Effect.fn("contentRelease.verifyArticleCategory")(
   function* (ctx: QueryCtx, category: CategoryRow, activeSequence: number) {
     const article = yield* Effect.promise(() =>

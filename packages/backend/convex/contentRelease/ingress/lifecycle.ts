@@ -12,6 +12,7 @@ import { recomputeProgram } from "@repo/backend/convex/contentRelease/proof/veri
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import type {
   abortReceiptValidator,
+  progressValidator,
   publicationReceiptValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { makeFunctionReference } from "convex/server";
@@ -39,12 +40,8 @@ interface StoredEnvelope {
   readonly rendererJson: string;
 }
 type AbortReceipt = Infer<typeof abortReceiptValidator>;
+type ModelProgress = Infer<typeof progressValidator>;
 type PublicationReceipt = Infer<typeof publicationReceiptValidator>;
-interface ReadModelSyncResult {
-  readonly complete: boolean;
-  readonly processed: number;
-}
-
 const envelopeReference = makeFunctionReference<
   "query",
   { manifestHash: string; releaseId: string },
@@ -73,13 +70,13 @@ const recoveryReference = makeFunctionReference<
 const articleSyncReference = makeFunctionReference<
   "mutation",
   { releaseId: string },
-  ReadModelSyncResult
->("contentRelease/article/sync:sync");
+  ModelProgress
+>("contentRelease/article/sync:page");
 const searchSyncReference = makeFunctionReference<
   "mutation",
   { releaseId: string },
-  ReadModelSyncResult
->("contentRelease/search/sync:sync");
+  ModelProgress
+>("contentRelease/search/sync:page");
 
 /** Authenticates one lifecycle request and its immutable release identity. */
 function verifyRequest(request: SignedRequest) {
@@ -112,7 +109,7 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
   return envelope.rendererJson;
 });
 
-/** Resumes one active-only read model until the release is fully indexed. */
+/** Drains one active read model while its scheduled resume remains durable. */
 const syncActiveModel = Effect.fn("contentRelease.syncActiveModel")(function* (
   ctx: ActionCtx,
   releaseId: string,
@@ -123,7 +120,7 @@ const syncActiveModel = Effect.fn("contentRelease.syncActiveModel")(function* (
     const result = yield* callInternal(() =>
       ctx.runMutation(reference, { releaseId })
     );
-    if (result.complete) {
+    if (result.done) {
       return;
     }
     if (result.processed === 0) {

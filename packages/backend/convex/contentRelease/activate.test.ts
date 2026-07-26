@@ -12,8 +12,9 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
+import { insertReleaseItem } from "@repo/backend/test/content-sync";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const CANDIDATE = {
   manifestHash: `sha256:${"6".repeat(64)}`,
@@ -71,6 +72,9 @@ function expectedReceipt(identity: TestIdentity) {
 }
 
 describe("contentRelease/activate", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
   it("atomically activates a candidate while retaining its inverse", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(seedVerifiedPair);
@@ -80,11 +84,18 @@ describe("contentRelease/activate", () => {
       releaseId: CANDIDATE.releaseId,
       rendererJson: testRendererJson(),
     });
+    const pending = await t.run((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    expect(pending).toHaveLength(2);
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
     const repeated = await t.mutation(activate, {
       manifestHash: CANDIDATE.manifestHash,
       releaseId: CANDIDATE.releaseId,
       rendererJson: testRendererJson(),
     });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
     const state = await t.run((ctx) => ctx.db.query("contentState").unique());
 
     expect(receipt).toEqual(expectedReceipt(CANDIDATE));
@@ -93,7 +104,9 @@ describe("contentRelease/activate", () => {
       activeManifestHash: CANDIDATE.manifestHash,
       activeReleaseId: CANDIDATE.releaseId,
       activeSequence: CANDIDATE.sequence,
+      articleReleaseId: CANDIDATE.releaseId,
       recoveryReleaseId: RECOVERY.releaseId,
+      searchReleaseId: CANDIDATE.releaseId,
     });
     expect(state?.candidateReleaseId).toBeUndefined();
   });
@@ -106,12 +119,14 @@ describe("contentRelease/activate", () => {
       releaseId: CANDIDATE.releaseId,
       rendererJson: testRendererJson(),
     });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
 
     const receipt = await t.mutation(activateRecovery, {
       manifestHash: RECOVERY.manifestHash,
       releaseId: RECOVERY.releaseId,
       rendererJson: testRendererJson(),
     });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
     const state = await t.run((ctx) => ctx.db.query("contentState").unique());
 
     expect(receipt).toEqual(expectedReceipt(RECOVERY));
@@ -119,6 +134,8 @@ describe("contentRelease/activate", () => {
       activeManifestHash: RECOVERY.manifestHash,
       activeReleaseId: RECOVERY.releaseId,
       activeSequence: RECOVERY.sequence,
+      articleReleaseId: RECOVERY.releaseId,
+      searchReleaseId: RECOVERY.releaseId,
     });
     expect(state?.recoveryReleaseId).toBeUndefined();
   });
@@ -145,6 +162,35 @@ describe("contentRelease/activate", () => {
         rendererJson: testRendererJson(),
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+  });
+
+  it("keeps an activated pointer observable when a durable model job fails", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await seedVerifiedPair(ctx);
+      await insertReleaseItem(ctx, CANDIDATE, "test:unexpected", 0);
+    });
+
+    await t.mutation(activate, {
+      manifestHash: CANDIDATE.manifestHash,
+      releaseId: CANDIDATE.releaseId,
+      rendererJson: testRendererJson(),
+    });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    const stored = await t.run(async (ctx) => ({
+      release: await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (index) =>
+          index.eq("releaseId", CANDIDATE.releaseId)
+        )
+        .unique(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+
+    expect(stored.release?.status).toBe("completed");
+    expect(stored.state?.activeReleaseId).toBe(CANDIDATE.releaseId);
+    expect(stored.state?.articleReleaseId).toBeUndefined();
+    expect(stored.state?.searchReleaseId).toBeUndefined();
   });
 
   it("rejects renderer drift and a stale active base", async () => {
