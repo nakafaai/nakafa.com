@@ -1,3 +1,4 @@
+import { FetchHttpClient } from "@effect/platform";
 import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
@@ -184,7 +185,7 @@ export function ForumPostInput() {
           forumId,
           parentId: replyTarget?.postId,
         },
-      });
+      }).pipe(Effect.provide(FetchHttpClient.layer));
 
       if (isTextOnlyPost) {
         Effect.runSync(clearSubmittedDraft());

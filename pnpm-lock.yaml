@@ -247,6 +247,9 @@ importers:
       '@convex-dev/better-auth':
         specifier: ^0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.25(@opentelemetry/api@1.9.1)(next@16.2.11(@opentelemetry/api@1.9.1)(@playwright/test@1.62.0)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10))(convex@1.42.3(react@19.2.8))(hono@4.12.32)(react@19.2.8)(typescript@6.0.3)
+      '@effect/platform':
+        specifier: 0.97.0
+        version: 0.97.0(effect@3.22.0)
       '@hugeicons/core-free-icons':
         specifier: ^4.2.2
         version: 4.2.3
@@ -358,9 +361,6 @@ importers:
       immer:
         specifier: ^11.1.11
         version: 11.1.15
-      ky:
-        specifier: ^2.0.2
-        version: 2.0.2
       motion:
         specifier: ^12.42.2
         version: 12.42.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -461,6 +461,9 @@ importers:
       '@ai-sdk/react':
         specifier: ^4.0.40
         version: 4.0.40(react@19.2.8)(zod@4.4.3)
+      '@effect/platform':
+        specifier: 0.97.0
+        version: 0.97.0(effect@3.22.0)
       '@mendable/firecrawl-js':
         specifier: ^4.30.1
         version: 4.30.1
@@ -494,9 +497,6 @@ importers:
       ipaddr.js:
         specifier: ^2.4.0
         version: 2.4.0
-      ky:
-        specifier: ^2.0.2
-        version: 2.0.2
       parse-domain:
         specifier: ^8.3.1
         version: 8.3.1
@@ -5903,10 +5903,6 @@ packages:
 
   kubernetes-types@1.30.0:
     resolution: {integrity: sha512-Dew1okvhM/SQcIa2rcgujNndZwU8VnSapDgdxlYoB84ZlpAD43U6KLAFqYo17ykSFGHNPrg0qry0bP+GJd9v7Q==}
-
-  ky@2.0.2:
-    resolution: {integrity: sha512-/GmXpo9F9W+f8n4Ivr2iH+7h7wL7jLbLKWkMlpflcCRb6kGjBfTlASEXaZ9qUgNTn4VgS0P2pwxxzQ4EM6Ulgg==}
-    engines: {node: '>=22'}
 
   kysely@0.28.17:
     resolution: {integrity: sha512-nbD8lB9EB3wNdMhOCdx5Li8DxnLbvKByylRLcJ1h+4SkrowVeECAyZlyiKMThF7xFdRz0jSQ2MoJr+wXux2y0Q==}
@@ -12881,8 +12877,6 @@ snapshots:
   kleur@3.0.3: {}
 
   kubernetes-types@1.30.0: {}
-
-  ky@2.0.2: {}
 
   kysely@0.28.17: {}
 

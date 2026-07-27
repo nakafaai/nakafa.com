@@ -138,5 +138,17 @@ export const GeoDataSchema = Schema.Struct({
   longitude: Schema.String,
 });
 
+/** Weather payload returned by the Nakafa weather route. */
+export const WeatherDataSchema = WeatherResponseSchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      air_pollution: AirPollutionResponseSchema,
+      air_pollution_forecast: AirPollutionResponseSchema,
+      geocoding: GeoDataSchema,
+    })
+  ),
+  Schema.mutable
+);
+
 /** Geographic data used by Nina weather context. */
 export type GeoData = Schema.Schema.Type<typeof GeoDataSchema>;

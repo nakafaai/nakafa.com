@@ -17,6 +17,7 @@
     "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts"
   },
   "dependencies": {
+    "@effect/platform": "0.97.0",
     "@ai-sdk/react": "^4.0.40",
     "@convex-dev/better-auth": "^0.12.5",
     "@hugeicons/core-free-icons": "^4.2.2",
@@ -56,7 +57,6 @@
     "effect": "catalog:",
     "feed": "^6.0.0",
     "immer": "^11.1.11",
-    "ky": "^2.0.2",
     "motion": "^12.42.2",
     "nanoid": "^6.0.0",
     "next": "16.2.11",
