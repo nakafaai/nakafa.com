@@ -6,7 +6,11 @@ const accountDeletionFailedCode = "ACCOUNT_DELETION_FAILED";
 const accountDeletionSessionExpiredCode = "ACCOUNT_DELETION_SESSION_EXPIRED";
 const accountReauthenticationFailedCode = "ACCOUNT_REAUTHENTICATION_FAILED";
 const betterAuthSessionExpiredCode = "SESSION_EXPIRED";
-const deviceIdentityStorageKey = "nakafa-device-id";
+const accountStorageKeys = [
+  "nakafa-ai",
+  "nakafa-content-views",
+  "nakafa-device-id",
+] as const;
 
 type DeleteUserResult = Awaited<ReturnType<typeof authClient.deleteUser>>;
 type SignOutResult = Awaited<ReturnType<typeof authClient.signOut>>;
@@ -14,7 +18,7 @@ type DeleteUserRequest = () => Promise<DeleteUserResult>;
 type SignOutRequest = () => Promise<SignOutResult>;
 
 interface BrowserIdentityCleanup {
-  readonly removeDeviceIdentity: () => void;
+  readonly removePersistedAccountState: () => void;
   readonly resetAnalytics: () => void;
 }
 
@@ -78,15 +82,18 @@ export const clearDeletedAccountBrowserIdentity = Effect.fn(
   "www.auth.clearDeletedAccountBrowserIdentity"
 )(function* (
   cleanup: BrowserIdentityCleanup = {
-    removeDeviceIdentity: () =>
-      window.localStorage.removeItem(deviceIdentityStorageKey),
+    removePersistedAccountState: () => {
+      for (const storageKey of accountStorageKeys) {
+        window.localStorage.removeItem(storageKey);
+      }
+    },
     resetAnalytics: () => analytics.reset(),
   }
 ) {
   yield* Effect.all(
     [
       Effect.try(cleanup.resetAnalytics).pipe(Effect.ignore),
-      Effect.try(cleanup.removeDeviceIdentity).pipe(Effect.ignore),
+      Effect.try(cleanup.removePersistedAccountState).pipe(Effect.ignore),
     ],
     { discard: true }
   );

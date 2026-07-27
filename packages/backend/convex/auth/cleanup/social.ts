@@ -27,7 +27,7 @@ const cleanupBookmarks = Effect.fn("auth.cleanup.cleanupBookmarks")(function* (
     yield* tryUserCleanup(() => ctx.db.delete("bookmarks", bookmark._id));
   }
 
-  if (bookmarks.length === BOOKMARK_BATCH_SIZE) {
+  if (bookmarks.length > 0) {
     return true;
   }
 
@@ -44,7 +44,7 @@ const cleanupBookmarks = Effect.fn("auth.cleanup.cleanupBookmarks")(function* (
     );
   }
 
-  return collections.length === COLLECTION_BATCH_SIZE;
+  return collections.length > 0;
 });
 
 /** Deletes one bounded batch of a user's comments and votes. */
@@ -63,7 +63,7 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(function* (
     yield* tryUserCleanup(() => ctx.db.delete("commentVotes", vote._id));
   }
 
-  if (votes.length === COMMENT_VOTE_BATCH_SIZE) {
+  if (votes.length > 0) {
     return true;
   }
 
@@ -85,7 +85,7 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(function* (
     );
   }
 
-  if (referencedReplies.length === COMMENT_REFERENCE_BATCH_SIZE) {
+  if (referencedReplies.length > 0) {
     return true;
   }
 
@@ -115,7 +115,7 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(function* (
     );
   }
 
-  if (notifications.length === COMMENT_DEPENDENCY_BATCH_SIZE) {
+  if (notifications.length > 0) {
     return true;
   }
 
@@ -134,7 +134,7 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(function* (
     );
   }
 
-  if (mutes.length === COMMENT_DEPENDENCY_BATCH_SIZE) {
+  if (mutes.length > 0) {
     return true;
   }
 
@@ -151,7 +151,7 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(function* (
     yield* tryUserCleanup(() => ctx.db.delete("commentVotes", vote._id));
   }
 
-  if (commentVotes.length === COMMENT_VOTE_BATCH_SIZE) {
+  if (commentVotes.length > 0) {
     return true;
   }
 
@@ -172,7 +172,7 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(function* (
     );
   }
 
-  if (replies.length === COMMENT_REFERENCE_BATCH_SIZE) {
+  if (replies.length > 0) {
     return true;
   }
 
@@ -196,7 +196,7 @@ const cleanupChatTraces = Effect.fn("auth.cleanup.cleanupChatTraces")(
       );
     }
 
-    return traces.length === CHAT_TRACE_BATCH_SIZE;
+    return traces.length > 0;
   }
 );
 

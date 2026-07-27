@@ -26,7 +26,7 @@ export const cleanupUserNotifications = Effect.fn(
     );
   }
 
-  if (preferences.length === PREFERENCES_BATCH_SIZE) {
+  if (preferences.length > 0) {
     return true;
   }
 
@@ -43,7 +43,7 @@ export const cleanupUserNotifications = Effect.fn(
     );
   }
 
-  if (entityMutes.length === ENTITY_MUTES_BATCH_SIZE) {
+  if (entityMutes.length > 0) {
     return true;
   }
 
@@ -58,7 +58,7 @@ export const cleanupUserNotifications = Effect.fn(
     yield* tryUserCleanup(() => ctx.db.delete("notificationCounts", count._id));
   }
 
-  if (counts.length === COUNT_BATCH_SIZE) {
+  if (counts.length > 0) {
     return true;
   }
 
@@ -75,7 +75,7 @@ export const cleanupUserNotifications = Effect.fn(
     );
   }
 
-  if (received.length === RECIPIENT_BATCH_SIZE) {
+  if (received.length > 0) {
     return true;
   }
 
@@ -92,5 +92,5 @@ export const cleanupUserNotifications = Effect.fn(
     );
   }
 
-  return acted.length === ACTOR_BATCH_SIZE;
+  return acted.length > 0;
 });

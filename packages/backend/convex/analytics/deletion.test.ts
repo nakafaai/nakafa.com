@@ -1,5 +1,6 @@
 import {
   deletePostHogPerson,
+  ensurePostHogDeletionConfigured,
   PostHogDeletionConfigError,
   PostHogDeletionRequestError,
 } from "@repo/backend/convex/analytics/deletion";
@@ -44,6 +45,17 @@ describe("analytics/deletion", () => {
           personalApiKey: "",
         },
         request: fetch,
+      }).pipe(Effect.flip)
+    );
+
+    expect(failure).toBeInstanceOf(PostHogDeletionConfigError);
+  });
+
+  it("rejects account deletion before auth removal without credentials", async () => {
+    const failure = await Effect.runPromise(
+      ensurePostHogDeletionConfigured({
+        ...config,
+        personalApiKey: " ",
       }).pipe(Effect.flip)
     );
 

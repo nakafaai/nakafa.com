@@ -38,6 +38,17 @@ export const deleteCustomerById = internalMutation({
   }),
   returns: v.null(),
   handler: async (ctx, args) => {
+    const tombstone = await ctx.db
+      .query("customerDeletionTombstones")
+      .withIndex("by_polarCustomerId", (q) => q.eq("polarCustomerId", args.id))
+      .unique();
+
+    if (!tombstone) {
+      await ctx.db.insert("customerDeletionTombstones", {
+        polarCustomerId: args.id,
+      });
+    }
+
     const customer = await ctx.db
       .query("customers")
       .withIndex("by_polarId", (q) => q.eq("id", args.id))
@@ -77,6 +88,17 @@ export const upsertCustomer = internalMutation({
   },
   returns: vv.nullable(vv.id("customers")),
   handler: async (ctx, args) => {
+    const tombstone = await ctx.db
+      .query("customerDeletionTombstones")
+      .withIndex("by_polarCustomerId", (q) =>
+        q.eq("polarCustomerId", args.customer.id)
+      )
+      .unique();
+
+    if (tombstone) {
+      return null;
+    }
+
     const user = await ctx.db.get("users", args.customer.userId);
 
     if (!user || user.deletedAt !== undefined) {

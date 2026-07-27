@@ -148,4 +148,40 @@ describe("subscriptions/mutations", () => {
       }),
     ]);
   });
+
+  it("rejects late subscription webhooks for a deleted customer", async () => {
+    const t = convexTest(schema, convexModules);
+    const subscription = buildSubscription({
+      customerId: "polar-deleted",
+      productId: products.pro.id,
+      status: "active",
+      subscriptionId: "sub-deleted",
+    });
+
+    await t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
+      id: subscription.customerId,
+    });
+
+    const createdId = await t.mutation(
+      internal.subscriptions.mutations.createSubscription,
+      { subscription }
+    );
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("subscriptions", subscription);
+    });
+    await t.mutation(internal.subscriptions.mutations.updateSubscription, {
+      subscription: {
+        ...subscription,
+        status: "canceled",
+      },
+    });
+
+    const rows = await t.query(
+      async (ctx) => await ctx.db.query("subscriptions").collect()
+    );
+
+    expect(createdId).toBeNull();
+    expect(rows).toEqual([]);
+  });
 });

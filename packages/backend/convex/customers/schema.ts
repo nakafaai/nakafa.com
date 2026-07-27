@@ -21,6 +21,13 @@ const tables = {
   })
     .index("by_userId", ["userId"])
     .index("by_polarId", ["id"]),
+  customerDeletionTombstones: defineTable({
+    /**
+     * Polar customer deletion is terminal for this ID. Retaining the ID keeps
+     * delayed or replayed webhooks from recreating billing state.
+     */
+    polarCustomerId: v.string(),
+  }).index("by_polarCustomerId", ["polarCustomerId"]),
 };
 
 export default tables;

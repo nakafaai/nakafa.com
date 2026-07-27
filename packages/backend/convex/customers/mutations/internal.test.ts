@@ -264,9 +264,18 @@ describe("customers/mutations", () => {
     const state = await t.query(async (ctx) => ({
       customers: await ctx.db.query("customers").collect(),
       subscriptions: await ctx.db.query("subscriptions").collect(),
+      tombstones: await ctx.db.query("customerDeletionTombstones").collect(),
     }));
 
-    expect(state).toEqual({ customers: [], subscriptions: [] });
+    expect(state).toEqual({
+      customers: [],
+      subscriptions: [],
+      tombstones: [
+        expect.objectContaining({
+          polarCustomerId: "polar-delete",
+        }),
+      ],
+    });
   });
 
   it("does not recreate customer data for a deleted user", async () => {
@@ -296,6 +305,34 @@ describe("customers/mutations", () => {
     expect(customers).toEqual([]);
   });
 
+  it("does not recreate a customer after its Polar deletion tombstone", async () => {
+    const t = convexTest(schema, convexModules);
+    const userId = await t.mutation((ctx) =>
+      insertCustomerUser(ctx, "terminal")
+    );
+
+    await t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
+      id: "polar-terminal",
+    });
+    const customerId = await t.mutation(
+      internal.customers.mutations.internal.upsertCustomer,
+      {
+        customer: {
+          id: "polar-terminal",
+          externalId: "auth-terminal",
+          metadata: { userId },
+          userId,
+        },
+      }
+    );
+    const customers = await t.query(
+      async (ctx) => await ctx.db.query("customers").collect()
+    );
+
+    expect(customerId).toBeNull();
+    expect(customers).toEqual([]);
+  });
+
   it("ignores delete requests for unknown Polar ids", async () => {
     const t = convexTest(schema, convexModules);
 
@@ -304,5 +341,15 @@ describe("customers/mutations", () => {
         id: "missing-polar",
       })
     ).resolves.toBeNull();
+
+    const tombstones = await t.query(
+      async (ctx) => await ctx.db.query("customerDeletionTombstones").collect()
+    );
+
+    expect(tombstones).toEqual([
+      expect.objectContaining({
+        polarCustomerId: "missing-polar",
+      }),
+    ]);
   });
 });

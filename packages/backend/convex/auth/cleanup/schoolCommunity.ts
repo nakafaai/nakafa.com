@@ -27,7 +27,7 @@ const cleanupForumReactions = Effect.fn("auth.cleanup.cleanupForumReactions")(
       );
     }
 
-    if (postReactions.length === REACTION_BATCH_SIZE) {
+    if (postReactions.length > 0) {
       return true;
     }
 
@@ -44,7 +44,7 @@ const cleanupForumReactions = Effect.fn("auth.cleanup.cleanupForumReactions")(
       );
     }
 
-    return forumReactions.length === REACTION_BATCH_SIZE;
+    return forumReactions.length > 0;
   }
 );
 
@@ -64,7 +64,7 @@ const cleanupForumState = Effect.fn("auth.cleanup.cleanupForumState")(
       );
     }
 
-    if (readStates.length === READ_STATE_BATCH_SIZE) {
+    if (readStates.length > 0) {
       return true;
     }
 
@@ -87,7 +87,7 @@ const cleanupForumState = Effect.fn("auth.cleanup.cleanupForumState")(
       );
     }
 
-    return uploads.length === UPLOAD_BATCH_SIZE;
+    return uploads.length > 0;
   }
 );
 
@@ -113,7 +113,7 @@ const cleanupForumReplyReferences = Effect.fn(
     );
   }
 
-  return replies.length === REPLY_REFERENCE_BATCH_SIZE;
+  return replies.length > 0;
 });
 
 /** Deletes one bounded batch of authored forum threads. */
@@ -147,7 +147,7 @@ const cleanupForumPosts = Effect.fn("auth.cleanup.cleanupForumPosts")(
       );
     }
 
-    if (notifications.length === POST_DEPENDENCY_BATCH_SIZE) {
+    if (notifications.length > 0) {
       return true;
     }
 
@@ -168,7 +168,7 @@ const cleanupForumPosts = Effect.fn("auth.cleanup.cleanupForumPosts")(
       );
     }
 
-    if (mutes.length === POST_DEPENDENCY_BATCH_SIZE) {
+    if (mutes.length > 0) {
       return true;
     }
 
@@ -186,7 +186,7 @@ const cleanupForumPosts = Effect.fn("auth.cleanup.cleanupForumPosts")(
       );
     }
 
-    if (attachments.length === POST_ATTACHMENT_BATCH_SIZE) {
+    if (attachments.length > 0) {
       return true;
     }
 
@@ -205,7 +205,7 @@ const cleanupForumPosts = Effect.fn("auth.cleanup.cleanupForumPosts")(
       );
     }
 
-    if (reactions.length === POST_DEPENDENCY_BATCH_SIZE) {
+    if (reactions.length > 0) {
       return true;
     }
 
@@ -226,7 +226,7 @@ const cleanupForumPosts = Effect.fn("auth.cleanup.cleanupForumPosts")(
       );
     }
 
-    if (replies.length === REPLY_REFERENCE_BATCH_SIZE) {
+    if (replies.length > 0) {
       return true;
     }
 
@@ -253,7 +253,7 @@ const cleanupMaterialViews = Effect.fn("auth.cleanup.cleanupMaterialViews")(
       );
     }
 
-    return views.length === MATERIAL_VIEW_BATCH_SIZE;
+    return views.length > 0;
   }
 );
 

@@ -10,15 +10,6 @@ export class UserCleanupError extends Schema.TaggedError<UserCleanupError>()(
   }
 ) {}
 
-/** Typed invariant failure for corrupt try-out runtime rows during cleanup. */
-export class InvalidTryoutCleanupStateError extends Schema.TaggedError<InvalidTryoutCleanupStateError>()(
-  "InvalidTryoutCleanupStateError",
-  {
-    code: Schema.Literal("INVALID_TRYOUT_STATE"),
-    message: Schema.String,
-  }
-) {}
-
 /** Converts a database or scheduler failure into the cleanup error contract. */
 export function toUserCleanupError(error: unknown) {
   return new UserCleanupError({

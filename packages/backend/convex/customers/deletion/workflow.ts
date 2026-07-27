@@ -109,8 +109,9 @@ export const startDeletedUserCleanup = internalMutation({
 });
 
 /**
- * Starts local data erasure before durably canceling billing and anonymizing
- * the matching Polar customer. Each step is idempotent across workflow retries.
+ * Cancels billing and starts external erasure before local cleanup. This keeps
+ * deterministic local corruption from leaving paid service or analytics data
+ * active after the auth identity is gone. Every step is retry-safe.
  */
 export const cleanupDeletedUserData = workflow.define({
   args: {
@@ -119,15 +120,6 @@ export const cleanupDeletedUserData = workflow.define({
   },
   returns: v.null(),
   handler: async (step, args) => {
-    let hasMoreLocalData = true;
-
-    while (hasMoreLocalData) {
-      hasMoreLocalData = await step.runMutation(
-        internal.auth.cleanup.cleanupDeletedUser,
-        { userId: args.userId }
-      );
-    }
-
     await step.runAction(
       internal.customers.actions.internal.cleanupUserData,
       args,
@@ -138,6 +130,15 @@ export const cleanupDeletedUserData = workflow.define({
       { userId: args.userId },
       { retry: EXTERNAL_DELETE_RETRY }
     );
+
+    let hasMoreLocalData = true;
+
+    while (hasMoreLocalData) {
+      hasMoreLocalData = await step.runMutation(
+        internal.auth.cleanup.cleanupDeletedUser,
+        { userId: args.userId }
+      );
+    }
 
     return null;
   },

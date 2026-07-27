@@ -23,7 +23,7 @@ const cleanupMemberships = Effect.fn("auth.cleanup.cleanupMemberships")(
       );
     }
 
-    if (classMemberships.length === MEMBERSHIP_BATCH_SIZE) {
+    if (classMemberships.length > 0) {
       return true;
     }
 
@@ -42,7 +42,7 @@ const cleanupMemberships = Effect.fn("auth.cleanup.cleanupMemberships")(
       );
     }
 
-    return schoolMemberships.length === MEMBERSHIP_BATCH_SIZE;
+    return schoolMemberships.length > 0;
   }
 );
 
@@ -64,7 +64,7 @@ const cleanupActivity = Effect.fn("auth.cleanup.cleanupSchoolActivity")(
       );
     }
 
-    if (inviteRows.length === ACTIVITY_REFERENCE_BATCH_SIZE) {
+    if (inviteRows.length > 0) {
       return true;
     }
 
@@ -83,7 +83,7 @@ const cleanupActivity = Effect.fn("auth.cleanup.cleanupSchoolActivity")(
       );
     }
 
-    if (addedRows.length === ACTIVITY_REFERENCE_BATCH_SIZE) {
+    if (addedRows.length > 0) {
       return true;
     }
 
@@ -102,7 +102,7 @@ const cleanupActivity = Effect.fn("auth.cleanup.cleanupSchoolActivity")(
       );
     }
 
-    if (removedRows.length === ACTIVITY_REFERENCE_BATCH_SIZE) {
+    if (removedRows.length > 0) {
       return true;
     }
 
@@ -119,7 +119,7 @@ const cleanupActivity = Effect.fn("auth.cleanup.cleanupSchoolActivity")(
       );
     }
 
-    return activityRows.length === ACTIVITY_BATCH_SIZE;
+    return activityRows.length > 0;
   }
 );
 
