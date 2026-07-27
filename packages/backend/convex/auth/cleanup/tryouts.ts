@@ -1,53 +1,36 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  InvalidTryoutCleanupStateError,
-  tryUserCleanup,
-} from "@repo/backend/convex/auth/cleanup/spec";
+import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
 import { Effect } from "effect";
 
-const ATTEMPT_BATCH_SIZE = 10;
+const ATTEMPT_CHILD_BATCH_SIZE = 50;
 const PROGRESS_BATCH_SIZE = 25;
 const LEADERBOARD_BATCH_SIZE = 25;
 const STATS_BATCH_SIZE = 25;
 const ENTITLEMENT_BATCH_SIZE = 25;
 const ACCESS_GRANT_BATCH_SIZE = 25;
 
-/** Deletes one try-out attempt and every runtime row that belongs to it. */
-const deleteAttemptRuntime = Effect.fn("auth.cleanup.deleteAttemptRuntime")(
+/** Deletes one bounded phase from a try-out attempt runtime. */
+const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
   function* (ctx: MutationCtx, attempt: Doc<"tryoutAttempts">) {
-    const sections = yield* tryUserCleanup(() =>
+    const section = yield* tryUserCleanup(() =>
       ctx.db
         .query("tryoutSectionAttempts")
         .withIndex("by_tryoutAttemptId_and_sectionOrder", (query) =>
           query.eq("tryoutAttemptId", attempt._id)
         )
-        .take(attempt.sectionSnapshots.length + 1)
+        .first()
     );
 
-    if (sections.length > attempt.sectionSnapshots.length) {
-      return yield* new InvalidTryoutCleanupStateError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout attempt has more sections than its snapshot.",
-      });
-    }
-
-    for (const section of sections) {
+    if (section) {
       const responses = yield* tryUserCleanup(() =>
         ctx.db
           .query("tryoutResponses")
           .withIndex("by_tryoutSectionAttemptId_and_questionId", (query) =>
             query.eq("tryoutSectionAttemptId", section._id)
           )
-          .take(section.totalQuestions + 1)
+          .take(ATTEMPT_CHILD_BATCH_SIZE)
       );
-
-      if (responses.length > section.totalQuestions) {
-        return yield* new InvalidTryoutCleanupStateError({
-          code: "INVALID_TRYOUT_STATE",
-          message: "Tryout section has more responses than questions.",
-        });
-      }
 
       for (const response of responses) {
         yield* tryUserCleanup(() =>
@@ -55,9 +38,14 @@ const deleteAttemptRuntime = Effect.fn("auth.cleanup.deleteAttemptRuntime")(
         );
       }
 
+      if (responses.length > 0) {
+        return true;
+      }
+
       yield* tryUserCleanup(() =>
         ctx.db.delete("tryoutSectionAttempts", section._id)
       );
+      return true;
     }
 
     const placements = yield* tryUserCleanup(() =>
@@ -66,20 +54,17 @@ const deleteAttemptRuntime = Effect.fn("auth.cleanup.deleteAttemptRuntime")(
         .withIndex("by_tryoutAttemptId_and_questionOrder", (query) =>
           query.eq("tryoutAttemptId", attempt._id)
         )
-        .take(attempt.totalQuestions + 1)
+        .take(ATTEMPT_CHILD_BATCH_SIZE)
     );
-
-    if (placements.length > attempt.totalQuestions) {
-      return yield* new InvalidTryoutCleanupStateError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout attempt has more placements than questions.",
-      });
-    }
 
     for (const placement of placements) {
       yield* tryUserCleanup(() =>
         ctx.db.delete("tryoutAttemptPlacements", placement._id)
       );
+    }
+
+    if (placements.length > 0) {
+      return true;
     }
 
     const score = yield* tryUserCleanup(() =>
@@ -93,9 +78,11 @@ const deleteAttemptRuntime = Effect.fn("auth.cleanup.deleteAttemptRuntime")(
 
     if (score) {
       yield* tryUserCleanup(() => ctx.db.delete("tryoutScores", score._id));
+      return true;
     }
 
     yield* tryUserCleanup(() => ctx.db.delete("tryoutAttempts", attempt._id));
+    return true;
   }
 );
 
@@ -115,25 +102,21 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
       yield* tryUserCleanup(() => ctx.db.delete("tryoutSetProgress", row._id));
     }
 
-    if (progress.length === PROGRESS_BATCH_SIZE) {
+    if (progress.length > 0) {
       return true;
     }
 
-    const attempts = yield* tryUserCleanup(() =>
+    const attempt = yield* tryUserCleanup(() =>
       ctx.db
         .query("tryoutAttempts")
         .withIndex("by_userId_and_startedAt", (query) =>
           query.eq("userId", userId)
         )
-        .take(ATTEMPT_BATCH_SIZE)
+        .first()
     );
 
-    for (const attempt of attempts) {
-      yield* deleteAttemptRuntime(ctx, attempt);
-    }
-
-    if (attempts.length === ATTEMPT_BATCH_SIZE) {
-      return true;
+    if (attempt) {
+      return yield* cleanupAttemptRuntime(ctx, attempt);
     }
 
     const leaderboard = yield* tryUserCleanup(() =>
@@ -152,7 +135,7 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
       );
     }
 
-    if (leaderboard.length === LEADERBOARD_BATCH_SIZE) {
+    if (leaderboard.length > 0) {
       return true;
     }
 
@@ -171,7 +154,7 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
       );
     }
 
-    if (stats.length === STATS_BATCH_SIZE) {
+    if (stats.length > 0) {
       return true;
     }
 
@@ -190,7 +173,7 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
       );
     }
 
-    if (entitlements.length === ENTITLEMENT_BATCH_SIZE) {
+    if (entitlements.length > 0) {
       return true;
     }
 
@@ -209,7 +192,7 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
       );
     }
 
-    if (accessGrants.length === ACCESS_GRANT_BATCH_SIZE) {
+    if (accessGrants.length > 0) {
       return true;
     }
 
@@ -224,6 +207,7 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
       yield* tryUserCleanup(() =>
         ctx.db.delete("tryoutFreeAttemptClaims", freeClaim._id)
       );
+      return true;
     }
 
     return false;

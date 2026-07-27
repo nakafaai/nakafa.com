@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { cleanupDeletedUserProgram } from "@repo/backend/convex/auth/cleanup/impl";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -10,6 +11,66 @@ const deletedAuthIdPattern = /^deleted:/;
 const deletedEmailPattern = /^deleted-.+@account\.nakafa\.invalid$/;
 
 describe("auth/cleanup", () => {
+  it("stops after the first cleanup batch that makes progress", async () => {
+    const t = convexTest(schema, convexModules);
+    const state = await t.mutation(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "bounded-cleanup-user",
+        credits: 10,
+        creditsResetAt: NOW,
+        email: "bounded@example.com",
+        name: "Bounded User",
+        plan: "free",
+      });
+      const preferenceId = await ctx.db.insert("notificationPreferences", {
+        disabledTypes: [],
+        emailDigest: "weekly",
+        emailEnabled: true,
+        updatedAt: NOW,
+        userId,
+      });
+      const collectionId = await ctx.db.insert("bookmarkCollections", {
+        bookmarkCount: 1,
+        image: "default",
+        isDefault: true,
+        isPublic: false,
+        name: "Saved",
+        order: 0,
+        updatedAt: NOW,
+        userId,
+      });
+      const bookmarkId = await ctx.db.insert("bookmarks", {
+        bookmarkedAt: NOW,
+        collectionId,
+        order: 0,
+        slug: "material/algebra",
+        userId,
+      });
+
+      return { bookmarkId, preferenceId, userId };
+    });
+
+    const hasMore = await t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
+      userId: state.userId,
+    });
+    const remaining = await t.query(async (ctx) => ({
+      bookmark: await ctx.db.get("bookmarks", state.bookmarkId),
+      preference: await ctx.db.get(
+        "notificationPreferences",
+        state.preferenceId
+      ),
+      user: await ctx.db.get("users", state.userId),
+    }));
+
+    expect(hasMore).toBe(true);
+    expect(remaining.preference).toBeNull();
+    expect(remaining.bookmark).not.toBeNull();
+    expect(remaining.user).toMatchObject({
+      authId: "bounded-cleanup-user",
+      email: "bounded@example.com",
+    });
+  });
+
   it("deletes personal data and anonymizes the shared-record identity", async () => {
     const t = convexTest(schema, convexModules);
 

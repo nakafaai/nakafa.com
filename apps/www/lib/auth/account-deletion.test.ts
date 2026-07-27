@@ -41,26 +41,33 @@ describe("account deletion", () => {
   });
 
   it("clears browser identities after deletion", async () => {
-    const removeDeviceIdentity = vi.fn();
+    const removePersistedAccountState = vi.fn();
     const resetAnalytics = vi.fn();
 
     await Effect.runPromise(
       clearDeletedAccountBrowserIdentity({
-        removeDeviceIdentity,
+        removePersistedAccountState,
         resetAnalytics,
       })
     );
 
-    expect(removeDeviceIdentity).toHaveBeenCalledOnce();
+    expect(removePersistedAccountState).toHaveBeenCalledOnce();
     expect(resetAnalytics).toHaveBeenCalledOnce();
   });
 
-  it("clears the default analytics and device identities", async () => {
+  it("clears analytics and every persisted account store", async () => {
+    window.localStorage.setItem("nakafa-ai", "test-ai-state");
+    window.localStorage.setItem(
+      "nakafa-content-views",
+      "test-content-view-state"
+    );
     window.localStorage.setItem("nakafa-device-id", "test-device");
 
     await Effect.runPromise(clearDeletedAccountBrowserIdentity());
 
     expect(analytics.reset).toHaveBeenCalledOnce();
+    expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
+    expect(window.localStorage.getItem("nakafa-content-views")).toBeNull();
     expect(window.localStorage.getItem("nakafa-device-id")).toBeNull();
   });
 
@@ -68,7 +75,7 @@ describe("account deletion", () => {
     await expect(
       Effect.runPromise(
         clearDeletedAccountBrowserIdentity({
-          removeDeviceIdentity: () => {
+          removePersistedAccountState: () => {
             throw new Error("storage unavailable");
           },
           resetAnalytics: () => {

@@ -16,7 +16,7 @@ import { v } from "convex/values";
  */
 export const createSubscription = internalMutation({
   args: subscriptionRecordArgs,
-  returns: vv.id("subscriptions"),
+  returns: vv.nullable(vv.id("subscriptions")),
   handler: async (ctx, args) =>
     await runConvexProgram(createSubscriptionRecord(ctx, args.subscription)),
 });

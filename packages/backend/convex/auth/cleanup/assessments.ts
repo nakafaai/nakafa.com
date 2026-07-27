@@ -24,7 +24,7 @@ const cleanupAttemptChildren = Effect.fn(
     );
   }
 
-  if (essayGrades.length === CHILD_BATCH_SIZE) {
+  if (essayGrades.length > 0) {
     return true;
   }
 
@@ -47,7 +47,7 @@ const cleanupAttemptChildren = Effect.fn(
     );
   }
 
-  if (responses.length === CHILD_BATCH_SIZE) {
+  if (responses.length > 0) {
     return true;
   }
 
@@ -66,7 +66,7 @@ const cleanupAttemptChildren = Effect.fn(
     );
   }
 
-  if (sectionAttempts.length === CHILD_BATCH_SIZE) {
+  if (sectionAttempts.length > 0) {
     return true;
   }
 
@@ -83,7 +83,7 @@ const cleanupAttemptChildren = Effect.fn(
     );
   }
 
-  if (sessions.length === CHILD_BATCH_SIZE) {
+  if (sessions.length > 0) {
     return true;
   }
 
@@ -102,7 +102,7 @@ const cleanupAttemptChildren = Effect.fn(
     );
   }
 
-  if (events.length === CHILD_BATCH_SIZE) {
+  if (events.length > 0) {
     return true;
   }
 
@@ -119,7 +119,7 @@ const cleanupAttemptChildren = Effect.fn(
     );
   }
 
-  return flags.length === CHILD_BATCH_SIZE;
+  return flags.length > 0;
 });
 
 /** Deletes one assessment attempt after its dependent rows are gone. */
@@ -167,7 +167,7 @@ const cleanupAssessmentResults = Effect.fn(
     );
   }
 
-  if (finalGrades.length === RESULT_BATCH_SIZE) {
+  if (finalGrades.length > 0) {
     return true;
   }
 
@@ -184,7 +184,7 @@ const cleanupAssessmentResults = Effect.fn(
     );
   }
 
-  if (studentStats.length === RESULT_BATCH_SIZE) {
+  if (studentStats.length > 0) {
     return true;
   }
 
@@ -201,7 +201,7 @@ const cleanupAssessmentResults = Effect.fn(
     );
   }
 
-  return leaderboardRows.length === RESULT_BATCH_SIZE;
+  return leaderboardRows.length > 0;
 });
 
 /** Deletes one user-created assessment import and its source file. */
@@ -234,7 +234,7 @@ const cleanupAssessmentImport = Effect.fn(
     );
   }
 
-  if (drafts.length === IMPORT_DRAFT_BATCH_SIZE) {
+  if (drafts.length > 0) {
     return true;
   }
 

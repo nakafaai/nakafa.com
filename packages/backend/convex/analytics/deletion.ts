@@ -19,6 +19,12 @@ interface PostHogDeletionOptions {
   readonly request: typeof fetch;
 }
 
+interface ValidPostHogDeletionConfig {
+  readonly apiOrigin: string;
+  readonly personalApiKey: string;
+  readonly projectToken: string;
+}
+
 /** Raised when PostHog erasure credentials are not configured. */
 export class PostHogDeletionConfigError extends Schema.TaggedError<PostHogDeletionConfigError>()(
   "PostHogDeletionConfigError",
@@ -46,22 +52,20 @@ function getPostHogApiOrigin(host: string) {
   return url.origin;
 }
 
-/** Deletes the PostHog person, historical events, and session recordings. */
-export const deletePostHogPerson = Effect.fn(
-  "analytics.deletion.deletePostHogPerson"
-)(function* (
-  distinctId: string,
-  options: PostHogDeletionOptions = {
-    config: {
-      host: env.POSTHOG_HOST ?? defaultPostHogIngestionHost,
-      personalApiKey: env.POSTHOG_PERSONAL_API_KEY ?? "",
-      projectToken: env.POSTHOG_PROJECT_TOKEN,
-    },
-    request: fetch,
-  }
-) {
-  const personalApiKey = options.config.personalApiKey.trim();
-  const projectToken = options.config.projectToken.trim();
+function getDefaultPostHogDeletionConfig(): PostHogDeletionConfig {
+  return {
+    host: env.POSTHOG_HOST ?? defaultPostHogIngestionHost,
+    personalApiKey: env.POSTHOG_PERSONAL_API_KEY,
+    projectToken: env.POSTHOG_PROJECT_TOKEN,
+  };
+}
+
+/** Validates and normalizes the credentials required before identity removal. */
+const validatePostHogDeletionConfig = Effect.fn(
+  "analytics.deletion.validatePostHogDeletionConfig"
+)(function* (config: PostHogDeletionConfig) {
+  const personalApiKey = config.personalApiKey.trim();
+  const projectToken = config.projectToken.trim();
 
   if (!(personalApiKey && projectToken)) {
     return yield* new PostHogDeletionConfigError({
@@ -71,13 +75,42 @@ export const deletePostHogPerson = Effect.fn(
   }
 
   const apiOrigin = yield* Effect.try({
-    try: () => getPostHogApiOrigin(options.config.host),
+    try: () => getPostHogApiOrigin(config.host),
     catch: () =>
       new PostHogDeletionConfigError({
         code: postHogDeletionConfigErrorCode,
         message: "PostHog deletion host is invalid.",
       }),
   });
+
+  return {
+    apiOrigin,
+    personalApiKey,
+    projectToken,
+  } satisfies ValidPostHogDeletionConfig;
+});
+
+/** Fails before auth deletion when durable analytics erasure cannot start. */
+export const ensurePostHogDeletionConfigured = Effect.fn(
+  "analytics.deletion.ensurePostHogDeletionConfigured"
+)(function* (
+  config: PostHogDeletionConfig = getDefaultPostHogDeletionConfig()
+) {
+  yield* validatePostHogDeletionConfig(config);
+});
+
+/** Deletes the PostHog person, historical events, and session recordings. */
+export const deletePostHogPerson = Effect.fn(
+  "analytics.deletion.deletePostHogPerson"
+)(function* (
+  distinctId: string,
+  options: PostHogDeletionOptions = {
+    config: getDefaultPostHogDeletionConfig(),
+    request: fetch,
+  }
+) {
+  const { apiOrigin, personalApiKey, projectToken } =
+    yield* validatePostHogDeletionConfig(options.config);
   const endpoint = `${apiOrigin}/api/projects/@current/persons/bulk_delete/?token=${encodeURIComponent(projectToken)}`;
   const response = yield* Effect.tryPromise({
     try: () =>

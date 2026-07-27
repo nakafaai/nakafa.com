@@ -29,7 +29,7 @@ type Env = {
   readonly CONTENT_RUNTIME_TOKEN: string;
   readonly POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS: string | undefined;
   readonly POSTHOG_HOST: string | undefined;
-  readonly POSTHOG_PERSONAL_API_KEY: string | undefined;
+  readonly POSTHOG_PERSONAL_API_KEY: string;
   readonly POSTHOG_PROJECT_TOKEN: string;
 };
 

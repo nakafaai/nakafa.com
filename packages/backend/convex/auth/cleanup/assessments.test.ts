@@ -264,11 +264,13 @@ describe("auth cleanup assessments", () => {
         importedAt: NOW,
       });
 
-      await runConvexProgram(cleanupUserAssessmentData(ctx, userId));
-      await runConvexProgram(cleanupUserAssessmentData(ctx, userId));
-      const hasMore = await runConvexProgram(
-        cleanupUserAssessmentData(ctx, userId)
-      );
+      let hasMore = true;
+
+      while (hasMore) {
+        hasMore = await runConvexProgram(
+          cleanupUserAssessmentData(ctx, userId)
+        );
+      }
 
       return {
         answerFile: await ctx.storage.getUrl(answerStorageId),

@@ -1,3 +1,4 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import {
@@ -29,6 +30,51 @@ const loadSubscriptionByPolarId = Effect.fn(
   });
 });
 
+/** Loads the terminal customer-deletion marker for a Polar customer ID. */
+const loadCustomerDeletionTombstone = Effect.fn(
+  "subscriptions.records.loadCustomerDeletionTombstone"
+)(function* (db: MutationCtx["db"], polarCustomerId: string) {
+  return yield* Effect.tryPromise({
+    try: () =>
+      db
+        .query("customerDeletionTombstones")
+        .withIndex("by_polarCustomerId", (query) =>
+          query.eq("polarCustomerId", polarCustomerId)
+        )
+        .unique(),
+    catch: toSubscriptionRecordIoError,
+  });
+});
+
+/**
+ * Discards any stale row after its Polar customer reached terminal deletion.
+ */
+const discardSubscriptionForDeletedCustomer = Effect.fn(
+  "subscriptions.records.discardSubscriptionForDeletedCustomer"
+)(function* (
+  ctx: MutationCtx,
+  subscription: SubscriptionRecord,
+  existingSubscription: Doc<"subscriptions"> | null
+) {
+  const tombstone = yield* loadCustomerDeletionTombstone(
+    ctx.db,
+    subscription.customerId
+  );
+
+  if (!tombstone) {
+    return false;
+  }
+
+  if (existingSubscription) {
+    yield* Effect.tryPromise({
+      try: () => ctx.db.delete("subscriptions", existingSubscription._id),
+      catch: toSubscriptionRecordIoError,
+    });
+  }
+
+  return true;
+});
+
 /**
  * Creates one subscription record idempotently for Polar webhook delivery.
  *
@@ -44,6 +90,16 @@ export const createSubscriptionRecord = Effect.fn(
     ctx.db,
     subscription.id
   );
+
+  if (
+    yield* discardSubscriptionForDeletedCustomer(
+      ctx,
+      subscription,
+      existingSubscription
+    )
+  ) {
+    return null;
+  }
 
   if (existingSubscription) {
     return existingSubscription._id;
@@ -70,6 +126,16 @@ export const updateSubscriptionRecord = Effect.fn(
     ctx.db,
     subscription.id
   );
+
+  if (
+    yield* discardSubscriptionForDeletedCustomer(
+      ctx,
+      subscription,
+      existingSubscription
+    )
+  ) {
+    return null;
+  }
 
   if (!existingSubscription) {
     yield* Effect.tryPromise({

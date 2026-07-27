@@ -1,6 +1,7 @@
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { ensurePostHogDeletionConfigured } from "@repo/backend/convex/analytics/deletion";
 import { cleanupAuthRelations } from "@repo/backend/convex/auth/cleanup/relations";
 import { authComponent } from "@repo/backend/convex/auth/client";
 import { generatedUsername } from "@repo/backend/convex/auth/username/plugin";
@@ -10,6 +11,7 @@ import {
 } from "@repo/backend/convex/auth/username/policy";
 import authConfig from "@repo/backend/convex/auth.config";
 import { siteUrl } from "@repo/backend/convex/utils/site";
+import { APIError } from "better-auth/api";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import {
   anonymous,
@@ -44,6 +46,17 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     },
     user: {
       deleteUser: {
+        beforeDelete: () =>
+          Effect.runPromise(
+            ensurePostHogDeletionConfigured().pipe(
+              Effect.mapError(() =>
+                APIError.from("INTERNAL_SERVER_ERROR", {
+                  code: "ACCOUNT_DELETION_UNAVAILABLE",
+                  message: "Account deletion is temporarily unavailable.",
+                })
+              )
+            )
+          ),
         enabled: true,
       },
     },

@@ -18,7 +18,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { Effect, Either } from "effect";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { FormBlock } from "@/components/shared/form-block";
 import {
@@ -33,6 +33,7 @@ type DialogError = "generic" | "session-expired" | null;
 export function UserSettingsDeleteAccount() {
   const t = useTranslations("Auth");
   const common = useTranslations("Common");
+  const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -68,7 +69,7 @@ export function UserSettingsDeleteAccount() {
     );
 
     if (Either.isRight(result)) {
-      router.replace("/");
+      window.location.replace(`/${locale}`);
       return;
     }
 

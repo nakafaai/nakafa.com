@@ -23,7 +23,7 @@ const cleanupAccountHistory = Effect.fn("auth.cleanup.cleanupAccountHistory")(
       );
     }
 
-    if (preferences.length === SMALL_BATCH_SIZE) {
+    if (preferences.length > 0) {
       return true;
     }
 
@@ -40,7 +40,7 @@ const cleanupAccountHistory = Effect.fn("auth.cleanup.cleanupAccountHistory")(
       );
     }
 
-    return transactions.length === HISTORY_BATCH_SIZE;
+    return transactions.length > 0;
   }
 );
 
@@ -60,7 +60,7 @@ const cleanupLearningHistory = Effect.fn("auth.cleanup.cleanupLearningHistory")(
       yield* tryUserCleanup(() => ctx.db.delete("learningViews", view._id));
     }
 
-    if (views.length === HISTORY_BATCH_SIZE) {
+    if (views.length > 0) {
       return true;
     }
 
@@ -79,7 +79,7 @@ const cleanupLearningHistory = Effect.fn("auth.cleanup.cleanupLearningHistory")(
       );
     }
 
-    return recents.length === HISTORY_BATCH_SIZE;
+    return recents.length > 0;
   }
 );
 
@@ -101,7 +101,7 @@ const cleanupPopularityIdentity = Effect.fn(
     );
   }
 
-  if (queueRows.length === HISTORY_BATCH_SIZE) {
+  if (queueRows.length > 0) {
     return true;
   }
 
@@ -120,7 +120,7 @@ const cleanupPopularityIdentity = Effect.fn(
     );
   }
 
-  return signals.length === HISTORY_BATCH_SIZE;
+  return signals.length > 0;
 });
 
 /** Deletes one bounded batch of generated learning-plan data. */
@@ -137,7 +137,7 @@ const cleanupLearningPlans = Effect.fn("auth.cleanup.cleanupLearningPlans")(
       yield* tryUserCleanup(() => ctx.db.delete("learningPlanItems", item._id));
     }
 
-    if (items.length === HISTORY_BATCH_SIZE) {
+    if (items.length > 0) {
       return true;
     }
 
@@ -154,7 +154,7 @@ const cleanupLearningPlans = Effect.fn("auth.cleanup.cleanupLearningPlans")(
       yield* tryUserCleanup(() => ctx.db.delete("learningPlans", plan._id));
     }
 
-    if (plans.length === SMALL_BATCH_SIZE) {
+    if (plans.length > 0) {
       return true;
     }
 
@@ -171,7 +171,7 @@ const cleanupLearningPlans = Effect.fn("auth.cleanup.cleanupLearningPlans")(
       );
     }
 
-    return profiles.length === SMALL_BATCH_SIZE;
+    return profiles.length > 0;
   }
 );
 
