@@ -30,8 +30,13 @@ export const syncCustomer = internalAction({
  * Deletes Polar customer to prevent orphaned customers that cause email conflicts.
  */
 export const cleanupUserData = internalAction({
-  args: { userId: vv.id("users") },
+  args: {
+    authId: v.string(),
+    userId: vv.id("users"),
+  },
   returns: v.null(),
   handler: async (ctx, args) =>
-    await runConvexProgram(cleanupCustomerDataForDeletedUser(ctx, args.userId)),
+    await runConvexProgram(
+      cleanupCustomerDataForDeletedUser(ctx, args.userId, args.authId)
+    ),
 });

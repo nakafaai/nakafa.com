@@ -2,15 +2,24 @@ import { type AuthFunctions, createClient } from "@convex-dev/better-auth";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
+import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
 import authSchema from "@repo/backend/convex/betterAuth/schema";
 import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,
 } from "@repo/backend/convex/credits/constants";
 import { getCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { posthog } from "@repo/backend/convex/posthog";
+import { makeFunctionReference } from "convex/server";
+import { Effect } from "effect";
 
 const authFunctions: AuthFunctions = internal.auth.lifecycle;
+const startDeletedUserCleanupReference = makeFunctionReference<
+  "mutation",
+  { authId: string },
+  null
+>("customers/deletion/workflow:startDeletedUserCleanup");
 
 export const authComponent = createClient<DataModel, typeof authSchema>(
   components.betterAuth,
@@ -133,30 +142,14 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             }
           );
         },
-        onDelete: async (ctx, authUser) => {
-          const userApp = await ctx.db
-            .query("users")
-            .withIndex("by_authId", (q) => q.eq("authId", authUser._id))
-            .unique();
-
-          if (!userApp) {
-            return;
-          }
-
-          await ctx.scheduler.runAfter(
-            0,
-            internal.auth.cleanup.cleanupDeletedUser,
-            {
-              userId: userApp._id,
-            }
-          );
-
-          await ctx.scheduler.runAfter(
-            0,
-            internal.customers.actions.internal.cleanupUserData,
-            { userId: userApp._id }
-          );
-        },
+        onDelete: (ctx, authUser) =>
+          runConvexProgram(
+            tryUserCleanup(() =>
+              ctx.runMutation(startDeletedUserCleanupReference, {
+                authId: authUser._id,
+              })
+            ).pipe(Effect.asVoid)
+          ),
       },
     },
   }

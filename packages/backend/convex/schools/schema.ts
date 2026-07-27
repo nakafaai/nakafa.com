@@ -243,7 +243,12 @@ const tables = {
     metadata: schoolActivityMetadataValidator,
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
-  }).index("by_schoolId", ["schoolId"]),
+  })
+    .index("by_schoolId", ["schoolId"])
+    .index("by_userId", ["userId"])
+    .index("by_metadata_invitedUserId", ["metadata.invitedUserId"])
+    .index("by_metadata_addedUserId", ["metadata.addedUserId"])
+    .index("by_metadata_removedUserId", ["metadata.removedUserId"]),
 };
 
 export default tables;

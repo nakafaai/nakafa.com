@@ -50,7 +50,10 @@ export const creditResetPeriodValidator = v.object({
 });
 
 const tables = {
-  creditTransactions: defineTable(creditTransactionValidator),
+  creditTransactions: defineTable(creditTransactionValidator).index(
+    "by_userId",
+    ["userId"]
+  ),
 
   creditResetPeriods: defineTable(creditResetPeriodValidator).index("by_plan", [
     "plan",

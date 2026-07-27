@@ -9,6 +9,7 @@
  */
 
 import type * as analytics_capture from "../analytics/capture.js";
+import type * as analytics_deletion from "../analytics/deletion.js";
 import type * as analytics_events from "../analytics/events.js";
 import type * as assessments_helpers_access from "../assessments/helpers/access.js";
 import type * as assessments_helpers_attempts from "../assessments/helpers/attempts.js";
@@ -52,8 +53,14 @@ import type * as audioStudies_queries_public_spec from "../audioStudies/queries/
 import type * as audioStudies_workflows from "../audioStudies/workflows.js";
 import type * as auth_actions from "../auth/actions.js";
 import type * as auth_cleanup from "../auth/cleanup.js";
+import type * as auth_cleanup_assessments from "../auth/cleanup/assessments.js";
 import type * as auth_cleanup_impl from "../auth/cleanup/impl.js";
+import type * as auth_cleanup_learning from "../auth/cleanup/learning.js";
 import type * as auth_cleanup_notifications from "../auth/cleanup/notifications.js";
+import type * as auth_cleanup_relations from "../auth/cleanup/relations.js";
+import type * as auth_cleanup_schoolCommunity from "../auth/cleanup/schoolCommunity.js";
+import type * as auth_cleanup_schools from "../auth/cleanup/schools.js";
+import type * as auth_cleanup_social from "../auth/cleanup/social.js";
 import type * as auth_cleanup_spec from "../auth/cleanup/spec.js";
 import type * as auth_cleanup_tryouts from "../auth/cleanup/tryouts.js";
 import type * as auth_client from "../auth/client.js";
@@ -323,6 +330,7 @@ import type * as customers_actions_public from "../customers/actions/public.js";
 import type * as customers_checkout_impl from "../customers/checkout/impl.js";
 import type * as customers_checkout_localization from "../customers/checkout/localization.js";
 import type * as customers_checkout_spec from "../customers/checkout/spec.js";
+import type * as customers_deletion_workflow from "../customers/deletion/workflow.js";
 import type * as customers_integrity_internal from "../customers/integrity/internal.js";
 import type * as customers_mutations_internal from "../customers/mutations/internal.js";
 import type * as customers_polar_impl from "../customers/polar/impl.js";
@@ -468,6 +476,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "analytics/capture": typeof analytics_capture;
+  "analytics/deletion": typeof analytics_deletion;
   "analytics/events": typeof analytics_events;
   "assessments/helpers/access": typeof assessments_helpers_access;
   "assessments/helpers/attempts": typeof assessments_helpers_attempts;
@@ -511,8 +520,14 @@ declare const fullApi: ApiFromModules<{
   "audioStudies/workflows": typeof audioStudies_workflows;
   "auth/actions": typeof auth_actions;
   "auth/cleanup": typeof auth_cleanup;
+  "auth/cleanup/assessments": typeof auth_cleanup_assessments;
   "auth/cleanup/impl": typeof auth_cleanup_impl;
+  "auth/cleanup/learning": typeof auth_cleanup_learning;
   "auth/cleanup/notifications": typeof auth_cleanup_notifications;
+  "auth/cleanup/relations": typeof auth_cleanup_relations;
+  "auth/cleanup/schoolCommunity": typeof auth_cleanup_schoolCommunity;
+  "auth/cleanup/schools": typeof auth_cleanup_schools;
+  "auth/cleanup/social": typeof auth_cleanup_social;
   "auth/cleanup/spec": typeof auth_cleanup_spec;
   "auth/cleanup/tryouts": typeof auth_cleanup_tryouts;
   "auth/client": typeof auth_client;
@@ -782,6 +797,7 @@ declare const fullApi: ApiFromModules<{
   "customers/checkout/impl": typeof customers_checkout_impl;
   "customers/checkout/localization": typeof customers_checkout_localization;
   "customers/checkout/spec": typeof customers_checkout_spec;
+  "customers/deletion/workflow": typeof customers_deletion_workflow;
   "customers/integrity/internal": typeof customers_integrity_internal;
   "customers/mutations/internal": typeof customers_mutations_internal;
   "customers/polar/impl": typeof customers_polar_impl;

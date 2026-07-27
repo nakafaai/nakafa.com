@@ -185,6 +185,45 @@ describe("triggers/subscriptions/impl", () => {
     expect(result.creditTransactions).toHaveLength(0);
   });
 
+  it("does not recreate plan history for a deleted user", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createSubscriptionTestConvex();
+
+    const result = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx, "deleted-user", {
+        credits: 120,
+        creditsResetAt: NOW,
+        plan: "pro",
+      });
+      await ctx.db.patch("users", userId, { deletedAt: NOW });
+      await insertCustomer(ctx, userId, "polar-deleted-user");
+      await insertSubscription(ctx, {
+        customerId: "polar-deleted-user",
+        productId: products.pro.id,
+        status: "canceled",
+        subscriptionId: "sub-deleted-user",
+      });
+
+      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-deleted-user");
+
+      return {
+        creditTransactions: await ctx.db.query("creditTransactions").collect(),
+        scheduledJobs: await ctx.db.system
+          .query("_scheduled_functions")
+          .collect(),
+        user: await ctx.db.get("users", userId),
+      };
+    });
+
+    expect(result.creditTransactions).toEqual([]);
+    expect(result.scheduledJobs).toEqual([]);
+    expect(result.user).toMatchObject({
+      credits: 120,
+      plan: "pro",
+    });
+  });
+
   it("returns early when the derived plan is unchanged", async () => {
     vi.setSystemTime(new Date(NOW));
 

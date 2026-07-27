@@ -1,48 +1,71 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { cleanupUserAssessmentData } from "@repo/backend/convex/auth/cleanup/assessments";
+import { cleanupUserLearningData } from "@repo/backend/convex/auth/cleanup/learning";
 import { cleanupUserNotifications } from "@repo/backend/convex/auth/cleanup/notifications";
+import { cleanupUserSchoolCommunity } from "@repo/backend/convex/auth/cleanup/schoolCommunity";
+import { cleanupUserSchoolData } from "@repo/backend/convex/auth/cleanup/schools";
+import { cleanupUserSocialData } from "@repo/backend/convex/auth/cleanup/social";
 import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
 import { cleanupUserTryouts } from "@repo/backend/convex/auth/cleanup/tryouts";
-import { makeFunctionReference } from "convex/server";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 
-const cleanupDeletedUserReference = makeFunctionReference<
-  "mutation",
-  { userId: Id<"users"> },
-  null
->("auth/cleanup:cleanupDeletedUser");
-
-/** Re-schedules cleanup so every mutation remains within transaction limits. */
-const scheduleRetry = Effect.fn("auth.cleanup.scheduleRetry")(function* (
-  ctx: Pick<MutationCtx, "scheduler">,
-  userId: Id<"users">
-) {
-  yield* tryUserCleanup(() =>
-    ctx.scheduler.runAfter(0, cleanupDeletedUserReference, {
-      userId,
-    })
-  );
-});
-
-/** Deletes one user's bounded local app data and finally the app user row. */
+/**
+ * Deletes one bounded batch of personal data. Shared school records keep the
+ * stable user ID, so the final pass replaces profile fields with an anonymous
+ * tombstone instead of leaving dangling references.
+ */
 export const cleanupDeletedUserProgram = Effect.fn(
   "auth.cleanup.cleanupDeletedUser"
 )(function* (ctx: MutationCtx, userId: Id<"users">) {
   if (yield* cleanupUserNotifications(ctx, userId)) {
-    yield* scheduleRetry(ctx, userId);
-    return null;
+    return true;
   }
 
   if (yield* cleanupUserTryouts(ctx, userId)) {
-    yield* scheduleRetry(ctx, userId);
-    return null;
+    return true;
+  }
+
+  if (yield* cleanupUserAssessmentData(ctx, userId)) {
+    return true;
+  }
+
+  if (yield* cleanupUserSchoolCommunity(ctx, userId)) {
+    return true;
+  }
+
+  if (yield* cleanupUserSchoolData(ctx, userId)) {
+    return true;
+  }
+
+  if (yield* cleanupUserSocialData(ctx, userId)) {
+    return true;
+  }
+
+  if (yield* cleanupUserLearningData(ctx, userId)) {
+    return true;
   }
 
   const user = yield* tryUserCleanup(() => ctx.db.get("users", userId));
 
   if (user) {
-    yield* tryUserCleanup(() => ctx.db.delete("users", userId));
+    const deletedAt = user.deletedAt ?? (yield* Clock.currentTimeMillis);
+    const anonymousId = String(userId);
+
+    yield* tryUserCleanup(() =>
+      ctx.db.patch("users", userId, {
+        authId: `deleted:${anonymousId}`,
+        credits: 0,
+        creditsResetAt: 0,
+        deletedAt,
+        email: `deleted-${anonymousId}@account.nakafa.invalid`,
+        image: undefined,
+        name: "Deleted user",
+        plan: "free",
+        role: undefined,
+      })
+    );
   }
 
-  return null;
+  return false;
 });
