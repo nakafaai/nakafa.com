@@ -1,10 +1,27 @@
+import {
+  HttpBody,
+  HttpClient,
+  HttpClientRequest,
+  HttpClientResponse,
+} from "@effect/platform";
 import { captureException } from "@repo/analytics/posthog";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Either, Schema } from "effect";
-import ky from "ky";
+
+const STORAGE_UPLOAD_TIMEOUT = "10 seconds";
+
+const StorageIdSchema = Schema.declare(
+  (input): input is Id<"_storage"> =>
+    typeof input === "string" && input.length > 0,
+  { identifier: "ConvexStorageId" }
+);
+
+const StorageUploadResponseSchema = Schema.Struct({
+  storageId: StorageIdSchema,
+});
 
 type GenerateUploadUrlMutation = (
   args: FunctionArgs<
@@ -157,21 +174,29 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
           cause: getErrorCause(cause),
         }),
     });
+    const client = (yield* HttpClient.HttpClient).pipe(
+      // Convex upload URLs are short-lived capabilities and must not enter traces.
+      HttpClient.withTracerDisabledWhen(() => true)
+    );
 
-    const { storageId } = yield* Effect.tryPromise({
-      try: () =>
-        ky
-          .post(uploadUrl, {
-            headers: { "Content-Type": file.type },
-            body: file,
+    const { storageId } = yield* HttpClientRequest.post(uploadUrl).pipe(
+      HttpClientRequest.setBody(
+        HttpBody.raw(file, {
+          contentType: file.type,
+        })
+      ),
+      client.execute,
+      Effect.flatMap(HttpClientResponse.filterStatusOk),
+      Effect.flatMap(
+        HttpClientResponse.schemaBodyJson(StorageUploadResponseSchema)
+      ),
+      Effect.timeout(STORAGE_UPLOAD_TIMEOUT),
+      Effect.mapError(
+        () =>
+          new ForumAttachmentUploadError({
+            message: "Forum attachment storage upload failed.",
           })
-          .json<{ storageId: Id<"_storage"> }>(),
-      catch: (cause) =>
-        new ForumAttachmentUploadError({
-          message: "Forum attachment storage upload failed.",
-          cause: getErrorCause(cause),
-        }),
-    }).pipe(
+      ),
       Effect.tapError(() =>
         discardPendingUploads({
           mutations,

@@ -1,3 +1,4 @@
+import { FetchHttpClient } from "@effect/platform";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -102,7 +103,8 @@ export function POST(req: Request) {
             { status: 500 }
           );
         })
-      )
+      ),
+      Effect.provide(FetchHttpClient.layer)
     )
   );
 }
