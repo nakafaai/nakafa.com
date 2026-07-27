@@ -22,13 +22,16 @@ const tables = {
   })
     .index("by_slug", ["slug"])
     .index("by_parentId", ["parentId"])
-    .index("by_userId", ["userId"]),
+    .index("by_userId", ["userId"])
+    .index("by_replyToUserId", ["replyToUserId"]),
 
   commentVotes: defineTable({
     commentId: v.id("comments"),
     userId: v.id("users"),
     vote: commentVoteValidator,
-  }).index("by_commentId_and_userId", ["commentId", "userId"]),
+  })
+    .index("by_commentId_and_userId", ["commentId", "userId"])
+    .index("by_userId", ["userId"]),
 };
 
 export default tables;

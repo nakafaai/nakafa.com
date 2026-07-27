@@ -54,7 +54,9 @@ describe("customers/mutations", () => {
       }
     );
 
-    const customer = await t.query(async (ctx) => await ctx.db.get(customerId));
+    const customer = await t.query(async (ctx) =>
+      customerId ? await ctx.db.get(customerId) : null
+    );
 
     expect(customer).toMatchObject({
       externalId: "auth-new",
@@ -89,7 +91,9 @@ describe("customers/mutations", () => {
       }
     );
 
-    const customer = await t.query(async (ctx) => await ctx.db.get(resultId));
+    const customer = await t.query(async (ctx) =>
+      resultId ? await ctx.db.get(resultId) : null
+    );
 
     expect(resultId).toBe(state.customerId);
     expect(customer).toMatchObject({
@@ -126,7 +130,9 @@ describe("customers/mutations", () => {
       }
     );
 
-    const customer = await t.query(async (ctx) => await ctx.db.get(resultId));
+    const customer = await t.query(async (ctx) =>
+      resultId ? await ctx.db.get(resultId) : null
+    );
 
     expect(resultId).toBe(state.customerId);
     expect(customer).toMatchObject({
@@ -161,7 +167,9 @@ describe("customers/mutations", () => {
       }
     );
 
-    const customer = await t.query(async (ctx) => await ctx.db.get(resultId));
+    const customer = await t.query(async (ctx) =>
+      resultId ? await ctx.db.get(resultId) : null
+    );
 
     expect(resultId).toBe(state.customerId);
     expect(customer).toMatchObject({
@@ -227,6 +235,24 @@ describe("customers/mutations", () => {
         polarId: "polar-delete",
         userId,
       });
+      await ctx.db.insert("subscriptions", {
+        amount: null,
+        cancelAtPeriodEnd: false,
+        checkoutId: null,
+        createdAt: "2026-07-27T00:00:00.000Z",
+        currency: null,
+        currentPeriodEnd: null,
+        currentPeriodStart: "2026-07-27T00:00:00.000Z",
+        customerId: "polar-delete",
+        endedAt: null,
+        id: "subscription-delete",
+        metadata: {},
+        modifiedAt: null,
+        productId: "product-delete",
+        recurringInterval: null,
+        startedAt: "2026-07-27T00:00:00.000Z",
+        status: "canceled",
+      });
     });
 
     await expect(
@@ -235,10 +261,38 @@ describe("customers/mutations", () => {
       })
     ).resolves.toBeNull();
 
+    const state = await t.query(async (ctx) => ({
+      customers: await ctx.db.query("customers").collect(),
+      subscriptions: await ctx.db.query("subscriptions").collect(),
+    }));
+
+    expect(state).toEqual({ customers: [], subscriptions: [] });
+  });
+
+  it("does not recreate customer data for a deleted user", async () => {
+    const t = convexTest(schema, convexModules);
+    const userId = await t.mutation(async (ctx) => {
+      const insertedUserId = await insertCustomerUser(ctx, "deleted");
+      await ctx.db.patch("users", insertedUserId, { deletedAt: 1 });
+      return insertedUserId;
+    });
+
+    const customerId = await t.mutation(
+      internal.customers.mutations.internal.upsertCustomer,
+      {
+        customer: {
+          id: "polar-deleted",
+          externalId: "auth-deleted",
+          metadata: { userId },
+          userId,
+        },
+      }
+    );
     const customers = await t.query(
       async (ctx) => await ctx.db.query("customers").collect()
     );
 
+    expect(customerId).toBeNull();
     expect(customers).toEqual([]);
   });
 

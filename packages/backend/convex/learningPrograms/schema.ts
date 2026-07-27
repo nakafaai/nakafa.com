@@ -253,6 +253,7 @@ const tables = {
     updatedAt: v.number(),
     userId: v.id("users"),
   })
+    .index("by_userId", ["userId"])
     .index("by_planId_and_position", ["planId", "position"])
     .index("by_programId_and_lensId_and_content_id", [
       "programId",

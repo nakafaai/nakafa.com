@@ -306,6 +306,10 @@ export const syncCustomerPlan = Effect.fn(
     return;
   }
 
+  if (user.deletedAt !== undefined) {
+    return;
+  }
+
   const now = yield* Clock.currentTimeMillis;
   const activeSubscriptions = yield* loadActiveSubscriptions(
     ctx.db,

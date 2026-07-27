@@ -10,7 +10,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
 
 interface Props {
-  children: ReactNode;
+  children?: ReactNode;
   description: ReactNode;
   footer?: ReactNode;
   title: ReactNode;
@@ -36,7 +36,7 @@ export function FormBlock({
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      {!!children && <CardContent>{children}</CardContent>}
       {!!footer && (
         <CardFooter
           className={cn(

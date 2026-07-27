@@ -312,7 +312,8 @@ const tables = {
 
   schoolClassMembers: defineTable(schoolClassMemberValidator)
     .index("by_classId_and_userId", ["classId", "userId"])
-    .index("by_schoolId", ["schoolId"]),
+    .index("by_schoolId", ["schoolId"])
+    .index("by_userId", ["userId"]),
 
   schoolClassInviteCodes: defineTable(schoolClassInviteCodeValidator)
     .index("by_classId_and_role", ["classId", "role"])
@@ -337,11 +338,15 @@ const tables = {
     emoji: v.string(),
   })
     .index("by_forumId_and_userId_and_emoji", ["forumId", "userId", "emoji"])
-    .index("by_forumId_and_emoji_and_userId", ["forumId", "emoji", "userId"]),
+    .index("by_forumId_and_emoji_and_userId", ["forumId", "emoji", "userId"])
+    .index("by_userId", ["userId"]),
 
   schoolClassForumPosts: defineTable(schoolClassForumPostValidator)
     .index("by_forumId", ["forumId"])
-    .index("by_forumId_and_sequence", ["forumId", "sequence"]),
+    .index("by_forumId_and_sequence", ["forumId", "sequence"])
+    .index("by_createdBy", ["createdBy"])
+    .index("by_parentId", ["parentId"])
+    .index("by_replyToUserId", ["replyToUserId"]),
 
   /**
    * Tracks uploads that were authorized for one user+forum but not yet claimed
@@ -357,7 +362,8 @@ const tables = {
     size: v.optional(v.number()),
   })
     .index("by_storageId", ["storageId"])
-    .index("by_forumId_and_uploadedBy", ["forumId", "uploadedBy"]),
+    .index("by_forumId_and_uploadedBy", ["forumId", "uploadedBy"])
+    .index("by_uploadedBy", ["uploadedBy"]),
 
   /**
    * Stores finalized forum attachments separately so posts do not grow with an
@@ -382,7 +388,8 @@ const tables = {
     emoji: v.string(),
   })
     .index("by_postId_and_userId_and_emoji", ["postId", "userId", "emoji"])
-    .index("by_postId_and_emoji_and_userId", ["postId", "emoji", "userId"]),
+    .index("by_postId_and_emoji_and_userId", ["postId", "emoji", "userId"])
+    .index("by_userId", ["userId"]),
 
   /** Persists each user's read boundary by forum sequence. */
   schoolClassForumReadStates: defineTable({
@@ -392,7 +399,8 @@ const tables = {
     lastReadSequence: v.number(),
   })
     .index("by_forumId_and_userId", ["forumId", "userId"])
-    .index("by_classId_and_userId", ["classId", "userId"]),
+    .index("by_classId_and_userId", ["classId", "userId"])
+    .index("by_userId", ["userId"]),
 
   schoolClassMaterialGroups: defineTable(schoolClassMaterialGroupValidator)
     .index("by_classId_and_parentId_and_order", [
@@ -476,7 +484,8 @@ const tables = {
     lastDownloadedAt: v.optional(v.number()),
   })
     .index("by_materialId_and_userId", ["materialId", "userId"])
-    .index("by_classId_and_userId", ["classId", "userId"]),
+    .index("by_classId_and_userId", ["classId", "userId"])
+    .index("by_userId", ["userId"]),
 };
 
 export default tables;

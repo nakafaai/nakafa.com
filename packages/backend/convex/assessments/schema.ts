@@ -746,9 +746,9 @@ const schema = {
   schoolAssessmentEssayGrades: defineTable(schoolAssessmentEssayGradeValidator)
     .index("by_responseId", ["responseId"])
     .index("by_attemptId", ["attemptId"]),
-  schoolAssessmentFinalGrades: defineTable(
-    schoolAssessmentFinalGradeValidator
-  ).index("by_assignmentId_and_studentId", ["assignmentId", "studentId"]),
+  schoolAssessmentFinalGrades: defineTable(schoolAssessmentFinalGradeValidator)
+    .index("by_assignmentId_and_studentId", ["assignmentId", "studentId"])
+    .index("by_studentId", ["studentId"]),
   schoolAssessmentAttemptSessions: defineTable(
     schoolAssessmentAttemptSessionValidator
   )
@@ -764,7 +764,9 @@ const schema = {
     .index("by_attemptId", ["attemptId"]),
   schoolAssessmentStudentStats: defineTable(
     schoolAssessmentStudentStatValidator
-  ).index("by_assignmentId_and_studentId", ["assignmentId", "studentId"]),
+  )
+    .index("by_assignmentId_and_studentId", ["assignmentId", "studentId"])
+    .index("by_studentId", ["studentId"]),
   schoolAssessmentQuestionStats: defineTable(
     schoolAssessmentQuestionStatValidator
   ).index("by_assignmentId_and_questionId", ["assignmentId", "questionId"]),
@@ -779,7 +781,8 @@ const schema = {
       "rankingScope",
       "rank",
     ])
-    .index("by_assignmentId_and_studentId", ["assignmentId", "studentId"]),
+    .index("by_assignmentId_and_studentId", ["assignmentId", "studentId"])
+    .index("by_studentId", ["studentId"]),
   schoolAssessmentImportJobs: defineTable(schoolAssessmentImportJobValidator)
     .index("by_schoolId_and_status", ["schoolId", "status"])
     .index("by_createdBy_and_status", ["createdBy", "status"]),

@@ -531,7 +531,8 @@ export const tables = {
     ])
     .index("by_capability_and_startedAt", ["capability", "startedAt"])
     .index("by_status_and_startedAt", ["status", "startedAt"])
-    .index("by_expiresAt", ["expiresAt"]),
+    .index("by_expiresAt", ["expiresAt"])
+    .index("by_userId", ["userId"]),
 };
 
 export default tables;

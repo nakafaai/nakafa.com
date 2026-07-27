@@ -1,6 +1,7 @@
 "use client";
 
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
+import { UserSettingsDeleteAccount } from "@/components/user/settings/delete-account";
 import { UserSettingsName } from "@/components/user/settings/name";
 import { UserSettingsRole } from "@/components/user/settings/role";
 import { useUser } from "@/lib/context/use-user";
@@ -17,6 +18,7 @@ export function UserSettingsProfilePage() {
       <UserSettingsName user={user} />
       <UserSettingsRole user={user} />
       <UserSettingsCurriculum />
+      <UserSettingsDeleteAccount />
     </>
   );
 }

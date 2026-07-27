@@ -10,7 +10,7 @@ const tables = {
     order: v.number(),
     bookmarkedAt: v.number(),
     updatedAt: v.optional(v.number()),
-  }),
+  }).index("by_userId", ["userId"]),
   bookmarkCollections: defineTable({
     name: v.string(),
     description: v.optional(v.string()),
@@ -22,7 +22,7 @@ const tables = {
     image: v.string(), // auto random pick from a list of images as default
     order: v.number(),
     updatedAt: v.number(),
-  }),
+  }).index("by_userId", ["userId"]),
 };
 
 export default tables;

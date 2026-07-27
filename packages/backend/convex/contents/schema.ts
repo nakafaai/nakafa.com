@@ -125,7 +125,9 @@ const tables = {
     title: v.string(),
     viewerKey: v.string(),
     viewedAt: v.number(),
-  }).index("by_partition_and_insertedAt", ["partition", "insertedAt"]),
+  })
+    .index("by_partition_and_insertedAt", ["partition", "insertedAt"])
+    .index("by_viewerKey", ["viewerKey"]),
 
   /**
    * Durable user-facing Continue Learning projection ranked by the learner's

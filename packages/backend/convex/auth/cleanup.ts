@@ -8,7 +8,7 @@ export const cleanupDeletedUser = internalMutation({
   args: {
     userId: v.id("users"),
   },
-  returns: v.null(),
+  returns: v.boolean(),
   handler: (ctx, args) =>
     runConvexProgram(cleanupDeletedUserProgram(ctx, args.userId)),
 });

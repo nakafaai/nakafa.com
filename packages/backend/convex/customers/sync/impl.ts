@@ -25,15 +25,23 @@ import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
-type CustomerSyncUser = Pick<Doc<"users">, "_id" | "authId" | "email" | "name">;
+type CustomerSyncUser = Pick<
+  Doc<"users">,
+  "_id" | "authId" | "deletedAt" | "email" | "name"
+>;
 type CustomerSyncState = [CustomerSyncUser | null, Doc<"customers"> | null];
 type CustomerSyncError =
   | CustomerSyncIoError
   | PolarCustomerEmailConflict
   | PolarCustomerError
+  | PolarDeleteError
+  | UserNotFound
   | PolarUpdateError;
-type RequiredCustomerError = CustomerSyncError | UserNotFound;
-type CleanupUserDataError = CustomerSyncIoError | PolarDeleteError;
+type RequiredCustomerError = CustomerSyncError;
+type CleanupUserDataError =
+  | CustomerSyncIoError
+  | PolarCustomerError
+  | PolarDeleteError;
 
 export type RequiredCustomer = WithoutSystemFields<Doc<"customers">> & {
   readonly localCustomerId: Id<"customers">;
@@ -75,7 +83,7 @@ const loadCustomerSyncState: (
 const saveLocalCustomer: (
   ctx: ActionCtx,
   customer: WithoutSystemFields<Doc<"customers">>
-) => Effect.Effect<Id<"customers">, CustomerSyncIoError> = Effect.fn(
+) => Effect.Effect<Id<"customers"> | null, CustomerSyncIoError> = Effect.fn(
   "customers.sync.saveLocalCustomer"
 )(function* (ctx: ActionCtx, customer: WithoutSystemFields<Doc<"customers">>) {
   return yield* Effect.tryPromise({
@@ -154,6 +162,15 @@ export const syncCustomerForUser: (
   });
   const localCustomerId = yield* saveLocalCustomer(ctx, customer);
 
+  if (!localCustomerId) {
+    yield* polarGateway.deleteCustomer(syncedPolarCustomer.id);
+
+    return yield* new UserNotFound({
+      code: userNotFoundCode,
+      message: `User not found for userId: ${input.user._id}`,
+    });
+  }
+
   return { ...customer, localCustomerId } satisfies RequiredCustomer;
 });
 
@@ -166,14 +183,14 @@ export const syncOptionalCustomer: (
 )(function* (ctx: ActionCtx, userId: Id<"users">) {
   const [user, localCustomer] = yield* loadCustomerSyncState(ctx, userId);
 
-  if (!user) {
+  if (!user || user.deletedAt !== undefined) {
     return null;
   }
 
   return yield* syncCustomerForUser(ctx, {
     localCustomerId: localCustomer?.id,
     user,
-  });
+  }).pipe(Effect.catchTag("UserNotFound", () => Effect.succeed(null)));
 });
 
 /** Reconciles and returns the customer for an authenticated app user. */
@@ -185,7 +202,7 @@ export const requireCustomer: (
 )(function* (ctx: ActionCtx, userId: Id<"users">) {
   const [user, localCustomer] = yield* loadCustomerSyncState(ctx, userId);
 
-  if (!user) {
+  if (!user || user.deletedAt !== undefined) {
     return yield* new UserNotFound({
       code: userNotFoundCode,
       message: `User not found for userId: ${userId}`,
@@ -201,10 +218,11 @@ export const requireCustomer: (
 /** Deletes Polar and local customer state for a deleted app user. */
 export const cleanupCustomerDataForDeletedUser: (
   ctx: ActionCtx,
-  userId: Id<"users">
+  userId: Id<"users">,
+  authId: string
 ) => Effect.Effect<null, CleanupUserDataError> = Effect.fn(
   "customers.sync.cleanupCustomerDataForDeletedUser"
-)(function* (ctx: ActionCtx, userId: Id<"users">) {
+)(function* (ctx: ActionCtx, userId: Id<"users">, authId: string) {
   const customer = yield* Effect.tryPromise({
     try: () =>
       ctx.runQuery(
@@ -217,12 +235,15 @@ export const cleanupCustomerDataForDeletedUser: (
       customerSyncIoError("Failed to load customer for cleanup", error),
   });
 
-  if (!customer) {
+  const polarCustomer =
+    customer ?? (yield* polarGateway.getCustomerByExternalId(authId));
+
+  if (!polarCustomer) {
     return null;
   }
 
-  yield* polarGateway.deleteCustomer(customer.id);
-  yield* deleteLocalCustomer(ctx, customer.id);
+  yield* polarGateway.deleteCustomer(polarCustomer.id);
+  yield* deleteLocalCustomer(ctx, polarCustomer.id);
 
   return null;
 });

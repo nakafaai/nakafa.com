@@ -1,6 +1,7 @@
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { cleanupAuthRelations } from "@repo/backend/convex/auth/cleanup/relations";
 import { authComponent } from "@repo/backend/convex/auth/client";
 import { generatedUsername } from "@repo/backend/convex/auth/username/plugin";
 import {
@@ -16,6 +17,7 @@ import {
   organization,
   username,
 } from "better-auth/plugins";
+import { Effect } from "effect";
 
 /** Builds Better Auth options for HTTP auth routes and component adapters. */
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
@@ -43,6 +45,24 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     user: {
       deleteUser: {
         enabled: true,
+      },
+    },
+    databaseHooks: {
+      user: {
+        delete: {
+          before: (user, context) => {
+            if (!context) {
+              return Promise.resolve();
+            }
+
+            return Effect.runPromise(
+              cleanupAuthRelations(
+                (input) => context.context.adapter.deleteMany(input),
+                user
+              )
+            );
+          },
+        },
       },
     },
     plugins: [
