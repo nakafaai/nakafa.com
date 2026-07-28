@@ -162,6 +162,14 @@ describe("contents/views/target", () => {
       ...testArticleProjection(0),
       publicPath: PublicPathSchema.make("articles/politics/published-article"),
     });
+    const routeIdentity = createLearningGraphIdentityFromRoute({
+      locale: projection.locale,
+      route: projection.publicPath,
+    });
+    if (!routeIdentity) {
+      throw new Error("Expected one path-derived article graph identity.");
+    }
+    expect(routeIdentity.assetId).not.toBe(projection.graph.assetId);
     await target.mutation((ctx) =>
       insertRuntimeArticles(ctx, 1, () => projection)
     );
@@ -170,7 +178,7 @@ describe("contents/views/target", () => {
       target.query((ctx) =>
         runConvexProgram(
           loadContentTarget(ctx, {
-            contentId: projection.graph.assetId,
+            contentId: routeIdentity.assetId,
             locale: projection.locale,
             publicPath: projection.publicPath,
             section: "articles",

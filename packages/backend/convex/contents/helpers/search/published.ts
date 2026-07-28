@@ -28,13 +28,13 @@ export function getPublishedSearchFamilies(
   }
   const families: PublishedFamily[] = [];
   if (
-    owner.families.includes("article") &&
+    owner.readyFamilies.includes("article") &&
     (section === undefined || section === "articles")
   ) {
     families.push("article");
   }
   if (
-    owner.families.includes("material") &&
+    owner.readyFamilies.includes("material") &&
     (section === undefined || section === "material")
   ) {
     families.push("material");

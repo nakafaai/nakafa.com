@@ -139,7 +139,7 @@ describe("readContentSearchDocuments", () => {
     }
   });
 
-  it("resolves exact active material paths from the release-owned index", async () => {
+  it("keeps source material searchable until its release model is ready", async () => {
     const t = createConvexTestWithBetterAuth();
     const projection = makeMaterialProjection("en", 1);
     await activateMaterialCatalog(t, [projection]);
@@ -149,6 +149,18 @@ describe("readContentSearchDocuments", () => {
         locale: projection.locale,
         plainText: "release owned searchable material",
       });
+      await insertContentSearch(ctx, {
+        contentHash: "source-material-during-sync",
+        description: "",
+        locale: projection.locale,
+        route: projection.publicPath,
+        section: "material",
+        sourcePath:
+          "material/lesson/mathematics/exponential-logarithm/logarithm-definition",
+        syncedAt: 1,
+        text: "release owned searchable material",
+        title: "Source material during synchronization",
+      });
       const state = await ctx.db.query("contentState").unique();
       if (!state) {
         throw new Error("Expected one active content state.");
@@ -157,6 +169,45 @@ describe("readContentSearchDocuments", () => {
         searchManifestHash: MATERIAL_IDENTITY.manifestHash,
         searchReleaseId: MATERIAL_IDENTITY.releaseId,
         searchSequence: MATERIAL_IDENTITY.sequence,
+        materialManifestHash: undefined,
+        materialReleaseId: undefined,
+        materialSequence: undefined,
+      });
+    });
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readContentSearchDocuments(
+            ctx,
+            {
+              limit: 10,
+              locale: projection.locale,
+              offset: 0,
+              queries: ["release owned searchable material"],
+              section: "material",
+            },
+            ["release owned searchable material"],
+            10
+          )
+        )
+      )
+    ).resolves.toMatchObject([
+      {
+        section: "material",
+        title: "Source material during synchronization",
+      },
+    ]);
+
+    await t.mutation(async (ctx) => {
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        materialManifestHash: MATERIAL_IDENTITY.manifestHash,
+        materialReleaseId: MATERIAL_IDENTITY.releaseId,
+        materialSequence: MATERIAL_IDENTITY.sequence,
       });
     });
 

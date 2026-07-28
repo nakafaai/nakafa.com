@@ -173,9 +173,9 @@ export const advancePublication = Effect.fn(
         rendererJson,
       })
     );
-    yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
     yield* syncActiveModel(ctx, releaseId, "Article", articleSyncReference);
     yield* syncActiveModel(ctx, releaseId, "Material", materialSyncReference);
+    yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
     return { ok: true, operation: request.operation, value };
   }
   const value = yield* callInternal(() =>
@@ -185,8 +185,8 @@ export const advancePublication = Effect.fn(
       rendererJson,
     })
   );
-  yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
   yield* syncActiveModel(ctx, releaseId, "Article", articleSyncReference);
   yield* syncActiveModel(ctx, releaseId, "Material", materialSyncReference);
+  yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
   return { ok: true, operation: request.operation, value };
 });
