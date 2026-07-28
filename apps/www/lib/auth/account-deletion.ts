@@ -1,4 +1,3 @@
-import { analytics } from "@repo/analytics/posthog";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
@@ -17,10 +16,8 @@ const accountDeletionFailedCode = "ACCOUNT_DELETION_FAILED";
 const accountDeletionRequestUncertainCode =
   "ACCOUNT_DELETION_REQUEST_UNCERTAIN";
 const accountDeletionSessionExpiredCode = "ACCOUNT_DELETION_SESSION_EXPIRED";
-const accountReauthenticationFailedCode = "ACCOUNT_REAUTHENTICATION_FAILED";
 const betterAuthSessionExpiredCode = "SESSION_EXPIRED";
 const betterAuthUserDeletedMessage = "User deleted";
-const accountStorageKeyPrefix = "nakafa-";
 
 export const accountDeletionRequestPhase = {
   deletion: "deletion",
@@ -31,7 +28,6 @@ export type AccountDeletionRequestPhase =
   (typeof accountDeletionRequestPhase)[keyof typeof accountDeletionRequestPhase];
 
 type DeleteUserResult = Awaited<ReturnType<typeof authClient.deleteUser>>;
-type SignOutResult = Awaited<ReturnType<typeof authClient.signOut>>;
 type DeleteUserRequest = (attemptId: string) => Promise<DeleteUserResult>;
 type CancelAccountDeletionRequest = (attemptId: string) => Promise<unknown>;
 type PrepareAccountDeletionRequest = (
@@ -40,7 +36,6 @@ type PrepareAccountDeletionRequest = (
 type ReconcileAccountDeletionRequest = (
   attemptId: string
 ) => Promise<AccountDeletionAttemptStatus>;
-type SignOutRequest = () => Promise<SignOutResult>;
 
 interface AccountDeletionOperations {
   readonly attemptId: string;
@@ -49,12 +44,6 @@ interface AccountDeletionOperations {
   readonly reconcile: ReconcileAccountDeletionRequest;
   readonly request?: DeleteUserRequest;
   readonly startPhase: AccountDeletionRequestPhase;
-}
-
-interface BrowserIdentityCleanup {
-  readonly flushAnalytics: () => Promise<void>;
-  readonly removePersistedAccountState: () => void;
-  readonly resetAnalytics: () => void;
 }
 
 /** Raised when Better Auth requires a fresh session before account deletion. */
@@ -91,14 +80,6 @@ export class AccountDeletionSchoolMemberRequired extends Schema.TaggedError<Acco
   "AccountDeletionSchoolMemberRequired",
   {
     code: Schema.Literal(ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE),
-  }
-) {}
-
-/** Raised when the stale session cannot be cleared for reauthentication. */
-export class AccountReauthenticationFailed extends Schema.TaggedError<AccountReauthenticationFailed>()(
-  "AccountReauthenticationFailed",
-  {
-    code: Schema.Literal(accountReauthenticationFailedCode),
   }
 ) {}
 
@@ -256,61 +237,3 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     });
   }
 );
-
-/**
- * Clears browser identities after a successful deletion. Each cleanup is
- * best-effort because the server-side deletion has already committed.
- */
-export const clearDeletedAccountBrowserIdentity = Effect.fn(
-  "www.auth.clearDeletedAccountBrowserIdentity"
-)(function* (
-  cleanup: BrowserIdentityCleanup = {
-    flushAnalytics: () => analytics.shutdown(),
-    removePersistedAccountState: () => {
-      for (const storage of [window.localStorage, window.sessionStorage]) {
-        for (let index = storage.length - 1; index >= 0; index -= 1) {
-          const storageKey = storage.key(index);
-
-          if (storageKey?.startsWith(accountStorageKeyPrefix)) {
-            storage.removeItem(storageKey);
-          }
-        }
-      }
-    },
-    resetAnalytics: () => analytics.reset(true),
-  }
-) {
-  yield* Effect.tryPromise({
-    try: cleanup.flushAnalytics,
-    catch: () => undefined,
-  }).pipe(Effect.ignore);
-
-  yield* Effect.all(
-    [
-      Effect.try(cleanup.resetAnalytics).pipe(Effect.ignore),
-      Effect.try(cleanup.removePersistedAccountState).pipe(Effect.ignore),
-    ],
-    { discard: true }
-  );
-});
-
-/** Clears account-scoped browser identity and the stale auth session. */
-export const prepareAccountReauthentication = Effect.fn(
-  "www.auth.prepareAccountReauthentication"
-)(function* (request: SignOutRequest = async () => await authClient.signOut()) {
-  yield* clearDeletedAccountBrowserIdentity();
-
-  const result = yield* Effect.tryPromise({
-    try: request,
-    catch: () =>
-      new AccountReauthenticationFailed({
-        code: accountReauthenticationFailedCode,
-      }),
-  });
-
-  if (result.error) {
-    return yield* new AccountReauthenticationFailed({
-      code: accountReauthenticationFailedCode,
-    });
-  }
-});
