@@ -1,5 +1,5 @@
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
-import { ARTICLE_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/article/bucket";
+import { CONTENT_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/bucket";
 import {
   CONTENT_DOCUMENT_LIMIT,
   READ_MODEL_DOCUMENT_LIMIT,
@@ -72,7 +72,7 @@ describe("contentRelease/spec", () => {
 
   it("bounds article partitions by their worst-case verified reads", () => {
     const maximumArticleWork =
-      ARTICLE_BUCKET_SIZE * 6 * READ_MODEL_DOCUMENT_LIMIT;
+      CONTENT_BUCKET_SIZE * 6 * READ_MODEL_DOCUMENT_LIMIT;
 
     expect(maximumArticleWork).toBeLessThanOrEqual(
       TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM

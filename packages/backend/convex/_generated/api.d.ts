@@ -130,6 +130,7 @@ import type * as contentRelease_article_write from "../contentRelease/article/wr
 import type * as contentRelease_artifacts from "../contentRelease/artifacts.js";
 import type * as contentRelease_base from "../contentRelease/base.js";
 import type * as contentRelease_batch from "../contentRelease/batch.js";
+import type * as contentRelease_bucket from "../contentRelease/bucket.js";
 import type * as contentRelease_catalog from "../contentRelease/catalog.js";
 import type * as contentRelease_cleanup from "../contentRelease/cleanup.js";
 import type * as contentRelease_compact from "../contentRelease/compact.js";
@@ -161,7 +162,9 @@ import type * as contentRelease_item from "../contentRelease/item.js";
 import type * as contentRelease_items from "../contentRelease/items.js";
 import type * as contentRelease_manifest from "../contentRelease/manifest.js";
 import type * as contentRelease_material from "../contentRelease/material.js";
+import type * as contentRelease_material_bucket from "../contentRelease/material/bucket.js";
 import type * as contentRelease_material_limits from "../contentRelease/material/limits.js";
+import type * as contentRelease_material_migrate from "../contentRelease/material/migrate.js";
 import type * as contentRelease_material_model from "../contentRelease/material/model.js";
 import type * as contentRelease_material_owner from "../contentRelease/material/owner.js";
 import type * as contentRelease_material_page from "../contentRelease/material/page.js";
@@ -587,6 +590,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/artifacts": typeof contentRelease_artifacts;
   "contentRelease/base": typeof contentRelease_base;
   "contentRelease/batch": typeof contentRelease_batch;
+  "contentRelease/bucket": typeof contentRelease_bucket;
   "contentRelease/catalog": typeof contentRelease_catalog;
   "contentRelease/cleanup": typeof contentRelease_cleanup;
   "contentRelease/compact": typeof contentRelease_compact;
@@ -618,7 +622,9 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/items": typeof contentRelease_items;
   "contentRelease/manifest": typeof contentRelease_manifest;
   "contentRelease/material": typeof contentRelease_material;
+  "contentRelease/material/bucket": typeof contentRelease_material_bucket;
   "contentRelease/material/limits": typeof contentRelease_material_limits;
+  "contentRelease/material/migrate": typeof contentRelease_material_migrate;
   "contentRelease/material/model": typeof contentRelease_material_model;
   "contentRelease/material/owner": typeof contentRelease_material_owner;
   "contentRelease/material/page": typeof contentRelease_material_page;

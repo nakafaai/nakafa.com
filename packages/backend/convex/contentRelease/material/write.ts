@@ -4,6 +4,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/material";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import type { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import {
@@ -11,6 +12,7 @@ import {
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { adjustMaterialBucket } from "@repo/backend/convex/contentRelease/material/bucket";
 import { Effect } from "effect";
 
 type PublicProjection = NonNullable<
@@ -70,8 +72,18 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
         `Material entry ${head.contentKey}/${head.locale} changed its projection.`
       );
     }
+    const bucket = getHashBucket(projectionHash);
+    if (!bucket) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Material entry ${head.contentKey}/${head.locale} has an invalid projection hash.`
+      );
+    }
     const row = {
+      assetId: projection.graph.assetId,
+      bucket,
       contentKey: head.contentKey,
+      date: projection.metadata.date,
       locale: head.locale,
       materialKey: projection.materialKey,
       order: projection.order,
@@ -91,11 +103,23 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
     );
     const existing = yield* loadMaterial(ctx, head.contentKey, head.locale);
     if (existing) {
+      if (existing.bucket !== row.bucket) {
+        if (existing.bucket !== undefined) {
+          yield* adjustMaterialBucket(
+            ctx,
+            existing.locale,
+            existing.bucket,
+            -1
+          );
+        }
+        yield* adjustMaterialBucket(ctx, row.locale, row.bucket, 1);
+      }
       yield* Effect.promise(() =>
         ctx.db.replace("materialCatalog", existing._id, row)
       );
       return;
     }
+    yield* adjustMaterialBucket(ctx, row.locale, row.bucket, 1);
     yield* Effect.promise(() => ctx.db.insert("materialCatalog", row));
   }
 );
@@ -106,6 +130,9 @@ export const deleteMaterial = Effect.fn("contentRelease.deleteMaterial")(
     const existing = yield* loadMaterial(ctx, contentKey, locale);
     if (!existing) {
       return;
+    }
+    if (existing.bucket !== undefined) {
+      yield* adjustMaterialBucket(ctx, existing.locale, existing.bucket, -1);
     }
     yield* Effect.promise(() => ctx.db.delete("materialCatalog", existing._id));
   }
