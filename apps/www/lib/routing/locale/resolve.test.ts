@@ -140,7 +140,16 @@ describe("resolveLocalizedNavigationHref", () => {
 
     publishedMocks.programRoute.mockReturnValue(
       Effect.succeed({
-        alternates: [testProgramSubject, idProgramSubject],
+        alternates: [
+          {
+            ...idProgramSubject,
+            level: "unit",
+            publicPath: `${idProgramSubject.publicPath}/internal`,
+            sitemap: false,
+          },
+          testProgramSubject,
+          idProgramSubject,
+        ],
         managed: true,
         route: testProgramSubject,
       })
@@ -216,15 +225,14 @@ describe("resolveLocalizedNavigationHref", () => {
       projectMaterialContextToLocale: () => undefined,
       projectRouteToLocale: () => undefined,
       resolveMaterialHeaderLink: () => undefined,
+      resolveMaterialRouteBySource: () => undefined,
       resolveRouteByPath: () => undefined,
       toContextualMaterialHref: preserveContextualHref,
     };
     const missingTargetIndex: PublicLearningIndex = {
       ...missingSourceIndex,
-      resolveRouteByPath: (publicPath) =>
-        publicPath === previewProjection.publicPath
-          ? previewPublicRoute
-          : undefined,
+      resolveMaterialRouteBySource: (_sourcePath, locale) =>
+        locale === previewProjection.locale ? previewPublicRoute : undefined,
     };
     vi.spyOn(publicLearningStatic, "loadStaticPublicLearningIndex")
       .mockImplementationOnce(() => Effect.succeed(missingSourceIndex))
@@ -232,6 +240,35 @@ describe("resolveLocalizedNavigationHref", () => {
 
     expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);
     expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);
+  });
+
+  it("preserves source context across published material route renames", () => {
+    const currentPath =
+      "subjects/mathematics/function-composition-inverse-function/renamed-function";
+    const targetPath =
+      "materi/matematika/fungsi-komposisi-dan-fungsi-invers/fungsi-berganti";
+    publishedMocks.materialRoute.mockReturnValue(
+      Effect.succeed({
+        alternates: [
+          { ...previewProjection, publicPath: currentPath },
+          { ...previewIdProjection, publicPath: targetPath },
+        ],
+        managed: true,
+        projection: { ...previewProjection, publicPath: currentPath },
+      })
+    );
+    publishedMocks.materialContext.mockReturnValue(
+      Effect.succeed({ managed: false, value: null })
+    );
+
+    expect(
+      resolveHref(
+        `/en/${currentPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`,
+        "id"
+      )
+    ).toBe(
+      `/${targetPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`
+    );
   });
 
   it("fails closed for active curriculum tombstones and missing locale rows", () => {
@@ -356,6 +393,7 @@ describe("resolveLocalizedNavigationHref", () => {
       projectMaterialContextToLocale: () => undefined,
       projectRouteToLocale: () => undefined,
       resolveMaterialHeaderLink: () => undefined,
+      resolveMaterialRouteBySource: () => undefined,
       resolveRouteByPath: () => idOnlyRoute,
       toContextualMaterialHref: preserveContextualHref,
     };

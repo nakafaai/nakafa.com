@@ -1,3 +1,4 @@
+import { isRenderableCurriculumLevel } from "@nakafa/aksara-contracts/program/curriculum";
 import { loadStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
@@ -87,8 +88,14 @@ export const readPublishedLocalizedHref = Effect.fn(
     }
 
     const index = yield* loadStaticPublicLearningIndex();
-    const sourceRoute = index.resolveRouteByPath(publicPath, currentLocale);
-    const targetRoute = index.resolveRouteByPath(target.publicPath, locale);
+    const sourceRoute = index.resolveMaterialRouteBySource(
+      current.projection.contentKey,
+      currentLocale
+    );
+    const targetRoute = index.resolveMaterialRouteBySource(
+      target.contentKey,
+      locale
+    );
     if (!(sourceRoute && targetRoute)) {
       return toNavigationHref(target.publicPath, "");
     }
@@ -123,7 +130,9 @@ export const readPublishedLocalizedHref = Effect.fn(
     (alternate) =>
       alternate.locale === locale &&
       alternate.nodeKey === current.route?.nodeKey &&
-      alternate.programKey === current.route?.programKey
+      alternate.programKey === current.route?.programKey &&
+      alternate.sitemap &&
+      isRenderableCurriculumLevel(alternate.level)
   );
   if (!target) {
     return yield* new MissingLocalizedRouteProjectionError({

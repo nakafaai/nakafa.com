@@ -9,12 +9,7 @@ import { InvalidPublicRouteSourceError } from "@repo/contents/_types/route/error
 import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
 import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
-import {
-  type PublicContentRoute,
-  type PublicMaterialLessonRoute,
-  PublicMaterialLessonRouteSchema,
-} from "@repo/contents/_types/route/schema";
-import { Either, Schema } from "effect";
+import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import type { Locale } from "next-intl";
 import {
   readMaterialRoutes,
@@ -85,31 +80,6 @@ export function readMaterialIcon(page: MaterialPageSource) {
     page.kind === "source" ? page.route.sourcePath : page.route.contentKey;
   const [, , domain] = sourcePath.split("/");
   return getMaterialIcon(domain ?? "");
-}
-
-/** Adapts one authenticated projection to the temporary source context seam. */
-function toSourceMaterialRoute(
-  projection: MaterialProjectionWire
-): PublicMaterialLessonRoute {
-  const decoded = Schema.decodeUnknownEither(PublicMaterialLessonRouteSchema)({
-    description: projection.metadata.description,
-    kind: projection.kind,
-    locale: projection.locale,
-    materialKey: projection.materialKey,
-    order: projection.order,
-    parentPath: projection.parentPath,
-    publicPath: projection.publicPath,
-    sectionKey: projection.sectionKey,
-    sitemap: projection.sitemap,
-    sourcePath: projection.contentKey,
-    title: projection.metadata.title,
-  });
-  if (Either.isRight(decoded)) {
-    return decoded.right;
-  }
-  throw new InvalidPublicRouteSourceError({
-    message: `Published material ${projection.contentKey}/${projection.locale} cannot use source curriculum context.`,
-  });
 }
 
 /** Builds sibling pagination with one optional context-aware href resolver. */
@@ -193,15 +163,29 @@ export async function readMaterialNavigation(
   );
   if (!published.managed) {
     const index = readStaticPublicLearningIndex();
-    const route = toSourceMaterialRoute(page.route);
-    const link = index.resolveMaterialHeaderLink({ context, route });
+    const route = index.resolveMaterialRouteBySource(
+      page.route.contentKey,
+      page.locale
+    );
+    const link = route
+      ? index.resolveMaterialHeaderLink({ context, route })
+      : undefined;
     const toHref = link
-      ? (target: MaterialProjectionWire) =>
-          index.toContextualMaterialHref({
+      ? (target: MaterialProjectionWire) => {
+          const href = toMaterialHref(target);
+          const targetRoute = index.resolveMaterialRouteBySource(
+            target.contentKey,
+            target.locale
+          );
+          if (!targetRoute) {
+            return href;
+          }
+          return index.toContextualMaterialHref({
             context,
-            href: toMaterialHref(target),
-            route: toSourceMaterialRoute(target),
-          })
+            href,
+            route: targetRoute,
+          });
+        }
       : undefined;
     return {
       context: link ? context : undefined,

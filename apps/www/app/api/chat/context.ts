@@ -166,10 +166,11 @@ const createNinaLearningSessionInput = Effect.fn(
       url,
     });
     if (published.managed && published.learning) {
-      const route = readStaticPublicLearningIndex().resolveRouteByPath(
-        cleanPath,
-        locale
-      );
+      const route =
+        readStaticPublicLearningIndex().resolveMaterialRouteBySource(
+          published.contentKey,
+          locale
+        );
       const placement = published.programManaged
         ? published.placement
         : createNinaPlacementContext({ clientContext, route });

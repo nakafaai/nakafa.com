@@ -221,6 +221,8 @@ describe("app/api/chat/context", () => {
       Effect.succeed({
         managed: true,
         projection: {
+          contentKey:
+            "material/lesson/mathematics/function-composition-inverse-function/function-concept",
           graph: {
             assetId: "asset:en:material:function-concept",
           },
@@ -274,6 +276,49 @@ describe("app/api/chat/context", () => {
         nodeKey: "cambridge-function-concept",
         parentTitle: "Functions",
         programKey: "cambridge-international",
+      },
+    });
+  });
+
+  it("uses stable material identity for source placement after a route rename", async () => {
+    const renamedPath =
+      "subjects/mathematics/function-composition-inverse-function/renamed-function-concept";
+    mocks.materialRoute.mockReturnValueOnce(
+      Effect.succeed({
+        managed: true,
+        projection: {
+          ...previewProjection,
+          publicPath: renamedPath,
+        },
+        sourcePath: previewSourcePath,
+      })
+    );
+    mocks.materialContext.mockReturnValueOnce(
+      Effect.succeed({ managed: false, value: null })
+    );
+
+    const session = await Effect.runPromise(
+      resolveNinaLearningSession({
+        capturedAt: "2026-07-28T00:00:00.000Z",
+        locale: "en",
+        rawContext: {
+          materialContextHint:
+            "merdeka~class-11-mathematics-function-composition-inverse-function",
+        },
+        slug: `/${renamedPath}`,
+        url: `https://nakafa.com/en/${renamedPath}`,
+        verified: true,
+      })
+    );
+
+    expect(session.context.snapshot).toMatchObject({
+      learning: {
+        contentId: previewProjection.graph.assetId,
+        slug: renamedPath,
+      },
+      placement: {
+        nodeKey: "class-11-mathematics-function-composition-inverse-function",
+        programKey: "merdeka",
       },
     });
   });

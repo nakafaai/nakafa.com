@@ -54,6 +54,15 @@ describe("createPublicLearningIndex", () => {
     });
 
     expect(
+      index.resolveMaterialRouteBySource(
+        "material/lesson/ai-ds/linear-methods/system-linear-equation",
+        "id"
+      )
+    ).toMatchObject({
+      publicPath: "materi/ai-ds/metode-linear-ai/sistem-persamaan-linear",
+    });
+
+    expect(
       index.resolveRouteByPath(
         "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
         "id"
