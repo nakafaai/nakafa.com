@@ -1,9 +1,10 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { action } from "@repo/backend/convex/_generated/server";
-import tables, {
+import {
   messageGenerationErrorCodeValidator,
   modelIdValueValidator,
 } from "@repo/backend/convex/chats/schema";
+import tables from "@repo/backend/convex/chats/tables/schema";
 import { requireAuthForAction } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
