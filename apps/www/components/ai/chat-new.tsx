@@ -10,7 +10,10 @@ import {
   PromptInputTools,
 } from "@repo/design-system/components/ai/input-controls";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import {
+  usePathname,
+  useRouter,
+} from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -24,6 +27,7 @@ import { useUser } from "@/lib/context/use-user";
 export function ChatNew() {
   const t = useTranslations("Ai");
 
+  const pathname = usePathname();
   const router = useRouter();
 
   const text = useAi((state) => state.text);
@@ -53,7 +57,7 @@ export function ChatNew() {
       }
 
       if (!user) {
-        router.push("/auth");
+        router.push(`/auth?redirect=${encodeURIComponent(pathname)}`);
         return;
       }
 

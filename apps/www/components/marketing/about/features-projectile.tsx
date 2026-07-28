@@ -1,5 +1,6 @@
 "use client";
 
+import { useIntersection } from "@mantine/hooks";
 import {
   DEFAULT_PROJECTILE_SCENARIO_ID,
   formatMeterMath,
@@ -24,6 +25,7 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import { getColor } from "@repo/design-system/lib/color";
+import { useReducedMotion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { Suspense, useMemo, useState } from "react";
 
@@ -33,6 +35,12 @@ const FLASH_COLOR = getColor("ORANGE", 500);
 export function FeaturesProjectile() {
   const t = useTranslations("Features");
   const locale = useLocale();
+  const shouldReduceMotion = useReducedMotion() ?? false;
+  const { ref: sceneRef, entry: sceneEntry } = useIntersection({
+    root: null,
+    rootMargin: "400px 0px",
+    threshold: 0.01,
+  });
   const [scenarioId, setScenarioId] = useState<ProjectileScenarioId>(
     DEFAULT_PROJECTILE_SCENARIO_ID
   );
@@ -145,43 +153,46 @@ export function FeaturesProjectile() {
           <section
             aria-label={t("projectile-view-label")}
             className={threeSceneFrameVariants()}
+            ref={sceneRef}
           >
-            <ThreeCanvas frameloop="always">
-              <Suspense>
-                <ambientLight intensity={0.62} />
-                <hemisphereLight
-                  color={getColor("SKY", 400)}
-                  groundColor={getColor("TEAL", 700)}
-                  intensity={0.68}
-                />
-                <directionalLight
-                  castShadow
-                  intensity={1.35}
-                  position={[-3.4, 5.8, 4.7]}
-                  shadow-bias={-0.0006}
-                  shadow-mapSize-height={1024}
-                  shadow-mapSize-width={1024}
-                  shadow-normalBias={0.02}
-                />
-                <pointLight
-                  color={FLASH_COLOR}
-                  intensity={0.45}
-                  position={PROJECTILE_SCENE.launchOffset}
-                />
-                <CameraControls
-                  autoRotate={false}
-                  cameraPosition={PROJECTILE_SCENE.cameraPosition}
-                  cameraTarget={PROJECTILE_SCENE.cameraTarget}
-                  enablePan
-                  enableRotate
-                  enableZoom
-                  fov={PROJECTILE_SCENE.cameraFov}
-                  maxDistance={PROJECTILE_SCENE.maxDistance}
-                  minDistance={PROJECTILE_SCENE.minDistance}
-                />
-                <PirateProjectileScene motion={motion} />
-              </Suspense>
-            </ThreeCanvas>
+            {sceneEntry?.isIntersecting ? (
+              <ThreeCanvas frameloop={shouldReduceMotion ? "demand" : "always"}>
+                <Suspense>
+                  <ambientLight intensity={0.62} />
+                  <hemisphereLight
+                    color={getColor("SKY", 400)}
+                    groundColor={getColor("TEAL", 700)}
+                    intensity={0.68}
+                  />
+                  <directionalLight
+                    castShadow
+                    intensity={1.35}
+                    position={[-3.4, 5.8, 4.7]}
+                    shadow-bias={-0.0006}
+                    shadow-mapSize-height={1024}
+                    shadow-mapSize-width={1024}
+                    shadow-normalBias={0.02}
+                  />
+                  <pointLight
+                    color={FLASH_COLOR}
+                    intensity={0.45}
+                    position={PROJECTILE_SCENE.launchOffset}
+                  />
+                  <CameraControls
+                    autoRotate={false}
+                    cameraPosition={PROJECTILE_SCENE.cameraPosition}
+                    cameraTarget={PROJECTILE_SCENE.cameraTarget}
+                    enablePan
+                    enableRotate
+                    enableZoom
+                    fov={PROJECTILE_SCENE.cameraFov}
+                    maxDistance={PROJECTILE_SCENE.maxDistance}
+                    minDistance={PROJECTILE_SCENE.minDistance}
+                  />
+                  <PirateProjectileScene motion={motion} />
+                </Suspense>
+              </ThreeCanvas>
+            ) : null}
           </section>
         </div>
       </div>

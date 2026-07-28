@@ -41,6 +41,7 @@ export function FeaturesBento({ subjectPaths }: FeaturesBentoProps) {
                 icon={path.icon}
                 key={path.href}
                 label={path.title}
+                labelElement="span"
               />
             ))}
           </SubjectList>

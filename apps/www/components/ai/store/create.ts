@@ -22,7 +22,10 @@ export const createAiStore = () =>
       })),
       {
         name: "nakafa-ai",
-        partialize: (state) => ({ activeChatId: state.activeChatId }),
+        partialize: (state) => ({
+          activeChatId: state.activeChatId,
+          text: state.text,
+        }),
         version: 1,
       }
     )

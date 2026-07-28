@@ -37,7 +37,7 @@ export function Language({ compact = false }: { compact?: boolean }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="outline">
+          <Button aria-label={t("language")} variant="outline">
             <HugeIcons icon={TranslateIcon} />
             <span className={cn("truncate", compact && "hidden sm:inline")}>
               {t("language")}
