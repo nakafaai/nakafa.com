@@ -1,5 +1,5 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { action } from "@repo/backend/convex/_generated/server";
-import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { validateCheckoutRequest } from "@repo/backend/convex/customers/checkout/impl";
 import { checkoutLocaleValidator } from "@repo/backend/convex/customers/checkout/localization";
 import { polarGateway } from "@repo/backend/convex/customers/polar/live";
@@ -47,20 +47,23 @@ export const generateCheckoutLink = action({
       })
     );
 
-    await captureProductEvent(ctx, {
-      distinctId: appUserId,
-      event: {
-        name: "checkout started",
-        properties: {
-          checkout_locale: request.polarLocale,
-          customer_ip_available: requestMetadata.ip !== null,
-          locale: request.locale,
-          product_count: request.productIds.length,
-          product_id: request.primaryProductId,
+    await ctx.runMutation(
+      internal.analytics.capture.captureActionProductEvent,
+      {
+        distinctId: appUserId,
+        event: {
+          name: "checkout started",
+          properties: {
+            checkout_locale: request.polarLocale,
+            customer_ip_available: requestMetadata.ip !== null,
+            locale: request.locale,
+            product_count: request.productIds.length,
+            product_id: request.primaryProductId,
+          },
         },
-      },
-      timestamp: new Date(),
-    });
+        timestamp: Date.now(),
+      }
+    );
 
     return { url: checkout.url };
   },
