@@ -87,55 +87,7 @@ describe("readContentSearchDocuments", () => {
     ]);
   });
 
-  it("shares one published read budget across alternate query variants", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const terms = ["alpha", "beta", "gamma", "delta"];
-
-    await t.mutation(async (ctx) => {
-      await insertRuntimeArticles(ctx, terms.length);
-      for (const [index, term] of terms.entries()) {
-        const projection = testArticleProjection(index);
-        await insertRuntimeIndex(ctx, projection.contentKey, {
-          plainText: `${term} bounded search`,
-        });
-      }
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        throw new Error("Expected one active content state.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-        searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-        searchSequence: TEST_RUNTIME_RELEASE.sequence,
-      });
-    });
-
-    const documents = await t.query((ctx) =>
-      runConvexProgram(
-        readContentSearchDocuments(
-          ctx,
-          {
-            limit: 3,
-            locale: "en",
-            offset: 0,
-            queries: terms,
-            section: "articles",
-          },
-          terms,
-          3
-        )
-      )
-    );
-
-    expect(documents).toHaveLength(3);
-    expect(documents.map((document) => document.text)).toEqual([
-      "Article 0 Article 0 articles/politics/article-0 alpha bounded search",
-      "Article 1 Article 1 articles/politics/article-1 beta bounded search",
-      "Article 2 Article 2 articles/politics/article-2 gamma bounded search",
-    ]);
-  });
-
-  it("refills an unused article budget from searchable materials", async () => {
+  it("fills an empty article family from searchable materials", async () => {
     const t = createConvexTestWithBetterAuth();
     const projections = Array.from({ length: 25 }, (_, index) =>
       makeMaterialProjection("en", index + 1)

@@ -2,10 +2,10 @@
 export const NAKAFA_AGENT_DEFAULT_LIMIT = 20;
 
 /**
- * Maximum candidate window for one bounded search transaction.
+ * Maximum authenticated candidate window for one bounded search transaction.
  *
- * The published read model authenticates every candidate against its active
- * head and binding, so this cap leaves room below Convex transaction limits.
+ * Raw indexes may prefilter several bounded groups, but the published read
+ * model authenticates at most this many unique heads and bindings.
  */
 export const NAKAFA_AGENT_SEARCH_WINDOW = 32;
 

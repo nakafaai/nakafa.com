@@ -5,10 +5,14 @@ import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse"
 import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
 import { resolveSearchProjection } from "@repo/backend/convex/contentRelease/search/verify";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
-import { readSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
+import {
+  type ContentSearchDocument,
+  interleaveSearchGroups,
+} from "@repo/backend/convex/contents/helpers/search/groups";
 import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { getExactRouteQuery } from "@repo/backend/convex/contents/helpers/search/terms";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import type { Infer } from "convex/values";
 import { Effect } from "effect";
 
@@ -54,33 +58,78 @@ export const readPublishedSearchDocuments = Effect.fn(
   families: readonly PublishedFamily[]
 ) {
   if (queryTexts.length === 0) {
-    return yield* readSearchGroups(scanLimit, families, (family, limit) =>
-      browseFamily(ctx, args.locale, family, limit, owner)
+    const groups = yield* Effect.all(
+      families.map((family) =>
+        browseFamily(ctx, args.locale, family, NAKAFA_AGENT_SEARCH_WINDOW)
+      ),
+      { concurrency: "unbounded" }
     );
+    const rows = interleaveSearchGroups(
+      groups,
+      NAKAFA_AGENT_SEARCH_WINDOW,
+      (row) => row._id
+    );
+    const authenticated = yield* authenticateSearchRows(ctx, rows, owner);
+    return authenticated.map(({ document }) => document).slice(0, scanLimit);
   }
-  return yield* readSearchGroups(scanLimit, queryTexts, (queryText, limit) =>
-    searchQuery(ctx, args.locale, families, queryText, limit, owner)
+  const groups = yield* Effect.all(
+    queryTexts.map((queryText) =>
+      searchQuery(
+        ctx,
+        args.locale,
+        families,
+        queryText,
+        NAKAFA_AGENT_SEARCH_WINDOW
+      ).pipe(Effect.map((rows) => ({ queryText, rows })))
+    ),
+    { concurrency: "unbounded" }
+  );
+  const rows = interleaveSearchGroups(
+    groups.map((group) => group.rows),
+    NAKAFA_AGENT_SEARCH_WINDOW,
+    (row) => row._id
+  );
+  const authenticated = yield* authenticateSearchRows(ctx, rows, owner);
+  const documentsByRow = new Map(
+    authenticated.map(({ document, row }) => [row._id, document])
+  );
+  const rankedGroups = groups.map(({ queryText, rows: queryRows }) => {
+    const documents: ContentSearchDocument[] = [];
+
+    for (const row of queryRows) {
+      const document = documentsByRow.get(row._id);
+
+      if (document) {
+        documents.push(document);
+      }
+    }
+
+    return rankContentSearchDocuments(documents, queryText);
+  });
+  return interleaveSearchGroups(
+    rankedGroups,
+    scanLimit,
+    (document) => document.content_id
   );
 });
 
-/** Searches one query fairly across active release-owned families. */
+/** Reads one fixed raw candidate window across active published families. */
 const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
   function* (
     ctx: QueryCtx,
     locale: ContentSearchInput["locale"],
     families: readonly PublishedFamily[],
     queryText: string,
-    scanLimit: number,
-    owner: PublishedSearchOwner
+    scanLimit: number
   ) {
     const route = getExactRouteQuery(locale, queryText);
-    const documents = yield* readSearchGroups(
-      scanLimit,
-      families,
-      (family, limit) =>
-        searchFamily(ctx, locale, family, route, queryText, limit, owner)
+    const groups = yield* Effect.all(
+      families.map((family) =>
+        searchFamily(ctx, locale, family, route, queryText, scanLimit)
+      ),
+      { concurrency: "unbounded" }
     );
-    return rankContentSearchDocuments(documents, queryText);
+    return interleaveSearchGroups(groups, scanLimit, (row) => row._id);
   }
 );
 
@@ -92,8 +141,7 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
     family: PublishedFamily,
     route: null | string,
     queryText: string,
-    scanLimit: number,
-    owner: PublishedSearchOwner
+    scanLimit: number
   ) {
     if (scanLimit <= 0) {
       return [];
@@ -111,25 +159,21 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
             .unique()
         )
       : null;
-    const hitLimit = scanLimit - (exact ? 1 : 0);
-    const hits =
-      hitLimit > 0
-        ? yield* Effect.promise(() =>
-            ctx.db
-              .query("contentIndex")
-              .withSearchIndex("search_text", (index) =>
-                index
-                  .search("text", queryText)
-                  .eq("family", family)
-                  .eq("locale", locale)
-              )
-              .take(hitLimit)
-          )
-        : [];
+    const hits = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentIndex")
+        .withSearchIndex("search_text", (index) =>
+          index
+            .search("text", queryText)
+            .eq("family", family)
+            .eq("locale", locale)
+        )
+        .take(scanLimit)
+    );
     const rows = exact
       ? [exact, ...hits.filter((row) => row._id !== exact._id)]
       : hits;
-    return yield* authenticateSearchRows(ctx, rows, owner);
+    return rows.slice(0, scanLimit);
   }
 );
 
@@ -139,8 +183,7 @@ const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
     ctx: QueryCtx,
     locale: ContentSearchInput["locale"],
     family: PublishedFamily,
-    scanLimit: number,
-    owner: PublishedSearchOwner
+    scanLimit: number
   ) {
     if (scanLimit <= 0) {
       return [];
@@ -153,7 +196,7 @@ const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
         )
         .take(scanLimit)
     );
-    return yield* authenticateSearchRows(ctx, rows, owner);
+    return rows;
   }
 );
 
@@ -163,9 +206,14 @@ function authenticateSearchRows(
   rows: readonly Doc<"contentIndex">[],
   owner: PublishedSearchOwner
 ) {
-  return Effect.forEach(rows, (row) => authenticateSearchRow(ctx, row, owner), {
-    concurrency: "unbounded",
-  });
+  return Effect.forEach(
+    rows,
+    (row) =>
+      authenticateSearchRow(ctx, row, owner).pipe(
+        Effect.map((document) => ({ document, row }))
+      ),
+    { concurrency: "unbounded" }
+  );
 }
 
 /** Verifies one search hit against its active immutable projection. */
