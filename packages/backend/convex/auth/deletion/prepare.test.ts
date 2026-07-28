@@ -485,7 +485,7 @@ describe("auth/deletion/prepare", () => {
       }),
     ]);
 
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    await t.finishAllScheduledFunctions(vi.runOnlyPendingTimers);
 
     const settled = await t.query(async (ctx) => ({
       preparations: await ctx.db.query("accountDeletionPreparations").collect(),
