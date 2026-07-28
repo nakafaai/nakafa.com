@@ -11,6 +11,7 @@ import type { ContentViewTarget } from "@repo/backend/convex/contents/views/targ
 import { Effect } from "effect";
 
 interface MaterialTarget {
+  readonly contentKey: string;
   readonly materialKey: string;
   readonly parentPath: string;
   readonly publicPath: string;
@@ -27,6 +28,7 @@ function readPublishedMaterial(target: ContentViewTarget) {
     return null;
   }
   return {
+    contentKey: target.contentKey,
     materialKey: target.materialKey,
     parentPath: target.parentPath,
     publicPath: target.route,
@@ -44,8 +46,8 @@ const loadSourceMaterial = Effect.fn("contents.views.loadSourceMaterial")(
       try: () =>
         db
           .query("publicRoutes")
-          .withIndex("by_locale_and_publicPath", (q) =>
-            q.eq("locale", target.locale).eq("publicPath", target.route)
+          .withIndex("by_locale_and_sourcePath", (q) =>
+            q.eq("locale", target.locale).eq("sourcePath", target.contentKey)
           )
           .unique(),
       catch: toContentViewIoError,
@@ -60,6 +62,7 @@ const loadSourceMaterial = Effect.fn("contents.views.loadSourceMaterial")(
       return null;
     }
     return {
+      contentKey: publicRoute.sourcePath,
       materialKey: publicRoute.materialKey,
       parentPath: publicRoute.parentPath,
       publicPath: publicRoute.publicPath,

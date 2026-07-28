@@ -85,7 +85,14 @@ async function upsertRecent(
     readonly userId: Doc<"users">["_id"];
   }
 ) {
-  await runConvexProgram(upsertUserRecent(ctx.db, route, context, input));
+  await runConvexProgram(
+    upsertUserRecent(
+      ctx.db,
+      { ...route, contentKey: route.sourcePath },
+      context,
+      input
+    )
+  );
 }
 
 describe("contents/views/recent", () => {
