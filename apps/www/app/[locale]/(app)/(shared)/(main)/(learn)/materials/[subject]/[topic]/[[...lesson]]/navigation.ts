@@ -7,6 +7,8 @@ import {
 } from "@repo/contents/_types/route/content";
 import { InvalidPublicRouteSourceError } from "@repo/contents/_types/route/error";
 import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
+import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
+import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import {
   type PublicContentRoute,
   type PublicMaterialLessonRoute,
@@ -23,8 +25,6 @@ import type {
   MaterialPageSource,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
 import { getPublishedMaterialContext } from "@/lib/content/material/context";
-import type { MaterialContextIdentity } from "@/lib/routing/material/context";
-import { toContextualMaterialHref } from "@/lib/routing/material/context";
 
 const emptyItem = { href: "", title: "" };
 
@@ -55,7 +55,6 @@ export function readMaterialParentTitle(page: MaterialPageSource) {
   const sourceRoute = readMaterialRoutes().find(
     (route) =>
       route.locale === page.route.locale &&
-      String(route.publicPath) === String(page.route.publicPath) &&
       String(route.sourcePath) === String(page.route.contentKey)
   );
   if (!sourceRoute) {
@@ -137,7 +136,7 @@ function readPublishedPagination(
     }
     const href = toMaterialHref(target);
     return {
-      href: context ? toContextualMaterialHref(href, context) : href,
+      href: toContextualMaterialHref({ href, ref: context }),
       title: target.metadata.title,
     };
   };

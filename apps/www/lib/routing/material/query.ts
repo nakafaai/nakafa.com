@@ -1,16 +1,15 @@
-import { Option } from "effect";
+import {
+  encodeMaterialContextHint,
+  MATERIAL_CONTEXT_QUERY_PARAM,
+  readMaterialContextHint,
+} from "@repo/contents/_types/route/material/context";
+import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import {
   createLoader,
   createParser,
   createSerializer,
   type LoaderInput,
 } from "nuqs/server";
-import {
-  encodeMaterialContextHint,
-  MATERIAL_CONTEXT_QUERY_PARAM,
-  type MaterialContextIdentity,
-  readMaterialContextHint,
-} from "@/lib/routing/material/context";
 
 /**
  * Parses the public `ctx` query value through the route-owned context grammar.
@@ -19,7 +18,7 @@ import {
  * or mismatched material context must be ignored rather than block the page.
  */
 function parseMaterialContextQuery(value: string) {
-  return Option.getOrNull(readMaterialContextHint(value));
+  return readMaterialContextHint(value) ?? null;
 }
 
 /**

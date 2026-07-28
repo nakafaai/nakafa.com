@@ -3,6 +3,7 @@ import "server-only";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -13,7 +14,6 @@ import {
   fetchRuntimeQuery,
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
-import type { MaterialContextIdentity } from "@/lib/routing/material/context";
 
 type PublishedMaterialIdentity = Pick<
   MaterialLessonProjection,
