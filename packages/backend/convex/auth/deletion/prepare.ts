@@ -4,7 +4,7 @@ import {
   tryUserCleanup,
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
-import { deleteAccountDeletionPreparation } from "@repo/backend/convex/auth/deletion/cancel";
+import { cancelAccountDeletionAttemptBatch } from "@repo/backend/convex/auth/deletion/cancel";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";
 import {
   type AccountDeletionPreparationOutcome,
@@ -49,7 +49,8 @@ const reserveSchoolSuccessors = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   user: AppUser,
-  preparation: AccountDeletionPreparation
+  preparation: AccountDeletionPreparation,
+  attemptId: string
 ) {
   const schoolCursor = preparation.schoolCursor ?? null;
   let pendingSchoolId = preparation.pendingSchoolId;
@@ -119,12 +120,11 @@ const reserveSchoolSuccessors = Effect.fn(
   }
 
   if (successor.kind === "not-found") {
-    yield* tryUserCleanup(() =>
-      ctx.db.patch("users", user._id, {
-        deletionPreparedAt: undefined,
-      })
+    yield* cancelAccountDeletionAttemptBatch(
+      ctx,
+      preparation.authId,
+      attemptId
     );
-    yield* deleteAccountDeletionPreparation(ctx, preparation);
     return accountDeletionPreparationOutcome.schoolSuccessorRequired;
   }
 
@@ -230,7 +230,12 @@ export const prepareAccountDeletion: (
       }
     }
 
-    const outcome = yield* reserveSchoolSuccessors(ctx, user, preparation);
+    const outcome = yield* reserveSchoolSuccessors(
+      ctx,
+      user,
+      preparation,
+      attemptId
+    );
 
     if (outcome === accountDeletionPreparationOutcome.ready) {
       yield* completePreparation(ctx, user, preparation);

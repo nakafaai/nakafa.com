@@ -1,7 +1,7 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
 import {
-  cancelAccountDeletionAttempt,
+  cancelAccountDeletionAttemptBatch,
   cancelAccountDeletion as cancelAccountDeletionProgram,
 } from "@repo/backend/convex/auth/deletion/cancel";
 import { prepareAccountDeletion as prepareAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/prepare";
@@ -17,11 +17,6 @@ import { makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const continueAccountDeletionCancellationReference = makeFunctionReference<
-  "mutation",
-  { attemptId: string; authId: string },
-  null
->("auth/deletion:continueAccountDeletionCancellation");
 const cancelAccountDeletionReference = makeFunctionReference<
   "mutation",
   {
@@ -30,21 +25,6 @@ const cancelAccountDeletionReference = makeFunctionReference<
   },
   boolean
 >("auth/deletion:cancelAccountDeletion");
-
-const cancelAccountDeletionAttemptBatch = Effect.fn(
-  "auth.deletion.cancelAccountDeletionAttemptBatch"
-)(function* (ctx: MutationCtx, authId: string, attemptId: string) {
-  const hasMore = yield* cancelAccountDeletionAttempt(ctx, authId, attemptId);
-
-  if (hasMore) {
-    yield* tryUserCleanup(() =>
-      ctx.scheduler.runAfter(0, continueAccountDeletionCancellationReference, {
-        attemptId,
-        authId,
-      })
-    );
-  }
-});
 
 const cancelAccountDeletionRecoveryBatch = Effect.fn(
   "auth.deletion.cancelAccountDeletionRecoveryBatch"

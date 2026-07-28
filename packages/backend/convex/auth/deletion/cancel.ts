@@ -6,7 +6,14 @@ import {
 } from "@repo/backend/convex/auth/cleanup/spec";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/convex/auth/deletion/spec";
+import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
+
+const continueAccountDeletionCancellationReference = makeFunctionReference<
+  "mutation",
+  { attemptId: string; authId: string },
+  null
+>("auth/deletion:continueAccountDeletionCancellation");
 
 /** Removes one bounded reservation batch and then its empty preparation. */
 export const deleteAccountDeletionPreparation = Effect.fn(
@@ -119,6 +126,22 @@ export const cancelAccountDeletionAttempt = Effect.fn(
   }
 
   return yield* deleteAccountDeletionPreparation(ctx, preparation);
+});
+
+/** Cancels one attempt batch and transactionally schedules any continuation. */
+export const cancelAccountDeletionAttemptBatch = Effect.fn(
+  "auth.deletion.cancelAccountDeletionAttemptBatch"
+)(function* (ctx: MutationCtx, authId: string, attemptId: string) {
+  const hasMore = yield* cancelAccountDeletionAttempt(ctx, authId, attemptId);
+
+  if (hasMore) {
+    yield* tryUserCleanup(() =>
+      ctx.scheduler.runAfter(0, continueAccountDeletionCancellationReference, {
+        attemptId,
+        authId,
+      })
+    );
+  }
 });
 
 /** Removes finalized preparation metadata once its cleanup workflow is active. */

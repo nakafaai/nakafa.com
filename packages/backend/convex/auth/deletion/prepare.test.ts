@@ -1,3 +1,4 @@
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   ACCOUNT_DELETION_RECOVERY_DELAY_MS,
@@ -46,6 +47,43 @@ function insertUser(
   });
 }
 
+/** Inserts one school owned by the test user. */
+function insertOwnedSchool(
+  ctx: MutationCtx,
+  ownerId: Id<"users">,
+  slug: string
+) {
+  return ctx.db.insert("schools", {
+    city: "Jakarta",
+    createdBy: ownerId,
+    currentStudents: 0,
+    currentTeachers: 0,
+    email: `${slug}@example.com`,
+    name: slug,
+    province: "DKI Jakarta",
+    slug,
+    type: "high-school",
+    updatedAt: NOW,
+  });
+}
+
+/** Inserts one active school membership. */
+function insertActiveSchoolMember(
+  ctx: MutationCtx,
+  schoolId: Id<"schools">,
+  userId: Id<"users">,
+  role: Doc<"schoolMembers">["role"] = "student"
+) {
+  return ctx.db.insert("schoolMembers", {
+    joinedAt: NOW,
+    role,
+    schoolId,
+    status: "active",
+    updatedAt: NOW,
+    userId,
+  });
+}
+
 describe("auth/deletion/prepare", () => {
   it("allows an account that does not own a school", async () => {
     const t = convexTest(schema, convexModules);
@@ -64,26 +102,12 @@ describe("auth/deletion/prepare", () => {
 
     const seeded = await t.mutation(async (ctx) => {
       const ownerId = await insertUser(ctx, "school-owner");
-      const schoolId = await ctx.db.insert("schools", {
-        city: "Jakarta",
-        createdBy: ownerId,
-        currentStudents: 0,
-        currentTeachers: 0,
-        email: "school@example.com",
-        name: "Owner-only School",
-        province: "DKI Jakarta",
-        slug: "owner-only-school",
-        type: "high-school",
-        updatedAt: NOW,
-      });
-      await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "admin",
-        schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: ownerId,
-      });
+      const schoolId = await insertOwnedSchool(
+        ctx,
+        ownerId,
+        "owner-only-school"
+      );
+      await insertActiveSchoolMember(ctx, schoolId, ownerId, "admin");
 
       return { ownerId, schoolId };
     });
@@ -118,42 +142,15 @@ describe("auth/deletion/prepare", () => {
         { deletedAt: NOW }
       );
       const successorId = await insertUser(ctx, "transfer-successor");
-      const schoolId = await ctx.db.insert("schools", {
-        city: "Jakarta",
-        createdBy: ownerId,
-        currentStudents: 1,
-        currentTeachers: 0,
-        email: "school@example.com",
-        name: "Shared School",
-        province: "DKI Jakarta",
-        slug: "shared-school",
-        type: "high-school",
-        updatedAt: NOW,
-      });
-      await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "admin",
+      const schoolId = await insertOwnedSchool(ctx, ownerId, "shared-school");
+      await insertActiveSchoolMember(ctx, schoolId, ownerId, "admin");
+      await insertActiveSchoolMember(
+        ctx,
         schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: ownerId,
-      });
-      await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "teacher",
-        schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: deletingSuccessorId,
-      });
-      await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "student",
-        schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: successorId,
-      });
+        deletingSuccessorId,
+        "teacher"
+      );
+      await insertActiveSchoolMember(ctx, schoolId, successorId);
 
       return { ownerId, schoolId, successorId };
     });
@@ -207,26 +204,8 @@ describe("auth/deletion/prepare", () => {
     const ownerId = await t.mutation(async (ctx) => {
       const ownerId = await insertUser(ctx, "quiesced-owner");
       const successorId = await insertUser(ctx, "quiesced-successor");
-      const schoolId = await ctx.db.insert("schools", {
-        city: "Jakarta",
-        createdBy: ownerId,
-        currentStudents: 1,
-        currentTeachers: 0,
-        email: "quiesced-school@example.com",
-        name: "Quiesced School",
-        province: "DKI Jakarta",
-        slug: "quiesced-school",
-        type: "high-school",
-        updatedAt: NOW,
-      });
-      await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "student",
-        schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: successorId,
-      });
+      const schoolId = await insertOwnedSchool(ctx, ownerId, "quiesced-school");
+      await insertActiveSchoolMember(ctx, schoolId, successorId);
       return ownerId;
     });
 
@@ -255,34 +234,18 @@ describe("auth/deletion/prepare", () => {
         "concurrent-successor",
         { deletionPreparedAt: NOW }
       );
-      const schoolId = await ctx.db.insert("schools", {
-        city: "Jakarta",
-        createdBy: ownerId,
-        currentStudents: 0,
-        currentTeachers: 1,
-        email: "school@example.com",
-        name: "Concurrent Deletion School",
-        province: "DKI Jakarta",
-        slug: "concurrent-deletion-school",
-        type: "high-school",
-        updatedAt: NOW,
-      });
-      await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "admin",
+      const schoolId = await insertOwnedSchool(
+        ctx,
+        ownerId,
+        "concurrent-deletion-school"
+      );
+      await insertActiveSchoolMember(ctx, schoolId, ownerId, "admin");
+      await insertActiveSchoolMember(
+        ctx,
         schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: ownerId,
-      });
-      await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "teacher",
-        schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: deletingSuccessorId,
-      });
+        deletingSuccessorId,
+        "teacher"
+      );
 
       return ownerId;
     });
@@ -306,26 +269,12 @@ describe("auth/deletion/prepare", () => {
     const reservedUserId = await t.mutation(async (ctx) => {
       const ownerId = await insertUser(ctx, "reserving-owner");
       const successorId = await insertUser(ctx, "reserved-successor");
-      const schoolId = await ctx.db.insert("schools", {
-        city: "Jakarta",
-        createdBy: ownerId,
-        currentStudents: 1,
-        currentTeachers: 0,
-        email: "reserved@example.com",
-        name: "Reserved School",
-        province: "DKI Jakarta",
-        slug: "reserved-school",
-        type: "high-school",
-        updatedAt: NOW,
-      });
-      const membershipId = await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "student",
+      const schoolId = await insertOwnedSchool(ctx, ownerId, "reserved-school");
+      const membershipId = await insertActiveSchoolMember(
+        ctx,
         schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: successorId,
-      });
+        successorId
+      );
       const preparationId = await ctx.db.insert("accountDeletionPreparations", {
         attemptId: ATTEMPT_ID,
         authId: "reserving-owner",
@@ -425,26 +374,12 @@ describe("auth/deletion/prepare", () => {
         index <= ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
         index += 1
       ) {
-        const schoolId = await ctx.db.insert("schools", {
-          city: "Jakarta",
-          createdBy: ownerId,
-          currentStudents: 1,
-          currentTeachers: 0,
-          email: `many-schools-${index}@example.com`,
-          name: `Many Schools ${index}`,
-          province: "DKI Jakarta",
-          slug: `many-schools-${index}`,
-          type: "high-school",
-          updatedAt: NOW,
-        });
-        await ctx.db.insert("schoolMembers", {
-          joinedAt: NOW,
-          role: "student",
-          schoolId,
-          status: "active",
-          updatedAt: NOW,
-          userId: successorId,
-        });
+        const schoolId = await insertOwnedSchool(
+          ctx,
+          ownerId,
+          `many-schools-${index}`
+        );
+        await insertActiveSchoolMember(ctx, schoolId, successorId);
       }
 
       return ownerId;
@@ -468,5 +403,72 @@ describe("auth/deletion/prepare", () => {
     expect(state.transferCount).toBe(
       ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE + 1
     );
+  });
+
+  it("continues canceling prior reservations after a later school has no successor", async () => {
+    vi.useFakeTimers();
+    const t = convexTest(schema, convexModules);
+    const ownerId = await t.mutation(async (ctx) => {
+      const insertedOwnerId = await insertUser(ctx, "partially-reserved-owner");
+      const successorId = await insertUser(ctx, "partially-reserved-successor");
+
+      for (
+        let index = 0;
+        index <= ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
+        index += 1
+      ) {
+        const schoolId = await insertOwnedSchool(
+          ctx,
+          insertedOwnerId,
+          `partially-reserved-${index}`
+        );
+        await insertActiveSchoolMember(ctx, schoolId, successorId);
+      }
+
+      await insertOwnedSchool(ctx, insertedOwnerId, "successor-required");
+
+      return insertedOwnerId;
+    });
+    const outcome = await settlePreparation(() =>
+      t.mutation((ctx) =>
+        runConvexProgram(
+          prepareAccountDeletion(ctx, "partially-reserved-owner", ATTEMPT_ID)
+        )
+      )
+    );
+    const partial = await t.query(async (ctx) => ({
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      preparation: await ctx.db.query("accountDeletionPreparations").unique(),
+      transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
+      user: await ctx.db.get("users", ownerId),
+    }));
+
+    expect(outcome).toBe("school-successor-required");
+    expect(partial.user).not.toHaveProperty("deletionPreparedAt");
+    expect(partial.preparation).not.toBeNull();
+    expect(partial.transfers).toHaveLength(1);
+    expect(partial.jobs).toEqual([
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            attemptId: ATTEMPT_ID,
+            authId: "partially-reserved-owner",
+          }),
+        ],
+        name: expect.stringContaining("continueAccountDeletionCancellation"),
+      }),
+    ]);
+
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const settled = await t.query(async (ctx) => ({
+      preparations: await ctx.db.query("accountDeletionPreparations").collect(),
+      transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
+    }));
+
+    expect(settled).toEqual({
+      preparations: [],
+      transfers: [],
+    });
   });
 });
