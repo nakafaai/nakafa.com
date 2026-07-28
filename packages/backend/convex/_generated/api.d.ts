@@ -103,6 +103,7 @@ import type * as classes_constants from "../classes/constants.js";
 import type * as classes_forums_aggregate from "../classes/forums/aggregate.js";
 import type * as classes_forums_attachments_impl from "../classes/forums/attachments/impl.js";
 import type * as classes_forums_attachments_spec from "../classes/forums/attachments/spec.js";
+import type * as classes_forums_cleanup from "../classes/forums/cleanup.js";
 import type * as classes_forums_internalMutations from "../classes/forums/internalMutations.js";
 import type * as classes_forums_mutations_forums from "../classes/forums/mutations/forums.js";
 import type * as classes_forums_mutations_posts from "../classes/forums/mutations/posts.js";
@@ -580,6 +581,7 @@ declare const fullApi: ApiFromModules<{
   "classes/forums/aggregate": typeof classes_forums_aggregate;
   "classes/forums/attachments/impl": typeof classes_forums_attachments_impl;
   "classes/forums/attachments/spec": typeof classes_forums_attachments_spec;
+  "classes/forums/cleanup": typeof classes_forums_cleanup;
   "classes/forums/internalMutations": typeof classes_forums_internalMutations;
   "classes/forums/mutations/forums": typeof classes_forums_mutations_forums;
   "classes/forums/mutations/posts": typeof classes_forums_mutations_posts;

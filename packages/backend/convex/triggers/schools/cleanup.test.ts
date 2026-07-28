@@ -1,4 +1,4 @@
-import { internal } from "@repo/backend/convex/_generated/api";
+import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -73,26 +73,6 @@ async function insertForum(
   });
 }
 
-/** Insert one forum post row owned by a forum. */
-async function insertForumPost(
-  ctx: MutationCtx,
-  classId: Id<"schoolClasses">,
-  forumId: Id<"schoolClassForums">,
-  userId: Id<"users">
-) {
-  return await ctx.db.insert("schoolClassForumPosts", {
-    forumId,
-    classId,
-    body: "Post body",
-    mentions: [],
-    replyCount: 0,
-    reactionCounts: [],
-    sequence: 1,
-    createdBy: userId,
-    updatedAt: NOW,
-  });
-}
-
 /** Insert one unread notification and its current unread count row. */
 async function insertUnreadNotification(
   ctx: MutationCtx,
@@ -117,11 +97,23 @@ async function insertUnreadNotification(
     previewTitle: "Preview",
     previewBody: "Preview body",
   });
-  await ctx.db.insert("notificationCounts", {
-    userId: recipientId,
-    unreadCount: 1,
-    updatedAt: NOW,
-  });
+  const count = await ctx.db
+    .query("notificationCounts")
+    .withIndex("by_userId", (query) => query.eq("userId", recipientId))
+    .unique();
+
+  if (count) {
+    await ctx.db.patch("notificationCounts", count._id, {
+      unreadCount: count.unreadCount + 1,
+      updatedAt: NOW,
+    });
+  } else {
+    await ctx.db.insert("notificationCounts", {
+      userId: recipientId,
+      unreadCount: 1,
+      updatedAt: NOW,
+    });
+  }
 }
 
 describe("triggers/schools/cleanupDeletedClass", () => {
@@ -212,16 +204,33 @@ describe("triggers/schools/cleanupDeletedClass", () => {
 
 describe("triggers/schools/cleanupDeletedForum", () => {
   it("removes rows owned by a deleted forum", async () => {
+    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = createConvexTestWithBetterAuth();
-    await t.mutation(async (ctx) => {
+    const seeded = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "forum",
       });
       const schoolId = await insertSchool(ctx, viewer.userId);
       const classId = await insertClass(ctx, schoolId, viewer.userId);
+      await ctx.db.insert("schoolMembers", {
+        joinedAt: NOW,
+        role: "admin",
+        schoolId,
+        status: "active",
+        updatedAt: NOW,
+        userId: viewer.userId,
+      });
+      await ctx.db.insert("schoolClassMembers", {
+        classId,
+        role: "teacher",
+        schoolId,
+        teacherRole: "primary",
+        updatedAt: NOW,
+        userId: viewer.userId,
+      });
       const forumId = await insertForum(ctx, classId, schoolId, viewer.userId);
       await ctx.db.insert("schoolClassForumReactions", {
         forumId,
@@ -251,135 +260,122 @@ describe("triggers/schools/cleanupDeletedForum", () => {
         mutedAt: NOW,
         userId: viewer.userId,
       });
-      await ctx.runMutation(
-        internal.triggers.schools.cleanup.cleanupDeletedForum,
-        {
-          forumId,
-        }
-      );
 
-      expect(
-        await ctx.db
-          .query("schoolClassForumReactions")
-          .withIndex("by_forumId_and_emoji_and_userId", (q) =>
-            q.eq("forumId", forumId)
-          )
-          .collect()
-      ).toHaveLength(0);
-      expect(
-        await ctx.db
-          .query("schoolClassForumPendingUploads")
-          .withIndex("by_forumId_and_uploadedBy", (q) =>
-            q.eq("forumId", forumId)
-          )
-          .collect()
-      ).toHaveLength(0);
-      expect(
-        await ctx.db
-          .query("schoolClassForumReadStates")
-          .withIndex("by_forumId_and_userId", (q) => q.eq("forumId", forumId))
-          .collect()
-      ).toHaveLength(0);
-      expect(
-        await ctx.db
-          .query("notifications")
-          .withIndex("by_entityType_and_entityId", (q) =>
-            q.eq("entityType", "schoolClassForums").eq("entityId", forumId)
-          )
-          .collect()
-      ).toHaveLength(0);
-      expect(
-        await ctx.db
-          .query("notificationEntityMutes")
-          .withIndex("by_entityType_and_entityId", (q) =>
-            q.eq("entityType", "schoolClassForums").eq("entityId", forumId)
-          )
-          .collect()
-      ).toHaveLength(0);
-
-      const counts = await ctx.db
-        .query("notificationCounts")
-        .withIndex("by_userId", (q) => q.eq("userId", viewer.userId))
-        .collect();
-
-      expect(counts).toHaveLength(1);
-      expect(counts[0]?.unreadCount).toBe(0);
-    });
-  });
-});
-
-describe("triggers/schools/cleanupDeletedForumPost", () => {
-  it("removes rows owned by a deleted forum post", async () => {
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createConvexTestWithBetterAuth();
-    await t.mutation(async (ctx) => {
-      const viewer = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "post",
-      });
-      const schoolId = await insertSchool(ctx, viewer.userId);
-      const classId = await insertClass(ctx, schoolId, viewer.userId);
-      const forumId = await insertForum(ctx, classId, schoolId, viewer.userId);
-      const postId = await insertForumPost(
-        ctx,
-        classId,
+      return {
+        authUserId: viewer.authUserId,
         forumId,
-        viewer.userId
-      );
+        sessionId: viewer.sessionId,
+        userId: viewer.userId,
+      };
+    });
+    const owner = t.withIdentity({
+      sessionId: seeded.sessionId,
+      subject: seeded.authUserId,
+    });
+    const postId = await owner.mutation(
+      api.classes.forums.mutations.posts.createForumPost,
+      {
+        body: "Post body",
+        forumId: seeded.forumId,
+      }
+    );
+
+    await t.mutation(async (ctx) => {
       await ctx.db.insert("schoolClassForumPostReactions", {
         postId,
-        userId: viewer.userId,
+        userId: seeded.userId,
         emoji: "🔥",
       });
       await insertUnreadNotification(ctx, {
         entityId: postId,
         entityType: "schoolClassForumPosts",
-        recipientId: viewer.userId,
+        recipientId: seeded.userId,
       });
       await ctx.db.insert("notificationEntityMutes", {
         entityId: postId,
         entityType: "schoolClassForumPosts",
         mutedAt: NOW,
-        userId: viewer.userId,
+        userId: seeded.userId,
       });
-      await ctx.runMutation(
-        internal.triggers.schools.cleanup.cleanupDeletedForumPost,
-        { postId }
-      );
+    });
 
-      expect(
-        await ctx.db
-          .query("schoolClassForumPostReactions")
-          .withIndex("by_postId_and_emoji_and_userId", (q) =>
-            q.eq("postId", postId)
-          )
-          .collect()
-      ).toHaveLength(0);
-      expect(
-        await ctx.db
-          .query("notifications")
-          .withIndex("by_entityType_and_entityId", (q) =>
-            q.eq("entityType", "schoolClassForumPosts").eq("entityId", postId)
-          )
-          .collect()
-      ).toHaveLength(0);
-      expect(
-        await ctx.db
-          .query("notificationEntityMutes")
-          .withIndex("by_entityType_and_entityId", (q) =>
-            q.eq("entityType", "schoolClassForumPosts").eq("entityId", postId)
-          )
-          .collect()
-      ).toHaveLength(0);
+    await t.mutation(internal.triggers.schools.cleanup.cleanupDeletedForum, {
+      forumId: seeded.forumId,
+    });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    vi.useRealTimers();
 
-      const counts = await ctx.db
+    const result = await t.query(async (ctx) => ({
+      counts: await ctx.db
         .query("notificationCounts")
-        .withIndex("by_userId", (q) => q.eq("userId", viewer.userId))
-        .collect();
+        .withIndex("by_userId", (query) => query.eq("userId", seeded.userId))
+        .collect(),
+      forumMutes: await ctx.db
+        .query("notificationEntityMutes")
+        .withIndex("by_entityType_and_entityId", (query) =>
+          query
+            .eq("entityType", "schoolClassForums")
+            .eq("entityId", seeded.forumId)
+        )
+        .collect(),
+      forumNotifications: await ctx.db
+        .query("notifications")
+        .withIndex("by_entityType_and_entityId", (query) =>
+          query
+            .eq("entityType", "schoolClassForums")
+            .eq("entityId", seeded.forumId)
+        )
+        .collect(),
+      pendingUploads: await ctx.db
+        .query("schoolClassForumPendingUploads")
+        .withIndex("by_forumId_and_uploadedBy", (query) =>
+          query.eq("forumId", seeded.forumId)
+        )
+        .collect(),
+      post: await ctx.db.get("schoolClassForumPosts", postId),
+      postMutes: await ctx.db
+        .query("notificationEntityMutes")
+        .withIndex("by_entityType_and_entityId", (query) =>
+          query.eq("entityType", "schoolClassForumPosts").eq("entityId", postId)
+        )
+        .collect(),
+      postNotifications: await ctx.db
+        .query("notifications")
+        .withIndex("by_entityType_and_entityId", (query) =>
+          query.eq("entityType", "schoolClassForumPosts").eq("entityId", postId)
+        )
+        .collect(),
+      postReactions: await ctx.db
+        .query("schoolClassForumPostReactions")
+        .withIndex("by_postId_and_emoji_and_userId", (query) =>
+          query.eq("postId", postId)
+        )
+        .collect(),
+      reactions: await ctx.db
+        .query("schoolClassForumReactions")
+        .withIndex("by_forumId_and_emoji_and_userId", (query) =>
+          query.eq("forumId", seeded.forumId)
+        )
+        .collect(),
+      readStates: await ctx.db
+        .query("schoolClassForumReadStates")
+        .withIndex("by_forumId_and_userId", (query) =>
+          query.eq("forumId", seeded.forumId)
+        )
+        .collect(),
+    }));
 
-      expect(counts).toHaveLength(1);
-      expect(counts[0]?.unreadCount).toBe(0);
+    expect(result).toEqual({
+      counts: [expect.objectContaining({ unreadCount: 0 })],
+      forumMutes: [],
+      forumNotifications: [],
+      pendingUploads: [],
+      post: null,
+      postMutes: [],
+      postNotifications: [],
+      postReactions: [],
+      reactions: [],
+      readStates: [],
     });
   });
 });
