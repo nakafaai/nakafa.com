@@ -6,6 +6,7 @@ import {
 } from "@repo/backend/convex/auth/deletion/cancel";
 import { prepareAccountDeletion as prepareAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/prepare";
 import {
+  type AccountDeletionPreparationVersion,
   accountDeletionPreparationOutcomeValidator,
   accountDeletionPreparationVersionValidator,
 } from "@repo/backend/convex/auth/deletion/spec";
@@ -21,6 +22,14 @@ const continueAccountDeletionCancellationReference = makeFunctionReference<
   { attemptId: string; authId: string },
   null
 >("auth/deletion:continueAccountDeletionCancellation");
+const cancelAccountDeletionReference = makeFunctionReference<
+  "mutation",
+  {
+    authId: string;
+    expectedPreparation: AccountDeletionPreparationVersion;
+  },
+  boolean
+>("auth/deletion:cancelAccountDeletion");
 
 const cancelAccountDeletionAttemptBatch = Effect.fn(
   "auth.deletion.cancelAccountDeletionAttemptBatch"
@@ -35,6 +44,31 @@ const cancelAccountDeletionAttemptBatch = Effect.fn(
       })
     );
   }
+});
+
+const cancelAccountDeletionRecoveryBatch = Effect.fn(
+  "auth.deletion.cancelAccountDeletionRecoveryBatch"
+)(function* (
+  ctx: MutationCtx,
+  authId: string,
+  expectedPreparation: AccountDeletionPreparationVersion
+) {
+  const hasMore = yield* cancelAccountDeletionProgram(
+    ctx,
+    authId,
+    expectedPreparation
+  );
+
+  if (hasMore) {
+    yield* tryUserCleanup(() =>
+      ctx.scheduler.runAfter(0, cancelAccountDeletionReference, {
+        authId,
+        expectedPreparation,
+      })
+    );
+  }
+
+  return hasMore;
 });
 
 /** Reserves every owned school's successor before auth deletion. */
@@ -65,7 +99,7 @@ export const prepareCurrentAccountDeletion = mutation({
   },
 });
 
-/** Cancels one exact prepared deletion during durable recovery. */
+/** Cancels one versioned recovery batch and schedules any continuation. */
 export const cancelAccountDeletion = internalMutation({
   args: {
     authId: v.string(),
@@ -74,7 +108,11 @@ export const cancelAccountDeletion = internalMutation({
   returns: v.boolean(),
   handler: (ctx, args) =>
     runConvexProgram(
-      cancelAccountDeletionProgram(ctx, args.authId, args.expectedPreparation)
+      cancelAccountDeletionRecoveryBatch(
+        ctx,
+        args.authId,
+        args.expectedPreparation
+      )
     ),
 });
 
