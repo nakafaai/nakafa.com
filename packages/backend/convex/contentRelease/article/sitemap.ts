@@ -1,11 +1,11 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import {
-  ARTICLE_BUCKET_LIMIT,
-  ARTICLE_BUCKET_SIZE,
-  isArticleBucket,
-} from "@repo/backend/convex/contentRelease/article/bucket";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
 import { readArticlePartition } from "@repo/backend/convex/contentRelease/article/partition";
+import {
+  CONTENT_BUCKET_LIMIT,
+  CONTENT_BUCKET_SIZE,
+  isProjectionBucket,
+} from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 
@@ -22,9 +22,9 @@ export const readArticleBuckets = Effect.fn(
     ctx.db
       .query("articleBuckets")
       .withIndex("by_locale_and_bucket", (index) => index.eq("locale", locale))
-      .take(ARTICLE_BUCKET_LIMIT + 1)
+      .take(CONTENT_BUCKET_LIMIT + 1)
   );
-  if (rows.length > ARTICLE_BUCKET_LIMIT) {
+  if (rows.length > CONTENT_BUCKET_LIMIT) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Article sitemap buckets for ${locale} exceed their fixed partition space.`
@@ -33,11 +33,11 @@ export const readArticleBuckets = Effect.fn(
 
   for (const row of rows) {
     if (
-      !isArticleBucket(row.bucket) ||
+      !isProjectionBucket(row.bucket) ||
       row.articleCount < 0 ||
       row.categoryCount < 0 ||
       row.articleCount + row.categoryCount === 0 ||
-      row.articleCount + row.categoryCount > ARTICLE_BUCKET_SIZE
+      row.articleCount + row.categoryCount > CONTENT_BUCKET_SIZE
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

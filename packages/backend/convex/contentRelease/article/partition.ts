@@ -1,13 +1,13 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import {
-  ARTICLE_BUCKET_SIZE,
-  isArticleBucket,
-} from "@repo/backend/convex/contentRelease/article/bucket";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
 import {
   verifyArticle,
   verifyCategory,
 } from "@repo/backend/convex/contentRelease/article/verify";
+import {
+  CONTENT_BUCKET_SIZE,
+  isProjectionBucket,
+} from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 
@@ -19,7 +19,7 @@ export const readArticlePartition = Effect.fn(
   locale: Parameters<typeof loadArticleOwner>[1],
   bucket: string
 ) {
-  if (!isArticleBucket(bucket)) {
+  if (!isProjectionBucket(bucket)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
       "Article partition must be three lowercase hexadecimal characters."
@@ -46,7 +46,7 @@ export const readArticlePartition = Effect.fn(
         .withIndex("by_locale_and_bucket_and_publicPath", (index) =>
           index.eq("locale", locale).eq("bucket", bucket)
         )
-        .take(ARTICLE_BUCKET_SIZE + 1)
+        .take(CONTENT_BUCKET_SIZE + 1)
     ),
     Effect.promise(() =>
       ctx.db
@@ -54,7 +54,7 @@ export const readArticlePartition = Effect.fn(
         .withIndex("by_locale_and_bucket_and_category", (index) =>
           index.eq("locale", locale).eq("bucket", bucket)
         )
-        .take(ARTICLE_BUCKET_SIZE + 1)
+        .take(CONTENT_BUCKET_SIZE + 1)
     ),
   ]);
   if (!count) {
@@ -63,7 +63,7 @@ export const readArticlePartition = Effect.fn(
   if (
     articles.length !== count.articleCount ||
     categories.length !== count.categoryCount ||
-    articles.length + categories.length > ARTICLE_BUCKET_SIZE
+    articles.length + categories.length > CONTENT_BUCKET_SIZE
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

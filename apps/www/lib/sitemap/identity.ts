@@ -1,5 +1,5 @@
 import type { api } from "@repo/backend/convex/_generated/api";
-import { isArticleBucket } from "@repo/backend/convex/contentRelease/article/bucket";
+import { isProjectionBucket } from "@repo/backend/convex/contentRelease/bucket";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs } from "convex/server";
 import { hasLocale, type Locale } from "next-intl";
@@ -84,7 +84,7 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
 
   if (prefix === "article") {
     const bucket = segments[2];
-    if (segments.length !== 3 || !bucket || !isArticleBucket(bucket)) {
+    if (segments.length !== 3 || !bucket || !isProjectionBucket(bucket)) {
       return null;
     }
     return { bucket, id, kind: "article", locale };

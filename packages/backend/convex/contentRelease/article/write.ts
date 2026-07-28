@@ -1,10 +1,8 @@
 import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  adjustArticleBucket,
-  getArticleBucket,
-} from "@repo/backend/convex/contentRelease/article/bucket";
+import { adjustArticleBucket } from "@repo/backend/convex/contentRelease/article/bucket";
+import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import {
   ensureDocumentSize,
   READ_MODEL_DOCUMENT_LIMIT,
@@ -158,7 +156,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
       `Article entry ${head.contentKey}/${head.locale} lost its public identity.`
     );
   }
-  const bucket = getArticleBucket(head.projectionHash);
+  const bucket = getHashBucket(head.projectionHash);
   if (!bucket) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

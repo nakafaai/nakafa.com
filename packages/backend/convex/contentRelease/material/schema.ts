@@ -8,7 +8,10 @@ import { v } from "convex/values";
 const tables = {
   /** Active public material lessons indexed for curriculum-card assembly. */
   materialCatalog: defineTable({
+    assetId: v.optional(v.string()),
+    bucket: v.optional(v.string()),
     contentKey: v.string(),
+    date: v.optional(v.string()),
     locale: localeValidator,
     materialKey: v.string(),
     order: v.number(),
@@ -22,7 +25,18 @@ const tables = {
     sourcePath: v.string(),
   })
     .index("by_contentKey_and_locale", ["contentKey", "locale"])
+    .index("by_locale_and_assetId", ["locale", "assetId"])
     .index("by_locale_and_publicPath", ["locale", "publicPath"])
+    .index("by_locale_and_date_and_contentKey", [
+      "locale",
+      "date",
+      "contentKey",
+    ])
+    .index("by_locale_and_bucket_and_publicPath", [
+      "locale",
+      "bucket",
+      "publicPath",
+    ])
     .index("by_locale_and_parentPath_and_order_and_publicPath", [
       "locale",
       "parentPath",
@@ -35,6 +49,13 @@ const tables = {
       "order",
       "publicPath",
     ]),
+
+  /** Non-empty deterministic partitions for bounded material discovery. */
+  materialBuckets: defineTable({
+    bucket: v.string(),
+    count: v.number(),
+    locale: localeValidator,
+  }).index("by_locale_and_bucket", ["locale", "bucket"]),
 };
 
 export default tables;
