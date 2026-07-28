@@ -1,5 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import {
   listCatalogSets,
   listSetsByStatus,
@@ -25,7 +25,7 @@ export const list = query({
       return emptySetPage;
     }
 
-    const auth = await getOptionalAppUser(ctx);
+    const auth = await getOptionalAppUserForRead(ctx);
 
     if (args.sort.field === "publishedScore") {
       if (auth) {
@@ -52,7 +52,7 @@ export const byStatus = query({
       return emptySetPage;
     }
 
-    const auth = await getOptionalAppUser(ctx);
+    const auth = await getOptionalAppUserForRead(ctx);
 
     if (!auth) {
       return emptySetPage;
@@ -71,7 +71,7 @@ export const unattempted = query({
       return emptySetPage;
     }
 
-    const auth = await getOptionalAppUser(ctx);
+    const auth = await getOptionalAppUserForRead(ctx);
     return await listUnattemptedSets(ctx, args, auth?.appUser ?? null);
   },
 });

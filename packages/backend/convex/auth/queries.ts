@@ -1,5 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 
 /**
@@ -9,7 +9,7 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
  */
 export const getCurrentUser = query({
   args: {},
-  handler: (ctx) => getOptionalAppUser(ctx),
+  handler: (ctx) => getOptionalAppUserForRead(ctx),
 });
 
 /** Gets a public user profile by app user id. */

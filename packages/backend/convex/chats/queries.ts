@@ -10,7 +10,7 @@ import {
   paginatedChatsValidator,
   paginatedMessagesValidator,
 } from "@repo/backend/convex/chats/schema";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { requireChatAccess } from "@repo/backend/convex/lib/helpers/chat";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
@@ -57,7 +57,7 @@ export const getChat = query({
   },
   returns: vv.doc("chats"),
   handler: async (ctx, args) => {
-    const viewer = await getOptionalAppUser(ctx);
+    const viewer = await getOptionalAppUserForRead(ctx);
     const viewerUserId = viewer?.appUser._id ?? null;
 
     const chat = await ctx.db.get("chats", args.chatId);
@@ -153,7 +153,7 @@ export const getOwnChats = query({
   returns: paginatedChatsValidator,
   handler: async (ctx, args) => {
     const { q: searchQuery, visibility, type, paginationOpts } = args;
-    const viewer = await getOptionalAppUser(ctx);
+    const viewer = await getOptionalAppUserForRead(ctx);
 
     if (!viewer) {
       return emptyChatsPage;
@@ -239,7 +239,7 @@ export const getChatTitle = query({
       return chat.title ?? null;
     }
 
-    const viewer = await getOptionalAppUser(ctx);
+    const viewer = await getOptionalAppUserForRead(ctx);
     const viewerUserId = viewer?.appUser._id ?? null;
 
     if (viewerUserId !== chat.userId) {
@@ -262,7 +262,7 @@ export const getPinnedNinaContextForTurn = query({
   },
   returns: nullable(ninaContextSnapshotValidator),
   handler: async (ctx, args) => {
-    const viewer = await getOptionalAppUser(ctx);
+    const viewer = await getOptionalAppUserForRead(ctx);
     const viewerUserId = viewer?.appUser._id ?? null;
 
     const chat = await ctx.db.get(args.chatId);
@@ -302,7 +302,7 @@ export const loadMessagesPage = query({
   },
   returns: paginatedMessagesValidator,
   handler: async (ctx, args) => {
-    const viewer = await getOptionalAppUser(ctx);
+    const viewer = await getOptionalAppUserForRead(ctx);
     const viewerUserId = viewer?.appUser._id ?? null;
 
     const chat = await ctx.db.get("chats", args.chatId);

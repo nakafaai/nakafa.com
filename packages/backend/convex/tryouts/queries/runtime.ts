@@ -1,6 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { getSectionScoreResult } from "@repo/backend/convex/tryouts/queries/score";
 import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
@@ -77,7 +77,7 @@ export const getSection = query({
   },
   returns: v.union(v.null(), sectionRuntimeValidator),
   handler: async (ctx, args) => {
-    const auth = await getOptionalAppUser(ctx);
+    const auth = await getOptionalAppUserForRead(ctx);
 
     if (!auth) {
       return null;

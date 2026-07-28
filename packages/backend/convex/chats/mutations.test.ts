@@ -35,7 +35,7 @@ describe("chats/mutations", () => {
     vi.setSystemTime(new Date(NOW));
   });
 
-  it("does not capture messages inserted for a deleting account", async () => {
+  it("does not capture messages inserted for a prepared account", async () => {
     const t = convexTest(schema, convexModules);
     posthogTest.register(t);
 
@@ -44,7 +44,7 @@ describe("chats/mutations", () => {
         authId: "deleted-message-trigger-user",
         credits: 0,
         creditsResetAt: NOW,
-        deletedAt: NOW,
+        deletionPreparedAt: NOW,
         email: "deleted-message-trigger-user@example.com",
         name: "Deleted Trigger User",
         plan: "free",
@@ -73,10 +73,10 @@ describe("chats/mutations", () => {
     }));
 
     expect(state.scheduledJobs).toEqual([]);
-    expect(state.user?.deletedAt).toBe(NOW);
+    expect(state.user?.deletionPreparedAt).toBe(NOW);
   });
 
-  it("rejects authenticated writes after account deletion starts", async () => {
+  it("rejects authenticated writes while account deletion is prepared", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(
       async (ctx) =>
@@ -87,7 +87,9 @@ describe("chats/mutations", () => {
     );
     await t.mutation(
       async (ctx) =>
-        await ctx.db.patch("users", identity.userId, { deletedAt: NOW })
+        await ctx.db.patch("users", identity.userId, {
+          deletionPreparedAt: NOW,
+        })
     );
 
     await expect(

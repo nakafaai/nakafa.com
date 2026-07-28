@@ -1,6 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { getTryoutStartAccess } from "@repo/backend/convex/tryouts/access/impl";
 import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
@@ -27,7 +27,7 @@ export const getStartAccess = query({
       Effect.gen(function* () {
         const auth = yield* Effect.tryPromise({
           catch: toTryoutStartError,
-          try: () => getOptionalAppUser(ctx),
+          try: () => getOptionalAppUserForRead(ctx),
         });
 
         if (!auth) {
@@ -54,7 +54,7 @@ export const getSectionContent = query({
   },
   returns: tryoutSectionContentAccessValidator,
   handler: async (ctx, args) => {
-    const auth = await getOptionalAppUser(ctx);
+    const auth = await getOptionalAppUserForRead(ctx);
 
     if (!auth) {
       return noContentAccess;

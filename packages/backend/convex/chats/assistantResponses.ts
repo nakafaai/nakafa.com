@@ -1,4 +1,5 @@
 import { ModelIdSchema } from "@repo/ai/config/model";
+import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import {
   deleteExistingResponseByIdentifier,
   getAssistantCreditUsage,
@@ -46,7 +47,7 @@ export const saveAssistantResponse = internalMutation({
     const { userId, message, parts } = args;
     const appUser = await ctx.db.get("users", userId);
 
-    if (!appUser || appUser.deletedAt !== undefined) {
+    if (!appUser || isAccountDeletionPending(appUser)) {
       return null;
     }
 
@@ -153,7 +154,7 @@ export const saveAssistantFailure = internalMutation({
     const { userId, message } = args;
     const appUser = await ctx.db.get("users", userId);
 
-    if (!appUser || appUser.deletedAt !== undefined) {
+    if (!appUser || isAccountDeletionPending(appUser)) {
       return null;
     }
 

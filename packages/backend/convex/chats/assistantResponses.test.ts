@@ -198,7 +198,7 @@ describe("chats/assistantResponses", () => {
     ]);
   });
 
-  it("ignores scheduled writes after account deletion starts", async () => {
+  it("ignores scheduled writes while account deletion is prepared", async () => {
     const t = convexTest(schema, convexModules);
 
     const { chatId, userId } = await t.mutation(async (ctx) => {
@@ -206,7 +206,7 @@ describe("chats/assistantResponses", () => {
         authId: "deleting-chat-user",
         credits: 10,
         creditsResetAt: NOW,
-        deletedAt: NOW,
+        deletionPreparedAt: NOW,
         email: "deleting-chat-user@example.com",
         name: "Deleting Chat User",
         plan: "free",

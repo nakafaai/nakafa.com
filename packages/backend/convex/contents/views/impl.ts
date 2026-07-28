@@ -14,7 +14,7 @@ import {
   type RecordContentViewArgs,
 } from "@repo/backend/convex/contents/views/spec";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalActiveAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
 
@@ -253,7 +253,7 @@ export const recordUniqueContentView = Effect.fn(
   scheduleAnalyticsPartition: ScheduleContentAnalyticsPartitionReference
 ) {
   const authContext = yield* Effect.tryPromise({
-    try: () => getOptionalAppUser(ctx),
+    try: () => getOptionalActiveAppUser(ctx),
     catch: toContentViewIoError,
   });
   const target = yield* loadContentTarget(ctx.db, args);

@@ -8,7 +8,7 @@ import {
   getUnknownErrorMessage,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -58,7 +58,7 @@ const listRecentLearning = Effect.fn("contents.recent.listRecentLearning")(
     const rawLimit = args.limit ?? defaultRecentLearningLimit;
     const limit = Math.min(Math.max(rawLimit, 0), maxRecentLearningLimit);
     const user = yield* Effect.tryPromise({
-      try: () => getOptionalAppUser(ctx),
+      try: () => getOptionalAppUserForRead(ctx),
       catch: toRecentLearningIoError,
     });
 

@@ -12,15 +12,18 @@ import {
   type DeleteExpiredCapabilityTracesArgs,
   type ListCapabilityTracesArgs,
 } from "@repo/backend/convex/chats/traces/spec";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import {
+  getOptionalAppUserForRead,
+  requireAuth,
+} from "@repo/backend/convex/lib/helpers/auth";
 import { ConvexError } from "convex/values";
 
 const defaultTraceReadLimit = 20;
 const maxTraceReadLimit = 100;
 
-/** Resolves the authenticated owner for one trace operation. */
-async function requireTraceOwner(ctx: MutationCtx | QueryCtx) {
-  const user = await getOptionalAppUser(ctx);
+/** Resolves a readable authenticated owner for one trace query. */
+async function requireTraceReadOwner(ctx: QueryCtx) {
+  const user = await getOptionalAppUserForRead(ctx);
 
   if (!user) {
     throw new ConvexError({
@@ -38,16 +41,16 @@ export async function saveCapabilityTrace(
   chatId: Doc<"chats">["_id"],
   trace: CapabilityTraceInput
 ) {
-  const user = await requireTraceOwner(ctx);
+  const { appUser } = await requireAuth(ctx);
 
-  await verifyChatOwnership(ctx, chatId, user._id);
+  await verifyChatOwnership(ctx, chatId, appUser._id);
 
   return await ctx.db.insert("ninaCapabilityTraces", {
     ...trace,
     chatId,
     expiresAt: trace.endedAt + CAPABILITY_TRACE_RETENTION_MS,
     status: trace.evidence.status,
-    userId: user._id,
+    userId: appUser._id,
   });
 }
 
@@ -56,7 +59,7 @@ export async function listCapabilityTraces(
   ctx: QueryCtx,
   args: ListCapabilityTracesArgs
 ) {
-  const user = await requireTraceOwner(ctx);
+  const user = await requireTraceReadOwner(ctx);
   const limit = Math.min(
     args.limit ?? defaultTraceReadLimit,
     maxTraceReadLimit
