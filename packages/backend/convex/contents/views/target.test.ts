@@ -1,6 +1,5 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
-import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import {
   type ContentViewTargetInput,
   loadContentTarget,
@@ -9,7 +8,7 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
-  FUNCTION_MATERIAL_V2,
+  FUNCTION_MATERIAL,
   makeMaterialProjection,
 } from "@repo/backend/test/content-material";
 import {
@@ -29,16 +28,10 @@ import {
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest, type TestConvex } from "convex-test";
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const SOURCE_PATH = "articles/politics/source-target";
-const PUBLISHED_MATERIAL = Schema.decodeUnknownSync(
-  MaterialLessonProjectionSchema
-)({
-  ...FUNCTION_MATERIAL_V2,
-  topicTitle: "Function Composition and Inverse Function",
-});
+const PUBLISHED_MATERIAL = FUNCTION_MATERIAL;
 
 /** Inserts one route-catalog target whose family remains source-owned. */
 async function insertSourceTarget(target: TestConvex<typeof schema>) {

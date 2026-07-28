@@ -5,8 +5,8 @@ import type {
   GitCommitSha,
 } from "@nakafa/aksara-contracts/ids";
 import type {
+  MaterialLessonProjection,
   MaterialMetadata,
-  MaterialProjectionWire,
 } from "@nakafa/aksara-contracts/projection/material";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
@@ -29,7 +29,7 @@ export type PublishedMaterialInput = PublishedContentInput;
 export interface PublishedMaterialContent {
   readonly body: ReactNode;
   readonly metadata: MaterialMetadata;
-  readonly projection: MaterialProjectionWire;
+  readonly projection: MaterialLessonProjection;
   readonly rawMdx: string;
   readonly sourcePath: CorpusSourcePath;
   readonly sourceRevision: GitCommitSha | null;
@@ -39,7 +39,7 @@ export interface PublishedMaterialContent {
 export interface PublishedMaterialData
   extends Omit<PublishedContentData, "projection"> {
   readonly metadata: MaterialMetadata;
-  readonly projection: MaterialProjectionWire;
+  readonly projection: MaterialLessonProjection;
 }
 
 /** Reads and strictly narrows one verified runtime exchange to material data. */

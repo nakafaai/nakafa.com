@@ -1,11 +1,10 @@
-import type { MaterialProjectionWire } from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import type { ContentPagination } from "@repo/contents/_types/content";
 import {
   readMaterialPagination,
   toLocalizedContentHref,
 } from "@repo/contents/_types/route/content";
-import { InvalidPublicRouteSourceError } from "@repo/contents/_types/route/error";
 import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
 import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
@@ -44,20 +43,7 @@ export function readMaterialParentTitle(page: MaterialPageSource) {
   if (page.kind === "source") {
     return requireParentMaterialRoute(page.route).title;
   }
-  if (page.route.topicTitle !== undefined) {
-    return page.route.topicTitle;
-  }
-  const sourceRoute = readMaterialRoutes().find(
-    (route) =>
-      route.locale === page.route.locale &&
-      String(route.sourcePath) === String(page.route.contentKey)
-  );
-  if (!sourceRoute) {
-    throw new InvalidPublicRouteSourceError({
-      message: `Retained material projection ${page.route.contentKey}/${page.route.locale} lost its source route.`,
-    });
-  }
-  return requireParentMaterialRoute(sourceRoute).title;
+  return page.route.topicTitle;
 }
 
 /** Locale counterparts owned by the selected material route source. */
@@ -85,7 +71,7 @@ export function readMaterialIcon(page: MaterialPageSource) {
 /** Builds sibling pagination with one optional context-aware href resolver. */
 function readPublishedPagination(
   page: MaterialPageSource,
-  toHref?: (target: MaterialProjectionWire) => string
+  toHref?: (target: MaterialLessonProjection) => string
 ): ContentPagination {
   const current = page.route;
   const siblings = Array.from(page.siblings).sort(
@@ -100,7 +86,7 @@ function readPublishedPagination(
     return { next: emptyItem, prev: emptyItem };
   }
   /** Converts one optional sibling projection into a navigation item. */
-  const toItem = (target: MaterialProjectionWire | undefined) => {
+  const toItem = (target: MaterialLessonProjection | undefined) => {
     if (!target) {
       return emptyItem;
     }
@@ -171,7 +157,7 @@ export async function readMaterialNavigation(
       ? index.resolveMaterialHeaderLink({ context, route })
       : undefined;
     const toHref = link
-      ? (target: MaterialProjectionWire) => {
+      ? (target: MaterialLessonProjection) => {
           const href = toMaterialHref(target);
           const targetRoute = index.resolveMaterialRouteBySource(
             target.contentKey,
@@ -196,7 +182,7 @@ export async function readMaterialNavigation(
   const valid = published.value;
   const validContext = valid?.context;
   const toHref = valid
-    ? (target: MaterialProjectionWire) => {
+    ? (target: MaterialLessonProjection) => {
         const href = toMaterialHref(target);
         if (
           !(

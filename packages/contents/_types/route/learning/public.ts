@@ -24,6 +24,7 @@ const contentRouteKinds = new Set<PublicRoute["kind"]>([
   "subject-topic",
 ]);
 
+/** Checks whether one public route is a source-owned content route. */
 function isPublicContentRoute(route: PublicRoute): route is PublicContentRoute {
   return contentRouteKinds.has(route.kind);
 }

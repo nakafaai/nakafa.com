@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { MaterialProjectionWire } from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
 import { Effect } from "effect";
@@ -12,7 +12,7 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 /** Builds one stable contextual lesson URL from source-owned identities. */
 function toMaterialHref(
   locale: Locale,
-  material: MaterialProjectionWire,
+  material: MaterialLessonProjection,
   group: PublishedCurriculumRoute
 ) {
   const context = {
@@ -28,7 +28,7 @@ function toMaterialHref(
 /** Selects only material routes explicitly owned by one curriculum context. */
 function selectContextMaterials(
   context: PublishedCurriculumRoute,
-  materials: readonly MaterialProjectionWire[]
+  materials: readonly MaterialLessonProjection[]
 ) {
   if (!(context.materialKey && context.canonicalPath)) {
     return [];
@@ -60,7 +60,7 @@ export const readPublishedMaterialCards = Effect.fn(
   readonly contexts: readonly PublishedCurriculumRoute[];
   readonly groups: readonly PublishedCurriculumRoute[];
   readonly locale: Locale;
-  readonly materials: readonly MaterialProjectionWire[];
+  readonly materials: readonly MaterialLessonProjection[];
   readonly route: PublishedCurriculumRoute;
 }) {
   if (!(route.level === "subject" || route.level === "course")) {

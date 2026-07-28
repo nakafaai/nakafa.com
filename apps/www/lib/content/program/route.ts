@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
-import type { MaterialProjectionWire } from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -28,7 +28,7 @@ export interface PublishedProgramRoute {
   readonly contexts: readonly PublishedCurriculumRoute[];
   readonly groups: readonly PublishedCurriculumRoute[];
   readonly managed: boolean;
-  readonly materials: readonly MaterialProjectionWire[];
+  readonly materials: readonly MaterialLessonProjection[];
   readonly program: null | PublishedLearningProgram;
   readonly route: null | PublishedCurriculumRoute;
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;

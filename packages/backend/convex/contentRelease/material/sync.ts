@@ -10,7 +10,7 @@ import {
   writeMaterial,
 } from "@repo/backend/convex/contentRelease/material/write";
 import { loadReleaseItems } from "@repo/backend/convex/contentRelease/model";
-import { decodeProjectionWireJson } from "@repo/backend/convex/contentRelease/parse";
+import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import { progressValidator } from "@repo/backend/convex/contentRelease/spec";
 import { loadSyncRelease } from "@repo/backend/convex/contentRelease/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -44,7 +44,7 @@ const syncMaterialIdentity = Effect.fn("contentRelease.syncMaterialIdentity")(
     if (resolved?.family !== "material") {
       return yield* deleteMaterial(ctx, contentKey, locale);
     }
-    const projection = yield* decodeProjectionWireJson(resolved.projectionJson);
+    const projection = yield* decodeProjectionJson(resolved.projectionJson);
     if (projection.kind !== "subject-lesson") {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

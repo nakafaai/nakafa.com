@@ -7,7 +7,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import type { MaterialProjectionWire } from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import {
   type RendererDomain,
   RendererDomainSchema,
@@ -55,11 +55,11 @@ export type PublishedMaterialRoute =
   | {
       readonly activeManifestHash: typeof Sha256HashSchema.Type;
       readonly activeReleaseId: typeof ReleaseIdSchema.Type;
-      readonly alternates: readonly MaterialProjectionWire[];
+      readonly alternates: readonly MaterialLessonProjection[];
       readonly managed: true;
-      readonly projection: MaterialProjectionWire;
+      readonly projection: MaterialLessonProjection;
       readonly rendererDomain: RendererDomain;
-      readonly siblings: readonly MaterialProjectionWire[];
+      readonly siblings: readonly MaterialLessonProjection[];
       readonly sourcePath: typeof CorpusSourcePathSchema.Type;
       readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
     };

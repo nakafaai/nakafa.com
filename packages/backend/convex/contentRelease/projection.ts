@@ -1,5 +1,5 @@
 import {
-  type ContentProjectionWire,
+  type ContentProjection,
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import {
@@ -24,7 +24,6 @@ import {
 import {
   decodeItemJson,
   decodeProjectionJson,
-  decodeProjectionWireJson,
   decodeReleaseJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { encodeProjectionJson } from "@repo/backend/convex/contentRelease/wire";
@@ -36,8 +35,7 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
   function* (
     releaseId: string,
     batchIndex: number,
-    projectionJson: readonly string[],
-    usePublishedWire: boolean
+    projectionJson: readonly string[]
   ) {
     if (
       projectionJson.length === 0 ||
@@ -53,10 +51,9 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
         `Projection batch ${batchIndex} exceeds its bounded transport contract.`
       );
     }
-    const projections = yield* Effect.forEach(projectionJson, (source) =>
-      usePublishedWire
-        ? decodeProjectionWireJson(source)
-        : decodeProjectionJson(source)
+    const projections = yield* Effect.forEach(
+      projectionJson,
+      decodeProjectionJson
     );
     return yield* Schema.decodeUnknown(StageProjectionBatchInputSchema)({
       batchIndex,
@@ -80,7 +77,7 @@ const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
   releaseId: string,
   batchIndex: number,
   batchHash: string,
-  projection: ContentProjectionWire,
+  projection: ContentProjection,
   projectionJson: string
 ) {
   const item = yield* loadIdentityItem(
@@ -146,12 +143,7 @@ export const stageProjectionProgram = Effect.fn(
       `Content release ${releaseId} no longer accepts projection batches.`
     );
   }
-  const { projections } = yield* decodeBatch(
-    releaseId,
-    batchIndex,
-    sources,
-    signed.manifest.origin.kind === "rollback"
-  );
+  const { projections } = yield* decodeBatch(releaseId, batchIndex, sources);
   const entries = projections.map((projection) => ({
     projection,
     projectionJson: encodeProjectionJson(projection),

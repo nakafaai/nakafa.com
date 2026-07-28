@@ -20,7 +20,6 @@ import {
   previewNextProjection,
   previewProjection,
   previewPublicRoute,
-  previewV2Projection,
 } from "@/test/content-preview";
 
 const mocks = vi.hoisted(() => ({
@@ -188,37 +187,6 @@ describe("material lesson navigation", () => {
     expect(readMaterialIcon(previewPage)).toBe("material-icon");
     expect(readMaterialIcon(shortSourcePage)).toBe("material-icon");
     expect(mocks.getMaterialIcon).toHaveBeenLastCalledWith("");
-  });
-
-  it("resolves retained v2 topic copy by exact source identity", () => {
-    const retainedPage = {
-      ...publishedPage,
-      route: {
-        ...previewV2Projection,
-        publicPath: previewNextProjection.publicPath,
-      },
-    } satisfies MaterialPageSource;
-    const wrongSourceRoute = Schema.decodeUnknownSync(
-      PublicMaterialLessonRouteSchema
-    )({
-      ...previewPublicRoute,
-      sourcePath: previewNextProjection.contentKey,
-    });
-    mocks.readMaterialRoutes.mockReturnValue([
-      idPublicRoute,
-      nextPublicRoute,
-      wrongSourceRoute,
-      previewPublicRoute,
-    ]);
-
-    expect(readMaterialParentTitle(retainedPage)).toBe(
-      previewProjection.topicTitle
-    );
-
-    mocks.readMaterialRoutes.mockReturnValue([]);
-    expect(() => readMaterialParentTitle(retainedPage)).toThrow(
-      "lost its source route"
-    );
   });
 
   it("builds plain published sibling pagination for direct visits", async () => {

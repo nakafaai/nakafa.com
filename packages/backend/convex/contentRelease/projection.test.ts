@@ -2,11 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import {
-  FUNCTION_MATERIAL_KEY,
-  FUNCTION_MATERIAL_V2_JSON,
-  testProjectionJson,
-} from "@repo/backend/test/content-material";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_DIGEST,
   TEST_RELEASE_ID,
@@ -98,27 +94,6 @@ describe("contentRelease/projection", () => {
     await expect(
       t.run((ctx) => ctx.db.query("contentItems").unique())
     ).resolves.toMatchObject({ projectionJson });
-  });
-
-  it("allows retained v2 material only for a forward rollback release", async () => {
-    const git = convexTest(schema, convexModules);
-    await git.mutation((ctx) => insertTestRelease(ctx));
-    await stageUpsert(git, FUNCTION_MATERIAL_KEY);
-    await expect(stage(git, [FUNCTION_MATERIAL_V2_JSON])).rejects.toMatchObject(
-      { data: { code: "CONTENT_RELEASE_INTEGRITY" } }
-    );
-
-    const rollback = convexTest(schema, convexModules);
-    await rollback.mutation((ctx) =>
-      insertTestRelease(ctx, { originReleaseId: "release-prior" })
-    );
-    await stageUpsert(rollback, FUNCTION_MATERIAL_KEY);
-    await expect(
-      stage(rollback, [FUNCTION_MATERIAL_V2_JSON])
-    ).resolves.toMatchObject({ created: 1 });
-    await expect(
-      rollback.run((ctx) => ctx.db.query("contentItems").unique())
-    ).resolves.toMatchObject({ projectionJson: FUNCTION_MATERIAL_V2_JSON });
   });
 
   it("rejects malformed, duplicate, and count-exceeding batches", async () => {

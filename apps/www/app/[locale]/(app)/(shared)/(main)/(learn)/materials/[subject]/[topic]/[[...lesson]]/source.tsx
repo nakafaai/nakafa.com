@@ -1,6 +1,6 @@
 import type {
+  MaterialLessonProjection,
   MaterialMetadata,
-  MaterialProjectionWire,
 } from "@nakafa/aksara-contracts/projection/material";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { isMaterialLessonRoute } from "@repo/contents/_types/route/content";
@@ -31,7 +31,7 @@ import { getAksaraUrl, getGithubUrl } from "@/lib/utils/github";
 
 /** Route data accepted while one family moves from source to Aksara. */
 export type MaterialViewRoute =
-  | MaterialProjectionWire
+  | MaterialLessonProjection
   | PublicMaterialLessonRoute;
 
 interface PreviewOwner {
@@ -43,7 +43,7 @@ interface PublishedOwner {
   readonly kind: "published";
   readonly model: Extract<
     PublishedMaterialRoute,
-    { readonly projection: MaterialProjectionWire }
+    { readonly projection: MaterialLessonProjection }
   >;
 }
 
@@ -56,24 +56,24 @@ interface SourceOwner {
 type MaterialOwner = PreviewOwner | PublishedOwner | SourceOwner;
 
 interface MaterialPageFields {
-  readonly alternates: readonly MaterialProjectionWire[];
+  readonly alternates: readonly MaterialLessonProjection[];
   readonly body: string;
   readonly children: ReactNode;
   readonly locale: Locale;
   readonly metadata: MaterialMetadata;
   readonly rendererDomain: RendererDomain | null;
-  readonly siblings: readonly MaterialProjectionWire[];
+  readonly siblings: readonly MaterialLessonProjection[];
   readonly sourceUrl: null | string;
 }
 
 interface PreviewPageSource extends MaterialPageFields {
   readonly kind: "preview";
-  readonly route: MaterialProjectionWire;
+  readonly route: MaterialLessonProjection;
 }
 
 interface PublishedPageSource extends MaterialPageFields {
   readonly kind: "published";
-  readonly route: MaterialProjectionWire;
+  readonly route: MaterialLessonProjection;
 }
 
 interface SourcePageSource extends MaterialPageFields {
@@ -88,19 +88,19 @@ export type MaterialPageSource =
   | SourcePageSource;
 
 interface MaterialMetadataFields {
-  readonly alternates: readonly MaterialProjectionWire[];
+  readonly alternates: readonly MaterialLessonProjection[];
   readonly locale: Locale;
   readonly metadata: MaterialMetadata | undefined;
 }
 
 interface PreviewMetadataSource extends MaterialMetadataFields {
   readonly kind: "preview";
-  readonly route: MaterialProjectionWire;
+  readonly route: MaterialLessonProjection;
 }
 
 interface PublishedMetadataSource extends MaterialMetadataFields {
   readonly kind: "published";
-  readonly route: MaterialProjectionWire;
+  readonly route: MaterialLessonProjection;
 }
 
 interface SourceMetadataSource extends MaterialMetadataFields {

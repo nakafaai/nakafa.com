@@ -1,7 +1,6 @@
 import {
+  type MaterialLessonProjection,
   MaterialLessonProjectionSchema,
-  MaterialProjectionV2Schema,
-  type MaterialProjectionWire,
 } from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -18,19 +17,15 @@ function projectionError(identity: MaterialProjectionIdentity) {
   return new PublishedProjectionError(identity);
 }
 
-const MaterialProjectionWireSchema = Schema.Union(
-  MaterialLessonProjectionSchema,
-  MaterialProjectionV2Schema
-);
-
 /** Strictly decodes one material projection and its requested route identity. */
 export const decodeMaterialProjection = Effect.fn(
   "NakafaMaterial.decodeProjection"
 )(function* (input: unknown, identity: MaterialProjectionIdentity) {
-  const projection = yield* Schema.decodeUnknown(MaterialProjectionWireSchema)(
-    input,
-    { onExcessProperty: "error" }
-  ).pipe(Effect.mapError(() => projectionError(identity)));
+  const projection = yield* Schema.decodeUnknown(
+    MaterialLessonProjectionSchema
+  )(input, { onExcessProperty: "error" }).pipe(
+    Effect.mapError(() => projectionError(identity))
+  );
   if (
     projection.locale !== identity.locale ||
     projection.publicPath !== identity.publicPath
@@ -47,7 +42,7 @@ export const decodeMaterialJson = Effect.fn("NakafaMaterial.decodeJson")(
       catch: () => projectionError(identity),
       try: (): unknown => JSON.parse(source),
     });
-    return yield* Schema.decodeUnknown(MaterialProjectionWireSchema)(input, {
+    return yield* Schema.decodeUnknown(MaterialLessonProjectionSchema)(input, {
       onExcessProperty: "error",
     }).pipe(Effect.mapError(() => projectionError(identity)));
   }
@@ -55,16 +50,16 @@ export const decodeMaterialJson = Effect.fn("NakafaMaterial.decodeJson")(
 
 /** Checks whether two material projections share one stable content identity. */
 export function isMaterialCounterpart(
-  current: MaterialProjectionWire,
-  candidate: MaterialProjectionWire
+  current: MaterialLessonProjection,
+  candidate: MaterialLessonProjection
 ) {
   return current.contentKey === candidate.contentKey;
 }
 
 /** Checks whether two projections belong to one localized lesson group. */
 export function isMaterialSibling(
-  current: MaterialProjectionWire,
-  candidate: MaterialProjectionWire
+  current: MaterialLessonProjection,
+  candidate: MaterialLessonProjection
 ) {
   return (
     current.locale === candidate.locale &&

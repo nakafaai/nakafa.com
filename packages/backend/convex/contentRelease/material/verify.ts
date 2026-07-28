@@ -3,7 +3,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { decodeProjectionWireJson } from "@repo/backend/convex/contentRelease/parse";
+import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect } from "effect";
 
 type MaterialRow = Doc<"materialCatalog">;
@@ -11,7 +11,7 @@ type MaterialRow = Doc<"materialCatalog">;
 /** Authenticates one self-contained active material read-model row. */
 export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
   function* (row: MaterialRow) {
-    const projection = yield* decodeProjectionWireJson(row.projectionJson);
+    const projection = yield* decodeProjectionJson(row.projectionJson);
     if (projection.kind !== "subject-lesson") {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
