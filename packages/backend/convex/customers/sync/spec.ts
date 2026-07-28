@@ -1,4 +1,7 @@
-import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
+import {
+  type ConvexTaggedError,
+  getUnknownErrorMessage,
+} from "@repo/backend/convex/lib/effect";
 import { Schema } from "effect";
 
 export const customerSyncIoErrorCode = "CUSTOMER_SYNC_IO_ERROR";
@@ -13,6 +16,14 @@ export class CustomerSyncIoError
 {
   declare readonly code: typeof customerSyncIoErrorCode;
   declare readonly message: string;
+}
+
+/** Preserves the operation context while normalizing an unknown IO failure. */
+export function customerSyncIoError(message: string, error: unknown) {
+  return new CustomerSyncIoError({
+    code: customerSyncIoErrorCode,
+    message: `${message}: ${getUnknownErrorMessage(error)}`,
+  });
 }
 
 export class UserNotFound

@@ -1,22 +1,17 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
+import {
+  completeCustomerDeletionCheckpointProgram,
+  deleteCustomerByIdProgram,
+  recordCustomerDeletionCheckpointProgram,
+} from "@repo/backend/convex/customers/deletion/billingState";
 import tables from "@repo/backend/convex/customers/schema";
-import {
-  CustomerSyncIoError,
-  customerSyncIoErrorCode,
-} from "@repo/backend/convex/customers/sync/spec";
 import { internalMutation } from "@repo/backend/convex/functions";
-import {
-  getUnknownErrorMessage,
-  runConvexProgram,
-} from "@repo/backend/convex/lib/effect";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import type { WithoutSystemFields } from "convex/server";
 import { v } from "convex/values";
-import { Effect } from "effect";
-
-const CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE = 50;
 
 /** Patches one local customer row to the latest Polar-backed fields. */
 async function patchCustomerRow(
@@ -32,76 +27,6 @@ async function patchCustomerRow(
   });
 }
 
-/** Maps local customer-deletion IO failures into the sync error contract. */
-function toCustomerDeletionError(error: unknown) {
-  return new CustomerSyncIoError({
-    code: customerSyncIoErrorCode,
-    message: `Failed to delete local customer data: ${getUnknownErrorMessage(error)}`,
-  });
-}
-
-/** Lifts one local customer-deletion operation into the Effect error channel. */
-function tryCustomerDeletion<A>(operation: () => Promise<A>) {
-  return Effect.tryPromise({
-    catch: toCustomerDeletionError,
-    try: operation,
-  });
-}
-
-/** Deletes local subscriptions before their customer-to-user mapping. */
-export const deleteCustomerByIdProgram = Effect.fn(
-  "customers.mutations.deleteCustomerById"
-)(function* (ctx: MutationCtx, polarCustomerId: string) {
-  const tombstone = yield* tryCustomerDeletion(() =>
-    ctx.db
-      .query("customerDeletionTombstones")
-      .withIndex("by_polarCustomerId", (query) =>
-        query.eq("polarCustomerId", polarCustomerId)
-      )
-      .unique()
-  );
-
-  if (!tombstone) {
-    yield* tryCustomerDeletion(() =>
-      ctx.db.insert("customerDeletionTombstones", {
-        polarCustomerId,
-      })
-    );
-  }
-
-  const subscriptions = yield* tryCustomerDeletion(() =>
-    ctx.db
-      .query("subscriptions")
-      .withIndex("by_customerId_and_status", (query) =>
-        query.eq("customerId", polarCustomerId)
-      )
-      .take(CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE)
-  );
-
-  for (const subscription of subscriptions) {
-    yield* tryCustomerDeletion(() =>
-      ctx.db.delete("subscriptions", subscription._id)
-    );
-  }
-
-  if (subscriptions.length === CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE) {
-    return true;
-  }
-
-  const customer = yield* tryCustomerDeletion(() =>
-    ctx.db
-      .query("customers")
-      .withIndex("by_polarId", (query) => query.eq("id", polarCustomerId))
-      .unique()
-  );
-
-  if (customer) {
-    yield* tryCustomerDeletion(() => ctx.db.delete("customers", customer._id));
-  }
-
-  return false;
-});
-
 /**
  * Delete a customer by Polar customer ID.
  * Internal function - called from Polar webhooks only.
@@ -113,6 +38,44 @@ export const deleteCustomerById = internalMutation({
   returns: v.boolean(),
   handler: (ctx, args) =>
     runConvexProgram(deleteCustomerByIdProgram(ctx, args.id)),
+});
+
+/** Persists the Polar ID before the external customer is anonymized. */
+export const recordCustomerDeletionCheckpoint = internalMutation({
+  args: {
+    polarCustomerId: v.string(),
+    userId: vv.id("users"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await runConvexProgram(
+      recordCustomerDeletionCheckpointProgram(
+        ctx,
+        args.polarCustomerId,
+        args.userId
+      )
+    );
+    return null;
+  },
+});
+
+/** Releases the deleted-user lookup after every local billing row is drained. */
+export const completeCustomerDeletionCheckpoint = internalMutation({
+  args: {
+    polarCustomerId: v.string(),
+    userId: vv.id("users"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await runConvexProgram(
+      completeCustomerDeletionCheckpointProgram(
+        ctx,
+        args.userId,
+        args.polarCustomerId
+      )
+    );
+    return null;
+  },
 });
 
 /**

@@ -1,8 +1,6 @@
 import { internalAction } from "@repo/backend/convex/_generated/server";
-import {
-  cleanupCustomerDataForDeletedUser,
-  syncOptionalCustomer,
-} from "@repo/backend/convex/customers/sync/impl";
+import { cleanupDeletedUserBilling } from "@repo/backend/convex/customers/deletion/billing";
+import { syncOptionalCustomer } from "@repo/backend/convex/customers/sync/impl";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
@@ -33,6 +31,6 @@ export const cleanupDeletedUserCustomerData = internalAction({
   returns: v.null(),
   handler: async (ctx, args) =>
     await runConvexProgram(
-      cleanupCustomerDataForDeletedUser(ctx, args.userId, args.authId)
+      cleanupDeletedUserBilling(ctx, args.userId, args.authId)
     ),
 });
