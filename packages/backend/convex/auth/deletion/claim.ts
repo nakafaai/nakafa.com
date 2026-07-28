@@ -9,6 +9,7 @@ import {
   type AccountDeletionPreparationOutcome,
   accountDeletionPreparationOutcome,
 } from "@repo/backend/convex/auth/deletion/spec";
+import { cancelPendingWelcomeEmail } from "@repo/backend/convex/emails/deletion";
 import { Clock, Effect } from "effect";
 
 /**
@@ -60,6 +61,7 @@ export const claimAccountDeletion: (
       return accountDeletionPreparationOutcome.temporarilyUnavailable;
     }
 
+    yield* cancelPendingWelcomeEmail(ctx, user);
     const deletionStartedAt = yield* Clock.currentTimeMillis;
 
     yield* tryUserCleanup(() =>

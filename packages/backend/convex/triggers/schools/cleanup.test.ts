@@ -1,6 +1,7 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { FORUM_PENDING_UPLOAD_EXPIRATION_MS } from "@repo/backend/convex/classes/forums/attachments/constants";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -238,8 +239,9 @@ describe("triggers/schools/cleanupDeletedForum", () => {
         emoji: "👍",
       });
       await ctx.db.insert("schoolClassForumPendingUploads", {
-        forumId,
         classId,
+        expiresAt: NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS,
+        forumId,
         uploadToken: "forum-upload-token",
         uploadedBy: viewer.userId,
         name: "draft.txt",

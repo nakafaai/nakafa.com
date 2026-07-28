@@ -3,9 +3,10 @@ import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import { FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX } from "@repo/backend/convex/classes/forums/attachments/constants";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
-import { Config, Effect, Schema } from "effect";
+import { Clock, Config, Effect, Schema } from "effect";
 
 const forumAttachmentUploadOutcomeValidator = literals(
   "accepted",
@@ -51,6 +52,7 @@ export const createForumAttachmentUploadUrl = Effect.fn(
 /** Checks the capability before an HTTP action consumes the request body. */
 export const authorize = internalQuery({
   args: {
+    authorizedAt: v.number(),
     uploadId: v.string(),
     uploadToken: v.string(),
   },
@@ -68,6 +70,7 @@ export const authorize = internalQuery({
     if (
       !upload ||
       upload.uploadToken !== args.uploadToken ||
+      upload.expiresAt <= args.authorizedAt ||
       upload.storageId
     ) {
       return false;
@@ -94,6 +97,7 @@ export const settle = internalMutation({
   },
   returns: forumAttachmentUploadOutcomeValidator,
   handler: async (ctx, args): Promise<ForumAttachmentUploadOutcome> => {
+    const settledAt = await runConvexProgram(Clock.currentTimeMillis);
     const uploadId = ctx.db.normalizeId(
       "schoolClassForumPendingUploads",
       args.uploadId
@@ -110,6 +114,12 @@ export const settle = internalMutation({
       upload.storageId
     ) {
       await ctx.storage.delete(args.storageId);
+      return "rejected";
+    }
+
+    if (upload.expiresAt <= settledAt) {
+      await ctx.storage.delete(args.storageId);
+      await ctx.db.delete("schoolClassForumPendingUploads", upload._id);
       return "rejected";
     }
 

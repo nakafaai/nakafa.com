@@ -356,6 +356,7 @@ const tables = {
   schoolClassForumPendingUploads: defineTable({
     forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
+    expiresAt: v.number(),
     uploadToken: v.string(),
     uploadedBy: v.id("users"),
     storageId: v.optional(v.id("_storage")),

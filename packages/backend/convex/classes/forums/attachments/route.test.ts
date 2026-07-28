@@ -2,6 +2,7 @@
 
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { FORUM_PENDING_UPLOAD_EXPIRATION_MS } from "@repo/backend/convex/classes/forums/attachments/constants";
 import { MAX_FORUM_ATTACHMENT_BYTES } from "@repo/backend/convex/classes/forums/utils/constants";
 import {
   insertClass,
@@ -14,7 +15,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { Effect, Schema } from "effect";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
 const polarSecretName = "POLAR_WEBHOOK_SECRET";
@@ -105,10 +106,13 @@ function expectPrivate(response: Response) {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(NOW);
   process.env[polarSecretName] = "technical-webhook-secret";
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   delete process.env[polarSecretName];
 });
 
@@ -209,6 +213,40 @@ describe("classes/forums/attachments/route", () => {
     });
   });
 
+  it("rejects an expired capability before consuming the request body", async () => {
+    const { capabilityPath, t, uploadId } = await createPendingUpload();
+    vi.setSystemTime(NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS);
+    let pulls = 0;
+    const body = new ReadableStream<Uint8Array>(
+      {
+        /** Records any attempt to consume a body after capability expiry. */
+        pull(controller) {
+          pulls += 1;
+          controller.error(new Error("Expired capability body was consumed."));
+        },
+      },
+      { highWaterMark: 0 }
+    );
+    const request = {
+      body,
+      duplex: "half",
+      headers: { "content-type": "text/plain" },
+      method: "POST",
+    } satisfies RequestInit & { readonly duplex: "half" };
+
+    const response = await t.fetch(capabilityPath, request);
+
+    expect(response.status).toBe(404);
+    expectPrivate(response);
+    expect(pulls).toBe(0);
+    await expect(response.json()).resolves.toEqual({
+      code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
+    });
+    await expect(
+      t.query((ctx) => ctx.db.get("schoolClassForumPendingUploads", uploadId))
+    ).resolves.not.toBeNull();
+  });
+
   it("rejects an oversized upload without binding storage", async () => {
     const { capabilityPath, t, uploadId } = await createPendingUpload();
     const response = await t.fetch(capabilityPath, {
@@ -275,6 +313,37 @@ describe("classes/forums/attachments/route", () => {
         uploadToken,
       })
     ).resolves.toBe("discarded");
+
+    await expect(
+      t.query(async (ctx) => ({
+        pendingUpload: await ctx.db.get(
+          "schoolClassForumPendingUploads",
+          uploadId
+        ),
+        storageMetadata: await ctx.db.system.get("_storage", storageId),
+      }))
+    ).resolves.toEqual({
+      pendingUpload: null,
+      storageMetadata: null,
+    });
+  });
+
+  it("removes a server-created object when settlement reaches its deadline", async () => {
+    const { t, uploadId, uploadToken } = await createPendingUpload();
+    const storageId = await t.run((ctx) =>
+      ctx.storage.store(new Blob(["hello"], { type: "text/plain" }))
+    );
+    vi.setSystemTime(NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS);
+
+    await expect(
+      t.mutation(internal.classes.forums.attachments.upload.settle, {
+        contentType: "text/plain",
+        size: 5,
+        storageId,
+        uploadId,
+        uploadToken,
+      })
+    ).resolves.toBe("rejected");
 
     await expect(
       t.query(async (ctx) => ({
