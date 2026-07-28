@@ -119,7 +119,7 @@ describe("contentRelease/snapshot/program", () => {
     });
   });
 
-  it("counts one sitemap bucket exactly once across an identical replay", async () => {
+  it("backfills one legacy sitemap bucket exactly once across replay", async () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const source = findCurriculum(data);
     const target = convexTest(schema, convexModules);
@@ -132,6 +132,17 @@ describe("contentRelease/snapshot/program", () => {
         )
       )
     ).resolves.toBe(false);
+    await target.mutation(async (ctx) => {
+      const route = await ctx.db.query("curriculumRoutes").unique();
+      const count = await ctx.db.query("programBuckets").unique();
+      if (!(route && count)) {
+        throw new Error("Expected one staged curriculum sitemap route.");
+      }
+      await ctx.db.patch("curriculumRoutes", route._id, {
+        bucket: undefined,
+      });
+      await ctx.db.delete("programBuckets", count._id);
+    });
     await expect(
       target.mutation((ctx) =>
         runConvexProgram(
@@ -139,6 +150,20 @@ describe("contentRelease/snapshot/program", () => {
         )
       )
     ).resolves.toBe(true);
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(
+          stageProgramRow(ctx, data.snapshotId, 2, source, rowJson)
+        )
+      )
+    ).resolves.toBe(true);
+    await expect(
+      target.run((ctx) => ctx.db.query("curriculumRoutes").unique())
+    ).resolves.toMatchObject({
+      bucket: expect.any(String),
+      index: 2,
+      snapshotId: data.snapshotId,
+    });
     await expect(
       target.run((ctx) => ctx.db.query("programBuckets").unique())
     ).resolves.toMatchObject({

@@ -160,9 +160,6 @@ const readArticleTarget = Effect.fn("contents.views.readArticleTarget")(
       row,
       owner.active.sequence
     ).pipe(Effect.mapError(toContentViewIoError));
-    if (projection.graph.assetId !== input.contentId) {
-      return { managed: true, target: null };
-    }
     return {
       managed: true,
       target: {

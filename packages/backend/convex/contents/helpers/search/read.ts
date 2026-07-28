@@ -30,7 +30,7 @@ export const readContentSearchDocuments = Effect.fn(
   }
   const owner = yield* loadSearchOwner(ctx);
   const publishedFamilies = getPublishedSearchFamilies(owner, args.section);
-  const sourceSections = getSourceSections(owner, args.section);
+  const sourceSections = getSourceSections(publishedFamilies, args.section);
   const [published, source] = yield* Effect.all(
     [
       owner && publishedFamilies.length > 0
@@ -58,15 +58,15 @@ export const readContentSearchDocuments = Effect.fn(
 
 /** Returns only sections whose source ownership remains with Nakafa. */
 function getSourceSections(
-  owner: Effect.Effect.Success<ReturnType<typeof loadSearchOwner>>,
+  publishedFamilies: ReturnType<typeof getPublishedSearchFamilies>,
   section: ContentSearchInput["section"]
 ) {
   const requested = section ? [section] : NAKAFA_CONTENT_SECTIONS;
   return requested.filter(
     (candidate): candidate is NakafaSection =>
       !(
-        (candidate === "articles" && owner?.families.includes("article")) ||
-        (candidate === "material" && owner?.families.includes("material"))
+        (candidate === "articles" && publishedFamilies.includes("article")) ||
+        (candidate === "material" && publishedFamilies.includes("material"))
       )
   );
 }

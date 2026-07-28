@@ -104,6 +104,30 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
   record: CurriculumRecord,
   rowJson: string
 ) {
+  const bucket = getHashBucket(record.rowHash);
+  if (record.row.sitemap && bucket === null) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Program snapshot ${snapshotId} has an invalid curriculum row hash.`
+    );
+  }
+  const row = {
+    ...(record.row.sitemap && bucket !== null ? { bucket } : {}),
+    index,
+    level: record.row.level,
+    locale: record.row.locale,
+    contextPath: record.row.materialContextParentPath,
+    materialKey: record.row.materialKey,
+    nodeKey: record.row.nodeKey,
+    order: record.row.order,
+    parentPath: record.row.parentPath,
+    programKey: record.row.programKey,
+    path: record.row.publicPath,
+    rowHash: record.rowHash,
+    rowJson,
+    snapshotId,
+    sourcePath: record.row.sourcePath,
+  };
   const [storedProgram, storedCurriculum] = yield* loadProgramIndex(
     ctx,
     snapshotId,
@@ -150,45 +174,47 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
         `Program snapshot ${snapshotId} has a curriculum identity collision.`
       );
     }
+    if (storedCurriculum.bucket === row.bucket) {
+      return true;
+    }
+    if (storedCurriculum.bucket !== undefined || row.bucket === undefined) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_CONFLICT",
+        `Program snapshot ${snapshotId} has a curriculum bucket collision.`
+      );
+    }
+    yield* ensureDocumentSize(
+      `Program snapshot ${snapshotId} curriculum row ${index}`,
+      row,
+      READ_MODEL_DOCUMENT_LIMIT
+    );
+    yield* Effect.promise(() =>
+      ctx.db.patch("curriculumRoutes", storedCurriculum._id, {
+        bucket: row.bucket,
+      })
+    );
+    yield* addProgramBucketRoute(
+      ctx,
+      snapshotId,
+      index,
+      record.row.locale,
+      row.bucket
+    );
     return true;
   }
-  const bucket = getHashBucket(record.rowHash);
-  if (record.row.sitemap && bucket === null) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Program snapshot ${snapshotId} has an invalid curriculum row hash.`
-    );
-  }
-  const row = {
-    ...(record.row.sitemap && bucket !== null ? { bucket } : {}),
-    index,
-    level: record.row.level,
-    locale: record.row.locale,
-    contextPath: record.row.materialContextParentPath,
-    materialKey: record.row.materialKey,
-    nodeKey: record.row.nodeKey,
-    order: record.row.order,
-    parentPath: record.row.parentPath,
-    programKey: record.row.programKey,
-    path: record.row.publicPath,
-    rowHash: record.rowHash,
-    rowJson,
-    snapshotId,
-    sourcePath: record.row.sourcePath,
-  };
   yield* ensureDocumentSize(
     `Program snapshot ${snapshotId} curriculum row ${index}`,
     row,
     READ_MODEL_DOCUMENT_LIMIT
   );
   yield* Effect.promise(() => ctx.db.insert("curriculumRoutes", row));
-  if (record.row.sitemap && bucket !== null) {
+  if (row.bucket !== undefined) {
     yield* addProgramBucketRoute(
       ctx,
       snapshotId,
       index,
       record.row.locale,
-      bucket
+      row.bucket
     );
   }
   return false;

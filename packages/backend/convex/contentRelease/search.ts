@@ -88,9 +88,27 @@ export const loadSearchOwner = Effect.fn("contentRelease.loadSearchOwner")(
       );
     }
     const families = yield* loadReleaseFamilies(active.release);
+    const readyFamilies = families.result.filter((family) => {
+      if (family === "article") {
+        return (
+          state.articleManifestHash === active.manifestHash &&
+          state.articleReleaseId === active.releaseId &&
+          state.articleSequence === active.sequence
+        );
+      }
+      if (family === "material") {
+        return (
+          state.materialManifestHash === active.manifestHash &&
+          state.materialReleaseId === active.releaseId &&
+          state.materialSequence === active.sequence
+        );
+      }
+      return true;
+    });
     return {
       families: families.result,
       manifestHash: active.manifestHash,
+      readyFamilies,
       releaseId: active.releaseId,
       sequence: active.sequence,
     };
