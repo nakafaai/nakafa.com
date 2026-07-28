@@ -82,7 +82,7 @@ describe("auth/deletion", () => {
     ).resolves.toBe(accountDeletionAttemptStatus.unknown);
   });
 
-  it("lets a prepared auth session cancel its own deletion", async () => {
+  it("lets an opaque browser attempt cancel while its auth user exists", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
@@ -102,14 +102,9 @@ describe("auth/deletion", () => {
       });
     });
 
-    await t
-      .withIdentity({
-        sessionId: identity.sessionId,
-        subject: identity.authUserId,
-      })
-      .mutation(api.auth.deletion.cancelCurrentAccountDeletion, {
-        attemptId: ATTEMPT_ID,
-      });
+    await t.mutation(api.auth.deletion.cancelAccountDeletionAttempt, {
+      attemptId: ATTEMPT_ID,
+    });
 
     const state = await t.query(async (ctx) => ({
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),
@@ -118,6 +113,36 @@ describe("auth/deletion", () => {
 
     expect(state.preparation).toBeNull();
     expect(state.user).not.toHaveProperty("deletionPreparedAt");
+  });
+
+  it("does not cancel an attempt after its auth user is gone", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const preparationId = await t.mutation(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "removed-auth-user",
+        credits: 0,
+        creditsResetAt: NOW,
+        deletionPreparedAt: NOW,
+        email: "removed-auth-user@example.com",
+        name: "Removed Auth User",
+        plan: "free",
+      });
+
+      return await ctx.db.insert("accountDeletionPreparations", {
+        attemptId: ATTEMPT_ID,
+        authId: "removed-auth-user",
+        recoveryGeneration: 0,
+        userId,
+      });
+    });
+
+    await t.mutation(api.auth.deletion.cancelAccountDeletionAttempt, {
+      attemptId: ATTEMPT_ID,
+    });
+
+    await expect(
+      t.query((ctx) => ctx.db.get("accountDeletionPreparations", preparationId))
+    ).resolves.not.toBeNull();
   });
 
   it("schedules the next versioned recovery cancellation batch", async () => {

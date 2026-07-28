@@ -410,14 +410,18 @@ describe("account deletion", () => {
     expect(failure).toBeInstanceOf(AccountDeletionSchoolMemberRequired);
   });
 
-  it("preserves a server failure when immediate cancellation also fails", async () => {
+  it("preserves the attempt when immediate cancellation also fails", async () => {
     const failure = await runDeletionFailure({
       cancelPreparation: () =>
         Promise.reject(new Error("cancellation unavailable")),
       request: requestFailure("DELETE_FAILED", 500),
     });
 
-    expect(failure).toBeInstanceOf(AccountDeletionFailed);
+    expect(failure).toMatchObject({
+      _tag: "AccountDeletionRequestUncertain",
+      attemptId: ATTEMPT_ID,
+      phase: accountDeletionRequestPhase.preparation,
+    });
   });
 
   it("leaves uncertain transport failures to durable server recovery", async () => {
