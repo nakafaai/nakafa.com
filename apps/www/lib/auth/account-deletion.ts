@@ -5,7 +5,9 @@ import {
   ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
 } from "@repo/backend/convex/auth/deletion/constants";
 import {
+  type AccountDeletionAttemptStatus,
   type AccountDeletionPreparationOutcome,
+  accountDeletionAttemptStatus,
   accountDeletionPreparationOutcome,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { Effect, Either, Schema } from "effect";
@@ -35,12 +37,16 @@ type CancelAccountDeletionRequest = (attemptId: string) => Promise<unknown>;
 type PrepareAccountDeletionRequest = (
   attemptId: string
 ) => Promise<AccountDeletionPreparationOutcome>;
+type ReconcileAccountDeletionRequest = (
+  attemptId: string
+) => Promise<AccountDeletionAttemptStatus>;
 type SignOutRequest = () => Promise<SignOutResult>;
 
 interface AccountDeletionOperations {
   readonly attemptId: string;
   readonly cancelPreparation: CancelAccountDeletionRequest;
   readonly prepare: PrepareAccountDeletionRequest;
+  readonly reconcile: ReconcileAccountDeletionRequest;
   readonly request?: DeleteUserRequest;
   readonly startPhase: AccountDeletionRequestPhase;
 }
@@ -102,6 +108,7 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     attemptId,
     cancelPreparation,
     prepare,
+    reconcile,
     request = async (requestAttemptId) =>
       await authClient.deleteUser({
         fetchOptions: {
@@ -117,6 +124,20 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
         try: () => cancelPreparation(attemptId),
         catch: () => undefined,
       }).pipe(Effect.ignore);
+    const proveCommittedDeletion = () =>
+      Effect.tryPromise({
+        try: () => reconcile(attemptId),
+        catch: () =>
+          new AccountDeletionRequestUncertain({
+            attemptId,
+            code: accountDeletionRequestUncertainCode,
+            phase: accountDeletionRequestPhase.deletion,
+          }),
+      }).pipe(
+        Effect.map(
+          (status) => status === accountDeletionAttemptStatus.committed
+        )
+      );
 
     if (startPhase === accountDeletionRequestPhase.preparation) {
       let preparationOutcome: AccountDeletionPreparationOutcome =
@@ -153,6 +174,13 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
       }
     }
 
+    if (
+      startPhase === accountDeletionRequestPhase.deletion &&
+      (yield* proveCommittedDeletion())
+    ) {
+      return;
+    }
+
     const resultOrFailure = yield* Effect.either(
       Effect.tryPromise({
         try: () => request(attemptId),
@@ -166,6 +194,12 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     );
 
     if (Either.isLeft(resultOrFailure)) {
+      const reconciliation = yield* Effect.either(proveCommittedDeletion());
+
+      if (Either.isRight(reconciliation) && reconciliation.right) {
+        return;
+      }
+
       return yield* resultOrFailure.left;
     }
 
@@ -176,6 +210,10 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
       result.data?.success === true &&
       result.data.message === betterAuthUserDeletedMessage
     ) {
+      return;
+    }
+
+    if (yield* proveCommittedDeletion()) {
       return;
     }
 

@@ -3,7 +3,10 @@ import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
 } from "@repo/backend/convex/auth/deletion/constants";
-import { accountDeletionPreparationOutcome } from "@repo/backend/convex/auth/deletion/spec";
+import {
+  accountDeletionAttemptStatus,
+  accountDeletionPreparationOutcome,
+} from "@repo/backend/convex/auth/deletion/spec";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -44,9 +47,28 @@ function createDeletionOperations(
     attemptId: ATTEMPT_ID,
     cancelPreparation: vi.fn(async () => undefined),
     prepare: vi.fn(async () => accountDeletionPreparationOutcome.ready),
+    reconcile: vi.fn(async () => accountDeletionAttemptStatus.pending),
     startPhase: accountDeletionRequestPhase.preparation,
     ...overrides,
   };
+}
+
+function requestFailure(code: string, status = 400) {
+  return async () => ({
+    data: null,
+    error: {
+      code,
+      message: code,
+      status,
+      statusText: "ERROR",
+    },
+  });
+}
+
+function runDeletionFailure(overrides: Partial<AccountDeletionOperations>) {
+  return Effect.runPromise(
+    deleteCurrentAccount(createDeletionOperations(overrides)).pipe(Effect.flip)
+  );
 }
 
 describe("account deletion", () => {
@@ -141,46 +163,106 @@ describe("account deletion", () => {
 
   it("skips completed preparation when retrying an uncertain auth delete", async () => {
     const prepare = vi.fn(async () => accountDeletionPreparationOutcome.ready);
-    const failure = await Effect.runPromise(
-      deleteCurrentAccount(
-        createDeletionOperations({
-          prepare,
-          request: async () => ({
-            data: null,
-            error: {
-              code: "SESSION_EXPIRED",
-              message: "Session expired",
-              status: 400,
-              statusText: "BAD_REQUEST",
-            },
-          }),
-          startPhase: accountDeletionRequestPhase.deletion,
-        })
-      ).pipe(Effect.flip)
-    );
+    const failure = await runDeletionFailure({
+      prepare,
+      request: requestFailure("SESSION_EXPIRED"),
+      startPhase: accountDeletionRequestPhase.deletion,
+    });
 
     expect(failure).toBeInstanceOf(AccountDeletionSessionExpired);
     expect(prepare).not.toHaveBeenCalled();
   });
 
-  it("continues preparation when the auth safety check is not ready", async () => {
+  it("completes a retry from its durable commit receipt", async () => {
+    const prepare = vi.fn(async () => accountDeletionPreparationOutcome.ready);
+    const request = vi.fn();
+
+    await expect(
+      Effect.runPromise(
+        deleteCurrentAccount(
+          createDeletionOperations({
+            prepare,
+            reconcile: vi.fn(
+              async () => accountDeletionAttemptStatus.committed
+            ),
+            request,
+            startPhase: accountDeletionRequestPhase.deletion,
+          })
+        )
+      )
+    ).resolves.toBeUndefined();
+    expect(prepare).not.toHaveBeenCalled();
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it("recovers when the delete response is lost after commit", async () => {
     const cancelPreparation = vi.fn(async () => undefined);
+
+    await expect(
+      Effect.runPromise(
+        deleteCurrentAccount(
+          createDeletionOperations({
+            cancelPreparation,
+            reconcile: vi.fn(
+              async () => accountDeletionAttemptStatus.committed
+            ),
+            request: () => Promise.reject(new Error("response unavailable")),
+          })
+        )
+      )
+    ).resolves.toBeUndefined();
+    expect(cancelPreparation).not.toHaveBeenCalled();
+  });
+
+  it("proves a lost success before accepting an unauthorized retry", async () => {
+    const cancelPreparation = vi.fn(async () => undefined);
+    const reconcile = vi
+      .fn<AccountDeletionOperations["reconcile"]>()
+      .mockResolvedValueOnce(accountDeletionAttemptStatus.pending)
+      .mockResolvedValueOnce(accountDeletionAttemptStatus.committed);
+
+    await expect(
+      Effect.runPromise(
+        deleteCurrentAccount(
+          createDeletionOperations({
+            cancelPreparation,
+            reconcile,
+            request: requestFailure("UNAUTHORIZED", 401),
+            startPhase: accountDeletionRequestPhase.deletion,
+          })
+        )
+      )
+    ).resolves.toBeUndefined();
+    expect(reconcile).toHaveBeenCalledTimes(2);
+    expect(cancelPreparation).not.toHaveBeenCalled();
+  });
+
+  it("keeps a deletion retry uncertain when proof is unavailable", async () => {
+    const request = vi.fn();
     const failure = await Effect.runPromise(
       deleteCurrentAccount(
         createDeletionOperations({
-          cancelPreparation,
-          request: async () => ({
-            data: null,
-            error: {
-              code: ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
-              message: "Account deletion preparation is incomplete.",
-              status: 400,
-              statusText: "BAD_REQUEST",
-            },
-          }),
+          reconcile: () => Promise.reject(new Error("proof unavailable")),
+          request,
+          startPhase: accountDeletionRequestPhase.deletion,
         })
       ).pipe(Effect.flip)
     );
+
+    expect(failure).toMatchObject({
+      _tag: "AccountDeletionRequestUncertain",
+      attemptId: ATTEMPT_ID,
+      phase: accountDeletionRequestPhase.deletion,
+    });
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it("continues preparation when the auth safety check is not ready", async () => {
+    const cancelPreparation = vi.fn(async () => undefined);
+    const failure = await runDeletionFailure({
+      cancelPreparation,
+      request: requestFailure(ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE),
+    });
 
     expect(failure).toMatchObject({
       _tag: "AccountDeletionRequestUncertain",
@@ -302,86 +384,38 @@ describe("account deletion", () => {
   });
 
   it("returns a typed stale-session failure", async () => {
-    const failure = await Effect.runPromise(
-      deleteCurrentAccount(
-        createDeletionOperations({
-          request: async () => ({
-            data: null,
-            error: {
-              code: "SESSION_EXPIRED",
-              message: "Session expired",
-              status: 400,
-              statusText: "BAD_REQUEST",
-            },
-          }),
-        })
-      ).pipe(Effect.flip)
-    );
+    const failure = await runDeletionFailure({
+      request: requestFailure("SESSION_EXPIRED"),
+    });
 
     expect(failure).toBeInstanceOf(AccountDeletionSessionExpired);
   });
 
   it("returns a typed failure for other delete errors", async () => {
     const cancelPreparation = vi.fn(async () => undefined);
-    const failure = await Effect.runPromise(
-      deleteCurrentAccount(
-        createDeletionOperations({
-          cancelPreparation,
-          request: async () => ({
-            data: null,
-            error: {
-              code: "DELETE_FAILED",
-              message: "Delete failed",
-              status: 500,
-              statusText: "INTERNAL_SERVER_ERROR",
-            },
-          }),
-        })
-      ).pipe(Effect.flip)
-    );
+    const failure = await runDeletionFailure({
+      cancelPreparation,
+      request: requestFailure("DELETE_FAILED", 500),
+    });
 
     expect(failure).toBeInstanceOf(AccountDeletionFailed);
     expect(cancelPreparation).toHaveBeenCalledWith(expect.any(String));
   });
 
   it("returns a typed failure when an owned school needs a successor", async () => {
-    const failure = await Effect.runPromise(
-      deleteCurrentAccount(
-        createDeletionOperations({
-          request: async () => ({
-            data: null,
-            error: {
-              code: "ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER",
-              message: "An owned school needs another active member.",
-              status: 400,
-              statusText: "BAD_REQUEST",
-            },
-          }),
-        })
-      ).pipe(Effect.flip)
-    );
+    const failure = await runDeletionFailure({
+      request: requestFailure("ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER"),
+    });
 
     expect(failure).toBeInstanceOf(AccountDeletionSchoolMemberRequired);
   });
 
   it("preserves a server failure when immediate cancellation also fails", async () => {
-    const failure = await Effect.runPromise(
-      deleteCurrentAccount(
-        createDeletionOperations({
-          cancelPreparation: () =>
-            Promise.reject(new Error("cancellation unavailable")),
-          request: async () => ({
-            data: null,
-            error: {
-              code: "DELETE_FAILED",
-              message: "Delete failed",
-              status: 500,
-              statusText: "INTERNAL_SERVER_ERROR",
-            },
-          }),
-        })
-      ).pipe(Effect.flip)
-    );
+    const failure = await runDeletionFailure({
+      cancelPreparation: () =>
+        Promise.reject(new Error("cancellation unavailable")),
+      request: requestFailure("DELETE_FAILED", 500),
+    });
 
     expect(failure).toBeInstanceOf(AccountDeletionFailed);
   });

@@ -18,7 +18,7 @@ import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
+import { useConvex, useMutation } from "convex/react";
 import { Effect, Either } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
@@ -46,6 +46,7 @@ export function UserSettingsDeleteAccount() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const convex = useConvex();
   const cancelAccountDeletion = useMutation(
     api.auth.deletion.cancelCurrentAccountDeletion
   );
@@ -85,6 +86,10 @@ export function UserSettingsDeleteAccount() {
             cancelPreparation: (attemptId) =>
               cancelAccountDeletion({ attemptId }),
             prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
+            reconcile: (attemptId) =>
+              convex.query(api.auth.deletion.getAccountDeletionAttemptStatus, {
+                attemptId,
+              }),
             startPhase: retry?.phase ?? accountDeletionRequestPhase.preparation,
           })
         );

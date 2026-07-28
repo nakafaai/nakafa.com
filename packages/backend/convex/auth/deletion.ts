@@ -1,4 +1,7 @@
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  type MutationCtx,
+  query,
+} from "@repo/backend/convex/_generated/server";
 import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
 import {
   cancelAccountDeletionAttemptBatch,
@@ -6,7 +9,12 @@ import {
 } from "@repo/backend/convex/auth/deletion/cancel";
 import { prepareAccountDeletion as prepareAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/prepare";
 import {
+  getAccountDeletionAttemptStatusProgram,
+  sweepAccountDeletionReceiptsProgram,
+} from "@repo/backend/convex/auth/deletion/receipt";
+import {
   type AccountDeletionPreparationVersion,
+  accountDeletionAttemptStatusValidator,
   accountDeletionPreparationOutcomeValidator,
   accountDeletionPreparationVersionValidator,
 } from "@repo/backend/convex/auth/deletion/spec";
@@ -25,6 +33,11 @@ const cancelAccountDeletionReference = makeFunctionReference<
   },
   boolean
 >("auth/deletion:cancelAccountDeletion");
+const sweepAccountDeletionReceiptsReference = makeFunctionReference<
+  "mutation",
+  Record<string, never>,
+  null
+>("auth/deletion:sweepAccountDeletionReceipts");
 
 const cancelAccountDeletionRecoveryBatch = Effect.fn(
   "auth.deletion.cancelAccountDeletionRecoveryBatch"
@@ -125,4 +138,39 @@ export const cancelCurrentAccountDeletion = mutation({
     );
     return null;
   },
+});
+
+/** Proves whether one opaque browser deletion attempt committed. */
+export const getAccountDeletionAttemptStatus = query({
+  args: {
+    attemptId: v.string(),
+  },
+  returns: accountDeletionAttemptStatusValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      getAccountDeletionAttemptStatusProgram(
+        ctx,
+        args.attemptId,
+        async (authId) =>
+          (await authReader.getAnyUserById(ctx, authId)) !== null
+      )
+    ),
+});
+
+/** Removes expired privacy-minimal deletion receipts in bounded pages. */
+export const sweepAccountDeletionReceipts = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: (ctx) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const hasMore = yield* sweepAccountDeletionReceiptsProgram(ctx);
+
+        if (hasMore) {
+          yield* tryUserCleanup(() =>
+            ctx.scheduler.runAfter(0, sweepAccountDeletionReceiptsReference, {})
+          );
+        }
+      }).pipe(Effect.as(null))
+    ),
 });

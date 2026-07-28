@@ -8,6 +8,7 @@ import {
   ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS,
   ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
 } from "@repo/backend/convex/auth/deletion/constants";
+import { recordAccountDeletionReceipt } from "@repo/backend/convex/auth/deletion/receipt";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/convex/auth/deletion/spec";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import { findSchoolOwnershipSuccessorPage } from "@repo/backend/convex/auth/deletion/successor";
@@ -210,7 +211,23 @@ export const finalizeAccountDeletion: (
       ? yield* tryUserCleanup(() => ctx.db.get("users", preparation.userId))
       : null);
 
-  if (!user || user.deletionCleanupStartedAt !== undefined) {
+  if (!user) {
+    return;
+  }
+
+  if (
+    user.deletionCleanupStartedAt !== undefined &&
+    preparation?.finalizedAt !== undefined
+  ) {
+    yield* recordAccountDeletionReceipt(
+      ctx,
+      preparation.attemptId,
+      preparation.finalizedAt
+    );
+    return;
+  }
+
+  if (user.deletionCleanupStartedAt !== undefined) {
     return;
   }
 
@@ -269,6 +286,11 @@ export const finalizeAccountDeletion: (
     );
   }
 
+  yield* recordAccountDeletionReceipt(
+    ctx,
+    preparation?.attemptId,
+    preparation?.finalizedAt ?? finalizedAt
+  );
   yield* tryUserCleanup(() =>
     ctx.db.patch(
       "users",
