@@ -543,6 +543,7 @@
     "delete-account-dialog-title": "Hapus akun?",
     "delete-account-dialog-description": "Profil dan data akunmu akan dihapus permanen. Langganan aktif akan dibatalkan dan akses Nakafa Pro akan berakhir.",
     "delete-account-session-expired": "Sesi ini sudah terlalu lama. Masuk lagi untuk melanjutkan.",
+    "delete-account-school-member-required": "Tambahkan satu anggota aktif ke setiap sekolah yang kamu buat, lalu coba lagi.",
     "delete-account-error": "Akunmu belum bisa dihapus. Coba lagi.",
     "delete-account-sign-in-again": "Masuk lagi",
     "teacher": "Guru",

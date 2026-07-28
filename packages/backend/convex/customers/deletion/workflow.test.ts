@@ -139,4 +139,62 @@ describe("customers/deletion/workflow", () => {
 
     expect(restartWorkflow).not.toHaveBeenCalled();
   });
+
+  it("requeues recovery when a retained workflow cannot be inspected", async () => {
+    const t = convexTest(schema, convexModules);
+    const workflowId = "unavailable-workflow" as WorkflowId;
+    const getStatus = vi.fn(async () =>
+      Promise.reject(new Error("workflow status unavailable"))
+    );
+    const restartWorkflow = vi.fn(async () => undefined);
+    const scheduleRecovery = vi.fn(async () => undefined);
+
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        retryDeletedUserCleanupProgram(
+          ctx,
+          workflowId,
+          getStatus,
+          restartWorkflow,
+          scheduleRecovery
+        )
+      )
+    );
+
+    expect(restartWorkflow).not.toHaveBeenCalled();
+    expect(scheduleRecovery).toHaveBeenCalledWith(
+      expect.any(Object),
+      workflowId
+    );
+  });
+
+  it("requeues recovery when a retained workflow cannot restart", async () => {
+    const t = convexTest(schema, convexModules);
+    const workflowId = "restart-failed-workflow" as WorkflowId;
+    const getStatus = vi.fn(async () => ({
+      error: "PostHog unavailable",
+      type: "failed" as const,
+    }));
+    const restartWorkflow = vi.fn(async () =>
+      Promise.reject(new Error("workflow restart unavailable"))
+    );
+    const scheduleRecovery = vi.fn(async () => undefined);
+
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        retryDeletedUserCleanupProgram(
+          ctx,
+          workflowId,
+          getStatus,
+          restartWorkflow,
+          scheduleRecovery
+        )
+      )
+    );
+
+    expect(scheduleRecovery).toHaveBeenCalledWith(
+      expect.any(Object),
+      workflowId
+    );
+  });
 });

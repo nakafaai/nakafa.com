@@ -1,11 +1,68 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
-import { Effect } from "effect";
+import {
+  tryUserCleanup,
+  UserCleanupError,
+} from "@repo/backend/convex/auth/cleanup/spec";
+import { Clock, Effect } from "effect";
 
 const MEMBERSHIP_BATCH_SIZE = 25;
 const ACTIVITY_BATCH_SIZE = 50;
 const ACTIVITY_REFERENCE_BATCH_SIZE = 25;
+
+/** Transfers one owned school to its next active member. */
+const transferSchoolOwnership = Effect.fn(
+  "auth.cleanup.transferSchoolOwnership"
+)(function* (ctx: MutationCtx, userId: Id<"users">) {
+  const school = yield* tryUserCleanup(() =>
+    ctx.db
+      .query("schools")
+      .withIndex("by_createdBy", (query) => query.eq("createdBy", userId))
+      .first()
+  );
+
+  if (!school) {
+    return false;
+  }
+
+  const successor = yield* tryUserCleanup(() =>
+    ctx.db
+      .query("schoolMembers")
+      .withIndex("by_schoolId_and_status", (query) =>
+        query.eq("schoolId", school._id).eq("status", "active")
+      )
+      .filter((query) => query.neq(query.field("userId"), userId))
+      .first()
+  );
+
+  if (!successor) {
+    return yield* new UserCleanupError({
+      code: "USER_CLEANUP_FAILED",
+      message: `School ${school._id} has no active ownership successor.`,
+    });
+  }
+
+  const transferredAt = yield* Clock.currentTimeMillis;
+
+  if (successor.role !== "admin") {
+    yield* tryUserCleanup(() =>
+      ctx.db.patch("schoolMembers", successor._id, {
+        role: "admin",
+        updatedAt: transferredAt,
+      })
+    );
+  }
+
+  yield* tryUserCleanup(() =>
+    ctx.db.patch("schools", school._id, {
+      createdBy: successor.userId,
+      updatedAt: transferredAt,
+      updatedBy: successor.userId,
+    })
+  );
+
+  return true;
+});
 
 /** Deletes one bounded batch of school and class memberships. */
 const cleanupMemberships = Effect.fn("auth.cleanup.cleanupMemberships")(
@@ -130,6 +187,10 @@ const cleanupActivity = Effect.fn("auth.cleanup.cleanupSchoolActivity")(
 export const cleanupUserSchoolData = Effect.fn(
   "auth.cleanup.cleanupUserSchoolData"
 )(function* (ctx: MutationCtx, userId: Id<"users">) {
+  if (yield* transferSchoolOwnership(ctx, userId)) {
+    return true;
+  }
+
   if (yield* cleanupMemberships(ctx, userId)) {
     return true;
   }
