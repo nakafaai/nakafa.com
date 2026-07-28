@@ -39,6 +39,24 @@ export const getCustomerByPolarId = internalQuery({
   },
 });
 
+/** Loads the durable Polar cleanup checkpoint for one deleted app user. */
+export const getCustomerDeletionCheckpoint = internalQuery({
+  args: {
+    userId: vv.id("users"),
+  },
+  returns: nullable(v.string()),
+  handler: async (ctx, args) => {
+    const tombstone = await ctx.db
+      .query("customerDeletionTombstones")
+      .withIndex("by_cleanupUserId", (query) =>
+        query.eq("cleanupUserId", args.userId)
+      )
+      .unique();
+
+    return tombstone?.polarCustomerId ?? null;
+  },
+});
+
 /** Returns whether a Polar customer currently owns an active subscription. */
 export const hasActiveSubscriptionByCustomerId = internalQuery({
   args: {

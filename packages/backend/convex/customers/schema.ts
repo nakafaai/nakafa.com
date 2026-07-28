@@ -27,7 +27,14 @@ const tables = {
      * delayed or replayed webhooks from recreating billing state.
      */
     polarCustomerId: v.string(),
-  }).index("by_polarCustomerId", ["polarCustomerId"]),
+    /**
+     * Present only while the deleted-user billing workflow still needs the
+     * Polar ID as a durable retry checkpoint.
+     */
+    cleanupUserId: v.optional(v.id("users")),
+  })
+    .index("by_polarCustomerId", ["polarCustomerId"])
+    .index("by_cleanupUserId", ["cleanupUserId"]),
 };
 
 export default tables;
