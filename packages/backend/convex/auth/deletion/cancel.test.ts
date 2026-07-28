@@ -1,6 +1,7 @@
 import {
   cancelAccountDeletion,
   cancelAccountDeletionAttempt,
+  cancelAccountDeletionAttemptByToken,
   cleanupFinalizedAccountDeletion,
 } from "@repo/backend/convex/auth/deletion/cancel";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
@@ -8,7 +9,7 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 9, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -173,6 +174,44 @@ describe("auth/deletion/cancel", () => {
 
     expect(state.preparation?.finalizedAt).toBe(NOW);
     expect(state.user?.deletedAt).toBe(NOW);
+  });
+
+  it("never reopens an irreversible deletion from the browser token", async () => {
+    const t = convexTest(schema, convexModules);
+    const userId = await t.mutation(async (ctx) => {
+      const insertedUserId = await ctx.db.insert("users", {
+        authId: "started-owner",
+        credits: 0,
+        creditsResetAt: 0,
+        deletionPreparedAt: NOW,
+        email: "started@example.com",
+        name: "Started Owner",
+        plan: "free",
+      });
+      await ctx.db.insert("accountDeletionPreparations", {
+        attemptId: ATTEMPT_ID,
+        authId: "started-owner",
+        deletionStartedAt: NOW,
+        recoveryGeneration: 1,
+        userId: insertedUserId,
+      });
+      return insertedUserId;
+    });
+    const authUserExists = vi.fn(async () => true);
+
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        cancelAccountDeletionAttemptByToken(ctx, ATTEMPT_ID, authUserExists)
+      )
+    );
+    const state = await t.query(async (ctx) => ({
+      preparation: await ctx.db.query("accountDeletionPreparations").unique(),
+      user: await ctx.db.get("users", userId),
+    }));
+
+    expect(authUserExists).not.toHaveBeenCalled();
+    expect(state.preparation?.deletionStartedAt).toBe(NOW);
+    expect(state.user?.deletionPreparedAt).toBe(NOW);
   });
 
   it("removes finalized metadata after workflow admission", async () => {

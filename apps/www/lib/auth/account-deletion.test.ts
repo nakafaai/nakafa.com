@@ -10,6 +10,7 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AccountDeletionFailed,
+  AccountDeletionRequestUncertain,
   AccountDeletionSchoolMemberRequired,
   AccountDeletionSessionExpired,
   accountDeletionRequestPhase,
@@ -306,15 +307,19 @@ describe("account deletion", () => {
     expect(failure).toBeInstanceOf(AccountDeletionSessionExpired);
   });
 
-  it("returns a typed failure for other delete errors", async () => {
+  it("leaves other delete errors to durable server recovery", async () => {
     const cancelPreparation = vi.fn(async () => undefined);
     const failure = await runDeletionFailure({
       cancelPreparation,
       request: requestFailure("DELETE_FAILED", 500),
     });
 
-    expect(failure).toBeInstanceOf(AccountDeletionFailed);
-    expect(cancelPreparation).toHaveBeenCalledWith(expect.any(String));
+    expect(failure).toBeInstanceOf(AccountDeletionRequestUncertain);
+    expect(failure).toMatchObject({
+      attemptId: ATTEMPT_ID,
+      phase: accountDeletionRequestPhase.deletion,
+    });
+    expect(cancelPreparation).not.toHaveBeenCalled();
   });
 
   it("returns a typed failure when an owned school needs a successor", async () => {
@@ -329,7 +334,7 @@ describe("account deletion", () => {
     const failure = await runDeletionFailure({
       cancelPreparation: () =>
         Promise.reject(new Error("cancellation unavailable")),
-      request: requestFailure("DELETE_FAILED", 500),
+      request: requestFailure("SESSION_EXPIRED"),
     });
 
     expect(failure).toMatchObject({

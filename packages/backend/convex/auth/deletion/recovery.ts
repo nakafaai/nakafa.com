@@ -33,6 +33,14 @@ const cancelAccountDeletionReference = makeFunctionReference<
   },
   boolean
 >("auth/deletion:cancelAccountDeletion");
+const continueAccountDeletionCommitReference = makeFunctionReference<
+  "mutation",
+  {
+    authId: string;
+    expectedPreparation: AccountDeletionPreparationVersion;
+  },
+  boolean
+>("auth/deletion:continueAccountDeletionCommit");
 const finalizeDeletedUserCleanupReference = makeFunctionReference<
   "mutation",
   {
@@ -58,6 +66,7 @@ const sweepAccountDeletionRecoveryReference = makeFunctionReference<
 interface RecoveryOperations {
   readonly authUserExists: () => Promise<boolean>;
   readonly cancel: () => Promise<unknown>;
+  readonly continueCommit: () => Promise<boolean>;
   readonly finalize: () => Promise<unknown>;
 }
 
@@ -67,6 +76,12 @@ export const recoverAccountDeletionProgram: (
 ) => Effect.Effect<void, UserCleanupError> = Effect.fn(
   "auth.deletion.recoverAccountDeletion"
 )(function* (operations: RecoveryOperations) {
+  const commitStarted = yield* tryUserCleanup(operations.continueCommit);
+
+  if (commitStarted) {
+    return;
+  }
+
   const authUserExists = yield* tryUserCleanup(operations.authUserExists);
 
   if (authUserExists) {
@@ -192,6 +207,11 @@ export const recoverAccountDeletion = internalAction({
           (await authReader.getAnyUserById(ctx, args.authId)) !== null,
         cancel: () =>
           ctx.runMutation(cancelAccountDeletionReference, {
+            authId: args.authId,
+            expectedPreparation: args.expectedPreparation,
+          }),
+        continueCommit: () =>
+          ctx.runMutation(continueAccountDeletionCommitReference, {
             authId: args.authId,
             expectedPreparation: args.expectedPreparation,
           }),

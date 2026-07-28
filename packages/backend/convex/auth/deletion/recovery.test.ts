@@ -25,6 +25,7 @@ describe("auth/deletion/recovery", () => {
       recoverAccountDeletionProgram({
         authUserExists: vi.fn(async () => true),
         cancel,
+        continueCommit: vi.fn(async () => false),
         finalize,
       })
     );
@@ -41,6 +42,7 @@ describe("auth/deletion/recovery", () => {
       recoverAccountDeletionProgram({
         authUserExists: vi.fn(async () => false),
         cancel,
+        continueCommit: vi.fn(async () => false),
         finalize,
       })
     );
@@ -56,6 +58,7 @@ describe("auth/deletion/recovery", () => {
           Promise.reject(new Error("auth unavailable"))
         ),
         cancel: vi.fn(async () => false),
+        continueCommit: vi.fn(async () => false),
         finalize: vi.fn(async () => undefined),
       }).pipe(Effect.flip)
     );
@@ -74,11 +77,33 @@ describe("auth/deletion/recovery", () => {
       recoverAccountDeletionProgram({
         authUserExists: vi.fn(async () => true),
         cancel,
+        continueCommit: vi.fn(async () => false),
         finalize: vi.fn(async () => undefined),
       })
     );
 
     expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  it("continues a claimed deletion without reopening cancellation", async () => {
+    const authUserExists = vi.fn(async () => true);
+    const cancel = vi.fn(async () => false);
+    const continueCommit = vi.fn(async () => true);
+    const finalize = vi.fn(async () => undefined);
+
+    await Effect.runPromise(
+      recoverAccountDeletionProgram({
+        authUserExists,
+        cancel,
+        continueCommit,
+        finalize,
+      })
+    );
+
+    expect(continueCommit).toHaveBeenCalledOnce();
+    expect(authUserExists).not.toHaveBeenCalled();
+    expect(cancel).not.toHaveBeenCalled();
+    expect(finalize).not.toHaveBeenCalled();
   });
 
   it("claims only due preparations before scheduling recovery", async () => {
