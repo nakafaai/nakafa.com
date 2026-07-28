@@ -5,10 +5,11 @@ import {
   insertParts,
   verifyChatOwnership,
 } from "@repo/backend/convex/chats/helpers";
-import tables, {
+import {
   chatTypeValidator,
   chatVisibilityValidator,
 } from "@repo/backend/convex/chats/schema";
+import tables from "@repo/backend/convex/chats/tables/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
