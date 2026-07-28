@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/test/content-runtime";
 import {
   activateMaterialCatalog,
+  insertMaterialProjection,
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material-catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
@@ -132,6 +133,58 @@ describe("readContentSearchDocuments", () => {
       "Article 1 Article 1 articles/politics/article-1 beta bounded search",
       "Article 2 Article 2 articles/politics/article-2 gamma bounded search",
     ]);
+  });
+
+  it("refills an unused article budget from searchable materials", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const projections = Array.from({ length: 25 }, (_, index) =>
+      makeMaterialProjection("en", index + 1)
+    );
+
+    await t.mutation(async (ctx) => {
+      await insertRuntimeArticles(ctx, 0);
+      for (const projection of projections) {
+        await insertMaterialProjection(ctx, projection, TEST_RUNTIME_RELEASE);
+        await insertRuntimeIndex(ctx, projection.contentKey, {
+          headSequence: TEST_RUNTIME_RELEASE.sequence,
+          locale: projection.locale,
+          plainText: "saturated published material",
+        });
+      }
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        materialManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+        materialReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+        materialSequence: TEST_RUNTIME_RELEASE.sequence,
+        searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+        searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+        searchSequence: TEST_RUNTIME_RELEASE.sequence,
+      });
+    });
+
+    const documents = await t.query((ctx) =>
+      runConvexProgram(
+        readContentSearchDocuments(
+          ctx,
+          {
+            limit: 20,
+            locale: "en",
+            offset: 0,
+            queries: ["saturated published material"],
+          },
+          ["saturated published material"],
+          21
+        )
+      )
+    );
+
+    expect(documents).toHaveLength(21);
+    expect(documents.every((document) => document.section === "material")).toBe(
+      true
+    );
   });
 
   it("reads source-only sections while release search is synchronizing", async () => {

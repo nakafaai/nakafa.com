@@ -214,7 +214,7 @@ describe("contents/queries/search:search", () => {
     expect(result.items[0].title).toBe("Alpha");
   });
 
-  it("does not return a follow-up offset beyond the accepted maximum", async () => {
+  it("caps the final page without advertising another offset", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
@@ -253,6 +253,16 @@ describe("contents/queries/search:search", () => {
       queries: ["searchcap"],
       section: "articles",
     });
+    const naturalContinuation = await t.query(
+      api.contents.queries.search.search,
+      {
+        limit: 20,
+        locale: "id",
+        offset: 20,
+        queries: ["searchcap"],
+        section: "articles",
+      }
+    );
 
     expect(browseResult).toMatchObject({
       count: limit,
@@ -262,19 +272,11 @@ describe("contents/queries/search:search", () => {
       count: limit,
       has_more: false,
     });
-  });
-
-  it("rejects a page that crosses the bounded search window", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await expect(
-      t.query(api.contents.queries.search.search, {
-        limit: 20,
-        locale: "id",
-        offset: NAKAFA_AGENT_SEARCH_WINDOW - 10,
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_SEARCH_WINDOW_INVALID" },
+    expect(naturalContinuation).toMatchObject({
+      count: NAKAFA_AGENT_SEARCH_WINDOW - 20,
+      has_more: false,
+      limit: 20,
+      offset: 20,
     });
   });
 

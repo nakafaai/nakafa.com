@@ -32,13 +32,14 @@ export const MATERIAL_IDENTITY = {
 /** Inserts one projection into the immutable head and active material model. */
 export async function insertMaterialProjection(
   ctx: MutationCtx,
-  projection: MaterialLessonProjection
+  projection: MaterialLessonProjection,
+  identity: TestIdentity = MATERIAL_IDENTITY
 ) {
   const projectionJson = canonicalizeMaterialProjection(projection);
   const sourcePath = `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`;
   await insertRuntimeVersion(ctx, "public", projection.contentKey, {
-    headReleaseId: MATERIAL_IDENTITY.releaseId,
-    headSequence: MATERIAL_IDENTITY.sequence,
+    headReleaseId: identity.releaseId,
+    headSequence: identity.sequence,
     locale: projection.locale,
     projectionJson,
     publicPath: projection.publicPath,
@@ -46,8 +47,8 @@ export async function insertMaterialProjection(
     sourcePath,
   });
   await insertRuntimeBinding(ctx, projection.contentKey, {
-    bindingReleaseId: MATERIAL_IDENTITY.releaseId,
-    bindingSequence: MATERIAL_IDENTITY.sequence,
+    bindingReleaseId: identity.releaseId,
+    bindingSequence: identity.sequence,
     locale: projection.locale,
     publicPath: projection.publicPath,
   });
@@ -56,7 +57,7 @@ export async function insertMaterialProjection(
       ctx,
       projection.contentKey,
       projection.locale,
-      MATERIAL_IDENTITY.sequence
+      identity.sequence
     )
   );
   if (resolved?.family !== "material") {
