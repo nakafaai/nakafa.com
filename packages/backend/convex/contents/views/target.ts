@@ -23,6 +23,7 @@ import { Effect } from "effect";
 
 const contentViewTargetValidator = v.object({
   ...learningGraphIdentityValidator.fields,
+  contentKey: v.string(),
   content_id: v.string(),
   description: v.optional(v.string()),
   kind: literals(...CONTENT_ROUTE_KINDS),
@@ -45,10 +46,10 @@ export type ContentViewTargetInput = Pick<
   "contentId" | "locale" | "publicPath" | "section"
 >;
 
-type ResolvedContentViewTargetInput = Omit<
-  ContentViewTargetInput,
-  "section"
-> & {
+type ContentViewTargetLookup = ContentViewTargetInput &
+  Readonly<{ contentKey?: string }>;
+
+type ResolvedContentViewTargetInput = ContentViewTargetLookup & {
   readonly section: NonNullable<ContentViewTargetInput["section"]>;
 };
 
@@ -84,6 +85,7 @@ const resolveContentViewTargetInput = Effect.fn(
     return null;
   }
   return {
+    contentKey: route.sourcePath,
     contentId: input.contentId,
     locale: input.locale,
     publicPath: route.route,
@@ -104,29 +106,39 @@ function readMaterialDomain(materialKey: string): Material | undefined {
 
 /** Resolves one active material by exact route or stable graph identity. */
 const readMaterialTarget = Effect.fn("contents.views.readMaterialTarget")(
-  function* (ctx: QueryCtx, input: ContentViewTargetInput) {
+  function* (ctx: QueryCtx, input: ContentViewTargetLookup) {
     const owner = yield* loadMaterialOwner(ctx, input.locale).pipe(
       Effect.mapError(toContentViewIoError)
     );
     if (!(owner.managed && owner.active)) {
       return { managed: false, target: null };
     }
-    const publicPath = input.publicPath;
+    const { contentKey, publicPath } = input;
     const row = yield* Effect.tryPromise({
-      try: () =>
-        publicPath
-          ? ctx.db
-              .query("materialCatalog")
-              .withIndex("by_locale_and_publicPath", (query) =>
-                query.eq("locale", input.locale).eq("publicPath", publicPath)
-              )
-              .unique()
-          : ctx.db
-              .query("materialCatalog")
-              .withIndex("by_locale_and_assetId", (query) =>
-                query.eq("locale", input.locale).eq("assetId", input.contentId)
-              )
-              .unique(),
+      try: () => {
+        if (contentKey) {
+          return ctx.db
+            .query("materialCatalog")
+            .withIndex("by_contentKey_and_locale", (query) =>
+              query.eq("contentKey", contentKey).eq("locale", input.locale)
+            )
+            .unique();
+        }
+        if (publicPath) {
+          return ctx.db
+            .query("materialCatalog")
+            .withIndex("by_locale_and_publicPath", (query) =>
+              query.eq("locale", input.locale).eq("publicPath", publicPath)
+            )
+            .unique();
+        }
+        return ctx.db
+          .query("materialCatalog")
+          .withIndex("by_locale_and_assetId", (query) =>
+            query.eq("locale", input.locale).eq("assetId", input.contentId)
+          )
+          .unique();
+      },
       catch: toContentViewIoError,
     });
     if (!row) {
@@ -146,6 +158,7 @@ const readMaterialTarget = Effect.fn("contents.views.readMaterialTarget")(
       managed: true,
       target: {
         ...projection.graph,
+        contentKey: projection.contentKey,
         content_id: projection.graph.assetId,
         description: projection.metadata.description,
         kind: "curriculum-lesson",
@@ -164,25 +177,28 @@ const readMaterialTarget = Effect.fn("contents.views.readMaterialTarget")(
 
 /** Resolves one active article through its canonical published route. */
 const readArticleTarget = Effect.fn("contents.views.readArticleTarget")(
-  function* (ctx: QueryCtx, input: ContentViewTargetInput) {
+  function* (ctx: QueryCtx, input: ContentViewTargetLookup) {
     const owner = yield* loadArticleOwner(ctx, input.locale).pipe(
       Effect.mapError(toContentViewIoError)
     );
     if (!(owner.managed && owner.active)) {
       return { managed: false, target: null };
     }
-    if (!input.publicPath) {
-      return { managed: true, target: null };
+    let contentKey = input.contentKey;
+    if (!contentKey) {
+      const publicPath = input.publicPath;
+      if (!publicPath) {
+        return { managed: true, target: null };
+      }
+      const binding = yield* loadRouteBinding(
+        ctx,
+        input.locale,
+        publicPath,
+        owner.active.sequence
+      ).pipe(Effect.mapError(toContentViewIoError));
+      contentKey =
+        binding?.operation === "bind" ? binding.contentKey : undefined;
     }
-    const publicPath = input.publicPath;
-    const binding = yield* loadRouteBinding(
-      ctx,
-      input.locale,
-      publicPath,
-      owner.active.sequence
-    ).pipe(Effect.mapError(toContentViewIoError));
-    const contentKey =
-      binding?.operation === "bind" ? binding.contentKey : undefined;
     if (!contentKey) {
       return { managed: true, target: null };
     }
@@ -208,6 +224,7 @@ const readArticleTarget = Effect.fn("contents.views.readArticleTarget")(
       managed: true,
       target: {
         ...projection.graph,
+        contentKey: projection.contentKey,
         content_id: projection.graph.assetId,
         description: projection.metadata.description,
         kind: "article",
@@ -267,6 +284,7 @@ const readSourceTarget = Effect.fn("contents.views.readSourceTarget")(
       alignmentId: route.alignmentId,
       assetId: route.assetId,
       conceptId: route.conceptId,
+      contentKey: route.sourcePath,
       content_id: route.content_id,
       description: route.description,
       kind: route.kind,

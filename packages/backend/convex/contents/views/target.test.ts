@@ -1,5 +1,6 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import {
   type ContentViewTargetInput,
   loadContentTarget,
@@ -32,6 +33,12 @@ import { describe, expect, it } from "vitest";
 
 const SOURCE_PATH = "articles/politics/source-target";
 const PUBLISHED_MATERIAL = FUNCTION_MATERIAL;
+const RENAMED_MATERIAL = MaterialLessonProjectionSchema.make({
+  ...PUBLISHED_MATERIAL,
+  publicPath: PublicPathSchema.make(
+    `${PUBLISHED_MATERIAL.parentPath}/function-concept-renamed`
+  ),
+});
 
 /** Inserts one route-catalog target whose family remains source-owned. */
 async function insertSourceTarget(target: TestConvex<typeof schema>) {
@@ -59,6 +66,50 @@ async function insertSourceTarget(target: TestConvex<typeof schema>) {
     })
   );
   return graph;
+}
+
+/** Inserts the source route retained during the material expand phase. */
+async function insertLegacyMaterialTarget(target: TestConvex<typeof schema>) {
+  await target.mutation((ctx) =>
+    ctx.db.insert("contentRoutes", {
+      ...PUBLISHED_MATERIAL.graph,
+      authors: [],
+      contentHash: "legacy-material-target",
+      content_id: PUBLISHED_MATERIAL.graph.assetId,
+      kind: "curriculum-lesson",
+      locale: PUBLISHED_MATERIAL.locale,
+      markdown: true,
+      materialDomain: "mathematics",
+      route: PUBLISHED_MATERIAL.publicPath,
+      section: "material",
+      sourcePath: PUBLISHED_MATERIAL.contentKey,
+      syncedAt: 1,
+      title: PUBLISHED_MATERIAL.metadata.title,
+    })
+  );
+}
+
+/** Inserts one active article together with its expand-phase source route. */
+async function insertLegacyArticleTarget(target: TestConvex<typeof schema>) {
+  const projection = testArticleProjection(0);
+  await target.mutation(async (ctx) => {
+    await ctx.db.insert("contentRoutes", {
+      ...projection.graph,
+      authors: [],
+      contentHash: "legacy-article-target",
+      content_id: projection.graph.assetId,
+      kind: "article",
+      locale: projection.locale,
+      markdown: true,
+      route: projection.publicPath,
+      section: "articles",
+      sourcePath: projection.contentKey,
+      syncedAt: 1,
+      title: projection.metadata.title,
+    });
+    await insertRuntimeArticles(ctx, 1, () => projection);
+  });
+  return projection;
 }
 
 describe("contents/views/target", () => {
@@ -170,6 +221,27 @@ describe("contents/views/target", () => {
     expect(byIdentity).toEqual(byPath);
   });
 
+  it("resolves a legacy material view to its renamed active route", async () => {
+    const target = convexTest(schema, convexModules);
+    await insertLegacyMaterialTarget(target);
+    await activateMaterialCatalog(target, [RENAMED_MATERIAL]);
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          loadContentTarget(ctx, {
+            contentId: PUBLISHED_MATERIAL.graph.assetId,
+            locale: PUBLISHED_MATERIAL.locale,
+          })
+        )
+      )
+    ).resolves.toMatchObject({
+      contentKey: PUBLISHED_MATERIAL.contentKey,
+      content_id: PUBLISHED_MATERIAL.graph.assetId,
+      route: RENAMED_MATERIAL.publicPath,
+    });
+  });
+
   it("does not revive stale material routes after ownership activates", async () => {
     const target = convexTest(schema, convexModules);
     const graph = await insertSourceTarget(target);
@@ -223,6 +295,26 @@ describe("contents/views/target", () => {
       route: projection.publicPath,
       sourcePath: `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`,
       title: projection.metadata.title,
+    });
+  });
+
+  it("resolves a legacy article view through its stable source identity", async () => {
+    const target = convexTest(schema, convexModules);
+    const projection = await insertLegacyArticleTarget(target);
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          loadContentTarget(ctx, {
+            contentId: projection.graph.assetId,
+            locale: projection.locale,
+          })
+        )
+      )
+    ).resolves.toMatchObject({
+      contentKey: projection.contentKey,
+      content_id: projection.graph.assetId,
+      route: projection.publicPath,
     });
   });
 

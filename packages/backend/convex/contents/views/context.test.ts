@@ -1,3 +1,5 @@
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -24,6 +26,12 @@ const CONTEXT_PUBLIC_PATH =
 const CONTEXT_PARENT_PATH =
   "kurikulum/cambridge-international/upper-secondary/biology-0610";
 const PUBLISHED_MATERIAL = FUNCTION_MATERIAL;
+const RENAMED_MATERIAL = MaterialLessonProjectionSchema.make({
+  ...PUBLISHED_MATERIAL,
+  publicPath: PublicPathSchema.make(
+    `${PUBLISHED_MATERIAL.parentPath}/function-concept-renamed`
+  ),
+});
 const publishedPlacement = readStaticPublicCurriculumRoutes().find(
   (route) =>
     route.locale === PUBLISHED_MATERIAL.locale &&
@@ -321,9 +329,9 @@ describe("contents/views/context", () => {
     ]);
   });
 
-  it("uses source placement by public path while only materials are published", async () => {
+  it("uses stable source placement after a published material route changes", async () => {
     const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [PUBLISHED_MATERIAL]);
+    await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
     const viewer = await t.mutation(seedMixedPlacement);
     const signedIn = t.withIdentity({
       sessionId: viewer.sessionId,
@@ -339,7 +347,7 @@ describe("contents/views/context", () => {
       },
       deviceId: "published-material-context",
       locale: PUBLISHED_MATERIAL.locale,
-      publicPath: PUBLISHED_MATERIAL.publicPath,
+      publicPath: RENAMED_MATERIAL.publicPath,
       section: "material",
     });
 
@@ -348,6 +356,7 @@ describe("contents/views/context", () => {
     ).resolves.toMatchObject({
       contextKey: `placement:${PUBLISHED_PLACEMENT.programKey}:${PUBLISHED_CONTEXT_NODE}`,
       contextSourcePath: PUBLISHED_MATERIAL.contentKey,
+      route: RENAMED_MATERIAL.publicPath,
     });
   });
 });
