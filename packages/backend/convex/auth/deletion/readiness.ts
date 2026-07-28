@@ -1,6 +1,7 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
-import { Effect } from "effect";
+import { findSchoolOwnershipSuccessor } from "@repo/backend/convex/auth/deletion/successor";
+import { Effect, Option } from "effect";
 
 const OWNED_SCHOOL_LIMIT = 100;
 
@@ -35,17 +36,13 @@ export const getSchoolOwnershipDeletionReadiness = Effect.fn(
   }
 
   for (const school of ownedSchools) {
-    const successor = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("schoolMembers")
-        .withIndex("by_schoolId_and_status", (query) =>
-          query.eq("schoolId", school._id).eq("status", "active")
-        )
-        .filter((query) => query.neq(query.field("userId"), user._id))
-        .first()
+    const successor = yield* findSchoolOwnershipSuccessor(
+      ctx,
+      school._id,
+      user._id
     );
 
-    if (!successor) {
+    if (Option.isNone(successor)) {
       return false;
     }
   }

@@ -1,10 +1,19 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import tables from "@repo/backend/convex/customers/schema";
+import {
+  CustomerSyncIoError,
+  customerSyncIoErrorCode,
+} from "@repo/backend/convex/customers/sync/spec";
 import { internalMutation } from "@repo/backend/convex/functions";
+import {
+  getUnknownErrorMessage,
+  runConvexProgram,
+} from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { makeFunctionReference, type WithoutSystemFields } from "convex/server";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE = 50;
 
@@ -28,6 +37,81 @@ async function patchCustomerRow(
   });
 }
 
+/** Maps local customer-deletion IO failures into the sync error contract. */
+function toCustomerDeletionError(error: unknown) {
+  return new CustomerSyncIoError({
+    code: customerSyncIoErrorCode,
+    message: `Failed to delete local customer data: ${getUnknownErrorMessage(error)}`,
+  });
+}
+
+/** Lifts one local customer-deletion operation into the Effect error channel. */
+function tryCustomerDeletion<A>(operation: () => Promise<A>) {
+  return Effect.tryPromise({
+    catch: toCustomerDeletionError,
+    try: operation,
+  });
+}
+
+/** Deletes local subscriptions before their customer-to-user mapping. */
+export const deleteCustomerByIdProgram = Effect.fn(
+  "customers.mutations.deleteCustomerById"
+)(function* (ctx: MutationCtx, polarCustomerId: string) {
+  const tombstone = yield* tryCustomerDeletion(() =>
+    ctx.db
+      .query("customerDeletionTombstones")
+      .withIndex("by_polarCustomerId", (query) =>
+        query.eq("polarCustomerId", polarCustomerId)
+      )
+      .unique()
+  );
+
+  if (!tombstone) {
+    yield* tryCustomerDeletion(() =>
+      ctx.db.insert("customerDeletionTombstones", {
+        polarCustomerId,
+      })
+    );
+  }
+
+  const subscriptions = yield* tryCustomerDeletion(() =>
+    ctx.db
+      .query("subscriptions")
+      .withIndex("by_customerId_and_status", (query) =>
+        query.eq("customerId", polarCustomerId)
+      )
+      .take(CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE)
+  );
+
+  for (const subscription of subscriptions) {
+    yield* tryCustomerDeletion(() =>
+      ctx.db.delete("subscriptions", subscription._id)
+    );
+  }
+
+  if (subscriptions.length === CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE) {
+    yield* tryCustomerDeletion(() =>
+      ctx.scheduler.runAfter(0, deleteCustomerByIdReference, {
+        id: polarCustomerId,
+      })
+    );
+    return null;
+  }
+
+  const customer = yield* tryCustomerDeletion(() =>
+    ctx.db
+      .query("customers")
+      .withIndex("by_polarId", (query) => query.eq("id", polarCustomerId))
+      .unique()
+  );
+
+  if (customer) {
+    yield* tryCustomerDeletion(() => ctx.db.delete("customers", customer._id));
+  }
+
+  return null;
+});
+
 /**
  * Delete a customer by Polar customer ID.
  * Internal function - called from Polar webhooks only.
@@ -37,42 +121,8 @@ export const deleteCustomerById = internalMutation({
     id: v.string(),
   }),
   returns: v.null(),
-  handler: async (ctx, args) => {
-    const tombstone = await ctx.db
-      .query("customerDeletionTombstones")
-      .withIndex("by_polarCustomerId", (q) => q.eq("polarCustomerId", args.id))
-      .unique();
-
-    if (!tombstone) {
-      await ctx.db.insert("customerDeletionTombstones", {
-        polarCustomerId: args.id,
-      });
-    }
-
-    const customer = await ctx.db
-      .query("customers")
-      .withIndex("by_polarId", (q) => q.eq("id", args.id))
-      .unique();
-
-    if (customer) {
-      await ctx.db.delete("customers", customer._id);
-    }
-
-    const subscriptions = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_customerId_and_status", (q) => q.eq("customerId", args.id))
-      .take(CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE);
-
-    for (const subscription of subscriptions) {
-      await ctx.db.delete("subscriptions", subscription._id);
-    }
-
-    if (subscriptions.length === CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE) {
-      await ctx.scheduler.runAfter(0, deleteCustomerByIdReference, args);
-    }
-
-    return null;
-  },
+  handler: (ctx, args) =>
+    runConvexProgram(deleteCustomerByIdProgram(ctx, args.id)),
 });
 
 /**
