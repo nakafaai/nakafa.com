@@ -1,7 +1,7 @@
 "use client";
 
 import { createStore } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { initialState } from "@/components/ai/store/state";
 import type { AiStore } from "@/components/ai/store/types";
@@ -26,6 +26,7 @@ export const createAiStore = () =>
           activeChatId: state.activeChatId,
           text: state.text,
         }),
+        storage: createJSONStorage(() => sessionStorage),
         version: 1,
       }
     )
