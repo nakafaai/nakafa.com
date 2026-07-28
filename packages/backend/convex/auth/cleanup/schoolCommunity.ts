@@ -1,14 +1,19 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
+import {
+  toUserCleanupError,
+  tryUserCleanup,
+} from "@repo/backend/convex/auth/cleanup/spec";
+import {
+  cleanupForumData,
+  cleanupForumPostData,
+} from "@repo/backend/convex/classes/forums/cleanup";
 import { Effect } from "effect";
 
 const REACTION_BATCH_SIZE = 50;
 const READ_STATE_BATCH_SIZE = 50;
 const UPLOAD_BATCH_SIZE = 10;
 const REPLY_REFERENCE_BATCH_SIZE = 25;
-const POST_DEPENDENCY_BATCH_SIZE = 25;
-const POST_ATTACHMENT_BATCH_SIZE = 10;
 const MATERIAL_VIEW_BATCH_SIZE = 50;
 
 /** Deletes one bounded batch of a user's class-forum reactions. */
@@ -116,6 +121,33 @@ const cleanupForumReplyReferences = Effect.fn(
   return replies.length > 0;
 });
 
+/** Deletes authored forum roots only after every dependent row is gone. */
+const cleanupForumRoots = Effect.fn("auth.cleanup.cleanupForumRoots")(
+  function* (ctx: MutationCtx, userId: Id<"users">) {
+    const forum = yield* tryUserCleanup(() =>
+      ctx.db
+        .query("schoolClassForums")
+        .withIndex("by_createdBy", (query) => query.eq("createdBy", userId))
+        .first()
+    );
+
+    if (!forum) {
+      return false;
+    }
+
+    const removedDependencies = yield* cleanupForumData(ctx, forum._id).pipe(
+      Effect.mapError(toUserCleanupError)
+    );
+
+    if (removedDependencies) {
+      return true;
+    }
+
+    yield* tryUserCleanup(() => ctx.db.delete("schoolClassForums", forum._id));
+    return true;
+  }
+);
+
 /** Deletes one bounded batch of authored forum threads. */
 const cleanupForumPosts = Effect.fn("auth.cleanup.cleanupForumPosts")(
   function* (ctx: MutationCtx, userId: Id<"users">) {
@@ -130,110 +162,9 @@ const cleanupForumPosts = Effect.fn("auth.cleanup.cleanupForumPosts")(
       return false;
     }
 
-    const notifications = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("notifications")
-        .withIndex("by_entityType_and_entityId", (query) =>
-          query
-            .eq("entityType", "schoolClassForumPosts")
-            .eq("entityId", post._id)
-        )
-        .take(POST_DEPENDENCY_BATCH_SIZE)
+    return yield* cleanupForumPostData(ctx, post._id).pipe(
+      Effect.mapError(toUserCleanupError)
     );
-
-    for (const notification of notifications) {
-      yield* tryUserCleanup(() =>
-        ctx.db.delete("notifications", notification._id)
-      );
-    }
-
-    if (notifications.length > 0) {
-      return true;
-    }
-
-    const mutes = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("notificationEntityMutes")
-        .withIndex("by_entityType_and_entityId", (query) =>
-          query
-            .eq("entityType", "schoolClassForumPosts")
-            .eq("entityId", post._id)
-        )
-        .take(POST_DEPENDENCY_BATCH_SIZE)
-    );
-
-    for (const mute of mutes) {
-      yield* tryUserCleanup(() =>
-        ctx.db.delete("notificationEntityMutes", mute._id)
-      );
-    }
-
-    if (mutes.length > 0) {
-      return true;
-    }
-
-    const attachments = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("schoolClassForumPostAttachments")
-        .withIndex("by_postId", (query) => query.eq("postId", post._id))
-        .take(POST_ATTACHMENT_BATCH_SIZE)
-    );
-
-    for (const attachment of attachments) {
-      yield* tryUserCleanup(() => ctx.storage.delete(attachment.fileId));
-      yield* tryUserCleanup(() =>
-        ctx.db.delete("schoolClassForumPostAttachments", attachment._id)
-      );
-    }
-
-    if (attachments.length > 0) {
-      return true;
-    }
-
-    const reactions = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("schoolClassForumPostReactions")
-        .withIndex("by_postId_and_emoji_and_userId", (query) =>
-          query.eq("postId", post._id)
-        )
-        .take(POST_DEPENDENCY_BATCH_SIZE)
-    );
-
-    for (const reaction of reactions) {
-      yield* tryUserCleanup(() =>
-        ctx.db.delete("schoolClassForumPostReactions", reaction._id)
-      );
-    }
-
-    if (reactions.length > 0) {
-      return true;
-    }
-
-    const replies = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("schoolClassForumPosts")
-        .withIndex("by_parentId", (query) => query.eq("parentId", post._id))
-        .take(REPLY_REFERENCE_BATCH_SIZE)
-    );
-
-    for (const reply of replies) {
-      yield* tryUserCleanup(() =>
-        ctx.db.patch("schoolClassForumPosts", reply._id, {
-          parentId: undefined,
-          replyToBody: undefined,
-          replyToUserId: undefined,
-        })
-      );
-    }
-
-    if (replies.length > 0) {
-      return true;
-    }
-
-    yield* tryUserCleanup(() =>
-      ctx.db.delete("schoolClassForumPosts", post._id)
-    );
-    return true;
   }
 );
 
@@ -270,6 +201,10 @@ export const cleanupUserSchoolCommunity = Effect.fn(
   }
 
   if (yield* cleanupForumReplyReferences(ctx, userId)) {
+    return true;
+  }
+
+  if (yield* cleanupForumRoots(ctx, userId)) {
     return true;
   }
 

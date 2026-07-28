@@ -327,6 +327,7 @@ const tables = {
       "status",
       "lastPostAt",
     ])
+    .index("by_createdBy", ["createdBy"])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["classId", "status"],

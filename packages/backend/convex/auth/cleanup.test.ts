@@ -277,6 +277,38 @@ describe("auth/cleanup", () => {
         createdBy: otherUserId,
         updatedAt: NOW,
       });
+      const deletedForumId = await ctx.db.insert("schoolClassForums", {
+        body: "Deleted account forum body",
+        classId,
+        createdBy: userId,
+        isPinned: false,
+        lastPostAt: NOW,
+        lastPostBy: otherUserId,
+        nextPostSequence: 2,
+        postCount: 1,
+        reactionCounts: [],
+        schoolId,
+        status: "open",
+        tag: "general",
+        title: "Deleted account forum",
+        updatedAt: NOW,
+      });
+      await ctx.db.insert("schoolClassForumPosts", {
+        body: "Dependent shared reply",
+        classId,
+        createdBy: otherUserId,
+        forumId: deletedForumId,
+        mentions: [],
+        reactionCounts: [],
+        replyCount: 0,
+        sequence: 1,
+        updatedAt: NOW,
+      });
+      await ctx.db.insert("schoolClassForumReactions", {
+        emoji: "👍",
+        forumId: deletedForumId,
+        userId: otherUserId,
+      });
       await ctx.db.insert("schoolActivityLogs", {
         schoolId,
         userId: otherUserId,
@@ -318,6 +350,19 @@ describe("auth/cleanup", () => {
           .query("bookmarkCollections")
           .withIndex("by_userId", (query) => query.eq("userId", userId))
           .collect(),
+        deletedForum: await ctx.db.get("schoolClassForums", deletedForumId),
+        deletedForumPosts: await ctx.db
+          .query("schoolClassForumPosts")
+          .withIndex("by_forumId", (query) =>
+            query.eq("forumId", deletedForumId)
+          )
+          .collect(),
+        deletedForumReactions: await ctx.db
+          .query("schoolClassForumReactions")
+          .withIndex("by_forumId_and_emoji_and_userId", (query) =>
+            query.eq("forumId", deletedForumId)
+          )
+          .collect(),
         creditTransactions: await ctx.db
           .query("creditTransactions")
           .withIndex("by_userId", (query) => query.eq("userId", userId))
@@ -358,6 +403,9 @@ describe("auth/cleanup", () => {
       claims: [],
       collections: [],
       creditTransactions: [],
+      deletedForum: null,
+      deletedForumPosts: [],
+      deletedForumReactions: [],
       learningPreferences: [],
       messageParts: [],
       messages: [],
