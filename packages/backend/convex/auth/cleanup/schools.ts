@@ -4,7 +4,8 @@ import {
   tryUserCleanup,
   UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
-import { Clock, Effect } from "effect";
+import { findSchoolOwnershipSuccessor } from "@repo/backend/convex/auth/deletion/successor";
+import { Clock, Effect, Option } from "effect";
 
 const MEMBERSHIP_BATCH_SIZE = 25;
 const ACTIVITY_BATCH_SIZE = 50;
@@ -25,28 +26,25 @@ const transferSchoolOwnership = Effect.fn(
     return false;
   }
 
-  const successor = yield* tryUserCleanup(() =>
-    ctx.db
-      .query("schoolMembers")
-      .withIndex("by_schoolId_and_status", (query) =>
-        query.eq("schoolId", school._id).eq("status", "active")
-      )
-      .filter((query) => query.neq(query.field("userId"), userId))
-      .first()
+  const successor = yield* findSchoolOwnershipSuccessor(
+    ctx,
+    school._id,
+    userId
   );
 
-  if (!successor) {
+  if (Option.isNone(successor)) {
     return yield* new UserCleanupError({
       code: "USER_CLEANUP_FAILED",
       message: `School ${school._id} has no active ownership successor.`,
     });
   }
 
+  const successorMembership = successor.value;
   const transferredAt = yield* Clock.currentTimeMillis;
 
-  if (successor.role !== "admin") {
+  if (successorMembership.role !== "admin") {
     yield* tryUserCleanup(() =>
-      ctx.db.patch("schoolMembers", successor._id, {
+      ctx.db.patch("schoolMembers", successorMembership._id, {
         role: "admin",
         updatedAt: transferredAt,
       })
@@ -55,9 +53,9 @@ const transferSchoolOwnership = Effect.fn(
 
   yield* tryUserCleanup(() =>
     ctx.db.patch("schools", school._id, {
-      createdBy: successor.userId,
+      createdBy: successorMembership.userId,
       updatedAt: transferredAt,
-      updatedBy: successor.userId,
+      updatedBy: successorMembership.userId,
     })
   );
 

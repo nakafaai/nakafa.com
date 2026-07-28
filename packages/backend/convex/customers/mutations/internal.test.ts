@@ -1,8 +1,11 @@
+import posthogTest from "@posthog/convex/test";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { products } from "@repo/backend/convex/utils/polar/products";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -228,9 +231,14 @@ describe("customers/mutations", () => {
 
   it("deletes an existing customer by Polar id", async () => {
     const t = convexTest(schema, convexModules);
+    posthogTest.register(t);
 
-    await t.mutation(async (ctx) => {
+    const userId = await t.mutation(async (ctx) => {
       const userId = await insertCustomerUser(ctx, "delete");
+      await ctx.db.patch("users", userId, {
+        credits: getPlanCreditConfig("pro").amount,
+        plan: "pro",
+      });
       await insertCustomerRow(ctx, {
         polarId: "polar-delete",
         userId,
@@ -248,11 +256,13 @@ describe("customers/mutations", () => {
         id: "subscription-delete",
         metadata: {},
         modifiedAt: null,
-        productId: "product-delete",
+        productId: products.pro.id,
         recurringInterval: null,
         startedAt: "2026-07-27T00:00:00.000Z",
-        status: "canceled",
+        status: "active",
       });
+
+      return userId;
     });
 
     await expect(
@@ -265,6 +275,7 @@ describe("customers/mutations", () => {
       customers: await ctx.db.query("customers").collect(),
       subscriptions: await ctx.db.query("subscriptions").collect(),
       tombstones: await ctx.db.query("customerDeletionTombstones").collect(),
+      user: await ctx.db.get("users", userId),
     }));
 
     expect(state).toEqual({
@@ -275,6 +286,10 @@ describe("customers/mutations", () => {
           polarCustomerId: "polar-delete",
         }),
       ],
+      user: expect.objectContaining({
+        credits: getPlanCreditConfig("free").amount,
+        plan: "free",
+      }),
     });
   });
 

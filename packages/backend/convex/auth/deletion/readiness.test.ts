@@ -73,6 +73,15 @@ describe("auth/deletion/readiness", () => {
         name: "School Owner",
         plan: "free",
       });
+      const deletingSuccessorId = await ctx.db.insert("users", {
+        authId: "deleting-transfer-successor",
+        credits: 0,
+        creditsResetAt: 0,
+        deletedAt: NOW,
+        email: "deleting-successor@example.com",
+        name: "Deleting Successor",
+        plan: "free",
+      });
       const successorId = await ctx.db.insert("users", {
         authId: "transfer-successor",
         credits: 0,
@@ -103,6 +112,14 @@ describe("auth/deletion/readiness", () => {
       });
       await ctx.db.insert("schoolMembers", {
         joinedAt: NOW,
+        role: "teacher",
+        schoolId,
+        status: "active",
+        updatedAt: NOW,
+        userId: deletingSuccessorId,
+      });
+      await ctx.db.insert("schoolMembers", {
+        joinedAt: NOW,
         role: "student",
         schoolId,
         status: "active",
@@ -116,5 +133,63 @@ describe("auth/deletion/readiness", () => {
     });
 
     expect(isReady).toBe(true);
+  });
+
+  it("blocks a successor whose account is already being deleted", async () => {
+    const t = convexTest(schema, convexModules);
+
+    const isReady = await t.mutation(async (ctx) => {
+      const ownerId = await ctx.db.insert("users", {
+        authId: "concurrent-owner",
+        credits: 0,
+        creditsResetAt: 0,
+        email: "owner@example.com",
+        name: "School Owner",
+        plan: "free",
+      });
+      const deletingSuccessorId = await ctx.db.insert("users", {
+        authId: "concurrent-successor",
+        credits: 0,
+        creditsResetAt: 0,
+        deletedAt: NOW,
+        email: "successor@example.com",
+        name: "Deleting Successor",
+        plan: "free",
+      });
+      const schoolId = await ctx.db.insert("schools", {
+        city: "Jakarta",
+        createdBy: ownerId,
+        currentStudents: 0,
+        currentTeachers: 1,
+        email: "school@example.com",
+        name: "Concurrent Deletion School",
+        province: "DKI Jakarta",
+        slug: "concurrent-deletion-school",
+        type: "high-school",
+        updatedAt: NOW,
+      });
+      await ctx.db.insert("schoolMembers", {
+        joinedAt: NOW,
+        role: "admin",
+        schoolId,
+        status: "active",
+        updatedAt: NOW,
+        userId: ownerId,
+      });
+      await ctx.db.insert("schoolMembers", {
+        joinedAt: NOW,
+        role: "teacher",
+        schoolId,
+        status: "active",
+        updatedAt: NOW,
+        userId: deletingSuccessorId,
+      });
+
+      return await runConvexProgram(
+        getSchoolOwnershipDeletionReadiness(ctx, "concurrent-owner")
+      );
+    });
+
+    expect(isReady).toBe(false);
   });
 });

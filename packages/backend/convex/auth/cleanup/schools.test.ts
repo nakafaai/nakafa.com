@@ -21,6 +21,15 @@ describe("auth/cleanup/schools", () => {
         name: "School Owner",
         plan: "free",
       });
+      const deletingCandidateId = await ctx.db.insert("users", {
+        authId: "deleting-school-successor",
+        credits: 0,
+        creditsResetAt: 0,
+        deletedAt: NOW,
+        email: "deleting-successor@example.com",
+        name: "Deleting School Successor",
+        plan: "free",
+      });
       const successorId = await ctx.db.insert("users", {
         authId: "school-successor",
         credits: 0,
@@ -48,6 +57,14 @@ describe("auth/cleanup/schools", () => {
         status: "active",
         updatedAt: NOW,
         userId: ownerId,
+      });
+      await ctx.db.insert("schoolMembers", {
+        joinedAt: NOW,
+        role: "teacher",
+        schoolId,
+        status: "active",
+        updatedAt: NOW,
+        userId: deletingCandidateId,
       });
       const successorMembershipId = await ctx.db.insert("schoolMembers", {
         joinedAt: NOW,
@@ -90,7 +107,7 @@ describe("auth/cleanup/schools", () => {
     });
   });
 
-  it("preserves an owner-only school when no transfer is possible", async () => {
+  it("preserves an owned school when no live transfer is possible", async () => {
     const t = convexTest(schema, convexModules);
 
     const result = await t.mutation(async (ctx) => {
@@ -121,6 +138,23 @@ describe("auth/cleanup/schools", () => {
         status: "active",
         updatedAt: NOW,
         userId: ownerId,
+      });
+      const deletingSuccessorId = await ctx.db.insert("users", {
+        authId: "deleting-only-successor",
+        credits: 0,
+        creditsResetAt: 0,
+        deletedAt: NOW,
+        email: "deleting-successor@example.com",
+        name: "Deleting Successor",
+        plan: "free",
+      });
+      await ctx.db.insert("schoolMembers", {
+        joinedAt: NOW,
+        role: "teacher",
+        schoolId,
+        status: "active",
+        updatedAt: NOW,
+        userId: deletingSuccessorId,
       });
 
       const outcome = await runConvexProgram(
