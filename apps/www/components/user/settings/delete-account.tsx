@@ -5,6 +5,7 @@ import {
   Delete02Icon,
   Login01Icon,
 } from "@hugeicons/core-free-icons";
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   Alert,
   AlertDescription,
@@ -17,9 +18,10 @@ import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
+import { useMutation } from "convex/react";
 import { Effect, Either } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FormBlock } from "@/components/shared/form-block";
 import {
   clearDeletedAccountBrowserIdentity,
@@ -27,11 +29,13 @@ import {
   prepareAccountReauthentication,
 } from "@/lib/auth/account-deletion";
 
-type DialogError =
-  | "generic"
-  | "school-member-required"
-  | "session-expired"
-  | null;
+const dialogError = {
+  generic: "generic",
+  schoolMemberRequired: "school-member-required",
+  sessionExpired: "session-expired",
+} as const;
+
+type DialogError = (typeof dialogError)[keyof typeof dialogError] | null;
 
 /** Renders the destructive account-deletion card and confirmation flow. */
 export function UserSettingsDeleteAccount() {
@@ -40,9 +44,13 @@ export function UserSettingsDeleteAccount() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const cancelAccountDeletion = useMutation(
+    api.auth.deletion.cancelCurrentAccountDeletion
+  );
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<DialogError>(null);
   const [isPending, setIsPending] = useState(false);
+  const retryAttemptId = useRef<string | null>(null);
 
   function handleOpenChange(nextOpen: boolean) {
     if (isPending && !nextOpen) {
@@ -62,7 +70,13 @@ export function UserSettingsDeleteAccount() {
 
     const result = await Effect.runPromise(
       Effect.gen(function* () {
-        const deletion = yield* Effect.either(deleteCurrentAccount());
+        const deletion = yield* Effect.either(
+          deleteCurrentAccount({
+            attemptId: retryAttemptId.current ?? crypto.randomUUID(),
+            cancelPreparation: (attemptId) =>
+              cancelAccountDeletion({ attemptId }),
+          })
+        );
 
         if (Either.isRight(deletion)) {
           yield* clearDeletedAccountBrowserIdentity();
@@ -77,15 +91,21 @@ export function UserSettingsDeleteAccount() {
       return;
     }
 
+    if (result.left._tag === "AccountDeletionRequestUncertain") {
+      retryAttemptId.current = result.left.attemptId;
+    } else {
+      retryAttemptId.current = null;
+    }
+
     if (result.left._tag === "AccountDeletionSessionExpired") {
-      setError("session-expired");
+      setError(dialogError.sessionExpired);
       return;
     }
 
     setError(
       result.left._tag === "AccountDeletionSchoolMemberRequired"
-        ? "school-member-required"
-        : "generic"
+        ? dialogError.schoolMemberRequired
+        : dialogError.generic
     );
   }
 
@@ -104,14 +124,14 @@ export function UserSettingsDeleteAccount() {
       return;
     }
 
-    setError("generic");
+    setError(dialogError.generic);
   }
 
   let errorMessage = t("delete-account-error");
 
-  if (error === "session-expired") {
+  if (error === dialogError.sessionExpired) {
     errorMessage = t("delete-account-session-expired");
-  } else if (error === "school-member-required") {
+  } else if (error === dialogError.schoolMemberRequired) {
     errorMessage = t("delete-account-school-member-required");
   }
 
@@ -150,7 +170,7 @@ export function UserSettingsDeleteAccount() {
             >
               {common("cancel")}
             </Button>
-            {error === "session-expired" ? (
+            {error === dialogError.sessionExpired ? (
               <Button
                 disabled={isPending}
                 onClick={handleReauthenticate}

@@ -1,5 +1,23 @@
+import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { UserSettingsTabs } from "@/components/user/settings/tabs";
+
+/** Keeps private account settings out of search and social discovery. */
+export const metadata: Metadata = {
+  alternates: null,
+  openGraph: null,
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
+  twitter: null,
+};
 
 /** Render the user settings shell inside the validated locale subtree. */
 export default function Layout({
