@@ -2,119 +2,18 @@ import {
   validateEvent,
   WebhookVerificationError,
 } from "@polar-sh/sdk/webhooks";
-import { internal } from "@repo/backend/convex/_generated/api";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { convertToDatabaseCustomer } from "@repo/backend/convex/customers/records";
+import { processPolarWebhookEvent } from "@repo/backend/convex/customers/polar/webhook";
 import {
   HTTP_ACCEPTED,
   HTTP_BAD_REQUEST,
   HTTP_FORBIDDEN,
   HTTP_INTERNAL_ERROR,
 } from "@repo/backend/convex/routes/constants";
-import { convertToDatabaseSubscription } from "@repo/backend/convex/subscriptions/utils";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { polarWebhookSecret } from "@repo/backend/convex/utils/polar/webhook";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
-
-/**
- * Upsert the local customer row only when the webhook can be matched back to a
- * known app user.
- */
-async function handleCustomerUpsert(
-  ctx: ActionCtx,
-  customer: {
-    id: string;
-    externalId?: string | null;
-    metadata?: Record<string, string | number | boolean> | null;
-  }
-) {
-  const userId = await ctx.runQuery(
-    internal.customers.queries.internal.customer.getUserIdByPolarCustomer,
-    {
-      externalId: customer.externalId ?? undefined,
-      metadataUserId:
-        typeof customer.metadata?.userId === "string"
-          ? customer.metadata.userId
-          : undefined,
-    }
-  );
-
-  if (!userId) {
-    return false;
-  }
-
-  await ctx.runMutation(internal.customers.mutations.internal.upsertCustomer, {
-    customer: convertToDatabaseCustomer({
-      id: customer.id,
-      externalId: customer.externalId,
-      metadata: customer.metadata ?? {},
-      userId,
-    }),
-  });
-
-  return true;
-}
-
-/**
- * Verify one Polar webhook payload, then dispatch the matching customer or
- * subscription mutation.
- */
-async function handlePolarEvent(
-  ctx: ActionCtx,
-  body: string,
-  headers: Headers
-) {
-  const event = validateEvent(
-    body,
-    Object.fromEntries(headers.entries()),
-    polarWebhookSecret
-  );
-
-  switch (event.type) {
-    case "customer.created":
-    case "customer.updated": {
-      return handleCustomerUpsert(ctx, event.data);
-    }
-    case "customer.deleted": {
-      let hasMore = true;
-
-      while (hasMore) {
-        hasMore = await ctx.runMutation(
-          internal.customers.mutations.internal.deleteCustomerById,
-          {
-            id: event.data.id,
-          }
-        );
-      }
-      return true;
-    }
-    case "subscription.created": {
-      await ctx.runMutation(
-        internal.subscriptions.mutations.createSubscription,
-        {
-          subscription: convertToDatabaseSubscription(event.data),
-        }
-      );
-      return true;
-    }
-    case "subscription.updated":
-    case "subscription.active":
-    case "subscription.canceled":
-    case "subscription.uncanceled":
-    case "subscription.revoked": {
-      await ctx.runMutation(
-        internal.subscriptions.mutations.updateSubscription,
-        {
-          subscription: convertToDatabaseSubscription(event.data),
-        }
-      );
-      return true;
-    }
-    default: {
-      return true;
-    }
-  }
-}
+import { Effect } from "effect";
 
 /** Register Polar webhook routes on the Hono app. */
 export function registerPolarRoutes(app: HonoWithConvex<ActionCtx>) {
@@ -122,7 +21,14 @@ export function registerPolarRoutes(app: HonoWithConvex<ActionCtx>) {
     const body = await c.req.text();
 
     try {
-      const handled = await handlePolarEvent(c.env, body, c.req.raw.headers);
+      const event = validateEvent(
+        body,
+        Object.fromEntries(c.req.raw.headers.entries()),
+        polarWebhookSecret
+      );
+      const handled = await Effect.runPromise(
+        processPolarWebhookEvent(c.env, event)
+      );
 
       if (!handled) {
         return c.text("Bad Request: Missing User", HTTP_BAD_REQUEST);

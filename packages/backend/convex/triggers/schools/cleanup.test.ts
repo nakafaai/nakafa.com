@@ -240,7 +240,7 @@ describe("triggers/schools/cleanupDeletedForum", () => {
       await ctx.db.insert("schoolClassForumPendingUploads", {
         forumId,
         classId,
-        settlementToken: "forum-upload-settlement-token",
+        uploadToken: "forum-upload-token",
         uploadedBy: viewer.userId,
         name: "draft.txt",
       });

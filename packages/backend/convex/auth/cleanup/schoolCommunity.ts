@@ -4,6 +4,7 @@ import {
   toUserCleanupError,
   tryUserCleanup,
 } from "@repo/backend/convex/auth/cleanup/spec";
+import { deleteForumPendingUpload } from "@repo/backend/convex/classes/forums/attachments/impl";
 import {
   cleanupForumData,
   cleanupForumPostData,
@@ -12,6 +13,7 @@ import { Effect } from "effect";
 
 const REACTION_BATCH_SIZE = 50;
 const READ_STATE_BATCH_SIZE = 50;
+const UPLOAD_BATCH_SIZE = 10;
 const REPLY_REFERENCE_BATCH_SIZE = 25;
 const MATERIAL_VIEW_BATCH_SIZE = 50;
 
@@ -52,7 +54,7 @@ const cleanupForumReactions = Effect.fn("auth.cleanup.cleanupForumReactions")(
   }
 );
 
-/** Deletes one bounded batch of class-forum read state. */
+/** Deletes one bounded batch of class-forum read state and pending uploads. */
 const cleanupForumState = Effect.fn("auth.cleanup.cleanupForumState")(
   function* (ctx: MutationCtx, userId: Id<"users">) {
     const readStates = yield* tryUserCleanup(() =>
@@ -68,7 +70,24 @@ const cleanupForumState = Effect.fn("auth.cleanup.cleanupForumState")(
       );
     }
 
-    return readStates.length > 0;
+    if (readStates.length > 0) {
+      return true;
+    }
+
+    const uploads = yield* tryUserCleanup(() =>
+      ctx.db
+        .query("schoolClassForumPendingUploads")
+        .withIndex("by_uploadedBy", (query) => query.eq("uploadedBy", userId))
+        .take(UPLOAD_BATCH_SIZE)
+    );
+
+    for (const upload of uploads) {
+      yield* deleteForumPendingUpload(ctx, upload).pipe(
+        Effect.mapError(toUserCleanupError)
+      );
+    }
+
+    return uploads.length > 0;
   }
 );
 

@@ -1,6 +1,10 @@
 import "@repo/backend/convex/polyfills";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { createAuth } from "@repo/backend/convex/auth/runtime";
+import {
+  isForumAttachmentUploadPath,
+  registerForumAttachmentUploadRoute,
+} from "@repo/backend/convex/classes/forums/attachments/route";
 import { registerContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime";
 import { registerContentReleaseRoutes } from "@repo/backend/convex/contentRelease/ingress/route";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
@@ -20,11 +24,12 @@ const app: HonoWithConvex<ActionCtx> = new Hono();
 app.use("*", requestId);
 
 // Logging middleware - strip ANSI for Convex dashboard
-app.use(
-  "*",
-  logger((...args) => {
-    console.info(...args.map(stripAnsi));
-  })
+const requestLogger = logger((...args) => {
+  console.info(...args.map(stripAnsi));
+});
+
+app.use("*", (c, next) =>
+  isForumAttachmentUploadPath(c.req.path) ? next() : requestLogger(c, next)
 );
 
 // Note: CORS is handled in Next.js middleware (apps/api/proxy.ts)
@@ -46,6 +51,9 @@ app.route("/v1", v1);
 
 // Register webhook routes (internal - called by external services)
 registerPolarRoutes(app);
+
+// Register capability-authenticated forum attachment uploads.
+registerForumAttachmentUploadRoute(app);
 
 // Register authenticated content publication routes.
 registerContentReleaseRoutes(app);

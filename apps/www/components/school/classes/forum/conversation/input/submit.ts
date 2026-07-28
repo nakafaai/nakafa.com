@@ -166,7 +166,7 @@ const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
 /** Uploads one attachment and removes its pending record if the upload fails. */
 const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
   function* ({ file, forumId, mutations }: UploadAttachmentFileInput) {
-    const { settlementToken, uploadId, uploadUrl } = yield* Effect.tryPromise({
+    const { uploadId, uploadUrl } = yield* Effect.tryPromise({
       try: () => mutations.generateUploadUrl({ forumId }),
       catch: (cause) =>
         new ForumAttachmentUploadError({
@@ -211,7 +211,6 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
         mutations.saveForumUpload({
           name: file.name,
           size: file.size,
-          settlementToken,
           type: file.type,
           storageId,
           uploadId,

@@ -7,6 +7,8 @@ process.env.POSTHOG_HOST = "http://127.0.0.1:9";
 process.env.POSTHOG_ACCOUNT_DELETION_API_KEY = "phx_test";
 process.env.POSTHOG_PROJECT_ID = "114144";
 process.env.POSTHOG_PROJECT_TOKEN = "phc_test";
+process.env.CONVEX_SITE_URL = "https://example.convex.site";
+process.env.POLAR_ACCESS_TOKEN = "polar_test";
 
 /** Restores real timers after every backend test to prevent timer leakage. */
 afterEach(() => {
