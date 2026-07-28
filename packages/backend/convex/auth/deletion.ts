@@ -5,6 +5,7 @@ import {
 import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
 import {
   cancelAccountDeletionAttemptBatch,
+  cancelAccountDeletionAttemptByToken,
   cancelAccountDeletion as cancelAccountDeletionProgram,
 } from "@repo/backend/convex/auth/deletion/cancel";
 import { prepareAccountDeletion as prepareAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/prepare";
@@ -124,17 +125,20 @@ export const continueAccountDeletionCancellation = internalMutation({
   },
 });
 
-/** Lets the current auth session immediately recover from an aborted delete. */
-export const cancelCurrentAccountDeletion = mutation({
+/** Lets the opaque browser attempt recover while its auth user still exists. */
+export const cancelAccountDeletionAttempt = mutation({
   args: {
     attemptId: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const authUser = await authReader.getAuthUser(ctx);
-
     await runConvexProgram(
-      cancelAccountDeletionAttemptBatch(ctx, authUser._id, args.attemptId)
+      cancelAccountDeletionAttemptByToken(
+        ctx,
+        args.attemptId,
+        async (authId) =>
+          (await authReader.getAnyUserById(ctx, authId)) !== null
+      )
     );
     return null;
   },

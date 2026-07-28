@@ -122,8 +122,13 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     const cancelPreparedAttempt = () =>
       Effect.tryPromise({
         try: () => cancelPreparation(attemptId),
-        catch: () => undefined,
-      }).pipe(Effect.ignore);
+        catch: () =>
+          new AccountDeletionRequestUncertain({
+            attemptId,
+            code: accountDeletionRequestUncertainCode,
+            phase: accountDeletionRequestPhase.preparation,
+          }),
+      });
     const proveCommittedDeletion = () =>
       Effect.tryPromise({
         try: () => reconcile(attemptId),

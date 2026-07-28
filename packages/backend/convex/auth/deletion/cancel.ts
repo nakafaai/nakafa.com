@@ -144,6 +144,39 @@ export const cancelAccountDeletionAttemptBatch = Effect.fn(
   }
 });
 
+/**
+ * Cancels a browser-owned attempt only while the Better Auth user still
+ * exists. The unguessable attempt ID is the narrow recovery capability.
+ */
+export const cancelAccountDeletionAttemptByToken = Effect.fn(
+  "auth.deletion.cancelAccountDeletionAttemptByToken"
+)(function* (
+  ctx: MutationCtx,
+  attemptId: string,
+  authUserExists: (authId: string) => Promise<boolean>
+) {
+  const preparation = yield* tryUserCleanup(() =>
+    ctx.db
+      .query("accountDeletionPreparations")
+      .withIndex("by_attemptId", (query) => query.eq("attemptId", attemptId))
+      .unique()
+  );
+
+  if (!preparation || preparation.finalizedAt !== undefined) {
+    return;
+  }
+
+  const userStillExists = yield* tryUserCleanup(() =>
+    authUserExists(preparation.authId)
+  );
+
+  if (!userStillExists) {
+    return;
+  }
+
+  yield* cancelAccountDeletionAttemptBatch(ctx, preparation.authId, attemptId);
+});
+
 /** Removes finalized preparation metadata once its cleanup workflow is active. */
 export const cleanupFinalizedAccountDeletion: (
   ctx: MutationCtx,

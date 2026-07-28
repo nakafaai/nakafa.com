@@ -48,7 +48,7 @@ export function UserSettingsDeleteAccount() {
   const router = useRouter();
   const convex = useConvex();
   const cancelAccountDeletion = useMutation(
-    api.auth.deletion.cancelCurrentAccountDeletion
+    api.auth.deletion.cancelAccountDeletionAttempt
   );
   const prepareAccountDeletion = useMutation(
     api.auth.deletion.prepareCurrentAccountDeletion
