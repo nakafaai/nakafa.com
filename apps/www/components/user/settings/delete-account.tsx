@@ -26,10 +26,12 @@ import { FormBlock } from "@/components/shared/form-block";
 import {
   type AccountDeletionRequestPhase,
   accountDeletionRequestPhase,
-  clearDeletedAccountBrowserIdentity,
   deleteCurrentAccount,
-  prepareAccountReauthentication,
 } from "@/lib/auth/account-deletion";
+import {
+  clearDeletedAccountBrowserIdentity,
+  prepareAccountReauthentication,
+} from "@/lib/auth/account-deletion-identity";
 
 const dialogError = {
   generic: "generic",
