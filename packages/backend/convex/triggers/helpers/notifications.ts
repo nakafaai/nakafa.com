@@ -3,6 +3,7 @@ import type {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/convex/_generated/server";
+import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import type { WithoutSystemFields } from "convex/server";
 
 /**
@@ -19,6 +20,7 @@ import type { WithoutSystemFields } from "convex/server";
  * This ensures URLs are always correct even if routing changes.
  *
  * Current preference checks:
+ * - Missing, prepared, or deleted recipients
  * - Disabled notification types via notificationPreferences.disabledTypes
  * - Muted entities via notificationEntityMutes
  */
@@ -26,6 +28,12 @@ export async function createNotification(
   ctx: { db: DatabaseReader & DatabaseWriter },
   args: Omit<WithoutSystemFields<Doc<"notifications">>, "readAt">
 ) {
+  const recipient = await ctx.db.get("users", args.recipientId);
+
+  if (!recipient || isAccountDeletionPending(recipient)) {
+    return null;
+  }
+
   const entityId = args.entityId;
 
   const preferencesPromise = ctx.db
