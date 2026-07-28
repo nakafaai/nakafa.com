@@ -1,9 +1,4 @@
-import { ModelIdSchema } from "@repo/ai/config/model";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
-import {
-  deleteExistingResponseByIdentifier,
-  getAssistantCreditUsage,
-} from "@repo/backend/convex/chats/assistantResponses/impl";
 import {
   deleteMessageBatchFromPoint,
   getMessageByIdentifier,
@@ -13,11 +8,8 @@ import {
 import tables, {
   chatTypeValidator,
   chatVisibilityValidator,
-  messageGenerationErrorCodeValidator,
-  modelIdValueValidator,
 } from "@repo/backend/convex/chats/schema";
-import type { CreditTransactionMetadata } from "@repo/backend/convex/credits/schema";
-import { internalMutation, mutation } from "@repo/backend/convex/functions";
+import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
@@ -236,176 +228,5 @@ export const deleteChat = mutation({
 
     await ctx.db.delete("chats", args.chatId);
     return null;
-  },
-});
-
-/**
- * Persists an assistant message with parts and deducts credits atomically.
- *
- * Credits are deducted *after* streaming (via waitUntil). The pre-check in
- * route.ts is the real gate — a small negative balance is intentionally
- * allowed here to avoid erroring mid-stream.
- */
-export const saveAssistantResponse = internalMutation({
-  args: {
-    userId: vv.id("users"),
-    message: tables.messages.validator,
-    parts: v.array(
-      v.object({
-        ...tables.messageParts.validator.fields,
-        messageId: v.optional(vv.id("messages")),
-      })
-    ),
-  },
-  returns: v.object({
-    messageId: vv.id("messages"),
-    partIds: v.array(vv.id("messageParts")),
-    credits: v.number(),
-    newBalance: v.number(),
-  }),
-  handler: async (ctx, args) => {
-    const { userId, message, parts } = args;
-
-    // Auth is not propagated to scheduled functions — user is looked up by the
-    // userId the action captured from its own auth context before scheduling.
-    const appUser = await ctx.db.get("users", userId);
-    if (!appUser) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User not found.",
-      });
-    }
-
-    await verifyChatOwnership(ctx, message.chatId, appUser._id);
-
-    await deleteExistingResponseByIdentifier(
-      ctx,
-      message.chatId,
-      message.identifier
-    );
-
-    const modelId = message.modelId
-      ? ModelIdSchema.make(message.modelId)
-      : undefined;
-    const creditUsage = await getAssistantCreditUsage(ctx, appUser, modelId);
-
-    const messageId = await ctx.db.insert("messages", {
-      chatId: message.chatId,
-      role: message.role,
-      identifier: message.identifier,
-      modelId: message.modelId,
-      inputTokens: message.inputTokens,
-      outputTokens: message.outputTokens,
-      totalTokens: message.totalTokens,
-      credits: creditUsage?.credits,
-      generationStatus: "complete",
-      ninaContextSnapshot: message.ninaContextSnapshot,
-      ninaContextTransition: message.ninaContextTransition,
-    });
-
-    const partIds = await insertParts(ctx, messageId, parts);
-
-    if (!(modelId && creditUsage)) {
-      return {
-        messageId,
-        partIds,
-        credits: 0,
-        newBalance: appUser.credits,
-      };
-    }
-
-    await ctx.db.patch("users", appUser._id, {
-      credits: creditUsage.newBalance,
-      creditsResetAt: creditUsage.nextResetTimestamp,
-    });
-
-    if (creditUsage.resetGrant) {
-      await ctx.db.insert("creditTransactions", {
-        userId: appUser._id,
-        ...creditUsage.resetGrant,
-      });
-    }
-
-    const usageMetadata: CreditTransactionMetadata = {
-      chatId: message.chatId,
-      messageId,
-      modelId,
-    };
-
-    if (message.inputTokens !== undefined) {
-      usageMetadata.inputTokens = message.inputTokens;
-    }
-
-    if (message.outputTokens !== undefined) {
-      usageMetadata.outputTokens = message.outputTokens;
-    }
-
-    if (message.totalTokens !== undefined) {
-      usageMetadata.totalTokens = message.totalTokens;
-    }
-
-    await ctx.db.insert("creditTransactions", {
-      userId: appUser._id,
-      amount: -creditUsage.credits,
-      type: "usage",
-      balanceAfter: creditUsage.newBalance,
-      metadata: usageMetadata,
-    });
-
-    return {
-      messageId,
-      partIds,
-      credits: creditUsage.credits,
-      newBalance: creditUsage.newBalance,
-    };
-  },
-});
-
-/**
- * Persists one failed assistant response so refresh never hides stream failure.
- *
- * @see https://docs.convex.dev/functions/internal-functions
- */
-export const saveAssistantFailure = internalMutation({
-  args: {
-    userId: vv.id("users"),
-    message: v.object({
-      chatId: vv.id("chats"),
-      identifier: v.string(),
-      modelId: modelIdValueValidator,
-      generationErrorCode: messageGenerationErrorCodeValidator,
-    }),
-  },
-  returns: v.object({
-    messageId: vv.id("messages"),
-  }),
-  handler: async (ctx, args) => {
-    const { userId, message } = args;
-
-    const appUser = await ctx.db.get("users", userId);
-    if (!appUser) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "User not found.",
-      });
-    }
-
-    await verifyChatOwnership(ctx, message.chatId, appUser._id);
-    await deleteExistingResponseByIdentifier(
-      ctx,
-      message.chatId,
-      message.identifier
-    );
-
-    const messageId = await ctx.db.insert("messages", {
-      chatId: message.chatId,
-      role: "assistant",
-      identifier: message.identifier,
-      modelId: message.modelId,
-      generationStatus: "failed",
-      generationErrorCode: message.generationErrorCode,
-    });
-
-    return { messageId };
   },
 });

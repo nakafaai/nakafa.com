@@ -30,7 +30,7 @@ export const scheduleSaveAssistantResponse = action({
     const { appUser } = await requireAuthForAction(ctx);
     await ctx.scheduler.runAfter(
       0,
-      internal.chats.mutations.saveAssistantResponse,
+      internal.chats.assistantResponses.saveAssistantResponse,
       { userId: appUser._id, ...args }
     );
     return null;
@@ -56,7 +56,7 @@ export const scheduleSaveAssistantFailure = action({
     const { appUser } = await requireAuthForAction(ctx);
     await ctx.scheduler.runAfter(
       0,
-      internal.chats.mutations.saveAssistantFailure,
+      internal.chats.assistantResponses.saveAssistantFailure,
       { userId: appUser._id, ...args }
     );
     return null;

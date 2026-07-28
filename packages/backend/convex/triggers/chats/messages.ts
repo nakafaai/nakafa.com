@@ -21,6 +21,11 @@ export async function messagesHandler(
     return;
   }
 
+  const user = await ctx.db.get("users", chat.userId);
+  if (!user || user.deletedAt !== undefined) {
+    return;
+  }
+
   if (message.role === "user") {
     await captureProductEvent(ctx, {
       distinctId: chat.userId,

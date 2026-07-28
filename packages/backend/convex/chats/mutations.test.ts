@@ -1,6 +1,4 @@
 import posthogTest from "@posthog/convex/test";
-import { chatResponseFailureCode } from "@repo/ai/config/generation";
-import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -15,8 +13,6 @@ import { convexTest } from "convex-test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
-const liteModel = ModelIdSchema.make("nakafa-lite");
-const liteCreditCost = getModelCreditCost(liteModel);
 
 /** Inserts generated tail messages used to exercise bounded transcript rewrites. */
 async function insertGeneratedTailMessages(
@@ -39,248 +35,76 @@ describe("chats/mutations", () => {
     vi.setSystemTime(new Date(NOW));
   });
 
-  it("records a reset grant before the usage transaction when credits roll into a new window", async () => {
+  it("does not capture messages inserted for a deleting account", async () => {
     const t = convexTest(schema, convexModules);
     posthogTest.register(t);
 
-    const { chatId, userId } = await t.mutation(async (ctx) => {
+    const userId = await t.mutation(async (ctx) => {
       const userId = await ctx.db.insert("users", {
-        authId: "chat_user_auth",
-        email: "chat-user@example.com",
-        name: "Chat User",
+        authId: "deleted-message-trigger-user",
+        credits: 0,
+        creditsResetAt: NOW,
+        deletedAt: NOW,
+        email: "deleted-message-trigger-user@example.com",
+        name: "Deleted Trigger User",
         plan: "free",
-        credits: -3,
-        creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
       });
       const chatId = await ctx.db.insert("chats", {
+        title: "Deleted trigger",
+        type: "study",
         updatedAt: NOW,
-        title: "Set 1",
         userId,
         visibility: "private",
-        type: "study",
+      });
+      await ctx.db.insert("messages", {
+        chatId,
+        identifier: "late-direct-message",
+        modelId: "nakafa-lite",
+        role: "assistant",
       });
 
-      return { chatId, userId };
+      return userId;
     });
-
-    const result = await t.mutation(
-      internal.chats.mutations.saveAssistantResponse,
-      {
-        userId,
-        message: {
-          chatId,
-          role: "assistant",
-          identifier: "assistant-1",
-          modelId: "nakafa-lite",
-          inputTokens: 10,
-          outputTokens: 20,
-          totalTokens: 30,
-        },
-        parts: [],
-      }
-    );
-
-    const savedState = await t.query(async (ctx) => ({
-      creditTransactions: await ctx.db.query("creditTransactions").collect(),
+    const state = await t.query(async (ctx) => ({
       scheduledJobs: await ctx.db.system
         .query("_scheduled_functions")
         .collect(),
       user: await ctx.db.get("users", userId),
     }));
 
-    expect(result.credits).toBe(liteCreditCost);
-    expect(result.newBalance).toBe(7 - liteCreditCost);
-    expect(savedState.user).toMatchObject({
-      credits: 7 - liteCreditCost,
-      creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
-    });
-    expect(savedState.creditTransactions).toEqual([
-      expect.objectContaining({
-        userId,
-        amount: 10,
-        type: "daily-grant",
-        balanceAfter: 7,
-      }),
-      expect.objectContaining({
-        userId,
-        amount: -liteCreditCost,
-        type: "usage",
-        balanceAfter: 7 - liteCreditCost,
-        metadata: expect.objectContaining({
-          chatId,
-          inputTokens: 10,
-          outputTokens: 20,
-          totalTokens: 30,
-          modelId: "nakafa-lite",
-        }),
-      }),
-    ]);
-    expect(savedState.scheduledJobs).toEqual([
-      expect.objectContaining({
-        args: [
-          expect.objectContaining({
-            disableGeoip: true,
-            distinctId: userId,
-            event: "chat response completed",
-            properties: JSON.stringify({
-              chat_type: "study",
-              credits: liteCreditCost,
-              input_tokens: 10,
-              model_id: "nakafa-lite",
-              output_tokens: 20,
-              total_tokens: 30,
-            }),
-          }),
-        ],
-        name: expect.stringContaining("capture"),
-      }),
-    ]);
+    expect(state.scheduledJobs).toEqual([]);
+    expect(state.user?.deletedAt).toBe(NOW);
   });
 
-  it("persists a failed assistant response without deducting credits", async () => {
-    const t = convexTest(schema, convexModules);
-    posthogTest.register(t);
-
-    const { chatId, userId } = await t.mutation(async (ctx) => {
-      const userId = await ctx.db.insert("users", {
-        authId: "failed_chat_user_auth",
-        email: "failed-chat-user@example.com",
-        name: "Failed Chat User",
-        plan: "free",
-        credits: 10,
-        creditsResetAt: NOW,
-      });
-      const chatId = await ctx.db.insert("chats", {
-        updatedAt: NOW,
-        title: "Failure",
-        userId,
-        visibility: "private",
-        type: "study",
-      });
-
-      return { chatId, userId };
-    });
-
-    const result = await t.mutation(
-      internal.chats.mutations.saveAssistantFailure,
-      {
-        userId,
-        message: {
-          chatId,
-          identifier: "assistant-failed",
-          modelId: "nakafa-lite",
-          generationErrorCode: chatResponseFailureCode,
-        },
-      }
+  it("rejects authenticated writes after account deletion starts", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(
+      async (ctx) =>
+        await seedAuthenticatedUser(ctx, {
+          now: NOW,
+          suffix: "deleting-authenticated-user",
+        })
+    );
+    await t.mutation(
+      async (ctx) =>
+        await ctx.db.patch("users", identity.userId, { deletedAt: NOW })
     );
 
-    const savedState = await t.query(async (ctx) => ({
-      creditTransactions: await ctx.db.query("creditTransactions").collect(),
-      messages: await ctx.db.query("messages").collect(),
-      scheduledJobs: await ctx.db.system
-        .query("_scheduled_functions")
-        .collect(),
-      user: await ctx.db.get("users", userId),
-    }));
-
-    expect(result.messageId).toBeDefined();
-    expect(savedState.user?.credits).toBe(10);
-    expect(savedState.creditTransactions).toEqual([]);
-    expect(savedState.messages).toEqual([
-      expect.objectContaining({
-        chatId,
-        role: "assistant",
-        identifier: "assistant-failed",
-        modelId: "nakafa-lite",
-        generationStatus: "failed",
-        generationErrorCode: chatResponseFailureCode,
-      }),
-    ]);
-    expect(savedState.scheduledJobs).toEqual([
-      expect.objectContaining({
-        args: [
-          expect.objectContaining({
-            disableGeoip: true,
-            distinctId: userId,
-            event: "chat response failed",
-            properties: JSON.stringify({
-              chat_type: "study",
-              error_code: chatResponseFailureCode,
-              model_id: "nakafa-lite",
-            }),
-          }),
-        ],
-        name: expect.stringContaining("capture"),
-      }),
-    ]);
-  });
-
-  it("replaces a failed assistant marker when the response is saved later", async () => {
-    const t = convexTest(schema, convexModules);
-    posthogTest.register(t);
-
-    const { chatId, userId } = await t.mutation(async (ctx) => {
-      const userId = await ctx.db.insert("users", {
-        authId: "retry_chat_user_auth",
-        email: "retry-chat-user@example.com",
-        name: "Retry Chat User",
-        plan: "free",
-        credits: 10,
-        creditsResetAt: NOW,
-      });
-      const chatId = await ctx.db.insert("chats", {
-        updatedAt: NOW,
-        title: "Retry",
-        userId,
-        visibility: "private",
-        type: "study",
-      });
-
-      return { chatId, userId };
-    });
-
-    await t.mutation(internal.chats.mutations.saveAssistantFailure, {
-      userId,
-      message: {
-        chatId,
-        identifier: "assistant-retry",
-        modelId: "nakafa-lite",
-        generationErrorCode: chatResponseFailureCode,
+    await expect(
+      t
+        .withIdentity({
+          sessionId: identity.sessionId,
+          subject: identity.authUserId,
+        })
+        .mutation(api.chats.mutations.createChat, {
+          type: "study",
+        })
+    ).rejects.toMatchObject({
+      data: {
+        code: "UNAUTHORIZED",
+        message: "User not found.",
       },
     });
-
-    await t.mutation(internal.chats.mutations.saveAssistantResponse, {
-      userId,
-      message: {
-        chatId,
-        role: "assistant",
-        identifier: "assistant-retry",
-        modelId: "nakafa-lite",
-        inputTokens: 1,
-        outputTokens: 2,
-        totalTokens: 3,
-      },
-      parts: [],
-    });
-
-    const savedState = await t.query(async (ctx) => ({
-      messages: await ctx.db.query("messages").collect(),
-      user: await ctx.db.get("users", userId),
-    }));
-
-    expect(savedState.user?.credits).toBe(10 - liteCreditCost);
-    expect(savedState.messages).toEqual([
-      expect.objectContaining({
-        chatId,
-        role: "assistant",
-        identifier: "assistant-retry",
-        modelId: "nakafa-lite",
-        generationStatus: "complete",
-        inputTokens: 1,
-        outputTokens: 2,
-        totalTokens: 3,
-      }),
-    ]);
   });
 
   it("captures a user chat message with the selected model", async () => {
@@ -354,7 +178,7 @@ describe("chats/mutations", () => {
       }
     );
 
-    await t.mutation(internal.chats.mutations.saveAssistantResponse, {
+    await t.mutation(internal.chats.assistantResponses.saveAssistantResponse, {
       userId: identity.userId,
       message: {
         chatId,

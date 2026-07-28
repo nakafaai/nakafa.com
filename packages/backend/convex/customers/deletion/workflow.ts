@@ -86,13 +86,15 @@ export const startDeletedUserCleanupProgram: (
     return;
   }
 
-  const deletedAt = yield* Clock.currentTimeMillis;
+  if (user.deletedAt === undefined) {
+    const deletedAt = yield* Clock.currentTimeMillis;
 
-  yield* tryUserCleanup(() =>
-    ctx.db.patch("users", user._id, {
-      deletedAt,
-    })
-  );
+    yield* tryUserCleanup(() =>
+      ctx.db.patch("users", user._id, {
+        deletedAt,
+      })
+    );
+  }
   yield* tryUserCleanup(() =>
     startWorkflow(ctx, {
       authId,
@@ -114,9 +116,9 @@ export const startDeletedUserCleanup = internalMutation({
 });
 
 /**
- * Cancels billing and starts external erasure before local cleanup. This keeps
- * deterministic local corruption from leaving paid service or analytics data
- * active after the auth identity is gone. Every step is retry-safe.
+ * Cancels billing before fallible local cleanup, then erases analytics only
+ * after account writes are quiesced and personal data is gone. Every step is
+ * retry-safe across retained workflow restarts.
  */
 export const cleanupDeletedUserData = workflow.define({
   args: {
@@ -130,12 +132,6 @@ export const cleanupDeletedUserData = workflow.define({
       args,
       { retry: EXTERNAL_DELETE_RETRY }
     );
-    await step.runAction(
-      internal.analytics.deletion.cleanupDeletedUserAnalytics,
-      { userId: args.userId },
-      { retry: EXTERNAL_DELETE_RETRY }
-    );
-
     let hasMoreLocalData = true;
 
     while (hasMoreLocalData) {
@@ -144,6 +140,12 @@ export const cleanupDeletedUserData = workflow.define({
         { userId: args.userId }
       );
     }
+
+    await step.runAction(
+      internal.analytics.deletion.cleanupDeletedUserAnalytics,
+      { userId: args.userId },
+      { retry: EXTERNAL_DELETE_RETRY }
+    );
 
     return null;
   },

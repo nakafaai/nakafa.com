@@ -1,5 +1,4 @@
 import posthogTest from "@posthog/convex/test";
-import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getStoredCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
@@ -183,45 +182,6 @@ describe("triggers/subscriptions/impl", () => {
 
     expect(result.ran).toBe(true);
     expect(result.creditTransactions).toHaveLength(0);
-  });
-
-  it("does not recreate plan history for a deleted user", async () => {
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createSubscriptionTestConvex();
-
-    const result = await t.mutation(async (ctx) => {
-      const userId = await insertUser(ctx, "deleted-user", {
-        credits: 120,
-        creditsResetAt: NOW,
-        plan: "pro",
-      });
-      await ctx.db.patch("users", userId, { deletedAt: NOW });
-      await insertCustomer(ctx, userId, "polar-deleted-user");
-      await insertSubscription(ctx, {
-        customerId: "polar-deleted-user",
-        productId: products.pro.id,
-        status: "canceled",
-        subscriptionId: "sub-deleted-user",
-      });
-
-      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-deleted-user");
-
-      return {
-        creditTransactions: await ctx.db.query("creditTransactions").collect(),
-        scheduledJobs: await ctx.db.system
-          .query("_scheduled_functions")
-          .collect(),
-        user: await ctx.db.get("users", userId),
-      };
-    });
-
-    expect(result.creditTransactions).toEqual([]);
-    expect(result.scheduledJobs).toEqual([]);
-    expect(result.user).toMatchObject({
-      credits: 120,
-      plan: "pro",
-    });
   });
 
   it("returns early when the derived plan is unchanged", async () => {
@@ -526,112 +486,5 @@ describe("triggers/subscriptions/impl", () => {
       amount: 3000,
       type: "purchase",
     });
-  });
-
-  it("runs through the trigger-aware subscription create mutation", async () => {
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createSubscriptionTestConvex();
-
-    const userId = await t.mutation(async (ctx) => {
-      const userId = await insertUser(ctx, "trigger-create", {
-        credits: 4,
-        creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
-        plan: "free",
-      });
-
-      await insertCustomer(ctx, userId, "polar-trigger-create");
-
-      return userId;
-    });
-
-    await t.mutation(internal.subscriptions.mutations.createSubscription, {
-      subscription: buildSubscription({
-        customerId: "polar-trigger-create",
-        productId: products.pro.id,
-        status: "active",
-        subscriptionId: "sub-trigger-create",
-      }),
-    });
-
-    const result = await t.query(async (ctx) => ({
-      creditTransactions: await ctx.db.query("creditTransactions").collect(),
-      user: await ctx.db.get("users", userId),
-    }));
-
-    expect(result.user).toMatchObject({
-      credits: 3000,
-      plan: "pro",
-      creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
-    });
-    expect(result.creditTransactions).toEqual([
-      expect.objectContaining({
-        amount: 3000,
-        type: "purchase",
-        metadata: expect.objectContaining({
-          "subscription-id": "sub-trigger-create",
-        }),
-      }),
-    ]);
-  });
-
-  it("runs through the trigger-aware subscription update mutation", async () => {
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createSubscriptionTestConvex();
-
-    const userId = await t.mutation(async (ctx) => {
-      const userId = await insertUser(ctx, "trigger-update", {
-        credits: 4,
-        creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
-        plan: "free",
-      });
-
-      await insertCustomer(ctx, userId, "polar-trigger-update");
-
-      return userId;
-    });
-
-    const activeSubscription = buildSubscription({
-      customerId: "polar-trigger-update",
-      productId: products.pro.id,
-      status: "active",
-      subscriptionId: "sub-trigger-update",
-    });
-
-    await t.mutation(internal.subscriptions.mutations.createSubscription, {
-      subscription: activeSubscription,
-    });
-    await t.mutation(internal.subscriptions.mutations.updateSubscription, {
-      subscription: {
-        ...activeSubscription,
-        status: "canceled",
-      },
-    });
-
-    const result = await t.query(async (ctx) => ({
-      creditTransactions: await ctx.db.query("creditTransactions").collect(),
-      user: await ctx.db.get("users", userId),
-    }));
-
-    expect(result.user).toMatchObject({
-      credits: 10,
-      plan: "free",
-      creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
-    });
-    expect(result.creditTransactions).toEqual([
-      expect.objectContaining({
-        amount: 3000,
-        type: "purchase",
-      }),
-      expect.objectContaining({
-        amount: 10,
-        type: "daily-grant",
-        metadata: expect.objectContaining({
-          reason: "plan-downgrade",
-          "subscription-id": "sub-trigger-update",
-        }),
-      }),
-    ]);
   });
 });

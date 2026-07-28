@@ -15,10 +15,10 @@ const app = defineApp({
   env: {
     AKSARA_PUBLICATION_TOKEN: v.string(),
     CONTENT_RUNTIME_TOKEN: v.string(),
+    // Dedicated least-privilege key for permanent account erasure.
+    POSTHOG_ACCOUNT_DELETION_API_KEY: v.string(),
     POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS: v.optional(v.string()),
     POSTHOG_HOST: v.optional(v.string()),
-    // Required for account erasure; the PAK needs PostHog person:write scope.
-    POSTHOG_PERSONAL_API_KEY: v.string(),
     POSTHOG_PROJECT_TOKEN: v.string(),
   },
 });
@@ -33,7 +33,6 @@ app.use(posthog, {
     POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS:
       app.env.POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS,
     POSTHOG_HOST: app.env.POSTHOG_HOST,
-    POSTHOG_PERSONAL_API_KEY: app.env.POSTHOG_PERSONAL_API_KEY,
     POSTHOG_PROJECT_TOKEN: app.env.POSTHOG_PROJECT_TOKEN,
   },
 });

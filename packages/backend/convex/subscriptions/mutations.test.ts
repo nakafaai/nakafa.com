@@ -1,11 +1,15 @@
+import posthogTest from "@posthog/convex/test";
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import type { SubscriptionRecord } from "@repo/backend/convex/subscriptions/records/spec";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
 
@@ -56,7 +60,51 @@ async function loadSubscription(
     .unique();
 }
 
+/** Builds a trigger-aware subscription test deployment. */
+function createSubscriptionTestConvex() {
+  const t = convexTest(schema, convexModules);
+  posthogTest.register(t);
+  return t;
+}
+
+/** Inserts one local user and linked Polar customer. */
+async function insertBillingUser(
+  ctx: MutationCtx,
+  {
+    credits,
+    customerId,
+    plan,
+    suffix,
+  }: {
+    credits: number;
+    customerId: string;
+    plan: "free" | "pro";
+    suffix: string;
+  }
+) {
+  const userId = await ctx.db.insert("users", {
+    authId: `auth-${suffix}`,
+    credits,
+    creditsResetAt: NOW,
+    email: `${suffix}@example.com`,
+    name: `User ${suffix}`,
+    plan,
+  });
+  await ctx.db.insert("customers", {
+    externalId: null,
+    id: customerId,
+    metadata: {},
+    userId,
+  });
+
+  return userId;
+}
+
 describe("subscriptions/mutations", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("creates subscriptions idempotently from webhook payloads", async () => {
     const t = convexTest(schema, convexModules);
     const subscription = buildSubscription({
@@ -183,5 +231,141 @@ describe("subscriptions/mutations", () => {
 
     expect(createdId).toBeNull();
     expect(rows).toEqual([]);
+  });
+
+  it("upgrades the linked user when an active subscription is created", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createSubscriptionTestConvex();
+    const userId = await t.mutation((ctx) =>
+      insertBillingUser(ctx, {
+        credits: 4,
+        customerId: "polar-trigger-create",
+        plan: "free",
+        suffix: "trigger-create",
+      })
+    );
+
+    await t.mutation(internal.subscriptions.mutations.createSubscription, {
+      subscription: buildSubscription({
+        customerId: "polar-trigger-create",
+        productId: products.pro.id,
+        status: "active",
+        subscriptionId: "sub-trigger-create",
+      }),
+    });
+
+    const state = await t.query(async (ctx) => ({
+      creditTransactions: await ctx.db.query("creditTransactions").collect(),
+      user: await ctx.db.get("users", userId),
+    }));
+
+    expect(state.user).toMatchObject({
+      credits: 3000,
+      plan: "pro",
+    });
+    expect(state.creditTransactions).toEqual([
+      expect.objectContaining({
+        amount: 3000,
+        metadata: expect.objectContaining({
+          "subscription-id": "sub-trigger-create",
+        }),
+        type: "purchase",
+      }),
+    ]);
+  });
+
+  it("downgrades the linked user when its subscription is canceled", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createSubscriptionTestConvex();
+    const userId = await t.mutation((ctx) =>
+      insertBillingUser(ctx, {
+        credits: 4,
+        customerId: "polar-trigger-update",
+        plan: "free",
+        suffix: "trigger-update",
+      })
+    );
+    const activeSubscription = buildSubscription({
+      customerId: "polar-trigger-update",
+      productId: products.pro.id,
+      status: "active",
+      subscriptionId: "sub-trigger-update",
+    });
+
+    await t.mutation(internal.subscriptions.mutations.createSubscription, {
+      subscription: activeSubscription,
+    });
+    await t.mutation(internal.subscriptions.mutations.updateSubscription, {
+      subscription: {
+        ...activeSubscription,
+        status: "canceled",
+      },
+    });
+
+    const state = await t.query(async (ctx) => ({
+      creditTransactions: await ctx.db.query("creditTransactions").collect(),
+      user: await ctx.db.get("users", userId),
+    }));
+
+    expect(state.user).toMatchObject({
+      credits: 10,
+      plan: "free",
+    });
+    expect(state.creditTransactions).toEqual([
+      expect.objectContaining({
+        amount: 3000,
+        type: "purchase",
+      }),
+      expect.objectContaining({
+        amount: 10,
+        metadata: expect.objectContaining({
+          reason: "plan-downgrade",
+          "subscription-id": "sub-trigger-update",
+        }),
+        type: "daily-grant",
+      }),
+    ]);
+  });
+
+  it("does not recreate plan history for a deleting user", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createSubscriptionTestConvex();
+    const userId = await t.mutation(async (ctx) => {
+      const userId = await insertBillingUser(ctx, {
+        credits: 120,
+        customerId: "polar-deleting-user",
+        plan: "pro",
+        suffix: "deleting-user",
+      });
+      await ctx.db.patch("users", userId, { deletedAt: NOW });
+      return userId;
+    });
+
+    await t.mutation(internal.subscriptions.mutations.createSubscription, {
+      subscription: buildSubscription({
+        customerId: "polar-deleting-user",
+        productId: products.pro.id,
+        status: "canceled",
+        subscriptionId: "sub-deleting-user",
+      }),
+    });
+
+    const state = await t.query(async (ctx) => ({
+      creditTransactions: await ctx.db.query("creditTransactions").collect(),
+      scheduledJobs: await ctx.db.system
+        .query("_scheduled_functions")
+        .collect(),
+      user: await ctx.db.get("users", userId),
+    }));
+
+    expect(state.creditTransactions).toEqual([]);
+    expect(state.scheduledJobs).toEqual([]);
+    expect(state.user).toMatchObject({
+      credits: 120,
+      plan: "pro",
+    });
   });
 });
