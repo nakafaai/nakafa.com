@@ -1,8 +1,13 @@
 import { analytics } from "@repo/analytics/posthog";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
+  ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
   ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
 } from "@repo/backend/convex/auth/deletion/constants";
+import {
+  type AccountDeletionPreparationOutcome,
+  accountDeletionPreparationOutcome,
+} from "@repo/backend/convex/auth/deletion/spec";
 import { Effect, Either, Schema } from "effect";
 import { authClient } from "@/lib/auth/client";
 
@@ -15,16 +20,29 @@ const betterAuthSessionExpiredCode = "SESSION_EXPIRED";
 const betterAuthUserDeletedMessage = "User deleted";
 const accountStorageKeyPrefix = "nakafa-";
 
+export const accountDeletionRequestPhase = {
+  deletion: "deletion",
+  preparation: "preparation",
+} as const;
+
+export type AccountDeletionRequestPhase =
+  (typeof accountDeletionRequestPhase)[keyof typeof accountDeletionRequestPhase];
+
 type DeleteUserResult = Awaited<ReturnType<typeof authClient.deleteUser>>;
 type SignOutResult = Awaited<ReturnType<typeof authClient.signOut>>;
 type DeleteUserRequest = (attemptId: string) => Promise<DeleteUserResult>;
 type CancelAccountDeletionRequest = (attemptId: string) => Promise<unknown>;
+type PrepareAccountDeletionRequest = (
+  attemptId: string
+) => Promise<AccountDeletionPreparationOutcome>;
 type SignOutRequest = () => Promise<SignOutResult>;
 
 interface AccountDeletionOperations {
   readonly attemptId: string;
   readonly cancelPreparation: CancelAccountDeletionRequest;
-  readonly request: DeleteUserRequest;
+  readonly prepare: PrepareAccountDeletionRequest;
+  readonly request?: DeleteUserRequest;
+  readonly startPhase: AccountDeletionRequestPhase;
 }
 
 interface BrowserIdentityCleanup {
@@ -55,6 +73,10 @@ export class AccountDeletionRequestUncertain extends Schema.TaggedError<AccountD
   {
     attemptId: Schema.String,
     code: Schema.Literal(accountDeletionRequestUncertainCode),
+    phase: Schema.Literal(
+      accountDeletionRequestPhase.preparation,
+      accountDeletionRequestPhase.deletion
+    ),
   }
 ) {}
 
@@ -77,17 +99,60 @@ export class AccountReauthenticationFailed extends Schema.TaggedError<AccountRea
 /** Deletes the current Better Auth account through a typed failure channel. */
 export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
   function* ({
-    request = async (attemptId) =>
+    attemptId,
+    cancelPreparation,
+    prepare,
+    request = async (requestAttemptId) =>
       await authClient.deleteUser({
         fetchOptions: {
           headers: {
-            [ACCOUNT_DELETION_ATTEMPT_HEADER]: attemptId,
+            [ACCOUNT_DELETION_ATTEMPT_HEADER]: requestAttemptId,
           },
         },
       }),
-    cancelPreparation = async () => undefined,
-    attemptId = crypto.randomUUID(),
-  }: Partial<AccountDeletionOperations> = {}) {
+    startPhase,
+  }: AccountDeletionOperations) {
+    const cancelPreparedAttempt = () =>
+      Effect.tryPromise({
+        try: () => cancelPreparation(attemptId),
+        catch: () => undefined,
+      }).pipe(Effect.ignore);
+
+    if (startPhase === accountDeletionRequestPhase.preparation) {
+      let preparationOutcome: AccountDeletionPreparationOutcome =
+        accountDeletionPreparationOutcome.continue;
+
+      while (
+        preparationOutcome === accountDeletionPreparationOutcome.continue
+      ) {
+        preparationOutcome = yield* Effect.tryPromise({
+          try: () => prepare(attemptId),
+          catch: () =>
+            new AccountDeletionRequestUncertain({
+              attemptId,
+              code: accountDeletionRequestUncertainCode,
+              phase: accountDeletionRequestPhase.preparation,
+            }),
+        });
+      }
+
+      if (
+        preparationOutcome ===
+        accountDeletionPreparationOutcome.schoolSuccessorRequired
+      ) {
+        return yield* new AccountDeletionSchoolMemberRequired({
+          code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
+        });
+      }
+
+      if (preparationOutcome !== accountDeletionPreparationOutcome.ready) {
+        yield* cancelPreparedAttempt();
+        return yield* new AccountDeletionFailed({
+          code: accountDeletionFailedCode,
+        });
+      }
+    }
+
     const resultOrFailure = yield* Effect.either(
       Effect.tryPromise({
         try: () => request(attemptId),
@@ -95,6 +160,7 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
           new AccountDeletionRequestUncertain({
             attemptId,
             code: accountDeletionRequestUncertainCode,
+            phase: accountDeletionRequestPhase.deletion,
           }),
       })
     );
@@ -113,16 +179,22 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
       return;
     }
 
-    yield* Effect.tryPromise({
-      try: () => cancelPreparation(attemptId),
-      catch: () => undefined,
-    }).pipe(Effect.ignore);
-
     if (!result.error) {
+      yield* cancelPreparedAttempt();
       return yield* new AccountDeletionFailed({
         code: accountDeletionFailedCode,
       });
     }
+
+    if (result.error.code === ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE) {
+      return yield* new AccountDeletionRequestUncertain({
+        attemptId,
+        code: accountDeletionRequestUncertainCode,
+        phase: accountDeletionRequestPhase.preparation,
+      });
+    }
+
+    yield* cancelPreparedAttempt();
 
     if (result.error.code === betterAuthSessionExpiredCode) {
       return yield* new AccountDeletionSessionExpired({
@@ -179,10 +251,12 @@ export const clearDeletedAccountBrowserIdentity = Effect.fn(
   );
 });
 
-/** Clears the stale session before sending the user through sign-in again. */
+/** Clears account-scoped browser identity and the stale auth session. */
 export const prepareAccountReauthentication = Effect.fn(
   "www.auth.prepareAccountReauthentication"
 )(function* (request: SignOutRequest = async () => await authClient.signOut()) {
+  yield* clearDeletedAccountBrowserIdentity();
+
   const result = yield* Effect.tryPromise({
     try: request,
     catch: () =>

@@ -50,6 +50,21 @@ export const prepareAccountDeletion = internalMutation({
     ),
 });
 
+/** Advances one bounded preparation step for the current browser attempt. */
+export const prepareCurrentAccountDeletion = mutation({
+  args: {
+    attemptId: v.string(),
+  },
+  returns: accountDeletionPreparationOutcomeValidator,
+  handler: async (ctx, args) => {
+    const authUser = await authReader.getAuthUser(ctx);
+
+    return await runConvexProgram(
+      prepareAccountDeletionProgram(ctx, authUser._id, args.attemptId)
+    );
+  },
+});
+
 /** Cancels one exact prepared deletion during durable recovery. */
 export const cancelAccountDeletion = internalMutation({
   args: {

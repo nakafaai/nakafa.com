@@ -9,6 +9,37 @@ const NOW = Date.UTC(2026, 6, 28, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 
 describe("auth/deletion", () => {
+  it("advances one authenticated preparation step", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "prepare-current-deletion",
+      })
+    );
+
+    const outcome = await t
+      .withIdentity({
+        sessionId: identity.sessionId,
+        subject: identity.authUserId,
+      })
+      .mutation(api.auth.deletion.prepareCurrentAccountDeletion, {
+        attemptId: ATTEMPT_ID,
+      });
+    const state = await t.query(async (ctx) => ({
+      preparation: await ctx.db.query("accountDeletionPreparations").unique(),
+      user: await ctx.db.get("users", identity.userId),
+    }));
+
+    expect(outcome).toBe("ready");
+    expect(state.preparation).toMatchObject({
+      attemptId: ATTEMPT_ID,
+      authId: identity.authUserId,
+      userId: identity.userId,
+    });
+    expect(state.user?.deletionPreparedAt).toEqual(expect.any(Number));
+  });
+
   it("lets a prepared auth session cancel its own deletion", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
