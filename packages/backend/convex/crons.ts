@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES } from "@repo/backend/convex/auth/deletion/constants";
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
@@ -8,6 +9,17 @@ const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
 const NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS = 24;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
+
+/**
+ * Reconciles prepared deletions even when an at-most-once recovery action
+ * never starts.
+ */
+crons.interval(
+  "sweep account deletion recovery",
+  { minutes: ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES },
+  internal.auth.deletion.recovery.sweepAccountDeletionRecovery,
+  {}
+);
 
 /**
  * Materializes the current daily reset boundary for free-plan credits.

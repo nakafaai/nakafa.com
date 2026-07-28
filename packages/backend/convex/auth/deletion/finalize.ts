@@ -255,6 +255,7 @@ export const finalizeAccountDeletion: (
     yield* tryUserCleanup(() =>
       ctx.db.patch("accountDeletionPreparations", preparation._id, {
         finalizedAt,
+        recoveryAt: undefined,
       })
     );
   } else if (!preparation) {

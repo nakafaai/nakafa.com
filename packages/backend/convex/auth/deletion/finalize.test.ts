@@ -64,6 +64,7 @@ async function seedPreparedSchool(ctx: MutationCtx, authId: string) {
   const preparationId = await ctx.db.insert("accountDeletionPreparations", {
     attemptId: ATTEMPT_ID,
     authId,
+    recoveryAt: NOW,
     recoveryGeneration: 0,
     userId: ownerId,
   });
@@ -133,6 +134,7 @@ describe("auth/deletion/finalize", () => {
     expect(state.owner).not.toHaveProperty("image");
     expect(state.owner).not.toHaveProperty("role");
     expect(state.preparation?.finalizedAt).toEqual(expect.any(Number));
+    expect(state.preparation).not.toHaveProperty("recoveryAt");
     expect(state.school).toMatchObject({
       createdBy: seeded.successorId,
       updatedBy: seeded.successorId,

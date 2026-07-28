@@ -9,12 +9,14 @@ const tables = {
     pendingSchoolId: v.optional(v.id("schools")),
     pendingSchoolNextCursor: v.optional(v.string()),
     readyAt: v.optional(v.number()),
+    recoveryAt: v.optional(v.number()),
     recoveryGeneration: v.number(),
     schoolCursor: v.optional(v.string()),
     successorCursor: v.optional(v.string()),
     userId: v.id("users"),
   })
     .index("by_authId", ["authId"])
+    .index("by_recoveryAt", ["recoveryAt"])
     .index("by_userId", ["userId"]),
   accountDeletionSchoolTransfers: defineTable({
     preparationId: v.id("accountDeletionPreparations"),

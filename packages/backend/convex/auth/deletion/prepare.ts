@@ -8,50 +8,20 @@ import { deleteAccountDeletionPreparation } from "@repo/backend/convex/auth/dele
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";
 import {
   type AccountDeletionPreparationOutcome,
-  type AccountDeletionPreparationVersion,
   accountDeletionPreparationOutcome,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { findSchoolOwnershipSuccessorPage } from "@repo/backend/convex/auth/deletion/successor";
-import { makeFunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
-
-const recoverAccountDeletionReference = makeFunctionReference<
-  "action",
-  {
-    authId: string;
-    expectedPreparation: AccountDeletionPreparationVersion;
-  },
-  null
->("auth/deletion/recovery:recoverAccountDeletion");
 
 type AccountDeletionPreparation = Doc<"accountDeletionPreparations">;
 type AppUser = Doc<"users">;
 
-type ScheduleRecovery = (
-  ctx: MutationCtx,
-  authId: string,
-  expectedPreparation: AccountDeletionPreparationVersion
-) => Promise<unknown>;
-
-const defaultScheduleRecovery: ScheduleRecovery = (
-  ctx,
-  authId,
-  expectedPreparation
-) =>
-  ctx.scheduler.runAfter(
-    ACCOUNT_DELETION_RECOVERY_DELAY_MS,
-    recoverAccountDeletionReference,
-    { authId, expectedPreparation }
-  );
-
-/** Marks a fully reserved preparation ready and starts its recovery lease. */
+/** Marks a fully reserved preparation ready and refreshes its recovery lease. */
 const completePreparation = Effect.fn("auth.deletion.completePreparation")(
   function* (
     ctx: MutationCtx,
     user: AppUser,
-    preparation: AccountDeletionPreparation,
-    attemptId: string,
-    scheduleRecovery: ScheduleRecovery
+    preparation: AccountDeletionPreparation
   ) {
     const readyAt = yield* Clock.currentTimeMillis;
     const recoveryGeneration = preparation.recoveryGeneration + 1;
@@ -61,6 +31,7 @@ const completePreparation = Effect.fn("auth.deletion.completePreparation")(
         pendingSchoolId: undefined,
         pendingSchoolNextCursor: undefined,
         readyAt,
+        recoveryAt: readyAt + ACCOUNT_DELETION_RECOVERY_DELAY_MS,
         recoveryGeneration,
         schoolCursor: undefined,
         successorCursor: undefined,
@@ -68,13 +39,6 @@ const completePreparation = Effect.fn("auth.deletion.completePreparation")(
     );
     yield* tryUserCleanup(() =>
       ctx.db.patch("users", user._id, { deletionPreparedAt: readyAt })
-    );
-    yield* tryUserCleanup(() =>
-      scheduleRecovery(ctx, preparation.authId, {
-        attemptId,
-        preparationId: preparation._id,
-        recoveryGeneration,
-      })
     );
   }
 );
@@ -187,14 +151,12 @@ const reserveSchoolSuccessors = Effect.fn(
 export const prepareAccountDeletion: (
   ctx: MutationCtx,
   authId: string,
-  attemptId: string,
-  scheduleRecovery?: ScheduleRecovery
+  attemptId: string
 ) => Effect.Effect<AccountDeletionPreparationOutcome, UserCleanupError> =
   Effect.fn("auth.deletion.prepareAccountDeletion")(function* (
     ctx: MutationCtx,
     authId: string,
-    attemptId: string,
-    scheduleRecovery: ScheduleRecovery = defaultScheduleRecovery
+    attemptId: string
   ) {
     const user = yield* tryUserCleanup(() =>
       ctx.db
@@ -226,17 +188,9 @@ export const prepareAccountDeletion: (
     }
 
     if (preparation?.readyAt !== undefined) {
-      yield* completePreparation(
-        ctx,
-        user,
-        preparation,
-        attemptId,
-        scheduleRecovery
-      );
+      yield* completePreparation(ctx, user, preparation);
       return accountDeletionPreparationOutcome.ready;
     }
-
-    let createdPreparation = false;
 
     if (!preparation) {
       const successorReservation = yield* tryUserCleanup(() =>
@@ -257,6 +211,7 @@ export const prepareAccountDeletion: (
         ctx.db.insert("accountDeletionPreparations", {
           attemptId,
           authId,
+          recoveryAt: preparationStartedAt + ACCOUNT_DELETION_RECOVERY_DELAY_MS,
           recoveryGeneration: 0,
           userId: user._id,
         })
@@ -273,34 +228,13 @@ export const prepareAccountDeletion: (
       if (!preparation) {
         return accountDeletionPreparationOutcome.temporarilyUnavailable;
       }
-
-      createdPreparation = true;
     }
 
     const outcome = yield* reserveSchoolSuccessors(ctx, user, preparation);
 
     if (outcome === accountDeletionPreparationOutcome.ready) {
-      yield* completePreparation(
-        ctx,
-        user,
-        preparation,
-        attemptId,
-        scheduleRecovery
-      );
+      yield* completePreparation(ctx, user, preparation);
       return accountDeletionPreparationOutcome.ready;
-    }
-
-    if (
-      outcome === accountDeletionPreparationOutcome.continue &&
-      createdPreparation
-    ) {
-      yield* tryUserCleanup(() =>
-        scheduleRecovery(ctx, authId, {
-          attemptId,
-          preparationId: preparation._id,
-          recoveryGeneration: preparation.recoveryGeneration,
-        })
-      );
     }
 
     return outcome;
