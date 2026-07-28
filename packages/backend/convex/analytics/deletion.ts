@@ -55,7 +55,7 @@ function getPostHogApiOrigin(host: string) {
 function getDefaultPostHogDeletionConfig(): PostHogDeletionConfig {
   return {
     host: env.POSTHOG_HOST ?? defaultPostHogIngestionHost,
-    personalApiKey: env.POSTHOG_PERSONAL_API_KEY,
+    personalApiKey: env.POSTHOG_ACCOUNT_DELETION_API_KEY,
     projectToken: env.POSTHOG_PROJECT_TOKEN,
   };
 }

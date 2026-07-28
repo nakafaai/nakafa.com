@@ -24,11 +24,11 @@ import {
 import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
 
-const getSchoolOwnershipReadiness = makeFunctionReference<
-  "query",
+const prepareAccountDeletion = makeFunctionReference<
+  "mutation",
   { authId: string },
   boolean
->("auth/deletion:getSchoolOwnershipReadiness");
+>("auth/deletion:prepareAccountDeletion");
 
 const deletionUnavailableError = () =>
   APIError.from("INTERNAL_SERVER_ERROR", {
@@ -46,12 +46,12 @@ const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
       return yield* Effect.fail(deletionUnavailableError());
     }
 
-    const schoolOwnershipReady = yield* Effect.tryPromise({
-      try: () => ctx.runQuery(getSchoolOwnershipReadiness, { authId }),
+    const accountDeletionPrepared = yield* Effect.tryPromise({
+      try: () => ctx.runMutation(prepareAccountDeletion, { authId }),
       catch: deletionUnavailableError,
     });
 
-    if (!schoolOwnershipReady) {
+    if (!accountDeletionPrepared) {
       return yield* Effect.fail(
         APIError.from("BAD_REQUEST", {
           code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,

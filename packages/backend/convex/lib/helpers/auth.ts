@@ -41,7 +41,7 @@ export async function getOptionalAppUser(
 
   const appUser = await getAppUserByAuthId(ctx, authUser._id);
 
-  if (!appUser) {
+  if (!appUser || appUser.deletedAt !== undefined) {
     return null;
   }
 
@@ -58,7 +58,7 @@ export async function requireAuth(
   const authUser = await authReader.getAuthUser(ctx);
   const appUser = await getAppUserByAuthId(ctx, authUser._id);
 
-  if (!appUser) {
+  if (!appUser || appUser.deletedAt !== undefined) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
       message: "User not found.",
@@ -81,7 +81,7 @@ export async function requireAuthForAction(
     }
   );
 
-  if (!appUser) {
+  if (!appUser || appUser.deletedAt !== undefined) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
       message: "User not found.",
