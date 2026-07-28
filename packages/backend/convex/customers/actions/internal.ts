@@ -9,7 +9,7 @@ import { v } from "convex/values";
 
 /**
  * Sync customer between Polar and local database.
- * For scheduling from auth triggers.
+ * For scheduling from authenticated customer workflows.
  * Reuses the shared customer sync helper so Polar and local writes stay aligned.
  */
 export const syncCustomer = internalAction({
@@ -24,12 +24,8 @@ export const syncCustomer = internalAction({
   },
 });
 
-/**
- * Clean up all user-related data when user is deleted.
- * Called from auth trigger when Better Auth user is deleted.
- * Deletes Polar customer to prevent orphaned customers that cause email conflicts.
- */
-export const cleanupUserData = internalAction({
+/** Removes and anonymizes billing data for one deleted app user. */
+export const cleanupDeletedUserCustomerData = internalAction({
   args: {
     authId: v.string(),
     userId: vv.id("users"),

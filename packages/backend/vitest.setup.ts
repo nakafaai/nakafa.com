@@ -5,6 +5,7 @@ import { afterEach, vi } from "vitest";
 // @see https://docs.convex.dev/components/authoring#environment-variables
 process.env.POSTHOG_HOST = "http://127.0.0.1:9";
 process.env.POSTHOG_ACCOUNT_DELETION_API_KEY = "phx_test";
+process.env.POSTHOG_PROJECT_ID = "114144";
 process.env.POSTHOG_PROJECT_TOKEN = "phc_test";
 
 /** Restores real timers after every backend test to prevent timer leakage. */

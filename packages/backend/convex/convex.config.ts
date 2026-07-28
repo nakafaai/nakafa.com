@@ -17,8 +17,8 @@ const app = defineApp({
     CONTENT_RUNTIME_TOKEN: v.string(),
     // Dedicated least-privilege key for permanent account erasure.
     POSTHOG_ACCOUNT_DELETION_API_KEY: v.string(),
-    POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS: v.optional(v.string()),
-    POSTHOG_HOST: v.optional(v.string()),
+    POSTHOG_HOST: v.string(),
+    POSTHOG_PROJECT_ID: v.string(),
     POSTHOG_PROJECT_TOKEN: v.string(),
   },
 });
@@ -30,8 +30,6 @@ app.use(workpool, { name: "tryoutLeaderboardWorkpool" });
 app.use(resend);
 app.use(posthog, {
   env: {
-    POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS:
-      app.env.POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS,
     POSTHOG_HOST: app.env.POSTHOG_HOST,
     POSTHOG_PROJECT_TOKEN: app.env.POSTHOG_PROJECT_TOKEN,
   },

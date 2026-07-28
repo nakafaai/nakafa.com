@@ -29,6 +29,7 @@ import { schoolClassMembersHandler } from "@repo/backend/convex/triggers/schools
 import { schoolMembersHandler } from "@repo/backend/convex/triggers/schools/members";
 import { schoolsHandler } from "@repo/backend/convex/triggers/schools/schools";
 import { subscriptionsHandler } from "@repo/backend/convex/triggers/subscriptions/subscriptions";
+import { tryoutScoresHandler } from "@repo/backend/convex/triggers/tryouts/scores";
 import {
   customCtx,
   customMutation,
@@ -60,6 +61,7 @@ triggers.register("schoolClassForumPostReactions", postReactionsHandler);
 triggers.register("schoolClassForumReactions", forumReactionsHandler);
 triggers.register("schoolClassMaterials", materialsHandler);
 triggers.register("schoolClassMaterialGroups", materialGroupsHandler);
+triggers.register("tryoutScores", tryoutScoresHandler);
 
 triggers.register(
   "learningPopularityCounters",

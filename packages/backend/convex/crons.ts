@@ -5,6 +5,7 @@ const crons = cronJobs();
 const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
+const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
 const NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS = 24;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
@@ -53,6 +54,17 @@ crons.interval(
   "compact content release history",
   { minutes: CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES },
   internal.contentRelease.compact.run,
+  {}
+);
+
+/**
+ * Applies the Resend component's bounded finalized and abandoned email
+ * retention windows instead of retaining delivery records indefinitely.
+ */
+crons.interval(
+  "sweep retained email delivery data",
+  { hours: EMAIL_RETENTION_SWEEP_INTERVAL_HOURS },
+  internal.emails.mutations.cleanupRetainedEmailData,
   {}
 );
 

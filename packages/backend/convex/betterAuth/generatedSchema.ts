@@ -38,7 +38,6 @@ export const tables = {
     ipAddress: v.optional(v.union(v.null(), v.string())),
     userAgent: v.optional(v.union(v.null(), v.string())),
     userId: v.string(),
-    activeOrganizationId: v.optional(v.union(v.null(), v.string())),
   })
     .index("expiresAt", ["expiresAt"])
     .index("expiresAt_userId", ["expiresAt", "userId"])
@@ -71,38 +70,6 @@ export const tables = {
   })
     .index("expiresAt", ["expiresAt"])
     .index("identifier", ["identifier"]),
-  organization: defineTable({
-    name: v.string(),
-    slug: v.string(),
-    logo: v.optional(v.union(v.null(), v.string())),
-    createdAt: v.number(),
-    metadata: v.optional(v.union(v.null(), v.string())),
-  })
-    .index("name", ["name"])
-    .index("slug", ["slug"]),
-  member: defineTable({
-    organizationId: v.string(),
-    userId: v.string(),
-    role: v.string(),
-    createdAt: v.number(),
-  })
-    .index("organizationId", ["organizationId"])
-    .index("userId", ["userId"])
-    .index("role", ["role"]),
-  invitation: defineTable({
-    organizationId: v.string(),
-    email: v.string(),
-    role: v.optional(v.union(v.null(), v.string())),
-    status: v.string(),
-    expiresAt: v.number(),
-    createdAt: v.number(),
-    inviterId: v.string(),
-  })
-    .index("organizationId", ["organizationId"])
-    .index("email", ["email"])
-    .index("role", ["role"])
-    .index("status", ["status"])
-    .index("inviterId", ["inviterId"]),
   jwks: defineTable({
     publicKey: v.string(),
     privateKey: v.string(),

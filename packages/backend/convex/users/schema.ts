@@ -42,6 +42,8 @@ export const userValidator = v.object({
   plan: userPlanValidator,
   credits: v.number(),
   creditsResetAt: v.number(),
+  deletionCleanupStartedAt: v.optional(v.number()),
+  deletionPreparedAt: v.optional(v.number()),
   deletedAt: v.optional(v.number()),
 });
 

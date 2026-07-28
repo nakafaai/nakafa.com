@@ -6,9 +6,9 @@ import { cleanupUserNotifications } from "@repo/backend/convex/auth/cleanup/noti
 import { cleanupUserSchoolCommunity } from "@repo/backend/convex/auth/cleanup/schoolCommunity";
 import { cleanupUserSchoolData } from "@repo/backend/convex/auth/cleanup/schools";
 import { cleanupUserSocialData } from "@repo/backend/convex/auth/cleanup/social";
-import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
 import { cleanupUserTryouts } from "@repo/backend/convex/auth/cleanup/tryouts";
-import { Clock, Effect } from "effect";
+import { cleanupFinalizedAccountDeletion } from "@repo/backend/convex/auth/deletion/cancel";
+import { Effect } from "effect";
 
 /**
  * Deletes one bounded batch of personal data. Shared school records keep the
@@ -46,25 +46,8 @@ export const cleanupDeletedUserProgram = Effect.fn(
     return true;
   }
 
-  const user = yield* tryUserCleanup(() => ctx.db.get("users", userId));
-
-  if (user) {
-    const deletedAt = user.deletedAt ?? (yield* Clock.currentTimeMillis);
-    const anonymousId = String(userId);
-
-    yield* tryUserCleanup(() =>
-      ctx.db.patch("users", userId, {
-        authId: `deleted:${anonymousId}`,
-        credits: 0,
-        creditsResetAt: 0,
-        deletedAt,
-        email: `deleted-${anonymousId}@account.nakafa.invalid`,
-        image: undefined,
-        name: "Deleted user",
-        plan: "free",
-        role: undefined,
-      })
-    );
+  if (yield* cleanupFinalizedAccountDeletion(ctx, userId)) {
+    return true;
   }
 
   return false;
