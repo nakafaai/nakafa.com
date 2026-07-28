@@ -6,6 +6,7 @@ import { ensurePostHogDeletionConfigured } from "@repo/backend/convex/analytics/
 import { authComponent } from "@repo/backend/convex/auth/client";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
+  ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
   ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
   ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
 } from "@repo/backend/convex/auth/deletion/constants";
@@ -42,6 +43,44 @@ const deletionUnavailableError = () =>
     message: "Account deletion is temporarily unavailable.",
   });
 
+/** Requires one bounded preparation step to confirm deletion readiness. */
+export const verifyAccountDeletionPreparation = Effect.fn(
+  "auth.verifyAccountDeletionPreparation"
+)(function* (runPreparation: () => Promise<AccountDeletionPreparationOutcome>) {
+  const preparationOutcome = yield* Effect.tryPromise({
+    try: runPreparation,
+    catch: deletionUnavailableError,
+  });
+
+  if (preparationOutcome === accountDeletionPreparationOutcome.continue) {
+    return yield* Effect.fail(
+      APIError.from("BAD_REQUEST", {
+        code: ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
+        message: "Account deletion preparation is incomplete.",
+      })
+    );
+  }
+
+  if (
+    preparationOutcome ===
+    accountDeletionPreparationOutcome.schoolSuccessorRequired
+  ) {
+    return yield* Effect.fail(
+      APIError.from("BAD_REQUEST", {
+        code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
+        message: "An owned school needs another active member.",
+      })
+    );
+  }
+
+  if (
+    preparationOutcome ===
+    accountDeletionPreparationOutcome.temporarilyUnavailable
+  ) {
+    return yield* Effect.fail(deletionUnavailableError());
+  }
+});
+
 const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
   function* (
     ctx: GenericCtx<DataModel>,
@@ -59,41 +98,10 @@ const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
     const attemptId = yield* Schema.decodeUnknown(Schema.UUID)(
       rawAttemptId
     ).pipe(Effect.mapError(deletionUnavailableError));
-    const runPreparation = () =>
-      Effect.tryPromise({
-        try: () =>
-          ctx.runMutation(prepareAccountDeletion, { attemptId, authId }),
-        catch: deletionUnavailableError,
-      });
-    let preparationOutcome = yield* runPreparation();
 
-    while (preparationOutcome === accountDeletionPreparationOutcome.continue) {
-      preparationOutcome = yield* runPreparation();
-    }
-
-    if (
-      preparationOutcome ===
-      accountDeletionPreparationOutcome.schoolSuccessorRequired
-    ) {
-      return yield* Effect.fail(
-        APIError.from("BAD_REQUEST", {
-          code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
-          message: "An owned school needs another active member.",
-        })
-      );
-    }
-
-    if (
-      preparationOutcome ===
-      accountDeletionPreparationOutcome.temporarilyUnavailable
-    ) {
-      return yield* Effect.fail(
-        APIError.from("INTERNAL_SERVER_ERROR", {
-          code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
-          message: "Account deletion is temporarily unavailable.",
-        })
-      );
-    }
+    yield* verifyAccountDeletionPreparation(() =>
+      ctx.runMutation(prepareAccountDeletion, { attemptId, authId })
+    );
   }
 );
 

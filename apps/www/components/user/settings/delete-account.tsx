@@ -24,6 +24,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { FormBlock } from "@/components/shared/form-block";
 import {
+  type AccountDeletionRequestPhase,
+  accountDeletionRequestPhase,
   clearDeletedAccountBrowserIdentity,
   deleteCurrentAccount,
   prepareAccountReauthentication,
@@ -47,10 +49,16 @@ export function UserSettingsDeleteAccount() {
   const cancelAccountDeletion = useMutation(
     api.auth.deletion.cancelCurrentAccountDeletion
   );
+  const prepareAccountDeletion = useMutation(
+    api.auth.deletion.prepareCurrentAccountDeletion
+  );
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<DialogError>(null);
   const [isPending, setIsPending] = useState(false);
-  const retryAttemptId = useRef<string | null>(null);
+  const retryAttempt = useRef<{
+    readonly attemptId: string;
+    readonly phase: AccountDeletionRequestPhase;
+  } | null>(null);
 
   function handleOpenChange(nextOpen: boolean) {
     if (isPending && !nextOpen) {
@@ -70,11 +78,14 @@ export function UserSettingsDeleteAccount() {
 
     const result = await Effect.runPromise(
       Effect.gen(function* () {
+        const retry = retryAttempt.current;
         const deletion = yield* Effect.either(
           deleteCurrentAccount({
-            attemptId: retryAttemptId.current ?? crypto.randomUUID(),
+            attemptId: retry?.attemptId ?? crypto.randomUUID(),
             cancelPreparation: (attemptId) =>
               cancelAccountDeletion({ attemptId }),
+            prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
+            startPhase: retry?.phase ?? accountDeletionRequestPhase.preparation,
           })
         );
 
@@ -92,9 +103,12 @@ export function UserSettingsDeleteAccount() {
     }
 
     if (result.left._tag === "AccountDeletionRequestUncertain") {
-      retryAttemptId.current = result.left.attemptId;
+      retryAttempt.current = {
+        attemptId: result.left.attemptId,
+        phase: result.left.phase,
+      };
     } else {
-      retryAttemptId.current = null;
+      retryAttempt.current = null;
     }
 
     if (result.left._tag === "AccountDeletionSessionExpired") {
