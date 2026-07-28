@@ -57,7 +57,7 @@ const sweepAccountDeletionRecoveryReference = makeFunctionReference<
 
 interface RecoveryOperations {
   readonly authUserExists: () => Promise<boolean>;
-  readonly cancel: () => Promise<boolean>;
+  readonly cancel: () => Promise<unknown>;
   readonly finalize: () => Promise<unknown>;
 }
 
@@ -70,11 +70,7 @@ export const recoverAccountDeletionProgram: (
   const authUserExists = yield* tryUserCleanup(operations.authUserExists);
 
   if (authUserExists) {
-    let hasMore = yield* tryUserCleanup(operations.cancel);
-
-    while (hasMore) {
-      hasMore = yield* tryUserCleanup(operations.cancel);
-    }
+    yield* tryUserCleanup(operations.cancel);
     return;
   }
 

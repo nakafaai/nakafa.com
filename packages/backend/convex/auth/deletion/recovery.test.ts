@@ -67,12 +67,8 @@ describe("auth/deletion/recovery", () => {
     });
   });
 
-  it("drains every bounded cancellation batch", async () => {
-    const cancel = vi
-      .fn<() => Promise<boolean>>()
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(false);
+  it("delegates exactly one bounded cancellation batch", async () => {
+    const cancel = vi.fn(async () => true);
 
     await Effect.runPromise(
       recoverAccountDeletionProgram({
@@ -82,7 +78,7 @@ describe("auth/deletion/recovery", () => {
       })
     );
 
-    expect(cancel).toHaveBeenCalledTimes(3);
+    expect(cancel).toHaveBeenCalledOnce();
   });
 
   it("claims only due preparations before scheduling recovery", async () => {
