@@ -53,7 +53,11 @@ export const readContentSearchDocuments = Effect.fn(
     ],
     { concurrency: "unbounded" }
   );
-  return interleaveSearchGroups([published, source]);
+  return interleaveSearchGroups(
+    [published, source],
+    scanLimit,
+    (document) => document.content_id
+  );
 });
 
 /** Returns only sections whose source ownership remains with Nakafa. */

@@ -10,6 +10,7 @@ import {
   getRouteSearchText,
 } from "@repo/backend/convex/contents/helpers/search/terms";
 import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import type { Infer } from "convex/values";
 import { Effect } from "effect";
 
@@ -31,19 +32,33 @@ export const readSourceSearchDocuments = Effect.fn(
   if (queryTexts.length === 0) {
     const groups = yield* Effect.all(
       sections.map((section) =>
-        browseSection(ctx, args.locale, section, scanLimit)
+        browseSection(ctx, args.locale, section, NAKAFA_AGENT_SEARCH_WINDOW)
       ),
       { concurrency: "unbounded" }
     );
-    return interleaveSearchGroups(groups);
+    return interleaveSearchGroups(
+      groups,
+      scanLimit,
+      (document) => document.content_id
+    );
   }
   const groups = yield* Effect.all(
     queryTexts.map((queryText) =>
-      searchQuery(ctx, args.locale, sections, queryText, scanLimit)
+      searchQuery(
+        ctx,
+        args.locale,
+        sections,
+        queryText,
+        NAKAFA_AGENT_SEARCH_WINDOW
+      )
     ),
     { concurrency: "unbounded" }
   );
-  return interleaveSearchGroups(groups);
+  return interleaveSearchGroups(
+    groups,
+    scanLimit,
+    (document) => document.content_id
+  );
 });
 
 /** Searches one query fairly across every still-unmanaged section. */
@@ -60,7 +75,11 @@ const searchQuery = Effect.fn("contents.search.searchSourceQuery")(function* (
     ),
     { concurrency: "unbounded" }
   );
-  return interleaveSearchGroups(groups);
+  return interleaveSearchGroups(
+    groups,
+    scanLimit,
+    (document) => document.content_id
+  );
 });
 
 /** Runs title, text, route, and exact-path reads for one source-owned section. */
