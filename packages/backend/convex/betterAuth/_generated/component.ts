@@ -1034,6 +1034,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    deletion: {
+      deleteUserVerificationPage: FunctionReference<
+        "mutation",
+        "internal",
+        { authId: string; cursor: null | string },
+        { continueCursor: string; isDone: boolean },
+        Name
+      >;
+    };
     mutations: {
       setUserId: FunctionReference<
         "mutation",
