@@ -3,7 +3,6 @@ import {
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,
   NAKAFA_AGENT_MAX_QUERIES,
-  NAKAFA_AGENT_SEARCH_WINDOW,
 } from "@repo/contents/_types/agent/search";
 import { ConvexError, type Infer } from "convex/values";
 
@@ -22,13 +21,6 @@ export function validateContentSearchInput(args: ContentSearchInput) {
     throw new ConvexError({
       code: "CONTENT_SEARCH_OFFSET_INVALID",
       message: `Content search offset must be between 0 and ${NAKAFA_AGENT_MAX_OFFSET}.`,
-    });
-  }
-
-  if (args.offset + args.limit > NAKAFA_AGENT_SEARCH_WINDOW) {
-    throw new ConvexError({
-      code: "CONTENT_SEARCH_WINDOW_INVALID",
-      message: `Content search offset and limit must stay within the first ${NAKAFA_AGENT_SEARCH_WINDOW} results.`,
     });
   }
 

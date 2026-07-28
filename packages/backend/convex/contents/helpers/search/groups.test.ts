@@ -3,8 +3,10 @@ import {
   allocateSearchLimits,
   appendSearchGroups,
   interleaveSearchGroups,
+  readSearchGroups,
 } from "@repo/backend/convex/contents/helpers/search/groups";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Builds one complete search document for deterministic group tests. */
@@ -61,5 +63,63 @@ describe("search groups", () => {
         [THIRD, FIRST],
       ]).map((document) => document.title)
     ).toEqual(["first", "third", "second"]);
+  });
+
+  it("refills unused group budget without exceeding the global limit", async () => {
+    const calls: [string, number][] = [];
+
+    const result = await Effect.runPromise(
+      readSearchGroups(3, ["empty", "full"], (group, limit) => {
+        calls.push([group, limit]);
+        const documents = group === "empty" ? [] : [FIRST, SECOND, THIRD];
+        return Effect.succeed(documents.slice(0, limit));
+      })
+    );
+
+    expect(result.map((document) => document.title)).toEqual([
+      "first",
+      "second",
+      "third",
+    ]);
+    expect(calls).toEqual([
+      ["empty", 2],
+      ["full", 1],
+      ["full", 3],
+    ]);
+  });
+
+  it("does not read groups without an allocated budget", async () => {
+    const calls: [string, number][] = [];
+
+    const result = await Effect.runPromise(
+      readSearchGroups(2, ["first", "second", "unused"], (group, limit) => {
+        calls.push([group, limit]);
+        const document = group === "first" ? FIRST : SECOND;
+        return Effect.succeed([document]);
+      })
+    );
+
+    expect(result.map((document) => document.title)).toEqual([
+      "first",
+      "second",
+    ]);
+    expect(calls).toEqual([
+      ["first", 1],
+      ["second", 1],
+    ]);
+  });
+
+  it("does not read when the global budget is empty", async () => {
+    let calls = 0;
+
+    const result = await Effect.runPromise(
+      readSearchGroups(0, ["unused"], () => {
+        calls += 1;
+        return Effect.succeed([FIRST]);
+      })
+    );
+
+    expect(result).toEqual([]);
+    expect(calls).toBe(0);
   });
 });

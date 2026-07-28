@@ -5,10 +5,7 @@ import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse"
 import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
 import { resolveSearchProjection } from "@repo/backend/convex/contentRelease/search/verify";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
-import {
-  allocateSearchLimits,
-  interleaveSearchGroups,
-} from "@repo/backend/convex/contents/helpers/search/groups";
+import { readSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
 import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { getExactRouteQuery } from "@repo/backend/convex/contents/helpers/search/terms";
@@ -57,30 +54,13 @@ export const readPublishedSearchDocuments = Effect.fn(
   families: readonly PublishedFamily[]
 ) {
   if (queryTexts.length === 0) {
-    const limits = allocateSearchLimits(scanLimit, families.length);
-    const groups = yield* Effect.all(
-      families.map((family, index) =>
-        browseFamily(ctx, args.locale, family, limits[index] ?? 0, owner)
-      ),
-      { concurrency: "unbounded" }
+    return yield* readSearchGroups(scanLimit, families, (family, limit) =>
+      browseFamily(ctx, args.locale, family, limit, owner)
     );
-    return interleaveSearchGroups(groups);
   }
-  const limits = allocateSearchLimits(scanLimit, queryTexts.length);
-  const groups = yield* Effect.all(
-    queryTexts.map((queryText, index) =>
-      searchQuery(
-        ctx,
-        args.locale,
-        families,
-        queryText,
-        limits[index] ?? 0,
-        owner
-      )
-    ),
-    { concurrency: "unbounded" }
+  return yield* readSearchGroups(scanLimit, queryTexts, (queryText, limit) =>
+    searchQuery(ctx, args.locale, families, queryText, limit, owner)
   );
-  return interleaveSearchGroups(groups);
 });
 
 /** Searches one query fairly across active release-owned families. */
@@ -94,25 +74,13 @@ const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
     owner: PublishedSearchOwner
   ) {
     const route = getExactRouteQuery(locale, queryText);
-    const limits = allocateSearchLimits(scanLimit, families.length);
-    const groups = yield* Effect.all(
-      families.map((family, index) =>
-        searchFamily(
-          ctx,
-          locale,
-          family,
-          route,
-          queryText,
-          limits[index] ?? 0,
-          owner
-        )
-      ),
-      { concurrency: "unbounded" }
+    const documents = yield* readSearchGroups(
+      scanLimit,
+      families,
+      (family, limit) =>
+        searchFamily(ctx, locale, family, route, queryText, limit, owner)
     );
-    return rankContentSearchDocuments(
-      interleaveSearchGroups(groups),
-      queryText
-    );
+    return rankContentSearchDocuments(documents, queryText);
   }
 );
 
