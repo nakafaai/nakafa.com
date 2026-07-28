@@ -2,13 +2,13 @@ import "server-only";
 
 import type { NinaLearningSessionInput } from "@repo/ai/nina/memory/pack";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
+import { readMaterialContextHint } from "@repo/contents/_types/route/material/context";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
-import { readMaterialContextHint } from "@/lib/routing/material/context";
 
 /** Returns whether one localized path belongs to the material route surface. */
 export function isPublishedMaterialPath(locale: Locale, publicPath: string) {
@@ -59,7 +59,7 @@ export const readPublishedNinaMaterial = Effect.fn(
     verified: true,
   } satisfies NinaLearningSessionInput["learning"];
   const context = readMaterialContextHint(input.contextHint);
-  if (Option.isNone(context)) {
+  if (!context) {
     return {
       learning,
       managed: true,
@@ -70,7 +70,7 @@ export const readPublishedNinaMaterial = Effect.fn(
   const resolved = yield* readPublishedMaterialContext(
     input.locale,
     published.projection,
-    context.value
+    context
   );
   if (!resolved.managed) {
     return {

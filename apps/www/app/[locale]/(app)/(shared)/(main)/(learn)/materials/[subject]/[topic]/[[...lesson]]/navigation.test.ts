@@ -181,7 +181,10 @@ describe("material lesson navigation", () => {
   it("resolves retained v2 topic copy by exact source identity", () => {
     const retainedPage = {
       ...publishedPage,
-      route: previewV2Projection,
+      route: {
+        ...previewV2Projection,
+        publicPath: previewNextProjection.publicPath,
+      },
     } satisfies MaterialPageSource;
     const wrongSourceRoute = Schema.decodeUnknownSync(
       PublicMaterialLessonRouteSchema

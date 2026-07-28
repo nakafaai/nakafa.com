@@ -2,12 +2,12 @@ import "server-only";
 
 import type { MaterialProjectionWire } from "@nakafa/aksara-contracts/projection/material";
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
+import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import type { PublishedCurriculumRoute } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
-import { toContextualMaterialHref } from "@/lib/routing/material/context";
 
 /** Builds one stable contextual lesson URL from source-owned identities. */
 function toMaterialHref(
@@ -19,7 +19,10 @@ function toMaterialHref(
     nodeKey: group.nodeKey,
     programKey: group.programKey,
   };
-  return toContextualMaterialHref(`/${locale}/${material.publicPath}`, context);
+  return toContextualMaterialHref({
+    href: `/${locale}/${material.publicPath}`,
+    ref: context,
+  });
 }
 
 /** Selects only material routes explicitly owned by one curriculum context. */

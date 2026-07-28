@@ -56,7 +56,7 @@ export function toContextualMaterialHref({
   ref,
 }: {
   href: string;
-  ref: MaterialContextRef | undefined;
+  ref: MaterialContextIdentity | undefined;
 }) {
   if (!ref) {
     return href;
