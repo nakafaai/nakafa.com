@@ -37,6 +37,36 @@ type StartCleanupWorkflow = (
   }
 ) => Promise<unknown>;
 
+interface CleanupWorkflowStarters {
+  readonly startAnalytics: StartCleanupWorkflow;
+  readonly startData: StartCleanupWorkflow;
+}
+
+const cleanupWorkflowStarters: CleanupWorkflowStarters = {
+  startAnalytics: (ctx, identity) =>
+    workflow.start(
+      ctx,
+      internal.customers.deletion.workflow.cleanupDeletedUserAnalytics,
+      { userId: identity.userId },
+      {
+        context: {},
+        onComplete:
+          internal.customers.deletion.workflow.handleDeletedUserCleanupComplete,
+      }
+    ),
+  startData: (ctx, identity) =>
+    workflow.start(
+      ctx,
+      internal.customers.deletion.workflow.cleanupDeletedUserData,
+      identity,
+      {
+        context: {},
+        onComplete:
+          internal.customers.deletion.workflow.handleDeletedUserCleanupComplete,
+      }
+    ),
+};
+
 type GetCleanupWorkflowStatus = (
   ctx: MutationCtx,
   workflowId: WorkflowId
@@ -61,29 +91,19 @@ type CleanupWorkflowStorage = (
   workflowId: WorkflowId
 ) => Promise<unknown>;
 
-/** Starts the durable cleanup workflow once for one finalized app user. */
+/** Atomically admits independent analytics and app-data cleanup workflows. */
 export const launchDeletedUserCleanupProgram: (
   ctx: MutationCtx,
   authId: string,
   userId: Id<"users">,
-  startWorkflow?: StartCleanupWorkflow
+  starters?: CleanupWorkflowStarters
 ) => Effect.Effect<void, UserCleanupError> = Effect.fn(
   "customers.deletion.launchDeletedUserCleanup"
 )(function* (
   ctx: MutationCtx,
   authId: string,
   userId: Id<"users">,
-  startWorkflow: StartCleanupWorkflow = (workflowCtx, identity) =>
-    workflow.start(
-      workflowCtx,
-      internal.customers.deletion.workflow.cleanupDeletedUserData,
-      identity,
-      {
-        context: {},
-        onComplete:
-          internal.customers.deletion.workflow.handleDeletedUserCleanupComplete,
-      }
-    )
+  starters: CleanupWorkflowStarters = cleanupWorkflowStarters
 ) {
   const user = yield* tryUserCleanup(() => ctx.db.get("users", userId));
 
@@ -96,13 +116,13 @@ export const launchDeletedUserCleanupProgram: (
   }
 
   const cleanupStartedAt = yield* Clock.currentTimeMillis;
+  const identity = {
+    authId,
+    userId: user._id,
+  };
 
-  yield* tryUserCleanup(() =>
-    startWorkflow(ctx, {
-      authId,
-      userId: user._id,
-    })
-  );
+  yield* tryUserCleanup(() => starters.startAnalytics(ctx, identity));
+  yield* tryUserCleanup(() => starters.startData(ctx, identity));
   yield* tryUserCleanup(() =>
     ctx.db.patch("users", user._id, {
       deletionCleanupStartedAt: cleanupStartedAt,
@@ -140,7 +160,33 @@ export const launchDeletedUserCleanup = internalMutation({
   },
 });
 
-/** Runs every retry-safe personal-data cleanup step in durable order. */
+/** Erases analytics independently from every local and external data drain. */
+export const cleanupDeletedUserAnalytics = workflow.define({
+  args: {
+    userId: vv.id("users"),
+  },
+  returns: v.null(),
+  handler: async (step, args) => {
+    await step.runAction(
+      internal.analytics.deletion.cleanupDeletedUserAnalytics,
+      { userId: args.userId },
+      { retry: DELETED_USER_CLEANUP_RETRY }
+    );
+    await step.runAction(
+      internal.analytics.deletion.cleanupDeletedUserAnalytics,
+      { userId: args.userId },
+      {
+        name: "reconcile late analytics writes",
+        retry: DELETED_USER_CLEANUP_RETRY,
+        runAfter: POSTHOG_DELETION_RECONCILIATION_DELAY_MS,
+      }
+    );
+
+    return null;
+  },
+});
+
+/** Runs every retry-safe customer and app-data cleanup step in durable order. */
 export const cleanupDeletedUserData = workflow.define({
   args: {
     authId: v.string(),
@@ -160,21 +206,6 @@ export const cleanupDeletedUserData = workflow.define({
       internal.auth.cleanup.drainDeletedUserData,
       { userId: args.userId },
       { retry: DELETED_USER_CLEANUP_RETRY }
-    );
-
-    await step.runAction(
-      internal.analytics.deletion.cleanupDeletedUserAnalytics,
-      { userId: args.userId },
-      { retry: DELETED_USER_CLEANUP_RETRY }
-    );
-    await step.runAction(
-      internal.analytics.deletion.cleanupDeletedUserAnalytics,
-      { userId: args.userId },
-      {
-        name: "reconcile late analytics writes",
-        retry: DELETED_USER_CLEANUP_RETRY,
-        runAfter: POSTHOG_DELETION_RECONCILIATION_DELAY_MS,
-      }
     );
 
     return null;
