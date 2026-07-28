@@ -11,12 +11,13 @@ import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/dis
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
+  FUNCTION_MATERIAL_JSON,
   FUNCTION_MATERIAL_KEY,
   FUNCTION_MATERIAL_PATH,
   FUNCTION_MATERIAL_SOURCE,
-  FUNCTION_MATERIAL_V2_JSON,
 } from "@repo/backend/test/content-material";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content-proof";
+import { testTextHash } from "@repo/backend/test/content-release";
 import {
   articleRuntimeRequest,
   insertSignedRelease,
@@ -153,12 +154,12 @@ describe("contentRelease/runtime/dispatch", () => {
     });
   });
 
-  it("authenticates the exact active v2 material through the current runtime", async () => {
+  it("authenticates the exact active canonical material", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {
       await insertSignedRelease(ctx);
       await insertSignedHead(ctx, "public", FUNCTION_MATERIAL_KEY, {
-        projectionJson: FUNCTION_MATERIAL_V2_JSON,
+        projectionJson: FUNCTION_MATERIAL_JSON,
         publicPath: FUNCTION_MATERIAL_PATH,
         rendererDomain: "mathematics",
         sourcePath: FUNCTION_MATERIAL_SOURCE,
@@ -183,11 +184,13 @@ describe("contentRelease/runtime/dispatch", () => {
         contentKey: FUNCTION_MATERIAL_KEY,
         kind: "subject-lesson",
       },
-      projectionHash:
-        "sha256:1d80cfc727a8d84ad952b34c79e437acc2ab73360addd1c9d7eea78791eea21d",
+      projectionHash: testTextHash(FUNCTION_MATERIAL_JSON),
       sourcePath: FUNCTION_MATERIAL_SOURCE,
     });
-    expect(body.projection).not.toHaveProperty("topicTitle");
+    expect(body.projection).toHaveProperty(
+      "topicTitle",
+      "Function Composition and Inverse Function"
+    );
   });
 
   it("rejects non-public delivery before reading restricted heads", async () => {

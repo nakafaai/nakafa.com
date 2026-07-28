@@ -3,7 +3,6 @@ import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import {
   ContentProjectionSchema,
-  ContentProjectionWireSchema,
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
@@ -76,7 +75,7 @@ export async function insertRuntimeVersion(
   const artifactHash = options?.artifactHash ?? `sha256:${"3".repeat(64)}`;
   const projectionJson =
     options?.projectionJson ?? testProjectionJson({ contentKey, publicPath });
-  const projection = Schema.decodeUnknownSync(ContentProjectionWireSchema)(
+  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
     JSON.parse(projectionJson)
   );
   const headSequence = options?.headSequence ?? TEST_RUNTIME_RELEASE.sequence;
@@ -120,7 +119,7 @@ export async function insertRuntimeKey(
 ) {
   const projectionJson =
     options?.projectionJson ?? testProjectionJson({ contentKey });
-  const projection = Schema.decodeUnknownSync(ContentProjectionWireSchema)(
+  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
     JSON.parse(projectionJson)
   );
   await ctx.db.insert("contentKeys", {
@@ -256,7 +255,7 @@ export async function insertSignedHead(
   const projectionJson =
     options?.projectionJson ??
     testProjectionJson({ contentKey, publicPath: TEST_RUNTIME_PATH });
-  const projection = Schema.decodeUnknownSync(ContentProjectionWireSchema)(
+  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
     JSON.parse(projectionJson)
   );
   const rendererDomain = options?.rendererDomain ?? "mathematics";

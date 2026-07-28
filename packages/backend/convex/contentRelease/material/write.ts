@@ -1,6 +1,6 @@
 import {
   canonicalizeMaterialProjection,
-  type MaterialProjectionWire,
+  type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -41,7 +41,7 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
   function* (
     ctx: MutationCtx,
     head: PublicProjection,
-    projection: MaterialProjectionWire
+    projection: MaterialLessonProjection
   ) {
     if (
       head.family !== "material" ||

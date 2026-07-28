@@ -1,12 +1,9 @@
-import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
-import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
 import {
   decodeArtifactJson,
   decodeItemJson,
   decodeProjectionJson,
-  decodeProjectionWireJson,
   decodeProofJson,
   decodeReleaseJson,
   decodeRendererJson,
@@ -21,7 +18,7 @@ import {
 } from "@repo/backend/convex/contentRelease/wire";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import {
-  FUNCTION_MATERIAL_V2_JSON,
+  FUNCTION_MATERIAL,
   testProjectionJson,
 } from "@repo/backend/test/content-material";
 import {
@@ -109,20 +106,12 @@ describe("contentRelease/parse", () => {
     ).toBe(true);
   });
 
-  it("preserves the exact active v2 material wire and its published hash", async () => {
-    const projection = await Effect.runPromise(
-      decodeProjectionWireJson(FUNCTION_MATERIAL_V2_JSON)
-    );
+  it("rejects stored material without its canonical topic title", async () => {
+    const { topicTitle: _topicTitle, ...incomplete } = FUNCTION_MATERIAL;
 
-    expect(canonicalizeContentProjection(projection)).toBe(
-      FUNCTION_MATERIAL_V2_JSON
-    );
-    expect(hashContentProjection(projection)).toBe(
-      "sha256:1d80cfc727a8d84ad952b34c79e437acc2ab73360addd1c9d7eea78791eea21d"
-    );
     await expect(
       Effect.runPromise(
-        decodeProjectionJson(FUNCTION_MATERIAL_V2_JSON).pipe(Effect.flip)
+        decodeProjectionJson(JSON.stringify(incomplete)).pipe(Effect.flip)
       )
     ).resolves.toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
   });

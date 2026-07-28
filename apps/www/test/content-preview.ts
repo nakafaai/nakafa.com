@@ -23,11 +23,10 @@ import {
 import {
   MaterialLessonRouteSchema,
   MaterialMetadataSchema,
-  MaterialProjectionV2Schema,
   makeMaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
 import { PublicMaterialLessonRouteSchema } from "@repo/contents/_types/route/schema";
-import { Effect, Redacted, Schema, Struct } from "effect";
+import { Effect, Redacted, Schema } from "effect";
 import { NextRequest } from "next/server";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import type { MaterialPreviewInput } from "@/lib/content/preview/material";
@@ -100,11 +99,6 @@ export const previewProjection = makeMaterialLessonProjection(
   previewRoute,
   previewMetadata
 );
-
-/** Retained v2 wire sample used to prove migration-safe runtime decoding. */
-export const previewV2Projection = Schema.decodeUnknownSync(
-  MaterialProjectionV2Schema
-)(Struct.omit(previewProjection, "topicTitle"));
 
 /** Exact English route owned by the next real Function Concept sibling. */
 export const previewNextRoute = Schema.decodeUnknownSync(

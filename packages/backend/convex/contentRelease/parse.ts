@@ -1,8 +1,5 @@
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
-import {
-  ContentProjectionSchema,
-  ContentProjectionWireSchema,
-} from "@nakafa/aksara-contracts/projection/spec";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import {
   ContentReleaseItemSchema,
   PublicationReceiptSchema,
@@ -124,26 +121,6 @@ export const decodeProjectionJson = Effect.fn(
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
           message: "Content projection does not satisfy its exact contract.",
-        })
-    )
-  )
-);
-
-/** Decodes retained published wire data without widening current write paths. */
-export const decodeProjectionWireJson = Effect.fn(
-  "contentRelease.decodeProjectionWireJson"
-)((source: string) =>
-  parseStoredJson(source, "Content projection wire").pipe(
-    Effect.flatMap(
-      Schema.decodeUnknown(ContentProjectionWireSchema, {
-        onExcessProperty: "error",
-      })
-    ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Content projection wire does not satisfy its contract.",
         })
     )
   )

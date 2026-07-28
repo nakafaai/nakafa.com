@@ -9,7 +9,6 @@ import {
   canonicalizeMaterialProjection,
   MaterialKeySchema,
   MaterialLessonProjectionSchema,
-  MaterialProjectionV2Schema,
   MaterialSectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
@@ -70,7 +69,7 @@ export const FUNCTION_MATERIAL_PATH = PublicPathSchema.make(
 export const FUNCTION_MATERIAL_SOURCE = CorpusSourcePathSchema.make(
   "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx"
 );
-export const FUNCTION_MATERIAL_V2 = MaterialProjectionV2Schema.make({
+export const FUNCTION_MATERIAL = MaterialLessonProjectionSchema.make({
   contentKey: FUNCTION_MATERIAL_KEY,
   graph: Effect.runSync(
     makeLearningGraphIdentity({
@@ -110,9 +109,10 @@ export const FUNCTION_MATERIAL_V2 = MaterialProjectionV2Schema.make({
   publicPath: FUNCTION_MATERIAL_PATH,
   sectionKey: MaterialSectionSchema.make("function-concept"),
   sitemap: true,
+  topicTitle: "Function Composition and Inverse Function",
 });
-export const FUNCTION_MATERIAL_V2_JSON =
-  canonicalizeMaterialProjection(FUNCTION_MATERIAL_V2);
+export const FUNCTION_MATERIAL_JSON =
+  canonicalizeMaterialProjection(FUNCTION_MATERIAL);
 
 /** Creates one exact technical material projection for read-model tests. */
 export function makeMaterialProjection(

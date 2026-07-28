@@ -4,7 +4,7 @@ import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   familyForProjection,
-  RoutedContentProjectionWireSchema,
+  RoutedContentProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/spec";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
@@ -44,7 +44,7 @@ type ActiveContentRoute =
   | {
       readonly activeReleaseId: ActiveContentReleaseId;
       readonly kind: "found";
-      readonly projection: typeof RoutedContentProjectionWireSchema.Type;
+      readonly projection: typeof RoutedContentProjectionSchema.Type;
     };
 
 /** Reads one exact active public-route projection from Convex. */
@@ -67,11 +67,10 @@ const decodeActiveProjection = Effect.fn(
     catch: () => new PublishedProjectionError(identity),
     try: (): unknown => JSON.parse(input.projectionJson),
   });
-  const projection = yield* Schema.decodeUnknown(
-    RoutedContentProjectionWireSchema
-  )(parsed, { onExcessProperty: "error" }).pipe(
-    Effect.mapError(() => new PublishedProjectionError(identity))
-  );
+  const projection = yield* Schema.decodeUnknown(RoutedContentProjectionSchema)(
+    parsed,
+    { onExcessProperty: "error" }
+  ).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
   if (
     familyForProjection(projection) !== identity.family ||
     projection.locale !== identity.locale ||

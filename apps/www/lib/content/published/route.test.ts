@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { testArticleProjection } from "@/test/content-article";
-import { previewProjection, previewV2Projection } from "@/test/content-preview";
+import { previewProjection } from "@/test/content-preview";
 import { readTestRuntimeQuery } from "@/test/runtime-query";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
@@ -101,22 +101,20 @@ describe("published content route", () => {
     });
   });
 
-  it("adapts every retained routed wire without fetching its artifact", async () => {
-    for (const projection of [previewV2Projection, previewProjection]) {
-      fetchQueryMock.mockResolvedValue({
-        activeReleaseId,
-        kind: "found",
-        projectionJson: JSON.stringify(projection),
-      });
+  it("decodes the canonical routed projection without fetching its artifact", async () => {
+    fetchQueryMock.mockResolvedValue({
+      activeReleaseId,
+      kind: "found",
+      projectionJson: JSON.stringify(previewProjection),
+    });
 
-      await expect(
-        Effect.runPromise(readActiveContentRoute(input))
-      ).resolves.toEqual({
-        activeReleaseId,
-        kind: "found",
-        projection,
-      });
-    }
+    await expect(
+      Effect.runPromise(readActiveContentRoute(input))
+    ).resolves.toEqual({
+      activeReleaseId,
+      kind: "found",
+      projection: previewProjection,
+    });
     expect(fetchQueryMock).toHaveBeenCalledWith(expect.anything(), {
       family: input.family,
       locale: input.locale,

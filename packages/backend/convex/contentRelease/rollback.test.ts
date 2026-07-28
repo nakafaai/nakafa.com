@@ -10,9 +10,9 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  FUNCTION_MATERIAL_JSON,
   FUNCTION_MATERIAL_KEY,
   FUNCTION_MATERIAL_SOURCE,
-  FUNCTION_MATERIAL_V2_JSON,
 } from "@repo/backend/test/content-material";
 import {
   TEST_MANIFEST_HASH,
@@ -155,13 +155,13 @@ describe("contentRelease/rollback", () => {
     });
   });
 
-  it("returns the exact retained v2 material state for forward rollback", async () => {
+  it("returns the exact canonical material state for forward rollback", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await activateRollbackFixture(ctx, 1);
       await insertRollbackItem(ctx, 0, true, "return {};", {
         contentKey: FUNCTION_MATERIAL_KEY,
-        priorProjectionJson: FUNCTION_MATERIAL_V2_JSON,
+        priorProjectionJson: FUNCTION_MATERIAL_JSON,
         priorSourcePath: FUNCTION_MATERIAL_SOURCE,
       });
     });
@@ -173,9 +173,12 @@ describe("contentRelease/rollback", () => {
         operation: "upsert",
         sourcePath: FUNCTION_MATERIAL_SOURCE,
       },
-      projection: JSON.parse(FUNCTION_MATERIAL_V2_JSON),
+      projection: JSON.parse(FUNCTION_MATERIAL_JSON),
     });
-    expect(page.records[0]?.prior).not.toHaveProperty("projection.topicTitle");
+    expect(page.records[0]?.prior).toHaveProperty(
+      "projection.topicTitle",
+      "Function Composition and Inverse Function"
+    );
   });
 
   it("rejects invalid identity, unreadable state, and cursor drift", async () => {

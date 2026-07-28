@@ -17,7 +17,7 @@ import {
 import {
   decodeArtifactJson,
   decodeItemJson,
-  decodeProjectionWireJson,
+  decodeProjectionJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
@@ -56,7 +56,7 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
     );
   }
   const artifact = yield* decodeArtifactJson(artifactRow.artifactJson);
-  const projection = yield* decodeProjectionWireJson(row.projectionJson);
+  const projection = yield* decodeProjectionJson(row.projectionJson);
   const projectionHash = yield* hashText(
     "the content projection",
     canonicalizeContentProjection(projection)

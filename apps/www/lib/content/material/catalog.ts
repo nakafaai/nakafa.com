@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
-import type { MaterialProjectionWire } from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionArgs } from "convex/server";
@@ -30,7 +30,7 @@ interface PublishedMaterialPageBase {
   readonly activeManifestHash: null | string;
   readonly activeReleaseId: null | string;
   readonly managed: boolean;
-  readonly routes: readonly MaterialProjectionWire[];
+  readonly routes: readonly MaterialLessonProjection[];
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
   readonly stale: boolean;
 }
@@ -120,7 +120,7 @@ export const readPublishedMaterialPage = Effect.fn(
 export const readPublishedMaterialRoutes = Effect.fn(
   "NakafaMaterial.readPublishedRoutes"
 )(function* (locale: Locale) {
-  const routes: MaterialProjectionWire[] = [];
+  const routes: MaterialLessonProjection[] = [];
   let cursor: MaterialPageCursor = {
     cursor: null,
     expectedManifestHash: null,

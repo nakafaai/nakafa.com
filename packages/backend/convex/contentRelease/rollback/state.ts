@@ -19,7 +19,7 @@ import { loadExactVersion } from "@repo/backend/convex/contentRelease/model";
 import {
   decodeArtifactJson,
   decodeItemJson,
-  decodeProjectionWireJson,
+  decodeProjectionJson,
   decodeRollbackJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { Effect, Schema } from "effect";
@@ -57,7 +57,7 @@ const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
   const state = {
     artifact: yield* loadArtifact(ctx, change.artifactHash, identity),
     change,
-    projection: yield* decodeProjectionWireJson(projectionJson),
+    projection: yield* decodeProjectionJson(projectionJson),
   };
   return yield* Schema.decodeUnknown(RollbackUpsertStateSchema)(state, {
     onExcessProperty: "error",

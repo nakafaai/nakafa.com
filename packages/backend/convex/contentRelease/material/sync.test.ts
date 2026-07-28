@@ -4,10 +4,10 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  FUNCTION_MATERIAL_JSON,
   FUNCTION_MATERIAL_KEY,
   FUNCTION_MATERIAL_PATH,
   FUNCTION_MATERIAL_SOURCE,
-  FUNCTION_MATERIAL_V2_JSON,
   testProjectionJson,
 } from "@repo/backend/test/content-material";
 import { testTextHash } from "@repo/backend/test/content-release";
@@ -247,7 +247,7 @@ describe("contentRelease/material/sync", () => {
     });
   });
 
-  it("rebuilds the exact retained v2 material during forward rollback", async () => {
+  it("rebuilds the exact canonical material during forward rollback", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertCompletedRelease(ctx, BASE, 1);
@@ -255,12 +255,12 @@ describe("contentRelease/material/sync", () => {
       await insertReleaseItem(ctx, BASE, FUNCTION_MATERIAL_KEY, 0);
       await insertRuntimeKey(ctx, FUNCTION_MATERIAL_KEY, {
         headSequence: BASE.sequence,
-        projectionJson: FUNCTION_MATERIAL_V2_JSON,
+        projectionJson: FUNCTION_MATERIAL_JSON,
       });
       await insertRuntimeVersion(ctx, "public", FUNCTION_MATERIAL_KEY, {
         headReleaseId: BASE.releaseId,
         headSequence: BASE.sequence,
-        projectionJson: FUNCTION_MATERIAL_V2_JSON,
+        projectionJson: FUNCTION_MATERIAL_JSON,
         publicPath: FUNCTION_MATERIAL_PATH,
         rendererDomain: "mathematics",
         sourcePath: FUNCTION_MATERIAL_SOURCE,
@@ -280,8 +280,8 @@ describe("contentRelease/material/sync", () => {
       contentKey: FUNCTION_MATERIAL_KEY,
       publicPath: FUNCTION_MATERIAL_PATH,
     });
-    expect(JSON.parse(row?.projectionJson ?? "{}")).not.toHaveProperty(
-      "topicTitle"
-    );
+    expect(JSON.parse(row?.projectionJson ?? "{}")).toMatchObject({
+      topicTitle: "Function Composition and Inverse Function",
+    });
   });
 });

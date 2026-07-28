@@ -1,11 +1,10 @@
-import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { FUNCTION_MATERIAL_V2 } from "@repo/backend/test/content-material";
+import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
@@ -24,12 +23,7 @@ const CONTEXT_PUBLIC_PATH =
   "kurikulum/cambridge-international/upper-secondary/biology-0610/karakteristik-dan-klasifikasi-organisme-hidup";
 const CONTEXT_PARENT_PATH =
   "kurikulum/cambridge-international/upper-secondary/biology-0610";
-const PUBLISHED_MATERIAL = Schema.decodeUnknownSync(
-  MaterialLessonProjectionSchema
-)({
-  ...FUNCTION_MATERIAL_V2,
-  topicTitle: "Function Composition and Inverse Function",
-});
+const PUBLISHED_MATERIAL = FUNCTION_MATERIAL;
 const publishedPlacement = readStaticPublicCurriculumRoutes().find(
   (route) =>
     route.locale === PUBLISHED_MATERIAL.locale &&
