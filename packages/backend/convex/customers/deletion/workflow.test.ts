@@ -13,7 +13,8 @@ import { describe, expect, it, vi } from "vitest";
 describe("customers/deletion/workflow", () => {
   it("starts cleanup for the matching app user", async () => {
     const t = convexTest(schema, convexModules);
-    const startWorkflow = vi.fn(async () => undefined);
+    const startAnalytics = vi.fn(async () => undefined);
+    const startData = vi.fn(async () => undefined);
     const deletedAt = Date.now();
 
     const user = await t.mutation(async (ctx) => {
@@ -38,7 +39,7 @@ describe("customers/deletion/workflow", () => {
           ctx,
           "deleted-auth-user",
           insertedUserId,
-          startWorkflow
+          { startAnalytics, startData }
         )
       );
 
@@ -46,16 +47,26 @@ describe("customers/deletion/workflow", () => {
     });
 
     expect(user?.deletionCleanupStartedAt).toEqual(expect.any(Number));
-    expect(startWorkflow).toHaveBeenCalledOnce();
-    expect(startWorkflow).toHaveBeenCalledWith(expect.any(Object), {
+    expect(startAnalytics).toHaveBeenCalledOnce();
+    expect(startData).toHaveBeenCalledOnce();
+    const expectedIdentity = {
       authId: "deleted-auth-user",
       userId: user?._id,
-    });
+    };
+    expect(startAnalytics).toHaveBeenCalledWith(
+      expect.any(Object),
+      expectedIdentity
+    );
+    expect(startData).toHaveBeenCalledWith(
+      expect.any(Object),
+      expectedIdentity
+    );
   });
 
   it("does nothing when the app user is already absent", async () => {
     const t = convexTest(schema, convexModules);
-    const startWorkflow = vi.fn(async () => undefined);
+    const startAnalytics = vi.fn(async () => undefined);
+    const startData = vi.fn(async () => undefined);
     const missingUserId = await t.mutation(async (ctx) => {
       const userId = await ctx.db.insert("users", {
         authId: "removed-auth-user",
@@ -75,16 +86,21 @@ describe("customers/deletion/workflow", () => {
           ctx,
           "missing-auth-user",
           missingUserId,
-          startWorkflow
+          { startAnalytics, startData }
         )
       )
     );
 
-    expect(startWorkflow).not.toHaveBeenCalled();
+    expect(startAnalytics).not.toHaveBeenCalled();
+    expect(startData).not.toHaveBeenCalled();
   });
 
-  it("returns a typed failure when the workflow cannot start", async () => {
+  it("returns a typed failure when either workflow cannot start", async () => {
     const t = convexTest(schema, convexModules);
+    const startAnalytics = vi.fn(async () => undefined);
+    const startData = vi.fn(async () =>
+      Promise.reject(new Error("workflow unavailable"))
+    );
     const userId = await t.mutation((ctx) =>
       ctx.db.insert("users", {
         authId: "failing-auth-user",
@@ -101,13 +117,10 @@ describe("customers/deletion/workflow", () => {
       t.mutation(
         async (ctx) =>
           await runConvexProgram(
-            launchDeletedUserCleanupProgram(
-              ctx,
-              "failing-auth-user",
-              userId,
-              async () =>
-                await Promise.reject(new Error("workflow unavailable"))
-            )
+            launchDeletedUserCleanupProgram(ctx, "failing-auth-user", userId, {
+              startAnalytics,
+              startData,
+            })
           )
       )
     ).rejects.toMatchObject({
@@ -119,6 +132,8 @@ describe("customers/deletion/workflow", () => {
 
     const user = await t.query(async (ctx) => await ctx.db.get(userId));
 
+    expect(startAnalytics).toHaveBeenCalledOnce();
+    expect(startData).toHaveBeenCalledOnce();
     expect(user).not.toHaveProperty("deletionCleanupStartedAt");
   });
 
