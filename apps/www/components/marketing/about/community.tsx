@@ -14,7 +14,7 @@ export function Community() {
         <div className="grid gap-12 px-6 py-48">
           <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
             <div className="grid content-start gap-6">
-              <h2 className="max-w-xl text-balance font-medium text-3xl tracking-tight sm:text-4xl">
+              <h2 className="max-w-xl text-balance text-3xl tracking-tight sm:text-4xl">
                 {t("community-title")}
               </h2>
               <div className="flex items-center gap-4">

@@ -29,29 +29,13 @@ export function LogoCta() {
 
 export function HeaderCta() {
   const t = useTranslations("Marketing");
-
   const currentUser = useUser((state) => state.user);
-
-  if (currentUser) {
-    return (
-      <Button
-        nativeButton={false}
-        render={<NavigationLink href="/home">{t("try-nakafa")}</NavigationLink>}
-      />
-    );
-  }
+  const href = currentUser ? "/home" : "/auth";
 
   return (
-    <div className="flex gap-2">
-      <Button
-        nativeButton={false}
-        render={<NavigationLink href="/auth">{t("sign-in")}</NavigationLink>}
-      />
-      <Button
-        nativeButton={false}
-        render={<NavigationLink href="/auth">{t("sign-up")}</NavigationLink>}
-        variant="outline"
-      />
-    </div>
+    <Button
+      nativeButton={false}
+      render={<NavigationLink href={href}>{t("try-nakafa")}</NavigationLink>}
+    />
   );
 }

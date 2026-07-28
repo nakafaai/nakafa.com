@@ -18,7 +18,7 @@ export function Schools() {
               </span>
             </div>
 
-            <h2 className="max-w-3xl text-balance font-medium text-3xl tracking-tight sm:text-4xl">
+            <h2 className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl">
               {t.rich("headline", {
                 mark: (chunks) => <mark>{chunks}</mark>,
               })}

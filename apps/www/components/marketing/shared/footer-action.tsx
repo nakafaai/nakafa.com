@@ -1,6 +1,6 @@
 "use client";
 
-import { PaintBoardIcon, TranslateIcon } from "@hugeicons/core-free-icons";
+import { PaintBoardIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -14,13 +14,11 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { cn } from "@repo/design-system/lib/utils";
-import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
-import { type Locale, useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ComponentProps } from "react";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
-import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
+import { Language } from "@/components/marketing/shared/language";
 
 /** Renders footer preference actions that share the same language route resolver as the sidebar. */
 export function FooterAction() {
@@ -29,59 +27,6 @@ export function FooterAction() {
       <Language />
       <Theme />
     </ButtonGroup>
-  );
-}
-
-/** Renders the footer language switcher and keeps localized route projection outside the UI list. */
-function Language() {
-  const { isPending, replace } = useLocalizedRouteSwitch();
-  const currentLocale = useLocale();
-  const t = useTranslations("Common");
-
-  /** Replaces the current route with the selected locale. */
-  function handleChangeLocale(locale: Locale) {
-    replace(locale);
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button variant="outline">
-            <HugeIcons icon={TranslateIcon} />
-            <span className="truncate">{t("language")}</span>
-          </Button>
-        }
-      />
-
-      <DropdownMenuContent
-        align="end"
-        className="w-max max-w-[calc(100vw-2rem)]"
-      >
-        <DropdownMenuGroup>
-          {languages.map((language) => (
-            <DropdownMenuItem
-              className="cursor-pointer"
-              disabled={isPending}
-              key={language.value}
-              onClick={(event) => {
-                event.stopPropagation();
-                handleChangeLocale(language.value);
-              }}
-            >
-              <CountryFlagIcon countryCode={language.countryCode} />
-              <span className="truncate">{language.label}</span>
-              <IconCircleFilled
-                className={cn(
-                  "ml-auto size-3 text-primary opacity-0 transition-opacity",
-                  currentLocale === language.value && "opacity-100"
-                )}
-              />
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
 

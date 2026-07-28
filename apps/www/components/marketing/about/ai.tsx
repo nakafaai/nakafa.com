@@ -60,7 +60,7 @@ export function Ai() {
     >
       <div className="mx-auto w-full max-w-7xl border-x">
         <div className="grid items-center gap-6 bg-card px-6 pt-18 pb-9 text-card-foreground lg:grid-cols-2">
-          <h2 className="max-w-sm text-balance font-medium text-3xl tracking-tight sm:text-4xl">
+          <h2 className="max-w-sm text-balance text-3xl tracking-tight sm:text-4xl">
             {t.rich("headline", {
               mark: (chunks) => <mark>{chunks}</mark>,
             })}

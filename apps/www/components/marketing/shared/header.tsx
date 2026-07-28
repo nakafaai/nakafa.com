@@ -3,6 +3,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
 import { HeaderContainer } from "@/components/marketing/shared/header-container";
 import { HeaderCta, LogoCta } from "@/components/marketing/shared/header-cta";
+import { Language } from "@/components/marketing/shared/language";
 
 export function Header() {
   const t = useTranslations("Marketing");
@@ -12,7 +13,7 @@ export function Header() {
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-6">
         <LogoCta />
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center md:flex">
           <Button
             nativeButton={false}
             render={<NavigationLink href="/">{t("about")}</NavigationLink>}
@@ -34,7 +35,10 @@ export function Header() {
           />
         </nav>
 
-        <HeaderCta />
+        <div className="flex items-center gap-2">
+          <Language compact />
+          <HeaderCta />
+        </div>
       </div>
     </HeaderContainer>
   );
