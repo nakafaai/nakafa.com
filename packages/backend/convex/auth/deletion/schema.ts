@@ -15,9 +15,16 @@ const tables = {
     successorCursor: v.optional(v.string()),
     userId: v.id("users"),
   })
+    .index("by_attemptId", ["attemptId"])
     .index("by_authId", ["authId"])
     .index("by_recoveryAt", ["recoveryAt"])
     .index("by_userId", ["userId"]),
+  accountDeletionReceipts: defineTable({
+    attemptId: v.string(),
+    committedAt: v.number(),
+  })
+    .index("by_attemptId", ["attemptId"])
+    .index("by_committedAt", ["committedAt"]),
   accountDeletionSchoolTransfers: defineTable({
     preparationId: v.id("accountDeletionPreparations"),
     schoolId: v.id("schools"),

@@ -113,6 +113,7 @@ describe("auth/deletion/finalize", () => {
         "accountDeletionPreparations",
         seeded.preparationId
       ),
+      receipt: await ctx.db.query("accountDeletionReceipts").unique(),
       school: await ctx.db.get("schools", seeded.schoolId),
       successorMembership: await ctx.db.get(
         "schoolMembers",
@@ -135,6 +136,10 @@ describe("auth/deletion/finalize", () => {
     expect(state.owner).not.toHaveProperty("role");
     expect(state.preparation?.finalizedAt).toEqual(expect.any(Number));
     expect(state.preparation).not.toHaveProperty("recoveryAt");
+    expect(state.receipt).toMatchObject({
+      attemptId: ATTEMPT_ID,
+      committedAt: expect.any(Number),
+    });
     expect(state.school).toMatchObject({
       createdBy: seeded.successorId,
       updatedBy: seeded.successorId,
@@ -389,6 +394,7 @@ describe("auth/deletion/finalize", () => {
 
     const state = await t.query(async (ctx) => ({
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),
+      receipt: await ctx.db.query("accountDeletionReceipts").unique(),
       user: await ctx.db.get("users", userId),
     }));
 
@@ -403,6 +409,7 @@ describe("auth/deletion/finalize", () => {
       finalizedAt: expect.any(Number),
       userId,
     });
+    expect(state.receipt).toBeNull();
     expect(scheduleCleanup).toHaveBeenCalledWith(expect.any(Object), {
       authId: "direct-auth-removal",
       userId,

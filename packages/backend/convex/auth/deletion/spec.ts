@@ -17,6 +17,20 @@ export type AccountDeletionPreparationOutcome = Infer<
   typeof accountDeletionPreparationOutcomeValidator
 >;
 
+export const accountDeletionAttemptStatus = {
+  committed: "committed",
+  pending: "pending",
+  unknown: "unknown",
+} as const;
+
+export const accountDeletionAttemptStatusValidator = literals(
+  ...Object.values(accountDeletionAttemptStatus)
+);
+
+export type AccountDeletionAttemptStatus = Infer<
+  typeof accountDeletionAttemptStatusValidator
+>;
+
 export const accountDeletionPreparationVersionValidator = v.object({
   attemptId: v.string(),
   preparationId: v.id("accountDeletionPreparations"),

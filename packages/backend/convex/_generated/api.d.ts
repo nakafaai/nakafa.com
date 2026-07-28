@@ -68,6 +68,7 @@ import type * as auth_deletion_cancel from "../auth/deletion/cancel.js";
 import type * as auth_deletion_constants from "../auth/deletion/constants.js";
 import type * as auth_deletion_finalize from "../auth/deletion/finalize.js";
 import type * as auth_deletion_prepare from "../auth/deletion/prepare.js";
+import type * as auth_deletion_receipt from "../auth/deletion/receipt.js";
 import type * as auth_deletion_recovery from "../auth/deletion/recovery.js";
 import type * as auth_deletion_spec from "../auth/deletion/spec.js";
 import type * as auth_deletion_state from "../auth/deletion/state.js";
@@ -546,6 +547,7 @@ declare const fullApi: ApiFromModules<{
   "auth/deletion/constants": typeof auth_deletion_constants;
   "auth/deletion/finalize": typeof auth_deletion_finalize;
   "auth/deletion/prepare": typeof auth_deletion_prepare;
+  "auth/deletion/receipt": typeof auth_deletion_receipt;
   "auth/deletion/recovery": typeof auth_deletion_recovery;
   "auth/deletion/spec": typeof auth_deletion_spec;
   "auth/deletion/state": typeof auth_deletion_state;

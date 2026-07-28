@@ -1,5 +1,6 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
+import { accountDeletionAttemptStatus } from "@repo/backend/convex/auth/deletion/spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -8,6 +9,8 @@ import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
+const COMMITTED_ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0621";
+const UNKNOWN_ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0622";
 
 describe("auth/deletion", () => {
   it("advances one authenticated preparation step", async () => {
@@ -39,6 +42,44 @@ describe("auth/deletion", () => {
       userId: identity.userId,
     });
     expect(state.user?.deletionPreparedAt).toEqual(expect.any(Number));
+  });
+
+  it("exposes only the commit status for an opaque browser attempt", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "deletion-attempt-status",
+      })
+    );
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("accountDeletionPreparations", {
+        attemptId: ATTEMPT_ID,
+        authId: identity.authUserId,
+        recoveryGeneration: 0,
+        userId: identity.userId,
+      });
+      await ctx.db.insert("accountDeletionReceipts", {
+        attemptId: COMMITTED_ATTEMPT_ID,
+        committedAt: NOW,
+      });
+    });
+
+    await expect(
+      t.query(api.auth.deletion.getAccountDeletionAttemptStatus, {
+        attemptId: ATTEMPT_ID,
+      })
+    ).resolves.toBe(accountDeletionAttemptStatus.pending);
+    await expect(
+      t.query(api.auth.deletion.getAccountDeletionAttemptStatus, {
+        attemptId: COMMITTED_ATTEMPT_ID,
+      })
+    ).resolves.toBe(accountDeletionAttemptStatus.committed);
+    await expect(
+      t.query(api.auth.deletion.getAccountDeletionAttemptStatus, {
+        attemptId: UNKNOWN_ATTEMPT_ID,
+      })
+    ).resolves.toBe(accountDeletionAttemptStatus.unknown);
   });
 
   it("lets a prepared auth session cancel its own deletion", async () => {
