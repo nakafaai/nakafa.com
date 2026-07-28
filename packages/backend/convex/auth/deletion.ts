@@ -8,6 +8,8 @@ import {
   cancelAccountDeletionAttemptByToken,
   cancelAccountDeletion as cancelAccountDeletionProgram,
 } from "@repo/backend/convex/auth/deletion/cancel";
+import { claimAccountDeletion as claimAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/claim";
+import { continueAccountDeletionCommitProgram } from "@repo/backend/convex/auth/deletion/commit";
 import { prepareAccountDeletion as prepareAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/prepare";
 import {
   getAccountDeletionAttemptStatusProgram,
@@ -65,8 +67,8 @@ const cancelAccountDeletionRecoveryBatch = Effect.fn(
   return hasMore;
 });
 
-/** Reserves every owned school's successor before auth deletion. */
-export const prepareAccountDeletion = internalMutation({
+/** Claims the irreversible phase after reserving every school successor. */
+export const claimAccountDeletion = internalMutation({
   args: {
     attemptId: v.string(),
     authId: v.string(),
@@ -74,7 +76,24 @@ export const prepareAccountDeletion = internalMutation({
   returns: accountDeletionPreparationOutcomeValidator,
   handler: (ctx, args) =>
     runConvexProgram(
-      prepareAccountDeletionProgram(ctx, args.authId, args.attemptId)
+      claimAccountDeletionProgram(ctx, args.authId, args.attemptId)
+    ),
+});
+
+/** Continues one bounded, already-claimed Better Auth deletion transaction. */
+export const continueAccountDeletionCommit = internalMutation({
+  args: {
+    authId: v.string(),
+    expectedPreparation: accountDeletionPreparationVersionValidator,
+  },
+  returns: v.boolean(),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      continueAccountDeletionCommitProgram(
+        ctx,
+        args.authId,
+        args.expectedPreparation
+      )
     ),
 });
 

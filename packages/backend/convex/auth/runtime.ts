@@ -27,11 +27,11 @@ import { anonymous, openAPI, username } from "better-auth/plugins";
 import { makeFunctionReference } from "convex/server";
 import { Effect, Schema } from "effect";
 
-const prepareAccountDeletion = makeFunctionReference<
+const claimAccountDeletion = makeFunctionReference<
   "mutation",
   { attemptId: string; authId: string },
   AccountDeletionPreparationOutcome
->("auth/deletion:prepareAccountDeletion");
+>("auth/deletion:claimAccountDeletion");
 const disabledLegacyAnonymousPaths = [
   "/sign-in/anonymous",
   "/delete-anonymous-user",
@@ -43,7 +43,7 @@ const deletionUnavailableError = () =>
     message: "Account deletion is temporarily unavailable.",
   });
 
-/** Requires one bounded preparation step to confirm deletion readiness. */
+/** Requires the server-side claim to confirm deletion readiness. */
 export const verifyAccountDeletionPreparation = Effect.fn(
   "auth.verifyAccountDeletionPreparation"
 )(function* (runPreparation: () => Promise<AccountDeletionPreparationOutcome>) {
@@ -100,7 +100,7 @@ const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
     ).pipe(Effect.mapError(deletionUnavailableError));
 
     yield* verifyAccountDeletionPreparation(() =>
-      ctx.runMutation(prepareAccountDeletion, { attemptId, authId })
+      ctx.runMutation(claimAccountDeletion, { attemptId, authId })
     );
   }
 );

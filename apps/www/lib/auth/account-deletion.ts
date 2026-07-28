@@ -218,22 +218,24 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
       });
     }
 
-    yield* cancelPreparedAttempt();
-
     if (result.error.code === betterAuthSessionExpiredCode) {
+      yield* cancelPreparedAttempt();
       return yield* new AccountDeletionSessionExpired({
         code: accountDeletionSessionExpiredCode,
       });
     }
 
     if (result.error.code === ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE) {
+      yield* cancelPreparedAttempt();
       return yield* new AccountDeletionSchoolMemberRequired({
         code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
       });
     }
 
-    return yield* new AccountDeletionFailed({
-      code: accountDeletionFailedCode,
+    return yield* new AccountDeletionRequestUncertain({
+      attemptId,
+      code: accountDeletionRequestUncertainCode,
+      phase: accountDeletionRequestPhase.deletion,
     });
   }
 );

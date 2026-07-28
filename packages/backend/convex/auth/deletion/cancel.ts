@@ -71,6 +71,7 @@ export const cancelAccountDeletion: (
 
   if (
     !preparation ||
+    preparation.deletionStartedAt !== undefined ||
     preparation.finalizedAt !== undefined ||
     preparation.attemptId !== expectedPreparation.attemptId ||
     preparation._id !== expectedPreparation.preparationId ||
@@ -107,6 +108,7 @@ export const cancelAccountDeletionAttempt = Effect.fn(
 
   if (
     !preparation ||
+    preparation.deletionStartedAt !== undefined ||
     preparation.finalizedAt !== undefined ||
     preparation.attemptId !== attemptId
   ) {
@@ -162,7 +164,11 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
       .unique()
   );
 
-  if (!preparation || preparation.finalizedAt !== undefined) {
+  if (
+    !preparation ||
+    preparation.deletionStartedAt !== undefined ||
+    preparation.finalizedAt !== undefined
+  ) {
     return;
   }
 
