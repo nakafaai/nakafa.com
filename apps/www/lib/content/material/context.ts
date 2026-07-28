@@ -26,6 +26,7 @@ export interface PublishedMaterialContext {
   readonly group: CurriculumRoute;
   readonly href: string;
   readonly label: string;
+  readonly mapping: CurriculumRoute;
   readonly parent: CurriculumRoute;
 }
 
@@ -104,6 +105,7 @@ export const readPublishedMaterialContext = Effect.fn(
       group,
       href: `/${locale}/${parent.publicPath}#${slugify(label)}`,
       label,
+      mapping,
       parent,
     } satisfies PublishedMaterialContext,
   };

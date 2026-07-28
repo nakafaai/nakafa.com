@@ -1,11 +1,11 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
-import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers/search/constants";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   getPublicSearchPath,
   insertContentSearch,
   searchContentId,
 } from "@repo/backend/test/search";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import { describe, expect, it } from "vitest";
 
 describe("contents/queries/search:search", () => {
@@ -218,7 +218,11 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      for (let index = 0; index <= CONTENT_SEARCH_MAX_OFFSET + 10; index += 1) {
+      for (
+        let index = 0;
+        index <= NAKAFA_AGENT_SEARCH_WINDOW + 10;
+        index += 1
+      ) {
         const title = `Search Cap ${index.toString().padStart(4, "0")}`;
 
         await insertContentSearch(ctx, {
@@ -234,15 +238,16 @@ describe("contents/queries/search:search", () => {
       }
     });
 
-    const offset = CONTENT_SEARCH_MAX_OFFSET - 10;
+    const limit = 10;
+    const offset = NAKAFA_AGENT_SEARCH_WINDOW - limit;
     const browseResult = await t.query(api.contents.queries.search.search, {
-      limit: 20,
+      limit,
       locale: "id",
       offset,
       section: "articles",
     });
     const queryResult = await t.query(api.contents.queries.search.search, {
-      limit: 20,
+      limit,
       locale: "id",
       offset,
       queries: ["searchcap"],
@@ -250,12 +255,26 @@ describe("contents/queries/search:search", () => {
     });
 
     expect(browseResult).toMatchObject({
-      count: 20,
+      count: limit,
       has_more: false,
     });
     expect(queryResult).toMatchObject({
-      count: 20,
+      count: limit,
       has_more: false,
+    });
+  });
+
+  it("rejects a page that crosses the bounded search window", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await expect(
+      t.query(api.contents.queries.search.search, {
+        limit: 20,
+        locale: "id",
+        offset: NAKAFA_AGENT_SEARCH_WINDOW - 10,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_SEARCH_WINDOW_INVALID" },
     });
   });
 

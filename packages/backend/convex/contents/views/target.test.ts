@@ -1,7 +1,10 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
-import { loadContentTarget } from "@repo/backend/convex/contents/views/target";
+import {
+  type ContentViewTargetInput,
+  loadContentTarget,
+} from "@repo/backend/convex/contents/views/target";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -106,14 +109,51 @@ describe("contents/views/target", () => {
     });
   });
 
+  it("resolves the currently deployed input through its stable content id", async () => {
+    const target = convexTest(schema, convexModules);
+    const graph = await insertSourceTarget(target);
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          loadContentTarget(ctx, {
+            contentId: graph.assetId,
+            locale: "en",
+          })
+        )
+      )
+    ).resolves.toMatchObject({
+      content_id: graph.assetId,
+      route: SOURCE_PATH,
+      section: "articles",
+    });
+  });
+
+  it("rejects a route without its owning section", async () => {
+    const target = convexTest(schema, convexModules);
+    const graph = await insertSourceTarget(target);
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          loadContentTarget(ctx, {
+            contentId: graph.assetId,
+            locale: "en",
+            publicPath: SOURCE_PATH,
+          })
+        )
+      )
+    ).resolves.toBeNull();
+  });
+
   it("resolves active materials by current path and stable asset identity", async () => {
     const target = convexTest(schema, convexModules);
     await activateMaterialCatalog(target, [PUBLISHED_MATERIAL]);
-    const input = {
+    const input: ContentViewTargetInput = {
       contentId: PUBLISHED_MATERIAL.graph.assetId,
       locale: PUBLISHED_MATERIAL.locale,
       section: "material",
-    } as const;
+    };
 
     const byPath = await target.query((ctx) =>
       runConvexProgram(

@@ -1,7 +1,7 @@
-import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers/search/constants";
 import { buildContentSearchExcerpt } from "@repo/backend/convex/contents/helpers/search/excerpt";
 import type { ContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/groups";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
+import { NAKAFA_AGENT_MAX_OFFSET } from "@repo/contents/_types/agent/search";
 import type { Infer } from "convex/values";
 
 type ContentSearchInput = Infer<typeof contentSearchInputValidator>;
@@ -32,7 +32,7 @@ export function buildContentSearchResult(
     }));
   const nextOffset = args.offset + items.length;
   const hasMore =
-    ranked.length > nextOffset && nextOffset <= CONTENT_SEARCH_MAX_OFFSET;
+    ranked.length > nextOffset && nextOffset <= NAKAFA_AGENT_MAX_OFFSET;
 
   const result = {
     count: items.length,

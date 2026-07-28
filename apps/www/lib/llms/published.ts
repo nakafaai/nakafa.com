@@ -37,6 +37,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   rawMdx,
   sourcePath,
   sourceRevision,
+  title,
 }: {
   description: string;
   locale: ContentLocale;
@@ -44,6 +45,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   rawMdx: string;
   sourcePath: string;
   sourceRevision: GitCommitSha | null;
+  title: string;
 }) {
   const body = yield* projectMdxForAgentMarkdown(rawMdx).pipe(
     Effect.catchTag("MdxAgentProjectionError", () =>
@@ -61,6 +63,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
     ...buildHeader({
       description,
       source,
+      title,
       url: `${BASE_URL}/${locale}/${publicPath}`,
     }),
     body,
@@ -80,6 +83,7 @@ const readPublishedTextData = Effect.fn("www.llms.published.data")(function* (
       rawMdx: data.artifact.payload.rawMdx,
       sourcePath: data.sourcePath,
       sourceRevision: data.sourceRevision,
+      title: data.projection.metadata.title,
     };
   }
 
@@ -91,6 +95,7 @@ const readPublishedTextData = Effect.fn("www.llms.published.data")(function* (
     rawMdx: data.artifact.payload.rawMdx,
     sourcePath: data.sourcePath,
     sourceRevision: data.sourceRevision,
+    title: data.metadata.title,
   };
 });
 
@@ -109,6 +114,7 @@ export async function getCachedPublishedText(input: PublishedMarkdownInput) {
       rawMdx: data.rawMdx,
       sourcePath: data.sourcePath,
       sourceRevision: data.sourceRevision,
+      title: data.title,
     })
   );
 }

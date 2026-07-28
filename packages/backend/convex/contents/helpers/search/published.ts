@@ -5,7 +5,10 @@ import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse"
 import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
 import { resolveSearchProjection } from "@repo/backend/convex/contentRelease/search/verify";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
-import { interleaveSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
+import {
+  allocateSearchLimits,
+  interleaveSearchGroups,
+} from "@repo/backend/convex/contents/helpers/search/groups";
 import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { getExactRouteQuery } from "@repo/backend/convex/contents/helpers/search/terms";
@@ -54,17 +57,26 @@ export const readPublishedSearchDocuments = Effect.fn(
   families: readonly PublishedFamily[]
 ) {
   if (queryTexts.length === 0) {
+    const limits = allocateSearchLimits(scanLimit, families.length);
     const groups = yield* Effect.all(
-      families.map((family) =>
-        browseFamily(ctx, args.locale, family, scanLimit, owner)
+      families.map((family, index) =>
+        browseFamily(ctx, args.locale, family, limits[index] ?? 0, owner)
       ),
       { concurrency: "unbounded" }
     );
     return interleaveSearchGroups(groups);
   }
+  const limits = allocateSearchLimits(scanLimit, queryTexts.length);
   const groups = yield* Effect.all(
-    queryTexts.map((queryText) =>
-      searchQuery(ctx, args.locale, families, queryText, scanLimit, owner)
+    queryTexts.map((queryText, index) =>
+      searchQuery(
+        ctx,
+        args.locale,
+        families,
+        queryText,
+        limits[index] ?? 0,
+        owner
+      )
     ),
     { concurrency: "unbounded" }
   );
@@ -82,9 +94,18 @@ const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
     owner: PublishedSearchOwner
   ) {
     const route = getExactRouteQuery(locale, queryText);
+    const limits = allocateSearchLimits(scanLimit, families.length);
     const groups = yield* Effect.all(
-      families.map((family) =>
-        searchFamily(ctx, locale, family, route, queryText, scanLimit, owner)
+      families.map((family, index) =>
+        searchFamily(
+          ctx,
+          locale,
+          family,
+          route,
+          queryText,
+          limits[index] ?? 0,
+          owner
+        )
       ),
       { concurrency: "unbounded" }
     );
@@ -106,36 +127,40 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
     scanLimit: number,
     owner: PublishedSearchOwner
   ) {
-    const [hits, exact] = yield* Effect.all(
-      [
-        Effect.promise(() =>
+    if (scanLimit <= 0) {
+      return [];
+    }
+    const exact = route
+      ? yield* Effect.promise(() =>
           ctx.db
             .query("contentIndex")
-            .withSearchIndex("search_text", (index) =>
+            .withIndex("by_locale_and_family_and_publicPath", (index) =>
               index
-                .search("text", queryText)
-                .eq("family", family)
                 .eq("locale", locale)
+                .eq("family", family)
+                .eq("publicPath", route)
             )
-            .take(scanLimit)
-        ),
-        route
-          ? Effect.promise(() =>
-              ctx.db
-                .query("contentIndex")
-                .withIndex("by_locale_and_family_and_publicPath", (index) =>
-                  index
-                    .eq("locale", locale)
-                    .eq("family", family)
-                    .eq("publicPath", route)
-                )
-                .unique()
-            )
-          : Effect.succeed(null),
-      ],
-      { concurrency: "unbounded" }
-    );
-    const rows = exact ? [exact, ...hits] : hits;
+            .unique()
+        )
+      : null;
+    const hitLimit = scanLimit - (exact ? 1 : 0);
+    const hits =
+      hitLimit > 0
+        ? yield* Effect.promise(() =>
+            ctx.db
+              .query("contentIndex")
+              .withSearchIndex("search_text", (index) =>
+                index
+                  .search("text", queryText)
+                  .eq("family", family)
+                  .eq("locale", locale)
+              )
+              .take(hitLimit)
+          )
+        : [];
+    const rows = exact
+      ? [exact, ...hits.filter((row) => row._id !== exact._id)]
+      : hits;
     return yield* authenticateSearchRows(ctx, rows, owner);
   }
 );
@@ -149,6 +174,9 @@ const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
     scanLimit: number,
     owner: PublishedSearchOwner
   ) {
+    if (scanLimit <= 0) {
+      return [];
+    }
     const rows = yield* Effect.promise(() =>
       ctx.db
         .query("contentIndex")

@@ -298,7 +298,6 @@ import type * as contents_graph from "../contents/graph.js";
 import type * as contents_helpers_partitions from "../contents/helpers/partitions.js";
 import type * as contents_helpers_popularity from "../contents/helpers/popularity.js";
 import type * as contents_helpers_routes_write from "../contents/helpers/routes/write.js";
-import type * as contents_helpers_search_constants from "../contents/helpers/search/constants.js";
 import type * as contents_helpers_search_documents from "../contents/helpers/search/documents.js";
 import type * as contents_helpers_search_excerpt from "../contents/helpers/search/excerpt.js";
 import type * as contents_helpers_search_input from "../contents/helpers/search/input.js";
@@ -794,7 +793,6 @@ declare const fullApi: ApiFromModules<{
   "contents/helpers/partitions": typeof contents_helpers_partitions;
   "contents/helpers/popularity": typeof contents_helpers_popularity;
   "contents/helpers/routes/write": typeof contents_helpers_routes_write;
-  "contents/helpers/search/constants": typeof contents_helpers_search_constants;
   "contents/helpers/search/documents": typeof contents_helpers_search_documents;
   "contents/helpers/search/excerpt": typeof contents_helpers_search_excerpt;
   "contents/helpers/search/input": typeof contents_helpers_search_input;

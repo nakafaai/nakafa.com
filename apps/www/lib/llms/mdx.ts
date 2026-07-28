@@ -55,9 +55,10 @@ export const getLlmsMdxText = Effect.fn("www.llms.mdx.text")(function* ({
   );
   const scanned = [
     ...buildHeader({
-      url: `${BASE_URL}/${locale}/${publicSlug ?? cleanSlug}`,
       description: getMdxDescription(content.metadata),
       source: getRawGithubUrl(`/packages/contents/${cleanSlug}/${locale}.mdx`),
+      title: content.metadata.title,
+      url: `${BASE_URL}/${locale}/${publicSlug ?? cleanSlug}`,
     }),
     body,
   ];

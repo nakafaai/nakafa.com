@@ -1,9 +1,9 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
-import { NAKAFA_AGENT_MAX_QUERIES } from "@repo/contents/_lib/agent/constants";
 import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
 } from "@repo/contents/_lib/agent/schema/search";
+import { NAKAFA_AGENT_MAX_QUERIES } from "@repo/contents/_types/agent/search";
 import type { ModelMessage } from "ai";
 
 /**

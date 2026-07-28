@@ -174,32 +174,12 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
         `Program snapshot ${snapshotId} has a curriculum identity collision.`
       );
     }
-    if (storedCurriculum.bucket === row.bucket) {
-      return true;
-    }
-    if (storedCurriculum.bucket !== undefined || row.bucket === undefined) {
+    if (storedCurriculum.bucket !== row.bucket) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
         `Program snapshot ${snapshotId} has a curriculum bucket collision.`
       );
     }
-    yield* ensureDocumentSize(
-      `Program snapshot ${snapshotId} curriculum row ${index}`,
-      row,
-      READ_MODEL_DOCUMENT_LIMIT
-    );
-    yield* Effect.promise(() =>
-      ctx.db.patch("curriculumRoutes", storedCurriculum._id, {
-        bucket: row.bucket,
-      })
-    );
-    yield* addProgramBucketRoute(
-      ctx,
-      snapshotId,
-      index,
-      record.row.locale,
-      row.bucket
-    );
     return true;
   }
   yield* ensureDocumentSize(
