@@ -205,7 +205,13 @@ export async function insertRuntimeRelease(
 }
 
 /** Inserts active indexed articles through the production writer. */
-export async function insertRuntimeArticles(ctx: MutationCtx, count: number) {
+export async function insertRuntimeArticles(
+  ctx: MutationCtx,
+  count: number,
+  projectionAt: (
+    index: number
+  ) => ReturnType<typeof testArticleProjection> = testArticleProjection
+) {
   await insertRuntimeRelease(ctx);
   const state = await ctx.db.query("contentState").unique();
   if (!state) {
@@ -218,7 +224,7 @@ export async function insertRuntimeArticles(ctx: MutationCtx, count: number) {
   });
 
   for (let index = 0; index < count; index += 1) {
-    const projection = testArticleProjection(index);
+    const projection = projectionAt(index);
     const projectionJson = canonicalizeArticleProjection(projection);
     await insertRuntimeKey(ctx, projection.contentKey, { projectionJson });
     await insertRuntimeVersion(ctx, "public", projection.contentKey, {

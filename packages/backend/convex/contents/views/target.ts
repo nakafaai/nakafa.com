@@ -3,6 +3,7 @@ import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/ow
 import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
 import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
 import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
 import {
@@ -117,7 +118,7 @@ const readMaterialTarget = Effect.fn("contents.views.readMaterialTarget")(
   }
 );
 
-/** Resolves one active article through its canonical content-key route. */
+/** Resolves one active article through its canonical published route. */
 const readArticleTarget = Effect.fn("contents.views.readArticleTarget")(
   function* (ctx: QueryCtx, input: ContentViewTargetInput) {
     const owner = yield* loadArticleOwner(ctx, input.locale).pipe(
@@ -130,12 +131,23 @@ const readArticleTarget = Effect.fn("contents.views.readArticleTarget")(
       return { managed: true, target: null };
     }
     const publicPath = input.publicPath;
+    const binding = yield* loadRouteBinding(
+      ctx,
+      input.locale,
+      publicPath,
+      owner.active.sequence
+    ).pipe(Effect.mapError(toContentViewIoError));
+    const contentKey =
+      binding?.operation === "bind" ? binding.contentKey : undefined;
+    if (!contentKey) {
+      return { managed: true, target: null };
+    }
     const row = yield* Effect.tryPromise({
       try: () =>
         ctx.db
           .query("articleCatalog")
           .withIndex("by_contentKey_and_locale", (query) =>
-            query.eq("contentKey", publicPath).eq("locale", input.locale)
+            query.eq("contentKey", contentKey).eq("locale", input.locale)
           )
           .unique(),
       catch: toContentViewIoError,
@@ -172,23 +184,30 @@ const readArticleTarget = Effect.fn("contents.views.readArticleTarget")(
 const readSourceTarget = Effect.fn("contents.views.readSourceTarget")(
   function* (ctx: QueryCtx, input: ContentViewTargetInput) {
     const publicPath = input.publicPath;
-    const route = yield* Effect.tryPromise({
-      try: () =>
-        publicPath
-          ? ctx.db
+    const routeAtPath = publicPath
+      ? yield* Effect.tryPromise({
+          try: () =>
+            ctx.db
               .query("contentRoutes")
               .withIndex("by_locale_and_route", (query) =>
                 query.eq("locale", input.locale).eq("route", publicPath)
               )
-              .unique()
-          : ctx.db
-              .query("contentRoutes")
-              .withIndex("by_content_id", (query) =>
-                query.eq("content_id", input.contentId)
-              )
               .unique(),
-      catch: toContentViewIoError,
-    });
+          catch: toContentViewIoError,
+        })
+      : null;
+    const route =
+      routeAtPath ??
+      (yield* Effect.tryPromise({
+        try: () =>
+          ctx.db
+            .query("contentRoutes")
+            .withIndex("by_content_id", (query) =>
+              query.eq("content_id", input.contentId)
+            )
+            .unique(),
+        catch: toContentViewIoError,
+      }));
     if (
       !route ||
       route.content_id !== input.contentId ||

@@ -1,3 +1,5 @@
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { loadContentTarget } from "@repo/backend/convex/contents/views/target";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -28,7 +30,6 @@ import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const SOURCE_PATH = "articles/politics/source-target";
-const PUBLISHED_SOURCE_PATTERN = /^packages\/corpus\//u;
 const PUBLISHED_MATERIAL = Schema.decodeUnknownSync(
   MaterialLessonProjectionSchema
 )({
@@ -157,8 +158,13 @@ describe("contents/views/target", () => {
 
   it("resolves active articles without depending on source route rows", async () => {
     const target = convexTest(schema, convexModules);
-    const projection = testArticleProjection(0);
-    await target.mutation((ctx) => insertRuntimeArticles(ctx, 1));
+    const projection = ArticleProjectionSchema.make({
+      ...testArticleProjection(0),
+      publicPath: PublicPathSchema.make("articles/politics/published-article"),
+    });
+    await target.mutation((ctx) =>
+      insertRuntimeArticles(ctx, 1, () => projection)
+    );
 
     await expect(
       target.query((ctx) =>
@@ -174,7 +180,7 @@ describe("contents/views/target", () => {
     ).resolves.toMatchObject({
       content_id: projection.graph.assetId,
       route: projection.publicPath,
-      sourcePath: expect.stringMatching(PUBLISHED_SOURCE_PATTERN),
+      sourcePath: `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`,
       title: projection.metadata.title,
     });
   });
@@ -290,7 +296,7 @@ describe("contents/views/target", () => {
           loadContentTarget(ctx, {
             contentId: fixtures.subject.contentId,
             locale: "id",
-            publicPath: SUBJECT_VIEW_ROUTE,
+            publicPath: "materi/matematika/vektor/penjumlahan",
             section: "material",
           })
         )
