@@ -165,6 +165,8 @@ import type * as contentRelease_material from "../contentRelease/material.js";
 import type * as contentRelease_material_bucket from "../contentRelease/material/bucket.js";
 import type * as contentRelease_material_limits from "../contentRelease/material/limits.js";
 import type * as contentRelease_material_migrate from "../contentRelease/material/migrate.js";
+import type * as contentRelease_material_migration_buckets from "../contentRelease/material/migration/buckets.js";
+import type * as contentRelease_material_migration_impl from "../contentRelease/material/migration/impl.js";
 import type * as contentRelease_material_model from "../contentRelease/material/model.js";
 import type * as contentRelease_material_owner from "../contentRelease/material/owner.js";
 import type * as contentRelease_material_page from "../contentRelease/material/page.js";
@@ -625,6 +627,8 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material/bucket": typeof contentRelease_material_bucket;
   "contentRelease/material/limits": typeof contentRelease_material_limits;
   "contentRelease/material/migrate": typeof contentRelease_material_migrate;
+  "contentRelease/material/migration/buckets": typeof contentRelease_material_migration_buckets;
+  "contentRelease/material/migration/impl": typeof contentRelease_material_migration_impl;
   "contentRelease/material/model": typeof contentRelease_material_model;
   "contentRelease/material/owner": typeof contentRelease_material_owner;
   "contentRelease/material/page": typeof contentRelease_material_page;
