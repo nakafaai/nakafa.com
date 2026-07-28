@@ -1,153 +1,32 @@
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
-import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
-import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
+import { contentViewRouteCollisionCode } from "@repo/backend/convex/contents/views/spec";
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
-import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
-import { PublicCurriculumRouteSchema } from "@repo/contents/_types/route/schema";
-import { Schema } from "effect";
+import {
+  CONTEXT_NODE_KEY,
+  CONTEXT_PARENT_PATH,
+  CONTEXT_PUBLIC_PATH,
+  LATEST_MATERIAL,
+  PLACEMENT_VIEW_NOW,
+  PROGRAM_KEY,
+  PUBLIC_LESSON_PATH,
+  PUBLISHED_CONTEXT_NODE,
+  PUBLISHED_MATERIAL,
+  PUBLISHED_PLACEMENT,
+  RENAMED_MATERIAL,
+  recordPublishedView,
+  seedContextOwnershipConflict,
+  seedContextRouteOverlap,
+  seedContextSyncOverlap,
+  seedMaterialPlacement,
+  seedMixedPlacement,
+  seedRouteSyncOverlap,
+} from "@repo/backend/test/material-view";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const NOW = Date.UTC(2026, 6, 13, 2, 0, 0);
-const SOURCE_PATH = "material/lesson/biology/biodiversity/bacteria";
-const PUBLIC_TOPIC_PATH = "materi/biologi/keanekaragaman-makhluk-hidup";
-const PUBLIC_LESSON_PATH = `${PUBLIC_TOPIC_PATH}/bakteri`;
-const MATERIAL_KEY = "lesson.biology.biodiversity";
-const PROGRAM_KEY = "cambridge-international";
-const CONTEXT_NODE_KEY = "biology-0610-living-organisms";
-const CONTEXT_PUBLIC_PATH =
-  "kurikulum/cambridge-international/upper-secondary/biology-0610/karakteristik-dan-klasifikasi-organisme-hidup";
-const CONTEXT_PARENT_PATH =
-  "kurikulum/cambridge-international/upper-secondary/biology-0610";
-const PUBLISHED_MATERIAL = FUNCTION_MATERIAL;
-const RENAMED_MATERIAL = MaterialLessonProjectionSchema.make({
-  ...PUBLISHED_MATERIAL,
-  publicPath: PublicPathSchema.make(
-    `${PUBLISHED_MATERIAL.parentPath}/function-concept-renamed`
-  ),
-});
-const publishedPlacement = readStaticPublicCurriculumRoutes().find(
-  (route) =>
-    route.locale === PUBLISHED_MATERIAL.locale &&
-    route.materialKey === PUBLISHED_MATERIAL.materialKey &&
-    route.materialContextNodeKey !== undefined
-);
-if (!publishedPlacement) {
-  throw new Error("Expected the real Function Concept curriculum placement.");
-}
-const PUBLISHED_PLACEMENT = Schema.decodeUnknownSync(
-  PublicCurriculumRouteSchema
-)(publishedPlacement);
-const PUBLISHED_CONTEXT_NODE = PUBLISHED_PLACEMENT.materialContextNodeKey;
-if (!PUBLISHED_CONTEXT_NODE) {
-  throw new Error("Expected the real curriculum placement context identity.");
-}
-
-/** Inserts one production-shaped material route and its exact placement leaf. */
-async function seedMaterialPlacement(ctx: MutationCtx) {
-  const identity = createLearningGraphIdentityFromRoute({
-    locale: "id",
-    route: SOURCE_PATH,
-  });
-
-  if (!identity) {
-    expect.fail(`Expected graph identity for ${SOURCE_PATH}.`);
-  }
-
-  await ctx.db.insert("contentRoutes", {
-    ...identity,
-    authors: [],
-    contentHash: "content-route-hash",
-    content_id: identity.assetId,
-    description: "Mengenali bakteri",
-    kind: "curriculum-lesson",
-    locale: "id",
-    markdown: true,
-    materialDomain: "biology",
-    route: PUBLIC_LESSON_PATH,
-    section: "material",
-    sourcePath: SOURCE_PATH,
-    syncedAt: NOW,
-    title: "Bakteri",
-  });
-
-  await ctx.db.insert("publicRoutes", {
-    contentHash: "public-material-route-hash",
-    kind: "subject-lesson",
-    locale: "id",
-    materialDomain: "biology",
-    materialKey: MATERIAL_KEY,
-    parentPath: PUBLIC_TOPIC_PATH,
-    publicPath: PUBLIC_LESSON_PATH,
-    sitemap: true,
-    sourcePath: SOURCE_PATH,
-    syncShard: 0,
-    title: "Bakteri",
-  });
-
-  const placementId = await ctx.db.insert("publicRoutes", {
-    canonicalPath: PUBLIC_TOPIC_PATH,
-    contentHash: "curriculum-placement-route-hash",
-    kind: "curriculum-context",
-    locale: "id",
-    materialContextNodeKey: CONTEXT_NODE_KEY,
-    materialContextParentPath: CONTEXT_PARENT_PATH,
-    materialContextPublicPath: CONTEXT_PUBLIC_PATH,
-    materialKey: MATERIAL_KEY,
-    nodeKey: `${CONTEXT_NODE_KEY}-material`,
-    parentPath: CONTEXT_PUBLIC_PATH,
-    programKey: PROGRAM_KEY,
-    publicPath: `${CONTEXT_PUBLIC_PATH}/bakteri`,
-    sitemap: false,
-    syncShard: 0,
-    title: "Bakteri",
-  });
-
-  const viewer = await seedAuthenticatedUser(ctx, {
-    now: NOW,
-    suffix: "material-context",
-  });
-
-  return { ...viewer, contentId: identity.assetId, placementId };
-}
-
-/** Inserts source placement rows for one material already owned by Aksara. */
-async function seedMixedPlacement(ctx: MutationCtx) {
-  await ctx.db.insert("publicRoutes", {
-    contentHash: "published-material-source-route",
-    kind: PUBLISHED_MATERIAL.kind,
-    locale: PUBLISHED_MATERIAL.locale,
-    materialDomain: "mathematics",
-    materialKey: PUBLISHED_MATERIAL.materialKey,
-    order: PUBLISHED_MATERIAL.order,
-    parentPath: PUBLISHED_MATERIAL.parentPath,
-    publicPath: PUBLISHED_MATERIAL.publicPath,
-    sectionKey: PUBLISHED_MATERIAL.sectionKey,
-    sitemap: PUBLISHED_MATERIAL.sitemap,
-    sourcePath: PUBLISHED_MATERIAL.contentKey,
-    syncShard: 0,
-    title: PUBLISHED_MATERIAL.metadata.title,
-  });
-  await ctx.db.insert("publicRoutes", {
-    ...PUBLISHED_PLACEMENT,
-    contentHash: "published-material-source-placement",
-    syncShard: 0,
-  });
-  return seedAuthenticatedUser(ctx, {
-    now: NOW,
-    suffix: "published-material-context",
-  });
-}
 
 describe("contents/views/context", () => {
   beforeEach(() => {
-    vi.useFakeTimers({ now: NOW });
+    vi.useFakeTimers({ now: PLACEMENT_VIEW_NOW });
   });
 
   afterEach(() => {
@@ -226,7 +105,7 @@ describe("contents/views/context", () => {
       publicPath: PUBLIC_LESSON_PATH,
       section: "material",
     });
-    vi.setSystemTime(NOW + 1000);
+    vi.setSystemTime(PLACEMENT_VIEW_NOW + 1000);
     await signedIn.mutation(api.contents.mutations.views.recordContentView, {
       contentId: fixture.contentId,
       deviceId: "direct-device",
@@ -332,24 +211,13 @@ describe("contents/views/context", () => {
   it("uses stable source placement after a published material route changes", async () => {
     const t = createConvexTestWithBetterAuth();
     await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
-    const viewer = await t.mutation(seedMixedPlacement);
-    const signedIn = t.withIdentity({
-      sessionId: viewer.sessionId,
-      subject: viewer.authUserId,
-    });
-
-    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
-      contentId: PUBLISHED_MATERIAL.graph.assetId,
-      context: {
-        mode: "placement",
-        nodeKey: PUBLISHED_CONTEXT_NODE,
-        programKey: PUBLISHED_PLACEMENT.programKey,
-      },
-      deviceId: "published-material-context",
-      locale: PUBLISHED_MATERIAL.locale,
-      publicPath: RENAMED_MATERIAL.publicPath,
-      section: "material",
-    });
+    const viewer = await t.mutation((ctx) => seedMixedPlacement(ctx));
+    await recordPublishedView(
+      t,
+      viewer,
+      "published-material-context",
+      RENAMED_MATERIAL.publicPath
+    );
 
     await expect(
       t.query((ctx) => ctx.db.query("userLearningRecents").unique())
@@ -357,6 +225,146 @@ describe("contents/views/context", () => {
       contextKey: `placement:${PUBLISHED_PLACEMENT.programKey}:${PUBLISHED_CONTEXT_NODE}`,
       contextSourcePath: PUBLISHED_MATERIAL.contentKey,
       route: RENAMED_MATERIAL.publicPath,
+    });
+  });
+
+  it("keeps placement while equivalent curriculum shards overlap", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
+    const viewer = await t.mutation((ctx) => seedMixedPlacement(ctx));
+    await t.mutation(seedContextRouteOverlap);
+    await recordPublishedView(
+      t,
+      viewer,
+      "curriculum-route-overlap",
+      RENAMED_MATERIAL.publicPath
+    );
+
+    await expect(
+      t.query((ctx) => ctx.db.query("userLearningRecents").unique())
+    ).resolves.toMatchObject({
+      contextKey: `placement:${PUBLISHED_PLACEMENT.programKey}:${PUBLISHED_CONTEXT_NODE}`,
+      contextSourcePath: PUBLISHED_MATERIAL.contentKey,
+      route: RENAMED_MATERIAL.publicPath,
+    });
+  });
+
+  it("rejects conflicting curriculum ownership during overlap", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
+    const viewer = await t.mutation((ctx) => seedMixedPlacement(ctx));
+    await t.mutation(seedContextOwnershipConflict);
+    await recordPublishedView(
+      t,
+      viewer,
+      "curriculum-owner-conflict",
+      RENAMED_MATERIAL.publicPath
+    );
+
+    await expect(
+      t.query((ctx) => ctx.db.query("userLearningRecents").unique())
+    ).resolves.toMatchObject({
+      contextKey: "canonical",
+      route: RENAMED_MATERIAL.publicPath,
+    });
+  });
+
+  it("keeps direct lesson placement while renamed shards overlap", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
+    const viewer = await t.mutation((ctx) =>
+      seedMixedPlacement(ctx, PUBLISHED_MATERIAL.publicPath)
+    );
+    await t.mutation(seedContextSyncOverlap);
+    await recordPublishedView(
+      t,
+      viewer,
+      "overlapping-material-context",
+      RENAMED_MATERIAL.publicPath
+    );
+
+    await expect(
+      t.query((ctx) => ctx.db.query("userLearningRecents").unique())
+    ).resolves.toMatchObject({
+      contextKey: `placement:${PUBLISHED_PLACEMENT.programKey}:${PUBLISHED_CONTEXT_NODE}`,
+      contextSourcePath: PUBLISHED_MATERIAL.contentKey,
+      route: RENAMED_MATERIAL.publicPath,
+    });
+  });
+
+  it("keeps stable topic placement while the published parent changes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await activateMaterialCatalog(t, [LATEST_MATERIAL]);
+    const viewer = await t.mutation((ctx) => seedMixedPlacement(ctx));
+    await t.mutation(seedRouteSyncOverlap);
+    await recordPublishedView(
+      t,
+      viewer,
+      "ambiguous-material-context",
+      LATEST_MATERIAL.publicPath
+    );
+
+    await expect(
+      t.query((ctx) => ctx.db.query("userLearningRecents").unique())
+    ).resolves.toMatchObject({
+      contextKey: `placement:${PUBLISHED_PLACEMENT.programKey}:${PUBLISHED_CONTEXT_NODE}`,
+      contextSourcePath: PUBLISHED_MATERIAL.contentKey,
+      route: LATEST_MATERIAL.publicPath,
+    });
+  });
+
+  it("rejects route collisions beyond the bounded rename overlap", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
+    const viewer = await t.mutation((ctx) =>
+      seedMixedPlacement(ctx, PUBLISHED_MATERIAL.publicPath)
+    );
+    await t.mutation(seedContextSyncOverlap);
+
+    const thirdSourceId = await t.mutation((ctx) =>
+      ctx.db.insert("publicRoutes", {
+        contentHash: "latest-material-source-route",
+        kind: LATEST_MATERIAL.kind,
+        locale: LATEST_MATERIAL.locale,
+        materialKey: LATEST_MATERIAL.materialKey,
+        parentPath: LATEST_MATERIAL.parentPath,
+        publicPath: LATEST_MATERIAL.publicPath,
+        sitemap: LATEST_MATERIAL.sitemap,
+        sourcePath: LATEST_MATERIAL.contentKey,
+        syncShard: 2,
+        title: LATEST_MATERIAL.metadata.title,
+      })
+    );
+    await expect(
+      recordPublishedView(
+        t,
+        viewer,
+        "source-collision",
+        RENAMED_MATERIAL.publicPath
+      )
+    ).rejects.toMatchObject({
+      data: { code: contentViewRouteCollisionCode },
+    });
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.delete(thirdSourceId);
+      await ctx.db.insert("publicRoutes", {
+        ...PUBLISHED_PLACEMENT,
+        canonicalPath: RENAMED_MATERIAL.publicPath,
+        contentHash: "latest-material-source-placement",
+        publicPath: `${PUBLISHED_PLACEMENT.publicPath}-latest`,
+        syncShard: 2,
+      });
+    });
+    await expect(
+      recordPublishedView(
+        t,
+        viewer,
+        "context-collision",
+        RENAMED_MATERIAL.publicPath
+      )
+    ).rejects.toMatchObject({
+      data: { code: contentViewRouteCollisionCode },
     });
   });
 });

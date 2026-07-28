@@ -9,6 +9,7 @@ import { type Infer, v } from "convex/values";
 import { Schema } from "effect";
 
 export const contentViewIoFailedCode = "CONTENT_VIEW_IO_FAILED";
+export const contentViewRouteCollisionCode = "CONTENT_VIEW_ROUTE_COLLISION";
 
 export const recordContentViewArgs = {
   contentId: graphContentIdValidator,
@@ -40,6 +41,15 @@ export class ContentViewIoError extends Schema.TaggedError<ContentViewIoError>()
   "ContentViewIoError",
   {
     code: Schema.Literal(contentViewIoFailedCode),
+    message: Schema.String,
+  }
+) {}
+
+/** Raised when published route shards exceed the bounded sync overlap. */
+export class ContentViewRouteCollisionError extends Schema.TaggedError<ContentViewRouteCollisionError>()(
+  "ContentViewRouteCollisionError",
+  {
+    code: Schema.Literal(contentViewRouteCollisionCode),
     message: Schema.String,
   }
 ) {}
