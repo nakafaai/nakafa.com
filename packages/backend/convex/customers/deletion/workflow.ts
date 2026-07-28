@@ -24,6 +24,7 @@ type StartCleanupWorkflow = (
 
 interface CleanupWorkflowStarters {
   readonly startAnalytics: StartCleanupWorkflow;
+  readonly startAuth: StartCleanupWorkflow;
   readonly startCustomer: StartCleanupWorkflow;
   readonly startData: StartCleanupWorkflow;
 }
@@ -34,6 +35,17 @@ const cleanupWorkflowStarters: CleanupWorkflowStarters = {
       ctx,
       internal.customers.deletion.cleanup.cleanupDeletedUserAnalytics,
       { userId: identity.userId },
+      {
+        context: {},
+        onComplete:
+          internal.customers.deletion.recovery.handleDeletedUserCleanupComplete,
+      }
+    ),
+  startAuth: (ctx, identity) =>
+    workflow.start(
+      ctx,
+      internal.customers.deletion.cleanup.cleanupDeletedUserAuth,
+      { authId: identity.authId },
       {
         context: {},
         onComplete:
@@ -64,7 +76,7 @@ const cleanupWorkflowStarters: CleanupWorkflowStarters = {
     ),
 };
 
-/** Atomically admits independent analytics, customer, and local workflows. */
+/** Atomically admits independent auth, analytics, customer, and data workflows. */
 export const launchDeletedUserCleanupProgram: (
   ctx: MutationCtx,
   authId: string,
@@ -95,6 +107,7 @@ export const launchDeletedUserCleanupProgram: (
   };
 
   yield* tryUserCleanup(() => starters.startAnalytics(ctx, identity));
+  yield* tryUserCleanup(() => starters.startAuth(ctx, identity));
   yield* tryUserCleanup(() => starters.startCustomer(ctx, identity));
   yield* tryUserCleanup(() => starters.startData(ctx, identity));
   yield* tryUserCleanup(() =>

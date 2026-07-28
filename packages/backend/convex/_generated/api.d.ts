@@ -76,6 +76,7 @@ import type * as auth_deletion_spec from "../auth/deletion/spec.js";
 import type * as auth_deletion_state from "../auth/deletion/state.js";
 import type * as auth_deletion_successor from "../auth/deletion/successor.js";
 import type * as auth_deletion_tombstone from "../auth/deletion/tombstone.js";
+import type * as auth_deletion_verification from "../auth/deletion/verification.js";
 import type * as auth_lifecycle from "../auth/lifecycle.js";
 import type * as auth_queries from "../auth/queries.js";
 import type * as auth_reader from "../auth/reader.js";
@@ -561,6 +562,7 @@ declare const fullApi: ApiFromModules<{
   "auth/deletion/state": typeof auth_deletion_state;
   "auth/deletion/successor": typeof auth_deletion_successor;
   "auth/deletion/tombstone": typeof auth_deletion_tombstone;
+  "auth/deletion/verification": typeof auth_deletion_verification;
   "auth/lifecycle": typeof auth_lifecycle;
   "auth/queries": typeof auth_queries;
   "auth/reader": typeof auth_reader;
