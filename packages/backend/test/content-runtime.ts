@@ -231,6 +231,7 @@ export async function insertRuntimeArticles(
       projectionJson,
       publicPath: projection.publicPath,
       rendererDomain: "politics",
+      sourcePath: `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`,
     });
     await insertRuntimeBinding(ctx, projection.contentKey, {
       publicPath: projection.publicPath,
