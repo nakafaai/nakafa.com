@@ -1,6 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   getSectionScoreResult,
@@ -146,7 +146,7 @@ export const getCurrent = query({
   },
   returns: v.union(v.null(), currentAttemptValidator),
   handler: async (ctx, args) => {
-    const auth = await getOptionalAppUser(ctx);
+    const auth = await getOptionalAppUserForRead(ctx);
 
     if (!auth) {
       return null;
@@ -174,7 +174,7 @@ export const getCurrentByPublicPath = query({
   },
   returns: v.union(v.null(), currentAttemptValidator),
   handler: async (ctx, args) => {
-    const auth = await getOptionalAppUser(ctx);
+    const auth = await getOptionalAppUserForRead(ctx);
 
     if (!auth) {
       return null;

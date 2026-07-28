@@ -1,7 +1,7 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
 import { commentVoteValidator } from "@repo/backend/convex/comments/schema";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { userDataValidator } from "@repo/backend/convex/lib/validators/user";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -75,7 +75,7 @@ export const getCommentsBySlug = query({
       comment.replyToUserId ? [comment.replyToUserId] : []
     );
 
-    const viewer = await getOptionalAppUser(ctx);
+    const viewer = await getOptionalAppUserForRead(ctx);
     const [userMap, replyToUserMap, viewerVotes] = await Promise.all([
       getUserMap(ctx, commentUserIds),
       getUserMap(ctx, replyToUserIds),
@@ -125,7 +125,7 @@ export const getCommentsByUserId = query({
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .order("desc")
       .paginate(args.paginationOpts);
-    const viewer = await getOptionalAppUser(ctx);
+    const viewer = await getOptionalAppUserForRead(ctx);
     const viewerVotes = await getViewerVotes(
       ctx,
       comments.page,

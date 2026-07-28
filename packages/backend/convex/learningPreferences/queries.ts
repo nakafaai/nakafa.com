@@ -11,7 +11,7 @@ import {
   currentTryoutPreferenceValidator,
   curriculumProgramOptionValidator,
 } from "@repo/backend/convex/learningPreferences/schema";
-import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
 
@@ -37,7 +37,7 @@ export const getCurrent = query({
   },
   returns: currentLearningPreferenceValidator,
   handler: async (ctx, args) => {
-    const user = await getOptionalAppUser(ctx);
+    const user = await getOptionalAppUserForRead(ctx);
 
     if (!user) {
       return null;
@@ -63,7 +63,7 @@ export const getCurrentTryout = query({
   },
   returns: currentTryoutPreferenceValidator,
   handler: async (ctx, args) => {
-    const user = await getOptionalAppUser(ctx);
+    const user = await getOptionalAppUserForRead(ctx);
 
     if (!user) {
       return null;
