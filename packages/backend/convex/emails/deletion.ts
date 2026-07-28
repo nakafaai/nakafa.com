@@ -14,7 +14,7 @@ interface WelcomeEmailCancellationOperations {
   readonly loadStatus: () => Promise<EmailStatus | null>;
 }
 
-/** Cancels one queued welcome email before account deletion becomes ready. */
+/** Cancels one queued welcome email when account deletion becomes irreversible. */
 export const cancelWelcomeEmailProgram: (
   operations: WelcomeEmailCancellationOperations
 ) => Effect.Effect<void, UserCleanupError> = Effect.fn(
@@ -30,9 +30,9 @@ export const cancelWelcomeEmailProgram: (
 });
 
 /**
- * Cancels component delivery and clears the app-owned handle in the same root
- * mutation that starts deletion. Convex commits component and app writes
- * transactionally, so enqueue and deletion cannot lose the handle between them.
+ * Cancels component delivery and clears the app-owned handle in the irreversible
+ * claim transaction. Convex commits component and app writes transactionally,
+ * so a recoverable preparation never loses the surviving account's email.
  */
 export const cancelPendingWelcomeEmail = Effect.fn(
   "emails.deletion.cancelPendingWelcomeEmail"

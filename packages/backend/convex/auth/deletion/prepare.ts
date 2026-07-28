@@ -11,7 +11,6 @@ import {
   accountDeletionPreparationOutcome,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { findSchoolOwnershipSuccessorPage } from "@repo/backend/convex/auth/deletion/successor";
-import { cancelPendingWelcomeEmail } from "@repo/backend/convex/emails/deletion";
 import { Clock, Effect } from "effect";
 
 type AccountDeletionPreparation = Doc<"accountDeletionPreparations">;
@@ -227,7 +226,6 @@ export const prepareAccountDeletion: (
         return accountDeletionPreparationOutcome.temporarilyUnavailable;
       }
 
-      yield* cancelPendingWelcomeEmail(ctx, user);
       const preparationStartedAt = yield* Clock.currentTimeMillis;
       const preparationId = yield* tryUserCleanup(() =>
         ctx.db.insert("accountDeletionPreparations", {

@@ -317,7 +317,9 @@ describe("classes/forums/attachments/impl", () => {
       scheduled: await ctx.db.system.query("_scheduled_functions").collect(),
     }));
 
-    expect(retained.pendingUpload).not.toBeNull();
+    expect(retained.pendingUpload).toMatchObject({
+      expiresAt: NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS,
+    });
     expect(retained.scheduled).toEqual([
       expect.objectContaining({
         args: [{ uploadId: upload.uploadId }],
@@ -344,6 +346,7 @@ describe("classes/forums/attachments/impl", () => {
         "schoolClassForumPendingUploads",
         {
           classId: seeded.classId,
+          expiresAt: NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS,
           forumId: seeded.forumId,
           mimeType: "text/plain",
           name: "notes.txt",
@@ -357,6 +360,7 @@ describe("classes/forums/attachments/impl", () => {
         "schoolClassForumPendingUploads",
         {
           classId: seeded.classId,
+          expiresAt: NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS,
           forumId: seeded.forumId,
           uploadToken: `${UPLOAD_TOKEN}-second`,
           uploadedBy: seeded.userId,
@@ -412,6 +416,7 @@ describe("classes/forums/attachments/impl", () => {
 
       return await ctx.db.insert("schoolClassForumPendingUploads", {
         classId: seeded.classId,
+        expiresAt: NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS,
         forumId: seeded.forumId,
         uploadToken: UPLOAD_TOKEN,
         uploadedBy: seeded.userId,

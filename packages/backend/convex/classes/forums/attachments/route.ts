@@ -5,7 +5,7 @@ import { MAX_FORUM_ATTACHMENT_BYTES } from "@repo/backend/convex/classes/forums/
 import { siteOrigin } from "@repo/backend/convex/utils/site";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { Effect, Either, Schema } from "effect";
+import { Clock, Effect, Either, Schema } from "effect";
 import { cors } from "hono/cors";
 
 const uploadPath = `${FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX}/:uploadId/:uploadToken`;
@@ -85,9 +85,11 @@ const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
     uploadId: string,
     uploadToken: string
   ) {
+    const authorizedAt = yield* Clock.currentTimeMillis;
     const authorized = yield* Effect.tryPromise({
       try: () =>
         ctx.runQuery(internal.classes.forums.attachments.upload.authorize, {
+          authorizedAt,
           uploadId,
           uploadToken,
         }),

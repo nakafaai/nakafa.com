@@ -18,6 +18,7 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { generateId } from "@repo/backend/convex/utils/id";
 import { ConvexError, v } from "convex/values";
+import { Clock } from "effect";
 
 /**
  * Create an upload URL for one new forum post attachment.
@@ -46,15 +47,18 @@ export const generateUploadUrl = mutation({
     }
 
     const uploadToken = generateId();
+    const createdAt = await runConvexProgram(Clock.currentTimeMillis);
+    const expiresAt = createdAt + FORUM_PENDING_UPLOAD_EXPIRATION_MS;
     const uploadId = await ctx.db.insert("schoolClassForumPendingUploads", {
       classId: forum.classId,
+      expiresAt,
       forumId: forum._id,
       uploadToken,
       uploadedBy: userId,
     });
 
-    await ctx.scheduler.runAfter(
-      FORUM_PENDING_UPLOAD_EXPIRATION_MS,
+    await ctx.scheduler.runAt(
+      expiresAt,
       internal.classes.forums.internalMutations.deleteExpiredPendingUpload,
       { uploadId }
     );
