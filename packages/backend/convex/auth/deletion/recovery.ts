@@ -1,10 +1,16 @@
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { internalAction } from "@repo/backend/convex/_generated/server";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  internalAction,
+  internalMutation,
+} from "@repo/backend/convex/_generated/server";
 import {
   tryUserCleanup,
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
-import { ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";
+import {
+  ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS,
+  ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE,
+} from "@repo/backend/convex/auth/deletion/constants";
 import {
   type AccountDeletionPreparationVersion,
   accountDeletionPreparationVersionValidator,
@@ -12,9 +18,13 @@ import {
 import { authReader } from "@repo/backend/convex/auth/reader";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { makeFunctionReference } from "convex/server";
-import { v } from "convex/values";
-import { Effect } from "effect";
+import { type Infer, v } from "convex/values";
+import { Clock, Effect } from "effect";
 
+const sweepAccountDeletionRecoveryArgsValidator = v.object({});
+type SweepAccountDeletionRecoveryArgs = Infer<
+  typeof sweepAccountDeletionRecoveryArgsValidator
+>;
 const cancelAccountDeletionReference = makeFunctionReference<
   "mutation",
   {
@@ -39,12 +49,16 @@ const recoverAccountDeletionReference = makeFunctionReference<
   },
   null
 >("auth/deletion/recovery:recoverAccountDeletion");
+const sweepAccountDeletionRecoveryReference = makeFunctionReference<
+  "mutation",
+  SweepAccountDeletionRecoveryArgs,
+  null
+>("auth/deletion/recovery:sweepAccountDeletionRecovery");
 
 interface RecoveryOperations {
   readonly authUserExists: () => Promise<boolean>;
   readonly cancel: () => Promise<boolean>;
   readonly finalize: () => Promise<unknown>;
-  readonly reschedule: () => Promise<unknown>;
 }
 
 /** Restores an aborted deletion or finishes one whose auth user is gone. */
@@ -53,29 +67,119 @@ export const recoverAccountDeletionProgram: (
 ) => Effect.Effect<void, UserCleanupError> = Effect.fn(
   "auth.deletion.recoverAccountDeletion"
 )(function* (operations: RecoveryOperations) {
-  const recoveryAttempt = Effect.gen(function* () {
-    const authUserExists = yield* tryUserCleanup(operations.authUserExists);
+  const authUserExists = yield* tryUserCleanup(operations.authUserExists);
 
-    if (authUserExists) {
-      let hasMore = yield* tryUserCleanup(operations.cancel);
+  if (authUserExists) {
+    let hasMore = yield* tryUserCleanup(operations.cancel);
 
-      while (hasMore) {
-        hasMore = yield* tryUserCleanup(operations.cancel);
-      }
-      return;
+    while (hasMore) {
+      hasMore = yield* tryUserCleanup(operations.cancel);
     }
+    return;
+  }
 
-    yield* tryUserCleanup(operations.finalize);
+  yield* tryUserCleanup(operations.finalize);
+});
+
+type ScheduleRecovery = (
+  ctx: MutationCtx,
+  authId: string,
+  expectedPreparation: AccountDeletionPreparationVersion
+) => Promise<unknown>;
+
+const defaultScheduleRecovery: ScheduleRecovery = (
+  ctx,
+  authId,
+  expectedPreparation
+) =>
+  ctx.scheduler.runAfter(0, recoverAccountDeletionReference, {
+    authId,
+    expectedPreparation,
   });
 
-  yield* recoveryAttempt.pipe(
-    Effect.catchTag("UserCleanupError", (error) =>
-      Effect.logError("Account deletion recovery attempt failed").pipe(
-        Effect.annotateLogs({ error: error.message }),
-        Effect.zipRight(tryUserCleanup(operations.reschedule))
+/**
+ * Claims due recovery leases before scheduling at-most-once auth reads.
+ *
+ * Advancing the indexed due time and scheduling the action share one mutation
+ * transaction. A missed or failed action therefore becomes due again without
+ * depending on that action to reschedule itself.
+ */
+export const sweepAccountDeletionRecoveryProgram: (
+  ctx: MutationCtx,
+  scheduleRecovery?: ScheduleRecovery
+) => Effect.Effect<boolean, UserCleanupError> = Effect.fn(
+  "auth.deletion.sweepAccountDeletionRecovery"
+)(function* (
+  ctx: MutationCtx,
+  scheduleRecovery: ScheduleRecovery = defaultScheduleRecovery
+) {
+  const now = yield* Clock.currentTimeMillis;
+  const preparations = yield* tryUserCleanup(() =>
+    ctx.db
+      .query("accountDeletionPreparations")
+      .withIndex("by_recoveryAt", (query) =>
+        query.gt("recoveryAt", undefined).lte("recoveryAt", now)
       )
-    )
+      .take(ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE)
   );
+
+  for (const preparation of preparations) {
+    if (
+      preparation.attemptId === undefined ||
+      preparation.finalizedAt !== undefined
+    ) {
+      yield* Effect.logError(
+        "Account deletion preparation has an invalid recovery lease"
+      ).pipe(
+        Effect.annotateLogs({ preparationId: preparation._id }),
+        Effect.zipRight(
+          tryUserCleanup(() =>
+            ctx.db.patch("accountDeletionPreparations", preparation._id, {
+              recoveryAt: undefined,
+            })
+          )
+        )
+      );
+      continue;
+    }
+
+    const recoveryGeneration = preparation.recoveryGeneration + 1;
+    const expectedPreparation = {
+      attemptId: preparation.attemptId,
+      preparationId: preparation._id,
+      recoveryGeneration,
+    };
+
+    yield* tryUserCleanup(() =>
+      ctx.db.patch("accountDeletionPreparations", preparation._id, {
+        recoveryAt: now + ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS,
+        recoveryGeneration,
+      })
+    );
+    yield* tryUserCleanup(() =>
+      scheduleRecovery(ctx, preparation.authId, expectedPreparation)
+    );
+  }
+
+  return preparations.length === ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE;
+});
+
+/** Claims due recovery leases and drains additional bounded pages. */
+export const sweepAccountDeletionRecovery = internalMutation({
+  args: sweepAccountDeletionRecoveryArgsValidator,
+  returns: v.null(),
+  handler: (ctx) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const hasMore = yield* sweepAccountDeletionRecoveryProgram(ctx);
+
+        if (hasMore) {
+          yield* tryUserCleanup(() =>
+            ctx.scheduler.runAfter(0, sweepAccountDeletionRecoveryReference, {})
+          );
+        }
+      }).pipe(Effect.as(null))
+    ),
 });
 
 /** Reconciles one prepared deletion after the Better Auth request has settled. */
@@ -100,23 +204,9 @@ export const recoverAccountDeletion = internalAction({
             authId: args.authId,
             expectedPreparation: args.expectedPreparation,
           }),
-        reschedule: () =>
-          scheduleRecoveryRetry(ctx, args.authId, args.expectedPreparation),
       }).pipe(Effect.annotateLogs({ authId: args.authId }))
     );
 
     return null;
   },
 });
-
-function scheduleRecoveryRetry(
-  ctx: ActionCtx,
-  authId: string,
-  expectedPreparation: AccountDeletionPreparationVersion
-) {
-  return ctx.scheduler.runAfter(
-    ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS,
-    recoverAccountDeletionReference,
-    { authId, expectedPreparation }
-  );
-}

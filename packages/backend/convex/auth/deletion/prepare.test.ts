@@ -1,5 +1,8 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
+import {
+  ACCOUNT_DELETION_RECOVERY_DELAY_MS,
+  ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
+} from "@repo/backend/convex/auth/deletion/constants";
 import { prepareAccountDeletion } from "@repo/backend/convex/auth/deletion/prepare";
 import type { AccountDeletionPreparationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -201,7 +204,6 @@ describe("auth/deletion/prepare", () => {
 
   it("quiesces account writes from the first reservation batch", async () => {
     const t = convexTest(schema, convexModules);
-    const scheduleRecovery = vi.fn(async () => undefined);
     const ownerId = await t.mutation(async (ctx) => {
       const ownerId = await insertUser(ctx, "quiesced-owner");
       const successorId = await insertUser(ctx, "quiesced-successor");
@@ -230,19 +232,17 @@ describe("auth/deletion/prepare", () => {
 
     const outcome = await t.mutation((ctx) =>
       runConvexProgram(
-        prepareAccountDeletion(
-          ctx,
-          "quiesced-owner",
-          ATTEMPT_ID,
-          scheduleRecovery
-        )
+        prepareAccountDeletion(ctx, "quiesced-owner", ATTEMPT_ID)
       )
     );
-    const owner = await t.query((ctx) => ctx.db.get("users", ownerId));
+    const state = await t.query(async (ctx) => ({
+      owner: await ctx.db.get("users", ownerId),
+      preparation: await ctx.db.query("accountDeletionPreparations").unique(),
+    }));
 
     expect(outcome).toBe("continue");
-    expect(owner?.deletionPreparedAt).toEqual(expect.any(Number));
-    expect(scheduleRecovery).toHaveBeenCalledOnce();
+    expect(state.owner?.deletionPreparedAt).toEqual(expect.any(Number));
+    expect(state.preparation?.recoveryAt).toEqual(expect.any(Number));
   });
 
   it("blocks a successor whose account is already prepared for deletion", async () => {
@@ -358,21 +358,13 @@ describe("auth/deletion/prepare", () => {
 
   it("refreshes one preparation without duplicating it", async () => {
     const t = convexTest(schema, convexModules);
-    const scheduleRecovery = vi.fn(async () => undefined);
 
     await t.mutation((ctx) => insertUser(ctx, "retry-owner"));
 
     for (const now of [NOW, NOW + 1000]) {
       vi.setSystemTime(now);
       await t.mutation((ctx) =>
-        runConvexProgram(
-          prepareAccountDeletion(
-            ctx,
-            "retry-owner",
-            ATTEMPT_ID,
-            scheduleRecovery
-          )
-        )
+        runConvexProgram(prepareAccountDeletion(ctx, "retry-owner", ATTEMPT_ID))
       );
     }
 
@@ -382,24 +374,20 @@ describe("auth/deletion/prepare", () => {
 
     expect(preparations).toHaveLength(1);
     expect(preparations[0]?.attemptId).toBe(ATTEMPT_ID);
+    expect(preparations[0]?.recoveryAt).toBe(
+      NOW + 1000 + ACCOUNT_DELETION_RECOVERY_DELAY_MS
+    );
     expect(preparations[0]?.recoveryGeneration).toBe(2);
-    expect(scheduleRecovery).toHaveBeenCalledTimes(2);
   });
 
   it("rejects a concurrent browser attempt without changing the reservation", async () => {
     const t = convexTest(schema, convexModules);
-    const scheduleRecovery = vi.fn(async () => undefined);
 
     await t.mutation((ctx) => insertUser(ctx, "concurrent-attempt-owner"));
 
     await t.mutation((ctx) =>
       runConvexProgram(
-        prepareAccountDeletion(
-          ctx,
-          "concurrent-attempt-owner",
-          ATTEMPT_ID,
-          scheduleRecovery
-        )
+        prepareAccountDeletion(ctx, "concurrent-attempt-owner", ATTEMPT_ID)
       )
     );
     const initialPreparation = await t.query((ctx) =>
@@ -410,8 +398,7 @@ describe("auth/deletion/prepare", () => {
         prepareAccountDeletion(
           ctx,
           "concurrent-attempt-owner",
-          "019fa44c-02be-7cd0-a4ed-61a7af8e0621",
-          scheduleRecovery
+          "019fa44c-02be-7cd0-a4ed-61a7af8e0621"
         )
       )
     );
@@ -424,7 +411,7 @@ describe("auth/deletion/prepare", () => {
     expect(preparation?.recoveryGeneration).toBe(
       initialPreparation?.recoveryGeneration
     );
-    expect(scheduleRecovery).toHaveBeenCalledOnce();
+    expect(preparation?.recoveryAt).toBe(initialPreparation?.recoveryAt);
   });
 
   it("prepares more owned schools than one transaction batch", async () => {
