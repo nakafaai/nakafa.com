@@ -34,6 +34,7 @@ export const readPublishedNinaMaterial = Effect.fn(
   );
   if (!published.managed) {
     return {
+      contentKey: null,
       learning: null,
       managed: false,
       placement: undefined,
@@ -61,6 +62,7 @@ export const readPublishedNinaMaterial = Effect.fn(
   const context = readMaterialContextHint(input.contextHint);
   if (!context) {
     return {
+      contentKey: published.projection.contentKey,
       learning,
       managed: true,
       placement: undefined,
@@ -74,6 +76,7 @@ export const readPublishedNinaMaterial = Effect.fn(
   );
   if (!resolved.managed) {
     return {
+      contentKey: published.projection.contentKey,
       learning,
       managed: true,
       placement: undefined,
@@ -82,6 +85,7 @@ export const readPublishedNinaMaterial = Effect.fn(
   }
   if (!resolved.value) {
     return {
+      contentKey: published.projection.contentKey,
       learning,
       managed: true,
       placement: undefined,
@@ -100,6 +104,7 @@ export const readPublishedNinaMaterial = Effect.fn(
     )
   );
   return {
+    contentKey: published.projection.contentKey,
     learning,
     managed: true,
     placement: {

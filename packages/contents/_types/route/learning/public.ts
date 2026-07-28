@@ -15,6 +15,7 @@ import { normalizePublicPath } from "@repo/contents/_types/route/path";
 import type {
   PublicContentRoute,
   PublicCurriculumRoute,
+  PublicMaterialLessonRoute,
   PublicRoute,
 } from "@repo/contents/_types/route/schema";
 
@@ -40,6 +41,7 @@ export function createPublicLearningIndex({
 }) {
   const routesByPath = new Map<string, PublicRoute>();
   const routesByIdentityAndLocale = new Map<string, PublicRoute>();
+  const materialRoutesBySource = new Map<string, PublicMaterialLessonRoute>();
   const contentRoutes: PublicContentRoute[] = [];
   const curriculumRoutes: PublicCurriculumRoute[] = [];
 
@@ -57,6 +59,13 @@ export function createPublicLearningIndex({
 
     if (isPublicContentRoute(route)) {
       contentRoutes.push(route);
+
+      if (route.kind === "subject-lesson") {
+        materialRoutesBySource.set(
+          readLocalePathKey(route.locale, route.sourcePath),
+          route
+        );
+      }
     }
   }
 
@@ -69,6 +78,11 @@ export function createPublicLearningIndex({
   function resolveRouteByPath(path: string, locale: Locale) {
     const publicPath = normalizePublicPath(path);
     return routesByPath.get(readLocalePathKey(locale, publicPath));
+  }
+
+  /** Resolves one source-owned material route by its stable content identity. */
+  function resolveMaterialRouteBySource(sourcePath: string, locale: Locale) {
+    return materialRoutesBySource.get(readLocalePathKey(locale, sourcePath));
   }
 
   /** Projects one route row to the target locale through source identity keys. */
@@ -109,6 +123,7 @@ export function createPublicLearningIndex({
     projectMaterialContextToLocale,
     projectRouteToLocale,
     resolveMaterialHeaderLink,
+    resolveMaterialRouteBySource,
     resolveRouteByPath,
     toContextualMaterialHref,
   };

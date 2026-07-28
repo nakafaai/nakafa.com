@@ -60,6 +60,7 @@ describe("published Nina material", () => {
     await expect(
       Effect.runPromise(readPublishedNinaMaterial(input))
     ).resolves.toEqual({
+      contentKey: null,
       learning: null,
       managed: false,
       placement: undefined,

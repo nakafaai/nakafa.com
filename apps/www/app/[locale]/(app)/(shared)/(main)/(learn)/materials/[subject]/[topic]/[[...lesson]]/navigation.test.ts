@@ -1,7 +1,7 @@
 // @vitest-environment node
 
-import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
 import { PublicMaterialLessonRouteSchema } from "@repo/contents/_types/route/schema";
 import { Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   readMaterialRoutes: vi.fn(),
   requireParentMaterialRoute: vi.fn(),
   resolveMaterialHeaderLink: vi.fn(),
+  resolveMaterialRouteBySource: vi.fn(),
   toContextualMaterialHref: vi.fn(),
 }));
 
@@ -38,6 +39,7 @@ vi.mock("@repo/contents/_lib/curriculum/material", () => ({
 vi.mock("@repo/contents/_types/route/learning/static", () => ({
   readStaticPublicLearningIndex: () => ({
     resolveMaterialHeaderLink: mocks.resolveMaterialHeaderLink,
+    resolveMaterialRouteBySource: mocks.resolveMaterialRouteBySource,
     toContextualMaterialHref: mocks.toContextualMaterialHref,
   }),
 }));
@@ -133,6 +135,16 @@ beforeEach(() => {
   mocks.requireParentMaterialRoute.mockReturnValue({
     title: previewProjection.topicTitle,
   });
+  mocks.resolveMaterialRouteBySource.mockImplementation(
+    (
+      ...[sourcePath, locale]: Parameters<
+        PublicLearningIndex["resolveMaterialRouteBySource"]
+      >
+    ) =>
+      [previewPublicRoute, nextPublicRoute, idPublicRoute].find(
+        (route) => route.sourcePath === sourcePath && route.locale === locale
+      )
+  );
   mocks.getMaterialIcon.mockReturnValue("material-icon");
 });
 
@@ -358,7 +370,7 @@ describe("material lesson navigation", () => {
       readMaterialNavigation(publishedPage, context)
     ).resolves.toMatchObject({ context, link });
 
-    mocks.resolveMaterialHeaderLink.mockReturnValueOnce(undefined);
+    mocks.resolveMaterialRouteBySource.mockReturnValue(undefined);
     await expect(
       readMaterialNavigation(publishedPage, context)
     ).resolves.toMatchObject({
@@ -367,22 +379,30 @@ describe("material lesson navigation", () => {
     });
   });
 
-  it("rejects a projection that cannot enter the source context contract", async () => {
-    const invalidPage = {
-      ...publishedPage,
-      route: {
-        ...previewProjection,
-        contentKey: ContentKeySchema.make("material:invalid"),
-      },
-    } satisfies MaterialPageSource;
+  it("keeps a canonical sibling when its source route is unavailable", async () => {
+    const link = { href: "/en/curriculum/merdeka", label: "Mathematics" };
     mocks.getPublishedMaterialContext.mockResolvedValue({
       managed: false,
       value: null,
     });
-
-    await expect(readMaterialNavigation(invalidPage, context)).rejects.toThrow(
-      "cannot use source curriculum context"
+    mocks.resolveMaterialRouteBySource.mockImplementation(
+      (sourcePath: string) =>
+        sourcePath === previewProjection.contentKey
+          ? previewPublicRoute
+          : undefined
     );
+    mocks.resolveMaterialHeaderLink.mockReturnValue(link);
+
+    await expect(
+      readMaterialNavigation(publishedPage, context)
+    ).resolves.toMatchObject({
+      context,
+      link,
+      pagination: {
+        next: { href: toMaterialHref(previewNextProjection) },
+      },
+    });
+    expect(mocks.toContextualMaterialHref).not.toHaveBeenCalled();
   });
 
   it("preserves the established source context model before cutover", async () => {
