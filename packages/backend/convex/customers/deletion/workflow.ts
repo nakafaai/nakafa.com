@@ -48,6 +48,11 @@ type RestartCleanupWorkflow = (
   }
 ) => Promise<void>;
 
+type ScheduleCleanupRecovery = (
+  ctx: MutationCtx,
+  workflowId: WorkflowId
+) => Promise<unknown>;
+
 /** Resolves a deleted auth identity and starts its durable cleanup workflow. */
 export const startDeletedUserCleanupProgram: (
   ctx: MutationCtx,
@@ -149,7 +154,8 @@ export const retryDeletedUserCleanupProgram: (
   ctx: MutationCtx,
   workflowId: WorkflowId,
   getStatus?: GetCleanupWorkflowStatus,
-  restartWorkflow?: RestartCleanupWorkflow
+  restartWorkflow?: RestartCleanupWorkflow,
+  scheduleRecovery?: ScheduleCleanupRecovery
 ) => Effect.Effect<void, UserCleanupError> = Effect.fn(
   "customers.deletion.retryDeletedUserCleanup"
 )(function* (
@@ -158,16 +164,36 @@ export const retryDeletedUserCleanupProgram: (
   getStatus: GetCleanupWorkflowStatus = (workflowCtx, id) =>
     workflow.status(workflowCtx, id),
   restartWorkflow: RestartCleanupWorkflow = (workflowCtx, id, options) =>
-    workflow.restart(workflowCtx, id, options)
+    workflow.restart(workflowCtx, id, options),
+  scheduleRecovery: ScheduleCleanupRecovery = (workflowCtx, id) =>
+    workflowCtx.scheduler.runAfter(
+      FAILED_WORKFLOW_RECOVERY_DELAY_MS,
+      internal.customers.deletion.workflow.retryDeletedUserCleanup,
+      { workflowId: id }
+    )
 ) {
-  const status = yield* tryUserCleanup(() => getStatus(ctx, workflowId));
+  const recoverFailedWorkflow = Effect.gen(function* () {
+    const status = yield* tryUserCleanup(() => getStatus(ctx, workflowId));
 
-  if (status.type !== "failed") {
-    return;
-  }
+    if (status.type !== "failed") {
+      return;
+    }
 
-  yield* tryUserCleanup(() =>
-    restartWorkflow(ctx, workflowId, { from: 0, startAsync: true })
+    yield* tryUserCleanup(() =>
+      restartWorkflow(ctx, workflowId, { from: 0, startAsync: true })
+    );
+  });
+
+  yield* recoverFailedWorkflow.pipe(
+    Effect.catchTag("UserCleanupError", (error) =>
+      Effect.logError("Deleted-user cleanup recovery attempt failed").pipe(
+        Effect.annotateLogs({
+          error: error.message,
+          workflowId,
+        }),
+        Effect.zipRight(tryUserCleanup(() => scheduleRecovery(ctx, workflowId)))
+      )
+    )
   );
 });
 

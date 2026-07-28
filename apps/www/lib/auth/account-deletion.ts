@@ -1,16 +1,15 @@
 import { analytics } from "@repo/analytics/posthog";
+import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/convex/auth/deletion/constants";
 import { Effect, Schema } from "effect";
 import { authClient } from "@/lib/auth/client";
 
 const accountDeletionFailedCode = "ACCOUNT_DELETION_FAILED";
+const accountDeletionSchoolMemberRequiredCode =
+  "ACCOUNT_DELETION_SCHOOL_MEMBER_REQUIRED";
 const accountDeletionSessionExpiredCode = "ACCOUNT_DELETION_SESSION_EXPIRED";
 const accountReauthenticationFailedCode = "ACCOUNT_REAUTHENTICATION_FAILED";
 const betterAuthSessionExpiredCode = "SESSION_EXPIRED";
-const accountStorageKeys = [
-  "nakafa-ai",
-  "nakafa-content-views",
-  "nakafa-device-id",
-] as const;
+const accountStorageKeyPrefix = "nakafa-";
 
 type DeleteUserResult = Awaited<ReturnType<typeof authClient.deleteUser>>;
 type SignOutResult = Awaited<ReturnType<typeof authClient.signOut>>;
@@ -35,6 +34,14 @@ export class AccountDeletionFailed extends Schema.TaggedError<AccountDeletionFai
   "AccountDeletionFailed",
   {
     code: Schema.Literal(accountDeletionFailedCode),
+  }
+) {}
+
+/** Raised when an owned school has no active successor. */
+export class AccountDeletionSchoolMemberRequired extends Schema.TaggedError<AccountDeletionSchoolMemberRequired>()(
+  "AccountDeletionSchoolMemberRequired",
+  {
+    code: Schema.Literal(accountDeletionSchoolMemberRequiredCode),
   }
 ) {}
 
@@ -67,6 +74,12 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
       });
     }
 
+    if (result.error.code === ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE) {
+      return yield* new AccountDeletionSchoolMemberRequired({
+        code: accountDeletionSchoolMemberRequiredCode,
+      });
+    }
+
     return yield* new AccountDeletionFailed({
       code: accountDeletionFailedCode,
     });
@@ -83,8 +96,14 @@ export const clearDeletedAccountBrowserIdentity = Effect.fn(
 )(function* (
   cleanup: BrowserIdentityCleanup = {
     removePersistedAccountState: () => {
-      for (const storageKey of accountStorageKeys) {
-        window.localStorage.removeItem(storageKey);
+      for (const storage of [window.localStorage, window.sessionStorage]) {
+        for (let index = storage.length - 1; index >= 0; index -= 1) {
+          const storageKey = storage.key(index);
+
+          if (storageKey?.startsWith(accountStorageKeyPrefix)) {
+            storage.removeItem(storageKey);
+          }
+        }
       }
     },
     resetAnalytics: () => analytics.reset(),

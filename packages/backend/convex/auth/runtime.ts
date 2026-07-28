@@ -1,9 +1,11 @@
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
+import { isActionCtx } from "@convex-dev/better-auth/utils";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { ensurePostHogDeletionConfigured } from "@repo/backend/convex/analytics/deletion";
 import { cleanupAuthRelations } from "@repo/backend/convex/auth/cleanup/relations";
 import { authComponent } from "@repo/backend/convex/auth/client";
+import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/convex/auth/deletion/constants";
 import { generatedUsername } from "@repo/backend/convex/auth/username/plugin";
 import {
   createGoogleUsernameFields,
@@ -19,7 +21,46 @@ import {
   organization,
   username,
 } from "better-auth/plugins";
+import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
+
+const getSchoolOwnershipReadiness = makeFunctionReference<
+  "query",
+  { authId: string },
+  boolean
+>("auth/deletion:getSchoolOwnershipReadiness");
+
+const deletionUnavailableError = () =>
+  APIError.from("INTERNAL_SERVER_ERROR", {
+    code: "ACCOUNT_DELETION_UNAVAILABLE",
+    message: "Account deletion is temporarily unavailable.",
+  });
+
+const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
+  function* (ctx: GenericCtx<DataModel>, authId: string) {
+    yield* ensurePostHogDeletionConfigured().pipe(
+      Effect.mapError(deletionUnavailableError)
+    );
+
+    if (!isActionCtx(ctx)) {
+      return yield* Effect.fail(deletionUnavailableError());
+    }
+
+    const schoolOwnershipReady = yield* Effect.tryPromise({
+      try: () => ctx.runQuery(getSchoolOwnershipReadiness, { authId }),
+      catch: deletionUnavailableError,
+    });
+
+    if (!schoolOwnershipReady) {
+      return yield* Effect.fail(
+        APIError.from("BAD_REQUEST", {
+          code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
+          message: "An owned school needs another active member.",
+        })
+      );
+    }
+  }
+);
 
 /** Builds Better Auth options for HTTP auth routes and component adapters. */
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
@@ -46,17 +87,8 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     },
     user: {
       deleteUser: {
-        beforeDelete: () =>
-          Effect.runPromise(
-            ensurePostHogDeletionConfigured().pipe(
-              Effect.mapError(() =>
-                APIError.from("INTERNAL_SERVER_ERROR", {
-                  code: "ACCOUNT_DELETION_UNAVAILABLE",
-                  message: "Account deletion is temporarily unavailable.",
-                })
-              )
-            )
-          ),
+        beforeDelete: (user) =>
+          Effect.runPromise(ensureAccountDeletionReady(ctx, user.id)),
         enabled: true,
       },
     },

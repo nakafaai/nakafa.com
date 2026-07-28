@@ -210,10 +210,12 @@ const schoolActivityMetadataValidator = v.optional(
 const tables = {
   schools: defineTable(schoolValidator)
     .index("by_slug", ["slug"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_createdBy", ["createdBy"]),
 
   schoolMembers: defineTable(schoolMemberValidator)
     .index("by_userId_and_status", ["userId", "status"])
+    .index("by_schoolId_and_status", ["schoolId", "status"])
     .index("by_schoolId_and_userId_and_status", [
       "schoolId",
       "userId",

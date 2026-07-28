@@ -27,7 +27,11 @@ import {
   prepareAccountReauthentication,
 } from "@/lib/auth/account-deletion";
 
-type DialogError = "generic" | "session-expired" | null;
+type DialogError =
+  | "generic"
+  | "school-member-required"
+  | "session-expired"
+  | null;
 
 /** Renders the destructive account-deletion card and confirmation flow. */
 export function UserSettingsDeleteAccount() {
@@ -73,9 +77,14 @@ export function UserSettingsDeleteAccount() {
       return;
     }
 
+    if (result.left._tag === "AccountDeletionSessionExpired") {
+      setError("session-expired");
+      return;
+    }
+
     setError(
-      result.left._tag === "AccountDeletionSessionExpired"
-        ? "session-expired"
+      result.left._tag === "AccountDeletionSchoolMemberRequired"
+        ? "school-member-required"
         : "generic"
     );
   }
@@ -98,10 +107,13 @@ export function UserSettingsDeleteAccount() {
     setError("generic");
   }
 
-  const errorMessage =
-    error === "session-expired"
-      ? t("delete-account-session-expired")
-      : t("delete-account-error");
+  let errorMessage = t("delete-account-error");
+
+  if (error === "session-expired") {
+    errorMessage = t("delete-account-session-expired");
+  } else if (error === "school-member-required") {
+    errorMessage = t("delete-account-school-member-required");
+  }
 
   return (
     <>
