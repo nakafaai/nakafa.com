@@ -117,7 +117,7 @@ export const validateStoredForumAttachmentMetadata = Effect.fn(
   "classes.forums.attachments.validateStoredForumAttachmentMetadata"
 )(function* (
   ctx: MutationCtx,
-  { mimeType, size, storageId }: ForumAttachmentMetadataInput
+  { size, storageId }: ForumAttachmentMetadataInput
 ) {
   const metadata = yield* Effect.tryPromise({
     try: () => ctx.db.system.get("_storage", storageId),
@@ -131,9 +131,7 @@ export const validateStoredForumAttachmentMetadata = Effect.fn(
     );
   }
 
-  const contentType = metadata.contentType ?? "";
-
-  if (metadata.size === size && contentType === mimeType) {
+  if (metadata.size === size) {
     return;
   }
 

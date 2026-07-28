@@ -107,7 +107,9 @@ import type * as classes_constants from "../classes/constants.js";
 import type * as classes_forums_aggregate from "../classes/forums/aggregate.js";
 import type * as classes_forums_attachments_constants from "../classes/forums/attachments/constants.js";
 import type * as classes_forums_attachments_impl from "../classes/forums/attachments/impl.js";
+import type * as classes_forums_attachments_route from "../classes/forums/attachments/route.js";
 import type * as classes_forums_attachments_spec from "../classes/forums/attachments/spec.js";
+import type * as classes_forums_attachments_upload from "../classes/forums/attachments/upload.js";
 import type * as classes_forums_cleanup from "../classes/forums/cleanup.js";
 import type * as classes_forums_internalMutations from "../classes/forums/internalMutations.js";
 import type * as classes_forums_mutations_forums from "../classes/forums/mutations/forums.js";
@@ -356,6 +358,8 @@ import type * as customers_mutations_internal from "../customers/mutations/inter
 import type * as customers_polar_impl from "../customers/polar/impl.js";
 import type * as customers_polar_live from "../customers/polar/live.js";
 import type * as customers_polar_spec from "../customers/polar/spec.js";
+import type * as customers_polar_target from "../customers/polar/target.js";
+import type * as customers_polar_webhook from "../customers/polar/webhook.js";
 import type * as customers_queries_internal_customer from "../customers/queries/internal/customer.js";
 import type * as customers_records from "../customers/records.js";
 import type * as customers_sync_impl from "../customers/sync/impl.js";
@@ -595,7 +599,9 @@ declare const fullApi: ApiFromModules<{
   "classes/forums/aggregate": typeof classes_forums_aggregate;
   "classes/forums/attachments/constants": typeof classes_forums_attachments_constants;
   "classes/forums/attachments/impl": typeof classes_forums_attachments_impl;
+  "classes/forums/attachments/route": typeof classes_forums_attachments_route;
   "classes/forums/attachments/spec": typeof classes_forums_attachments_spec;
+  "classes/forums/attachments/upload": typeof classes_forums_attachments_upload;
   "classes/forums/cleanup": typeof classes_forums_cleanup;
   "classes/forums/internalMutations": typeof classes_forums_internalMutations;
   "classes/forums/mutations/forums": typeof classes_forums_mutations_forums;
@@ -844,6 +850,8 @@ declare const fullApi: ApiFromModules<{
   "customers/polar/impl": typeof customers_polar_impl;
   "customers/polar/live": typeof customers_polar_live;
   "customers/polar/spec": typeof customers_polar_spec;
+  "customers/polar/target": typeof customers_polar_target;
+  "customers/polar/webhook": typeof customers_polar_webhook;
   "customers/queries/internal/customer": typeof customers_queries_internal_customer;
   "customers/records": typeof customers_records;
   "customers/sync/impl": typeof customers_sync_impl;

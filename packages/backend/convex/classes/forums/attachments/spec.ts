@@ -53,7 +53,7 @@ export type ForumAttachmentPolicyInput = Pick<
 
 export type ForumAttachmentMetadataInput = Pick<
   ForumAttachmentUpload,
-  "mimeType" | "size" | "storageId"
+  "size" | "storageId"
 >;
 
 export interface ForumAttachmentStorageClaimInput {

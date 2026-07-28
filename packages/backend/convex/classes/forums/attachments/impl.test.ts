@@ -1,6 +1,6 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { FORUM_PENDING_UPLOAD_SETTLEMENT_WINDOW_MS } from "@repo/backend/convex/classes/forums/attachments/constants";
+import { FORUM_PENDING_UPLOAD_EXPIRATION_MS } from "@repo/backend/convex/classes/forums/attachments/constants";
 import {
   validateForumAttachmentPolicy,
   validateForumAttachmentStorageClaim,
@@ -23,7 +23,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
-const SETTLEMENT_TOKEN = "forum-upload-settlement-token";
+const UPLOAD_TOKEN = "forum-upload-token";
 
 function getConvexErrorData(error: unknown) {
   if (typeof error !== "object" || error === null || !("data" in error)) {
@@ -215,7 +215,6 @@ describe("classes/forums/attachments/impl", () => {
       getRejectedConvexErrorData(
         owner.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
           name: "notes.txt",
-          settlementToken: upload.settlementToken,
           size: 6,
           storageId,
           type: "text/plain",
@@ -228,7 +227,7 @@ describe("classes/forums/attachments/impl", () => {
     });
   });
 
-  it("settles and erases an in-flight upload after account deletion starts", async () => {
+  it("erases only the server-bound upload after account deletion starts", async () => {
     vi.setSystemTime(new Date(NOW));
 
     const { owner, seeded, t } = await createForumOwner();
@@ -236,7 +235,14 @@ describe("classes/forums/attachments/impl", () => {
       api.classes.forums.mutations.uploads.generateUploadUrl,
       { forumId: seeded.forumId }
     );
-    const storageId = await storeTextFile(t);
+    const boundStorageId = await storeTextFile(t);
+    const unrelatedStorageId = await storeTextFile(t);
+
+    await t.mutation((ctx) =>
+      ctx.db.patch("schoolClassForumPendingUploads", upload.uploadId, {
+        storageId: boundStorageId,
+      })
+    );
 
     await t.mutation((ctx) =>
       ctx.db.patch("users", seeded.userId, {
@@ -248,9 +254,8 @@ describe("classes/forums/attachments/impl", () => {
       getRejectedConvexErrorData(
         t.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
           name: "notes.txt",
-          settlementToken: "wrong-settlement-token",
           size: 5,
-          storageId,
+          storageId: unrelatedStorageId,
           type: "text/plain",
           uploadId: upload.uploadId,
         })
@@ -262,9 +267,8 @@ describe("classes/forums/attachments/impl", () => {
     await expect(
       t.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
         name: "notes.txt",
-        settlementToken: upload.settlementToken,
         size: 5,
-        storageId,
+        storageId: boundStorageId,
         type: "text/plain",
         uploadId: upload.uploadId,
       })
@@ -275,16 +279,21 @@ describe("classes/forums/attachments/impl", () => {
         "schoolClassForumPendingUploads",
         upload.uploadId
       ),
-      storageMetadata: await ctx.db.system.get("_storage", storageId),
+      storageMetadata: await ctx.db.system.get("_storage", boundStorageId),
+      unrelatedMetadata: await ctx.db.system.get(
+        "_storage",
+        unrelatedStorageId
+      ),
     }));
 
     expect(state).toEqual({
       pendingUpload: null,
       storageMetadata: null,
+      unrelatedMetadata: expect.objectContaining({ size: 5 }),
     });
   });
 
-  it("retains an upload claim until its signed capability expires", async () => {
+  it("expires an unused server upload capability", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
@@ -313,7 +322,7 @@ describe("classes/forums/attachments/impl", () => {
       expect.objectContaining({
         args: [{ uploadId: upload.uploadId }],
         name: expect.stringContaining("deleteExpiredPendingUpload"),
-        scheduledTime: NOW + FORUM_PENDING_UPLOAD_SETTLEMENT_WINDOW_MS,
+        scheduledTime: NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS,
       }),
     ]);
 
@@ -340,7 +349,7 @@ describe("classes/forums/attachments/impl", () => {
           name: "notes.txt",
           size: 5,
           storageId,
-          settlementToken: `${SETTLEMENT_TOKEN}-first`,
+          uploadToken: `${UPLOAD_TOKEN}-first`,
           uploadedBy: seeded.userId,
         }
       );
@@ -349,7 +358,7 @@ describe("classes/forums/attachments/impl", () => {
         {
           classId: seeded.classId,
           forumId: seeded.forumId,
-          settlementToken: `${SETTLEMENT_TOKEN}-second`,
+          uploadToken: `${UPLOAD_TOKEN}-second`,
           uploadedBy: seeded.userId,
         }
       );
@@ -404,7 +413,7 @@ describe("classes/forums/attachments/impl", () => {
       return await ctx.db.insert("schoolClassForumPendingUploads", {
         classId: seeded.classId,
         forumId: seeded.forumId,
-        settlementToken: SETTLEMENT_TOKEN,
+        uploadToken: UPLOAD_TOKEN,
         uploadedBy: seeded.userId,
       });
     });
