@@ -14,7 +14,35 @@ import { findSchoolOwnershipSuccessorPage } from "@repo/backend/convex/auth/dele
 import { Clock, Effect } from "effect";
 
 type AccountDeletionPreparation = Doc<"accountDeletionPreparations">;
+type AccountDeletionPreparationProgress = Partial<
+  Pick<
+    AccountDeletionPreparation,
+    | "pendingSchoolId"
+    | "pendingSchoolNextCursor"
+    | "schoolCursor"
+    | "successorCursor"
+  >
+>;
 type AppUser = Doc<"users">;
+
+/** Persists cursor progress and atomically renews its versioned recovery lease. */
+const advancePreparation = Effect.fn("auth.deletion.advancePreparation")(
+  function* (
+    ctx: MutationCtx,
+    preparation: AccountDeletionPreparation,
+    progress: AccountDeletionPreparationProgress
+  ) {
+    const progressedAt = yield* Clock.currentTimeMillis;
+
+    yield* tryUserCleanup(() =>
+      ctx.db.patch("accountDeletionPreparations", preparation._id, {
+        ...progress,
+        recoveryAt: progressedAt + ACCOUNT_DELETION_RECOVERY_DELAY_MS,
+        recoveryGeneration: preparation.recoveryGeneration + 1,
+      })
+    );
+  }
+);
 
 /** Marks a fully reserved preparation ready and refreshes its recovery lease. */
 const completePreparation = Effect.fn("auth.deletion.completePreparation")(
@@ -73,14 +101,12 @@ const reserveSchoolSuccessors = Effect.fn(
     pendingSchoolId = school._id;
     pendingSchoolNextCursor = schoolPage.continueCursor;
     successorCursor = null;
-    yield* tryUserCleanup(() =>
-      ctx.db.patch("accountDeletionPreparations", preparation._id, {
-        pendingSchoolId,
-        pendingSchoolNextCursor,
-        schoolCursor: schoolCursor ?? undefined,
-        successorCursor: undefined,
-      })
-    );
+    yield* advancePreparation(ctx, preparation, {
+      pendingSchoolId,
+      pendingSchoolNextCursor,
+      schoolCursor: schoolCursor ?? undefined,
+      successorCursor: undefined,
+    });
     return accountDeletionPreparationOutcome.continue;
   }
 
@@ -89,14 +115,12 @@ const reserveSchoolSuccessors = Effect.fn(
   );
 
   if (!school || school.createdBy !== user._id) {
-    yield* tryUserCleanup(() =>
-      ctx.db.patch("accountDeletionPreparations", preparation._id, {
-        pendingSchoolId: undefined,
-        pendingSchoolNextCursor: undefined,
-        schoolCursor: pendingSchoolNextCursor,
-        successorCursor: undefined,
-      })
-    );
+    yield* advancePreparation(ctx, preparation, {
+      pendingSchoolId: undefined,
+      pendingSchoolNextCursor: undefined,
+      schoolCursor: pendingSchoolNextCursor,
+      successorCursor: undefined,
+    });
     return accountDeletionPreparationOutcome.continue;
   }
 
@@ -108,14 +132,12 @@ const reserveSchoolSuccessors = Effect.fn(
   );
 
   if (successor.kind === "continue") {
-    yield* tryUserCleanup(() =>
-      ctx.db.patch("accountDeletionPreparations", preparation._id, {
-        pendingSchoolId: school._id,
-        pendingSchoolNextCursor,
-        schoolCursor: schoolCursor ?? undefined,
-        successorCursor: successor.cursor,
-      })
-    );
+    yield* advancePreparation(ctx, preparation, {
+      pendingSchoolId: school._id,
+      pendingSchoolNextCursor,
+      schoolCursor: schoolCursor ?? undefined,
+      successorCursor: successor.cursor,
+    });
     return accountDeletionPreparationOutcome.continue;
   }
 
@@ -136,14 +158,12 @@ const reserveSchoolSuccessors = Effect.fn(
       successorUserId: successor.successorMembership.userId,
     })
   );
-  yield* tryUserCleanup(() =>
-    ctx.db.patch("accountDeletionPreparations", preparation._id, {
-      pendingSchoolId: undefined,
-      pendingSchoolNextCursor: undefined,
-      schoolCursor: pendingSchoolNextCursor,
-      successorCursor: undefined,
-    })
-  );
+  yield* advancePreparation(ctx, preparation, {
+    pendingSchoolId: undefined,
+    pendingSchoolNextCursor: undefined,
+    schoolCursor: pendingSchoolNextCursor,
+    successorCursor: undefined,
+  });
   return accountDeletionPreparationOutcome.continue;
 });
 

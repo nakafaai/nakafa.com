@@ -16,14 +16,17 @@ const NOW = Date.UTC(2026, 6, 28, 8, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 
 async function settlePreparation(
-  prepare: () => Promise<AccountDeletionPreparationOutcome>
+  prepare: () => Promise<AccountDeletionPreparationOutcome>,
+  observe: (
+    outcome: AccountDeletionPreparationOutcome
+  ) => Promise<void> | void = () => undefined
 ) {
   let outcome = await prepare();
-
+  await observe(outcome);
   while (outcome === "continue") {
     outcome = await prepare();
+    await observe(outcome);
   }
-
   return outcome;
 }
 
@@ -365,6 +368,8 @@ describe("auth/deletion/prepare", () => {
 
   it("prepares more owned schools than one transaction batch", async () => {
     const t = convexTest(schema, convexModules);
+    const continuedPreparations: Doc<"accountDeletionPreparations">[] = [];
+    let currentTime = NOW;
     const seeded = await t.mutation(async (ctx) => {
       const ownerId = await insertUser(ctx, "many-schools-owner");
       const successorId = await insertUser(ctx, "many-schools-successor");
@@ -384,12 +389,24 @@ describe("auth/deletion/prepare", () => {
 
       return ownerId;
     });
-    const outcome = await settlePreparation(() =>
-      t.mutation((ctx) =>
-        runConvexProgram(
-          prepareAccountDeletion(ctx, "many-schools-owner", ATTEMPT_ID)
-        )
-      )
+    const outcome = await settlePreparation(
+      () => {
+        vi.setSystemTime(currentTime);
+        currentTime += 1000;
+        return t.mutation((ctx) =>
+          runConvexProgram(
+            prepareAccountDeletion(ctx, "many-schools-owner", ATTEMPT_ID)
+          )
+        );
+      },
+      async (stepOutcome) => {
+        const preparation = await t.query((ctx) =>
+          ctx.db.query("accountDeletionPreparations").unique()
+        );
+        if (stepOutcome === "continue" && preparation) {
+          continuedPreparations.push(preparation);
+        }
+      }
     );
     const state = await t.query(async (ctx) => ({
       owner: await ctx.db.get("users", seeded),
@@ -403,6 +420,15 @@ describe("auth/deletion/prepare", () => {
     expect(state.transferCount).toBe(
       ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE + 1
     );
+    expect(continuedPreparations).toHaveLength(
+      (ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE + 1) * 2
+    );
+    for (const [index, preparation] of continuedPreparations.entries()) {
+      expect(preparation.recoveryAt).toBe(
+        NOW + index * 1000 + ACCOUNT_DELETION_RECOVERY_DELAY_MS
+      );
+      expect(preparation.recoveryGeneration).toBe(index + 1);
+    }
   });
 
   it("continues canceling prior reservations after a later school has no successor", async () => {
