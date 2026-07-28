@@ -65,29 +65,25 @@ const captureContentViewEvent = Effect.fn(
 
   const userId = view.userId;
 
-  yield* Effect.tryPromise({
-    try: () =>
-      captureProductEvent(ctx, {
-        distinctId: userId,
-        event: {
-          name: "content viewed",
-          properties: {
-            alignment_id: view.alignmentId,
-            concept_id: view.conceptId,
-            content_id: view.content_id,
-            context_key: view.contextKey,
-            content_type: getContentViewEventType(view.section),
-            is_new_view: change.operation === "insert",
-            learning_object_id: view.learningObjectId,
-            lens_id: view.lensId,
-            locale: view.locale,
-            route: view.route,
-          },
-        },
-        timestamp: new Date(view.lastViewedAt),
-      }),
-    catch: toContentViewEventError,
-  });
+  yield* captureProductEvent(ctx, {
+    distinctId: userId,
+    event: {
+      name: "content viewed",
+      properties: {
+        alignment_id: view.alignmentId,
+        concept_id: view.conceptId,
+        content_id: view.content_id,
+        context_key: view.contextKey,
+        content_type: getContentViewEventType(view.section),
+        is_new_view: change.operation === "insert",
+        learning_object_id: view.learningObjectId,
+        lens_id: view.lensId,
+        locale: view.locale,
+        route: view.route,
+      },
+    },
+    timestamp: new Date(view.lastViewedAt),
+  }).pipe(Effect.mapError(toContentViewEventError));
 });
 
 /**

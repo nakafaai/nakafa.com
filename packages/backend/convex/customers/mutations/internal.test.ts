@@ -229,7 +229,7 @@ describe("customers/mutations", () => {
     });
   });
 
-  it("deletes an existing customer by Polar id", async () => {
+  it("drains every subscription batch before deleting a customer", async () => {
     const t = convexTest(schema, convexModules);
     posthogTest.register(t);
 
@@ -243,33 +243,43 @@ describe("customers/mutations", () => {
         polarId: "polar-delete",
         userId,
       });
-      await ctx.db.insert("subscriptions", {
-        amount: null,
-        cancelAtPeriodEnd: false,
-        checkoutId: null,
-        createdAt: "2026-07-27T00:00:00.000Z",
-        currency: null,
-        currentPeriodEnd: null,
-        currentPeriodStart: "2026-07-27T00:00:00.000Z",
-        customerId: "polar-delete",
-        endedAt: null,
-        id: "subscription-delete",
-        metadata: {},
-        modifiedAt: null,
-        productId: products.pro.id,
-        recurringInterval: null,
-        startedAt: "2026-07-27T00:00:00.000Z",
-        status: "active",
-      });
+      for (let index = 0; index <= 50; index += 1) {
+        await ctx.db.insert("subscriptions", {
+          amount: null,
+          cancelAtPeriodEnd: false,
+          checkoutId: null,
+          createdAt: "2026-07-27T00:00:00.000Z",
+          currency: null,
+          currentPeriodEnd: null,
+          currentPeriodStart: "2026-07-27T00:00:00.000Z",
+          customerId: "polar-delete",
+          endedAt: null,
+          id: `subscription-delete-${index}`,
+          metadata: {},
+          modifiedAt: null,
+          productId: products.pro.id,
+          recurringInterval: null,
+          startedAt: "2026-07-27T00:00:00.000Z",
+          status: "active",
+        });
+      }
 
       return userId;
     });
+    let hasMore = true;
+    let mutationCount = 0;
 
-    await expect(
-      t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
-        id: "polar-delete",
-      })
-    ).resolves.toBeNull();
+    while (hasMore) {
+      hasMore = await t.mutation(
+        internal.customers.mutations.internal.deleteCustomerById,
+        {
+          id: "polar-delete",
+        }
+      );
+      mutationCount += 1;
+    }
+
+    expect(mutationCount).toBe(2);
 
     const state = await t.query(async (ctx) => ({
       customers: await ctx.db.query("customers").collect(),
@@ -293,11 +303,13 @@ describe("customers/mutations", () => {
     });
   });
 
-  it("does not recreate customer data for a deleted user", async () => {
+  it("does not recreate customer data for a prepared user", async () => {
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation(async (ctx) => {
       const insertedUserId = await insertCustomerUser(ctx, "deleted");
-      await ctx.db.patch("users", insertedUserId, { deletedAt: 1 });
+      await ctx.db.patch("users", insertedUserId, {
+        deletionPreparedAt: 1,
+      });
       return insertedUserId;
     });
 
@@ -355,7 +367,7 @@ describe("customers/mutations", () => {
       t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
         id: "missing-polar",
       })
-    ).resolves.toBeNull();
+    ).resolves.toBe(false);
 
     const tombstones = await t.query(
       async (ctx) => await ctx.db.query("customerDeletionTombstones").collect()

@@ -329,7 +329,7 @@ describe("subscriptions/mutations", () => {
     ]);
   });
 
-  it("does not recreate plan history for a deleting user", async () => {
+  it("does not recreate plan history for a prepared user", async () => {
     vi.setSystemTime(new Date(NOW));
 
     const t = createSubscriptionTestConvex();
@@ -340,7 +340,9 @@ describe("subscriptions/mutations", () => {
         plan: "pro",
         suffix: "deleting-user",
       });
-      await ctx.db.patch("users", userId, { deletedAt: NOW });
+      await ctx.db.patch("users", userId, {
+        deletionPreparedAt: NOW,
+      });
       return userId;
     });
 

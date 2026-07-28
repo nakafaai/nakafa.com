@@ -5,24 +5,28 @@ import { Effect, Schema } from "effect";
 
 const postHogDeletionConfigErrorCode = "POSTHOG_DELETION_CONFIG_INVALID";
 const postHogDeletionRequestErrorCode = "POSTHOG_DELETION_REQUEST_FAILED";
-const defaultPostHogIngestionHost = "https://us.i.posthog.com";
 const postHogIngestionHostnameSuffix = /\.i\.posthog\.com$/;
+const postHogProjectIdPattern = /^[1-9]\d*$/;
+
+export const POSTHOG_DELETION_RECONCILIATION_DELAY_MS = 24 * 60 * 60 * 1000;
+
+const PostHogBulkDeleteResponseSchema = Schema.Struct({
+  deletion_errors: Schema.optional(Schema.Array(Schema.Unknown)),
+  events_queued_for_deletion: Schema.Boolean,
+  persons_deleted: Schema.Number,
+  persons_found: Schema.Number,
+  recordings_queued_for_deletion: Schema.Boolean,
+});
 
 interface PostHogDeletionConfig {
+  readonly deletionApiKey: string;
   readonly host: string;
-  readonly personalApiKey: string;
-  readonly projectToken: string;
+  readonly projectId: string;
 }
 
 interface PostHogDeletionOptions {
   readonly config: PostHogDeletionConfig;
   readonly request: typeof fetch;
-}
-
-interface ValidPostHogDeletionConfig {
-  readonly apiOrigin: string;
-  readonly personalApiKey: string;
-  readonly projectToken: string;
 }
 
 /** Raised when PostHog erasure credentials are not configured. */
@@ -43,20 +47,11 @@ export class PostHogDeletionRequestError extends Schema.TaggedError<PostHogDelet
   }
 ) {}
 
-function getPostHogApiOrigin(host: string) {
-  const url = new URL(host);
-  url.hostname = url.hostname.replace(
-    postHogIngestionHostnameSuffix,
-    ".posthog.com"
-  );
-  return url.origin;
-}
-
 function getDefaultPostHogDeletionConfig(): PostHogDeletionConfig {
   return {
-    host: env.POSTHOG_HOST ?? defaultPostHogIngestionHost,
-    personalApiKey: env.POSTHOG_ACCOUNT_DELETION_API_KEY,
-    projectToken: env.POSTHOG_PROJECT_TOKEN,
+    deletionApiKey: env.POSTHOG_ACCOUNT_DELETION_API_KEY,
+    host: env.POSTHOG_HOST,
+    projectId: env.POSTHOG_PROJECT_ID,
   };
 }
 
@@ -64,30 +59,43 @@ function getDefaultPostHogDeletionConfig(): PostHogDeletionConfig {
 const validatePostHogDeletionConfig = Effect.fn(
   "analytics.deletion.validatePostHogDeletionConfig"
 )(function* (config: PostHogDeletionConfig) {
-  const personalApiKey = config.personalApiKey.trim();
-  const projectToken = config.projectToken.trim();
+  const deletionApiKey = config.deletionApiKey.trim();
+  const projectId = config.projectId.trim();
 
-  if (!(personalApiKey && projectToken)) {
+  if (!(deletionApiKey && postHogProjectIdPattern.test(projectId))) {
     return yield* new PostHogDeletionConfigError({
       code: postHogDeletionConfigErrorCode,
       message: "PostHog person deletion credentials are not configured.",
     });
   }
 
-  const apiOrigin = yield* Effect.try({
-    try: () => getPostHogApiOrigin(config.host),
+  const hostUrl = yield* Effect.try({
+    try: () => new URL(config.host),
     catch: () =>
       new PostHogDeletionConfigError({
         code: postHogDeletionConfigErrorCode,
         message: "PostHog deletion host is invalid.",
       }),
   });
+  const hasTrustedHost = postHogIngestionHostnameSuffix.test(hostUrl.hostname);
+
+  if (hostUrl.protocol !== "https:" || hostUrl.port || !hasTrustedHost) {
+    return yield* new PostHogDeletionConfigError({
+      code: postHogDeletionConfigErrorCode,
+      message: "PostHog deletion host is invalid.",
+    });
+  }
+
+  hostUrl.hostname = hostUrl.hostname.replace(
+    postHogIngestionHostnameSuffix,
+    ".posthog.com"
+  );
 
   return {
-    apiOrigin,
-    personalApiKey,
-    projectToken,
-  } satisfies ValidPostHogDeletionConfig;
+    apiOrigin: hostUrl.origin,
+    deletionApiKey,
+    projectId,
+  };
 });
 
 /** Fails before auth deletion when durable analytics erasure cannot start. */
@@ -109,9 +117,9 @@ export const deletePostHogPerson = Effect.fn(
     request: fetch,
   }
 ) {
-  const { apiOrigin, personalApiKey, projectToken } =
+  const { apiOrigin, deletionApiKey, projectId } =
     yield* validatePostHogDeletionConfig(options.config);
-  const endpoint = `${apiOrigin}/api/projects/@current/persons/bulk_delete/?token=${encodeURIComponent(projectToken)}`;
+  const endpoint = `${apiOrigin}/api/projects/${encodeURIComponent(projectId)}/persons/bulk_delete/`;
   const response = yield* Effect.tryPromise({
     try: () =>
       options.request(endpoint, {
@@ -122,7 +130,7 @@ export const deletePostHogPerson = Effect.fn(
           keep_person: false,
         }),
         headers: {
-          Authorization: `Bearer ${personalApiKey}`,
+          Authorization: `Bearer ${deletionApiKey}`,
           "Content-Type": "application/json",
         },
         method: "POST",
@@ -138,6 +146,33 @@ export const deletePostHogPerson = Effect.fn(
     return yield* new PostHogDeletionRequestError({
       code: postHogDeletionRequestErrorCode,
       message: `PostHog person deletion returned HTTP ${response.status}.`,
+    });
+  }
+
+  const responseBody = yield* Effect.tryPromise({
+    try: (): Promise<unknown> => response.json(),
+    catch: () =>
+      new PostHogDeletionRequestError({
+        code: postHogDeletionRequestErrorCode,
+        message: "PostHog person deletion returned an invalid response.",
+      }),
+  });
+  const result = yield* Schema.decodeUnknown(PostHogBulkDeleteResponseSchema)(
+    responseBody
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new PostHogDeletionRequestError({
+          code: postHogDeletionRequestErrorCode,
+          message: "PostHog person deletion returned an invalid response.",
+        })
+    )
+  );
+
+  if ((result.deletion_errors?.length ?? 0) > 0) {
+    return yield* new PostHogDeletionRequestError({
+      code: postHogDeletionRequestErrorCode,
+      message: "PostHog could not delete every matched person.",
     });
   }
 });

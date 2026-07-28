@@ -73,7 +73,7 @@ const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
         .withIndex("by_tryoutAttemptId", (query) =>
           query.eq("tryoutAttemptId", attempt._id)
         )
-        .unique()
+        .first()
     );
 
     if (score) {
@@ -200,7 +200,7 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
       ctx.db
         .query("tryoutFreeAttemptClaims")
         .withIndex("by_userId", (query) => query.eq("userId", userId))
-        .unique()
+        .first()
     );
 
     if (freeClaim) {

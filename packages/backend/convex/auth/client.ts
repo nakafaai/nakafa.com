@@ -1,8 +1,12 @@
 import { type AuthFunctions, createClient } from "@convex-dev/better-auth";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
-import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
+import {
+  captureProductEvent,
+  identifyProductUser,
+} from "@repo/backend/convex/analytics/capture";
+import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";
+import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import authSchema from "@repo/backend/convex/betterAuth/schema";
 import {
   DEFAULT_USER_CREDITS,
@@ -10,16 +14,15 @@ import {
 } from "@repo/backend/convex/credits/constants";
 import { getCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { posthog } from "@repo/backend/convex/posthog";
 import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
 
 const authFunctions: AuthFunctions = internal.auth.lifecycle;
-const startDeletedUserCleanupReference = makeFunctionReference<
+const finalizeDeletedUserCleanupReference = makeFunctionReference<
   "mutation",
   { authId: string },
   null
->("customers/deletion/workflow:startDeletedUserCleanup");
+>("customers/deletion/workflow:finalizeDeletedUserCleanup");
 
 export const authComponent = createClient<DataModel, typeof authSchema>(
   components.betterAuth,
@@ -61,31 +64,27 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             updatedAt: now,
           });
 
-          await posthog.identify(ctx, {
-            distinctId: userId,
-            disableGeoip: true,
-            properties: {
-              $set: {
+          await runConvexProgram(
+            Effect.gen(function* () {
+              yield* identifyProductUser(ctx, {
+                distinctId: userId,
                 email: authUser.email,
                 name: authUser.name,
                 plan: DEFAULT_USER_PLAN,
-              },
-              $set_once: {
-                signed_up_at: signedUpAt,
-              },
-            },
-          });
-
-          await captureProductEvent(ctx, {
-            distinctId: userId,
-            event: {
-              name: "user signed up",
-              properties: {
-                plan: DEFAULT_USER_PLAN,
-              },
-            },
-            timestamp: new Date(now),
-          });
+                signedUpAt,
+              });
+              yield* captureProductEvent(ctx, {
+                distinctId: userId,
+                event: {
+                  name: "user signed up",
+                  properties: {
+                    plan: DEFAULT_USER_PLAN,
+                  },
+                },
+                timestamp: new Date(now),
+              });
+            })
+          );
 
           await ctx.runMutation(components.betterAuth.mutations.setUserId, {
             authId: authUser._id,
@@ -104,8 +103,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             0,
             internal.emails.mutations.sendWelcomeEmail,
             {
-              name: authUser.name,
-              email: authUser.email,
+              userId,
             }
           );
         },
@@ -124,7 +122,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             .withIndex("by_authId", (q) => q.eq("authId", newDoc._id))
             .unique();
 
-          if (!appUser) {
+          if (!appUser || isAccountDeletionPending(appUser)) {
             return;
           }
 
@@ -142,14 +140,18 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             }
           );
         },
-        onDelete: (ctx, authUser) =>
-          runConvexProgram(
-            tryUserCleanup(() =>
-              ctx.runMutation(startDeletedUserCleanupReference, {
-                authId: authUser._id,
-              })
-            ).pipe(Effect.asVoid)
-          ),
+        onDelete: async (ctx, authUser) => {
+          await ctx.scheduler.runAfter(0, finalizeDeletedUserCleanupReference, {
+            authId: authUser._id,
+          });
+          await ctx.scheduler.runAfter(
+            ACCOUNT_DELETION_RECOVERY_DELAY_MS,
+            finalizeDeletedUserCleanupReference,
+            {
+              authId: authUser._id,
+            }
+          );
+        },
       },
     },
   }

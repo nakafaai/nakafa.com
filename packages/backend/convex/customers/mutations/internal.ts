@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import tables from "@repo/backend/convex/customers/schema";
 import {
   CustomerSyncIoError,
@@ -11,17 +12,11 @@ import {
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { makeFunctionReference, type WithoutSystemFields } from "convex/server";
+import type { WithoutSystemFields } from "convex/server";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
 const CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE = 50;
-
-const deleteCustomerByIdReference = makeFunctionReference<
-  "mutation",
-  { id: string },
-  null
->("customers/mutations/internal:deleteCustomerById");
 
 /** Patches one local customer row to the latest Polar-backed fields. */
 async function patchCustomerRow(
@@ -90,12 +85,7 @@ export const deleteCustomerByIdProgram = Effect.fn(
   }
 
   if (subscriptions.length === CUSTOMER_SUBSCRIPTION_CLEANUP_BATCH_SIZE) {
-    yield* tryCustomerDeletion(() =>
-      ctx.scheduler.runAfter(0, deleteCustomerByIdReference, {
-        id: polarCustomerId,
-      })
-    );
-    return null;
+    return true;
   }
 
   const customer = yield* tryCustomerDeletion(() =>
@@ -109,7 +99,7 @@ export const deleteCustomerByIdProgram = Effect.fn(
     yield* tryCustomerDeletion(() => ctx.db.delete("customers", customer._id));
   }
 
-  return null;
+  return false;
 });
 
 /**
@@ -120,7 +110,7 @@ export const deleteCustomerById = internalMutation({
   args: v.object({
     id: v.string(),
   }),
-  returns: v.null(),
+  returns: v.boolean(),
   handler: (ctx, args) =>
     runConvexProgram(deleteCustomerByIdProgram(ctx, args.id)),
 });
@@ -151,7 +141,7 @@ export const upsertCustomer = internalMutation({
 
     const user = await ctx.db.get("users", args.customer.userId);
 
-    if (!user || user.deletedAt !== undefined) {
+    if (!user || isAccountDeletionPending(user)) {
       return null;
     }
 

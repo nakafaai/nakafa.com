@@ -7,10 +7,13 @@ import { vResultValidator } from "@convex-dev/workpool";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { POSTHOG_DELETION_RECONCILIATION_DELAY_MS } from "@repo/backend/convex/analytics/deletion";
 import {
   tryUserCleanup,
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
+import { finalizeAccountDeletion } from "@repo/backend/convex/auth/deletion/finalize";
+import { accountDeletionPreparationVersionValidator } from "@repo/backend/convex/auth/deletion/spec";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -19,12 +22,12 @@ import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 import { Clock, Effect } from "effect";
 
-const EXTERNAL_DELETE_RETRY = {
+const DELETED_USER_CLEANUP_RETRY = {
   maxAttempts: 10,
   initialBackoffMs: 1000,
   base: 2,
 };
-const FAILED_WORKFLOW_RECOVERY_DELAY_MS = 60 * 60 * 1000;
+const WORKFLOW_RECOVERY_DELAY_MS = 60 * 60 * 1000;
 
 type StartCleanupWorkflow = (
   ctx: MutationCtx,
@@ -53,16 +56,23 @@ type ScheduleCleanupRecovery = (
   workflowId: WorkflowId
 ) => Promise<unknown>;
 
-/** Resolves a deleted auth identity and starts its durable cleanup workflow. */
-export const startDeletedUserCleanupProgram: (
+type CleanupWorkflowStorage = (
+  ctx: MutationCtx,
+  workflowId: WorkflowId
+) => Promise<unknown>;
+
+/** Starts the durable cleanup workflow once for one finalized app user. */
+export const launchDeletedUserCleanupProgram: (
   ctx: MutationCtx,
   authId: string,
+  userId: Id<"users">,
   startWorkflow?: StartCleanupWorkflow
 ) => Effect.Effect<void, UserCleanupError> = Effect.fn(
-  "customers.deletion.startDeletedUserCleanup"
+  "customers.deletion.launchDeletedUserCleanup"
 )(function* (
   ctx: MutationCtx,
   authId: string,
+  userId: Id<"users">,
   startWorkflow: StartCleanupWorkflow = (workflowCtx, identity) =>
     workflow.start(
       workflowCtx,
@@ -75,51 +85,62 @@ export const startDeletedUserCleanupProgram: (
       }
     )
 ) {
-  const user = yield* tryUserCleanup(() =>
-    ctx.db
-      .query("users")
-      .withIndex("by_authId", (query) => query.eq("authId", authId))
-      .unique()
-  );
+  const user = yield* tryUserCleanup(() => ctx.db.get("users", userId));
 
-  if (!user) {
+  if (
+    !user ||
+    user.deletedAt === undefined ||
+    user.deletionCleanupStartedAt !== undefined
+  ) {
     return;
   }
 
-  if (user.deletedAt === undefined) {
-    const deletedAt = yield* Clock.currentTimeMillis;
+  const cleanupStartedAt = yield* Clock.currentTimeMillis;
 
-    yield* tryUserCleanup(() =>
-      ctx.db.patch("users", user._id, {
-        deletedAt,
-      })
-    );
-  }
   yield* tryUserCleanup(() =>
     startWorkflow(ctx, {
       authId,
       userId: user._id,
     })
   );
+  yield* tryUserCleanup(() =>
+    ctx.db.patch("users", user._id, {
+      deletionCleanupStartedAt: cleanupStartedAt,
+    })
+  );
 });
 
-/** Starts durable cleanup after the Better Auth user transaction commits. */
-export const startDeletedUserCleanup = internalMutation({
+/** Finalizes app state after the Better Auth user transaction commits. */
+export const finalizeDeletedUserCleanup = internalMutation({
   args: {
     authId: v.string(),
+    expectedPreparation: v.optional(accountDeletionPreparationVersionValidator),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await runConvexProgram(startDeletedUserCleanupProgram(ctx, args.authId));
+    await runConvexProgram(
+      finalizeAccountDeletion(ctx, args.authId, args.expectedPreparation)
+    );
     return null;
   },
 });
 
-/**
- * Cancels billing before fallible local cleanup, then erases analytics only
- * after account writes are quiesced and personal data is gone. Every step is
- * retry-safe across retained workflow restarts.
- */
+/** Starts durable personal-data cleanup after app finalization commits. */
+export const launchDeletedUserCleanup = internalMutation({
+  args: {
+    authId: v.string(),
+    userId: vv.id("users"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await runConvexProgram(
+      launchDeletedUserCleanupProgram(ctx, args.authId, args.userId)
+    );
+    return null;
+  },
+});
+
+/** Runs every retry-safe personal-data cleanup step in durable order. */
 export const cleanupDeletedUserData = workflow.define({
   args: {
     authId: v.string(),
@@ -128,30 +149,39 @@ export const cleanupDeletedUserData = workflow.define({
   returns: v.null(),
   handler: async (step, args) => {
     await step.runAction(
-      internal.customers.actions.internal.cleanupUserData,
-      args,
-      { retry: EXTERNAL_DELETE_RETRY }
+      internal.customers.actions.internal.cleanupDeletedUserCustomerData,
+      {
+        authId: args.authId,
+        userId: args.userId,
+      },
+      { retry: DELETED_USER_CLEANUP_RETRY }
     );
-    let hasMoreLocalData = true;
-
-    while (hasMoreLocalData) {
-      hasMoreLocalData = await step.runMutation(
-        internal.auth.cleanup.cleanupDeletedUser,
-        { userId: args.userId }
-      );
-    }
+    await step.runAction(
+      internal.auth.cleanup.drainDeletedUserData,
+      { userId: args.userId },
+      { retry: DELETED_USER_CLEANUP_RETRY }
+    );
 
     await step.runAction(
       internal.analytics.deletion.cleanupDeletedUserAnalytics,
       { userId: args.userId },
-      { retry: EXTERNAL_DELETE_RETRY }
+      { retry: DELETED_USER_CLEANUP_RETRY }
+    );
+    await step.runAction(
+      internal.analytics.deletion.cleanupDeletedUserAnalytics,
+      { userId: args.userId },
+      {
+        name: "reconcile late analytics writes",
+        retry: DELETED_USER_CLEANUP_RETRY,
+        runAfter: POSTHOG_DELETION_RECONCILIATION_DELAY_MS,
+      }
     );
 
     return null;
   },
 });
 
-/** Restarts every idempotent cleanup step after a retained workflow failure. */
+/** Restarts every idempotent cleanup step after a recoverable terminal state. */
 export const retryDeletedUserCleanupProgram: (
   ctx: MutationCtx,
   workflowId: WorkflowId,
@@ -169,7 +199,7 @@ export const retryDeletedUserCleanupProgram: (
     workflow.restart(workflowCtx, id, options),
   scheduleRecovery: ScheduleCleanupRecovery = (workflowCtx, id) =>
     workflowCtx.scheduler.runAfter(
-      FAILED_WORKFLOW_RECOVERY_DELAY_MS,
+      WORKFLOW_RECOVERY_DELAY_MS,
       internal.customers.deletion.workflow.retryDeletedUserCleanup,
       { workflowId: id }
     )
@@ -177,7 +207,7 @@ export const retryDeletedUserCleanupProgram: (
   const recoverFailedWorkflow = Effect.gen(function* () {
     const status = yield* tryUserCleanup(() => getStatus(ctx, workflowId));
 
-    if (status.type !== "failed") {
+    if (status.type !== "failed" && status.type !== "canceled") {
       return;
     }
 
@@ -199,7 +229,7 @@ export const retryDeletedUserCleanupProgram: (
   );
 });
 
-/** Retries one retained failed workflow after its recovery delay. */
+/** Retries one retained recoverable workflow after its recovery delay. */
 export const retryDeletedUserCleanup = internalMutation({
   args: {
     workflowId: vWorkflowId,
@@ -213,9 +243,7 @@ export const retryDeletedUserCleanup = internalMutation({
   },
 });
 
-/**
- * Retains and retries failed cleanup journals, and releases successful ones.
- */
+/** Retains incomplete cleanup journals and releases successful ones. */
 export const handleDeletedUserCleanupComplete = internalMutation({
   args: {
     workflowId: vWorkflowId,
@@ -238,11 +266,11 @@ export const handleDeletedUserCleanupComplete = internalMutation({
       workflowId: args.workflowId,
     });
 
-    if (args.result.kind === "failed") {
+    if (args.result.kind === "failed" || args.result.kind === "canceled") {
       await runConvexProgram(
         tryUserCleanup(() =>
           ctx.scheduler.runAfter(
-            FAILED_WORKFLOW_RECOVERY_DELAY_MS,
+            WORKFLOW_RECOVERY_DELAY_MS,
             internal.customers.deletion.workflow.retryDeletedUserCleanup,
             { workflowId: args.workflowId }
           )
@@ -254,14 +282,49 @@ export const handleDeletedUserCleanupComplete = internalMutation({
   },
 });
 
-/** Releases the journal only after the completion callback has returned. */
+/** Retries journal release until the component accepts the cleanup. */
+export const cleanupDeletedUserWorkflowStorageProgram: (
+  ctx: MutationCtx,
+  workflowId: WorkflowId,
+  cleanupStorage?: CleanupWorkflowStorage,
+  scheduleRecovery?: ScheduleCleanupRecovery
+) => Effect.Effect<void, UserCleanupError> = Effect.fn(
+  "customers.deletion.cleanupDeletedUserWorkflowStorage"
+)(function* (
+  ctx: MutationCtx,
+  workflowId: WorkflowId,
+  cleanupStorage: CleanupWorkflowStorage = (workflowCtx, id) =>
+    workflow.cleanup(workflowCtx, id),
+  scheduleRecovery: ScheduleCleanupRecovery = (workflowCtx, id) =>
+    workflowCtx.scheduler.runAfter(
+      WORKFLOW_RECOVERY_DELAY_MS,
+      internal.customers.deletion.workflow.cleanupDeletedUserWorkflowStorage,
+      { workflowId: id }
+    )
+) {
+  yield* tryUserCleanup(() => cleanupStorage(ctx, workflowId)).pipe(
+    Effect.catchTag("UserCleanupError", (error) =>
+      Effect.logError("Deleted-user workflow journal cleanup failed").pipe(
+        Effect.annotateLogs({
+          error: error.message,
+          workflowId,
+        }),
+        Effect.zipRight(tryUserCleanup(() => scheduleRecovery(ctx, workflowId)))
+      )
+    )
+  );
+});
+
+/** Releases the journal after completion and retries transient failures. */
 export const cleanupDeletedUserWorkflowStorage = internalMutation({
   args: {
     workflowId: vWorkflowId,
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await workflow.cleanup(ctx, args.workflowId);
+    await runConvexProgram(
+      cleanupDeletedUserWorkflowStorageProgram(ctx, args.workflowId)
+    );
     return null;
   },
 });

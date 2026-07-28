@@ -1,6 +1,5 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import {
   type AttemptEndReason,
   getAttemptStatusFromEndReason,
@@ -140,27 +139,6 @@ export async function finalizeAttemptScore(
     set,
     status,
     updatedAt: args.now,
-  });
-
-  await captureProductEvent(ctx, {
-    distinctId: args.attempt.userId,
-    event: {
-      name: "tryout attempt completed",
-      properties: {
-        attempt_number: args.attempt.attemptNumber,
-        country_key: set.countryKey,
-        exam_key: set.examKey,
-        locale: set.locale,
-        raw_score_percentage: score.rawScore,
-        score_status: score.scoreStatus,
-        set_key: set.setKey,
-        theta: score.theta,
-        total_correct: score.totalCorrect,
-        total_questions: score.totalQuestions,
-        track_key: set.trackKey,
-      },
-    },
-    timestamp: new Date(args.now),
   });
 
   return { scoreId };

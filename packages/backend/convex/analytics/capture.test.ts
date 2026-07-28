@@ -1,18 +1,20 @@
-import posthogTest from "@posthog/convex/test";
 import { chatResponseFailureCode } from "@repo/ai/config/generation";
 import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   captureActionProductEventProgram,
   captureProductEvent,
+  deliverProductAnalyticsProgram,
+  identifyProductUser,
+  ProductAnalyticsCaptureError,
 } from "@repo/backend/convex/analytics/capture";
 import { productAnalyticsEventValidator } from "@repo/backend/convex/analytics/events";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { posthog } from "@repo/backend/convex/posthog";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { validate } from "convex-helpers/validators";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
@@ -186,9 +188,8 @@ describe("analytics/capture", () => {
     ).toBe(false);
   });
 
-  it("schedules the PostHog component capture action with the product payload", async () => {
+  it("schedules deletion-aware product delivery with the validated payload", async () => {
     const t = convexTest(schema, convexModules);
-    posthogTest.register(t);
 
     const scheduledJobs = await t.mutation(async (ctx) => {
       const userId = await ctx.db.insert("users", {
@@ -200,14 +201,16 @@ describe("analytics/capture", () => {
         plan: "free",
       });
 
-      await captureProductEvent(ctx, {
-        distinctId: userId,
-        event: {
-          name: "content viewed",
-          properties: contentViewProperties,
-        },
-        timestamp: new Date(NOW),
-      });
+      await runConvexProgram(
+        captureProductEvent(ctx, {
+          distinctId: userId,
+          event: {
+            name: "content viewed",
+            properties: contentViewProperties,
+          },
+          timestamp: new Date(NOW),
+        })
+      );
 
       return await ctx.db.system.query("_scheduled_functions").collect();
     });
@@ -216,20 +219,125 @@ describe("analytics/capture", () => {
       expect.objectContaining({
         args: [
           expect.objectContaining({
-            disableGeoip: true,
             event: "content viewed",
             properties: JSON.stringify(contentViewProperties),
             timestamp: NOW,
           }),
         ],
-        name: expect.stringContaining("capture"),
+        name: expect.stringContaining("deliverProductEvent"),
       }),
     ]);
   });
 
+  it("drops a queued event when deletion starts before delivery", async () => {
+    const capture = vi.fn(async () => undefined);
+    const erase = vi.fn(() => Effect.void);
+
+    await Effect.runPromise(
+      deliverProductAnalyticsProgram({
+        capture,
+        erase,
+        isUserActive: vi.fn(async () => false),
+      })
+    );
+
+    expect(capture).not.toHaveBeenCalled();
+    expect(erase).not.toHaveBeenCalled();
+  });
+
+  it("queues signup identification behind the delivery gate", async () => {
+    const t = convexTest(schema, convexModules);
+
+    const scheduledJobs = await t.mutation(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "identify-user-auth",
+        credits: 10,
+        creditsResetAt: NOW,
+        email: "identify@example.com",
+        name: "Identify User",
+        plan: "free",
+      });
+
+      await runConvexProgram(
+        identifyProductUser(ctx, {
+          distinctId: userId,
+          email: "identify@example.com",
+          name: "Identify User",
+          plan: "free",
+          signedUpAt: new Date(NOW).toISOString(),
+        })
+      );
+
+      return await ctx.db.system.query("_scheduled_functions").collect();
+    });
+
+    expect(scheduledJobs).toEqual([
+      expect.objectContaining({
+        name: expect.stringContaining("deliverProductIdentify"),
+      }),
+    ]);
+  });
+
+  it("keeps delivered analytics when the user remains active", async () => {
+    const capture = vi.fn(async () => undefined);
+    const erase = vi.fn(() => Effect.void);
+
+    await Effect.runPromise(
+      deliverProductAnalyticsProgram({
+        capture,
+        erase,
+        isUserActive: vi.fn(async () => true),
+      })
+    );
+
+    expect(capture).toHaveBeenCalledOnce();
+    expect(erase).not.toHaveBeenCalled();
+  });
+
+  it("re-erases analytics when deletion overlaps the external send", async () => {
+    const capture = vi.fn(async () => undefined);
+    const erase = vi.fn(() => Effect.void);
+    const isUserActive = vi
+      .fn<() => Promise<boolean>>()
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+
+    await Effect.runPromise(
+      deliverProductAnalyticsProgram({
+        capture,
+        erase,
+        isUserActive,
+      })
+    );
+
+    expect(capture).toHaveBeenCalledOnce();
+    expect(erase).toHaveBeenCalledOnce();
+  });
+
+  it("re-erases after a failed send that overlaps deletion", async () => {
+    const erase = vi.fn(() => Effect.void);
+    const isUserActive = vi
+      .fn<() => Promise<boolean>>()
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+
+    const failure = await Effect.runPromise(
+      deliverProductAnalyticsProgram({
+        capture: vi.fn(() => Promise.reject(new Error("capture uncertain"))),
+        erase,
+        isUserActive,
+      }).pipe(Effect.flip)
+    );
+
+    expect(erase).toHaveBeenCalledOnce();
+    expect(failure).toMatchObject({
+      _tag: "ProductAnalyticsCaptureError",
+      message: "capture uncertain",
+    });
+  });
+
   it("admits an action event while its app user remains active", async () => {
     const t = convexTest(schema, convexModules);
-    posthogTest.register(t);
     const userId = await t.mutation((ctx) =>
       ctx.db.insert("users", {
         authId: "active-analytics-user-auth",
@@ -259,21 +367,20 @@ describe("analytics/capture", () => {
             timestamp: NOW,
           }),
         ],
-        name: expect.stringContaining("capture"),
+        name: expect.stringContaining("deliverProductEvent"),
       }),
     ]);
   });
 
-  it("drops an action event when account deletion has started", async () => {
+  it("drops an action event while account deletion is prepared", async () => {
     const t = convexTest(schema, convexModules);
-    posthogTest.register(t);
 
     const userId = await t.mutation((ctx) =>
       ctx.db.insert("users", {
         authId: "deleting-analytics-user-auth",
         credits: 10,
         creditsResetAt: NOW,
-        deletedAt: NOW,
+        deletionPreparedAt: NOW,
         email: "deleting-analytics@example.com",
         name: "Deleting Analytics User",
         plan: "free",
@@ -294,7 +401,6 @@ describe("analytics/capture", () => {
 
   it("drops an action event after its app user is removed", async () => {
     const t = convexTest(schema, convexModules);
-    posthogTest.register(t);
     const userId = await t.mutation(async (ctx) => {
       const id = await ctx.db.insert("users", {
         authId: "removed-analytics-user-auth",
@@ -344,7 +450,13 @@ describe("analytics/capture", () => {
               timestamp: new Date(NOW),
             },
             {
-              capture: () => Promise.reject(new Error("PostHog unavailable")),
+              capture: () =>
+                Effect.fail(
+                  new ProductAnalyticsCaptureError({
+                    code: "PRODUCT_ANALYTICS_CAPTURE_FAILED",
+                    message: "PostHog unavailable",
+                  })
+                ),
               loadUser: () => ctx.db.get("users", userId),
             }
           )
@@ -356,64 +468,5 @@ describe("analytics/capture", () => {
         message: "PostHog unavailable",
       },
     });
-  });
-
-  it("keeps already scheduled component captures independent from the product event validator", async () => {
-    const t = convexTest(schema, convexModules);
-    posthogTest.register(t);
-
-    const scheduledJobs = await t.mutation(async (ctx) => {
-      const userId = await ctx.db.insert("users", {
-        authId: "scheduled-analytics-user-auth",
-        credits: 10,
-        creditsResetAt: NOW,
-        email: "scheduled-analytics@example.com",
-        name: "Scheduled Analytics User",
-        plan: "free",
-      });
-
-      await posthog.capture(ctx, {
-        distinctId: userId,
-        disableGeoip: true,
-        event: "content viewed",
-        properties: {
-          content_type: "material-lesson",
-          is_new_view: false,
-          locale: "id",
-          slug: "material/lesson/mathematics/example",
-        },
-        timestamp: new Date(NOW),
-      });
-
-      return await ctx.db.system.query("_scheduled_functions").collect();
-    });
-
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "content viewed",
-        properties: {
-          content_type: "material-lesson",
-          is_new_view: false,
-          locale: "id",
-          slug: "material/lesson/mathematics/example",
-        },
-      })
-    ).toBe(false);
-    expect(scheduledJobs).toEqual([
-      expect.objectContaining({
-        args: [
-          expect.objectContaining({
-            event: "content viewed",
-            properties: JSON.stringify({
-              content_type: "material-lesson",
-              is_new_view: false,
-              locale: "id",
-              slug: "material/lesson/mathematics/example",
-            }),
-          }),
-        ],
-        name: expect.stringContaining("capture"),
-      }),
-    ]);
   });
 });

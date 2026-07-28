@@ -1,16 +1,31 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { drainDeletedUserDataProgram } from "@repo/backend/convex/auth/cleanup";
 import { cleanupDeletedUserProgram } from "@repo/backend/convex/auth/cleanup/impl";
+import { createDeletedUserTombstone } from "@repo/backend/convex/auth/deletion/tombstone";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { Effect } from "effect";
+import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
 const deletedAuthIdPattern = /^deleted:/;
 const deletedEmailPattern = /^deleted-.+@account\.nakafa\.invalid$/;
 
 describe("auth/cleanup", () => {
+  it("drains every committed local cleanup batch outside the workflow journal", async () => {
+    const cleanupBatch = vi
+      .fn<() => Promise<boolean>>()
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+
+    await Effect.runPromise(drainDeletedUserDataProgram(cleanupBatch));
+
+    expect(cleanupBatch).toHaveBeenCalledTimes(3);
+  });
+
   it("stops after the first cleanup batch that makes progress", async () => {
     const t = convexTest(schema, convexModules);
     const state = await t.mutation(async (ctx) => {
@@ -22,6 +37,11 @@ describe("auth/cleanup", () => {
         name: "Bounded User",
         plan: "free",
       });
+      await ctx.db.patch(
+        "users",
+        userId,
+        createDeletedUserTombstone(userId, NOW)
+      );
       const preferenceId = await ctx.db.insert("notificationPreferences", {
         disabledTypes: [],
         emailDigest: "weekly",
@@ -66,8 +86,8 @@ describe("auth/cleanup", () => {
     expect(remaining.preference).toBeNull();
     expect(remaining.bookmark).not.toBeNull();
     expect(remaining.user).toMatchObject({
-      authId: "bounded-cleanup-user",
-      email: "bounded@example.com",
+      authId: expect.stringMatching(deletedAuthIdPattern),
+      email: expect.stringMatching(deletedEmailPattern),
     });
   });
 
@@ -83,6 +103,11 @@ describe("auth/cleanup", () => {
         name: "Deleted User",
         plan: "free",
       });
+      await ctx.db.patch(
+        "users",
+        userId,
+        createDeletedUserTombstone(userId, NOW)
+      );
       const otherUserId = await ctx.db.insert("users", {
         authId: "retained-auth-user",
         credits: 10,

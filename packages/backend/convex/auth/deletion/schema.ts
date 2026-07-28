@@ -1,0 +1,30 @@
+import { defineTable } from "convex/server";
+import { v } from "convex/values";
+
+const tables = {
+  accountDeletionPreparations: defineTable({
+    attemptId: v.optional(v.string()),
+    authId: v.string(),
+    finalizedAt: v.optional(v.number()),
+    pendingSchoolId: v.optional(v.id("schools")),
+    pendingSchoolNextCursor: v.optional(v.string()),
+    readyAt: v.optional(v.number()),
+    recoveryGeneration: v.number(),
+    schoolCursor: v.optional(v.string()),
+    successorCursor: v.optional(v.string()),
+    userId: v.id("users"),
+  })
+    .index("by_authId", ["authId"])
+    .index("by_userId", ["userId"]),
+  accountDeletionSchoolTransfers: defineTable({
+    preparationId: v.id("accountDeletionPreparations"),
+    schoolId: v.id("schools"),
+    successorMembershipId: v.id("schoolMembers"),
+    successorCursor: v.optional(v.string()),
+    successorUserId: v.id("users"),
+  })
+    .index("by_preparationId", ["preparationId"])
+    .index("by_successorUserId", ["successorUserId"]),
+};
+
+export default tables;

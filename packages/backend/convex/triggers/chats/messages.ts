@@ -1,5 +1,7 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
+import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 
@@ -22,22 +24,24 @@ export async function messagesHandler(
   }
 
   const user = await ctx.db.get("users", chat.userId);
-  if (!user || user.deletedAt !== undefined) {
+  if (!user || isAccountDeletionPending(user)) {
     return;
   }
 
   if (message.role === "user") {
-    await captureProductEvent(ctx, {
-      distinctId: chat.userId,
-      event: {
-        name: "chat message sent",
-        properties: {
-          chat_type: chat.type,
-          model_id: message.modelId,
+    await runConvexProgram(
+      captureProductEvent(ctx, {
+        distinctId: chat.userId,
+        event: {
+          name: "chat message sent",
+          properties: {
+            chat_type: chat.type,
+            model_id: message.modelId,
+          },
         },
-      },
-      timestamp: new Date(message._creationTime),
-    });
+        timestamp: new Date(message._creationTime),
+      })
+    );
     return;
   }
 
@@ -50,34 +54,38 @@ export async function messagesHandler(
       return;
     }
 
-    await captureProductEvent(ctx, {
-      distinctId: chat.userId,
-      event: {
-        name: "chat response failed",
-        properties: {
-          chat_type: chat.type,
-          error_code: message.generationErrorCode,
-          model_id: message.modelId,
+    await runConvexProgram(
+      captureProductEvent(ctx, {
+        distinctId: chat.userId,
+        event: {
+          name: "chat response failed",
+          properties: {
+            chat_type: chat.type,
+            error_code: message.generationErrorCode,
+            model_id: message.modelId,
+          },
         },
-      },
-      timestamp: new Date(message._creationTime),
-    });
+        timestamp: new Date(message._creationTime),
+      })
+    );
     return;
   }
 
-  await captureProductEvent(ctx, {
-    distinctId: chat.userId,
-    event: {
-      name: "chat response completed",
-      properties: {
-        chat_type: chat.type,
-        credits: message.credits,
-        input_tokens: message.inputTokens,
-        model_id: message.modelId,
-        output_tokens: message.outputTokens,
-        total_tokens: message.totalTokens,
+  await runConvexProgram(
+    captureProductEvent(ctx, {
+      distinctId: chat.userId,
+      event: {
+        name: "chat response completed",
+        properties: {
+          chat_type: chat.type,
+          credits: message.credits,
+          input_tokens: message.inputTokens,
+          model_id: message.modelId,
+          output_tokens: message.outputTokens,
+          total_tokens: message.totalTokens,
+        },
       },
-    },
-    timestamp: new Date(message._creationTime),
-  });
+      timestamp: new Date(message._creationTime),
+    })
+  );
 }

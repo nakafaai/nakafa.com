@@ -1,6 +1,7 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import {
   ensureCustomer,
   normalizeStoredCustomer,
@@ -27,7 +28,7 @@ import { Effect } from "effect";
 
 type CustomerSyncUser = Pick<
   Doc<"users">,
-  "_id" | "authId" | "deletedAt" | "email" | "name"
+  "_id" | "authId" | "deletedAt" | "deletionPreparedAt" | "email" | "name"
 >;
 type CustomerSyncState = [CustomerSyncUser | null, Doc<"customers"> | null];
 type CustomerSyncError =
@@ -38,7 +39,7 @@ type CustomerSyncError =
   | UserNotFound
   | PolarUpdateError;
 type RequiredCustomerError = CustomerSyncError;
-type CleanupUserDataError =
+type DeletedUserCustomerCleanupError =
   | CustomerSyncIoError
   | PolarCustomerError
   | PolarDeleteError;
@@ -96,24 +97,30 @@ const saveLocalCustomer: (
   });
 });
 
-/** Deletes the local customer row linked to one Polar customer ID. */
+/** Drains every bounded local billing row for one Polar customer ID. */
 const deleteLocalCustomer: (
   ctx: ActionCtx,
   polarCustomerId: string
 ) => Effect.Effect<null, CustomerSyncIoError> = Effect.fn(
   "customers.sync.deleteLocalCustomer"
 )(function* (ctx: ActionCtx, polarCustomerId: string) {
-  return yield* Effect.tryPromise({
-    try: () =>
-      ctx.runMutation(
-        internal.customers.mutations.internal.deleteCustomerById,
-        {
-          id: polarCustomerId,
-        }
-      ),
-    catch: (error) =>
-      customerSyncIoError("Failed to delete local customer row", error),
-  });
+  let hasMore = true;
+
+  while (hasMore) {
+    hasMore = yield* Effect.tryPromise({
+      try: () =>
+        ctx.runMutation(
+          internal.customers.mutations.internal.deleteCustomerById,
+          {
+            id: polarCustomerId,
+          }
+        ),
+      catch: (error) =>
+        customerSyncIoError("Failed to delete local customer row", error),
+    });
+  }
+
+  return null;
 });
 
 /**
@@ -164,6 +171,7 @@ export const syncCustomerForUser: (
 
   if (!localCustomerId) {
     yield* polarGateway.deleteCustomer(syncedPolarCustomer.id);
+    yield* deleteLocalCustomer(ctx, syncedPolarCustomer.id);
 
     return yield* new UserNotFound({
       code: userNotFoundCode,
@@ -183,7 +191,7 @@ export const syncOptionalCustomer: (
 )(function* (ctx: ActionCtx, userId: Id<"users">) {
   const [user, localCustomer] = yield* loadCustomerSyncState(ctx, userId);
 
-  if (!user || user.deletedAt !== undefined) {
+  if (!user || isAccountDeletionPending(user)) {
     return null;
   }
 
@@ -202,7 +210,7 @@ export const requireCustomer: (
 )(function* (ctx: ActionCtx, userId: Id<"users">) {
   const [user, localCustomer] = yield* loadCustomerSyncState(ctx, userId);
 
-  if (!user || user.deletedAt !== undefined) {
+  if (!user || isAccountDeletionPending(user)) {
     return yield* new UserNotFound({
       code: userNotFoundCode,
       message: `User not found for userId: ${userId}`,
@@ -220,7 +228,7 @@ export const cleanupCustomerDataForDeletedUser: (
   ctx: ActionCtx,
   userId: Id<"users">,
   authId: string
-) => Effect.Effect<null, CleanupUserDataError> = Effect.fn(
+) => Effect.Effect<null, DeletedUserCustomerCleanupError> = Effect.fn(
   "customers.sync.cleanupCustomerDataForDeletedUser"
 )(function* (ctx: ActionCtx, userId: Id<"users">, authId: string) {
   const customer = yield* Effect.tryPromise({

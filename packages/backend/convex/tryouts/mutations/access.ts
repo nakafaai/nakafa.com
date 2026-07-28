@@ -24,18 +24,14 @@ export const trackPaywallView = mutation({
         });
         const now = yield* Clock.currentTimeMillis;
 
-        yield* Effect.tryPromise({
-          catch: toTryoutStartError,
-          try: () =>
-            captureProductEvent(ctx, {
-              distinctId: appUser._id,
-              event: {
-                name: "tryout paywall viewed",
-                properties: { source: args.source },
-              },
-              timestamp: new Date(now),
-            }),
-        });
+        yield* captureProductEvent(ctx, {
+          distinctId: appUser._id,
+          event: {
+            name: "tryout paywall viewed",
+            properties: { source: args.source },
+          },
+          timestamp: new Date(now),
+        }).pipe(Effect.mapError(toTryoutStartError));
 
         return null;
       })

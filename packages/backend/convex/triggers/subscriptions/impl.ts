@@ -1,6 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
+import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import { resolveCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
@@ -154,39 +155,31 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
         })
       );
 
-      yield* Effect.tryPromise({
-        try: () =>
-          captureProductEvent(ctx, {
-            distinctId: user._id,
-            event: {
-              name: "subscription started",
-              properties: {
-                product_id: subscription.productId,
-                status: subscription.status,
-                subscription_id: subscription.id,
-              },
-            },
-            timestamp,
-          }),
-        catch: toSubscriptionPlanSyncIoError,
-      });
+      yield* captureProductEvent(ctx, {
+        distinctId: user._id,
+        event: {
+          name: "subscription started",
+          properties: {
+            product_id: subscription.productId,
+            status: subscription.status,
+            subscription_id: subscription.id,
+          },
+        },
+        timestamp,
+      }).pipe(Effect.mapError(toSubscriptionPlanSyncIoError));
 
-      yield* Effect.tryPromise({
-        try: () =>
-          captureProductEvent(ctx, {
-            distinctId: user._id,
-            event: {
-              name: "plan changed",
-              properties: {
-                new_plan: newPlan,
-                previous_plan: previousPlan,
-                subscription_id: subscription.id,
-              },
-            },
-            timestamp,
-          }),
-        catch: toSubscriptionPlanSyncIoError,
-      });
+      yield* captureProductEvent(ctx, {
+        distinctId: user._id,
+        event: {
+          name: "plan changed",
+          properties: {
+            new_plan: newPlan,
+            previous_plan: previousPlan,
+            subscription_id: subscription.id,
+          },
+        },
+        timestamp,
+      }).pipe(Effect.mapError(toSubscriptionPlanSyncIoError));
 
       return;
     }
@@ -229,40 +222,32 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
     );
 
     if (subscription.status === canceledSubscriptionStatus) {
-      yield* Effect.tryPromise({
-        try: () =>
-          captureProductEvent(ctx, {
-            distinctId: user._id,
-            event: {
-              name: "subscription canceled",
-              properties: {
-                product_id: subscription.productId,
-                status: subscription.status,
-                subscription_id: subscription.id,
-              },
-            },
-            timestamp,
-          }),
-        catch: toSubscriptionPlanSyncIoError,
-      });
+      yield* captureProductEvent(ctx, {
+        distinctId: user._id,
+        event: {
+          name: "subscription canceled",
+          properties: {
+            product_id: subscription.productId,
+            status: subscription.status,
+            subscription_id: subscription.id,
+          },
+        },
+        timestamp,
+      }).pipe(Effect.mapError(toSubscriptionPlanSyncIoError));
     }
 
-    yield* Effect.tryPromise({
-      try: () =>
-        captureProductEvent(ctx, {
-          distinctId: user._id,
-          event: {
-            name: "plan changed",
-            properties: {
-              new_plan: newPlan,
-              previous_plan: previousPlan,
-              subscription_id: subscription.id,
-            },
-          },
-          timestamp,
-        }),
-      catch: toSubscriptionPlanSyncIoError,
-    });
+    yield* captureProductEvent(ctx, {
+      distinctId: user._id,
+      event: {
+        name: "plan changed",
+        properties: {
+          new_plan: newPlan,
+          previous_plan: previousPlan,
+          subscription_id: subscription.id,
+        },
+      },
+      timestamp,
+    }).pipe(Effect.mapError(toSubscriptionPlanSyncIoError));
   }
 );
 
@@ -306,7 +291,7 @@ export const syncCustomerPlan = Effect.fn(
     return;
   }
 
-  if (user.deletedAt !== undefined) {
+  if (isAccountDeletionPending(user)) {
     return;
   }
 

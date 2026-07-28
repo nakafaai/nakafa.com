@@ -1,7 +1,8 @@
 import type { WorkflowId } from "@convex-dev/workflow";
 import {
+  cleanupDeletedUserWorkflowStorageProgram,
+  launchDeletedUserCleanupProgram,
   retryDeletedUserCleanupProgram,
-  startDeletedUserCleanupProgram,
 } from "@repo/backend/convex/customers/deletion/workflow";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -13,25 +14,38 @@ describe("customers/deletion/workflow", () => {
   it("starts cleanup for the matching app user", async () => {
     const t = convexTest(schema, convexModules);
     const startWorkflow = vi.fn(async () => undefined);
+    const deletedAt = Date.now();
 
     const user = await t.mutation(async (ctx) => {
       const insertedUserId = await ctx.db.insert("users", {
         authId: "deleted-auth-user",
         credits: 0,
         creditsResetAt: 0,
+        deletedAt,
         email: "deleted@example.com",
         name: "Deleted User",
         plan: "free",
       });
+      await ctx.db.insert("accountDeletionPreparations", {
+        authId: "deleted-auth-user",
+        finalizedAt: Date.now(),
+        recoveryGeneration: 0,
+        userId: insertedUserId,
+      });
 
       await runConvexProgram(
-        startDeletedUserCleanupProgram(ctx, "deleted-auth-user", startWorkflow)
+        launchDeletedUserCleanupProgram(
+          ctx,
+          "deleted-auth-user",
+          insertedUserId,
+          startWorkflow
+        )
       );
 
       return await ctx.db.get("users", insertedUserId);
     });
 
-    expect(user?.deletedAt).toEqual(expect.any(Number));
+    expect(user?.deletionCleanupStartedAt).toEqual(expect.any(Number));
     expect(startWorkflow).toHaveBeenCalledOnce();
     expect(startWorkflow).toHaveBeenCalledWith(expect.any(Object), {
       authId: "deleted-auth-user",
@@ -42,10 +56,27 @@ describe("customers/deletion/workflow", () => {
   it("does nothing when the app user is already absent", async () => {
     const t = convexTest(schema, convexModules);
     const startWorkflow = vi.fn(async () => undefined);
+    const missingUserId = await t.mutation(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "removed-auth-user",
+        credits: 0,
+        creditsResetAt: 0,
+        email: "removed@example.com",
+        name: "Removed User",
+        plan: "free",
+      });
+      await ctx.db.delete("users", userId);
+      return userId;
+    });
 
     await t.mutation((ctx) =>
       runConvexProgram(
-        startDeletedUserCleanupProgram(ctx, "missing-auth-user", startWorkflow)
+        launchDeletedUserCleanupProgram(
+          ctx,
+          "missing-auth-user",
+          missingUserId,
+          startWorkflow
+        )
       )
     );
 
@@ -59,6 +90,7 @@ describe("customers/deletion/workflow", () => {
         authId: "failing-auth-user",
         credits: 0,
         creditsResetAt: 0,
+        deletedAt: Date.now(),
         email: "failing@example.com",
         name: "Failing User",
         plan: "free",
@@ -69,9 +101,10 @@ describe("customers/deletion/workflow", () => {
       t.mutation(
         async (ctx) =>
           await runConvexProgram(
-            startDeletedUserCleanupProgram(
+            launchDeletedUserCleanupProgram(
               ctx,
               "failing-auth-user",
+              userId,
               async () =>
                 await Promise.reject(new Error("workflow unavailable"))
             )
@@ -86,7 +119,7 @@ describe("customers/deletion/workflow", () => {
 
     const user = await t.query(async (ctx) => await ctx.db.get(userId));
 
-    expect(user).not.toHaveProperty("deletedAt");
+    expect(user).not.toHaveProperty("deletionCleanupStartedAt");
   });
 
   it("restarts a retained failed cleanup asynchronously", async () => {
@@ -117,7 +150,33 @@ describe("customers/deletion/workflow", () => {
     );
   });
 
-  it("does not restart a cleanup that is no longer failed", async () => {
+  it("restarts a retained canceled cleanup asynchronously", async () => {
+    const t = convexTest(schema, convexModules);
+    const workflowId = "canceled-workflow" as WorkflowId;
+    const getStatus = vi.fn(async () => ({
+      type: "canceled" as const,
+    }));
+    const restartWorkflow = vi.fn(async () => undefined);
+
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        retryDeletedUserCleanupProgram(
+          ctx,
+          workflowId,
+          getStatus,
+          restartWorkflow
+        )
+      )
+    );
+
+    expect(restartWorkflow).toHaveBeenCalledWith(
+      expect.any(Object),
+      workflowId,
+      { from: 0, startAsync: true }
+    );
+  });
+
+  it("does not restart a cleanup that already completed", async () => {
     const t = convexTest(schema, convexModules);
     const workflowId = "completed-workflow" as WorkflowId;
     const getStatus = vi.fn(async () => ({
@@ -196,5 +255,52 @@ describe("customers/deletion/workflow", () => {
       expect.any(Object),
       workflowId
     );
+  });
+
+  it("requeues journal cleanup when workflow storage is unavailable", async () => {
+    const t = convexTest(schema, convexModules);
+    const workflowId = "cleanup-unavailable-workflow" as WorkflowId;
+    const cleanupStorage = vi.fn(async () =>
+      Promise.reject(new Error("workflow storage unavailable"))
+    );
+    const scheduleRecovery = vi.fn(async () => undefined);
+
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        cleanupDeletedUserWorkflowStorageProgram(
+          ctx,
+          workflowId,
+          cleanupStorage,
+          scheduleRecovery
+        )
+      )
+    );
+
+    expect(cleanupStorage).toHaveBeenCalledWith(expect.any(Object), workflowId);
+    expect(scheduleRecovery).toHaveBeenCalledWith(
+      expect.any(Object),
+      workflowId
+    );
+  });
+
+  it("does not requeue journal cleanup after storage is released", async () => {
+    const t = convexTest(schema, convexModules);
+    const workflowId = "cleanup-complete-workflow" as WorkflowId;
+    const cleanupStorage = vi.fn(async () => undefined);
+    const scheduleRecovery = vi.fn(async () => undefined);
+
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        cleanupDeletedUserWorkflowStorageProgram(
+          ctx,
+          workflowId,
+          cleanupStorage,
+          scheduleRecovery
+        )
+      )
+    );
+
+    expect(cleanupStorage).toHaveBeenCalledWith(expect.any(Object), workflowId);
+    expect(scheduleRecovery).not.toHaveBeenCalled();
   });
 });

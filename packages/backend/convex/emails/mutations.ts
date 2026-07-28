@@ -1,6 +1,8 @@
 import { Resend } from "@convex-dev/resend";
 import { components } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
+import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
 /**
@@ -19,19 +21,49 @@ export const resend = new Resend(components.resend, {
 
 export const sendWelcomeEmail = internalMutation({
   args: {
-    name: v.string(),
-    email: v.string(),
+    userId: vv.id("users"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
+    const user = await ctx.db.get("users", args.userId);
+
+    if (!user || isAccountDeletionPending(user)) {
+      return null;
+    }
+
     await resend.sendEmail(ctx, {
       from: "Nakafa <nakafa@notifications.nakafa.com>",
-      to: args.email,
+      to: user.email,
       template: {
         id: "welcome",
         variables: {
-          name: args.name,
+          name: user.name,
         },
       },
     });
+
+    return null;
+  },
+});
+
+/**
+ * Applies the Resend component's bounded retention policy.
+ *
+ * The component owns both retention windows so Nakafa does not duplicate
+ * processor-specific durations. This app does not use historical delivery
+ * records after an email has been sent.
+ */
+export const cleanupRetainedEmailData = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    await ctx.scheduler.runAfter(0, components.resend.lib.cleanupOldEmails, {});
+    await ctx.scheduler.runAfter(
+      0,
+      components.resend.lib.cleanupAbandonedEmails,
+      {}
+    );
+
+    return null;
   },
 });

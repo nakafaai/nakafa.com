@@ -1,6 +1,7 @@
 import articleContentsSchema from "@repo/backend/convex/articleContents/schema";
 import assessmentsSchema from "@repo/backend/convex/assessments/schema";
 import audioStudiesSchema from "@repo/backend/convex/audioStudies/schema";
+import authDeletionSchema from "@repo/backend/convex/auth/deletion/schema";
 import authorsSchema from "@repo/backend/convex/authors/schema";
 import bookmarksSchema from "@repo/backend/convex/bookmarks/schema";
 import chatsSchema from "@repo/backend/convex/chats/schema";
@@ -31,6 +32,7 @@ import { defineSchema } from "convex/server";
 export default defineSchema(
   {
     ...usersSchema,
+    ...authDeletionSchema,
     ...chatsSchema,
     ...commentsSchema,
     ...contentReleaseSchema,

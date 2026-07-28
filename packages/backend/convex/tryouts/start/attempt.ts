@@ -132,25 +132,23 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
         { attemptId: attempt._id, expiresAt: attempt.expiresAt }
       )
     );
-    yield* tryStartPromise(() =>
-      captureProductEvent(ctx, {
-        distinctId: input.userId,
-        event: {
-          name: "tryout attempt started",
-          properties: {
-            access_source: input.access.accessSourceKind,
-            attempt_number: attempt.attemptNumber,
-            country_key: input.set.countryKey,
-            exam_key: input.set.examKey,
-            locale: input.set.locale,
-            score_status: attempt.scoreStatus,
-            set_key: input.set.setKey,
-            track_key: input.set.trackKey,
-          },
+    yield* captureProductEvent(ctx, {
+      distinctId: input.userId,
+      event: {
+        name: "tryout attempt started",
+        properties: {
+          access_source: input.access.accessSourceKind,
+          attempt_number: attempt.attemptNumber,
+          country_key: input.set.countryKey,
+          exam_key: input.set.examKey,
+          locale: input.set.locale,
+          score_status: attempt.scoreStatus,
+          set_key: input.set.setKey,
+          track_key: input.set.trackKey,
         },
-        timestamp: new Date(input.now),
-      })
-    );
+      },
+      timestamp: new Date(input.now),
+    }).pipe(Effect.mapError(toTryoutStartError));
   }
 );
 

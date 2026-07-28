@@ -76,12 +76,16 @@ async function handlePolarEvent(
       return handleCustomerUpsert(ctx, event.data);
     }
     case "customer.deleted": {
-      await ctx.runMutation(
-        internal.customers.mutations.internal.deleteCustomerById,
-        {
-          id: event.data.id,
-        }
-      );
+      let hasMore = true;
+
+      while (hasMore) {
+        hasMore = await ctx.runMutation(
+          internal.customers.mutations.internal.deleteCustomerById,
+          {
+            id: event.data.id,
+          }
+        );
+      }
       return true;
     }
     case "subscription.created": {
