@@ -1,8 +1,10 @@
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
+import { createDeletedUserTombstone } from "@repo/backend/convex/auth/deletion/tombstone";
+import { drainDeletedUserVerificationsProgram } from "@repo/backend/convex/auth/deletion/verification";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
+import { Effect, Either, Schema } from "effect";
+import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 21, 0, 0);
 const decodeVerificationPage = Schema.decodeUnknownSync(
@@ -16,6 +18,60 @@ const decodeVerificationPage = Schema.decodeUnknownSync(
 );
 
 describe("auth/deletion/verification", () => {
+  it("resumes from the last committed verification page after an action retry", async () => {
+    let durableCursor: string | null = null;
+    let interruptNextPage = true;
+    const deletePage = vi.fn((cursor: string | null) => {
+      if (cursor === null) {
+        return Promise.resolve({
+          continueCursor: "verification-cursor-1",
+          isDone: false,
+        });
+      }
+
+      if (interruptNextPage) {
+        interruptNextPage = false;
+        return Promise.reject(new Error("action interrupted"));
+      }
+
+      return Promise.resolve({
+        continueCursor: "verification-cursor-2",
+        isDone: true,
+      });
+    });
+    const operations = {
+      deletePage,
+      loadCursor: vi.fn(() => Promise.resolve(durableCursor)),
+      saveCursor: vi.fn((cursor: string | null) => {
+        durableCursor = cursor;
+        return Promise.resolve();
+      }),
+    };
+
+    const interrupted = await Effect.runPromise(
+      drainDeletedUserVerificationsProgram(operations).pipe(Effect.either)
+    );
+
+    expect(Either.isLeft(interrupted)).toBe(true);
+    if (Either.isRight(interrupted)) {
+      throw new Error("Expected verification cleanup to be interrupted.");
+    }
+    expect(interrupted.left).toMatchObject({
+      _tag: "UserCleanupError",
+    });
+    expect(durableCursor).toBe("verification-cursor-1");
+
+    await expect(
+      Effect.runPromise(drainDeletedUserVerificationsProgram(operations))
+    ).resolves.toBeUndefined();
+    expect(deletePage.mock.calls.map(([cursor]) => cursor)).toEqual([
+      null,
+      "verification-cursor-1",
+      "verification-cursor-1",
+    ]);
+    expect(durableCursor).toBeNull();
+  });
+
   it("drains direct tokens and OAuth-link state across bounded pages", async () => {
     const t = createConvexTestWithBetterAuth();
     const authUser = await t.mutation(components.betterAuth.adapter.create, {
@@ -96,28 +152,49 @@ describe("auth/deletion/verification", () => {
         },
       },
     });
+    const userId = await t.mutation(async (ctx) => {
+      const insertedUserId = await ctx.db.insert("users", {
+        authId: authUser._id,
+        credits: 0,
+        creditsResetAt: NOW,
+        email: "verification-owner@example.com",
+        name: "Verification owner",
+        plan: "free",
+      });
+      await ctx.db.patch(
+        "users",
+        insertedUserId,
+        createDeletedUserTombstone(insertedUserId, NOW)
+      );
+      return insertedUserId;
+    });
 
     await t.action(
       internal.auth.deletion.verification.drainDeletedUserVerifications,
       {
         authId: authUser._id,
+        userId,
       }
     );
 
-    const remaining = decodeVerificationPage(
-      await t.query(components.betterAuth.adapter.findMany, {
-        model: "verification",
-        paginationOpts: {
-          cursor: null,
-          numItems: 100,
-        },
-        select: ["value"],
-      })
-    );
+    const state = await t.query(async (ctx) => ({
+      remaining: decodeVerificationPage(
+        await ctx.runQuery(components.betterAuth.adapter.findMany, {
+          model: "verification",
+          paginationOpts: {
+            cursor: null,
+            numItems: 100,
+          },
+          select: ["value"],
+        })
+      ),
+      user: await ctx.db.get("users", userId),
+    }));
 
-    expect(remaining.page.map((row) => row.value)).toEqual([
+    expect(state.remaining.page.map((row) => row.value)).toEqual([
       ...unrelatedValues,
       substringValue,
     ]);
+    expect(state.user).not.toHaveProperty("authVerificationCleanupCursor");
   });
 });

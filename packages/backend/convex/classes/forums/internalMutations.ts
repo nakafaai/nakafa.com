@@ -4,8 +4,6 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
-export const STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS = 2 * 60 * 60 * 1000;
-
 /**
  * Delete one pending upload if it is still present when its scheduled expiry
  * window elapses.

@@ -22,6 +22,7 @@ vi.mock("@repo/analytics/posthog", () => ({
 const forumId = "forum_1" as Id<"schoolClassForums">;
 const postId = "post_1" as Id<"schoolClassForumPosts">;
 const storageId = "storage_1" as Id<"_storage">;
+const settlementToken = "forum-upload-settlement-token";
 const uploadUrl = "https://upload.example.test/file?token=signed-upload-secret";
 
 type SubmitForumPostInput = Parameters<typeof submitForumPost>[0];
@@ -138,6 +139,7 @@ describe("submitForumPost", () => {
     ] satisfies FileWithPreview[];
     const mutations = makeMutations({
       generateUploadUrl: vi.fn(async () => ({
+        settlementToken,
         uploadId,
         uploadUrl,
       })),
@@ -169,6 +171,14 @@ describe("submitForumPost", () => {
       })
     );
     expect(mutations.generateUploadUrl).toHaveBeenCalledTimes(1);
+    expect(mutations.saveForumUpload).toHaveBeenCalledWith({
+      name: "fresh.txt",
+      settlementToken,
+      size: 5,
+      storageId,
+      type: "text/plain",
+      uploadId,
+    });
     expect(mocks.tracingDisabled).toHaveBeenCalledWith(true);
     expect(mutations.createPost).toHaveBeenCalledWith({
       attachmentUploadIds: [uploadId],
@@ -186,6 +196,7 @@ describe("submitForumPost", () => {
       generateUploadUrl: vi
         .fn()
         .mockResolvedValueOnce({
+          settlementToken,
           uploadId: successfulUploadId,
           uploadUrl,
         })
@@ -219,6 +230,7 @@ describe("submitForumPost", () => {
     const mutations = makeMutations({
       discardForumUploads: vi.fn(() => Promise.reject("cleanup failed")),
       generateUploadUrl: vi.fn(async () => ({
+        settlementToken,
         uploadId,
         uploadUrl,
       })),
@@ -240,6 +252,7 @@ describe("submitForumPost", () => {
       return;
     }
     expect(JSON.stringify(result.left)).not.toContain("signed-upload-secret");
+    expect(JSON.stringify(result.left)).not.toContain(settlementToken);
     expect(JSON.stringify(result.left)).not.toContain(uploadUrl);
     expect(mutations.saveForumUpload).not.toHaveBeenCalled();
     expect(mocks.captureException).toHaveBeenCalledWith(
@@ -256,6 +269,7 @@ describe("submitForumPost", () => {
     const files = [makeFile("metadata")];
     const mutations = makeMutations({
       generateUploadUrl: vi.fn(async () => ({
+        settlementToken,
         uploadId,
         uploadUrl,
       })),
@@ -285,6 +299,7 @@ describe("submitForumPost", () => {
     const mutations = makeMutations({
       createPost: vi.fn(() => Promise.reject(new Error("post failed"))),
       generateUploadUrl: vi.fn(async () => ({
+        settlementToken,
         uploadId,
         uploadUrl,
       })),

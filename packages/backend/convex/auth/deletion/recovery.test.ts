@@ -1,5 +1,5 @@
 import {
-  ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS,
+  ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
   ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE,
 } from "@repo/backend/convex/auth/deletion/constants";
 import {
@@ -149,7 +149,7 @@ describe("auth/deletion/recovery", () => {
 
     expect(hasMore).toBe(false);
     expect(state.due).toMatchObject({
-      recoveryAt: NOW + ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS,
+      recoveryAt: NOW + ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
       recoveryGeneration: 3,
     });
     expect(state.future).toMatchObject({

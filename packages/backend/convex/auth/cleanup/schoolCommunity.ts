@@ -12,7 +12,6 @@ import { Effect } from "effect";
 
 const REACTION_BATCH_SIZE = 50;
 const READ_STATE_BATCH_SIZE = 50;
-const UPLOAD_BATCH_SIZE = 10;
 const REPLY_REFERENCE_BATCH_SIZE = 25;
 const MATERIAL_VIEW_BATCH_SIZE = 50;
 
@@ -53,7 +52,7 @@ const cleanupForumReactions = Effect.fn("auth.cleanup.cleanupForumReactions")(
   }
 );
 
-/** Deletes one bounded batch of class-forum read state and pending uploads. */
+/** Deletes one bounded batch of class-forum read state. */
 const cleanupForumState = Effect.fn("auth.cleanup.cleanupForumState")(
   function* (ctx: MutationCtx, userId: Id<"users">) {
     const readStates = yield* tryUserCleanup(() =>
@@ -69,30 +68,7 @@ const cleanupForumState = Effect.fn("auth.cleanup.cleanupForumState")(
       );
     }
 
-    if (readStates.length > 0) {
-      return true;
-    }
-
-    const uploads = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("schoolClassForumPendingUploads")
-        .withIndex("by_uploadedBy", (query) => query.eq("uploadedBy", userId))
-        .take(UPLOAD_BATCH_SIZE)
-    );
-
-    for (const upload of uploads) {
-      const storageId = upload.storageId;
-
-      if (storageId) {
-        yield* tryUserCleanup(() => ctx.storage.delete(storageId));
-      }
-
-      yield* tryUserCleanup(() =>
-        ctx.db.delete("schoolClassForumPendingUploads", upload._id)
-      );
-    }
-
-    return uploads.length > 0;
+    return readStates.length > 0;
   }
 );
 

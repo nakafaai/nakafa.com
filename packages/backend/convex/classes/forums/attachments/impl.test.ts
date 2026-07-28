@@ -1,5 +1,6 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { FORUM_PENDING_UPLOAD_SETTLEMENT_WINDOW_MS } from "@repo/backend/convex/classes/forums/attachments/constants";
 import {
   validateForumAttachmentPolicy,
   validateForumAttachmentStorageClaim,
@@ -22,6 +23,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
+const SETTLEMENT_TOKEN = "forum-upload-settlement-token";
 
 function getConvexErrorData(error: unknown) {
   if (typeof error !== "object" || error === null || !("data" in error)) {
@@ -213,6 +215,7 @@ describe("classes/forums/attachments/impl", () => {
       getRejectedConvexErrorData(
         owner.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
           name: "notes.txt",
+          settlementToken: upload.settlementToken,
           size: 6,
           storageId,
           type: "text/plain",
@@ -223,6 +226,104 @@ describe("classes/forums/attachments/impl", () => {
       code: "FORUM_ATTACHMENT_METADATA_MISMATCH",
       message: "Forum post attachment metadata no longer matches the upload.",
     });
+  });
+
+  it("settles and erases an in-flight upload after account deletion starts", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const { owner, seeded, t } = await createForumOwner();
+    const upload = await owner.mutation(
+      api.classes.forums.mutations.uploads.generateUploadUrl,
+      { forumId: seeded.forumId }
+    );
+    const storageId = await storeTextFile(t);
+
+    await t.mutation((ctx) =>
+      ctx.db.patch("users", seeded.userId, {
+        deletionPreparedAt: NOW,
+      })
+    );
+
+    await expect(
+      getRejectedConvexErrorData(
+        t.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
+          name: "notes.txt",
+          settlementToken: "wrong-settlement-token",
+          size: 5,
+          storageId,
+          type: "text/plain",
+          uploadId: upload.uploadId,
+        })
+      )
+    ).resolves.toMatchObject({
+      code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
+    });
+
+    await expect(
+      t.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
+        name: "notes.txt",
+        settlementToken: upload.settlementToken,
+        size: 5,
+        storageId,
+        type: "text/plain",
+        uploadId: upload.uploadId,
+      })
+    ).resolves.toBe(upload.uploadId);
+
+    const state = await t.query(async (ctx) => ({
+      pendingUpload: await ctx.db.get(
+        "schoolClassForumPendingUploads",
+        upload.uploadId
+      ),
+      storageMetadata: await ctx.db.system.get("_storage", storageId),
+    }));
+
+    expect(state).toEqual({
+      pendingUpload: null,
+      storageMetadata: null,
+    });
+  });
+
+  it("retains an upload claim until its signed capability expires", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(NOW));
+
+    const { owner, seeded, t } = await createForumOwner();
+    const upload = await owner.mutation(
+      api.classes.forums.mutations.uploads.generateUploadUrl,
+      { forumId: seeded.forumId }
+    );
+
+    await t.mutation((ctx) =>
+      ctx.db.patch("users", seeded.userId, {
+        deletionPreparedAt: NOW,
+      })
+    );
+
+    const retained = await t.query(async (ctx) => ({
+      pendingUpload: await ctx.db.get(
+        "schoolClassForumPendingUploads",
+        upload.uploadId
+      ),
+      scheduled: await ctx.db.system.query("_scheduled_functions").collect(),
+    }));
+
+    expect(retained.pendingUpload).not.toBeNull();
+    expect(retained.scheduled).toEqual([
+      expect.objectContaining({
+        args: [{ uploadId: upload.uploadId }],
+        name: expect.stringContaining("deleteExpiredPendingUpload"),
+        scheduledTime: NOW + FORUM_PENDING_UPLOAD_SETTLEMENT_WINDOW_MS,
+      }),
+    ]);
+
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    await expect(
+      t.query((ctx) =>
+        ctx.db.get("schoolClassForumPendingUploads", upload.uploadId)
+      )
+    ).resolves.toBeNull();
   });
 
   it("rejects storage already claimed by another pending upload", async () => {
@@ -239,6 +340,7 @@ describe("classes/forums/attachments/impl", () => {
           name: "notes.txt",
           size: 5,
           storageId,
+          settlementToken: `${SETTLEMENT_TOKEN}-first`,
           uploadedBy: seeded.userId,
         }
       );
@@ -247,6 +349,7 @@ describe("classes/forums/attachments/impl", () => {
         {
           classId: seeded.classId,
           forumId: seeded.forumId,
+          settlementToken: `${SETTLEMENT_TOKEN}-second`,
           uploadedBy: seeded.userId,
         }
       );
@@ -301,6 +404,7 @@ describe("classes/forums/attachments/impl", () => {
       return await ctx.db.insert("schoolClassForumPendingUploads", {
         classId: seeded.classId,
         forumId: seeded.forumId,
+        settlementToken: SETTLEMENT_TOKEN,
         uploadedBy: seeded.userId,
       });
     });

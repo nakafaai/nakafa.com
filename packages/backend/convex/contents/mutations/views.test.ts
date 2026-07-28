@@ -805,6 +805,45 @@ describe("contents/mutations/views", () => {
     });
   });
 
+  it("does not treat a prepared signed-in viewer as anonymous", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const article = await insertArticle(ctx);
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "prepared-viewer",
+      });
+      await ctx.db.patch("users", user.userId, {
+        deletionPreparedAt: NOW,
+      });
+
+      return { ...user, contentId: article.contentId };
+    });
+
+    await expect(
+      t
+        .withIdentity({
+          sessionId: identity.sessionId,
+          subject: identity.authUserId,
+        })
+        .mutation(api.contents.mutations.views.recordContentView, {
+          contentId: identity.contentId,
+          deviceId: "prepared-device",
+          locale: "id",
+        })
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_VIEW_IO_FAILED",
+      },
+    });
+
+    const state = await readViewState(t);
+    expect(state.views).toEqual([]);
+    expect(state.engagementQueue).toEqual([]);
+    expect(state.scheduledJobs).toEqual([]);
+    expect(state.viewerSignals).toEqual([]);
+  });
+
   it("resolves subject and try-out graph IDs through the route catalog", async () => {
     const t = createConvexTestWithBetterAuth();
     const fixtures = await t.mutation(async (ctx) => ({

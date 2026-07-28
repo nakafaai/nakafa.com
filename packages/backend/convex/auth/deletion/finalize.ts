@@ -5,7 +5,7 @@ import {
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
 import {
-  ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS,
+  ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
   ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
 } from "@repo/backend/convex/auth/deletion/constants";
 import { recordAccountDeletionReceipt } from "@repo/backend/convex/auth/deletion/receipt";
@@ -164,7 +164,7 @@ export const finalizeAccountDeletion: (
       userId: identity.userId,
     });
     await cleanupCtx.scheduler.runAfter(
-      ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS,
+      ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
       retryAccountDeletionFinalizationReference,
       { authId: identity.authId }
     );
