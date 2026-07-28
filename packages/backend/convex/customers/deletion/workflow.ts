@@ -45,7 +45,7 @@ const cleanupWorkflowStarters: CleanupWorkflowStarters = {
     workflow.start(
       ctx,
       internal.customers.deletion.cleanup.cleanupDeletedUserAuth,
-      { authId: identity.authId },
+      identity,
       {
         context: {},
         onComplete:

@@ -1,20 +1,11 @@
 import { Resend } from "@convex-dev/resend";
 import { components } from "@repo/backend/convex/_generated/api";
-import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
+import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
-/**
- * Resend component boundary.
- *
- * This intentionally uses Convex's raw internalMutation because it writes only
- * through the Resend component, not app tables registered in convex/functions.ts.
- * Importing the trigger-aware builder here would load the app trigger graph for
- * an email enqueue function without adding trigger coverage.
- *
- * @see https://www.convex.dev/components/resend
- */
+/** Shared Resend component boundary for delivery and cancellation. */
 export const resend = new Resend(components.resend, {
   testMode: false,
 });
@@ -31,7 +22,7 @@ export const sendWelcomeEmail = internalMutation({
       return null;
     }
 
-    await resend.sendEmail(ctx, {
+    const welcomeEmailId = await resend.sendEmail(ctx, {
       from: "Nakafa <nakafa@notifications.nakafa.com>",
       to: user.email,
       template: {
@@ -40,6 +31,9 @@ export const sendWelcomeEmail = internalMutation({
           name: user.name,
         },
       },
+    });
+    await ctx.db.patch("users", user._id, {
+      welcomeEmailId,
     });
 
     return null;

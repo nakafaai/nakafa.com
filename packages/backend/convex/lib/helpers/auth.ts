@@ -28,6 +28,14 @@ interface AuthContext {
   readonly authUser: AuthUser;
 }
 
+/** Keeps every rejected account state on the same public auth contract. */
+function accountUnavailableError() {
+  return new ConvexError({
+    code: "UNAUTHORIZED",
+    message: "User not found.",
+  });
+}
+
 /** Resolves a session and its app row without applying an activity policy. */
 async function loadOptionalAuthContext(
   ctx: QueryCtx | MutationCtx
@@ -59,13 +67,17 @@ export async function getOptionalAppUserForRead(
   return auth && auth.appUser.deletedAt === undefined ? auth : null;
 }
 
-/** Optional mutation identity that cannot write after deletion preparation. */
+/** Optional mutation identity; prepared sessions are rejected, not anonymous. */
 export async function getOptionalActiveAppUser(
   ctx: MutationCtx
 ): Promise<AuthContext | null> {
   const auth = await loadOptionalAuthContext(ctx);
 
-  return auth && !isAccountDeletionPending(auth.appUser) ? auth : null;
+  if (auth && isAccountDeletionPending(auth.appUser)) {
+    throw accountUnavailableError();
+  }
+
+  return auth;
 }
 
 /** Required query/mutation authentication with Better Auth session validation. */
@@ -76,10 +88,7 @@ export async function requireAuth(
   const appUser = await getAppUserByAuthId(ctx, authUser._id);
 
   if (!appUser || isAccountDeletionPending(appUser)) {
-    throw new ConvexError({
-      code: "UNAUTHORIZED",
-      message: "User not found.",
-    });
+    throw accountUnavailableError();
   }
 
   return { appUser, authUser };
@@ -99,10 +108,7 @@ export async function requireAuthForAction(
   );
 
   if (!appUser || isAccountDeletionPending(appUser)) {
-    throw new ConvexError({
-      code: "UNAUTHORIZED",
-      message: "User not found.",
-    });
+    throw accountUnavailableError();
   }
 
   return { appUser, authUser };

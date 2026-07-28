@@ -151,4 +151,31 @@ describe("customers/deletion/billing", () => {
     expect(state.subscriptions).toEqual([]);
     expect(state.tombstone).not.toHaveProperty("cleanupUserId");
   });
+
+  it("removes a Polar customer created after the first cleanup pass", async () => {
+    const t = convexTest(schema, convexModules);
+    posthogTest.register(t);
+    const userId = await t.mutation((ctx) =>
+      insertDeletedUser(ctx, "late-polar-sync")
+    );
+    polarGateway.getCustomerByExternalId
+      .mockReturnValueOnce(Effect.succeed(null))
+      .mockReturnValueOnce(Effect.succeed({ id: "polar-late-sync" }));
+
+    await t.action((ctx) =>
+      runConvexProgram(
+        cleanupDeletedUserBilling(ctx, userId, "original-auth-late-sync")
+      )
+    );
+    expect(polarGateway.deleteCustomer).not.toHaveBeenCalled();
+
+    await t.action((ctx) =>
+      runConvexProgram(
+        cleanupDeletedUserBilling(ctx, userId, "original-auth-late-sync")
+      )
+    );
+
+    expect(polarGateway.deleteCustomer).toHaveBeenCalledOnce();
+    expect(polarGateway.deleteCustomer).toHaveBeenCalledWith("polar-late-sync");
+  });
 });

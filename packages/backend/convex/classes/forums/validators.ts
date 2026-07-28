@@ -68,6 +68,7 @@ export const forumReactionToggleResultValidator = v.object({
 
 /** Mutation result for creating a signed forum attachment upload. */
 export const forumUploadUrlResultValidator = v.object({
+  settlementToken: v.string(),
   uploadId: vv.id("schoolClassForumPendingUploads"),
   uploadUrl: v.string(),
 });

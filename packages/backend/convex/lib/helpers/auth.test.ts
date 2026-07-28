@@ -35,13 +35,17 @@ describe("lib/helpers/auth", () => {
       const auth = await getOptionalAppUserForRead(ctx);
       return auth?.appUser._id ?? null;
     });
-    const activeMutationUserId = await authenticated.mutation(async (ctx) => {
-      const auth = await getOptionalActiveAppUser(ctx);
-      return auth?.appUser._id ?? null;
-    });
-
     expect(optionalUserId).toBe(identity.userId);
-    expect(activeMutationUserId).toBeNull();
+    await expect(
+      authenticated.mutation(async (ctx) => {
+        const auth = await getOptionalActiveAppUser(ctx);
+        return auth?.appUser._id ?? null;
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "UNAUTHORIZED",
+      },
+    });
     await expect(
       authenticated.query(async (ctx) => await requireAuth(ctx))
     ).rejects.toMatchObject({

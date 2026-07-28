@@ -8,7 +8,7 @@ import {
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
 import {
-  ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS,
+  ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
   ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE,
 } from "@repo/backend/convex/auth/deletion/constants";
 import {
@@ -163,7 +163,7 @@ export const sweepAccountDeletionRecoveryProgram: (
 
     yield* tryUserCleanup(() =>
       ctx.db.patch("accountDeletionPreparations", preparation._id, {
-        recoveryAt: now + ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS,
+        recoveryAt: now + ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
         recoveryGeneration,
       })
     );

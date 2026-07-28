@@ -1,11 +1,12 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
+import { FORUM_PENDING_UPLOAD_SETTLEMENT_WINDOW_MS } from "@repo/backend/convex/classes/forums/attachments/constants";
 import {
   deleteForumPendingUpload,
   validateForumAttachmentPolicy,
   validateForumAttachmentStorageClaim,
   validateStoredForumAttachmentMetadata,
 } from "@repo/backend/convex/classes/forums/attachments/impl";
-import { STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS } from "@repo/backend/convex/classes/forums/internalMutations";
 import { loadOpenForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/convex/classes/forums/utils/constants";
 import { forumUploadUrlResultValidator } from "@repo/backend/convex/classes/forums/validators";
@@ -13,6 +14,7 @@ import { mutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { generateId } from "@repo/backend/convex/utils/id";
 import { ConvexError, v } from "convex/values";
 
 /**
@@ -42,19 +44,22 @@ export const generateUploadUrl = mutation({
     }
 
     const uploadUrl = await ctx.storage.generateUploadUrl();
+    const settlementToken = generateId();
     const uploadId = await ctx.db.insert("schoolClassForumPendingUploads", {
       classId: forum.classId,
       forumId: forum._id,
+      settlementToken,
       uploadedBy: userId,
     });
 
     await ctx.scheduler.runAfter(
-      STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS,
+      FORUM_PENDING_UPLOAD_SETTLEMENT_WINDOW_MS,
       internal.classes.forums.internalMutations.deleteExpiredPendingUpload,
       { uploadId }
     );
 
     return {
+      settlementToken,
       uploadId,
       uploadUrl,
     };
@@ -70,25 +75,22 @@ export const saveForumUpload = mutation({
     storageId: v.id("_storage"),
     name: v.string(),
     size: v.number(),
+    settlementToken: v.string(),
     type: v.string(),
   },
   returns: vv.id("schoolClassForumPendingUploads"),
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
-    const userId = user.appUser._id;
     const upload = await ctx.db.get(
       "schoolClassForumPendingUploads",
       args.uploadId
     );
 
-    if (!upload || upload.uploadedBy !== userId) {
+    if (!upload || upload.settlementToken !== args.settlementToken) {
       throw new ConvexError({
         code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
         message: "Forum post attachment upload not found.",
       });
     }
-
-    await loadOpenForumWithAccess(ctx, upload.forumId, userId);
 
     if (
       upload.storageId === args.storageId &&
@@ -105,6 +107,32 @@ export const saveForumUpload = mutation({
         message: "Forum post attachment upload has already been finalized.",
       });
     }
+
+    const owner = await ctx.db.get("users", upload.uploadedBy);
+
+    if (!owner || isAccountDeletionPending(owner)) {
+      await runConvexProgram(
+        validateForumAttachmentStorageClaim(ctx, {
+          storageId: args.storageId,
+          uploadId: args.uploadId,
+        })
+      );
+      await ctx.storage.delete(args.storageId);
+      await ctx.db.delete("schoolClassForumPendingUploads", upload._id);
+      return args.uploadId;
+    }
+
+    const user = await requireAuth(ctx);
+    const userId = user.appUser._id;
+
+    if (upload.uploadedBy !== userId) {
+      throw new ConvexError({
+        code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
+        message: "Forum post attachment upload not found.",
+      });
+    }
+
+    await loadOpenForumWithAccess(ctx, upload.forumId, userId);
 
     await runConvexProgram(
       validateForumAttachmentPolicy({

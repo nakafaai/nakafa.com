@@ -18,7 +18,12 @@ export const ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE = 50;
 
 export const ACCOUNT_DELETION_RECOVERY_DELAY_MS = 15 * 60 * 1000;
 
-export const ACCOUNT_DELETION_RECOVERY_RETRY_DELAY_MS = 60 * 60 * 1000;
+/**
+ * Reconciles external writes after every already-running Convex action must
+ * have settled.
+ * @see https://docs.convex.dev/production/state/limits#execution-time-and-scheduling
+ */
+export const ACCOUNT_DELETION_RECONCILIATION_DELAY_MS = 60 * 60 * 1000;
 
 export const ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE = 20;
 

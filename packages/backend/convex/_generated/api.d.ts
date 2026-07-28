@@ -105,6 +105,7 @@ import type * as chats_traces_spec from "../chats/traces/spec.js";
 import type * as chats_utils from "../chats/utils.js";
 import type * as classes_constants from "../classes/constants.js";
 import type * as classes_forums_aggregate from "../classes/forums/aggregate.js";
+import type * as classes_forums_attachments_constants from "../classes/forums/attachments/constants.js";
 import type * as classes_forums_attachments_impl from "../classes/forums/attachments/impl.js";
 import type * as classes_forums_attachments_spec from "../classes/forums/attachments/spec.js";
 import type * as classes_forums_cleanup from "../classes/forums/cleanup.js";
@@ -359,6 +360,7 @@ import type * as customers_queries_internal_customer from "../customers/queries/
 import type * as customers_records from "../customers/records.js";
 import type * as customers_sync_impl from "../customers/sync/impl.js";
 import type * as customers_sync_spec from "../customers/sync/spec.js";
+import type * as emails_deletion from "../emails/deletion.js";
 import type * as emails_mutations from "../emails/mutations.js";
 import type * as functions from "../functions.js";
 import type * as http from "../http.js";
@@ -591,6 +593,7 @@ declare const fullApi: ApiFromModules<{
   "chats/utils": typeof chats_utils;
   "classes/constants": typeof classes_constants;
   "classes/forums/aggregate": typeof classes_forums_aggregate;
+  "classes/forums/attachments/constants": typeof classes_forums_attachments_constants;
   "classes/forums/attachments/impl": typeof classes_forums_attachments_impl;
   "classes/forums/attachments/spec": typeof classes_forums_attachments_spec;
   "classes/forums/cleanup": typeof classes_forums_cleanup;
@@ -845,6 +848,7 @@ declare const fullApi: ApiFromModules<{
   "customers/records": typeof customers_records;
   "customers/sync/impl": typeof customers_sync_impl;
   "customers/sync/spec": typeof customers_sync_spec;
+  "emails/deletion": typeof emails_deletion;
   "emails/mutations": typeof emails_mutations;
   functions: typeof functions;
   http: typeof http;
