@@ -7,6 +7,7 @@ import {
   contentSearchResultValidator,
 } from "@repo/backend/convex/contents/helpers/search/schema";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import { Effect } from "effect";
 
 /**
@@ -24,7 +25,10 @@ export const search = query({
   /** Runs a bounded section-aware search over the durable content read model. */
   handler: (ctx, args) => {
     const queryTexts = validateContentSearchInput(args);
-    const scanLimit = args.offset + args.limit + 1;
+    const scanLimit = Math.min(
+      args.offset + args.limit + 1,
+      NAKAFA_AGENT_SEARCH_WINDOW
+    );
     return runConvexProgram(
       readContentSearchDocuments(ctx, args, queryTexts, scanLimit).pipe(
         Effect.map((documents) =>

@@ -112,10 +112,10 @@ function toSourceMaterialRoute(
   });
 }
 
-/** Builds plain or context-preserving pagination for published siblings. */
+/** Builds sibling pagination with one optional context-aware href resolver. */
 function readPublishedPagination(
   page: MaterialPageSource,
-  context: MaterialContextIdentity | undefined
+  toHref?: (target: MaterialProjectionWire) => string
 ): ContentPagination {
   const current = page.route;
   const siblings = Array.from(page.siblings).sort(
@@ -134,9 +134,8 @@ function readPublishedPagination(
     if (!target) {
       return emptyItem;
     }
-    const href = toMaterialHref(target);
     return {
-      href: toContextualMaterialHref({ href, ref: context }),
+      href: toHref?.(target) ?? toMaterialHref(target),
       title: target.metadata.title,
     };
   };
@@ -184,7 +183,7 @@ export async function readMaterialNavigation(
     return {
       context: undefined,
       link: undefined,
-      pagination: readPublishedPagination(page, undefined),
+      pagination: readPublishedPagination(page),
     };
   }
   const published = await getPublishedMaterialContext(
@@ -196,18 +195,39 @@ export async function readMaterialNavigation(
     const index = readStaticPublicLearningIndex();
     const route = toSourceMaterialRoute(page.route);
     const link = index.resolveMaterialHeaderLink({ context, route });
+    const toHref = link
+      ? (target: MaterialProjectionWire) =>
+          index.toContextualMaterialHref({
+            context,
+            href: toMaterialHref(target),
+            route: toSourceMaterialRoute(target),
+          })
+      : undefined;
     return {
       context: link ? context : undefined,
       link,
-      pagination: readPublishedPagination(page, link ? context : undefined),
+      pagination: readPublishedPagination(page, toHref),
     };
   }
-  const validContext = published.value?.context;
+  const valid = published.value;
+  const validContext = valid?.context;
+  const toHref = valid
+    ? (target: MaterialProjectionWire) => {
+        const href = toMaterialHref(target);
+        if (
+          !(
+            valid.mapping.canonicalPath === target.publicPath ||
+            valid.mapping.canonicalPath === target.parentPath
+          )
+        ) {
+          return href;
+        }
+        return toContextualMaterialHref({ href, ref: valid.context });
+      }
+    : undefined;
   return {
     context: validContext,
-    link: published.value
-      ? { href: published.value.href, label: published.value.label }
-      : undefined,
-    pagination: readPublishedPagination(page, validContext ?? undefined),
+    link: valid ? { href: valid.href, label: valid.label } : undefined,
+    pagination: readPublishedPagination(page, toHref),
   };
 }

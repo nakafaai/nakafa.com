@@ -277,6 +277,7 @@ describe("material lesson navigation", () => {
         group: {},
         href: "/en/curriculum/merdeka#functions",
         label: "Functions",
+        mapping: { canonicalPath: previewProjection.parentPath },
         parent: {},
       },
     });
@@ -300,6 +301,29 @@ describe("material lesson navigation", () => {
       previewProjection,
       context
     );
+  });
+
+  it("keeps an exact lesson context off sibling links", async () => {
+    mocks.getPublishedMaterialContext.mockResolvedValue({
+      managed: true,
+      value: {
+        context,
+        group: {},
+        href: "/en/curriculum/merdeka#functions",
+        label: "Functions",
+        mapping: { canonicalPath: previewProjection.publicPath },
+        parent: {},
+      },
+    });
+
+    await expect(
+      readMaterialNavigation(publishedPage, context)
+    ).resolves.toMatchObject({
+      context,
+      pagination: {
+        next: { href: toMaterialHref(previewNextProjection) },
+      },
+    });
   });
 
   it("drops a stale published context and keeps canonical pagination", async () => {

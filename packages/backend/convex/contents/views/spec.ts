@@ -15,8 +15,8 @@ export const recordContentViewArgs = {
   context: v.optional(learningContextInputValidator),
   deviceId: v.string(),
   locale: localeValidator,
-  publicPath: v.string(),
-  section: nakafaSectionValidator,
+  publicPath: v.optional(v.string()),
+  section: v.optional(nakafaSectionValidator),
 };
 
 export const recordContentViewArgsValidator = v.object(recordContentViewArgs);

@@ -45,8 +45,9 @@ function getQuranIndexText(locale: Locale) {
   return Effect.gen(function* () {
     const surahs = yield* getRuntimeQuranSurahs();
     const scanned = buildHeader({
-      url: `${BASE_URL}/${locale}/quran`,
       description: "Al-Quran - List of all 114 Surahs in the Holy Quran.",
+      title: "Al-Quran",
+      url: `${BASE_URL}/${locale}/quran`,
     });
 
     for (const surah of surahs) {
@@ -85,8 +86,9 @@ function getSurahLlmsText({
     const title = getQuranSurahName({ locale, name: surah.name });
     const translation = surah.name.translation[locale];
     const scanned = buildHeader({
-      url: `${BASE_URL}/${locale}/quran/${surahNumber}`,
       description: `Al-Quran - Surah ${title} (${translation})`,
+      title,
+      url: `${BASE_URL}/${locale}/quran/${surahNumber}`,
     });
 
     scanned.push(`## ${title}`);

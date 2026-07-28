@@ -70,7 +70,9 @@ describe("quran llms text", () => {
       })
     );
 
+    expect(indexText?.startsWith("# Al-Quran")).toBe(true);
     expect(indexText).toContain("## 1. Al-Faatiha");
+    expect(firstSurahText?.startsWith("# Al-Faatiha")).toBe(true);
     expect(firstSurahText).toContain("### Pre-Bismillah");
     expect(firstSurahText).toContain("### Verses");
     expect(firstSurahText).toContain("#### Verse 1");

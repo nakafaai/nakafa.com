@@ -73,6 +73,9 @@ describe("published material context", () => {
           "/en/curriculum/merdeka/class-11/mathematics#"
         ),
         label: "Function Composition and Inverses",
+        mapping: {
+          canonicalPath: mapping.canonicalPath,
+        },
         parent: {
           nodeKey: testProgramSubject.nodeKey,
           publicPath: testProgramSubject.publicPath,

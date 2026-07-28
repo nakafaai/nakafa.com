@@ -6,6 +6,21 @@ export type ContentSearchDocument = Infer<
   typeof contentSearchDocumentValidator
 >;
 
+/** Distributes one read budget fairly across a fixed number of groups. */
+export function allocateSearchLimits(total: number, groupCount: number) {
+  if (total <= 0 || groupCount <= 0) {
+    return [];
+  }
+
+  const base = Math.floor(total / groupCount);
+  const remainder = total % groupCount;
+
+  return Array.from(
+    { length: groupCount },
+    (_, index) => base + (index < remainder ? 1 : 0)
+  );
+}
+
 /** Merges ranked groups while preserving first-seen relevance order. */
 export function appendSearchGroups(
   groups: readonly (readonly ContentSearchDocument[])[]

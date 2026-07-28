@@ -17,10 +17,11 @@ describe("llms formatting helpers", () => {
         description: "Description",
         source:
           "packages/contents/articles/politics/dynastic-politics-asian-values/en.mdx",
+        title: "Dynastic Politics",
         url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
       })
     ).toStrictEqual([
-      "# Nakafa Learning Content",
+      "# Dynastic Politics",
       "",
       AGENT_MARKDOWN_DIRECTIVE,
       "",
@@ -36,6 +37,7 @@ describe("llms formatting helpers", () => {
     expect(
       buildHeader({
         description: "Description",
+        title: "Dynastic Politics",
         url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
       })
     ).not.toContain("Source:");

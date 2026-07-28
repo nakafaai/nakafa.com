@@ -1,13 +1,14 @@
 import {
+  NakafaAgentContentSummarySchema,
+  NakafaAgentSectionSchema,
+} from "@repo/contents/_lib/agent/schema/ref";
+import {
   NAKAFA_AGENT_DEFAULT_LIMIT,
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,
   NAKAFA_AGENT_MAX_QUERIES,
-} from "@repo/contents/_lib/agent/constants";
-import {
-  NakafaAgentContentSummarySchema,
-  NakafaAgentSectionSchema,
-} from "@repo/contents/_lib/agent/schema/ref";
+  NAKAFA_AGENT_SEARCH_WINDOW,
+} from "@repo/contents/_types/agent/search";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { Schema } from "effect";
@@ -55,6 +56,15 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
     })
   ),
 })
+  .pipe(
+    Schema.filter(
+      ({ limit, offset }) => limit + offset <= NAKAFA_AGENT_SEARCH_WINDOW,
+      {
+        message: () =>
+          `Search offset and limit must stay within the first ${NAKAFA_AGENT_SEARCH_WINDOW} results.`,
+      }
+    )
+  )
   .pipe(Schema.mutable)
   .annotations({ description: "Nakafa content search options." });
 

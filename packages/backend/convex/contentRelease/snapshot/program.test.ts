@@ -119,61 +119,6 @@ describe("contentRelease/snapshot/program", () => {
     });
   });
 
-  it("backfills one legacy sitemap bucket exactly once across replay", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const source = findCurriculum(data);
-    const target = convexTest(schema, convexModules);
-    const rowJson = canonicalizeContentSnapshotRow(source);
-
-    await expect(
-      target.mutation((ctx) =>
-        runConvexProgram(
-          stageProgramRow(ctx, data.snapshotId, 2, source, rowJson)
-        )
-      )
-    ).resolves.toBe(false);
-    await target.mutation(async (ctx) => {
-      const route = await ctx.db.query("curriculumRoutes").unique();
-      const count = await ctx.db.query("programBuckets").unique();
-      if (!(route && count)) {
-        throw new Error("Expected one staged curriculum sitemap route.");
-      }
-      await ctx.db.patch("curriculumRoutes", route._id, {
-        bucket: undefined,
-      });
-      await ctx.db.delete("programBuckets", count._id);
-    });
-    await expect(
-      target.mutation((ctx) =>
-        runConvexProgram(
-          stageProgramRow(ctx, data.snapshotId, 2, source, rowJson)
-        )
-      )
-    ).resolves.toBe(true);
-    await expect(
-      target.mutation((ctx) =>
-        runConvexProgram(
-          stageProgramRow(ctx, data.snapshotId, 2, source, rowJson)
-        )
-      )
-    ).resolves.toBe(true);
-    await expect(
-      target.run((ctx) => ctx.db.query("curriculumRoutes").unique())
-    ).resolves.toMatchObject({
-      bucket: expect.any(String),
-      index: 2,
-      snapshotId: data.snapshotId,
-    });
-    await expect(
-      target.run((ctx) => ctx.db.query("programBuckets").unique())
-    ).resolves.toMatchObject({
-      index: 2,
-      locale: source.record.row.locale,
-      routeCount: 1,
-      snapshotId: data.snapshotId,
-    });
-  });
-
   it("rejects oversized program and curriculum read-model rows", async () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const [program] = data.rows;

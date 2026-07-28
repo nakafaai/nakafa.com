@@ -10,16 +10,18 @@ export const AGENT_MARKDOWN_DIRECTIVE = `> For AI agents: use [llms.txt](${BASE_
 
 /** Builds the common markdown header used by page-level llms output. */
 export function buildHeader({
-  url,
   description,
   source,
+  title,
+  url,
 }: {
-  url: string;
   description: string;
   source?: string;
+  title: string;
+  url: string;
 }) {
   const header = [
-    "# Nakafa Learning Content",
+    `# ${title}`,
     "",
     AGENT_MARKDOWN_DIRECTIVE,
     "",

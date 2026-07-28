@@ -42,10 +42,54 @@ export type ContentViewTarget = Infer<typeof contentViewTargetValidator>;
 /** Stable identity used to resolve a current content-view target. */
 export type ContentViewTargetInput = Pick<
   RecordContentViewArgs,
-  "contentId" | "locale" | "section"
+  "contentId" | "locale" | "publicPath" | "section"
+>;
+
+type ResolvedContentViewTargetInput = Omit<
+  ContentViewTargetInput,
+  "section"
 > & {
-  readonly publicPath?: string;
+  readonly section: NonNullable<ContentViewTargetInput["section"]>;
 };
+
+/**
+ * Resolves the deployed argument shape into the current exact route identity.
+ *
+ * The optional branch exists only for the expand phase while already-open
+ * clients still send the previous content-view arguments.
+ */
+const resolveContentViewTargetInput = Effect.fn(
+  "contents.views.resolveContentViewTargetInput"
+)(function* (ctx: QueryCtx, input: ContentViewTargetInput) {
+  if (input.section !== undefined) {
+    return {
+      ...input,
+      section: input.section,
+    } satisfies ResolvedContentViewTargetInput;
+  }
+  if (input.publicPath !== undefined) {
+    return null;
+  }
+  const route = yield* Effect.tryPromise({
+    try: () =>
+      ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (query) =>
+          query.eq("content_id", input.contentId)
+        )
+        .unique(),
+    catch: toContentViewIoError,
+  });
+  if (!route || route.locale !== input.locale) {
+    return null;
+  }
+  return {
+    contentId: input.contentId,
+    locale: input.locale,
+    publicPath: route.route,
+    section: route.section,
+  } satisfies ResolvedContentViewTargetInput;
+});
 
 /** Reads the source-owned material domain from one stable material key. */
 function readMaterialDomain(materialKey: string): Material | undefined {
@@ -241,18 +285,22 @@ const readSourceTarget = Effect.fn("contents.views.readSourceTarget")(
 /** Resolves the current family-owned target without reviving deleted content. */
 export const loadContentTarget = Effect.fn("contents.views.loadContentTarget")(
   function* (ctx: QueryCtx, input: ContentViewTargetInput) {
-    if (input.section === "material") {
-      const material = yield* readMaterialTarget(ctx, input);
+    const resolved = yield* resolveContentViewTargetInput(ctx, input);
+    if (!resolved) {
+      return null;
+    }
+    if (resolved.section === "material") {
+      const material = yield* readMaterialTarget(ctx, resolved);
       if (material.managed) {
         return material.target;
       }
     }
-    if (input.section === "articles") {
-      const article = yield* readArticleTarget(ctx, input);
+    if (resolved.section === "articles") {
+      const article = yield* readArticleTarget(ctx, resolved);
       if (article.managed) {
         return article.target;
       }
     }
-    return yield* readSourceTarget(ctx, input);
+    return yield* readSourceTarget(ctx, resolved);
   }
 );
