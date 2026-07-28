@@ -1,6 +1,10 @@
 "use client";
 
 import { analytics } from "@repo/analytics/posthog";
+import {
+  authorizeAnalyticsIdentity,
+  revokeAnalyticsIdentity,
+} from "@repo/analytics/posthog/identity";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth } from "convex/react";
@@ -51,6 +55,8 @@ export function UserContextProvider({
     : null;
 
   useEffect(() => {
+    revokeAnalyticsIdentity();
+
     if (isPending) {
       return;
     }
@@ -74,6 +80,10 @@ export function UserContextProvider({
       return;
     }
 
+    if (trackedUserId && trackedUserId !== userId) {
+      analytics.reset();
+    }
+
     const roleProperties = userRole ? { role: userRole } : {};
     const personProperties = {
       email: userEmail,
@@ -85,12 +95,15 @@ export function UserContextProvider({
       signed_up_at: signedUpAt,
     };
 
-    if (trackedUserId !== userId) {
+    authorizeAnalyticsIdentity(userId);
+
+    if (trackedUserId === userId) {
+      analytics.setPersonProperties(personProperties, setOnceProperties);
+    } else {
       analytics.identify(userId, personProperties, setOnceProperties);
-      return;
     }
 
-    analytics.setPersonProperties(personProperties, setOnceProperties);
+    return revokeAnalyticsIdentity;
   }, [isPending, signedUpAt, userEmail, userId, userName, userPlan, userRole]);
 
   const contextValue = {
