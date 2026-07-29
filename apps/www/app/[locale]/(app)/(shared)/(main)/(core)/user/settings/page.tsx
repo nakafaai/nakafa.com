@@ -1,9 +1,12 @@
 import { api } from "@repo/backend/convex/_generated/api";
+import { redirect } from "@repo/internationalization/src/navigation";
+import { Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile-page";
-import { preloadAuthQuery } from "@/lib/auth/server";
+import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/server";
+import { getToken, preloadAuthQuery } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export async function generateMetadata({
@@ -23,20 +26,56 @@ export async function generateMetadata({
 export default async function Page({
   params,
 }: PageProps<"/[locale]/user/settings">) {
-  const locale = getLocaleOrThrow((await params).locale);
-  const [preloadedPrograms, preloadedPreference] = await Promise.all([
-    preloadAuthQuery(api.learningPreferences.queries.listCurriculumPrograms, {
-      locale,
-    }),
-    preloadAuthQuery(api.learningPreferences.queries.getCurrent, { locale }),
+  const [{ locale: rawLocale }, token] = await Promise.all([
+    params,
+    getToken(),
   ]);
+  const locale = getLocaleOrThrow(rawLocale);
+
+  if (!token) {
+    redirect({ href: "/auth", locale });
+    return null;
+  }
+
+  const curriculum = await Effect.runPromise(
+    Effect.all(
+      {
+        preloadedPreference: Effect.tryPromise(() =>
+          preloadAuthQuery(api.learningPreferences.queries.getCurrent, {
+            locale,
+          })
+        ),
+        preloadedPrograms: Effect.tryPromise(() =>
+          preloadAuthQuery(
+            api.learningPreferences.queries.listCurriculumPrograms,
+            { locale }
+          )
+        ),
+      },
+      { concurrency: "unbounded" }
+    ).pipe(
+      Effect.map(Option.some),
+      Effect.catchTag("UnknownException", (error) =>
+        Effect.sync(() =>
+          scheduleCurrentServerExceptionCapture(error.error, {
+            source: "user-settings-curriculum-preload",
+          })
+        ).pipe(Effect.as(Option.none()))
+      )
+    )
+  );
 
   return (
     <UserSettingsProfilePage>
-      <UserSettingsCurriculum
-        preloadedPreference={preloadedPreference}
-        preloadedPrograms={preloadedPrograms}
-      />
+      {Option.match(curriculum, {
+        onNone: () => null,
+        onSome: ({ preloadedPreference, preloadedPrograms }) => (
+          <UserSettingsCurriculum
+            preloadedPreference={preloadedPreference}
+            preloadedPrograms={preloadedPrograms}
+          />
+        ),
+      })}
     </UserSettingsProfilePage>
   );
 }
