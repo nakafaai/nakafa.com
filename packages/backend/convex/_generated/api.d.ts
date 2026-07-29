@@ -348,6 +348,7 @@ import type * as contents_views_context from "../contents/views/context.js";
 import type * as contents_views_impl from "../contents/views/impl.js";
 import type * as contents_views_recent from "../contents/views/recent.js";
 import type * as contents_views_signals from "../contents/views/signals.js";
+import type * as contents_views_source from "../contents/views/source.js";
 import type * as contents_views_spec from "../contents/views/spec.js";
 import type * as contents_views_target from "../contents/views/target.js";
 import type * as credits_constants from "../credits/constants.js";
@@ -858,6 +859,7 @@ declare const fullApi: ApiFromModules<{
   "contents/views/impl": typeof contents_views_impl;
   "contents/views/recent": typeof contents_views_recent;
   "contents/views/signals": typeof contents_views_signals;
+  "contents/views/source": typeof contents_views_source;
   "contents/views/spec": typeof contents_views_spec;
   "contents/views/target": typeof contents_views_target;
   "credits/constants": typeof credits_constants;
