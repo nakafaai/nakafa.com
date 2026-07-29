@@ -1,17 +1,13 @@
 "use client";
 
-import { Effect } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import { saveAiDraftText } from "@/components/ai/store/draft";
 import { initialState } from "@/components/ai/store/state";
 import type { AiStore } from "@/components/ai/store/types";
 
-type ReadDraftOwnerId = () => string | null | undefined;
-
 /** Creates one scoped Zustand store for Nina UI state. */
-export function createAiStore(readDraftOwnerId: ReadDraftOwnerId) {
+export function createAiStore() {
   return createStore<AiStore>()(
     persist(
       immer((set, get) => ({
@@ -22,10 +18,7 @@ export function createAiStore(readDraftOwnerId: ReadDraftOwnerId) {
         setContextTitle: (contextTitle) => set({ contextTitle }),
         setModel: (model) => set({ model }),
         setOpen: (open) => set({ open }),
-        setText: (text) => {
-          set({ text });
-          Effect.runSync(saveAiDraftText(text, readDraftOwnerId()));
-        },
+        setText: (text) => set({ text }),
       })),
       {
         name: "nakafa-ai",

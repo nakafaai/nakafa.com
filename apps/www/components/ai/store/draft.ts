@@ -89,5 +89,21 @@ export function readAiDraftText(ownerId: string | null) {
   );
 }
 
+/**
+ * Keeps text entered during session resolution ahead of an older saved draft.
+ */
+export function resolveAiDraftText(
+  pendingText: string,
+  ownerId: string | null
+) {
+  if (pendingText.length > 0) {
+    return saveAiDraftText(pendingText, ownerId).pipe(
+      Effect.as<string | null>(pendingText)
+    );
+  }
+
+  return readAiDraftText(ownerId);
+}
+
 /** Clears the current tab's Nina draft without interrupting sign-out. */
 export const clearAiDraftText = saveAiDraftText("", null);

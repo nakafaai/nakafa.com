@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   clearAiDraftText,
   readAiDraftText,
+  resolveAiDraftText,
   saveAiDraftText,
 } from "@/components/ai/store/draft";
 
@@ -42,6 +43,18 @@ describe("ai/store/draft", () => {
     expect(Effect.runSync(readAiDraftText("learner-a"))).toBe(
       "Legacy question"
     );
+  });
+
+  it("keeps newer input entered while account ownership resolves", () => {
+    Effect.runSync(saveAiDraftText("Older question", "learner-a"));
+
+    expect(Effect.runSync(resolveAiDraftText("", "learner-a"))).toBe(
+      "Older question"
+    );
+    expect(
+      Effect.runSync(resolveAiDraftText("Newer question", "learner-a"))
+    ).toBe("Newer question");
+    expect(Effect.runSync(readAiDraftText("learner-a"))).toBe("Newer question");
   });
 
   it("clears a draft when another account owns it", () => {
