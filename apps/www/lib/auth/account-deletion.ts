@@ -2,6 +2,7 @@ import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
   ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
+  ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
 } from "@repo/backend/convex/auth/deletion/constants";
 import {
   type AccountDeletionAttemptStatus,
@@ -146,7 +147,10 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
       });
     }
 
-    if (result.error.code === ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE) {
+    if (
+      result.error.code === ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE ||
+      result.error.code === ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE
+    ) {
       yield* resetPreparedAttempt();
       return yield* new AccountDeletionRequestUncertain({
         attemptId,

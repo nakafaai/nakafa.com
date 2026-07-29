@@ -1,6 +1,7 @@
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
+  ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
 } from "@repo/backend/convex/auth/deletion/constants";
 import {
   accountDeletionAttemptStatus,
@@ -238,6 +239,31 @@ describe("account deletion", () => {
       cancelPreparation,
       clearAttempt,
       request: requestFailure(ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE),
+    });
+
+    expect(failure).toMatchObject({
+      _tag: "AccountDeletionRequestUncertain",
+      attemptId: ATTEMPT_ID,
+      phase: accountDeletionRequestPhase.preparation,
+    });
+    expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
+    expect(clearAttempt).toHaveBeenCalledOnce();
+  });
+
+  it("rotates an attempt canceled by background recovery", async () => {
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
+    const clearAttempt = vi.fn(() => Effect.void);
+    const failure = await runDeletionFailure({
+      attempt: {
+        attemptId: ATTEMPT_ID,
+        phase: accountDeletionRequestPhase.deletion,
+        userId: USER_ID,
+      },
+      cancelPreparation,
+      clearAttempt,
+      request: requestFailure(ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE),
     });
 
     expect(failure).toMatchObject({
