@@ -1,6 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -11,21 +10,8 @@ import {
 } from "@repo/backend/convex/contentRelease/material/write";
 import { loadReleaseItems } from "@repo/backend/convex/contentRelease/model";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
-import { progressValidator } from "@repo/backend/convex/contentRelease/spec";
 import { loadSyncRelease } from "@repo/backend/convex/contentRelease/sync";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { makeFunctionReference } from "convex/server";
-import type { Infer } from "convex/values";
-import { v } from "convex/values";
 import { Effect } from "effect";
-
-type ModelProgress = Infer<typeof progressValidator>;
-
-const resumeReference = makeFunctionReference<
-  "mutation",
-  { releaseId: string },
-  ModelProgress
->("contentRelease/material/sync:resume");
 
 /** Synchronizes one exact identity into the active material read model. */
 const syncMaterialIdentity = Effect.fn("contentRelease.syncMaterialIdentity")(
@@ -183,29 +169,3 @@ export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
     return { done, nextIndex, processed };
   }
 );
-
-/** Runs one bounded material-model page for the lifecycle action. */
-export const page = internalMutation({
-  args: { releaseId: v.string() },
-  returns: progressValidator,
-  handler: (ctx, { releaseId }) =>
-    runConvexProgram(syncMaterials(ctx, releaseId)),
-});
-
-/** Durably resumes material indexing until the active release is complete. */
-export const resume = internalMutation({
-  args: { releaseId: v.string() },
-  returns: progressValidator,
-  handler: (ctx, { releaseId }) =>
-    runConvexProgram(
-      Effect.gen(function* () {
-        const result = yield* syncMaterials(ctx, releaseId);
-        if (!result.done) {
-          yield* Effect.promise(() =>
-            ctx.scheduler.runAfter(0, resumeReference, { releaseId })
-          );
-        }
-        return result;
-      })
-    ),
-});

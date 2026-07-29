@@ -197,6 +197,8 @@ const tables = {
     searchSyncedAt: v.optional(v.number()),
     sequence: v.number(),
     status: releaseStatusValidator,
+    syncGeneration: v.optional(v.number()),
+    syncJobId: v.optional(v.id("_scheduled_functions")),
     updatedAt: v.number(),
     verifiedAt: v.optional(v.number()),
     ...releaseProgress,

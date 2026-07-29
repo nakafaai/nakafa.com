@@ -22,6 +22,27 @@ const convexClock: Clock.Clock = {
   unsafeCurrentTimeNanos: () => BigInt(Date.now()) * nanosPerMillisecond,
 };
 
+/** Resolves one Effect exit into the stable Convex boundary behavior. */
+function resolveConvexExit<A, E extends ConvexTaggedError>(
+  exit: Exit.Exit<A, E>
+) {
+  return Exit.match(exit, {
+    onFailure: (cause) => {
+      const failure = Cause.failureOption(cause);
+
+      if (Option.isSome(failure)) {
+        throw new ConvexError({
+          code: failure.value.code,
+          message: failure.value.message,
+        });
+      }
+
+      throw Cause.squash(cause);
+    },
+    onSuccess: (value) => value,
+  });
+}
+
 /**
  * Runs one local Effect program at a native Convex handler seam.
  *
@@ -41,21 +62,21 @@ export async function runConvexProgram<A, E extends ConvexTaggedError>(
     Effect.withClock(program, convexClock)
   );
 
-  return Exit.match(exit, {
-    onFailure: (cause) => {
-      const failure = Cause.failureOption(cause);
+  return resolveConvexExit(exit);
+}
 
-      if (Option.isSome(failure)) {
-        throw new ConvexError({
-          code: failure.value.code,
-          message: failure.value.message,
-        });
-      }
-
-      throw Cause.squash(cause);
-    },
-    onSuccess: (value) => value,
-  });
+/**
+ * Runs one Effect program at the Node Convex action boundary.
+ *
+ * Node actions support Effect's live clock, including bounded sleeps used to
+ * observe durable scheduled mutations. Native queries and mutations continue
+ * to use the Date-backed boundary above.
+ */
+export async function runConvexActionProgram<A, E extends ConvexTaggedError>(
+  program: Effect.Effect<A, E, never>
+) {
+  const exit = await Effect.runPromiseExit(program);
+  return resolveConvexExit(exit);
 }
 
 /** Converts an unknown thrown value into a stable message for tagged errors. */

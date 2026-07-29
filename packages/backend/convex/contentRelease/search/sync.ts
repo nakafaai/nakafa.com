@@ -1,6 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
@@ -15,21 +14,8 @@ import {
   deleteSearchEntry,
   writeSearchEntry,
 } from "@repo/backend/convex/contentRelease/search/write";
-import { progressValidator } from "@repo/backend/convex/contentRelease/spec";
 import { loadSyncRelease } from "@repo/backend/convex/contentRelease/sync";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { makeFunctionReference } from "convex/server";
-import type { Infer } from "convex/values";
-import { v } from "convex/values";
 import { Effect } from "effect";
-
-type ModelProgress = Infer<typeof progressValidator>;
-
-const resumeReference = makeFunctionReference<
-  "mutation",
-  { releaseId: string },
-  ModelProgress
->("contentRelease/search/sync:resume");
 
 /** Loads the signed artifact selected by one active public projection. */
 const loadSearchArtifact = Effect.fn("contentRelease.loadSearchArtifact")(
@@ -160,29 +146,4 @@ export const syncSearch = Effect.fn("contentRelease.syncSearch")(function* (
     );
   }
   return { done, nextIndex, processed: page.page.length };
-});
-
-/** Runs one bounded search-model page for the authenticated lifecycle action. */
-export const page = internalMutation({
-  args: { releaseId: v.string() },
-  returns: progressValidator,
-  handler: (ctx, { releaseId }) => runConvexProgram(syncSearch(ctx, releaseId)),
-});
-
-/** Durably resumes search indexing until the active release is complete. */
-export const resume = internalMutation({
-  args: { releaseId: v.string() },
-  returns: progressValidator,
-  handler: (ctx, { releaseId }) =>
-    runConvexProgram(
-      Effect.gen(function* () {
-        const result = yield* syncSearch(ctx, releaseId);
-        if (!result.done) {
-          yield* Effect.promise(() =>
-            ctx.scheduler.runAfter(0, resumeReference, { releaseId })
-          );
-        }
-        return result;
-      })
-    ),
 });
