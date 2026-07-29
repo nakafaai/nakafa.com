@@ -105,40 +105,42 @@ export const upsertPolarSubscriptionWebhook: (
   ctx: ActionCtx,
   subscription: SubscriptionRecord,
   operation: SubscriptionWebhookOperation
-) => Effect.Effect<void, PolarWebhookFailure> = Effect.fn(
-  "customers.polar.upsertWebhookSubscription"
-)(function* (
-  ctx: ActionCtx,
-  subscription: SubscriptionRecord,
-  operation: SubscriptionWebhookOperation
-) {
-  const customer = yield* polarGateway.getCustomerById(subscription.customerId);
+) => Effect.Effect<PolarCustomerWebhookDisposition, PolarWebhookFailure> =
+  Effect.fn("customers.polar.upsertWebhookSubscription")(function* (
+    ctx: ActionCtx,
+    subscription: SubscriptionRecord,
+    operation: SubscriptionWebhookOperation
+  ) {
+    const customer = yield* polarGateway.getCustomerById(
+      subscription.customerId
+    );
 
-  if (!customer) {
-    return;
-  }
+    if (!customer) {
+      return "discarded";
+    }
 
-  const disposition = yield* upsertPolarCustomerWebhook(ctx, customer);
+    const disposition = yield* upsertPolarCustomerWebhook(ctx, customer);
 
-  if (disposition !== "stored") {
-    return;
-  }
+    if (disposition !== "stored") {
+      return disposition;
+    }
 
-  if (operation === "create") {
+    if (operation === "create") {
+      yield* tryPolarWebhook(() =>
+        ctx.runMutation(internal.subscriptions.mutations.createSubscription, {
+          subscription,
+        })
+      );
+      return "stored";
+    }
+
     yield* tryPolarWebhook(() =>
-      ctx.runMutation(internal.subscriptions.mutations.createSubscription, {
+      ctx.runMutation(internal.subscriptions.mutations.updateSubscription, {
         subscription,
       })
     );
-    return;
-  }
-
-  yield* tryPolarWebhook(() =>
-    ctx.runMutation(internal.subscriptions.mutations.updateSubscription, {
-      subscription,
-    })
-  );
-});
+    return "stored";
+  });
 
 /** Drains local state for one terminal Polar customer deletion. */
 const deletePolarCustomerWebhook: (
@@ -177,12 +179,12 @@ export const processPolarWebhookEvent: (
       return true;
     }
     case "subscription.created": {
-      yield* upsertPolarSubscriptionWebhook(
+      const disposition = yield* upsertPolarSubscriptionWebhook(
         ctx,
         convertToDatabaseSubscription(event.data),
         "create"
       );
-      return true;
+      return disposition !== "missing";
     }
     case "subscription.updated":
     case "subscription.active":
@@ -190,12 +192,12 @@ export const processPolarWebhookEvent: (
     case "subscription.past_due":
     case "subscription.uncanceled":
     case "subscription.revoked": {
-      yield* upsertPolarSubscriptionWebhook(
+      const disposition = yield* upsertPolarSubscriptionWebhook(
         ctx,
         convertToDatabaseSubscription(event.data),
         "update"
       );
-      return true;
+      return disposition !== "missing";
     }
     default: {
       return true;
