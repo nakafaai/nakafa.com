@@ -6,9 +6,12 @@ import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/requ
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
-import { decodeRendererJson } from "@repo/backend/convex/contentRelease/parse";
+import {
+  decodeProofJson,
+  decodeRendererJson,
+} from "@repo/backend/convex/contentRelease/parse";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
-import { recomputeProgram } from "@repo/backend/convex/contentRelease/proof/verify";
+import type { proofPollValidator } from "@repo/backend/convex/contentRelease/proof/spec";
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import type {
   abortReceiptValidator,
@@ -41,6 +44,7 @@ interface StoredEnvelope {
 }
 type AbortReceipt = Infer<typeof abortReceiptValidator>;
 type ModelProgress = Infer<typeof progressValidator>;
+type ProofPoll = Infer<typeof proofPollValidator>;
 type PublicationReceipt = Infer<typeof publicationReceiptValidator>;
 const envelopeReference = makeFunctionReference<
   "query",
@@ -82,6 +86,11 @@ const materialSyncReference = makeFunctionReference<
   { releaseId: string },
   ModelProgress
 >("contentRelease/material/sync:page");
+const proofPollReference = makeFunctionReference<
+  "mutation",
+  { manifestHash: string; releaseId: string },
+  ProofPoll
+>("contentRelease/proof/poll:poll");
 
 /** Authenticates one lifecycle request and its immutable release identity. */
 function verifyRequest(request: SignedRequest) {
@@ -161,8 +170,35 @@ export const advancePublication = Effect.fn(
   const release = yield* verifyRequest(request);
   const releaseId = release.manifest.releaseId;
   if (request.operation === "verify") {
-    const value = yield* recomputeProgram(ctx, release.manifestHash, releaseId);
-    return { ok: true, operation: request.operation, value };
+    const result = yield* callInternal(() =>
+      ctx.runMutation(proofPollReference, {
+        manifestHash: release.manifestHash,
+        releaseId,
+      })
+    );
+    if (result.phase === "failed") {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${releaseId} proof workflow ${result.reason}.`
+      );
+    }
+    if (result.phase === "verifying") {
+      return {
+        ok: true,
+        operation: request.operation,
+        value: {
+          manifestHash: release.manifestHash,
+          phase: result.phase,
+          releaseId,
+        },
+      };
+    }
+    const evidence = yield* decodeProofJson(result.proofJson);
+    return {
+      ok: true,
+      operation: request.operation,
+      value: { evidence, phase: result.phase },
+    };
   }
   const rendererJson = yield* loadRenderer(ctx, release);
   if (request.operation === "activate") {

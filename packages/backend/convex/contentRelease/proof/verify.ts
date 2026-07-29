@@ -8,7 +8,10 @@ import { verifyRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollbac
 import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/routes";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
+import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { internalAction } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import {
@@ -32,8 +35,9 @@ import type {
   progressValidator,
   statusValidator,
 } from "@repo/backend/convex/contentRelease/spec";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { makeFunctionReference } from "convex/server";
-import type { Infer } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { Effect, Option, Stream } from "effect";
 
 type Progress = Infer<typeof progressValidator>;
@@ -49,11 +53,6 @@ const catalogRoutesReference = makeFunctionReference<
   { cursor: null | string; releaseId: string },
   RouteCatalogPage
 >("contentRelease/proof/catalog:routes");
-const beginReference = makeFunctionReference<
-  "mutation",
-  { releaseId: string },
-  number
->("contentRelease/verify:begin");
 const proofStateReference = makeFunctionReference<
   "query",
   { manifestHash: string; releaseId: string },
@@ -112,7 +111,6 @@ const verifyRouteCatalog = Effect.fn("contentRelease.verifyRouteCatalog")(
 /** Recomputes the complete authenticated proof before activation. */
 export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
   function* (ctx: ActionCtx, manifestHash: string, releaseId: string) {
-    yield* callInternal(() => ctx.runMutation(beginReference, { releaseId }));
     const state = yield* callInternal(() =>
       ctx.runQuery(proofStateReference, {
         manifestHash,
@@ -238,3 +236,22 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
     return proof;
   }
 );
+
+/** Recomputes and commits one complete proof outside the request lifecycle. */
+export const verifyRelease = internalAction({
+  args: {
+    manifestHash: v.string(),
+    releaseId: v.string(),
+  },
+  returns: v.null(),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      recomputeProgram(ctx, args.manifestHash, args.releaseId).pipe(
+        Effect.provideService(
+          ContentVerificationKeyResolver,
+          contentKeyResolver
+        ),
+        Effect.as(null)
+      )
+    ),
+});

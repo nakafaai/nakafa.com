@@ -101,6 +101,7 @@ describe("contentRelease/receipt", () => {
       { ...release, checkedIndex: 0 },
       { ...release, checkedItems: 1 },
       { ...release, proofAt: 1 },
+      { ...release, proofFailure: "failed" },
       { ...release, proofJson: "{}" },
       { ...release, verifiedAt: 1 },
       { ...release, checkedItems: 0.5 },
@@ -118,6 +119,19 @@ describe("contentRelease/receipt", () => {
     for (const corrupted of invalid) {
       await expectIntegrity(stagedEvidence(corrupted, signed));
     }
+    await expect(
+      Effect.runPromise(
+        stagedEvidence(
+          { ...release, proofFailure: "failed", status: "verifying" },
+          signed
+        )
+      )
+    ).resolves.toBeUndefined();
+    await expect(
+      Effect.runPromise(
+        stagedEvidence({ ...release, status: "verifying" }, signed)
+      )
+    ).resolves.toBeUndefined();
   });
 
   it("requires complete verifier evidence before activation", async () => {
@@ -129,6 +143,7 @@ describe("contentRelease/receipt", () => {
 
     const corruptions: readonly Doc<"contentReleases">[] = [
       { ...verified, proofAt: undefined },
+      { ...verified, proofFailure: "failed" },
       { ...verified, proofJson: undefined },
       { ...verified, verifiedAt: undefined },
       { ...verified, checkedIndex: -1 },
@@ -156,6 +171,7 @@ describe("contentRelease/receipt", () => {
       { ...completed, status: "verified" },
       { ...completed, completedAt: undefined },
       { ...completed, proofAt: undefined },
+      { ...completed, proofFailure: "failed" },
       { ...completed, proofJson: undefined },
       { ...completed, verifiedAt: undefined },
       { ...completed, checkedItems: 0 },

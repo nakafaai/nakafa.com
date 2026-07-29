@@ -28,7 +28,14 @@ import {
 } from "@repo/backend/test/content-state";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@repo/backend/content/trust", async () => {
+  const { TEST_KEY_RESOLVER } = await import(
+    "@repo/backend/test/content-proof"
+  );
+  return { contentKeyResolver: TEST_KEY_RESOLVER };
+});
 
 describe("content publication Node dispatch", () => {
   it("publishes one authenticated release through every lifecycle boundary", async () => {

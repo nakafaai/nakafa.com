@@ -15,40 +15,40 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 
 /** Freezes a complete staged release before any cross-transaction proof read. */
-const beginProgram = Effect.fn("contentRelease.beginVerify")(function* (
-  ctx: MutationCtx,
-  releaseId: string
-) {
-  const { release } = yield* loadStaged(ctx, releaseId);
-  if (release.status === "verifying" || release.status === "verified") {
+export const beginVerification = Effect.fn("contentRelease.beginVerification")(
+  function* (ctx: MutationCtx, releaseId: string) {
+    const { release } = yield* loadStaged(ctx, releaseId);
+    if (release.status === "verifying" || release.status === "verified") {
+      return release.checkedIndex;
+    }
+    const signed = yield* decodeReleaseJson(release.releaseJson);
+    yield* validateContentOwners(ctx, release, signed.manifest);
+    const complete =
+      release.status === "staging" &&
+      release.abortingAt === undefined &&
+      release.stagedItems === signed.manifest.itemCount &&
+      release.stagedDeletes === signed.manifest.deleteCount &&
+      release.stagedUpserts === signed.manifest.upsertCount &&
+      release.stagedArtifacts === signed.manifest.upsertCount &&
+      release.stagedProjections === signed.manifest.projectionCount &&
+      release.stagedRoutes === signed.manifest.routeCount &&
+      release.stagedSnapshotRows ===
+        snapshotRowCount(signed.manifest.snapshots);
+    if (!complete) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_STATE",
+        `Content release ${releaseId} is not completely staged for verification.`
+      );
+    }
+    yield* Effect.promise(() =>
+      ctx.db.patch("contentReleases", release._id, {
+        status: "verifying",
+        updatedAt: Date.now(),
+      })
+    );
     return release.checkedIndex;
   }
-  const signed = yield* decodeReleaseJson(release.releaseJson);
-  yield* validateContentOwners(ctx, release, signed.manifest);
-  const complete =
-    release.status === "staging" &&
-    release.abortingAt === undefined &&
-    release.stagedItems === signed.manifest.itemCount &&
-    release.stagedDeletes === signed.manifest.deleteCount &&
-    release.stagedUpserts === signed.manifest.upsertCount &&
-    release.stagedArtifacts === signed.manifest.upsertCount &&
-    release.stagedProjections === signed.manifest.projectionCount &&
-    release.stagedRoutes === signed.manifest.routeCount &&
-    release.stagedSnapshotRows === snapshotRowCount(signed.manifest.snapshots);
-  if (!complete) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_STATE",
-      `Content release ${releaseId} is not completely staged for verification.`
-    );
-  }
-  yield* Effect.promise(() =>
-    ctx.db.patch("contentReleases", release._id, {
-      status: "verifying",
-      updatedAt: Date.now(),
-    })
-  );
-  return release.checkedIndex;
-});
+);
 
 /** Verifies one resumable contiguous page before proof can be committed. */
 const verifyProgram = Effect.fn("contentRelease.verifyItems")(function* (
@@ -116,13 +116,6 @@ const verifyProgram = Effect.fn("contentRelease.verifyItems")(function* (
     })
   );
   return { done, nextIndex, processed };
-});
-
-/** Atomically freezes staging so the verifier reads a quiescent candidate. */
-export const begin = internalMutation({
-  args: { releaseId: v.string() },
-  returns: v.number(),
-  handler: (ctx, args) => runConvexProgram(beginProgram(ctx, args.releaseId)),
 });
 
 /** Verifies one bounded item page and returns a durable continuation index. */

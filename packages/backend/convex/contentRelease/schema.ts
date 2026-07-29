@@ -1,5 +1,7 @@
+import { vWorkflowId } from "@convex-dev/workflow";
 import articleSchema from "@repo/backend/convex/contentRelease/article/schema";
 import materialSchema from "@repo/backend/convex/contentRelease/material/schema";
+import { proofFailureValidator } from "@repo/backend/convex/contentRelease/proof/spec";
 import scopeSchema from "@repo/backend/convex/contentRelease/scope/schema";
 import snapshotSchema from "@repo/backend/convex/contentRelease/snapshot/schema";
 import {
@@ -182,7 +184,9 @@ const tables = {
     materialIndex: v.optional(v.number()),
     materialSyncedAt: v.optional(v.number()),
     proofAt: v.optional(v.number()),
+    proofFailure: v.optional(proofFailureValidator),
     proofJson: v.optional(v.string()),
+    proofWorkflowId: v.optional(vWorkflowId),
     receiptJson: v.optional(v.string()),
     releaseId: v.string(),
     releaseJson: v.string(),

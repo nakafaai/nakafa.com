@@ -120,8 +120,8 @@ const commitProgram = Effect.fn("contentRelease.commitProof")(function* (
       `Content release ${proof.releaseId} proof does not match staging evidence.`
     );
   }
-  if (release.status === "verified") {
-    if (release.proofJson !== proofJson) {
+  if (release.proofJson !== undefined) {
+    if (release.proofJson !== proofJson || release.proofAt === undefined) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
         `Content release ${proof.releaseId} already owns different proof bytes.`
@@ -129,7 +129,7 @@ const commitProgram = Effect.fn("contentRelease.commitProof")(function* (
     }
     return {
       manifestHash: signed.manifestHash,
-      phase: "verified",
+      phase: release.status === "verified" ? "verified" : "verifying",
       releaseId: release.releaseId,
     } satisfies ReleaseStatus;
   }
@@ -143,12 +143,10 @@ const commitProgram = Effect.fn("contentRelease.commitProof")(function* (
   const patch = {
     proofAt: now,
     proofJson,
-    status: "verified",
     updatedAt: now,
-    verifiedAt: now,
   } satisfies Pick<
     Doc<"contentReleases">,
-    "proofAt" | "proofJson" | "status" | "updatedAt" | "verifiedAt"
+    "proofAt" | "proofJson" | "updatedAt"
   >;
   yield* ensureDocumentSize(`Content release ${proof.releaseId}`, {
     ...release,
@@ -160,7 +158,7 @@ const commitProgram = Effect.fn("contentRelease.commitProof")(function* (
   );
   return {
     manifestHash: signed.manifestHash,
-    phase: "verified",
+    phase: "verifying",
     releaseId: release.releaseId,
   } satisfies ReleaseStatus;
 });

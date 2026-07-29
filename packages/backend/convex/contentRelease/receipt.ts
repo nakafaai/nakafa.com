@@ -88,6 +88,11 @@ export const stagedEvidence = Effect.fn("contentRelease.stagedEvidence")(
     const staging = release.status === "staging";
     const checking = release.status === "verifying";
     const verified = release.status === "verified";
+    const hasProofAt = release.proofAt !== undefined;
+    const hasProofFailure = release.proofFailure !== undefined;
+    const hasProofJson = release.proofJson !== undefined;
+    const hasProofWorkflow = release.proofWorkflowId !== undefined;
+    const proofPairIsComplete = hasProofAt === hasProofJson;
     const partial =
       hasStageCounters(release) &&
       Number.isSafeInteger(release.checkedItems) &&
@@ -105,6 +110,7 @@ export const stagedEvidence = Effect.fn("contentRelease.stagedEvidence")(
       release.stagedSnapshotRows <= snapshotRowCount(manifest.snapshots) &&
       release.completedAt === undefined &&
       release.receiptJson === undefined &&
+      proofPairIsComplete &&
       (staging || checking || verified);
     if (!partial) {
       return yield* releaseFail(
@@ -112,10 +118,11 @@ export const stagedEvidence = Effect.fn("contentRelease.stagedEvidence")(
         `Pending release ${release.releaseId} lost durable progress.`
       );
     }
-    if (!verified) {
+    if (staging) {
       if (
-        release.proofAt !== undefined ||
-        release.proofJson !== undefined ||
+        hasProofJson ||
+        hasProofFailure ||
+        hasProofWorkflow ||
         release.verifiedAt !== undefined
       ) {
         return yield* releaseFail(
@@ -125,10 +132,27 @@ export const stagedEvidence = Effect.fn("contentRelease.stagedEvidence")(
       }
       return;
     }
+    if (checking) {
+      const running = hasProofWorkflow && !hasProofFailure;
+      const failed = !hasProofWorkflow && hasProofFailure && !hasProofJson;
+      const restartable = !(hasProofWorkflow || hasProofFailure);
+      if (
+        release.verifiedAt !== undefined ||
+        !(running || failed || restartable)
+      ) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          `Verifying release ${release.releaseId} lost its proof coordinator state.`
+        );
+      }
+      return;
+    }
     yield* publicationReceipt(release, signed);
     if (
       release.proofAt === undefined ||
+      hasProofFailure ||
       release.proofJson === undefined ||
+      hasProofWorkflow ||
       release.verifiedAt === undefined ||
       !hasCheckedCursor(release, manifest)
     ) {
@@ -148,7 +172,9 @@ export const completedReceipt = Effect.fn("contentRelease.completedReceipt")(
       release.status !== "completed" ||
       release.completedAt === undefined ||
       release.proofAt === undefined ||
+      release.proofFailure !== undefined ||
       release.proofJson === undefined ||
+      release.proofWorkflowId !== undefined ||
       release.verifiedAt === undefined ||
       !hasCheckedCursor(release, signed.manifest) ||
       !release.receiptJson

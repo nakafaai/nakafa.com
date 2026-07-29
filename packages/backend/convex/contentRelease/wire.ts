@@ -6,11 +6,11 @@ import {
   type ContentProjection,
   canonicalizeContentProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
-import {
-  type ContentReleaseItemSchema,
-  canonicalizeContentReleaseItem,
-  type SignedContentReleaseSchema,
+import type {
+  ContentReleaseItemSchema,
+  SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
+import { canonicalizeContentReleaseItem } from "@nakafa/aksara-contracts/release/canonical";
 import {
   type ContentRouteItemSchema,
   canonicalizeContentRouteItem,

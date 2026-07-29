@@ -101,6 +101,7 @@ describe("contentRelease/status", () => {
     await t.mutation(async (ctx) => {
       const release = await requireRelease(ctx);
       await ctx.db.patch("contentReleases", release._id, {
+        proofFailure: "failed",
         status: "verifying",
       });
     });
@@ -112,6 +113,7 @@ describe("contentRelease/status", () => {
         checkedIndex: 0,
         checkedItems: 1,
         proofAt: 1,
+        proofFailure: undefined,
         proofJson: "{}",
         stagedArtifacts: 1,
         stagedItems: 1,
