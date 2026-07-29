@@ -149,18 +149,16 @@ export const cancelAccountDeletionAttempt = mutation({
   args: {
     attemptId: v.string(),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await runConvexProgram(
+  returns: v.boolean(),
+  handler: (ctx, args) =>
+    runConvexProgram(
       cancelAccountDeletionAttemptByToken(
         ctx,
         args.attemptId,
         async (authId) =>
           (await authReader.getAnyUserById(ctx, authId)) !== null
       )
-    );
-    return null;
-  },
+    ),
 });
 
 /** Proves whether one opaque browser deletion attempt committed. */

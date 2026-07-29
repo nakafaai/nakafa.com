@@ -102,9 +102,11 @@ describe("auth/deletion", () => {
       });
     });
 
-    await t.mutation(api.auth.deletion.cancelAccountDeletionAttempt, {
-      attemptId: ATTEMPT_ID,
-    });
+    await expect(
+      t.mutation(api.auth.deletion.cancelAccountDeletionAttempt, {
+        attemptId: ATTEMPT_ID,
+      })
+    ).resolves.toBe(true);
 
     const state = await t.query(async (ctx) => ({
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),
@@ -136,9 +138,11 @@ describe("auth/deletion", () => {
       });
     });
 
-    await t.mutation(api.auth.deletion.cancelAccountDeletionAttempt, {
-      attemptId: ATTEMPT_ID,
-    });
+    await expect(
+      t.mutation(api.auth.deletion.cancelAccountDeletionAttempt, {
+        attemptId: ATTEMPT_ID,
+      })
+    ).resolves.toBe(false);
 
     await expect(
       t.query((ctx) => ctx.db.get("accountDeletionPreparations", preparationId))

@@ -1,6 +1,8 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   cancelAccountDeletion,
   cancelAccountDeletionAttempt,
+  cancelAccountDeletionAttemptBatch,
   cancelAccountDeletionAttemptByToken,
   cleanupFinalizedAccountDeletion,
 } from "@repo/backend/convex/auth/deletion/cancel";
@@ -199,7 +201,7 @@ describe("auth/deletion/cancel", () => {
     });
     const authUserExists = vi.fn(async () => true);
 
-    await t.mutation((ctx) =>
+    const canceled = await t.mutation((ctx) =>
       runConvexProgram(
         cancelAccountDeletionAttemptByToken(ctx, ATTEMPT_ID, authUserExists)
       )
@@ -209,6 +211,7 @@ describe("auth/deletion/cancel", () => {
       user: await ctx.db.get("users", userId),
     }));
 
+    expect(canceled).toBe(false);
     expect(authUserExists).not.toHaveBeenCalled();
     expect(state.preparation?.deletionStartedAt).toBe(NOW);
     expect(state.user?.deletionPreparedAt).toBe(NOW);
@@ -290,7 +293,7 @@ describe("auth/deletion/cancel", () => {
 
   it("drains reservations larger than one transaction batch", async () => {
     const t = convexTest(schema, convexModules);
-    const preparationId = await t.mutation(async (ctx) => {
+    await t.mutation(async (ctx) => {
       const ownerId = await ctx.db.insert("users", {
         authId: "batch-cancel-owner",
         credits: 0,
@@ -350,19 +353,30 @@ describe("auth/deletion/cancel", () => {
 
       return id;
     });
-    let hasMore = true;
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        cancelAccountDeletionAttemptBatch(ctx, "batch-cancel-owner", ATTEMPT_ID)
+      )
+    );
+    const pending = await t.query(async (ctx) => ({
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
+    }));
 
-    while (hasMore) {
-      hasMore = await t.mutation((ctx) =>
-        runConvexProgram(
-          cancelAccountDeletion(ctx, "batch-cancel-owner", {
-            attemptId: ATTEMPT_ID,
-            preparationId,
-            recoveryGeneration: 0,
-          })
-        )
-      );
-    }
+    expect(pending.transfers).toHaveLength(1);
+    expect(pending.jobs).toEqual([
+      expect.objectContaining({
+        name: expect.stringContaining("continueAccountDeletionCancellation"),
+      }),
+    ]);
+
+    await t.mutation(
+      internal.auth.deletion.continueAccountDeletionCancellation,
+      {
+        attemptId: ATTEMPT_ID,
+        authId: "batch-cancel-owner",
+      }
+    );
 
     const remaining = await t.query(async (ctx) => ({
       preparations: await ctx.db.query("accountDeletionPreparations").collect(),
