@@ -76,12 +76,10 @@ export const clearDeletedAccountBrowserIdentity = Effect.fn(
   yield* clearAccountBrowserIdentity(cleanup);
 });
 
-/** Clears account-scoped browser identity before ending the auth session. */
+/** Clears account-scoped browser identity after the auth session ends. */
 export const signOutAccountBrowserIdentity = Effect.fn(
   "www.auth.signOutAccountBrowserIdentity"
 )(function* (request: SignOutRequest = async () => await authClient.signOut()) {
-  yield* clearAccountBrowserIdentity();
-
   const result = yield* Effect.tryPromise({
     try: request,
     catch: () =>
@@ -95,4 +93,6 @@ export const signOutAccountBrowserIdentity = Effect.fn(
       code: accountSignOutFailedCode,
     });
   }
+
+  yield* clearAccountBrowserIdentity();
 });
