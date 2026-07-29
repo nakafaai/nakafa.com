@@ -30,7 +30,7 @@ jobs:
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
       POSTHOG_PROXY_HOST: https://t.nakafa.com
       SITE_URL: http://localhost:3000
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]') }}
     steps:
       - uses: actions/checkout@v5
         with:
