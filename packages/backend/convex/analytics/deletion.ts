@@ -13,8 +13,8 @@ export const POSTHOG_DELETION_RECONCILIATION_DELAY_MS = 24 * 60 * 60 * 1000;
 const PostHogBulkDeleteResponseSchema = Schema.Struct({
   deletion_errors: Schema.optional(Schema.Array(Schema.Unknown)),
   events_queued_for_deletion: Schema.Boolean,
-  persons_deleted: Schema.Number,
-  persons_found: Schema.Number,
+  persons_deleted: Schema.NonNegativeInt,
+  persons_found: Schema.NonNegativeInt,
   recordings_queued_for_deletion: Schema.Boolean,
 });
 
@@ -169,10 +169,21 @@ export const deletePostHogPerson = Effect.fn(
     )
   );
 
-  if ((result.deletion_errors?.length ?? 0) > 0) {
+  const matchedPersonsWereQueued =
+    result.persons_found === 0 ||
+    (result.events_queued_for_deletion &&
+      result.recordings_queued_for_deletion);
+  const everyMatchedPersonWasDeleted =
+    result.persons_deleted === result.persons_found;
+
+  if (
+    (result.deletion_errors?.length ?? 0) > 0 ||
+    !matchedPersonsWereQueued ||
+    !everyMatchedPersonWasDeleted
+  ) {
     return yield* new PostHogDeletionRequestError({
       code: postHogDeletionRequestErrorCode,
-      message: "PostHog could not delete every matched person.",
+      message: "PostHog did not accept complete analytics deletion.",
     });
   }
 });

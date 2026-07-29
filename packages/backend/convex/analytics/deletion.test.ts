@@ -49,6 +49,26 @@ describe("analytics/deletion", () => {
     );
   });
 
+  it("accepts an idempotent retry after the person is already absent", async () => {
+    const request = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            deletion_errors: [],
+            events_queued_for_deletion: false,
+            persons_deleted: 0,
+            persons_found: 0,
+            recordings_queued_for_deletion: false,
+          }),
+          { status: 202 }
+        )
+    );
+
+    await expect(
+      Effect.runPromise(deletePostHogPerson("user-1", { config, request }))
+    ).resolves.toBeUndefined();
+  });
+
   it("returns a typed failure when credentials are missing", async () => {
     const failure = await Effect.runPromise(
       deletePostHogPerson("user-1", {
@@ -172,7 +192,47 @@ describe("analytics/deletion", () => {
 
     expect(failure).toBeInstanceOf(PostHogDeletionRequestError);
     expect(failure.message).toBe(
-      "PostHog could not delete every matched person."
+      "PostHog did not accept complete analytics deletion."
+    );
+  });
+
+  it.each([
+    {
+      events_queued_for_deletion: false,
+      persons_deleted: 1,
+      persons_found: 1,
+      recordings_queued_for_deletion: true,
+    },
+    {
+      events_queued_for_deletion: true,
+      persons_deleted: 1,
+      persons_found: 1,
+      recordings_queued_for_deletion: false,
+    },
+    {
+      events_queued_for_deletion: true,
+      persons_deleted: 0,
+      persons_found: 1,
+      recordings_queued_for_deletion: true,
+    },
+  ])("retries an incomplete accepted response", async (result) => {
+    const failure = await Effect.runPromise(
+      deletePostHogPerson("user-1", {
+        config,
+        request: async () =>
+          new Response(
+            JSON.stringify({
+              deletion_errors: [],
+              ...result,
+            }),
+            { status: 202 }
+          ),
+      }).pipe(Effect.flip)
+    );
+
+    expect(failure).toBeInstanceOf(PostHogDeletionRequestError);
+    expect(failure.message).toBe(
+      "PostHog did not accept complete analytics deletion."
     );
   });
 });
