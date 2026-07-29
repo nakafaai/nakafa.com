@@ -245,8 +245,10 @@ describe("auth/deletion", () => {
 
     expect(hasMore).toBe(true);
     expect(state.transfers).toHaveLength(1);
-    expect(state.preparation).not.toBeNull();
-    expect(state.user).not.toHaveProperty("deletionPreparedAt");
+    expect(state.preparation?.cancellationStartedAt).toEqual(
+      expect.any(Number)
+    );
+    expect(state.user?.deletionPreparedAt).toBe(NOW);
     expect(state.jobs).toEqual([
       expect.objectContaining({
         args: [
