@@ -64,6 +64,7 @@ import type * as auth_cleanup_spec from "../auth/cleanup/spec.js";
 import type * as auth_cleanup_tryouts from "../auth/cleanup/tryouts.js";
 import type * as auth_client from "../auth/client.js";
 import type * as auth_deletion from "../auth/deletion.js";
+import type * as auth_deletion_attemptCancellation from "../auth/deletion/attemptCancellation.js";
 import type * as auth_deletion_cancel from "../auth/deletion/cancel.js";
 import type * as auth_deletion_claim from "../auth/deletion/claim.js";
 import type * as auth_deletion_commit from "../auth/deletion/commit.js";
@@ -556,6 +557,7 @@ declare const fullApi: ApiFromModules<{
   "auth/cleanup/tryouts": typeof auth_cleanup_tryouts;
   "auth/client": typeof auth_client;
   "auth/deletion": typeof auth_deletion;
+  "auth/deletion/attemptCancellation": typeof auth_deletion_attemptCancellation;
   "auth/deletion/cancel": typeof auth_deletion_cancel;
   "auth/deletion/claim": typeof auth_deletion_claim;
   "auth/deletion/commit": typeof auth_deletion_commit;

@@ -6,7 +6,7 @@ import { Effect } from "effect";
 
 /** Cancels only the browser attempt that created the active preparation. */
 export const cancelAccountDeletionAttempt = Effect.fn(
-  "auth.deletion.cancelAccountDeletionAttempt"
+  "auth.deletion.attemptCancellation.cancel"
 )(function* (ctx: MutationCtx, authId: string, attemptId: string) {
   const preparation = yield* tryUserCleanup(() =>
     ctx.db
@@ -44,7 +44,7 @@ export const cancelAccountDeletionAttempt = Effect.fn(
  * exists. The unguessable attempt ID is the narrow recovery capability.
  */
 export const cancelAccountDeletionAttemptByToken = Effect.fn(
-  "auth.deletion.cancelAccountDeletionAttemptByToken"
+  "auth.deletion.attemptCancellation.cancelByToken"
 )(function* (
   ctx: MutationCtx,
   attemptId: string,

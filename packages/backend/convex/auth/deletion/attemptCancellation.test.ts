@@ -1,7 +1,7 @@
 import {
   cancelAccountDeletionAttempt,
   cancelAccountDeletionAttemptByToken,
-} from "@repo/backend/convex/auth/deletion/cancel-attempt";
+} from "@repo/backend/convex/auth/deletion/attemptCancellation";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
 import { accountDeletionCancellationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -13,7 +13,7 @@ import { describe, expect, it, vi } from "vitest";
 const NOW = Date.UTC(2026, 6, 28, 9, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 
-describe("auth/deletion/cancel-attempt", () => {
+describe("auth/deletion/attemptCancellation", () => {
   it("never reopens an irreversible deletion from the browser token", async () => {
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation(async (ctx) => {

@@ -1,10 +1,10 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { cancelAccountDeletionAttemptByToken } from "@repo/backend/convex/auth/deletion/attemptCancellation";
 import {
   cancelAccountDeletion,
   cancelAccountDeletionBatch,
   cleanupFinalizedAccountDeletion,
 } from "@repo/backend/convex/auth/deletion/cancel";
-import { cancelAccountDeletionAttemptByToken } from "@repo/backend/convex/auth/deletion/cancel-attempt";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
