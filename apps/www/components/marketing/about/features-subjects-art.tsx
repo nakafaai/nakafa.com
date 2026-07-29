@@ -8,6 +8,7 @@ import {
 import { useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 
+/** Adds an alpha channel to a theme registry RGB color. */
 function withAlpha(color: string, alpha: number) {
   return color.replace("rgb(", "rgba(").replace(")", `, ${alpha})`);
 }

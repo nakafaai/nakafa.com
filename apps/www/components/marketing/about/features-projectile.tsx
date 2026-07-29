@@ -123,6 +123,7 @@ export function FeaturesProjectile() {
     },
   ];
 
+  /** Selects a verified projectile scenario for the interactive lesson scene. */
   function handleScenarioChange(value: string) {
     if (!isProjectileScenarioId(value)) {
       return;

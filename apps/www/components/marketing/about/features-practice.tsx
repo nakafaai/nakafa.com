@@ -33,6 +33,7 @@ export function FeaturesNina() {
   const ninaAnswer = t.raw("nina-answer");
   const ninaPrompt = t.raw("nina-prompt");
 
+  /** Opens Nina with the learner's current marketing-page draft. */
   function handleSubmit(message: PromptInputMessage) {
     const query = message.text?.trim();
     if (!query) {

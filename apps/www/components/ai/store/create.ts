@@ -8,6 +8,7 @@ import type { AiStore } from "@/components/ai/store/types";
 
 const AI_DRAFT_STORAGE_KEY = "nakafa-ai-draft";
 
+/** Saves or clears the current Nina draft in session storage. */
 function saveDraftText(text: string) {
   if (typeof window === "undefined") {
     return;
@@ -21,6 +22,7 @@ function saveDraftText(text: string) {
   window.sessionStorage.setItem(AI_DRAFT_STORAGE_KEY, text);
 }
 
+/** Restores the saved Nina draft after the persisted store rehydrates. */
 function restoreDraftText(state: AiStore | undefined) {
   if (typeof window === "undefined") {
     return;
