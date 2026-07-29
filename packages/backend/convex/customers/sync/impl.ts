@@ -3,6 +3,7 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import { deleteLocalCustomer } from "@repo/backend/convex/customers/deletion/billingState";
+import type { CustomerUpsertResult } from "@repo/backend/convex/customers/mutations/spec";
 import {
   ensureCustomer,
   normalizeStoredCustomer,
@@ -17,6 +18,7 @@ import {
   type PolarUpdateError,
 } from "@repo/backend/convex/customers/polar/spec";
 import { convertToDatabaseCustomer } from "@repo/backend/convex/customers/records";
+import { settleCustomerSync } from "@repo/backend/convex/customers/sync/settlement";
 import {
   type CustomerSyncIoError,
   customerSyncIoError,
@@ -73,7 +75,7 @@ const loadCustomerSyncState: (
 const saveLocalCustomer: (
   ctx: ActionCtx,
   customer: WithoutSystemFields<Doc<"customers">>
-) => Effect.Effect<Id<"customers"> | null, CustomerSyncIoError> = Effect.fn(
+) => Effect.Effect<CustomerUpsertResult, CustomerSyncIoError> = Effect.fn(
   "customers.sync.saveLocalCustomer"
 )(function* (ctx: ActionCtx, customer: WithoutSystemFields<Doc<"customers">>) {
   return yield* Effect.tryPromise({
@@ -130,17 +132,12 @@ export const syncCustomerForUser: (
     ...syncedPolarCustomer,
     userId: input.user._id,
   });
-  const localCustomerId = yield* saveLocalCustomer(ctx, customer);
-
-  if (!localCustomerId) {
-    yield* polarGateway.deleteCustomer(syncedPolarCustomer.id);
-    yield* deleteLocalCustomer(ctx, syncedPolarCustomer.id);
-
-    return yield* new UserNotFound({
-      code: userNotFoundCode,
-      message: `User not found for userId: ${input.user._id}`,
-    });
-  }
+  const result = yield* saveLocalCustomer(ctx, customer);
+  const localCustomerId = yield* settleCustomerSync(result, input.user._id, {
+    deleteLocalCustomer: () => deleteLocalCustomer(ctx, syncedPolarCustomer.id),
+    deletePolarCustomer: () =>
+      polarGateway.deleteCustomer(syncedPolarCustomer.id),
+  });
 
   return { ...customer, localCustomerId } satisfies RequiredCustomer;
 });

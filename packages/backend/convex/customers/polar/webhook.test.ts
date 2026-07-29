@@ -118,7 +118,7 @@ describe("customers/polar/webhook", () => {
     ]);
   });
 
-  it("discards subscription delivery once its app user starts deletion", async () => {
+  it("keeps subscription delivery retryable during cancelable preparation", async () => {
     const t = createWebhookTestConvex();
     const userId = await t.mutation((ctx) => insertUser(ctx, "pending", NOW));
     const subscription = buildSubscription("polar-pending", "pending");
@@ -138,7 +138,7 @@ describe("customers/polar/webhook", () => {
       )
     );
 
-    expect(disposition).toBe("discarded");
+    expect(disposition).toBe("missing");
     await expect(
       t.query(async (ctx) => ({
         customers: await ctx.db.query("customers").collect(),

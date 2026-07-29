@@ -356,6 +356,7 @@ import type * as customers_deletion_recovery from "../customers/deletion/recover
 import type * as customers_deletion_workflow from "../customers/deletion/workflow.js";
 import type * as customers_integrity_internal from "../customers/integrity/internal.js";
 import type * as customers_mutations_internal from "../customers/mutations/internal.js";
+import type * as customers_mutations_spec from "../customers/mutations/spec.js";
 import type * as customers_polar_impl from "../customers/polar/impl.js";
 import type * as customers_polar_live from "../customers/polar/live.js";
 import type * as customers_polar_spec from "../customers/polar/spec.js";
@@ -364,6 +365,7 @@ import type * as customers_polar_webhook from "../customers/polar/webhook.js";
 import type * as customers_queries_internal_customer from "../customers/queries/internal/customer.js";
 import type * as customers_records from "../customers/records.js";
 import type * as customers_sync_impl from "../customers/sync/impl.js";
+import type * as customers_sync_settlement from "../customers/sync/settlement.js";
 import type * as customers_sync_spec from "../customers/sync/spec.js";
 import type * as emails_deletion from "../emails/deletion.js";
 import type * as emails_mutations from "../emails/mutations.js";
@@ -849,6 +851,7 @@ declare const fullApi: ApiFromModules<{
   "customers/deletion/workflow": typeof customers_deletion_workflow;
   "customers/integrity/internal": typeof customers_integrity_internal;
   "customers/mutations/internal": typeof customers_mutations_internal;
+  "customers/mutations/spec": typeof customers_mutations_spec;
   "customers/polar/impl": typeof customers_polar_impl;
   "customers/polar/live": typeof customers_polar_live;
   "customers/polar/spec": typeof customers_polar_spec;
@@ -857,6 +860,7 @@ declare const fullApi: ApiFromModules<{
   "customers/queries/internal/customer": typeof customers_queries_internal_customer;
   "customers/records": typeof customers_records;
   "customers/sync/impl": typeof customers_sync_impl;
+  "customers/sync/settlement": typeof customers_sync_settlement;
   "customers/sync/spec": typeof customers_sync_spec;
   "emails/deletion": typeof emails_deletion;
   "emails/mutations": typeof emails_mutations;
