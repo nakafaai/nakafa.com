@@ -15,6 +15,7 @@ import {
   makeArticleViewArgs,
   CONTENT_VIEW_NOW as NOW,
   readContentViewState as readViewState,
+  seedArticleViewer,
 } from "@repo/backend/test/content-view";
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -135,15 +136,9 @@ describe("contents/views/impl", () => {
 
   it("links an anonymous view to a user without duplicate popularity analytics", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const article = await insertArticle(ctx);
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "viewer",
-      });
-
-      return { ...user, contentId: article.contentId };
-    });
+    const identity = await t.mutation((ctx) =>
+      seedArticleViewer(ctx, "viewer")
+    );
     await t.mutation(
       api.contents.mutations.views.recordContentView,
       makeArticleViewArgs(identity.contentId, "device-1")
@@ -268,15 +263,9 @@ describe("contents/views/impl", () => {
 
   it("records signed-in user views per device while deduplicating popularity", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const article = await insertArticle(ctx);
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "cross-device-viewer",
-      });
-
-      return { ...user, contentId: article.contentId };
-    });
+    const identity = await t.mutation((ctx) =>
+      seedArticleViewer(ctx, "cross-device-viewer")
+    );
     const signedIn = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,
@@ -330,15 +319,9 @@ describe("contents/views/impl", () => {
 
   it("treats a signed-out same-device repeat as deduped without mutating ownership", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const article = await insertArticle(ctx);
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "signed-out-repeat",
-      });
-
-      return { ...user, contentId: article.contentId };
-    });
+    const identity = await t.mutation((ctx) =>
+      seedArticleViewer(ctx, "signed-out-repeat")
+    );
     const signedIn = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,
@@ -376,15 +359,9 @@ describe("contents/views/impl", () => {
 
   it("does not add another same-day popularity signal after cross-device sign-out", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const article = await insertArticle(ctx);
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "cross-device-sign-out",
-      });
-
-      return { ...user, contentId: article.contentId };
-    });
+    const identity = await t.mutation((ctx) =>
+      seedArticleViewer(ctx, "cross-device-sign-out")
+    );
     const signedIn = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,

@@ -1,5 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  ScheduleContentAnalyticsPartitionArgs,
+  ScheduleContentAnalyticsPartitionResult,
+} from "@repo/backend/convex/contents/analytics/spec";
 import {
   createCanonicalLearningContext,
   type LearningContextStorage,
@@ -15,7 +19,16 @@ import {
   toContentViewIoError,
 } from "@repo/backend/convex/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/convex/contents/views/target";
+import type { FunctionReference } from "convex/server";
 import { Effect } from "effect";
+
+/** Generated internal mutation reference accepted by Convex's scheduler. */
+export type ScheduleContentAnalyticsPartitionReference = FunctionReference<
+  "mutation",
+  "internal",
+  ScheduleContentAnalyticsPartitionArgs,
+  ScheduleContentAnalyticsPartitionResult
+>;
 
 /** Creates one popularity signal scope from verified learning-context storage. */
 function createSignalScope(
@@ -187,4 +200,21 @@ export const enqueuePopularitySignals = Effect.fn(
   }
 
   return [...partitions];
+});
+
+/** Schedules bounded popularity processing for every newly enqueued partition. */
+export const schedulePopularityPartitions = Effect.fn(
+  "contents.views.schedulePopularityPartitions"
+)(function* (
+  scheduler: MutationCtx["scheduler"],
+  partitions: readonly number[],
+  scheduleAnalyticsPartition: ScheduleContentAnalyticsPartitionReference
+) {
+  for (const partition of partitions) {
+    yield* Effect.tryPromise({
+      try: () =>
+        scheduler.runAfter(0, scheduleAnalyticsPartition, { partition }),
+      catch: toContentViewIoError,
+    });
+  }
 });
