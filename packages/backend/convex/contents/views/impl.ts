@@ -1,13 +1,13 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type {
-  ScheduleContentAnalyticsPartitionArgs,
-  ScheduleContentAnalyticsPartitionResult,
-} from "@repo/backend/convex/contents/analytics/spec";
 import type { LearningContextStorage } from "@repo/backend/convex/contents/context";
 import { resolveLearningContext } from "@repo/backend/convex/contents/views/context";
 import { upsertUserRecent } from "@repo/backend/convex/contents/views/recent";
-import { enqueuePopularitySignals } from "@repo/backend/convex/contents/views/signals";
+import {
+  enqueuePopularitySignals,
+  type ScheduleContentAnalyticsPartitionReference,
+  schedulePopularityPartitions,
+} from "@repo/backend/convex/contents/views/signals";
 import {
   type RecordContentViewArgs,
   toContentViewIoError,
@@ -17,16 +17,7 @@ import {
   loadContentTarget,
 } from "@repo/backend/convex/contents/views/target";
 import { getOptionalActiveAppUser } from "@repo/backend/convex/lib/helpers/auth";
-import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
-
-/** Generated internal mutation reference accepted by Convex's scheduler. */
-type ScheduleContentAnalyticsPartitionReference = FunctionReference<
-  "mutation",
-  "internal",
-  ScheduleContentAnalyticsPartitionArgs,
-  ScheduleContentAnalyticsPartitionResult
->;
 
 /** Loads the latest view row recorded for a device/content/context tuple. */
 const loadLatestDeviceView = Effect.fn("contents.views.loadLatestDeviceView")(
@@ -269,13 +260,11 @@ export const recordUniqueContentView = Effect.fn(
       }
     );
 
-    for (const partition of partitions) {
-      yield* Effect.tryPromise({
-        try: () =>
-          ctx.scheduler.runAfter(0, scheduleAnalyticsPartition, { partition }),
-        catch: toContentViewIoError,
-      });
-    }
+    yield* schedulePopularityPartitions(
+      ctx.scheduler,
+      partitions,
+      scheduleAnalyticsPartition
+    );
 
     return { alreadyViewed: true, isNewView: false, success: true };
   }
@@ -303,13 +292,11 @@ export const recordUniqueContentView = Effect.fn(
     }
   );
 
-  for (const partition of partitions) {
-    yield* Effect.tryPromise({
-      try: () =>
-        ctx.scheduler.runAfter(0, scheduleAnalyticsPartition, { partition }),
-      catch: toContentViewIoError,
-    });
-  }
+  yield* schedulePopularityPartitions(
+    ctx.scheduler,
+    partitions,
+    scheduleAnalyticsPartition
+  );
 
   return { alreadyViewed: false, isNewView: true, success: true };
 });

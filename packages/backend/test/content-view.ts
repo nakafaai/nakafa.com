@@ -2,7 +2,10 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
 import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/spec";
-import type { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import {
+  type createConvexTestWithBetterAuth,
+  seedAuthenticatedUser,
+} from "@repo/backend/convex/test.helpers";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { expect } from "vitest";
 
@@ -106,6 +109,17 @@ export async function insertContentViewArticle(
   });
 
   return { contentId, id };
+}
+
+/** Seeds one article and authenticated viewer for content-view behavior tests. */
+export async function seedArticleViewer(ctx: MutationCtx, suffix: string) {
+  const article = await insertContentViewArticle(ctx);
+  const user = await seedAuthenticatedUser(ctx, {
+    now: CONTENT_VIEW_NOW,
+    suffix,
+  });
+
+  return { ...user, contentId: article.contentId };
 }
 
 /** Inserts one source-owned curriculum lesson and its route projection. */
