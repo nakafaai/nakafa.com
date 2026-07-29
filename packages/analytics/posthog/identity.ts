@@ -9,12 +9,24 @@ type AnalyticsIdentityAuthorization =
 const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
   status: "unresolved",
 });
+const posthogPageviewEvent = "$pageview";
+const deferredPageview = MutableRef.make(false);
 
 interface AnalyticsIdentityClient {
   get_property(key: string): unknown;
   has_opted_out_capturing(): boolean;
   opt_out_capturing(): void;
   reset(resetDeviceId?: boolean): void;
+}
+
+interface AnalyticsPageviewClient {
+  capture(event: typeof posthogPageviewEvent): unknown;
+}
+
+/** Starts one browser analytics lifecycle without stale authorization state. */
+export function initializeAnalyticsIdentityAuthorization() {
+  MutableRef.set(identityAuthorization, { status: "unresolved" });
+  MutableRef.set(deferredPageview, false);
 }
 
 /** Resolves analytics identity only from definitive auth and app-user state. */
@@ -83,6 +95,22 @@ export function revokeAnalyticsIdentity() {
   MutableRef.set(identityAuthorization, { status: "unresolved" });
 }
 
+/** Emits one initial pageview that waited for definitive auth resolution. */
+export function captureDeferredAnalyticsPageview(
+  client: AnalyticsPageviewClient
+) {
+  if (
+    !MutableRef.get(deferredPageview) ||
+    MutableRef.get(identityAuthorization).status === "unresolved"
+  ) {
+    return false;
+  }
+
+  MutableRef.set(deferredPageview, false);
+  client.capture(posthogPageviewEvent);
+  return true;
+}
+
 /**
  * Rejects every event until auth resolves, then admits only the exact resolved
  * anonymous or identified identity.
@@ -96,7 +124,15 @@ export function filterAuthorizedAnalyticsEvent(event: CaptureResult | null) {
   const eventUserId = event.properties.$user_id;
 
   if (authorization.status === "unresolved") {
+    if (event.event === posthogPageviewEvent) {
+      MutableRef.set(deferredPageview, true);
+    }
+
     return null;
+  }
+
+  if (event.event === posthogPageviewEvent) {
+    MutableRef.set(deferredPageview, false);
   }
 
   if (authorization.status === "anonymous") {

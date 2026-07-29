@@ -1,7 +1,9 @@
 import {
   authorizeAnalyticsIdentity,
   authorizeAnonymousAnalyticsIdentity,
+  captureDeferredAnalyticsPageview,
   filterAuthorizedAnalyticsEvent,
+  initializeAnalyticsIdentityAuthorization,
   resetAnalyticsIdentity,
   resetPersistedAnalyticsIdentity,
   resolveAnalyticsIdentityAuthorization,
@@ -22,7 +24,7 @@ function createEvent(userId?: string): CaptureResult {
 
 describe("PostHog browser identity gate", () => {
   beforeEach(() => {
-    revokeAnalyticsIdentity();
+    initializeAnalyticsIdentityAuthorization();
   });
 
   it("drops every event until auth resolves anonymously", () => {
@@ -57,6 +59,51 @@ describe("PostHog browser identity gate", () => {
     revokeAnalyticsIdentity();
 
     expect(filterAuthorizedAnalyticsEvent(currentUserEvent)).toBeNull();
+  });
+
+  it("emits one deferred initial pageview after identity resolves", () => {
+    const client = {
+      capture: vi.fn(),
+    };
+
+    expect(captureDeferredAnalyticsPageview(client)).toBe(false);
+    expect(filterAuthorizedAnalyticsEvent(createEvent())).toBeNull();
+    expect(captureDeferredAnalyticsPageview(client)).toBe(false);
+
+    authorizeAnonymousAnalyticsIdentity();
+
+    expect(captureDeferredAnalyticsPageview(client)).toBe(true);
+    expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
+    expect(captureDeferredAnalyticsPageview(client)).toBe(false);
+  });
+
+  it("does not duplicate a deferred pageview admitted after resolution", () => {
+    const client = {
+      capture: vi.fn(),
+    };
+    const pageview = createEvent();
+
+    expect(filterAuthorizedAnalyticsEvent(pageview)).toBeNull();
+    authorizeAnonymousAnalyticsIdentity();
+    expect(filterAuthorizedAnalyticsEvent(pageview)).toBe(pageview);
+
+    expect(captureDeferredAnalyticsPageview(client)).toBe(false);
+    expect(client.capture).not.toHaveBeenCalled();
+  });
+
+  it("does not defer non-pageview events while identity resolves", () => {
+    const event = {
+      ...createEvent(),
+      event: "$exception",
+    };
+    const client = {
+      capture: vi.fn(),
+    };
+
+    expect(filterAuthorizedAnalyticsEvent(event)).toBeNull();
+    authorizeAnonymousAnalyticsIdentity();
+    expect(filterAuthorizedAnalyticsEvent(event)).toBe(event);
+    expect(captureDeferredAnalyticsPageview(client)).toBe(false);
   });
 
   it("keeps authenticated query failures unresolved", () => {

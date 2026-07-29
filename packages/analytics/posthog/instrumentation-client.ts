@@ -2,8 +2,8 @@ import { keys } from "@repo/analytics/keys";
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import {
   filterAuthorizedAnalyticsEvent,
+  initializeAnalyticsIdentityAuthorization,
   resetPersistedAnalyticsIdentity,
-  revokeAnalyticsIdentity,
 } from "@repo/analytics/posthog/identity";
 import posthog from "posthog-js";
 
@@ -15,7 +15,7 @@ import posthog from "posthog-js";
  * https://posthog.com/docs/advanced/proxy/nextjs
  */
 export const initializeAnalytics = () => {
-  revokeAnalyticsIdentity();
+  initializeAnalyticsIdentityAuthorization();
 
   posthog.init(keys().NEXT_PUBLIC_POSTHOG_KEY, {
     api_host: POSTHOG_PROXY_PATH,

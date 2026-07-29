@@ -4,6 +4,7 @@ import { analytics } from "@repo/analytics/posthog";
 import {
   authorizeAnalyticsIdentity,
   authorizeAnonymousAnalyticsIdentity,
+  captureDeferredAnalyticsPageview,
   resetAnalyticsIdentity,
   resolveAnalyticsIdentityAuthorization,
   revokeAnalyticsIdentity,
@@ -81,6 +82,7 @@ export function UserContextProvider({
       }
 
       authorizeAnonymousAnalyticsIdentity();
+      captureDeferredAnalyticsPageview(analytics);
       return revokeAnalyticsIdentity;
     }
 
@@ -117,6 +119,7 @@ export function UserContextProvider({
       analytics.identify(analyticsUserId, personProperties, setOnceProperties);
     }
 
+    captureDeferredAnalyticsPageview(analytics);
     return revokeAnalyticsIdentity;
   }, [
     analyticsIdentityStatus,
