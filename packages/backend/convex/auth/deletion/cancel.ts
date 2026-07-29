@@ -167,8 +167,11 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
       .unique()
   );
 
+  if (!preparation) {
+    return accountDeletionCancellationOutcome.complete;
+  }
+
   if (
-    !preparation ||
     preparation.deletionStartedAt !== undefined ||
     preparation.finalizedAt !== undefined
   ) {
