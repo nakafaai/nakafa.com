@@ -1,7 +1,9 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
-import { FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX } from "@repo/backend/convex/classes/forums/attachments/constants";
+import {
+  FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX,
+  FORUM_PENDING_UPLOAD_LEASE_MS,
+} from "@repo/backend/convex/classes/forums/attachments/constants";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
@@ -49,15 +51,16 @@ export const createForumAttachmentUploadUrl = Effect.fn(
   return url.toString();
 });
 
-/** Checks the capability before an HTTP action consumes the request body. */
-export const authorize = internalQuery({
+/** Exclusively leases the capability before an HTTP action consumes its body. */
+export const claim = internalMutation({
   args: {
-    authorizedAt: v.number(),
+    leaseId: v.string(),
     uploadId: v.string(),
     uploadToken: v.string(),
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
+    const claimedAt = await runConvexProgram(Clock.currentTimeMillis);
     const uploadId = ctx.db.normalizeId(
       "schoolClassForumPendingUploads",
       args.uploadId
@@ -70,14 +73,55 @@ export const authorize = internalQuery({
     if (
       !upload ||
       upload.uploadToken !== args.uploadToken ||
-      upload.expiresAt <= args.authorizedAt ||
-      upload.storageId
+      upload.expiresAt <= claimedAt ||
+      upload.storageId ||
+      (upload.uploadLease?.expiresAt ?? 0) > claimedAt
     ) {
       return false;
     }
 
     const owner = await ctx.db.get("users", upload.uploadedBy);
-    return Boolean(owner && !isAccountDeletionPending(owner));
+    if (!owner || isAccountDeletionPending(owner)) {
+      return false;
+    }
+
+    await ctx.db.patch("schoolClassForumPendingUploads", upload._id, {
+      uploadLease: {
+        expiresAt: Math.min(
+          upload.expiresAt,
+          claimedAt + FORUM_PENDING_UPLOAD_LEASE_MS
+        ),
+        id: args.leaseId,
+      },
+    });
+    return true;
+  },
+});
+
+/** Releases only the matching interrupted upload lease. */
+export const release = internalMutation({
+  args: {
+    leaseId: v.string(),
+    uploadId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const uploadId = ctx.db.normalizeId(
+      "schoolClassForumPendingUploads",
+      args.uploadId
+    );
+    if (!uploadId) {
+      return null;
+    }
+    const upload = await ctx.db.get("schoolClassForumPendingUploads", uploadId);
+
+    if (upload?.uploadLease?.id === args.leaseId) {
+      await ctx.db.patch("schoolClassForumPendingUploads", upload._id, {
+        uploadLease: undefined,
+      });
+    }
+
+    return null;
   },
 });
 
@@ -90,6 +134,7 @@ export const authorize = internalQuery({
 export const settle = internalMutation({
   args: {
     contentType: v.string(),
+    leaseId: v.string(),
     size: v.number(),
     storageId: v.id("_storage"),
     uploadId: v.string(),
@@ -123,6 +168,14 @@ export const settle = internalMutation({
       return "rejected";
     }
 
+    if (
+      upload.uploadLease?.id !== args.leaseId ||
+      upload.uploadLease.expiresAt <= settledAt
+    ) {
+      await ctx.storage.delete(args.storageId);
+      return "rejected";
+    }
+
     const owner = await ctx.db.get("users", upload.uploadedBy);
 
     if (!owner || isAccountDeletionPending(owner)) {
@@ -135,6 +188,7 @@ export const settle = internalMutation({
       mimeType: args.contentType,
       size: args.size,
       storageId: args.storageId,
+      uploadLease: undefined,
     });
 
     return "accepted";

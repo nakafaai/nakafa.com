@@ -359,6 +359,12 @@ const tables = {
     expiresAt: v.number(),
     uploadToken: v.string(),
     uploadedBy: v.id("users"),
+    uploadLease: v.optional(
+      v.object({
+        expiresAt: v.number(),
+        id: v.string(),
+      })
+    ),
     storageId: v.optional(v.id("_storage")),
     name: v.optional(v.string()),
     mimeType: v.optional(v.string()),

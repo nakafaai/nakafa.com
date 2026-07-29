@@ -2,10 +2,11 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX } from "@repo/backend/convex/classes/forums/attachments/constants";
 import { MAX_FORUM_ATTACHMENT_BYTES } from "@repo/backend/convex/classes/forums/utils/constants";
+import { generateId } from "@repo/backend/convex/utils/id";
 import { siteOrigin } from "@repo/backend/convex/utils/site";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { Clock, Effect, Either, Schema } from "effect";
+import { Effect, Either, Schema } from "effect";
 import { cors } from "hono/cors";
 
 const uploadPath = `${FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX}/:uploadId/:uploadToken`;
@@ -19,9 +20,10 @@ class ForumAttachmentHttpError extends Schema.TaggedError<ForumAttachmentHttpErr
       "FORUM_ATTACHMENT_UPLOAD_FAILED"
     ),
     operation: Schema.Literal(
-      "authorize",
       "body",
+      "claim",
       "cleanup",
+      "release",
       "settle",
       "store"
     ),
@@ -36,6 +38,32 @@ function uploadError(
 ) {
   return new ForumAttachmentHttpError({ code, operation, status });
 }
+
+/** Releases one failed request's lease without replacing its original error. */
+const releaseUploadLease = Effect.fn(
+  "classes.forums.attachments.releaseUploadLease"
+)(function* (ctx: ActionCtx, uploadId: string, leaseId: string) {
+  const release = yield* Effect.either(
+    Effect.tryPromise({
+      try: () =>
+        ctx.runMutation(internal.classes.forums.attachments.upload.release, {
+          leaseId,
+          uploadId,
+        }),
+      catch: () =>
+        uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "release", 500),
+    })
+  );
+
+  if (Either.isLeft(release)) {
+    yield* Effect.logError("Forum attachment upload lease release failed").pipe(
+      Effect.annotateLogs({
+        code: release.left.code,
+        operation: release.left.operation,
+      })
+    );
+  }
+});
 
 /** Identifies the capability-bearing route so access logs never record it. */
 export function isForumAttachmentUploadPath(path: string) {
@@ -85,67 +113,85 @@ const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
     uploadId: string,
     uploadToken: string
   ) {
-    const authorizedAt = yield* Clock.currentTimeMillis;
-    const authorized = yield* Effect.tryPromise({
+    const leaseId = yield* Effect.try({
+      try: generateId,
+      catch: () => uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "claim", 500),
+    });
+    const claimed = yield* Effect.tryPromise({
       try: () =>
-        ctx.runQuery(internal.classes.forums.attachments.upload.authorize, {
-          authorizedAt,
+        ctx.runMutation(internal.classes.forums.attachments.upload.claim, {
+          leaseId,
           uploadId,
           uploadToken,
         }),
-      catch: () =>
-        uploadError("FORUM_ATTACHMENT_UPLOAD_NOT_FOUND", "authorize", 404),
+      catch: () => uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "claim", 500),
     });
 
-    if (!authorized) {
+    if (!claimed) {
       return yield* uploadError(
         "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
-        "authorize",
+        "claim",
         404
       );
     }
 
-    const { bytes, contentType } = yield* readUploadBody(request);
-    const storageId = yield* Effect.tryPromise({
-      try: () =>
-        ctx.storage.store(
-          new Blob([new Uint8Array(bytes)], { type: contentType })
-        ),
-      catch: () => uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "store", 500),
-    });
-    const settlement = yield* Effect.either(
-      Effect.tryPromise({
-        try: () =>
-          ctx.runMutation(internal.classes.forums.attachments.upload.settle, {
-            contentType,
-            size: bytes.byteLength,
-            storageId,
-            uploadId,
-            uploadToken,
-          }),
-        catch: () =>
-          uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "settle", 500),
+    const upload = yield* Effect.either(
+      Effect.gen(function* () {
+        const { bytes, contentType } = yield* readUploadBody(request);
+        const storageId = yield* Effect.tryPromise({
+          try: () =>
+            ctx.storage.store(
+              new Blob([new Uint8Array(bytes)], { type: contentType })
+            ),
+          catch: () =>
+            uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "store", 500),
+        });
+        const settlement = yield* Effect.either(
+          Effect.tryPromise({
+            try: () =>
+              ctx.runMutation(
+                internal.classes.forums.attachments.upload.settle,
+                {
+                  contentType,
+                  leaseId,
+                  size: bytes.byteLength,
+                  storageId,
+                  uploadId,
+                  uploadToken,
+                }
+              ),
+            catch: () =>
+              uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "settle", 500),
+          })
+        );
+
+        if (Either.isLeft(settlement)) {
+          yield* Effect.tryPromise({
+            try: () => ctx.storage.delete(storageId),
+            catch: () =>
+              uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "cleanup", 500),
+          });
+          return yield* settlement.left;
+        }
+
+        if (settlement.right !== "accepted") {
+          return yield* uploadError(
+            "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
+            "settle",
+            404
+          );
+        }
+
+        return storageId;
       })
     );
 
-    if (Either.isLeft(settlement)) {
-      yield* Effect.tryPromise({
-        try: () => ctx.storage.delete(storageId),
-        catch: () =>
-          uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "cleanup", 500),
-      });
-      return yield* settlement.left;
+    if (Either.isLeft(upload)) {
+      yield* releaseUploadLease(ctx, uploadId, leaseId);
+      return yield* upload.left;
     }
 
-    if (settlement.right !== "accepted") {
-      return yield* uploadError(
-        "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
-        "settle",
-        404
-      );
-    }
-
-    return storageId;
+    return upload.right;
   }
 );
 
