@@ -1,10 +1,14 @@
 "use client";
 
-import { Data, Effect } from "effect";
+import { Data, Effect, Option, Schema } from "effect";
 
 const AI_DRAFT_STORAGE_KEY = "nakafa-ai-draft";
-const AI_DRAFT_OWNER_STORAGE_KEY = "nakafa-ai-draft-owner";
 const ANONYMOUS_DRAFT_OWNER = "anonymous";
+
+const AiDraftRecordSchema = Schema.Struct({
+  owner: Schema.String,
+  text: Schema.String,
+});
 
 /** Describes an unavailable or rejected Nina draft storage operation. */
 class AiDraftStorageError extends Data.TaggedError("AiDraftStorageError")<{
@@ -19,7 +23,6 @@ function encodeDraftOwner(ownerId: string | null) {
 /** Removes every tab-scoped value owned by the Nina draft handoff. */
 function removeAiDraft() {
   window.sessionStorage.removeItem(AI_DRAFT_STORAGE_KEY);
-  window.sessionStorage.removeItem(AI_DRAFT_OWNER_STORAGE_KEY);
 }
 
 /** Saves or clears the current Nina draft without interrupting the input. */
@@ -39,10 +42,12 @@ export function saveAiDraftText(
         return;
       }
 
-      window.sessionStorage.setItem(AI_DRAFT_STORAGE_KEY, text);
       window.sessionStorage.setItem(
-        AI_DRAFT_OWNER_STORAGE_KEY,
-        encodeDraftOwner(ownerId)
+        AI_DRAFT_STORAGE_KEY,
+        JSON.stringify({
+          owner: encodeDraftOwner(ownerId),
+          text,
+        })
       );
     },
   }).pipe(Effect.catchTag("AiDraftStorageError", () => Effect.void));
@@ -59,24 +64,36 @@ export function readAiDraftText(ownerId: string | null) {
         return null;
       }
 
-      const text = window.sessionStorage.getItem(AI_DRAFT_STORAGE_KEY);
-      if (!text) {
+      const storedDraft = window.sessionStorage.getItem(AI_DRAFT_STORAGE_KEY);
+      if (!storedDraft) {
         return null;
       }
 
-      const storedOwner =
-        window.sessionStorage.getItem(AI_DRAFT_OWNER_STORAGE_KEY) ??
-        ANONYMOUS_DRAFT_OWNER;
+      const decodedDraft = Schema.decodeUnknownOption(
+        Schema.parseJson(AiDraftRecordSchema)
+      )(storedDraft);
+      if (Option.isNone(decodedDraft)) {
+        removeAiDraft();
+        return null;
+      }
+
+      const draft = decodedDraft.value;
       const currentOwner = encodeDraftOwner(ownerId);
       if (
-        storedOwner === ANONYMOUS_DRAFT_OWNER &&
+        draft.owner === ANONYMOUS_DRAFT_OWNER &&
         currentOwner !== ANONYMOUS_DRAFT_OWNER
       ) {
-        window.sessionStorage.setItem(AI_DRAFT_OWNER_STORAGE_KEY, currentOwner);
-        return text;
+        window.sessionStorage.setItem(
+          AI_DRAFT_STORAGE_KEY,
+          JSON.stringify({
+            owner: currentOwner,
+            text: draft.text,
+          })
+        );
+        return draft.text;
       }
-      if (storedOwner === currentOwner) {
-        return text;
+      if (draft.owner === currentOwner) {
+        return draft.text;
       }
 
       removeAiDraft();

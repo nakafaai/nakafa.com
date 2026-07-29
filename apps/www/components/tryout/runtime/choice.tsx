@@ -150,6 +150,7 @@ export function TryoutChoiceSurface({
       )}
     >
       <Checkbox
+        aria-labelledby={id}
         checked={checked}
         className="mt-1 shrink-0 cursor-pointer"
         disabled={disabled}

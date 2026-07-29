@@ -37,11 +37,22 @@ describe("ai/store/draft", () => {
     );
   });
 
-  it("claims a legacy tab draft without recorded ownership", () => {
+  it("discards a legacy tab draft without atomic ownership", () => {
     window.sessionStorage.setItem("nakafa-ai-draft", "Legacy question");
 
-    expect(Effect.runSync(readAiDraftText("learner-a"))).toBe(
-      "Legacy question"
+    expect(Effect.runSync(readAiDraftText("learner-a"))).toBeNull();
+    expect(window.sessionStorage.getItem("nakafa-ai-draft")).toBeNull();
+  });
+
+  it("writes text and ownership in one storage record", () => {
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+
+    Effect.runSync(saveAiDraftText("One record", "learner-a"));
+
+    expect(setItem).toHaveBeenCalledOnce();
+    expect(setItem).toHaveBeenCalledWith(
+      "nakafa-ai-draft",
+      '{"owner":"learner-a","text":"One record"}'
     );
   });
 
