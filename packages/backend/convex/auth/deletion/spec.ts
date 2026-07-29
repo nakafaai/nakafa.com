@@ -1,6 +1,17 @@
+import { ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE } from "@repo/backend/convex/auth/deletion/constants";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
+import { Schema } from "effect";
+
+/** Raised when a browser attempt cannot prove its reversible phase was canceled. */
+export class AccountDeletionCancellationUnprovenError extends Schema.TaggedError<AccountDeletionCancellationUnprovenError>()(
+  "AccountDeletionCancellationUnprovenError",
+  {
+    code: Schema.Literal(ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE),
+    message: Schema.String,
+  }
+) {}
 
 export const accountDeletionPreparationOutcome = {
   continue: "continue",

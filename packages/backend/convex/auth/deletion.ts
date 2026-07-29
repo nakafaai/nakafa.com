@@ -10,12 +10,14 @@ import {
 } from "@repo/backend/convex/auth/deletion/cancel";
 import { claimAccountDeletion as claimAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/claim";
 import { continueAccountDeletionCommitProgram } from "@repo/backend/convex/auth/deletion/commit";
+import { ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE } from "@repo/backend/convex/auth/deletion/constants";
 import { prepareAccountDeletion as prepareAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/prepare";
 import {
   getAccountDeletionAttemptStatusProgram,
   sweepAccountDeletionReceiptsProgram,
 } from "@repo/backend/convex/auth/deletion/receipt";
 import {
+  AccountDeletionCancellationUnprovenError,
   type AccountDeletionPreparationVersion,
   accountDeletionAttemptStatusValidator,
   accountDeletionPreparationOutcomeValidator,
@@ -157,6 +159,15 @@ export const cancelAccountDeletionAttempt = mutation({
         args.attemptId,
         async (authId) =>
           (await authReader.getAnyUserById(ctx, authId)) !== null
+      ).pipe(
+        Effect.filterOrFail(
+          (canceled) => canceled,
+          () =>
+            new AccountDeletionCancellationUnprovenError({
+              code: ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
+              message: "Account deletion cancellation could not be proven.",
+            })
+        )
       )
     ),
 });

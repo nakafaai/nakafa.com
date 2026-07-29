@@ -350,8 +350,6 @@ describe("auth/deletion/cancel", () => {
           successorUserId: successorId,
         });
       }
-
-      return id;
     });
     await t.mutation((ctx) =>
       runConvexProgram(
