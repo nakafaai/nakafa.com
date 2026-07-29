@@ -335,12 +335,53 @@ describe("sync-content Convex adapter", () => {
     );
   });
 
+  it("uses a scoped deploy key without requiring local Convex auth", async () => {
+    const { getConvexConfig } = await loadAdapter();
+    configFileContent = undefined;
+
+    const result = await Effect.runPromise(
+      withConfig(
+        getConvexConfig(),
+        new Map([
+          ["CONVEX_DEPLOY_KEY", "agent-deploy-key"],
+          ["CONVEX_URL", "agent-url"],
+        ])
+      )
+    );
+
+    expect(result).toEqual({
+      accessToken: "agent-deploy-key",
+      url: "agent-url",
+    });
+    expect(warningMock).not.toHaveBeenCalled();
+
+    const prodResult = await Effect.runPromise(
+      withConfig(
+        getConvexConfig({ prod: true }),
+        new Map([
+          ["CONVEX_DEPLOY_KEY", "agent-prod-key"],
+          ["CONVEX_PROD_URL", "agent-prod-url"],
+        ])
+      )
+    );
+
+    expect(prodResult).toEqual({
+      accessToken: "agent-prod-key",
+      url: "agent-prod-url",
+    });
+    expect(warningMock).toHaveBeenCalledWith(
+      "PRODUCTION MODE: Syncing to agent-prod-url"
+    );
+  });
+
   it("reports missing URL config for dev and prod targets", async () => {
     const { getConvexConfig } = await loadAdapter();
     const devMessage = await getFailureMessage(
       withConfig(getConvexConfig(), new Map())
     );
-    expect(devMessage).toContain("CONVEX_URL not set. Run: npx convex dev");
+    expect(devMessage).toContain(
+      "CONVEX_URL not set. Run: pnpm exec convex dev"
+    );
 
     const prodMessage = await getFailureMessage(
       withConfig(getConvexConfig({ prod: true }), new Map())
@@ -356,14 +397,16 @@ describe("sync-content Convex adapter", () => {
     const missingMessage = await getFailureMessage(
       withConfig(getConvexConfig(), values)
     );
-    expect(missingMessage).toContain("Not authenticated. Run: npx convex dev");
+    expect(missingMessage).toContain(
+      "No CONVEX_DEPLOY_KEY and no local login. Run: pnpm exec convex dev"
+    );
 
     configFileContent = "{";
     const invalidJsonMessage = await getFailureMessage(
       withConfig(getConvexConfig(), values)
     );
     expect(invalidJsonMessage).toContain(
-      "Invalid Convex config. Run: npx convex dev"
+      "Invalid Convex config. Run: pnpm exec convex dev"
     );
 
     configFileContent = JSON.stringify({ accessToken: 1 });
@@ -371,7 +414,7 @@ describe("sync-content Convex adapter", () => {
       withConfig(getConvexConfig(), values)
     );
     expect(invalidSchemaMessage).toContain(
-      "Invalid Convex config. Run: npx convex dev"
+      "Invalid Convex config. Run: pnpm exec convex dev"
     );
 
     configFileContent = JSON.stringify({});
@@ -379,7 +422,7 @@ describe("sync-content Convex adapter", () => {
       withConfig(getConvexConfig(), values)
     );
     expect(missingTokenMessage).toContain(
-      "No access token. Run: npx convex dev"
+      "No access token. Run: pnpm exec convex dev"
     );
   });
 

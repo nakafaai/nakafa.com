@@ -10,16 +10,22 @@ permissions:
   contents: read
 
 concurrency:
-  group: agent-docs-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: agent-docs
+  cancel-in-progress: false
 
 jobs:
   agent-docs:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     env:
+      CONTENT_RUNTIME_TOKEN: ci-agent-docs
+      CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
+      CONVEX_SITE_URL: ${{ vars.AGENT_DOCS_CONVEX_SITE_URL }}
+      CONVEX_URL: ${{ vars.AGENT_DOCS_CONVEX_URL }}
       INTERNAL_CONTENT_API_KEY: ci-agent-docs
       NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_CONVEX_SITE_URL: ${{ vars.AGENT_DOCS_CONVEX_SITE_URL }}
+      NEXT_PUBLIC_CONVEX_URL: ${{ vars.AGENT_DOCS_CONVEX_URL }}
       NEXT_PUBLIC_MCP_URL: https://mcp.nakafa.com
       NEXT_PUBLIC_POSTHOG_KEY: phc_agent_docs_ci
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
@@ -53,28 +59,14 @@ jobs:
           app_version="$(node -p 'require("./package.json").version')"
           echo "NEXT_PUBLIC_VERSION=$app_version" >> "$GITHUB_ENV"
 
-      - name: Select pull request Convex deployment
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "NEXT_PUBLIC_CONVEX_SITE_URL=https://cheerful-ocelot-306.convex.site" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_CONVEX_URL=https://cheerful-ocelot-306.convex.cloud" >> "$GITHUB_ENV"
-
-      - name: Select main Convex deployment
-        if: github.event_name == 'push'
-        run: |
-          echo "NEXT_PUBLIC_CONVEX_SITE_URL=https://dapper-antelope-269.convex.site" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_CONVEX_URL=https://dapper-antelope-269.convex.cloud" >> "$GITHUB_ENV"
-
       - name: Run tests
         run: pnpm test
 
-      - name: Load main content runtime token
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CONTENT_RUNTIME_TOKEN: ${{ secrets.CONTENT_RUNTIME_TOKEN }}
-        run: |
-          test -n "$CONTENT_RUNTIME_TOKEN"
-          echo "CONTENT_RUNTIME_TOKEN=$CONTENT_RUNTIME_TOKEN" >> "$GITHUB_ENV"
+      - name: Deploy isolated backend
+        run: pnpm --dir packages/backend exec convex dev --once --typecheck enable --tail-logs disable
+
+      - name: Sync real content
+        run: pnpm --filter @repo/backend sync
 
       - name: Build production app
         run: pnpm build
