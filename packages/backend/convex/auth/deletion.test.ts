@@ -1,5 +1,8 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
-import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
+import {
+  ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
+  ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
+} from "@repo/backend/convex/auth/deletion/constants";
 import { accountDeletionAttemptStatus } from "@repo/backend/convex/auth/deletion/spec";
 import {
   createConvexTestWithBetterAuth,
@@ -117,7 +120,7 @@ describe("auth/deletion", () => {
     expect(state.user).not.toHaveProperty("deletionPreparedAt");
   });
 
-  it("does not cancel an attempt after its auth user is gone", async () => {
+  it("rejects cancellation when the auth user is already gone", async () => {
     const t = createConvexTestWithBetterAuth();
     const preparationId = await t.mutation(async (ctx) => {
       const userId = await ctx.db.insert("users", {
@@ -142,7 +145,11 @@ describe("auth/deletion", () => {
       t.mutation(api.auth.deletion.cancelAccountDeletionAttempt, {
         attemptId: ATTEMPT_ID,
       })
-    ).resolves.toBe(false);
+    ).rejects.toMatchObject({
+      data: {
+        code: ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
+      },
+    });
 
     await expect(
       t.query((ctx) => ctx.db.get("accountDeletionPreparations", preparationId))
