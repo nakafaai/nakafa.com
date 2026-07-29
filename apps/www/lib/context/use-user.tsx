@@ -3,6 +3,7 @@
 import { analytics } from "@repo/analytics/posthog";
 import {
   authorizeAnalyticsIdentity,
+  authorizeAnonymousAnalyticsIdentity,
   resetAnalyticsIdentity,
   revokeAnalyticsIdentity,
 } from "@repo/analytics/posthog/identity";
@@ -69,7 +70,8 @@ export function UserContextProvider({
         resetAnalyticsIdentity(analytics);
       }
 
-      return;
+      authorizeAnonymousAnalyticsIdentity();
+      return revokeAnalyticsIdentity;
     }
 
     if (
