@@ -1,6 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
-  ACCOUNT_DELETION_RECEIPT_SWEEP_INTERVAL_HOURS,
+  ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS,
   ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES,
 } from "@repo/backend/convex/auth/deletion/constants";
 import { cronJobs } from "convex/server";
@@ -24,11 +24,11 @@ crons.interval(
   {}
 );
 
-/** Removes expired opaque receipts after the browser retry window closes. */
+/** Removes expired opaque attempt artifacts after the retry window closes. */
 crons.interval(
-  "sweep account deletion receipts",
-  { hours: ACCOUNT_DELETION_RECEIPT_SWEEP_INTERVAL_HOURS },
-  internal.auth.deletion.sweepAccountDeletionReceipts,
+  "sweep account deletion retention",
+  { hours: ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS },
+  internal.auth.deletion.sweepAccountDeletionRetention,
   {}
 );
 

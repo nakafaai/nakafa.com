@@ -30,6 +30,7 @@ import {
 } from "@/lib/auth/account-browser-identity";
 import { deleteCurrentAccount } from "@/lib/auth/account-deletion";
 import {
+  clearAccountDeletionAttempt,
   loadOrCreateAccountDeletionAttempt,
   saveAccountDeletionAttempt,
 } from "@/lib/auth/account-deletion-attempt";
@@ -83,6 +84,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
           attempt,
           cancelPreparation: (attemptId) =>
             cancelAccountDeletion({ attemptId }),
+          clearAttempt: clearAccountDeletionAttempt,
           persist: saveAccountDeletionAttempt,
           prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
           reconcile: (attemptId) =>

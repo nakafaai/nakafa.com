@@ -32,6 +32,7 @@ function createPreparationOperations(
     cancelPreparation: vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     ),
+    clearAttempt: vi.fn(() => Effect.void),
     persist: vi.fn(() => Effect.void),
     prepare: vi.fn(async () => accountDeletionPreparationOutcome.ready),
     ...overrides,
@@ -141,8 +142,10 @@ describe("account deletion preparation", () => {
     const cancelPreparation = vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     );
+    const clearAttempt = vi.fn(() => Effect.void);
     const failure = await runPreparationFailure({
       cancelPreparation,
+      clearAttempt,
       prepare: vi.fn(
         async () => accountDeletionPreparationOutcome.schoolSuccessorRequired
       ),
@@ -150,14 +153,17 @@ describe("account deletion preparation", () => {
 
     expect(failure).toBeInstanceOf(AccountDeletionSchoolMemberRequired);
     expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
+    expect(clearAttempt).toHaveBeenCalledOnce();
   });
 
   it("cancels a preparation that cannot safely continue", async () => {
     const cancelPreparation = vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     );
+    const clearAttempt = vi.fn(() => Effect.void);
     const failure = await runPreparationFailure({
       cancelPreparation,
+      clearAttempt,
       prepare: vi.fn(
         async () => accountDeletionPreparationOutcome.temporarilyUnavailable
       ),
@@ -165,5 +171,22 @@ describe("account deletion preparation", () => {
 
     expect(failure).toBeInstanceOf(AccountDeletionFailed);
     expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
+    expect(clearAttempt).toHaveBeenCalledOnce();
+  });
+
+  it("fails closed when a canceled browser capability cannot be removed", async () => {
+    const failure = await runPreparationFailure({
+      clearAttempt: () =>
+        Effect.fail(
+          new AccountDeletionAttemptStorageFailed({
+            code: STORAGE_FAILED_CODE,
+          })
+        ),
+      prepare: vi.fn(
+        async () => accountDeletionPreparationOutcome.temporarilyUnavailable
+      ),
+    });
+
+    expect(failure).toBeInstanceOf(AccountDeletionFailed);
   });
 });

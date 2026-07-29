@@ -27,10 +27,15 @@ type PrepareAccountDeletionRequest = (
 type PersistAccountDeletionAttempt = (
   attempt: AccountDeletionBrowserAttempt
 ) => Effect.Effect<void, AccountDeletionAttemptStorageFailed>;
+type ClearAccountDeletionAttempt = () => Effect.Effect<
+  void,
+  AccountDeletionAttemptStorageFailed
+>;
 
 export interface AccountDeletionPreparationOperations {
   readonly attempt: AccountDeletionBrowserAttempt;
   readonly cancelPreparation: CancelAccountDeletionRequest;
+  readonly clearAttempt: ClearAccountDeletionAttempt;
   readonly persist: PersistAccountDeletionAttempt;
   readonly prepare: PrepareAccountDeletionRequest;
 }
@@ -77,12 +82,27 @@ export const persistAccountDeletionPhase = Effect.fn(
   );
 });
 
+/** Removes a proven-canceled browser attempt before another delete can begin. */
+export const clearCanceledAccountDeletionAttempt = Effect.fn(
+  "www.auth.clearCanceledAccountDeletionAttempt"
+)(function* (clearAttempt: ClearAccountDeletionAttempt) {
+  yield* clearAttempt().pipe(
+    Effect.mapError(
+      () =>
+        new AccountDeletionFailed({
+          code: accountDeletionErrorCode.failed,
+        })
+    )
+  );
+});
+
 /** Reserves all owned resources before the irreversible auth deletion. */
 export const prepareAccountDeletion = Effect.fn(
   "www.auth.prepareAccountDeletion"
 )(function* ({
   attempt,
   cancelPreparation,
+  clearAttempt,
   persist,
   prepare,
 }: AccountDeletionPreparationOperations) {
@@ -111,6 +131,7 @@ export const prepareAccountDeletion = Effect.fn(
       accountDeletionRequestPhase.preparation,
       cancelPreparation
     );
+    yield* clearCanceledAccountDeletionAttempt(clearAttempt);
     return yield* new AccountDeletionSchoolMemberRequired({
       code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
     });
@@ -122,6 +143,7 @@ export const prepareAccountDeletion = Effect.fn(
       accountDeletionRequestPhase.preparation,
       cancelPreparation
     );
+    yield* clearCanceledAccountDeletionAttempt(clearAttempt);
     return yield* new AccountDeletionFailed({
       code: accountDeletionErrorCode.failed,
     });
@@ -141,6 +163,7 @@ export const prepareAccountDeletion = Effect.fn(
       accountDeletionRequestPhase.preparation,
       cancelPreparation
     );
+    yield* clearCanceledAccountDeletionAttempt(clearAttempt);
     return yield* persistedDeletionPhase.left;
   }
 });

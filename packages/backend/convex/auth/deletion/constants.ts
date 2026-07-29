@@ -32,9 +32,9 @@ export const ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE = 20;
 
 export const ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES = 5;
 
-/** Keeps a privacy-minimal commit receipt long enough for browser retries. */
-export const ACCOUNT_DELETION_RECEIPT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+/** Keeps opaque attempt outcomes long enough to reject delayed browser replays. */
+export const ACCOUNT_DELETION_ATTEMPT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
-export const ACCOUNT_DELETION_RECEIPT_SWEEP_BATCH_SIZE = 50;
+export const ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE = 50;
 
-export const ACCOUNT_DELETION_RECEIPT_SWEEP_INTERVAL_HOURS = 24;
+export const ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS = 24;

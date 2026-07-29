@@ -4,7 +4,10 @@ import {
   tryUserCleanup,
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
-import { cancelAccountDeletionBatch } from "@repo/backend/convex/auth/deletion/cancel";
+import {
+  cancelAccountDeletionBatch,
+  hasAccountDeletionCancellation,
+} from "@repo/backend/convex/auth/deletion/cancel";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";
 import {
   type AccountDeletionPreparationOutcome,
@@ -187,6 +190,10 @@ export const prepareAccountDeletion: (
 
     if (!user || user.deletedAt !== undefined) {
       return accountDeletionPreparationOutcome.ready;
+    }
+
+    if (yield* hasAccountDeletionCancellation(ctx, attemptId)) {
+      return accountDeletionPreparationOutcome.temporarilyUnavailable;
     }
 
     let preparation = yield* tryUserCleanup(() =>

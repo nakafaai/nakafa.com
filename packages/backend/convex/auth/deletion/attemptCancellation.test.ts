@@ -57,9 +57,29 @@ describe("auth/deletion/attemptCancellation", () => {
     expect(state.user?.deletionPreparedAt).toBe(NOW);
   });
 
-  it("treats an already-absent preparation as completely canceled", async () => {
+  it("does not invent cancellation proof for an unknown attempt", async () => {
     const t = convexTest(schema, convexModules);
     const authUserExists = vi.fn(async () => true);
+
+    const outcome = await t.mutation((ctx) =>
+      runConvexProgram(
+        cancelAccountDeletionAttemptByToken(ctx, ATTEMPT_ID, authUserExists)
+      )
+    );
+
+    expect(outcome).toBeNull();
+    expect(authUserExists).not.toHaveBeenCalled();
+  });
+
+  it("treats a tombstoned attempt as completely canceled", async () => {
+    const t = convexTest(schema, convexModules);
+    const authUserExists = vi.fn(async () => true);
+    await t.mutation((ctx) =>
+      ctx.db.insert("accountDeletionAttemptCancellations", {
+        attemptId: ATTEMPT_ID,
+        canceledAt: NOW,
+      })
+    );
 
     const outcome = await t.mutation((ctx) =>
       runConvexProgram(
@@ -184,6 +204,9 @@ describe("auth/deletion/attemptCancellation", () => {
       )
     );
     const pending = await t.query(async (ctx) => ({
+      cancellations: await ctx.db
+        .query("accountDeletionAttemptCancellations")
+        .collect(),
       jobs: await ctx.db.system.query("_scheduled_functions").collect(),
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),
       transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
@@ -197,6 +220,7 @@ describe("auth/deletion/attemptCancellation", () => {
     expect(pending.preparation?.cancellationStartedAt).toEqual(
       expect.any(Number)
     );
+    expect(pending.cancellations).toEqual([]);
     expect(pending.transfers).toHaveLength(1);
     expect(pending.jobs).toHaveLength(0);
     expect(pending.user?.deletionPreparedAt).toBe(NOW);
@@ -208,6 +232,9 @@ describe("auth/deletion/attemptCancellation", () => {
     );
 
     const remaining = await t.query(async (ctx) => ({
+      cancellations: await ctx.db
+        .query("accountDeletionAttemptCancellations")
+        .collect(),
       preparations: await ctx.db.query("accountDeletionPreparations").collect(),
       transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
       user: await ctx.db.get("users", ownerId),
@@ -215,6 +242,9 @@ describe("auth/deletion/attemptCancellation", () => {
 
     expect(finalOutcome).toBe(accountDeletionCancellationOutcome.complete);
     expect(authUserExists).toHaveBeenCalledTimes(2);
+    expect(remaining.cancellations).toEqual([
+      expect.objectContaining({ attemptId: ATTEMPT_ID }),
+    ]);
     expect(remaining.preparations).toEqual([]);
     expect(remaining.transfers).toEqual([]);
     expect(remaining.user).not.toHaveProperty("deletionPreparedAt");
