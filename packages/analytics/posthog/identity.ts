@@ -17,6 +17,33 @@ interface AnalyticsIdentityClient {
   reset(resetDeviceId?: boolean): void;
 }
 
+/** Resolves analytics identity only from definitive auth and app-user state. */
+export function resolveAnalyticsIdentityAuthorization({
+  isAuthenticated,
+  isAuthLoading,
+  isUserResolved,
+  userId,
+}: {
+  readonly isAuthenticated: boolean;
+  readonly isAuthLoading: boolean;
+  readonly isUserResolved: boolean;
+  readonly userId: string | null;
+}): AnalyticsIdentityAuthorization {
+  if (isAuthLoading) {
+    return { status: "unresolved" };
+  }
+
+  if (!isAuthenticated) {
+    return { status: "anonymous" };
+  }
+
+  if (!(isUserResolved && userId)) {
+    return { status: "unresolved" };
+  }
+
+  return { status: "identified", userId };
+}
+
 /** Replaces the current analytics identity without changing capture consent. */
 export function resetAnalyticsIdentity(
   client: AnalyticsIdentityClient,

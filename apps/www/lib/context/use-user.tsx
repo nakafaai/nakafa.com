@@ -5,6 +5,7 @@ import {
   authorizeAnalyticsIdentity,
   authorizeAnonymousAnalyticsIdentity,
   resetAnalyticsIdentity,
+  resolveAnalyticsIdentityAuthorization,
   revokeAnalyticsIdentity,
 } from "@repo/analytics/posthog/identity";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -55,17 +56,26 @@ export function UserContextProvider({
   const signedUpAt = appUser
     ? new Date(appUser._creationTime).toISOString()
     : null;
+  const analyticsIdentity = resolveAnalyticsIdentityAuthorization({
+    isAuthenticated,
+    isAuthLoading: isLoading,
+    isUserResolved: userQuery.isSuccess,
+    userId,
+  });
+  const analyticsIdentityStatus = analyticsIdentity.status;
+  const analyticsUserId =
+    analyticsIdentity.status === "identified" ? analyticsIdentity.userId : null;
 
   useEffect(() => {
     revokeAnalyticsIdentity();
 
-    if (isPending) {
+    if (analyticsIdentityStatus === "unresolved") {
       return;
     }
 
     const trackedUserId = analytics.get_property("$user_id");
 
-    if (!userId) {
+    if (analyticsIdentityStatus === "anonymous") {
       if (trackedUserId) {
         resetAnalyticsIdentity(analytics);
       }
@@ -75,6 +85,7 @@ export function UserContextProvider({
     }
 
     if (
+      analyticsUserId === null ||
       userEmail === null ||
       userName === null ||
       userPlan === null ||
@@ -83,7 +94,7 @@ export function UserContextProvider({
       return;
     }
 
-    if (trackedUserId && trackedUserId !== userId) {
+    if (trackedUserId && trackedUserId !== analyticsUserId) {
       resetAnalyticsIdentity(analytics);
     }
 
@@ -98,16 +109,24 @@ export function UserContextProvider({
       signed_up_at: signedUpAt,
     };
 
-    authorizeAnalyticsIdentity(userId);
+    authorizeAnalyticsIdentity(analyticsUserId);
 
-    if (trackedUserId === userId) {
+    if (trackedUserId === analyticsUserId) {
       analytics.setPersonProperties(personProperties, setOnceProperties);
     } else {
-      analytics.identify(userId, personProperties, setOnceProperties);
+      analytics.identify(analyticsUserId, personProperties, setOnceProperties);
     }
 
     return revokeAnalyticsIdentity;
-  }, [isPending, signedUpAt, userEmail, userId, userName, userPlan, userRole]);
+  }, [
+    analyticsIdentityStatus,
+    analyticsUserId,
+    signedUpAt,
+    userEmail,
+    userName,
+    userPlan,
+    userRole,
+  ]);
 
   const contextValue = {
     user: currentUser,
