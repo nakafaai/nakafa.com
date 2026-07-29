@@ -23,7 +23,7 @@ import authConfig from "@repo/backend/convex/auth.config";
 import { siteUrl } from "@repo/backend/convex/utils/site";
 import { APIError } from "better-auth/api";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
-import { anonymous, openAPI, username } from "better-auth/plugins";
+import { openAPI, username } from "better-auth/plugins";
 import { makeFunctionReference } from "convex/server";
 import { Effect, Schema } from "effect";
 
@@ -32,11 +32,6 @@ const claimAccountDeletion = makeFunctionReference<
   { attemptId: string; authId: string },
   AccountDeletionPreparationOutcome
 >("auth/deletion:claimAccountDeletion");
-const disabledLegacyAnonymousPaths = [
-  "/sign-in/anonymous",
-  "/delete-anonymous-user",
-];
-
 const deletionUnavailableError = () =>
   APIError.from("INTERNAL_SERVER_ERROR", {
     code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
@@ -110,7 +105,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
   ({
     baseURL: siteUrl,
     database: authComponent.adapter(ctx),
-    disabledPaths: disabledLegacyAnonymousPaths,
     account: {
       accountLinking: {
         enabled: true,
@@ -143,7 +137,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       },
     },
     plugins: [
-      anonymous({ disableDeleteAnonymousUser: true }),
       /*
        * generatedUsername() must run before Better Auth's username plugin so
        * Google-created users are normalized before username validation runs.

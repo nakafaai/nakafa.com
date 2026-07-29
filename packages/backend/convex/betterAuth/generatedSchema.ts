@@ -21,7 +21,6 @@ export const tables = {
     image: v.optional(v.union(v.null(), v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),
-    isAnonymous: v.optional(v.union(v.null(), v.boolean())),
     username: v.optional(v.union(v.null(), v.string())),
     displayUsername: v.optional(v.union(v.null(), v.string())),
     userId: v.optional(v.union(v.null(), v.string())),
