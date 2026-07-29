@@ -19,7 +19,7 @@ import type {
   FunctionType,
 } from "convex/server";
 import { getFunctionName } from "convex/server";
-import { Config, Effect, ParseResult, Schema } from "effect";
+import { Config, Effect, Option, ParseResult, Schema } from "effect";
 
 class ConvexConfigError extends Schema.TaggedError<ConvexConfigError>()(
   "ConvexConfigError",
@@ -73,7 +73,7 @@ const missingConfigMessage = (options: SyncOptions) => {
     );
   }
 
-  return "CONVEX_URL not set. Run: npx convex dev";
+  return "CONVEX_URL not set. Run: pnpm exec convex dev";
 };
 
 /** Renders Effect schema parse failures into a script-friendly string. */
@@ -193,7 +193,11 @@ const callConvexFunction = Effect.fn("scripts.callConvexFunction")(function* <
 });
 
 /**
- * Reads the target Convex deployment URL and local auth token for script calls.
+ * Reads the target Convex deployment URL and the narrowest available auth.
+ *
+ * A scoped deploy key lets CI and isolated agents sync their own deployment
+ * without relying on a developer's global Convex login. Interactive local
+ * development falls back to the authenticated Convex CLI configuration.
  *
  * References:
  * - Effect Config: https://effect.website/docs/configuration/
@@ -208,33 +212,46 @@ export const getConvexConfig = Effect.fn("scripts.getConvexConfig")(function* (
       () => new ConvexConfigError({ message: missingConfigMessage(options) })
     )
   );
+  const deployKey = yield* Config.option(
+    Config.nonEmptyString("CONVEX_DEPLOY_KEY")
+  );
+
+  if (Option.isSome(deployKey)) {
+    if (options.prod) {
+      logWarning(`PRODUCTION MODE: Syncing to ${url}`);
+    }
+
+    return { accessToken: deployKey.value, url };
+  }
+
   const configPath = join(homedir(), ".convex", "config.json");
   const content = yield* Effect.try({
     try: () => readFileSync(configPath, "utf8"),
     catch: () =>
       new ConvexAuthError({
-        message: "Not authenticated. Run: npx convex dev",
+        message:
+          "No CONVEX_DEPLOY_KEY and no local login. Run: pnpm exec convex dev",
       }),
   });
   const json = yield* Effect.try({
     try: () => JSON.parse(content),
     catch: () =>
       new ConvexAuthError({
-        message: "Invalid Convex config. Run: npx convex dev",
+        message: "Invalid Convex config. Run: pnpm exec convex dev",
       }),
   });
   const parsed = yield* Schema.decodeUnknown(ConvexAuthConfigSchema)(json).pipe(
     Effect.mapError(
       () =>
         new ConvexAuthError({
-          message: "Invalid Convex config. Run: npx convex dev",
+          message: "Invalid Convex config. Run: pnpm exec convex dev",
         })
     )
   );
 
   if (!parsed.accessToken) {
     return yield* new ConvexAuthError({
-      message: "No access token. Run: npx convex dev",
+      message: "No access token. Run: pnpm exec convex dev",
     });
   }
 
