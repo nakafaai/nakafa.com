@@ -36,7 +36,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   email: string;
                   emailVerified: boolean;
                   image?: null | string;
-                  isAnonymous?: null | boolean;
                   name: string;
                   updatedAt: number;
                   userId?: null | string;
@@ -114,7 +113,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
-                    | "isAnonymous"
                     | "username"
                     | "displayUsername"
                     | "userId"
@@ -310,7 +308,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
-                    | "isAnonymous"
                     | "username"
                     | "displayUsername"
                     | "userId"
@@ -566,7 +563,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   email?: string;
                   emailVerified?: boolean;
                   image?: null | string;
-                  isAnonymous?: null | boolean;
                   name?: string;
                   updatedAt?: number;
                   userId?: null | string;
@@ -581,7 +577,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
-                    | "isAnonymous"
                     | "username"
                     | "displayUsername"
                     | "userId"
@@ -810,7 +805,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   email?: string;
                   emailVerified?: boolean;
                   image?: null | string;
-                  isAnonymous?: null | boolean;
                   name?: string;
                   updatedAt?: number;
                   userId?: null | string;
@@ -825,7 +819,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
-                    | "isAnonymous"
                     | "username"
                     | "displayUsername"
                     | "userId"
