@@ -3,6 +3,37 @@ import type { CaptureResult } from "posthog-js";
 
 const authorizedUserId = MutableRef.make(Option.none<string>());
 
+interface AnalyticsIdentityClient {
+  get_property(key: string): unknown;
+  has_opted_out_capturing(): boolean;
+  opt_out_capturing(): void;
+  reset(resetDeviceId?: boolean): void;
+}
+
+/** Replaces the current analytics identity without changing capture consent. */
+export function resetAnalyticsIdentity(
+  client: AnalyticsIdentityClient,
+  resetDeviceId = false
+) {
+  const wasOptedOut = client.has_opted_out_capturing();
+  client.reset(resetDeviceId);
+
+  if (wasOptedOut) {
+    client.opt_out_capturing();
+  }
+}
+
+/** Removes a persisted identified user before the SDK's initial pageview. */
+export function resetPersistedAnalyticsIdentity(
+  client: AnalyticsIdentityClient
+) {
+  if (typeof client.get_property("$user_id") !== "string") {
+    return;
+  }
+
+  resetAnalyticsIdentity(client);
+}
+
 /** Authorizes identified analytics only after the current app user resolves. */
 export function authorizeAnalyticsIdentity(userId: string) {
   MutableRef.set(authorizedUserId, Option.some(userId));
