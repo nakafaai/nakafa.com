@@ -5,11 +5,15 @@ import {
 } from "@repo/backend/convex/auth/deletion/constants";
 import {
   type AccountDeletionAttemptStatus,
+  type AccountDeletionBrowserAttempt,
   type AccountDeletionPreparationOutcome,
+  type AccountDeletionRequestPhase,
   accountDeletionAttemptStatus,
   accountDeletionPreparationOutcome,
+  accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { Effect, Either, Schema } from "effect";
+import type { AccountDeletionAttemptStorageFailed } from "@/lib/auth/account-deletion-attempt";
 import { authClient } from "@/lib/auth/client";
 
 const accountDeletionFailedCode = "ACCOUNT_DELETION_FAILED";
@@ -19,31 +23,31 @@ const accountDeletionSessionExpiredCode = "ACCOUNT_DELETION_SESSION_EXPIRED";
 const betterAuthSessionExpiredCode = "SESSION_EXPIRED";
 const betterAuthUserDeletedMessage = "User deleted";
 
-export const accountDeletionRequestPhase = {
-  deletion: "deletion",
-  preparation: "preparation",
-} as const;
-
-export type AccountDeletionRequestPhase =
-  (typeof accountDeletionRequestPhase)[keyof typeof accountDeletionRequestPhase];
-
 type DeleteUserResult = Awaited<ReturnType<typeof authClient.deleteUser>>;
-type DeleteUserRequest = (attemptId: string) => Promise<DeleteUserResult>;
-type CancelAccountDeletionRequest = (attemptId: string) => Promise<boolean>;
+type AccountDeletionAttemptId = AccountDeletionBrowserAttempt["attemptId"];
+type DeleteUserRequest = (
+  attemptId: AccountDeletionAttemptId
+) => Promise<DeleteUserResult>;
+type CancelAccountDeletionRequest = (
+  attemptId: AccountDeletionAttemptId
+) => Promise<boolean>;
 type PrepareAccountDeletionRequest = (
-  attemptId: string
+  attemptId: AccountDeletionAttemptId
 ) => Promise<AccountDeletionPreparationOutcome>;
+type PersistAccountDeletionAttempt = (
+  attempt: AccountDeletionBrowserAttempt
+) => Effect.Effect<void, AccountDeletionAttemptStorageFailed>;
 type ReconcileAccountDeletionRequest = (
-  attemptId: string
+  attemptId: AccountDeletionAttemptId
 ) => Promise<AccountDeletionAttemptStatus>;
 
 interface AccountDeletionOperations {
-  readonly attemptId: string;
+  readonly attempt: AccountDeletionBrowserAttempt;
   readonly cancelPreparation: CancelAccountDeletionRequest;
+  readonly persist: PersistAccountDeletionAttempt;
   readonly prepare: PrepareAccountDeletionRequest;
   readonly reconcile: ReconcileAccountDeletionRequest;
   readonly request?: DeleteUserRequest;
-  readonly startPhase: AccountDeletionRequestPhase;
 }
 
 /** Raised when Better Auth requires a fresh session before account deletion. */
@@ -86,8 +90,9 @@ export class AccountDeletionSchoolMemberRequired extends Schema.TaggedError<Acco
 /** Deletes the current Better Auth account through a typed failure channel. */
 export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
   function* ({
-    attemptId,
+    attempt,
     cancelPreparation,
+    persist,
     prepare,
     reconcile,
     request = async (requestAttemptId) =>
@@ -98,8 +103,8 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
           },
         },
       }),
-    startPhase,
   }: AccountDeletionOperations) {
+    const { attemptId, phase: startPhase } = attempt;
     const cancelPreparedAttempt = (
       uncertainPhase: AccountDeletionRequestPhase
     ) =>
@@ -119,6 +124,15 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
               attemptId,
               code: accountDeletionRequestUncertainCode,
               phase: uncertainPhase,
+            })
+        )
+      );
+    const persistAttemptPhase = (phase: AccountDeletionRequestPhase) =>
+      persist({ attemptId, phase }).pipe(
+        Effect.mapError(
+          () =>
+            new AccountDeletionFailed({
+              code: accountDeletionFailedCode,
             })
         )
       );
@@ -170,6 +184,15 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
           code: accountDeletionFailedCode,
         });
       }
+
+      const persistedDeletionPhase = yield* Effect.either(
+        persistAttemptPhase(accountDeletionRequestPhase.deletion)
+      );
+
+      if (Either.isLeft(persistedDeletionPhase)) {
+        yield* cancelPreparedAttempt(accountDeletionRequestPhase.preparation);
+        return yield* persistedDeletionPhase.left;
+      }
     }
 
     if (
@@ -217,12 +240,14 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
 
     if (!result.error) {
       yield* cancelPreparedAttempt(accountDeletionRequestPhase.deletion);
+      yield* persistAttemptPhase(accountDeletionRequestPhase.preparation);
       return yield* new AccountDeletionFailed({
         code: accountDeletionFailedCode,
       });
     }
 
     if (result.error.code === ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE) {
+      yield* persistAttemptPhase(accountDeletionRequestPhase.preparation);
       return yield* new AccountDeletionRequestUncertain({
         attemptId,
         code: accountDeletionRequestUncertainCode,
@@ -232,13 +257,14 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
 
     if (result.error.code === betterAuthSessionExpiredCode) {
       yield* cancelPreparedAttempt(accountDeletionRequestPhase.deletion);
+      yield* persistAttemptPhase(accountDeletionRequestPhase.preparation);
       return yield* new AccountDeletionSessionExpired({
         code: accountDeletionSessionExpiredCode,
       });
     }
 
     if (result.error.code === ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE) {
-      yield* cancelPreparedAttempt(accountDeletionRequestPhase.deletion);
+      yield* persistAttemptPhase(accountDeletionRequestPhase.preparation);
       return yield* new AccountDeletionSchoolMemberRequired({
         code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
       });
