@@ -1,7 +1,7 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
+import { cancelAccountDeletionAttemptByToken } from "@repo/backend/convex/auth/deletion/attemptCancellation";
 import { cancelAccountDeletionBatch } from "@repo/backend/convex/auth/deletion/cancel";
-import { cancelAccountDeletionAttemptByToken } from "@repo/backend/convex/auth/deletion/cancel-attempt";
 import { claimAccountDeletion as claimAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/claim";
 import { continueAccountDeletionCommitProgram } from "@repo/backend/convex/auth/deletion/commit";
 import { ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE } from "@repo/backend/convex/auth/deletion/constants";
