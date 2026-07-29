@@ -126,7 +126,6 @@ const ResponseContent = memo(
   ({
     className,
     children,
-    id,
     allowedImagePrefixes = DEFAULT_ALLOWED_PREFIXES,
     allowedLinkPrefixes = DEFAULT_ALLOWED_PREFIXES,
     defaultOrigin = "https://nakafa.com",
@@ -137,13 +136,11 @@ const ResponseContent = memo(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
         className
       )}
-      id={id}
     >
       <Blocks
         allowedImagePrefixes={allowedImagePrefixes}
         allowedLinkPrefixes={allowedLinkPrefixes}
         defaultOrigin={defaultOrigin}
-        id={id}
         {...props}
       >
         {children}

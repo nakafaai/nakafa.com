@@ -136,6 +136,7 @@ export function TryoutChoiceSurface({
   onSelect,
   reviewMode,
 }: TryoutChoiceSurfaceProps) {
+  const labelId = `${id}-label`;
   const variant = getTryoutChoiceVariant({
     checked,
     isCorrect,
@@ -150,7 +151,7 @@ export function TryoutChoiceSurface({
       )}
     >
       <Checkbox
-        aria-labelledby={id}
+        aria-labelledby={labelId}
         checked={checked}
         className="mt-1 shrink-0 cursor-pointer"
         disabled={disabled}
@@ -160,12 +161,11 @@ export function TryoutChoiceSurface({
           }
         }}
       />
-      <Response
-        className="wrap-anywhere h-auto min-w-0 flex-1 whitespace-normal"
-        id={id}
-      >
-        {label}
-      </Response>
+      <div className="min-w-0 flex-1" id={labelId}>
+        <Response className="wrap-anywhere h-auto whitespace-normal" id={id}>
+          {label}
+        </Response>
+      </div>
     </Label>
   );
 }
