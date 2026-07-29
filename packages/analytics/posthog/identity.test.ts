@@ -4,6 +4,7 @@ import {
   filterAuthorizedAnalyticsEvent,
   resetAnalyticsIdentity,
   resetPersistedAnalyticsIdentity,
+  resolveAnalyticsIdentityAuthorization,
   revokeAnalyticsIdentity,
 } from "@repo/analytics/posthog/identity";
 import type { CaptureResult } from "posthog-js";
@@ -56,6 +57,55 @@ describe("PostHog browser identity gate", () => {
     revokeAnalyticsIdentity();
 
     expect(filterAuthorizedAnalyticsEvent(currentUserEvent)).toBeNull();
+  });
+
+  it("keeps authenticated query failures unresolved", () => {
+    expect(
+      resolveAnalyticsIdentityAuthorization({
+        isAuthenticated: true,
+        isAuthLoading: false,
+        isUserResolved: false,
+        userId: null,
+      })
+    ).toEqual({ status: "unresolved" });
+    expect(
+      resolveAnalyticsIdentityAuthorization({
+        isAuthenticated: true,
+        isAuthLoading: false,
+        isUserResolved: true,
+        userId: null,
+      })
+    ).toEqual({ status: "unresolved" });
+  });
+
+  it("authorizes anonymous identity only after auth resolves signed out", () => {
+    expect(
+      resolveAnalyticsIdentityAuthorization({
+        isAuthenticated: false,
+        isAuthLoading: true,
+        isUserResolved: false,
+        userId: null,
+      })
+    ).toEqual({ status: "unresolved" });
+    expect(
+      resolveAnalyticsIdentityAuthorization({
+        isAuthenticated: false,
+        isAuthLoading: false,
+        isUserResolved: false,
+        userId: null,
+      })
+    ).toEqual({ status: "anonymous" });
+  });
+
+  it("authorizes only the resolved authenticated app user", () => {
+    expect(
+      resolveAnalyticsIdentityAuthorization({
+        isAuthenticated: true,
+        isAuthLoading: false,
+        isUserResolved: true,
+        userId: USER_ID,
+      })
+    ).toEqual({ status: "identified", userId: USER_ID });
   });
 
   it("replaces analytics identity while preserving capture consent", () => {
