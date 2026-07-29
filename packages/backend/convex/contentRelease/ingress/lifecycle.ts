@@ -6,6 +6,7 @@ import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/requ
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
+import type { ReadModelStatus } from "@repo/backend/convex/contentRelease/models";
 import {
   decodeProofJson,
   decodeRendererJson,
@@ -15,12 +16,11 @@ import type { proofPollValidator } from "@repo/backend/convex/contentRelease/pro
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import type {
   abortReceiptValidator,
-  progressValidator,
   publicationReceiptValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { makeFunctionReference } from "convex/server";
 import type { Infer } from "convex/values";
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
 
 type LifecycleRequest = Extract<
   PublicationRequest,
@@ -43,7 +43,6 @@ interface StoredEnvelope {
   readonly rendererJson: string;
 }
 type AbortReceipt = Infer<typeof abortReceiptValidator>;
-type ModelProgress = Infer<typeof progressValidator>;
 type ProofPoll = Infer<typeof proofPollValidator>;
 type PublicationReceipt = Infer<typeof publicationReceiptValidator>;
 const envelopeReference = makeFunctionReference<
@@ -71,21 +70,11 @@ const recoveryReference = makeFunctionReference<
   { manifestHash: string; releaseId: string; rendererJson: string },
   PublicationReceipt
 >("contentRelease/activate:activateRecovery");
-const articleSyncReference = makeFunctionReference<
-  "mutation",
+const modelStatusReference = makeFunctionReference<
+  "query",
   { releaseId: string },
-  ModelProgress
->("contentRelease/article/sync:page");
-const searchSyncReference = makeFunctionReference<
-  "mutation",
-  { releaseId: string },
-  ModelProgress
->("contentRelease/search/sync:page");
-const materialSyncReference = makeFunctionReference<
-  "mutation",
-  { releaseId: string },
-  ModelProgress
->("contentRelease/material/sync:page");
+  ReadModelStatus
+>("contentRelease/models:status");
 const proofPollReference = makeFunctionReference<
   "mutation",
   { manifestHash: string; releaseId: string },
@@ -123,28 +112,26 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
   return envelope.rendererJson;
 });
 
-/** Drains one active read model while its scheduled resume remains durable. */
-const syncActiveModel = Effect.fn("contentRelease.syncActiveModel")(function* (
-  ctx: ActionCtx,
-  releaseId: string,
-  label: string,
-  reference: typeof articleSyncReference
-) {
-  while (true) {
-    const result = yield* callInternal(() =>
-      ctx.runMutation(reference, { releaseId })
-    );
-    if (result.done) {
-      return;
-    }
-    if (result.processed === 0) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `${label} sync ${releaseId} stopped without progress.`
+/** Waits until the single durable model lineage converges or fails visibly. */
+const waitForReadModels = Effect.fn("contentRelease.waitForReadModels")(
+  function* (ctx: ActionCtx, releaseId: string) {
+    while (true) {
+      const status = yield* callInternal(() =>
+        ctx.runQuery(modelStatusReference, { releaseId })
       );
+      if (status.phase === "completed") {
+        return;
+      }
+      if (status.phase === "failed") {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          `Read-model sync ${releaseId} failed before completion.`
+        );
+      }
+      yield* Effect.sleep(Duration.millis(100));
     }
   }
-});
+);
 
 /** Executes authenticated verification, activation, or recovery activation. */
 export const advancePublication = Effect.fn(
@@ -209,9 +196,7 @@ export const advancePublication = Effect.fn(
         rendererJson,
       })
     );
-    yield* syncActiveModel(ctx, releaseId, "Article", articleSyncReference);
-    yield* syncActiveModel(ctx, releaseId, "Material", materialSyncReference);
-    yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
+    yield* waitForReadModels(ctx, releaseId);
     return { ok: true, operation: request.operation, value };
   }
   const value = yield* callInternal(() =>
@@ -221,8 +206,6 @@ export const advancePublication = Effect.fn(
       rendererJson,
     })
   );
-  yield* syncActiveModel(ctx, releaseId, "Article", articleSyncReference);
-  yield* syncActiveModel(ctx, releaseId, "Material", materialSyncReference);
-  yield* syncActiveModel(ctx, releaseId, "Search", searchSyncReference);
+  yield* waitForReadModels(ctx, releaseId);
   return { ok: true, operation: request.operation, value };
 });

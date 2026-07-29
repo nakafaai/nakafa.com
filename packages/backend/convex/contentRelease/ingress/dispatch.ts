@@ -23,7 +23,7 @@ import {
   publicationSuccess,
 } from "@repo/backend/convex/contentRelease/ingress/response";
 import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/stage";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { runConvexActionProgram } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
 import { Effect, Either } from "effect";
 
@@ -108,7 +108,7 @@ export const dispatchPublication = Effect.fn(
 
 /** Runs the publication program with the reviewed production key registry. */
 export function dispatchHandler(ctx: ActionCtx, input: DispatchInput) {
-  return runConvexProgram(
+  return runConvexActionProgram(
     dispatchPublication(ctx, input).pipe(
       Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver)
     )

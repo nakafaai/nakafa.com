@@ -96,21 +96,31 @@ describe("contentRelease/activate", () => {
     const pending = await t.run((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
     );
-    expect(pending).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: expect.stringContaining("contentRelease/article/sync:resume"),
-        }),
-        expect.objectContaining({
-          name: expect.stringContaining("contentRelease/material/sync:resume"),
-        }),
-        expect.objectContaining({
-          name: expect.stringContaining("contentRelease/search/sync:resume"),
-        }),
-      ])
+    expect(pending).toEqual([
+      expect.objectContaining({
+        name: expect.stringContaining("contentRelease/models:resume"),
+        state: { kind: "pending" },
+      }),
+    ]);
+
+    const repeatedPending = await t.mutation(activate, {
+      manifestHash: CANDIDATE.manifestHash,
+      releaseId: CANDIDATE.releaseId,
+      rendererJson: testRendererJson(),
+    });
+    const deduplicated = await t.run((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
     );
-    expect(pending).toHaveLength(3);
+    expect(deduplicated).toHaveLength(1);
+
     await t.finishAllScheduledFunctions(vi.runAllTimers);
+    const completedJobs = await t.run((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    expect(completedJobs).toHaveLength(3);
+    expect(completedJobs.every(({ state }) => state.kind === "success")).toBe(
+      true
+    );
 
     const repeated = await t.mutation(activate, {
       manifestHash: CANDIDATE.manifestHash,
@@ -121,12 +131,14 @@ describe("contentRelease/activate", () => {
     const state = await t.run((ctx) => ctx.db.query("contentState").unique());
 
     expect(receipt).toEqual(expectedReceipt(CANDIDATE));
+    expect(repeatedPending).toEqual(receipt);
     expect(repeated).toEqual(receipt);
     expect(state).toMatchObject({
       activeManifestHash: CANDIDATE.manifestHash,
       activeReleaseId: CANDIDATE.releaseId,
       activeSequence: CANDIDATE.sequence,
       articleReleaseId: CANDIDATE.releaseId,
+      materialReleaseId: CANDIDATE.releaseId,
       recoveryReleaseId: RECOVERY.releaseId,
       searchReleaseId: CANDIDATE.releaseId,
     });
@@ -186,7 +198,7 @@ describe("contentRelease/activate", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
   });
 
-  it("keeps an activated pointer observable when a durable model job fails", async () => {
+  it("restarts a failed model lineage under one new generation", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await seedVerifiedPair(ctx);
@@ -199,7 +211,8 @@ describe("contentRelease/activate", () => {
       rendererJson: testRendererJson(),
     });
     await t.finishAllScheduledFunctions(vi.runAllTimers);
-    const stored = await t.run(async (ctx) => ({
+    const failed = await t.run(async (ctx) => ({
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
       release: await ctx.db
         .query("contentReleases")
         .withIndex("by_releaseId", (index) =>
@@ -209,10 +222,38 @@ describe("contentRelease/activate", () => {
       state: await ctx.db.query("contentState").unique(),
     }));
 
-    expect(stored.release?.status).toBe("completed");
-    expect(stored.state?.activeReleaseId).toBe(CANDIDATE.releaseId);
-    expect(stored.state?.articleReleaseId).toBeUndefined();
-    expect(stored.state?.searchReleaseId).toBeUndefined();
+    expect(failed.jobs).toEqual([
+      expect.objectContaining({
+        state: expect.objectContaining({ kind: "failed" }),
+      }),
+    ]);
+    expect(failed.release).toMatchObject({
+      status: "completed",
+      syncGeneration: 1,
+    });
+    expect(failed.state?.activeReleaseId).toBe(CANDIDATE.releaseId);
+    expect(failed.state?.articleReleaseId).toBeUndefined();
+    expect(failed.state?.materialReleaseId).toBeUndefined();
+    expect(failed.state?.searchReleaseId).toBeUndefined();
+
+    await t.mutation(activate, {
+      manifestHash: CANDIDATE.manifestHash,
+      releaseId: CANDIDATE.releaseId,
+      rendererJson: testRendererJson(),
+    });
+    const restarted = await t.run(async (ctx) => ({
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      release: await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (index) =>
+          index.eq("releaseId", CANDIDATE.releaseId)
+        )
+        .unique(),
+    }));
+
+    expect(restarted.jobs).toHaveLength(2);
+    expect(restarted.jobs.at(-1)?.state).toEqual({ kind: "pending" });
+    expect(restarted.release?.syncGeneration).toBe(2);
   });
 
   it("rejects renderer drift and a stale active base", async () => {

@@ -1,5 +1,6 @@
 import {
   getUnknownErrorMessage,
+  runConvexActionProgram,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
 import { Clock, Effect, Schema } from "effect";
@@ -59,6 +60,12 @@ describe("lib/effect", () => {
     await expect(runConvexProgram(Effect.sleep(1))).rejects.toThrow(
       "Effect.sleep is not supported inside native Convex handlers."
     );
+  });
+
+  it("supports the live clock at the Node action boundary", async () => {
+    await expect(
+      runConvexActionProgram(Effect.sleep(1).pipe(Effect.as("done")))
+    ).resolves.toBe("done");
   });
 
   it("maps tagged Effect failures into ConvexError payloads", async () => {
