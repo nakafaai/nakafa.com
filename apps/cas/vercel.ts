@@ -10,10 +10,4 @@ export const config: VercelConfig = {
       main: true,
     },
   },
-  rewrites: [
-    {
-      source: "/(.*)",
-      destination: "/api/index",
-    },
-  ],
 };
