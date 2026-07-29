@@ -22,7 +22,7 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
   const [store] = useState(createAiStore);
   let ownerId: string | null | undefined;
   if (!(isPending || error)) {
-    ownerId = session?.user.isAnonymous ? null : (session?.user.id ?? null);
+    ownerId = session?.user.id ?? null;
   }
 
   useEffect(() => {
