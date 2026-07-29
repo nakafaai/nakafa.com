@@ -15,6 +15,14 @@ import { describe, expect, it, vi } from "vitest";
 const NOW = Date.UTC(2026, 6, 28, 8, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 
+function prepareInTest(
+  ctx: MutationCtx,
+  authId: string,
+  attemptId = ATTEMPT_ID
+) {
+  return runConvexProgram(prepareAccountDeletion(ctx, authId, attemptId));
+}
+
 async function settlePreparation(
   prepare: () => Promise<AccountDeletionPreparationOutcome>,
   observe: (
@@ -92,9 +100,7 @@ describe("auth/deletion/prepare", () => {
     const t = convexTest(schema, convexModules);
 
     const outcome = await t.mutation((ctx) =>
-      runConvexProgram(
-        prepareAccountDeletion(ctx, "missing-auth-user", ATTEMPT_ID)
-      )
+      prepareInTest(ctx, "missing-auth-user")
     );
 
     expect(outcome).toBe("ready");
@@ -112,9 +118,7 @@ describe("auth/deletion/prepare", () => {
     });
 
     const outcome = await t.mutation((ctx) =>
-      runConvexProgram(
-        prepareAccountDeletion(ctx, "canceled-attempt-owner", ATTEMPT_ID)
-      )
+      prepareInTest(ctx, "canceled-attempt-owner")
     );
     const state = await t.query(async (ctx) => ({
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),
@@ -141,11 +145,7 @@ describe("auth/deletion/prepare", () => {
       return { ownerId, schoolId };
     });
     const outcome = await settlePreparation(() =>
-      t.mutation((ctx) =>
-        runConvexProgram(
-          prepareAccountDeletion(ctx, "school-owner", ATTEMPT_ID)
-        )
-      )
+      t.mutation((ctx) => prepareInTest(ctx, "school-owner"))
     );
     const state = await t.query(async (ctx) => ({
       owner: await ctx.db.get("users", seeded.ownerId),
@@ -184,11 +184,7 @@ describe("auth/deletion/prepare", () => {
       return { ownerId, schoolId, successorId };
     });
     const outcome = await settlePreparation(() =>
-      t.mutation((ctx) =>
-        runConvexProgram(
-          prepareAccountDeletion(ctx, "transfer-owner", ATTEMPT_ID)
-        )
-      )
+      t.mutation((ctx) => prepareInTest(ctx, "transfer-owner"))
     );
     const state = await t.query(async (ctx) => ({
       owner: await ctx.db.get("users", seeded.ownerId),
@@ -239,9 +235,7 @@ describe("auth/deletion/prepare", () => {
     });
 
     const outcome = await t.mutation((ctx) =>
-      runConvexProgram(
-        prepareAccountDeletion(ctx, "quiesced-owner", ATTEMPT_ID)
-      )
+      prepareInTest(ctx, "quiesced-owner")
     );
     const state = await t.query(async (ctx) => ({
       owner: await ctx.db.get("users", ownerId),
@@ -279,11 +273,7 @@ describe("auth/deletion/prepare", () => {
       return ownerId;
     });
     const outcome = await settlePreparation(() =>
-      t.mutation((ctx) =>
-        runConvexProgram(
-          prepareAccountDeletion(ctx, "concurrent-owner", ATTEMPT_ID)
-        )
-      )
+      t.mutation((ctx) => prepareInTest(ctx, "concurrent-owner"))
     );
     const owner = await t.query(async (ctx) => await ctx.db.get(ownerId));
 
@@ -320,9 +310,7 @@ describe("auth/deletion/prepare", () => {
       return successorId;
     });
     const outcome = await t.mutation((ctx) =>
-      runConvexProgram(
-        prepareAccountDeletion(ctx, "reserved-successor", ATTEMPT_ID)
-      )
+      prepareInTest(ctx, "reserved-successor")
     );
     const state = await t.query(async (ctx) => ({
       preparations: await ctx.db.query("accountDeletionPreparations").collect(),
@@ -341,9 +329,7 @@ describe("auth/deletion/prepare", () => {
 
     for (const now of [NOW, NOW + 1000]) {
       vi.setSystemTime(now);
-      await t.mutation((ctx) =>
-        runConvexProgram(prepareAccountDeletion(ctx, "retry-owner", ATTEMPT_ID))
-      );
+      await t.mutation((ctx) => prepareInTest(ctx, "retry-owner"));
     }
 
     const preparations = await t.query((ctx) =>
@@ -363,21 +349,15 @@ describe("auth/deletion/prepare", () => {
 
     await t.mutation((ctx) => insertUser(ctx, "concurrent-attempt-owner"));
 
-    await t.mutation((ctx) =>
-      runConvexProgram(
-        prepareAccountDeletion(ctx, "concurrent-attempt-owner", ATTEMPT_ID)
-      )
-    );
+    await t.mutation((ctx) => prepareInTest(ctx, "concurrent-attempt-owner"));
     const initialPreparation = await t.query((ctx) =>
       ctx.db.query("accountDeletionPreparations").unique()
     );
     const outcome = await t.mutation((ctx) =>
-      runConvexProgram(
-        prepareAccountDeletion(
-          ctx,
-          "concurrent-attempt-owner",
-          "019fa44c-02be-7cd0-a4ed-61a7af8e0621"
-        )
+      prepareInTest(
+        ctx,
+        "concurrent-attempt-owner",
+        "019fa44c-02be-7cd0-a4ed-61a7af8e0621"
       )
     );
     const preparation = await t.query((ctx) =>
@@ -419,11 +399,7 @@ describe("auth/deletion/prepare", () => {
       () => {
         vi.setSystemTime(currentTime);
         currentTime += 1000;
-        return t.mutation((ctx) =>
-          runConvexProgram(
-            prepareAccountDeletion(ctx, "many-schools-owner", ATTEMPT_ID)
-          )
-        );
+        return t.mutation((ctx) => prepareInTest(ctx, "many-schools-owner"));
       },
       async (stepOutcome) => {
         const preparation = await t.query((ctx) =>
@@ -481,11 +457,7 @@ describe("auth/deletion/prepare", () => {
       return insertedOwnerId;
     });
     const outcome = await settlePreparation(() =>
-      t.mutation((ctx) =>
-        runConvexProgram(
-          prepareAccountDeletion(ctx, "partially-reserved-owner", ATTEMPT_ID)
-        )
-      )
+      t.mutation((ctx) => prepareInTest(ctx, "partially-reserved-owner"))
     );
     const partial = await t.query(async (ctx) => ({
       jobs: await ctx.db.system.query("_scheduled_functions").collect(),
