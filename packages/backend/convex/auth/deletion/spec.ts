@@ -13,6 +13,28 @@ export class AccountDeletionCancellationUnprovenError extends Schema.TaggedError
   }
 ) {}
 
+export const accountDeletionRequestPhase = {
+  deletion: "deletion",
+  preparation: "preparation",
+} as const;
+
+const accountDeletionRequestPhaseSchema = Schema.Literal(
+  ...Object.values(accountDeletionRequestPhase)
+);
+
+export type AccountDeletionRequestPhase = Schema.Schema.Type<
+  typeof accountDeletionRequestPhaseSchema
+>;
+
+export const accountDeletionBrowserAttemptSchema = Schema.Struct({
+  attemptId: Schema.String,
+  phase: accountDeletionRequestPhaseSchema,
+});
+
+export type AccountDeletionBrowserAttempt = Schema.Schema.Type<
+  typeof accountDeletionBrowserAttemptSchema
+>;
+
 export const accountDeletionPreparationOutcome = {
   continue: "continue",
   ready: "ready",

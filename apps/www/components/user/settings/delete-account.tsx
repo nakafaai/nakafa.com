@@ -21,13 +21,13 @@ import {
 import { useConvex, useMutation } from "convex/react";
 import { Effect, Either } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { FormBlock } from "@/components/shared/form-block";
+import { deleteCurrentAccount } from "@/lib/auth/account-deletion";
 import {
-  type AccountDeletionRequestPhase,
-  accountDeletionRequestPhase,
-  deleteCurrentAccount,
-} from "@/lib/auth/account-deletion";
+  loadOrCreateAccountDeletionAttempt,
+  saveAccountDeletionAttempt,
+} from "@/lib/auth/account-deletion-attempt";
 import {
   clearDeletedAccountBrowserIdentity,
   prepareAccountReauthentication,
@@ -58,10 +58,6 @@ export function UserSettingsDeleteAccount() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<DialogError>(null);
   const [isPending, setIsPending] = useState(false);
-  const retryAttempt = useRef<{
-    readonly attemptId: string;
-    readonly phase: AccountDeletionRequestPhase;
-  } | null>(null);
 
   function handleOpenChange(nextOpen: boolean) {
     if (isPending && !nextOpen) {
@@ -81,18 +77,18 @@ export function UserSettingsDeleteAccount() {
 
     const result = await Effect.runPromise(
       Effect.gen(function* () {
-        const retry = retryAttempt.current;
+        const attempt = yield* loadOrCreateAccountDeletionAttempt();
         const deletion = yield* Effect.either(
           deleteCurrentAccount({
-            attemptId: retry?.attemptId ?? crypto.randomUUID(),
+            attempt,
             cancelPreparation: (attemptId) =>
               cancelAccountDeletion({ attemptId }),
+            persist: saveAccountDeletionAttempt,
             prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
             reconcile: (attemptId) =>
               convex.query(api.auth.deletion.getAccountDeletionAttemptStatus, {
                 attemptId,
               }),
-            startPhase: retry?.phase ?? accountDeletionRequestPhase.preparation,
           })
         );
 
@@ -107,15 +103,6 @@ export function UserSettingsDeleteAccount() {
     if (Either.isRight(result)) {
       window.location.replace(`/${locale}`);
       return;
-    }
-
-    if (result.left._tag === "AccountDeletionRequestUncertain") {
-      retryAttempt.current = {
-        attemptId: result.left.attemptId,
-        phase: result.left.phase,
-      };
-    } else {
-      retryAttempt.current = null;
     }
 
     if (result.left._tag === "AccountDeletionSessionExpired") {
