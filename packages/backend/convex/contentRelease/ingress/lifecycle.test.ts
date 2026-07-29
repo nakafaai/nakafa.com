@@ -16,9 +16,18 @@ import {
   testProofRenderer,
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
+import { insertSignedCandidate } from "@repo/backend/test/content-stage";
+import { completeContentProof } from "@repo/backend/test/content-verify";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@repo/backend/content/trust", async () => {
+  const { TEST_KEY_RESOLVER } = await import(
+    "@repo/backend/test/content-proof"
+  );
+  return { contentKeyResolver: TEST_KEY_RESOLVER };
+});
 
 const releaseId = ReleaseIdSchema.make("release-lifecycle-ingress");
 const release = testSignedRelease(testEmptyManifest(releaseId));
@@ -73,6 +82,63 @@ function runLifecycle<A, E>(
 }
 
 describe("content release lifecycle ingress", () => {
+  it("returns authenticated evidence after durable proof completion", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      insertSignedCandidate(
+        ctx,
+        releaseId,
+        release,
+        JSON.stringify(TEST_PROOF_RENDERER)
+      )
+    );
+
+    await completeContentProof(t, release.manifestHash, releaseId);
+    await expect(
+      t.action((ctx) =>
+        runLifecycle(advancePublication(ctx, { operation: "verify", release }))
+      )
+    ).resolves.toMatchObject({
+      ok: true,
+      operation: "verify",
+      value: {
+        evidence: {
+          manifestHash: release.manifestHash,
+          releaseId,
+        },
+        phase: "verified",
+      },
+    });
+  });
+
+  it("surfaces only the stable terminal proof category", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      insertSignedCandidate(
+        ctx,
+        releaseId,
+        release,
+        JSON.stringify(TEST_PROOF_RENDERER)
+      )
+    );
+    await t.mutation(async (ctx) => {
+      const stored = await ctx.db.query("contentReleases").unique();
+      if (!stored) {
+        throw new Error("Expected proof release.");
+      }
+      await ctx.db.patch("contentReleases", stored._id, {
+        proofFailure: "failed",
+        status: "verifying",
+      });
+    });
+
+    await expect(
+      t.action((ctx) =>
+        runLifecycle(advancePublication(ctx, { operation: "verify", release }))
+      )
+    ).rejects.toThrow(`Content release ${releaseId} proof workflow failed.`);
+  });
+
   it("aborts through the server-owned cursor and returns exact evidence", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>

@@ -1,3 +1,4 @@
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { PublicationResponseSchema } from "@nakafa/aksara-contracts/transport/response";
 import { dispatchPublication } from "@repo/backend/convex/contentRelease/ingress/dispatch";
@@ -19,6 +20,7 @@ import {
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,
 } from "@repo/backend/test/content-proof";
+import { completeContentProof } from "@repo/backend/test/content-verify";
 import type { TestConvex } from "convex-test";
 import { Effect, Schema } from "effect";
 
@@ -47,8 +49,23 @@ export async function sendPublication(
   );
 }
 
+/** Polls one durable ingress proof after its scheduled workflow completes. */
+async function verifyPublication(
+  target: TestConvex<typeof schema>,
+  release: SignedContentRelease
+) {
+  await completeContentProof(
+    target,
+    release.manifestHash,
+    release.manifest.releaseId
+  );
+  return sendPublication(target, { operation: "verify", release });
+}
+
 /** Stages and verifies the authenticated technical candidate end to end. */
-export function publishIngressCandidate(target: TestConvex<typeof schema>) {
+export async function publishIngressCandidate(
+  target: TestConvex<typeof schema>
+) {
   const requests = [
     {
       operation: "stageRelease",
@@ -85,7 +102,14 @@ export function publishIngressCandidate(target: TestConvex<typeof schema>) {
       operation: "status",
       releaseId: ingressReleaseId,
     },
-    { operation: "verify", release: ingressRelease },
+  ];
+  const responses = await Effect.runPromise(
+    Effect.forEach(requests, (request) =>
+      Effect.promise(() => sendPublication(target, request))
+    )
+  );
+  responses.push(await verifyPublication(target, ingressRelease));
+  const afterVerification = [
     {
       afterIndex: -1,
       limit: 8,
@@ -101,16 +125,21 @@ export function publishIngressCandidate(target: TestConvex<typeof schema>) {
       rollbackOfManifestHash: ingressRelease.manifestHash,
     },
   ];
-  return Effect.runPromise(
-    Effect.forEach(requests, (request) =>
-      Effect.promise(() => sendPublication(target, request))
-    )
+  responses.push(
+    ...(await Effect.runPromise(
+      Effect.forEach(afterVerification, (request) =>
+        Effect.promise(() => sendPublication(target, request))
+      )
+    ))
   );
+  return responses;
 }
 
 /** Verifies, activates, and then activates the retained technical inverse. */
-export function publishIngressRecovery(target: TestConvex<typeof schema>) {
-  const requests = [
+export async function publishIngressRecovery(
+  target: TestConvex<typeof schema>
+) {
+  const staging = [
     {
       operation: "stageRecovery",
       release: ingressRecovery,
@@ -128,7 +157,14 @@ export function publishIngressRecovery(target: TestConvex<typeof schema>) {
       releaseId: ingressRecoveryId,
       routes: [ingressRecoveryRoute],
     },
-    { operation: "verify", release: ingressRecovery },
+  ];
+  const responses = await Effect.runPromise(
+    Effect.forEach(staging, (request) =>
+      Effect.promise(() => sendPublication(target, request))
+    )
+  );
+  responses.push(await verifyPublication(target, ingressRecovery));
+  const afterVerification = [
     {
       operation: "recovery",
       recoveryId: ingressRecoveryId,
@@ -160,9 +196,12 @@ export function publishIngressRecovery(target: TestConvex<typeof schema>) {
       operation: "headPage",
     },
   ];
-  return Effect.runPromise(
-    Effect.forEach(requests, (request) =>
-      Effect.promise(() => sendPublication(target, request))
-    )
+  responses.push(
+    ...(await Effect.runPromise(
+      Effect.forEach(afterVerification, (request) =>
+        Effect.promise(() => sendPublication(target, request))
+      )
+    ))
   );
+  return responses;
 }

@@ -27,6 +27,7 @@ import {
   testProofRenderer,
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
+import { prepareContentProof } from "@repo/backend/test/content-verify";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect, Stream } from "effect";
 import { describe, expect, it } from "vitest";
@@ -36,12 +37,18 @@ const manifest = testEmptyManifest(releaseId);
 const signedRelease = testSignedRelease(manifest);
 const manifestHash = signedRelease.manifestHash;
 
-/** Runs one proof through the same Node action boundary as production. */
-function runProof(
+/** Creates one isolated database for the production proof program. */
+function createProofTest() {
+  return convexTest(schema, convexModules);
+}
+
+/** Runs the production proof inline across convex-test's component limitation. */
+async function runProof(
   t: TestConvex<typeof schema>,
   hash = manifestHash,
   resolver = TEST_KEY_RESOLVER
 ) {
+  await prepareContentProof(t, releaseId);
   return t.action((ctx) =>
     Effect.runPromise(
       recomputeProgram(ctx, hash, releaseId).pipe(
@@ -184,7 +191,7 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
 
 describe("contentRelease/proof/verify", () => {
   it("recomputes an authenticated empty proof and commits it exactly once", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createProofTest();
     await t.mutation(insertRelease);
 
     const proof = await runProof(t);
@@ -200,12 +207,13 @@ describe("contentRelease/proof/verify", () => {
     });
     expect(release).toMatchObject({
       checkedItems: 0,
-      status: "verified",
+      proofJson: JSON.stringify(proof),
+      status: "verifying",
     });
   });
 
   it("fails closed when no production key has been reviewed", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createProofTest();
     await t.mutation(insertRelease);
 
     await expect(runProof(t, manifestHash, contentKeyResolver)).rejects.toThrow(
@@ -214,7 +222,7 @@ describe("contentRelease/proof/verify", () => {
   });
 
   it("recovers stable internal failures into the typed channel", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createProofTest();
 
     const result = await t.action((ctx) =>
       Effect.runPromise(
@@ -238,7 +246,7 @@ describe("contentRelease/proof/verify", () => {
   });
 
   it("replays multi-page item and proof streams before committing", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createProofTest();
     const hash = await t.mutation((ctx) => insertDeleteRelease(ctx, 9));
 
     const proof = await runProof(t, hash);
@@ -251,7 +259,7 @@ describe("contentRelease/proof/verify", () => {
   });
 
   it("rejects renderer and durable counter drift", async () => {
-    const rendererDrift = convexTest(schema, convexModules);
+    const rendererDrift = createProofTest();
     await rendererDrift.mutation(insertRelease);
     const changedRenderer = testProofRenderer("h1");
     await rendererDrift.mutation(async (ctx) => {
@@ -267,7 +275,7 @@ describe("contentRelease/proof/verify", () => {
       "no longer matches its frozen renderer"
     );
 
-    const counters = convexTest(schema, convexModules);
+    const counters = createProofTest();
     await counters.mutation(insertRelease);
     await counters.mutation(async (ctx) => {
       const release = await ctx.db.query("contentReleases").unique();

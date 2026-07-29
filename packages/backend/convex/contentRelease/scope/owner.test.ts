@@ -1,6 +1,8 @@
 import { ContentPublicationIdentitySchema } from "@nakafa/aksara-contracts/content";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { beginVerification } from "@repo/backend/convex/contentRelease/verify";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -21,14 +23,27 @@ import {
   TEST_OWNER_RECOVERY as RECOVERY,
   stageVerifiedOwner,
 } from "@repo/backend/test/release-owner";
-import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { convexTest, type TestConvex } from "convex-test";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-const begin = internal.contentRelease.verify.begin;
 const activate = internal.contentRelease.activate.activate;
 const abortRelease = internal.contentRelease.manifest.abort;
 const stageRecovery = internal.contentRelease.manifest.stageRecovery;
 const stageRelease = internal.contentRelease.manifest.stageRelease;
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+/** Freezes one staged ownership fixture through the production program. */
+function beginOwnerVerification(
+  t: TestConvex<typeof schema>,
+  releaseId: string
+) {
+  return t.mutation((ctx) =>
+    runConvexProgram(beginVerification(ctx, releaseId))
+  );
+}
 
 describe("contentRelease/scope/owner", () => {
   it("owns and verifies exact unchanged content without a release item", async () => {
@@ -51,9 +66,9 @@ describe("contentRelease/scope/owner", () => {
         sequence: CANDIDATE.sequence,
       },
     ]);
-    await expect(
-      t.mutation(begin, { releaseId: CANDIDATE.releaseId })
-    ).resolves.toBe(-1);
+    await expect(beginOwnerVerification(t, CANDIDATE.releaseId)).resolves.toBe(
+      -1
+    );
 
     const missing = convexTest(schema, convexModules);
     await missing.mutation(stageRelease, {
@@ -68,7 +83,7 @@ describe("contentRelease/scope/owner", () => {
       await ctx.db.delete("contentOwners", owner._id);
     });
     await expect(
-      missing.mutation(begin, { releaseId: CANDIDATE.releaseId })
+      beginOwnerVerification(missing, CANDIDATE.releaseId)
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
@@ -159,6 +174,7 @@ describe("contentRelease/scope/owner", () => {
   });
 
   it("keeps recovery validation immutable after candidate activation", async () => {
+    vi.useFakeTimers();
     const t = convexTest(schema, convexModules);
     await stageVerifiedOwner(
       t,

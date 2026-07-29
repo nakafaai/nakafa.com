@@ -1,8 +1,19 @@
+import { vWorkflowId, type WorkflowStatus } from "@convex-dev/workflow";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
+import {
+  ProofPollCoordinator,
+  type ProofPollCoordinatorService,
+  pollProgram,
+} from "@repo/backend/convex/contentRelease/proof/poll";
+import { recomputeProgram } from "@repo/backend/convex/contentRelease/proof/verify";
+import { beginVerification } from "@repo/backend/convex/contentRelease/verify";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import { testProjectionJson } from "@repo/backend/test/content-material";
+import { TEST_KEY_RESOLVER } from "@repo/backend/test/content-proof";
 import {
   TEST_RELEASE_ID,
   testDeleteJson,
@@ -20,13 +31,27 @@ import {
   insertRuntimeBinding,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime-head";
+import { parse } from "convex-helpers/validators";
 import type { TestConvex } from "convex-test";
+import { Effect } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
 const stageProjections = internal.contentRelease.items.stageProjectionBatch;
 const stageRoutes = internal.contentRelease.routes.stageRouteBatch;
-const beginVerify = internal.contentRelease.verify.begin;
+const TEST_PROOF_WORKFLOW_ID = parse(
+  vWorkflowId,
+  "content-proof-test-workflow"
+);
+const COMPLETED_PROOF_WORKFLOW_STATUS = {
+  result: null,
+  type: "completed",
+} satisfies WorkflowStatus;
+const completedProofCoordinator = {
+  cleanup: () => Effect.succeed(true),
+  start: () => Effect.dieMessage("Unexpected proof coordinator start."),
+  status: () => Effect.succeed(COMPLETED_PROOF_WORKFLOW_STATUS),
+} satisfies ProofPollCoordinatorService;
 
 /** Selects one complete family-owned upsert fixture without parallel helpers. */
 function upsertFixture(family: ContentFamily) {
@@ -142,5 +167,60 @@ export async function stageDeleteFixture(
 
 /** Freezes one fully staged fixture before item verification. */
 export function beginFixture(t: TestConvex<typeof schema>) {
-  return t.mutation(beginVerify, { releaseId: TEST_RELEASE_ID });
+  return t.mutation((ctx) =>
+    runConvexProgram(beginVerification(ctx, TEST_RELEASE_ID))
+  );
+}
+
+/** Freezes one release with validator-derived test coordinator identity. */
+export async function prepareContentProof(
+  target: TestConvex<typeof schema>,
+  releaseId: string
+) {
+  await target.mutation(async (ctx) => {
+    await runConvexProgram(beginVerification(ctx, releaseId));
+    const release = await ctx.db
+      .query("contentReleases")
+      .withIndex("by_releaseId", (query) => query.eq("releaseId", releaseId))
+      .unique();
+    if (release === null) {
+      throw new Error(`Expected content release ${releaseId}.`);
+    }
+    await ctx.db.patch("contentReleases", release._id, {
+      proofWorkflowId: TEST_PROOF_WORKFLOW_ID,
+    });
+  });
+}
+
+/** Recomputes proof with the production verifier and technical test key. */
+export async function recomputeContentProof(
+  target: TestConvex<typeof schema>,
+  manifestHash: string,
+  releaseId: string
+) {
+  await prepareContentProof(target, releaseId);
+  return target.action((ctx) =>
+    Effect.runPromise(
+      recomputeProgram(ctx, manifestHash, releaseId).pipe(
+        Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
+      )
+    )
+  );
+}
+
+/** Finalizes recomputed proof when a test owns no Workflow component state. */
+export async function completeContentProof(
+  target: TestConvex<typeof schema>,
+  manifestHash: string,
+  releaseId: string
+) {
+  const proof = await recomputeContentProof(target, manifestHash, releaseId);
+  await target.mutation((ctx) =>
+    runConvexProgram(
+      pollProgram(ctx, manifestHash, releaseId).pipe(
+        Effect.provideService(ProofPollCoordinator, completedProofCoordinator)
+      )
+    )
+  );
+  return proof;
 }

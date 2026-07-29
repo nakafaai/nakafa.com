@@ -13,6 +13,7 @@ import {
   loadState,
   ownsRole,
 } from "@repo/backend/convex/contentRelease/model";
+import { stopProofWorkflow } from "@repo/backend/convex/contentRelease/proof/coordinator";
 import { Effect } from "effect";
 
 /** Validates durable progress for one still-invisible abort operation. */
@@ -91,6 +92,8 @@ export const validateAbortedRelease = Effect.fn(
     release.abortedAt === undefined ||
     release.abortingAt === undefined ||
     release.abortedRows !== abortRowCount(release) ||
+    release.proofFailure !== undefined ||
+    release.proofWorkflowId !== undefined ||
     state?.activeReleaseId === releaseId ||
     state?.candidateReleaseId === releaseId ||
     state?.recoveryReleaseId === releaseId ||
@@ -143,6 +146,9 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
   if (release.status === "aborting") {
     yield* abortEvidence(release);
   }
+  if (release.proofWorkflowId) {
+    yield* stopProofWorkflow(ctx, release.proofWorkflowId);
+  }
   const total = abortRowCount(release);
   const before = release.abortedRows ?? 0;
   const deleted = yield* deleteAbortRows(ctx, releaseId, release.sequence);
@@ -172,6 +178,8 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
       abortedAt: complete ? now : undefined,
       abortedRows: processed,
       abortingAt: release.abortingAt ?? now,
+      proofFailure: undefined,
+      proofWorkflowId: undefined,
       status: complete ? "aborted" : "aborting",
       updatedAt: now,
     })
