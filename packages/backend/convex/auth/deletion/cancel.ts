@@ -169,7 +169,7 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
     preparation.deletionStartedAt !== undefined ||
     preparation.finalizedAt !== undefined
   ) {
-    return;
+    return false;
   }
 
   const userStillExists = yield* tryUserCleanup(() =>
@@ -177,10 +177,11 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
   );
 
   if (!userStillExists) {
-    return;
+    return false;
   }
 
   yield* cancelAccountDeletionAttemptBatch(ctx, preparation.authId, attemptId);
+  return true;
 });
 
 /** Removes finalized preparation metadata once its cleanup workflow is active. */
