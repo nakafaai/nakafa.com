@@ -14,13 +14,41 @@ afterEach(() => {
 
 describe("ai/store/draft", () => {
   it("saves, reads, and clears the current tab draft", () => {
-    Effect.runSync(saveAiDraftText("Explain this step"));
+    Effect.runSync(saveAiDraftText("Explain this step", "learner-a"));
 
-    expect(Effect.runSync(readAiDraftText())).toBe("Explain this step");
+    expect(Effect.runSync(readAiDraftText("learner-a"))).toBe(
+      "Explain this step"
+    );
 
     Effect.runSync(clearAiDraftText);
 
-    expect(Effect.runSync(readAiDraftText())).toBeNull();
+    expect(Effect.runSync(readAiDraftText("learner-a"))).toBeNull();
+  });
+
+  it("claims an anonymous draft for the account completing authentication", () => {
+    Effect.runSync(saveAiDraftText("Carry this question", null));
+
+    expect(Effect.runSync(readAiDraftText("learner-a"))).toBe(
+      "Carry this question"
+    );
+    expect(Effect.runSync(readAiDraftText("learner-a"))).toBe(
+      "Carry this question"
+    );
+  });
+
+  it("claims a legacy tab draft without recorded ownership", () => {
+    window.sessionStorage.setItem("nakafa-ai-draft", "Legacy question");
+
+    expect(Effect.runSync(readAiDraftText("learner-a"))).toBe(
+      "Legacy question"
+    );
+  });
+
+  it("clears a draft when another account owns it", () => {
+    Effect.runSync(saveAiDraftText("Private question", "learner-a"));
+
+    expect(Effect.runSync(readAiDraftText("learner-b"))).toBeNull();
+    expect(Effect.runSync(readAiDraftText("learner-a"))).toBeNull();
   });
 
   it("keeps draft persistence best effort when storage rejects access", () => {
@@ -28,14 +56,16 @@ describe("ai/store/draft", () => {
       throw new DOMException("Storage blocked");
     });
 
-    expect(() => Effect.runSync(saveAiDraftText("Keep typing"))).not.toThrow();
+    expect(() =>
+      Effect.runSync(saveAiDraftText("Keep typing", "learner-a"))
+    ).not.toThrow();
 
     vi.restoreAllMocks();
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new DOMException("Storage blocked");
     });
 
-    expect(Effect.runSync(readAiDraftText())).toBeNull();
+    expect(Effect.runSync(readAiDraftText("learner-a"))).toBeNull();
 
     vi.restoreAllMocks();
     vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
@@ -49,8 +79,8 @@ describe("ai/store/draft", () => {
     vi.stubGlobal("window", undefined);
 
     expect(() =>
-      Effect.runSync(saveAiDraftText("Server render"))
+      Effect.runSync(saveAiDraftText("Server render", null))
     ).not.toThrow();
-    expect(Effect.runSync(readAiDraftText())).toBeNull();
+    expect(Effect.runSync(readAiDraftText(null))).toBeNull();
   });
 });

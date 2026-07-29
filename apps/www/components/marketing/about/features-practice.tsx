@@ -19,9 +19,20 @@ import { Response } from "@repo/design-system/components/ai/response";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
+import type { ClipboardEvent } from "react";
 
 import { AiChatModel } from "@/components/ai/chat-model";
 import { useAi } from "@/components/ai/context/use-ai";
+
+/** Keeps the marketing prompt text-only without changing Nina's shared input. */
+function stopAttachmentPaste(event: ClipboardEvent<HTMLFormElement>) {
+  const includesFile = Array.from(event.clipboardData.items).some(
+    (item) => item.kind === "file"
+  );
+  if (includesFile) {
+    event.stopPropagation();
+  }
+}
 
 /** Shows one real Nina exchange with the same message renderer used in chat. */
 export function FeaturesNina() {
@@ -68,7 +79,11 @@ export function FeaturesNina() {
       </Conversation>
 
       <div className="mx-auto grid w-full max-w-3xl shrink-0 px-8 pb-8 lg:px-10 lg:pb-10">
-        <PromptInput onSubmit={handleSubmit}>
+        <PromptInput
+          maxFiles={0}
+          onPasteCapture={stopAttachmentPaste}
+          onSubmit={handleSubmit}
+        >
           <PromptInputTextarea
             aria-label={aiT("text-placeholder")}
             className="p-4"
