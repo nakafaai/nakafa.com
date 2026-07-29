@@ -1,7 +1,9 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   cancelAccountDeletion,
   cancelAccountDeletionAttempt,
   cancelAccountDeletionAttemptByToken,
+  cancelAccountDeletionBatch,
   cleanupFinalizedAccountDeletion,
 } from "@repo/backend/convex/auth/deletion/cancel";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
@@ -393,5 +395,115 @@ describe("auth/deletion/cancel", () => {
     expect(finalOutcome).toBe(accountDeletionCancellationOutcome.complete);
     expect(authUserExists).toHaveBeenCalledTimes(2);
     expect(remaining).toEqual({ preparations: [], transfers: [] });
+  });
+
+  it("does not let a stale cancellation delete a retried preparation", async () => {
+    const t = convexTest(schema, convexModules);
+    const seeded = await t.mutation(async (ctx) => {
+      const ownerId = await ctx.db.insert("users", {
+        authId: "retry-owner",
+        credits: 0,
+        creditsResetAt: 0,
+        deletionPreparedAt: NOW,
+        email: "retry-owner@example.com",
+        name: "Retry Owner",
+        plan: "free",
+      });
+      const successorId = await ctx.db.insert("users", {
+        authId: "retry-successor",
+        credits: 0,
+        creditsResetAt: 0,
+        email: "retry-successor@example.com",
+        name: "Retry Successor",
+        plan: "free",
+      });
+      const schoolId = await ctx.db.insert("schools", {
+        city: "Jakarta",
+        createdBy: ownerId,
+        currentStudents: 1,
+        currentTeachers: 0,
+        email: "retry-school@example.com",
+        name: "Retry School",
+        province: "DKI Jakarta",
+        slug: "retry-school",
+        type: "high-school",
+        updatedAt: NOW,
+      });
+      const membershipId = await ctx.db.insert("schoolMembers", {
+        joinedAt: NOW,
+        role: "student",
+        schoolId,
+        status: "active",
+        updatedAt: NOW,
+        userId: successorId,
+      });
+      const preparationId = await ctx.db.insert("accountDeletionPreparations", {
+        attemptId: ATTEMPT_ID,
+        authId: "retry-owner",
+        recoveryGeneration: 0,
+        userId: ownerId,
+      });
+
+      for (
+        let index = 0;
+        index <= ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
+        index += 1
+      ) {
+        await ctx.db.insert("accountDeletionSchoolTransfers", {
+          preparationId,
+          schoolId,
+          successorMembershipId: membershipId,
+          successorUserId: successorId,
+        });
+      }
+
+      return { ownerId, preparationId };
+    });
+    const expectedPreparation = {
+      attemptId: ATTEMPT_ID,
+      preparationId: seeded.preparationId,
+      recoveryGeneration: 0,
+    };
+
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        cancelAccountDeletionBatch(ctx, "retry-owner", expectedPreparation)
+      )
+    );
+    await t.mutation((ctx) =>
+      runConvexProgram(
+        cancelAccountDeletionAttemptByToken(ctx, ATTEMPT_ID, async () => true)
+      )
+    );
+    const retriedPreparationId = await t.mutation(async (ctx) => {
+      await ctx.db.patch("users", seeded.ownerId, {
+        deletionPreparedAt: NOW + 1,
+      });
+      return await ctx.db.insert("accountDeletionPreparations", {
+        attemptId: ATTEMPT_ID,
+        authId: "retry-owner",
+        recoveryGeneration: 0,
+        userId: seeded.ownerId,
+      });
+    });
+
+    const canceled = await t.mutation(
+      internal.auth.deletion.cancelAccountDeletion,
+      {
+        authId: "retry-owner",
+        expectedPreparation,
+      }
+    );
+    const remaining = await t.query(async (ctx) => ({
+      preparation: await ctx.db.get(
+        "accountDeletionPreparations",
+        retriedPreparationId
+      ),
+      user: await ctx.db.get("users", seeded.ownerId),
+    }));
+
+    expect(canceled).toBe(false);
+    expect(remaining.preparation?._id).toBe(retriedPreparationId);
+    expect(remaining.user?.deletionPreparedAt).toBe(NOW + 1);
   });
 });
