@@ -2,8 +2,12 @@ import {
   cancelAccountDeletionAttempt,
   cancelAccountDeletionAttemptByToken,
 } from "@repo/backend/convex/auth/deletion/attemptCancellation";
+import { claimAccountDeletion } from "@repo/backend/convex/auth/deletion/claim";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
-import { accountDeletionCancellationOutcome } from "@repo/backend/convex/auth/deletion/spec";
+import {
+  accountDeletionCancellationOutcome,
+  accountDeletionPreparationOutcome,
+} from "@repo/backend/convex/auth/deletion/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -108,7 +112,7 @@ describe("auth/deletion/attemptCancellation", () => {
 
   it("reports every browser-owned cancellation batch until complete", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
+    const ownerId = await t.mutation(async (ctx) => {
       const ownerId = await ctx.db.insert("users", {
         authId: "batch-cancel-owner",
         credits: 0,
@@ -165,6 +169,8 @@ describe("auth/deletion/attemptCancellation", () => {
           successorUserId: successorId,
         });
       }
+
+      return ownerId;
     });
     const authUserExists = vi.fn(async () => true);
     const firstOutcome = await t.mutation((ctx) =>
@@ -172,14 +178,28 @@ describe("auth/deletion/attemptCancellation", () => {
         cancelAccountDeletionAttemptByToken(ctx, ATTEMPT_ID, authUserExists)
       )
     );
+    const replayedAttempt = await t.mutation((ctx) =>
+      runConvexProgram(
+        claimAccountDeletion(ctx, "batch-cancel-owner", ATTEMPT_ID)
+      )
+    );
     const pending = await t.query(async (ctx) => ({
       jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      preparation: await ctx.db.query("accountDeletionPreparations").unique(),
       transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
+      user: await ctx.db.get("users", ownerId),
     }));
 
     expect(firstOutcome).toBe(accountDeletionCancellationOutcome.continue);
+    expect(replayedAttempt).toBe(
+      accountDeletionPreparationOutcome.temporarilyUnavailable
+    );
+    expect(pending.preparation?.cancellationStartedAt).toEqual(
+      expect.any(Number)
+    );
     expect(pending.transfers).toHaveLength(1);
     expect(pending.jobs).toHaveLength(0);
+    expect(pending.user?.deletionPreparedAt).toBe(NOW);
 
     const finalOutcome = await t.mutation((ctx) =>
       runConvexProgram(
@@ -190,10 +210,13 @@ describe("auth/deletion/attemptCancellation", () => {
     const remaining = await t.query(async (ctx) => ({
       preparations: await ctx.db.query("accountDeletionPreparations").collect(),
       transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
+      user: await ctx.db.get("users", ownerId),
     }));
 
     expect(finalOutcome).toBe(accountDeletionCancellationOutcome.complete);
     expect(authUserExists).toHaveBeenCalledTimes(2);
-    expect(remaining).toEqual({ preparations: [], transfers: [] });
+    expect(remaining.preparations).toEqual([]);
+    expect(remaining.transfers).toEqual([]);
+    expect(remaining.user).not.toHaveProperty("deletionPreparedAt");
   });
 });

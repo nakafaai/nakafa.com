@@ -200,6 +200,10 @@ export const prepareAccountDeletion: (
       return accountDeletionPreparationOutcome.temporarilyUnavailable;
     }
 
+    if (preparation?.cancellationStartedAt !== undefined) {
+      return accountDeletionPreparationOutcome.temporarilyUnavailable;
+    }
+
     if (
       preparation &&
       (preparation.attemptId !== attemptId || preparation.userId !== user._id)

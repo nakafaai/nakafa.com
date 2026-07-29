@@ -1,6 +1,6 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
-import { deleteAccountDeletionPreparation } from "@repo/backend/convex/auth/deletion/cancel";
+import { cancelPreparedAccountDeletion } from "@repo/backend/convex/auth/deletion/cancel";
 import { accountDeletionCancellationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import { Effect } from "effect";
 
@@ -24,19 +24,7 @@ export const cancelAccountDeletionAttempt = Effect.fn(
     return false;
   }
 
-  const user = yield* tryUserCleanup(() =>
-    ctx.db.get("users", preparation.userId)
-  );
-
-  if (user?.deletionPreparedAt !== undefined) {
-    yield* tryUserCleanup(() =>
-      ctx.db.patch("users", preparation.userId, {
-        deletionPreparedAt: undefined,
-      })
-    );
-  }
-
-  return yield* deleteAccountDeletionPreparation(ctx, preparation);
+  return yield* cancelPreparedAccountDeletion(ctx, preparation);
 });
 
 /**

@@ -7,7 +7,7 @@ import {
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/convex/auth/deletion/spec";
 import { makeFunctionReference } from "convex/server";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 
 const cancelAccountDeletionReference = makeFunctionReference<
   "mutation",
@@ -53,6 +53,50 @@ export const deleteAccountDeletionPreparation = Effect.fn(
   return false;
 });
 
+/**
+ * Drains one cancellation batch while keeping the user write-locked.
+ *
+ * The canceling marker prevents the same prepared attempt from being reclaimed
+ * between bounded reservation batches. App access is restored atomically only
+ * after the final reservation and preparation are gone.
+ */
+export const cancelPreparedAccountDeletion = Effect.fn(
+  "auth.deletion.cancelPreparedAccountDeletion"
+)(function* (
+  ctx: MutationCtx,
+  preparation: Doc<"accountDeletionPreparations">
+) {
+  if (preparation.cancellationStartedAt === undefined) {
+    const cancellationStartedAt = yield* Clock.currentTimeMillis;
+
+    yield* tryUserCleanup(() =>
+      ctx.db.patch("accountDeletionPreparations", preparation._id, {
+        cancellationStartedAt,
+      })
+    );
+  }
+
+  const hasMore = yield* deleteAccountDeletionPreparation(ctx, preparation);
+
+  if (hasMore) {
+    return true;
+  }
+
+  const user = yield* tryUserCleanup(() =>
+    ctx.db.get("users", preparation.userId)
+  );
+
+  if (user?.deletionPreparedAt !== undefined) {
+    yield* tryUserCleanup(() =>
+      ctx.db.patch("users", preparation.userId, {
+        deletionPreparedAt: undefined,
+      })
+    );
+  }
+
+  return false;
+});
+
 /** Restores app access after Better Auth aborts before removing the auth user. */
 export const cancelAccountDeletion: (
   ctx: MutationCtx,
@@ -83,19 +127,7 @@ export const cancelAccountDeletion: (
     return false;
   }
 
-  const user = yield* tryUserCleanup(() =>
-    ctx.db.get("users", preparation.userId)
-  );
-
-  if (user?.deletionPreparedAt !== undefined) {
-    yield* tryUserCleanup(() =>
-      ctx.db.patch("users", preparation.userId, {
-        deletionPreparedAt: undefined,
-      })
-    );
-  }
-
-  return yield* deleteAccountDeletionPreparation(ctx, preparation);
+  return yield* cancelPreparedAccountDeletion(ctx, preparation);
 });
 
 /** Cancels one versioned reservation batch and schedules any continuation. */

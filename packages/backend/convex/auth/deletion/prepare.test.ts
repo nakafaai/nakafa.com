@@ -469,7 +469,10 @@ describe("auth/deletion/prepare", () => {
     }));
 
     expect(outcome).toBe("school-successor-required");
-    expect(partial.user).not.toHaveProperty("deletionPreparedAt");
+    expect(partial.user?.deletionPreparedAt).toEqual(expect.any(Number));
+    expect(partial.preparation?.cancellationStartedAt).toEqual(
+      expect.any(Number)
+    );
     expect(partial.preparation).not.toBeNull();
     expect(partial.transfers).toHaveLength(1);
     expect(partial.jobs).toEqual([
