@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth/account-deletion-attempt";
 
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
+const USER_ID = "user-1";
 
 describe("account deletion attempt", () => {
   beforeEach(() => {
@@ -16,15 +17,16 @@ describe("account deletion attempt", () => {
 
   it("creates and reloads one tab-owned browser capability", async () => {
     const created = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt()
+      loadOrCreateAccountDeletionAttempt(USER_ID)
     );
     const reloaded = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt()
+      loadOrCreateAccountDeletionAttempt(USER_ID)
     );
 
     expect(created).toMatchObject({
       attemptId: expect.any(String),
       phase: accountDeletionRequestPhase.preparation,
+      userId: USER_ID,
     });
     expect(reloaded).toEqual(created);
   });
@@ -33,13 +35,29 @@ describe("account deletion attempt", () => {
     const deletionAttempt = {
       attemptId: ATTEMPT_ID,
       phase: accountDeletionRequestPhase.deletion,
+      userId: USER_ID,
     } as const;
 
     await Effect.runPromise(saveAccountDeletionAttempt(deletionAttempt));
 
     await expect(
-      Effect.runPromise(loadOrCreateAccountDeletionAttempt())
+      Effect.runPromise(loadOrCreateAccountDeletionAttempt(USER_ID))
     ).resolves.toEqual(deletionAttempt);
+  });
+
+  it("rotates a persisted capability when the signed-in account changes", async () => {
+    const first = await Effect.runPromise(
+      loadOrCreateAccountDeletionAttempt(USER_ID)
+    );
+    const second = await Effect.runPromise(
+      loadOrCreateAccountDeletionAttempt("user-2")
+    );
+
+    expect(second).toMatchObject({
+      phase: accountDeletionRequestPhase.preparation,
+      userId: "user-2",
+    });
+    expect(second.attemptId).not.toBe(first.attemptId);
   });
 
   it("fails closed when persisted state is malformed", async () => {
@@ -49,7 +67,7 @@ describe("account deletion attempt", () => {
     );
 
     const failure = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt().pipe(Effect.flip)
+      loadOrCreateAccountDeletionAttempt(USER_ID).pipe(Effect.flip)
     );
 
     expect(failure).toBeInstanceOf(AccountDeletionAttemptStorageFailed);
@@ -66,7 +84,9 @@ describe("account deletion attempt", () => {
     };
 
     const failure = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt(unavailableStorage).pipe(Effect.flip)
+      loadOrCreateAccountDeletionAttempt(USER_ID, unavailableStorage).pipe(
+        Effect.flip
+      )
     );
 
     expect(failure).toBeInstanceOf(AccountDeletionAttemptStorageFailed);

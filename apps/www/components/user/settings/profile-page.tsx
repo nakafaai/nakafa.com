@@ -18,7 +18,7 @@ export function UserSettingsProfilePage() {
       <UserSettingsName user={user} />
       <UserSettingsRole user={user} />
       <UserSettingsCurriculum />
-      <UserSettingsDeleteAccount />
+      <UserSettingsDeleteAccount userId={user.appUser._id} />
     </>
   );
 }

@@ -3,7 +3,10 @@ import {
   ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
   ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
 } from "@repo/backend/convex/auth/deletion/constants";
-import { accountDeletionAttemptStatus } from "@repo/backend/convex/auth/deletion/spec";
+import {
+  accountDeletionAttemptStatus,
+  accountDeletionCancellationOutcome,
+} from "@repo/backend/convex/auth/deletion/spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -109,7 +112,7 @@ describe("auth/deletion", () => {
       t.mutation(api.auth.deletion.cancelAccountDeletionAttempt, {
         attemptId: ATTEMPT_ID,
       })
-    ).resolves.toBe(true);
+    ).resolves.toBe(accountDeletionCancellationOutcome.complete);
 
     const state = await t.query(async (ctx) => ({
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),

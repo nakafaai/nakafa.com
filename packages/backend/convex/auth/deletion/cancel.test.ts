@@ -1,12 +1,11 @@
-import { internal } from "@repo/backend/convex/_generated/api";
 import {
   cancelAccountDeletion,
   cancelAccountDeletionAttempt,
-  cancelAccountDeletionAttemptBatch,
   cancelAccountDeletionAttemptByToken,
   cleanupFinalizedAccountDeletion,
 } from "@repo/backend/convex/auth/deletion/cancel";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
+import { accountDeletionCancellationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -211,7 +210,7 @@ describe("auth/deletion/cancel", () => {
       user: await ctx.db.get("users", userId),
     }));
 
-    expect(canceled).toBe(false);
+    expect(canceled).toBeNull();
     expect(authUserExists).not.toHaveBeenCalled();
     expect(state.preparation?.deletionStartedAt).toBe(NOW);
     expect(state.user?.deletionPreparedAt).toBe(NOW);
@@ -291,7 +290,7 @@ describe("auth/deletion/cancel", () => {
     expect(state.user?.deletionPreparedAt).toBe(NOW);
   });
 
-  it("drains reservations larger than one transaction batch", async () => {
+  it("reports every browser-owned cancellation batch until complete", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       const ownerId = await ctx.db.insert("users", {
@@ -351,9 +350,10 @@ describe("auth/deletion/cancel", () => {
         });
       }
     });
-    await t.mutation((ctx) =>
+    const authUserExists = vi.fn(async () => true);
+    const firstOutcome = await t.mutation((ctx) =>
       runConvexProgram(
-        cancelAccountDeletionAttemptBatch(ctx, "batch-cancel-owner", ATTEMPT_ID)
+        cancelAccountDeletionAttemptByToken(ctx, ATTEMPT_ID, authUserExists)
       )
     );
     const pending = await t.query(async (ctx) => ({
@@ -361,19 +361,14 @@ describe("auth/deletion/cancel", () => {
       transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
     }));
 
+    expect(firstOutcome).toBe(accountDeletionCancellationOutcome.continue);
     expect(pending.transfers).toHaveLength(1);
-    expect(pending.jobs).toEqual([
-      expect.objectContaining({
-        name: expect.stringContaining("continueAccountDeletionCancellation"),
-      }),
-    ]);
+    expect(pending.jobs).toHaveLength(0);
 
-    await t.mutation(
-      internal.auth.deletion.continueAccountDeletionCancellation,
-      {
-        attemptId: ATTEMPT_ID,
-        authId: "batch-cancel-owner",
-      }
+    const finalOutcome = await t.mutation((ctx) =>
+      runConvexProgram(
+        cancelAccountDeletionAttemptByToken(ctx, ATTEMPT_ID, authUserExists)
+      )
     );
 
     const remaining = await t.query(async (ctx) => ({
@@ -381,6 +376,8 @@ describe("auth/deletion/cancel", () => {
       transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
     }));
 
+    expect(finalOutcome).toBe(accountDeletionCancellationOutcome.complete);
+    expect(authUserExists).toHaveBeenCalledTimes(2);
     expect(remaining).toEqual({ preparations: [], transfers: [] });
   });
 });

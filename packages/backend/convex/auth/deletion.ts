@@ -20,6 +20,7 @@ import {
   AccountDeletionCancellationUnprovenError,
   type AccountDeletionPreparationVersion,
   accountDeletionAttemptStatusValidator,
+  accountDeletionCancellationOutcomeValidator,
   accountDeletionPreparationOutcomeValidator,
   accountDeletionPreparationVersionValidator,
 } from "@repo/backend/convex/auth/deletion/spec";
@@ -151,7 +152,7 @@ export const cancelAccountDeletionAttempt = mutation({
   args: {
     attemptId: v.string(),
   },
-  returns: v.boolean(),
+  returns: accountDeletionCancellationOutcomeValidator,
   handler: (ctx, args) =>
     runConvexProgram(
       cancelAccountDeletionAttemptByToken(
@@ -160,13 +161,15 @@ export const cancelAccountDeletionAttempt = mutation({
         async (authId) =>
           (await authReader.getAnyUserById(ctx, authId)) !== null
       ).pipe(
-        Effect.filterOrFail(
-          (canceled) => canceled,
-          () =>
-            new AccountDeletionCancellationUnprovenError({
-              code: ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
-              message: "Account deletion cancellation could not be proven.",
-            })
+        Effect.flatMap((outcome) =>
+          outcome === null
+            ? Effect.fail(
+                new AccountDeletionCancellationUnprovenError({
+                  code: ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
+                  message: "Account deletion cancellation could not be proven.",
+                })
+              )
+            : Effect.succeed(outcome)
         )
       )
     ),

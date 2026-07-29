@@ -6,9 +6,11 @@ import {
 import {
   type AccountDeletionAttemptStatus,
   type AccountDeletionBrowserAttempt,
+  type AccountDeletionCancellationOutcome,
   type AccountDeletionPreparationOutcome,
   type AccountDeletionRequestPhase,
   accountDeletionAttemptStatus,
+  accountDeletionCancellationOutcome,
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
@@ -30,7 +32,7 @@ type DeleteUserRequest = (
 ) => Promise<DeleteUserResult>;
 type CancelAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
-) => Promise<boolean>;
+) => Promise<AccountDeletionCancellationOutcome>;
 type PrepareAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
 ) => Promise<AccountDeletionPreparationOutcome>;
@@ -104,31 +106,28 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
         },
       }),
   }: AccountDeletionOperations) {
-    const { attemptId, phase: startPhase } = attempt;
+    const { attemptId, phase: startPhase, userId } = attempt;
     const cancelPreparedAttempt = (
       uncertainPhase: AccountDeletionRequestPhase
     ) =>
-      Effect.tryPromise({
-        try: () => cancelPreparation(attemptId),
-        catch: () =>
-          new AccountDeletionRequestUncertain({
-            attemptId,
-            code: accountDeletionRequestUncertainCode,
-            phase: uncertainPhase,
-          }),
-      }).pipe(
-        Effect.filterOrFail(
-          (canceled) => canceled,
-          () =>
-            new AccountDeletionRequestUncertain({
-              attemptId,
-              code: accountDeletionRequestUncertainCode,
-              phase: uncertainPhase,
-            })
-        )
-      );
+      Effect.gen(function* () {
+        let outcome: AccountDeletionCancellationOutcome =
+          accountDeletionCancellationOutcome.continue;
+
+        while (outcome === accountDeletionCancellationOutcome.continue) {
+          outcome = yield* Effect.tryPromise({
+            try: () => cancelPreparation(attemptId),
+            catch: () =>
+              new AccountDeletionRequestUncertain({
+                attemptId,
+                code: accountDeletionRequestUncertainCode,
+                phase: uncertainPhase,
+              }),
+          });
+        }
+      });
     const persistAttemptPhase = (phase: AccountDeletionRequestPhase) =>
-      persist({ attemptId, phase }).pipe(
+      persist({ attemptId, phase, userId }).pipe(
         Effect.mapError(
           () =>
             new AccountDeletionFailed({

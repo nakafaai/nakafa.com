@@ -70,7 +70,10 @@ export const saveAccountDeletionAttempt = Effect.fn(
 /** Loads the tab-owned deletion capability, creating it before first use. */
 export const loadOrCreateAccountDeletionAttempt = Effect.fn(
   "www.auth.loadOrCreateAccountDeletionAttempt"
-)(function* (storage?: AccountDeletionAttemptStorage) {
+)(function* (
+  userId: AccountDeletionBrowserAttempt["userId"],
+  storage?: AccountDeletionAttemptStorage
+) {
   const target = yield* getAccountDeletionAttemptStorage(storage);
   const persisted = yield* Effect.try({
     try: () => target.getItem(accountDeletionAttemptStorageKey),
@@ -78,9 +81,13 @@ export const loadOrCreateAccountDeletionAttempt = Effect.fn(
   });
 
   if (persisted !== null) {
-    return yield* decodePersistedAccountDeletionAttempt(persisted, {
+    const attempt = yield* decodePersistedAccountDeletionAttempt(persisted, {
       onExcessProperty: "error",
     }).pipe(Effect.mapError(accountDeletionAttemptStorageFailure));
+
+    if (attempt.userId === userId) {
+      return attempt;
+    }
   }
 
   const attempt: AccountDeletionBrowserAttempt = {
@@ -89,6 +96,7 @@ export const loadOrCreateAccountDeletionAttempt = Effect.fn(
       catch: accountDeletionAttemptStorageFailure,
     }),
     phase: accountDeletionRequestPhase.preparation,
+    userId,
   };
 
   yield* saveAccountDeletionAttempt(attempt, target);
