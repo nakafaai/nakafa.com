@@ -19,7 +19,6 @@ jobs:
     timeout-minutes: 40
     env:
       CONTENT_RUNTIME_TOKEN: ci-agent-docs
-      CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
       CONVEX_SITE_URL: ${{ vars.AGENT_DOCS_CONVEX_SITE_URL }}
       CONVEX_URL: ${{ vars.AGENT_DOCS_CONVEX_URL }}
       INTERNAL_CONTENT_API_KEY: ci-agent-docs
@@ -31,6 +30,7 @@ jobs:
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
       POSTHOG_PROXY_HOST: https://t.nakafa.com
       SITE_URL: http://localhost:3000
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -63,22 +63,31 @@ jobs:
         run: pnpm test
 
       - name: Deploy isolated backend
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
         run: pnpm --dir packages/backend exec convex dev --once --typecheck enable --tail-logs disable
 
       - name: Sync real content
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
         run: pnpm --filter @repo/backend sync
 
       - name: Build production app
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm build
         env:
           NODE_ENV: production
 
       - name: Start web app
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
           pnpm --filter www start > /tmp/nakafa-www.log 2>&1 &
           echo "$!" > /tmp/nakafa-www.pid
 
       - name: Wait for web app
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
           for attempt in {1..60}; do
             if curl -fsS http://localhost:3000/llms.txt > /dev/null && \
@@ -91,17 +100,18 @@ jobs:
           exit 1
 
       - name: Run AFDocs checks
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm agent-docs
 
       - name: Print web app log after failure
-        if: failure()
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && failure()
         run: |
           if [ -f /tmp/nakafa-www.log ]; then
             cat /tmp/nakafa-www.log
           fi
 
       - name: Stop web app
-        if: always()
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && always()
         run: |
           if [ -f /tmp/nakafa-www.pid ]; then
             kill "$(cat /tmp/nakafa-www.pid)" || true
