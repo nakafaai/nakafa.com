@@ -1,7 +1,14 @@
-import { MutableRef, Option } from "effect";
+import { MutableRef } from "effect";
 import type { CaptureResult } from "posthog-js";
 
-const authorizedUserId = MutableRef.make(Option.none<string>());
+type AnalyticsIdentityAuthorization =
+  | { readonly status: "anonymous" }
+  | { readonly status: "identified"; readonly userId: string }
+  | { readonly status: "unresolved" };
+
+const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
+  status: "unresolved",
+});
 
 interface AnalyticsIdentityClient {
   get_property(key: string): unknown;
@@ -36,31 +43,38 @@ export function resetPersistedAnalyticsIdentity(
 
 /** Authorizes identified analytics only after the current app user resolves. */
 export function authorizeAnalyticsIdentity(userId: string) {
-  MutableRef.set(authorizedUserId, Option.some(userId));
+  MutableRef.set(identityAuthorization, { status: "identified", userId });
+}
+
+/** Authorizes anonymous analytics only after auth resolves without a user. */
+export function authorizeAnonymousAnalyticsIdentity() {
+  MutableRef.set(identityAuthorization, { status: "anonymous" });
 }
 
 /** Revokes identified analytics while auth identity is absent or unresolved. */
 export function revokeAnalyticsIdentity() {
-  MutableRef.set(authorizedUserId, Option.none());
+  MutableRef.set(identityAuthorization, { status: "unresolved" });
 }
 
 /**
- * Allows anonymous analytics immediately but rejects identified events until
- * the current browser runtime has authorized that exact app user.
+ * Rejects every event until auth resolves, then admits only the exact resolved
+ * anonymous or identified identity.
  */
 export function filterAuthorizedAnalyticsEvent(event: CaptureResult | null) {
   if (!event) {
     return null;
   }
 
+  const authorization = MutableRef.get(identityAuthorization);
   const eventUserId = event.properties.$user_id;
 
-  if (typeof eventUserId !== "string") {
-    return event;
+  if (authorization.status === "unresolved") {
+    return null;
   }
 
-  return Option.match(MutableRef.get(authorizedUserId), {
-    onNone: () => null,
-    onSome: (userId) => (userId === eventUserId ? event : null),
-  });
+  if (authorization.status === "anonymous") {
+    return typeof eventUserId === "string" ? null : event;
+  }
+
+  return authorization.userId === eventUserId ? event : null;
 }

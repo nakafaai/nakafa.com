@@ -1,5 +1,6 @@
 import {
   authorizeAnalyticsIdentity,
+  authorizeAnonymousAnalyticsIdentity,
   filterAuthorizedAnalyticsEvent,
   resetAnalyticsIdentity,
   resetPersistedAnalyticsIdentity,
@@ -23,14 +24,22 @@ describe("PostHog browser identity gate", () => {
     revokeAnalyticsIdentity();
   });
 
-  it("allows anonymous events without an auth dependency", () => {
-    const event = createEvent();
+  it("drops every event until auth resolves anonymously", () => {
+    const anonymousEvent = createEvent();
+    const identifiedEvent = createEvent(USER_ID);
 
-    expect(filterAuthorizedAnalyticsEvent(event)).toBe(event);
+    expect(filterAuthorizedAnalyticsEvent(anonymousEvent)).toBeNull();
+    expect(filterAuthorizedAnalyticsEvent(identifiedEvent)).toBeNull();
     expect(filterAuthorizedAnalyticsEvent(null)).toBeNull();
+
+    authorizeAnonymousAnalyticsIdentity();
+
+    expect(filterAuthorizedAnalyticsEvent(anonymousEvent)).toBe(anonymousEvent);
+    expect(filterAuthorizedAnalyticsEvent(identifiedEvent)).toBeNull();
   });
 
   it("allows only the currently authorized identified user", () => {
+    const anonymousEvent = createEvent();
     const currentUserEvent = createEvent(USER_ID);
     const otherUserEvent = createEvent("user-2");
 
@@ -41,6 +50,7 @@ describe("PostHog browser identity gate", () => {
     expect(filterAuthorizedAnalyticsEvent(currentUserEvent)).toBe(
       currentUserEvent
     );
+    expect(filterAuthorizedAnalyticsEvent(anonymousEvent)).toBeNull();
     expect(filterAuthorizedAnalyticsEvent(otherUserEvent)).toBeNull();
 
     revokeAnalyticsIdentity();
