@@ -29,7 +29,7 @@ interface AuthContext {
 }
 
 /** Keeps every rejected account state on the same public auth contract. */
-function accountUnavailableError() {
+export function accountUnavailableError() {
   return new ConvexError({
     code: "UNAUTHORIZED",
     message: "User not found.",

@@ -349,15 +349,19 @@ describe("analytics/capture", () => {
       })
     );
 
-    await t.mutation(internal.analytics.capture.captureActionProductEvent, {
-      distinctId: userId,
-      event: checkoutStartedEvent,
-      timestamp: NOW,
-    });
+    const admitted = await t.mutation(
+      internal.analytics.capture.captureActionProductEvent,
+      {
+        distinctId: userId,
+        event: checkoutStartedEvent,
+        timestamp: NOW,
+      }
+    );
     const scheduledJobs = await t.query((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
     );
 
+    expect(admitted).toBe(true);
     expect(scheduledJobs).toEqual([
       expect.objectContaining({
         args: [
@@ -387,15 +391,19 @@ describe("analytics/capture", () => {
       })
     );
 
-    await t.mutation(internal.analytics.capture.captureActionProductEvent, {
-      distinctId: userId,
-      event: checkoutStartedEvent,
-      timestamp: NOW,
-    });
+    const admitted = await t.mutation(
+      internal.analytics.capture.captureActionProductEvent,
+      {
+        distinctId: userId,
+        event: checkoutStartedEvent,
+        timestamp: NOW,
+      }
+    );
     const scheduledJobs = await t.query((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
     );
 
+    expect(admitted).toBe(false);
     expect(scheduledJobs).toEqual([]);
   });
 
@@ -415,14 +423,18 @@ describe("analytics/capture", () => {
       return id;
     });
 
-    await t.mutation(internal.analytics.capture.captureActionProductEvent, {
-      distinctId: userId,
-      event: checkoutStartedEvent,
-    });
+    const admitted = await t.mutation(
+      internal.analytics.capture.captureActionProductEvent,
+      {
+        distinctId: userId,
+        event: checkoutStartedEvent,
+      }
+    );
     const scheduledJobs = await t.query((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
     );
 
+    expect(admitted).toBe(false);
     expect(scheduledJobs).toEqual([]);
   });
 
