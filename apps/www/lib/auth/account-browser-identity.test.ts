@@ -17,6 +17,9 @@ vi.mock("@/lib/auth/client", () => ({
 
 vi.mock("@repo/analytics/posthog", () => ({
   analytics: {
+    get_property: vi.fn(),
+    has_opted_out_capturing: vi.fn(() => false),
+    opt_out_capturing: vi.fn(),
     reset: vi.fn(),
     shutdown: vi.fn(async () => undefined),
   },
@@ -100,6 +103,15 @@ describe("account browser identity", () => {
 
     expect(analytics.shutdown).toHaveBeenCalledOnce();
     expect(analytics.reset).toHaveBeenCalledWith(true);
+  });
+
+  it("preserves analytics opt-out while replacing browser identity", async () => {
+    vi.mocked(analytics.has_opted_out_capturing).mockReturnValue(true);
+
+    await Effect.runPromise(clearAccountBrowserIdentity());
+
+    expect(analytics.reset).toHaveBeenCalledWith(true);
+    expect(analytics.opt_out_capturing).toHaveBeenCalledOnce();
   });
 
   it("does not fail a completed deletion when browser cleanup fails", async () => {

@@ -2,32 +2,10 @@ import { keys } from "@repo/analytics/keys";
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import {
   filterAuthorizedAnalyticsEvent,
+  resetPersistedAnalyticsIdentity,
   revokeAnalyticsIdentity,
 } from "@repo/analytics/posthog/identity";
 import posthog from "posthog-js";
-
-interface AnalyticsIdentityClient {
-  get_property(key: string): unknown;
-  has_opted_out_capturing(): boolean;
-  opt_out_capturing(): void;
-  reset(): void;
-}
-
-/** Removes a persisted identified user before the SDK's initial pageview. */
-export function resetPersistedAnalyticsIdentity(
-  client: AnalyticsIdentityClient
-) {
-  if (typeof client.get_property("$user_id") !== "string") {
-    return;
-  }
-
-  const wasOptedOut = client.has_opted_out_capturing();
-  client.reset();
-
-  if (wasOptedOut) {
-    client.opt_out_capturing();
-  }
-}
 
 /**
  * Initialize the browser PostHog client against the app's same-origin proxy.

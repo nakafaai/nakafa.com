@@ -1,4 +1,5 @@
 import { analytics } from "@repo/analytics/posthog";
+import { resetAnalyticsIdentity } from "@repo/analytics/posthog/identity";
 import { Effect, Schema } from "effect";
 import { authClient } from "@/lib/auth/client";
 
@@ -37,7 +38,7 @@ const defaultBrowserAccountIdentityCleanup: BrowserAccountIdentityCleanup = {
       }
     }
   },
-  resetAnalytics: () => analytics.reset(true),
+  resetAnalytics: () => resetAnalyticsIdentity(analytics, true),
 };
 
 /** Clears account-scoped state before another browser identity can take over. */
