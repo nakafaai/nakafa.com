@@ -91,7 +91,7 @@ describe("customers/polar/webhook", () => {
       })
     );
 
-    await t.action((ctx) =>
+    const disposition = await t.action((ctx) =>
       Effect.runPromise(
         upsertPolarSubscriptionWebhook(ctx, subscription, "update")
       )
@@ -103,6 +103,7 @@ describe("customers/polar/webhook", () => {
     }));
 
     expect(polarGateway.getCustomerById).toHaveBeenCalledWith("polar-active");
+    expect(disposition).toBe("stored");
     expect(state.customers).toEqual([
       expect.objectContaining({
         id: "polar-active",
@@ -131,12 +132,13 @@ describe("customers/polar/webhook", () => {
       })
     );
 
-    await t.action((ctx) =>
+    const disposition = await t.action((ctx) =>
       Effect.runPromise(
         upsertPolarSubscriptionWebhook(ctx, subscription, "create")
       )
     );
 
+    expect(disposition).toBe("discarded");
     await expect(
       t.query(async (ctx) => ({
         customers: await ctx.db.query("customers").collect(),
@@ -166,12 +168,13 @@ describe("customers/polar/webhook", () => {
       })
     );
 
-    await t.action((ctx) =>
+    const disposition = await t.action((ctx) =>
       Effect.runPromise(
         upsertPolarSubscriptionWebhook(ctx, subscription, "create")
       )
     );
 
+    expect(disposition).toBe("discarded");
     await expect(
       t.query(async (ctx) => ({
         customers: await ctx.db.query("customers").collect(),
@@ -188,12 +191,13 @@ describe("customers/polar/webhook", () => {
     const subscription = buildSubscription("polar-missing", "missing");
     polarGateway.getCustomerById.mockReturnValue(Effect.succeed(null));
 
-    await t.action((ctx) =>
+    const disposition = await t.action((ctx) =>
       Effect.runPromise(
         upsertPolarSubscriptionWebhook(ctx, subscription, "create")
       )
     );
 
+    expect(disposition).toBe("discarded");
     await expect(
       t.query((ctx) => ctx.db.query("subscriptions").collect())
     ).resolves.toEqual([]);
@@ -226,6 +230,32 @@ describe("customers/polar/webhook", () => {
         Effect.runPromise(upsertPolarCustomerWebhook(ctx, missing))
       )
     ).resolves.toBe("discarded");
+  });
+
+  it("keeps a subscription retryable until its app user exists", async () => {
+    const t = createWebhookTestConvex();
+    const subscription = buildSubscription("polar-unknown", "unknown");
+    polarGateway.getCustomerById.mockReturnValue(
+      Effect.succeed({
+        email: "unknown@example.com",
+        externalId: "auth-unknown",
+        id: subscription.customerId,
+        metadata: {},
+        name: "Unknown User",
+      })
+    );
+
+    await expect(
+      t.action((ctx) =>
+        Effect.runPromise(
+          upsertPolarSubscriptionWebhook(ctx, subscription, "create")
+        )
+      )
+    ).resolves.toBe("missing");
+
+    await expect(
+      t.query((ctx) => ctx.db.query("subscriptions").collect())
+    ).resolves.toEqual([]);
   });
 
   it("fails closed when Polar metadata and external identity disagree", async () => {
