@@ -476,11 +476,15 @@ describe("auth/deletion/prepare", () => {
       expect.objectContaining({
         args: [
           expect.objectContaining({
-            attemptId: ATTEMPT_ID,
             authId: "partially-reserved-owner",
+            expectedPreparation: {
+              attemptId: ATTEMPT_ID,
+              preparationId: partial.preparation?._id,
+              recoveryGeneration: partial.preparation?.recoveryGeneration,
+            },
           }),
         ],
-        name: expect.stringContaining("continueAccountDeletionCancellation"),
+        name: expect.stringContaining("cancelAccountDeletion"),
       }),
     ]);
   });

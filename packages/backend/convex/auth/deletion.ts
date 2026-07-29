@@ -1,12 +1,8 @@
-import {
-  type MutationCtx,
-  query,
-} from "@repo/backend/convex/_generated/server";
+import { query } from "@repo/backend/convex/_generated/server";
 import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
 import {
-  cancelAccountDeletionAttemptBatch,
   cancelAccountDeletionAttemptByToken,
-  cancelAccountDeletion as cancelAccountDeletionProgram,
+  cancelAccountDeletionBatch,
 } from "@repo/backend/convex/auth/deletion/cancel";
 import { claimAccountDeletion as claimAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/claim";
 import { continueAccountDeletionCommitProgram } from "@repo/backend/convex/auth/deletion/commit";
@@ -18,7 +14,6 @@ import {
 } from "@repo/backend/convex/auth/deletion/receipt";
 import {
   AccountDeletionCancellationUnprovenError,
-  type AccountDeletionPreparationVersion,
   accountDeletionAttemptStatusValidator,
   accountDeletionCancellationOutcomeValidator,
   accountDeletionPreparationOutcomeValidator,
@@ -31,44 +26,11 @@ import { makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const cancelAccountDeletionReference = makeFunctionReference<
-  "mutation",
-  {
-    authId: string;
-    expectedPreparation: AccountDeletionPreparationVersion;
-  },
-  boolean
->("auth/deletion:cancelAccountDeletion");
 const sweepAccountDeletionReceiptsReference = makeFunctionReference<
   "mutation",
   Record<string, never>,
   null
 >("auth/deletion:sweepAccountDeletionReceipts");
-
-const cancelAccountDeletionRecoveryBatch = Effect.fn(
-  "auth.deletion.cancelAccountDeletionRecoveryBatch"
-)(function* (
-  ctx: MutationCtx,
-  authId: string,
-  expectedPreparation: AccountDeletionPreparationVersion
-) {
-  const hasMore = yield* cancelAccountDeletionProgram(
-    ctx,
-    authId,
-    expectedPreparation
-  );
-
-  if (hasMore) {
-    yield* tryUserCleanup(() =>
-      ctx.scheduler.runAfter(0, cancelAccountDeletionReference, {
-        authId,
-        expectedPreparation,
-      })
-    );
-  }
-
-  return hasMore;
-});
 
 /** Claims the irreversible phase after reserving every school successor. */
 export const claimAccountDeletion = internalMutation({
@@ -124,27 +86,8 @@ export const cancelAccountDeletion = internalMutation({
   returns: v.boolean(),
   handler: (ctx, args) =>
     runConvexProgram(
-      cancelAccountDeletionRecoveryBatch(
-        ctx,
-        args.authId,
-        args.expectedPreparation
-      )
+      cancelAccountDeletionBatch(ctx, args.authId, args.expectedPreparation)
     ),
-});
-
-/** Continues bounded reservation cleanup after the browser has recovered. */
-export const continueAccountDeletionCancellation = internalMutation({
-  args: {
-    attemptId: v.string(),
-    authId: v.string(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await runConvexProgram(
-      cancelAccountDeletionAttemptBatch(ctx, args.authId, args.attemptId)
-    );
-    return null;
-  },
 });
 
 /** Lets the opaque browser attempt recover while its auth user still exists. */

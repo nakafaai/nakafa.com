@@ -4,7 +4,7 @@ import {
   tryUserCleanup,
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
-import { cancelAccountDeletionAttemptBatch } from "@repo/backend/convex/auth/deletion/cancel";
+import { cancelAccountDeletionBatch } from "@repo/backend/convex/auth/deletion/cancel";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";
 import {
   type AccountDeletionPreparationOutcome,
@@ -142,11 +142,11 @@ const reserveSchoolSuccessors = Effect.fn(
   }
 
   if (successor.kind === "not-found") {
-    yield* cancelAccountDeletionAttemptBatch(
-      ctx,
-      preparation.authId,
-      attemptId
-    );
+    yield* cancelAccountDeletionBatch(ctx, preparation.authId, {
+      attemptId,
+      preparationId: preparation._id,
+      recoveryGeneration: preparation.recoveryGeneration,
+    });
     return accountDeletionPreparationOutcome.schoolSuccessorRequired;
   }
 

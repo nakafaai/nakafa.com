@@ -12,11 +12,14 @@ import {
 import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
 
-const continueAccountDeletionCancellationReference = makeFunctionReference<
+const cancelAccountDeletionReference = makeFunctionReference<
   "mutation",
-  { attemptId: string; authId: string },
-  null
->("auth/deletion:continueAccountDeletionCancellation");
+  {
+    authId: string;
+    expectedPreparation: AccountDeletionPreparationVersion;
+  },
+  boolean
+>("auth/deletion:cancelAccountDeletion");
 
 /** Removes one bounded reservation batch and then its empty preparation. */
 export const deleteAccountDeletionPreparation = Effect.fn(
@@ -98,6 +101,32 @@ export const cancelAccountDeletion: (
   return yield* deleteAccountDeletionPreparation(ctx, preparation);
 });
 
+/** Cancels one versioned reservation batch and schedules any continuation. */
+export const cancelAccountDeletionBatch = Effect.fn(
+  "auth.deletion.cancelAccountDeletionBatch"
+)(function* (
+  ctx: MutationCtx,
+  authId: string,
+  expectedPreparation: AccountDeletionPreparationVersion
+) {
+  const hasMore = yield* cancelAccountDeletion(
+    ctx,
+    authId,
+    expectedPreparation
+  );
+
+  if (hasMore) {
+    yield* tryUserCleanup(() =>
+      ctx.scheduler.runAfter(0, cancelAccountDeletionReference, {
+        authId,
+        expectedPreparation,
+      })
+    );
+  }
+
+  return hasMore;
+});
+
 /** Cancels only the browser attempt that created the active preparation. */
 export const cancelAccountDeletionAttempt = Effect.fn(
   "auth.deletion.cancelAccountDeletionAttempt"
@@ -131,22 +160,6 @@ export const cancelAccountDeletionAttempt = Effect.fn(
   }
 
   return yield* deleteAccountDeletionPreparation(ctx, preparation);
-});
-
-/** Cancels one attempt batch and transactionally schedules any continuation. */
-export const cancelAccountDeletionAttemptBatch = Effect.fn(
-  "auth.deletion.cancelAccountDeletionAttemptBatch"
-)(function* (ctx: MutationCtx, authId: string, attemptId: string) {
-  const hasMore = yield* cancelAccountDeletionAttempt(ctx, authId, attemptId);
-
-  if (hasMore) {
-    yield* tryUserCleanup(() =>
-      ctx.scheduler.runAfter(0, continueAccountDeletionCancellationReference, {
-        attemptId,
-        authId,
-      })
-    );
-  }
 });
 
 /**
