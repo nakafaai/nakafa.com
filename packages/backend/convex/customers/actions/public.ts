@@ -1,13 +1,30 @@
-import { internal } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { action } from "@repo/backend/convex/_generated/server";
+import type { ProductAnalyticsEvent } from "@repo/backend/convex/analytics/events";
 import { validateCheckoutRequest } from "@repo/backend/convex/customers/checkout/impl";
 import { checkoutLocaleValidator } from "@repo/backend/convex/customers/checkout/localization";
+import { createAdmittedCheckoutSession } from "@repo/backend/convex/customers/checkout/session";
+import { checkoutSessionIoError } from "@repo/backend/convex/customers/checkout/spec";
 import { polarGateway } from "@repo/backend/convex/customers/polar/live";
 import { requireCustomer } from "@repo/backend/convex/customers/sync/impl";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { requireAuthForAction } from "@repo/backend/convex/lib/helpers/auth";
+import {
+  accountUnavailableError,
+  requireAuthForAction,
+} from "@repo/backend/convex/lib/helpers/auth";
+import { makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
 import { Effect } from "effect";
+
+const captureActionProductEventReference = makeFunctionReference<
+  "mutation",
+  {
+    distinctId: Id<"users">;
+    event: ProductAnalyticsEvent;
+    timestamp?: number;
+  },
+  boolean
+>("analytics/capture:captureActionProductEvent");
 
 /**
  * Create one authenticated Polar checkout session after validating the selected
@@ -28,42 +45,51 @@ export const generateCheckoutLink = action({
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthForAction(ctx);
     const appUserId = appUser._id;
-    const { checkout, request, requestMetadata } = await runConvexProgram(
+    const checkout = await runConvexProgram(
       Effect.gen(function* () {
         const request = yield* validateCheckoutRequest(args);
-        const requestMetadata = yield* Effect.promise(() =>
-          ctx.meta.getRequestMetadata()
-        );
+        const requestMetadata = yield* Effect.tryPromise({
+          try: () => ctx.meta.getRequestMetadata(),
+          catch: checkoutSessionIoError,
+        });
         const customer = yield* requireCustomer(ctx, appUserId);
-        const checkout = yield* polarGateway.createCheckoutSession({
-          customerId: customer.id,
-          customerIpAddress: requestMetadata.ip,
-          locale: request.polarLocale,
-          productIds: [...request.productIds],
-          successUrl: request.successUrl,
+        const checkout = yield* createAdmittedCheckoutSession({
+          createCheckout: () =>
+            polarGateway.createCheckoutSession({
+              customerId: customer.id,
+              customerIpAddress: requestMetadata.ip,
+              locale: request.polarLocale,
+              productIds: [...request.productIds],
+              successUrl: request.successUrl,
+            }),
+          admitCheckout: () =>
+            Effect.tryPromise({
+              try: () =>
+                ctx.runMutation(captureActionProductEventReference, {
+                  distinctId: appUserId,
+                  event: {
+                    name: "checkout started",
+                    properties: {
+                      checkout_locale: request.polarLocale,
+                      customer_ip_available: requestMetadata.ip !== null,
+                      locale: request.locale,
+                      product_count: request.productIds.length,
+                      product_id: request.primaryProductId,
+                    },
+                  },
+                  timestamp: Date.now(),
+                }),
+              catch: checkoutSessionIoError,
+            }),
         });
 
-        return { checkout, request, requestMetadata };
+        return checkout;
       })
     );
 
-    await ctx.runMutation(
-      internal.analytics.capture.captureActionProductEvent,
-      {
-        distinctId: appUserId,
-        event: {
-          name: "checkout started",
-          properties: {
-            checkout_locale: request.polarLocale,
-            customer_ip_available: requestMetadata.ip !== null,
-            locale: request.locale,
-            product_count: request.productIds.length,
-            product_id: request.primaryProductId,
-          },
-        },
-        timestamp: Date.now(),
-      }
-    );
+    if (!checkout) {
+      throw accountUnavailableError();
+    }
 
     return { url: checkout.url };
   },

@@ -270,10 +270,11 @@ export const captureActionProductEventProgram = Effect.fn(
   });
 
   if (!user || isAccountDeletionPending(user)) {
-    return;
+    return false;
   }
 
   yield* operations.capture();
+  return true;
 });
 
 /** Mutation boundary for action-owned analytics events. */
@@ -283,17 +284,14 @@ export const captureActionProductEvent = internalMutation({
     event: productAnalyticsEventValidator,
     timestamp: v.optional(v.number()),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await runConvexProgram(
+  returns: v.boolean(),
+  handler: (ctx, args) =>
+    runConvexProgram(
       captureActionProductEventProgram(ctx, {
         distinctId: args.distinctId,
         event: args.event,
         timestamp:
           args.timestamp === undefined ? undefined : new Date(args.timestamp),
       })
-    );
-
-    return null;
-  },
+    ),
 });

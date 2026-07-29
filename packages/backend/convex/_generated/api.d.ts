@@ -348,6 +348,7 @@ import type * as customers_actions_internal from "../customers/actions/internal.
 import type * as customers_actions_public from "../customers/actions/public.js";
 import type * as customers_checkout_impl from "../customers/checkout/impl.js";
 import type * as customers_checkout_localization from "../customers/checkout/localization.js";
+import type * as customers_checkout_session from "../customers/checkout/session.js";
 import type * as customers_checkout_spec from "../customers/checkout/spec.js";
 import type * as customers_deletion_billing from "../customers/deletion/billing.js";
 import type * as customers_deletion_billingState from "../customers/deletion/billingState.js";
@@ -843,6 +844,7 @@ declare const fullApi: ApiFromModules<{
   "customers/actions/public": typeof customers_actions_public;
   "customers/checkout/impl": typeof customers_checkout_impl;
   "customers/checkout/localization": typeof customers_checkout_localization;
+  "customers/checkout/session": typeof customers_checkout_session;
   "customers/checkout/spec": typeof customers_checkout_spec;
   "customers/deletion/billing": typeof customers_deletion_billing;
   "customers/deletion/billingState": typeof customers_deletion_billingState;
