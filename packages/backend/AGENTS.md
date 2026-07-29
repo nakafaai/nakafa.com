@@ -12,6 +12,22 @@ Convex agent skills for common tasks can be installed by running
 
 <!-- convex-ai-end -->
 
+## Parallel Worktree Deployments
+
+Read [Convex Agent Mode](https://docs.convex.dev/cli/agent-mode) before running
+Convex from a new worktree. Every concurrent task must select its own local
+backend or short-lived cloud dev deployment; never develop against Nakafa's
+shared personal dev deployment. Use cloud dev when the task needs environment
+variables, inbound HTTP, crons, or external integrations, and create a deploy
+key scoped only to that deployment. Use the repository's pnpm CLI boundary,
+set required environment values without printing secrets, and give temporary
+cloud deployments an expiration.
+
+Agent Mode isolates new development only. Existing workflows and scheduled
+functions remain on the deployment where they started, and shared-dev or
+production data/deploy windows still require explicit read-only proof and
+coordination.
+
 ## Nakafa Convex Architecture Rules
 
 Keep Convex route files focused on registered Convex functions. Move shared
