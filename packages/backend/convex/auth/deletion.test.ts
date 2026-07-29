@@ -115,10 +115,14 @@ describe("auth/deletion", () => {
     ).resolves.toBe(accountDeletionCancellationOutcome.complete);
 
     const state = await t.query(async (ctx) => ({
+      cancellation: await ctx.db
+        .query("accountDeletionAttemptCancellations")
+        .unique(),
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),
       user: await ctx.db.get("users", identity.userId),
     }));
 
+    expect(state.cancellation).toMatchObject({ attemptId: ATTEMPT_ID });
     expect(state.preparation).toBeNull();
     expect(state.user).not.toHaveProperty("deletionPreparedAt");
   });

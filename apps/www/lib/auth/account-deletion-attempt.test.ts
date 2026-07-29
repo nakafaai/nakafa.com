@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   AccountDeletionAttemptStorageFailed,
+  clearAccountDeletionAttempt,
   loadOrCreateAccountDeletionAttempt,
   saveAccountDeletionAttempt,
 } from "@/lib/auth/account-deletion-attempt";
@@ -60,6 +61,20 @@ describe("account deletion attempt", () => {
     expect(second.attemptId).not.toBe(first.attemptId);
   });
 
+  it("rotates a capability after its cancellation is proven", async () => {
+    const canceled = await Effect.runPromise(
+      loadOrCreateAccountDeletionAttempt(USER_ID)
+    );
+
+    await Effect.runPromise(clearAccountDeletionAttempt());
+
+    const next = await Effect.runPromise(
+      loadOrCreateAccountDeletionAttempt(USER_ID)
+    );
+
+    expect(next.attemptId).not.toBe(canceled.attemptId);
+  });
+
   it("fails closed when persisted state is malformed", async () => {
     window.sessionStorage.setItem(
       "nakafa-account-deletion-attempt",
@@ -76,6 +91,9 @@ describe("account deletion attempt", () => {
   it("fails closed when session storage is unavailable", async () => {
     const unavailableStorage = {
       getItem: () => {
+        throw new Error("storage unavailable");
+      },
+      removeItem: () => {
         throw new Error("storage unavailable");
       },
       setItem: () => {

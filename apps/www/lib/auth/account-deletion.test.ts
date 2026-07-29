@@ -44,6 +44,7 @@ function createDeletionOperations(
     cancelPreparation: vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     ),
+    clearAttempt: vi.fn(() => Effect.void),
     persist: vi.fn(() => Effect.void),
     prepare: vi.fn(async () => accountDeletionPreparationOutcome.ready),
     reconcile: vi.fn(async () => accountDeletionAttemptStatus.pending),
@@ -232,10 +233,10 @@ describe("account deletion", () => {
     const cancelPreparation = vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     );
-    const persist = vi.fn(() => Effect.void);
+    const clearAttempt = vi.fn(() => Effect.void);
     const failure = await runDeletionFailure({
       cancelPreparation,
-      persist,
+      clearAttempt,
       request: requestFailure(ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE),
     });
 
@@ -245,11 +246,7 @@ describe("account deletion", () => {
       phase: accountDeletionRequestPhase.preparation,
     });
     expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
-    expect(persist).toHaveBeenLastCalledWith({
-      attemptId: ATTEMPT_ID,
-      phase: accountDeletionRequestPhase.preparation,
-      userId: USER_ID,
-    });
+    expect(clearAttempt).toHaveBeenCalledOnce();
   });
 
   it("returns a typed stale-session failure", async () => {
@@ -297,20 +294,16 @@ describe("account deletion", () => {
     const cancelPreparation = vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     );
-    const persist = vi.fn(() => Effect.void);
+    const clearAttempt = vi.fn(() => Effect.void);
     const failure = await runDeletionFailure({
       cancelPreparation,
-      persist,
+      clearAttempt,
       request: requestFailure("ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER"),
     });
 
     expect(failure).toBeInstanceOf(AccountDeletionSchoolMemberRequired);
     expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
-    expect(persist).toHaveBeenLastCalledWith({
-      attemptId: ATTEMPT_ID,
-      phase: accountDeletionRequestPhase.preparation,
-      userId: USER_ID,
-    });
+    expect(clearAttempt).toHaveBeenCalledOnce();
   });
 
   it("preserves the attempt when immediate cancellation also fails", async () => {

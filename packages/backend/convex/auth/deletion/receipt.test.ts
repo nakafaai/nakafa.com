@@ -1,4 +1,5 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
 import {
   getAccountDeletionAttemptStatusProgram,
   recordAccountDeletionReceipt,
@@ -114,7 +115,11 @@ describe("auth/deletion/receipt", () => {
   it("deletes expired receipts in bounded pages", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
-      for (let index = 0; index <= 50; index += 1) {
+      for (
+        let index = 0;
+        index <= ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE;
+        index += 1
+      ) {
         await ctx.db.insert("accountDeletionReceipts", {
           attemptId: `expired-${index}`,
           committedAt: 0,

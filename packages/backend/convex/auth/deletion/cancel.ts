@@ -4,7 +4,11 @@ import {
   tryUserCleanup,
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
-import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
+import {
+  ACCOUNT_DELETION_ATTEMPT_RETENTION_MS,
+  ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE,
+  ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
+} from "@repo/backend/convex/auth/deletion/constants";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/convex/auth/deletion/spec";
 import { makeFunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
@@ -17,6 +21,68 @@ const cancelAccountDeletionReference = makeFunctionReference<
   },
   boolean
 >("auth/deletion:cancelAccountDeletion");
+
+/** Proves that one opaque attempt was already canceled. */
+export const hasAccountDeletionCancellation = Effect.fn(
+  "auth.deletion.hasAccountDeletionCancellation"
+)(function* (ctx: MutationCtx, attemptId: string) {
+  const cancellation = yield* tryUserCleanup(() =>
+    ctx.db
+      .query("accountDeletionAttemptCancellations")
+      .withIndex("by_attemptId", (query) => query.eq("attemptId", attemptId))
+      .unique()
+  );
+
+  return cancellation !== null;
+});
+
+/** Persists one privacy-minimal cancellation tombstone idempotently. */
+export const recordAccountDeletionCancellation = Effect.fn(
+  "auth.deletion.recordAccountDeletionCancellation"
+)(function* (ctx: MutationCtx, attemptId: string | undefined) {
+  if (attemptId === undefined) {
+    return;
+  }
+
+  if (yield* hasAccountDeletionCancellation(ctx, attemptId)) {
+    return;
+  }
+
+  const canceledAt = yield* Clock.currentTimeMillis;
+
+  yield* tryUserCleanup(() =>
+    ctx.db.insert("accountDeletionAttemptCancellations", {
+      attemptId,
+      canceledAt,
+    })
+  );
+});
+
+/** Deletes one bounded page of expired cancellation tombstones. */
+export const sweepAccountDeletionCancellationsProgram = Effect.fn(
+  "auth.deletion.sweepAccountDeletionCancellations"
+)(function* (ctx: MutationCtx) {
+  const now = yield* Clock.currentTimeMillis;
+  const cancellations = yield* tryUserCleanup(() =>
+    ctx.db
+      .query("accountDeletionAttemptCancellations")
+      .withIndex("by_canceledAt", (query) =>
+        query.lt("canceledAt", now - ACCOUNT_DELETION_ATTEMPT_RETENTION_MS)
+      )
+      .take(ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE + 1)
+  );
+
+  for (const cancellation of cancellations.slice(
+    0,
+    ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE
+  )) {
+    yield* tryUserCleanup(() =>
+      ctx.db.delete("accountDeletionAttemptCancellations", cancellation._id)
+    );
+  }
+
+  return cancellations.length > ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE;
+});
 
 /** Removes one bounded reservation batch and then its empty preparation. */
 export const deleteAccountDeletionPreparation = Effect.fn(
@@ -94,6 +160,7 @@ export const cancelPreparedAccountDeletion = Effect.fn(
     );
   }
 
+  yield* recordAccountDeletionCancellation(ctx, preparation.attemptId);
   return false;
 });
 

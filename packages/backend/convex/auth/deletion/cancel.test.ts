@@ -4,8 +4,12 @@ import {
   cancelAccountDeletion,
   cancelAccountDeletionBatch,
   cleanupFinalizedAccountDeletion,
+  sweepAccountDeletionCancellationsProgram,
 } from "@repo/backend/convex/auth/deletion/cancel";
-import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
+import {
+  ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE,
+  ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
+} from "@repo/backend/convex/auth/deletion/constants";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -320,5 +324,43 @@ describe("auth/deletion/cancel", () => {
     expect(canceled).toBe(false);
     expect(remaining.preparation?._id).toBe(retriedPreparationId);
     expect(remaining.user?.deletionPreparedAt).toBe(NOW + 1);
+  });
+
+  it("deletes expired cancellation tombstones in bounded pages", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      for (
+        let index = 0;
+        index <= ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE;
+        index += 1
+      ) {
+        await ctx.db.insert("accountDeletionAttemptCancellations", {
+          attemptId: `expired-${index}`,
+          canceledAt: 0,
+        });
+      }
+      await ctx.db.insert("accountDeletionAttemptCancellations", {
+        attemptId: "future",
+        canceledAt: Number.MAX_SAFE_INTEGER,
+      });
+    });
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(sweepAccountDeletionCancellationsProgram(ctx))
+      )
+    ).resolves.toBe(true);
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(sweepAccountDeletionCancellationsProgram(ctx))
+      )
+    ).resolves.toBe(false);
+    const cancellations = await t.query((ctx) =>
+      ctx.db.query("accountDeletionAttemptCancellations").collect()
+    );
+
+    expect(cancellations).toEqual([
+      expect.objectContaining({ attemptId: "future" }),
+    ]);
   });
 });

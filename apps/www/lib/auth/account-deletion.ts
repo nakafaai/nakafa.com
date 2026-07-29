@@ -20,7 +20,7 @@ import {
 import {
   type AccountDeletionPreparationOperations,
   cancelPreparedAccountDeletion,
-  persistAccountDeletionPhase,
+  clearCanceledAccountDeletionAttempt,
   prepareAccountDeletion,
 } from "@/lib/auth/account-deletion-preparation";
 import { authClient } from "@/lib/auth/client";
@@ -48,6 +48,7 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
   function* ({
     attempt,
     cancelPreparation,
+    clearAttempt,
     persist,
     prepare,
     reconcile,
@@ -82,17 +83,14 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
           accountDeletionRequestPhase.deletion,
           cancelPreparation
         );
-        yield* persistAccountDeletionPhase(
-          attempt,
-          accountDeletionRequestPhase.preparation,
-          persist
-        );
+        yield* clearCanceledAccountDeletionAttempt(clearAttempt);
       });
 
     if (startPhase === accountDeletionRequestPhase.preparation) {
       yield* prepareAccountDeletion({
         attempt,
         cancelPreparation,
+        clearAttempt,
         persist,
         prepare,
       });

@@ -2,6 +2,12 @@ import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
 const tables = {
+  accountDeletionAttemptCancellations: defineTable({
+    attemptId: v.string(),
+    canceledAt: v.number(),
+  })
+    .index("by_attemptId", ["attemptId"])
+    .index("by_canceledAt", ["canceledAt"]),
   accountDeletionPreparations: defineTable({
     attemptId: v.optional(v.string()),
     authId: v.string(),

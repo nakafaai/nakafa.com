@@ -100,6 +100,32 @@ describe("auth/deletion/prepare", () => {
     expect(outcome).toBe("ready");
   });
 
+  it("rejects a delayed request after its attempt was canceled", async () => {
+    const t = convexTest(schema, convexModules);
+    const userId = await t.mutation(async (ctx) => {
+      const insertedUserId = await insertUser(ctx, "canceled-attempt-owner");
+      await ctx.db.insert("accountDeletionAttemptCancellations", {
+        attemptId: ATTEMPT_ID,
+        canceledAt: NOW,
+      });
+      return insertedUserId;
+    });
+
+    const outcome = await t.mutation((ctx) =>
+      runConvexProgram(
+        prepareAccountDeletion(ctx, "canceled-attempt-owner", ATTEMPT_ID)
+      )
+    );
+    const state = await t.query(async (ctx) => ({
+      preparation: await ctx.db.query("accountDeletionPreparations").unique(),
+      user: await ctx.db.get("users", userId),
+    }));
+
+    expect(outcome).toBe("temporarily-unavailable");
+    expect(state.preparation).toBeNull();
+    expect(state.user).not.toHaveProperty("deletionPreparedAt");
+  });
+
   it("leaves an owner-only school and account unchanged", async () => {
     const t = convexTest(schema, convexModules);
 

@@ -7,8 +7,8 @@ import {
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
 import {
-  ACCOUNT_DELETION_RECEIPT_RETENTION_MS,
-  ACCOUNT_DELETION_RECEIPT_SWEEP_BATCH_SIZE,
+  ACCOUNT_DELETION_ATTEMPT_RETENTION_MS,
+  ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE,
 } from "@repo/backend/convex/auth/deletion/constants";
 import {
   type AccountDeletionAttemptStatus,
@@ -110,19 +110,19 @@ export const sweepAccountDeletionReceiptsProgram: (
     ctx.db
       .query("accountDeletionReceipts")
       .withIndex("by_committedAt", (query) =>
-        query.lt("committedAt", now - ACCOUNT_DELETION_RECEIPT_RETENTION_MS)
+        query.lt("committedAt", now - ACCOUNT_DELETION_ATTEMPT_RETENTION_MS)
       )
-      .take(ACCOUNT_DELETION_RECEIPT_SWEEP_BATCH_SIZE + 1)
+      .take(ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE + 1)
   );
 
   for (const receipt of receipts.slice(
     0,
-    ACCOUNT_DELETION_RECEIPT_SWEEP_BATCH_SIZE
+    ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE
   )) {
     yield* tryUserCleanup(() =>
       ctx.db.delete("accountDeletionReceipts", receipt._id)
     );
   }
 
-  return receipts.length > ACCOUNT_DELETION_RECEIPT_SWEEP_BATCH_SIZE;
+  return receipts.length > ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE;
 });

@@ -1,7 +1,10 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
 import { cancelAccountDeletionAttemptByToken } from "@repo/backend/convex/auth/deletion/attemptCancellation";
-import { cancelAccountDeletionBatch } from "@repo/backend/convex/auth/deletion/cancel";
+import {
+  cancelAccountDeletionBatch,
+  sweepAccountDeletionCancellationsProgram,
+} from "@repo/backend/convex/auth/deletion/cancel";
 import { claimAccountDeletion as claimAccountDeletionProgram } from "@repo/backend/convex/auth/deletion/claim";
 import { continueAccountDeletionCommitProgram } from "@repo/backend/convex/auth/deletion/commit";
 import { ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE } from "@repo/backend/convex/auth/deletion/constants";
@@ -24,11 +27,11 @@ import { makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const sweepAccountDeletionReceiptsReference = makeFunctionReference<
+const sweepAccountDeletionRetentionReference = makeFunctionReference<
   "mutation",
   Record<string, never>,
   null
->("auth/deletion:sweepAccountDeletionReceipts");
+>("auth/deletion:sweepAccountDeletionRetention");
 
 /** Claims the irreversible phase after reserving every school successor. */
 export const claimAccountDeletion = internalMutation({
@@ -133,18 +136,24 @@ export const getAccountDeletionAttemptStatus = query({
     ),
 });
 
-/** Removes expired privacy-minimal deletion receipts in bounded pages. */
-export const sweepAccountDeletionReceipts = internalMutation({
+/** Removes expired privacy-minimal attempt artifacts in bounded pages. */
+export const sweepAccountDeletionRetention = internalMutation({
   args: {},
   returns: v.null(),
   handler: (ctx) =>
     runConvexProgram(
       Effect.gen(function* () {
-        const hasMore = yield* sweepAccountDeletionReceiptsProgram(ctx);
+        const hasMoreCancellations =
+          yield* sweepAccountDeletionCancellationsProgram(ctx);
+        const hasMoreReceipts = yield* sweepAccountDeletionReceiptsProgram(ctx);
 
-        if (hasMore) {
+        if (hasMoreCancellations || hasMoreReceipts) {
           yield* tryUserCleanup(() =>
-            ctx.scheduler.runAfter(0, sweepAccountDeletionReceiptsReference, {})
+            ctx.scheduler.runAfter(
+              0,
+              sweepAccountDeletionRetentionReference,
+              {}
+            )
           );
         }
       }).pipe(Effect.as(null))

@@ -1,6 +1,9 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
-import { cancelPreparedAccountDeletion } from "@repo/backend/convex/auth/deletion/cancel";
+import {
+  cancelPreparedAccountDeletion,
+  hasAccountDeletionCancellation,
+} from "@repo/backend/convex/auth/deletion/cancel";
 import { accountDeletionCancellationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import { Effect } from "effect";
 
@@ -46,7 +49,9 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
   );
 
   if (!preparation) {
-    return accountDeletionCancellationOutcome.complete;
+    return (yield* hasAccountDeletionCancellation(ctx, attemptId))
+      ? accountDeletionCancellationOutcome.complete
+      : null;
   }
 
   if (

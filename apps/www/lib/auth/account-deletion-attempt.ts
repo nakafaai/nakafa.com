@@ -20,6 +20,7 @@ const encodePersistedAccountDeletionAttempt = Schema.encode(
 
 interface AccountDeletionAttemptStorage {
   readonly getItem: (key: string) => string | null;
+  readonly removeItem: (key: string) => void;
   readonly setItem: (key: string, value: string) => void;
 }
 
@@ -63,6 +64,18 @@ export const saveAccountDeletionAttempt = Effect.fn(
 
   yield* Effect.try({
     try: () => target.setItem(accountDeletionAttemptStorageKey, encoded),
+    catch: accountDeletionAttemptStorageFailure,
+  });
+});
+
+/** Removes one proven-canceled browser capability before a later retry. */
+export const clearAccountDeletionAttempt = Effect.fn(
+  "www.auth.clearAccountDeletionAttempt"
+)(function* (storage?: AccountDeletionAttemptStorage) {
+  const target = yield* getAccountDeletionAttemptStorage(storage);
+
+  yield* Effect.try({
+    try: () => target.removeItem(accountDeletionAttemptStorageKey),
     catch: accountDeletionAttemptStorageFailure,
   });
 });
