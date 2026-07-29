@@ -3,6 +3,7 @@
 import { analytics } from "@repo/analytics/posthog";
 import {
   authorizeAnalyticsIdentity,
+  resetAnalyticsIdentity,
   revokeAnalyticsIdentity,
 } from "@repo/analytics/posthog/identity";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -65,7 +66,7 @@ export function UserContextProvider({
 
     if (!userId) {
       if (trackedUserId) {
-        analytics.reset();
+        resetAnalyticsIdentity(analytics);
       }
 
       return;
@@ -81,7 +82,7 @@ export function UserContextProvider({
     }
 
     if (trackedUserId && trackedUserId !== userId) {
-      analytics.reset();
+      resetAnalyticsIdentity(analytics);
     }
 
     const roleProperties = userRole ? { role: userRole } : {};
