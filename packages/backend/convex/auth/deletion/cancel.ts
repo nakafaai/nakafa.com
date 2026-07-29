@@ -5,7 +5,10 @@ import {
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
-import type { AccountDeletionPreparationVersion } from "@repo/backend/convex/auth/deletion/spec";
+import {
+  type AccountDeletionPreparationVersion,
+  accountDeletionCancellationOutcome,
+} from "@repo/backend/convex/auth/deletion/spec";
 import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
 
@@ -169,7 +172,7 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
     preparation.deletionStartedAt !== undefined ||
     preparation.finalizedAt !== undefined
   ) {
-    return false;
+    return null;
   }
 
   const userStillExists = yield* tryUserCleanup(() =>
@@ -177,11 +180,18 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
   );
 
   if (!userStillExists) {
-    return false;
+    return null;
   }
 
-  yield* cancelAccountDeletionAttemptBatch(ctx, preparation.authId, attemptId);
-  return true;
+  const hasMore = yield* cancelAccountDeletionAttempt(
+    ctx,
+    preparation.authId,
+    attemptId
+  );
+
+  return hasMore
+    ? accountDeletionCancellationOutcome.continue
+    : accountDeletionCancellationOutcome.complete;
 });
 
 /** Removes finalized preparation metadata once its cleanup workflow is active. */

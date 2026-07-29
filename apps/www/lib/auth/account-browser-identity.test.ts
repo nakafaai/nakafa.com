@@ -2,10 +2,11 @@ import { analytics } from "@repo/analytics/posthog";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  AccountReauthenticationFailed,
+  AccountSignOutFailed,
+  clearAccountBrowserIdentity,
   clearDeletedAccountBrowserIdentity,
-  prepareAccountReauthentication,
-} from "@/lib/auth/account-deletion-identity";
+  signOutAccountBrowserIdentity,
+} from "@/lib/auth/account-browser-identity";
 import { authClient } from "@/lib/auth/client";
 
 vi.mock("@/lib/auth/client", () => ({
@@ -21,12 +22,59 @@ vi.mock("@repo/analytics/posthog", () => ({
   },
 }));
 
-describe("account deletion identity", () => {
+describe("account browser identity", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("clears browser identities after deletion", async () => {
+  it("clears browser identity without stopping analytics", async () => {
+    const removePersistedAccountState = vi.fn();
+    const resetAnalytics = vi.fn();
+
+    await Effect.runPromise(
+      clearAccountBrowserIdentity({
+        removePersistedAccountState,
+        resetAnalytics,
+      })
+    );
+
+    expect(removePersistedAccountState).toHaveBeenCalledOnce();
+    expect(resetAnalytics).toHaveBeenCalledOnce();
+  });
+
+  it("clears analytics and every Nakafa-prefixed account store", async () => {
+    window.localStorage.setItem("nakafa-ai", "test-ai-state");
+    window.localStorage.setItem(
+      "nakafa-content-views",
+      "test-content-view-state"
+    );
+    window.localStorage.setItem("nakafa-device-id", "test-device");
+    window.localStorage.setItem("nakafa-school-layout", "test-layout");
+    window.localStorage.setItem("unrelated", "preserved");
+    window.sessionStorage.setItem("nakafa-search", "test-search");
+    window.sessionStorage.setItem(
+      "nakafa-forum-session:class-1",
+      "test-forum-session"
+    );
+    window.sessionStorage.setItem("unrelated", "preserved");
+
+    await Effect.runPromise(clearAccountBrowserIdentity());
+
+    expect(analytics.shutdown).not.toHaveBeenCalled();
+    expect(analytics.reset).toHaveBeenCalledWith(true);
+    expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
+    expect(window.localStorage.getItem("nakafa-content-views")).toBeNull();
+    expect(window.localStorage.getItem("nakafa-device-id")).toBeNull();
+    expect(window.localStorage.getItem("nakafa-school-layout")).toBeNull();
+    expect(window.localStorage.getItem("unrelated")).toBe("preserved");
+    expect(window.sessionStorage.getItem("nakafa-search")).toBeNull();
+    expect(
+      window.sessionStorage.getItem("nakafa-forum-session:class-1")
+    ).toBeNull();
+    expect(window.sessionStorage.getItem("unrelated")).toBe("preserved");
+  });
+
+  it("flushes analytics before clearing a deleted browser identity", async () => {
     const flushAnalytics = vi.fn(async () => undefined);
     const removePersistedAccountState = vi.fn();
     const resetAnalytics = vi.fn();
@@ -47,39 +95,11 @@ describe("account deletion identity", () => {
     );
   });
 
-  it("clears analytics and every Nakafa-prefixed account store", async () => {
-    window.localStorage.setItem("nakafa-ai", "test-ai-state");
-    window.localStorage.setItem(
-      "nakafa-content-views",
-      "test-content-view-state"
-    );
-    window.localStorage.setItem("nakafa-device-id", "test-device");
-    window.localStorage.setItem("nakafa-school-layout", "test-layout");
-    window.localStorage.setItem("unrelated", "preserved");
-    window.sessionStorage.setItem("nakafa-search", "test-search");
-    window.sessionStorage.setItem(
-      "nakafa-forum-session:class-1",
-      "test-forum-session"
-    );
-    window.sessionStorage.setItem("unrelated", "preserved");
-
+  it("uses the analytics client after a committed deletion", async () => {
     await Effect.runPromise(clearDeletedAccountBrowserIdentity());
 
     expect(analytics.shutdown).toHaveBeenCalledOnce();
     expect(analytics.reset).toHaveBeenCalledWith(true);
-    expect(
-      vi.mocked(analytics.shutdown).mock.invocationCallOrder[0]
-    ).toBeLessThan(vi.mocked(analytics.reset).mock.invocationCallOrder[0] ?? 0);
-    expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
-    expect(window.localStorage.getItem("nakafa-content-views")).toBeNull();
-    expect(window.localStorage.getItem("nakafa-device-id")).toBeNull();
-    expect(window.localStorage.getItem("nakafa-school-layout")).toBeNull();
-    expect(window.localStorage.getItem("unrelated")).toBe("preserved");
-    expect(window.sessionStorage.getItem("nakafa-search")).toBeNull();
-    expect(
-      window.sessionStorage.getItem("nakafa-forum-session:class-1")
-    ).toBeNull();
-    expect(window.sessionStorage.getItem("unrelated")).toBe("preserved");
   });
 
   it("does not fail a completed deletion when browser cleanup fails", async () => {
@@ -99,7 +119,7 @@ describe("account deletion identity", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("clears browser identity before reauthentication", async () => {
+  it("clears browser identity before sign-out", async () => {
     vi.mocked(authClient.signOut).mockResolvedValue({
       data: { success: true },
       error: null,
@@ -111,26 +131,24 @@ describe("account deletion identity", () => {
     );
 
     await expect(
-      Effect.runPromise(prepareAccountReauthentication())
+      Effect.runPromise(signOutAccountBrowserIdentity())
     ).resolves.toBeUndefined();
 
     expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
     expect(
       window.sessionStorage.getItem("nakafa-forum-session:class-1")
     ).toBeNull();
-    expect(analytics.shutdown).toHaveBeenCalledOnce();
+    expect(analytics.shutdown).not.toHaveBeenCalled();
     expect(analytics.reset).toHaveBeenCalledWith(true);
     expect(authClient.signOut).toHaveBeenCalledOnce();
-    expect(
-      vi.mocked(analytics.shutdown).mock.invocationCallOrder[0]
-    ).toBeLessThan(
+    expect(vi.mocked(analytics.reset).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(authClient.signOut).mock.invocationCallOrder[0] ?? 0
     );
   });
 
   it("returns a typed failure when sign-out is rejected", async () => {
     const failure = await Effect.runPromise(
-      prepareAccountReauthentication(async () => ({
+      signOutAccountBrowserIdentity(async () => ({
         data: null,
         error: {
           code: "SIGN_OUT_FAILED",
@@ -141,16 +159,16 @@ describe("account deletion identity", () => {
       })).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(AccountReauthenticationFailed);
+    expect(failure).toBeInstanceOf(AccountSignOutFailed);
   });
 
   it("returns a typed failure when sign-out cannot start", async () => {
     const failure = await Effect.runPromise(
-      prepareAccountReauthentication(() =>
+      signOutAccountBrowserIdentity(() =>
         Promise.reject(new Error("network unavailable"))
       ).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(AccountReauthenticationFailed);
+    expect(failure).toBeInstanceOf(AccountSignOutFailed);
   });
 });

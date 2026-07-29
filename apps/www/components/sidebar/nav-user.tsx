@@ -35,12 +35,13 @@ import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
+import { Effect, Either } from "effect";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
 import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
-import { authClient } from "@/lib/auth/client";
+import { signOutAccountBrowserIdentity } from "@/lib/auth/account-browser-identity";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -69,13 +70,13 @@ export function NavUser() {
 
   /** Signs the user out and leaves the shared authenticated app subtree on success. */
   async function handleSignOut() {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.replace(authHref);
-        },
-      },
-    });
+    const result = await Effect.runPromise(
+      Effect.either(signOutAccountBrowserIdentity())
+    );
+
+    if (Either.isRight(result)) {
+      router.replace(authHref);
+    }
   }
 
   if (isPending) {

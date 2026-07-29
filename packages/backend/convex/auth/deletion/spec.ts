@@ -29,10 +29,24 @@ export type AccountDeletionRequestPhase = Schema.Schema.Type<
 export const accountDeletionBrowserAttemptSchema = Schema.Struct({
   attemptId: Schema.String,
   phase: accountDeletionRequestPhaseSchema,
+  userId: Schema.String,
 });
 
 export type AccountDeletionBrowserAttempt = Schema.Schema.Type<
   typeof accountDeletionBrowserAttemptSchema
+>;
+
+export const accountDeletionCancellationOutcome = {
+  complete: "complete",
+  continue: "continue",
+} as const;
+
+export const accountDeletionCancellationOutcomeValidator = literals(
+  ...Object.values(accountDeletionCancellationOutcome)
+);
+
+export type AccountDeletionCancellationOutcome = Infer<
+  typeof accountDeletionCancellationOutcomeValidator
 >;
 
 export const accountDeletionPreparationOutcome = {

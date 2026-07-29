@@ -4,6 +4,7 @@ import {
 } from "@repo/backend/convex/auth/deletion/constants";
 import {
   accountDeletionAttemptStatus,
+  accountDeletionCancellationOutcome,
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
@@ -30,6 +31,7 @@ vi.mock("@/lib/auth/client", () => ({
 }));
 
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
+const USER_ID = "user-1";
 const STORAGE_FAILED_CODE = "ACCOUNT_DELETION_ATTEMPT_STORAGE_FAILED";
 
 function createDeletionOperations(
@@ -39,8 +41,11 @@ function createDeletionOperations(
     attempt: {
       attemptId: ATTEMPT_ID,
       phase: accountDeletionRequestPhase.preparation,
+      userId: USER_ID,
     },
-    cancelPreparation: vi.fn(async () => true),
+    cancelPreparation: vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    ),
     persist: vi.fn(() => Effect.void),
     prepare: vi.fn(async () => accountDeletionPreparationOutcome.ready),
     reconcile: vi.fn(async () => accountDeletionAttemptStatus.pending),
@@ -90,7 +95,9 @@ describe("account deletion", () => {
   });
 
   it("does not clear the account for a non-terminal Better Auth response", async () => {
-    const cancelPreparation = vi.fn(async () => true);
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
     const failure = await Effect.runPromise(
       deleteCurrentAccount(
         createDeletionOperations({
@@ -134,6 +141,7 @@ describe("account deletion", () => {
     expect(persist).toHaveBeenCalledExactlyOnceWith({
       attemptId: ATTEMPT_ID,
       phase: accountDeletionRequestPhase.deletion,
+      userId: USER_ID,
     });
     expect(persist.mock.invocationCallOrder[0]).toBeLessThan(
       request.mock.invocationCallOrder[0] ?? 0
@@ -155,6 +163,7 @@ describe("account deletion", () => {
           attempt: {
             attemptId: persistedAttemptId,
             phase: accountDeletionRequestPhase.preparation,
+            userId: USER_ID,
           },
           prepare,
           request,
@@ -167,7 +176,9 @@ describe("account deletion", () => {
   });
 
   it("cancels before deletion when its durable phase cannot be saved", async () => {
-    const cancelPreparation = vi.fn(async () => true);
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
     const prepare = vi.fn(async () => accountDeletionPreparationOutcome.ready);
     const request = vi.fn();
     const failure = await runDeletionFailure({
@@ -189,7 +200,9 @@ describe("account deletion", () => {
   });
 
   it("preserves a preparation attempt after an uncertain request", async () => {
-    const cancelPreparation = vi.fn(async () => true);
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
     const request = vi.fn();
     const failure = await Effect.runPromise(
       deleteCurrentAccount(
@@ -219,6 +232,7 @@ describe("account deletion", () => {
       attempt: {
         attemptId: ATTEMPT_ID,
         phase: accountDeletionRequestPhase.deletion,
+        userId: USER_ID,
       },
     });
 
@@ -242,6 +256,7 @@ describe("account deletion", () => {
             attempt: {
               attemptId: ATTEMPT_ID,
               phase: accountDeletionRequestPhase.deletion,
+              userId: USER_ID,
             },
           })
         )
@@ -252,7 +267,9 @@ describe("account deletion", () => {
   });
 
   it("recovers when the delete response is lost after commit", async () => {
-    const cancelPreparation = vi.fn(async () => true);
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
 
     await expect(
       Effect.runPromise(
@@ -271,7 +288,9 @@ describe("account deletion", () => {
   });
 
   it("proves a lost success before accepting an unauthorized retry", async () => {
-    const cancelPreparation = vi.fn(async () => true);
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
     const reconcile = vi
       .fn<AccountDeletionOperations["reconcile"]>()
       .mockResolvedValueOnce(accountDeletionAttemptStatus.pending)
@@ -287,6 +306,7 @@ describe("account deletion", () => {
             attempt: {
               attemptId: ATTEMPT_ID,
               phase: accountDeletionRequestPhase.deletion,
+              userId: USER_ID,
             },
           })
         )
@@ -306,6 +326,7 @@ describe("account deletion", () => {
           attempt: {
             attemptId: ATTEMPT_ID,
             phase: accountDeletionRequestPhase.deletion,
+            userId: USER_ID,
           },
         })
       ).pipe(Effect.flip)
@@ -320,7 +341,9 @@ describe("account deletion", () => {
   });
 
   it("continues preparation when the auth safety check is not ready", async () => {
-    const cancelPreparation = vi.fn(async () => true);
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
     const persist = vi.fn(() => Effect.void);
     const failure = await runDeletionFailure({
       cancelPreparation,
@@ -337,6 +360,7 @@ describe("account deletion", () => {
     expect(persist).toHaveBeenLastCalledWith({
       attemptId: ATTEMPT_ID,
       phase: accountDeletionRequestPhase.preparation,
+      userId: USER_ID,
     });
   });
 
@@ -359,7 +383,9 @@ describe("account deletion", () => {
   });
 
   it("cancels a preparation that cannot safely continue", async () => {
-    const cancelPreparation = vi.fn(async () => true);
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
     const request = vi.fn();
     const failure = await Effect.runPromise(
       deleteCurrentAccount(
@@ -386,23 +412,26 @@ describe("account deletion", () => {
     expect(failure).toBeInstanceOf(AccountDeletionSessionExpired);
   });
 
-  it("preserves a stale-session attempt when cancellation is not proven", async () => {
-    const cancelPreparation = vi.fn(async () => false);
+  it("drains cancellation before resetting a stale-session attempt", async () => {
+    const cancelPreparation = vi
+      .fn<AccountDeletionOperations["cancelPreparation"]>()
+      .mockResolvedValueOnce(accountDeletionCancellationOutcome.continue)
+      .mockResolvedValueOnce(accountDeletionCancellationOutcome.complete);
     const failure = await runDeletionFailure({
       cancelPreparation,
       request: requestFailure("SESSION_EXPIRED"),
     });
 
-    expect(failure).toMatchObject({
-      _tag: "AccountDeletionRequestUncertain",
-      attemptId: ATTEMPT_ID,
-      phase: accountDeletionRequestPhase.deletion,
-    });
-    expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
+    expect(failure).toBeInstanceOf(AccountDeletionSessionExpired);
+    expect(cancelPreparation).toHaveBeenCalledTimes(2);
+    expect(cancelPreparation).toHaveBeenNthCalledWith(1, ATTEMPT_ID);
+    expect(cancelPreparation).toHaveBeenNthCalledWith(2, ATTEMPT_ID);
   });
 
   it("leaves other delete errors to durable server recovery", async () => {
-    const cancelPreparation = vi.fn(async () => true);
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
     const failure = await runDeletionFailure({
       cancelPreparation,
       request: requestFailure("DELETE_FAILED", 500),
@@ -417,7 +446,9 @@ describe("account deletion", () => {
   });
 
   it("returns a typed failure when an owned school needs a successor", async () => {
-    const cancelPreparation = vi.fn(async () => true);
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
     const persist = vi.fn(() => Effect.void);
     const failure = await runDeletionFailure({
       cancelPreparation,
@@ -430,6 +461,7 @@ describe("account deletion", () => {
     expect(persist).toHaveBeenLastCalledWith({
       attemptId: ATTEMPT_ID,
       phase: accountDeletionRequestPhase.preparation,
+      userId: USER_ID,
     });
   });
 

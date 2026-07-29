@@ -6,6 +6,7 @@ import {
   Login01Icon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Alert,
   AlertDescription,
@@ -23,15 +24,15 @@ import { Effect, Either } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { FormBlock } from "@/components/shared/form-block";
+import {
+  clearDeletedAccountBrowserIdentity,
+  signOutAccountBrowserIdentity,
+} from "@/lib/auth/account-browser-identity";
 import { deleteCurrentAccount } from "@/lib/auth/account-deletion";
 import {
   loadOrCreateAccountDeletionAttempt,
   saveAccountDeletionAttempt,
 } from "@/lib/auth/account-deletion-attempt";
-import {
-  clearDeletedAccountBrowserIdentity,
-  prepareAccountReauthentication,
-} from "@/lib/auth/account-deletion-identity";
 
 const dialogError = {
   generic: "generic",
@@ -42,7 +43,7 @@ const dialogError = {
 type DialogError = (typeof dialogError)[keyof typeof dialogError] | null;
 
 /** Renders the destructive account-deletion card and confirmation flow. */
-export function UserSettingsDeleteAccount() {
+export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Auth");
   const common = useTranslations("Common");
   const locale = useLocale();
@@ -77,27 +78,23 @@ export function UserSettingsDeleteAccount() {
 
     const result = await Effect.runPromise(
       Effect.gen(function* () {
-        const attempt = yield* loadOrCreateAccountDeletionAttempt();
-        const deletion = yield* Effect.either(
-          deleteCurrentAccount({
-            attempt,
-            cancelPreparation: (attemptId) =>
-              cancelAccountDeletion({ attemptId }),
-            persist: saveAccountDeletionAttempt,
-            prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
-            reconcile: (attemptId) =>
-              convex.query(api.auth.deletion.getAccountDeletionAttemptStatus, {
-                attemptId,
-              }),
-          })
-        );
-
-        if (Either.isRight(deletion)) {
-          yield* clearDeletedAccountBrowserIdentity();
-        }
-
-        return deletion;
-      }).pipe(Effect.ensuring(Effect.sync(() => setIsPending(false))))
+        const attempt = yield* loadOrCreateAccountDeletionAttempt(userId);
+        yield* deleteCurrentAccount({
+          attempt,
+          cancelPreparation: (attemptId) =>
+            cancelAccountDeletion({ attemptId }),
+          persist: saveAccountDeletionAttempt,
+          prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
+          reconcile: (attemptId) =>
+            convex.query(api.auth.deletion.getAccountDeletionAttemptStatus, {
+              attemptId,
+            }),
+        });
+        yield* clearDeletedAccountBrowserIdentity();
+      }).pipe(
+        Effect.either,
+        Effect.ensuring(Effect.sync(() => setIsPending(false)))
+      )
     );
 
     if (Either.isRight(result)) {
@@ -122,7 +119,7 @@ export function UserSettingsDeleteAccount() {
     setIsPending(true);
 
     const result = await Effect.runPromise(
-      Effect.either(prepareAccountReauthentication()).pipe(
+      Effect.either(signOutAccountBrowserIdentity()).pipe(
         Effect.ensuring(Effect.sync(() => setIsPending(false)))
       )
     );
