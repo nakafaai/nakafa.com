@@ -1,34 +1,16 @@
 "use client";
 
+import { Effect } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { readAiDraftText, saveAiDraftText } from "@/components/ai/store/draft";
 import { initialState } from "@/components/ai/store/state";
 import type { AiStore } from "@/components/ai/store/types";
 
-const AI_DRAFT_STORAGE_KEY = "nakafa-ai-draft";
-
-/** Saves or clears the current Nina draft in session storage. */
-function saveDraftText(text: string) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (text.length === 0) {
-    window.sessionStorage.removeItem(AI_DRAFT_STORAGE_KEY);
-    return;
-  }
-
-  window.sessionStorage.setItem(AI_DRAFT_STORAGE_KEY, text);
-}
-
 /** Restores the saved Nina draft after the persisted store rehydrates. */
 function restoreDraftText(state: AiStore | undefined) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const text = window.sessionStorage.getItem(AI_DRAFT_STORAGE_KEY);
+  const text = Effect.runSync(readAiDraftText());
   if (text) {
     state?.setText(text);
   }
@@ -47,8 +29,8 @@ export const createAiStore = () =>
         setModel: (model) => set({ model }),
         setOpen: (open) => set({ open }),
         setText: (text) => {
-          saveDraftText(text);
           set({ text });
+          Effect.runSync(saveAiDraftText(text));
         },
       })),
       {

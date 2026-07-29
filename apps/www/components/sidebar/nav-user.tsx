@@ -38,6 +38,7 @@ import {
 import { Effect, Either } from "effect";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
+import { clearAiDraftText } from "@/components/ai/store/draft";
 import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
 import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
@@ -75,6 +76,7 @@ export function NavUser() {
     );
 
     if (Either.isRight(result)) {
+      Effect.runSync(clearAiDraftText);
       router.replace(authHref);
     }
   }
