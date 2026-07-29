@@ -2,7 +2,10 @@
 
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { FORUM_PENDING_UPLOAD_EXPIRATION_MS } from "@repo/backend/convex/classes/forums/attachments/constants";
+import {
+  FORUM_PENDING_UPLOAD_EXPIRATION_MS,
+  FORUM_PENDING_UPLOAD_LEASE_MS,
+} from "@repo/backend/convex/classes/forums/attachments/constants";
 import { MAX_FORUM_ATTACHMENT_BYTES } from "@repo/backend/convex/classes/forums/utils/constants";
 import {
   insertClass,
@@ -18,6 +21,7 @@ import { Effect, Schema } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
+const LEASE_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const polarSecretName = "POLAR_WEBHOOK_SECRET";
 const uploadTokenSuffixPattern = /[^/]+$/;
 
@@ -97,6 +101,21 @@ async function createPendingUpload() {
     uploadId: upload.uploadId,
     uploadToken,
   };
+}
+
+/** Claims one pending capability as the internal HTTP adapter. */
+async function claimPendingUpload(
+  pendingUpload: Awaited<ReturnType<typeof createPendingUpload>>,
+  leaseId = LEASE_ID
+) {
+  return await pendingUpload.t.mutation(
+    internal.classes.forums.attachments.upload.claim,
+    {
+      leaseId,
+      uploadId: pendingUpload.uploadId,
+      uploadToken: pendingUpload.uploadToken,
+    }
+  );
 }
 
 /** Asserts response bytes and the capability URL remain private. */
@@ -213,6 +232,64 @@ describe("classes/forums/attachments/route", () => {
     });
   });
 
+  it("rejects a concurrent request before consuming its hostile body", async () => {
+    const pendingUpload = await createPendingUpload();
+    const { capabilityPath, t, uploadId } = pendingUpload;
+    await expect(claimPendingUpload(pendingUpload)).resolves.toBe(true);
+    let pulls = 0;
+    const body = new ReadableStream<Uint8Array>(
+      {
+        /** Records any attempt to consume a concurrently leased body. */
+        pull(controller) {
+          pulls += 1;
+          controller.error(new Error("Leased capability body was consumed."));
+        },
+      },
+      { highWaterMark: 0 }
+    );
+    const request = {
+      body,
+      duplex: "half",
+      headers: { "content-type": "text/plain" },
+      method: "POST",
+    } satisfies RequestInit & { readonly duplex: "half" };
+
+    const response = await t.fetch(capabilityPath, request);
+
+    expect(response.status).toBe(404);
+    expectPrivate(response);
+    expect(pulls).toBe(0);
+    await expect(
+      t.query((ctx) => ctx.db.get("schoolClassForumPendingUploads", uploadId))
+    ).resolves.toMatchObject({
+      uploadLease: {
+        expiresAt: NOW + FORUM_PENDING_UPLOAD_LEASE_MS,
+        id: LEASE_ID,
+      },
+    });
+  });
+
+  it("reclaims an interrupted upload after its lease expires", async () => {
+    const pendingUpload = await createPendingUpload();
+    const { capabilityPath, t, uploadId } = pendingUpload;
+    await expect(claimPendingUpload(pendingUpload)).resolves.toBe(true);
+    vi.setSystemTime(NOW + FORUM_PENDING_UPLOAD_LEASE_MS);
+
+    const response = await t.fetch(capabilityPath, {
+      body: "hello",
+      headers: { "content-type": "text/plain" },
+      method: "POST",
+    });
+
+    expect(response.status).toBe(200);
+    expectPrivate(response);
+    const upload = await t.query((ctx) =>
+      ctx.db.get("schoolClassForumPendingUploads", uploadId)
+    );
+    expect(upload).toMatchObject({ size: 5 });
+    expect(upload).not.toHaveProperty("uploadLease");
+  });
+
   it("rejects an expired capability before consuming the request body", async () => {
     const { capabilityPath, t, uploadId } = await createPendingUpload();
     vi.setSystemTime(NOW + FORUM_PENDING_UPLOAD_EXPIRATION_MS);
@@ -269,13 +346,21 @@ describe("classes/forums/attachments/route", () => {
           "schoolClassForumPendingUploads",
           uploadId
         );
-        return upload?.storageId ?? null;
+        return {
+          storageId: upload?.storageId ?? null,
+          uploadLease: upload?.uploadLease,
+        };
       })
-    ).resolves.toBeNull();
+    ).resolves.toEqual({
+      storageId: null,
+      uploadLease: undefined,
+    });
   });
 
   it("binds a server-created object for an active upload capability", async () => {
-    const { t, uploadId, uploadToken } = await createPendingUpload();
+    const pendingUpload = await createPendingUpload();
+    const { t, uploadId, uploadToken } = pendingUpload;
+    await expect(claimPendingUpload(pendingUpload)).resolves.toBe(true);
     const storageId = await t.run((ctx) =>
       ctx.storage.store(new Blob(["hello"], { type: "text/plain" }))
     );
@@ -286,6 +371,7 @@ describe("classes/forums/attachments/route", () => {
     await expect(
       t.mutation(internal.classes.forums.attachments.upload.settle, {
         contentType: "text/plain",
+        leaseId: LEASE_ID,
         size: 5,
         storageId,
         uploadId,
@@ -295,7 +381,9 @@ describe("classes/forums/attachments/route", () => {
   });
 
   it("removes a newly stored object when deletion wins the settlement race", async () => {
-    const { seeded, t, uploadId, uploadToken } = await createPendingUpload();
+    const pendingUpload = await createPendingUpload();
+    const { seeded, t, uploadId, uploadToken } = pendingUpload;
+    await expect(claimPendingUpload(pendingUpload)).resolves.toBe(true);
     const storageId = await t.run((ctx) =>
       ctx.storage.store(new Blob(["hello"], { type: "text/plain" }))
     );
@@ -307,6 +395,7 @@ describe("classes/forums/attachments/route", () => {
     await expect(
       t.mutation(internal.classes.forums.attachments.upload.settle, {
         contentType: "text/plain",
+        leaseId: LEASE_ID,
         size: 5,
         storageId,
         uploadId,
@@ -329,7 +418,9 @@ describe("classes/forums/attachments/route", () => {
   });
 
   it("removes a server-created object when settlement reaches its deadline", async () => {
-    const { t, uploadId, uploadToken } = await createPendingUpload();
+    const pendingUpload = await createPendingUpload();
+    const { t, uploadId, uploadToken } = pendingUpload;
+    await expect(claimPendingUpload(pendingUpload)).resolves.toBe(true);
     const storageId = await t.run((ctx) =>
       ctx.storage.store(new Blob(["hello"], { type: "text/plain" }))
     );
@@ -338,6 +429,7 @@ describe("classes/forums/attachments/route", () => {
     await expect(
       t.mutation(internal.classes.forums.attachments.upload.settle, {
         contentType: "text/plain",
+        leaseId: LEASE_ID,
         size: 5,
         storageId,
         uploadId,
