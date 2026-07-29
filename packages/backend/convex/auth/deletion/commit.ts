@@ -110,6 +110,7 @@ export const continueAccountDeletionCommitProgram: (
     preparation.attemptId !== expectedPreparation.attemptId ||
     preparation._id !== expectedPreparation.preparationId ||
     preparation.recoveryGeneration !== expectedPreparation.recoveryGeneration ||
+    preparation.cancellationStartedAt !== undefined ||
     preparation.deletionStartedAt === undefined
   ) {
     return false;

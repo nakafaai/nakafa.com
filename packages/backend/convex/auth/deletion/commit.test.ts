@@ -136,13 +136,20 @@ describe("auth/deletion/commit", () => {
     });
   });
 
-  it("does not touch auth before the irreversible claim", async () => {
+  it.each([
+    {
+      patch: { deletionStartedAt: undefined },
+      state: "before the irreversible claim",
+    },
+    {
+      patch: { cancellationStartedAt: NOW + 1 },
+      state: "after cancellation starts",
+    },
+  ])("does not touch auth $state", async ({ patch }) => {
     const t = convexTest(schema, convexModules);
     const seeded = await seedStartedDeletion(t, "unclaimed-owner");
     await t.mutation((ctx) =>
-      ctx.db.patch("accountDeletionPreparations", seeded.preparationId, {
-        deletionStartedAt: undefined,
-      })
+      ctx.db.patch("accountDeletionPreparations", seeded.preparationId, patch)
     );
     const deleteAuthUser = vi.fn(async () => undefined);
     const deleteSessions = vi.fn(async () => 0);

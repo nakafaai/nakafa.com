@@ -5,6 +5,7 @@ const tables = {
   accountDeletionPreparations: defineTable({
     attemptId: v.optional(v.string()),
     authId: v.string(),
+    cancellationStartedAt: v.optional(v.number()),
     deletionStartedAt: v.optional(v.number()),
     finalizedAt: v.optional(v.number()),
     pendingSchoolId: v.optional(v.id("schools")),

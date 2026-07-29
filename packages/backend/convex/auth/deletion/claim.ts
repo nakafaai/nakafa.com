@@ -54,6 +54,7 @@ export const claimAccountDeletion: (
     if (
       !preparation ||
       preparation.attemptId !== attemptId ||
+      preparation.cancellationStartedAt !== undefined ||
       preparation.finalizedAt !== undefined ||
       preparation.readyAt === undefined ||
       user.deletionPreparedAt === undefined
