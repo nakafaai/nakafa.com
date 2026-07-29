@@ -131,7 +131,7 @@ describe("account browser identity", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("clears browser identity before sign-out", async () => {
+  it("clears browser identity after successful sign-out", async () => {
     vi.mocked(authClient.signOut).mockResolvedValue({
       data: { success: true },
       error: null,
@@ -153,12 +153,14 @@ describe("account browser identity", () => {
     expect(analytics.shutdown).not.toHaveBeenCalled();
     expect(analytics.reset).toHaveBeenCalledWith(true);
     expect(authClient.signOut).toHaveBeenCalledOnce();
-    expect(vi.mocked(analytics.reset).mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(authClient.signOut).mock.invocationCallOrder[0] ?? 0
-    );
+    expect(
+      vi.mocked(authClient.signOut).mock.invocationCallOrder[0]
+    ).toBeLessThan(vi.mocked(analytics.reset).mock.invocationCallOrder[0] ?? 0);
   });
 
-  it("returns a typed failure when sign-out is rejected", async () => {
+  it("preserves browser identity when sign-out is rejected", async () => {
+    window.localStorage.setItem("nakafa-ai", "active-account-chat");
+
     const failure = await Effect.runPromise(
       signOutAccountBrowserIdentity(async () => ({
         data: null,
@@ -172,9 +174,18 @@ describe("account browser identity", () => {
     );
 
     expect(failure).toBeInstanceOf(AccountSignOutFailed);
+    expect(window.localStorage.getItem("nakafa-ai")).toBe(
+      "active-account-chat"
+    );
+    expect(analytics.reset).not.toHaveBeenCalled();
   });
 
-  it("returns a typed failure when sign-out cannot start", async () => {
+  it("preserves browser identity when sign-out cannot start", async () => {
+    window.sessionStorage.setItem(
+      "nakafa-forum-session:class-1",
+      "active-account-forum"
+    );
+
     const failure = await Effect.runPromise(
       signOutAccountBrowserIdentity(() =>
         Promise.reject(new Error("network unavailable"))
@@ -182,5 +193,9 @@ describe("account browser identity", () => {
     );
 
     expect(failure).toBeInstanceOf(AccountSignOutFailed);
+    expect(window.sessionStorage.getItem("nakafa-forum-session:class-1")).toBe(
+      "active-account-forum"
+    );
+    expect(analytics.reset).not.toHaveBeenCalled();
   });
 });
