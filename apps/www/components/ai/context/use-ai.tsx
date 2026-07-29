@@ -31,9 +31,10 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
     }
 
     const previousOwnerId = previousDraftOwnerIdRef.current;
-    const pendingText =
-      previousOwnerId === undefined ? store.getState().text : "";
-    if (previousOwnerId !== undefined && previousOwnerId !== ownerId) {
+    const ownerChanged =
+      previousOwnerId !== undefined && previousOwnerId !== ownerId;
+    const pendingText = ownerChanged ? "" : store.getState().text;
+    if (ownerChanged) {
       store.setState({ text: "" });
     }
 
