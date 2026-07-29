@@ -172,6 +172,7 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
         preparationOutcome ===
         accountDeletionPreparationOutcome.schoolSuccessorRequired
       ) {
+        yield* cancelPreparedAttempt(accountDeletionRequestPhase.preparation);
         return yield* new AccountDeletionSchoolMemberRequired({
           code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
         });
@@ -246,6 +247,7 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     }
 
     if (result.error.code === ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE) {
+      yield* cancelPreparedAttempt(accountDeletionRequestPhase.deletion);
       yield* persistAttemptPhase(accountDeletionRequestPhase.preparation);
       return yield* new AccountDeletionRequestUncertain({
         attemptId,
@@ -263,6 +265,7 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     }
 
     if (result.error.code === ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE) {
+      yield* cancelPreparedAttempt(accountDeletionRequestPhase.deletion);
       yield* persistAttemptPhase(accountDeletionRequestPhase.preparation);
       return yield* new AccountDeletionSchoolMemberRequired({
         code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,

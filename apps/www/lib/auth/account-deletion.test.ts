@@ -340,7 +340,7 @@ describe("account deletion", () => {
     expect(request).not.toHaveBeenCalled();
   });
 
-  it("continues preparation when the auth safety check is not ready", async () => {
+  it("cancels before retrying when the auth safety check is not ready", async () => {
     const cancelPreparation = vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     );
@@ -356,7 +356,7 @@ describe("account deletion", () => {
       attemptId: ATTEMPT_ID,
       phase: accountDeletionRequestPhase.preparation,
     });
-    expect(cancelPreparation).not.toHaveBeenCalled();
+    expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
     expect(persist).toHaveBeenLastCalledWith({
       attemptId: ATTEMPT_ID,
       phase: accountDeletionRequestPhase.preparation,
@@ -365,10 +365,14 @@ describe("account deletion", () => {
   });
 
   it("stops before auth deletion when preparation needs a successor", async () => {
+    const cancelPreparation = vi.fn(
+      async () => accountDeletionCancellationOutcome.complete
+    );
     const request = vi.fn();
     const failure = await Effect.runPromise(
       deleteCurrentAccount(
         createDeletionOperations({
+          cancelPreparation,
           prepare: vi.fn(
             async () =>
               accountDeletionPreparationOutcome.schoolSuccessorRequired
@@ -379,6 +383,7 @@ describe("account deletion", () => {
     );
 
     expect(failure).toBeInstanceOf(AccountDeletionSchoolMemberRequired);
+    expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
     expect(request).not.toHaveBeenCalled();
   });
 
@@ -457,7 +462,7 @@ describe("account deletion", () => {
     });
 
     expect(failure).toBeInstanceOf(AccountDeletionSchoolMemberRequired);
-    expect(cancelPreparation).not.toHaveBeenCalled();
+    expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
     expect(persist).toHaveBeenLastCalledWith({
       attemptId: ATTEMPT_ID,
       phase: accountDeletionRequestPhase.preparation,

@@ -216,6 +216,20 @@ describe("auth/deletion/cancel", () => {
     expect(state.user?.deletionPreparedAt).toBe(NOW);
   });
 
+  it("treats an already-absent preparation as completely canceled", async () => {
+    const t = convexTest(schema, convexModules);
+    const authUserExists = vi.fn(async () => true);
+
+    const outcome = await t.mutation((ctx) =>
+      runConvexProgram(
+        cancelAccountDeletionAttemptByToken(ctx, ATTEMPT_ID, authUserExists)
+      )
+    );
+
+    expect(outcome).toBe(accountDeletionCancellationOutcome.complete);
+    expect(authUserExists).not.toHaveBeenCalled();
+  });
+
   it("removes finalized metadata after workflow admission", async () => {
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation(async (ctx) => {
