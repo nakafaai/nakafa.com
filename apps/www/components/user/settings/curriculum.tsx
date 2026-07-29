@@ -1,7 +1,6 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import {
@@ -13,6 +12,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { useForm } from "@tanstack/react-form";
+import { type Preloaded, usePreloadedQuery } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -59,27 +59,28 @@ class CurriculumPreferenceMutationError extends Schema.TaggedError<CurriculumPre
   }
 ) {}
 
-/** Renders the settings form that saves the user's preferred curriculum. */
-export function UserSettingsCurriculum() {
-  const locale = useLocale();
-  const programs = useQueryWithStatus(
-    api.learningPreferences.queries.listCurriculumPrograms,
-    { locale }
-  );
-  const preference = useQueryWithStatus(
-    api.learningPreferences.queries.getCurrent,
-    { locale }
-  );
+interface UserSettingsCurriculumProps {
+  preloadedPreference: Preloaded<
+    typeof api.learningPreferences.queries.getCurrent
+  >;
+  preloadedPrograms: Preloaded<
+    typeof api.learningPreferences.queries.listCurriculumPrograms
+  >;
+}
 
-  if (!(programs.isSuccess && preference.isSuccess)) {
-    return null;
-  }
+/** Renders the settings form that saves the user's preferred curriculum. */
+export function UserSettingsCurriculum({
+  preloadedPreference,
+  preloadedPrograms,
+}: UserSettingsCurriculumProps) {
+  const preference = usePreloadedQuery(preloadedPreference);
+  const programs = usePreloadedQuery(preloadedPrograms);
 
   return (
     <UserSettingsCurriculumForm
-      initialProgramKey={preference.data?.preferredCurriculumProgramKey ?? ""}
-      key={preference.data?.preferredCurriculumProgramKey ?? "empty"}
-      programs={programs.data}
+      initialProgramKey={preference?.preferredCurriculumProgramKey ?? ""}
+      key={preference?.preferredCurriculumProgramKey ?? "empty"}
+      programs={programs}
     />
   );
 }
