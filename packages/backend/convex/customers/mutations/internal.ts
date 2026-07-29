@@ -1,11 +1,14 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import {
   completeCustomerDeletionCheckpointProgram,
   deleteCustomerByIdProgram,
   recordCustomerDeletionCheckpointProgram,
 } from "@repo/backend/convex/customers/deletion/billingState";
+import {
+  type CustomerUpsertResult,
+  customerUpsertResultValidator,
+} from "@repo/backend/convex/customers/mutations/spec";
 import tables from "@repo/backend/convex/customers/schema";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -89,8 +92,8 @@ export const upsertCustomer = internalMutation({
   args: {
     customer: tables.customers.validator,
   },
-  returns: vv.nullable(vv.id("customers")),
-  handler: async (ctx, args) => {
+  returns: customerUpsertResultValidator,
+  handler: async (ctx, args): Promise<CustomerUpsertResult> => {
     const tombstone = await ctx.db
       .query("customerDeletionTombstones")
       .withIndex("by_polarCustomerId", (q) =>
@@ -99,13 +102,21 @@ export const upsertCustomer = internalMutation({
       .unique();
 
     if (tombstone) {
-      return null;
+      return { kind: "deleted" };
     }
 
     const user = await ctx.db.get("users", args.customer.userId);
 
-    if (!user || isAccountDeletionPending(user)) {
-      return null;
+    if (!user) {
+      return { kind: "missing" };
+    }
+
+    if (user.deletedAt !== undefined) {
+      return { kind: "deleted" };
+    }
+
+    if (user.deletionPreparedAt !== undefined) {
+      return { kind: "prepared" };
     }
 
     const existingByUser = await ctx.db
@@ -120,24 +131,25 @@ export const upsertCustomer = internalMutation({
     if (existingByUser && existingByPolarId) {
       if (existingByUser._id === existingByPolarId._id) {
         await patchCustomerRow(ctx, existingByUser, args.customer);
-        return existingByUser._id;
+        return { customerId: existingByUser._id, kind: "stored" };
       }
 
       await patchCustomerRow(ctx, existingByPolarId, args.customer);
       await ctx.db.delete("customers", existingByUser._id);
-      return existingByPolarId._id;
+      return { customerId: existingByPolarId._id, kind: "stored" };
     }
 
     if (existingByPolarId) {
       await patchCustomerRow(ctx, existingByPolarId, args.customer);
-      return existingByPolarId._id;
+      return { customerId: existingByPolarId._id, kind: "stored" };
     }
 
     if (existingByUser) {
       await patchCustomerRow(ctx, existingByUser, args.customer);
-      return existingByUser._id;
+      return { customerId: existingByUser._id, kind: "stored" };
     }
 
-    return ctx.db.insert("customers", args.customer);
+    const customerId = await ctx.db.insert("customers", args.customer);
+    return { customerId, kind: "stored" };
   },
 });

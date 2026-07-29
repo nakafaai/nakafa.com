@@ -3,6 +3,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
+import type { CustomerUpsertResult } from "@repo/backend/convex/customers/mutations/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { products } from "@repo/backend/convex/utils/polar/products";
@@ -40,12 +41,23 @@ function insertCustomerRow(
   });
 }
 
+/** Narrows one successful customer upsert after asserting its contract. */
+function getStoredCustomerId(result: CustomerUpsertResult) {
+  expect(result.kind).toBe("stored");
+
+  if (result.kind !== "stored") {
+    throw new Error(`Expected stored customer, received ${result.kind}`);
+  }
+
+  return result.customerId;
+}
+
 describe("customers/mutations", () => {
   it("inserts a new customer when no local row exists", async () => {
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation((ctx) => insertCustomerUser(ctx, "new"));
 
-    const customerId = await t.mutation(
+    const result = await t.mutation(
       internal.customers.mutations.internal.upsertCustomer,
       {
         customer: {
@@ -56,10 +68,9 @@ describe("customers/mutations", () => {
         },
       }
     );
+    const customerId = getStoredCustomerId(result);
 
-    const customer = await t.query(async (ctx) =>
-      customerId ? await ctx.db.get(customerId) : null
-    );
+    const customer = await t.query((ctx) => ctx.db.get(customerId));
 
     expect(customer).toMatchObject({
       externalId: "auth-new",
@@ -82,7 +93,7 @@ describe("customers/mutations", () => {
       return { customerId, userId };
     });
 
-    const resultId = await t.mutation(
+    const result = await t.mutation(
       internal.customers.mutations.internal.upsertCustomer,
       {
         customer: {
@@ -93,10 +104,9 @@ describe("customers/mutations", () => {
         },
       }
     );
+    const resultId = getStoredCustomerId(result);
 
-    const customer = await t.query(async (ctx) =>
-      resultId ? await ctx.db.get(resultId) : null
-    );
+    const customer = await t.query((ctx) => ctx.db.get(resultId));
 
     expect(resultId).toBe(state.customerId);
     expect(customer).toMatchObject({
@@ -121,7 +131,7 @@ describe("customers/mutations", () => {
       return { customerId, newUserId };
     });
 
-    const resultId = await t.mutation(
+    const result = await t.mutation(
       internal.customers.mutations.internal.upsertCustomer,
       {
         customer: {
@@ -132,10 +142,9 @@ describe("customers/mutations", () => {
         },
       }
     );
+    const resultId = getStoredCustomerId(result);
 
-    const customer = await t.query(async (ctx) =>
-      resultId ? await ctx.db.get(resultId) : null
-    );
+    const customer = await t.query((ctx) => ctx.db.get(resultId));
 
     expect(resultId).toBe(state.customerId);
     expect(customer).toMatchObject({
@@ -158,7 +167,7 @@ describe("customers/mutations", () => {
       return { customerId, userId };
     });
 
-    const resultId = await t.mutation(
+    const result = await t.mutation(
       internal.customers.mutations.internal.upsertCustomer,
       {
         customer: {
@@ -169,10 +178,9 @@ describe("customers/mutations", () => {
         },
       }
     );
+    const resultId = getStoredCustomerId(result);
 
-    const customer = await t.query(async (ctx) =>
-      resultId ? await ctx.db.get(resultId) : null
-    );
+    const customer = await t.query((ctx) => ctx.db.get(resultId));
 
     expect(resultId).toBe(state.customerId);
     expect(customer).toMatchObject({
@@ -204,7 +212,7 @@ describe("customers/mutations", () => {
       };
     });
 
-    const reconciledId = await t.mutation(
+    const result = await t.mutation(
       internal.customers.mutations.internal.upsertCustomer,
       {
         customer: {
@@ -215,6 +223,7 @@ describe("customers/mutations", () => {
         },
       }
     );
+    const reconciledId = getStoredCustomerId(result);
 
     const customers = await t.query(
       async (ctx) => await ctx.db.query("customers").collect()
@@ -313,7 +322,7 @@ describe("customers/mutations", () => {
       return insertedUserId;
     });
 
-    const customerId = await t.mutation(
+    const result = await t.mutation(
       internal.customers.mutations.internal.upsertCustomer,
       {
         customer: {
@@ -328,7 +337,7 @@ describe("customers/mutations", () => {
       async (ctx) => await ctx.db.query("customers").collect()
     );
 
-    expect(customerId).toBeNull();
+    expect(result).toEqual({ kind: "prepared" });
     expect(customers).toEqual([]);
   });
 
@@ -341,7 +350,7 @@ describe("customers/mutations", () => {
     await t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
       id: "polar-terminal",
     });
-    const customerId = await t.mutation(
+    const result = await t.mutation(
       internal.customers.mutations.internal.upsertCustomer,
       {
         customer: {
@@ -356,7 +365,7 @@ describe("customers/mutations", () => {
       async (ctx) => await ctx.db.query("customers").collect()
     );
 
-    expect(customerId).toBeNull();
+    expect(result).toEqual({ kind: "deleted" });
     expect(customers).toEqual([]);
   });
 

@@ -52,8 +52,8 @@ function tryPolarWebhook<A>(operation: () => Promise<A>) {
 /**
  * Upserts one Polar customer only while its app user remains active.
  *
- * A durable tombstone or deletion-pending user is an accepted discard. A
- * missing app user remains retryable for customer-created delivery ordering.
+ * A durable tombstone or deleted user is an accepted discard. A missing user
+ * or cancelable deletion preparation remains retryable.
  */
 export const upsertPolarCustomerWebhook: (
   ctx: ActionCtx,
@@ -82,7 +82,7 @@ export const upsertPolarCustomerWebhook: (
       return target.kind === "deleted" ? "discarded" : "missing";
     }
 
-    const customerId = yield* tryPolarWebhook(() =>
+    const result = yield* tryPolarWebhook(() =>
       ctx.runMutation(internal.customers.mutations.internal.upsertCustomer, {
         customer: convertToDatabaseCustomer({
           ...normalizedCustomer,
@@ -91,7 +91,11 @@ export const upsertPolarCustomerWebhook: (
       })
     );
 
-    return customerId ? "stored" : "discarded";
+    if (result.kind === "stored") {
+      return "stored";
+    }
+
+    return result.kind === "prepared" ? "missing" : "discarded";
   });
 
 /**

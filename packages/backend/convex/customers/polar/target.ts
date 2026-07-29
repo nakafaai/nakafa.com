@@ -1,5 +1,4 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { type Infer, v } from "convex/values";
@@ -9,7 +8,8 @@ export const polarCustomerWebhookTargetValidator = v.union(
   v.object({ kind: v.literal("active"), userId: vv.id("users") }),
   v.object({ kind: v.literal("conflict") }),
   v.object({ kind: v.literal("deleted") }),
-  v.object({ kind: v.literal("missing") })
+  v.object({ kind: v.literal("missing") }),
+  v.object({ kind: v.literal("prepared") })
 );
 type PolarCustomerWebhookTarget = Infer<
   typeof polarCustomerWebhookTargetValidator
@@ -114,7 +114,13 @@ export const resolvePolarCustomerWebhookTarget: (
     return { kind: "missing" };
   }
 
-  return isAccountDeletionPending(user)
-    ? { kind: "deleted" }
-    : { kind: "active", userId: user._id };
+  if (user.deletedAt !== undefined) {
+    return { kind: "deleted" };
+  }
+
+  if (user.deletionPreparedAt !== undefined) {
+    return { kind: "prepared" };
+  }
+
+  return { kind: "active", userId: user._id };
 });
