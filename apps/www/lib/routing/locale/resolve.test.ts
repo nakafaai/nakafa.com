@@ -17,6 +17,7 @@ import {
 const publishedMocks = vi.hoisted(() => ({
   materialContext: vi.fn(),
   materialRoute: vi.fn(),
+  materialSource: vi.fn(),
   programRoute: vi.fn(),
 }));
 const activeMaterialRoute = {
@@ -37,19 +38,12 @@ vi.mock("@/lib/content/material/context", () => ({
 vi.mock("@/lib/content/material/route", () => ({
   readPublishedMaterialRoute: publishedMocks.materialRoute,
 }));
+vi.mock("@/lib/content/material/shell", () => ({
+  readMaterialSource: publishedMocks.materialSource,
+}));
 vi.mock("@/lib/content/program/route", () => ({
   readPublishedProgramRoute: publishedMocks.programRoute,
 }));
-
-/**
- * Keeps contextual hrefs unchanged in tests that isolate locale projection
- * failures instead of material context validation.
- */
-function preserveContextualHref(
-  input: Parameters<PublicLearningIndex["toContextualMaterialHref"]>[0]
-) {
-  return input.href;
-}
 
 const emptyLearningIndex: PublicLearningIndex = {
   projectMaterialContextToLocale: () => undefined,
@@ -57,7 +51,7 @@ const emptyLearningIndex: PublicLearningIndex = {
   resolveMaterialHeaderLink: () => undefined,
   resolveMaterialRouteBySource: () => undefined,
   resolveRouteByPath: () => undefined,
-  toContextualMaterialHref: preserveContextualHref,
+  toContextualMaterialHref: ({ href }) => href,
 };
 
 /** Resolves a localized href through the Effect boundary used by route callers. */
@@ -70,8 +64,25 @@ beforeEach(() => {
   publishedMocks.materialRoute.mockReset();
   publishedMocks.programRoute.mockReset();
   publishedMocks.materialRoute.mockReturnValue(
-    Effect.succeed({ managed: false, projection: null })
+    Effect.succeed({
+      managed: false,
+      projection: null,
+      sourceClaims: [],
+    })
   );
+  publishedMocks.materialSource.mockReturnValue({
+    candidates: [
+      {
+        contentKey: previewProjection.contentKey,
+        locale: previewProjection.locale,
+      },
+      {
+        contentKey: previewIdProjection.contentKey,
+        locale: previewIdProjection.locale,
+      },
+    ],
+    route: previewPublicRoute,
+  });
   publishedMocks.programRoute.mockReturnValue(
     Effect.succeed({ managed: false, route: null })
   );
@@ -197,8 +208,58 @@ describe("resolveLocalizedNavigationHref", () => {
     }
   });
 
-  it("reconciles every partial exact material target state", () => {
+  it("reconciles source and partial exact material target states", () => {
     const href = `/${previewProjection.locale}/${previewProjection.publicPath}`;
+    publishedMocks.materialSource.mockReturnValueOnce({
+      candidates: [],
+      route: undefined,
+    });
+    expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);
+
+    const renamedId = {
+      ...previewIdProjection,
+      publicPath: `${previewIdProjection.parentPath}/fungsi-berganti`,
+    };
+    publishedMocks.materialRoute.mockReturnValue(
+      Effect.succeed({
+        managed: false,
+        projection: null,
+        sourceClaims: [
+          {
+            contentKey: previewProjection.contentKey,
+            kind: "found",
+            locale: "id",
+            projection: renamedId,
+          },
+        ],
+      })
+    );
+    expect(resolveHref(href, "id")).toBe(`/${renamedId.publicPath}`);
+    expect(publishedMocks.materialRoute).toHaveBeenCalledWith(
+      previewProjection.locale,
+      previewProjection.publicPath,
+      expect.arrayContaining([
+        {
+          contentKey: previewProjection.contentKey,
+          locale: previewIdProjection.locale,
+        },
+      ])
+    );
+    publishedMocks.materialRoute.mockReturnValue(
+      Effect.succeed({
+        managed: false,
+        projection: null,
+        sourceClaims: [
+          {
+            contentKey: previewProjection.contentKey,
+            kind: "missing",
+            locale: "id",
+          },
+        ],
+      })
+    );
+    expect(() => resolveHref(href, "id")).toThrow();
+
     const partial = {
       activeReleaseId: "material-partial",
       alternates: [previewProjection],
@@ -472,12 +533,8 @@ describe("resolveLocalizedNavigationHref", () => {
     }
 
     const index: PublicLearningIndex = {
-      projectMaterialContextToLocale: () => undefined,
-      projectRouteToLocale: () => undefined,
-      resolveMaterialHeaderLink: () => undefined,
-      resolveMaterialRouteBySource: () => undefined,
+      ...emptyLearningIndex,
       resolveRouteByPath: () => idOnlyRoute,
-      toContextualMaterialHref: preserveContextualHref,
     };
 
     vi.spyOn(

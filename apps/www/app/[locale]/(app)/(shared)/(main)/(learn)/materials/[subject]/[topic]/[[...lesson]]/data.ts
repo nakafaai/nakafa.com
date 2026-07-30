@@ -2,34 +2,19 @@ import {
   isMaterialLessonRoute,
   readParentMaterialRoute,
 } from "@repo/contents/_types/route/content";
-import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
-import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
 import { readNamespaceSegment } from "@repo/contents/_types/route/path";
-import type {
-  PublicContentRoute,
-  PublicMaterialLessonRoute,
-} from "@repo/contents/_types/route/schema";
+import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { notFound } from "next/navigation";
 import { getPublishedMaterialRoutes } from "@/lib/content/material/catalog";
-import type { MaterialSourceCandidate } from "@/lib/content/material/route";
+import {
+  readMaterialRoutes,
+  readMaterialSource,
+} from "@/lib/content/material/shell";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
 export type MaterialParams =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">["params"];
-
-let materialRouteCache: readonly PublicContentRoute[] | undefined;
-
-/** Lazily decodes content routes when a framework route function needs them. */
-export function readMaterialRoutes() {
-  if (materialRouteCache) {
-    return materialRouteCache;
-  }
-
-  materialRouteCache = readStaticPublicContentRoutes();
-
-  return materialRouteCache;
-}
 
 /** Builds the exact localized path without consulting either content owner. */
 export async function readMaterialRequest(params: MaterialParams) {
@@ -64,55 +49,6 @@ export async function readMaterialRoute(params: MaterialParams) {
     locale,
     route,
   };
-}
-
-/** Resolves one source route and every identity in its temporary shell. */
-export function readMaterialSource(
-  locale: PublicMaterialLessonRoute["locale"],
-  publicPath: string
-) {
-  const route = readStaticPublicLearningIndex().resolveRouteByPath(
-    publicPath,
-    locale
-  );
-  if (route?.kind !== "subject-lesson") {
-    return {
-      candidates: [] satisfies readonly MaterialSourceCandidate[],
-      route: undefined,
-    };
-  }
-  return { candidates: collectMaterialCandidates(route), route };
-}
-
-/** Resolves temporary source-shell identities from one stable content key. */
-export function readMaterialCandidates(
-  contentKey: string,
-  locale: PublicMaterialLessonRoute["locale"]
-) {
-  const route = readStaticPublicLearningIndex().resolveMaterialRouteBySource(
-    contentKey,
-    locale
-  );
-  return route ? collectMaterialCandidates(route) : [];
-}
-
-/** Collects locale counterparts and localized siblings for one source route. */
-function collectMaterialCandidates(route: PublicMaterialLessonRoute) {
-  const candidates = new Map<string, MaterialSourceCandidate>();
-  for (const candidate of readMaterialRoutes()) {
-    if (
-      isMaterialLessonRoute(candidate) &&
-      (candidate.sourcePath === route.sourcePath ||
-        (candidate.locale === route.locale &&
-          candidate.parentPath === route.parentPath))
-    ) {
-      candidates.set(`${candidate.locale}\0${candidate.sourcePath}`, {
-        contentKey: candidate.sourcePath,
-        locale: candidate.locale,
-      });
-    }
-  }
-  return Array.from(candidates.values());
 }
 
 /**

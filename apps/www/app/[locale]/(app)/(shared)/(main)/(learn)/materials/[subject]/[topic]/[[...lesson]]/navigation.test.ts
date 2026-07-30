@@ -1,8 +1,7 @@
 // @vitest-environment node
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
-import { PublicMaterialLessonRouteSchema } from "@repo/contents/_types/route/schema";
-import { Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   readMaterialAlternates,
@@ -14,6 +13,7 @@ import {
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import type { MaterialPageSource } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
 import {
+  makePreviewPublicRoute,
   previewIdProjection,
   previewMetadata,
   previewNextProjection,
@@ -43,81 +43,58 @@ vi.mock("@repo/contents/_types/route/learning/static", () => ({
 vi.mock(
   "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data",
   () => ({
-    readMaterialRoutes: mocks.readMaterialRoutes,
     requireParentMaterialRoute: mocks.requireParentMaterialRoute,
   })
 );
+vi.mock("@/lib/content/material/shell", () => ({
+  readMaterialRoutes: mocks.readMaterialRoutes,
+}));
 vi.mock("@/lib/content/material/context", () => ({
   getPublishedMaterialContext: mocks.getPublishedMaterialContext,
 }));
-const body = "Function Concept";
+const pageFields = {
+  body: "## Function Concept",
+  children: "Function Concept",
+  locale: previewProjection.locale,
+  metadata: previewMetadata,
+  sourceClaims: [],
+  sourceUrl: null,
+};
 const publishedPage = {
   alternates: [previewProjection, previewIdProjection],
-  body: "## Function Concept",
-  children: body,
   familyManaged: true,
   kind: "published",
-  locale: "en",
-  metadata: previewMetadata,
+  ...pageFields,
   rendererDomain: "mathematics",
   route: previewProjection,
   siblings: [previewProjection, previewNextProjection],
-  sourceClaims: [],
-  sourceUrl: null,
 } satisfies MaterialPageSource;
 const sourcePage = {
   alternates: [],
-  body: "## Function Concept",
-  children: body,
   kind: "source",
-  locale: "en",
-  metadata: previewMetadata,
+  ...pageFields,
   rendererDomain: null,
   route: previewPublicRoute,
   siblings: [],
-  sourceClaims: [],
-  sourceUrl: null,
 } satisfies MaterialPageSource;
 const previewPage = {
   ...publishedPage,
+  alternates: [previewProjection],
   kind: "preview",
   rendererDomain: null,
 } satisfies MaterialPageSource;
-/** Adapts one published projection into the source route contract. */
-function makePublicRoute(
-  projection: MaterialLessonProjection,
-  overrides: Partial<
-    Schema.Schema.Encoded<typeof PublicMaterialLessonRouteSchema>
-  > = {}
-) {
-  return Schema.decodeUnknownSync(PublicMaterialLessonRouteSchema)({
-    description: projection.metadata.description,
-    kind: projection.kind,
-    locale: projection.locale,
-    materialKey: projection.materialKey,
-    order: projection.order,
-    parentPath: projection.parentPath,
-    publicPath: projection.publicPath,
-    sectionKey: projection.sectionKey,
-    sitemap: projection.sitemap,
-    sourcePath: projection.contentKey,
-    title: projection.metadata.title,
-    ...overrides,
-  });
-}
-
-const nextPublicRoute = makePublicRoute(previewNextProjection);
+const nextPublicRoute = makePreviewPublicRoute(previewNextProjection);
 const shortSourcePage = {
   ...sourcePage,
-  route: makePublicRoute(previewProjection, { sourcePath: "material" }),
+  route: makePreviewPublicRoute(previewProjection, { sourcePath: "material" }),
 } satisfies MaterialPageSource;
-const idPublicRoute = makePublicRoute(previewIdProjection);
-const noOrderPrevRoute = makePublicRoute(previewNextProjection, {
+const idPublicRoute = makePreviewPublicRoute(previewIdProjection);
+const noOrderPrevRoute = makePreviewPublicRoute(previewNextProjection, {
   order: undefined,
   publicPath: `${previewProjection.parentPath}/a-first`,
   sourcePath: "material/a-first",
 });
-const noOrderNextRoute = makePublicRoute(previewNextProjection, {
+const noOrderNextRoute = makePreviewPublicRoute(previewNextProjection, {
   order: undefined,
   publicPath: `${previewProjection.parentPath}/z-last`,
   sourcePath: "material/z-last",
@@ -126,12 +103,13 @@ const context = {
   nodeKey: "class-11-mathematics-function-composition-inverse-function",
   programKey: "merdeka",
 };
+const emptyItem = { href: "", title: "" };
 const emptyNavigation = {
   context: undefined,
   link: undefined,
   pagination: {
-    next: { href: "", title: "" },
-    prev: { href: "", title: "" },
+    next: emptyItem,
+    prev: emptyItem,
   },
 };
 /** Builds one exact-owned page while its family shell remains source-owned. */
@@ -192,37 +170,11 @@ describe("material lesson navigation", () => {
     expect(readMaterialParentTitle(sourcePage)).toBe(
       previewProjection.topicTitle
     );
-    expect(
-      readMaterialAlternates({
-        alternates: publishedPage.alternates,
-        familyManaged: true,
-        kind: "published",
-        locale: "en",
-        metadata: previewMetadata,
-        route: previewProjection,
-        sourceClaims: [],
-      })
-    ).toEqual(publishedPage.alternates);
-    expect(
-      readMaterialAlternates({
-        alternates: [previewProjection],
-        kind: "preview",
-        locale: "en",
-        metadata: previewMetadata,
-        route: previewProjection,
-        sourceClaims: [],
-      })
-    ).toEqual([previewProjection]);
-    expect(
-      readMaterialAlternates({
-        alternates: [],
-        kind: "source",
-        locale: "en",
-        metadata: previewMetadata,
-        route: previewPublicRoute,
-        sourceClaims: [],
-      })
-    ).toEqual([previewPublicRoute]);
+    expect(readMaterialAlternates(publishedPage)).toEqual(
+      publishedPage.alternates
+    );
+    expect(readMaterialAlternates(previewPage)).toEqual([previewProjection]);
+    expect(readMaterialAlternates(sourcePage)).toEqual([previewPublicRoute]);
     expect(readMaterialIcon(publishedPage)).toBe("material-icon");
     expect(readMaterialIcon(sourcePage)).toBe("material-icon");
     expect(readMaterialIcon(previewPage)).toBe("material-icon");
@@ -281,7 +233,59 @@ describe("material lesson navigation", () => {
     mocks.resolveMaterialRouteBySource.mockReturnValue(undefined);
     await expect(
       readMaterialNavigation(makeExactPage(), undefined)
-    ).resolves.toEqual(emptyNavigation);
+    ).resolves.toMatchObject({
+      pagination: {
+        next: { href: toMaterialHref(nextPublicRoute) },
+        prev: { href: "", title: "" },
+      },
+    });
+  });
+
+  it("uses the active group after an exact owner moves between topics", async () => {
+    const movedParentPath = PublicPathSchema.make(
+      "subjects/mathematics/moved-functions"
+    );
+    const movedCurrent = {
+      ...previewProjection,
+      parentPath: movedParentPath,
+      publicPath: PublicPathSchema.make(`${movedParentPath}/function-concept`),
+    } satisfies MaterialLessonProjection;
+    const movedSibling = makePreviewPublicRoute(previewNextProjection, {
+      materialKey: movedCurrent.materialKey,
+      parentPath: movedCurrent.parentPath,
+      publicPath: `${movedCurrent.parentPath}/source-sibling`,
+      sourcePath: "material/lesson/mathematics/moved-functions/source-sibling",
+    });
+    mocks.readMaterialRoutes.mockReturnValue([
+      previewPublicRoute,
+      nextPublicRoute,
+      movedSibling,
+    ]);
+
+    await expect(
+      readMaterialNavigation(
+        {
+          ...makeExactPage(movedCurrent),
+          sourceClaims: [
+            foundClaim(movedCurrent),
+            {
+              contentKey: previewNextProjection.contentKey,
+              kind: "missing",
+              locale: "en",
+            },
+          ],
+        },
+        undefined
+      )
+    ).resolves.toMatchObject({
+      pagination: {
+        next: {
+          href: toMaterialHref(movedSibling),
+          title: movedSibling.title,
+        },
+        prev: { href: "", title: "" },
+      },
+    });
   });
 
   it("orders source shell routes whose authored order is absent", async () => {

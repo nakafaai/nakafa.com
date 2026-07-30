@@ -251,17 +251,26 @@ describe("contents/views/target", () => {
       await ctx.db.delete("contentBindings", binding._id);
       await ctx.db.delete("materialCatalog", material._id);
     });
+    const inputs: readonly ContentViewTargetInput[] = [
+      {
+        contentId: PUBLISHED_MATERIAL.graph.assetId,
+        locale: PUBLISHED_MATERIAL.locale,
+        section: "material",
+      },
+      {
+        contentId: PUBLISHED_MATERIAL.graph.assetId,
+        locale: PUBLISHED_MATERIAL.locale,
+        publicPath: PUBLISHED_MATERIAL.publicPath,
+        section: "material",
+      },
+    ];
     await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          loadContentTarget(ctx, {
-            contentId: PUBLISHED_MATERIAL.graph.assetId,
-            locale: PUBLISHED_MATERIAL.locale,
-            section: "material",
-          })
+      Promise.all(
+        inputs.map((input) =>
+          target.query((ctx) => runConvexProgram(loadContentTarget(ctx, input)))
         )
       )
-    ).resolves.toBeNull();
+    ).resolves.toEqual([null, null]);
   });
 
   it("resolves a legacy material view to its renamed active route", async () => {

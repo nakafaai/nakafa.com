@@ -25,6 +25,7 @@ import type { MaterialPreviewContent } from "@/lib/content/preview/material";
 import {
   previewIdProjection,
   previewMetadata,
+  previewNextProjection,
   previewProjection,
   previewPublicRoute,
   previewSourcePath,
@@ -53,9 +54,7 @@ vi.mock("@repo/contents/_types/route/content", () => ({
 vi.mock(
   "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data",
   () => ({
-    readMaterialCandidates: mocks.readMaterialCandidates,
     readMaterialRequest: mocks.readMaterialRequest,
-    readMaterialSource: mocks.readMaterialSource,
   })
 );
 vi.mock(
@@ -64,6 +63,10 @@ vi.mock(
 );
 vi.mock("@/lib/content/material/route", () => ({
   getPublishedMaterialRoute: mocks.getPublishedMaterialRoute,
+}));
+vi.mock("@/lib/content/material/shell", () => ({
+  readMaterialCandidates: mocks.readMaterialCandidates,
+  readMaterialSource: mocks.readMaterialSource,
 }));
 vi.mock("@/lib/content/module", () => ({
   importContentModuleOrNull: mocks.importContentModuleOrNull,
@@ -283,7 +286,12 @@ describe("material page source", () => {
       ],
     } satisfies PublishedMaterialRoute;
     mocks.readMaterialSource.mockReturnValue({
-      candidates: [],
+      candidates: [
+        {
+          contentKey: previewNextProjection.contentKey,
+          locale: previewNextProjection.locale,
+        },
+      ],
       route: undefined,
     });
     mocks.readMaterialCandidates.mockReturnValue(candidates);
@@ -297,8 +305,7 @@ describe("material page source", () => {
       sourceClaims: reconciled.sourceClaims,
     });
     expect(mocks.readMaterialCandidates).toHaveBeenCalledWith(
-      previewProjection.contentKey,
-      previewProjection.locale
+      previewProjection
     );
     expect(mocks.getPublishedMaterialRoute).toHaveBeenNthCalledWith(
       2,
@@ -326,8 +333,7 @@ describe("material page source", () => {
       route: previewProjection,
     });
     expect(mocks.readMaterialCandidates).toHaveBeenCalledWith(
-      previewProjection.contentKey,
-      previewProjection.locale
+      previewProjection
     );
     expect(mocks.getPublishedMaterialRoute).toHaveBeenCalledTimes(1);
   });

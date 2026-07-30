@@ -12,9 +12,7 @@ import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
 import {
   type MaterialParams,
-  readMaterialCandidates,
   readMaterialRequest,
-  readMaterialSource,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { getMaterialPageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/runtime";
 import {
@@ -22,6 +20,10 @@ import {
   type MaterialSourceClaim,
   type PublishedMaterialRoute,
 } from "@/lib/content/material/route";
+import {
+  readMaterialCandidates,
+  readMaterialSource,
+} from "@/lib/content/material/shell";
 import { importContentModuleOrNull } from "@/lib/content/module";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
@@ -162,14 +164,21 @@ async function resolveMaterialOwner(
   if (
     published.managed &&
     !published.familyManaged &&
-    published.projection !== null &&
-    source.candidates.length === 0
+    published.projection !== null
   ) {
-    const candidates = readMaterialCandidates(
-      published.projection.contentKey,
-      published.projection.locale
+    const candidates = readMaterialCandidates(published.projection);
+    const initialIdentities = new Set(
+      source.candidates.map(
+        (candidate) => `${candidate.locale}\0${candidate.contentKey}`
+      )
     );
-    if (candidates.length > 0) {
+    if (
+      candidates.length !== source.candidates.length ||
+      candidates.some(
+        (candidate) =>
+          !initialIdentities.has(`${candidate.locale}\0${candidate.contentKey}`)
+      )
+    ) {
       published = await getPublishedMaterialRoute(
         request.locale,
         request.publicPath,

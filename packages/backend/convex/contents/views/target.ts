@@ -56,6 +56,41 @@ type ResolvedContentViewTargetInput = ContentViewTargetLookup & {
   readonly section: NonNullable<ContentViewTargetInput["section"]>;
 };
 
+/** Reads an optional source route used to recover one stable content key. */
+const readContentViewSourceRoute = Effect.fn(
+  "contents.views.readContentViewSourceRoute"
+)(function* (ctx: QueryCtx, input: ContentViewTargetInput) {
+  const publicPath = input.publicPath;
+  const route = yield* Effect.tryPromise({
+    try: () => {
+      if (publicPath) {
+        return ctx.db
+          .query("contentRoutes")
+          .withIndex("by_locale_and_route", (query) =>
+            query.eq("locale", input.locale).eq("route", publicPath)
+          )
+          .unique();
+      }
+      return ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (query) =>
+          query.eq("content_id", input.contentId)
+        )
+        .unique();
+    },
+    catch: toContentViewIoError,
+  });
+  if (
+    !route ||
+    route.content_id !== input.contentId ||
+    route.locale !== input.locale ||
+    (input.section !== undefined && route.section !== input.section)
+  ) {
+    return null;
+  }
+  return route;
+});
+
 /**
  * Resolves the deployed argument shape into the current exact route identity.
  *
@@ -66,24 +101,17 @@ const resolveContentViewTargetInput = Effect.fn(
   "contents.views.resolveContentViewTargetInput"
 )(function* (ctx: QueryCtx, input: ContentViewTargetInput) {
   if (input.section !== undefined && input.publicPath !== undefined) {
+    const route = yield* readContentViewSourceRoute(ctx, input);
     return {
       ...input,
+      ...(route ? { contentKey: route.sourcePath } : {}),
       section: input.section,
     } satisfies ResolvedContentViewTargetInput;
   }
   if (input.publicPath !== undefined) {
     return null;
   }
-  const route = yield* Effect.tryPromise({
-    try: () =>
-      ctx.db
-        .query("contentRoutes")
-        .withIndex("by_content_id", (query) =>
-          query.eq("content_id", input.contentId)
-        )
-        .unique(),
-    catch: toContentViewIoError,
-  });
+  const route = yield* readContentViewSourceRoute(ctx, input);
   if (!route) {
     if (input.section === undefined) {
       return null;

@@ -5,16 +5,14 @@ import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learn
 import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import type { Locale } from "next-intl";
-import {
-  readMaterialRoutes,
-  requireParentMaterialRoute,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
+import { requireParentMaterialRoute } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import type {
   MaterialMetadataSource,
   MaterialPageSource,
   MaterialViewRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
 import { getPublishedMaterialContext } from "@/lib/content/material/context";
+import { readMaterialRoutes } from "@/lib/content/material/shell";
 
 const emptyItem = { href: "", title: "" };
 
@@ -166,28 +164,13 @@ function readShellPagination(
   ) {
     return readRoutePagination(page.route, page.siblings, toHref);
   }
-  const sourceRoute =
-    page.kind === "source"
-      ? page.route
-      : readStaticPublicLearningIndex().resolveMaterialRouteBySource(
-          page.route.contentKey,
-          page.locale
-        );
   const siblings = new Map<string, MaterialViewRoute>(
     page.siblings.map((route) => [materialRouteIdentity(route), route])
   );
-  if (!sourceRoute) {
-    return readRoutePagination(
-      page.route,
-      Array.from(siblings.values()),
-      toHref
-    );
-  }
   for (const route of readMaterialRoutes()) {
     if (
       isMaterialLessonRoute(route) &&
-      route.locale === sourceRoute.locale &&
-      route.parentPath === sourceRoute.parentPath
+      sharesMaterialGroup(page.route, route)
     ) {
       siblings.set(materialRouteIdentity(route), route);
     }
@@ -196,7 +179,7 @@ function readShellPagination(
     const identity = `${claim.locale}\0${claim.contentKey}`;
     if (
       claim.kind === "missing" ||
-      !sharesMaterialGroup(sourceRoute, claim.projection)
+      !sharesMaterialGroup(page.route, claim.projection)
     ) {
       siblings.delete(identity);
       continue;

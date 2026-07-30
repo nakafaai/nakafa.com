@@ -1,20 +1,17 @@
 // @vitest-environment node
 
-import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { PublicContentRouteSchema } from "@repo/contents/_types/route/schema";
 import { Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   listMaterialStaticParams,
-  readMaterialCandidates,
   readMaterialRequest,
   readMaterialRoute,
-  readMaterialRoutes,
-  readMaterialSource,
   requireParentMaterialRoute,
   resolveMaterialRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import {
+  makePreviewPublicRoute,
   previewIdProjection,
   previewNextProjection,
   previewProjection,
@@ -26,7 +23,6 @@ const mocks = vi.hoisted(() => ({
   notFound: vi.fn(),
   readNamespaceSegment: vi.fn(),
   readStaticPublicContentRoutes: vi.fn(),
-  resolveMaterialRouteBySource: vi.fn(),
   resolveRouteByPath: vi.fn(),
   selectLearningStaticParams: vi.fn(),
 }));
@@ -36,7 +32,6 @@ vi.mock("@repo/contents/_types/route/content/static", () => ({
 }));
 vi.mock("@repo/contents/_types/route/learning/static", () => ({
   readStaticPublicLearningIndex: () => ({
-    resolveMaterialRouteBySource: mocks.resolveMaterialRouteBySource,
     resolveRouteByPath: mocks.resolveRouteByPath,
   }),
 }));
@@ -64,25 +59,8 @@ const parentRoute = Schema.decodeUnknownSync(PublicContentRouteSchema)({
   title: previewProjection.topicTitle,
 });
 
-/** Adapts one published projection into the source route contract. */
-function makePublicRoute(projection: MaterialLessonProjection) {
-  return Schema.decodeUnknownSync(PublicContentRouteSchema)({
-    description: projection.metadata.description,
-    kind: projection.kind,
-    locale: projection.locale,
-    materialKey: projection.materialKey,
-    order: projection.order,
-    parentPath: projection.parentPath,
-    publicPath: projection.publicPath,
-    sectionKey: projection.sectionKey,
-    sitemap: projection.sitemap,
-    sourcePath: projection.contentKey,
-    title: projection.metadata.title,
-  });
-}
-
-const idRoute = makePublicRoute(previewIdProjection);
-const nextRoute = makePublicRoute(previewNextProjection);
+const idRoute = makePreviewPublicRoute(previewIdProjection);
+const nextRoute = makePreviewPublicRoute(previewNextProjection);
 
 /** Produces fresh framework params for one real material route. */
 function params(overrides?: Partial<typeof routeParams>) {
@@ -98,7 +76,6 @@ beforeEach(() => {
     nextRoute,
   ]);
   mocks.readNamespaceSegment.mockReturnValue("subjects");
-  mocks.resolveMaterialRouteBySource.mockReturnValue(previewPublicRoute);
   mocks.resolveRouteByPath.mockReturnValue(previewPublicRoute);
   mocks.getPublishedMaterialRoutes.mockResolvedValue({
     managed: false,
@@ -125,28 +102,6 @@ describe("material route data", () => {
       locale: "en",
       route: previewPublicRoute,
     });
-    expect(
-      readMaterialSource("en", previewProjection.publicPath)
-    ).toMatchObject({
-      candidates: [
-        {
-          contentKey: previewPublicRoute.sourcePath,
-          locale: previewPublicRoute.locale,
-        },
-        { contentKey: idRoute.sourcePath, locale: idRoute.locale },
-        { contentKey: nextRoute.sourcePath, locale: nextRoute.locale },
-      ],
-      route: previewPublicRoute,
-    });
-    expect(readMaterialCandidates(previewProjection.contentKey, "en")).toEqual([
-      {
-        contentKey: previewPublicRoute.sourcePath,
-        locale: previewPublicRoute.locale,
-      },
-      { contentKey: idRoute.sourcePath, locale: idRoute.locale },
-      { contentKey: nextRoute.sourcePath, locale: nextRoute.locale },
-    ]);
-    expect(mocks.readStaticPublicContentRoutes).toHaveBeenCalledOnce();
     await expect(
       readMaterialRequest(
         Promise.resolve({
@@ -181,17 +136,12 @@ describe("material route data", () => {
       ...previewPublicRoute,
       kind: "article-category",
     });
-    mocks.resolveMaterialRouteBySource.mockReturnValue(undefined);
-
     await expect(readMaterialRoute(params())).resolves.toEqual({
       locale: "en",
       route: undefined,
     });
     await expect(resolveMaterialRoute(params())).rejects.toThrow(
       "NEXT_NOT_FOUND"
-    );
-    expect(readMaterialCandidates(previewProjection.contentKey, "en")).toEqual(
-      []
     );
   });
 
@@ -224,12 +174,6 @@ describe("material route data", () => {
         subject: "mathematics",
         topic: "function-composition-inverse-function",
       },
-    ]);
-    expect(readMaterialRoutes()).toEqual([
-      parentRoute,
-      previewPublicRoute,
-      idRoute,
-      nextRoute,
     ]);
   });
 

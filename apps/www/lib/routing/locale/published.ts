@@ -10,6 +10,7 @@ import {
   type PublishedMaterialRoute,
   readPublishedMaterialRoute,
 } from "@/lib/content/material/route";
+import { readMaterialSource } from "@/lib/content/material/shell";
 import { readPublishedProgramRoute } from "@/lib/content/program/route";
 import {
   MissingLocalizedRouteProjectionError,
@@ -118,11 +119,30 @@ export const readPublishedLocalizedHref = Effect.fn(
   );
 
   if (surface?.key === "subject") {
+    const source = readMaterialSource(currentLocale, publicPath);
     const current = yield* readPublishedMaterialRoute(
       currentLocale,
-      publicPath
+      publicPath,
+      source.candidates
     );
     if (!current.managed) {
+      if (!source.route) {
+        return null;
+      }
+      const targetClaim = current.sourceClaims.find(
+        (claim) =>
+          claim.contentKey === source.route.sourcePath &&
+          claim.locale === locale
+      );
+      if (targetClaim?.kind === "found") {
+        return toNavigationHref(targetClaim.projection.publicPath, "");
+      }
+      if (targetClaim) {
+        return yield* new MissingLocalizedRouteProjectionError({
+          locale,
+          publicPath,
+        });
+      }
       return null;
     }
     if (!current.projection) {
