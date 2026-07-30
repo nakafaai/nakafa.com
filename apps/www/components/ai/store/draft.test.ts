@@ -59,13 +59,40 @@ describe("ai/store/draft", () => {
   it("keeps newer input entered while account ownership resolves", () => {
     Effect.runSync(saveAiDraftText("Older question", "learner-a"));
 
-    expect(Effect.runSync(resolveAiDraftText("", "learner-a"))).toBe(
-      "Older question"
-    );
     expect(
-      Effect.runSync(resolveAiDraftText("Newer question", "learner-a"))
+      Effect.runSync(
+        resolveAiDraftText({
+          ownerId: "learner-a",
+          pendingText: "",
+          pendingTextChanged: false,
+        })
+      )
+    ).toBe("Older question");
+    expect(
+      Effect.runSync(
+        resolveAiDraftText({
+          ownerId: "learner-a",
+          pendingText: "Newer question",
+          pendingTextChanged: true,
+        })
+      )
     ).toBe("Newer question");
     expect(Effect.runSync(readAiDraftText("learner-a"))).toBe("Newer question");
+  });
+
+  it("keeps an intentional empty draft during account resolution", () => {
+    Effect.runSync(saveAiDraftText("Older question", "learner-a"));
+
+    expect(
+      Effect.runSync(
+        resolveAiDraftText({
+          ownerId: "learner-a",
+          pendingText: "",
+          pendingTextChanged: true,
+        })
+      )
+    ).toBe("");
+    expect(Effect.runSync(readAiDraftText("learner-a"))).toBeNull();
   });
 
   it("clears a draft when another account owns it", () => {

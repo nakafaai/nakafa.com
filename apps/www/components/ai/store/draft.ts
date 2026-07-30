@@ -10,6 +10,12 @@ const AiDraftRecordSchema = Schema.Struct({
   text: Schema.String,
 });
 
+interface AiDraftResolution {
+  ownerId: string | null;
+  pendingText: string;
+  pendingTextChanged: boolean;
+}
+
 /** Describes an unavailable or rejected Nina draft storage operation. */
 class AiDraftStorageError extends Data.TaggedError("AiDraftStorageError")<{
   cause: unknown;
@@ -109,11 +115,12 @@ export function readAiDraftText(ownerId: string | null) {
 /**
  * Keeps text entered during session resolution ahead of an older saved draft.
  */
-export function resolveAiDraftText(
-  pendingText: string,
-  ownerId: string | null
-) {
-  if (pendingText.length > 0) {
+export function resolveAiDraftText({
+  ownerId,
+  pendingText,
+  pendingTextChanged,
+}: AiDraftResolution) {
+  if (pendingTextChanged) {
     return saveAiDraftText(pendingText, ownerId).pipe(
       Effect.as<string | null>(pendingText)
     );

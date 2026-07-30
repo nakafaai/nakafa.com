@@ -1,7 +1,6 @@
 "use client";
 
 import type { DataPart } from "@repo/ai/schema/data";
-import type { MyUIMessage } from "@repo/ai/types/message";
 import {
   Conversation,
   ConversationContent,
@@ -17,6 +16,11 @@ import {
   Message,
   MessageContent,
 } from "@repo/design-system/components/ai/message";
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
@@ -25,8 +29,7 @@ import type { ClipboardEvent } from "react";
 
 import { AiChatModel } from "@/components/ai/chat-model";
 import { useAi } from "@/components/ai/context/use-ai";
-import { MessageProvider } from "@/components/ai/context/use-message";
-import { AiMessagePart } from "@/components/ai/message-part";
+import { MathPart } from "@/components/ai/message-part/math";
 
 const featuresNinaMathInput: DataPart["math"]["input"] = {
   expression: "5 * 2 + 9 / 1",
@@ -97,40 +100,6 @@ export function FeaturesNina() {
   const ninaAnswer = t.raw("nina-answer");
   const ninaPrompt = t.raw("nina-prompt");
   const ninaReasoning = t.raw("nina-reasoning");
-  const ninaPartEntries = [
-    {
-      key: "features-nina-reasoning",
-      part: {
-        state: "done",
-        text: ninaReasoning,
-        type: "reasoning",
-      },
-    },
-    {
-      key: "features-nina-math",
-      part: {
-        data: featuresNinaMath,
-        id: "features-nina-math",
-        type: "data-math",
-      },
-    },
-    {
-      key: "features-nina-answer",
-      part: {
-        state: "done",
-        text: ninaAnswer,
-        type: "text",
-      },
-    },
-  ] satisfies ReadonlyArray<{
-    key: string;
-    part: MyUIMessage["parts"][number];
-  }>;
-  const ninaMessage: MyUIMessage = {
-    id: "features-nina-answer",
-    parts: ninaPartEntries.map(({ part }) => part),
-    role: "assistant",
-  };
 
   /** Opens Nina with the learner's current marketing-page draft. */
   function handleSubmit(message: PromptInputMessage) {
@@ -159,19 +128,23 @@ export function FeaturesNina() {
             </MessageContent>
           </Message>
           <Message from="assistant">
-            <MessageProvider message={ninaMessage}>
-              <div className="flex size-full flex-col gap-3 group-[.is-user]:items-end group-[.is-user]:justify-end">
-                <div className="flex flex-col gap-6">
-                  {ninaPartEntries.map(({ key, part }, partIndex) => (
-                    <AiMessagePart
-                      key={key}
-                      part={part}
-                      partIndex={partIndex}
-                    />
-                  ))}
-                </div>
-              </div>
-            </MessageProvider>
+            <div className="flex size-full flex-col gap-6">
+              <Reasoning
+                className="w-full"
+                defaultOpen={false}
+                hasContent={true}
+                isStreaming={false}
+              >
+                <ReasoningTrigger />
+                <ReasoningContent id="features-nina-reasoning">
+                  {ninaReasoning}
+                </ReasoningContent>
+              </Reasoning>
+              <MathPart message={featuresNinaMath} />
+              <MessageContent>
+                <Response id="features-nina-answer">{ninaAnswer}</Response>
+              </MessageContent>
+            </div>
           </Message>
         </ConversationContent>
       </Conversation>
