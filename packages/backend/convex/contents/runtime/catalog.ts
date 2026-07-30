@@ -16,7 +16,7 @@ import type {
   ListContentRoutesByKindPrefixArgs,
   ListContentRoutesByParentArgs,
   ListContentRoutesByPrefixArgs,
-  ListLatestContentRoutesArgs,
+  ListLatestContentRoutePageArgs,
 } from "@repo/backend/convex/contents/runtime/spec";
 import { ConvexError } from "convex/values";
 
@@ -169,22 +169,25 @@ export async function getContentRouteArtifactPageImpl(
   return toRuntimeContentRouteArtifactPage(page);
 }
 
-/** Reads a bounded newest-first content feed page from dated routes. */
-export async function listLatestContentRoutesImpl(
+/** Reads one bounded newest-first content feed page from dated routes. */
+export async function listLatestContentRoutePageImpl(
   ctx: QueryCtx,
-  args: ListLatestContentRoutesArgs
+  args: ListLatestContentRoutePageArgs
 ) {
   assertContentRoutePageLimit(args.limit);
 
-  const routes = await ctx.db
+  const page = await ctx.db
     .query("contentRoutes")
     .withIndex("by_locale_and_section_and_date", (q) =>
       q.eq("locale", args.locale).eq("section", args.section).gt("date", 0)
     )
     .order("desc")
-    .take(args.limit);
+    .paginate({
+      cursor: args.cursor,
+      numItems: args.limit,
+    });
 
-  return routes.map(toRuntimeContentRoute);
+  return toRuntimeContentRoutePage(page);
 }
 
 /** Reads materialized route counts for one locale without route scans. */

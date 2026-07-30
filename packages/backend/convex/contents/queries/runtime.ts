@@ -14,7 +14,7 @@ import {
   listContentRoutesByKindPrefixImpl,
   listContentRoutesByParentImpl,
   listContentRoutesByPrefixImpl,
-  listLatestContentRoutesImpl,
+  listLatestContentRoutePageImpl,
   listPublicRoutesByMaterialImpl,
   listPublicRoutesByParentImpl,
 } from "@repo/backend/convex/contents/runtime/catalog";
@@ -60,8 +60,8 @@ import {
   listContentRoutesByParentArgsValidator,
   listContentRoutesByPrefixArgsValidator,
   listContentRoutesPageReturnValidator,
-  listLatestContentRoutesArgsValidator,
-  listLatestContentRoutesReturnValidator,
+  listLatestContentRoutePageArgsValidator,
+  listLatestContentRoutePageReturnValidator,
   listMaterialApiContentPageArgsValidator,
   listMaterialApiContentPageReturnValidator,
   listQuranSurahsReturnValidator,
@@ -130,11 +130,11 @@ export const getContentRouteArtifactPage = query({
   handler: (ctx, args) => getContentRouteArtifactPageImpl(ctx, args),
 });
 
-/** Lists newest dated content routes without scanning the full catalog. */
-export const listLatestContentRoutes = query({
-  args: listLatestContentRoutesArgsValidator,
-  returns: listLatestContentRoutesReturnValidator,
-  handler: (ctx, args) => listLatestContentRoutesImpl(ctx, args),
+/** Lists one newest-first page of dated content routes. */
+export const listLatestContentRoutePage = query({
+  args: listLatestContentRoutePageArgsValidator,
+  returns: listLatestContentRoutePageReturnValidator,
+  handler: (ctx, args) => listLatestContentRoutePageImpl(ctx, args),
 });
 
 /** Lists materialized route counts for one locale. */

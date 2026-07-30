@@ -3,6 +3,7 @@ import {
   readLatestMaterials,
   readMaterialBucket,
 } from "@repo/backend/convex/contentRelease/material/discovery";
+import { lookupMaterial } from "@repo/backend/convex/contentRelease/material/lookup";
 import { readMaterialModel } from "@repo/backend/convex/contentRelease/material/model";
 import { readMaterialPage } from "@repo/backend/convex/contentRelease/material/page";
 import {
@@ -14,6 +15,7 @@ import {
   readMaterialShell,
 } from "@repo/backend/convex/contentRelease/material/source";
 import {
+  materialLookupInputValidator,
   materialSourceCandidateValidator,
   materialSourceClaimValidator,
 } from "@repo/backend/convex/contentRelease/material/spec";
@@ -95,6 +97,18 @@ const materialClaimsValidator = v.object({
   sourceClaims: v.array(materialSourceClaimValidator),
 });
 
+const materialLookupValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
+  managed: v.boolean(),
+  route: v.union(
+    v.null(),
+    v.object({
+      locale: localeValidator,
+      publicPath: v.string(),
+    })
+  ),
+});
+
 const materialShellValidator = v.object({
   activeReleaseId: v.union(v.string(), v.null()),
   sourceClaims: v.array(materialSourceClaimValidator),
@@ -115,6 +129,13 @@ export const latest = query({
   returns: materialDiscoveryValidator,
   handler: (ctx, { limit, locale }) =>
     runConvexProgram(readLatestMaterials(ctx, locale, limit)),
+});
+
+/** Resolves one active material identity for a signed agent read. */
+export const lookup = query({
+  args: { input: materialLookupInputValidator },
+  returns: materialLookupValidator,
+  handler: (ctx, { input }) => runConvexProgram(lookupMaterial(ctx, input)),
 });
 
 /** Resolves exact active claims for one bounded source-owned material set. */

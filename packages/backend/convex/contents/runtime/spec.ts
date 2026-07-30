@@ -249,20 +249,20 @@ export const getContentRouteArtifactPageReturnValidator = nullable(
   runtimeContentRouteArtifactPageValidator
 );
 
-const listLatestContentRoutesArgsObjectValidator = v.object({
+const listLatestContentRoutePageArgsObjectValidator = v.object({
+  cursor: v.union(v.string(), v.null()),
   limit: v.number(),
   locale: localeValidator,
   section: nakafaSectionValidator,
 });
-export const listLatestContentRoutesArgsValidator =
-  listLatestContentRoutesArgsObjectValidator.fields;
-export type ListLatestContentRoutesArgs = Infer<
-  typeof listLatestContentRoutesArgsObjectValidator
+export const listLatestContentRoutePageArgsValidator =
+  listLatestContentRoutePageArgsObjectValidator.fields;
+export type ListLatestContentRoutePageArgs = Infer<
+  typeof listLatestContentRoutePageArgsObjectValidator
 >;
 
-export const listLatestContentRoutesReturnValidator = v.array(
-  runtimeContentRouteValidator
-);
+export const listLatestContentRoutePageReturnValidator =
+  paginatedContentRoutesValidator;
 
 const listContentRouteCountsArgsObjectValidator = v.object({
   locale: localeValidator,

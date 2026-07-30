@@ -8,10 +8,28 @@ import {
 import {
   canonicalizeMaterialProjection,
   MaterialKeySchema,
+  type MaterialLessonProjection,
   MaterialLessonProjectionSchema,
   MaterialSectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
-import { Effect } from "effect";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
+import { Effect, Option } from "effect";
+
+/** Creates one complete agent reference from a material projection fixture. */
+export function makeMaterialContentRef(projection: MaterialLessonProjection) {
+  const ref = createNakafaContentRefFromGraphProjection({
+    ...projection.graph,
+    content_id: projection.graph.assetId,
+    locale: projection.locale,
+    route: projection.publicPath,
+    section: "material",
+    sourcePath: projection.contentKey,
+  });
+  if (Option.isNone(ref)) {
+    throw new Error("Expected one valid material content reference.");
+  }
+  return ref.value;
+}
 
 /** Creates the exact graph identity derived from one material source key. */
 export function testMaterialGraph(

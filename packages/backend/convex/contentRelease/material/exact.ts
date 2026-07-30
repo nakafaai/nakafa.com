@@ -6,6 +6,7 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { validateExactMaterialRoutes } from "@repo/backend/convex/contentRelease/material/collision";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
 import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
@@ -20,11 +21,10 @@ type MaterialOwnerRelease = Pick<
   Doc<"contentReleases">,
   "releaseId" | "resultFamilies" | "sequence"
 >;
+type ExactMaterialOwner = Pick<Doc<"materialOwners">, "contentKey" | "locale">;
 
 /** Returns one stable identity shared by stored and staged material owners. */
-function materialOwnerIdentity(
-  owner: Pick<Doc<"materialOwners">, "contentKey" | "locale">
-) {
+function materialOwnerIdentity(owner: ExactMaterialOwner) {
   return `${owner.locale}\0${owner.contentKey}`;
 }
 
@@ -160,7 +160,41 @@ const buildExactMaterialOwnerPlan = Effect.fn(
 export const validateExactMaterialOwnerScope = Effect.fn(
   "contentRelease.validateExactMaterialOwnerScope"
 )(function* (ctx: MutationCtx, release: MaterialOwnerRelease) {
-  yield* buildExactMaterialOwnerPlan(ctx, release);
+  const plan = yield* buildExactMaterialOwnerPlan(ctx, release);
+  if (!release.resultFamilies.includes("material")) {
+    yield* validateExactMaterialRoutes(
+      ctx,
+      release.sequence,
+      Array.from(plan.expected.values())
+    );
+  }
+});
+
+/** Detects exact material work that must finish before source fallback is safe. */
+export const hasExactMaterialOwnerWork = Effect.fn(
+  "contentRelease.hasExactMaterialOwnerWork"
+)(function* (ctx: QueryCtx, releaseId: string) {
+  const [stored, transitions] = yield* Effect.all([
+    Effect.promise(() => ctx.db.query("materialOwners").first()),
+    Effect.promise(() =>
+      ctx.db
+        .query("contentOwners")
+        .withIndex("by_releaseId_and_contentKey_and_locale", (index) =>
+          index.eq("releaseId", releaseId)
+        )
+        .take(EXACT_SCOPE_LIMIT + 1)
+    ),
+  ]);
+  if (transitions.length > EXACT_SCOPE_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Release ${releaseId} exceeds ${EXACT_SCOPE_LIMIT} exact ownership transitions.`
+    );
+  }
+  return (
+    stored !== null ||
+    transitions.some((transition) => transition.family === "material")
+  );
 });
 
 /** Loads the bounded current exact material ownership projection. */

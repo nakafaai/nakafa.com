@@ -1,6 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { hasExactMaterialOwnerWork } from "@repo/backend/convex/contentRelease/material/exact";
 import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
@@ -35,7 +36,9 @@ export const loadMaterialCatalogOwner = Effect.fn(
   const families = yield* loadReleaseFamilies(active.release);
   const familyManaged = families.result.includes("material");
   const ready = hasMaterialReadModel(active);
-  if (familyManaged && !ready) {
+  const exactPending =
+    !ready && (yield* hasExactMaterialOwnerWork(ctx, active.releaseId));
+  if (!ready && (familyManaged || exactPending)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
       `Materials in active release ${active.releaseId} are still synchronizing.`
