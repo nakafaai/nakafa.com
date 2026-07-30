@@ -51,6 +51,7 @@ export function createLocalizedAlternates(
     );
   const typeAlternates = options.types ? { types: options.types } : {};
   const xDefault =
+    languages["x-default"] ??
     languages[routing.defaultLocale] ??
     `/${routing.defaultLocale}${pathWithoutLocale}`;
 
@@ -83,6 +84,8 @@ export function createProjectedRouteAlternates(
       languages[locale] = `/${locale}/${alternate.publicPath}`;
     }
   }
+  languages["x-default"] =
+    languages[routing.defaultLocale] ?? `/${route.locale}/${route.publicPath}`;
 
   return createLocalizedAlternates(`/${route.locale}/${route.publicPath}`, {
     ...options,
@@ -102,6 +105,8 @@ export function createResolvedRouteAlternates(
     languages[alternate.locale] =
       `/${alternate.locale}/${alternate.publicPath}`;
   }
+  languages["x-default"] =
+    languages[routing.defaultLocale] ?? `/${route.locale}/${route.publicPath}`;
 
   return createLocalizedAlternates(`/${route.locale}/${route.publicPath}`, {
     ...options,

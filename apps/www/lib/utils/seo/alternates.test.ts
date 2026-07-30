@@ -147,6 +147,21 @@ describe("createLocalizedAlternates", () => {
       canonical: "/id/materi/matematika/integral/jumlahan-riemann",
       languages: {
         id: "/id/materi/matematika/integral/jumlahan-riemann",
+        "x-default": "/id/materi/matematika/integral/jumlahan-riemann",
+      },
+    });
+  });
+
+  it("keeps x-default on an existing resolved locale route", () => {
+    expect(
+      createResolvedRouteAlternates(
+        { locale: "id", publicPath: "materi/matematika/fungsi/konsep" },
+        [{ locale: "id", publicPath: "materi/matematika/fungsi/konsep" }]
+      )
+    ).toMatchObject({
+      languages: {
+        id: "/id/materi/matematika/fungsi/konsep",
+        "x-default": "/id/materi/matematika/fungsi/konsep",
       },
     });
   });

@@ -4,6 +4,7 @@ import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculu
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
+import type { PublicMaterialLessonRoute } from "@repo/contents/_types/route/schema";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -15,10 +16,17 @@ import {
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
 
-type PublishedMaterialIdentity = Pick<
-  MaterialLessonProjection,
-  "materialKey" | "parentPath" | "publicPath"
->;
+interface PublishedMaterialIdentity {
+  readonly materialKey:
+    | MaterialLessonProjection["materialKey"]
+    | PublicMaterialLessonRoute["materialKey"];
+  readonly parentPath:
+    | MaterialLessonProjection["parentPath"]
+    | PublicMaterialLessonRoute["parentPath"];
+  readonly publicPath:
+    | MaterialLessonProjection["publicPath"]
+    | PublicMaterialLessonRoute["publicPath"];
+}
 
 /** Verified curriculum return link for one material lesson. */
 export interface PublishedMaterialContext {

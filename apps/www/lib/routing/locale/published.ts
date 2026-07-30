@@ -1,10 +1,15 @@
 import { isRenderableCurriculumLevel } from "@nakafa/aksara-contracts/program/curriculum";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { loadStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
+import type { PublicMaterialLessonRoute } from "@repo/contents/_types/route/schema";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
-import { readPublishedMaterialRoute } from "@/lib/content/material/route";
+import {
+  type PublishedMaterialRoute,
+  readPublishedMaterialRoute,
+} from "@/lib/content/material/route";
 import { readPublishedProgramRoute } from "@/lib/content/program/route";
 import {
   MissingLocalizedRouteProjectionError,
@@ -30,6 +35,73 @@ interface PublishedLocalizedHrefInput {
 function toNavigationHref(publicPath: string, suffix: string) {
   return `/${publicPath}${suffix}`;
 }
+
+type PublishedMaterialOwner = Extract<
+  PublishedMaterialRoute,
+  { readonly projection: MaterialLessonProjection }
+>;
+type LocalizedMaterialTarget =
+  | MaterialLessonProjection
+  | PublicMaterialLessonRoute;
+
+/** Reconciles one missing published alternate with exact source ownership. */
+const readPartialMaterialTarget = Effect.fn(
+  "www.routing.locale.readPartialMaterial"
+)(function* (
+  current: PublishedMaterialOwner,
+  currentLocale: Locale,
+  locale: Locale,
+  publicPath: string
+) {
+  const direct = current.alternates.find(
+    (alternate) => alternate.locale === locale
+  );
+  if (direct || current.familyManaged) {
+    return direct;
+  }
+
+  const index = yield* loadStaticPublicLearningIndex();
+  const sourceTarget = index.resolveMaterialRouteBySource(
+    current.projection.contentKey,
+    locale
+  );
+  if (!sourceTarget) {
+    return;
+  }
+
+  const reconciled = yield* readPublishedMaterialRoute(
+    currentLocale,
+    publicPath,
+    [{ contentKey: sourceTarget.sourcePath, locale }]
+  );
+  if (
+    !(
+      reconciled.managed &&
+      reconciled.projection &&
+      reconciled.activeReleaseId === current.activeReleaseId &&
+      reconciled.projection.contentKey === current.projection.contentKey
+    )
+  ) {
+    return;
+  }
+
+  const alternate = reconciled.alternates.find(
+    (candidate) => candidate.locale === locale
+  );
+  if (alternate) {
+    return alternate;
+  }
+
+  const claim = reconciled.sourceClaims.find(
+    (candidate) =>
+      candidate.contentKey === sourceTarget.sourcePath &&
+      candidate.locale === locale
+  );
+  if (claim?.kind === "found") {
+    return claim.projection;
+  }
+  return claim ? undefined : sourceTarget;
+});
 
 /** Resolves an Aksara-owned material or curriculum locale counterpart. */
 export const readPublishedLocalizedHref = Effect.fn(
@@ -60,9 +132,13 @@ export const readPublishedLocalizedHref = Effect.fn(
       });
     }
 
-    const target = current.alternates.find(
-      (alternate) => alternate.locale === locale
-    );
+    const target: LocalizedMaterialTarget | undefined =
+      yield* readPartialMaterialTarget(
+        current,
+        currentLocale,
+        locale,
+        publicPath
+      );
     if (!target) {
       return yield* new MissingLocalizedRouteProjectionError({
         locale,
@@ -93,7 +169,7 @@ export const readPublishedLocalizedHref = Effect.fn(
       currentLocale
     );
     const targetRoute = index.resolveMaterialRouteBySource(
-      target.contentKey,
+      "contentKey" in target ? target.contentKey : target.sourcePath,
       locale
     );
     if (!(sourceRoute && targetRoute)) {

@@ -2,6 +2,7 @@
 
 import {
   GitCommitShaSchema,
+  PublicPathSchema,
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
@@ -12,7 +13,10 @@ import {
   readMaterialMetadata,
   readMaterialPage,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
-import type { PublishedMaterialRoute } from "@/lib/content/material/route";
+import type {
+  MaterialSourceClaim,
+  PublishedMaterialRoute,
+} from "@/lib/content/material/route";
 import {
   PreviewCompileError,
   PreviewPendingError,
@@ -37,8 +41,9 @@ const mocks = vi.hoisted(() => ({
   isMaterialLessonRoute: vi.fn(),
   notFound: vi.fn(),
   readMaterialPreview: vi.fn(),
+  readMaterialCandidates: vi.fn(),
   readMaterialRequest: vi.fn(),
-  readMaterialRoute: vi.fn(),
+  readMaterialSource: vi.fn(),
   renderPublishedMaterial: vi.fn(),
 }));
 
@@ -48,8 +53,9 @@ vi.mock("@repo/contents/_types/route/content", () => ({
 vi.mock(
   "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data",
   () => ({
+    readMaterialCandidates: mocks.readMaterialCandidates,
     readMaterialRequest: mocks.readMaterialRequest,
-    readMaterialRoute: mocks.readMaterialRoute,
+    readMaterialSource: mocks.readMaterialSource,
   })
 );
 vi.mock(
@@ -119,10 +125,12 @@ const publishedModel = {
   activeManifestHash,
   activeReleaseId,
   alternates: [previewProjection, previewIdProjection],
+  familyManaged: true,
   managed: true,
   projection: previewProjection,
   rendererDomain: "mathematics",
   siblings: [previewProjection],
+  sourceClaims: [],
   sourcePath: previewSourcePath,
   sourceRevision,
 } satisfies PublishedMaterialRoute;
@@ -131,10 +139,12 @@ const unmanagedModel = {
   activeManifestHash: null,
   activeReleaseId: null,
   alternates: [],
+  familyManaged: false,
   managed: false,
   projection: null,
   rendererDomain: null,
   siblings: [],
+  sourceClaims: [],
   sourcePath: null,
   sourceRevision: null,
 } satisfies PublishedMaterialRoute;
@@ -161,13 +171,14 @@ beforeEach(() => {
   mocks.hasPreviewConfig.mockReturnValue(false);
   mocks.connection.mockResolvedValue(undefined);
   mocks.readMaterialPreview.mockReturnValue(Effect.succeed(Option.none()));
+  mocks.readMaterialCandidates.mockReturnValue([]);
   mocks.readMaterialRequest.mockResolvedValue({
     locale: "en",
     publicPath: previewProjection.publicPath,
   });
   mocks.getPublishedMaterialRoute.mockResolvedValue(unmanagedModel);
-  mocks.readMaterialRoute.mockResolvedValue({
-    locale: "en",
+  mocks.readMaterialSource.mockReturnValue({
+    candidates: [],
     route: previewPublicRoute,
   });
   mocks.isMaterialLessonRoute.mockReturnValue(true);
@@ -212,7 +223,7 @@ describe("material page source", () => {
       route: previewProjection,
     });
     expect(mocks.getPublishedMaterialRoute).not.toHaveBeenCalled();
-    expect(mocks.readMaterialRoute).not.toHaveBeenCalled();
+    expect(mocks.readMaterialSource).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -237,13 +248,88 @@ describe("material page source", () => {
 
     await expect(readMaterialMetadata(params())).resolves.toEqual({
       alternates: publishedModel.alternates,
+      familyManaged: true,
       kind: "published",
       locale: "en",
       metadata: previewMetadata,
       route: previewProjection,
+      sourceClaims: [],
     });
     expect(mocks.renderPublishedMaterial).not.toHaveBeenCalled();
-    expect(mocks.readMaterialRoute).not.toHaveBeenCalled();
+    expect(mocks.getMaterialPageData).not.toHaveBeenCalled();
+  });
+
+  it("reconciles a renamed exact owner from its stable source identity", async () => {
+    const candidates = [
+      {
+        contentKey: previewProjection.contentKey,
+        locale: previewProjection.locale,
+      },
+    ];
+    const initial = {
+      ...publishedModel,
+      familyManaged: false,
+      sourceClaims: [],
+    } satisfies PublishedMaterialRoute;
+    const reconciled = {
+      ...initial,
+      sourceClaims: [
+        {
+          contentKey: previewProjection.contentKey,
+          kind: "found",
+          locale: previewProjection.locale,
+          projection: previewProjection,
+        },
+      ],
+    } satisfies PublishedMaterialRoute;
+    mocks.readMaterialSource.mockReturnValue({
+      candidates: [],
+      route: undefined,
+    });
+    mocks.readMaterialCandidates.mockReturnValue(candidates);
+    mocks.getPublishedMaterialRoute
+      .mockResolvedValueOnce(initial)
+      .mockResolvedValueOnce(reconciled);
+
+    await expect(readMaterialMetadata(params())).resolves.toMatchObject({
+      familyManaged: false,
+      kind: "published",
+      sourceClaims: reconciled.sourceClaims,
+    });
+    expect(mocks.readMaterialCandidates).toHaveBeenCalledWith(
+      previewProjection.contentKey,
+      previewProjection.locale
+    );
+    expect(mocks.getPublishedMaterialRoute).toHaveBeenNthCalledWith(
+      2,
+      previewProjection.locale,
+      previewProjection.publicPath,
+      candidates
+    );
+  });
+
+  it("keeps a published owner when its source identity no longer resolves", async () => {
+    const publishedOnly = {
+      ...publishedModel,
+      familyManaged: false,
+      sourceClaims: [],
+    } satisfies PublishedMaterialRoute;
+    mocks.readMaterialSource.mockReturnValue({
+      candidates: [],
+      route: undefined,
+    });
+    mocks.getPublishedMaterialRoute.mockResolvedValue(publishedOnly);
+
+    await expect(readMaterialMetadata(params())).resolves.toMatchObject({
+      familyManaged: false,
+      kind: "published",
+      route: previewProjection,
+    });
+    expect(mocks.readMaterialCandidates).toHaveBeenCalledWith(
+      previewProjection.contentKey,
+      previewProjection.locale
+    );
+    expect(mocks.getPublishedMaterialRoute).toHaveBeenCalledTimes(1);
   });
 
   it("hard-fails a managed deletion without reading source", async () => {
@@ -256,8 +342,35 @@ describe("material page source", () => {
     });
 
     await expect(readMaterialPage(params())).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(mocks.readMaterialRoute).not.toHaveBeenCalled();
     expect(mocks.getMaterialPageData).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      contentKey: previewProjection.contentKey,
+      kind: "missing",
+      locale: previewProjection.locale,
+    } satisfies MaterialSourceClaim,
+    {
+      contentKey: previewProjection.contentKey,
+      kind: "found",
+      locale: previewProjection.locale,
+      projection: {
+        ...previewProjection,
+        publicPath: PublicPathSchema.make(
+          `${previewProjection.parentPath}/renamed-function`
+        ),
+      },
+    } satisfies MaterialSourceClaim,
+  ])("does not revive source body for an exact $kind claim", async (claim) => {
+    mocks.getPublishedMaterialRoute.mockResolvedValue({
+      ...unmanagedModel,
+      sourceClaims: [claim],
+    });
+
+    await expect(readMaterialPage(params())).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(mocks.getMaterialPageData).not.toHaveBeenCalled();
+    expect(mocks.importContentModuleOrNull).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -281,12 +394,14 @@ describe("material page source", () => {
         alternates: publishedModel.alternates,
         body: "## Published function concept",
         children: body,
+        familyManaged: true,
         kind: "published",
         locale: "en",
         metadata: previewMetadata,
         rendererDomain: "mathematics",
         route: previewProjection,
         siblings: publishedModel.siblings,
+        sourceClaims: [],
         sourceUrl: expectedUrl,
       });
       expect(mocks.renderPublishedMaterial).toHaveBeenCalledWith({
@@ -339,7 +454,7 @@ describe("material page source", () => {
     mocks.getPublishedMaterialRoute.mockRejectedValue(failure);
 
     await expect(readMaterialPage(params())).rejects.toBe(failure);
-    expect(mocks.readMaterialRoute).not.toHaveBeenCalled();
+    expect(mocks.getMaterialPageData).not.toHaveBeenCalled();
   });
 
   it("rejects a request without one localized public path", async () => {
@@ -350,11 +465,12 @@ describe("material page source", () => {
 
     await expect(readMaterialPage(params())).rejects.toThrow("NEXT_NOT_FOUND");
     expect(mocks.getPublishedMaterialRoute).not.toHaveBeenCalled();
+    expect(mocks.readMaterialSource).not.toHaveBeenCalled();
   });
 
   it("rejects an unmanaged request without one concrete lesson route", async () => {
-    mocks.readMaterialRoute.mockResolvedValue({
-      locale: "en",
+    mocks.readMaterialSource.mockReturnValue({
+      candidates: [],
       route: undefined,
     });
 

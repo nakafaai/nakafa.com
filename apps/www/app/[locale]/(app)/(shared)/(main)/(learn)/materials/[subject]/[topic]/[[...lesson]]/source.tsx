@@ -12,12 +12,14 @@ import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
 import {
   type MaterialParams,
+  readMaterialCandidates,
   readMaterialRequest,
-  readMaterialRoute,
+  readMaterialSource,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { getMaterialPageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/runtime";
 import {
   getPublishedMaterialRoute,
+  type MaterialSourceClaim,
   type PublishedMaterialRoute,
 } from "@/lib/content/material/route";
 import { importContentModuleOrNull } from "@/lib/content/module";
@@ -51,18 +53,20 @@ interface SourceOwner {
   readonly kind: "source";
   readonly locale: Locale;
   readonly route: PublicMaterialLessonRoute;
+  readonly sourceClaims: readonly MaterialSourceClaim[];
 }
 
 type MaterialOwner = PreviewOwner | PublishedOwner | SourceOwner;
 
 interface MaterialPageFields {
-  readonly alternates: readonly MaterialLessonProjection[];
+  readonly alternates: readonly MaterialViewRoute[];
   readonly body: string;
   readonly children: ReactNode;
   readonly locale: Locale;
   readonly metadata: MaterialMetadata;
   readonly rendererDomain: RendererDomain | null;
   readonly siblings: readonly MaterialLessonProjection[];
+  readonly sourceClaims: readonly MaterialSourceClaim[];
   readonly sourceUrl: null | string;
 }
 
@@ -72,6 +76,7 @@ interface PreviewPageSource extends MaterialPageFields {
 }
 
 interface PublishedPageSource extends MaterialPageFields {
+  readonly familyManaged: boolean;
   readonly kind: "published";
   readonly route: MaterialLessonProjection;
 }
@@ -88,9 +93,10 @@ export type MaterialPageSource =
   | SourcePageSource;
 
 interface MaterialMetadataFields {
-  readonly alternates: readonly MaterialLessonProjection[];
+  readonly alternates: readonly MaterialViewRoute[];
   readonly locale: Locale;
   readonly metadata: MaterialMetadata | undefined;
+  readonly sourceClaims: readonly MaterialSourceClaim[];
 }
 
 interface PreviewMetadataSource extends MaterialMetadataFields {
@@ -99,6 +105,7 @@ interface PreviewMetadataSource extends MaterialMetadataFields {
 }
 
 interface PublishedMetadataSource extends MaterialMetadataFields {
+  readonly familyManaged: boolean;
   readonly kind: "published";
   readonly route: MaterialLessonProjection;
 }
@@ -129,7 +136,7 @@ async function readPreviewOwner(
 }
 
 /**
- * Selects one exclusive body owner before consulting the filesystem catalog.
+ * Selects one exclusive body owner before loading a filesystem body.
  *
  * An Aksara-owned deletion cannot fall through to the old source body.
  */
@@ -146,24 +153,52 @@ async function resolveMaterialOwner(
   if (!request.publicPath) {
     notFound();
   }
-  const published = await getPublishedMaterialRoute(
+  const source = readMaterialSource(request.locale, request.publicPath);
+  let published = await getPublishedMaterialRoute(
     request.locale,
-    request.publicPath
+    request.publicPath,
+    source.candidates
   );
+  if (
+    published.managed &&
+    !published.familyManaged &&
+    published.projection !== null &&
+    source.candidates.length === 0
+  ) {
+    const candidates = readMaterialCandidates(
+      published.projection.contentKey,
+      published.projection.locale
+    );
+    if (candidates.length > 0) {
+      published = await getPublishedMaterialRoute(
+        request.locale,
+        request.publicPath,
+        candidates
+      );
+    }
+  }
   if (published.managed) {
     if (published.projection === null) {
       notFound();
     }
     return { kind: "published", model: published };
   }
-  const source = await readMaterialRoute(resolvedParams);
   if (!(source.route && isMaterialLessonRoute(source.route))) {
+    notFound();
+  }
+  const sourceClaim = published.sourceClaims.find(
+    (claim) =>
+      claim.contentKey === source.route.sourcePath &&
+      claim.locale === request.locale
+  );
+  if (sourceClaim) {
     notFound();
   }
   return {
     kind: "source",
-    locale: source.locale,
+    locale: request.locale,
     route: source.route,
+    sourceClaims: published.sourceClaims,
   };
 }
 
@@ -179,15 +214,18 @@ export async function readMaterialMetadata(
       locale: owner.preview.locale,
       metadata: owner.preview.metadata,
       route: owner.preview.projection,
+      sourceClaims: [],
     };
   }
   if (owner.kind === "published") {
     return {
       alternates: owner.model.alternates,
+      familyManaged: owner.model.familyManaged,
       kind: owner.kind,
       locale: owner.model.projection.locale,
       metadata: owner.model.projection.metadata,
       route: owner.model.projection,
+      sourceClaims: owner.model.sourceClaims,
     };
   }
   const source = await getMaterialPageData({
@@ -200,6 +238,7 @@ export async function readMaterialMetadata(
     locale: owner.locale,
     metadata: source?.metadata,
     route: owner.route,
+    sourceClaims: owner.sourceClaims,
   };
 }
 
@@ -220,6 +259,7 @@ export async function readMaterialPage(
       rendererDomain: owner.preview.rendererDomain,
       route: owner.preview.projection,
       siblings: [owner.preview.projection],
+      sourceClaims: [],
       sourceUrl: null,
     };
   }
@@ -234,12 +274,14 @@ export async function readMaterialPage(
       alternates: model.alternates,
       body: published.rawMdx,
       children: published.body,
+      familyManaged: model.familyManaged,
       kind: owner.kind,
       locale: model.projection.locale,
       metadata: published.metadata,
       rendererDomain: model.rendererDomain,
       route: model.projection,
       siblings: model.siblings,
+      sourceClaims: model.sourceClaims,
       sourceUrl: published.sourceRevision
         ? getAksaraUrl({
             path: published.sourcePath,
@@ -273,6 +315,7 @@ export async function readMaterialPage(
     rendererDomain: null,
     route: owner.route,
     siblings: [],
+    sourceClaims: owner.sourceClaims,
     sourceUrl: getGithubUrl({
       path: `/packages/contents/${owner.route.sourcePath}/${owner.locale}.mdx`,
     }),

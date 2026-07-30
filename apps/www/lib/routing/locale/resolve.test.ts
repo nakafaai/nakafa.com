@@ -21,8 +21,10 @@ const publishedMocks = vi.hoisted(() => ({
 }));
 const activeMaterialRoute = {
   alternates: [previewProjection, previewIdProjection],
+  familyManaged: true,
   managed: true,
   projection: previewProjection,
+  sourceClaims: [],
 };
 const idProgramSubject = readTestPublishedRoute(
   "kurikulum/merdeka/kelas-11/matematika",
@@ -48,6 +50,15 @@ function preserveContextualHref(
 ) {
   return input.href;
 }
+
+const emptyLearningIndex: PublicLearningIndex = {
+  projectMaterialContextToLocale: () => undefined,
+  projectRouteToLocale: () => undefined,
+  resolveMaterialHeaderLink: () => undefined,
+  resolveMaterialRouteBySource: () => undefined,
+  resolveRouteByPath: () => undefined,
+  toContextualMaterialHref: preserveContextualHref,
+};
 
 /** Resolves a localized href through the Effect boundary used by route callers. */
 function resolveHref(href: string, locale: "en" | "id") {
@@ -168,8 +179,10 @@ describe("resolveLocalizedNavigationHref", () => {
       .mockReturnValueOnce(
         Effect.succeed({
           alternates: [previewProjection],
+          familyManaged: true,
           managed: true,
           projection: previewProjection,
+          sourceClaims: [],
         })
       );
 
@@ -182,6 +195,83 @@ describe("resolveLocalizedNavigationHref", () => {
       );
       expect(result._tag).toBe("Failure");
     }
+  });
+
+  it("reconciles every partial exact material target state", () => {
+    const href = `/${previewProjection.locale}/${previewProjection.publicPath}`;
+    const partial = {
+      activeReleaseId: "material-partial",
+      alternates: [previewProjection],
+      familyManaged: false,
+      managed: true,
+      projection: previewProjection,
+      sourceClaims: [],
+    };
+    const found = {
+      ...previewIdProjection,
+      publicPath: `${previewIdProjection.parentPath}/renamed-function`,
+    };
+    /** Runs one authoritative refresh after the initial partial model. */
+    const read = (refresh: object) => {
+      publishedMocks.materialRoute
+        .mockReturnValueOnce(Effect.succeed(partial))
+        .mockReturnValueOnce(Effect.succeed(refresh));
+      return resolveHref(href, "id");
+    };
+
+    expect(read(partial)).toBe(`/${previewIdProjection.publicPath}`);
+    const context =
+      "?ctx=merdeka~class-11-mathematics-function-composition-inverse-function";
+    publishedMocks.materialRoute
+      .mockReturnValueOnce(Effect.succeed(partial))
+      .mockReturnValueOnce(Effect.succeed(partial));
+    publishedMocks.materialContext.mockReturnValueOnce(
+      Effect.succeed({ managed: false, value: null })
+    );
+    expect(resolveHref(`${href}${context}`, "id")).toBe(
+      `/${previewIdProjection.publicPath}${context}`
+    );
+    expect(
+      read({ ...partial, alternates: [previewProjection, previewIdProjection] })
+    ).toBe(`/${previewIdProjection.publicPath}`);
+    expect(
+      read({
+        ...partial,
+        sourceClaims: [
+          {
+            contentKey: previewProjection.contentKey,
+            kind: "found",
+            locale: previewIdProjection.locale,
+            projection: found,
+          },
+        ],
+      })
+    ).toBe(`/${found.publicPath}`);
+    expect(() =>
+      read({
+        ...partial,
+        sourceClaims: [
+          {
+            contentKey: previewProjection.contentKey,
+            kind: "missing",
+            locale: previewIdProjection.locale,
+          },
+        ],
+      })
+    ).toThrow();
+    expect(() =>
+      read({ managed: false, projection: null, sourceClaims: [] })
+    ).toThrow();
+    expect(() =>
+      read({ ...partial, activeReleaseId: "material-replaced" })
+    ).toThrow();
+
+    publishedMocks.materialRoute.mockReturnValue(Effect.succeed(partial));
+    vi.spyOn(
+      publicLearningStatic,
+      "loadStaticPublicLearningIndex"
+    ).mockReturnValueOnce(Effect.succeed(emptyLearningIndex));
+    expect(() => resolveHref(href, "id")).toThrow();
   });
 
   it("keeps material context only while the active program verifies it", () => {
@@ -221,21 +311,13 @@ describe("resolveLocalizedNavigationHref", () => {
 
     expect(resolveHref(href, "id")).toContain("?ctx=merdeka~");
 
-    const missingSourceIndex: PublicLearningIndex = {
-      projectMaterialContextToLocale: () => undefined,
-      projectRouteToLocale: () => undefined,
-      resolveMaterialHeaderLink: () => undefined,
-      resolveMaterialRouteBySource: () => undefined,
-      resolveRouteByPath: () => undefined,
-      toContextualMaterialHref: preserveContextualHref,
-    };
     const missingTargetIndex: PublicLearningIndex = {
-      ...missingSourceIndex,
+      ...emptyLearningIndex,
       resolveMaterialRouteBySource: (_sourcePath, locale) =>
         locale === previewProjection.locale ? previewPublicRoute : undefined,
     };
     vi.spyOn(publicLearningStatic, "loadStaticPublicLearningIndex")
-      .mockImplementationOnce(() => Effect.succeed(missingSourceIndex))
+      .mockImplementationOnce(() => Effect.succeed(emptyLearningIndex))
       .mockImplementationOnce(() => Effect.succeed(missingTargetIndex));
 
     expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);

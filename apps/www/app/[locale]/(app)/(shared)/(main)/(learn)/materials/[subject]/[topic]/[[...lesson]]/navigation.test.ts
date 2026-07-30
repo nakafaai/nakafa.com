@@ -1,5 +1,4 @@
 // @vitest-environment node
-
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
 import { PublicMaterialLessonRouteSchema } from "@repo/contents/_types/route/schema";
@@ -31,7 +30,6 @@ const mocks = vi.hoisted(() => ({
   resolveMaterialRouteBySource: vi.fn(),
   toContextualMaterialHref: vi.fn(),
 }));
-
 vi.mock("@repo/contents/_lib/curriculum/material", () => ({
   getMaterialIcon: mocks.getMaterialIcon,
 }));
@@ -52,18 +50,19 @@ vi.mock(
 vi.mock("@/lib/content/material/context", () => ({
   getPublishedMaterialContext: mocks.getPublishedMaterialContext,
 }));
-
 const body = "Function Concept";
 const publishedPage = {
   alternates: [previewProjection, previewIdProjection],
   body: "## Function Concept",
   children: body,
+  familyManaged: true,
   kind: "published",
   locale: "en",
   metadata: previewMetadata,
   rendererDomain: "mathematics",
   route: previewProjection,
   siblings: [previewProjection, previewNextProjection],
+  sourceClaims: [],
   sourceUrl: null,
 } satisfies MaterialPageSource;
 const sourcePage = {
@@ -76,6 +75,7 @@ const sourcePage = {
   rendererDomain: null,
   route: previewPublicRoute,
   siblings: [],
+  sourceClaims: [],
   sourceUrl: null,
 } satisfies MaterialPageSource;
 const previewPage = {
@@ -83,48 +83,76 @@ const previewPage = {
   kind: "preview",
   rendererDomain: null,
 } satisfies MaterialPageSource;
-const nextPublicRoute = Schema.decodeUnknownSync(
-  PublicMaterialLessonRouteSchema
-)({
-  description: previewNextProjection.metadata.description,
-  kind: previewNextProjection.kind,
-  locale: previewNextProjection.locale,
-  materialKey: previewNextProjection.materialKey,
-  order: previewNextProjection.order,
-  parentPath: previewNextProjection.parentPath,
-  publicPath: previewNextProjection.publicPath,
-  sectionKey: previewNextProjection.sectionKey,
-  sitemap: previewNextProjection.sitemap,
-  sourcePath: previewNextProjection.contentKey,
-  title: previewNextProjection.metadata.title,
-});
+/** Adapts one published projection into the source route contract. */
+function makePublicRoute(
+  projection: MaterialLessonProjection,
+  overrides: Partial<
+    Schema.Schema.Encoded<typeof PublicMaterialLessonRouteSchema>
+  > = {}
+) {
+  return Schema.decodeUnknownSync(PublicMaterialLessonRouteSchema)({
+    description: projection.metadata.description,
+    kind: projection.kind,
+    locale: projection.locale,
+    materialKey: projection.materialKey,
+    order: projection.order,
+    parentPath: projection.parentPath,
+    publicPath: projection.publicPath,
+    sectionKey: projection.sectionKey,
+    sitemap: projection.sitemap,
+    sourcePath: projection.contentKey,
+    title: projection.metadata.title,
+    ...overrides,
+  });
+}
+
+const nextPublicRoute = makePublicRoute(previewNextProjection);
 const shortSourcePage = {
   ...sourcePage,
-  route: Schema.decodeUnknownSync(PublicMaterialLessonRouteSchema)({
-    ...previewPublicRoute,
-    sourcePath: "material",
-  }),
+  route: makePublicRoute(previewProjection, { sourcePath: "material" }),
 } satisfies MaterialPageSource;
-const idPublicRoute = Schema.decodeUnknownSync(PublicMaterialLessonRouteSchema)(
-  {
-    description: previewIdProjection.metadata.description,
-    kind: previewIdProjection.kind,
-    locale: previewIdProjection.locale,
-    materialKey: previewIdProjection.materialKey,
-    order: previewIdProjection.order,
-    parentPath: previewIdProjection.parentPath,
-    publicPath: previewIdProjection.publicPath,
-    sectionKey: previewIdProjection.sectionKey,
-    sitemap: previewIdProjection.sitemap,
-    sourcePath: previewIdProjection.contentKey,
-    title: previewIdProjection.metadata.title,
-  }
-);
+const idPublicRoute = makePublicRoute(previewIdProjection);
+const noOrderPrevRoute = makePublicRoute(previewNextProjection, {
+  order: undefined,
+  publicPath: `${previewProjection.parentPath}/a-first`,
+  sourcePath: "material/a-first",
+});
+const noOrderNextRoute = makePublicRoute(previewNextProjection, {
+  order: undefined,
+  publicPath: `${previewProjection.parentPath}/z-last`,
+  sourcePath: "material/z-last",
+});
 const context = {
   nodeKey: "class-11-mathematics-function-composition-inverse-function",
   programKey: "merdeka",
 };
+const emptyNavigation = {
+  context: undefined,
+  link: undefined,
+  pagination: {
+    next: { href: "", title: "" },
+    prev: { href: "", title: "" },
+  },
+};
+/** Builds one exact-owned page while its family shell remains source-owned. */
+function makeExactPage(route = previewProjection): MaterialPageSource {
+  return {
+    ...publishedPage,
+    familyManaged: false,
+    route,
+    siblings: [route],
+  };
+}
 
+/** Builds one exact-owned source claim from its canonical projection. */
+function foundClaim(projection: MaterialLessonProjection) {
+  return {
+    contentKey: projection.contentKey,
+    kind: "found",
+    locale: projection.locale,
+    projection,
+  } satisfies MaterialPageSource["sourceClaims"][number];
+}
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.readMaterialRoutes.mockReturnValue([
@@ -167,12 +195,24 @@ describe("material lesson navigation", () => {
     expect(
       readMaterialAlternates({
         alternates: publishedPage.alternates,
+        familyManaged: true,
         kind: "published",
         locale: "en",
         metadata: previewMetadata,
         route: previewProjection,
+        sourceClaims: [],
       })
     ).toEqual(publishedPage.alternates);
+    expect(
+      readMaterialAlternates({
+        alternates: [previewProjection],
+        kind: "preview",
+        locale: "en",
+        metadata: previewMetadata,
+        route: previewProjection,
+        sourceClaims: [],
+      })
+    ).toEqual([previewProjection]);
     expect(
       readMaterialAlternates({
         alternates: [],
@@ -180,6 +220,7 @@ describe("material lesson navigation", () => {
         locale: "en",
         metadata: previewMetadata,
         route: previewPublicRoute,
+        sourceClaims: [],
       })
     ).toEqual([previewPublicRoute]);
     expect(readMaterialIcon(publishedPage)).toBe("material-icon");
@@ -189,21 +230,93 @@ describe("material lesson navigation", () => {
     expect(mocks.getMaterialIcon).toHaveBeenLastCalledWith("");
   });
 
-  it("builds plain published sibling pagination for direct visits", async () => {
+  it("removes an exact-owned locale tombstone from the source shell", () => {
+    mocks.readMaterialRoutes.mockReturnValue([
+      previewPublicRoute,
+      idPublicRoute,
+      nextPublicRoute,
+    ]);
+    expect(
+      readMaterialAlternates({
+        alternates: [previewProjection],
+        familyManaged: false,
+        kind: "published",
+        locale: "en",
+        metadata: previewMetadata,
+        route: previewProjection,
+        sourceClaims: [
+          {
+            contentKey: previewNextProjection.contentKey,
+            kind: "missing",
+            locale: "en",
+          },
+          foundClaim(previewProjection),
+          {
+            contentKey: previewIdProjection.contentKey,
+            kind: "missing",
+            locale: "id",
+          },
+        ],
+      })
+    ).toEqual([previewProjection]);
+  });
+
+  it("removes an exact-owned sibling tombstone from pagination", async () => {
     await expect(
-      readMaterialNavigation(publishedPage, undefined)
+      readMaterialNavigation(
+        {
+          ...makeExactPage(),
+          sourceClaims: [
+            {
+              contentKey: previewNextProjection.contentKey,
+              kind: "missing",
+              locale: "en",
+            },
+            foundClaim(previewIdProjection),
+          ],
+        },
+        undefined
+      )
+    ).resolves.toEqual(emptyNavigation);
+    mocks.resolveMaterialRouteBySource.mockReturnValue(undefined);
+    await expect(
+      readMaterialNavigation(makeExactPage(), undefined)
+    ).resolves.toEqual(emptyNavigation);
+  });
+
+  it("orders source shell routes whose authored order is absent", async () => {
+    mocks.readMaterialRoutes.mockReturnValue([
+      noOrderPrevRoute,
+      idPublicRoute,
+      previewPublicRoute,
+      noOrderNextRoute,
+    ]);
+    const current = {
+      ...previewProjection,
+      order: 0,
+    } satisfies MaterialLessonProjection;
+    await expect(
+      readMaterialNavigation(
+        {
+          ...makeExactPage(current),
+          sourceClaims: [foundClaim(previewNextProjection)],
+        },
+        undefined
+      )
     ).resolves.toEqual({
       context: undefined,
       link: undefined,
       pagination: {
         next: {
-          href: toMaterialHref(previewNextProjection),
-          title: previewNextProjection.metadata.title,
+          href: toMaterialHref(noOrderNextRoute),
+          title: noOrderNextRoute.title,
         },
-        prev: { href: "", title: "" },
+        prev: {
+          href: toMaterialHref(noOrderPrevRoute),
+          title: noOrderPrevRoute.title,
+        },
       },
     });
-    expect(mocks.getPublishedMaterialContext).not.toHaveBeenCalled();
   });
 
   it("handles tied order, a missing current row, and the final sibling", async () => {
@@ -220,7 +333,6 @@ describe("material lesson navigation", () => {
       metadata: previewNextProjection.metadata,
       route: previewNextProjection,
     } satisfies MaterialPageSource;
-
     await expect(
       readMaterialNavigation(
         { ...publishedPage, siblings: [tiedNext, previewProjection] },
@@ -233,12 +345,7 @@ describe("material lesson navigation", () => {
     });
     await expect(
       readMaterialNavigation(missingCurrent, undefined)
-    ).resolves.toMatchObject({
-      pagination: {
-        next: { href: "", title: "" },
-        prev: { href: "", title: "" },
-      },
-    });
+    ).resolves.toEqual(emptyNavigation);
     await expect(
       readMaterialNavigation(finalPage, undefined)
     ).resolves.toMatchObject({
@@ -261,7 +368,6 @@ describe("material lesson navigation", () => {
         parent: {},
       },
     });
-
     await expect(
       readMaterialNavigation(publishedPage, context)
     ).resolves.toMatchObject({
@@ -295,7 +401,6 @@ describe("material lesson navigation", () => {
         parent: {},
       },
     });
-
     await expect(
       readMaterialNavigation(publishedPage, context)
     ).resolves.toMatchObject({
@@ -311,7 +416,6 @@ describe("material lesson navigation", () => {
       managed: true,
       value: null,
     });
-
     await expect(
       readMaterialNavigation(publishedPage, context)
     ).resolves.toMatchObject({
@@ -329,15 +433,26 @@ describe("material lesson navigation", () => {
       managed: false,
       value: null,
     });
-    mocks.resolveMaterialHeaderLink.mockReturnValueOnce(link);
+    mocks.resolveMaterialHeaderLink.mockReturnValue(link);
     mocks.toContextualMaterialHref.mockReturnValue(
       `${toMaterialHref(previewProjection)}?ctx=merdeka~functions`
     );
-
+    await expect(
+      readMaterialNavigation(makeExactPage(), context)
+    ).resolves.toMatchObject({ context, link });
+    mocks.resolveMaterialRouteBySource.mockImplementation(
+      (sourcePath: string) =>
+        sourcePath === previewProjection.contentKey
+          ? previewPublicRoute
+          : undefined
+    );
     await expect(
       readMaterialNavigation(publishedPage, context)
-    ).resolves.toMatchObject({ context, link });
-
+    ).resolves.toMatchObject({
+      pagination: {
+        next: { href: toMaterialHref(previewNextProjection) },
+      },
+    });
     mocks.resolveMaterialRouteBySource.mockReturnValue(undefined);
     await expect(
       readMaterialNavigation(publishedPage, context)
@@ -345,32 +460,6 @@ describe("material lesson navigation", () => {
       context: undefined,
       link: undefined,
     });
-  });
-
-  it("keeps a canonical sibling when its source route is unavailable", async () => {
-    const link = { href: "/en/curriculum/merdeka", label: "Mathematics" };
-    mocks.getPublishedMaterialContext.mockResolvedValue({
-      managed: false,
-      value: null,
-    });
-    mocks.resolveMaterialRouteBySource.mockImplementation(
-      (sourcePath: string) =>
-        sourcePath === previewProjection.contentKey
-          ? previewPublicRoute
-          : undefined
-    );
-    mocks.resolveMaterialHeaderLink.mockReturnValue(link);
-
-    await expect(
-      readMaterialNavigation(publishedPage, context)
-    ).resolves.toMatchObject({
-      context,
-      link,
-      pagination: {
-        next: { href: toMaterialHref(previewNextProjection) },
-      },
-    });
-    expect(mocks.toContextualMaterialHref).not.toHaveBeenCalled();
   });
 
   it("preserves the established source context model before cutover", async () => {
@@ -384,11 +473,22 @@ describe("material lesson navigation", () => {
       readMaterialNavigation(sourcePage, context)
     ).resolves.toMatchObject({ context, link });
     expect(mocks.toContextualMaterialHref).toHaveBeenCalled();
-  });
-
-  it("drops an unverified source context", async () => {
+    mocks.resolveMaterialRouteBySource.mockReturnValue(undefined);
+    await expect(
+      readMaterialNavigation(
+        {
+          ...sourcePage,
+          sourceClaims: [foundClaim(previewNextProjection)],
+        },
+        context
+      )
+    ).resolves.toMatchObject({
+      pagination: {
+        next: { href: toMaterialHref(previewNextProjection) },
+      },
+    });
+    mocks.toContextualMaterialHref.mockClear();
     mocks.resolveMaterialHeaderLink.mockReturnValue(undefined);
-
     await expect(
       readMaterialNavigation(sourcePage, context)
     ).resolves.toMatchObject({
