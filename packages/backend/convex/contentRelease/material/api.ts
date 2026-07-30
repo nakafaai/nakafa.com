@@ -48,6 +48,25 @@ function normalizePrefix(prefix: string) {
   return prefix.split("/").filter(Boolean).join("/");
 }
 
+/** Returns the segment-safe indexed range after one material page cursor. */
+function prefixRange(
+  input: Effect.Effect.Success<ReturnType<typeof validatePageInput>>
+) {
+  const prefixStart = input.prefix === "" ? "" : `${input.prefix}/`;
+  if (input.cursor === null || input.cursor === input.prefix) {
+    return {
+      inclusive: true,
+      lower: prefixStart,
+      upper: `${prefixStart}\uffff`,
+    };
+  }
+  return {
+    inclusive: false,
+    lower: input.cursor,
+    upper: `${prefixStart}\uffff`,
+  };
+}
+
 /** Validates one bounded material API page request and its server cursor. */
 const validatePageInput = Effect.fn("contentRelease.validateMaterialApiPage")(
   function* (input: MaterialApiPageInput) {
@@ -146,19 +165,38 @@ const readSourceCandidates = Effect.fn(
   claimed: ReadonlySet<string>
 ) {
   const scanLimit = input.limit + claimed.size + 1;
-  const rows = yield* Effect.promise(() =>
+  const exact =
+    input.cursor === null && input.prefix !== ""
+      ? yield* Effect.promise(() =>
+          ctx.db
+            .query("curriculumLessons")
+            .withIndex("by_locale_and_slug", (index) =>
+              index.eq("locale", input.locale).eq("slug", input.prefix)
+            )
+            .unique()
+        )
+      : null;
+  const range = prefixRange(input);
+  const remaining = scanLimit - (exact === null ? 0 : 1);
+  const descendants = yield* Effect.promise(() =>
     ctx.db
       .query("curriculumLessons")
       .withIndex("by_locale_and_slug", (index) => {
         const locale = index.eq("locale", input.locale);
-        const lower =
-          input.cursor === null
-            ? locale.gte("slug", input.prefix)
-            : locale.gt("slug", input.cursor);
-        return lower.lt("slug", `${input.prefix}\uffff`);
+        const lower = range.inclusive
+          ? locale.gte("slug", range.lower)
+          : locale.gt("slug", range.lower);
+        return lower.lt("slug", range.upper);
       })
-      .take(scanLimit)
+      .take(remaining)
   );
+  const rows = exact === null ? descendants : [exact, ...descendants];
+  if (rows.some((row) => !matchesPrefix(row.slug, input.prefix))) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Material API source scan escaped its requested prefix."
+    );
+  }
   const candidates = yield* Effect.forEach(rows, (row) =>
     claimed.has(row.slug) ? Effect.succeed(null) : readSourceCandidate(ctx, row)
   );
@@ -192,19 +230,38 @@ const readFamilyPage = Effect.fn("contentRelease.readMaterialFamilyApiPage")(
     input: Effect.Effect.Success<ReturnType<typeof validatePageInput>>,
     activeReleaseId: string
   ) {
-    const rows = yield* Effect.promise(() =>
+    const exact =
+      input.cursor === null && input.prefix !== ""
+        ? yield* Effect.promise(() =>
+            ctx.db
+              .query("materialCatalog")
+              .withIndex("by_locale_and_contentKey", (index) =>
+                index.eq("locale", input.locale).eq("contentKey", input.prefix)
+              )
+              .unique()
+          )
+        : null;
+    const range = prefixRange(input);
+    const remaining = input.limit + 1 - (exact === null ? 0 : 1);
+    const descendants = yield* Effect.promise(() =>
       ctx.db
         .query("materialCatalog")
         .withIndex("by_locale_and_contentKey", (index) => {
           const locale = index.eq("locale", input.locale);
-          const lower =
-            input.cursor === null
-              ? locale.gte("contentKey", input.prefix)
-              : locale.gt("contentKey", input.cursor);
-          return lower.lt("contentKey", `${input.prefix}\uffff`);
+          const lower = range.inclusive
+            ? locale.gte("contentKey", range.lower)
+            : locale.gt("contentKey", range.lower);
+          return lower.lt("contentKey", range.upper);
         })
-        .take(input.limit + 1)
+        .take(remaining)
     );
+    const rows = exact === null ? descendants : [exact, ...descendants];
+    if (rows.some((row) => !matchesPrefix(row.contentKey, input.prefix))) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Material API catalog scan escaped its requested prefix."
+      );
+    }
     const verified = yield* Effect.forEach(rows, (row) =>
       verifyMaterial(row).pipe(Effect.map((material) => ({ ...material, row })))
     );
@@ -230,12 +287,17 @@ function buildPage(
     .slice()
     .sort((left, right) => left.contentKey.localeCompare(right.contentKey));
   const selected = ordered.slice(0, limit);
-  const isDone = exhausted && ordered.length <= limit;
+  const hasUnreturnedCandidate = ordered.length > limit;
+  const isDone = exhausted && !hasUnreturnedCandidate;
+  let continueCursor = "";
+  if (!isDone) {
+    continueCursor = hasUnreturnedCandidate
+      ? (selected.at(-1)?.contentKey ?? "")
+      : (advanceCursor ?? selected.at(-1)?.contentKey ?? "");
+  }
   return {
     activeReleaseId,
-    continueCursor: isDone
-      ? ""
-      : (selected.at(-1)?.contentKey ?? advanceCursor ?? ""),
+    continueCursor,
     isDone,
     page: selected.map(({ entry }) => entry),
   };
@@ -257,11 +319,13 @@ export const readMaterialApiPage = Effect.fn(
       : { materials: [], owners: [] };
   const claimed = new Set(exact.owners.map(({ contentKey }) => contentKey));
   const source = yield* readSourceCandidates(ctx, input, claimed);
+  const sourceBoundary = source.exhausted ? null : source.advanceCursor;
   const exactCandidates = exact.materials
     .filter(
       ({ row }) =>
         matchesPrefix(row.contentKey, input.prefix) &&
-        (input.cursor === null || row.contentKey > input.cursor)
+        (input.cursor === null || row.contentKey > input.cursor) &&
+        (sourceBoundary === null || row.contentKey <= sourceBoundary)
     )
     .map(publishedCandidate);
   return buildPage(

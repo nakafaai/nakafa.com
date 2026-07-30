@@ -163,7 +163,7 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
     locale,
     "material",
     claimedContentKeys,
-    RSS_CONTENT_ROUTE_LIMIT - publishedRoutes.length
+    RSS_CONTENT_ROUTE_LIMIT
   );
   return [...publishedRoutes, ...sourceRoutes]
     .sort((left, right) => (right.date ?? 0) - (left.date ?? 0))
@@ -177,9 +177,6 @@ const readFeedSourceRoutes = Effect.fn("www.rss.readSourceRoutes")(function* (
   excludedContentKeys: ReadonlySet<string>,
   limit: number
 ) {
-  if (limit <= 0) {
-    return [];
-  }
   const maximumPages = Math.ceil(
     (limit + Math.min(excludedContentKeys.size, EXACT_SCOPE_LIMIT)) /
       RSS_SOURCE_PAGE_SIZE

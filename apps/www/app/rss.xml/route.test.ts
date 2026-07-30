@@ -254,8 +254,8 @@ describe("rss route", () => {
         if (cursor === "next") {
           return Effect.succeed({
             continueCursor: "",
-            isDone: true,
-            page: Array.from({ length: 64 }, (_, index) => ({
+            isDone: false,
+            page: Array.from({ length: 63 }, (_, index) => ({
               authors: [{ name: "Nakafa" }],
               date: Date.parse("2026-07-22T00:00:00.000Z") - index,
               locale: "en",
@@ -293,7 +293,7 @@ describe("rss route", () => {
     const text = await (await GET()).text();
 
     expect(text).toContain("<![CDATA[Retained 36]]>");
-    expect(text).toContain("<![CDATA[Refill 64]]>");
+    expect(text).toContain("<![CDATA[Refill 63]]>");
     expect(text).not.toContain("<![CDATA[Claimed 1]]>");
     expect(mockGetRuntimeLatestContentRoutePage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -305,34 +305,49 @@ describe("rss route", () => {
     );
   });
 
-  it("stops source pagination at the requested feed bound", async () => {
+  it("merges the full source window before applying the feed bound", async () => {
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
         claimedContentKeys: [],
         managed: false,
-        materials: Array.from({ length: 100 }, (_, index) => ({
+        materials: Array.from({ length: 64 }, (_, index) => ({
           authors: [{ name: "Nakafa" }],
-          date: "2026-07-24",
+          date: "2025-07-24",
           publicPath: `subjects/test/published-${index + 1}`,
           sourcePath: `material/lesson/test/published-${index + 1}`,
           title: `Published ${index + 1}`,
         })),
       })
     );
-    mockGetRuntimeLatestContentRoutePage.mockReturnValue(
-      Effect.succeed({
-        continueCursor: "more",
-        isDone: false,
-        page: [],
-      })
+    mockGetRuntimeLatestContentRoutePage.mockImplementation(
+      ({ locale, section }) =>
+        Effect.succeed({
+          continueCursor: "",
+          isDone: true,
+          page:
+            locale === "en" && section === "material"
+              ? Array.from({ length: 100 }, (_, index) => ({
+                  authors: [{ name: "Nakafa" }],
+                  date: Date.parse("2026-07-24T00:00:00.000Z") - index,
+                  locale: "en",
+                  route: `subjects/test/source-${index + 1}`,
+                  sourcePath: `material/lesson/test/source-${index + 1}`,
+                  title: `Source ${index + 1}`,
+                }))
+              : [],
+        })
     );
 
-    const response = await GET();
+    const text = await (await GET()).text();
 
-    expect(response.status).toBe(200);
-    expect(mockGetRuntimeLatestContentRoutePage).toHaveBeenCalledTimes(2);
-    expect(mockGetRuntimeLatestContentRoutePage).not.toHaveBeenCalledWith(
-      expect.objectContaining({ section: "material" })
+    expect(text).toContain("<![CDATA[Source 100]]>");
+    expect(text).not.toContain("<![CDATA[Published 1]]>");
+    expect(mockGetRuntimeLatestContentRoutePage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        limit: 100,
+        locale: "en",
+        section: "material",
+      })
     );
   });
 });

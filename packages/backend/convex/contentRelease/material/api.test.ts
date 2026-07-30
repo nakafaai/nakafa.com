@@ -180,6 +180,99 @@ describe("contentRelease/material/api", () => {
     });
   });
 
+  it("keeps sibling prefixes outside source and family pages", async () => {
+    const familyTarget = convexTest(schema, convexModules);
+    const exact = makeMaterialProjection("en", 1);
+    const sibling = makeMaterialProjection("en", 10);
+    await activateMaterialCatalog(familyTarget, [exact, sibling]);
+
+    await expect(
+      familyTarget.query(api.contentRelease.material.apiPage, {
+        cursor: null,
+        limit: 10,
+        locale: "en",
+        prefix: exact.contentKey,
+      })
+    ).resolves.toMatchObject({
+      isDone: true,
+      page: [{ kind: "published", publicPath: exact.publicPath }],
+    });
+
+    const sourceTarget = convexTest(schema, convexModules);
+    await sourceTarget.mutation(async (ctx) => {
+      await insertSourceMaterial(ctx, exact, true);
+      await insertSourceMaterial(ctx, sibling, true);
+    });
+    await expect(
+      sourceTarget.query(api.contentRelease.material.apiPage, {
+        cursor: null,
+        limit: 10,
+        locale: "en",
+        prefix: exact.contentKey,
+      })
+    ).resolves.toMatchObject({
+      isDone: true,
+      page: [{ item: { slug: exact.contentKey }, kind: "source" }],
+    });
+  });
+
+  it("advances source progress before selecting a later exact key", async () => {
+    const target = convexTest(schema, convexModules);
+    const exact = makeMaterialProjection("en", 5);
+    await activateMaterialCatalog(target, [exact]);
+    await selectExactMaterial(target, exact);
+    await target.mutation(async (ctx) => {
+      for (let order = 1; order <= 4; order += 1) {
+        await insertSourceMaterial(
+          ctx,
+          makeMaterialProjection("en", order),
+          order === 4
+        );
+      }
+    });
+
+    const first = await target.query(api.contentRelease.material.apiPage, {
+      cursor: null,
+      limit: 1,
+      locale: "en",
+      prefix: MATERIAL_PREFIX,
+    });
+    expect(first).toEqual({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      continueCursor: makeMaterialProjection("en", 3).contentKey,
+      isDone: false,
+      page: [],
+    });
+
+    const second = await target.query(api.contentRelease.material.apiPage, {
+      cursor: first.continueCursor,
+      limit: 1,
+      locale: "en",
+      prefix: MATERIAL_PREFIX,
+    });
+    expect(second).toMatchObject({
+      continueCursor: makeMaterialProjection("en", 4).contentKey,
+      isDone: false,
+      page: [
+        {
+          item: { slug: makeMaterialProjection("en", 4).contentKey },
+          kind: "source",
+        },
+      ],
+    });
+    await expect(
+      target.query(api.contentRelease.material.apiPage, {
+        cursor: second.continueCursor,
+        limit: 1,
+        locale: "en",
+        prefix: MATERIAL_PREFIX,
+      })
+    ).resolves.toMatchObject({
+      isDone: true,
+      page: [{ kind: "published", publicPath: exact.publicPath }],
+    });
+  });
+
   it("keeps unknown graph IDs unmanaged and rejects invalid pages", async () => {
     const target = convexTest(schema, convexModules);
 
