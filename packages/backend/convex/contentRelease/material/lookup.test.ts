@@ -4,8 +4,10 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { insertContentViewRoute } from "@repo/backend/test/content-view";
 import {
   activateMaterialCatalog,
+  MATERIAL_IDENTITY,
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
@@ -116,6 +118,101 @@ describe("contentRelease/material/lookup", () => {
     ).resolves.toEqual({
       activeReleaseId: "release-test",
       managed: false,
+      route: null,
+    });
+  });
+
+  it("keeps one exact content-ID tombstone managed", async () => {
+    const target = convexTest(schema, convexModules);
+    const selected = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(target, [selected]);
+    await selectExactMaterial(target, selected);
+    await target.mutation(async (ctx) => {
+      await insertContentViewRoute(ctx, {
+        contentId: selected.graph.assetId,
+        graph: selected.graph,
+        kind: "curriculum-lesson",
+        locale: selected.locale,
+        route: selected.publicPath,
+        section: "material",
+        sourcePath: selected.contentKey,
+        title: selected.metadata.title,
+      });
+      const binding = await ctx.db
+        .query("contentBindings")
+        .withIndex("by_locale_and_publicPath_and_sequence_and_index", (index) =>
+          index
+            .eq("locale", selected.locale)
+            .eq("publicPath", selected.publicPath)
+            .eq("sequence", MATERIAL_IDENTITY.sequence)
+        )
+        .unique();
+      const head = await ctx.db
+        .query("contentHeads")
+        .withIndex("by_contentKey_and_locale_and_sequence", (index) =>
+          index
+            .eq("contentKey", selected.contentKey)
+            .eq("locale", selected.locale)
+            .eq("sequence", MATERIAL_IDENTITY.sequence)
+        )
+        .unique();
+      const catalog = await ctx.db
+        .query("materialCatalog")
+        .withIndex("by_contentKey_and_locale", (index) =>
+          index
+            .eq("contentKey", selected.contentKey)
+            .eq("locale", selected.locale)
+        )
+        .unique();
+      if (!(binding && head && catalog)) {
+        throw new Error("Expected one complete exact material fixture.");
+      }
+      await ctx.db.patch("contentBindings", binding._id, {
+        operation: "delete",
+      });
+      await ctx.db.patch("contentHeads", head._id, { operation: "delete" });
+    });
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          lookupMaterial(ctx, {
+            contentId: selected.graph.assetId,
+            kind: "content",
+          })
+        )
+      )
+    ).resolves.toEqual({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      route: null,
+    });
+    await target.mutation(async (ctx) => {
+      const catalog = await ctx.db
+        .query("materialCatalog")
+        .withIndex("by_contentKey_and_locale", (index) =>
+          index
+            .eq("contentKey", selected.contentKey)
+            .eq("locale", selected.locale)
+        )
+        .unique();
+      if (!catalog) {
+        throw new Error("Expected one material catalog row.");
+      }
+      await ctx.db.delete("materialCatalog", catalog._id);
+    });
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          lookupMaterial(ctx, {
+            contentId: selected.graph.assetId,
+            kind: "content",
+          })
+        )
+      )
+    ).resolves.toEqual({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
       route: null,
     });
   });

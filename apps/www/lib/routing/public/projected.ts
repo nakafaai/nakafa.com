@@ -9,6 +9,44 @@ import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getRuntimePublicRoute } from "@/lib/content/runtime/routes";
 
+/** Resolves one material HTML route against a single active release snapshot. */
+const readProjectedMaterialRouteRejection = Effect.fn(
+  "www.routing.publicHtml.materialRejection"
+)(function* (locale: "en" | "id", publicPath: string) {
+  if (yield* matchesPreviewRoute({ locale, publicPath })) {
+    return null;
+  }
+  const identity = yield* readActiveContentIdentity();
+  const activeReleaseId = identity?.releaseId ?? null;
+  const ownership = yield* readActiveContentRoute({
+    activeReleaseId,
+    family: "material",
+    locale,
+    publicPath,
+  });
+  if (ownership.kind === "found") {
+    return null;
+  }
+  if (ownership.kind === "missing") {
+    return locale;
+  }
+  const route = yield* getRuntimePublicRoute({ locale, publicPath });
+  if (route?.kind !== "subject-lesson" || !route.sourcePath) {
+    return locale;
+  }
+  const claims = yield* readPublishedMaterialClaims(
+    locale,
+    [{ contentKey: route.sourcePath, locale: route.locale }],
+    activeReleaseId
+  );
+  return claims.some(
+    (claim) =>
+      claim.contentKey === route.sourcePath && claim.locale === route.locale
+  )
+    ? locale
+    : null;
+});
+
 /**
  * Reads projected HTML routes that must return a hard 404 when absent.
  *
@@ -45,26 +83,8 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   }
 
   const publicPath = [namespace, ...pathSegments].join("/");
-  if (
-    surface.key === "subject" &&
-    (yield* matchesPreviewRoute({ locale, publicPath }))
-  ) {
-    return null;
-  }
   if (surface.key === "subject") {
-    const identity = yield* readActiveContentIdentity();
-    const ownership = yield* readActiveContentRoute({
-      activeReleaseId: identity?.releaseId ?? null,
-      family: "material",
-      locale,
-      publicPath,
-    });
-    if (ownership.kind === "found") {
-      return null;
-    }
-    if (ownership.kind === "missing") {
-      return locale;
-    }
+    return yield* readProjectedMaterialRouteRejection(locale, publicPath);
   }
   if (surface.key === "curriculum") {
     const ownership = yield* readPublishedProgramPath(locale, publicPath);
@@ -73,20 +93,6 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     }
   }
   const route = yield* getRuntimePublicRoute({ locale, publicPath });
-  if (surface.key === "subject") {
-    if (route?.kind !== "subject-lesson" || !route.sourcePath) {
-      return locale;
-    }
-    const claims = yield* readPublishedMaterialClaims(locale, [
-      { contentKey: route.sourcePath, locale: route.locale },
-    ]);
-    return claims.some(
-      (claim) =>
-        claim.contentKey === route.sourcePath && claim.locale === route.locale
-    )
-      ? locale
-      : null;
-  }
   if (!route) {
     return locale;
   }

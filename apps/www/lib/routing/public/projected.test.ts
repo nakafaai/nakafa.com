@@ -172,12 +172,16 @@ describe("projected public html route rejection", () => {
       Effect.runPromise(readProjectedHtmlRouteRejection(`/en/${publicPath}`))
     ).resolves.toBe("en");
     expect(mockGetRuntimePublicRoute).toHaveBeenCalledTimes(1);
-    expect(mockReadPublishedMaterialClaims).toHaveBeenCalledWith("en", [
-      {
-        contentKey: "material/lesson/mathematics/functions/concept",
-        locale: "en",
-      },
-    ]);
+    expect(mockReadPublishedMaterialClaims).toHaveBeenCalledWith(
+      "en",
+      [
+        {
+          contentKey: "material/lesson/mathematics/functions/concept",
+          locale: "en",
+        },
+      ],
+      activeReleaseId
+    );
   });
 
   it("keys unmanaged ownership to the absence of an active release", async () => {
