@@ -1,5 +1,9 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import {
+  readMaterialApiPage,
+  readMaterialApiRoute,
+} from "@repo/backend/convex/contentRelease/material/api";
+import {
   readLatestMaterials,
   readMaterialBucket,
 } from "@repo/backend/convex/contentRelease/material/discovery";
@@ -15,6 +19,8 @@ import {
   readMaterialShell,
 } from "@repo/backend/convex/contentRelease/material/source";
 import {
+  materialApiPageValidator,
+  materialApiRouteValidator,
   materialLookupInputValidator,
   materialSourceCandidateValidator,
   materialSourceClaimValidator,
@@ -115,6 +121,26 @@ const materialShellValidator = v.object({
   activeReleaseId: v.union(v.string(), v.null()),
   sourceClaims: v.array(materialSourceClaimValidator),
   sourceProjectionJson: v.array(v.string()),
+});
+
+/** Returns one exact-ownership-aware material partner API page. */
+export const apiPage = query({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+    limit: v.number(),
+    locale: localeValidator,
+    prefix: v.string(),
+  },
+  returns: materialApiPageValidator,
+  handler: (ctx, args) => runConvexProgram(readMaterialApiPage(ctx, args)),
+});
+
+/** Resolves one material graph identity through exact ownership. */
+export const apiRoute = query({
+  args: { input: materialLookupInputValidator },
+  returns: materialApiRouteValidator,
+  handler: (ctx, { input }) =>
+    runConvexProgram(readMaterialApiRoute(ctx, input)),
 });
 
 /** Returns one complete managed material discovery partition. */

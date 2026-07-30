@@ -2,11 +2,20 @@ import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
+import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
+import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { Effect } from "effect";
 
 interface ExactMaterialOwner {
   readonly contentKey: string;
   readonly locale: ContentLocale;
+}
+
+interface SourceRouteCandidate {
+  readonly locale: ContentLocale;
+  readonly publicPath: string;
+  readonly sourcePath?: string;
 }
 
 /** Checks whether one selected exact owner displaces the source route. */
@@ -19,6 +28,85 @@ function ownsSourceRoute(
     (owner) => owner.locale === locale && owner.contentKey === sourcePath
   );
 }
+
+/** Loads every visible exact material path selected by the active release. */
+const loadActiveExactRoutes = Effect.fn(
+  "contentRelease.loadActiveExactMaterialRoutes"
+)(function* (ctx: MutationCtx) {
+  const active = yield* loadActiveIdentity(ctx);
+  if (!active) {
+    return new Map<string, string>();
+  }
+  const families = yield* loadReleaseFamilies(active.release);
+  if (families.result.includes("material")) {
+    return new Map<string, string>();
+  }
+  const owners = yield* Effect.promise(() =>
+    ctx.db
+      .query("materialOwners")
+      .withIndex("by_releaseId_and_locale_and_contentKey", (index) =>
+        index.eq("releaseId", active.releaseId)
+      )
+      .take(EXACT_SCOPE_LIMIT + 1)
+  );
+  if (owners.length > EXACT_SCOPE_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Active release ${active.releaseId} exceeds ${EXACT_SCOPE_LIMIT} exact material owners.`
+    );
+  }
+  const routes = new Map<string, string>();
+  for (const owner of owners) {
+    if (owner.sequence !== active.sequence) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Active material owner ${owner.contentKey}/${owner.locale} is stale.`
+      );
+    }
+    const projection = yield* resolvePublicProjection(
+      ctx,
+      owner.contentKey,
+      owner.locale,
+      active.sequence
+    );
+    if (!projection) {
+      continue;
+    }
+    if (projection.family !== "material") {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Active material owner ${owner.contentKey}/${owner.locale} resolved another family.`
+      );
+    }
+    const identity = `${projection.locale}\0${projection.publicPath}`;
+    const existing = routes.get(identity);
+    if (existing && existing !== owner.contentKey) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Active material route ${projection.locale}/${projection.publicPath} has multiple exact owners.`
+      );
+    }
+    routes.set(identity, owner.contentKey);
+  }
+  return routes;
+});
+
+/** Rejects source sync rows that would collide with an active exact owner. */
+export const validateSourceMaterialRoutes = Effect.fn(
+  "contentRelease.validateSourceMaterialRoutes"
+)(function* (ctx: MutationCtx, routes: readonly SourceRouteCandidate[]) {
+  const exactRoutes = yield* loadActiveExactRoutes(ctx);
+  for (const route of routes) {
+    const owner = exactRoutes.get(`${route.locale}\0${route.publicPath}`);
+    if (!owner || owner === route.sourcePath) {
+      continue;
+    }
+    return yield* releaseFail(
+      "CONTENT_RELEASE_ROUTE",
+      `Source route ${route.locale}/${route.publicPath} conflicts with active exact material ${owner}.`
+    );
+  }
+});
 
 /** Proves every exact route displaces only another selected source owner. */
 export const validateExactMaterialRoutes = Effect.fn(

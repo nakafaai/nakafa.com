@@ -1,8 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import {
-  listArticleApiContentPageImpl,
-  listMaterialApiContentPageImpl,
-} from "@repo/backend/convex/contents/runtime/api";
+import { listArticleApiContentPageImpl } from "@repo/backend/convex/contents/runtime/api";
 import { getArticlePageImpl } from "@repo/backend/convex/contents/runtime/articles";
 import {
   getContentRouteArtifactPageImpl,
@@ -62,8 +59,6 @@ import {
   listContentRoutesPageReturnValidator,
   listLatestContentRoutePageArgsValidator,
   listLatestContentRoutePageReturnValidator,
-  listMaterialApiContentPageArgsValidator,
-  listMaterialApiContentPageReturnValidator,
   listQuranSurahsReturnValidator,
 } from "@repo/backend/convex/contents/runtime/spec";
 import {
@@ -215,14 +210,6 @@ export const listArticleApiContentPage = query({
   returns: listArticleApiContentPageReturnValidator,
   /** Runs a bounded article API content page query with generated argument typing. */
   handler: (ctx, args) => listArticleApiContentPageImpl(ctx, args),
-});
-
-/** Lists material API rows matching one route prefix. */
-export const listMaterialApiContentPage = query({
-  args: listMaterialApiContentPageArgsValidator,
-  returns: listMaterialApiContentPageReturnValidator,
-  /** Runs a bounded material API content page query with generated argument typing. */
-  handler: (ctx, args) => listMaterialApiContentPageImpl(ctx, args),
 });
 
 /** Lists synced Quran surah metadata rows. */

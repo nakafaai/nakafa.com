@@ -25,6 +25,7 @@ const tables = {
     sourcePath: v.string(),
   })
     .index("by_contentKey_and_locale", ["contentKey", "locale"])
+    .index("by_locale_and_contentKey", ["locale", "contentKey"])
     .index("by_locale_and_assetId", ["locale", "assetId"])
     .index("by_locale_and_publicPath", ["locale", "publicPath"])
     .index("by_locale_and_date_and_contentKey", [

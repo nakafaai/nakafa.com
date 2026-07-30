@@ -2,6 +2,8 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { validateSourceMaterialRoutes } from "@repo/backend/convex/contentRelease/material/collision";
+import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import {
   PUBLIC_ROUTE_ROOT_SHARD,
   PUBLIC_ROUTE_SHARD_COUNT,
@@ -11,10 +13,13 @@ import {
 import type { PaginationOptions } from "convex/server";
 import { Effect, Schema } from "effect";
 
-class PublicRouteShardError extends Schema.TaggedError<PublicRouteShardError>()(
-  "PublicRouteShardError",
+class PublicRouteSyncError extends Schema.TaggedError<PublicRouteSyncError>()(
+  "PublicRouteSyncError",
   {
-    code: Schema.Literal("PUBLIC_ROUTE_SHARD_INVALID"),
+    code: Schema.Literal(
+      "PUBLIC_ROUTE_SHARD_INVALID",
+      "PUBLIC_ROUTE_SHARD_LIMIT"
+    ),
     message: Schema.String,
   }
 ) {}
@@ -30,6 +35,13 @@ interface SyncTotals {
 export const syncPublicRouteShards = Effect.fn(
   "contentSync.publicRoutes.syncShards"
 )(function* (ctx: MutationCtx, shards: PublicRouteShard[]) {
+  for (const shard of shards) {
+    yield* validateShard(shard.shard);
+  }
+  yield* validateSourceMaterialRoutes(
+    ctx,
+    shards.flatMap(({ routes }) => routes)
+  );
   const totals: SyncTotals = {
     created: 0,
     deleted: 0,
@@ -38,15 +50,22 @@ export const syncPublicRouteShards = Effect.fn(
   };
 
   for (const shard of shards) {
-    yield* validateShard(shard.shard);
     const storedRoutes = yield* Effect.promise(() =>
       ctx.db
         .query("publicRoutes")
         .withIndex("by_syncShard", (query) =>
           query.eq("syncShard", shard.shard)
         )
-        .collect()
+        .take(CONTENT_SYNC_BATCH_LIMITS.publicRouteRows + 1)
     );
+    if (storedRoutes.length > CONTENT_SYNC_BATCH_LIMITS.publicRouteRows) {
+      return yield* Effect.fail(
+        new PublicRouteSyncError({
+          code: "PUBLIC_ROUTE_SHARD_LIMIT",
+          message: `Public route shard ${shard.shard} exceeds the safe limit of ${CONTENT_SYNC_BATCH_LIMITS.publicRouteRows} rows.`,
+        })
+      );
+    }
     const remainingRoutes = new Map(
       storedRoutes.map((route) => [getRouteIdentity(route), route])
     );
@@ -194,7 +213,7 @@ function validateShard(shard: number) {
   }
 
   return Effect.fail(
-    new PublicRouteShardError({
+    new PublicRouteSyncError({
       code: "PUBLIC_ROUTE_SHARD_INVALID",
       message: `Public route shard ${shard} is outside 0-${PUBLIC_ROUTE_SHARD_COUNT - 1}.`,
     })

@@ -127,6 +127,7 @@ export const runtimeContentRouteValidator = v.object({
   syncedAt: v.number(),
   title: v.string(),
 });
+export type RuntimeContentRoute = Infer<typeof runtimeContentRouteValidator>;
 
 const runtimeContentRouteCountValidator = v.object({
   count: v.number(),
@@ -150,7 +151,7 @@ const runtimeContentRouteArtifactPageValidator = v.object({
   syncedAt: v.number(),
 });
 
-const apiContentItemValidator = v.object({
+export const apiContentItemValidator = v.object({
   ...learningGraphIdentityValidator.fields,
   locale: localeValidator,
   metadata: contentMetadataValidator,
@@ -326,16 +327,6 @@ export const listArticleApiContentPageArgsValidator = {
 };
 
 export const listArticleApiContentPageReturnValidator =
-  paginatedApiContentValidator;
-
-export const listMaterialApiContentPageArgsValidator = {
-  cursor: v.union(v.string(), v.null()),
-  limit: v.number(),
-  locale: localeValidator,
-  prefix: v.string(),
-};
-
-export const listMaterialApiContentPageReturnValidator =
   paginatedApiContentValidator;
 
 export const listQuranSurahsReturnValidator = v.array(

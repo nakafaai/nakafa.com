@@ -188,6 +188,7 @@ import type * as contentRelease_item from "../contentRelease/item.js";
 import type * as contentRelease_items from "../contentRelease/items.js";
 import type * as contentRelease_manifest from "../contentRelease/manifest.js";
 import type * as contentRelease_material from "../contentRelease/material.js";
+import type * as contentRelease_material_api from "../contentRelease/material/api.js";
 import type * as contentRelease_material_bucket from "../contentRelease/material/bucket.js";
 import type * as contentRelease_material_collision from "../contentRelease/material/collision.js";
 import type * as contentRelease_material_discovery from "../contentRelease/material/discovery.js";
@@ -711,6 +712,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/items": typeof contentRelease_items;
   "contentRelease/manifest": typeof contentRelease_manifest;
   "contentRelease/material": typeof contentRelease_material;
+  "contentRelease/material/api": typeof contentRelease_material_api;
   "contentRelease/material/bucket": typeof contentRelease_material_bucket;
   "contentRelease/material/collision": typeof contentRelease_material_collision;
   "contentRelease/material/discovery": typeof contentRelease_material_discovery;
