@@ -1,8 +1,11 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
 import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
-import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
-import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import {
+  loadMaterialIdentityOwner,
+  loadMaterialOwner,
+} from "@repo/backend/convex/contentRelease/material/owner";
+import { resolveMaterialRoute } from "@repo/backend/convex/contentRelease/material/route";
 import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
 import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
@@ -62,7 +65,7 @@ type ResolvedContentViewTargetInput = ContentViewTargetLookup & {
 const resolveContentViewTargetInput = Effect.fn(
   "contents.views.resolveContentViewTargetInput"
 )(function* (ctx: QueryCtx, input: ContentViewTargetInput) {
-  if (input.section !== undefined) {
+  if (input.section !== undefined && input.publicPath !== undefined) {
     return {
       ...input,
       section: input.section,
@@ -81,7 +84,19 @@ const resolveContentViewTargetInput = Effect.fn(
         .unique(),
     catch: toContentViewIoError,
   });
-  if (!route || route.locale !== input.locale) {
+  if (!route) {
+    if (input.section === undefined) {
+      return null;
+    }
+    return {
+      ...input,
+      section: input.section,
+    } satisfies ResolvedContentViewTargetInput;
+  }
+  if (
+    route.locale !== input.locale ||
+    (input.section !== undefined && route.section !== input.section)
+  ) {
     return null;
   }
   return {
@@ -107,14 +122,8 @@ function readMaterialDomain(materialKey: string): Material | undefined {
 /** Resolves one active material by exact route or stable graph identity. */
 const readMaterialTarget = Effect.fn("contents.views.readMaterialTarget")(
   function* (ctx: QueryCtx, input: ContentViewTargetLookup) {
-    const owner = yield* loadMaterialOwner(ctx, input.locale).pipe(
-      Effect.mapError(toContentViewIoError)
-    );
-    if (!(owner.managed && owner.active)) {
-      return { managed: false, target: null };
-    }
     const { contentKey, publicPath } = input;
-    const row = yield* Effect.tryPromise({
+    const candidate = yield* Effect.tryPromise({
       try: () => {
         if (contentKey) {
           return ctx.db
@@ -141,12 +150,35 @@ const readMaterialTarget = Effect.fn("contents.views.readMaterialTarget")(
       },
       catch: toContentViewIoError,
     });
-    if (!row) {
+    const activePath = candidate?.publicPath ?? publicPath;
+    if (!activePath) {
+      const owner = yield* loadMaterialOwner(ctx, input.locale).pipe(
+        Effect.mapError(toContentViewIoError)
+      );
+      return { managed: owner.managed, target: null };
+    }
+    const resolved = yield* resolveMaterialRoute(
+      ctx,
+      input.locale,
+      activePath
+    ).pipe(Effect.mapError(toContentViewIoError));
+    if (!resolved.managed) {
+      if (contentKey) {
+        const owner = yield* loadMaterialIdentityOwner(
+          ctx,
+          contentKey,
+          input.locale
+        ).pipe(Effect.mapError(toContentViewIoError));
+        if (owner.managed) {
+          return { managed: true, target: null };
+        }
+      }
+      return { managed: false, target: null };
+    }
+    if (!resolved.material) {
       return { managed: true, target: null };
     }
-    const { projection } = yield* verifyMaterial(row).pipe(
-      Effect.mapError(toContentViewIoError)
-    );
+    const { projection, row } = resolved.material;
     const materialDomain = readMaterialDomain(projection.materialKey);
     if (
       projection.graph.assetId !== input.contentId ||

@@ -195,7 +195,9 @@ import type * as contentRelease_material_model from "../contentRelease/material/
 import type * as contentRelease_material_owner from "../contentRelease/material/owner.js";
 import type * as contentRelease_material_page from "../contentRelease/material/page.js";
 import type * as contentRelease_material_partition from "../contentRelease/material/partition.js";
+import type * as contentRelease_material_route from "../contentRelease/material/route.js";
 import type * as contentRelease_material_sitemap from "../contentRelease/material/sitemap.js";
+import type * as contentRelease_material_spec from "../contentRelease/material/spec.js";
 import type * as contentRelease_material_sync from "../contentRelease/material/sync.js";
 import type * as contentRelease_material_verify from "../contentRelease/material/verify.js";
 import type * as contentRelease_material_write from "../contentRelease/material/write.js";
@@ -246,6 +248,7 @@ import type * as contentRelease_runtime_result from "../contentRelease/runtime/r
 import type * as contentRelease_runtime_snapshot from "../contentRelease/runtime/snapshot.js";
 import type * as contentRelease_scope_family from "../contentRelease/scope/family.js";
 import type * as contentRelease_scope_owner from "../contentRelease/scope/owner.js";
+import type * as contentRelease_scope_route from "../contentRelease/scope/route.js";
 import type * as contentRelease_search from "../contentRelease/search.js";
 import type * as contentRelease_search_sync from "../contentRelease/search/sync.js";
 import type * as contentRelease_search_verify from "../contentRelease/search/verify.js";
@@ -710,7 +713,9 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material/owner": typeof contentRelease_material_owner;
   "contentRelease/material/page": typeof contentRelease_material_page;
   "contentRelease/material/partition": typeof contentRelease_material_partition;
+  "contentRelease/material/route": typeof contentRelease_material_route;
   "contentRelease/material/sitemap": typeof contentRelease_material_sitemap;
+  "contentRelease/material/spec": typeof contentRelease_material_spec;
   "contentRelease/material/sync": typeof contentRelease_material_sync;
   "contentRelease/material/verify": typeof contentRelease_material_verify;
   "contentRelease/material/write": typeof contentRelease_material_write;
@@ -761,6 +766,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/runtime/snapshot": typeof contentRelease_runtime_snapshot;
   "contentRelease/scope/family": typeof contentRelease_scope_family;
   "contentRelease/scope/owner": typeof contentRelease_scope_owner;
+  "contentRelease/scope/route": typeof contentRelease_scope_route;
   "contentRelease/search": typeof contentRelease_search;
   "contentRelease/search/sync": typeof contentRelease_search_sync;
   "contentRelease/search/verify": typeof contentRelease_search_verify;

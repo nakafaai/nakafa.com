@@ -26,7 +26,11 @@ import {
   SUBJECT_VIEW_ROUTE,
   TRYOUT_VIEW_ROUTE,
 } from "@repo/backend/test/content-view";
-import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
+import {
+  activateMaterialCatalog,
+  MATERIAL_IDENTITY,
+  selectExactMaterial,
+} from "@repo/backend/test/material-catalog";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest, type TestConvex } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -39,51 +43,34 @@ const RENAMED_MATERIAL = MaterialLessonProjectionSchema.make({
     `${PUBLISHED_MATERIAL.parentPath}/function-concept-renamed`
   ),
 });
-
 /** Inserts one route-catalog target whose family remains source-owned. */
 async function insertSourceTarget(target: TestConvex<typeof schema>) {
-  const graph = createLearningGraphIdentityFromRoute({
-    locale: "en",
-    route: SOURCE_PATH,
-  });
-  if (!graph) {
-    throw new Error("Expected one source-owned article graph identity.");
-  }
-  await target.mutation((ctx) =>
-    ctx.db.insert("contentRoutes", {
-      ...graph,
-      authors: [],
-      contentHash: "source-target-hash",
-      content_id: graph.assetId,
+  const contentId = "asset:en:article:politics:source-target";
+  return await target.mutation((ctx) =>
+    insertContentViewRoute(ctx, {
+      contentId,
       kind: "article",
       locale: "en",
-      markdown: true,
       route: SOURCE_PATH,
       section: "articles",
       sourcePath: `packages/contents/${SOURCE_PATH}/en.mdx`,
-      syncedAt: 1,
       title: "Source target",
     })
   );
-  return graph;
 }
 
 /** Inserts the source route retained during the material expand phase. */
 async function insertLegacyMaterialTarget(target: TestConvex<typeof schema>) {
   await target.mutation((ctx) =>
-    ctx.db.insert("contentRoutes", {
-      ...PUBLISHED_MATERIAL.graph,
-      authors: [],
-      contentHash: "legacy-material-target",
-      content_id: PUBLISHED_MATERIAL.graph.assetId,
+    insertContentViewRoute(ctx, {
+      contentId: PUBLISHED_MATERIAL.graph.assetId,
+      graph: PUBLISHED_MATERIAL.graph,
       kind: "curriculum-lesson",
       locale: PUBLISHED_MATERIAL.locale,
-      markdown: true,
       materialDomain: "mathematics",
       route: PUBLISHED_MATERIAL.publicPath,
       section: "material",
       sourcePath: PUBLISHED_MATERIAL.contentKey,
-      syncedAt: 1,
       title: PUBLISHED_MATERIAL.metadata.title,
     })
   );
@@ -93,18 +80,14 @@ async function insertLegacyMaterialTarget(target: TestConvex<typeof schema>) {
 async function insertLegacyArticleTarget(target: TestConvex<typeof schema>) {
   const projection = testArticleProjection(0);
   await target.mutation(async (ctx) => {
-    await ctx.db.insert("contentRoutes", {
-      ...projection.graph,
-      authors: [],
-      contentHash: "legacy-article-target",
-      content_id: projection.graph.assetId,
+    await insertContentViewRoute(ctx, {
+      contentId: projection.graph.assetId,
+      graph: projection.graph,
       kind: "article",
       locale: projection.locale,
-      markdown: true,
       route: projection.publicPath,
       section: "articles",
       sourcePath: projection.contentKey,
-      syncedAt: 1,
       title: projection.metadata.title,
     });
     await insertRuntimeArticles(ctx, 1, () => projection);
@@ -113,10 +96,10 @@ async function insertLegacyArticleTarget(target: TestConvex<typeof schema>) {
 }
 
 describe("contents/views/target", () => {
-  it("returns a best-effort miss when no current route owns the identity", async () => {
+  it("returns best-effort misses for unknown or incomplete routes", async () => {
     const target = convexTest(schema, convexModules);
-
-    await expect(
+    const contentId = await insertSourceTarget(target);
+    const results = await Promise.all([
       target.query((ctx) =>
         runConvexProgram(
           loadContentTarget(ctx, {
@@ -126,68 +109,58 @@ describe("contents/views/target", () => {
             section: "articles",
           })
         )
-      )
-    ).resolves.toBeNull();
-  });
-
-  it("resolves one unmanaged route without inventing source facts", async () => {
-    const target = convexTest(schema, convexModules);
-    const graph = await insertSourceTarget(target);
-
-    await expect(
+      ),
       target.query((ctx) =>
         runConvexProgram(
           loadContentTarget(ctx, {
-            contentId: graph.assetId,
+            contentId,
+            locale: "en",
+            publicPath: SOURCE_PATH,
+          })
+        )
+      ),
+    ]);
+
+    expect(results).toEqual([null, null]);
+  });
+
+  it("resolves an unmanaged route by current path and stable content id", async () => {
+    const target = convexTest(schema, convexModules);
+    const contentId = await insertSourceTarget(target);
+    const results = await Promise.all([
+      target.query((ctx) =>
+        runConvexProgram(
+          loadContentTarget(ctx, {
+            contentId,
             locale: "en",
             publicPath: SOURCE_PATH,
             section: "articles",
           })
         )
-      )
-    ).resolves.toMatchObject({
-      content_id: graph.assetId,
-      route: SOURCE_PATH,
-      section: "articles",
-      sourcePath: `packages/contents/${SOURCE_PATH}/en.mdx`,
-    });
-  });
-
-  it("resolves the currently deployed input through its stable content id", async () => {
-    const target = convexTest(schema, convexModules);
-    const graph = await insertSourceTarget(target);
-
-    await expect(
+      ),
       target.query((ctx) =>
         runConvexProgram(
           loadContentTarget(ctx, {
-            contentId: graph.assetId,
+            contentId,
             locale: "en",
           })
         )
-      )
-    ).resolves.toMatchObject({
-      content_id: graph.assetId,
-      route: SOURCE_PATH,
-      section: "articles",
-    });
-  });
+      ),
+    ]);
 
-  it("rejects a route without its owning section", async () => {
-    const target = convexTest(schema, convexModules);
-    const graph = await insertSourceTarget(target);
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          loadContentTarget(ctx, {
-            contentId: graph.assetId,
-            locale: "en",
-            publicPath: SOURCE_PATH,
-          })
-        )
-      )
-    ).resolves.toBeNull();
+    expect(results).toMatchObject([
+      {
+        content_id: contentId,
+        route: SOURCE_PATH,
+        section: "articles",
+        sourcePath: `packages/contents/${SOURCE_PATH}/en.mdx`,
+      },
+      {
+        content_id: contentId,
+        route: SOURCE_PATH,
+        section: "articles",
+      },
+    ]);
   });
 
   it("resolves active materials by current path and stable asset identity", async () => {
@@ -198,7 +171,6 @@ describe("contents/views/target", () => {
       locale: PUBLISHED_MATERIAL.locale,
       section: "material",
     };
-
     const byPath = await target.query((ctx) =>
       runConvexProgram(
         loadContentTarget(ctx, {
@@ -221,11 +193,81 @@ describe("contents/views/target", () => {
     expect(byIdentity).toEqual(byPath);
   });
 
+  it("resolves exact-owned materials without a family-wide cutover", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(target, [PUBLISHED_MATERIAL]);
+    await selectExactMaterial(target, PUBLISHED_MATERIAL);
+    const input: ContentViewTargetInput = {
+      contentId: PUBLISHED_MATERIAL.graph.assetId,
+      locale: PUBLISHED_MATERIAL.locale,
+      section: "material",
+    };
+    const byPath = await target.query((ctx) =>
+      runConvexProgram(
+        loadContentTarget(ctx, {
+          ...input,
+          publicPath: PUBLISHED_MATERIAL.publicPath,
+        })
+      )
+    );
+    const byIdentity = await target.query((ctx) =>
+      runConvexProgram(loadContentTarget(ctx, input))
+    );
+
+    expect(byPath).toMatchObject({
+      contentKey: PUBLISHED_MATERIAL.contentKey,
+      content_id: PUBLISHED_MATERIAL.graph.assetId,
+      route: PUBLISHED_MATERIAL.publicPath,
+    });
+    expect(byIdentity).toEqual(byPath);
+  });
+
+  it("does not revive an exact-owned material tombstone by asset identity", async () => {
+    const target = convexTest(schema, convexModules);
+    await insertLegacyMaterialTarget(target);
+    await activateMaterialCatalog(target, [PUBLISHED_MATERIAL]);
+    await selectExactMaterial(target, PUBLISHED_MATERIAL);
+    await target.mutation(async (ctx) => {
+      const binding = await ctx.db
+        .query("contentBindings")
+        .withIndex("by_locale_and_publicPath_and_sequence_and_index", (index) =>
+          index
+            .eq("locale", PUBLISHED_MATERIAL.locale)
+            .eq("publicPath", PUBLISHED_MATERIAL.publicPath)
+            .eq("sequence", MATERIAL_IDENTITY.sequence)
+        )
+        .unique();
+      const material = await ctx.db
+        .query("materialCatalog")
+        .withIndex("by_contentKey_and_locale", (index) =>
+          index
+            .eq("contentKey", PUBLISHED_MATERIAL.contentKey)
+            .eq("locale", PUBLISHED_MATERIAL.locale)
+        )
+        .unique();
+      if (!(binding && material)) {
+        throw new Error("Expected active material fixture rows.");
+      }
+      await ctx.db.delete("contentBindings", binding._id);
+      await ctx.db.delete("materialCatalog", material._id);
+    });
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          loadContentTarget(ctx, {
+            contentId: PUBLISHED_MATERIAL.graph.assetId,
+            locale: PUBLISHED_MATERIAL.locale,
+            section: "material",
+          })
+        )
+      )
+    ).resolves.toBeNull();
+  });
+
   it("resolves a legacy material view to its renamed active route", async () => {
     const target = convexTest(schema, convexModules);
     await insertLegacyMaterialTarget(target);
     await activateMaterialCatalog(target, [RENAMED_MATERIAL]);
-
     await expect(
       target.query((ctx) =>
         runConvexProgram(
@@ -244,14 +286,13 @@ describe("contents/views/target", () => {
 
   it("does not revive stale material routes after ownership activates", async () => {
     const target = convexTest(schema, convexModules);
-    const graph = await insertSourceTarget(target);
+    const contentId = await insertSourceTarget(target);
     await activateMaterialCatalog(target, [PUBLISHED_MATERIAL]);
-
     await expect(
       target.query((ctx) =>
         runConvexProgram(
           loadContentTarget(ctx, {
-            contentId: graph.assetId,
+            contentId,
             locale: "en",
             publicPath: SOURCE_PATH,
             section: "material",
@@ -278,7 +319,6 @@ describe("contents/views/target", () => {
     await target.mutation((ctx) =>
       insertRuntimeArticles(ctx, 1, () => projection)
     );
-
     await expect(
       target.query((ctx) =>
         runConvexProgram(
@@ -301,7 +341,6 @@ describe("contents/views/target", () => {
   it("resolves a legacy article view through its stable source identity", async () => {
     const target = convexTest(schema, convexModules);
     const projection = await insertLegacyArticleTarget(target);
-
     await expect(
       target.query((ctx) =>
         runConvexProgram(
@@ -322,7 +361,6 @@ describe("contents/views/target", () => {
     const target = convexTest(schema, convexModules);
     const projection = makeMaterialProjection("en", 1);
     await activateMaterialCatalog(target, [projection]);
-
     await expect(
       target.query((ctx) =>
         runConvexProgram(

@@ -10,6 +10,10 @@ import {
   readMaterialSitemap,
 } from "@repo/backend/convex/contentRelease/material/sitemap";
 import {
+  materialSourceCandidateValidator,
+  materialSourceClaimValidator,
+} from "@repo/backend/convex/contentRelease/material/spec";
+import {
   localeValidator,
   rendererDomainValidator,
 } from "@repo/backend/convex/contentRelease/spec";
@@ -24,10 +28,12 @@ const materialModelValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),
   activeReleaseId: v.union(v.string(), v.null()),
   alternateJson: v.array(v.string()),
+  familyManaged: v.boolean(),
   managed: v.boolean(),
   projectionJson: v.union(v.string(), v.null()),
   rendererDomain: v.union(rendererDomainValidator, v.null()),
   siblingJson: v.array(v.string()),
+  sourceClaims: v.array(materialSourceClaimValidator),
   sourcePath: v.union(v.string(), v.null()),
   sourceRevision: v.union(v.string(), v.null()),
 });
@@ -95,10 +101,16 @@ export const latest = query({
 
 /** Resolves one complete active material shell model by localized path. */
 export const route = query({
-  args: { locale: localeValidator, publicPath: v.string() },
+  args: {
+    locale: localeValidator,
+    publicPath: v.string(),
+    sourceCandidates: v.optional(v.array(materialSourceCandidateValidator)),
+  },
   returns: materialModelValidator,
-  handler: (ctx, { locale, publicPath }) =>
-    runConvexProgram(readMaterialModel(ctx, locale, publicPath)),
+  handler: (ctx, { locale, publicPath, sourceCandidates = [] }) =>
+    runConvexProgram(
+      readMaterialModel(ctx, locale, publicPath, sourceCandidates)
+    ),
 });
 
 /** Returns non-empty material discovery partitions for one locale. */

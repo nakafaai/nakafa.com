@@ -93,3 +93,27 @@ export async function activateMaterialCatalog(
     }
   });
 }
+
+/** Limits active ownership to one exact material without changing its catalog. */
+export async function selectExactMaterial(
+  target: TestConvex<typeof schema>,
+  projection: MaterialLessonProjection
+) {
+  await target.mutation(async (ctx) => {
+    const release = await ctx.db.query("contentReleases").unique();
+    if (!release) {
+      throw new Error("Expected one active material release.");
+    }
+    await ctx.db.patch("contentReleases", release._id, {
+      resultFamilies: ["article"],
+    });
+    await ctx.db.insert("contentOwners", {
+      contentKey: projection.contentKey,
+      family: "material",
+      locale: projection.locale,
+      managed: true,
+      releaseId: MATERIAL_IDENTITY.releaseId,
+      sequence: MATERIAL_IDENTITY.sequence,
+    });
+  });
+}
