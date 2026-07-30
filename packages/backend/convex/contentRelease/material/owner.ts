@@ -1,6 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
@@ -11,20 +12,11 @@ type ActiveIdentity = Exclude<
   null
 >;
 
-/** Checks whether the active material read model matches one release. */
-function isMaterialStateReady(active: ActiveIdentity) {
-  return (
-    active.state.materialManifestHash === active.manifestHash &&
-    active.state.materialReleaseId === active.releaseId &&
-    active.state.materialSequence === active.sequence
-  );
-}
-
 /** Requires the active material read model to match its publication identity. */
 export const requireMaterialState = Effect.fn(
   "contentRelease.requireMaterialState"
 )(function* (active: ActiveIdentity, locale: Doc<"contentKeys">["locale"]) {
-  if (!isMaterialStateReady(active)) {
+  if (!hasMaterialReadModel(active)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
       `Materials for ${locale} in active release ${active.releaseId} are still synchronizing.`
@@ -42,7 +34,7 @@ export const loadMaterialCatalogOwner = Effect.fn(
   }
   const families = yield* loadReleaseFamilies(active.release);
   const familyManaged = families.result.includes("material");
-  const ready = isMaterialStateReady(active);
+  const ready = hasMaterialReadModel(active);
   if (familyManaged && !ready) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",

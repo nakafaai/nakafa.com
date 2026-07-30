@@ -5,10 +5,9 @@ import {
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { readExactMaterialSnapshot } from "@repo/backend/convex/contentRelease/material/exact";
 import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { readMaterialPartition } from "@repo/backend/convex/contentRelease/material/partition";
-import { readVisibleMaterial } from "@repo/backend/convex/contentRelease/material/route";
-import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { Effect } from "effect";
 
 /** Lists non-empty deterministic partitions for visible published materials. */
@@ -23,23 +22,11 @@ export const readMaterialBuckets = Effect.fn(
     return { buckets: [], managed: false, materialCount: 0 };
   }
   if (!owner.familyManaged) {
-    const catalog = yield* Effect.promise(() =>
-      ctx.db
-        .query("materialCatalog")
-        .withIndex("by_locale_and_date_and_contentKey", (index) =>
-          index.eq("locale", locale)
-        )
-        .take(EXACT_SCOPE_LIMIT + 1)
+    const { materials: visible } = yield* readExactMaterialSnapshot(
+      ctx,
+      owner.active,
+      locale
     );
-    if (catalog.length > EXACT_SCOPE_LIMIT) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_LIMIT",
-        `Partial material discovery for ${locale} exceeds ${EXACT_SCOPE_LIMIT} exact identities.`
-      );
-    }
-    const visible = (yield* Effect.forEach(catalog, (row) =>
-      readVisibleMaterial(ctx, row, false)
-    )).filter((material) => material !== null);
     return {
       buckets: Array.from(new Set(visible.map(({ row }) => row.bucket))).sort(),
       managed: false,

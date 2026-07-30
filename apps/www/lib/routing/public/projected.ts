@@ -3,7 +3,6 @@ import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale } from "next-intl";
 import { readPublishedMaterialClaims } from "@/lib/content/material/ownership";
-import { readMaterialSource } from "@/lib/content/material/shell";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
@@ -66,22 +65,6 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     if (ownership.kind === "missing") {
       return locale;
     }
-    const source = readMaterialSource(locale, publicPath);
-    if (source.route) {
-      const claims = yield* readPublishedMaterialClaims(
-        locale,
-        source.candidates
-      );
-      if (
-        claims.some(
-          (claim) =>
-            claim.contentKey === source.route.sourcePath &&
-            claim.locale === source.route.locale
-        )
-      ) {
-        return locale;
-      }
-    }
   }
   if (surface.key === "curriculum") {
     const ownership = yield* readPublishedProgramPath(locale, publicPath);
@@ -89,15 +72,23 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
       return ownership.route?.sitemap ? null : locale;
     }
   }
-
   const route = yield* getRuntimePublicRoute({ locale, publicPath });
-
+  if (surface.key === "subject") {
+    if (route?.kind !== "subject-lesson" || !route.sourcePath) {
+      return locale;
+    }
+    const claims = yield* readPublishedMaterialClaims(locale, [
+      { contentKey: route.sourcePath, locale: route.locale },
+    ]);
+    return claims.some(
+      (claim) =>
+        claim.contentKey === route.sourcePath && claim.locale === route.locale
+    )
+      ? locale
+      : null;
+  }
   if (!route) {
     return locale;
-  }
-
-  if (surface.key === "subject") {
-    return route.kind === "subject-lesson" ? null : locale;
   }
 
   if (surface.key === "curriculum") {

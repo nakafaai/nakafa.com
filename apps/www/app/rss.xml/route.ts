@@ -144,19 +144,30 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
     locale,
     RSS_CONTENT_ROUTE_LIMIT
   );
-  if (!published.managed) {
-    return yield* listRuntimeLatestContentRoutes({
-      limit: RSS_CONTENT_ROUTE_LIMIT,
-      locale,
-      section: "material",
-    });
-  }
-  return published.materials.map((material) => ({
+  const publishedRoutes = published.materials.map((material) => ({
     authors: material.authors,
     date: Date.parse(`${material.date}T00:00:00.000Z`),
     description: material.description,
     locale,
     route: material.publicPath,
+    sourcePath: material.sourcePath,
     title: material.title,
   }));
+  if (published.managed) {
+    return publishedRoutes;
+  }
+  const claimedContentKeys = new Set<string>(published.claimedContentKeys);
+  const sourceRoutes = yield* listRuntimeLatestContentRoutes({
+    limit: RSS_CONTENT_ROUTE_LIMIT,
+    locale,
+    section: "material",
+  });
+  return [
+    ...publishedRoutes,
+    ...sourceRoutes.filter(
+      ({ sourcePath }) => !claimedContentKeys.has(sourcePath)
+    ),
+  ]
+    .sort((left, right) => (right.date ?? 0) - (left.date ?? 0))
+    .slice(0, RSS_CONTENT_ROUTE_LIMIT);
 });

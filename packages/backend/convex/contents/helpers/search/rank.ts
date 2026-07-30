@@ -16,6 +16,30 @@ const searchTokenPattern = /[\p{L}\p{N}]+/gu;
 const numericTokenPattern = /^\p{N}+$/u;
 const routeSeparatorPattern = /[/_-]+/g;
 
+/**
+ * Matches the documented full-text semantics for a bounded in-memory row set.
+ *
+ * Every term except the last must match one complete token. The final term
+ * may match a token prefix, mirroring Convex search-as-you-type behavior.
+ *
+ * @see https://docs.convex.dev/search/text-search
+ */
+export function matchesContentSearchQuery(text: string, queryText: string) {
+  const queryTokens = tokenizeSearchText(queryText);
+  if (queryTokens.length === 0) {
+    return false;
+  }
+  const textTokens = new Set(tokenizeSearchText(text));
+  return queryTokens.every((token, index) => {
+    if (index < queryTokens.length - 1) {
+      return textTokens.has(token);
+    }
+    return Array.from(textTokens).some((candidate) =>
+      candidate.startsWith(token)
+    );
+  });
+}
+
 /** Re-ranks bounded search candidates by direct query-token evidence. */
 export function rankContentSearchDocuments<
   Document extends ContentSearchRankDocument,

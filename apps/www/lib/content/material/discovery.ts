@@ -1,7 +1,11 @@
 import "server-only";
 
 import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  ContentKeySchema,
+  CorpusSourcePathSchema,
+  PublicPathSchema,
+} from "@nakafa/aksara-contracts/ids";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -22,15 +26,17 @@ export interface PublishedMaterialSummary {
   readonly date: typeof DateOnlySchema.Type;
   readonly description: string | undefined;
   readonly publicPath: typeof PublicPathSchema.Type;
+  readonly sourcePath: typeof CorpusSourcePathSchema.Type;
   readonly title: string;
 }
 
 /** Decodes one backend-verified material discovery row. */
 const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
   function* (summary: MaterialSummary, locale: Locale) {
-    const [date, publicPath] = yield* Effect.all([
+    const [date, publicPath, sourcePath] = yield* Effect.all([
       Schema.decodeUnknown(DateOnlySchema)(summary.date),
       Schema.decodeUnknown(PublicPathSchema)(summary.publicPath),
+      Schema.decodeUnknown(CorpusSourcePathSchema)(summary.sourcePath),
     ]).pipe(
       Effect.mapError(
         () =>
@@ -45,6 +51,7 @@ const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
       date,
       description: summary.description,
       publicPath,
+      sourcePath,
       title: summary.title,
     } satisfies PublishedMaterialSummary;
   }
@@ -76,5 +83,20 @@ export const readPublishedLatestMaterials = Effect.fn(
   const materials = yield* Effect.forEach(result.materials, (summary) =>
     decodeMaterialSummary(summary, locale)
   );
-  return { managed: result.managed, materials };
+  const claimedContentKeys = yield* Schema.decodeUnknown(
+    Schema.Array(ContentKeySchema)
+  )(result.claimedContentKeys).pipe(
+    Effect.mapError(
+      () =>
+        new PublishedProjectionError({
+          locale,
+          publicPath: "materials",
+        })
+    )
+  );
+  return {
+    claimedContentKeys,
+    managed: result.managed,
+    materials,
+  };
 });

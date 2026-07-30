@@ -26,7 +26,7 @@ export const readMaterialPartition = Effect.fn(
   }
   const owner = yield* loadMaterialCatalogOwner(ctx);
   if (!(owner.active && owner.ready)) {
-    return { kind: "unmanaged" as const };
+    return { kind: "unmanaged" } satisfies { readonly kind: "unmanaged" };
   }
   const count = yield* Effect.promise(() =>
     ctx.db
@@ -37,7 +37,7 @@ export const readMaterialPartition = Effect.fn(
       .unique()
   );
   if (!count) {
-    return { kind: "missing" as const };
+    return { kind: "missing" } satisfies { readonly kind: "missing" };
   }
   const rows = yield* Effect.promise(() =>
     ctx.db
@@ -58,11 +58,21 @@ export const readMaterialPartition = Effect.fn(
     );
   }
   const materials = owner.familyManaged
-    ? yield* Effect.forEach(rows, verifyMaterial)
+    ? yield* Effect.forEach(rows, (row) =>
+        verifyMaterial(row).pipe(
+          Effect.map((verified) => ({ ...verified, row }))
+        )
+      )
     : (yield* Effect.forEach(rows, (row) =>
         readVisibleMaterial(ctx, row, false)
       )).filter((material) => material !== null);
   return materials.length === 0
-    ? { kind: "missing" as const }
-    : { kind: "found" as const, materials };
+    ? ({ kind: "missing" } satisfies { readonly kind: "missing" })
+    : ({
+        kind: "found",
+        materials,
+      } satisfies {
+        readonly kind: "found";
+        readonly materials: typeof materials;
+      });
 });

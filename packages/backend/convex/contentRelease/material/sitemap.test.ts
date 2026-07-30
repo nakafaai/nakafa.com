@@ -8,6 +8,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   activateMaterialCatalog,
+  insertMaterialProjection,
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
@@ -81,6 +82,36 @@ describe("contentRelease/material/sitemap", () => {
         publicPath: selected.publicPath,
       },
     ]);
+  });
+
+  it("lists one exact owner beyond the former catalog scan window", async () => {
+    const target = convexTest(schema, convexModules);
+    const selected = makeMaterialProjection("en", 1, 66);
+    const unowned = Array.from({ length: 65 }, (_, index) =>
+      makeMaterialProjection("en", index + 1, index + 1)
+    );
+    await activateMaterialCatalog(target, unowned);
+    await target.mutation((ctx) => insertMaterialProjection(ctx, selected));
+    await selectExactMaterial(target, selected);
+
+    const result = await target.query((ctx) =>
+      runConvexProgram(readMaterialBuckets(ctx, "en"))
+    );
+
+    expect(result).toMatchObject({ managed: false, materialCount: 1 });
+    expect(result.buckets).toHaveLength(1);
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(readMaterialSitemap(ctx, "en", result.buckets[0]))
+      )
+    ).resolves.toEqual({
+      routes: [
+        {
+          date: selected.metadata.date,
+          publicPath: selected.publicPath,
+        },
+      ],
+    });
   });
 
   it("rejects malformed stored partition metadata", async () => {

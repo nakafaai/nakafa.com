@@ -57,7 +57,11 @@ describe("rss route", () => {
       Effect.succeed({ articles: [], managed: false })
     );
     mockReadPublishedLatestMaterials.mockReturnValue(
-      Effect.succeed({ managed: false, materials: [] })
+      Effect.succeed({
+        claimedContentKeys: [],
+        managed: false,
+        materials: [],
+      })
     );
     mockListRuntimeLatestContentRoutes.mockImplementation(({ section }) =>
       Effect.succeed(
@@ -131,6 +135,7 @@ describe("rss route", () => {
   it("replaces source-backed materials after published ownership activates", async () => {
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
+        claimedContentKeys: [],
         managed: true,
         materials: [
           {
@@ -150,6 +155,71 @@ describe("rss route", () => {
     expect(text).toContain("<![CDATA[Function Concept]]>");
     expect(mockListRuntimeLatestContentRoutes).not.toHaveBeenCalledWith(
       expect.objectContaining({ section: "material" })
+    );
+  });
+
+  it("merges exact material ownership without stale source routes", async () => {
+    const sourcePath =
+      "material/lesson/mathematics/function-composition-inverse-function/function-concept";
+    mockReadPublishedLatestMaterials.mockReturnValue(
+      Effect.succeed({
+        claimedContentKeys: [sourcePath],
+        managed: false,
+        materials: [
+          {
+            authors: [{ name: "Nakafa" }],
+            date: "2026-07-24",
+            description:
+              "Understand functions as magic machines with interactive examples. Learn f(x) notation, input-output relationships, and the one-to-one rule.",
+            publicPath:
+              "subjects/mathematics/function-composition-inverse-function/function-concept",
+            sourcePath,
+            title: "Function Concept",
+          },
+        ],
+      })
+    );
+    mockListRuntimeLatestContentRoutes.mockImplementation(({ section }) =>
+      Effect.succeed(
+        section === "material"
+          ? [
+              {
+                authors: [{ name: "Nakafa" }],
+                locale: "en",
+                route: "subjects/mathematics/undated/concept",
+                sourcePath: "material/lesson/mathematics/undated/concept",
+                title: "Undated Material",
+              },
+              {
+                authors: [{ name: "Nakafa" }],
+                date: Date.parse("2026-07-23T00:00:00.000Z"),
+                locale: "en",
+                route:
+                  "subjects/mathematics/function-composition-inverse-function/old-function-concept",
+                sourcePath,
+                title: "Function Concept",
+              },
+              {
+                authors: [{ name: "Nakafa" }],
+                date: Date.parse("2026-07-22T00:00:00.000Z"),
+                locale: "en",
+                route: "subjects/mathematics/logarithms/definition",
+                sourcePath: "material/lesson/mathematics/logarithms/definition",
+                title: "Logarithm Definition",
+              },
+            ]
+          : []
+      )
+    );
+
+    const text = await (await GET()).text();
+
+    expect(text).toContain(
+      "subjects/mathematics/function-composition-inverse-function/function-concept"
+    );
+    expect(text).toContain("<![CDATA[Logarithm Definition]]>");
+    expect(text).not.toContain(
+      "subjects/mathematics/function-composition-inverse-function/old-function-concept"
     );
   });
 });

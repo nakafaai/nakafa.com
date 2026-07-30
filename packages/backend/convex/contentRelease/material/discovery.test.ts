@@ -20,7 +20,11 @@ describe("contentRelease/material/discovery", () => {
     ).resolves.toEqual({ managed: false, materials: null });
     await expect(
       target.query((ctx) => runConvexProgram(readLatestMaterials(ctx, "en", 2)))
-    ).resolves.toEqual({ managed: false, materials: [] });
+    ).resolves.toEqual({
+      claimedContentKeys: [],
+      managed: false,
+      materials: [],
+    });
     for (const limit of [0, 101, 1.5]) {
       await expect(
         target.query((ctx) =>

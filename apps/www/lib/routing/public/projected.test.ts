@@ -6,7 +6,6 @@ import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected"
 const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
-const mockReadMaterialSource = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialClaims = vi.hoisted(() => vi.fn());
 const mockReadPublishedProgramPath = vi.hoisted(() => vi.fn());
 const mockMatchesPreviewRoute = vi.hoisted(() => vi.fn());
@@ -17,9 +16,6 @@ vi.mock("@/lib/content/preview/route", () => ({
 }));
 vi.mock("@/lib/content/material/ownership", () => ({
   readPublishedMaterialClaims: mockReadPublishedMaterialClaims,
-}));
-vi.mock("@/lib/content/material/shell", () => ({
-  readMaterialSource: mockReadMaterialSource,
 }));
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimePublicRoute: mockGetRuntimePublicRoute,
@@ -37,6 +33,7 @@ vi.mock("@/lib/content/program/path", () => ({
 describe("projected public html route rejection", () => {
   beforeEach(() => {
     mockGetRuntimePublicRoute.mockReset();
+    mockGetRuntimePublicRoute.mockReturnValue(Effect.succeed(null));
     mockReadActiveContentRoute.mockReset();
     mockReadActiveContentRoute.mockReturnValue(
       Effect.succeed({ activeReleaseId, kind: "unmanaged" })
@@ -49,10 +46,6 @@ describe("projected public html route rejection", () => {
       .mockReturnValue(Effect.succeed({ managed: false, route: null }));
     mockMatchesPreviewRoute.mockReset();
     mockMatchesPreviewRoute.mockReturnValue(Effect.succeed(false));
-    mockReadMaterialSource.mockReset().mockReturnValue({
-      candidates: [],
-      route: undefined,
-    });
     mockReadPublishedMaterialClaims
       .mockReset()
       .mockReturnValue(Effect.succeed([]));
@@ -86,7 +79,18 @@ describe("projected public html route rejection", () => {
 
     for (const [pathname, kind] of paths) {
       mockGetRuntimePublicRoute.mockReturnValueOnce(
-        Effect.succeed({ kind, sitemap: true })
+        Effect.succeed({
+          kind,
+          locale: pathname.startsWith("/id/") ? "id" : "en",
+          publicPath: pathname.split("/").slice(2).join("/"),
+          sitemap: true,
+          ...(kind === "subject-lesson"
+            ? {
+                sourcePath:
+                  "material/lesson/chemistry/green-chemistry/definition",
+              }
+            : {}),
+        })
       );
 
       await expect(
@@ -145,19 +149,15 @@ describe("projected public html route rejection", () => {
 
   it("hard-rejects a source path claimed by one exact material owner", async () => {
     const publicPath = "subjects/mathematics/functions/old-concept";
-    mockReadMaterialSource.mockReturnValueOnce({
-      candidates: [
-        {
-          contentKey: "material/lesson/mathematics/functions/concept",
-          locale: "en",
-          parentPath: "subjects/mathematics/functions",
-        },
-      ],
-      route: {
+    mockGetRuntimePublicRoute.mockReturnValueOnce(
+      Effect.succeed({
+        kind: "subject-lesson",
         locale: "en",
+        publicPath,
+        sitemap: true,
         sourcePath: "material/lesson/mathematics/functions/concept",
-      },
-    });
+      })
+    );
     mockReadPublishedMaterialClaims.mockReturnValueOnce(
       Effect.succeed([
         {
@@ -171,7 +171,13 @@ describe("projected public html route rejection", () => {
     await expect(
       Effect.runPromise(readProjectedHtmlRouteRejection(`/en/${publicPath}`))
     ).resolves.toBe("en");
-    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+    expect(mockGetRuntimePublicRoute).toHaveBeenCalledTimes(1);
+    expect(mockReadPublishedMaterialClaims).toHaveBeenCalledWith("en", [
+      {
+        contentKey: "material/lesson/mathematics/functions/concept",
+        locale: "en",
+      },
+    ]);
   });
 
   it("keys unmanaged ownership to the absence of an active release", async () => {
@@ -180,7 +186,13 @@ describe("projected public html route rejection", () => {
       Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
     );
     mockGetRuntimePublicRoute.mockReturnValueOnce(
-      Effect.succeed({ kind: "subject-lesson", sitemap: true })
+      Effect.succeed({
+        kind: "subject-lesson",
+        locale: "en",
+        publicPath: "subjects/chemistry/green-chemistry/definition",
+        sitemap: true,
+        sourcePath: "material/lesson/chemistry/green-chemistry/definition",
+      })
     );
 
     await expect(

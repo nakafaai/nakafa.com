@@ -100,6 +100,9 @@ describe("readContentSearchDocuments", () => {
       }
       await ctx.db.patch("contentState", state._id, {
         materialManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+        materialOwnerManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+        materialOwnerReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+        materialOwnerSequence: TEST_RUNTIME_RELEASE.sequence,
         materialReleaseId: TEST_RUNTIME_RELEASE.releaseId,
         materialSequence: TEST_RUNTIME_RELEASE.sequence,
         searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
@@ -214,6 +217,9 @@ describe("readContentSearchDocuments", () => {
         searchReleaseId: MATERIAL_IDENTITY.releaseId,
         searchSequence: MATERIAL_IDENTITY.sequence,
         materialManifestHash: undefined,
+        materialOwnerManifestHash: undefined,
+        materialOwnerReleaseId: undefined,
+        materialOwnerSequence: undefined,
         materialReleaseId: undefined,
         materialSequence: undefined,
       });
@@ -250,6 +256,9 @@ describe("readContentSearchDocuments", () => {
       }
       await ctx.db.patch("contentState", state._id, {
         materialManifestHash: MATERIAL_IDENTITY.manifestHash,
+        materialOwnerManifestHash: MATERIAL_IDENTITY.manifestHash,
+        materialOwnerReleaseId: MATERIAL_IDENTITY.releaseId,
+        materialOwnerSequence: MATERIAL_IDENTITY.sequence,
         materialReleaseId: MATERIAL_IDENTITY.releaseId,
         materialSequence: MATERIAL_IDENTITY.sequence,
       });
@@ -348,6 +357,11 @@ describe("readContentSearchDocuments", () => {
     await activateMaterialCatalog(t, [projection]);
     await selectExactMaterial(t, projection);
     await t.mutation(async (ctx) => {
+      await insertRuntimeIndex(ctx, projection.contentKey, {
+        headSequence: MATERIAL_IDENTITY.sequence,
+        locale: projection.locale,
+        plainText: "claimed source material",
+      });
       await insertContentSearch(ctx, {
         contentHash: "claimed-source-first",
         description: "",
@@ -387,23 +401,24 @@ describe("readContentSearchDocuments", () => {
         readContentSearchDocuments(
           ctx,
           {
-            limit: 1,
+            limit: 2,
             locale: projection.locale,
             offset: 0,
             queries: [],
             section: "material",
           },
           [],
-          1
+          2
         )
       )
     );
 
     expect(documents).toMatchObject([
       {
+        route: projection.publicPath,
         section: "material",
-        title: "B unclaimed material",
       },
+      { section: "material", title: "B unclaimed material" },
     ]);
   });
 

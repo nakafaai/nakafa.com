@@ -2,10 +2,16 @@ import { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
 import { readPublishedSearchDocuments } from "@repo/backend/convex/contents/helpers/search/published";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content-runtime";
+import {
+  activateMaterialCatalog,
+  MATERIAL_IDENTITY,
+  selectExactMaterial,
+} from "@repo/backend/test/material-catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
 import { describe, expect, it } from "vitest";
@@ -110,5 +116,78 @@ describe("readPublishedSearchDocuments", () => {
     expect(new Set(documents.map((document) => document.content_id)).size).toBe(
       documents.length
     );
+  });
+
+  it("browses every exact material owner beyond the full-family window", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const unowned = Array.from({ length: 40 }, (_, index) =>
+      makeMaterialProjection("en", 1, index + 1)
+    );
+    const first = makeMaterialProjection("en", 1, 998);
+    const second = makeMaterialProjection("en", 2, 999);
+    const projections = [...unowned, first, second];
+    await activateMaterialCatalog(t, projections);
+    await selectExactMaterial(t, first);
+    await selectExactMaterial(t, second);
+    await t.mutation(async (ctx) => {
+      for (const projection of projections) {
+        await insertRuntimeIndex(ctx, projection.contentKey, {
+          headSequence: MATERIAL_IDENTITY.sequence,
+          locale: projection.locale,
+          plainText: "bounded published material",
+        });
+      }
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        expect.fail("Expected one active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        searchManifestHash: MATERIAL_IDENTITY.manifestHash,
+        searchReleaseId: MATERIAL_IDENTITY.releaseId,
+        searchSequence: MATERIAL_IDENTITY.sequence,
+      });
+    });
+    const formerWindow = await t.run((ctx) =>
+      ctx.db
+        .query("contentIndex")
+        .withIndex("by_locale_and_family_and_publicPath", (index) =>
+          index.eq("locale", "en").eq("family", "material")
+        )
+        .take(32)
+    );
+    expect(
+      formerWindow.some(({ contentKey }) => contentKey === first.contentKey)
+    ).toBe(false);
+    expect(
+      formerWindow.some(({ contentKey }) => contentKey === second.contentKey)
+    ).toBe(false);
+
+    const documents = await t.query(async (ctx) => {
+      const owner = await runConvexProgram(loadSearchOwner(ctx));
+      if (!owner) {
+        expect.fail("Expected one active search owner.");
+      }
+      return runConvexProgram(
+        readPublishedSearchDocuments(
+          ctx,
+          {
+            limit: 2,
+            locale: "en",
+            offset: 0,
+            queries: [],
+            section: "material",
+          },
+          [],
+          2,
+          owner,
+          ["material"]
+        )
+      );
+    });
+
+    expect(documents.map(({ route }) => route)).toEqual([
+      first.publicPath,
+      second.publicPath,
+    ]);
   });
 });

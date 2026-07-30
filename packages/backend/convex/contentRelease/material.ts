@@ -57,10 +57,12 @@ const materialSummaryValidator = v.object({
   date: v.string(),
   description: v.optional(v.string()),
   publicPath: v.string(),
+  sourcePath: v.string(),
   title: v.string(),
 });
 
 const materialDiscoveryValidator = v.object({
+  claimedContentKeys: v.array(v.string()),
   managed: v.boolean(),
   materials: v.array(materialSummaryValidator),
 });
