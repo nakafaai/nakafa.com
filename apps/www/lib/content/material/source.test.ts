@@ -39,6 +39,10 @@ describe("material source reconciliation", () => {
                 title: sourceRoute.title,
               },
               {
+                href: `/en/${sourceRoute.publicPath}?from=another-program`,
+                title: sourceRoute.title,
+              },
+              {
                 href: `/id/${idRoute.publicPath}`,
                 title: idRoute.title,
               },

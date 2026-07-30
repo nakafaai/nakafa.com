@@ -16,6 +16,18 @@ interface ActiveMaterialIdentity {
   readonly sequence: number;
 }
 
+type MaterialOwnerRelease = Pick<
+  Doc<"contentReleases">,
+  "releaseId" | "resultFamilies" | "sequence"
+>;
+
+/** Returns one stable identity shared by stored and staged material owners. */
+function materialOwnerIdentity(
+  owner: Pick<Doc<"materialOwners">, "contentKey" | "locale">
+) {
+  return `${owner.locale}\0${owner.contentKey}`;
+}
+
 /** Loads the current exact material owner for one stable content identity. */
 const loadStoredOwner = Effect.fn("contentRelease.loadStoredMaterialOwner")(
   function* (ctx: MutationCtx, contentKey: string, locale: ContentLocale) {
@@ -70,6 +82,87 @@ export const syncExactMaterialOwner = Effect.fn(
   yield* Effect.promise(() => ctx.db.insert("materialOwners", row));
 });
 
+/** Builds the bounded exact-owner plan that one release would activate. */
+const buildExactMaterialOwnerPlan = Effect.fn(
+  "contentRelease.buildExactMaterialOwnerPlan"
+)(function* (ctx: MutationCtx, release: MaterialOwnerRelease) {
+  const [stored, transitions] = yield* Effect.all([
+    Effect.promise(() =>
+      ctx.db.query("materialOwners").take(EXACT_SCOPE_LIMIT + 1)
+    ),
+    Effect.promise(() =>
+      ctx.db
+        .query("contentOwners")
+        .withIndex("by_releaseId_and_contentKey_and_locale", (index) =>
+          index.eq("releaseId", release.releaseId)
+        )
+        .take(EXACT_SCOPE_LIMIT + 1)
+    ),
+  ]);
+  if (stored.length > EXACT_SCOPE_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Active material ownership exceeds ${EXACT_SCOPE_LIMIT} exact identities.`
+    );
+  }
+  if (transitions.length > EXACT_SCOPE_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Release ${release.releaseId} exceeds ${EXACT_SCOPE_LIMIT} exact ownership transitions.`
+    );
+  }
+  if (release.resultFamilies.includes("material")) {
+    return {
+      expected: new Map<
+        string,
+        { contentKey: string; locale: ContentLocale }
+      >(),
+      reconcile: stored,
+      stored,
+    };
+  }
+  const materialTransitions = transitions.filter(
+    (transition) => transition.family === "material"
+  );
+  const expected = new Map(
+    stored.map(({ contentKey, locale }) => [
+      materialOwnerIdentity({ contentKey, locale }),
+      { contentKey, locale },
+    ])
+  );
+  for (const transition of materialTransitions) {
+    const identity = materialOwnerIdentity(transition);
+    if (transition.managed) {
+      expected.set(identity, {
+        contentKey: transition.contentKey,
+        locale: transition.locale,
+      });
+      continue;
+    }
+    expected.delete(identity);
+  }
+  if (expected.size > EXACT_SCOPE_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Release ${release.releaseId} would exceed ${EXACT_SCOPE_LIMIT} exact material owners.`
+    );
+  }
+  const reconcile = new Map(
+    [...stored, ...materialTransitions].map(({ contentKey, locale }) => [
+      materialOwnerIdentity({ contentKey, locale }),
+      { contentKey, locale },
+    ])
+  );
+  return { expected, reconcile: Array.from(reconcile.values()), stored };
+});
+
+/** Rejects an exact material projection that cannot synchronize after activation. */
+export const validateExactMaterialOwnerScope = Effect.fn(
+  "contentRelease.validateExactMaterialOwnerScope"
+)(function* (ctx: MutationCtx, release: MaterialOwnerRelease) {
+  yield* buildExactMaterialOwnerPlan(ctx, release);
+});
+
 /** Loads the bounded current exact material ownership projection. */
 export const loadExactMaterialOwners = Effect.fn(
   "contentRelease.loadExactMaterialOwners"
@@ -112,58 +205,27 @@ export const loadExactMaterialOwners = Effect.fn(
 /** Finalizes one bounded exact material owner snapshot after model sync. */
 export const finalizeExactMaterialOwners = Effect.fn(
   "contentRelease.finalizeExactMaterialOwners"
-)(function* (
-  ctx: MutationCtx,
-  release: Pick<
-    Doc<"contentReleases">,
-    "releaseId" | "resultFamilies" | "sequence"
-  >
-) {
-  const stored = yield* Effect.promise(() =>
-    ctx.db.query("materialOwners").take(EXACT_SCOPE_LIMIT + 1)
-  );
-  if (stored.length > EXACT_SCOPE_LIMIT) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_LIMIT",
-      `Active material ownership exceeds ${EXACT_SCOPE_LIMIT} exact identities.`
-    );
-  }
+)(function* (ctx: MutationCtx, release: MaterialOwnerRelease) {
+  const plan = yield* buildExactMaterialOwnerPlan(ctx, release);
   if (release.resultFamilies.includes("material")) {
-    for (const owner of stored) {
+    for (const owner of plan.stored) {
       yield* Effect.promise(() => ctx.db.delete("materialOwners", owner._id));
     }
     return;
   }
-  const transitions = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentOwners")
-      .withIndex("by_releaseId_and_contentKey_and_locale", (index) =>
-        index.eq("releaseId", release.releaseId)
-      )
-      .take(EXACT_SCOPE_LIMIT + 1)
-  );
-  if (transitions.length > EXACT_SCOPE_LIMIT) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_LIMIT",
-      `Release ${release.releaseId} exceeds ${EXACT_SCOPE_LIMIT} exact ownership transitions.`
-    );
-  }
-  const ownersByIdentity = new Map(
-    [...stored, ...transitions].map(({ contentKey, locale }) => [
-      `${locale}\0${contentKey}`,
-      { contentKey, locale },
-    ])
-  );
-  for (const owner of ownersByIdentity.values()) {
+  for (const owner of plan.reconcile) {
     yield* syncExactMaterialOwner(ctx, owner.contentKey, owner.locale, release);
   }
   const finalized = yield* Effect.promise(() =>
     ctx.db.query("materialOwners").take(EXACT_SCOPE_LIMIT + 1)
   );
-  if (finalized.length > EXACT_SCOPE_LIMIT) {
+  if (
+    finalized.length !== plan.expected.size ||
+    finalized.some((owner) => !plan.expected.has(materialOwnerIdentity(owner)))
+  ) {
     return yield* releaseFail(
-      "CONTENT_RELEASE_LIMIT",
-      `Active material ownership exceeds ${EXACT_SCOPE_LIMIT} exact identities.`
+      "CONTENT_RELEASE_INTEGRITY",
+      `Release ${release.releaseId} did not finalize its exact material owners.`
     );
   }
 });

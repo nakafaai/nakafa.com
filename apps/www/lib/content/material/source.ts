@@ -20,28 +20,29 @@ export function readMaterialCardCandidates(
   routes: readonly PublicContentRoute[]
 ) {
   const pathPrefix = `/${locale}/`;
-  return cards.flatMap(({ items }) =>
-    items.flatMap(({ href }) => {
+  const candidates = new Map<string, MaterialSourceCandidate>();
+  for (const { items } of cards) {
+    for (const { href } of items) {
       const path = href.split("?")[0];
       if (!path.startsWith(pathPrefix)) {
-        return [];
+        continue;
       }
       const publicPath = path.slice(pathPrefix.length);
       const material = routes.find(
         (candidate) =>
           candidate.locale === locale && candidate.publicPath === publicPath
       );
-      return material && isMaterialLessonRoute(material)
-        ? [
-            {
-              contentKey: material.sourcePath,
-              locale: material.locale,
-              parentPath: material.parentPath,
-            } satisfies MaterialSourceCandidate,
-          ]
-        : [];
-    })
-  );
+      if (!(material && isMaterialLessonRoute(material))) {
+        continue;
+      }
+      candidates.set(`${material.locale}\0${material.sourcePath}`, {
+        contentKey: material.sourcePath,
+        locale: material.locale,
+        parentPath: material.parentPath,
+      });
+    }
+  }
+  return Array.from(candidates.values());
 }
 
 /**

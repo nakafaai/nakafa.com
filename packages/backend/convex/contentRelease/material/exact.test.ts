@@ -2,6 +2,7 @@ import {
   finalizeExactMaterialOwners,
   loadExactMaterialOwners,
   readExactMaterialSnapshot,
+  validateExactMaterialOwnerScope,
 } from "@repo/backend/convex/contentRelease/material/exact";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -21,6 +22,16 @@ describe("contentRelease/material/exact", () => {
     const selected = makeMaterialProjection("en", 1);
     await activateMaterialCatalog(target, [selected]);
     await selectExactMaterial(target, selected);
+    await target.mutation((ctx) =>
+      ctx.db.insert("contentOwners", {
+        contentKey: "article/test/exact-transition",
+        family: "article",
+        locale: "en",
+        managed: true,
+        releaseId: MATERIAL_IDENTITY.releaseId,
+        sequence: MATERIAL_IDENTITY.sequence,
+      })
+    );
     await target.mutation((ctx) =>
       runConvexProgram(
         finalizeExactMaterialOwners(ctx, {
@@ -43,7 +54,15 @@ describe("contentRelease/material/exact", () => {
     });
 
     await target.mutation(async (ctx) => {
-      const owner = await ctx.db.query("contentOwners").unique();
+      const owner = await ctx.db
+        .query("contentOwners")
+        .withIndex("by_contentKey_and_locale_and_sequence", (index) =>
+          index
+            .eq("contentKey", selected.contentKey)
+            .eq("locale", selected.locale)
+            .eq("sequence", MATERIAL_IDENTITY.sequence)
+        )
+        .unique();
       if (!owner) {
         expect.fail("Expected one exact content owner.");
       }
@@ -61,7 +80,15 @@ describe("contentRelease/material/exact", () => {
     ).resolves.toEqual([]);
 
     await target.mutation(async (ctx) => {
-      const owner = await ctx.db.query("contentOwners").unique();
+      const owner = await ctx.db
+        .query("contentOwners")
+        .withIndex("by_contentKey_and_locale_and_sequence", (index) =>
+          index
+            .eq("contentKey", selected.contentKey)
+            .eq("locale", selected.locale)
+            .eq("sequence", MATERIAL_IDENTITY.sequence)
+        )
+        .unique();
       if (!owner) {
         expect.fail("Expected one exact content owner.");
       }
@@ -118,6 +145,42 @@ describe("contentRelease/material/exact", () => {
     await expect(
       oversized.query((ctx) =>
         runConvexProgram(loadExactMaterialOwners(ctx, MATERIAL_IDENTITY, "en"))
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_LIMIT" },
+    });
+  });
+
+  it("rejects cumulative exact material overflow before activation", async () => {
+    const target = convexTest(schema, convexModules);
+    await target.mutation(async (ctx) => {
+      for (let index = 0; index < 64; index += 1) {
+        await ctx.db.insert("materialOwners", {
+          contentKey: `material/lesson/test/stored-${index}`,
+          locale: "en",
+          releaseId: "release-prior",
+          sequence: 0,
+        });
+      }
+      await ctx.db.insert("contentOwners", {
+        contentKey: "material/lesson/test/next",
+        family: "material",
+        locale: "en",
+        managed: true,
+        releaseId: MATERIAL_IDENTITY.releaseId,
+        sequence: MATERIAL_IDENTITY.sequence,
+      });
+    });
+
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(
+          validateExactMaterialOwnerScope(ctx, {
+            releaseId: MATERIAL_IDENTITY.releaseId,
+            resultFamilies: ["article"],
+            sequence: MATERIAL_IDENTITY.sequence,
+          })
+        )
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_LIMIT" },
