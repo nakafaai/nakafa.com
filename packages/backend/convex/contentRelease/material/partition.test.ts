@@ -5,6 +5,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   activateMaterialCatalog,
+  MATERIAL_IDENTITY,
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { convexTest, type TestConvex } from "convex-test";
@@ -62,7 +63,7 @@ describe("contentRelease/material/partition", () => {
       target.query((ctx) =>
         runConvexProgram(readMaterialPartition(ctx, "en", "abc"))
       )
-    ).resolves.toEqual({ kind: "unmanaged" });
+    ).resolves.toEqual({ activeReleaseId: null, kind: "unmanaged" });
     await expect(
       target.query((ctx) =>
         runConvexProgram(readMaterialPartition(ctx, "en", "invalid"))
@@ -76,7 +77,10 @@ describe("contentRelease/material/partition", () => {
       target.query((ctx) =>
         runConvexProgram(readMaterialPartition(ctx, "en", "fff"))
       )
-    ).resolves.toEqual({ kind: "missing" });
+    ).resolves.toEqual({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      kind: "missing",
+    });
   });
 
   it("returns a verified partition and rejects count drift", async () => {
@@ -89,6 +93,7 @@ describe("contentRelease/material/partition", () => {
         runConvexProgram(readMaterialPartition(ctx, "en", bucket.bucket))
       )
     ).resolves.toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
       kind: "found",
       materials: [{ projection: { locale: "en", sitemap: true } }],
     });
@@ -119,6 +124,7 @@ describe("contentRelease/material/partition", () => {
         runConvexProgram(readMaterialPartition(ctx, "en", bucket.bucket))
       )
     ).resolves.toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
       kind: "found",
       materials: [{ projection: selected }],
     });

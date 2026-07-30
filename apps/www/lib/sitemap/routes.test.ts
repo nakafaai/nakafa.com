@@ -31,6 +31,7 @@ const ownershipMocks = vi.hoisted(() => ({
   filterMaterialContentRows: vi.fn(),
   filterMaterialPublicPaths: vi.fn(),
 }));
+const activeMaterialReleaseId = "release-material";
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleSitemap: articleMocks.readPublishedArticleSitemap,
@@ -57,7 +58,12 @@ beforeEach(() => {
   );
   materialMocks.readPublishedMaterialBuckets.mockReset();
   materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-    Effect.succeed({ buckets: [], managed: false })
+    Effect.succeed({
+      activeReleaseId: null,
+      buckets: [],
+      managed: false,
+      materialCount: 0,
+    })
   );
   materialMocks.readPublishedMaterialSitemap.mockReset();
   materialMocks.readPublishedMaterialSitemap.mockReturnValue(
@@ -194,7 +200,12 @@ describe("sitemap route pages", () => {
       })
     );
     materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-      Effect.succeed({ buckets: ["abc"], managed: true })
+      Effect.succeed({
+        activeReleaseId: activeMaterialReleaseId,
+        buckets: ["abc"],
+        managed: true,
+        materialCount: 1,
+      })
     );
     programMocks.readPublishedProgramBuckets.mockReturnValue(
       Effect.succeed({ buckets: ["abc"], managed: true })
@@ -203,6 +214,15 @@ describe("sitemap route pages", () => {
     await expect(readPaths("public_en_0")).resolves.toEqual([
       "/try-out/indonesia/snbt",
     ]);
+    expect(ownershipMocks.filterMaterialPublicPaths).toHaveBeenCalledWith(
+      "en",
+      [
+        "curriculum/merdeka/class-10/mathematics",
+        "subjects/mathematics/functions/concept",
+        "try-out/indonesia/snbt",
+      ],
+      activeMaterialReleaseId
+    );
   });
 
   it("fails when an id or its materialized page is missing", async () => {

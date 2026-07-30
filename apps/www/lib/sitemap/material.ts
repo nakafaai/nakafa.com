@@ -4,6 +4,7 @@ import {
   type MaterialSourceCandidate,
   readPublishedMaterialClaims,
 } from "@/lib/content/material/ownership";
+import type { MaterialReleasePin } from "@/lib/content/material/release";
 import { readMaterialSource } from "@/lib/content/material/shell";
 
 interface SourceSitemapRow {
@@ -44,7 +45,11 @@ export const filterMaterialContentRows = Effect.fn(
 /** Reconciles source public paths with exact active ownership. */
 export const filterMaterialPublicPaths = Effect.fn(
   "www.sitemap.filterMaterialPublicPaths"
-)(function* (locale: Locale, paths: readonly string[]) {
+)(function* (
+  locale: Locale,
+  paths: readonly string[],
+  expectedActiveReleaseId: MaterialReleasePin
+) {
   const sourceRoutes = paths.map((path) => readMaterialSource(locale, path));
   const candidates = new Map<string, MaterialSourceCandidate>();
   for (const source of sourceRoutes) {
@@ -54,7 +59,8 @@ export const filterMaterialPublicPaths = Effect.fn(
   }
   const claims = yield* readPublishedMaterialClaims(
     locale,
-    Array.from(candidates.values())
+    Array.from(candidates.values()),
+    expectedActiveReleaseId
   );
   const claimed = new Set(
     claims.map((claim) => `${claim.locale}\0${claim.contentKey}`)

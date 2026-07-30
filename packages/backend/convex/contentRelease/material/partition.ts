@@ -25,8 +25,15 @@ export const readMaterialPartition = Effect.fn(
     );
   }
   const owner = yield* loadMaterialCatalogOwner(ctx);
+  const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.active && owner.ready)) {
-    return { kind: "unmanaged" } satisfies { readonly kind: "unmanaged" };
+    return {
+      activeReleaseId,
+      kind: "unmanaged",
+    } satisfies {
+      readonly activeReleaseId: typeof activeReleaseId;
+      readonly kind: "unmanaged";
+    };
   }
   const count = yield* Effect.promise(() =>
     ctx.db
@@ -37,7 +44,13 @@ export const readMaterialPartition = Effect.fn(
       .unique()
   );
   if (!count) {
-    return { kind: "missing" } satisfies { readonly kind: "missing" };
+    return {
+      activeReleaseId,
+      kind: "missing",
+    } satisfies {
+      readonly activeReleaseId: typeof activeReleaseId;
+      readonly kind: "missing";
+    };
   }
   const rows = yield* Effect.promise(() =>
     ctx.db
@@ -67,11 +80,19 @@ export const readMaterialPartition = Effect.fn(
         readVisibleMaterial(ctx, row, false)
       )).filter((material) => material !== null);
   return materials.length === 0
-    ? ({ kind: "missing" } satisfies { readonly kind: "missing" })
+    ? ({
+        activeReleaseId,
+        kind: "missing",
+      } satisfies {
+        readonly activeReleaseId: typeof activeReleaseId;
+        readonly kind: "missing";
+      })
     : ({
+        activeReleaseId,
         kind: "found",
         materials,
       } satisfies {
+        readonly activeReleaseId: typeof activeReleaseId;
         readonly kind: "found";
         readonly materials: typeof materials;
       });

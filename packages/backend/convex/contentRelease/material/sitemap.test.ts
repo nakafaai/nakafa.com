@@ -9,6 +9,7 @@ import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   activateMaterialCatalog,
   insertMaterialProjection,
+  MATERIAL_IDENTITY,
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
@@ -20,7 +21,12 @@ describe("contentRelease/material/sitemap", () => {
 
     await expect(
       target.query((ctx) => runConvexProgram(readMaterialBuckets(ctx, "en")))
-    ).resolves.toEqual({ buckets: [], managed: false, materialCount: 0 });
+    ).resolves.toEqual({
+      activeReleaseId: null,
+      buckets: [],
+      managed: false,
+      materialCount: 0,
+    });
     await expect(
       target.query((ctx) =>
         runConvexProgram(readMaterialSitemap(ctx, "en", "abc"))
@@ -35,7 +41,11 @@ describe("contentRelease/material/sitemap", () => {
       runConvexProgram(readMaterialBuckets(ctx, "en"))
     );
 
-    expect(result).toMatchObject({ managed: true, materialCount: 2 });
+    expect(result).toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      materialCount: 2,
+    });
     expect(result.buckets.length).toBeGreaterThan(0);
     const pages = await Promise.all(
       result.buckets.map((bucket) =>
@@ -67,7 +77,11 @@ describe("contentRelease/material/sitemap", () => {
       runConvexProgram(readMaterialBuckets(ctx, "en"))
     );
 
-    expect(result).toMatchObject({ managed: false, materialCount: 1 });
+    expect(result).toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: false,
+      materialCount: 1,
+    });
     expect(result.buckets).toHaveLength(1);
     const pages = await Promise.all(
       result.buckets.map((bucket) =>
@@ -98,7 +112,11 @@ describe("contentRelease/material/sitemap", () => {
       runConvexProgram(readMaterialBuckets(ctx, "en"))
     );
 
-    expect(result).toMatchObject({ managed: false, materialCount: 1 });
+    expect(result).toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: false,
+      materialCount: 1,
+    });
     expect(result.buckets).toHaveLength(1);
     await expect(
       target.query((ctx) =>

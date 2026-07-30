@@ -1,9 +1,6 @@
 import "server-only";
 
-import {
-  ContentKeySchema,
-  ReleaseIdSchema,
-} from "@nakafa/aksara-contracts/ids";
+import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -18,8 +15,10 @@ import {
   type MaterialProjectionIdentity,
   makeMaterialProjectionError,
 } from "@/lib/content/material/decode";
-import type { ActiveContentReleaseId } from "@/lib/content/published/active";
-import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
+import {
+  decodeMaterialReleasePin,
+  type MaterialReleasePin,
+} from "@/lib/content/material/release";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
@@ -49,30 +48,6 @@ export interface MaterialSourceModel {
   readonly claims: readonly MaterialSourceClaim[];
   readonly materials: readonly MaterialLessonProjection[];
 }
-
-type MaterialReleasePin = ActiveContentReleaseId | null;
-
-/** Decodes and verifies the active release returned by one source batch. */
-const decodeMaterialReleasePin = Effect.fn("NakafaMaterial.decodeReleasePin")(
-  function* (
-    actual: unknown,
-    expected: MaterialReleasePin | undefined,
-    identity: MaterialProjectionIdentity
-  ) {
-    const activeReleaseId = yield* Schema.decodeUnknown(
-      Schema.NullOr(ReleaseIdSchema)
-    )(actual).pipe(
-      Effect.mapError(() => makeMaterialProjectionError(identity))
-    );
-    if (expected !== undefined && activeReleaseId !== expected) {
-      return yield* new PublishedReleaseMismatchError({
-        actualReleaseId: activeReleaseId,
-        expectedReleaseId: expected,
-      });
-    }
-    return activeReleaseId;
-  }
-);
 
 /** Decodes exact claims used to remove or replace temporary source routes. */
 export const decodeMaterialClaims = Effect.fn(

@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -14,6 +15,7 @@ const publicPath =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
 const sourcePath =
   "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx";
+const activeReleaseId = ReleaseIdSchema.make("release-material");
 
 vi.mock("@/lib/content/runtime/query", async () => {
   const { readTestRuntimeQuery } = await import("@/test/runtime-query");
@@ -40,15 +42,30 @@ describe("published material discovery", () => {
 
   it("reads missing and complete material buckets", async () => {
     fetchMock
-      .mockResolvedValueOnce({ managed: false, materials: null })
-      .mockResolvedValueOnce({ managed: true, materials: [summary] });
+      .mockResolvedValueOnce({
+        activeReleaseId: null,
+        managed: false,
+        materials: null,
+      })
+      .mockResolvedValueOnce({
+        activeReleaseId,
+        managed: true,
+        materials: [summary],
+      });
 
     await expect(
       Effect.runPromise(readPublishedMaterialBucket("en", "abc"))
-    ).resolves.toEqual({ managed: false, materials: null });
+    ).resolves.toEqual({
+      activeReleaseId: null,
+      managed: false,
+      materials: null,
+    });
     await expect(
-      Effect.runPromise(readPublishedMaterialBucket("en", "def"))
+      Effect.runPromise(
+        readPublishedMaterialBucket("en", "def", activeReleaseId)
+      )
     ).resolves.toMatchObject({
+      activeReleaseId,
       managed: true,
       materials: [
         {
@@ -78,6 +95,7 @@ describe("published material discovery", () => {
   it("rejects malformed summaries and claimed identities", async () => {
     fetchMock
       .mockResolvedValueOnce({
+        activeReleaseId,
         managed: true,
         materials: [{ ...summary, sourcePath: "" }],
       })
@@ -103,5 +121,24 @@ describe("published material discovery", () => {
         readPublishedLatestMaterials("en", 10).pipe(Effect.flip)
       )
     ).resolves.toMatchObject({ _tag: "TestRuntimeQueryError" });
+  });
+
+  it("rejects a material bucket from a different active release", async () => {
+    fetchMock.mockResolvedValueOnce({
+      activeReleaseId: ReleaseIdSchema.make("release-next"),
+      managed: true,
+      materials: [summary],
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialBucket("en", "abc", activeReleaseId).pipe(
+          Effect.flip
+        )
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+      expectedReleaseId: activeReleaseId,
+    });
   });
 });

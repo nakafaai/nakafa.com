@@ -45,6 +45,7 @@ beforeEach(() => {
   );
   mockReadMaterialInventory.mockReturnValue(
     Effect.succeed({
+      activeReleaseId: null,
       buckets: [],
       owner: "source",
       pageCount: 1,
@@ -107,6 +108,7 @@ describe("llms section indexes", () => {
   it("uses material partitions after their owner activates", async () => {
     mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: "release-material",
         buckets: ["000", "abc"],
         owner: "published",
         pageCount: 2,
@@ -131,6 +133,7 @@ describe("llms section indexes", () => {
   it("combines partial exact partitions with source catalog pages", async () => {
     mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: "release-material",
         buckets: ["abc"],
         owner: "mixed",
         pageCount: 2,

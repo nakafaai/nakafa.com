@@ -89,7 +89,12 @@ beforeEach(() => {
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
   );
   mockReadPublishedMaterialBuckets.mockReturnValue(
-    Effect.succeed({ buckets: [], managed: false, materialCount: 0 })
+    Effect.succeed({
+      activeReleaseId: null,
+      buckets: [],
+      managed: false,
+      materialCount: 0,
+    })
   );
   mockGetRuntimeContentRouteCounts.mockReturnValue(
     Effect.succeed([

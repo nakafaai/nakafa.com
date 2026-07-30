@@ -8,6 +8,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   activateMaterialCatalog,
+  MATERIAL_IDENTITY,
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
@@ -21,7 +22,11 @@ describe("contentRelease/material/discovery", () => {
       target.query((ctx) =>
         runConvexProgram(readMaterialBucket(ctx, "en", "abc"))
       )
-    ).resolves.toEqual({ managed: false, materials: null });
+    ).resolves.toEqual({
+      activeReleaseId: null,
+      managed: false,
+      materials: null,
+    });
     await expect(
       target.query((ctx) => runConvexProgram(readLatestMaterials(ctx, "en", 2)))
     ).resolves.toEqual({
@@ -57,12 +62,17 @@ describe("contentRelease/material/discovery", () => {
       target.query((ctx) =>
         runConvexProgram(readMaterialBucket(ctx, "en", "fff"))
       )
-    ).resolves.toEqual({ managed: true, materials: null });
+    ).resolves.toEqual({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      materials: null,
+    });
     await expect(
       target.query((ctx) =>
         runConvexProgram(readMaterialBucket(ctx, "en", count.bucket))
       )
     ).resolves.toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
       managed: true,
       materials: [
         {

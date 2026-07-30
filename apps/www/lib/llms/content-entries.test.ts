@@ -16,6 +16,7 @@ const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialBucket = vi.hoisted(() => vi.fn());
 const mockReadMaterialInventory = vi.hoisted(() => vi.fn());
 const mockReconcileMaterialRows = vi.hoisted(() => vi.fn());
+const activeMaterialReleaseId = "release-material";
 
 vi.mock("@/lib/content/article/discovery", () => ({
   readPublishedArticleBucket: mockReadPublishedArticleBucket,
@@ -100,10 +101,15 @@ beforeEach(() => {
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
   );
   mockReadPublishedMaterialBucket.mockReturnValue(
-    Effect.succeed({ managed: false, materials: null })
+    Effect.succeed({
+      activeReleaseId: null,
+      managed: false,
+      materials: null,
+    })
   );
   mockReadMaterialInventory.mockReturnValue(
     Effect.succeed({
+      activeReleaseId: null,
       buckets: [],
       owner: "source",
       pageCount: 1,
@@ -181,6 +187,11 @@ describe("llms content entries", () => {
       page: 0,
       section: "articles",
     });
+    expect(mockReconcileMaterialRows).toHaveBeenCalledWith(
+      "en",
+      [routeRows[3]],
+      null
+    );
   });
 
   it("uses published article partitions after ownership activates", async () => {
@@ -261,6 +272,7 @@ describe("llms content entries", () => {
   it("uses published material partitions after ownership activates", async () => {
     mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: activeMaterialReleaseId,
         buckets: ["abc"],
         owner: "published",
         pageCount: 1,
@@ -271,6 +283,7 @@ describe("llms content entries", () => {
     );
     mockReadPublishedMaterialBucket.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: activeMaterialReleaseId,
         managed: true,
         materials: [previewProjection, previewNextProjection].map(
           makeMaterialSummary
@@ -291,11 +304,17 @@ describe("llms content entries", () => {
       "/subjects/mathematics/function-composition-inverse-function/injective-surjective-bijective-function",
     ]);
     expect(mockGetArtifactPage).not.toHaveBeenCalled();
+    expect(mockReadPublishedMaterialBucket).toHaveBeenCalledWith(
+      "en",
+      "abc",
+      activeMaterialReleaseId
+    );
   });
 
   it("adds exact-only material partitions after source catalog pages", async () => {
     mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: activeMaterialReleaseId,
         buckets: ["abc"],
         owner: "mixed",
         pageCount: 2,
@@ -306,6 +325,7 @@ describe("llms content entries", () => {
     );
     mockReadPublishedMaterialBucket.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: activeMaterialReleaseId,
         managed: true,
         materials: [makeMaterialSummary(previewProjection)],
       })
@@ -325,7 +345,11 @@ describe("llms content entries", () => {
         title: previewProjection.metadata.title,
       }),
     ]);
-    expect(mockReadPublishedMaterialBucket).toHaveBeenCalledWith("en", "abc");
+    expect(mockReadPublishedMaterialBucket).toHaveBeenCalledWith(
+      "en",
+      "abc",
+      activeMaterialReleaseId
+    );
     expect(mockGetArtifactPage).not.toHaveBeenCalled();
   });
 
@@ -359,6 +383,18 @@ describe("llms content entries", () => {
           locale: "en",
           page: 404,
           section: "articles",
+        })
+      )
+    ).resolves.toBeNull();
+
+    mockGetArtifactPage.mockReturnValueOnce(Effect.succeed(null));
+
+    await expect(
+      Effect.runPromise(
+        getContentPageLlmsEntries({
+          locale: "en",
+          page: 404,
+          section: "material",
         })
       )
     ).resolves.toBeNull();
@@ -419,6 +455,7 @@ describe("llms content entries", () => {
     );
     mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: activeMaterialReleaseId,
         buckets: ["abc"],
         owner: "published",
         pageCount: 1,
@@ -438,8 +475,20 @@ describe("llms content entries", () => {
     ).resolves.toBeNull();
 
     mockReadPublishedMaterialBucket
-      .mockReturnValueOnce(Effect.succeed({ managed: true, materials: null }))
-      .mockReturnValueOnce(Effect.succeed({ managed: false, materials: [] }));
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: activeMaterialReleaseId,
+          managed: true,
+          materials: null,
+        })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: activeMaterialReleaseId,
+          managed: false,
+          materials: [],
+        })
+      );
     await expect(
       Effect.runPromise(
         getContentPageLlmsEntries({

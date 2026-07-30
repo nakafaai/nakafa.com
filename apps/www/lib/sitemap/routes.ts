@@ -75,7 +75,8 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       }
       const visiblePaths = yield* filterMaterialPublicPaths(
         page.locale,
-        artifact.paths
+        artifact.paths,
+        materialOwner.activeReleaseId
       );
       const routes: { lastModified: number; path: string }[] = [];
       for (const path of visiblePaths) {

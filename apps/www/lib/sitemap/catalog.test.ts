@@ -47,7 +47,12 @@ beforeEach(() => {
   );
   materialMocks.readPublishedMaterialBuckets.mockReset();
   materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-    Effect.succeed({ buckets: [], managed: false, materialCount: 0 })
+    Effect.succeed({
+      activeReleaseId: null,
+      buckets: [],
+      managed: false,
+      materialCount: 0,
+    })
   );
   programMocks.readPublishedProgramBuckets.mockReset();
   programMocks.readPublishedProgramBuckets.mockReturnValue(
@@ -139,6 +144,7 @@ describe("sitemap page catalog", () => {
   it("replaces material rows and adds curriculum partitions after cutover", async () => {
     materialMocks.readPublishedMaterialBuckets.mockImplementation((locale) =>
       Effect.succeed({
+        activeReleaseId: locale === "en" ? "release-material" : null,
         buckets: locale === "en" ? ["def"] : [],
         managed: locale === "en",
         materialCount: locale === "en" ? 2 : 0,

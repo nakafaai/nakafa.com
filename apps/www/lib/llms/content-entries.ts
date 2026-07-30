@@ -54,7 +54,11 @@ export const getContentPageLlmsEntries = Effect.fn(
       if (!bucket) {
         return null;
       }
-      const partition = yield* readPublishedMaterialBucket(locale, bucket);
+      const partition = yield* readPublishedMaterialBucket(
+        locale,
+        bucket,
+        inventory.activeReleaseId
+      );
       if (!(partition.managed && partition.materials)) {
         return null;
       }
@@ -64,19 +68,19 @@ export const getContentPageLlmsEntries = Effect.fn(
         section,
       });
     }
-  }
-
-  const artifactPage = yield* getRuntimeContentRouteArtifactPage({
-    locale,
-    page,
-    section,
-  });
-
-  if (!artifactPage) {
-    return null;
-  }
-  if (section === "material") {
-    const rows = yield* reconcileMaterialLlmsRows(locale, artifactPage.routes);
+    const artifactPage = yield* getRuntimeContentRouteArtifactPage({
+      locale,
+      page,
+      section,
+    });
+    if (!artifactPage) {
+      return null;
+    }
+    const rows = yield* reconcileMaterialLlmsRows(
+      locale,
+      artifactPage.routes,
+      inventory.activeReleaseId
+    );
     return buildRuntimeContentLlmsEntries({
       locale,
       rows,
@@ -84,6 +88,14 @@ export const getContentPageLlmsEntries = Effect.fn(
     });
   }
 
+  const artifactPage = yield* getRuntimeContentRouteArtifactPage({
+    locale,
+    page,
+    section,
+  });
+  if (!artifactPage) {
+    return null;
+  }
   return buildRuntimeContentLlmsEntries({
     locale,
     rows: artifactPage.routes,

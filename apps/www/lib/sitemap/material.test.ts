@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -10,6 +11,7 @@ import { previewProjection } from "@/test/content-preview";
 
 const claimsMock = vi.hoisted(() => vi.fn());
 const sourceMock = vi.hoisted(() => vi.fn());
+const activeReleaseId = ReleaseIdSchema.make("release-material");
 
 vi.mock("@/lib/content/material/ownership", () => ({
   readPublishedMaterialClaims: claimsMock,
@@ -120,19 +122,23 @@ describe("material sitemap ownership", () => {
 
     await expect(
       Effect.runPromise(
-        filterMaterialPublicPaths("en", [
-          ownedPath,
-          candidateOnlyPath,
-          unmanagedPath,
-        ])
+        filterMaterialPublicPaths(
+          "en",
+          [ownedPath, candidateOnlyPath, unmanagedPath],
+          activeReleaseId
+        )
       )
     ).resolves.toEqual([candidateOnlyPath, unmanagedPath]);
-    expect(claimsMock).toHaveBeenCalledWith("en", [
-      {
-        contentKey: previewProjection.contentKey,
-        locale: "en",
-        parentPath: previewProjection.parentPath,
-      },
-    ]);
+    expect(claimsMock).toHaveBeenCalledWith(
+      "en",
+      [
+        {
+          contentKey: previewProjection.contentKey,
+          locale: "en",
+          parentPath: previewProjection.parentPath,
+        },
+      ],
+      activeReleaseId
+    );
   });
 });

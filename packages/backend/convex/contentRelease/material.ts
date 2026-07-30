@@ -70,11 +70,13 @@ const materialDiscoveryValidator = v.object({
 });
 
 const materialBucketValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   managed: v.boolean(),
   materials: v.union(v.array(materialSummaryValidator), v.null()),
 });
 
 const materialBucketsValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   buckets: v.array(v.string()),
   managed: v.boolean(),
   materialCount: v.number(),

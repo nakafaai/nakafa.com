@@ -10,6 +10,10 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
+import {
+  decodeMaterialReleasePin,
+  type MaterialReleasePin,
+} from "@/lib/content/material/release";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {
   fetchRuntimeQuery,
@@ -60,17 +64,26 @@ const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
 /** Reads one complete published material partition for agent discovery. */
 export const readPublishedMaterialBucket = Effect.fn(
   "www.materials.readBucket"
-)(function* (locale: Locale, bucket: string) {
+)(function* (
+  locale: Locale,
+  bucket: string,
+  expectedActiveReleaseId?: MaterialReleasePin
+) {
   const result = yield* readRuntimeQuery("contentRelease.material.bucket", () =>
     fetchRuntimeQuery(api.contentRelease.material.bucket, { bucket, locale })
   );
+  const activeReleaseId = yield* decodeMaterialReleasePin(
+    result.activeReleaseId,
+    expectedActiveReleaseId,
+    { locale, publicPath: "materials" }
+  );
   if (result.materials === null) {
-    return { managed: result.managed, materials: null };
+    return { activeReleaseId, managed: result.managed, materials: null };
   }
   const materials = yield* Effect.forEach(result.materials, (summary) =>
     decodeMaterialSummary(summary, locale)
   );
-  return { managed: result.managed, materials };
+  return { activeReleaseId, managed: result.managed, materials };
 });
 
 /** Reads a bounded newest-first material set for feed discovery. */

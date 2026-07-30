@@ -53,12 +53,21 @@ export const readMaterialBucket = Effect.fn(
 ) {
   const partition = yield* readMaterialPartition(ctx, locale, bucket);
   if (partition.kind === "unmanaged") {
-    return { managed: false, materials: null };
+    return {
+      activeReleaseId: partition.activeReleaseId,
+      managed: false,
+      materials: null,
+    };
   }
   if (partition.kind === "missing") {
-    return { managed: true, materials: null };
+    return {
+      activeReleaseId: partition.activeReleaseId,
+      managed: true,
+      materials: null,
+    };
   }
   return {
+    activeReleaseId: partition.activeReleaseId,
     managed: true,
     materials: partition.materials.map((material) =>
       summarizeMaterial(material, material.row.sourcePath)

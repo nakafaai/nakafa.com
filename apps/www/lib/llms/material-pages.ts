@@ -1,11 +1,13 @@
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import type { MaterialReleasePin } from "@/lib/content/material/release";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
 import { getRuntimeContentRouteCounts } from "@/lib/content/runtime/routes";
 
 /** Bounded material LLMS inventory across source and published page owners. */
 export interface MaterialLlmsInventory {
+  readonly activeReleaseId: MaterialReleasePin;
   readonly buckets: readonly string[];
   readonly owner: "mixed" | "published" | "source";
   readonly pageCount: number;
@@ -21,6 +23,7 @@ export const readMaterialLlmsInventory = Effect.fn(
   const published = yield* readPublishedMaterialBuckets(locale);
   if (published.managed) {
     return {
+      activeReleaseId: published.activeReleaseId,
       buckets: published.buckets,
       owner: "published",
       pageCount: published.buckets.length,
@@ -37,6 +40,7 @@ export const readMaterialLlmsInventory = Effect.fn(
     sourceRouteCount / CONTENT_ROUTE_ARTIFACT_PAGE_SIZE
   );
   return {
+    activeReleaseId: published.activeReleaseId,
     buckets: published.buckets,
     owner: published.buckets.length > 0 ? "mixed" : "source",
     pageCount: sourcePageCount + published.buckets.length,

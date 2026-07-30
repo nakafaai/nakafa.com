@@ -20,11 +20,14 @@ beforeEach(() => {
     .mockReturnValue(
       Effect.succeed([{ count: 100, locale: "en", section: "material" }])
     );
-  mockReadPublishedBuckets
-    .mockReset()
-    .mockReturnValue(
-      Effect.succeed({ buckets: [], managed: false, materialCount: 0 })
-    );
+  mockReadPublishedBuckets.mockReset().mockReturnValue(
+    Effect.succeed({
+      activeReleaseId: null,
+      buckets: [],
+      managed: false,
+      materialCount: 0,
+    })
+  );
 });
 
 describe("material LLMS pages", () => {
@@ -32,6 +35,7 @@ describe("material LLMS pages", () => {
     await expect(
       Effect.runPromise(readMaterialLlmsInventory("en"))
     ).resolves.toEqual({
+      activeReleaseId: null,
       buckets: [],
       owner: "source",
       pageCount: 1,
@@ -41,11 +45,17 @@ describe("material LLMS pages", () => {
     });
 
     mockReadPublishedBuckets.mockReturnValueOnce(
-      Effect.succeed({ buckets: ["abc"], managed: false, materialCount: 1 })
+      Effect.succeed({
+        activeReleaseId: "release-material",
+        buckets: ["abc"],
+        managed: false,
+        materialCount: 1,
+      })
     );
     await expect(
       Effect.runPromise(readMaterialLlmsInventory("en"))
     ).resolves.toMatchObject({
+      activeReleaseId: "release-material",
       buckets: ["abc"],
       owner: "mixed",
       pageCount: 2,
@@ -53,11 +63,17 @@ describe("material LLMS pages", () => {
     });
 
     mockReadPublishedBuckets.mockReturnValueOnce(
-      Effect.succeed({ buckets: ["abc"], managed: true, materialCount: 1 })
+      Effect.succeed({
+        activeReleaseId: "release-material",
+        buckets: ["abc"],
+        managed: true,
+        materialCount: 1,
+      })
     );
     await expect(
       Effect.runPromise(readMaterialLlmsInventory("en"))
     ).resolves.toEqual({
+      activeReleaseId: "release-material",
       buckets: ["abc"],
       owner: "published",
       pageCount: 1,

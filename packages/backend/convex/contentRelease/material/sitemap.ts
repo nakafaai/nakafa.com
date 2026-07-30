@@ -19,8 +19,14 @@ export const readMaterialBuckets = Effect.fn(
 ) {
   const owner = yield* loadMaterialCatalogOwner(ctx);
   if (!(owner.active && owner.ready)) {
-    return { buckets: [], managed: false, materialCount: 0 };
+    return {
+      activeReleaseId: owner.active?.releaseId ?? null,
+      buckets: [],
+      managed: false,
+      materialCount: 0,
+    };
   }
+  const activeReleaseId = owner.active.releaseId;
   if (!owner.familyManaged) {
     const { materials: visible } = yield* readExactMaterialSnapshot(
       ctx,
@@ -28,6 +34,7 @@ export const readMaterialBuckets = Effect.fn(
       locale
     );
     return {
+      activeReleaseId,
       buckets: Array.from(new Set(visible.map(({ row }) => row.bucket))).sort(),
       managed: false,
       materialCount: visible.length,
@@ -58,6 +65,7 @@ export const readMaterialBuckets = Effect.fn(
     }
   }
   return {
+    activeReleaseId,
     buckets: rows.map(({ bucket }) => bucket),
     managed: owner.familyManaged,
     materialCount: rows.reduce((total, { count }) => total + count, 0),
