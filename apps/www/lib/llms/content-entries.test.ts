@@ -3,10 +3,7 @@ import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projecti
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
-import {
-  getContentListingLlmsEntries,
-  getContentPageLlmsEntries,
-} from "@/lib/llms/content-entries";
+import { getContentPageLlmsEntries } from "@/lib/llms/content-entries";
 import type { LlmsEntry } from "@/lib/llms/entries";
 import {
   previewNextProjection,
@@ -14,17 +11,14 @@ import {
 } from "@/test/content-preview";
 
 const mockGetArtifactPage = vi.hoisted(() => vi.fn());
-const mockGetParentPage = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBucket = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
-const mockReadPublishedCategoryArticles = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialBucket = vi.hoisted(() => vi.fn());
-const mockReadPublishedMaterialBuckets = vi.hoisted(() => vi.fn());
+const mockReadMaterialInventory = vi.hoisted(() => vi.fn());
 const mockReconcileMaterialRows = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/discovery", () => ({
   readPublishedArticleBucket: mockReadPublishedArticleBucket,
-  readPublishedCategoryArticles: mockReadPublishedCategoryArticles,
 }));
 
 vi.mock("@/lib/content/article/sitemap", () => ({
@@ -33,40 +27,43 @@ vi.mock("@/lib/content/article/sitemap", () => ({
 vi.mock("@/lib/content/material/discovery", () => ({
   readPublishedMaterialBucket: mockReadPublishedMaterialBucket,
 }));
-vi.mock("@/lib/content/material/sitemap", () => ({
-  readPublishedMaterialBuckets: mockReadPublishedMaterialBuckets,
-}));
 vi.mock("@/lib/llms/material", () => ({
   reconcileMaterialLlmsRows: mockReconcileMaterialRows,
+}));
+vi.mock("@/lib/llms/material-pages", () => ({
+  readMaterialLlmsInventory: mockReadMaterialInventory,
 }));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRouteArtifactPage: mockGetArtifactPage,
-  getRuntimeContentRouteParentPage: mockGetParentPage,
 }));
 
 const routeRows = [
   {
     markdown: false,
-    route: "articles/politics/draft",
+    route: "articles/politics/flawed-legal-geopolitics",
     section: "articles",
   },
   {
-    description: "A short article fixture.",
-    markdown: true,
-    route: "articles/politics/aaa-short-fixture",
-    section: "articles",
-    title: "A Short Fixture",
-  },
-  {
-    description: "Power is passed down under the guise of local values.",
+    description:
+      "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
     markdown: true,
     route: "articles/politics/dynastic-politics-asian-values",
     section: "articles",
-    title: "Dynastic Politics and Asian Values",
+    title: "Framing Dynastic Politics in Local Elections within Asian Values",
   },
   {
-    description: "Green Chemistry",
+    description:
+      "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
+    markdown: true,
+    route: "articles/politics/regional-elections-turmoil",
+    section: "articles",
+    title:
+      "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
+  },
+  {
+    description:
+      "Understand green chemistry as the design of chemical products and processes that reduce hazards, waste, and energy use from the start.",
     markdown: true,
     route: "subjects/chemistry/green-chemistry/definition",
     section: "material",
@@ -94,27 +91,29 @@ function makeMaterialSummary(projection: MaterialLessonProjection) {
 
 beforeEach(() => {
   mockGetArtifactPage.mockReset();
-  mockGetParentPage.mockReset();
   mockReadPublishedArticleBucket.mockReset();
   mockReadPublishedArticleBuckets.mockReset();
-  mockReadPublishedCategoryArticles.mockReset();
   mockReadPublishedMaterialBucket.mockReset();
-  mockReadPublishedMaterialBuckets.mockReset();
+  mockReadMaterialInventory.mockReset();
   mockReconcileMaterialRows.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
   );
-  mockReadPublishedCategoryArticles.mockReturnValue(
-    Effect.succeed({ articles: [], managed: false })
-  );
   mockReadPublishedMaterialBucket.mockReturnValue(
     Effect.succeed({ managed: false, materials: null })
   );
-  mockReadPublishedMaterialBuckets.mockReturnValue(
-    Effect.succeed({ buckets: [], managed: false, materialCount: 0 })
+  mockReadMaterialInventory.mockReturnValue(
+    Effect.succeed({
+      buckets: [],
+      owner: "source",
+      pageCount: 1,
+      publishedRouteCount: 0,
+      sourcePageCount: 1,
+      sourceRouteCount: 1,
+    })
   );
   mockReconcileMaterialRows.mockImplementation((_locale, rows) =>
-    Effect.succeed({ projections: [previewProjection], rows })
+    Effect.succeed(rows)
   );
   mockGetArtifactPage.mockImplementation(({ locale, page, section }) =>
     Effect.succeed({
@@ -124,13 +123,6 @@ beforeEach(() => {
       routes: routeRows.filter((route) => route.section === section),
       section,
       syncedAt: 1,
-    })
-  );
-  mockGetParentPage.mockImplementation(({ parentRoute }) =>
-    Effect.succeed({
-      continueCursor: null,
-      isDone: true,
-      page: routeRows.filter((row) => row.route.startsWith(`${parentRoute}/`)),
     })
   );
 });
@@ -169,46 +161,24 @@ describe("llms content entries", () => {
     }
 
     expect(entries.map((entry) => entry.route)).toEqual([
-      "/articles/politics/aaa-short-fixture",
       "/articles/politics/dynastic-politics-asian-values",
+      "/articles/politics/regional-elections-turmoil",
       "/subjects/chemistry/green-chemistry/definition",
-      `/${previewProjection.publicPath}`,
       "/quran/1",
     ]);
     expect(entries[1]).toEqual({
-      description: "Power is passed down under the guise of local values.",
-      href: `${BASE_URL}/en/articles/politics/dynastic-politics-asian-values.md`,
-      route: "/articles/politics/dynastic-politics-asian-values",
+      description:
+        "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
+      href: `${BASE_URL}/en/articles/politics/regional-elections-turmoil.md`,
+      route: "/articles/politics/regional-elections-turmoil",
       section: "articles",
-      segments: ["articles", "politics", "dynastic-politics-asian-values"],
-      title: "Dynastic Politics and Asian Values",
+      segments: ["articles", "politics", "regional-elections-turmoil"],
+      title:
+        "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
     });
     expect(mockGetArtifactPage).toHaveBeenCalledWith({
       locale: "en",
       page: 0,
-      section: "articles",
-    });
-  });
-
-  it("builds bounded article listing entries", async () => {
-    const entries = await Effect.runPromise(
-      getContentListingLlmsEntries({
-        locale: "en",
-        route: "articles/politics",
-      })
-    );
-
-    expect(entries?.map((entry) => entry.route)).toEqual([
-      "/articles/politics/aaa-short-fixture",
-      "/articles/politics/dynastic-politics-asian-values",
-    ]);
-    expect(mockGetParentPage).toHaveBeenCalledWith({
-      cursor: null,
-      kind: "article",
-      limit: 100,
-      locale: "en",
-      order: "date-desc",
-      parentRoute: "articles/politics",
       section: "articles",
     });
   });
@@ -225,26 +195,30 @@ describe("llms content entries", () => {
       Effect.succeed({
         articles: [
           {
-            authors: [{ name: "Nakafa" }],
+            authors: [{ name: "Shifna Zihdatal Haq" }],
             category: "politics",
             categoryTitle: "Politics",
-            date: "2026-07-24",
-            description: "Published article",
+            date: "2024-08-08",
+            description:
+              "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
             official: true,
-            publicPath: "articles/politics/published",
-            slug: "published",
-            title: "Published",
+            publicPath: "articles/politics/dynastic-politics-asian-values",
+            slug: "dynastic-politics-asian-values",
+            title:
+              "Framing Dynastic Politics in Local Elections within Asian Values",
           },
           {
-            authors: [{ name: "Nakafa" }],
+            authors: [{ name: "Shifna Zihdatal Haq" }],
             category: "politics",
             categoryTitle: "Politics",
-            date: "2026-07-23",
-            description: "Earlier article",
+            date: "2024-10-27",
+            description:
+              "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
             official: false,
-            publicPath: "articles/politics/aaa-earlier",
-            slug: "aaa-earlier",
-            title: "Earlier",
+            publicPath: "articles/politics/regional-elections-turmoil",
+            slug: "regional-elections-turmoil",
+            title:
+              "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
           },
         ],
         managed: true,
@@ -261,31 +235,38 @@ describe("llms content entries", () => {
       )
     ).resolves.toEqual([
       {
-        description: "Earlier article",
-        href: `${BASE_URL}/en/articles/politics/aaa-earlier.md`,
-        route: "/articles/politics/aaa-earlier",
+        description:
+          "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
+        href: `${BASE_URL}/en/articles/politics/dynastic-politics-asian-values.md`,
+        route: "/articles/politics/dynastic-politics-asian-values",
         section: "articles",
-        segments: ["articles", "politics", "aaa-earlier"],
-        title: "Earlier",
+        segments: ["articles", "politics", "dynastic-politics-asian-values"],
+        title:
+          "Framing Dynastic Politics in Local Elections within Asian Values",
       },
       {
-        description: "Published article",
-        href: `${BASE_URL}/en/articles/politics/published.md`,
-        route: "/articles/politics/published",
+        description:
+          "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
+        href: `${BASE_URL}/en/articles/politics/regional-elections-turmoil.md`,
+        route: "/articles/politics/regional-elections-turmoil",
         section: "articles",
-        segments: ["articles", "politics", "published"],
-        title: "Published",
+        segments: ["articles", "politics", "regional-elections-turmoil"],
+        title:
+          "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
       },
     ]);
     expect(mockGetArtifactPage).not.toHaveBeenCalled();
   });
 
   it("uses published material partitions after ownership activates", async () => {
-    mockReadPublishedMaterialBuckets.mockReturnValue(
+    mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
         buckets: ["abc"],
-        managed: true,
-        materialCount: 2,
+        owner: "published",
+        pageCount: 1,
+        publishedRouteCount: 2,
+        sourcePageCount: 0,
+        sourceRouteCount: 0,
       })
     );
     mockReadPublishedMaterialBucket.mockReturnValue(
@@ -312,62 +293,40 @@ describe("llms content entries", () => {
     expect(mockGetArtifactPage).not.toHaveBeenCalled();
   });
 
-  it("uses contract-valid published categories outside the source taxonomy", async () => {
-    mockReadPublishedCategoryArticles.mockReturnValue(
+  it("adds exact-only material partitions after source catalog pages", async () => {
+    mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
-        articles: [
-          {
-            authors: [{ name: "Nakafa" }],
-            category: "public-affairs",
-            categoryTitle: "Public Affairs",
-            date: "2026-07-24",
-            description: "",
-            official: true,
-            publicPath: "articles/public-affairs/published",
-            slug: "published",
-            title: "Published",
-          },
-        ],
+        buckets: ["abc"],
+        owner: "mixed",
+        pageCount: 2,
+        publishedRouteCount: 1,
+        sourcePageCount: 1,
+        sourceRouteCount: 1,
+      })
+    );
+    mockReadPublishedMaterialBucket.mockReturnValue(
+      Effect.succeed({
         managed: true,
+        materials: [makeMaterialSummary(previewProjection)],
       })
     );
 
     await expect(
       Effect.runPromise(
-        getContentListingLlmsEntries({
+        getContentPageLlmsEntries({
           locale: "en",
-          route: "articles/public-affairs",
+          page: 1,
+          section: "material",
         })
       )
     ).resolves.toEqual([
       expect.objectContaining({
-        route: "/articles/public-affairs/published",
-        title: "Published",
+        route: `/${previewProjection.publicPath}`,
+        title: previewProjection.metadata.title,
       }),
     ]);
-    expect(mockReadPublishedCategoryArticles).toHaveBeenCalledWith(
-      "en",
-      "public-affairs",
-      100
-    );
-    expect(mockGetParentPage).not.toHaveBeenCalled();
-  });
-
-  it("rejects unsupported listing routes without catalog reads", async () => {
-    const routes = [
-      "articles",
-      "articles/Invalid_Category",
-      "articles/politics/extra",
-      "curriculum/merdeka/class-10/mathematics/integral",
-    ];
-
-    for (const route of routes) {
-      await expect(
-        Effect.runPromise(getContentListingLlmsEntries({ locale: "en", route }))
-      ).resolves.toBeNull();
-    }
-
-    expect(mockGetParentPage).not.toHaveBeenCalled();
+    expect(mockReadPublishedMaterialBucket).toHaveBeenCalledWith("en", "abc");
+    expect(mockGetArtifactPage).not.toHaveBeenCalled();
   });
 
   it("distinguishes empty artifact pages from missing pages", async () => {
@@ -458,11 +417,14 @@ describe("llms content entries", () => {
         managed: false,
       })
     );
-    mockReadPublishedMaterialBuckets.mockReturnValue(
+    mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
         buckets: ["abc"],
-        managed: true,
-        materialCount: 1,
+        owner: "published",
+        pageCount: 1,
+        publishedRouteCount: 1,
+        sourcePageCount: 0,
+        sourceRouteCount: 0,
       })
     );
     await expect(

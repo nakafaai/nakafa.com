@@ -45,6 +45,57 @@ type LocalizedMaterialTarget =
   | MaterialLessonProjection
   | PublicMaterialLessonRoute;
 
+/** Preserves only material context proven valid for both locale targets. */
+const readLocalizedMaterialSuffix = Effect.fn(
+  "www.routing.locale.readMaterialSuffix"
+)(function* ({
+  currentContentKey,
+  currentLocale,
+  locale,
+  search,
+  target,
+}: {
+  currentContentKey: string;
+  currentLocale: Locale;
+  locale: Locale;
+  search: string;
+  target: LocalizedMaterialTarget;
+}) {
+  const context = readMaterialContextQuery(search);
+  if (!context) {
+    return "";
+  }
+
+  const publishedContext = yield* readPublishedMaterialContext(
+    locale,
+    target,
+    context
+  );
+  if (publishedContext.managed) {
+    return publishedContext.value ? toMaterialContextQueryString(context) : "";
+  }
+
+  const index = yield* loadStaticPublicLearningIndex();
+  const sourceRoute = index.resolveMaterialRouteBySource(
+    currentContentKey,
+    currentLocale
+  );
+  const targetRoute = index.resolveMaterialRouteBySource(
+    "contentKey" in target ? target.contentKey : target.sourcePath,
+    locale
+  );
+  if (!(sourceRoute && targetRoute)) {
+    return "";
+  }
+
+  return readProjectedRouteSuffix({
+    index,
+    route: sourceRoute,
+    search,
+    targetRoute,
+  });
+});
+
 /** Reconciles one missing published alternate with exact source ownership. */
 const readPartialMaterialTarget = Effect.fn(
   "www.routing.locale.readPartialMaterial"
@@ -135,7 +186,14 @@ export const readPublishedLocalizedHref = Effect.fn(
           claim.locale === locale
       );
       if (targetClaim?.kind === "found") {
-        return toNavigationHref(targetClaim.projection.publicPath, "");
+        const suffix = yield* readLocalizedMaterialSuffix({
+          currentContentKey: source.route.sourcePath,
+          currentLocale,
+          locale,
+          search,
+          target: targetClaim.projection,
+        });
+        return toNavigationHref(targetClaim.projection.publicPath, suffix);
       }
       if (targetClaim) {
         return yield* new MissingLocalizedRouteProjectionError({
@@ -166,45 +224,14 @@ export const readPublishedLocalizedHref = Effect.fn(
       });
     }
 
-    const context = readMaterialContextQuery(search);
-    if (!context) {
-      return toNavigationHref(target.publicPath, "");
-    }
-
-    const publishedContext = yield* readPublishedMaterialContext(
+    const suffix = yield* readLocalizedMaterialSuffix({
+      currentContentKey: current.projection.contentKey,
+      currentLocale,
       locale,
+      search,
       target,
-      context
-    );
-    if (publishedContext.managed) {
-      const suffix = publishedContext.value
-        ? toMaterialContextQueryString(context)
-        : "";
-      return toNavigationHref(target.publicPath, suffix);
-    }
-
-    const index = yield* loadStaticPublicLearningIndex();
-    const sourceRoute = index.resolveMaterialRouteBySource(
-      current.projection.contentKey,
-      currentLocale
-    );
-    const targetRoute = index.resolveMaterialRouteBySource(
-      "contentKey" in target ? target.contentKey : target.sourcePath,
-      locale
-    );
-    if (!(sourceRoute && targetRoute)) {
-      return toNavigationHref(target.publicPath, "");
-    }
-
-    return toNavigationHref(
-      target.publicPath,
-      readProjectedRouteSuffix({
-        index,
-        route: sourceRoute,
-        search,
-        targetRoute,
-      })
-    );
+    });
+    return toNavigationHref(target.publicPath, suffix);
   }
 
   if (surface?.key !== "curriculum") {

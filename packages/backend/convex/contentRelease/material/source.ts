@@ -80,6 +80,26 @@ type VisibleMaterial = Exclude<
   null
 >;
 
+/** Requires one batched caller to keep reading the same active release. */
+const requireExpectedRelease = Effect.fn(
+  "contentRelease.requireExpectedMaterialRelease"
+)(function* (
+  active: ActiveIdentity | null,
+  expectedActiveReleaseId: string | null | undefined
+) {
+  const activeReleaseId = active?.releaseId ?? null;
+  if (
+    expectedActiveReleaseId !== undefined &&
+    activeReleaseId !== expectedActiveReleaseId
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      `Material source shell expected active release ${expectedActiveReleaseId ?? "none"} but found ${activeReleaseId ?? "none"}.`
+    );
+  }
+  return activeReleaseId;
+});
+
 /** Reconciles decoded source identities claimed by active exact ownership. */
 const resolveSourceClaims = Effect.fn(
   "contentRelease.resolveMaterialSourceClaims"
@@ -143,17 +163,26 @@ const resolveSourceClaims = Effect.fn(
 /** Reads exact active claims for one bounded source-owned material set. */
 export const readMaterialClaims = Effect.fn(
   "contentRelease.readMaterialSourceClaims"
-)(function* (ctx: QueryCtx, candidates: readonly MaterialSourceCandidate[]) {
+)(function* (
+  ctx: QueryCtx,
+  candidates: readonly MaterialSourceCandidate[],
+  expectedActiveReleaseId?: string | null
+) {
   const [catalog, decoded] = yield* Effect.all([
     loadMaterialCatalogOwner(ctx),
     decodeSourceCandidates(candidates),
   ]);
-  return yield* resolveSourceClaims(
+  const activeReleaseId = yield* requireExpectedRelease(
+    catalog.active,
+    expectedActiveReleaseId
+  );
+  const sourceClaims = yield* resolveSourceClaims(
     ctx,
     catalog.active,
     catalog.familyManaged,
     decoded
   );
+  return { activeReleaseId, sourceClaims };
 });
 
 /** Reads exact-owned projections sharing one temporary source shell. */
@@ -244,14 +273,20 @@ export const readMaterialShell = Effect.fn(
 )(function* (
   ctx: QueryCtx,
   locale: Doc<"materialCatalog">["locale"],
-  candidates: readonly MaterialSourceCandidate[]
+  candidates: readonly MaterialSourceCandidate[],
+  expectedActiveReleaseId?: string | null
 ) {
   const catalog = yield* loadMaterialCatalogOwner(ctx);
-  return yield* resolveMaterialSourceModel(
+  const activeReleaseId = yield* requireExpectedRelease(
+    catalog.active,
+    expectedActiveReleaseId
+  );
+  const model = yield* resolveMaterialSourceModel(
     ctx,
     locale,
     catalog.active,
     catalog.familyManaged,
     candidates
   );
+  return { activeReleaseId, ...model };
 });

@@ -27,7 +27,6 @@ import {
   paginationResultValidator,
 } from "convex/server";
 import { v } from "convex/values";
-import { Effect } from "effect";
 
 const materialModelValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),
@@ -90,10 +89,12 @@ const materialSitemapValidator = v.union(
 );
 
 const materialClaimsValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   sourceClaims: v.array(materialSourceClaimValidator),
 });
 
 const materialShellValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   sourceClaims: v.array(materialSourceClaimValidator),
   sourceProjectionJson: v.array(v.string()),
 });
@@ -117,14 +118,13 @@ export const latest = query({
 /** Resolves exact active claims for one bounded source-owned material set. */
 export const claims = query({
   args: {
+    expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
     sourceCandidates: v.array(materialSourceCandidateValidator),
   },
   returns: materialClaimsValidator,
-  handler: (ctx, { sourceCandidates }) =>
+  handler: (ctx, { expectedActiveReleaseId, sourceCandidates }) =>
     runConvexProgram(
-      readMaterialClaims(ctx, sourceCandidates).pipe(
-        Effect.map((sourceClaims) => ({ sourceClaims }))
-      )
+      readMaterialClaims(ctx, sourceCandidates, expectedActiveReleaseId)
     ),
 });
 
@@ -145,12 +145,15 @@ export const route = query({
 /** Resolves one bounded exact overlay for source-owned material rows. */
 export const shell = query({
   args: {
+    expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
     locale: localeValidator,
     sourceCandidates: v.array(materialSourceCandidateValidator),
   },
   returns: materialShellValidator,
-  handler: (ctx, { locale, sourceCandidates }) =>
-    runConvexProgram(readMaterialShell(ctx, locale, sourceCandidates)),
+  handler: (ctx, { expectedActiveReleaseId, locale, sourceCandidates }) =>
+    runConvexProgram(
+      readMaterialShell(ctx, locale, sourceCandidates, expectedActiveReleaseId)
+    ),
 });
 
 /** Returns non-empty material discovery partitions for one locale. */

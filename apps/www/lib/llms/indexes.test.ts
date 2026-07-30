@@ -18,15 +18,16 @@ const mockReadPublishedMaterialBuckets = vi.hoisted(() => vi.fn());
 const mockGetSiteLlmsEntries = vi.hoisted(() => vi.fn());
 
 const articleEntry: LlmsEntry = {
-  description: "Fixture description",
-  href: `${BASE_URL}/en/articles/politics/dynastic-politics.md`,
-  route: "/articles/politics/dynastic-politics",
+  description:
+    "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
+  href: `${BASE_URL}/en/articles/politics/dynastic-politics-asian-values.md`,
+  route: "/articles/politics/dynastic-politics-asian-values",
   section: "articles",
-  segments: ["articles", "politics", "dynastic-politics"],
-  title: "Dynastic Politics",
+  segments: ["articles", "politics", "dynastic-politics-asian-values"],
+  title: "Framing Dynastic Politics in Local Elections within Asian Values",
 };
 const siteEntry: LlmsEntry = {
-  description: "Fixture description",
+  description: undefined,
   href: `${BASE_URL}/en/search`,
   route: "/search",
   section: "site",
@@ -54,8 +55,11 @@ vi.mock("@/lib/llms/entries", async () => {
 });
 
 vi.mock("@/lib/llms/content-entries", () => ({
-  getContentListingLlmsEntries: mockGetContentListingLlmsEntries,
   getContentPageLlmsEntries: mockGetContentPageLlmsEntries,
+}));
+
+vi.mock("@/lib/llms/content-listing", () => ({
+  getContentListingLlmsEntries: mockGetContentListingLlmsEntries,
 }));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
@@ -113,9 +117,7 @@ describe("llms indexes", () => {
       expect(text).toContain(`${BASE_URL}/en/${prefix}/llms.txt`);
     }
     expect(text).toContain(`${BASE_URL}/en/search`);
-    expect(text).toContain(
-      `- [Dynastic Politics](${BASE_URL}/en/articles/politics/dynastic-politics.md)`
-    );
+    expect(text).toContain(`- [${articleEntry.title}](${articleEntry.href})`);
     expect(mockGetContentPageLlmsEntries).toHaveBeenCalled();
   });
 
@@ -201,9 +203,7 @@ describe("llms indexes", () => {
     );
 
     expect(text).toContain("# Nakafa English Articles Page 7");
-    expect(text).toContain(
-      `- [Dynastic Politics](${BASE_URL}/en/articles/politics/dynastic-politics.md)`
-    );
+    expect(text).toContain(`- [${articleEntry.title}](${articleEntry.href})`);
     expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
       locale: "en",
       page: 7,
@@ -221,9 +221,7 @@ describe("llms indexes", () => {
     );
 
     expect(text).toContain("# Politics Articles");
-    expect(text).toContain(
-      `- [Dynastic Politics](${BASE_URL}/en/articles/politics/dynastic-politics.md)`
-    );
+    expect(text).toContain(`- [${articleEntry.title}](${articleEntry.href})`);
     expect(mockGetContentListingLlmsEntries).toHaveBeenCalledWith({
       locale: "en",
       route: "articles/politics",

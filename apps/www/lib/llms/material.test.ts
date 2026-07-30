@@ -55,7 +55,7 @@ describe("LLMS material ownership", () => {
   it("keeps unclaimed source rows and sends only lesson identities", async () => {
     await expect(
       Effect.runPromise(reconcileMaterialLlmsRows("en", sourceRows))
-    ).resolves.toEqual({ projections: [], rows: sourceRows });
+    ).resolves.toEqual(sourceRows);
     expect(mockReadClaims).toHaveBeenCalledWith("en", [
       {
         contentKey: previewProjection.contentKey,
@@ -78,10 +78,7 @@ describe("LLMS material ownership", () => {
     );
     await expect(
       Effect.runPromise(reconcileMaterialLlmsRows("en", sourceRows))
-    ).resolves.toEqual({
-      projections: [previewProjection],
-      rows: [sourceRows[1]],
-    });
+    ).resolves.toEqual([sourceRows[1]]);
 
     mockReadClaims.mockReturnValueOnce(
       Effect.succeed([
@@ -94,6 +91,6 @@ describe("LLMS material ownership", () => {
     );
     await expect(
       Effect.runPromise(reconcileMaterialLlmsRows("en", sourceRows))
-    ).resolves.toEqual({ projections: [], rows: [sourceRows[1]] });
+    ).resolves.toEqual([sourceRows[1]]);
   });
 });

@@ -1,6 +1,9 @@
 import "server-only";
 
-import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
+import {
+  ContentKeySchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -15,6 +18,8 @@ import {
   type MaterialProjectionIdentity,
   makeMaterialProjectionError,
 } from "@/lib/content/material/decode";
+import type { ActiveContentReleaseId } from "@/lib/content/published/active";
+import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
@@ -44,6 +49,30 @@ export interface MaterialSourceModel {
   readonly claims: readonly MaterialSourceClaim[];
   readonly materials: readonly MaterialLessonProjection[];
 }
+
+type MaterialReleasePin = ActiveContentReleaseId | null;
+
+/** Decodes and verifies the active release returned by one source batch. */
+const decodeMaterialReleasePin = Effect.fn("NakafaMaterial.decodeReleasePin")(
+  function* (
+    actual: unknown,
+    expected: MaterialReleasePin | undefined,
+    identity: MaterialProjectionIdentity
+  ) {
+    const activeReleaseId = yield* Schema.decodeUnknown(
+      Schema.NullOr(ReleaseIdSchema)
+    )(actual).pipe(
+      Effect.mapError(() => makeMaterialProjectionError(identity))
+    );
+    if (expected !== undefined && activeReleaseId !== expected) {
+      return yield* new PublishedReleaseMismatchError({
+        actualReleaseId: activeReleaseId,
+        expectedReleaseId: expected,
+      });
+    }
+    return activeReleaseId;
+  }
+);
 
 /** Decodes exact claims used to remove or replace temporary source routes. */
 export const decodeMaterialClaims = Effect.fn(
@@ -160,6 +189,24 @@ export const readPublishedMaterialClaims = Effect.fn(
       publicPath: "materials",
     });
   }
+  const result = yield* readPublishedMaterialClaimBatches(
+    locale,
+    sourceCandidates
+  );
+  return result.claims;
+});
+
+/** Reads release-pinned exact claims across backend-sized batches. */
+const readPublishedMaterialClaimBatches = Effect.fn(
+  "NakafaMaterial.readPublishedClaimBatches"
+)(function* (
+  locale: Locale,
+  sourceCandidates: readonly MaterialSourceCandidate[],
+  initialReleaseId?: MaterialReleasePin
+) {
+  if (sourceCandidates.length === 0) {
+    return { activeReleaseId: initialReleaseId, claims: [] };
+  }
   const batches: MaterialSourceCandidate[][] = [];
   for (
     let offset = 0;
@@ -170,21 +217,30 @@ export const readPublishedMaterialClaims = Effect.fn(
       Array.from(sourceCandidates.slice(offset, offset + MATERIAL_SOURCE_LIMIT))
     );
   }
-  const claims = yield* Effect.forEach(batches, (batch) =>
-    readRuntimeQuery("contentRelease.material.claims", () =>
-      fetchRuntimeQuery(api.contentRelease.material.claims, {
-        sourceCandidates: batch,
-      })
-    ).pipe(
-      Effect.flatMap((result) =>
-        decodeMaterialClaims(result.sourceClaims, batch, {
-          locale,
-          publicPath: "materials",
+  const claims: MaterialSourceClaim[] = [];
+  let activeReleaseId = initialReleaseId;
+  for (const batch of batches) {
+    const result = yield* readRuntimeQuery(
+      "contentRelease.material.claims",
+      () =>
+        fetchRuntimeQuery(api.contentRelease.material.claims, {
+          ...(activeReleaseId === undefined
+            ? {}
+            : { expectedActiveReleaseId: activeReleaseId }),
+          sourceCandidates: batch,
         })
-      )
-    )
-  );
-  return claims.flat();
+    );
+    const identity = { locale, publicPath: "materials" };
+    activeReleaseId = yield* decodeMaterialReleasePin(
+      result.activeReleaseId,
+      activeReleaseId,
+      identity
+    );
+    claims.push(
+      ...(yield* decodeMaterialClaims(result.sourceClaims, batch, identity))
+    );
+  }
+  return { activeReleaseId, claims };
 });
 
 /** Reads exact claims and group rows for one temporary source shell. */
@@ -217,12 +273,27 @@ export const readPublishedMaterialShell = Effect.fn(
       groups.slice(offset, offset + MATERIAL_SOURCE_GROUP_LIMIT).flat()
     );
   }
-  const models = yield* Effect.forEach(batches, (batch) =>
-    readPublishedMaterialShellBatch(locale, batch)
+  const models: MaterialSourceModel[] = [];
+  let activeReleaseId: MaterialReleasePin | undefined;
+  for (const batch of batches) {
+    const result = yield* readPublishedMaterialShellBatch(
+      locale,
+      batch,
+      activeReleaseId
+    );
+    activeReleaseId = result.activeReleaseId;
+    models.push(result.model);
+  }
+  const ungroupedResult = yield* readPublishedMaterialClaimBatches(
+    locale,
+    ungrouped,
+    activeReleaseId
   );
-  const ungroupedClaims = yield* readPublishedMaterialClaims(locale, ungrouped);
   return {
-    claims: [...models.flatMap(({ claims }) => claims), ...ungroupedClaims],
+    claims: [
+      ...models.flatMap(({ claims }) => claims),
+      ...ungroupedResult.claims,
+    ],
     materials: models.flatMap(({ materials }) => materials),
   } satisfies MaterialSourceModel;
 });
@@ -232,16 +303,25 @@ const readPublishedMaterialShellBatch = Effect.fn(
   "NakafaMaterial.readPublishedShellBatch"
 )(function* (
   locale: Locale,
-  sourceCandidates: readonly MaterialSourceCandidate[]
+  sourceCandidates: readonly MaterialSourceCandidate[],
+  expectedActiveReleaseId: MaterialReleasePin | undefined
 ) {
   const result = yield* readRuntimeQuery("contentRelease.material.shell", () =>
     fetchRuntimeQuery(api.contentRelease.material.shell, {
+      ...(expectedActiveReleaseId === undefined
+        ? {}
+        : { expectedActiveReleaseId }),
       locale,
       sourceCandidates: Array.from(sourceCandidates),
     })
   );
   const identity = { locale, publicPath: "materials" };
-  const [claims, materials] = yield* Effect.all([
+  const [activeReleaseId, claims, materials] = yield* Effect.all([
+    decodeMaterialReleasePin(
+      result.activeReleaseId,
+      expectedActiveReleaseId,
+      identity
+    ),
     decodeMaterialClaims(result.sourceClaims, sourceCandidates, identity),
     decodeMaterialSources(
       result.sourceProjectionJson,
@@ -249,5 +329,8 @@ const readPublishedMaterialShellBatch = Effect.fn(
       identity
     ),
   ]);
-  return { claims, materials } satisfies MaterialSourceModel;
+  return {
+    activeReleaseId,
+    model: { claims, materials } satisfies MaterialSourceModel,
+  };
 });

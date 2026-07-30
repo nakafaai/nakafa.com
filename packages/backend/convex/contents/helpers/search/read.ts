@@ -12,6 +12,7 @@ import {
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { readSourceSearchDocuments } from "@repo/backend/convex/contents/helpers/search/source";
 import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import type { Infer } from "convex/values";
 import { Effect } from "effect";
 
@@ -50,7 +51,7 @@ export const readContentSearchDocuments = Effect.fn(
         ctx,
         args,
         queryTexts,
-        scanLimit,
+        NAKAFA_AGENT_SEARCH_WINDOW,
         sourceSections
       ).pipe(
         Effect.flatMap((documents) =>

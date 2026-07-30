@@ -1,16 +1,19 @@
 // @vitest-environment node
 
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { MATERIAL_SOURCE_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  type MaterialSourceCandidate,
   readPublishedMaterialClaims,
   readPublishedMaterialShell,
 } from "@/lib/content/material/ownership";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 
 const fetchMock = vi.hoisted(() => vi.fn());
+const releaseId = ReleaseIdSchema.make("material-release");
 
 vi.mock("@/lib/content/runtime/query", async () => {
   const { readTestRuntimeQuery } = await import("@/test/runtime-query");
@@ -50,17 +53,18 @@ describe("published material ownership", () => {
   });
 
   it("batches exact source claims without changing their order", async () => {
-    const candidates = Array.from(
+    const candidates: MaterialSourceCandidate[] = Array.from(
       { length: MATERIAL_SOURCE_LIMIT + 1 },
       (_, index) => ({
         contentKey: `material/lesson/mathematics/functions/section-${index + 1}`,
-        locale: "en" as const,
+        locale: "en",
       })
     );
     const firstContentKey = "material/lesson/mathematics/functions/section-1";
     const lastContentKey = `material/lesson/mathematics/functions/section-${MATERIAL_SOURCE_LIMIT + 1}`;
     fetchMock
       .mockResolvedValueOnce({
+        activeReleaseId: releaseId,
         sourceClaims: [
           {
             contentKey: firstContentKey,
@@ -70,6 +74,7 @@ describe("published material ownership", () => {
         ],
       })
       .mockResolvedValueOnce({
+        activeReleaseId: releaseId,
         sourceClaims: [
           {
             contentKey: lastContentKey,
@@ -96,6 +101,7 @@ describe("published material ownership", () => {
       2,
       expect.anything(),
       expect.objectContaining({
+        expectedActiveReleaseId: releaseId,
         sourceCandidates: candidates.slice(MATERIAL_SOURCE_LIMIT),
       })
     );
@@ -104,43 +110,46 @@ describe("published material ownership", () => {
   it("batches source groups and reads ungrouped claims separately", async () => {
     const ungrouped = {
       contentKey: "material/lesson/mathematics/statistics/mean",
-      locale: "en" as const,
+      locale: previewProjection.locale,
     };
     const candidates = [
       {
         contentKey: previewProjection.contentKey,
-        locale: "en" as const,
+        locale: previewProjection.locale,
         parentPath: previewProjection.parentPath,
       },
       {
         contentKey: previewIdProjection.contentKey,
-        locale: "id" as const,
+        locale: previewIdProjection.locale,
         parentPath: previewIdProjection.parentPath,
       },
       {
         contentKey: "material/lesson/mathematics/algebra/linear-equation",
-        locale: "en" as const,
+        locale: previewProjection.locale,
         parentPath: "subjects/mathematics/algebra",
       },
       {
         contentKey: "material/lesson/mathematics/calculus/limit",
-        locale: "en" as const,
+        locale: previewProjection.locale,
         parentPath: "subjects/mathematics/calculus",
       },
       ungrouped,
     ];
     fetchMock
       .mockResolvedValueOnce({
+        activeReleaseId: releaseId,
         sourceClaims: [],
         sourceProjectionJson: [
           canonicalizeMaterialProjection(previewProjection),
         ],
       })
       .mockResolvedValueOnce({
+        activeReleaseId: releaseId,
         sourceClaims: [],
         sourceProjectionJson: [],
       })
       .mockResolvedValueOnce({
+        activeReleaseId: releaseId,
         sourceClaims: [
           {
             contentKey: ungrouped.contentKey,
@@ -163,6 +172,16 @@ describe("published material ownership", () => {
       materials: [previewProjection],
     });
     expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.anything(),
+      expect.objectContaining({ expectedActiveReleaseId: releaseId })
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      expect.anything(),
+      expect.objectContaining({ expectedActiveReleaseId: releaseId })
+    );
   });
 
   it.each([
@@ -188,6 +207,7 @@ describe("published material ownership", () => {
     "rejects invalid %s source group rows",
     async (_label, rows, parentPath) => {
       fetchMock.mockResolvedValueOnce({
+        activeReleaseId: releaseId,
         sourceClaims: [],
         sourceProjectionJson: rows,
       });
@@ -207,4 +227,43 @@ describe("published material ownership", () => {
       ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
     }
   );
+
+  it("rejects an active release change between source batches", async () => {
+    const candidates: MaterialSourceCandidate[] = Array.from(
+      { length: MATERIAL_SOURCE_LIMIT + 1 },
+      (_, index) => ({
+        contentKey: `material/lesson/mathematics/functions/section-${index + 1}`,
+        locale: "en",
+      })
+    );
+    fetchMock
+      .mockResolvedValueOnce({ activeReleaseId: releaseId, sourceClaims: [] })
+      .mockResolvedValueOnce({
+        activeReleaseId: ReleaseIdSchema.make("next-release"),
+        sourceClaims: [],
+      });
+
+    await expect(
+      Effect.runPromise(
+        Effect.flip(readPublishedMaterialClaims("en", candidates))
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedReleaseMismatchError" });
+  });
+
+  it("rejects an invalid release identity before decoding claims", async () => {
+    fetchMock.mockResolvedValueOnce({
+      activeReleaseId: "",
+      sourceClaims: [],
+    });
+
+    await expect(
+      Effect.runPromise(
+        Effect.flip(
+          readPublishedMaterialClaims("en", [
+            { contentKey: previewProjection.contentKey, locale: "en" },
+          ])
+        )
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+  });
 });

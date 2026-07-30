@@ -66,7 +66,8 @@ describe("contentRelease/material/sitemap", () => {
       runConvexProgram(readMaterialBuckets(ctx, "en"))
     );
 
-    expect(result).toMatchObject({ managed: false, materialCount: 2 });
+    expect(result).toMatchObject({ managed: false, materialCount: 1 });
+    expect(result.buckets).toHaveLength(1);
     const pages = await Promise.all(
       result.buckets.map((bucket) =>
         target.query((ctx) =>

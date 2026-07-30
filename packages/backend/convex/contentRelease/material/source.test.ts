@@ -14,6 +14,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   activateMaterialCatalog,
+  MATERIAL_IDENTITY,
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
@@ -61,6 +62,7 @@ describe("contentRelease/material/source", () => {
       runConvexProgram(readMaterialShell(ctx, current.locale, sourceCandidates))
     );
 
+    expect(result.activeReleaseId).toBe(MATERIAL_IDENTITY.releaseId);
     expect(result.sourceClaims).toMatchObject([
       { contentKey: current.contentKey, kind: "found" },
       { contentKey: moved.contentKey, kind: "found" },
@@ -73,10 +75,22 @@ describe("contentRelease/material/source", () => {
       target.query((ctx) =>
         runConvexProgram(readMaterialClaims(ctx, sourceCandidates))
       )
-    ).resolves.toMatchObject([
-      { contentKey: current.contentKey, kind: "found" },
-      { contentKey: moved.contentKey, kind: "found" },
-    ]);
+    ).resolves.toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      sourceClaims: [
+        { contentKey: current.contentKey, kind: "found" },
+        { contentKey: moved.contentKey, kind: "found" },
+      ],
+    });
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          readMaterialClaims(ctx, sourceCandidates, "different-release")
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
+    });
   });
 
   it("rejects source shells beyond the identity and group bounds", async () => {

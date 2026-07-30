@@ -3,10 +3,8 @@ import { Effect } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
-import {
-  getContentListingLlmsEntries,
-  getContentPageLlmsEntries,
-} from "@/lib/llms/content-entries";
+import { getContentPageLlmsEntries } from "@/lib/llms/content-entries";
+import { getContentListingLlmsEntries } from "@/lib/llms/content-listing";
 import {
   getLlmsSections,
   getSiteLlmsEntries,

@@ -1,9 +1,11 @@
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
 import * as publicLearningStatic from "@repo/contents/_types/route/learning/static";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import {
+  makePreviewPublicRoute,
   previewIdProjection,
   previewProjection,
   previewPublicRoute,
@@ -76,7 +78,9 @@ describe("published localized route ownership", () => {
   it("reconciles unmanaged exact claims and missing source routes", () => {
     const renamed = {
       ...previewIdProjection,
-      publicPath: `${previewIdProjection.parentPath}/fungsi-berganti`,
+      publicPath: PublicPathSchema.make(
+        `${previewIdProjection.parentPath}/fungsi-berganti`
+      ),
     };
     publishedMocks.materialRoute.mockReturnValue(
       Effect.succeed({
@@ -103,6 +107,25 @@ describe("published localized route ownership", () => {
         },
       ])
     );
+
+    const context =
+      "?ctx=merdeka~class-11-mathematics-function-composition-inverse-function";
+    const targetRoute = makePreviewPublicRoute(renamed);
+    publishedMocks.materialContext.mockReturnValueOnce(
+      Effect.succeed({ managed: false, value: null })
+    );
+    vi.spyOn(
+      publicLearningStatic,
+      "loadStaticPublicLearningIndex"
+    ).mockReturnValueOnce(
+      Effect.succeed({
+        ...emptyLearningIndex,
+        projectMaterialContextToLocale: ({ context: projected }) => projected,
+        resolveMaterialRouteBySource: (_sourcePath, locale) =>
+          locale === "en" ? previewPublicRoute : targetRoute,
+      })
+    );
+    expect(readHref(context)).toBe(`/${renamed.publicPath}${context}`);
 
     publishedMocks.materialRoute.mockReturnValue(
       Effect.succeed({
