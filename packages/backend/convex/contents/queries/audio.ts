@@ -7,7 +7,10 @@ import {
   MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
 } from "@repo/backend/convex/audioStudies/constants";
-import { getAudioContentSourceByContentId } from "@repo/backend/convex/audioStudies/helpers/sources";
+import {
+  getAudioContentSourceByContentId,
+  selectUnmanagedAudioSource,
+} from "@repo/backend/convex/audioStudies/helpers/sources";
 import { mergePopularAudioContentItems } from "@repo/backend/convex/contents/helpers/popularity";
 import { getLifetimePopularityWindow } from "@repo/backend/convex/contents/popularity";
 import {
@@ -107,8 +110,16 @@ const loadAudioItem = Effect.fn("contents.audio.loadAudioItem")(function* (
     return null;
   }
 
+  const unmanagedSource = yield* selectUnmanagedAudioSource(
+    ctx,
+    sourceContent
+  ).pipe(Effect.mapError(toPopularAudioIoError));
+  if (!unmanagedSource) {
+    return null;
+  }
+
   return {
-    sourceContent,
+    sourceContent: unmanagedSource,
     viewCount: row.score,
   };
 });

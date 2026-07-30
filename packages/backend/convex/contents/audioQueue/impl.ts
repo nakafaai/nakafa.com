@@ -7,7 +7,10 @@ import {
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
 } from "@repo/backend/convex/audioStudies/constants";
-import { getAudioContentSourceByLocale } from "@repo/backend/convex/audioStudies/helpers/sources";
+import {
+  getAudioContentSourceByLocale,
+  selectUnmanagedAudioSource,
+} from "@repo/backend/convex/audioStudies/helpers/sources";
 import {
   AudioQueuePopulationError,
   audioQueuePopulationFailedCode,
@@ -97,12 +100,12 @@ export const enqueuePopularAudioContent = Effect.fn(
     const sourceContent = item.sourceContent;
 
     for (const locale of SUPPORTED_CONTENT_LOCALES) {
-      const localizedContent = yield* Effect.tryPromise({
+      const localizedSource = yield* Effect.tryPromise({
         try: () => getAudioContentSourceByLocale(ctx, sourceContent, locale),
         catch: toAudioQueuePopulationError,
       });
 
-      if (!localizedContent) {
+      if (!localizedSource) {
         yield* Effect.sync(() =>
           logger.debug("Locale content not found", {
             contentId: sourceContent.content_id,
@@ -110,6 +113,13 @@ export const enqueuePopularAudioContent = Effect.fn(
             locale,
           })
         );
+        continue;
+      }
+      const localizedContent = yield* selectUnmanagedAudioSource(
+        ctx,
+        localizedSource
+      ).pipe(Effect.mapError(toAudioQueuePopulationError));
+      if (!localizedContent) {
         continue;
       }
 

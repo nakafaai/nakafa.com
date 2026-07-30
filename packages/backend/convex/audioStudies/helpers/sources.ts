@@ -3,14 +3,35 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { loadMaterialIdentityOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import type { AudioContentLookup } from "@repo/backend/convex/contents/validators";
+import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import { ConvexError } from "convex/values";
+import { Effect, Schema } from "effect";
 
 type AudioSourceReaderCtx = Pick<QueryCtx, "db">;
 type AudioSourceRoute = Pick<
   AudioContentLookup,
   "contentType" | "locale" | "route"
 >;
+const audioSourceOwnershipReadFailedCode = "AUDIO_SOURCE_OWNERSHIP_READ_FAILED";
+
+/** Raised when audio ownership cannot be resolved from current read models. */
+export class AudioSourceOwnershipError extends Schema.TaggedError<AudioSourceOwnershipError>()(
+  "AudioSourceOwnershipError",
+  {
+    code: Schema.Literal(audioSourceOwnershipReadFailedCode),
+    message: Schema.String,
+  }
+) {}
+
+/** Maps thrown ownership reads into the audio-source error channel. */
+function toAudioSourceOwnershipError(error: unknown) {
+  return new AudioSourceOwnershipError({
+    code: audioSourceOwnershipReadFailedCode,
+    message: getUnknownErrorMessage(error),
+  });
+}
 
 /** Projects an audio source document into the compact graph lookup contract. */
 function toAudioContentLookup(
@@ -65,6 +86,47 @@ export async function getAudioContentSourceByLocale(
 
   return source ? toAudioContentLookup(source) : null;
 }
+
+/**
+ * Keeps source-backed audio available only while its material is unmanaged.
+ *
+ * Articles remain source-owned. Material audio fails closed when its source
+ * route is absent, malformed, or already owned by an Aksara release.
+ */
+export const selectUnmanagedAudioSource = Effect.fn(
+  "audioStudies.selectUnmanagedAudioSource"
+)(function* (ctx: QueryCtx, source: AudioContentLookup) {
+  if (source.contentType === "article") {
+    return source;
+  }
+
+  const route = yield* Effect.tryPromise({
+    try: () =>
+      ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (query) =>
+          query.eq("content_id", source.content_id)
+        )
+        .unique(),
+    catch: toAudioSourceOwnershipError,
+  });
+  if (
+    route?.kind !== "curriculum-lesson" ||
+    route.locale !== source.locale ||
+    route.section !== "material" ||
+    route.assetId !== source.assetId
+  ) {
+    return null;
+  }
+
+  const owner = yield* loadMaterialIdentityOwner(
+    ctx,
+    route.sourcePath,
+    route.locale
+  ).pipe(Effect.mapError(toAudioSourceOwnershipError));
+
+  return owner.managed ? null : source;
+});
 
 /** Reads compact audio metadata through a graph route projection. */
 export async function getAudioContentSourceByRoute(

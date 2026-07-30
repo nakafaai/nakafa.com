@@ -2,6 +2,9 @@ import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
+import { insertContentViewRoute } from "@repo/backend/test/content-view";
+import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -106,6 +109,56 @@ describe("audioStudies/queries/public", () => {
         contentType: "article",
         locale: "en",
         slug: ARTICLE_SLUG,
+      }
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it("does not serve source audio for an exact material", async () => {
+    const t = convexTest(schema, convexModules);
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    const source = getTestAudioContent({
+      contentHash: "source-function-hash",
+      locale: FUNCTION_MATERIAL.locale,
+      route: FUNCTION_MATERIAL.contentKey,
+    });
+    await t.run(async (ctx) => {
+      await insertContentViewRoute(ctx, {
+        contentId: source.content_id,
+        graph: FUNCTION_MATERIAL.graph,
+        kind: "curriculum-lesson",
+        locale: FUNCTION_MATERIAL.locale,
+        materialDomain: "mathematics",
+        route: FUNCTION_MATERIAL.contentKey,
+        section: "material",
+        sourcePath: FUNCTION_MATERIAL.contentKey,
+        title: FUNCTION_MATERIAL.metadata.title,
+      });
+      const storageId = await ctx.storage.store(
+        new Blob(["audio bytes"], { type: "audio/wav" })
+      );
+      await ctx.db.insert("audioContentSources", {
+        ...source,
+        syncedAt: NOW,
+      });
+      await ctx.db.insert("contentAudios", {
+        ...source,
+        audioStorageId: storageId,
+        generationAttempts: 1,
+        model: "eleven_v3",
+        status: "completed",
+        updatedAt: NOW,
+        voiceId: "voice-1",
+      });
+    });
+
+    const result = await t.query(
+      api.audioStudies.queries.public.getAudioBySlug,
+      {
+        contentType: "material",
+        locale: FUNCTION_MATERIAL.locale,
+        slug: FUNCTION_MATERIAL.contentKey,
       }
     );
 

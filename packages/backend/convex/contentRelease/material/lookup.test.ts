@@ -41,6 +41,16 @@ describe("contentRelease/material/lookup", () => {
     const target = convexTest(schema, convexModules);
     const projection = makeMaterialProjection("en", 1);
     await activateMaterialCatalog(target, [projection]);
+    await target.mutation((ctx) =>
+      insertContentViewRoute(ctx, {
+        contentId: "asset:en:catalog:article:outside-material",
+        kind: "article",
+        locale: "en",
+        route: "articles/politics/outside-material",
+        section: "articles",
+        title: "Outside material",
+      })
+    );
 
     await expect(
       target.query((ctx) =>
@@ -89,6 +99,20 @@ describe("contentRelease/material/lookup", () => {
     ).resolves.toEqual({
       activeReleaseId: "release-test",
       managed: true,
+      route: null,
+    });
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          lookupMaterial(ctx, {
+            contentId: "asset:en:catalog:article:outside-material",
+            kind: "content",
+          })
+        )
+      )
+    ).resolves.toEqual({
+      activeReleaseId: "release-test",
+      managed: false,
       route: null,
     });
   });

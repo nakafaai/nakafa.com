@@ -3,8 +3,12 @@ import {
   scriptGenerationDataValidator,
   speechGenerationDataValidator,
 } from "@repo/backend/convex/audioStudies/generation/spec";
-import { getAudioContentSourceByContentId } from "@repo/backend/convex/audioStudies/helpers/sources";
+import {
+  getAudioContentSourceByContentId,
+  selectUnmanagedAudioSource,
+} from "@repo/backend/convex/audioStudies/helpers/sources";
 import { graphContentIdValidator } from "@repo/backend/convex/contents/graph";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
@@ -62,6 +66,13 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
           locale: article.locale,
         },
       };
+    }
+
+    const unmanagedSource = await runConvexProgram(
+      selectUnmanagedAudioSource(ctx, contentAudio)
+    );
+    if (!unmanagedSource) {
+      return null;
     }
 
     const section = await ctx.db
@@ -137,7 +148,14 @@ export const getContentHash = internalQuery({
     content_id: graphContentIdValidator,
   },
   returns: nullable(v.string()),
-  handler: async (ctx, args) =>
-    (await getAudioContentSourceByContentId(ctx, args.content_id))
-      ?.contentHash ?? null,
+  handler: async (ctx, args) => {
+    const source = await getAudioContentSourceByContentId(ctx, args.content_id);
+    if (!source) {
+      return null;
+    }
+    const unmanagedSource = await runConvexProgram(
+      selectUnmanagedAudioSource(ctx, source)
+    );
+    return unmanagedSource?.contentHash ?? null;
+  },
 });

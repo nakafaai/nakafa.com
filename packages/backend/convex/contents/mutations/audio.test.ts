@@ -12,6 +12,7 @@ import {
 } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
+import { insertContentViewRoute } from "@repo/backend/test/content-view";
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -136,6 +137,15 @@ async function insertSubject(
     title: source.title,
     topic: "vector-operations",
     topicId,
+  });
+  await insertContentViewRoute(ctx, {
+    contentId: sourceContent.content_id,
+    kind: "curriculum-lesson",
+    locale: source.locale,
+    materialDomain: "mathematics",
+    route: curriculumLessonSlug,
+    section: "material",
+    title: source.title,
   });
 
   if (syncSource) {

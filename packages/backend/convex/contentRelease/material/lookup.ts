@@ -160,7 +160,14 @@ const lookupMaterialContent = Effect.fn("contentRelease.lookupMaterialContent")(
         )
         .unique()
     );
-    if (source?.section !== "material") {
+    if (source && source.section !== "material") {
+      return {
+        activeReleaseId: catalog.active?.releaseId ?? null,
+        managed: false,
+        route: null,
+      };
+    }
+    if (!source) {
       return {
         activeReleaseId: catalog.active?.releaseId ?? null,
         managed: catalog.familyManaged,
