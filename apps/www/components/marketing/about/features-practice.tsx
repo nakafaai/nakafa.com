@@ -96,25 +96,38 @@ export function FeaturesNina() {
   const setText = useAi((state) => state.setText);
   const ninaAnswer = t.raw("nina-answer");
   const ninaPrompt = t.raw("nina-prompt");
-  const ninaMessage: MyUIMessage = {
-    id: "features-nina-answer",
-    parts: [
-      {
+  const ninaPartEntries = [
+    {
+      key: "features-nina-reasoning",
+      part: {
         state: "done",
         text: "",
         type: "reasoning",
       },
-      {
+    },
+    {
+      key: "features-nina-math",
+      part: {
         data: featuresNinaMath,
         id: "features-nina-math",
         type: "data-math",
       },
-      {
+    },
+    {
+      key: "features-nina-answer",
+      part: {
         state: "done",
         text: ninaAnswer,
         type: "text",
       },
-    ],
+    },
+  ] satisfies ReadonlyArray<{
+    key: string;
+    part: MyUIMessage["parts"][number];
+  }>;
+  const ninaMessage: MyUIMessage = {
+    id: "features-nina-answer",
+    parts: ninaPartEntries.map(({ part }) => part),
     role: "assistant",
   };
 
@@ -148,12 +161,11 @@ export function FeaturesNina() {
             <MessageProvider message={ninaMessage}>
               <div className="flex size-full flex-col gap-3 group-[.is-user]:items-end group-[.is-user]:justify-end">
                 <div className="flex flex-col gap-6">
-                  {ninaMessage.parts.map((part, index) => (
+                  {ninaPartEntries.map(({ key, part }, partIndex) => (
                     <AiMessagePart
-                      // biome-ignore lint/suspicious/noArrayIndexKey: Nina parts may share a type and need stable sequence keys
-                      key={`features-nina-${part.type}-${index}`}
+                      key={key}
                       part={part}
-                      partIndex={index}
+                      partIndex={partIndex}
                     />
                   ))}
                 </div>
