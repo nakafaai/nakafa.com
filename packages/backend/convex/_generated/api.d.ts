@@ -197,6 +197,7 @@ import type * as contentRelease_material_page from "../contentRelease/material/p
 import type * as contentRelease_material_partition from "../contentRelease/material/partition.js";
 import type * as contentRelease_material_route from "../contentRelease/material/route.js";
 import type * as contentRelease_material_sitemap from "../contentRelease/material/sitemap.js";
+import type * as contentRelease_material_source from "../contentRelease/material/source.js";
 import type * as contentRelease_material_spec from "../contentRelease/material/spec.js";
 import type * as contentRelease_material_sync from "../contentRelease/material/sync.js";
 import type * as contentRelease_material_verify from "../contentRelease/material/verify.js";
@@ -715,6 +716,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material/partition": typeof contentRelease_material_partition;
   "contentRelease/material/route": typeof contentRelease_material_route;
   "contentRelease/material/sitemap": typeof contentRelease_material_sitemap;
+  "contentRelease/material/source": typeof contentRelease_material_source;
   "contentRelease/material/spec": typeof contentRelease_material_spec;
   "contentRelease/material/sync": typeof contentRelease_material_sync;
   "contentRelease/material/verify": typeof contentRelease_material_verify;

@@ -95,30 +95,30 @@ async function insertLegacyArticleTarget(target: TestConvex<typeof schema>) {
   return projection;
 }
 
+/** Runs one target lookup through the production Effect boundary. */
+function readTarget(
+  target: TestConvex<typeof schema>,
+  input: ContentViewTargetInput
+) {
+  return target.query((ctx) => runConvexProgram(loadContentTarget(ctx, input)));
+}
+
 describe("contents/views/target", () => {
   it("returns best-effort misses for unknown or incomplete routes", async () => {
     const target = convexTest(schema, convexModules);
     const contentId = await insertSourceTarget(target);
     const results = await Promise.all([
-      target.query((ctx) =>
-        runConvexProgram(
-          loadContentTarget(ctx, {
-            contentId: "asset:id:missing",
-            locale: "id",
-            publicPath: "articles/politics/missing",
-            section: "articles",
-          })
-        )
-      ),
-      target.query((ctx) =>
-        runConvexProgram(
-          loadContentTarget(ctx, {
-            contentId,
-            locale: "en",
-            publicPath: SOURCE_PATH,
-          })
-        )
-      ),
+      readTarget(target, {
+        contentId: "asset:id:missing",
+        locale: "id",
+        publicPath: "articles/politics/missing",
+        section: "articles",
+      }),
+      readTarget(target, {
+        contentId,
+        locale: "en",
+        publicPath: SOURCE_PATH,
+      }),
     ]);
 
     expect(results).toEqual([null, null]);
@@ -128,24 +128,16 @@ describe("contents/views/target", () => {
     const target = convexTest(schema, convexModules);
     const contentId = await insertSourceTarget(target);
     const results = await Promise.all([
-      target.query((ctx) =>
-        runConvexProgram(
-          loadContentTarget(ctx, {
-            contentId,
-            locale: "en",
-            publicPath: SOURCE_PATH,
-            section: "articles",
-          })
-        )
-      ),
-      target.query((ctx) =>
-        runConvexProgram(
-          loadContentTarget(ctx, {
-            contentId,
-            locale: "en",
-          })
-        )
-      ),
+      readTarget(target, {
+        contentId,
+        locale: "en",
+        publicPath: SOURCE_PATH,
+        section: "articles",
+      }),
+      readTarget(target, {
+        contentId,
+        locale: "en",
+      }),
     ]);
 
     expect(results).toMatchObject([

@@ -5,7 +5,11 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
+import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import {
+  activateMaterialCatalog,
+  selectExactMaterial,
+} from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -51,6 +55,31 @@ describe("contentRelease/material/sitemap", () => {
         },
       ])
     );
+  });
+
+  it("lists partial buckets while returning only exact-owned routes", async () => {
+    const target = convexTest(schema, convexModules);
+    const selected = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(target);
+    await selectExactMaterial(target, selected);
+    const result = await target.query((ctx) =>
+      runConvexProgram(readMaterialBuckets(ctx, "en"))
+    );
+
+    expect(result).toMatchObject({ managed: false, materialCount: 2 });
+    const pages = await Promise.all(
+      result.buckets.map((bucket) =>
+        target.query((ctx) =>
+          runConvexProgram(readMaterialSitemap(ctx, "en", bucket))
+        )
+      )
+    );
+    expect(pages.flatMap((page) => page?.routes ?? [])).toEqual([
+      {
+        date: selected.metadata.date,
+        publicPath: selected.publicPath,
+      },
+    ]);
   });
 
   it("rejects malformed stored partition metadata", async () => {

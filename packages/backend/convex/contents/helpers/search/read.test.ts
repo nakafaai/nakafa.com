@@ -11,6 +11,7 @@ import {
   activateMaterialCatalog,
   insertMaterialProjection,
   MATERIAL_IDENTITY,
+  selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
@@ -282,6 +283,66 @@ describe("readContentSearchDocuments", () => {
     );
 
     expect(documents).toMatchObject([
+      {
+        content_id: projection.graph.assetId,
+        route: projection.publicPath,
+        section: "material",
+        title: projection.metadata.title,
+      },
+    ]);
+  });
+
+  it("replaces one stale source result through exact material ownership", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const projection = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(t, [projection]);
+    await selectExactMaterial(t, projection);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeIndex(ctx, projection.contentKey, {
+        headSequence: MATERIAL_IDENTITY.sequence,
+        locale: projection.locale,
+        plainText: "exact owned searchable material",
+      });
+      await insertContentSearch(ctx, {
+        contentHash: "stale-exact-material",
+        description: "",
+        locale: projection.locale,
+        route: "subjects/test/technical-topic/old-section",
+        section: "material",
+        sourcePath: projection.contentKey,
+        syncedAt: 1,
+        text: "exact owned searchable material",
+        title: "Stale exact source material",
+      });
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        searchManifestHash: MATERIAL_IDENTITY.manifestHash,
+        searchReleaseId: MATERIAL_IDENTITY.releaseId,
+        searchSequence: MATERIAL_IDENTITY.sequence,
+      });
+    });
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readContentSearchDocuments(
+            ctx,
+            {
+              limit: 10,
+              locale: projection.locale,
+              offset: 0,
+              queries: ["exact owned searchable material"],
+              section: "material",
+            },
+            ["exact owned searchable material"],
+            10
+          )
+        )
+      )
+    ).resolves.toMatchObject([
       {
         content_id: projection.graph.assetId,
         route: projection.publicPath,

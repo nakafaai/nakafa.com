@@ -11,15 +11,20 @@ type ActiveIdentity = Exclude<
   null
 >;
 
+/** Checks whether the active material read model matches one release. */
+function isMaterialStateReady(active: ActiveIdentity) {
+  return (
+    active.state.materialManifestHash === active.manifestHash &&
+    active.state.materialReleaseId === active.releaseId &&
+    active.state.materialSequence === active.sequence
+  );
+}
+
 /** Requires the active material read model to match its publication identity. */
 export const requireMaterialState = Effect.fn(
   "contentRelease.requireMaterialState"
 )(function* (active: ActiveIdentity, locale: Doc<"contentKeys">["locale"]) {
-  if (
-    active.state.materialManifestHash !== active.manifestHash ||
-    active.state.materialReleaseId !== active.releaseId ||
-    active.state.materialSequence !== active.sequence
-  ) {
+  if (!isMaterialStateReady(active)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
       `Materials for ${locale} in active release ${active.releaseId} are still synchronizing.`
@@ -27,19 +32,35 @@ export const requireMaterialState = Effect.fn(
   }
 });
 
+/** Loads active material catalog readiness independently of family ownership. */
+export const loadMaterialCatalogOwner = Effect.fn(
+  "contentRelease.loadMaterialCatalogOwner"
+)(function* (ctx: QueryCtx) {
+  const active = yield* loadActiveIdentity(ctx);
+  if (!active) {
+    return { active: null, familyManaged: false, ready: false };
+  }
+  const families = yield* loadReleaseFamilies(active.release);
+  const familyManaged = families.result.includes("material");
+  const ready = isMaterialStateReady(active);
+  if (familyManaged && !ready) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      `Materials in active release ${active.releaseId} are still synchronizing.`
+    );
+  }
+  return { active, familyManaged, ready };
+});
+
 /** Loads material ownership only after its active read model is complete. */
 export const loadMaterialOwner = Effect.fn("contentRelease.loadMaterialOwner")(
   function* (ctx: QueryCtx, locale: Doc<"contentKeys">["locale"]) {
-    const active = yield* loadActiveIdentity(ctx);
-    if (!active) {
-      return { active: null, managed: false };
+    const owner = yield* loadMaterialCatalogOwner(ctx);
+    if (!(owner.active && owner.familyManaged)) {
+      return { active: owner.active, managed: false };
     }
-    const families = yield* loadReleaseFamilies(active.release);
-    if (!families.result.includes("material")) {
-      return { active, managed: false };
-    }
-    yield* requireMaterialState(active, locale);
-    return { active, managed: true };
+    yield* requireMaterialState(owner.active, locale);
+    return { active: owner.active, managed: true };
   }
 );
 
@@ -51,15 +72,18 @@ export const loadMaterialIdentityOwner = Effect.fn(
   contentKey: string,
   locale: Doc<"contentKeys">["locale"]
 ) {
-  const family = yield* loadMaterialOwner(ctx, locale);
-  if (!(family.active && !family.managed)) {
-    return family;
+  const catalog = yield* loadMaterialCatalogOwner(ctx);
+  if (!catalog.active) {
+    return { active: null, managed: false };
+  }
+  if (catalog.familyManaged) {
+    return { active: catalog.active, managed: true };
   }
   const owner = yield* loadContentOwner(
     ctx,
     contentKey,
     locale,
-    family.active.sequence
+    catalog.active.sequence
   );
   if (owner && owner.family !== "material") {
     return yield* releaseFail(
@@ -68,10 +92,10 @@ export const loadMaterialIdentityOwner = Effect.fn(
     );
   }
   if (owner?.managed) {
-    yield* requireMaterialState(family.active, locale);
+    yield* requireMaterialState(catalog.active, locale);
   }
   return {
-    active: family.active,
+    active: catalog.active,
     managed: owner?.managed === true,
   };
 });

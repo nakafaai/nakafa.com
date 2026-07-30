@@ -118,6 +118,8 @@ export const getContentSitemapPageImpl = Effect.fn(
         kind: route.kind,
         route: route.route,
         section: route.section,
+        sourceParentPath: route.sourceParentPath,
+        sourcePath: route.sourcePath,
         syncedAt: route.syncedAt,
       }))
     );

@@ -65,3 +65,27 @@ export const resolveMaterialRoute = Effect.fn(
     material: { ...verified, row },
   };
 });
+
+/** Selects one catalog row only when its active ownership makes it visible. */
+export const readVisibleMaterial = Effect.fn(
+  "contentRelease.readVisibleMaterial"
+)(function* (
+  ctx: QueryCtx,
+  row: Doc<"materialCatalog">,
+  familyManaged: boolean
+) {
+  if (familyManaged) {
+    return { ...(yield* verifyMaterial(row)), row };
+  }
+  const route = yield* resolveMaterialRoute(ctx, row.locale, row.publicPath);
+  if (!route.material) {
+    return null;
+  }
+  if (route.material.row._id !== row._id) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Material ${row.locale}/${row.publicPath} resolved a different catalog row.`
+    );
+  }
+  return route.material;
+});

@@ -5,16 +5,19 @@ import {
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
+import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { readMaterialPartition } from "@repo/backend/convex/contentRelease/material/partition";
 import { Effect } from "effect";
 
-/** Lists non-empty deterministic partitions for managed materials. */
+/** Lists non-empty deterministic partitions for visible published materials. */
 export const readMaterialBuckets = Effect.fn(
   "contentRelease.readMaterialBuckets"
-)(function* (ctx: QueryCtx, locale: Parameters<typeof loadMaterialOwner>[1]) {
-  const owner = yield* loadMaterialOwner(ctx, locale);
-  if (!(owner.managed && owner.active)) {
+)(function* (
+  ctx: QueryCtx,
+  locale: Parameters<typeof readMaterialPartition>[1]
+) {
+  const owner = yield* loadMaterialCatalogOwner(ctx);
+  if (!(owner.active && owner.ready)) {
     return { buckets: [], managed: false, materialCount: 0 };
   }
   const rows = yield* Effect.promise(() =>
@@ -43,7 +46,7 @@ export const readMaterialBuckets = Effect.fn(
   }
   return {
     buckets: rows.map(({ bucket }) => bucket),
-    managed: true,
+    managed: owner.familyManaged,
     materialCount: rows.reduce((total, { count }) => total + count, 0),
   };
 });
@@ -53,7 +56,7 @@ export const readMaterialSitemap = Effect.fn(
   "contentRelease.readMaterialSitemap"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadMaterialOwner>[1],
+  locale: Parameters<typeof readMaterialPartition>[1],
   bucket: string
 ) {
   const partition = yield* readMaterialPartition(ctx, locale, bucket);

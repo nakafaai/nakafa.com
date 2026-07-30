@@ -1,10 +1,12 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   CONTENT_BUCKET_SIZE,
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
+import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/material/owner";
+import { readVisibleMaterial } from "@repo/backend/convex/contentRelease/material/route";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { Effect } from "effect";
 
@@ -13,7 +15,7 @@ export const readMaterialPartition = Effect.fn(
   "contentRelease.readMaterialPartition"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadMaterialOwner>[1],
+  locale: Doc<"materialCatalog">["locale"],
   bucket: string
 ) {
   if (!isProjectionBucket(bucket)) {
@@ -22,8 +24,8 @@ export const readMaterialPartition = Effect.fn(
       `Material discovery bucket ${bucket} is invalid.`
     );
   }
-  const owner = yield* loadMaterialOwner(ctx, locale);
-  if (!(owner.managed && owner.active)) {
+  const owner = yield* loadMaterialCatalogOwner(ctx);
+  if (!(owner.active && owner.ready)) {
     return { kind: "unmanaged" as const };
   }
   const count = yield* Effect.promise(() =>
@@ -55,8 +57,12 @@ export const readMaterialPartition = Effect.fn(
       `Material discovery bucket ${locale}/${bucket} has mismatched counts.`
     );
   }
-  return {
-    kind: "found" as const,
-    materials: yield* Effect.forEach(rows, verifyMaterial),
-  };
+  const materials = owner.familyManaged
+    ? yield* Effect.forEach(rows, verifyMaterial)
+    : (yield* Effect.forEach(rows, (row) =>
+        readVisibleMaterial(ctx, row, false)
+      )).filter((material) => material !== null);
+  return materials.length === 0
+    ? { kind: "missing" as const }
+    : { kind: "found" as const, materials };
 });

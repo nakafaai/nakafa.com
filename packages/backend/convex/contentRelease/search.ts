@@ -88,6 +88,10 @@ export const loadSearchOwner = Effect.fn("contentRelease.loadSearchOwner")(
       );
     }
     const families = yield* loadReleaseFamilies(active.release);
+    const materialReady =
+      state.materialManifestHash === active.manifestHash &&
+      state.materialReleaseId === active.releaseId &&
+      state.materialSequence === active.sequence;
     const readyFamilies = families.result.filter((family) => {
       if (family === "article") {
         return (
@@ -97,17 +101,14 @@ export const loadSearchOwner = Effect.fn("contentRelease.loadSearchOwner")(
         );
       }
       if (family === "material") {
-        return (
-          state.materialManifestHash === active.manifestHash &&
-          state.materialReleaseId === active.releaseId &&
-          state.materialSequence === active.sequence
-        );
+        return materialReady;
       }
       return true;
     });
     return {
       families: families.result,
       manifestHash: active.manifestHash,
+      materialReady,
       readyFamilies,
       releaseId: active.releaseId,
       sequence: active.sequence,
@@ -173,13 +174,16 @@ const searchPage = Effect.fn("contentRelease.searchProjectionPage")(function* (
         numItems: options.numItems,
       })
   );
-  const page = yield* Effect.forEach(stored.page, (hit) =>
+  const candidates = yield* Effect.forEach(stored.page, (hit) =>
     resolveSearchProjection(ctx, hit, active)
   );
   return {
     activeManifestHash: active.manifestHash,
     activeReleaseId: active.releaseId,
-    result: { ...stored, page },
+    result: {
+      ...stored,
+      page: candidates.filter((candidate) => candidate !== null),
+    },
   };
 });
 

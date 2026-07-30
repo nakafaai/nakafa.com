@@ -5,6 +5,7 @@ import { type Infer, v } from "convex/values";
 export const materialSourceCandidateValidator = v.object({
   contentKey: v.string(),
   locale: localeValidator,
+  parentPath: v.optional(v.string()),
 });
 
 export type MaterialSourceCandidate = Infer<

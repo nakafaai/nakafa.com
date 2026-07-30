@@ -38,7 +38,7 @@ export function getPublishedSearchFamilies(
     families.push("article");
   }
   if (
-    owner.readyFamilies.includes("material") &&
+    owner.materialReady &&
     (section === undefined || section === "material")
   ) {
     families.push("material");
@@ -210,10 +210,10 @@ function authenticateSearchRows(
     rows,
     (row) =>
       authenticateSearchRow(ctx, row, owner).pipe(
-        Effect.map((document) => ({ document, row }))
+        Effect.map((document) => (document ? { document, row } : null))
       ),
     { concurrency: "unbounded" }
-  );
+  ).pipe(Effect.map((results) => results.filter((result) => result !== null)));
 }
 
 /** Verifies one search hit against its active immutable projection. */
@@ -225,6 +225,9 @@ const authenticateSearchRow = Effect.fn(
   owner: PublishedSearchOwner
 ) {
   const resolved = yield* resolveSearchProjection(ctx, row, owner);
+  if (!resolved) {
+    return null;
+  }
   const projection = yield* decodeProjectionJson(resolved.projectionJson);
   if (projection.kind === "question-body") {
     return yield* releaseFail(

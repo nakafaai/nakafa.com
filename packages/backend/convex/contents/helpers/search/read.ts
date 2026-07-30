@@ -1,6 +1,9 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
 import { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
 import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
+import type { ContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/groups";
 import { interleaveSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
 import {
   getPublishedSearchFamilies,
@@ -30,7 +33,7 @@ export const readContentSearchDocuments = Effect.fn(
   }
   const owner = yield* loadSearchOwner(ctx);
   const publishedFamilies = getPublishedSearchFamilies(owner, args.section);
-  const sourceSections = getSourceSections(publishedFamilies, args.section);
+  const sourceSections = getSourceSections(owner, args.section);
   const [published, source] = yield* Effect.all(
     [
       owner && publishedFamilies.length > 0
@@ -49,6 +52,10 @@ export const readContentSearchDocuments = Effect.fn(
         queryTexts,
         scanLimit,
         sourceSections
+      ).pipe(
+        Effect.flatMap((documents) =>
+          filterClaimedSourceMaterials(ctx, documents, owner)
+        )
       ),
     ],
     { concurrency: "unbounded" }
@@ -62,15 +69,58 @@ export const readContentSearchDocuments = Effect.fn(
 
 /** Returns only sections whose source ownership remains with Nakafa. */
 function getSourceSections(
-  publishedFamilies: ReturnType<typeof getPublishedSearchFamilies>,
+  owner: Effect.Effect.Success<ReturnType<typeof loadSearchOwner>>,
   section: ContentSearchInput["section"]
 ) {
   const requested = section ? [section] : NAKAFA_CONTENT_SECTIONS;
   return requested.filter(
     (candidate): candidate is NakafaSection =>
       !(
-        (candidate === "articles" && publishedFamilies.includes("article")) ||
-        (candidate === "material" && publishedFamilies.includes("material"))
+        (candidate === "articles" &&
+          owner?.readyFamilies.includes("article")) ||
+        (candidate === "material" &&
+          owner?.materialReady &&
+          owner.families.includes("material"))
       )
   );
 }
+
+/** Removes source search rows whose stable identity has exact active ownership. */
+const filterClaimedSourceMaterials = Effect.fn(
+  "contents.search.filterClaimedMaterials"
+)(function* (
+  ctx: QueryCtx,
+  documents: readonly ContentSearchDocument[],
+  owner: Effect.Effect.Success<ReturnType<typeof loadSearchOwner>>
+) {
+  if (!(owner?.materialReady && !owner.families.includes("material"))) {
+    return documents;
+  }
+  const visible = yield* Effect.forEach(
+    documents,
+    (document) =>
+      document.section === "material"
+        ? loadContentOwner(
+            ctx,
+            document.sourcePath,
+            document.locale,
+            owner.sequence
+          ).pipe(
+            Effect.flatMap((contentOwner) => {
+              if (!contentOwner?.managed) {
+                return Effect.succeed(document);
+              }
+              if (contentOwner.family === "material") {
+                return Effect.succeed(null);
+              }
+              return releaseFail(
+                "CONTENT_RELEASE_INTEGRITY",
+                `Source material ${document.sourcePath}/${document.locale} changed ownership family.`
+              );
+            })
+          )
+        : Effect.succeed(document),
+    { concurrency: "unbounded" }
+  );
+  return visible.filter((document) => document !== null);
+});

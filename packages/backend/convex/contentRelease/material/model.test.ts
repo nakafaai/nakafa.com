@@ -1,4 +1,3 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
 import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
@@ -17,8 +16,6 @@ import {
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
-
-const testLocale = Schema.decodeUnknownSync(ContentLocaleSchema)("en");
 
 /** Decodes one returned material projection for result assertions. */
 function decodeProjection(source: string) {
@@ -175,37 +172,6 @@ describe("contentRelease/material/model", () => {
         locale: requested.locale,
       },
     ]);
-  });
-
-  it.each([
-    [
-      "duplicate",
-      [
-        { contentKey: "material/test", locale: testLocale },
-        { contentKey: "material/test", locale: testLocale },
-      ],
-    ],
-    ["invalid", [{ contentKey: "", locale: testLocale }]],
-  ])("rejects a %s source-shell identity", async (_label, candidates) => {
-    const t = convexTest(schema, convexModules);
-    const requested = makeMaterialProjection("en", 1);
-    await activateMaterialCatalog(t);
-    await selectExactMaterial(t, requested);
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readMaterialModel(
-            ctx,
-            requested.locale,
-            requested.publicPath,
-            candidates
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
   });
 
   it("supports one exact material locale without claiming family parity", async () => {

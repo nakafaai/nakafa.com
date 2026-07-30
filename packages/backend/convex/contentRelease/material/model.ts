@@ -1,137 +1,16 @@
 import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
-import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
-import {
-  ReleaseError,
-  releaseFail,
-} from "@repo/backend/convex/contentRelease/error";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { MATERIAL_GROUP_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
-import { resolveMaterialRoute } from "@repo/backend/convex/contentRelease/material/route";
-import type {
-  MaterialSourceCandidate,
-  MaterialSourceClaim,
-} from "@repo/backend/convex/contentRelease/material/spec";
-import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import {
+  readVisibleMaterial,
+  resolveMaterialRoute,
+} from "@repo/backend/convex/contentRelease/material/route";
+import { resolveMaterialSourceModel } from "@repo/backend/convex/contentRelease/material/source";
+import type { MaterialSourceCandidate } from "@repo/backend/convex/contentRelease/material/spec";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
-import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
-import { Effect, Schema } from "effect";
-
-const MATERIAL_SOURCE_LIMIT =
-  MATERIAL_GROUP_LIMIT + ContentLocaleSchema.literals.length;
-
-/** Produces one stable identity for duplicate source-candidate checks. */
-function sourceIdentity(candidate: MaterialSourceCandidate) {
-  return `${candidate.locale}\0${candidate.contentKey}`;
-}
-
-/** Reconciles source-shell identities claimed by active exact ownership. */
-const readSourceClaims = Effect.fn("contentRelease.readMaterialSourceClaims")(
-  function* (
-    ctx: QueryCtx,
-    activeSequence: number | undefined,
-    familyManaged: boolean,
-    candidates: readonly MaterialSourceCandidate[]
-  ) {
-    if (candidates.length > MATERIAL_SOURCE_LIMIT) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_LIMIT",
-        `Material source shell exceeds ${MATERIAL_SOURCE_LIMIT} identities.`
-      );
-    }
-    const identities = new Set(candidates.map(sourceIdentity));
-    if (identities.size !== candidates.length) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Material source shell repeats one content identity."
-      );
-    }
-    if (familyManaged || activeSequence === undefined) {
-      return [];
-    }
-    const claims = yield* Effect.forEach(candidates, (candidate) =>
-      Effect.gen(function* () {
-        const contentKey = yield* Schema.decodeUnknown(ContentKeySchema)(
-          candidate.contentKey
-        ).pipe(
-          Effect.mapError(
-            () =>
-              new ReleaseError({
-                code: "CONTENT_RELEASE_INTEGRITY",
-                message: `Material source shell has invalid content identity ${candidate.contentKey}.`,
-              })
-          )
-        );
-        const owner = yield* loadContentOwner(
-          ctx,
-          contentKey,
-          candidate.locale,
-          activeSequence
-        );
-        if (!owner?.managed) {
-          return null;
-        }
-        if (owner.family !== "material") {
-          return yield* releaseFail(
-            "CONTENT_RELEASE_INTEGRITY",
-            `Material source ${contentKey}/${candidate.locale} changed ownership family.`
-          );
-        }
-        const projection = yield* resolvePublicProjection(
-          ctx,
-          contentKey,
-          candidate.locale,
-          activeSequence
-        );
-        if (!projection) {
-          return {
-            contentKey,
-            kind: "missing",
-            locale: candidate.locale,
-          } satisfies MaterialSourceClaim;
-        }
-        if (projection.family !== "material") {
-          return yield* releaseFail(
-            "CONTENT_RELEASE_INTEGRITY",
-            `Material source ${contentKey}/${candidate.locale} resolved a non-material projection.`
-          );
-        }
-        return {
-          contentKey,
-          kind: "found",
-          locale: candidate.locale,
-          projectionJson: projection.projectionJson,
-        } satisfies MaterialSourceClaim;
-      })
-    );
-    return claims.filter((claim) => claim !== null);
-  }
-);
-
-/** Selects one catalog row only when its active ownership makes it visible. */
-const readVisibleMaterial = Effect.fn("contentRelease.readVisibleMaterial")(
-  function* (
-    ctx: QueryCtx,
-    row: Doc<"materialCatalog">,
-    familyManaged: boolean
-  ) {
-    if (familyManaged) {
-      return { ...(yield* verifyMaterial(row)), row };
-    }
-    const route = yield* resolveMaterialRoute(ctx, row.locale, row.publicPath);
-    if (!route.material) {
-      return null;
-    }
-    if (route.material.row._id !== row._id) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Material ${row.locale}/${row.publicPath} resolved a different catalog row.`
-      );
-    }
-    return route.material;
-  }
-);
+import { Effect } from "effect";
 
 /** Reads every locale-specific counterpart for one stable material identity. */
 const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
@@ -219,12 +98,14 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
     sourceCandidates: readonly MaterialSourceCandidate[] = []
   ) {
     const route = yield* resolveMaterialRoute(ctx, locale, publicPath);
-    const sourceClaims = yield* readSourceClaims(
-      ctx,
-      route.active?.sequence,
-      route.familyManaged,
-      sourceCandidates
-    );
+    const { sourceClaims, sourceProjectionJson } =
+      yield* resolveMaterialSourceModel(
+        ctx,
+        locale,
+        route.active,
+        route.familyManaged,
+        sourceCandidates
+      );
     if (!(route.managed && route.active)) {
       return {
         activeManifestHash: route.active?.manifestHash ?? null,
@@ -237,6 +118,7 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
         siblingJson: [],
         sourceClaims,
         sourcePath: null,
+        sourceProjectionJson,
         sourceRevision: null,
       };
     }
@@ -252,6 +134,7 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
         siblingJson: [],
         sourceClaims,
         sourcePath: null,
+        sourceProjectionJson,
         sourceRevision: readSourceRevision(route.active),
       };
     }
@@ -271,6 +154,7 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
       siblingJson: siblings.map(({ projectionJson }) => projectionJson),
       sourceClaims,
       sourcePath: row.sourcePath,
+      sourceProjectionJson,
       sourceRevision: readSourceRevision(route.active),
     };
   }

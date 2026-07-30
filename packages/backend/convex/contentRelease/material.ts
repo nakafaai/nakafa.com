@@ -10,6 +10,10 @@ import {
   readMaterialSitemap,
 } from "@repo/backend/convex/contentRelease/material/sitemap";
 import {
+  readMaterialClaims,
+  readMaterialShell,
+} from "@repo/backend/convex/contentRelease/material/source";
+import {
   materialSourceCandidateValidator,
   materialSourceClaimValidator,
 } from "@repo/backend/convex/contentRelease/material/spec";
@@ -23,6 +27,7 @@ import {
   paginationResultValidator,
 } from "convex/server";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const materialModelValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),
@@ -35,6 +40,7 @@ const materialModelValidator = v.object({
   siblingJson: v.array(v.string()),
   sourceClaims: v.array(materialSourceClaimValidator),
   sourcePath: v.union(v.string(), v.null()),
+  sourceProjectionJson: v.array(v.string()),
   sourceRevision: v.union(v.string(), v.null()),
 });
 
@@ -83,6 +89,15 @@ const materialSitemapValidator = v.union(
   })
 );
 
+const materialClaimsValidator = v.object({
+  sourceClaims: v.array(materialSourceClaimValidator),
+});
+
+const materialShellValidator = v.object({
+  sourceClaims: v.array(materialSourceClaimValidator),
+  sourceProjectionJson: v.array(v.string()),
+});
+
 /** Returns one complete managed material discovery partition. */
 export const bucket = query({
   args: { bucket: v.string(), locale: localeValidator },
@@ -99,6 +114,20 @@ export const latest = query({
     runConvexProgram(readLatestMaterials(ctx, locale, limit)),
 });
 
+/** Resolves exact active claims for one bounded source-owned material set. */
+export const claims = query({
+  args: {
+    sourceCandidates: v.array(materialSourceCandidateValidator),
+  },
+  returns: materialClaimsValidator,
+  handler: (ctx, { sourceCandidates }) =>
+    runConvexProgram(
+      readMaterialClaims(ctx, sourceCandidates).pipe(
+        Effect.map((sourceClaims) => ({ sourceClaims }))
+      )
+    ),
+});
+
 /** Resolves one complete active material shell model by localized path. */
 export const route = query({
   args: {
@@ -111,6 +140,17 @@ export const route = query({
     runConvexProgram(
       readMaterialModel(ctx, locale, publicPath, sourceCandidates)
     ),
+});
+
+/** Resolves one bounded exact overlay for source-owned material rows. */
+export const shell = query({
+  args: {
+    locale: localeValidator,
+    sourceCandidates: v.array(materialSourceCandidateValidator),
+  },
+  returns: materialShellValidator,
+  handler: (ctx, { locale, sourceCandidates }) =>
+    runConvexProgram(readMaterialShell(ctx, locale, sourceCandidates)),
 });
 
 /** Returns non-empty material discovery partitions for one locale. */
