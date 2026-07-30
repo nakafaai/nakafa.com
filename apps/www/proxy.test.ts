@@ -282,7 +282,18 @@ describe("proxy", () => {
     "delegates %s/%s to the locale middleware",
     async (locale, path, publicPath, kind) => {
       runtimeMocks.readPublic.mockReturnValueOnce(
-        Effect.succeed({ kind, sitemap: true })
+        Effect.succeed({
+          kind,
+          locale,
+          publicPath,
+          sitemap: true,
+          ...(kind === "subject-lesson"
+            ? {
+                sourcePath:
+                  "material/lesson/chemistry/green-chemistry/definition",
+              }
+            : {}),
+        })
       );
       const response = await requestProxy(path);
 
