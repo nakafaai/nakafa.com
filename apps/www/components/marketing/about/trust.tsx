@@ -62,9 +62,11 @@ function readTrustLessonHref(locale: Locale) {
 /** Renders the learner-facing side with Nakafa's shared MDX components. */
 function TrustLessonPreview({
   excerpt,
+  headingIdPrefix,
   lessonHref,
 }: {
   excerpt: TrustLessonExcerpt;
+  headingIdPrefix: string;
   lessonHref: string;
 }) {
   const t = useTranslations("TrustSection");
@@ -97,7 +99,9 @@ function TrustLessonPreview({
         className="px-6 py-7 sm:px-8 lg:px-10 lg:py-8"
       >
         <div className="mx-auto max-w-3xl">
-          <MdxHeading3>{excerpt.heading}</MdxHeading3>
+          <MdxHeading3 id={`${headingIdPrefix}-opening`}>
+            {excerpt.heading}
+          </MdxHeading3>
           <Paragraph>
             {excerpt.openingBeforeFolds} <InlineMath math={excerpt.foldsMath} />
             {excerpt.openingAfterFolds}{" "}
@@ -107,7 +111,9 @@ function TrustLessonPreview({
             {excerpt.growthBeforeYear} <InlineMath math={excerpt.yearMath} />
             {excerpt.growthAfterYear}
           </Paragraph>
-          <MdxHeading3>{excerpt.definitionHeading}</MdxHeading3>
+          <MdxHeading3 id={`${headingIdPrefix}-definition`}>
+            {excerpt.definitionHeading}
+          </MdxHeading3>
           <Paragraph>{excerpt.definition}</Paragraph>
           <BlockMath math={excerpt.sequenceMath} />
         </div>
@@ -179,11 +185,15 @@ function TrustComparison({
 
   return (
     <div className="border-t">
-      <div className="grid divide-y md:hidden">
-        <TrustLessonPreview excerpt={excerpt} lessonHref={lessonHref} />
+      <div className="grid divide-y lg:hidden">
+        <TrustLessonPreview
+          excerpt={excerpt}
+          headingIdPrefix="trust-compact"
+          lessonHref={lessonHref}
+        />
         <TrustSourcePreview excerpt={excerpt} sourceHref={sourceHref} />
       </div>
-      <div className="hidden h-[34rem] md:block">
+      <div className="hidden h-[50rem] lg:block">
         <ResizablePanelGroup
           defaultLayout={{
             "trust-human": 50,
@@ -197,7 +207,11 @@ function TrustComparison({
           }}
         >
           <ResizablePanel id="trust-human" maxSize="64%" minSize="36%">
-            <TrustLessonPreview excerpt={excerpt} lessonHref={lessonHref} />
+            <TrustLessonPreview
+              excerpt={excerpt}
+              headingIdPrefix="trust-comparison"
+              lessonHref={lessonHref}
+            />
           </ResizablePanel>
           <ResizableHandle
             aria-label={t("comparison-slider-label")}
