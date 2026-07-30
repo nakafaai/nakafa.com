@@ -96,12 +96,13 @@ export function FeaturesNina() {
   const setText = useAi((state) => state.setText);
   const ninaAnswer = t.raw("nina-answer");
   const ninaPrompt = t.raw("nina-prompt");
+  const ninaReasoning = t.raw("nina-reasoning");
   const ninaPartEntries = [
     {
       key: "features-nina-reasoning",
       part: {
         state: "done",
-        text: "",
+        text: ninaReasoning,
         type: "reasoning",
       },
     },

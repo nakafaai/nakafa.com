@@ -10,7 +10,7 @@ import {
   InlineMath,
 } from "@repo/design-system/components/markdown/math";
 import {
-  MdxHeading2,
+  MdxHeading3,
   MdxStrong,
 } from "@repo/design-system/components/markdown/mdx";
 import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
@@ -26,6 +26,11 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+
+import {
+  buildTrustSourceExcerpt,
+  type TrustLessonExcerpt,
+} from "./trust-source";
 
 const TRUST_MATERIAL_KEY = "lesson.mathematics.exponential-logarithm";
 const TRUST_SECTION_KEY = "basic-concept";
@@ -55,7 +60,13 @@ function readTrustLessonHref(locale: Locale) {
 }
 
 /** Renders the learner-facing side with Nakafa's shared MDX components. */
-function TrustLessonPreview({ lessonHref }: { lessonHref: string }) {
+function TrustLessonPreview({
+  excerpt,
+  lessonHref,
+}: {
+  excerpt: TrustLessonExcerpt;
+  lessonHref: string;
+}) {
   const t = useTranslations("TrustSection");
 
   return (
@@ -86,16 +97,19 @@ function TrustLessonPreview({ lessonHref }: { lessonHref: string }) {
         className="px-6 py-7 sm:px-8 lg:px-10 lg:py-8"
       >
         <div className="mx-auto max-w-3xl">
-          <MdxHeading2>{t("lesson-heading")}</MdxHeading2>
+          <MdxHeading3>{excerpt.heading}</MdxHeading3>
           <Paragraph>
-            {t("lesson-opening-before-folds")}{" "}
-            <InlineMath math={String(t.raw("lesson-folds-math"))} />
-            {t("lesson-opening-after-folds")}{" "}
-            <MdxStrong>{t("lesson-growth-term")}</MdxStrong>.
+            {excerpt.openingBeforeFolds} <InlineMath math={excerpt.foldsMath} />
+            {excerpt.openingAfterFolds}{" "}
+            <MdxStrong>{excerpt.growthTerm}</MdxStrong>.
           </Paragraph>
-          <MdxHeading2>{t("lesson-definition-heading")}</MdxHeading2>
-          <Paragraph>{t("lesson-definition")}</Paragraph>
-          <BlockMath math={String(t.raw("lesson-sequence-math"))} />
+          <Paragraph>
+            {excerpt.growthBeforeYear} <InlineMath math={excerpt.yearMath} />
+            {excerpt.growthAfterYear}
+          </Paragraph>
+          <MdxHeading3>{excerpt.definitionHeading}</MdxHeading3>
+          <Paragraph>{excerpt.definition}</Paragraph>
+          <BlockMath math={excerpt.sequenceMath} />
         </div>
       </article>
     </div>
@@ -103,7 +117,13 @@ function TrustLessonPreview({ lessonHref }: { lessonHref: string }) {
 }
 
 /** Renders the matching localized Markdown excerpt as open source text. */
-function TrustSourcePreview({ sourceHref }: { sourceHref: string }) {
+function TrustSourcePreview({
+  excerpt,
+  sourceHref,
+}: {
+  excerpt: TrustLessonExcerpt;
+  sourceHref: string;
+}) {
   const t = useTranslations("TrustSection");
 
   return (
@@ -134,10 +154,7 @@ function TrustSourcePreview({ sourceHref }: { sourceHref: string }) {
         />
       </div>
       <pre className="whitespace-pre-wrap break-words px-6 py-7 font-mono text-xs leading-6 sm:px-8 sm:text-sm lg:px-10 lg:py-8">
-        <code>
-          {String(t.raw("source-opening"))}
-          {String(t.raw("source-definition"))}
-        </code>
+        <code>{buildTrustSourceExcerpt(excerpt)}</code>
       </pre>
     </aside>
   );
@@ -150,9 +167,11 @@ function TrustSourcePreview({ sourceHref }: { sourceHref: string }) {
  * views at full width so neither proof becomes an unreadable narrow column.
  */
 function TrustComparison({
+  excerpt,
   lessonHref,
   sourceHref,
 }: {
+  excerpt: TrustLessonExcerpt;
   lessonHref: string;
   sourceHref: string;
 }) {
@@ -161,8 +180,8 @@ function TrustComparison({
   return (
     <div className="border-t">
       <div className="grid divide-y md:hidden">
-        <TrustLessonPreview lessonHref={lessonHref} />
-        <TrustSourcePreview sourceHref={sourceHref} />
+        <TrustLessonPreview excerpt={excerpt} lessonHref={lessonHref} />
+        <TrustSourcePreview excerpt={excerpt} sourceHref={sourceHref} />
       </div>
       <div className="hidden h-[34rem] md:block">
         <ResizablePanelGroup
@@ -178,7 +197,7 @@ function TrustComparison({
           }}
         >
           <ResizablePanel id="trust-human" maxSize="64%" minSize="36%">
-            <TrustLessonPreview lessonHref={lessonHref} />
+            <TrustLessonPreview excerpt={excerpt} lessonHref={lessonHref} />
           </ResizablePanel>
           <ResizableHandle
             aria-label={t("comparison-slider-label")}
@@ -186,7 +205,7 @@ function TrustComparison({
             withHandle
           />
           <ResizablePanel id="trust-agent" maxSize="64%" minSize="36%">
-            <TrustSourcePreview sourceHref={sourceHref} />
+            <TrustSourcePreview excerpt={excerpt} sourceHref={sourceHref} />
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
@@ -199,6 +218,19 @@ export function Trust({ locale }: { locale: Locale }) {
   const t = useTranslations("TrustSection");
   const lessonHref = readTrustLessonHref(locale);
   const sourceHref = `${lessonHref}.md`;
+  const excerpt: TrustLessonExcerpt = {
+    definition: t("lesson-definition"),
+    definitionHeading: t("lesson-definition-heading"),
+    foldsMath: String(t.raw("lesson-folds-math")),
+    growthAfterYear: t("lesson-growth-after-year"),
+    growthBeforeYear: t("lesson-growth-before-year"),
+    growthTerm: t("lesson-growth-term"),
+    heading: t("lesson-heading"),
+    openingAfterFolds: t("lesson-opening-after-folds"),
+    openingBeforeFolds: t("lesson-opening-before-folds"),
+    sequenceMath: String(t.raw("lesson-sequence-math")),
+    yearMath: String(t.raw("lesson-year-math")),
+  };
 
   return (
     <section className="scroll-mt-28 border-b" id="trust">
@@ -224,7 +256,11 @@ export function Trust({ locale }: { locale: Locale }) {
           />
         </div>
 
-        <TrustComparison lessonHref={lessonHref} sourceHref={sourceHref} />
+        <TrustComparison
+          excerpt={excerpt}
+          lessonHref={lessonHref}
+          sourceHref={sourceHref}
+        />
       </div>
     </section>
   );

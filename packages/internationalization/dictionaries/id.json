@@ -806,6 +806,7 @@
     "tryout-title": "Setelah belajar, coba lihat <mark>apa yang benar-benar kamu pahami</mark>",
     "nina-title": "Kalau masih ragu, <mark>Nina sudah tahu bagian mana yang kamu maksud</mark>",
     "nina-prompt": "Pada operasi $$\\triangle(a,b)=ka+\\frac{b}{m}$$, diketahui $$\\triangle(2,4)=8$$ dan $$\\triangle(3,5)=11$$. Bagaimana cara mencari $$\\triangle(5,9)$$?",
+    "nina-reasoning": "Bandingkan dua persamaan yang diketahui. Selisihnya menunjukkan nilai bulat positif $$k$$ dan $$m$$ sebelum perhitungan terakhir.",
     "nina-answer": "Kurangi persamaan pertama dari persamaan kedua:\n\n$$k+\\frac{1}{m}=3$$\n\nKarena $$k$$ dan $$m$$ bilangan bulat positif, $$\\frac{1}{m}$$ hanya bisa bulat saat $$m=1$$. Jadi $$k=2$$.\n\nMasukkan keduanya ke operasi terakhir:\n\n$$\\triangle(5,9)=5(2)+\\frac{9}{1}=19$$\n\nJadi $$\\triangle(5,9)=19$$.",
     "projectile-title": "Gerak yang sulit dibayangkan jadi lebih mudah saat <mark>bisa kamu lihat sendiri</mark>",
     "projectile-controls": "Pilih lintasan bola meriam",
@@ -842,11 +843,12 @@
     "lesson-folds-math": "42 \\text{ kali}",
     "lesson-opening-after-folds": "? Jika mungkin dilakukan, ketebalannya akan melebihi jarak bumi ke bulan! Ini karena setiap lipatan menghasilkan penggandaan ketebalan kertas, inilah yang disebut",
     "lesson-growth-term": "pertumbuhan eksponensial",
+    "lesson-growth-before-year": "Pertumbuhan eksponensial terjadi ketika sesuatu bertambah dengan faktor pengali tetap dalam setiap interval waktu. Pada awal",
+    "lesson-year-math": "2020",
+    "lesson-growth-after-year": ", dunia mengalami contoh nyata pertumbuhan eksponensial melalui penyebaran virus COVID-19. Satu orang terinfeksi dapat menularkan ke dua orang, kemudian empat, delapan, dan seterusnya.",
     "lesson-definition-heading": "Definisi Eksponen",
-    "lesson-definition": "Eksponen adalah cara singkat untuk menuliskan perkalian berulang. Setiap langkah dalam pola yang sama dapat ditulis lebih ringkas:",
-    "lesson-sequence-math": "1 = 2^0 \\quad 2 = 2^1 \\quad 4 = 2^2 \\quad 8 = 2^3 \\quad 16 = 2^4",
-    "source-opening": "## Dari Kertas hingga Pandemi\n\nPernahkah kamu membayangkan melipat selembar kertas sebanyak $$42 \\text{ kali}$$? Jika mungkin dilakukan,\nketebalannya akan melebihi jarak bumi ke bulan! Ini karena setiap lipatan menghasilkan penggandaan\nketebalan kertas, inilah yang disebut **pertumbuhan eksponensial**.",
-    "source-definition": "\n\n## Definisi Eksponen\n\nEksponen adalah cara singkat untuk menuliskan perkalian berulang. Setiap langkah dalam pola yang sama\ndapat ditulis lebih ringkas:\n\n<BlockMath math=\"1 = 2^0 \\\\quad 2 = 2^1 \\\\quad 4 = 2^2 \\\\quad 8 = 2^3 \\\\quad 16 = 2^4\" />"
+    "lesson-definition": "Eksponen adalah cara singkat untuk menuliskan perkalian berulang. Bayangkan kamu sedang menghitung berapa banyak orang yang tertular virus dalam kasus seperti COVID-19. Pada setiap fase penularan, jumlah orang yang tertular akan bertambah dengan pola yang menarik:",
+    "lesson-sequence-math": "1 = 2^0 \\quad 2 = 2^1 \\quad 4 = 2 \\times 2 = 2^2 \\quad 8 = 2 \\times 2 \\times 2 = 2^3 \\quad 16 = 2 \\times 2 \\times 2 \\times 2 = 2^4"
   },
   "About": {
     "meta-title": "Materi Belajar Terbuka Gratis dari SD sampai Universitas",
