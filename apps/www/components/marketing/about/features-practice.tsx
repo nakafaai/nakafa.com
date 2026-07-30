@@ -1,5 +1,7 @@
 "use client";
 
+import type { DataPart } from "@repo/ai/schema/data";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import {
   Conversation,
   ConversationContent,
@@ -23,6 +25,57 @@ import type { ClipboardEvent } from "react";
 
 import { AiChatModel } from "@/components/ai/chat-model";
 import { useAi } from "@/components/ai/context/use-ai";
+import { MessageProvider } from "@/components/ai/context/use-message";
+import { AiMessagePart } from "@/components/ai/message-part";
+
+const featuresNinaMathInput: DataPart["math"]["input"] = {
+  expression: "5 * 2 + 9 / 1",
+  kind: "math",
+  operation: "evaluate",
+};
+
+const featuresNinaMath: DataPart["math"] = {
+  input: featuresNinaMathInput,
+  kind: "evaluate",
+  result: {
+    conditions: [],
+    input: featuresNinaMathInput,
+    items: [],
+    kind: "evaluate",
+    operation: "evaluate",
+    primary: {
+      expression: "5 * 2 + 9 / 1",
+      latex: "5(2) + \\frac{9}{1}",
+    },
+    reason: "verified",
+    secondary: {
+      expression: "19",
+      latex: "19",
+    },
+    stepStatus: "complete",
+    steps: [
+      {
+        action: "evaluate",
+        items: [],
+        primary: {
+          expression: "5 * 2 + 9 / 1",
+          latex: "5(2) + \\frac{9}{1}",
+        },
+        relation: {
+          expression: "equals",
+          latex: "=",
+        },
+        secondary: {
+          expression: "19",
+          latex: "19",
+        },
+      },
+    ],
+    status: "verified",
+  },
+  status: "verified",
+  summary: "verified",
+};
 
 /** Keeps the marketing prompt text-only without changing Nina's shared input. */
 function stopAttachmentPaste(event: ClipboardEvent<HTMLFormElement>) {
@@ -43,6 +96,27 @@ export function FeaturesNina() {
   const setText = useAi((state) => state.setText);
   const ninaAnswer = t.raw("nina-answer");
   const ninaPrompt = t.raw("nina-prompt");
+  const ninaMessage: MyUIMessage = {
+    id: "features-nina-answer",
+    parts: [
+      {
+        state: "done",
+        text: "",
+        type: "reasoning",
+      },
+      {
+        data: featuresNinaMath,
+        id: "features-nina-math",
+        type: "data-math",
+      },
+      {
+        state: "done",
+        text: ninaAnswer,
+        type: "text",
+      },
+    ],
+    role: "assistant",
+  };
 
   /** Opens Nina with the learner's current marketing-page draft. */
   function handleSubmit(message: PromptInputMessage) {
@@ -71,9 +145,20 @@ export function FeaturesNina() {
             </MessageContent>
           </Message>
           <Message from="assistant">
-            <MessageContent>
-              <Response id="features-nina-answer">{ninaAnswer}</Response>
-            </MessageContent>
+            <MessageProvider message={ninaMessage}>
+              <div className="flex size-full flex-col gap-3 group-[.is-user]:items-end group-[.is-user]:justify-end">
+                <div className="flex flex-col gap-6">
+                  {ninaMessage.parts.map((part, index) => (
+                    <AiMessagePart
+                      // biome-ignore lint/suspicious/noArrayIndexKey: Nina parts may share a type and need stable sequence keys
+                      key={`features-nina-${part.type}-${index}`}
+                      part={part}
+                      partIndex={index}
+                    />
+                  ))}
+                </div>
+              </div>
+            </MessageProvider>
           </Message>
         </ConversationContent>
       </Conversation>
