@@ -190,6 +190,7 @@ import type * as contentRelease_manifest from "../contentRelease/manifest.js";
 import type * as contentRelease_material from "../contentRelease/material.js";
 import type * as contentRelease_material_bucket from "../contentRelease/material/bucket.js";
 import type * as contentRelease_material_discovery from "../contentRelease/material/discovery.js";
+import type * as contentRelease_material_exact from "../contentRelease/material/exact.js";
 import type * as contentRelease_material_limits from "../contentRelease/material/limits.js";
 import type * as contentRelease_material_model from "../contentRelease/material/model.js";
 import type * as contentRelease_material_owner from "../contentRelease/material/owner.js";
@@ -199,6 +200,7 @@ import type * as contentRelease_material_route from "../contentRelease/material/
 import type * as contentRelease_material_sitemap from "../contentRelease/material/sitemap.js";
 import type * as contentRelease_material_source from "../contentRelease/material/source.js";
 import type * as contentRelease_material_spec from "../contentRelease/material/spec.js";
+import type * as contentRelease_material_state from "../contentRelease/material/state.js";
 import type * as contentRelease_material_sync from "../contentRelease/material/sync.js";
 import type * as contentRelease_material_verify from "../contentRelease/material/verify.js";
 import type * as contentRelease_material_write from "../contentRelease/material/write.js";
@@ -709,6 +711,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material": typeof contentRelease_material;
   "contentRelease/material/bucket": typeof contentRelease_material_bucket;
   "contentRelease/material/discovery": typeof contentRelease_material_discovery;
+  "contentRelease/material/exact": typeof contentRelease_material_exact;
   "contentRelease/material/limits": typeof contentRelease_material_limits;
   "contentRelease/material/model": typeof contentRelease_material_model;
   "contentRelease/material/owner": typeof contentRelease_material_owner;
@@ -718,6 +721,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material/sitemap": typeof contentRelease_material_sitemap;
   "contentRelease/material/source": typeof contentRelease_material_source;
   "contentRelease/material/spec": typeof contentRelease_material_spec;
+  "contentRelease/material/state": typeof contentRelease_material_state;
   "contentRelease/material/sync": typeof contentRelease_material_sync;
   "contentRelease/material/verify": typeof contentRelease_material_verify;
   "contentRelease/material/write": typeof contentRelease_material_write;

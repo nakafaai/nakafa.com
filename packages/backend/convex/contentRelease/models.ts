@@ -10,6 +10,7 @@ import {
 } from "@repo/backend/convex/_generated/server";
 import { syncArticles } from "@repo/backend/convex/contentRelease/article/sync";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import { syncMaterials } from "@repo/backend/convex/contentRelease/material/sync";
 import { syncSearch } from "@repo/backend/convex/contentRelease/search/sync";
 import { loadSyncRelease } from "@repo/backend/convex/contentRelease/sync";
@@ -65,13 +66,12 @@ function getReadModelOwnership(
       state.articleReleaseId,
       state.articleSequence
     ),
-    material: ownsReadModel(
-      release,
-      signed,
-      state.materialManifestHash,
-      state.materialReleaseId,
-      state.materialSequence
-    ),
+    material: hasMaterialReadModel({
+      manifestHash: signed.manifestHash,
+      releaseId: release.releaseId,
+      sequence: release.sequence,
+      state,
+    }),
     search: ownsReadModel(
       release,
       signed,

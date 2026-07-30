@@ -115,5 +115,11 @@ export async function selectExactMaterial(
       releaseId: MATERIAL_IDENTITY.releaseId,
       sequence: MATERIAL_IDENTITY.sequence,
     });
+    await ctx.db.insert("materialOwners", {
+      contentKey: projection.contentKey,
+      locale: projection.locale,
+      releaseId: MATERIAL_IDENTITY.releaseId,
+      sequence: MATERIAL_IDENTITY.sequence,
+    });
   });
 }

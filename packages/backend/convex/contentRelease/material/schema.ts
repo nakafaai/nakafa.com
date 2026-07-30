@@ -50,6 +50,20 @@ const tables = {
       "publicPath",
     ]),
 
+  /** Current exact material ownership selected by the active release. */
+  materialOwners: defineTable({
+    contentKey: v.string(),
+    locale: localeValidator,
+    releaseId: v.string(),
+    sequence: v.number(),
+  })
+    .index("by_contentKey_and_locale", ["contentKey", "locale"])
+    .index("by_releaseId_and_locale_and_contentKey", [
+      "releaseId",
+      "locale",
+      "contentKey",
+    ]),
+
   /** Non-empty deterministic partitions for bounded material discovery. */
   materialBuckets: defineTable({
     bucket: v.string(),

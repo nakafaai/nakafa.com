@@ -3,7 +3,12 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  finalizeExactMaterialOwners,
+  syncExactMaterialOwner,
+} from "@repo/backend/convex/contentRelease/material/exact";
 import { MATERIAL_BASELINE_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
+import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import {
   deleteMaterial,
   writeMaterial,
@@ -46,7 +51,7 @@ const baselineMaterials = Effect.fn("contentRelease.baselineMaterials")(
   function* (
     ctx: MutationCtx,
     cursor: string | undefined,
-    activeSequence: number
+    active: Pick<Doc<"contentReleases">, "releaseId" | "sequence">
   ) {
     const stored = yield* Effect.promise(() =>
       ctx.db
@@ -66,8 +71,9 @@ const baselineMaterials = Effect.fn("contentRelease.baselineMaterials")(
         ctx,
         key.contentKey,
         key.locale,
-        activeSequence
+        active.sequence
       );
+      yield* syncExactMaterialOwner(ctx, key.contentKey, key.locale, active);
     }
     return {
       cursor: stored.isDone ? undefined : stored.continueCursor,
@@ -77,14 +83,37 @@ const baselineMaterials = Effect.fn("contentRelease.baselineMaterials")(
   }
 );
 
+/** Checks whether one optional identity triplet is complete. */
+function hasCompleteIdentity(fields: readonly unknown[]) {
+  return fields.every((field) => field !== undefined);
+}
+
+/** Rejects one partially persisted read-model identity. */
+const requireCompleteIdentity = Effect.fn(
+  "contentRelease.requireCompleteMaterialIdentity"
+)(function* (name: string, fields: readonly unknown[]) {
+  if (
+    !hasCompleteIdentity(fields) &&
+    fields.some((field) => field !== undefined)
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `${name} read-model ownership is partial.`
+    );
+  }
+});
+
 /** Advances the active material model through one durable release page. */
 export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
   function* (ctx: MutationCtx, releaseId: string) {
     const { release, signed, state } = yield* loadSyncRelease(ctx, releaseId);
     if (
-      state.materialManifestHash === signed.manifestHash &&
-      state.materialReleaseId === releaseId &&
-      state.materialSequence === release.sequence
+      hasMaterialReadModel({
+        manifestHash: signed.manifestHash,
+        releaseId,
+        sequence: release.sequence,
+        state,
+      })
     ) {
       return {
         done: true,
@@ -97,18 +126,41 @@ export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
       state.materialReleaseId,
       state.materialSequence,
     ];
-    const hasBaseline = materialIdentity.every((field) => field !== undefined);
-    if (!hasBaseline && materialIdentity.some((field) => field !== undefined)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Material read-model ownership is partial."
-      );
-    }
+    const materialOwnerIdentity = [
+      state.materialOwnerManifestHash,
+      state.materialOwnerReleaseId,
+      state.materialOwnerSequence,
+    ];
+    yield* Effect.all([
+      requireCompleteIdentity("Material", materialIdentity),
+      requireCompleteIdentity("Material owner", materialOwnerIdentity),
+    ]);
+    const hasMaterialBaseline = hasCompleteIdentity(materialIdentity);
+    const hasOwnerBaseline = hasCompleteIdentity(materialOwnerIdentity);
+    const hasRequiredBaseline =
+      hasMaterialBaseline &&
+      (hasOwnerBaseline || release.resultFamilies.includes("material"));
+    const rebuildOwners =
+      release.baseFamilies.includes("material") &&
+      !release.resultFamilies.includes("material");
+    const needsBaseline = !hasRequiredBaseline || rebuildOwners;
     let cursor: string | undefined;
     let done: boolean;
     let nextIndex = release.materialIndex ?? -1;
     let processed: number;
-    if (hasBaseline) {
+    if (needsBaseline) {
+      const baseline = yield* baselineMaterials(
+        ctx,
+        release.materialCursor,
+        release
+      );
+      cursor = baseline.cursor;
+      done = baseline.done;
+      processed = baseline.processed;
+      if (done) {
+        nextIndex = signed.manifest.itemCount - 1;
+      }
+    } else {
       const afterIndex = release.materialIndex ?? -1;
       const page = yield* loadReleaseItems(ctx, releaseId, afterIndex);
       for (const [offset, row] of page.page.entries()) {
@@ -134,18 +186,6 @@ export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
           `Material sync ${releaseId} stopped at item ${nextIndex}.`
         );
       }
-    } else {
-      const baseline = yield* baselineMaterials(
-        ctx,
-        release.materialCursor,
-        release.sequence
-      );
-      cursor = baseline.cursor;
-      done = baseline.done;
-      processed = baseline.processed;
-      if (done) {
-        nextIndex = signed.manifest.itemCount - 1;
-      }
     }
     const now = Date.now();
     yield* Effect.promise(() =>
@@ -157,9 +197,13 @@ export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
       })
     );
     if (done) {
+      yield* finalizeExactMaterialOwners(ctx, release);
       yield* Effect.promise(() =>
         ctx.db.patch("contentState", state._id, {
           materialManifestHash: signed.manifestHash,
+          materialOwnerManifestHash: signed.manifestHash,
+          materialOwnerReleaseId: releaseId,
+          materialOwnerSequence: release.sequence,
           materialReleaseId: releaseId,
           materialSequence: release.sequence,
           updatedAt: now,
