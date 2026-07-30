@@ -1,8 +1,8 @@
 import { routing } from "@repo/internationalization/src/routing";
 import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
+import { readOgMetadata } from "@/app/og/content";
 import { generateOGImage } from "@/lib/og";
-import { getCachedMetadataFromSlug } from "@/lib/utils/system";
 
 export async function GET(
   _req: NextRequest,
@@ -20,10 +20,7 @@ export async function GET(
   const contentSlug =
     cleanSlug.at(-1) === "image.png" ? cleanSlug.slice(0, -1) : cleanSlug;
 
-  const { title, description } = await getCachedMetadataFromSlug(
-    locale,
-    contentSlug
-  );
+  const { title, description } = await readOgMetadata(locale, contentSlug);
 
   return await generateOGImage({
     title,

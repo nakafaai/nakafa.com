@@ -183,7 +183,8 @@ async function resolveMaterialOwner(
       published = await getPublishedMaterialRoute(
         request.locale,
         request.publicPath,
-        candidates
+        candidates,
+        published.activeReleaseId
       );
     }
   }

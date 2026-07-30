@@ -29,6 +29,7 @@ import {
 import { getPublishedMaterialShell } from "@/lib/content/material/route";
 import {
   readMaterialSourceCandidates,
+  reconcileMaterialCurriculumRoutes,
   reconcileMaterialSourceRoutes,
 } from "@/lib/content/material/source";
 import { getPublishedMaterialCards } from "@/lib/content/program/cards";
@@ -189,9 +190,17 @@ export async function resolveRuntimeCurriculumRoute(
     const reconciled = Effect.runSync(
       reconcileMaterialSourceRoutes(locale, contentRoutes, model)
     );
+    const curriculumRoutes = Effect.runSync(
+      reconcileMaterialCurriculumRoutes(
+        sourceRoutes,
+        contentRoutes,
+        reconciled,
+        model
+      )
+    );
     materialCards = readCurriculumMaterialCards({
       contentRoutes: reconciled,
-      curriculumRoutes: sourceRoutes,
+      curriculumRoutes,
       route: source.route,
     });
   }

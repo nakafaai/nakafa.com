@@ -5,6 +5,7 @@ import { Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   listMaterialStaticParams,
+  parseMaterialParams,
   readMaterialRequest,
   readMaterialRoute,
   requireParentMaterialRoute,
@@ -89,6 +90,31 @@ beforeEach(() => {
 });
 
 describe("material route data", () => {
+  it("parses only concrete localized material slugs", () => {
+    expect(
+      parseMaterialParams("en", [
+        "subjects",
+        "mathematics",
+        "functions",
+        "concept",
+      ])
+    ).toEqual({
+      lesson: ["concept"],
+      locale: "en",
+      subject: "mathematics",
+      topic: "functions",
+    });
+    expect(
+      parseMaterialParams("en", ["subjects", "mathematics", "functions"])
+    ).toBeNull();
+    expect(
+      parseMaterialParams("en", ["articles", "politics", "example", "post"])
+    ).toBeNull();
+    expect(
+      parseMaterialParams("en", ["subjects", "", "functions", "concept"])
+    ).toBeNull();
+  });
+
   it("builds and resolves one exact localized material request", async () => {
     await expect(readMaterialRequest(params())).resolves.toEqual({
       locale: "en",

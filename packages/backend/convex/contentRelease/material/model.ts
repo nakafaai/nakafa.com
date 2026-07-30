@@ -7,7 +7,10 @@ import {
   readVisibleMaterial,
   resolveMaterialRoute,
 } from "@repo/backend/convex/contentRelease/material/route";
-import { resolveMaterialSourceModel } from "@repo/backend/convex/contentRelease/material/source";
+import {
+  requireExpectedMaterialRelease,
+  resolveMaterialSourceModel,
+} from "@repo/backend/convex/contentRelease/material/source";
 import type { MaterialSourceCandidate } from "@repo/backend/convex/contentRelease/material/spec";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect } from "effect";
@@ -95,9 +98,14 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
     ctx: QueryCtx,
     locale: Doc<"materialCatalog">["locale"],
     publicPath: string,
-    sourceCandidates: readonly MaterialSourceCandidate[] = []
+    sourceCandidates: readonly MaterialSourceCandidate[] = [],
+    expectedActiveReleaseId?: string | null
   ) {
     const route = yield* resolveMaterialRoute(ctx, locale, publicPath);
+    yield* requireExpectedMaterialRelease(
+      route.active,
+      expectedActiveReleaseId
+    );
     const { sourceClaims, sourceProjectionJson } =
       yield* resolveMaterialSourceModel(
         ctx,

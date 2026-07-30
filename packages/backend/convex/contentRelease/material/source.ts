@@ -81,7 +81,7 @@ type VisibleMaterial = Exclude<
 >;
 
 /** Requires one batched caller to keep reading the same active release. */
-const requireExpectedRelease = Effect.fn(
+export const requireExpectedMaterialRelease = Effect.fn(
   "contentRelease.requireExpectedMaterialRelease"
 )(function* (
   active: ActiveIdentity | null,
@@ -172,7 +172,7 @@ export const readMaterialClaims = Effect.fn(
     loadMaterialCatalogOwner(ctx),
     decodeSourceCandidates(candidates),
   ]);
-  const activeReleaseId = yield* requireExpectedRelease(
+  const activeReleaseId = yield* requireExpectedMaterialRelease(
     catalog.active,
     expectedActiveReleaseId
   );
@@ -277,7 +277,7 @@ export const readMaterialShell = Effect.fn(
   expectedActiveReleaseId?: string | null
 ) {
   const catalog = yield* loadMaterialCatalogOwner(ctx);
-  const activeReleaseId = yield* requireExpectedRelease(
+  const activeReleaseId = yield* requireExpectedMaterialRelease(
     catalog.active,
     expectedActiveReleaseId
   );

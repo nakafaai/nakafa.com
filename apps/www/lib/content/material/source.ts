@@ -4,6 +4,7 @@ import {
 } from "@repo/contents/_types/route/content";
 import type {
   PublicContentRoute,
+  PublicCurriculumRoute,
   PublicMaterialLessonRoute,
 } from "@repo/contents/_types/route/schema";
 import { PublicMaterialLessonRouteSchema } from "@repo/contents/_types/route/schema";
@@ -52,6 +53,71 @@ export function readMaterialSourceCandidates(
     }
   }
   return Array.from(candidates.values());
+}
+
+/** Reconciles concrete curriculum mappings with active exact material routes. */
+export function reconcileMaterialCurriculumRoutes(
+  curriculumRoutes: readonly PublicCurriculumRoute[],
+  sourceMaterials: readonly PublicContentRoute[],
+  reconciledMaterials: readonly PublicContentRoute[],
+  model: MaterialSourceModel
+) {
+  const sourcePaths = new Map<
+    string,
+    PublicCurriculumRoute["canonicalPath"] | null
+  >();
+  for (const claim of model.claims) {
+    const source = sourceMaterials.find(
+      (route) =>
+        isMaterialLessonRoute(route) &&
+        route.locale === claim.locale &&
+        route.sourcePath === claim.contentKey
+    );
+    if (!source) {
+      continue;
+    }
+    if (claim.kind === "missing") {
+      sourcePaths.set(`${claim.locale}\0${source.publicPath}`, null);
+      continue;
+    }
+    const replacement = reconciledMaterials.find(
+      (route) =>
+        isMaterialLessonRoute(route) &&
+        route.locale === claim.locale &&
+        route.sourcePath === claim.contentKey
+    );
+    if (!replacement) {
+      return Effect.fail(
+        new PublishedProjectionError({
+          locale: claim.locale,
+          publicPath: claim.projection.publicPath,
+        })
+      );
+    }
+    sourcePaths.set(
+      `${claim.locale}\0${source.publicPath}`,
+      replacement.publicPath
+    );
+  }
+
+  return Effect.succeed(
+    curriculumRoutes.map((route) => {
+      if (!route.canonicalPath) {
+        return route;
+      }
+      const replacement = sourcePaths.get(
+        `${route.locale}\0${route.canonicalPath}`
+      );
+      if (replacement === undefined) {
+        return route;
+      }
+      if (replacement !== null) {
+        return { ...route, canonicalPath: replacement };
+      }
+      const { canonicalPath: _canonicalPath, ...withoutCanonicalPath } = route;
+      return withoutCanonicalPath;
+    })
+  );
 }
 
 /**

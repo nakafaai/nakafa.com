@@ -182,6 +182,23 @@ describe("published material route", () => {
     );
   });
 
+  it("pins a follow-up route read to the expected active release", async () => {
+    fetchMock.mockResolvedValueOnce(foundModel());
+
+    await expect(
+      getPublishedMaterialRoute(
+        "en",
+        previewProjection.publicPath,
+        [],
+        activeReleaseId
+      )
+    ).resolves.toMatchObject({ activeReleaseId, managed: true });
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
+    );
+  });
+
   it("distinguishes unmanaged and managed missing routes", async () => {
     fetchMock
       .mockResolvedValueOnce({

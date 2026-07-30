@@ -1,10 +1,15 @@
 // @vitest-environment node
 
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  ContentKeySchema,
+  PublicPathSchema,
+} from "@nakafa/aksara-contracts/ids";
+import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import {
   readMaterialSourceCandidates,
+  reconcileMaterialCurriculumRoutes,
   reconcileMaterialSourceRoutes,
 } from "@/lib/content/material/source";
 import {
@@ -96,6 +101,129 @@ describe("material source reconciliation", () => {
 
     expect(result).toEqual([sourceRoute]);
     expect(dateNowCalls).toBe(0);
+  });
+
+  it("updates and removes concrete curriculum paths with exact claims", () => {
+    const curriculumRoutes = Effect.runSync(listPublicCurriculumRoutes());
+    const curriculumRoute = curriculumRoutes.find(
+      (route) => route.locale === sourceRoute.locale
+    );
+    if (!curriculumRoute) {
+      expect.fail("Expected one English curriculum route.");
+    }
+    const concrete = {
+      ...curriculumRoute,
+      canonicalPath: sourceRoute.publicPath,
+    };
+    const renamedPath = PublicPathSchema.make(
+      `${sourceRoute.parentPath}/renamed`
+    );
+    const projection = {
+      ...previewProjection,
+      contentKey: ContentKeySchema.make(sourceRoute.sourcePath),
+      locale: sourceRoute.locale,
+      publicPath: renamedPath,
+    };
+    const reconciled = Effect.runSync(
+      reconcileMaterialSourceRoutes(sourceRoute.locale, [sourceRoute], {
+        claims: [
+          {
+            contentKey: projection.contentKey,
+            kind: "found",
+            locale: projection.locale,
+            projection,
+          },
+        ],
+        materials: [],
+      })
+    );
+    const renamed = Effect.runSync(
+      reconcileMaterialCurriculumRoutes([concrete], [sourceRoute], reconciled, {
+        claims: [
+          {
+            contentKey: projection.contentKey,
+            kind: "found",
+            locale: projection.locale,
+            projection,
+          },
+        ],
+        materials: [],
+      })
+    );
+    const removed = Effect.runSync(
+      reconcileMaterialCurriculumRoutes(
+        [concrete],
+        [sourceRoute],
+        [sourceRoute],
+        {
+          claims: [
+            {
+              contentKey: projection.contentKey,
+              kind: "missing",
+              locale: projection.locale,
+            },
+          ],
+          materials: [],
+        }
+      )
+    );
+
+    expect(
+      renamed.find((route) => route.publicPath === concrete.publicPath)
+    ).toMatchObject({ canonicalPath: renamedPath });
+    expect(
+      removed.find((route) => route.publicPath === concrete.publicPath)
+    ).not.toHaveProperty("canonicalPath");
+  });
+
+  it("preserves unrelated curriculum mappings and rejects missing replacements", async () => {
+    const curriculumRoute = Effect.runSync(listPublicCurriculumRoutes()).find(
+      (route) => route.locale === sourceRoute.locale
+    );
+    if (!curriculumRoute) {
+      expect.fail("Expected one English curriculum route.");
+    }
+    const model = {
+      claims: [
+        {
+          contentKey: previewProjection.contentKey,
+          kind: "found" as const,
+          locale: previewProjection.locale,
+          projection: previewProjection,
+        },
+      ],
+      materials: [],
+    };
+    const unrelatedRoute = {
+      ...curriculumRoute,
+      canonicalPath: sourceRoute.parentPath,
+    };
+
+    await expect(
+      Effect.runPromise(
+        reconcileMaterialCurriculumRoutes(
+          [curriculumRoute, unrelatedRoute],
+          [],
+          [],
+          model
+        )
+      )
+    ).resolves.toEqual([curriculumRoute, unrelatedRoute]);
+    await expect(
+      Effect.runPromise(
+        Effect.flip(
+          reconcileMaterialCurriculumRoutes(
+            [{ ...curriculumRoute, canonicalPath: sourceRoute.publicPath }],
+            [sourceRoute],
+            [],
+            model
+          )
+        )
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedProjectionError",
+      locale: previewProjection.locale,
+    });
   });
 
   it("preserves a typed failure when a published projection cannot become a route", async () => {

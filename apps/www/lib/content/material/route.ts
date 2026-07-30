@@ -121,10 +121,14 @@ export const readPublishedMaterialRoute = Effect.fn(
 )(function* (
   locale: Locale,
   publicPath: string,
-  sourceCandidates: readonly MaterialSourceCandidate[] = []
+  sourceCandidates: readonly MaterialSourceCandidate[] = [],
+  expectedActiveReleaseId?: string | null
 ) {
   const result = yield* readRuntimeQuery("contentRelease.material.route", () =>
     fetchRuntimeQuery(api.contentRelease.material.route, {
+      ...(expectedActiveReleaseId === undefined
+        ? {}
+        : { expectedActiveReleaseId }),
       locale,
       publicPath,
       sourceCandidates: Array.from(sourceCandidates),
@@ -248,12 +252,18 @@ export const readPublishedMaterialRoute = Effect.fn(
 export async function getPublishedMaterialRoute(
   locale: Locale,
   publicPath: string,
-  sourceCandidates: readonly MaterialSourceCandidate[] = []
+  sourceCandidates: readonly MaterialSourceCandidate[] = [],
+  expectedActiveReleaseId?: string | null
 ) {
   "use cache";
 
   const result = await Effect.runPromise(
-    readPublishedMaterialRoute(locale, publicPath, sourceCandidates)
+    readPublishedMaterialRoute(
+      locale,
+      publicPath,
+      sourceCandidates,
+      expectedActiveReleaseId
+    )
   );
   applyContentRuntimeCache();
   return result;

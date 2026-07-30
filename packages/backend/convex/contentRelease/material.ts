@@ -182,14 +182,24 @@ export const claims = query({
 /** Resolves one complete active material shell model by localized path. */
 export const route = query({
   args: {
+    expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
     locale: localeValidator,
     publicPath: v.string(),
     sourceCandidates: v.optional(v.array(materialSourceCandidateValidator)),
   },
   returns: materialModelValidator,
-  handler: (ctx, { locale, publicPath, sourceCandidates = [] }) =>
+  handler: (
+    ctx,
+    { expectedActiveReleaseId, locale, publicPath, sourceCandidates = [] }
+  ) =>
     runConvexProgram(
-      readMaterialModel(ctx, locale, publicPath, sourceCandidates)
+      readMaterialModel(
+        ctx,
+        locale,
+        publicPath,
+        sourceCandidates,
+        expectedActiveReleaseId
+      )
     ),
 });
 

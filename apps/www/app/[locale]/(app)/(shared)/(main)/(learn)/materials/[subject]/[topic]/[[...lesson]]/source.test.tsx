@@ -311,7 +311,8 @@ describe("material page source", () => {
       2,
       previewProjection.locale,
       previewProjection.publicPath,
-      candidates
+      candidates,
+      initial.activeReleaseId
     );
   });
 
