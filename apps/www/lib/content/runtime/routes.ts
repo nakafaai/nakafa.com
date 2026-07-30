@@ -36,8 +36,8 @@ type PublicSitemapCountArgs = FunctionArgs<
 type PublicSitemapPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getPublicSitemapPage
 >;
-type LatestContentRoutesArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.listLatestContentRoutes
+type LatestContentRoutePageArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.listLatestContentRoutePage
 >;
 type ContentRouteArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getContentRoute
@@ -45,9 +45,13 @@ type ContentRouteArgs = FunctionArgs<
 type PublicRouteArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getPublicRouteByPath
 >;
-type LatestContentRoutes = FunctionReturnType<
-  typeof api.contents.queries.runtime.listLatestContentRoutes
+/** One bounded newest-first page from the content route catalog. */
+export type RuntimeLatestContentRoutePage = FunctionReturnType<
+  typeof api.contents.queries.runtime.listLatestContentRoutePage
 >;
+/** One dated route returned by the newest-first content catalog. */
+export type RuntimeLatestContentRoute =
+  RuntimeLatestContentRoutePage["page"][number];
 
 /** Reads one route-catalog page from the Convex content runtime model. */
 export function fetchRuntimeContentRoutesPage(args: ContentRoutesPageArgs) {
@@ -119,10 +123,12 @@ function fetchRuntimePublicSitemapPage(args: PublicSitemapPageArgs) {
   );
 }
 
-/** Reads newest dated route-catalog rows from the Convex content runtime model. */
-export function fetchRuntimeLatestContentRoutes(args: LatestContentRoutesArgs) {
+/** Reads one newest-first route-catalog page from the Convex runtime model. */
+export function fetchRuntimeLatestContentRoutePage(
+  args: LatestContentRoutePageArgs
+) {
   return fetchRuntimeQuery(
-    api.contents.queries.runtime.listLatestContentRoutes,
+    api.contents.queries.runtime.listLatestContentRoutePage,
     args
   );
 }
@@ -212,16 +218,16 @@ export const getRuntimePublicSitemapPage = Effect.fn(
   );
 });
 
-/** Lists newest dated content routes for capped feed surfaces. */
-export const listRuntimeLatestContentRoutes = Effect.fn(
-  "www.contentRuntime.latestContentRoutes"
-)(function* (args: LatestContentRoutesArgs) {
-  const routes: LatestContentRoutes = yield* readRuntimeQuery(
-    "listLatestContentRoutes",
-    () => fetchRuntimeLatestContentRoutes(args)
+/** Reads one newest-first dated route page for capped feed surfaces. */
+export const getRuntimeLatestContentRoutePage = Effect.fn(
+  "www.contentRuntime.latestContentRoutePage"
+)(function* (args: LatestContentRoutePageArgs) {
+  const page: RuntimeLatestContentRoutePage = yield* readRuntimeQuery(
+    "listLatestContentRoutePage",
+    () => fetchRuntimeLatestContentRoutePage(args)
   );
 
-  return routes;
+  return page;
 });
 
 /** Reads one exact route-catalog row from the Convex content runtime model. */

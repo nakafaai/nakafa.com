@@ -250,6 +250,27 @@ describe("published material ownership", () => {
     ).resolves.toMatchObject({ _tag: "PublishedReleaseMismatchError" });
   });
 
+  it("pins the first exact claim batch to its caller release", async () => {
+    fetchMock.mockResolvedValueOnce({
+      activeReleaseId: releaseId,
+      sourceClaims: [],
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialClaims(
+          "en",
+          [{ contentKey: previewProjection.contentKey, locale: "en" }],
+          releaseId
+        )
+      )
+    ).resolves.toEqual([]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ expectedActiveReleaseId: releaseId })
+    );
+  });
+
   it("rejects an invalid release identity before decoding claims", async () => {
     fetchMock.mockResolvedValueOnce({
       activeReleaseId: "",

@@ -5,6 +5,7 @@ import {
   keys,
   mcpKeys,
   publicAppKeys,
+  readContentRuntimeTarget,
   siteUrlKeys,
 } from "@repo/next-config/keys";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -36,6 +37,10 @@ describe("shared Next environment keys", () => {
     });
     expect(contentRuntimeKeys()).toMatchObject({
       CONTENT_RUNTIME_TOKEN: "runtime-token",
+    });
+    expect(readContentRuntimeTarget("https://example.convex.site")).toEqual({
+      siteUrl: "https://example.convex.site",
+      token: "runtime-token",
     });
     expect(siteUrlKeys()).toMatchObject({ SITE_URL: "https://nakafa.com" });
     expect(mcpKeys()).toMatchObject({

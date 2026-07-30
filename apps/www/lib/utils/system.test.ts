@@ -27,7 +27,7 @@ vi.mock("@repo/internationalization/src/routing", async () => {
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: routeMocks.read,
-  listRuntimeLatestContentRoutes: routeMocks.listLatest,
+  getRuntimeLatestContentRoutePage: routeMocks.listLatest,
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -73,11 +73,13 @@ beforeEach(() => {
 
   routeMocks.listLatest.mockImplementation(
     ({ locale, section }: { locale: Locale; section: string }) =>
-      Effect.succeed(
-        routeRows.filter(
+      Effect.succeed({
+        continueCursor: "",
+        isDone: true,
+        page: routeRows.filter(
           (route) => route.locale === locale && route.section === section
-        )
-      )
+        ),
+      })
   );
   routeMocks.read.mockReturnValue(
     Effect.succeed({
@@ -122,8 +124,9 @@ describe("route catalog static params", () => {
     ]);
 
     expect(routeMocks.listLatest).toHaveBeenCalledWith({
-      limit: 100,
       locale: "id",
+      cursor: null,
+      limit: 100,
       section: "articles",
     });
   });
@@ -144,6 +147,7 @@ describe("route catalog static params", () => {
 
     expect(routeMocks.listLatest).toHaveBeenCalledTimes(1);
     expect(routeMocks.listLatest).toHaveBeenCalledWith({
+      cursor: null,
       limit: 100,
       locale: "id",
       section: "articles",
@@ -153,14 +157,20 @@ describe("route catalog static params", () => {
   it("ignores routes that cannot fill the requested params", async () => {
     routeMocks.listLatest
       .mockReturnValueOnce(
-        Effect.succeed([
-          { route: "articles" },
-          { route: "curriculum/merdeka/class-10/chemistry" },
-          { route: "articles/politics" },
-          { route: "articles/politics/example" },
-        ])
+        Effect.succeed({
+          continueCursor: "",
+          isDone: true,
+          page: [
+            { route: "articles" },
+            { route: "curriculum/merdeka/class-10/chemistry" },
+            { route: "articles/politics" },
+            { route: "articles/politics/example" },
+          ],
+        })
       )
-      .mockReturnValueOnce(Effect.succeed([]));
+      .mockReturnValueOnce(
+        Effect.succeed({ continueCursor: "", isDone: true, page: [] })
+      );
 
     await expect(
       getStaticParams({

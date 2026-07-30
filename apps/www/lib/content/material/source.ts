@@ -105,5 +105,18 @@ export function reconcileMaterialSourceRoutes(
       decoded.right
     );
   }
-  return Effect.succeed([...retained, ...additions.values()]);
+  const routesByPath = new Map<string, PublicContentRoute>();
+  for (const route of [...retained, ...additions.values()]) {
+    const identity = `${route.locale}\0${route.publicPath}`;
+    if (routesByPath.has(identity)) {
+      return Effect.fail(
+        new PublishedProjectionError({
+          locale: route.locale,
+          publicPath: route.publicPath,
+        })
+      );
+    }
+    routesByPath.set(identity, route);
+  }
+  return Effect.succeed(Array.from(routesByPath.values()));
 }

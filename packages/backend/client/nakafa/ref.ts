@@ -9,7 +9,41 @@ import {
   NakafaAgentContentIdSchema,
   type NakafaAgentContentRef,
 } from "@repo/contents/_lib/agent/schema/ref";
+import { readNamespaceSegment } from "@repo/contents/_types/route/path";
+import type { FunctionArgs } from "convex/server";
 import { Effect, Option, Schema } from "effect";
+
+type MaterialLookupInput = FunctionArgs<
+  typeof api.contentRelease.material.lookup
+>["input"];
+
+/** Produces the exact material lookup accepted by the active owner query. */
+export function getMaterialLookupInput(input: string) {
+  const contentId = Schema.decodeUnknownOption(NakafaAgentContentIdSchema)(
+    normalizeNakafaContentInput(input)
+  );
+  if (Option.isSome(contentId)) {
+    return Option.some<MaterialLookupInput>({
+      contentId: contentId.value,
+      kind: "content",
+    });
+  }
+
+  const route = parseNakafaUrlRoute(input);
+  if (Option.isNone(route)) {
+    return Option.none<MaterialLookupInput>();
+  }
+  const namespace = readNamespaceSegment("subject", route.value.locale);
+  if (route.value.route.split("/").at(0) !== namespace) {
+    return Option.none<MaterialLookupInput>();
+  }
+
+  return Option.some<MaterialLookupInput>({
+    kind: "route",
+    locale: route.value.locale,
+    publicPath: route.value.route,
+  });
+}
 
 /** Resolves a graph content ID, resource URI, or canonical URL projection. */
 export function resolveNakafaContentRef(convexUrl: string, input: string) {

@@ -1,5 +1,9 @@
-import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
+import {
+  getMaterialLookupInput,
+  resolveNakafaContentRef,
+} from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
+import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import { LocaleSchema } from "@repo/contents/_types/content";
@@ -27,6 +31,7 @@ const convexUrl = "https://example.convex.cloud";
 const articleRoute = "articles/politics/example";
 const articleRef = readNakafaContentRefFixture("en", articleRoute, "articles");
 const detachedArticleRef = createDetachedArticleRef();
+const materialProjection = makeMaterialProjection("en", 1);
 
 beforeEach(() => {
   runtimeMocks.fetchConvexRuntimeQuery.mockReset();
@@ -34,6 +39,30 @@ beforeEach(() => {
 });
 
 describe("resolveNakafaContentRef", () => {
+  it("normalizes material graph IDs and public URLs into owner lookups", () => {
+    expect(getMaterialLookupInput(materialProjection.graph.assetId)).toEqual(
+      Option.some({
+        contentId: materialProjection.graph.assetId,
+        kind: "content",
+      })
+    );
+    expect(
+      getMaterialLookupInput(
+        `https://nakafa.com/${materialProjection.locale}/${materialProjection.publicPath}`
+      )
+    ).toEqual(
+      Option.some({
+        kind: "route",
+        locale: materialProjection.locale,
+        publicPath: materialProjection.publicPath,
+      })
+    );
+    expect(getMaterialLookupInput("not-content")).toEqual(Option.none());
+    expect(
+      getMaterialLookupInput("https://nakafa.com/en/articles/example")
+    ).toEqual(Option.none());
+  });
+
   it("resolves graph content IDs and resource URIs through the route catalog", async () => {
     const graphRef = await Effect.runPromise(
       resolveNakafaContentRef(convexUrl, articleRef.content_id)

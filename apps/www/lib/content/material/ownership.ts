@@ -173,7 +173,8 @@ export const readPublishedMaterialClaims = Effect.fn(
   "NakafaMaterial.readPublishedClaims"
 )(function* (
   locale: Locale,
-  sourceCandidates: readonly MaterialSourceCandidate[]
+  sourceCandidates: readonly MaterialSourceCandidate[],
+  expectedActiveReleaseId?: MaterialReleasePin
 ) {
   if (sourceCandidates.length === 0) {
     return [];
@@ -191,7 +192,8 @@ export const readPublishedMaterialClaims = Effect.fn(
   }
   const result = yield* readPublishedMaterialClaimBatches(
     locale,
-    sourceCandidates
+    sourceCandidates,
+    expectedActiveReleaseId
   );
   return result.claims;
 });

@@ -180,6 +180,7 @@ describe("llms markdown content resolver", () => {
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
     expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+    expect(mockReadPublishedMaterialClaims).not.toHaveBeenCalled();
   });
 
   it("reads an owned article body from the generic Aksara markdown seam", async () => {
@@ -323,6 +324,19 @@ describe("llms markdown content resolver", () => {
       locale: "en",
       publicPath: PUBLISHED_PATH,
     });
+    expect(mockReadPublishedMaterialClaims).toHaveBeenCalledWith(
+      "en",
+      [
+        {
+          contentKey:
+            "material/lesson/mathematics/function-composition-inverse-function/function-concept",
+          locale: "en",
+          parentPath:
+            "subjects/mathematics/function-composition-inverse-function",
+        },
+      ],
+      activeReleaseId
+    );
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
   });
 

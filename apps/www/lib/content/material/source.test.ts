@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -132,6 +133,33 @@ describe("material source reconciliation", () => {
       _tag: "PublishedProjectionError",
       locale: "en",
       publicPath: "",
+    });
+  });
+
+  it("rejects a published route owned by another source identity", async () => {
+    await expect(
+      Effect.runPromise(
+        Effect.flip(
+          reconcileMaterialSourceRoutes("en", [nextRoute], {
+            claims: [
+              {
+                contentKey: previewProjection.contentKey,
+                kind: "found",
+                locale: "en",
+                projection: {
+                  ...previewProjection,
+                  publicPath: PublicPathSchema.make(nextRoute.publicPath),
+                },
+              },
+            ],
+            materials: [],
+          })
+        )
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedProjectionError",
+      locale: "en",
+      publicPath: nextRoute.publicPath,
     });
   });
 });

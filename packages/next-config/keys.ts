@@ -55,6 +55,16 @@ export const contentRuntimeKeys = () =>
     },
   });
 
+/** Reads the private target required by signed public content consumers. */
+export function readContentRuntimeTarget(siteUrl: string) {
+  const keys = contentRuntimeKeys();
+
+  return {
+    siteUrl,
+    token: keys.CONTENT_RUNTIME_TOKEN,
+  };
+}
+
 /** Defines the canonical site URL used by server-side absolute URL builders. */
 export const siteUrlKeys = () =>
   createEnv({

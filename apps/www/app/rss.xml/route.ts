@@ -1,3 +1,4 @@
+import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { Feed, type Item } from "feed";
@@ -6,11 +7,16 @@ import { getTranslations } from "next-intl/server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
 import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
-import { listRuntimeLatestContentRoutes } from "@/lib/content/runtime/routes";
+import {
+  getRuntimeLatestContentRoutePage,
+  type RuntimeLatestContentRoute,
+  type RuntimeLatestContentRoutePage,
+} from "@/lib/content/runtime/routes";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const baseUrl = "https://nakafa.com";
 const RSS_CONTENT_ROUTE_LIMIT = 100;
+const RSS_SOURCE_PAGE_SIZE = 100;
 const rssHeaders = {
   "Content-Type": "application/rss+xml; charset=utf-8",
 };
@@ -119,11 +125,7 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
     RSS_CONTENT_ROUTE_LIMIT
   );
   if (!published.managed) {
-    return yield* listRuntimeLatestContentRoutes({
-      limit: RSS_CONTENT_ROUTE_LIMIT,
-      locale,
-      section: "articles",
-    });
+    return yield* readFeedSourceRoutes(locale, "articles", new Set(), 100);
   }
 
   return published.articles.map((article) => ({
@@ -157,17 +159,54 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
     return publishedRoutes;
   }
   const claimedContentKeys = new Set<string>(published.claimedContentKeys);
-  const sourceRoutes = yield* listRuntimeLatestContentRoutes({
-    limit: RSS_CONTENT_ROUTE_LIMIT,
+  const sourceRoutes = yield* readFeedSourceRoutes(
     locale,
-    section: "material",
-  });
-  return [
-    ...publishedRoutes,
-    ...sourceRoutes.filter(
-      ({ sourcePath }) => !claimedContentKeys.has(sourcePath)
-    ),
-  ]
+    "material",
+    claimedContentKeys,
+    RSS_CONTENT_ROUTE_LIMIT - publishedRoutes.length
+  );
+  return [...publishedRoutes, ...sourceRoutes]
     .sort((left, right) => (right.date ?? 0) - (left.date ?? 0))
     .slice(0, RSS_CONTENT_ROUTE_LIMIT);
+});
+
+/** Refills one source-owned feed after exact owners remove legacy rows. */
+const readFeedSourceRoutes = Effect.fn("www.rss.readSourceRoutes")(function* (
+  locale: (typeof routing.locales)[number],
+  section: "articles" | "material",
+  excludedContentKeys: ReadonlySet<string>,
+  limit: number
+) {
+  if (limit <= 0) {
+    return [];
+  }
+  const maximumPages = Math.ceil(
+    (limit + Math.min(excludedContentKeys.size, EXACT_SCOPE_LIMIT)) /
+      RSS_SOURCE_PAGE_SIZE
+  );
+  const routes: RuntimeLatestContentRoute[] = [];
+  let cursor: string | null = null;
+  for (let index = 0; index < maximumPages; index += 1) {
+    const result: RuntimeLatestContentRoutePage =
+      yield* getRuntimeLatestContentRoutePage({
+        cursor,
+        limit: RSS_SOURCE_PAGE_SIZE,
+        locale,
+        section,
+      });
+    for (const route of result.page) {
+      if (excludedContentKeys.has(route.sourcePath)) {
+        continue;
+      }
+      routes.push(route);
+      if (routes.length === limit) {
+        return routes;
+      }
+    }
+    if (result.isDone) {
+      return routes;
+    }
+    cursor = result.continueCursor;
+  }
+  return routes;
 });

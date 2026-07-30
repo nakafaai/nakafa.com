@@ -1,4 +1,6 @@
+import type { PublicContentTarget } from "@repo/backend/client/content/request";
 import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
+import { readPublishedMaterialMarkdown } from "@repo/backend/client/nakafa/material";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { readQuranMarkdown } from "@repo/backend/client/nakafa/quran";
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
@@ -10,15 +12,31 @@ import { Effect, Option } from "effect";
 
 /** Reads full markdown for one normalized Nakafa content reference. */
 export const readNakafaMarkdown = Effect.fn("NakafaContent.readMarkdown")(
-  function* (convexUrl: string, input: string) {
+  function* (
+    convexUrl: string,
+    readContentTarget: () => PublicContentTarget,
+    input: string
+  ) {
     const ref = yield* resolveNakafaContentRef(convexUrl, input);
 
-    if (Option.isNone(ref)) {
-      return Option.none<NakafaAgentMarkdown>();
+    if (Option.isSome(ref) && ref.value.section === "quran") {
+      return yield* readQuranMarkdown(convexUrl, ref.value);
     }
 
-    if (ref.value.section === "quran") {
-      return yield* readQuranMarkdown(convexUrl, ref.value);
+    if (Option.isSome(ref) && ref.value.section !== "material") {
+      return yield* readMdxMarkdown(convexUrl, ref.value);
+    }
+
+    const published = yield* readPublishedMaterialMarkdown(
+      convexUrl,
+      readContentTarget,
+      input
+    );
+    if (published.managed) {
+      return published.markdown;
+    }
+    if (Option.isNone(ref)) {
+      return Option.none<NakafaAgentMarkdown>();
     }
 
     return yield* readMdxMarkdown(convexUrl, ref.value);

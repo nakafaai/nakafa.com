@@ -153,13 +153,17 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
       return null;
     }
     if (publicRoute.kind === "subject-lesson" && active) {
-      const claims = yield* readPublishedMaterialClaims(locale, [
-        {
-          contentKey: publicRoute.sourcePath,
-          locale,
-          parentPath: publicRoute.parentPath,
-        },
-      ]);
+      const claims = yield* readPublishedMaterialClaims(
+        locale,
+        [
+          {
+            contentKey: publicRoute.sourcePath,
+            locale,
+            parentPath: publicRoute.parentPath,
+          },
+        ],
+        active.releaseId
+      );
       const claim = claims.find(
         (candidate) =>
           candidate.contentKey === publicRoute.sourcePath &&
