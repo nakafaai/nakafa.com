@@ -45,41 +45,19 @@ export async function GET(
   }
 
   const prefix = `material/${slug.join("/")}`;
-  const apiPage = getMaterialApiPage({
-    ...pageParams,
-    locale: validLocale,
-    prefix,
-  });
-
-  return runMaterialApiRead(apiPage, { locale, slug });
-}
-
-/** Routes unified material API requests to the material runtime table. */
-function getMaterialApiPage({
-  cursor,
-  limit,
-  locale,
-  prefix,
-}: {
-  cursor: string | null;
-  limit: number;
-  locale: NonNullable<ReturnType<typeof parseApiLocale>>;
-  prefix: string;
-}) {
-  return {
-    kind: "list" as const,
-    page: getMaterialApiContentPage({
-      cursor,
-      limit,
-      locale,
+  return runMaterialApiRead(
+    getMaterialApiContentPage({
+      ...pageParams,
+      locale: validLocale,
       prefix,
     }),
-  };
+    { locale, slug }
+  );
 }
 
 /** Converts one content-runtime read into the shared material API response shape. */
 function runMaterialApiRead(
-  apiRead: ReturnType<typeof getMaterialApiPage>,
+  apiRead: ReturnType<typeof getMaterialApiContentPage>,
   {
     locale,
     slug,
@@ -105,7 +83,7 @@ function runMaterialApiRead(
     });
 
   return Effect.runPromise(
-    apiRead.page.pipe(
+    apiRead.pipe(
       Effect.map((data): Response => NextResponse.json(data)),
       Effect.catchAll(onError)
     )
