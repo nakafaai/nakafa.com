@@ -6,7 +6,7 @@ import type {
   PublicContentRoute,
   PublicMaterialLessonRoute,
 } from "@repo/contents/_types/route/schema";
-import type { MaterialSourceCandidate } from "@/lib/content/material/route";
+import type { MaterialSourceCandidate } from "@/lib/content/material/ownership";
 
 let materialRouteCache: readonly PublicContentRoute[] | undefined;
 
@@ -95,6 +95,7 @@ function collectMaterialCandidates({
       candidates.set(`${candidate.locale}\0${candidate.sourcePath}`, {
         contentKey: candidate.sourcePath,
         locale: candidate.locale,
+        parentPath: candidate.parentPath,
       });
     }
   }

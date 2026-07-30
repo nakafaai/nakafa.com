@@ -13,10 +13,8 @@ import {
   readMaterialMetadata,
   readMaterialPage,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
-import type {
-  MaterialSourceClaim,
-  PublishedMaterialRoute,
-} from "@/lib/content/material/route";
+import type { MaterialSourceClaim } from "@/lib/content/material/ownership";
+import type { PublishedMaterialRoute } from "@/lib/content/material/route";
 import {
   PreviewCompileError,
   PreviewPendingError,
@@ -134,6 +132,7 @@ const publishedModel = {
   rendererDomain: "mathematics",
   siblings: [previewProjection],
   sourceClaims: [],
+  sourceMaterials: [],
   sourcePath: previewSourcePath,
   sourceRevision,
 } satisfies PublishedMaterialRoute;
@@ -148,6 +147,7 @@ const unmanagedModel = {
   rendererDomain: null,
   siblings: [],
   sourceClaims: [],
+  sourceMaterials: [],
   sourcePath: null,
   sourceRevision: null,
 } satisfies PublishedMaterialRoute;
@@ -418,7 +418,12 @@ describe("material page source", () => {
     }
   );
 
-  it("renders the unmanaged source and its current edit URL", async () => {
+  it("renders the unmanaged source with exact-owned sibling navigation", async () => {
+    mocks.getPublishedMaterialRoute.mockResolvedValue({
+      ...unmanagedModel,
+      sourceMaterials: [previewNextProjection],
+    });
+
     const page = await readMaterialPage(params());
 
     expect(page).toMatchObject({
@@ -427,6 +432,7 @@ describe("material page source", () => {
       metadata: previewMetadata,
       rendererDomain: null,
       route: previewPublicRoute,
+      siblings: [previewNextProjection],
       sourceUrl,
     });
     expect(isValidElement(page.children)).toBe(true);

@@ -13,7 +13,9 @@ export interface MaterialProjectionIdentity {
 }
 
 /** Creates the public failure returned for malformed material projection data. */
-function projectionError(identity: MaterialProjectionIdentity) {
+export function makeMaterialProjectionError(
+  identity: MaterialProjectionIdentity
+) {
   return new PublishedProjectionError(identity);
 }
 
@@ -24,13 +26,13 @@ export const decodeMaterialProjection = Effect.fn(
   const projection = yield* Schema.decodeUnknown(
     MaterialLessonProjectionSchema
   )(input, { onExcessProperty: "error" }).pipe(
-    Effect.mapError(() => projectionError(identity))
+    Effect.mapError(() => makeMaterialProjectionError(identity))
   );
   if (
     projection.locale !== identity.locale ||
     projection.publicPath !== identity.publicPath
   ) {
-    return yield* projectionError(identity);
+    return yield* makeMaterialProjectionError(identity);
   }
   return projection;
 });
@@ -39,12 +41,12 @@ export const decodeMaterialProjection = Effect.fn(
 export const decodeMaterialJson = Effect.fn("NakafaMaterial.decodeJson")(
   function* (source: string, identity: MaterialProjectionIdentity) {
     const input = yield* Effect.try({
-      catch: () => projectionError(identity),
+      catch: () => makeMaterialProjectionError(identity),
       try: (): unknown => JSON.parse(source),
     });
     return yield* Schema.decodeUnknown(MaterialLessonProjectionSchema)(input, {
       onExcessProperty: "error",
-    }).pipe(Effect.mapError(() => projectionError(identity)));
+    }).pipe(Effect.mapError(() => makeMaterialProjectionError(identity)));
   }
 );
 

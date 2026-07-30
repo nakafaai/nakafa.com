@@ -26,6 +26,7 @@ import {
   MaterialMetadataSchema,
   makeMaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import { PublicMaterialLessonRouteSchema } from "@repo/contents/_types/route/schema";
 import { Effect, Redacted, Schema } from "effect";
 import { NextRequest } from "next/server";
@@ -174,6 +175,24 @@ export const previewIdProjection = makeMaterialLessonProjection(
   previewIdRoute,
   previewIdMetadata
 );
+
+/** Builds one verified curriculum context for published material tests. */
+export function makePublishedMaterialContext(
+  context: MaterialContextIdentity,
+  canonicalPath: MaterialLessonProjection["publicPath"]
+) {
+  return {
+    managed: true,
+    value: {
+      context,
+      group: {},
+      href: "/en/curriculum/merdeka#functions",
+      label: "Functions",
+      mapping: { canonicalPath },
+      parent: {},
+    },
+  };
+}
 
 /** Adapts one published projection into a source-owned material test route. */
 export function makePreviewPublicRoute(

@@ -2,7 +2,6 @@ import "server-only";
 
 import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
 import {
-  ContentKeySchema,
   CorpusSourcePathSchema,
   type GitCommitShaSchema,
   ReleaseIdSchema,
@@ -14,7 +13,6 @@ import {
   RendererDomainSchema,
 } from "@nakafa/aksara-contracts/renderer/domain";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
@@ -22,33 +20,20 @@ import {
   decodeMaterialJson,
   isMaterialCounterpart,
   isMaterialSibling,
-  type MaterialProjectionIdentity,
+  makeMaterialProjectionError,
 } from "@/lib/content/material/decode";
-import { PublishedProjectionError } from "@/lib/content/published/errors";
+import {
+  decodeMaterialClaims,
+  decodeMaterialSources,
+  type MaterialSourceCandidate,
+  type MaterialSourceClaim,
+  readPublishedMaterialShell,
+} from "@/lib/content/material/ownership";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
-
-/** Source identity sent for one bounded source-shell reconciliation. */
-export type MaterialSourceCandidate = NonNullable<
-  FunctionArgs<typeof api.contentRelease.material.route>["sourceCandidates"]
->[number];
-
-/** Exact-owned source identity selected by the active material release. */
-export type MaterialSourceClaim =
-  | {
-      readonly contentKey: MaterialSourceCandidate["contentKey"];
-      readonly kind: "missing";
-      readonly locale: Locale;
-    }
-  | {
-      readonly contentKey: MaterialSourceCandidate["contentKey"];
-      readonly kind: "found";
-      readonly locale: Locale;
-      readonly projection: MaterialLessonProjection;
-    };
 
 /** Complete immutable shell data for one published material lesson. */
 export type PublishedMaterialRoute =
@@ -62,6 +47,7 @@ export type PublishedMaterialRoute =
       readonly rendererDomain: null;
       readonly siblings: readonly [];
       readonly sourceClaims: readonly MaterialSourceClaim[];
+      readonly sourceMaterials: readonly MaterialLessonProjection[];
       readonly sourcePath: null;
       readonly sourceRevision: null;
     }
@@ -75,6 +61,7 @@ export type PublishedMaterialRoute =
       readonly rendererDomain: null;
       readonly siblings: readonly [];
       readonly sourceClaims: readonly MaterialSourceClaim[];
+      readonly sourceMaterials: readonly MaterialLessonProjection[];
       readonly sourcePath: null;
       readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
     }
@@ -88,14 +75,10 @@ export type PublishedMaterialRoute =
       readonly rendererDomain: RendererDomain;
       readonly siblings: readonly MaterialLessonProjection[];
       readonly sourceClaims: readonly MaterialSourceClaim[];
+      readonly sourceMaterials: readonly MaterialLessonProjection[];
       readonly sourcePath: typeof CorpusSourcePathSchema.Type;
       readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
     };
-
-/** Maps malformed route data to the exact public projection failure. */
-function projectionError(locale: Locale, publicPath: string) {
-  return new PublishedProjectionError({ locale, publicPath });
-}
 
 /** Decodes the active release identifiers carried by one managed model. */
 const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
@@ -106,79 +89,31 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
     publicPath: string
   ) {
     if (activeManifestHash === null || activeReleaseId === null) {
-      return yield* projectionError(locale, publicPath);
+      return yield* makeMaterialProjectionError({ locale, publicPath });
     }
     return yield* Effect.all({
       activeManifestHash:
         Schema.decodeUnknown(Sha256HashSchema)(activeManifestHash),
       activeReleaseId: Schema.decodeUnknown(ReleaseIdSchema)(activeReleaseId),
-    }).pipe(Effect.mapError(() => projectionError(locale, publicPath)));
+    }).pipe(
+      Effect.mapError(() => makeMaterialProjectionError({ locale, publicPath }))
+    );
   }
 );
 
-/** Decodes exact claims used to remove or replace temporary source routes. */
-const decodeSourceClaims = Effect.fn("NakafaMaterial.decodeSourceClaims")(
-  function* (
-    claims: FunctionReturnType<
-      typeof api.contentRelease.material.route
-    >["sourceClaims"],
-    candidates: readonly MaterialSourceCandidate[],
-    identity: MaterialProjectionIdentity
-  ) {
-    const decoded = yield* Effect.forEach(claims, (claim) =>
-      Effect.gen(function* () {
-        const contentKey = yield* Schema.decodeUnknown(ContentKeySchema)(
-          claim.contentKey
-        ).pipe(
-          Effect.mapError(() =>
-            projectionError(identity.locale, identity.publicPath)
-          )
-        );
-        if (
-          !candidates.some(
-            (candidate) =>
-              candidate.contentKey === contentKey &&
-              candidate.locale === claim.locale
-          )
-        ) {
-          return yield* projectionError(identity.locale, identity.publicPath);
-        }
-        if (claim.kind === "missing") {
-          const missing: MaterialSourceClaim = {
-            contentKey,
-            kind: claim.kind,
-            locale: claim.locale,
-          };
-          return missing;
-        }
-        const projection = yield* decodeMaterialJson(
-          claim.projectionJson,
-          identity
-        );
-        if (
-          projection.contentKey !== contentKey ||
-          projection.locale !== claim.locale
-        ) {
-          return yield* projectionError(identity.locale, identity.publicPath);
-        }
-        const found: MaterialSourceClaim = {
-          contentKey,
-          kind: claim.kind,
-          locale: claim.locale,
-          projection,
-        };
-        return found;
-      })
-    );
-    const identities = new Set(
-      decoded.map((claim) => `${claim.locale}\0${claim.contentKey}`)
-    );
-    if (identities.size !== decoded.length) {
-      return yield* projectionError(identity.locale, identity.publicPath);
-    }
-    return decoded;
-  }
-);
+/** Caches one exact material source overlay under content invalidation. */
+export async function getPublishedMaterialShell(
+  locale: Locale,
+  sourceCandidates: readonly MaterialSourceCandidate[]
+) {
+  "use cache";
+
+  const result = await Effect.runPromise(
+    readPublishedMaterialShell(locale, sourceCandidates)
+  );
+  applyContentRuntimeCache();
+  return result;
+}
 
 /** Reads and validates one complete published material route model. */
 export const readPublishedMaterialRoute = Effect.fn(
@@ -195,8 +130,13 @@ export const readPublishedMaterialRoute = Effect.fn(
       sourceCandidates: Array.from(sourceCandidates),
     })
   );
-  const sourceClaims = yield* decodeSourceClaims(
+  const sourceClaims = yield* decodeMaterialClaims(
     result.sourceClaims,
+    sourceCandidates,
+    { locale, publicPath }
+  );
+  const sourceMaterials = yield* decodeMaterialSources(
+    result.sourceProjectionJson,
     sourceCandidates,
     { locale, publicPath }
   );
@@ -215,6 +155,7 @@ export const readPublishedMaterialRoute = Effect.fn(
       rendererDomain: null,
       siblings: [],
       sourceClaims,
+      sourceMaterials,
       sourcePath: null,
       sourceRevision: null,
     } satisfies PublishedMaterialRoute;
@@ -235,12 +176,13 @@ export const readPublishedMaterialRoute = Effect.fn(
       rendererDomain: null,
       siblings: [],
       sourceClaims,
+      sourceMaterials,
       sourcePath: null,
       sourceRevision,
     } satisfies PublishedMaterialRoute;
   }
   if (result.rendererDomain === null || result.sourcePath === null) {
-    return yield* projectionError(locale, publicPath);
+    return yield* makeMaterialProjectionError({ locale, publicPath });
   }
   const projection = yield* decodeMaterialJson(result.projectionJson, {
     locale,
@@ -258,7 +200,9 @@ export const readPublishedMaterialRoute = Effect.fn(
       })
     ),
     Schema.decodeUnknown(CorpusSourcePathSchema)(result.sourcePath),
-  ]).pipe(Effect.mapError(() => projectionError(locale, publicPath)));
+  ]).pipe(
+    Effect.mapError(() => makeMaterialProjectionError({ locale, publicPath }))
+  );
   const alternateLocales = new Set(
     alternates.map((alternate) => alternate.locale)
   );
@@ -283,7 +227,7 @@ export const readPublishedMaterialRoute = Effect.fn(
     siblings.some((sibling) => !isMaterialSibling(projection, sibling)) ||
     !siblings.some((sibling) => sibling.publicPath === projection.publicPath)
   ) {
-    return yield* projectionError(locale, publicPath);
+    return yield* makeMaterialProjectionError({ locale, publicPath });
   }
   return {
     ...active,
@@ -294,6 +238,7 @@ export const readPublishedMaterialRoute = Effect.fn(
     rendererDomain,
     siblings,
     sourceClaims,
+    sourceMaterials,
     sourcePath,
     sourceRevision,
   } satisfies PublishedMaterialRoute;

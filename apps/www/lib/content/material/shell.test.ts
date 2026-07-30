@@ -59,9 +59,18 @@ describe("material source shell", () => {
         {
           contentKey: previewPublicRoute.sourcePath,
           locale: previewPublicRoute.locale,
+          parentPath: previewPublicRoute.parentPath,
         },
-        { contentKey: idRoute.sourcePath, locale: idRoute.locale },
-        { contentKey: nextRoute.sourcePath, locale: nextRoute.locale },
+        {
+          contentKey: idRoute.sourcePath,
+          locale: idRoute.locale,
+          parentPath: idRoute.parentPath,
+        },
+        {
+          contentKey: nextRoute.sourcePath,
+          locale: nextRoute.locale,
+          parentPath: nextRoute.parentPath,
+        },
       ],
       route: previewPublicRoute,
     });
@@ -80,10 +89,23 @@ describe("material source shell", () => {
       {
         contentKey: previewPublicRoute.sourcePath,
         locale: previewPublicRoute.locale,
+        parentPath: previewPublicRoute.parentPath,
       },
-      { contentKey: idRoute.sourcePath, locale: idRoute.locale },
-      { contentKey: nextRoute.sourcePath, locale: nextRoute.locale },
-      { contentKey: movedRoute.sourcePath, locale: movedRoute.locale },
+      {
+        contentKey: idRoute.sourcePath,
+        locale: idRoute.locale,
+        parentPath: idRoute.parentPath,
+      },
+      {
+        contentKey: nextRoute.sourcePath,
+        locale: nextRoute.locale,
+        parentPath: nextRoute.parentPath,
+      },
+      {
+        contentKey: movedRoute.sourcePath,
+        locale: movedRoute.locale,
+        parentPath: movedRoute.parentPath,
+      },
     ]);
 
     mocks.resolveMaterialRouteBySource.mockReturnValue(undefined);
@@ -97,9 +119,18 @@ describe("material source shell", () => {
       {
         contentKey: previewPublicRoute.sourcePath,
         locale: previewPublicRoute.locale,
+        parentPath: previewPublicRoute.parentPath,
       },
-      { contentKey: idRoute.sourcePath, locale: idRoute.locale },
-      { contentKey: nextRoute.sourcePath, locale: nextRoute.locale },
+      {
+        contentKey: idRoute.sourcePath,
+        locale: idRoute.locale,
+        parentPath: idRoute.parentPath,
+      },
+      {
+        contentKey: nextRoute.sourcePath,
+        locale: nextRoute.locale,
+        parentPath: nextRoute.parentPath,
+      },
     ]);
   });
 

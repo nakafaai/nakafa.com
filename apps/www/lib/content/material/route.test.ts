@@ -7,6 +7,7 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getPublishedMaterialRoute,
+  getPublishedMaterialShell,
   readPublishedMaterialRoute,
 } from "@/lib/content/material/route";
 import {
@@ -50,6 +51,7 @@ function foundModel(overrides?: {
   readonly rendererDomain?: null | string;
   readonly siblingJson?: readonly string[];
   readonly sourceClaims?: readonly MaterialSourceClaimInput[];
+  readonly sourceProjectionJson?: readonly string[];
 }) {
   return {
     activeManifestHash,
@@ -76,6 +78,7 @@ function foundModel(overrides?: {
       ),
     sourceClaims: overrides?.sourceClaims ?? [],
     sourcePath: previewSourcePath,
+    sourceProjectionJson: overrides?.sourceProjectionJson ?? [],
     sourceRevision,
   };
 }
@@ -103,15 +106,26 @@ describe("published material route", () => {
     expect(cacheMock).toHaveBeenCalledOnce();
   });
 
+  it("caches an empty source shell without a network query", async () => {
+    await expect(getPublishedMaterialShell("en", [])).resolves.toEqual({
+      claims: [],
+      materials: [],
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(cacheMock).toHaveBeenCalledOnce();
+  });
+
   it("accepts a partial locale shell for one exact-owned route", async () => {
     const sourceCandidates = [
       {
         contentKey: previewProjection.contentKey,
         locale: previewProjection.locale,
+        parentPath: previewProjection.parentPath,
       },
       {
         contentKey: previewNextProjection.contentKey,
         locale: previewNextProjection.locale,
+        parentPath: previewNextProjection.parentPath,
       },
     ];
     fetchMock.mockResolvedValueOnce(
@@ -131,6 +145,9 @@ describe("published material route", () => {
             kind: "missing",
             locale: previewNextProjection.locale,
           },
+        ],
+        sourceProjectionJson: [
+          canonicalizeMaterialProjection(previewProjection),
         ],
       })
     );
@@ -157,6 +174,7 @@ describe("published material route", () => {
           kind: "missing",
         },
       ],
+      sourceMaterials: [previewProjection],
     });
     expect(fetchMock).toHaveBeenCalledWith(
       expect.anything(),
@@ -177,6 +195,7 @@ describe("published material route", () => {
         siblingJson: [],
         sourceClaims: [],
         sourcePath: null,
+        sourceProjectionJson: [],
         sourceRevision: null,
       })
       .mockResolvedValueOnce(

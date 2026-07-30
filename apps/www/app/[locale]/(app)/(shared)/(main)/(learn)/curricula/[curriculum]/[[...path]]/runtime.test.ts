@@ -1,7 +1,9 @@
 // @vitest-environment node
 
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { InvalidPublicRouteSourceError } from "@repo/contents/_types/route/error";
+import { Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   type CurriculumRouteModel,
@@ -28,6 +30,7 @@ import {
 const catalogMock = vi.hoisted(() => vi.fn());
 const routesMock = vi.hoisted(() => vi.fn());
 const routeMock = vi.hoisted(() => vi.fn());
+const materialShellMock = vi.hoisted(() => vi.fn());
 const revision = GitCommitShaSchema.make("a".repeat(40));
 
 vi.mock("@/lib/content/program/catalog", () => ({
@@ -36,6 +39,9 @@ vi.mock("@/lib/content/program/catalog", () => ({
 }));
 vi.mock("@/lib/content/program/route", () => ({
   getPublishedProgramRoute: routeMock,
+}));
+vi.mock("@/lib/content/material/route", () => ({
+  getPublishedMaterialShell: materialShellMock,
 }));
 vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: vi.fn(),
@@ -67,6 +73,10 @@ describe("curriculum runtime ownership", () => {
     catalogMock.mockReset();
     routesMock.mockReset();
     routeMock.mockReset();
+    materialShellMock.mockReset().mockResolvedValue({
+      claims: [],
+      materials: [],
+    });
   });
 
   it("builds static params from the managed published route inventory", async () => {
@@ -142,6 +152,63 @@ describe("curriculum runtime ownership", () => {
       sourcePath: "packages/contents/curriculum/merdeka",
       sourceRevision: null,
     });
+  });
+
+  it("replaces one source curriculum card through exact material ownership", async () => {
+    routeMock.mockResolvedValueOnce(
+      publishedRoute({ managed: false, route: null })
+    );
+    const renamed = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+      ...previewProjection,
+      metadata: {
+        ...previewProjection.metadata,
+        title: "Function Overview",
+      },
+      publicPath:
+        "subjects/mathematics/function-composition-inverse-function/function-overview",
+    });
+    materialShellMock.mockResolvedValueOnce({
+      claims: [
+        {
+          contentKey: previewProjection.contentKey,
+          kind: "found",
+          locale: "en",
+          projection: renamed,
+        },
+      ],
+      materials: [renamed],
+    });
+
+    const model = await resolveRuntimeCurriculumRoute(
+      Promise.resolve({
+        curriculum: "merdeka",
+        locale: "en",
+        path: ["class-11", "mathematics"],
+      })
+    );
+    const items = model.materialCards.flatMap((card) => card.items);
+
+    expect(items).toContainEqual(
+      expect.objectContaining({
+        href: expect.stringContaining(
+          "/en/subjects/mathematics/function-composition-inverse-function/function-overview"
+        ),
+        title: "Function Overview",
+      })
+    );
+    expect(items).not.toContainEqual(
+      expect.objectContaining({ title: "Function Concept" })
+    );
+    expect(materialShellMock).toHaveBeenCalledWith(
+      "en",
+      expect.arrayContaining([
+        {
+          contentKey: previewProjection.contentKey,
+          locale: "en",
+          parentPath: previewProjection.parentPath,
+        },
+      ])
+    );
   });
 
   it("fails closed when a managed route is absent", async () => {

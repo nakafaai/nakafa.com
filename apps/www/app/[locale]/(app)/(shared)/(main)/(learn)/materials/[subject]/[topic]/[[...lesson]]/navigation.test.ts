@@ -14,6 +14,7 @@ import {
 import type { MaterialPageSource } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
 import {
   makePreviewPublicRoute,
+  makePublishedMaterialContext,
   previewIdProjection,
   previewMetadata,
   previewNextProjection,
@@ -131,6 +132,7 @@ function foundClaim(projection: MaterialLessonProjection) {
     projection,
   } satisfies MaterialPageSource["sourceClaims"][number];
 }
+
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.readMaterialRoutes.mockReturnValue([
@@ -361,17 +363,9 @@ describe("material lesson navigation", () => {
   });
 
   it("preserves only a backend-verified published context", async () => {
-    mocks.getPublishedMaterialContext.mockResolvedValue({
-      managed: true,
-      value: {
-        context,
-        group: {},
-        href: "/en/curriculum/merdeka#functions",
-        label: "Functions",
-        mapping: { canonicalPath: previewProjection.parentPath },
-        parent: {},
-      },
-    });
+    mocks.getPublishedMaterialContext.mockResolvedValue(
+      makePublishedMaterialContext(context, previewProjection.parentPath)
+    );
     await expect(
       readMaterialNavigation(publishedPage, context)
     ).resolves.toMatchObject({
@@ -394,17 +388,9 @@ describe("material lesson navigation", () => {
   });
 
   it("keeps an exact lesson context off sibling links", async () => {
-    mocks.getPublishedMaterialContext.mockResolvedValue({
-      managed: true,
-      value: {
-        context,
-        group: {},
-        href: "/en/curriculum/merdeka#functions",
-        label: "Functions",
-        mapping: { canonicalPath: previewProjection.publicPath },
-        parent: {},
-      },
-    });
+    mocks.getPublishedMaterialContext.mockResolvedValue(
+      makePublishedMaterialContext(context, previewProjection.publicPath)
+    );
     await expect(
       readMaterialNavigation(publishedPage, context)
     ).resolves.toMatchObject({

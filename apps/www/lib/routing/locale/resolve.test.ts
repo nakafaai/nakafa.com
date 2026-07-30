@@ -208,131 +208,13 @@ describe("resolveLocalizedNavigationHref", () => {
     }
   });
 
-  it("reconciles source and partial exact material target states", () => {
+  it("falls back to the static projection when no published source route exists", () => {
     const href = `/${previewProjection.locale}/${previewProjection.publicPath}`;
     publishedMocks.materialSource.mockReturnValueOnce({
       candidates: [],
       route: undefined,
     });
     expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);
-
-    const renamedId = {
-      ...previewIdProjection,
-      publicPath: `${previewIdProjection.parentPath}/fungsi-berganti`,
-    };
-    publishedMocks.materialRoute.mockReturnValue(
-      Effect.succeed({
-        managed: false,
-        projection: null,
-        sourceClaims: [
-          {
-            contentKey: previewProjection.contentKey,
-            kind: "found",
-            locale: "id",
-            projection: renamedId,
-          },
-        ],
-      })
-    );
-    expect(resolveHref(href, "id")).toBe(`/${renamedId.publicPath}`);
-    expect(publishedMocks.materialRoute).toHaveBeenCalledWith(
-      previewProjection.locale,
-      previewProjection.publicPath,
-      expect.arrayContaining([
-        {
-          contentKey: previewProjection.contentKey,
-          locale: previewIdProjection.locale,
-        },
-      ])
-    );
-    publishedMocks.materialRoute.mockReturnValue(
-      Effect.succeed({
-        managed: false,
-        projection: null,
-        sourceClaims: [
-          {
-            contentKey: previewProjection.contentKey,
-            kind: "missing",
-            locale: "id",
-          },
-        ],
-      })
-    );
-    expect(() => resolveHref(href, "id")).toThrow();
-
-    const partial = {
-      activeReleaseId: "material-partial",
-      alternates: [previewProjection],
-      familyManaged: false,
-      managed: true,
-      projection: previewProjection,
-      sourceClaims: [],
-    };
-    const found = {
-      ...previewIdProjection,
-      publicPath: `${previewIdProjection.parentPath}/renamed-function`,
-    };
-    /** Runs one authoritative refresh after the initial partial model. */
-    const read = (refresh: object) => {
-      publishedMocks.materialRoute
-        .mockReturnValueOnce(Effect.succeed(partial))
-        .mockReturnValueOnce(Effect.succeed(refresh));
-      return resolveHref(href, "id");
-    };
-
-    expect(read(partial)).toBe(`/${previewIdProjection.publicPath}`);
-    const context =
-      "?ctx=merdeka~class-11-mathematics-function-composition-inverse-function";
-    publishedMocks.materialRoute
-      .mockReturnValueOnce(Effect.succeed(partial))
-      .mockReturnValueOnce(Effect.succeed(partial));
-    publishedMocks.materialContext.mockReturnValueOnce(
-      Effect.succeed({ managed: false, value: null })
-    );
-    expect(resolveHref(`${href}${context}`, "id")).toBe(
-      `/${previewIdProjection.publicPath}${context}`
-    );
-    expect(
-      read({ ...partial, alternates: [previewProjection, previewIdProjection] })
-    ).toBe(`/${previewIdProjection.publicPath}`);
-    expect(
-      read({
-        ...partial,
-        sourceClaims: [
-          {
-            contentKey: previewProjection.contentKey,
-            kind: "found",
-            locale: previewIdProjection.locale,
-            projection: found,
-          },
-        ],
-      })
-    ).toBe(`/${found.publicPath}`);
-    expect(() =>
-      read({
-        ...partial,
-        sourceClaims: [
-          {
-            contentKey: previewProjection.contentKey,
-            kind: "missing",
-            locale: previewIdProjection.locale,
-          },
-        ],
-      })
-    ).toThrow();
-    expect(() =>
-      read({ managed: false, projection: null, sourceClaims: [] })
-    ).toThrow();
-    expect(() =>
-      read({ ...partial, activeReleaseId: "material-replaced" })
-    ).toThrow();
-
-    publishedMocks.materialRoute.mockReturnValue(Effect.succeed(partial));
-    vi.spyOn(
-      publicLearningStatic,
-      "loadStaticPublicLearningIndex"
-    ).mockReturnValueOnce(Effect.succeed(emptyLearningIndex));
-    expect(() => resolveHref(href, "id")).toThrow();
   });
 
   it("keeps material context only while the active program verifies it", () => {

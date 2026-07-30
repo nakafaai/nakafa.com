@@ -15,9 +15,9 @@ import {
   readMaterialRequest,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { getMaterialPageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/runtime";
+import type { MaterialSourceClaim } from "@/lib/content/material/ownership";
 import {
   getPublishedMaterialRoute,
-  type MaterialSourceClaim,
   type PublishedMaterialRoute,
 } from "@/lib/content/material/route";
 import {
@@ -56,6 +56,7 @@ interface SourceOwner {
   readonly locale: Locale;
   readonly route: PublicMaterialLessonRoute;
   readonly sourceClaims: readonly MaterialSourceClaim[];
+  readonly sourceMaterials: readonly MaterialLessonProjection[];
 }
 
 type MaterialOwner = PreviewOwner | PublishedOwner | SourceOwner;
@@ -208,6 +209,7 @@ async function resolveMaterialOwner(
     locale: request.locale,
     route: source.route,
     sourceClaims: published.sourceClaims,
+    sourceMaterials: published.sourceMaterials,
   };
 }
 
@@ -323,7 +325,7 @@ export async function readMaterialPage(
     metadata: source.metadata,
     rendererDomain: null,
     route: owner.route,
-    siblings: [],
+    siblings: owner.sourceMaterials,
     sourceClaims: owner.sourceClaims,
     sourceUrl: getGithubUrl({
       path: `/packages/contents/${owner.route.sourcePath}/${owner.locale}.mdx`,

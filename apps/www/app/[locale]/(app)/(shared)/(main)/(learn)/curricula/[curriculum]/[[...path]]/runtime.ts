@@ -8,18 +8,26 @@ import type { LearningProgram as PublishedLearningProgram } from "@nakafa/aksara
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { findLearningProgramByKey } from "@repo/contents/_types/program/catalog";
 import { readCurriculumAncestors } from "@repo/contents/_types/route/curriculum";
+import { readCurriculumMaterialCards } from "@repo/contents/_types/route/curriculum/card";
 import { InvalidPublicRouteSourceError } from "@repo/contents/_types/route/error";
 import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
+import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import {
   groupCurriculumChildren,
   listCurriculumStaticParams as listSourceStaticParams,
   readCurriculumRoutes,
+  readMaterialRoutes as readSourceMaterialRoutes,
   readCurriculumRootRoutes as readSourceRootRoutes,
   readCurriculumRouteModel as readSourceRouteModel,
   resolveCurriculumRoute as resolveSourceRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
+import { getPublishedMaterialShell } from "@/lib/content/material/route";
+import {
+  readMaterialCardCandidates,
+  reconcileMaterialSourceRoutes,
+} from "@/lib/content/material/source";
 import { getPublishedMaterialCards } from "@/lib/content/program/cards";
 import {
   getPublishedProgramCatalog,
@@ -166,6 +174,24 @@ export async function resolveRuntimeCurriculumRoute(
   const sourceModel = readSourceRouteModel(source);
   const program = requireSourceCurriculumProgram(source.route.programKey);
   const sourceRoutes = readCurriculumRoutes();
+  let materialCards = sourceModel.materialCards;
+  if (materialCards.length > 0) {
+    const contentRoutes = readSourceMaterialRoutes();
+    const candidates = readMaterialCardCandidates(
+      materialCards,
+      locale,
+      contentRoutes
+    );
+    const model = await getPublishedMaterialShell(locale, candidates);
+    const reconciled = Effect.runSync(
+      reconcileMaterialSourceRoutes(locale, contentRoutes, model)
+    );
+    materialCards = readCurriculumMaterialCards({
+      contentRoutes: reconciled,
+      curriculumRoutes: sourceRoutes,
+      route: source.route,
+    });
+  }
   return {
     alternates: sourceRoutes.filter((candidate) =>
       isSamePublicRouteIdentity(source.route, candidate)
@@ -177,7 +203,7 @@ export async function resolveRuntimeCurriculumRoute(
     childRoutes: sourceModel.childRoutes,
     locale,
     managed: false,
-    materialCards: sourceModel.materialCards,
+    materialCards,
     program,
     route: source.route,
     sourcePath: `packages/contents/curriculum/${source.route.programKey}`,
