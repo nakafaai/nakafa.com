@@ -2,6 +2,8 @@ import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale } from "next-intl";
+import { readPublishedMaterialClaims } from "@/lib/content/material/ownership";
+import { readMaterialSource } from "@/lib/content/material/shell";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
@@ -63,6 +65,22 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     }
     if (ownership.kind === "missing") {
       return locale;
+    }
+    const source = readMaterialSource(locale, publicPath);
+    if (source.route) {
+      const claims = yield* readPublishedMaterialClaims(
+        locale,
+        source.candidates
+      );
+      if (
+        claims.some(
+          (claim) =>
+            claim.contentKey === source.route.sourcePath &&
+            claim.locale === source.route.locale
+        )
+      ) {
+        return locale;
+      }
     }
   }
   if (surface.key === "curriculum") {

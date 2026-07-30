@@ -1,6 +1,7 @@
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
+import { readPublishedMaterialClaims } from "@/lib/content/material/ownership";
 import {
   type ActiveContentReleaseId,
   readActiveContentIdentity,
@@ -112,8 +113,8 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
     const routeSegment = readRouteSegment(cleanSlug);
     const publishedFamily = readPublishedFamily(routeSegment);
+    const active = publishedFamily ? yield* readActiveContentIdentity() : null;
     if (publishedFamily) {
-      const active = yield* readActiveContentIdentity();
       const activeRoute = yield* readActiveContentRoute({
         activeReleaseId: active?.releaseId ?? null,
         family: publishedFamily,
@@ -150,6 +151,35 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
 
     if (!publicRoute.sourcePath) {
       return null;
+    }
+    if (publicRoute.kind === "subject-lesson" && active) {
+      const claims = yield* readPublishedMaterialClaims(locale, [
+        {
+          contentKey: publicRoute.sourcePath,
+          locale,
+          parentPath: publicRoute.parentPath,
+        },
+      ]);
+      const claim = claims.find(
+        (candidate) =>
+          candidate.contentKey === publicRoute.sourcePath &&
+          candidate.locale === locale
+      );
+      if (claim) {
+        if (
+          claim.kind === "missing" ||
+          claim.projection.publicPath !== cleanSlug
+        ) {
+          return null;
+        }
+        const source: MarkdownSource = {
+          activeReleaseId: active.releaseId,
+          family: "material",
+          kind: "published",
+          publicPath: cleanSlug,
+        };
+        return source;
+      }
     }
 
     const source: MarkdownSource = {

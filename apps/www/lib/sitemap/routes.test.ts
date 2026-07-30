@@ -27,12 +27,17 @@ const programMocks = vi.hoisted(() => ({
   readPublishedProgramBuckets: vi.fn(),
   readPublishedProgramSitemap: vi.fn(),
 }));
+const ownershipMocks = vi.hoisted(() => ({
+  filterMaterialContentRows: vi.fn(),
+  filterMaterialPublicPaths: vi.fn(),
+}));
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleSitemap: articleMocks.readPublishedArticleSitemap,
 }));
 vi.mock("@/lib/content/material/sitemap", () => materialMocks);
 vi.mock("@/lib/content/program/sitemap", () => programMocks);
+vi.mock("@/lib/sitemap/material", () => ownershipMocks);
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentSitemapPage: runtimeMocks.getRuntimeContentSitemapPage,
@@ -40,6 +45,12 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 }));
 
 beforeEach(() => {
+  ownershipMocks.filterMaterialContentRows
+    .mockReset()
+    .mockImplementation((_locale, rows) => Effect.succeed(rows));
+  ownershipMocks.filterMaterialPublicPaths
+    .mockReset()
+    .mockImplementation((_locale, paths) => Effect.succeed(paths));
   articleMocks.readPublishedArticleSitemap.mockReset();
   articleMocks.readPublishedArticleSitemap.mockReturnValue(
     Effect.succeed(null)
@@ -279,6 +290,7 @@ function routeRow({
     kind,
     route,
     section,
+    sourcePath,
     syncedAt: 1,
   };
 }

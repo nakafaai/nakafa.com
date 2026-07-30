@@ -24,6 +24,10 @@ import {
   isProgramSitemapPage,
   isPublicSitemapPage,
 } from "@/lib/sitemap/identity";
+import {
+  filterMaterialContentRows,
+  filterMaterialPublicPaths,
+} from "@/lib/sitemap/material";
 
 const quranRootRoute = "/quran";
 
@@ -69,8 +73,12 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       if (!artifact) {
         return yield* new SitemapPageNotFoundError({ pageId });
       }
+      const visiblePaths = yield* filterMaterialPublicPaths(
+        page.locale,
+        artifact.paths
+      );
       const routes: { lastModified: number; path: string }[] = [];
-      for (const path of artifact.paths) {
+      for (const path of visiblePaths) {
         if (
           !isSourceOwnedPublicPath(path, page.locale, {
             material: materialOwner.managed,
@@ -156,7 +164,11 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     if (!artifact) {
       return yield* new SitemapPageNotFoundError({ pageId });
     }
-    return { routes: yield* buildSitemapContentPageRoutes(artifact.routes) };
+    const visibleRoutes = yield* filterMaterialContentRows(
+      page.locale,
+      artifact.routes
+    );
+    return { routes: yield* buildSitemapContentPageRoutes(visibleRoutes) };
   }
 );
 

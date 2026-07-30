@@ -1,6 +1,4 @@
 import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
@@ -14,20 +12,17 @@ import {
   readPublishedMaterialBucket,
 } from "@/lib/content/material/discovery";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
+import type { RuntimeContentRoute } from "@/lib/content/runtime/routes";
 import {
   getRuntimeContentRouteArtifactPage,
   getRuntimeContentRouteParentPage,
 } from "@/lib/content/runtime/routes";
 import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
 import type { LlmsEntry } from "@/lib/llms/entries";
+import { reconcileMaterialLlmsRows } from "@/lib/llms/material";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
 const LLMS_LISTING_ENTRY_LIMIT = 100;
-type RuntimeContentRoute = NonNullable<
-  FunctionReturnType<
-    typeof api.contents.queries.runtime.getContentRouteArtifactPage
-  >
->["routes"][number];
 type ParentListingRowsArgs = Omit<
   Parameters<typeof getRuntimeContentRouteParentPage>[0],
   "cursor" | "limit"
@@ -92,6 +87,27 @@ export const getContentPageLlmsEntries = Effect.fn(
 
   if (!artifactPage) {
     return null;
+  }
+  if (section === "material") {
+    const sources = yield* reconcileMaterialLlmsRows(
+      locale,
+      artifactPage.routes
+    );
+    return [
+      ...buildPublishedMaterialEntries({
+        locale,
+        materials: sources.projections.map((projection) => ({
+          description: projection.metadata.description,
+          publicPath: projection.publicPath,
+          title: projection.metadata.title,
+        })),
+      }),
+      ...buildLocalizedLlmsEntriesFromRows({
+        locale,
+        rows: sources.rows,
+        section,
+      }),
+    ].sort((left, right) => left.route.localeCompare(right.route));
   }
 
   return buildLocalizedLlmsEntriesFromRows({
@@ -186,7 +202,10 @@ function buildPublishedMaterialEntries({
   materials,
 }: {
   locale: Locale;
-  materials: readonly PublishedMaterialSummary[];
+  materials: readonly Pick<
+    PublishedMaterialSummary,
+    "description" | "publicPath" | "title"
+  >[];
 }) {
   return materials
     .map((material) => {

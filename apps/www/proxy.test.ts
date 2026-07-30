@@ -41,6 +41,7 @@ const runtimeMocks = vi.hoisted(() => ({
   readActiveIdentity: vi.fn(),
   readArticleCategory: vi.fn(),
   readContent: vi.fn(),
+  readMaterialClaims: vi.fn(),
   readProgramPath: vi.fn(),
   readPublic: vi.fn(),
 }));
@@ -77,6 +78,9 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 vi.mock("@/lib/content/article/ownership", () => ({
   readPublishedArticleCategory: runtimeMocks.readArticleCategory,
 }));
+vi.mock("@/lib/content/material/ownership", () => ({
+  readPublishedMaterialClaims: runtimeMocks.readMaterialClaims,
+}));
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: runtimeMocks.readActive,
 }));
@@ -112,6 +116,9 @@ describe("proxy", () => {
     runtimeMocks.readArticleCategory
       .mockReset()
       .mockReturnValue(Effect.succeed({ exists: false, managed: false }));
+    runtimeMocks.readMaterialClaims
+      .mockReset()
+      .mockReturnValue(Effect.succeed([]));
     previewMocks.configured.mockReset().mockReturnValue(false);
     previewMocks.internal.mockReset().mockReturnValue(Effect.succeed(false));
     previewMocks.route.mockReset().mockReturnValue(Effect.succeed(false));

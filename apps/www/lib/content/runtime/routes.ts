@@ -18,6 +18,12 @@ type ContentRoutesByParentPageArgs = FunctionArgs<
 type ContentRouteArtifactPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getContentRouteArtifactPage
 >;
+/** One route row returned by the bounded content artifact catalog. */
+export type RuntimeContentRoute = NonNullable<
+  FunctionReturnType<
+    typeof api.contents.queries.runtime.getContentRouteArtifactPage
+  >
+>["routes"][number];
 type ContentRouteCountsArgs = FunctionArgs<
   typeof api.contents.queries.runtime.listContentRouteCounts
 >;

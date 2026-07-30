@@ -6,12 +6,20 @@ import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected"
 const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
+const mockReadMaterialSource = vi.hoisted(() => vi.fn());
+const mockReadPublishedMaterialClaims = vi.hoisted(() => vi.fn());
 const mockReadPublishedProgramPath = vi.hoisted(() => vi.fn());
 const mockMatchesPreviewRoute = vi.hoisted(() => vi.fn());
 const activeReleaseId = "release-active";
 
 vi.mock("@/lib/content/preview/route", () => ({
   matchesPreviewRoute: mockMatchesPreviewRoute,
+}));
+vi.mock("@/lib/content/material/ownership", () => ({
+  readPublishedMaterialClaims: mockReadPublishedMaterialClaims,
+}));
+vi.mock("@/lib/content/material/shell", () => ({
+  readMaterialSource: mockReadMaterialSource,
 }));
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimePublicRoute: mockGetRuntimePublicRoute,
@@ -41,6 +49,13 @@ describe("projected public html route rejection", () => {
       .mockReturnValue(Effect.succeed({ managed: false, route: null }));
     mockMatchesPreviewRoute.mockReset();
     mockMatchesPreviewRoute.mockReturnValue(Effect.succeed(false));
+    mockReadMaterialSource.mockReset().mockReturnValue({
+      candidates: [],
+      route: undefined,
+    });
+    mockReadPublishedMaterialClaims
+      .mockReset()
+      .mockReturnValue(Effect.succeed([]));
   });
 
   it("rejects missing projected routes through one indexed lookup", async () => {
@@ -125,6 +140,37 @@ describe("projected public html route rejection", () => {
       locale: "en",
       publicPath: "subjects/mathematics/new-topic/new-published-lesson",
     });
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+  });
+
+  it("hard-rejects a source path claimed by one exact material owner", async () => {
+    const publicPath = "subjects/mathematics/functions/old-concept";
+    mockReadMaterialSource.mockReturnValueOnce({
+      candidates: [
+        {
+          contentKey: "material/lesson/mathematics/functions/concept",
+          locale: "en",
+          parentPath: "subjects/mathematics/functions",
+        },
+      ],
+      route: {
+        locale: "en",
+        sourcePath: "material/lesson/mathematics/functions/concept",
+      },
+    });
+    mockReadPublishedMaterialClaims.mockReturnValueOnce(
+      Effect.succeed([
+        {
+          contentKey: "material/lesson/mathematics/functions/concept",
+          kind: "missing",
+          locale: "en",
+        },
+      ])
+    );
+
+    await expect(
+      Effect.runPromise(readProjectedHtmlRouteRejection(`/en/${publicPath}`))
+    ).resolves.toBe("en");
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 

@@ -107,6 +107,7 @@ function routeRow(
     kind,
     route,
     section,
+    sourcePath,
     syncedAt: date,
   };
 }

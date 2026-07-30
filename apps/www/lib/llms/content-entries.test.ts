@@ -1,4 +1,5 @@
 // @vitest-environment node
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
@@ -7,6 +8,10 @@ import {
   getContentPageLlmsEntries,
 } from "@/lib/llms/content-entries";
 import type { LlmsEntry } from "@/lib/llms/entries";
+import {
+  previewNextProjection,
+  previewProjection,
+} from "@/test/content-preview";
 
 const mockGetArtifactPage = vi.hoisted(() => vi.fn());
 const mockGetParentPage = vi.hoisted(() => vi.fn());
@@ -15,6 +20,7 @@ const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
 const mockReadPublishedCategoryArticles = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialBucket = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialBuckets = vi.hoisted(() => vi.fn());
+const mockReconcileMaterialRows = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/discovery", () => ({
   readPublishedArticleBucket: mockReadPublishedArticleBucket,
@@ -30,6 +36,9 @@ vi.mock("@/lib/content/material/discovery", () => ({
 vi.mock("@/lib/content/material/sitemap", () => ({
   readPublishedMaterialBuckets: mockReadPublishedMaterialBuckets,
 }));
+vi.mock("@/lib/llms/material", () => ({
+  reconcileMaterialLlmsRows: mockReconcileMaterialRows,
+}));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRouteArtifactPage: mockGetArtifactPage,
@@ -38,11 +47,9 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 
 const routeRows = [
   {
-    description: "Draft",
     markdown: false,
     route: "articles/politics/draft",
     section: "articles",
-    title: "Draft",
   },
   {
     description: "A short article fixture.",
@@ -74,6 +81,17 @@ const routeRows = [
   },
 ];
 
+/** Builds one published material summary from a real projection fixture. */
+function makeMaterialSummary(projection: MaterialLessonProjection) {
+  return {
+    authors: projection.metadata.authors.map(({ name }) => ({ name })),
+    date: projection.metadata.date,
+    description: projection.metadata.description,
+    publicPath: projection.publicPath,
+    title: projection.metadata.title,
+  };
+}
+
 beforeEach(() => {
   mockGetArtifactPage.mockReset();
   mockGetParentPage.mockReset();
@@ -82,6 +100,7 @@ beforeEach(() => {
   mockReadPublishedCategoryArticles.mockReset();
   mockReadPublishedMaterialBucket.mockReset();
   mockReadPublishedMaterialBuckets.mockReset();
+  mockReconcileMaterialRows.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
   );
@@ -93,6 +112,9 @@ beforeEach(() => {
   );
   mockReadPublishedMaterialBuckets.mockReturnValue(
     Effect.succeed({ buckets: [], managed: false, materialCount: 0 })
+  );
+  mockReconcileMaterialRows.mockImplementation((_locale, rows) =>
+    Effect.succeed({ projections: [previewProjection], rows })
   );
   mockGetArtifactPage.mockImplementation(({ locale, page, section }) =>
     Effect.succeed({
@@ -150,6 +172,7 @@ describe("llms content entries", () => {
       "/articles/politics/aaa-short-fixture",
       "/articles/politics/dynastic-politics-asian-values",
       "/subjects/chemistry/green-chemistry/definition",
+      `/${previewProjection.publicPath}`,
       "/quran/1",
     ]);
     expect(entries[1]).toEqual({
@@ -268,24 +291,9 @@ describe("llms content entries", () => {
     mockReadPublishedMaterialBucket.mockReturnValue(
       Effect.succeed({
         managed: true,
-        materials: [
-          {
-            authors: [{ name: "Nabil Akbarazzima Fatih" }],
-            date: "2025-04-27",
-            description: "Understand functions as input-output relationships.",
-            publicPath:
-              "subjects/mathematics/function-composition-inverse-function/function-concept",
-            title: "Function Concept",
-          },
-          {
-            authors: [{ name: "Nabil Akbarazzima Fatih" }],
-            date: "2025-04-27",
-            description: "Understand bijective function requirements.",
-            publicPath:
-              "subjects/mathematics/function-composition-inverse-function/injective-surjective-bijective-function",
-            title: "Injective, Surjective, and Bijective Functions",
-          },
-        ],
+        materials: [previewProjection, previewNextProjection].map(
+          makeMaterialSummary
+        ),
       })
     );
 
