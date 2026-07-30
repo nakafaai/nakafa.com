@@ -4,20 +4,12 @@ import { NextResponse } from "next/server";
 import {
   getMaterialApiContentPage,
   invalidApiLocaleMessage,
-  listApiStaticParams,
   parseApiLocale,
   parseApiPageParams,
 } from "@/lib/content/runtime";
 
+export const dynamic = "force-dynamic";
 export const revalidate = false;
-
-/** Generates all locale-aware material API paths from the Convex route catalog. */
-export function generateStaticParams() {
-  return listApiStaticParams({
-    prefix: "material/",
-    section: "material",
-  });
-}
 
 /** Returns material content lists for `/contents/:locale/material/*`. */
 export async function GET(
