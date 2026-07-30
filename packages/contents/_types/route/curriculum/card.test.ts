@@ -1,7 +1,10 @@
 import { MATERIAL_CARD_DESCRIPTION_MAX_LENGTH } from "@repo/contents/_types/material/description";
 import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
 import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
-import { readCurriculumMaterialCards } from "@repo/contents/_types/route/curriculum/card";
+import {
+  readCurriculumMaterialCards,
+  readCurriculumMaterialPaths,
+} from "@repo/contents/_types/route/curriculum/card";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -70,6 +73,12 @@ describe("curriculum cards", () => {
         route: subjectRoute,
       })
     ).toEqual([]);
+    expect(
+      readCurriculumMaterialPaths(subjectRoute, curriculumRoutes)
+    ).toContain(materialRoute.canonicalPath);
+    expect(readCurriculumMaterialPaths(classRoute, curriculumRoutes)).toEqual(
+      []
+    );
 
     const lesson = contentRoutes.find(
       (route) =>

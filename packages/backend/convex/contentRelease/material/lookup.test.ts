@@ -1,4 +1,7 @@
-import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import {
+  canonicalizeMaterialProjection,
+  MaterialLessonProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/material";
 import { lookupMaterial } from "@repo/backend/convex/contentRelease/material/lookup";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -11,6 +14,7 @@ import {
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("contentRelease/material/lookup", () => {
@@ -122,7 +126,49 @@ describe("contentRelease/material/lookup", () => {
     });
   });
 
-  it("keeps one exact content-ID tombstone managed", async () => {
+  it("redirects one exact source URL through its stable identity", async () => {
+    const target = convexTest(schema, convexModules);
+    const source = makeMaterialProjection("en", 1);
+    const renamed = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+      ...source,
+      publicPath: `${source.parentPath}/renamed`,
+    });
+    await activateMaterialCatalog(target, [renamed]);
+    await selectExactMaterial(target, renamed);
+    await target.mutation((ctx) =>
+      insertContentViewRoute(ctx, {
+        contentId: source.graph.assetId,
+        graph: source.graph,
+        kind: "curriculum-lesson",
+        locale: source.locale,
+        route: source.publicPath,
+        section: "material",
+        sourcePath: source.contentKey,
+        title: source.metadata.title,
+      })
+    );
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          lookupMaterial(ctx, {
+            kind: "route",
+            locale: source.locale,
+            publicPath: source.publicPath,
+          })
+        )
+      )
+    ).resolves.toEqual({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      route: {
+        locale: renamed.locale,
+        publicPath: renamed.publicPath,
+      },
+    });
+  });
+
+  it("keeps one exact source tombstone managed without a route binding", async () => {
     const target = convexTest(schema, convexModules);
     const selected = makeMaterialProjection("en", 1);
     await activateMaterialCatalog(target, [selected]);
@@ -167,9 +213,7 @@ describe("contentRelease/material/lookup", () => {
       if (!(binding && head && catalog)) {
         throw new Error("Expected one complete exact material fixture.");
       }
-      await ctx.db.patch("contentBindings", binding._id, {
-        operation: "delete",
-      });
+      await ctx.db.delete("contentBindings", binding._id);
       await ctx.db.patch("contentHeads", head._id, { operation: "delete" });
     });
 
@@ -179,6 +223,21 @@ describe("contentRelease/material/lookup", () => {
           lookupMaterial(ctx, {
             contentId: selected.graph.assetId,
             kind: "content",
+          })
+        )
+      )
+    ).resolves.toEqual({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      route: null,
+    });
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          lookupMaterial(ctx, {
+            kind: "route",
+            locale: selected.locale,
+            publicPath: selected.publicPath,
           })
         )
       )
@@ -207,6 +266,21 @@ describe("contentRelease/material/lookup", () => {
           lookupMaterial(ctx, {
             contentId: selected.graph.assetId,
             kind: "content",
+          })
+        )
+      )
+    ).resolves.toEqual({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      route: null,
+    });
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          lookupMaterial(ctx, {
+            kind: "route",
+            locale: selected.locale,
+            publicPath: selected.publicPath,
           })
         )
       )

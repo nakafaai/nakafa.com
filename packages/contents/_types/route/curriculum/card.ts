@@ -37,16 +37,8 @@ export function readCurriculumMaterialCards({
     contentRoutes,
     curriculumRoutes,
   });
-  const groupRoutes = curriculumRoutes
-    .filter(
-      (candidate) =>
-        candidate.locale === route.locale &&
-        candidate.parentPath === route.publicPath
-    )
-    .slice()
-    .sort(compareCurriculumRouteOrder);
 
-  return groupRoutes.flatMap((groupRoute) =>
+  return readCurriculumGroups(route, curriculumRoutes).flatMap((groupRoute) =>
     readCurriculumMaterialCard({
       contentRoutes,
       curriculumRoutes,
@@ -54,6 +46,44 @@ export function readCurriculumMaterialCards({
       route: groupRoute,
     })
   );
+}
+
+/** Lists canonical material paths referenced by one curriculum shell. */
+export function readCurriculumMaterialPaths(
+  route: PublicCurriculumRoute,
+  curriculumRoutes: readonly PublicCurriculumRoute[]
+) {
+  if (!(route.level === "subject" || route.level === "course")) {
+    return [];
+  }
+
+  const paths = new Set<string>();
+  for (const group of readCurriculumGroups(route, curriculumRoutes)) {
+    for (const candidate of [
+      group,
+      ...readCurriculumDescendants(group, curriculumRoutes),
+    ]) {
+      if (candidate.canonicalPath) {
+        paths.add(candidate.canonicalPath);
+      }
+    }
+  }
+  return Array.from(paths);
+}
+
+/** Reads immediate curriculum groups in deterministic source order. */
+function readCurriculumGroups(
+  route: PublicCurriculumRoute,
+  routes: readonly PublicCurriculumRoute[]
+) {
+  return routes
+    .filter(
+      (candidate) =>
+        candidate.locale === route.locale &&
+        candidate.parentPath === route.publicPath
+    )
+    .slice()
+    .sort(compareCurriculumRouteOrder);
 }
 
 /** Converts one curriculum group route into the existing collapsible material card contract. */

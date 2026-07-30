@@ -4,7 +4,7 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import {
-  readMaterialCardCandidates,
+  readMaterialSourceCandidates,
   reconcileMaterialSourceRoutes,
 } from "@/lib/content/material/source";
 import {
@@ -27,37 +27,14 @@ const topicRoute = {
 };
 
 describe("material source reconciliation", () => {
-  it("extracts only localized material routes from curriculum cards", () => {
+  it("extracts exact lesson identities from canonical curriculum paths", () => {
     expect(
-      readMaterialCardCandidates(
+      readMaterialSourceCandidates(
         [
-          {
-            description: "Functions",
-            href: "/en/subjects/mathematics/functions",
-            items: [
-              {
-                href: `/en/${sourceRoute.publicPath}?from=curriculum`,
-                title: sourceRoute.title,
-              },
-              {
-                href: `/en/${sourceRoute.publicPath}?from=another-program`,
-                title: sourceRoute.title,
-              },
-              {
-                href: `/id/${idRoute.publicPath}`,
-                title: idRoute.title,
-              },
-              {
-                href: "/en/subjects/mathematics/missing",
-                title: "Missing",
-              },
-              {
-                href: `/en/${topicRoute.publicPath}`,
-                title: topicRoute.title,
-              },
-            ],
-            title: "Functions",
-          },
+          topicRoute.publicPath,
+          sourceRoute.publicPath,
+          idRoute.publicPath,
+          "subjects/mathematics/missing",
         ],
         "en",
         [sourceRoute, idRoute, topicRoute]
@@ -67,6 +44,18 @@ describe("material source reconciliation", () => {
         contentKey: sourceRoute.sourcePath,
         locale: "en",
         parentPath: sourceRoute.parentPath,
+      },
+    ]);
+  });
+
+  it("keeps an empty source topic as a published-group anchor", () => {
+    expect(
+      readMaterialSourceCandidates([topicRoute.publicPath], "en", [topicRoute])
+    ).toEqual([
+      {
+        contentKey: topicRoute.sourcePath,
+        locale: "en",
+        parentPath: topicRoute.publicPath,
       },
     ]);
   });

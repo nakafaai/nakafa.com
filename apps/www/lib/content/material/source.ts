@@ -1,5 +1,7 @@
-import type { MaterialList } from "@repo/contents/_types/curriculum/material";
-import { isMaterialLessonRoute } from "@repo/contents/_types/route/content";
+import {
+  isMaterialContentRoute,
+  isMaterialLessonRoute,
+} from "@repo/contents/_types/route/content";
 import type {
   PublicContentRoute,
   PublicMaterialLessonRoute,
@@ -13,32 +15,39 @@ import type {
 } from "@/lib/content/material/ownership";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
-/** Resolves exact source identities referenced by localized curriculum cards. */
-export function readMaterialCardCandidates(
-  cards: MaterialList,
+/** Resolves exact source identities referenced by canonical curriculum paths. */
+export function readMaterialSourceCandidates(
+  paths: readonly string[],
   locale: Locale,
   routes: readonly PublicContentRoute[]
 ) {
-  const pathPrefix = `/${locale}/`;
   const candidates = new Map<string, MaterialSourceCandidate>();
-  for (const { items } of cards) {
-    for (const { href } of items) {
-      const path = href.split("?")[0];
-      if (!path.startsWith(pathPrefix)) {
-        continue;
-      }
-      const publicPath = path.slice(pathPrefix.length);
-      const material = routes.find(
-        (candidate) =>
-          candidate.locale === locale && candidate.publicPath === publicPath
-      );
-      if (!(material && isMaterialLessonRoute(material))) {
-        continue;
-      }
-      candidates.set(`${material.locale}\0${material.sourcePath}`, {
-        contentKey: material.sourcePath,
-        locale: material.locale,
-        parentPath: material.parentPath,
+  const materials = routes.filter(isMaterialContentRoute);
+  for (const path of paths) {
+    const material = materials.find(
+      (candidate) =>
+        candidate.locale === locale && candidate.publicPath === path
+    );
+    if (!material) {
+      continue;
+    }
+    const lessons = isMaterialLessonRoute(material)
+      ? [material]
+      : materials.filter(
+          (candidate) =>
+            isMaterialLessonRoute(candidate) &&
+            candidate.locale === locale &&
+            candidate.parentPath === material.publicPath
+        );
+    const sources = lessons.length > 0 ? lessons : [material];
+    for (const source of sources) {
+      const parentPath = isMaterialLessonRoute(source)
+        ? source.parentPath
+        : source.publicPath;
+      candidates.set(`${source.locale}\0${source.sourcePath}`, {
+        contentKey: source.sourcePath,
+        locale: source.locale,
+        parentPath,
       });
     }
   }

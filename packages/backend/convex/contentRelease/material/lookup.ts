@@ -1,4 +1,5 @@
 import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -22,82 +23,12 @@ function publicIdentity(
   };
 }
 
-/** Resolves one public material route through active release ownership. */
-const lookupMaterialRoute = Effect.fn("contentRelease.lookupMaterialRoute")(
+/** Resolves exact material ownership from one stable source identity. */
+const lookupSourceMaterial = Effect.fn("contentRelease.lookupSourceMaterial")(
   function* (
     ctx: QueryCtx,
-    input: Extract<MaterialLookupInput, { kind: "route" }>
+    source: Pick<Doc<"contentRoutes">, "locale" | "sourcePath">
   ) {
-    const resolved = yield* resolveMaterialRoute(
-      ctx,
-      input.locale,
-      input.publicPath
-    );
-
-    return {
-      activeReleaseId: resolved.active?.releaseId ?? null,
-      managed: resolved.managed,
-      route: resolved.material ? publicIdentity(resolved.material) : null,
-    };
-  }
-);
-
-/** Resolves one graph asset through the active material catalog. */
-const lookupMaterialContent = Effect.fn("contentRelease.lookupMaterialContent")(
-  function* (
-    ctx: QueryCtx,
-    input: Extract<MaterialLookupInput, { kind: "content" }>
-  ) {
-    const catalog = yield* loadMaterialCatalogOwner(ctx);
-    const rows = (yield* Effect.forEach(
-      ContentLocaleSchema.literals,
-      (locale) =>
-        Effect.promise(() =>
-          ctx.db
-            .query("materialCatalog")
-            .withIndex("by_locale_and_assetId", (index) =>
-              index.eq("locale", locale).eq("assetId", input.contentId)
-            )
-            .unique()
-        )
-    )).filter((row) => row !== null);
-
-    if (rows.length > 1) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Material asset ${input.contentId} resolves multiple locales.`
-      );
-    }
-
-    const row = rows.at(0);
-    if (row) {
-      const resolved = yield* resolveMaterialRoute(
-        ctx,
-        row.locale,
-        row.publicPath
-      );
-      return {
-        activeReleaseId: resolved.active?.releaseId ?? null,
-        managed: resolved.managed,
-        route: resolved.material ? publicIdentity(resolved.material) : null,
-      };
-    }
-
-    const source = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentRoutes")
-        .withIndex("by_content_id", (index) =>
-          index.eq("content_id", input.contentId)
-        )
-        .unique()
-    );
-    if (source?.section !== "material") {
-      return {
-        activeReleaseId: catalog.active?.releaseId ?? null,
-        managed: catalog.familyManaged,
-        route: null,
-      };
-    }
     const owner = yield* loadMaterialIdentityOwner(
       ctx,
       source.sourcePath,
@@ -134,11 +65,109 @@ const lookupMaterialContent = Effect.fn("contentRelease.lookupMaterialContent")(
       projection.locale,
       projection.publicPath
     );
+    if (!(resolved.managed && resolved.material)) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Material ${source.sourcePath}/${source.locale} lost its active route.`
+      );
+    }
+    return {
+      activeReleaseId: owner.active.releaseId,
+      managed: true,
+      route: publicIdentity(resolved.material),
+    };
+  }
+);
+
+/** Resolves one public material route through active release ownership. */
+const lookupMaterialRoute = Effect.fn("contentRelease.lookupMaterialRoute")(
+  function* (
+    ctx: QueryCtx,
+    input: Extract<MaterialLookupInput, { kind: "route" }>
+  ) {
+    const resolved = yield* resolveMaterialRoute(
+      ctx,
+      input.locale,
+      input.publicPath
+    );
+    if (resolved.managed) {
+      return {
+        activeReleaseId: resolved.active?.releaseId ?? null,
+        managed: true,
+        route: resolved.material ? publicIdentity(resolved.material) : null,
+      };
+    }
+    const source = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentRoutes")
+        .withIndex("by_locale_and_route", (index) =>
+          index.eq("locale", input.locale).eq("route", input.publicPath)
+        )
+        .unique()
+    );
+    if (source?.section === "material") {
+      return yield* lookupSourceMaterial(ctx, source);
+    }
+
     return {
       activeReleaseId: resolved.active?.releaseId ?? null,
-      managed: resolved.managed,
-      route: resolved.material ? publicIdentity(resolved.material) : null,
+      managed: false,
+      route: null,
     };
+  }
+);
+
+/** Resolves one graph asset through the active material catalog. */
+const lookupMaterialContent = Effect.fn("contentRelease.lookupMaterialContent")(
+  function* (
+    ctx: QueryCtx,
+    input: Extract<MaterialLookupInput, { kind: "content" }>
+  ) {
+    const catalog = yield* loadMaterialCatalogOwner(ctx);
+    const rows = (yield* Effect.forEach(
+      ContentLocaleSchema.literals,
+      (locale) =>
+        Effect.promise(() =>
+          ctx.db
+            .query("materialCatalog")
+            .withIndex("by_locale_and_assetId", (index) =>
+              index.eq("locale", locale).eq("assetId", input.contentId)
+            )
+            .unique()
+        )
+    )).filter((row) => row !== null);
+
+    if (rows.length > 1) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Material asset ${input.contentId} resolves multiple locales.`
+      );
+    }
+
+    const row = rows.at(0);
+    if (row) {
+      return yield* lookupSourceMaterial(ctx, {
+        locale: row.locale,
+        sourcePath: row.contentKey,
+      });
+    }
+
+    const source = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (index) =>
+          index.eq("content_id", input.contentId)
+        )
+        .unique()
+    );
+    if (source?.section !== "material") {
+      return {
+        activeReleaseId: catalog.active?.releaseId ?? null,
+        managed: catalog.familyManaged,
+        route: null,
+      };
+    }
+    return yield* lookupSourceMaterial(ctx, source);
   }
 );
 
