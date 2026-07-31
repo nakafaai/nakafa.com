@@ -13,6 +13,7 @@ import {
   learningInterestValidator,
   learningStageValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
@@ -117,13 +118,16 @@ export const selectLearningProgram = mutation({
       version: 1,
     });
 
-    await createInitialLearningPlanItems(ctx, {
-      locale: args.locale,
-      planId,
-      programId: program._id,
-      programKey: program.key,
-      userId: user.appUser._id,
-    });
+    await runConvexProgram(
+      createInitialLearningPlanItems(ctx, {
+        locale: args.locale,
+        now,
+        planId,
+        programId: program._id,
+        programKey: program.key,
+        userId: user.appUser._id,
+      })
+    );
     await ctx.db.patch(profileId, { activePlanId: planId, updatedAt: now });
 
     if (program.kind === "school-curriculum") {

@@ -199,6 +199,7 @@ import type * as contentRelease_material_model from "../contentRelease/material/
 import type * as contentRelease_material_owner from "../contentRelease/material/owner.js";
 import type * as contentRelease_material_page from "../contentRelease/material/page.js";
 import type * as contentRelease_material_partition from "../contentRelease/material/partition.js";
+import type * as contentRelease_material_readiness from "../contentRelease/material/readiness.js";
 import type * as contentRelease_material_route from "../contentRelease/material/route.js";
 import type * as contentRelease_material_sitemap from "../contentRelease/material/sitemap.js";
 import type * as contentRelease_material_source from "../contentRelease/material/source.js";
@@ -407,6 +408,7 @@ import type * as learningPrograms_catalog from "../learningPrograms/catalog.js";
 import type * as learningPrograms_impl from "../learningPrograms/impl.js";
 import type * as learningPrograms_mutations from "../learningPrograms/mutations.js";
 import type * as learningPrograms_omitted from "../learningPrograms/omitted.js";
+import type * as learningPrograms_planTarget from "../learningPrograms/planTarget.js";
 import type * as learningPrograms_queries from "../learningPrograms/queries.js";
 import type * as learningPrograms_sources from "../learningPrograms/sources.js";
 import type * as learningPrograms_sync from "../learningPrograms/sync.js";
@@ -723,6 +725,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material/owner": typeof contentRelease_material_owner;
   "contentRelease/material/page": typeof contentRelease_material_page;
   "contentRelease/material/partition": typeof contentRelease_material_partition;
+  "contentRelease/material/readiness": typeof contentRelease_material_readiness;
   "contentRelease/material/route": typeof contentRelease_material_route;
   "contentRelease/material/sitemap": typeof contentRelease_material_sitemap;
   "contentRelease/material/source": typeof contentRelease_material_source;
@@ -931,6 +934,7 @@ declare const fullApi: ApiFromModules<{
   "learningPrograms/impl": typeof learningPrograms_impl;
   "learningPrograms/mutations": typeof learningPrograms_mutations;
   "learningPrograms/omitted": typeof learningPrograms_omitted;
+  "learningPrograms/planTarget": typeof learningPrograms_planTarget;
   "learningPrograms/queries": typeof learningPrograms_queries;
   "learningPrograms/sources": typeof learningPrograms_sources;
   "learningPrograms/sync": typeof learningPrograms_sync;

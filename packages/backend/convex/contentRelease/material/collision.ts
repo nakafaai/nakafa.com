@@ -2,8 +2,7 @@ import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
-import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
+import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { Effect } from "effect";
 
@@ -33,14 +32,14 @@ function ownsSourceRoute(
 const loadActiveExactRoutes = Effect.fn(
   "contentRelease.loadActiveExactMaterialRoutes"
 )(function* (ctx: MutationCtx) {
-  const active = yield* loadActiveIdentity(ctx);
-  if (!active) {
+  const catalog = yield* loadMaterialCatalogOwner(ctx);
+  if (!catalog.active) {
     return new Map<string, string>();
   }
-  const families = yield* loadReleaseFamilies(active.release);
-  if (families.result.includes("material")) {
+  if (catalog.familyManaged) {
     return new Map<string, string>();
   }
+  const active = catalog.active;
   const owners = yield* Effect.promise(() =>
     ctx.db
       .query("materialOwners")

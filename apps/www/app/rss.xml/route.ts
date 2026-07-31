@@ -177,20 +177,28 @@ const readFeedSourceRoutes = Effect.fn("www.rss.readSourceRoutes")(function* (
   excludedContentKeys: ReadonlySet<string>,
   limit: number
 ) {
-  const maximumPages = Math.ceil(
-    (limit + Math.min(excludedContentKeys.size, EXACT_SCOPE_LIMIT)) /
-      RSS_SOURCE_PAGE_SIZE
-  );
+  const sourceRowLimit =
+    limit + Math.min(excludedContentKeys.size, EXACT_SCOPE_LIMIT);
   const routes: RuntimeLatestContentRoute[] = [];
   let cursor: string | null = null;
-  for (let index = 0; index < maximumPages; index += 1) {
+  let examinedRows = 0;
+  for (
+    let request = 0;
+    request < sourceRowLimit && examinedRows < sourceRowLimit;
+    request += 1
+  ) {
+    const pageLimit = Math.min(
+      RSS_SOURCE_PAGE_SIZE,
+      sourceRowLimit - examinedRows
+    );
     const result: RuntimeLatestContentRoutePage =
       yield* getRuntimeLatestContentRoutePage({
         cursor,
-        limit: RSS_SOURCE_PAGE_SIZE,
+        limit: pageLimit,
         locale,
         section,
       });
+    examinedRows += result.page.length;
     for (const route of result.page) {
       if (excludedContentKeys.has(route.sourcePath)) {
         continue;
@@ -201,6 +209,9 @@ const readFeedSourceRoutes = Effect.fn("www.rss.readSourceRoutes")(function* (
       }
     }
     if (result.isDone) {
+      return routes;
+    }
+    if (result.continueCursor === cursor) {
       return routes;
     }
     cursor = result.continueCursor;

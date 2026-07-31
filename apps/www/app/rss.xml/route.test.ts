@@ -254,7 +254,7 @@ describe("rss route", () => {
         if (cursor === "next") {
           return Effect.succeed({
             continueCursor: "",
-            isDone: false,
+            isDone: true,
             page: Array.from({ length: 63 }, (_, index) => ({
               authors: [{ name: "Nakafa" }],
               date: Date.parse("2026-07-22T00:00:00.000Z") - index,
@@ -298,11 +298,106 @@ describe("rss route", () => {
     expect(mockGetRuntimeLatestContentRoutePage).toHaveBeenCalledWith(
       expect.objectContaining({
         cursor: "next",
-        limit: 100,
+        limit: 64,
         locale: "en",
         section: "material",
       })
     );
+  });
+
+  it("continues through short nonterminal source pages", async () => {
+    mockGetRuntimeLatestContentRoutePage.mockImplementation(
+      ({ cursor, locale, section }) => {
+        if (locale !== "en" || section !== "material") {
+          return Effect.succeed({
+            continueCursor: "",
+            isDone: true,
+            page: [],
+          });
+        }
+        const offset = cursor === "next" ? 60 : 0;
+        const count = cursor === "next" ? 40 : 60;
+        return Effect.succeed({
+          continueCursor: cursor === "next" ? "" : "next",
+          isDone: cursor === "next",
+          page: Array.from({ length: count }, (_, index) => ({
+            authors: [{ name: "Nakafa" }],
+            date: Date.parse("2026-07-24T00:00:00.000Z") - offset - index,
+            locale: "en",
+            route: `subjects/mathematics/source-${offset + index + 1}`,
+            sourcePath: `material/lesson/mathematics/source-${offset + index + 1}`,
+            title: `Source ${offset + index + 1}`,
+          })),
+        });
+      }
+    );
+
+    const text = await (await GET()).text();
+
+    expect(text).toContain("<![CDATA[Source 100]]>");
+    expect(mockGetRuntimeLatestContentRoutePage).toHaveBeenCalledWith({
+      cursor: "next",
+      limit: 40,
+      locale: "en",
+      section: "material",
+    });
+  });
+
+  it("bounds stalled and repeated source pages", async () => {
+    const claimed = Array.from(
+      { length: 64 },
+      (_, index) => `material/lesson/mathematics/claimed-${index + 1}`
+    );
+    mockReadPublishedLatestMaterials.mockReturnValue(
+      Effect.succeed({
+        claimedContentKeys: claimed,
+        managed: false,
+        materials: [],
+      })
+    );
+    mockGetRuntimeLatestContentRoutePage.mockImplementation(
+      ({ cursor, limit, locale, section }) => {
+        if (locale !== "en") {
+          return Effect.succeed({
+            continueCursor: "",
+            isDone: true,
+            page: [],
+          });
+        }
+        if (section === "articles") {
+          return Effect.succeed({
+            continueCursor: cursor ?? "",
+            isDone: false,
+            page: [],
+          });
+        }
+        return Effect.succeed({
+          continueCursor: cursor === null ? "next" : "end",
+          isDone: false,
+          page: Array.from({ length: limit }, (_, index) => {
+            const sourcePath = claimed[index % claimed.length];
+            return {
+              authors: [{ name: "Nakafa" }],
+              date: Date.parse("2026-07-24T00:00:00.000Z") - index,
+              locale: "en",
+              route: `subjects/mathematics/claimed-${index + 1}`,
+              sourcePath,
+              title: `Claimed ${index + 1}`,
+            };
+          }),
+        });
+      }
+    );
+
+    const text = await (await GET()).text();
+
+    expect(text).not.toContain("<![CDATA[Claimed 1]]>");
+    expect(mockGetRuntimeLatestContentRoutePage).toHaveBeenCalledWith({
+      cursor: "next",
+      limit: 64,
+      locale: "en",
+      section: "material",
+    });
   });
 
   it("merges the full source window before applying the feed bound", async () => {

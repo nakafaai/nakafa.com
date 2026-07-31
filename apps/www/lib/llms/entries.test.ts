@@ -1,7 +1,9 @@
 // @vitest-environment node
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
+  buildRuntimeContentLlmsEntries,
   getLlmsSections,
   getSiteLlmsEntries,
   isLlmsSection,
@@ -53,5 +55,52 @@ describe("llms entries", () => {
     expect(englishEntries.some((entry) => entry.route === "/search")).toBe(
       false
     );
+  });
+
+  it("preserves source content metadata in markdown entries", () => {
+    const route = "articles/politics/dynastic-politics-asian-values";
+    const graph = createLearningGraphIdentityFromRoute({
+      locale: "en",
+      route,
+    });
+    if (!graph) {
+      expect.fail("Expected the real article route to have a graph identity.");
+    }
+
+    expect(
+      buildRuntimeContentLlmsEntries({
+        locale: "en",
+        rows: [
+          {
+            ...graph,
+            authors: [{ name: "Shifna Zihdatal Haq" }],
+            content_id: graph.assetId,
+            description:
+              "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
+            kind: "article",
+            locale: "en",
+            markdown: true,
+            route,
+            section: "articles",
+            sourcePath: route,
+            syncedAt: 1,
+            title:
+              "Framing Dynastic Politics in Local Elections within Asian Values",
+          },
+        ],
+        section: "articles",
+      })
+    ).toEqual([
+      {
+        description:
+          "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
+        href: `${BASE_URL}/en/articles/politics/dynastic-politics-asian-values.md`,
+        route: "/articles/politics/dynastic-politics-asian-values",
+        section: "articles",
+        segments: ["articles", "politics", "dynastic-politics-asian-values"],
+        title:
+          "Framing Dynastic Politics in Local Elections within Asian Values",
+      },
+    ]);
   });
 });

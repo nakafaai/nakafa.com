@@ -1,7 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { hasExactMaterialOwnerWork } from "@repo/backend/convex/contentRelease/material/exact";
+import { hasExactMaterialOwnerWork } from "@repo/backend/convex/contentRelease/material/readiness";
 import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";

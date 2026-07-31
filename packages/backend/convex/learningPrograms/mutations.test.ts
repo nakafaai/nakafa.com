@@ -3,13 +3,19 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
 import {
   getTestGraphIdentity,
   seedLearningProgramCatalog,
   seedTestContentRoute,
+  syncTestCoverage,
   syncTestGraphCoverage,
   TEST_NOW,
 } from "@repo/backend/test/learning-programs";
+import {
+  activateMaterialCatalog,
+  selectExactMaterial,
+} from "@repo/backend/test/material-catalog";
 import { describe, expect, it } from "vitest";
 
 const subjectGraph = getTestGraphIdentity(
@@ -86,6 +92,60 @@ describe("learningPrograms/mutations", () => {
       preferredCurriculumProgramKey: "merdeka",
       program: { key: "merdeka" },
     });
+  });
+
+  it("keeps generated plan items on the active exact material route", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: TEST_NOW })
+    );
+    await seedLearningProgramCatalog(t);
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    await selectExactMaterial(t, FUNCTION_MATERIAL);
+    await syncTestGraphCoverage(t, {
+      graph: FUNCTION_MATERIAL.graph,
+      lensScope: "curriculum",
+      locale: "en",
+      programKey: "merdeka",
+    });
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    const selected = await authed.mutation(
+      api.learningPrograms.mutations.selectLearningProgram,
+      {
+        interests: ["school-curriculum"],
+        locale: "en",
+        primaryProgramKey: "merdeka",
+      }
+    );
+    await syncTestCoverage(t, [
+      {
+        contentCount: 1,
+        coverageStatus: "partial",
+        lensId: FUNCTION_MATERIAL.graph.lensId,
+        lensScope: "curriculum",
+        locale: "en",
+        programKey: "merdeka",
+        sampleContentId: FUNCTION_MATERIAL.graph.assetId,
+        syncedAt: TEST_NOW + 1,
+      },
+    ]);
+    const refreshed = await authed.query(
+      api.learningPrograms.queries.getActiveProfile,
+      { locale: "en" }
+    );
+
+    expect(selected.planItems).toEqual([
+      expect.objectContaining({
+        content_id: FUNCTION_MATERIAL.graph.assetId,
+        route: FUNCTION_MATERIAL.publicPath,
+        title: FUNCTION_MATERIAL.metadata.title,
+      }),
+    ]);
+    expect(refreshed?.planItems).toEqual(selected.planItems);
   });
 
   it("stores unique interests and rejects unrelated primary programs", async () => {

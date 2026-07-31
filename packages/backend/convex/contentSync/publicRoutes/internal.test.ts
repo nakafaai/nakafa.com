@@ -1,7 +1,10 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import {
+  FUNCTION_MATERIAL,
+  makeMaterialProjection,
+} from "@repo/backend/test/content-material";
 import {
   activateMaterialCatalog,
   selectExactMaterial,
@@ -179,6 +182,44 @@ describe("contentSync/publicRoutes/internal", () => {
         sourcePath: selected.contentKey,
       }),
     ]);
+  });
+
+  it("blocks source sync until exact material ownership is ready", async () => {
+    const t = convexTest(schema, convexModules);
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    await selectExactMaterial(t, FUNCTION_MATERIAL);
+    await t.mutation(async (ctx) => {
+      const owner = await ctx.db.query("materialOwners").unique();
+      const state = await ctx.db.query("contentState").unique();
+      if (!(owner && state)) {
+        expect.fail("Expected synchronized exact material ownership.");
+      }
+      await ctx.db.delete(owner._id);
+      await ctx.db.patch(state._id, {
+        materialOwnerManifestHash: undefined,
+        materialOwnerReleaseId: undefined,
+        materialOwnerSequence: undefined,
+      });
+    });
+
+    await expect(
+      t.mutation(internal.contentSync.publicRoutes.internal.syncShards, {
+        shards: [
+          makeShard(8, [
+            makeRoute(FUNCTION_MATERIAL.publicPath, "source-sync", {
+              kind: FUNCTION_MATERIAL.kind,
+              locale: FUNCTION_MATERIAL.locale,
+              sourcePath: FUNCTION_MATERIAL.contentKey,
+            }),
+          ]),
+        ],
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
+    });
+    await expect(
+      t.query((ctx) => ctx.db.query("publicRoutes").take(1))
+    ).resolves.toEqual([]);
   });
 });
 

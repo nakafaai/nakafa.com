@@ -3,7 +3,9 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { loadLearningPlanTarget } from "@repo/backend/convex/learningPrograms/planTarget";
 import { defaultLocale, type Locale } from "@repo/utilities/locales";
+import { Effect } from "effect";
 
 const PLAN_COVERAGE_LIMIT = 12;
 
@@ -101,107 +103,104 @@ export async function supersedeActivePlans(
   }
 }
 
-/** Creates the first graph-backed plan items for a selected program. */
-export async function createInitialLearningPlanItems(
+/** Creates the first graph-backed plan items from current route ownership. */
+export const createInitialLearningPlanItems = Effect.fn(
+  "learningPrograms.createInitialPlanItems"
+)(function* (
   ctx: MutationCtx,
   {
     locale,
+    now,
     planId,
     programId,
     programKey,
     userId,
   }: {
     locale: Doc<"learningProgramCoverage">["locale"];
+    now: number;
     planId: Id<"learningPlans">;
     programId: Id<"learningPrograms">;
     programKey: Doc<"learningPrograms">["key"];
     userId: Id<"users">;
   }
 ) {
-  const coverageRows = await loadPlanCoverageRows(ctx, { locale, programId });
-  const now = Date.now();
+  const coverageRows = yield* loadPlanCoverageRows(ctx, { locale, programId });
   let position = 1;
 
   for (const row of coverageRows) {
-    const route = await getContentRouteByContentId(ctx, {
-      contentId: row.sampleContentId,
-      locale,
-    });
+    const route = yield* loadLearningPlanTarget(
+      ctx,
+      row.sampleContentId,
+      locale
+    );
+    if (!route) {
+      continue;
+    }
 
-    await ctx.db.insert("learningPlanItems", {
-      content_id: row.sampleContentId,
-      coverageStatus: row.coverageStatus,
-      createdAt: now,
-      lensId: row.lensId,
-      lensScope: row.lensScope,
-      planId,
-      position,
-      programId,
-      programKey,
-      reason: "program-alignment",
-      ...(route ? { route: route.route, title: route.title } : {}),
-      status: "ready",
-      updatedAt: now,
-      userId,
-    });
+    yield* Effect.promise(() =>
+      ctx.db.insert("learningPlanItems", {
+        content_id: row.sampleContentId,
+        coverageStatus: row.coverageStatus,
+        createdAt: now,
+        lensId: row.lensId,
+        lensScope: row.lensScope,
+        planId,
+        position,
+        programId,
+        programKey,
+        reason: "program-alignment",
+        route: route.route,
+        status: "ready",
+        title: route.title,
+        updatedAt: now,
+        userId,
+      })
+    );
 
     position++;
   }
-}
+});
 
 /** Loads bounded coverage rows in the order plans should consume them. */
-async function loadPlanCoverageRows(
-  ctx: MutationCtx,
-  {
-    locale,
-    programId,
-  }: {
-    locale: Doc<"learningProgramCoverage">["locale"];
-    programId: Id<"learningPrograms">;
+const loadPlanCoverageRows = Effect.fn("learningPrograms.loadPlanCoverage")(
+  function* (
+    ctx: MutationCtx,
+    {
+      locale,
+      programId,
+    }: {
+      locale: Doc<"learningProgramCoverage">["locale"];
+      programId: Id<"learningPrograms">;
+    }
+  ) {
+    const available = yield* Effect.promise(() =>
+      ctx.db
+        .query("learningProgramCoverage")
+        .withIndex("by_programId_and_locale_and_coverageStatus", (q) =>
+          q
+            .eq("programId", programId)
+            .eq("locale", locale)
+            .eq("coverageStatus", "available")
+        )
+        .take(PLAN_COVERAGE_LIMIT)
+    );
+
+    if (available.length >= PLAN_COVERAGE_LIMIT) {
+      return available;
+    }
+
+    const partial = yield* Effect.promise(() =>
+      ctx.db
+        .query("learningProgramCoverage")
+        .withIndex("by_programId_and_locale_and_coverageStatus", (q) =>
+          q
+            .eq("programId", programId)
+            .eq("locale", locale)
+            .eq("coverageStatus", "partial")
+        )
+        .take(PLAN_COVERAGE_LIMIT - available.length)
+    );
+
+    return [...available, ...partial];
   }
-) {
-  const available = await ctx.db
-    .query("learningProgramCoverage")
-    .withIndex("by_programId_and_locale_and_coverageStatus", (q) =>
-      q
-        .eq("programId", programId)
-        .eq("locale", locale)
-        .eq("coverageStatus", "available")
-    )
-    .take(PLAN_COVERAGE_LIMIT);
-
-  if (available.length >= PLAN_COVERAGE_LIMIT) {
-    return available;
-  }
-
-  const partial = await ctx.db
-    .query("learningProgramCoverage")
-    .withIndex("by_programId_and_locale_and_coverageStatus", (q) =>
-      q
-        .eq("programId", programId)
-        .eq("locale", locale)
-        .eq("coverageStatus", "partial")
-    )
-    .take(PLAN_COVERAGE_LIMIT - available.length);
-
-  return [...available, ...partial];
-}
-
-/** Finds the matching content route for one graph asset ID and locale. */
-export async function getContentRouteByContentId(
-  ctx: MutationCtx,
-  {
-    contentId,
-    locale,
-  }: {
-    contentId: Doc<"learningProgramCoverage">["sampleContentId"];
-    locale: Doc<"learningProgramCoverage">["locale"];
-  }
-) {
-  const routes = await ctx.db
-    .query("contentRoutes")
-    .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
-    .take(5);
-
-  return routes.find((route) => route.locale === locale) ?? null;
-}
+);

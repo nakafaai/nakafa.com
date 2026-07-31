@@ -2,19 +2,20 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { getContentRouteByContentId } from "@repo/backend/convex/learningPrograms/impl";
 import {
   deleteOmittedCatalogProgramBatch,
   deleteOmittedCatalogPrograms,
 } from "@repo/backend/convex/learningPrograms/omitted";
+import { loadLearningPlanTarget } from "@repo/backend/convex/learningPrograms/planTarget";
 import {
   learningProgramCoverageInputValidator,
   learningProgramInputValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
 import { syncProgramSources } from "@repo/backend/convex/learningPrograms/sources";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { LearningProgramSchema } from "@repo/contents/_types/program/schema";
 import { ConvexError, type Infer, v } from "convex/values";
-import { Either, Schema } from "effect";
+import { Effect, Either, Schema } from "effect";
 
 const STALE_COVERAGE_DELETE_LIMIT = 200;
 const ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE = 100;
@@ -188,12 +189,25 @@ export const syncLearningProgramCoverage = internalMutation({
         continue;
       }
 
-      await reconcileActivePlanItemsForCoverageRefresh(ctx, {
-        coverage: existing,
-        nextCoverageStatus: row.coverageStatus,
-        nextSampleContentId: row.sampleContentId,
-        updatedBefore: row.syncedAt,
-      });
+      const reconciliation = await runConvexProgram(
+        reconcileCoverageSamplePlanItemBatch(ctx, {
+          lensId: existing.lensId,
+          locale: existing.locale,
+          nextCoverageStatus: row.coverageStatus,
+          nextSampleContentId: row.sampleContentId,
+          previousSampleContentId: existing.sampleContentId,
+          programId: existing.programId,
+          updatedBefore: row.syncedAt,
+        })
+      );
+      if (reconciliation.continuation) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.learningPrograms.sync
+            .continueCoverageSamplePlanItemReconcile,
+          reconciliation.continuation
+        );
+      }
 
       await ctx.db.patch(existing._id, patch);
       updated++;
@@ -250,8 +264,22 @@ export const continueCoverageSamplePlanItemReconcile = internalMutation({
     updatedBefore: v.number(),
   },
   returns: planItemReconcileResultValidator,
-  handler: async (ctx, args) =>
-    await reconcileCoverageSamplePlanItemBatch(ctx, args),
+  handler: async (ctx, args) => {
+    const reconciliation = await runConvexProgram(
+      reconcileCoverageSamplePlanItemBatch(ctx, args)
+    );
+    if (reconciliation.continuation) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.learningPrograms.sync.continueCoverageSamplePlanItemReconcile,
+        reconciliation.continuation
+      );
+    }
+    return {
+      reconciled: reconciliation.reconciled,
+      scheduled: reconciliation.scheduled,
+    };
+  },
 });
 
 /** Continues generated plan-item deletion after a stale coverage row disappears. */
@@ -267,34 +295,10 @@ export const continueStaleCoveragePlanItemDelete = internalMutation({
     await deleteStaleCoveragePlanItemBatch(ctx, args),
 });
 
-/** Refreshes generated plan items when coverage keeps its key but its sample, route, or title projection changes. */
-async function reconcileActivePlanItemsForCoverageRefresh(
-  ctx: MutationCtx,
-  {
-    coverage,
-    nextCoverageStatus,
-    nextSampleContentId,
-    updatedBefore,
-  }: {
-    coverage: Doc<"learningProgramCoverage">;
-    nextCoverageStatus: Doc<"learningProgramCoverage">["coverageStatus"];
-    nextSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
-    updatedBefore: number;
-  }
-) {
-  await reconcileCoverageSamplePlanItemBatch(ctx, {
-    lensId: coverage.lensId,
-    locale: coverage.locale,
-    nextCoverageStatus,
-    nextSampleContentId,
-    previousSampleContentId: coverage.sampleContentId,
-    programId: coverage.programId,
-    updatedBefore,
-  });
-}
-
 /** Reconciles one bounded page of generated plan items for a changed coverage sample. */
-async function reconcileCoverageSamplePlanItemBatch(
+const reconcileCoverageSamplePlanItemBatch = Effect.fn(
+  "learningPrograms.reconcileCoveragePlanItems"
+)(function* (
   ctx: MutationCtx,
   {
     lensId,
@@ -315,81 +319,76 @@ async function reconcileCoverageSamplePlanItemBatch(
   }
 ) {
   const keepsSameContentId = previousSampleContentId === nextSampleContentId;
-  const planItems = keepsSameContentId
-    ? await ctx.db
-        .query("learningPlanItems")
-        .withIndex(
-          "by_programId_and_lensId_and_content_id_and_updatedAt",
-          (q) =>
+  const planItems = yield* Effect.promise(() =>
+    keepsSameContentId
+      ? ctx.db
+          .query("learningPlanItems")
+          .withIndex(
+            "by_programId_and_lensId_and_content_id_and_updatedAt",
+            (q) =>
+              q
+                .eq("programId", programId)
+                .eq("lensId", lensId)
+                .eq("content_id", previousSampleContentId)
+                .lt("updatedAt", updatedBefore)
+          )
+          .take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE)
+      : ctx.db
+          .query("learningPlanItems")
+          .withIndex("by_programId_and_lensId_and_content_id", (q) =>
             q
               .eq("programId", programId)
               .eq("lensId", lensId)
               .eq("content_id", previousSampleContentId)
-              .lt("updatedAt", updatedBefore)
-        )
-        .take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE)
-    : await ctx.db
-        .query("learningPlanItems")
-        .withIndex("by_programId_and_lensId_and_content_id", (q) =>
-          q
-            .eq("programId", programId)
-            .eq("lensId", lensId)
-            .eq("content_id", previousSampleContentId)
-        )
-        .take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE);
+          )
+          .take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE)
+  );
 
-  const route = await getContentRouteByContentId(ctx, {
-    contentId: nextSampleContentId,
-    locale,
-  });
+  const route = yield* loadLearningPlanTarget(ctx, nextSampleContentId, locale);
   let reconciled = 0;
 
   for (const item of planItems) {
-    const plan = await ctx.db.get(item.planId);
+    const plan = yield* Effect.promise(() => ctx.db.get(item.planId));
 
     if (!plan) {
-      await ctx.db.delete(item._id);
+      yield* Effect.promise(() => ctx.db.delete(item._id));
       continue;
     }
 
     if (!route) {
-      await ctx.db.delete(item._id);
+      yield* Effect.promise(() => ctx.db.delete(item._id));
       reconciled++;
       continue;
     }
 
-    await ctx.db.patch(item._id, {
-      content_id: nextSampleContentId,
-      coverageStatus: nextCoverageStatus,
-      route: route.route,
-      title: route.title,
-      updatedAt: updatedBefore,
-    });
+    yield* Effect.promise(() =>
+      ctx.db.patch(item._id, {
+        content_id: nextSampleContentId,
+        coverageStatus: nextCoverageStatus,
+        route: route.route,
+        title: route.title,
+        updatedAt: updatedBefore,
+      })
+    );
     reconciled++;
   }
 
   const scheduled = planItems.length === ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE;
 
-  if (scheduled) {
-    const continuationArgs = {
-      lensId,
-      locale,
-      nextCoverageStatus,
-      nextSampleContentId,
-      previousSampleContentId,
-      programId,
-      updatedBefore,
-    };
+  const continuation = scheduled
+    ? {
+        lensId,
+        locale,
+        nextCoverageStatus,
+        nextSampleContentId,
+        previousSampleContentId,
+        programId,
+        updatedBefore,
+      }
+    : null;
 
-    await ctx.scheduler.runAfter(
-      0,
-      internal.learningPrograms.sync.continueCoverageSamplePlanItemReconcile,
-      continuationArgs
-    );
-  }
-
-  return { reconciled, scheduled };
-}
+  return { continuation, reconciled, scheduled };
+});
 
 /** Removes generated active-plan items before their source coverage row disappears. */
 async function deleteActivePlanItemsForStaleCoverage(
