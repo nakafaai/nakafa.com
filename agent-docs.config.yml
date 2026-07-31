@@ -10,5 +10,13 @@ options:
   parityExclusions:
     - .katex
     - .katex-mathml
+  # The check targets a dedicated local server, so remote-site throttling only
+  # delays complete sitemap coverage across immutable content buckets.
+  requestDelay: 0
   requestTimeout: 20000
   samplingStrategy: deterministic
+  # Quran Markdown keeps one complete surah together. The largest sampled page
+  # is 58,115 characters after HTML conversion and remains below the 100K cap.
+  thresholds:
+    fail: 100000
+    pass: 60000
