@@ -9,6 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useLocale, useTranslations } from "next-intl";
+import type { ComponentProps } from "react";
 import { FooterAction } from "@/components/marketing/shared/footer-action";
 import { FooterArt } from "@/components/marketing/shared/footer-art";
 import { articlesMenu } from "@/components/sidebar/data/articles";
@@ -32,6 +33,7 @@ export function Footer() {
   const tHoly = useTranslations("Holy");
   const tCommon = useTranslations("Common");
   const tArticles = useTranslations("Articles");
+  const tMarketing = useTranslations("Marketing");
   const locale = useLocale();
 
   return (
@@ -93,7 +95,10 @@ export function Footer() {
                   <LinkItem href="/" label={t("about-us")} />
                 </li>
                 <li>
-                  <LinkItem href="/events" label={t("events")} />
+                  <LinkItem
+                    href={{ pathname: "/", hash: "pricing" }}
+                    label={tMarketing("pricing")}
+                  />
                 </li>
                 <li>
                   <LinkItem
@@ -135,9 +140,7 @@ export function Footer() {
 
       <NavigationLink
         className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
-        href="/auth"
-        rel="noopener noreferrer"
-        target="_blank"
+        href="/"
       >
         <span className="mx-auto font-bold text-7xl transition-colors duration-300 ease-out hover:text-primary sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
           Nakafa
@@ -147,7 +150,7 @@ export function Footer() {
       <section className="w-full border-t">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 p-6 lg:flex-row">
           <p className="text-center text-sm">
-            {tCommon("copyright", { year: "2025" })}
+            {tCommon("copyright", { year: "2026" })}
           </p>
           <div className="flex flex-col items-center gap-4 lg:flex-row">
             <div className="flex items-center gap-1">
@@ -181,7 +184,16 @@ export function Footer() {
   );
 }
 
-function LinkItem({ href, label }: { href: string; label: string }) {
+/**
+ * Renders one locale-aware footer destination with the shared text treatment.
+ */
+function LinkItem({
+  href,
+  label,
+}: {
+  href: ComponentProps<typeof NavigationLink>["href"];
+  label: string;
+}) {
   return (
     <NavigationLink
       className="text-sm transition-colors ease-out hover:text-primary"
