@@ -1,6 +1,12 @@
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  ContentKeySchema,
+  PublicPathSchema,
+} from "@nakafa/aksara-contracts/ids";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
-import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
+import {
+  MaterialKeySchema,
+  MaterialLessonProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/material";
 import {
   type ContentViewTargetInput,
   loadContentTarget,
@@ -11,6 +17,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   FUNCTION_MATERIAL,
   makeMaterialProjection,
+  testMaterialGraph,
 } from "@repo/backend/test/content-material";
 import {
   insertRuntimeArticles,
@@ -357,7 +364,19 @@ describe("contents/views/target", () => {
 
   it("rejects active material taxonomy outside the application registry", async () => {
     const target = convexTest(schema, convexModules);
-    const projection = makeMaterialProjection("en", 1);
+    const registered = makeMaterialProjection("en", 1);
+    const projection = MaterialLessonProjectionSchema.make({
+      ...registered,
+      contentKey: ContentKeySchema.make(
+        "material/lesson/test/technical-topic/section-1"
+      ),
+      graph: testMaterialGraph("technical-topic", "section-1"),
+      materialKey: MaterialKeySchema.make("lesson.test.technical-topic"),
+      parentPath: PublicPathSchema.make("subjects/test/technical-topic"),
+      publicPath: PublicPathSchema.make(
+        "subjects/test/technical-topic/section-1"
+      ),
+    });
     await activateMaterialCatalog(target, [projection]);
     await expect(
       target.query((ctx) =>

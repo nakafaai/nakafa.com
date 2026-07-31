@@ -19,6 +19,7 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
+import { testMaterialPublicPath } from "@repo/backend/test/content-material";
 import { Effect } from "effect";
 
 export const TEST_DIGEST = Sha256HashSchema.make(`sha256:${"0".repeat(64)}`);
@@ -219,13 +220,14 @@ export function testRouteJson(options?: {
   readonly releaseId?: string;
 }) {
   const index = options?.index ?? 0;
+  const locale = options?.locale ?? "en";
   const change = {
     ...(options?.operation === "delete"
       ? {}
       : { contentKey: options?.contentKey ?? `test:head-${index}` }),
-    locale: options?.locale ?? "en",
+    locale,
     operation: options?.operation ?? "bind",
-    publicPath: options?.publicPath ?? `test/head-${index}`,
+    publicPath: options?.publicPath ?? testMaterialPublicPath(index, locale),
   };
   return JSON.stringify({
     change,

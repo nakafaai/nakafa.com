@@ -49,10 +49,11 @@ function materialContext(
   materialIndex: number,
   group?: ReturnType<typeof materialGroup>
 ) {
+  const material = makeMaterialProjection("en", 1, materialIndex);
   const groupNodeKey = group?.nodeKey ?? `context-${materialIndex}`;
   const groupPath = group?.publicPath ?? PROGRAM_ROOT;
   return Schema.decodeUnknownSync(CurriculumRouteSchema)({
-    canonicalPath: `subjects/test/technical-topic-${materialIndex}`,
+    canonicalPath: material.parentPath,
     iconKey: "school",
     kind: "curriculum-context",
     level: "topic",
@@ -60,7 +61,7 @@ function materialContext(
     materialContextNodeKey: groupNodeKey,
     materialContextParentPath: PROGRAM_ROOT,
     materialContextPublicPath: groupPath,
-    materialKey: `lesson.test.topic-${materialIndex}`,
+    materialKey: material.materialKey,
     nodeKey: `context-${materialIndex}`,
     order: materialIndex,
     parentPath: groupPath,

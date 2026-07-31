@@ -269,8 +269,8 @@ describe("contentRelease/material/exact", () => {
       MaterialLessonProjectionSchema
     )({
       ...second,
-      parentPath: "subjects/test/other-topic",
-      publicPath: "subjects/test/other-topic/section-2",
+      parentPath: "subjects/mathematics/other-topic",
+      publicPath: "subjects/mathematics/other-topic/section-2",
     });
     await activateMaterialCatalog(target, [first, conflicting]);
     await selectExactMaterial(target, first);
@@ -311,7 +311,7 @@ describe("contentRelease/material/exact", () => {
       data: {
         code: "CONTENT_RELEASE_INTEGRITY",
         message:
-          "Material en/lesson.test.topic would split one lesson group across parents.",
+          "Material en/lesson.mathematics.technical-topic would split one lesson group across parents.",
       },
     });
   });

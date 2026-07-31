@@ -13,7 +13,37 @@ import {
   MaterialSectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
+import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
+import {
+  readDomainSlug,
+  readNamespaceSegment,
+} from "@repo/contents/_types/route/path";
 import { Effect, Option } from "effect";
+
+const TEST_MATERIAL_DOMAIN = "mathematics";
+
+/** Resolves the registered localized route prefix for material test rows. */
+function readTestMaterialPrefix(locale: ContentLocale) {
+  const namespace = readNamespaceSegment("subject", locale);
+  const domain = readDomainSlug(
+    MATERIAL_ROUTE_DOMAINS,
+    "lesson",
+    TEST_MATERIAL_DOMAIN,
+    locale
+  );
+  if (!(namespace && domain)) {
+    throw new Error(`Missing ${locale} material test route prefix.`);
+  }
+  return `${namespace}/${domain}`;
+}
+
+/** Creates one localized registered material route for release tests. */
+export function testMaterialPublicPath(
+  index: number,
+  locale: ContentLocale = "en"
+) {
+  return `${readTestMaterialPrefix(locale)}/technical-heads/head-${index}`;
+}
 
 /** Creates one complete agent reference from a material projection fixture. */
 export function makeMaterialContentRef(projection: MaterialLessonProjection) {
@@ -35,13 +65,14 @@ export function makeMaterialContentRef(projection: MaterialLessonProjection) {
 export function testMaterialGraph(
   topic: string,
   section: string,
-  locale: ContentLocale = "en"
+  locale: ContentLocale = "en",
+  domain = "test"
 ) {
   return Effect.runSync(
     makeLearningGraphIdentity({
-      concept: ["material", "lesson", "test", topic],
-      learningObject: ["material-section", "test", topic, section],
-      lens: ["material", "lesson", "test"],
+      concept: ["material", "lesson", domain, topic],
+      learningObject: ["material-section", domain, topic, section],
+      lens: ["material", "lesson", domain],
       locale,
     })
   );
@@ -58,20 +89,28 @@ export function testProjectionJson(options?: {
   const index = options?.index ?? 0;
   const locale = options?.locale ?? "en";
   const topic = `head-${index}`;
+  const publicPath =
+    options?.publicPath ?? testMaterialPublicPath(index, locale);
+  const parentPath = publicPath.slice(0, publicPath.lastIndexOf("/"));
   return JSON.stringify({
     contentKey: options?.contentKey ?? `test:head-${index}`,
-    graph: testMaterialGraph(topic, topic, locale),
+    graph: testMaterialGraph(
+      "technical-heads",
+      topic,
+      locale,
+      TEST_MATERIAL_DOMAIN
+    ),
     kind: "subject-lesson",
     locale,
-    materialKey: `lesson.test.${topic}`,
+    materialKey: `lesson.${TEST_MATERIAL_DOMAIN}.technical-heads`,
     metadata: {
       authors: [{ name: "Nakafa" }],
       date: "2026-07-22",
       title: options?.title ?? `Technical Head ${index}`,
     },
     order: index + 1,
-    parentPath: "test",
-    publicPath: options?.publicPath ?? `test/head-${index}`,
+    parentPath,
+    publicPath,
     sectionKey: topic,
     sitemap: true,
     topicTitle: `Technical Topic ${index}`,
@@ -141,26 +180,31 @@ export function makeMaterialProjection(
   const section = `section-${order}`;
   const topic = materialIndex === 0 ? "topic" : `topic-${materialIndex}`;
   const contentKey = ContentKeySchema.make(
-    `material/lesson/test/${topic}/${section}`
+    `material/lesson/${TEST_MATERIAL_DOMAIN}/technical-${topic}/${section}`
   );
-  const namespace = locale === "en" ? "subjects" : "materi";
+  const routePrefix = readTestMaterialPrefix(locale);
   const topicSlug = locale === "en" ? `technical-${topic}` : `teknis-${topic}`;
   return MaterialLessonProjectionSchema.make({
     contentKey,
-    graph: testMaterialGraph(topic, section, locale),
+    graph: testMaterialGraph(
+      `technical-${topic}`,
+      section,
+      locale,
+      TEST_MATERIAL_DOMAIN
+    ),
     kind: "subject-lesson",
     locale,
-    materialKey: MaterialKeySchema.make(`lesson.test.${topic}`),
+    materialKey: MaterialKeySchema.make(
+      `lesson.${TEST_MATERIAL_DOMAIN}.technical-${topic}`
+    ),
     metadata: {
       authors: [{ name: "Nakafa" }],
       date: "2026-07-24",
       title: `${locale.toUpperCase()} Section ${order}`,
     },
     order,
-    parentPath: PublicPathSchema.make(`${namespace}/test/${topicSlug}`),
-    publicPath: PublicPathSchema.make(
-      `${namespace}/test/${topicSlug}/${section}`
-    ),
+    parentPath: PublicPathSchema.make(`${routePrefix}/${topicSlug}`),
+    publicPath: PublicPathSchema.make(`${routePrefix}/${topicSlug}/${section}`),
     sectionKey: MaterialSectionSchema.make(section),
     sitemap: true,
     topicTitle:

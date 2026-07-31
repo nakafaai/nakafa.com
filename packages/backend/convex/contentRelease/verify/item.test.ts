@@ -4,7 +4,10 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import {
+  testMaterialPublicPath,
+  testProjectionJson,
+} from "@repo/backend/test/content-material";
 import {
   TEST_RELEASE_ID,
   testRollbackJson,
@@ -189,13 +192,14 @@ describe("contentRelease/verify/item", () => {
 
   it("rejects a material upsert that displaces a retained source route", async () => {
     const target = convexTest(schema, convexModules);
+    const publicPath = testMaterialPublicPath(0);
     await stageUpsertFixture(target);
     await target.mutation((ctx) =>
       ctx.db.insert("publicRoutes", {
         contentHash: "retained-source-route",
         kind: "subject-lesson",
         locale: "en",
-        publicPath: "test/head-0",
+        publicPath,
         sitemap: true,
         sourcePath: "material/lesson/test/retained",
         syncShard: 0,

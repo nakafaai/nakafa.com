@@ -14,7 +14,7 @@ import {
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-const MATERIAL_PREFIX = "material/lesson/test";
+const MATERIAL_PREFIX = "material/lesson/mathematics";
 const MATERIAL_CURSOR_PATTERN = /^material-v1:/;
 
 describe("contentRelease/material/api", () => {

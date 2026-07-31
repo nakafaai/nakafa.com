@@ -37,6 +37,8 @@ describe("contentRelease/material/sitemap", () => {
 
   it("lists and reads complete active material partitions", async () => {
     const target = convexTest(schema, convexModules);
+    const first = makeMaterialProjection("en", 1);
+    const second = makeMaterialProjection("en", 2);
     await activateMaterialCatalog(target);
     const result = await target.query((ctx) =>
       runConvexProgram(readMaterialBuckets(ctx, "en"))
@@ -60,11 +62,11 @@ describe("contentRelease/material/sitemap", () => {
       expect.arrayContaining([
         {
           date: "2026-07-24",
-          publicPath: "subjects/test/technical-topic/section-1",
+          publicPath: first.publicPath,
         },
         {
           date: "2026-07-24",
-          publicPath: "subjects/test/technical-topic/section-2",
+          publicPath: second.publicPath,
         },
       ])
     );

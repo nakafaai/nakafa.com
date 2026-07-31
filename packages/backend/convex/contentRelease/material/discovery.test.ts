@@ -79,7 +79,7 @@ describe("contentRelease/material/discovery", () => {
         {
           authors: [{ name: "Nakafa" }],
           date: "2026-07-24",
-          publicPath: expect.stringContaining("subjects/test/"),
+          publicPath: expect.stringContaining("subjects/mathematics/"),
           title: expect.stringContaining("EN Section"),
         },
       ],

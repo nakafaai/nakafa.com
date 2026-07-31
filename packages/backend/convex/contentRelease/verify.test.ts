@@ -2,7 +2,10 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import {
+  testMaterialPublicPath,
+  testProjectionJson,
+} from "@repo/backend/test/content-material";
 import {
   TEST_RELEASE_ID,
   testRouteJson,
@@ -25,7 +28,7 @@ const verifyItems = internal.contentRelease.verify.verifyItems;
 /** Builds one unique complete technical change at an ordered index. */
 function changeAt(index: number) {
   const contentKey = `test:head-${index}`;
-  const publicPath = `test/head-${index}`;
+  const publicPath = testMaterialPublicPath(index);
   const artifactHash = `sha256:${(index + 1).toString(16).padStart(64, "0")}`;
   return {
     artifact: testArtifactJson({ artifactHash, contentKey }),
