@@ -224,6 +224,52 @@ describe("audioStudies/queries/internal", () => {
     expect(result).toBeNull();
   });
 
+  it("stops queued speech work after an exact material activates", async () => {
+    const t = convexTest(schema, convexModules);
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    const exactAudio = getTestAudioIdentity({
+      locale: FUNCTION_MATERIAL.locale,
+      route: FUNCTION_MATERIAL.contentKey,
+    });
+    const audioId = await t.mutation(async (ctx) => {
+      await insertContentViewRoute(ctx, {
+        contentId: exactAudio.content_id,
+        graph: FUNCTION_MATERIAL.graph,
+        kind: "curriculum-lesson",
+        locale: FUNCTION_MATERIAL.locale,
+        materialDomain: "mathematics",
+        route: FUNCTION_MATERIAL.contentKey,
+        section: "material",
+        sourcePath: FUNCTION_MATERIAL.contentKey,
+        title: FUNCTION_MATERIAL.metadata.title,
+      });
+      return await ctx.db.insert("contentAudios", {
+        ...exactAudio,
+        contentHash: "source-hash",
+        generationAttempts: 1,
+        model: "eleven_v3",
+        script: "Previously queued narration",
+        status: "script-generated",
+        updatedAt: 1,
+        voiceId: "voice-1",
+      });
+    });
+
+    const [speech, hashMatches] = await Promise.all([
+      t.query(
+        internal.audioStudies.queries.internal.getAudioForSpeechGeneration,
+        { contentAudioId: audioId }
+      ),
+      t.query(internal.audioStudies.queries.internal.verifyContentHash, {
+        contentAudioId: audioId,
+        expectedHash: "source-hash",
+      }),
+    ]);
+
+    expect(speech).toBeNull();
+    expect(hashMatches).toBe(false);
+  });
+
   it("returns null when speech generation audio has no script", async () => {
     const t = convexTest(schema, convexModules);
 

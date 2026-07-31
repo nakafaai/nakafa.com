@@ -33,9 +33,9 @@ function toAudioSourceOwnershipError(error: unknown) {
   });
 }
 
-/** Projects an audio source document into the compact graph lookup contract. */
-function toAudioContentLookup(
-  source: Doc<"audioContentSources">
+/** Projects persisted audio metadata into the compact graph lookup contract. */
+export function toAudioContentLookup(
+  source: AudioContentLookup
 ): AudioContentLookup {
   return {
     alignmentId: source.alignmentId,
