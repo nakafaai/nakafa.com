@@ -71,6 +71,13 @@ export const loadMaterialIdentityOwner = Effect.fn(
   if (!catalog.active) {
     return { active: null, exactManaged: false, managed: false };
   }
+  if (catalog.familyManaged) {
+    return {
+      active: catalog.active,
+      exactManaged: false,
+      managed: true,
+    };
+  }
   const owner = yield* loadContentOwner(
     ctx,
     contentKey,
@@ -90,6 +97,6 @@ export const loadMaterialIdentityOwner = Effect.fn(
   return {
     active: catalog.active,
     exactManaged,
-    managed: catalog.familyManaged || exactManaged,
+    managed: exactManaged,
   };
 });

@@ -195,5 +195,28 @@ describe("learningPrograms/queries", () => {
     });
     expect(tombstoned?.planItems[0]).not.toHaveProperty("route");
     expect(tombstoned?.planItems[0]).not.toHaveProperty("title");
+
+    await target.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected one active material release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        resultFamilies: ["material"],
+      });
+    });
+
+    await expect(
+      authed.query(api.learningPrograms.queries.getActiveProfile, {
+        locale: "en",
+      })
+    ).resolves.toMatchObject({
+      planItems: [
+        {
+          route: topicRoute,
+          title: "Function Composition and Inverse Function",
+        },
+      ],
+    });
   });
 });
