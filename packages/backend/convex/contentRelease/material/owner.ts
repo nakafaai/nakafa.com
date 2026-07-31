@@ -71,13 +71,6 @@ export const loadMaterialIdentityOwner = Effect.fn(
   if (!catalog.active) {
     return { active: null, exactManaged: false, managed: false };
   }
-  if (catalog.familyManaged) {
-    return {
-      active: catalog.active,
-      exactManaged: false,
-      managed: true,
-    };
-  }
   const owner = yield* loadContentOwner(
     ctx,
     contentKey,
@@ -89,6 +82,13 @@ export const loadMaterialIdentityOwner = Effect.fn(
       "CONTENT_RELEASE_INTEGRITY",
       `Material ${contentKey}/${locale} changed ownership family.`
     );
+  }
+  if (catalog.familyManaged) {
+    return {
+      active: catalog.active,
+      exactManaged: false,
+      managed: true,
+    };
   }
   const exactManaged = owner?.managed === true;
   if (exactManaged) {
