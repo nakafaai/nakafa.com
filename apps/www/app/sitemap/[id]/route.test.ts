@@ -59,6 +59,7 @@ describe("sitemap page route", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toContain("application/xml");
+    expect(response.headers.get("Vercel-Cache-Tag")).toBe("content-sitemap");
     expect(text).toContain("<urlset");
     expect(text).toContain("<loc>https://nakafa.com/en</loc>");
     expect(mockGetSitemapEntries).toHaveBeenCalledWith({ pageId: "base" });

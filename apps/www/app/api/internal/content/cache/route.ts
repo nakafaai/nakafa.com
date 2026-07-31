@@ -8,7 +8,7 @@ import { Effect, Schema } from "effect";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { env } from "@/env";
-import { revalidateContentCache } from "@/lib/content/cache";
+import { invalidateContentCache } from "@/lib/content/cache";
 import { isInternalContentAuthorized } from "@/lib/content/internal/authorization";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 
@@ -111,14 +111,22 @@ export const POST = (request: NextRequest) =>
           { headers: PRIVATE_RESPONSE_HEADERS, status: 409 }
         );
       }
-      const tags = revalidateContentCache(decoded.right.tags);
+      const invalidation = yield* invalidateContentCache(
+        decoded.right.tags
+      ).pipe(Effect.either);
+      if (invalidation._tag === "Left") {
+        return NextResponse.json(
+          { error: "Content cache invalidation failed." },
+          { headers: PRIVATE_RESPONSE_HEADERS, status: 503 }
+        );
+      }
 
       return NextResponse.json(
         ContentCacheReceiptSchema.make({
           family: decoded.right.family,
           releaseId: decoded.right.releaseId,
           revalidated: true,
-          tags,
+          tags: invalidation.right,
         }),
         { headers: PRIVATE_RESPONSE_HEADERS }
       );

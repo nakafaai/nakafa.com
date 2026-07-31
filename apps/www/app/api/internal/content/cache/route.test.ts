@@ -11,6 +11,10 @@ import {
 import { Effect } from "effect";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  ContentCacheInvalidationError,
+  type invalidateContentCache,
+} from "@/lib/content/cache";
 
 const releaseId = ReleaseIdSchema.make("release-cache-test");
 const artifactHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
@@ -22,8 +26,8 @@ const exactRequest = makeContentCacheRequest({
 });
 const exactTags = exactRequest.tags;
 const readActiveContentIdentityMock = vi.hoisted(() => vi.fn());
-const revalidateContentCacheMock = vi.hoisted(() =>
-  vi.fn((tags: readonly string[]) => tags)
+const invalidateContentCacheMock = vi.hoisted(() =>
+  vi.fn<typeof invalidateContentCache>()
 );
 
 vi.mock("@/env", () => ({
@@ -34,7 +38,7 @@ vi.mock("@/env", () => ({
 vi.mock("@/lib/content/cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/content/cache")>()),
   /** Records content runtime cache invalidation calls. */
-  revalidateContentCache: revalidateContentCacheMock,
+  invalidateContentCache: invalidateContentCacheMock,
 }));
 
 vi.mock("@/lib/content/published/active", () => ({
@@ -49,7 +53,9 @@ beforeEach(() => {
       sequence: 1,
     })
   );
-  revalidateContentCacheMock.mockClear();
+  invalidateContentCacheMock
+    .mockReset()
+    .mockImplementation((tags) => Effect.succeed(tags));
 });
 
 /** Creates one Next POST request for the cache route. */
@@ -112,7 +118,7 @@ describe("content runtime cache revalidation route", () => {
     expect(missing.headers.get("Cache-Control")).toBe("private, no-store");
     expect(invalid.headers.get("Cache-Control")).toBe("private, no-store");
     expect(malformed.headers.get("Cache-Control")).toBe("private, no-store");
-    expect(revalidateContentCacheMock).not.toHaveBeenCalled();
+    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 
   it("rejects an authenticated request without an exact release body", async () => {
@@ -126,7 +132,7 @@ describe("content runtime cache revalidation route", () => {
     expect(response.status).toBe(400);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(readActiveContentIdentityMock).not.toHaveBeenCalled();
-    expect(revalidateContentCacheMock).not.toHaveBeenCalled();
+    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -157,7 +163,7 @@ describe("content runtime cache revalidation route", () => {
       error: "Content release is not active.",
     });
     expect(readActiveContentIdentityMock).toHaveBeenCalledTimes(1);
-    expect(revalidateContentCacheMock).not.toHaveBeenCalled();
+    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 
   it("rejects a declared body that is absent", async () => {
@@ -170,7 +176,7 @@ describe("content runtime cache revalidation route", () => {
     await expect(response.json()).resolves.toEqual({
       error: "Invalid cache invalidation request.",
     });
-    expect(revalidateContentCacheMock).not.toHaveBeenCalled();
+    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 
   it("invalidates and echoes the exact release artifact tags", async () => {
@@ -191,7 +197,23 @@ describe("content runtime cache revalidation route", () => {
     });
     expect(response.status).toBe(200);
     expect(readActiveContentIdentityMock).toHaveBeenCalledTimes(1);
-    expect(revalidateContentCacheMock).toHaveBeenCalledWith(exactTags);
+    expect(invalidateContentCacheMock).toHaveBeenCalledWith(exactTags);
+  });
+
+  it("reports a typed cache invalidation failure without a false receipt", async () => {
+    invalidateContentCacheMock.mockReturnValueOnce(
+      Effect.fail(new ContentCacheInvalidationError({ layer: "sitemap" }))
+    );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(JSON.stringify(exactRequest))
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      error: "Content cache invalidation failed.",
+    });
+    expect(invalidateContentCacheMock).toHaveBeenCalledWith(exactTags);
   });
 
   it.each([
@@ -274,7 +296,7 @@ describe("content runtime cache revalidation route", () => {
       await expect(response.json()).resolves.toEqual({
         error: "Invalid cache invalidation request.",
       });
-      expect(revalidateContentCacheMock).not.toHaveBeenCalled();
+      expect(invalidateContentCacheMock).not.toHaveBeenCalled();
     }
   );
 
@@ -293,6 +315,6 @@ describe("content runtime cache revalidation route", () => {
 
     expect(response.status).toBe(400);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
-    expect(revalidateContentCacheMock).not.toHaveBeenCalled();
+    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 });
