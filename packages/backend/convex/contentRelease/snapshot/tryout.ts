@@ -27,6 +27,18 @@ export const stageTryoutCatalog = Effect.fn(
   rowJson: string
 ) {
   const facts = tryoutCatalogFacts(source.record);
+  const stored = {
+    ...facts,
+    index,
+    rowHash: source.record.rowHash,
+    rowJson,
+    snapshotId,
+  };
+  yield* ensureDocumentSize(
+    `Try-out snapshot ${snapshotId} row ${index}`,
+    stored,
+    TRYOUT_CATALOG_DOCUMENT_LIMIT
+  );
   const byIndex = yield* Effect.promise(() =>
     ctx.db
       .query("tryoutCatalog")
@@ -57,18 +69,6 @@ export const stageTryoutCatalog = Effect.fn(
     }
     return true;
   }
-  const stored = {
-    ...facts,
-    index,
-    rowHash: source.record.rowHash,
-    rowJson,
-    snapshotId,
-  };
-  yield* ensureDocumentSize(
-    `Try-out snapshot ${snapshotId} row ${index}`,
-    stored,
-    TRYOUT_CATALOG_DOCUMENT_LIMIT
-  );
   yield* Effect.promise(() => ctx.db.insert("tryoutCatalog", stored));
   return false;
 });
@@ -84,6 +84,18 @@ export const stageTryoutPlacement = Effect.fn(
   rowJson: string
 ) {
   const facts = tryoutPlacementFacts(source.record);
+  const stored = {
+    ...facts,
+    index,
+    rowHash: source.record.rowHash,
+    rowJson,
+    snapshotId,
+  };
+  yield* ensureDocumentSize(
+    `Try-out snapshot ${snapshotId} placement ${index}`,
+    stored,
+    TRYOUT_PLACEMENT_DOCUMENT_LIMIT
+  );
   const byIndex = yield* Effect.promise(() =>
     ctx.db
       .query("tryoutPlacements")
@@ -114,18 +126,6 @@ export const stageTryoutPlacement = Effect.fn(
     }
     return true;
   }
-  const stored = {
-    ...facts,
-    index,
-    rowHash: source.record.rowHash,
-    rowJson,
-    snapshotId,
-  };
-  yield* ensureDocumentSize(
-    `Try-out snapshot ${snapshotId} placement ${index}`,
-    stored,
-    TRYOUT_PLACEMENT_DOCUMENT_LIMIT
-  );
   yield* Effect.promise(() => ctx.db.insert("tryoutPlacements", stored));
   return false;
 });

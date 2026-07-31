@@ -13,6 +13,10 @@ import {
   stageTryoutPlacement,
 } from "@repo/backend/convex/contentRelease/snapshot/tryout";
 import {
+  tryoutCatalogFacts,
+  tryoutPlacementFacts,
+} from "@repo/backend/convex/contentRelease/tryout/facts";
+import {
   TRYOUT_CATALOG_DOCUMENT_LIMIT,
   TRYOUT_PLACEMENT_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/tryout/limits";
@@ -91,7 +95,7 @@ describe("contentRelease/snapshot/tryout", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
   });
 
-  it("rejects rows that could exceed aggregate runtime read budgets", async () => {
+  it("rejects new or replayed rows beyond aggregate read budgets", async () => {
     const catalogSource = makeTryoutCatalogRow();
     const catalog = {
       ...catalogSource,
@@ -109,30 +113,52 @@ describe("contentRelease/snapshot/tryout", () => {
       }),
     };
     const t = convexTest(schema, convexModules);
+    const catalogJson = canonicalizeContentSnapshotRow(catalog);
+    const placementJson = canonicalizeContentSnapshotRow(placement);
 
     await expect(
       t.mutation((ctx) =>
         runConvexProgram(
-          stageTryoutCatalog(
-            ctx,
-            snapshotId,
-            0,
-            catalog,
-            canonicalizeContentSnapshotRow(catalog)
-          )
+          stageTryoutCatalog(ctx, snapshotId, 0, catalog, catalogJson)
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
     await expect(
       t.mutation((ctx) =>
         runConvexProgram(
-          stageTryoutPlacement(
-            ctx,
-            snapshotId,
-            1,
-            placement,
-            canonicalizeContentSnapshotRow(placement)
-          )
+          stageTryoutPlacement(ctx, snapshotId, 1, placement, placementJson)
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("tryoutCatalog", {
+        ...tryoutCatalogFacts(catalog.record),
+        index: 0,
+        rowHash: catalog.record.rowHash,
+        rowJson: catalogJson,
+        snapshotId,
+      });
+      await ctx.db.insert("tryoutPlacements", {
+        ...tryoutPlacementFacts(placement.record),
+        index: 1,
+        rowHash: placement.record.rowHash,
+        rowJson: placementJson,
+        snapshotId,
+      });
+    });
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          stageTryoutCatalog(ctx, snapshotId, 0, catalog, catalogJson)
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          stageTryoutPlacement(ctx, snapshotId, 1, placement, placementJson)
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
