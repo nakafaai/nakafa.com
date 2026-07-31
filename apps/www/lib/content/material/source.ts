@@ -70,10 +70,6 @@ export function reconcileMaterialCurriculumRoutes(
     string,
     PublicCurriculumRoute["canonicalPath"] | null
   >();
-  const activeParentPaths = new Map<
-    string,
-    Set<PublicMaterialLessonRoute["parentPath"]>
-  >();
   const sourceLessons = sourceMaterials.filter(isMaterialLessonRoute);
   const reconciledLessons = reconciledMaterials.filter(isMaterialLessonRoute);
   for (const claim of model.claims) {
@@ -104,20 +100,6 @@ export function reconcileMaterialCurriculumRoutes(
       `${claim.locale}\0${source.publicPath}`,
       replacement.publicPath
     );
-    const parentIdentity = `${claim.locale}\0${source.materialKey}\0${source.parentPath}`;
-    const parents =
-      activeParentPaths.get(parentIdentity) ??
-      new Set<PublicMaterialLessonRoute["parentPath"]>();
-    if (parents.size > 0 && !parents.has(replacement.parentPath)) {
-      return Effect.fail(
-        new PublishedProjectionError({
-          locale: claim.locale,
-          publicPath: source.parentPath,
-        })
-      );
-    }
-    parents.add(replacement.parentPath);
-    activeParentPaths.set(parentIdentity, parents);
   }
 
   return Effect.succeed(
@@ -128,21 +110,11 @@ export function reconcileMaterialCurriculumRoutes(
       const replacement = sourcePaths.get(
         `${route.locale}\0${route.canonicalPath}`
       );
-      const parentReplacement = route.materialKey
-        ? activeParentPaths
-            .get(
-              `${route.locale}\0${route.materialKey}\0${route.canonicalPath}`
-            )
-            ?.values()
-            .next().value
-        : undefined;
-      const currentPath =
-        replacement === undefined ? parentReplacement : replacement;
-      if (currentPath === undefined) {
+      if (replacement === undefined) {
         return route;
       }
-      if (currentPath !== null) {
-        return { ...route, canonicalPath: currentPath };
+      if (replacement !== null) {
+        return { ...route, canonicalPath: replacement };
       }
       const { canonicalPath: _canonicalPath, ...withoutCanonicalPath } = route;
       return withoutCanonicalPath;

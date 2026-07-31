@@ -190,7 +190,7 @@ describe("material source reconciliation", () => {
     ).not.toHaveProperty("canonicalPath");
   });
 
-  it("moves one topic mapping to its deterministic active group", async () => {
+  it("keeps one topic mapping stable while active lessons move", async () => {
     const curriculumRoute = Effect.runSync(listPublicCurriculumRoutes()).find(
       (route) => route.locale === sourceRoute.locale
     );
@@ -244,7 +244,7 @@ describe("material source reconciliation", () => {
     );
 
     expect(curriculumRoutes).toMatchObject([
-      { canonicalPath: movedParentPath },
+      { canonicalPath: sourceRoute.parentPath },
     ]);
     expect(reconciled).toEqual(
       expect.arrayContaining([
@@ -259,33 +259,31 @@ describe("material source reconciliation", () => {
     );
     await expect(
       Effect.runPromise(
-        Effect.flip(
-          reconcileMaterialCurriculumRoutes(
-            [
+        reconcileMaterialCurriculumRoutes(
+          [
+            {
+              ...curriculumRoute,
+              canonicalPath: sourceRoute.parentPath,
+              materialKey: sourceRoute.materialKey,
+            },
+          ],
+          [topicRoute, sourceRoute, nextRoute],
+          [makePreviewPublicRoute(moved), nextRoute],
+          {
+            claims: [
+              ...model.claims,
               {
-                ...curriculumRoute,
-                canonicalPath: sourceRoute.parentPath,
-                materialKey: sourceRoute.materialKey,
+                contentKey: previewNextProjection.contentKey,
+                kind: "found",
+                locale: previewNextProjection.locale,
+                projection: previewNextProjection,
               },
             ],
-            [topicRoute, sourceRoute, nextRoute],
-            [makePreviewPublicRoute(moved), nextRoute],
-            {
-              claims: [
-                ...model.claims,
-                {
-                  contentKey: previewNextProjection.contentKey,
-                  kind: "found",
-                  locale: previewNextProjection.locale,
-                  projection: previewNextProjection,
-                },
-              ],
-              materials: [moved, previewNextProjection],
-            }
-          )
+            materials: [moved, previewNextProjection],
+          }
         )
       )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    ).resolves.toMatchObject([{ canonicalPath: sourceRoute.parentPath }]);
   });
 
   it("preserves unrelated curriculum mappings and rejects missing replacements", async () => {

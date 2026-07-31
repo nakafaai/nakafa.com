@@ -2,17 +2,13 @@ import {
   type MaterialList,
   MaterialListSchema,
 } from "@repo/contents/_types/curriculum/material";
-import {
-  isMaterialContentRoute,
-  isMaterialLessonRoute,
-  toLocalizedContentHref,
-} from "@repo/contents/_types/route/content";
+import { toLocalizedContentHref } from "@repo/contents/_types/route/content";
 import { compareCurriculumRouteOrder } from "@repo/contents/_types/route/curriculum";
 import {
   createMaterialContextIndex,
   type MaterialContextIndex,
 } from "@repo/contents/_types/route/learning/context";
-import { comparePublicRouteOrder } from "@repo/contents/_types/route/path";
+import { readMaterialLessonGroup } from "@repo/contents/_types/route/material/group";
 import type {
   PublicContentRoute,
   PublicCurriculumRoute,
@@ -163,33 +159,13 @@ function readMaterialLessonItems(
   materialContextIndex: MaterialContextIndex,
   contextRoute: PublicCurriculumRoute
 ) {
-  const route = contentRoutes.find(
-    (candidate) =>
-      candidate.locale === locale &&
-      candidate.publicPath === path &&
-      isMaterialContentRoute(candidate)
+  return readMaterialLessonGroup({
+    contentRoutes,
+    locale,
+    publicPath: path,
+  }).map((candidate) =>
+    toMaterialLessonItem(candidate, materialContextIndex, contextRoute)
   );
-
-  if (!route) {
-    return [];
-  }
-
-  if (isMaterialLessonRoute(route)) {
-    return [toMaterialLessonItem(route, materialContextIndex, contextRoute)];
-  }
-
-  return contentRoutes
-    .filter(
-      (candidate) =>
-        isMaterialLessonRoute(candidate) &&
-        candidate.locale === locale &&
-        candidate.parentPath === route.publicPath
-    )
-    .slice()
-    .sort(comparePublicRouteOrder)
-    .map((candidate) =>
-      toMaterialLessonItem(candidate, materialContextIndex, contextRoute)
-    );
 }
 
 /** Builds one direct lesson item with a validated curriculum context hint. */

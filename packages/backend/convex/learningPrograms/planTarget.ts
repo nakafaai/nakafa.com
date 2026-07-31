@@ -33,20 +33,19 @@ export const loadLearningPlanTarget = Effect.fn(
     return { route: active.route, title: active.title };
   }
 
-  if (
-    source?.kind === "curriculum-topic" &&
-    source.locale === locale &&
-    source.section === "material"
-  ) {
-    return { route: source.route, title: source.title };
-  }
-
   if (source?.section === "material") {
     const owner = yield* loadMaterialIdentityOwner(
       ctx,
       source.sourcePath,
       locale
     ).pipe(Effect.mapError(toContentViewIoError));
+    if (
+      source.kind === "curriculum-topic" &&
+      source.locale === locale &&
+      !owner.exactManaged
+    ) {
+      return { route: source.route, title: source.title };
+    }
     if (owner.managed) {
       return null;
     }

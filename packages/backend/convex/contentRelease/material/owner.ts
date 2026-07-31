@@ -69,10 +69,7 @@ export const loadMaterialIdentityOwner = Effect.fn(
 ) {
   const catalog = yield* loadMaterialCatalogOwner(ctx);
   if (!catalog.active) {
-    return { active: null, managed: false };
-  }
-  if (catalog.familyManaged) {
-    return { active: catalog.active, managed: true };
+    return { active: null, exactManaged: false, managed: false };
   }
   const owner = yield* loadContentOwner(
     ctx,
@@ -86,11 +83,13 @@ export const loadMaterialIdentityOwner = Effect.fn(
       `Material ${contentKey}/${locale} changed ownership family.`
     );
   }
-  if (owner?.managed) {
+  const exactManaged = owner?.managed === true;
+  if (exactManaged) {
     yield* requireMaterialState(catalog.active, locale);
   }
   return {
     active: catalog.active,
-    managed: owner?.managed === true,
+    exactManaged,
+    managed: catalog.familyManaged || exactManaged,
   };
 });

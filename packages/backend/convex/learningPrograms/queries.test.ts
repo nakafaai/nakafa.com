@@ -167,5 +167,33 @@ describe("learningPrograms/queries", () => {
         },
       ],
     });
+
+    await target.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected one active material release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        resultFamilies: ["article"],
+      });
+      await ctx.db.insert("contentOwners", {
+        contentKey: sourcePath,
+        family: "material",
+        locale: "en",
+        managed: true,
+        releaseId: MATERIAL_IDENTITY.releaseId,
+        sequence: MATERIAL_IDENTITY.sequence,
+      });
+    });
+
+    const tombstoned = await authed.query(
+      api.learningPrograms.queries.getActiveProfile,
+      { locale: "en" }
+    );
+    expect(tombstoned).toMatchObject({
+      planItems: [{ content_id: graph.assetId }],
+    });
+    expect(tombstoned?.planItems[0]).not.toHaveProperty("route");
+    expect(tombstoned?.planItems[0]).not.toHaveProperty("title");
   });
 });
