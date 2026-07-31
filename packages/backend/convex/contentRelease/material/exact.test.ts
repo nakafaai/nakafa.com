@@ -186,4 +186,76 @@ describe("contentRelease/material/exact", () => {
       data: { code: "CONTENT_RELEASE_LIMIT" },
     });
   });
+
+  it("rejects exact ownership that changes a permanent content family", async () => {
+    const target = convexTest(schema, convexModules);
+    const selected = makeMaterialProjection("en", 1);
+    await target.mutation(async (ctx) => {
+      await ctx.db.insert("contentKeys", {
+        contentKey: selected.contentKey,
+        createdSequence: 0,
+        family: "material",
+        locale: selected.locale,
+      });
+      await ctx.db.insert("contentOwners", {
+        contentKey: selected.contentKey,
+        family: "article",
+        locale: selected.locale,
+        managed: true,
+        releaseId: MATERIAL_IDENTITY.releaseId,
+        sequence: MATERIAL_IDENTITY.sequence,
+      });
+    });
+
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(
+          validateExactMaterialOwnerScope(ctx, {
+            releaseId: MATERIAL_IDENTITY.releaseId,
+            resultFamilies: ["article"],
+            sequence: MATERIAL_IDENTITY.sequence,
+          })
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects exact material search ownership above one locale window", async () => {
+    const target = convexTest(schema, convexModules);
+    await target.mutation(async (ctx) => {
+      for (let index = 0; index < 33; index += 1) {
+        const contentKey = `material/lesson/test/locale-${index}`;
+        await ctx.db.insert("contentKeys", {
+          contentKey,
+          createdSequence: 0,
+          family: "material",
+          locale: "en",
+        });
+        await ctx.db.insert("contentOwners", {
+          contentKey,
+          family: "material",
+          locale: "en",
+          managed: true,
+          releaseId: MATERIAL_IDENTITY.releaseId,
+          sequence: MATERIAL_IDENTITY.sequence,
+        });
+      }
+    });
+
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(
+          validateExactMaterialOwnerScope(ctx, {
+            releaseId: MATERIAL_IDENTITY.releaseId,
+            resultFamilies: ["article"],
+            sequence: MATERIAL_IDENTITY.sequence,
+          })
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_LIMIT" },
+    });
+  });
 });

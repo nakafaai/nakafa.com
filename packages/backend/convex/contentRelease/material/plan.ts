@@ -57,6 +57,7 @@ export const buildExactMaterialOwnerPlan = Effect.fn(
       >(),
       reconcile: stored,
       stored,
+      transitions,
     };
   }
   const materialTransitions = transitions.filter(
@@ -91,5 +92,10 @@ export const buildExactMaterialOwnerPlan = Effect.fn(
       { contentKey, locale },
     ])
   );
-  return { expected, reconcile: Array.from(reconcile.values()), stored };
+  return {
+    expected,
+    reconcile: Array.from(reconcile.values()),
+    stored,
+    transitions,
+  };
 });

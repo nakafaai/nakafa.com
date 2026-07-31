@@ -1,4 +1,7 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import {
+  type ContentLocale,
+  ContentLocaleSchema,
+} from "@nakafa/aksara-contracts/content";
 import type {
   MutationCtx,
   QueryCtx,
@@ -6,6 +9,7 @@ import type {
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { validateExactMaterialRoutes } from "@repo/backend/convex/contentRelease/material/collision";
+import { MATERIAL_EXACT_LOCALE_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
 import {
   buildExactMaterialOwnerPlan,
   type MaterialOwnerRelease,
@@ -75,11 +79,40 @@ export const syncExactMaterialOwner = Effect.fn(
   yield* Effect.promise(() => ctx.db.insert("materialOwners", row));
 });
 
-/** Rejects an exact material projection that cannot synchronize after activation. */
+/** Rejects exact ownership that cannot synchronize safely after activation. */
 export const validateExactMaterialOwnerScope = Effect.fn(
   "contentRelease.validateExactMaterialOwnerScope"
 )(function* (ctx: MutationCtx, release: MaterialOwnerRelease) {
   const plan = yield* buildExactMaterialOwnerPlan(ctx, release);
+  for (const transition of plan.transitions) {
+    const key = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentKeys")
+        .withIndex("by_contentKey_and_locale", (index) =>
+          index
+            .eq("contentKey", transition.contentKey)
+            .eq("locale", transition.locale)
+        )
+        .unique()
+    );
+    if (!key || key.family !== transition.family) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Exact owner ${transition.contentKey}/${transition.locale} disagrees with its permanent content family.`
+      );
+    }
+  }
+  for (const locale of ContentLocaleSchema.literals) {
+    const ownerCount = Array.from(plan.expected.values()).filter(
+      (owner) => owner.locale === locale
+    ).length;
+    if (ownerCount > MATERIAL_EXACT_LOCALE_LIMIT) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_LIMIT",
+        `Release ${release.releaseId} exceeds ${MATERIAL_EXACT_LOCALE_LIMIT} exact material owners for ${locale}.`
+      );
+    }
+  }
   if (!release.resultFamilies.includes("material")) {
     yield* validateExactMaterialRoutes(
       ctx,
@@ -97,6 +130,8 @@ export const loadExactMaterialOwners = Effect.fn(
   active: ActiveMaterialIdentity,
   locale?: ContentLocale
 ) {
+  const rowLimit =
+    locale === undefined ? EXACT_SCOPE_LIMIT : MATERIAL_EXACT_LOCALE_LIMIT;
   const rows = yield* Effect.promise(() => {
     if (locale === undefined) {
       return ctx.db
@@ -104,19 +139,19 @@ export const loadExactMaterialOwners = Effect.fn(
         .withIndex("by_releaseId_and_locale_and_contentKey", (index) =>
           index.eq("releaseId", active.releaseId)
         )
-        .take(EXACT_SCOPE_LIMIT + 1);
+        .take(rowLimit + 1);
     }
     return ctx.db
       .query("materialOwners")
       .withIndex("by_releaseId_and_locale_and_contentKey", (index) =>
         index.eq("releaseId", active.releaseId).eq("locale", locale)
       )
-      .take(EXACT_SCOPE_LIMIT + 1);
+      .take(rowLimit + 1);
   });
-  if (rows.length > EXACT_SCOPE_LIMIT) {
+  if (rows.length > rowLimit) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
-      `Active release ${active.releaseId} exceeds ${EXACT_SCOPE_LIMIT} exact material owners.`
+      `Active release ${active.releaseId} exceeds ${rowLimit} exact material owners${locale === undefined ? "" : ` for ${locale}`}.`
     );
   }
   if (rows.some((row) => row.sequence !== active.sequence)) {
