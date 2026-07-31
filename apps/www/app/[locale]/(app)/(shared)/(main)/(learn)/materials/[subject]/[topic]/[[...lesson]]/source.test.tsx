@@ -44,6 +44,7 @@ const mocks = vi.hoisted(() => ({
   readMaterialRequest: vi.fn(),
   readMaterialSource: vi.fn(),
   renderPublishedMaterial: vi.fn(),
+  verifyReleasePin: vi.fn(),
 }));
 
 vi.mock("@repo/contents/_types/route/content", () => ({
@@ -61,6 +62,9 @@ vi.mock(
 );
 vi.mock("@/lib/content/material/route", () => ({
   getPublishedMaterialRoute: mocks.getPublishedMaterialRoute,
+}));
+vi.mock("@/lib/content/material/release", () => ({
+  verifyMaterialReleasePin: mocks.verifyReleasePin,
 }));
 vi.mock("@/lib/content/material/shell", () => ({
   readMaterialCandidates: mocks.readMaterialCandidates,
@@ -174,6 +178,9 @@ beforeEach(() => {
   mocks.hasPreviewConfig.mockReturnValue(false);
   mocks.connection.mockResolvedValue(undefined);
   mocks.readMaterialPreview.mockReturnValue(Effect.succeed(Option.none()));
+  mocks.verifyReleasePin
+    .mockReset()
+    .mockImplementation((releaseId) => Effect.succeed(releaseId));
   mocks.readMaterialCandidates.mockReturnValue([]);
   mocks.readMaterialRequest.mockResolvedValue({
     locale: "en",

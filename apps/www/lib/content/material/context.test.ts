@@ -1,6 +1,9 @@
 // @vitest-environment node
 
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  PublicPathSchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -110,6 +113,31 @@ describe("published material context", () => {
         readPublishedMaterialContext("en", previewProjection, context)
       )
     ).resolves.toEqual({ managed: true, value: null });
+  });
+
+  it("pins a context read to the expected active release", async () => {
+    const activeReleaseId = ReleaseIdSchema.make("release-material");
+    fetchMock.mockResolvedValueOnce({
+      groupJson: null,
+      managed: false,
+      mappingJson: null,
+      parentJson: null,
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialContext(
+          "en",
+          previewProjection,
+          context,
+          activeReleaseId
+        )
+      )
+    ).resolves.toEqual({ managed: false, value: null });
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
+    );
   });
 
   it("accepts course parents and falls back to the authored group title", async () => {

@@ -63,6 +63,27 @@ function mapPublishedMaterialError(cause: unknown) {
   });
 }
 
+/** Rejects a source fallback when ownership changed between runtime reads. */
+const verifyApiReleasePin = Effect.fn("api.content.verifyReleasePin")(
+  function* (expectedActiveReleaseId: string | null) {
+    const active = yield* fetchApiRuntimeQuery(
+      "activeContentRelease",
+      api.contentRelease.runtime.active.read,
+      {}
+    );
+    const activeReleaseId = active?.releaseId ?? null;
+    if (activeReleaseId !== expectedActiveReleaseId) {
+      return yield* new ApiContentRuntimeReadError({
+        cause: {
+          actualReleaseId: activeReleaseId,
+          expectedReleaseId: expectedActiveReleaseId,
+        },
+        message: "Content ownership changed during the public API read.",
+      });
+    }
+  }
+);
+
 /** Validates and narrows a locale segment from an API route. */
 export function parseApiLocale(locale: string): Locale | null {
   if (isApiLocale(locale)) {
@@ -177,11 +198,15 @@ export function getApiContentRouteByContentId(
   ).pipe(
     Effect.flatMap((material) => {
       if (!material.managed) {
-        return fetchApiRuntimeQuery(
-          "getContentRouteByContentId",
-          api.contents.queries.runtime.getContentRouteByContentId,
-          args
-        );
+        return Effect.gen(function* () {
+          const route = yield* fetchApiRuntimeQuery(
+            "getContentRouteByContentId",
+            api.contents.queries.runtime.getContentRouteByContentId,
+            args
+          );
+          yield* verifyApiReleasePin(material.activeReleaseId);
+          return route;
+        });
       }
       if (!material.route) {
         return Effect.succeed(null);

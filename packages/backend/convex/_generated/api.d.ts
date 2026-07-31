@@ -251,6 +251,7 @@ import type * as contentRelease_runtime from "../contentRelease/runtime.js";
 import type * as contentRelease_runtime_active from "../contentRelease/runtime/active.js";
 import type * as contentRelease_runtime_dispatch from "../contentRelease/runtime/dispatch.js";
 import type * as contentRelease_runtime_origin from "../contentRelease/runtime/origin.js";
+import type * as contentRelease_runtime_pin from "../contentRelease/runtime/pin.js";
 import type * as contentRelease_runtime_result from "../contentRelease/runtime/result.js";
 import type * as contentRelease_runtime_snapshot from "../contentRelease/runtime/snapshot.js";
 import type * as contentRelease_scope_family from "../contentRelease/scope/family.js";
@@ -778,6 +779,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/runtime/active": typeof contentRelease_runtime_active;
   "contentRelease/runtime/dispatch": typeof contentRelease_runtime_dispatch;
   "contentRelease/runtime/origin": typeof contentRelease_runtime_origin;
+  "contentRelease/runtime/pin": typeof contentRelease_runtime_pin;
   "contentRelease/runtime/result": typeof contentRelease_runtime_result;
   "contentRelease/runtime/snapshot": typeof contentRelease_runtime_snapshot;
   "contentRelease/scope/family": typeof contentRelease_scope_family;

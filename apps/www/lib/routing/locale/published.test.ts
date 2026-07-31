@@ -16,6 +16,7 @@ const publishedMocks = vi.hoisted(() => ({
   materialRoute: vi.fn(),
   materialSource: vi.fn(),
   programRoute: vi.fn(),
+  verifyReleasePin: vi.fn(),
 }));
 const emptyLearningIndex: PublicLearningIndex = {
   projectMaterialContextToLocale: () => undefined,
@@ -31,6 +32,9 @@ vi.mock("@/lib/content/material/context", () => ({
 }));
 vi.mock("@/lib/content/material/route", () => ({
   readPublishedMaterialRoute: publishedMocks.materialRoute,
+}));
+vi.mock("@/lib/content/material/release", () => ({
+  verifyMaterialReleasePin: publishedMocks.verifyReleasePin,
 }));
 vi.mock("@/lib/content/material/shell", () => ({
   readMaterialSource: publishedMocks.materialSource,
@@ -56,6 +60,9 @@ beforeEach(() => {
     route: previewPublicRoute,
   });
   publishedMocks.programRoute.mockReset();
+  publishedMocks.verifyReleasePin
+    .mockReset()
+    .mockImplementation((releaseId) => Effect.succeed(releaseId));
 });
 
 afterEach(() => {

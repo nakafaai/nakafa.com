@@ -72,7 +72,8 @@ export const readPublishedNinaMaterial = Effect.fn(
   const resolved = yield* readPublishedMaterialContext(
     input.locale,
     published.projection,
-    context
+    context,
+    published.activeReleaseId
   );
   if (!resolved.managed) {
     return {

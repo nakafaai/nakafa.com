@@ -5,6 +5,8 @@ import { PROGRAM_RELATED_LIMIT } from "@repo/backend/convex/contentRelease/progr
 import { loadProgramRouteRow } from "@repo/backend/convex/contentRelease/program/model";
 import { loadProgramOwner } from "@repo/backend/convex/contentRelease/program/owner";
 import { verifyCurriculum } from "@repo/backend/convex/contentRelease/program/verify";
+import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
+import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
 import { Effect } from "effect";
 
 interface ProgramContextInput {
@@ -39,8 +41,15 @@ export const readProgramContext = Effect.fn(
 )(function* (
   ctx: QueryCtx,
   locale: Doc<"curriculumRoutes">["locale"],
-  input: ProgramContextInput
+  input: ProgramContextInput,
+  expectedActiveReleaseId?: string | null
 ) {
+  const active = yield* loadActiveIdentity(ctx);
+  yield* requireExpectedActiveRelease(
+    active,
+    expectedActiveReleaseId,
+    "Curriculum context"
+  );
   const owner = yield* loadProgramOwner(ctx, locale);
   if (!(owner.managed && owner.selected)) {
     return { context: null, managed: false };

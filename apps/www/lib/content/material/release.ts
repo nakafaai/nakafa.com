@@ -2,7 +2,10 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Schema } from "effect";
 import type { MaterialProjectionIdentity } from "@/lib/content/material/decode";
 import { makeMaterialProjectionError } from "@/lib/content/material/decode";
-import type { ActiveContentReleaseId } from "@/lib/content/published/active";
+import {
+  type ActiveContentReleaseId,
+  readActiveContentIdentity,
+} from "@/lib/content/published/active";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 
 /** Active material release identity shared across one multi-read request. */
@@ -26,4 +29,19 @@ export const decodeMaterialReleasePin = Effect.fn(
     });
   }
   return activeReleaseId;
+});
+
+/** Rechecks one material read against the latest active publication identity. */
+export const verifyMaterialReleasePin = Effect.fn(
+  "NakafaMaterial.verifyReleasePin"
+)(function* (
+  expected: MaterialReleasePin,
+  identity: MaterialProjectionIdentity
+) {
+  const active = yield* readActiveContentIdentity();
+  return yield* decodeMaterialReleasePin(
+    active?.releaseId ?? null,
+    expected,
+    identity
+  );
 });

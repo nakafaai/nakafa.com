@@ -23,6 +23,7 @@ import type {
   MaterialSourceCandidate,
   MaterialSourceClaim,
 } from "@repo/backend/convex/contentRelease/material/spec";
+import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
 import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
 import { Effect, Schema } from "effect";
 
@@ -79,26 +80,6 @@ type VisibleMaterial = Exclude<
   Effect.Effect.Success<ReturnType<typeof readVisibleMaterial>>,
   null
 >;
-
-/** Requires one batched caller to keep reading the same active release. */
-export const requireExpectedMaterialRelease = Effect.fn(
-  "contentRelease.requireExpectedMaterialRelease"
-)(function* (
-  active: ActiveIdentity | null,
-  expectedActiveReleaseId: string | null | undefined
-) {
-  const activeReleaseId = active?.releaseId ?? null;
-  if (
-    expectedActiveReleaseId !== undefined &&
-    activeReleaseId !== expectedActiveReleaseId
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_STATE",
-      `Material source shell expected active release ${expectedActiveReleaseId ?? "none"} but found ${activeReleaseId ?? "none"}.`
-    );
-  }
-  return activeReleaseId;
-});
 
 /** Reconciles decoded source identities claimed by active exact ownership. */
 const resolveSourceClaims = Effect.fn(
@@ -172,9 +153,10 @@ export const readMaterialClaims = Effect.fn(
     loadMaterialCatalogOwner(ctx),
     decodeSourceCandidates(candidates),
   ]);
-  const activeReleaseId = yield* requireExpectedMaterialRelease(
+  const activeReleaseId = yield* requireExpectedActiveRelease(
     catalog.active,
-    expectedActiveReleaseId
+    expectedActiveReleaseId,
+    "Material source shell"
   );
   const sourceClaims = yield* resolveSourceClaims(
     ctx,
@@ -277,9 +259,10 @@ export const readMaterialShell = Effect.fn(
   expectedActiveReleaseId?: string | null
 ) {
   const catalog = yield* loadMaterialCatalogOwner(ctx);
-  const activeReleaseId = yield* requireExpectedMaterialRelease(
+  const activeReleaseId = yield* requireExpectedActiveRelease(
     catalog.active,
-    expectedActiveReleaseId
+    expectedActiveReleaseId,
+    "Material source shell"
   );
   const model = yield* resolveMaterialSourceModel(
     ctx,

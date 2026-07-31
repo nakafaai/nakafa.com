@@ -4,7 +4,7 @@ import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
 import {
   CorpusSourcePathSchema,
   type GitCommitShaSchema,
-  ReleaseIdSchema,
+  type ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
@@ -29,6 +29,10 @@ import {
   type MaterialSourceClaim,
   readPublishedMaterialShell,
 } from "@/lib/content/material/ownership";
+import {
+  decodeMaterialReleasePin,
+  type MaterialReleasePin,
+} from "@/lib/content/material/release";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import {
   fetchRuntimeQuery,
@@ -39,7 +43,7 @@ import {
 export type PublishedMaterialRoute =
   | {
       readonly activeManifestHash: null;
-      readonly activeReleaseId: null;
+      readonly activeReleaseId: MaterialReleasePin;
       readonly alternates: readonly [];
       readonly familyManaged: false;
       readonly managed: false;
@@ -80,24 +84,38 @@ export type PublishedMaterialRoute =
       readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
     };
 
-/** Decodes the active release identifiers carried by one managed model. */
+/** Decodes the coherent active release identifiers carried by one route model. */
 const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
   function* (
     activeManifestHash: null | string,
     activeReleaseId: null | string,
+    expectedActiveReleaseId: MaterialReleasePin | undefined,
     locale: Locale,
     publicPath: string
   ) {
-    if (activeManifestHash === null || activeReleaseId === null) {
+    const releaseId = yield* decodeMaterialReleasePin(
+      activeReleaseId,
+      expectedActiveReleaseId,
+      { locale, publicPath }
+    );
+    if (activeManifestHash === null && releaseId === null) {
+      return {
+        activeManifestHash: null,
+        activeReleaseId: null,
+      };
+    }
+    if (activeManifestHash === null || releaseId === null) {
       return yield* makeMaterialProjectionError({ locale, publicPath });
     }
-    return yield* Effect.all({
-      activeManifestHash:
-        Schema.decodeUnknown(Sha256HashSchema)(activeManifestHash),
-      activeReleaseId: Schema.decodeUnknown(ReleaseIdSchema)(activeReleaseId),
-    }).pipe(
+    const manifestHash = yield* Schema.decodeUnknown(Sha256HashSchema)(
+      activeManifestHash
+    ).pipe(
       Effect.mapError(() => makeMaterialProjectionError({ locale, publicPath }))
     );
+    return {
+      activeManifestHash: manifestHash,
+      activeReleaseId: releaseId,
+    };
   }
 );
 
@@ -122,7 +140,7 @@ export const readPublishedMaterialRoute = Effect.fn(
   locale: Locale,
   publicPath: string,
   sourceCandidates: readonly MaterialSourceCandidate[] = [],
-  expectedActiveReleaseId?: string | null
+  expectedActiveReleaseId?: MaterialReleasePin
 ) {
   const result = yield* readRuntimeQuery("contentRelease.material.route", () =>
     fetchRuntimeQuery(api.contentRelease.material.route, {
@@ -148,10 +166,17 @@ export const readPublishedMaterialRoute = Effect.fn(
     locale,
     publicPath,
   });
+  const active = yield* decodeActiveIdentity(
+    result.activeManifestHash,
+    result.activeReleaseId,
+    expectedActiveReleaseId,
+    locale,
+    publicPath
+  );
   if (!result.managed) {
     return {
       activeManifestHash: null,
-      activeReleaseId: null,
+      activeReleaseId: active.activeReleaseId,
       alternates: [],
       familyManaged: false,
       managed: false,
@@ -164,12 +189,9 @@ export const readPublishedMaterialRoute = Effect.fn(
       sourceRevision: null,
     } satisfies PublishedMaterialRoute;
   }
-  const active = yield* decodeActiveIdentity(
-    result.activeManifestHash,
-    result.activeReleaseId,
-    locale,
-    publicPath
-  );
+  if (active.activeManifestHash === null || active.activeReleaseId === null) {
+    return yield* makeMaterialProjectionError({ locale, publicPath });
+  }
   if (result.projectionJson === null) {
     return {
       ...active,
@@ -253,7 +275,7 @@ export async function getPublishedMaterialRoute(
   locale: Locale,
   publicPath: string,
   sourceCandidates: readonly MaterialSourceCandidate[] = [],
-  expectedActiveReleaseId?: string | null
+  expectedActiveReleaseId?: MaterialReleasePin
 ) {
   "use cache";
 

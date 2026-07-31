@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
@@ -20,7 +21,7 @@ import {
 const fetchMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 const activeManifestHash = `sha256:${"a".repeat(64)}`;
-const activeReleaseId = "release-material";
+const activeReleaseId = ReleaseIdSchema.make("release-material");
 const sourceRevision = "a".repeat(40);
 type MaterialSourceClaimResult = FunctionReturnType<
   typeof api.contentRelease.material.route
@@ -248,6 +249,14 @@ describe("published material route", () => {
       "missing active identity",
       {
         ...foundModel(),
+        activeReleaseId: null,
+      },
+    ],
+    [
+      "empty active identity",
+      {
+        ...foundModel(),
+        activeManifestHash: null,
         activeReleaseId: null,
       },
     ],

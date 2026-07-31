@@ -84,7 +84,8 @@ describe("API content runtime", () => {
         route: null,
         syncedAt: null,
       })
-      .mockResolvedValueOnce(routeRow);
+      .mockResolvedValueOnce(routeRow)
+      .mockResolvedValueOnce(null);
 
     await expect(
       Effect.runPromise(
@@ -157,10 +158,34 @@ describe("API content runtime", () => {
     expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
-      {
-        contentId: "asset:en:article:politics:article:a",
-      }
+      {}
     );
+  });
+
+  it("rejects a source graph fallback after ownership changes", async () => {
+    runtimeClientMocks.fetchConvexRuntimeQuery
+      .mockResolvedValueOnce({
+        activeReleaseId: "release-before",
+        managed: false,
+        route: null,
+        syncedAt: null,
+      })
+      .mockResolvedValueOnce({
+        content_id: "asset:en:material:test:source",
+      })
+      .mockResolvedValueOnce({
+        manifestHash: "manifest-after",
+        releaseId: "release-after",
+        sequence: 2,
+      });
+
+    await expect(
+      Effect.runPromise(
+        getApiContentRouteByContentId({
+          contentId: "asset:en:material:test:source",
+        })
+      )
+    ).rejects.toThrow("Content ownership changed during the public API read.");
   });
 
   it("reconciles source and signed material page entries", async () => {

@@ -9,6 +9,7 @@ import { slugify } from "@repo/design-system/lib/routing/slug";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
+import type { MaterialReleasePin } from "@/lib/content/material/release";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {
@@ -44,10 +45,14 @@ export const readPublishedMaterialContext = Effect.fn(
 )(function* (
   locale: Locale,
   material: PublishedMaterialIdentity,
-  context: MaterialContextIdentity
+  context: MaterialContextIdentity,
+  expectedActiveReleaseId?: MaterialReleasePin
 ) {
   const result = yield* readRuntimeQuery("contentRelease.program.context", () =>
     fetchRuntimeQuery(api.contentRelease.program.context, {
+      ...(expectedActiveReleaseId === undefined
+        ? {}
+        : { expectedActiveReleaseId }),
       locale,
       materialKey: material.materialKey,
       nodeKey: context.nodeKey,
@@ -123,12 +128,18 @@ export const readPublishedMaterialContext = Effect.fn(
 export async function getPublishedMaterialContext(
   locale: Locale,
   material: PublishedMaterialIdentity,
-  context: MaterialContextIdentity
+  context: MaterialContextIdentity,
+  expectedActiveReleaseId?: MaterialReleasePin
 ) {
   "use cache";
 
   const result = await Effect.runPromise(
-    readPublishedMaterialContext(locale, material, context)
+    readPublishedMaterialContext(
+      locale,
+      material,
+      context,
+      expectedActiveReleaseId
+    )
   );
   applyContentRuntimeCache();
   return result;

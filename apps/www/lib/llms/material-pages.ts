@@ -1,7 +1,10 @@
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import type { MaterialReleasePin } from "@/lib/content/material/release";
+import {
+  type MaterialReleasePin,
+  verifyMaterialReleasePin,
+} from "@/lib/content/material/release";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
 import { getRuntimeContentRouteCounts } from "@/lib/content/runtime/routes";
 
@@ -39,6 +42,10 @@ export const readMaterialLlmsInventory = Effect.fn(
   const sourcePageCount = Math.ceil(
     sourceRouteCount / CONTENT_ROUTE_ARTIFACT_PAGE_SIZE
   );
+  yield* verifyMaterialReleasePin(published.activeReleaseId, {
+    locale,
+    publicPath: "llms/material",
+  });
   return {
     activeReleaseId: published.activeReleaseId,
     buckets: published.buckets,

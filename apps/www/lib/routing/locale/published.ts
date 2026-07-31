@@ -7,6 +7,10 @@ import type { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
 import {
+  type MaterialReleasePin,
+  verifyMaterialReleasePin,
+} from "@/lib/content/material/release";
+import {
   type PublishedMaterialRoute,
   readPublishedMaterialRoute,
 } from "@/lib/content/material/route";
@@ -51,12 +55,14 @@ const readLocalizedMaterialSuffix = Effect.fn(
 )(function* ({
   currentContentKey,
   currentLocale,
+  expectedActiveReleaseId,
   locale,
   search,
   target,
 }: {
   currentContentKey: string;
   currentLocale: Locale;
+  expectedActiveReleaseId: MaterialReleasePin;
   locale: Locale;
   search: string;
   target: LocalizedMaterialTarget;
@@ -69,7 +75,8 @@ const readLocalizedMaterialSuffix = Effect.fn(
   const publishedContext = yield* readPublishedMaterialContext(
     locale,
     target,
-    context
+    context,
+    expectedActiveReleaseId
   );
   if (publishedContext.managed) {
     return publishedContext.value ? toMaterialContextQueryString(context) : "";
@@ -85,15 +92,24 @@ const readLocalizedMaterialSuffix = Effect.fn(
     locale
   );
   if (!(sourceRoute && targetRoute)) {
+    yield* verifyMaterialReleasePin(expectedActiveReleaseId, {
+      locale,
+      publicPath: target.publicPath,
+    });
     return "";
   }
 
-  return readProjectedRouteSuffix({
+  const suffix = readProjectedRouteSuffix({
     index,
     route: sourceRoute,
     search,
     targetRoute,
   });
+  yield* verifyMaterialReleasePin(expectedActiveReleaseId, {
+    locale,
+    publicPath: target.publicPath,
+  });
+  return suffix;
 });
 
 /** Reconciles one missing published alternate with exact source ownership. */
@@ -124,7 +140,8 @@ const readPartialMaterialTarget = Effect.fn(
   const reconciled = yield* readPublishedMaterialRoute(
     currentLocale,
     publicPath,
-    [{ contentKey: sourceTarget.sourcePath, locale }]
+    [{ contentKey: sourceTarget.sourcePath, locale }],
+    current.activeReleaseId
   );
   if (
     !(
@@ -189,6 +206,7 @@ export const readPublishedLocalizedHref = Effect.fn(
         const suffix = yield* readLocalizedMaterialSuffix({
           currentContentKey: source.route.sourcePath,
           currentLocale,
+          expectedActiveReleaseId: current.activeReleaseId,
           locale,
           search,
           target: targetClaim.projection,
@@ -227,6 +245,7 @@ export const readPublishedLocalizedHref = Effect.fn(
     const suffix = yield* readLocalizedMaterialSuffix({
       currentContentKey: current.projection.contentKey,
       currentLocale,
+      expectedActiveReleaseId: current.activeReleaseId,
       locale,
       search,
       target,

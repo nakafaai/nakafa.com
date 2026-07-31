@@ -1,3 +1,4 @@
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
 import * as publicLearningStatic from "@repo/contents/_types/route/learning/static";
@@ -19,8 +20,11 @@ const publishedMocks = vi.hoisted(() => ({
   materialRoute: vi.fn(),
   materialSource: vi.fn(),
   programRoute: vi.fn(),
+  verifyReleasePin: vi.fn(),
 }));
+const activeReleaseId = ReleaseIdSchema.make("release-material");
 const activeMaterialRoute = {
+  activeReleaseId,
   alternates: [previewProjection, previewIdProjection],
   familyManaged: true,
   managed: true,
@@ -37,6 +41,9 @@ vi.mock("@/lib/content/material/context", () => ({
 }));
 vi.mock("@/lib/content/material/route", () => ({
   readPublishedMaterialRoute: publishedMocks.materialRoute,
+}));
+vi.mock("@/lib/content/material/release", () => ({
+  verifyMaterialReleasePin: publishedMocks.verifyReleasePin,
 }));
 vi.mock("@/lib/content/material/shell", () => ({
   readMaterialSource: publishedMocks.materialSource,
@@ -63,6 +70,7 @@ beforeEach(() => {
   publishedMocks.materialContext.mockReset();
   publishedMocks.materialRoute.mockReset();
   publishedMocks.programRoute.mockReset();
+  publishedMocks.verifyReleasePin.mockReset();
   publishedMocks.materialRoute.mockReturnValue(
     Effect.succeed({
       managed: false,
@@ -85,6 +93,9 @@ beforeEach(() => {
   });
   publishedMocks.programRoute.mockReturnValue(
     Effect.succeed({ managed: false, route: null })
+  );
+  publishedMocks.verifyReleasePin.mockImplementation((expected) =>
+    Effect.succeed(expected)
   );
 });
 
@@ -274,6 +285,7 @@ describe("resolveLocalizedNavigationHref", () => {
       "materi/matematika/fungsi-komposisi-dan-fungsi-invers/fungsi-berganti";
     publishedMocks.materialRoute.mockReturnValue(
       Effect.succeed({
+        activeReleaseId,
         alternates: [
           { ...previewProjection, publicPath: currentPath },
           { ...previewIdProjection, publicPath: targetPath },

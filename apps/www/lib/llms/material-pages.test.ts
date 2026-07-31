@@ -6,9 +6,13 @@ import { readMaterialLlmsInventory } from "@/lib/llms/material-pages";
 
 const mockReadCounts = vi.hoisted(() => vi.fn());
 const mockReadPublishedBuckets = vi.hoisted(() => vi.fn());
+const mockVerifyReleasePin = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/material/sitemap", () => ({
   readPublishedMaterialBuckets: mockReadPublishedBuckets,
+}));
+vi.mock("@/lib/content/material/release", () => ({
+  verifyMaterialReleasePin: mockVerifyReleasePin,
 }));
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRouteCounts: mockReadCounts,
@@ -28,6 +32,9 @@ beforeEach(() => {
       materialCount: 0,
     })
   );
+  mockVerifyReleasePin
+    .mockReset()
+    .mockImplementation((releaseId) => Effect.succeed(releaseId));
 });
 
 describe("material LLMS pages", () => {
@@ -42,6 +49,10 @@ describe("material LLMS pages", () => {
       publishedRouteCount: 0,
       sourcePageCount: 1,
       sourceRouteCount: 100,
+    });
+    expect(mockVerifyReleasePin).toHaveBeenLastCalledWith(null, {
+      locale: "en",
+      publicPath: "llms/material",
     });
 
     mockReadPublishedBuckets.mockReturnValueOnce(
@@ -60,6 +71,10 @@ describe("material LLMS pages", () => {
       owner: "mixed",
       pageCount: 2,
       publishedRouteCount: 1,
+    });
+    expect(mockVerifyReleasePin).toHaveBeenLastCalledWith("release-material", {
+      locale: "en",
+      publicPath: "llms/material",
     });
 
     mockReadPublishedBuckets.mockReturnValueOnce(
@@ -81,6 +96,7 @@ describe("material LLMS pages", () => {
       sourcePageCount: 0,
       sourceRouteCount: 0,
     });
+    expect(mockVerifyReleasePin).toHaveBeenCalledTimes(2);
 
     mockReadCounts.mockReturnValueOnce(Effect.succeed([]));
     await expect(

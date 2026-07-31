@@ -17,6 +17,10 @@ import {
 import { getMaterialPageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/runtime";
 import type { MaterialSourceClaim } from "@/lib/content/material/ownership";
 import {
+  type MaterialReleasePin,
+  verifyMaterialReleasePin,
+} from "@/lib/content/material/release";
+import {
   getPublishedMaterialRoute,
   type PublishedMaterialRoute,
 } from "@/lib/content/material/route";
@@ -52,6 +56,7 @@ interface PublishedOwner {
 }
 
 interface SourceOwner {
+  readonly activeReleaseId: MaterialReleasePin;
   readonly kind: "source";
   readonly locale: Locale;
   readonly route: PublicMaterialLessonRoute;
@@ -206,6 +211,7 @@ async function resolveMaterialOwner(
     notFound();
   }
   return {
+    activeReleaseId: published.activeReleaseId,
     kind: "source",
     locale: request.locale,
     route: source.route,
@@ -244,6 +250,12 @@ export async function readMaterialMetadata(
     locale: owner.locale,
     sourcePath: owner.route.sourcePath,
   });
+  await Effect.runPromise(
+    verifyMaterialReleasePin(owner.activeReleaseId, {
+      locale: owner.locale,
+      publicPath: owner.route.publicPath,
+    })
+  );
   return {
     alternates: [],
     kind: owner.kind,
@@ -316,6 +328,12 @@ export async function readMaterialPage(
   if (!(source && content?.default)) {
     notFound();
   }
+  await Effect.runPromise(
+    verifyMaterialReleasePin(owner.activeReleaseId, {
+      locale: owner.locale,
+      publicPath: owner.route.publicPath,
+    })
+  );
   const Content = content.default;
   return {
     alternates: [],
