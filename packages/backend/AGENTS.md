@@ -7,8 +7,8 @@ When working on Convex code, **always read
 how to correctly use Convex APIs and patterns. The file contains rules that
 override what you may have learned about Convex from training data.
 
-Convex agent skills for common tasks can be installed by running
-`npx convex ai-files install`.
+Nakafa keeps one canonical Convex skill surface in root `.agents/skills`.
+Do not install package-local skill copies.
 
 <!-- convex-ai-end -->
 
@@ -27,6 +27,34 @@ Agent Mode isolates new development only. Existing workflows and scheduled
 functions remain on the deployment where they started, and shared-dev or
 production data/deploy windows still require explicit read-only proof and
 coordination.
+
+Nakafa is pnpm-only. From the repository root, create and select one expiring
+cloud dev deployment for a worktree with:
+
+```sh
+worktree_name=$(basename "$PWD")
+pnpm --dir packages/backend exec convex deployment create \
+  "dev/$USER-codex/$worktree_name" \
+  --type dev \
+  --select \
+  --expiration "in 5 days"
+pnpm --dir packages/backend exec convex deployment token create agent-token --save-env
+pnpm --dir packages/backend exec convex dev --once
+```
+
+Use a local deployment instead when HTTP ingress, project environment values,
+and hosted integrations are unnecessary:
+
+```sh
+pnpm --dir packages/backend exec convex deployment create local --select
+pnpm --dir packages/backend exec convex dev --once
+```
+
+The deployment selection and URLs are worktree-owned. Never copy
+`CONVEX_DEPLOYMENT`, `CONVEX_DEPLOY_KEY`, or generated Convex URL values from
+another worktree. Copy other ignored application environment files only when
+the task needs them, byte-for-byte from the canonical checkout, without
+printing secrets.
 
 ## Nakafa Convex Architecture Rules
 
@@ -57,8 +85,10 @@ obsolete Convex function and its tests before considering the work complete.
 ## Type And Convex Source Of Truth
 
 Convex is the typed transactional source for app state and graph read models.
-`packages/contents` is the authoring and source-registry input that feeds those
-read models; do not make path/corpus layout the app-state identity.
+Aksara signed snapshots feed activated content scopes. During migration,
+`packages/contents` still feeds unactivated scopes and contains cutover copies
+awaiting deletion. Those copies are not authoritative and must not be edited or
+republished. Do not make either corpus path layout the app-state identity.
 
 Domain validators and schema modules own backend value sets. Derive types from
 Convex `Infer<typeof validator>`, generated `Doc<>` and `Id<>` types, or

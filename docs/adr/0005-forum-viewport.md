@@ -1,4 +1,4 @@
-# ADR 0002: Effect-Owned Forum Conversation Viewport
+# ADR 0005: Effect-Owned Forum Conversation Viewport
 
 ## Status
 
