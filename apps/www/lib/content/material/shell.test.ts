@@ -170,6 +170,11 @@ describe("material source shell", () => {
         parentPath: nextRoute.parentPath,
       },
       {
+        contentKey: idRoute.sourcePath,
+        locale: idRoute.locale,
+        parentPath: idRoute.parentPath,
+      },
+      {
         contentKey: movedRoute.sourcePath,
         locale: movedRoute.locale,
         parentPath: movedRoute.parentPath,

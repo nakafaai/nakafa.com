@@ -21,7 +21,7 @@ import {
   formatContentDate,
   getContentAuthors,
 } from "@repo/backend/convex/contents/runtime/shared";
-import type { Infer } from "convex/values";
+import { compareValues, type Infer } from "convex/values";
 import { Effect } from "effect";
 
 const MATERIAL_API_PAGE_LIMIT = 100;
@@ -87,7 +87,10 @@ const validatePageInput = Effect.fn("contentRelease.validateMaterialApiPage")(
         `Material API pages accept 1 to ${MATERIAL_API_PAGE_LIMIT} rows.`
       );
     }
-    if (cursor !== null && !matchesPrefix(cursor.contentKey, prefix)) {
+    if (
+      cursor !== null &&
+      (cursor.prefix !== prefix || !matchesPrefix(cursor.contentKey, prefix))
+    ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         "Material API cursor does not belong to its requested prefix."
@@ -304,7 +307,7 @@ const buildPage = Effect.fn("contentRelease.buildMaterialApiPage")(function* (
 ) {
   const ordered = candidates
     .slice()
-    .sort((left, right) => left.contentKey.localeCompare(right.contentKey));
+    .sort((left, right) => compareValues(left.contentKey, right.contentKey));
   const selected = ordered.slice(0, input.limit);
   const hasUnreturnedCandidate = ordered.length > input.limit;
   const isDone = exhausted && !hasUnreturnedCandidate;
@@ -323,6 +326,7 @@ const buildPage = Effect.fn("contentRelease.buildMaterialApiPage")(function* (
     activeReleaseId,
     contentKey: nextContentKey,
     locale: input.locale,
+    prefix: input.prefix,
   });
   return {
     activeReleaseId,

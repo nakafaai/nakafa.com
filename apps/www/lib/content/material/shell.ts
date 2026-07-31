@@ -106,9 +106,6 @@ export function expandMaterialCandidates(
   );
   for (const projection of projections) {
     for (const candidate of readMaterialCandidates(projection)) {
-      if (candidate.locale !== projection.locale) {
-        continue;
-      }
       expanded.set(`${candidate.locale}\0${candidate.contentKey}`, candidate);
     }
   }

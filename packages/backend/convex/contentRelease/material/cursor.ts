@@ -15,6 +15,7 @@ const MaterialApiCursorSchema = Schema.Struct({
   activeReleaseId: Schema.NullOr(ReleaseIdSchema),
   contentKey: ContentKeySchema,
   locale: ContentLocaleSchema,
+  prefix: Schema.Union(Schema.Literal(""), ContentKeySchema),
 });
 
 /** Opaque material page position bound to one publication generation. */
@@ -34,19 +35,36 @@ export const decodeMaterialApiCursor = Effect.fn(
     );
   }
   const payload = cursor.slice(MATERIAL_API_CURSOR_PREFIX.length);
-  const releaseEnd = payload.indexOf(":");
-  const localeEnd = payload.indexOf(":", releaseEnd + 1);
-  if (releaseEnd < 0 || localeEnd <= releaseEnd + 1) {
+  const [releaseId, locale, encodedPrefix, encodedContentKey, ...extra] =
+    payload.split(":");
+  if (
+    releaseId === undefined ||
+    locale === undefined ||
+    encodedPrefix === undefined ||
+    encodedContentKey === undefined ||
+    extra.length > 0
+  ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Material API cursor has an invalid identity."
     );
   }
-  const releaseId = payload.slice(0, releaseEnd);
+  const decoded = yield* Effect.try({
+    try: () => ({
+      contentKey: decodeURIComponent(encodedContentKey),
+      prefix: decodeURIComponent(encodedPrefix),
+    }),
+    catch: () =>
+      new ReleaseError({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Material API cursor has an invalid identity.",
+      }),
+  });
   return yield* Schema.decodeUnknown(MaterialApiCursorSchema)({
     activeReleaseId: releaseId === "" ? null : releaseId,
-    contentKey: payload.slice(localeEnd + 1),
-    locale: payload.slice(releaseEnd + 1, localeEnd),
+    contentKey: decoded.contentKey,
+    locale,
+    prefix: decoded.prefix,
   }).pipe(
     Effect.mapError(
       () =>
@@ -65,6 +83,7 @@ export const encodeMaterialApiCursor = Effect.fn(
   readonly activeReleaseId: null | string;
   readonly contentKey: string;
   readonly locale: string;
+  readonly prefix: string;
 }) {
   const cursor = yield* Schema.decodeUnknown(MaterialApiCursorSchema)(
     input
@@ -77,5 +96,5 @@ export const encodeMaterialApiCursor = Effect.fn(
         })
     )
   );
-  return `${MATERIAL_API_CURSOR_PREFIX}${cursor.activeReleaseId ?? ""}:${cursor.locale}:${cursor.contentKey}`;
+  return `${MATERIAL_API_CURSOR_PREFIX}${cursor.activeReleaseId ?? ""}:${cursor.locale}:${encodeURIComponent(cursor.prefix)}:${encodeURIComponent(cursor.contentKey)}`;
 });

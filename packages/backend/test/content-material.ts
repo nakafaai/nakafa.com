@@ -12,6 +12,8 @@ import {
   MaterialLessonProjectionSchema,
   MaterialSectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { insertContentViewRoute } from "@repo/backend/test/content-view";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import {
@@ -211,5 +213,70 @@ export function makeMaterialProjection(
       materialIndex === 0
         ? `${locale.toUpperCase()} Technical Topic`
         : `${locale.toUpperCase()} Technical Topic ${materialIndex}`,
+  });
+}
+
+/** Inserts one source-owned material row and its optional graph projection. */
+export async function insertSourceMaterial(
+  ctx: MutationCtx,
+  projection: ReturnType<typeof makeMaterialProjection>,
+  includeGraph: boolean
+) {
+  const topicId = await ctx.db.insert("curriculumTopics", {
+    locale: projection.locale,
+    material: "mathematics",
+    order: projection.order,
+    sectionCount: 1,
+    slug: projection.parentPath,
+    syncedAt: 0,
+    title: projection.topicTitle,
+    topic: projection.sectionKey,
+  });
+  const contentId = await ctx.db.insert("curriculumLessons", {
+    body: "Source body",
+    contentHash: `source-${projection.contentKey}`,
+    date: Date.UTC(2026, 6, 24),
+    description: "Source description",
+    locale: projection.locale,
+    material: "mathematics",
+    order: projection.order,
+    section: projection.sectionKey,
+    slug: projection.contentKey,
+    subject: "Technical subject",
+    syncedAt: 0,
+    title: projection.metadata.title,
+    topic: projection.sectionKey,
+    topicId,
+  });
+  const authorId = await ctx.db.insert("authors", {
+    name: "Nakafa",
+    username: `nakafa-${projection.locale}-${projection.order}`,
+  });
+  await ctx.db.insert("contentAuthors", {
+    authorId,
+    contentId,
+    contentType: "material",
+    order: 0,
+  });
+  if (includeGraph) {
+    await insertSourceMaterialRoute(ctx, projection);
+  }
+}
+
+/** Inserts one lightweight material route without requiring a source body. */
+export async function insertSourceMaterialRoute(
+  ctx: MutationCtx,
+  projection: ReturnType<typeof makeMaterialProjection>
+) {
+  await insertContentViewRoute(ctx, {
+    contentId: projection.graph.assetId,
+    graph: projection.graph,
+    kind: "curriculum-lesson",
+    locale: projection.locale,
+    materialDomain: "mathematics",
+    route: projection.publicPath,
+    section: "material",
+    sourcePath: projection.contentKey,
+    title: projection.metadata.title,
   });
 }
