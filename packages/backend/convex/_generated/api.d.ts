@@ -201,8 +201,10 @@ import type * as contentRelease_material_owner from "../contentRelease/material/
 import type * as contentRelease_material_page from "../contentRelease/material/page.js";
 import type * as contentRelease_material_partition from "../contentRelease/material/partition.js";
 import type * as contentRelease_material_plan from "../contentRelease/material/plan.js";
+import type * as contentRelease_material_protection from "../contentRelease/material/protection.js";
 import type * as contentRelease_material_readiness from "../contentRelease/material/readiness.js";
 import type * as contentRelease_material_route from "../contentRelease/material/route.js";
+import type * as contentRelease_material_routeGuard from "../contentRelease/material/routeGuard.js";
 import type * as contentRelease_material_sitemap from "../contentRelease/material/sitemap.js";
 import type * as contentRelease_material_source from "../contentRelease/material/source.js";
 import type * as contentRelease_material_spec from "../contentRelease/material/spec.js";
@@ -732,8 +734,10 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material/page": typeof contentRelease_material_page;
   "contentRelease/material/partition": typeof contentRelease_material_partition;
   "contentRelease/material/plan": typeof contentRelease_material_plan;
+  "contentRelease/material/protection": typeof contentRelease_material_protection;
   "contentRelease/material/readiness": typeof contentRelease_material_readiness;
   "contentRelease/material/route": typeof contentRelease_material_route;
+  "contentRelease/material/routeGuard": typeof contentRelease_material_routeGuard;
   "contentRelease/material/sitemap": typeof contentRelease_material_sitemap;
   "contentRelease/material/source": typeof contentRelease_material_source;
   "contentRelease/material/spec": typeof contentRelease_material_spec;

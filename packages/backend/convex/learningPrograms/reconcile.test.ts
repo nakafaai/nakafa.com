@@ -103,7 +103,7 @@ describe("learningPrograms/reconcile", () => {
     });
   });
 
-  it("refreshes every transitioned row when the release changes between batches", async () => {
+  it("restores every unresolved row when the release changes between batches", async () => {
     const target = createConvexTestWithBetterAuth();
     const identity = await target.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: TEST_NOW })
@@ -115,12 +115,6 @@ describe("learningPrograms/reconcile", () => {
       "material/lesson/chemistry/atomic-structure/electron-configuration"
     );
     await seedLearningProgramCatalog(target);
-    const routeId = await seedTestContentRoute(target, {
-      graph: next,
-      route:
-        "material/lesson/chemistry/atomic-structure/electron-configuration",
-      title: "Electron Configuration",
-    });
     const exact = makeMaterialProjection("en", 1);
     await activateMaterialCatalog(target, [exact]);
     await selectExactMaterial(target, exact);
@@ -149,6 +143,12 @@ describe("learningPrograms/reconcile", () => {
     const firstContinuation = first.continuation;
     assert(firstContinuation, "Expected a bounded first continuation.");
 
+    await seedTestContentRoute(target, {
+      graph: next,
+      route:
+        "material/lesson/chemistry/atomic-structure/electron-configuration",
+      title: "Electron Configuration Updated",
+    });
     await target.mutation(async (ctx) => {
       await insertZeroRelease(ctx, {
         ...NEXT_IDENTITY,
@@ -177,10 +177,6 @@ describe("learningPrograms/reconcile", () => {
           sequence: NEXT_IDENTITY.sequence,
         });
       }
-      await ctx.db.patch(routeId, {
-        route: "subjects/chemistry/electron-configuration",
-        title: "Electron Configuration Updated",
-      });
     });
 
     let continuation = (
@@ -216,7 +212,8 @@ describe("learningPrograms/reconcile", () => {
     expect(
       rows.every(
         (row) =>
-          row.route === "subjects/chemistry/electron-configuration" &&
+          row.route ===
+            "material/lesson/chemistry/atomic-structure/electron-configuration" &&
           row.title === "Electron Configuration Updated"
       )
     ).toBe(true);

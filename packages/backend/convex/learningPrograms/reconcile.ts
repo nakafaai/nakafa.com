@@ -109,7 +109,15 @@ export const reconcileCoverageSamplePlanItemBatch = Effect.fn(
     }
 
     if (!route) {
-      yield* Effect.promise(() => ctx.db.delete(item._id));
+      yield* Effect.promise(() =>
+        ctx.db.patch(item._id, {
+          content_id: nextSampleContentId,
+          coverageStatus: nextCoverageStatus,
+          route: undefined,
+          title: undefined,
+          updatedAt: updatedBefore,
+        })
+      );
       reconciled++;
       continue;
     }

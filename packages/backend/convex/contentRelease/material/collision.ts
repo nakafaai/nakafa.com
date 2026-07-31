@@ -2,15 +2,14 @@ import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import {
   buildExactMaterialOwnerPlan,
   type ExactMaterialOwner,
 } from "@repo/backend/convex/contentRelease/material/plan";
 import {
-  loadRelease,
-  loadState,
-} from "@repo/backend/convex/contentRelease/model";
+  loadMaterialProtection,
+  type ProtectedMaterialRelease,
+} from "@repo/backend/convex/contentRelease/material/protection";
 import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { Effect } from "effect";
 
@@ -106,12 +105,10 @@ const loadExactRoutes = Effect.fn("contentRelease.loadExactMaterialRoutes")(
 /** Loads every visible exact material path selected by the active release. */
 const loadActiveExactRoutes = Effect.fn(
   "contentRelease.loadActiveExactMaterialRoutes"
-)(function* (ctx: MutationCtx) {
-  const catalog = yield* loadMaterialCatalogOwner(ctx);
-  if (!catalog.active || catalog.familyManaged) {
+)(function* (ctx: MutationCtx, active: ProtectedMaterialRelease | null) {
+  if (!active) {
     return new Map<string, string>();
   }
-  const active = catalog.active;
   const owners = yield* Effect.promise(() =>
     ctx.db
       .query("materialOwners")
@@ -138,38 +135,9 @@ const loadActiveExactRoutes = Effect.fn(
 /** Loads exact paths reserved by a retained verified recovery release. */
 const loadRecoveryExactRoutes = Effect.fn(
   "contentRelease.loadRecoveryExactMaterialRoutes"
-)(function* (ctx: MutationCtx) {
-  const state = yield* loadState(ctx);
-  if (!state || state.candidateReleaseId !== undefined) {
+)(function* (ctx: MutationCtx, recovery: ProtectedMaterialRelease | null) {
+  if (!recovery) {
     return new Map<string, string>();
-  }
-  const recoveryFields = [
-    state.recoveryManifestHash,
-    state.recoveryReleaseId,
-    state.recoverySequence,
-  ];
-  if (recoveryFields.every((field) => field === undefined)) {
-    return new Map<string, string>();
-  }
-  if (
-    !(state.recoveryManifestHash && state.recoveryReleaseId) ||
-    state.recoverySequence === undefined
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Retained recovery has a partial publication identity."
-    );
-  }
-  const recovery = yield* loadRelease(ctx, state.recoveryReleaseId);
-  if (
-    recovery.role !== "recovery" ||
-    recovery.status !== "verified" ||
-    recovery.sequence !== state.recoverySequence
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Retained recovery ${state.recoveryReleaseId} lost its verified identity.`
-    );
   }
   const plan = yield* buildExactMaterialOwnerPlan(ctx, recovery);
   return yield* loadExactRoutes(
@@ -200,9 +168,10 @@ function mergeExactRoutes(
 export const validateSourceMaterialRoutes = Effect.fn(
   "contentRelease.validateSourceMaterialRoutes"
 )(function* (ctx: MutationCtx, routes: readonly SourceRouteCandidate[]) {
+  const protection = yield* loadMaterialProtection(ctx);
   const [activeRoutes, recoveryRoutes] = yield* Effect.all([
-    loadActiveExactRoutes(ctx),
-    loadRecoveryExactRoutes(ctx),
+    loadActiveExactRoutes(ctx, protection.active),
+    loadRecoveryExactRoutes(ctx, protection.recovery),
   ]);
   const exactRoutes = mergeExactRoutes(activeRoutes, recoveryRoutes);
   if (!exactRoutes) {
