@@ -65,7 +65,7 @@ const readRenamedMaterialPath = Effect.fn(
       projection.publicPath === input.publicPath
   );
   if (!selected) {
-    return undefined;
+    return;
   }
   const parentPaths = new Set(
     materials.map(({ projection }) => projection.parentPath)
