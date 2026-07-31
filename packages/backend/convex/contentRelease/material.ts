@@ -87,6 +87,7 @@ const materialBucketsValidator = v.object({
   buckets: v.array(v.string()),
   managed: v.boolean(),
   materialCount: v.number(),
+  sourceClaimCount: v.number(),
 });
 
 const materialSitemapValidator = v.union(

@@ -6,6 +6,7 @@ import {
   verifyMaterialReleasePin,
 } from "@/lib/content/material/release";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { getRuntimeContentRouteCounts } from "@/lib/content/runtime/routes";
 
 /** Bounded material LLMS inventory across source and published page owners. */
@@ -37,11 +38,18 @@ export const readMaterialLlmsInventory = Effect.fn(
   }
 
   const counts = yield* getRuntimeContentRouteCounts({ locale });
-  const sourceRouteCount =
+  const sourceInventoryCount =
     counts.find(({ section }) => section === "material")?.count ?? 0;
+  if (published.sourceClaimCount > sourceInventoryCount) {
+    return yield* new PublishedProjectionError({
+      locale,
+      publicPath: "llms/material",
+    });
+  }
   const sourcePageCount = Math.ceil(
-    sourceRouteCount / CONTENT_ROUTE_ARTIFACT_PAGE_SIZE
+    sourceInventoryCount / CONTENT_ROUTE_ARTIFACT_PAGE_SIZE
   );
+  const sourceRouteCount = sourceInventoryCount - published.sourceClaimCount;
   yield* verifyMaterialReleasePin(published.activeReleaseId, {
     locale,
     publicPath: "llms/material",

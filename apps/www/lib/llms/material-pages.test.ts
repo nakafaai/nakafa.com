@@ -30,6 +30,7 @@ beforeEach(() => {
       buckets: [],
       managed: false,
       materialCount: 0,
+      sourceClaimCount: 0,
     })
   );
   mockVerifyReleasePin
@@ -61,6 +62,7 @@ describe("material LLMS pages", () => {
         buckets: ["abc"],
         managed: false,
         materialCount: 1,
+        sourceClaimCount: 1,
       })
     );
     await expect(
@@ -71,6 +73,7 @@ describe("material LLMS pages", () => {
       owner: "mixed",
       pageCount: 2,
       publishedRouteCount: 1,
+      sourceRouteCount: 99,
     });
     expect(mockVerifyReleasePin).toHaveBeenLastCalledWith("release-material", {
       locale: "en",
@@ -83,6 +86,7 @@ describe("material LLMS pages", () => {
         buckets: ["abc"],
         managed: true,
         materialCount: 1,
+        sourceClaimCount: 0,
       })
     );
     await expect(
@@ -106,5 +110,18 @@ describe("material LLMS pages", () => {
       pageCount: 0,
       sourceRouteCount: 0,
     });
+
+    mockReadPublishedBuckets.mockReturnValueOnce(
+      Effect.succeed({
+        activeReleaseId: "release-material",
+        buckets: ["abc"],
+        managed: false,
+        materialCount: 1,
+        sourceClaimCount: 101,
+      })
+    );
+    await expect(
+      Effect.runPromise(readMaterialLlmsInventory("en").pipe(Effect.flip))
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
   });
 });

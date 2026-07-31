@@ -10,6 +10,41 @@ import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/ma
 import { readMaterialPartition } from "@repo/backend/convex/contentRelease/material/partition";
 import { Effect } from "effect";
 
+type ExactMaterialOwner = Effect.Effect.Success<
+  ReturnType<typeof readExactMaterialSnapshot>
+>["owners"][number];
+
+/** Counts exact owners that displace rows in the source route inventory. */
+const countSourceClaims = Effect.fn("contentRelease.countMaterialSourceClaims")(
+  function* (ctx: QueryCtx, owners: readonly ExactMaterialOwner[]) {
+    let count = 0;
+    for (const owner of owners) {
+      const rows = yield* Effect.promise(() =>
+        ctx.db
+          .query("contentRoutes")
+          .withIndex("by_locale_and_section_and_kind_and_sourcePath", (index) =>
+            index
+              .eq("locale", owner.locale)
+              .eq("section", "material")
+              .eq("kind", "curriculum-lesson")
+              .eq("sourcePath", owner.contentKey)
+          )
+          .take(2)
+      );
+      if (rows.length > 1) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          `Source material ${owner.contentKey}/${owner.locale} has multiple route rows.`
+        );
+      }
+      if (rows.length === 1) {
+        count++;
+      }
+    }
+    return count;
+  }
+);
+
 /** Lists non-empty deterministic partitions for visible published materials. */
 export const readMaterialBuckets = Effect.fn(
   "contentRelease.readMaterialBuckets"
@@ -24,11 +59,12 @@ export const readMaterialBuckets = Effect.fn(
       buckets: [],
       managed: false,
       materialCount: 0,
+      sourceClaimCount: 0,
     };
   }
   const activeReleaseId = owner.active.releaseId;
   if (!owner.familyManaged) {
-    const { materials: visible } = yield* readExactMaterialSnapshot(
+    const { materials: visible, owners } = yield* readExactMaterialSnapshot(
       ctx,
       owner.active,
       locale
@@ -38,6 +74,7 @@ export const readMaterialBuckets = Effect.fn(
       buckets: Array.from(new Set(visible.map(({ row }) => row.bucket))).sort(),
       managed: false,
       materialCount: visible.length,
+      sourceClaimCount: yield* countSourceClaims(ctx, owners),
     };
   }
   const rows = yield* Effect.promise(() =>
@@ -69,6 +106,7 @@ export const readMaterialBuckets = Effect.fn(
     buckets: rows.map(({ bucket }) => bucket),
     managed: owner.familyManaged,
     materialCount: rows.reduce((total, { count }) => total + count, 0),
+    sourceClaimCount: 0,
   };
 });
 

@@ -26,6 +26,7 @@ describe("contentRelease/material/sitemap", () => {
       buckets: [],
       managed: false,
       materialCount: 0,
+      sourceClaimCount: 0,
     });
     await expect(
       target.query((ctx) =>
@@ -45,6 +46,7 @@ describe("contentRelease/material/sitemap", () => {
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
       managed: true,
       materialCount: 2,
+      sourceClaimCount: 0,
     });
     expect(result.buckets.length).toBeGreaterThan(0);
     const pages = await Promise.all(
@@ -81,6 +83,7 @@ describe("contentRelease/material/sitemap", () => {
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
       managed: false,
       materialCount: 1,
+      sourceClaimCount: 0,
     });
     expect(result.buckets).toHaveLength(1);
     const pages = await Promise.all(
@@ -116,6 +119,7 @@ describe("contentRelease/material/sitemap", () => {
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
       managed: false,
       materialCount: 1,
+      sourceClaimCount: 0,
     });
     expect(result.buckets).toHaveLength(1);
     await expect(
@@ -145,6 +149,74 @@ describe("contentRelease/material/sitemap", () => {
 
     await expect(
       target.query((ctx) => runConvexProgram(readMaterialBuckets(ctx, "en")))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("counts only exact owners that displace source route rows", async () => {
+    const target = convexTest(schema, convexModules);
+    const selected = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(target);
+    await selectExactMaterial(target, selected);
+    await target.mutation((ctx) =>
+      ctx.db.insert("contentRoutes", {
+        ...selected.graph,
+        authors: selected.metadata.authors.map(({ name }) => ({ name })),
+        contentHash: "source-material-route",
+        content_id: selected.graph.assetId,
+        kind: "curriculum-lesson",
+        locale: selected.locale,
+        markdown: true,
+        parentRoute: selected.parentPath,
+        route: selected.publicPath,
+        section: "material",
+        sourcePath: selected.contentKey,
+        syncedAt: 1,
+        title: selected.metadata.title,
+      })
+    );
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(readMaterialBuckets(ctx, selected.locale))
+      )
+    ).resolves.toMatchObject({
+      materialCount: 1,
+      sourceClaimCount: 1,
+    });
+  });
+
+  it("rejects duplicate source routes for one exact owner", async () => {
+    const target = convexTest(schema, convexModules);
+    const selected = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(target);
+    await selectExactMaterial(target, selected);
+    await target.mutation(async (ctx) => {
+      for (const suffix of ["first", "second"]) {
+        await ctx.db.insert("contentRoutes", {
+          ...selected.graph,
+          assetId: `${selected.graph.assetId}:${suffix}`,
+          authors: selected.metadata.authors.map(({ name }) => ({ name })),
+          contentHash: `source-material-route-${suffix}`,
+          content_id: `${selected.graph.assetId}:${suffix}`,
+          kind: "curriculum-lesson",
+          locale: selected.locale,
+          markdown: true,
+          parentRoute: selected.parentPath,
+          route: `${selected.publicPath}/${suffix}`,
+          section: "material",
+          sourcePath: selected.contentKey,
+          syncedAt: 1,
+          title: selected.metadata.title,
+        });
+      }
+    });
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(readMaterialBuckets(ctx, selected.locale))
+      )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
