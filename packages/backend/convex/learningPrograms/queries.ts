@@ -1,19 +1,69 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
 import {
   hasLearningProgramCoverageForLocale,
   isLearningProgramSelectable,
   toLearningProgramSummary,
 } from "@repo/backend/convex/learningPrograms/impl";
+import { loadLearningPlanTarget } from "@repo/backend/convex/learningPrograms/planTarget";
 import {
   activeLearningProfileValidator,
   learningProgramSummaryValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const PROGRAM_LIMIT = 50;
 const PLAN_ITEM_LIMIT = 20;
+
+/** Selects the stable plan facts plus either stored or current route facts. */
+function toPlanItemView(
+  item: Doc<"learningPlanItems">,
+  target:
+    | {
+        readonly route: string;
+        readonly title: string;
+      }
+    | null
+    | undefined
+) {
+  const route = target === undefined ? item.route : target?.route;
+  const title = target === undefined ? item.title : target?.title;
+
+  return {
+    content_id: item.content_id,
+    lensId: item.lensId,
+    position: item.position,
+    reason: item.reason,
+    route,
+    status: item.status,
+    title,
+  };
+}
+
+/** Resolves stored plan items through current content ownership when localized. */
+const loadPlanItemViews = Effect.fn("learningPrograms.loadPlanItemViews")(
+  function* (
+    ctx: QueryCtx,
+    items: readonly Doc<"learningPlanItems">[],
+    locale: Doc<"learningProgramCoverage">["locale"] | undefined
+  ) {
+    if (locale === undefined) {
+      return items.map((item) => toPlanItemView(item, undefined));
+    }
+
+    return yield* Effect.forEach(items, (item) =>
+      Effect.map(
+        loadLearningPlanTarget(ctx, item.content_id, locale),
+        (target) => toPlanItemView(item, target)
+      )
+    );
+  }
+);
 
 /** Lists selectable learning programs from the Convex catalog. */
 export const listSelectablePrograms = query({
@@ -90,18 +140,13 @@ export const getActiveProfile = query({
           )
           .take(PLAN_ITEM_LIMIT)
       : [];
+    const planItemViews = await runConvexProgram(
+      loadPlanItemViews(ctx, planItems, args.locale)
+    );
 
     return {
       interests: profile.interests,
-      planItems: planItems.map((item) => ({
-        content_id: item.content_id,
-        lensId: item.lensId,
-        position: item.position,
-        reason: item.reason,
-        route: item.route,
-        status: item.status,
-        title: item.title,
-      })),
+      planItems: planItemViews,
       program: toLearningProgramSummary(program, args.locale),
       stage: profile.stage,
     };
