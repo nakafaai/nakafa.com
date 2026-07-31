@@ -22,14 +22,18 @@ export function Header() {
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href="/#features">{t("features")}</NavigationLink>
+              <NavigationLink href={{ pathname: "/", hash: "features" }}>
+                {t("features")}
+              </NavigationLink>
             }
             variant="ghost"
           />
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href="/#pricing">{t("pricing")}</NavigationLink>
+              <NavigationLink href={{ pathname: "/", hash: "pricing" }}>
+                {t("pricing")}
+              </NavigationLink>
             }
             variant="ghost"
           />

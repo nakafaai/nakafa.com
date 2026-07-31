@@ -2,8 +2,9 @@ import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { HeroArt } from "@/components/marketing/about/hero-art";
+import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 /**
  * Introduces Nakafa through one readable learn, Tryout, and Nina story.
@@ -13,6 +14,7 @@ import { HeroArt } from "@/components/marketing/about/hero-art";
  */
 export function Hero() {
   const t = useTranslations("About");
+  const locale = useLocale();
 
   return (
     <section className="relative scroll-mt-28 overflow-hidden" id="hero">
@@ -36,7 +38,7 @@ export function Hero() {
             <Button
               nativeButton={false}
               render={
-                <NavigationLink href="/curricula">
+                <NavigationLink href={getCurriculumIndexHref(locale)}>
                   {t("explore-subjects")}
                   <HugeIcons icon={ArrowUpRight01Icon} />
                 </NavigationLink>
