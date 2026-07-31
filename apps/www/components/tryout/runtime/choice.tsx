@@ -102,9 +102,44 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
 function TryoutChoice({ value }: { value: TryoutChoiceValue }) {
   const { choice, disabled, onSelect, question, reviewMode } = value;
   const checked = question.response?.selectedOptionId === choice.optionKey;
+
+  return (
+    <TryoutChoiceSurface
+      checked={checked}
+      disabled={disabled}
+      id={`${question.questionId}-${choice.optionKey}`}
+      isCorrect={choice.isCorrect}
+      label={choice.label}
+      onSelect={onSelect}
+      reviewMode={reviewMode}
+    />
+  );
+}
+
+interface TryoutChoiceSurfaceProps {
+  checked: boolean;
+  disabled: boolean;
+  id: string;
+  isCorrect: boolean | undefined;
+  label: string;
+  onSelect: () => void;
+  reviewMode: boolean;
+}
+
+/** Renders the shared production choice surface without owning persistence. */
+export function TryoutChoiceSurface({
+  checked,
+  disabled,
+  id,
+  isCorrect,
+  label,
+  onSelect,
+  reviewMode,
+}: TryoutChoiceSurfaceProps) {
+  const labelId = `${id}-label`;
   const variant = getTryoutChoiceVariant({
     checked,
-    isCorrect: choice.isCorrect,
+    isCorrect,
     reviewMode,
   });
 
@@ -116,6 +151,7 @@ function TryoutChoice({ value }: { value: TryoutChoiceValue }) {
       )}
     >
       <Checkbox
+        aria-labelledby={labelId}
         checked={checked}
         className="mt-1 shrink-0 cursor-pointer"
         disabled={disabled}
@@ -125,12 +161,11 @@ function TryoutChoice({ value }: { value: TryoutChoiceValue }) {
           }
         }}
       />
-      <Response
-        className="wrap-anywhere h-auto min-w-0 flex-1 whitespace-normal"
-        id={`${question.questionId}-${choice.optionKey}`}
-      >
-        {choice.label}
-      </Response>
+      <div className="min-w-0 flex-1" id={labelId}>
+        <Response className="wrap-anywhere h-auto whitespace-normal" id={id}>
+          {label}
+        </Response>
+      </div>
     </Label>
   );
 }

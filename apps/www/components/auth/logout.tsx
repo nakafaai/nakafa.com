@@ -6,6 +6,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Either } from "effect";
 import { useTranslations } from "next-intl";
+import { clearAiDraftText } from "@/components/ai/store/draft";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/account-browser-identity";
 
 export function AuthLogout() {
@@ -20,6 +21,7 @@ export function AuthLogout() {
     );
 
     if (Either.isRight(result)) {
+      Effect.runSync(clearAiDraftText);
       router.replace("/");
     }
   }

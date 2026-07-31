@@ -35,7 +35,7 @@ export function Faq() {
                 </span>
               </div>
 
-              <h2 className="max-w-sm text-balance font-medium text-3xl tracking-tight sm:text-4xl">
+              <h2 className="max-w-sm text-balance text-3xl tracking-tight sm:text-4xl">
                 {t.rich("headline", {
                   mark: (chunks) => <mark>{chunks}</mark>,
                 })}

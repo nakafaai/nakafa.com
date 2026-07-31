@@ -103,7 +103,7 @@ function StepRow({ number, step }: StepRowProps) {
         <span>{t("math-step", { number })}</span>
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
-      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden">
+      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden py-1">
         <Expression value={step.primary.latex} />
         {step.relation ? <Expression value={step.relation.latex} /> : null}
         {step.secondary ? <Expression value={step.secondary.latex} /> : null}
@@ -123,7 +123,7 @@ function ResultLine({ result }: ResultLineProps) {
         <span>{label}</span>
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
-      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden">
+      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden py-1">
         <Expression value={result.primary.latex} />
         {result.secondary ? <Relation result={result} /> : null}
         {result.secondary ? (
@@ -182,7 +182,7 @@ function ItemRow({ item }: ItemRowProps) {
         <span>{t(getItemLabelKey(item.label))}</span>
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
-      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden">
+      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden py-1">
         <ItemValue item={item} />
       </span>
     </div>
@@ -219,7 +219,7 @@ function ConditionList({ conditions }: ConditionListProps) {
         <span>{t("math-condition")}</span>
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
-      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden">
+      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden py-1">
         {conditions.map((condition) => (
           <Expression key={condition.expression} value={condition.latex} />
         ))}

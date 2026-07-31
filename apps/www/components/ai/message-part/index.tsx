@@ -4,6 +4,7 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import { MessageContent } from "@repo/design-system/components/ai/message";
 import {
   Reasoning,
+  ReasoningContent,
   ReasoningTrigger,
 } from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
@@ -19,6 +20,7 @@ interface Props {
   partIndex: number;
 }
 
+/** Renders one typed Nina response part with its production presentation. */
 export const AiMessagePart = ({ part, partIndex }: Props) => {
   const messageId = useMessage((state) => state.message.id);
 
@@ -29,17 +31,25 @@ export const AiMessagePart = ({ part, partIndex }: Props) => {
           <Response id={`${messageId}-part-${partIndex}`}>{part.text}</Response>
         </MessageContent>
       );
-    case "reasoning":
+    case "reasoning": {
+      const hasContent = part.text.trim().length > 0;
+
       return (
         <Reasoning
           className="w-full"
           defaultOpen={false}
-          hasContent={false}
+          hasContent={hasContent}
           isStreaming={part.state === "streaming"}
         >
           <ReasoningTrigger />
+          {hasContent ? (
+            <ReasoningContent id={`${messageId}-part-${partIndex}`}>
+              {part.text}
+            </ReasoningContent>
+          ) : null}
         </Reasoning>
       );
+    }
     case "data-web-search":
       return <WebSearchPart message={part.data} />;
     case "data-scrape-url":

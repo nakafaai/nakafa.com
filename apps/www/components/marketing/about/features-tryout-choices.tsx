@@ -1,0 +1,46 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { TryoutChoiceSurface } from "@/components/tryout/runtime/choice";
+
+interface FeatureChoice {
+  label: string;
+  value: boolean;
+}
+
+interface FeaturesTryoutChoicesProps {
+  choices: readonly FeatureChoice[];
+}
+
+/** Adds local interaction to the same choice surface used by Tryout. */
+export function FeaturesTryoutChoices({ choices }: FeaturesTryoutChoicesProps) {
+  const t = useTranslations("Exercises");
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const selectedChoice =
+    selectedIndex === null ? undefined : choices[selectedIndex];
+
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+        {choices.map((choice, index) => (
+          <TryoutChoiceSurface
+            checked={selectedIndex === index}
+            disabled={false}
+            id={`features-tryout-choice-${index}`}
+            isCorrect={choice.value}
+            key={choice.label}
+            label={choice.label}
+            onSelect={() => setSelectedIndex(index)}
+            reviewMode={selectedIndex !== null}
+          />
+        ))}
+      </div>
+      <p aria-live="polite" className="sr-only" role="status">
+        {selectedChoice
+          ? `${selectedChoice.label}: ${t(selectedChoice.value ? "correct" : "incorrect")}`
+          : null}
+      </p>
+    </>
+  );
+}

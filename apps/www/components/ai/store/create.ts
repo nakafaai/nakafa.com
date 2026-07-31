@@ -1,14 +1,14 @@
 "use client";
 
 import { createStore } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { initialState } from "@/components/ai/store/state";
 import type { AiStore } from "@/components/ai/store/types";
 
 /** Creates one scoped Zustand store for Nina UI state. */
-export const createAiStore = () =>
-  createStore<AiStore>()(
+export function createAiStore() {
+  return createStore<AiStore>()(
     persist(
       immer((set, get) => ({
         ...initialState,
@@ -23,9 +23,11 @@ export const createAiStore = () =>
       {
         name: "nakafa-ai",
         partialize: (state) => ({ activeChatId: state.activeChatId }),
+        storage: createJSONStorage(() => localStorage),
         version: 1,
       }
     )
   );
+}
 
 export type AiStoreApi = ReturnType<typeof createAiStore>;
