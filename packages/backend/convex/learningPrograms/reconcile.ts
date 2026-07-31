@@ -1,6 +1,5 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { loadLearningPlanTarget } from "@repo/backend/convex/learningPrograms/planTarget";
 import { Effect } from "effect";
@@ -16,10 +15,11 @@ export interface CoverageReconcileInput {
   readonly nextSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
   readonly previousSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
   readonly programId: Id<"learningPrograms">;
+  readonly refreshAfterTransition?: boolean;
   readonly updatedBefore: number;
 }
 
-/** Pins a multi-batch reconcile to one globally active content release. */
+/** Reads whether a bounded reconcile must restart on the active release. */
 const readActiveReleasePin = Effect.fn(
   "learningPrograms.readCoverageReleasePin"
 )(function* (
@@ -28,16 +28,12 @@ const readActiveReleasePin = Effect.fn(
 ) {
   const active = yield* loadActiveIdentity(ctx);
   const activeReleaseId = active?.releaseId ?? null;
-  if (
-    expectedActiveReleaseId !== undefined &&
-    activeReleaseId !== expectedActiveReleaseId
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_STATE",
-      "Learning-plan reconciliation changed active content release."
-    );
-  }
-  return activeReleaseId;
+  return {
+    activeReleaseId,
+    changed:
+      expectedActiveReleaseId !== undefined &&
+      activeReleaseId !== expectedActiveReleaseId,
+  };
 });
 
 /** Reconciles one bounded page of generated plan items for a changed sample. */
@@ -52,13 +48,30 @@ export const reconcileCoverageSamplePlanItemBatch = Effect.fn(
     nextSampleContentId,
     previousSampleContentId,
     programId,
+    refreshAfterTransition = false,
     updatedBefore,
   } = input;
-  const activeReleaseId = yield* readActiveReleasePin(
-    ctx,
-    expectedActiveReleaseId
-  );
+  const releasePin = yield* readActiveReleasePin(ctx, expectedActiveReleaseId);
   const keepsSameContentId = previousSampleContentId === nextSampleContentId;
+  if (releasePin.changed) {
+    return {
+      continuation: {
+        expectedActiveReleaseId: releasePin.activeReleaseId,
+        lensId,
+        locale,
+        nextCoverageStatus,
+        nextSampleContentId,
+        previousSampleContentId,
+        programId,
+        refreshAfterTransition: refreshAfterTransition || !keepsSameContentId,
+        updatedBefore: keepsSameContentId
+          ? Math.max(Date.now(), updatedBefore + 1)
+          : updatedBefore,
+      },
+      reconciled: 0,
+      scheduled: true,
+    };
+  }
   const planItems = yield* Effect.promise(() =>
     keepsSameContentId
       ? ctx.db
@@ -114,18 +127,39 @@ export const reconcileCoverageSamplePlanItemBatch = Effect.fn(
   }
 
   const scheduled = planItems.length === ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE;
-  const continuation = scheduled
-    ? {
-        expectedActiveReleaseId: activeReleaseId,
+  const continuation = (() => {
+    if (scheduled) {
+      return {
+        expectedActiveReleaseId: releasePin.activeReleaseId,
         lensId,
         locale,
         nextCoverageStatus,
         nextSampleContentId,
         previousSampleContentId,
         programId,
+        refreshAfterTransition,
         updatedBefore,
-      }
-    : null;
+      };
+    }
+    if (refreshAfterTransition && !keepsSameContentId) {
+      return {
+        expectedActiveReleaseId: releasePin.activeReleaseId,
+        lensId,
+        locale,
+        nextCoverageStatus,
+        nextSampleContentId,
+        previousSampleContentId: nextSampleContentId,
+        programId,
+        refreshAfterTransition: false,
+        updatedBefore: Math.max(Date.now(), updatedBefore + 1),
+      };
+    }
+    return null;
+  })();
 
-  return { continuation, reconciled, scheduled };
+  return {
+    continuation,
+    reconciled,
+    scheduled: continuation !== null,
+  };
 });

@@ -262,6 +262,7 @@ export const continueCoverageSamplePlanItemReconcile = internalMutation({
     previousSampleContentId:
       learningProgramCoverageInputValidator.fields.sampleContentId,
     programId: v.id("learningPrograms"),
+    refreshAfterTransition: v.optional(v.boolean()),
     updatedBefore: v.number(),
   },
   returns: planItemReconcileResultValidator,
