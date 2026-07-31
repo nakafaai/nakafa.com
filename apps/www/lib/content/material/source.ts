@@ -61,6 +61,7 @@ export function readMaterialSourceCandidates(
 
 /** Reconciles concrete curriculum mappings with active exact material routes. */
 export function reconcileMaterialCurriculumRoutes(
+  locale: Locale,
   curriculumRoutes: readonly PublicCurriculumRoute[],
   sourceMaterials: readonly PublicContentRoute[],
   reconciledMaterials: readonly PublicContentRoute[],
@@ -73,6 +74,9 @@ export function reconcileMaterialCurriculumRoutes(
   const sourceLessons = sourceMaterials.filter(isMaterialLessonRoute);
   const reconciledLessons = reconciledMaterials.filter(isMaterialLessonRoute);
   for (const claim of model.claims) {
+    if (claim.locale !== locale) {
+      continue;
+    }
     const source = sourceLessons.find(
       (route) =>
         route.locale === claim.locale && route.sourcePath === claim.contentKey
@@ -136,7 +140,9 @@ export function reconcileMaterialSourceRoutes(
   model: MaterialSourceModel
 ) {
   const claimed = new Set(
-    model.claims.map((claim) => `${claim.locale}\0${claim.contentKey}`)
+    model.claims.flatMap((claim) =>
+      claim.locale === locale ? [`${claim.locale}\0${claim.contentKey}`] : []
+    )
   );
   const retained = routes.filter(
     (route) => !claimed.has(`${route.locale}\0${route.sourcePath}`)

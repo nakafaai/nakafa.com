@@ -89,6 +89,12 @@ describe("material source reconciliation", () => {
               kind: "missing",
               locale: "en",
             },
+            {
+              contentKey: previewIdProjection.contentKey,
+              kind: "found",
+              locale: "id",
+              projection: previewIdProjection,
+            },
           ],
           materials: [previewProjection, previewIdProjection],
         }
@@ -155,21 +161,34 @@ describe("material source reconciliation", () => {
       (error) => error
     );
     const renamed = Either.getOrThrowWith(
-      reconcileMaterialCurriculumRoutes([concrete], [sourceRoute], reconciled, {
-        claims: [
-          {
-            contentKey: projection.contentKey,
-            kind: "found",
-            locale: projection.locale,
-            projection,
-          },
-        ],
-        materials: [],
-      }),
+      reconcileMaterialCurriculumRoutes(
+        sourceRoute.locale,
+        [concrete],
+        [sourceRoute],
+        reconciled,
+        {
+          claims: [
+            {
+              contentKey: projection.contentKey,
+              kind: "found",
+              locale: projection.locale,
+              projection,
+            },
+            {
+              contentKey: previewIdProjection.contentKey,
+              kind: "found",
+              locale: previewIdProjection.locale,
+              projection: previewIdProjection,
+            },
+          ],
+          materials: [],
+        }
+      ),
       (error) => error
     );
     const removed = Either.getOrThrowWith(
       reconcileMaterialCurriculumRoutes(
+        sourceRoute.locale,
         [concrete],
         [sourceRoute],
         [sourceRoute],
@@ -236,6 +255,7 @@ describe("material source reconciliation", () => {
     );
     const curriculumRoutes = Either.getOrThrowWith(
       reconcileMaterialCurriculumRoutes(
+        sourceRoute.locale,
         [
           {
             ...curriculumRoute,
@@ -266,6 +286,7 @@ describe("material source reconciliation", () => {
     );
     const movedCurriculumRoutes = Either.getOrThrowWith(
       reconcileMaterialCurriculumRoutes(
+        sourceRoute.locale,
         [
           {
             ...curriculumRoute,
@@ -321,6 +342,7 @@ describe("material source reconciliation", () => {
 
     const preserved = Either.getOrThrowWith(
       reconcileMaterialCurriculumRoutes(
+        sourceRoute.locale,
         [curriculumRoute, unrelatedRoute],
         [],
         [],
@@ -332,6 +354,7 @@ describe("material source reconciliation", () => {
     expect(preserved).toEqual([curriculumRoute, unrelatedRoute]);
     expect(
       reconcileMaterialCurriculumRoutes(
+        sourceRoute.locale,
         [{ ...curriculumRoute, canonicalPath: sourceRoute.publicPath }],
         [sourceRoute],
         [],
