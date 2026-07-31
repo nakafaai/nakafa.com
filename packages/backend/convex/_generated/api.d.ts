@@ -454,6 +454,7 @@ import type * as triggers_comments_cleanup from "../triggers/comments/cleanup.js
 import type * as triggers_comments_commentVotes from "../triggers/comments/commentVotes.js";
 import type * as triggers_comments_comments from "../triggers/comments/comments.js";
 import type * as triggers_contents_popularity from "../triggers/contents/popularity.js";
+import type * as triggers_contents_routes from "../triggers/contents/routes.js";
 import type * as triggers_contents_views from "../triggers/contents/views.js";
 import type * as triggers_forums_postReactions from "../triggers/forums/postReactions.js";
 import type * as triggers_forums_posts from "../triggers/forums/posts.js";
@@ -984,6 +985,7 @@ declare const fullApi: ApiFromModules<{
   "triggers/comments/commentVotes": typeof triggers_comments_commentVotes;
   "triggers/comments/comments": typeof triggers_comments_comments;
   "triggers/contents/popularity": typeof triggers_contents_popularity;
+  "triggers/contents/routes": typeof triggers_contents_routes;
   "triggers/contents/views": typeof triggers_contents_views;
   "triggers/forums/postReactions": typeof triggers_forums_postReactions;
   "triggers/forums/posts": typeof triggers_forums_posts;
