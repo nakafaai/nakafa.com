@@ -57,19 +57,12 @@ export const readSourceSearchDocuments = Effect.fn(
   }
   const groups = yield* Effect.all(
     queryTexts.map((queryText) =>
-      searchQuery(
-        ctx,
-        args.locale,
-        sections,
-        queryText,
-        scanLimit,
-        claimed.size
-      )
+      searchQuery(ctx, args.locale, sections, queryText, scanLimit, claimed)
     ),
     { concurrency: "unbounded" }
   );
   return interleaveSearchGroups(
-    groups.map((documents) => removeClaimedMaterials(documents, claimed)),
+    groups,
     scanLimit,
     (document) => document.content_id
   );
@@ -103,7 +96,7 @@ const searchQuery = Effect.fn("contents.search.searchSourceQuery")(function* (
   sections: readonly NakafaSection[],
   queryText: string,
   scanLimit: number,
-  claimedMaterialCount: number
+  claimedMaterials: ReadonlySet<string>
 ) {
   const groups = yield* Effect.all(
     sections.map((section) =>
@@ -112,7 +105,11 @@ const searchQuery = Effect.fn("contents.search.searchSourceQuery")(function* (
         locale,
         section,
         queryText,
-        sourceScanLimit(section, scanLimit, claimedMaterialCount)
+        sourceScanLimit(section, scanLimit, claimedMaterials.size)
+      ).pipe(
+        Effect.map((documents) =>
+          removeClaimedMaterials(documents, claimedMaterials)
+        )
       )
     ),
     { concurrency: "unbounded" }

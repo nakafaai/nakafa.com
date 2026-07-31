@@ -94,52 +94,58 @@ describe("readSourceSearchDocuments", () => {
     expect(documents).toEqual([]);
   });
 
-  it("refills the source window after exact material claims", async () => {
-    const target = createConvexTestWithBetterAuth();
-    const sourcePaths = Array.from(
-      { length: 44 },
-      (_, index) =>
-        `material/lesson/mathematics/search-window/lesson-${String(index).padStart(2, "0")}`
-    );
-    await target.mutation(async (ctx) => {
-      for (const [index, sourcePath] of sourcePaths.entries()) {
-        await insertContentSearch(ctx, {
-          contentHash: `hash-material-${index}`,
-          description: "",
-          locale: "en",
-          route: sourcePath,
-          section: "material",
-          sourcePath,
-          syncedAt: 1,
-          text: "bounded material browse",
-          title: `Material ${String(index).padStart(2, "0")}`,
-        });
-      }
-    });
-
-    const documents = await target.query((ctx) =>
-      runConvexProgram(
-        readSourceSearchDocuments(
-          ctx,
-          {
-            limit: 32,
+  it.each([
+    { queryTexts: [], source: "browse" },
+    { queryTexts: ["bounded material browse"], source: "text search" },
+  ])(
+    "refills the $source window after exact material claims",
+    async ({ queryTexts }) => {
+      const target = createConvexTestWithBetterAuth();
+      const sourcePaths = Array.from(
+        { length: 44 },
+        (_, index) =>
+          `material/lesson/mathematics/search-window/lesson-${String(index).padStart(2, "0")}`
+      );
+      await target.mutation(async (ctx) => {
+        for (const [index, sourcePath] of sourcePaths.entries()) {
+          await insertContentSearch(ctx, {
+            contentHash: `hash-material-${index}`,
+            description: "",
             locale: "en",
-            offset: 0,
+            route: sourcePath,
             section: "material",
-          },
-          [],
-          32,
-          ["material"],
-          sourcePaths.slice(0, 12).map((contentKey) => ({
-            contentKey,
-            locale: "en",
-          }))
-        )
-      )
-    );
+            sourcePath,
+            syncedAt: 1,
+            text: "bounded material browse",
+            title: `Material ${String(index).padStart(2, "0")}`,
+          });
+        }
+      });
 
-    expect(documents).toHaveLength(32);
-    expect(documents[0]?.sourcePath).toBe(sourcePaths[12]);
-    expect(documents.at(-1)?.sourcePath).toBe(sourcePaths[43]);
-  });
+      const documents = await target.query((ctx) =>
+        runConvexProgram(
+          readSourceSearchDocuments(
+            ctx,
+            {
+              limit: 32,
+              locale: "en",
+              offset: 0,
+              section: "material",
+            },
+            queryTexts,
+            32,
+            ["material"],
+            sourcePaths.slice(0, 12).map((contentKey) => ({
+              contentKey,
+              locale: "en",
+            }))
+          )
+        )
+      );
+
+      expect(documents).toHaveLength(32);
+      expect(documents[0]?.sourcePath).toBe(sourcePaths[12]);
+      expect(documents.at(-1)?.sourcePath).toBe(sourcePaths[43]);
+    }
+  );
 });
