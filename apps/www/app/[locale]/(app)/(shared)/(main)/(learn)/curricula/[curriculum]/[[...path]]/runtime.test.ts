@@ -54,6 +54,7 @@ function publishedRoute(overrides?: {
   readonly route?: null | typeof testProgramSubject;
 }) {
   return {
+    activeReleaseId: "program-release",
     alternates: [testProgramSubject],
     ancestors: [testProgramRoot, testProgramClass],
     children: overrides?.children ?? [],
@@ -207,7 +208,8 @@ describe("curriculum runtime ownership", () => {
           locale: "en",
           parentPath: previewProjection.parentPath,
         },
-      ])
+      ]),
+      "program-release"
     );
   });
 

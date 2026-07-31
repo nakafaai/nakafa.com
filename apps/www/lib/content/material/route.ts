@@ -122,12 +122,17 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
 /** Caches one exact material source overlay under content invalidation. */
 export async function getPublishedMaterialShell(
   locale: Locale,
-  sourceCandidates: readonly MaterialSourceCandidate[]
+  sourceCandidates: readonly MaterialSourceCandidate[],
+  expectedActiveReleaseId?: MaterialReleasePin
 ) {
   "use cache";
 
   const result = await Effect.runPromise(
-    readPublishedMaterialShell(locale, sourceCandidates)
+    readPublishedMaterialShell(
+      locale,
+      sourceCandidates,
+      expectedActiveReleaseId
+    )
   );
   applyContentRuntimeCache();
   return result;

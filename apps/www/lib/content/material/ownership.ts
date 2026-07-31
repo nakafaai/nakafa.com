@@ -225,7 +225,8 @@ export const readPublishedMaterialShell = Effect.fn(
   "NakafaMaterial.readPublishedShell"
 )(function* (
   locale: Locale,
-  sourceCandidates: readonly MaterialSourceCandidate[]
+  sourceCandidates: readonly MaterialSourceCandidate[],
+  initialReleaseId?: MaterialReleasePin
 ) {
   const grouped = new Map<string, MaterialSourceCandidate[]>();
   const ungrouped: MaterialSourceCandidate[] = [];
@@ -251,7 +252,7 @@ export const readPublishedMaterialShell = Effect.fn(
     );
   }
   const models: MaterialSourceModel[] = [];
-  let activeReleaseId: MaterialReleasePin | undefined;
+  let activeReleaseId = initialReleaseId;
   for (const batch of batches) {
     const result = yield* readPublishedMaterialShellBatch(
       locale,

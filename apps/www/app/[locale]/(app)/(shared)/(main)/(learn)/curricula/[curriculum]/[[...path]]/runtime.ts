@@ -186,7 +186,11 @@ export async function resolveRuntimeCurriculumRoute(
     contentRoutes
   );
   if (candidates.length > 0) {
-    const model = await getPublishedMaterialShell(locale, candidates);
+    const model = await getPublishedMaterialShell(
+      locale,
+      candidates,
+      published.activeReleaseId
+    );
     const reconciled = Effect.runSync(
       reconcileMaterialSourceRoutes(locale, contentRoutes, model)
     );
