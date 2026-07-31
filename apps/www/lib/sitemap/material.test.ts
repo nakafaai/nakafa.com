@@ -58,15 +58,21 @@ describe("material sitemap ownership", () => {
     );
 
     await expect(
-      Effect.runPromise(filterMaterialContentRows("en", [owned, topic, tryout]))
+      Effect.runPromise(
+        filterMaterialContentRows("en", [owned, topic, tryout], activeReleaseId)
+      )
     ).resolves.toEqual([topic, tryout]);
-    expect(claimsMock).toHaveBeenCalledWith("en", [
-      {
-        contentKey: previewProjection.contentKey,
-        locale: "en",
-        parentPath: previewProjection.parentPath,
-      },
-    ]);
+    expect(claimsMock).toHaveBeenCalledWith(
+      "en",
+      [
+        {
+          contentKey: previewProjection.contentKey,
+          locale: "en",
+          parentPath: previewProjection.parentPath,
+        },
+      ],
+      activeReleaseId
+    );
   });
 
   it("removes only public paths whose source identity is exactly owned", async () => {

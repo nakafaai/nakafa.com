@@ -157,6 +157,13 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       };
     }
 
+    const materialOwner =
+      page.section === "material"
+        ? yield* readPublishedMaterialBuckets(page.locale)
+        : null;
+    if (materialOwner?.managed) {
+      return yield* new SitemapPageNotFoundError({ pageId });
+    }
     const artifact = yield* getRuntimeContentSitemapPage({
       locale: page.locale,
       page: page.page,
@@ -165,10 +172,13 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     if (!artifact) {
       return yield* new SitemapPageNotFoundError({ pageId });
     }
-    const visibleRoutes = yield* filterMaterialContentRows(
-      page.locale,
-      artifact.routes
-    );
+    const visibleRoutes = materialOwner
+      ? yield* filterMaterialContentRows(
+          page.locale,
+          artifact.routes,
+          materialOwner.activeReleaseId
+        )
+      : artifact.routes;
     return { routes: yield* buildSitemapContentPageRoutes(visibleRoutes) };
   }
 );

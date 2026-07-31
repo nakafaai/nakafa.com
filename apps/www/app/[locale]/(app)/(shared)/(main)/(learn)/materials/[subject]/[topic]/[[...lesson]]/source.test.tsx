@@ -102,19 +102,12 @@ const sourceBody = "## Function concept";
 const sourceUrl = "https://github.com/nakafaai/nakafa.com/source";
 const aksaraUrl = "https://github.com/nakafaai/aksara/source";
 /** Produces fresh framework params for one real material fixture. */
-function params() {
-  return Promise.resolve(routeParams);
-}
-
+const params = () => Promise.resolve(routeParams);
 /** Component proving that the selected preview body reached React. */
-function PreviewContent() {
-  return <p>Preview content</p>;
-}
+const PreviewContent = () => <p>Preview content</p>;
 
 /** Component proving that the selected native body reached React. */
-function SourceContent() {
-  return <p>Source content</p>;
-}
+const SourceContent = () => <p>Source content</p>;
 
 const previewContent = {
   Content: PreviewContent,

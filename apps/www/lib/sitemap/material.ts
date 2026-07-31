@@ -19,7 +19,8 @@ export const filterMaterialContentRows = Effect.fn(
   "www.sitemap.filterMaterialContentRows"
 )(function* <Row extends SourceSitemapRow>(
   locale: Locale,
-  rows: readonly Row[]
+  rows: readonly Row[],
+  expectedActiveReleaseId: MaterialReleasePin
 ) {
   const candidates = rows.flatMap((row) =>
     row.section === "material" && row.kind === "curriculum-lesson"
@@ -32,7 +33,11 @@ export const filterMaterialContentRows = Effect.fn(
         ]
       : []
   );
-  const claims = yield* readPublishedMaterialClaims(locale, candidates);
+  const claims = yield* readPublishedMaterialClaims(
+    locale,
+    candidates,
+    expectedActiveReleaseId
+  );
   const claimed = new Set(
     claims.map((claim) => `${claim.locale}\0${claim.contentKey}`)
   );

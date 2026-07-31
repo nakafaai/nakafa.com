@@ -225,6 +225,24 @@ describe("sitemap route pages", () => {
     );
   });
 
+  it("rejects retained source material pages after family cutover", async () => {
+    materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: activeMaterialReleaseId,
+        buckets: ["abc"],
+        managed: true,
+        materialCount: 1,
+      })
+    );
+
+    await expect(readFailure("content_en_material_0")).resolves.toMatchObject({
+      _tag: "SitemapPageNotFoundError",
+      pageId: "content_en_material_0",
+    });
+    expect(runtimeMocks.getRuntimeContentSitemapPage).not.toHaveBeenCalled();
+    expect(ownershipMocks.filterMaterialContentRows).not.toHaveBeenCalled();
+  });
+
   it("fails when an id or its materialized page is missing", async () => {
     await expect(readFailure("malformed")).resolves.toMatchObject({
       _tag: "SitemapPageNotFoundError",
