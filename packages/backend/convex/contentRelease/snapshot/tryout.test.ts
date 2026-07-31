@@ -5,9 +5,17 @@ import {
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import {
+  makeTryoutCatalogRecord,
+  makeTryoutPlacementRecord,
+} from "@nakafa/aksara-contracts/tryout/row-hash";
+import {
   stageTryoutCatalog,
   stageTryoutPlacement,
 } from "@repo/backend/convex/contentRelease/snapshot/tryout";
+import {
+  TRYOUT_CATALOG_DOCUMENT_LIMIT,
+  TRYOUT_PLACEMENT_DOCUMENT_LIMIT,
+} from "@repo/backend/convex/contentRelease/tryout/limits";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -81,5 +89,52 @@ describe("contentRelease/snapshot/tryout", () => {
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+  });
+
+  it("rejects rows that could exceed aggregate runtime read budgets", async () => {
+    const catalogSource = makeTryoutCatalogRow();
+    const catalog = {
+      ...catalogSource,
+      record: makeTryoutCatalogRecord({
+        ...catalogSource.record.row,
+        description: "x".repeat(TRYOUT_CATALOG_DOCUMENT_LIMIT),
+      }),
+    };
+    const placementSource = makeTryoutPlacementRow();
+    const placement = {
+      ...placementSource,
+      record: makeTryoutPlacementRecord({
+        ...placementSource.record.row,
+        title: "x".repeat(TRYOUT_PLACEMENT_DOCUMENT_LIMIT),
+      }),
+    };
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          stageTryoutCatalog(
+            ctx,
+            snapshotId,
+            0,
+            catalog,
+            canonicalizeContentSnapshotRow(catalog)
+          )
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          stageTryoutPlacement(
+            ctx,
+            snapshotId,
+            1,
+            placement,
+            canonicalizeContentSnapshotRow(placement)
+          )
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
   });
 });
