@@ -12,7 +12,7 @@ import {
   PublicMaterialLessonRouteSchema,
   PublicMaterialTopicRouteSchema,
 } from "@repo/contents/_types/route/schema";
-import { Effect, Either, Schema } from "effect";
+import { Either, Schema } from "effect";
 import type { Locale } from "next-intl";
 import type {
   MaterialSourceCandidate,
@@ -89,7 +89,7 @@ export function reconcileMaterialCurriculumRoutes(
         route.locale === claim.locale && route.sourcePath === claim.contentKey
     );
     if (!replacement) {
-      return Effect.fail(
+      return Either.left(
         new PublishedProjectionError({
           locale: claim.locale,
           publicPath: claim.projection.publicPath,
@@ -102,7 +102,7 @@ export function reconcileMaterialCurriculumRoutes(
     );
   }
 
-  return Effect.succeed(
+  return Either.right(
     curriculumRoutes.map((route) => {
       if (!route.canonicalPath) {
         return route;
@@ -125,9 +125,8 @@ export function reconcileMaterialCurriculumRoutes(
 /**
  * Replaces temporary source lessons with their exact active projections.
  *
- * This pure validation program deliberately returns a fast-path Effect instead
- * of using `Effect.fn`. Static Next.js routes run it synchronously during
- * prerender, where starting a traced Effect fiber would read the current time.
+ * This deterministic validation returns `Either` so static Next.js routes can
+ * preserve the typed failure without starting an Effect fiber during prerender.
  *
  * @see https://nextjs.org/docs/messages/next-prerender-current-time
  */
@@ -171,7 +170,7 @@ export function reconcileMaterialSourceRoutes(
       { onExcessProperty: "error" }
     );
     if (Either.isLeft(decoded)) {
-      return Effect.fail(
+      return Either.left(
         new PublishedProjectionError({
           locale,
           publicPath: projection.publicPath,
@@ -192,7 +191,7 @@ export function reconcileMaterialSourceRoutes(
         existingTopic.kind !== "subject-topic" ||
         existingTopic.materialKey !== projection.materialKey
       ) {
-        return Effect.fail(
+        return Either.left(
           new PublishedProjectionError({
             locale,
             publicPath: parentPath,
@@ -203,7 +202,7 @@ export function reconcileMaterialSourceRoutes(
     }
     const separator = projection.contentKey.lastIndexOf("/");
     if (separator < 1) {
-      return Effect.fail(
+      return Either.left(
         new PublishedProjectionError({
           locale,
           publicPath: parentPath,
@@ -226,7 +225,7 @@ export function reconcileMaterialSourceRoutes(
       { onExcessProperty: "error" }
     );
     if (Either.isLeft(decodedTopic)) {
-      return Effect.fail(
+      return Either.left(
         new PublishedProjectionError({
           locale,
           publicPath: parentPath,
@@ -239,7 +238,7 @@ export function reconcileMaterialSourceRoutes(
       existingAddition &&
       existingAddition.materialKey !== decodedTopic.right.materialKey
     ) {
-      return Effect.fail(
+      return Either.left(
         new PublishedProjectionError({
           locale,
           publicPath: parentPath,
@@ -256,7 +255,7 @@ export function reconcileMaterialSourceRoutes(
   ]) {
     const identity = `${route.locale}\0${route.publicPath}`;
     if (routesByPath.has(identity)) {
-      return Effect.fail(
+      return Either.left(
         new PublishedProjectionError({
           locale: route.locale,
           publicPath: route.publicPath,
@@ -265,5 +264,5 @@ export function reconcileMaterialSourceRoutes(
     }
     routesByPath.set(identity, route);
   }
-  return Effect.succeed(Array.from(routesByPath.values()));
+  return Either.right(Array.from(routesByPath.values()));
 }

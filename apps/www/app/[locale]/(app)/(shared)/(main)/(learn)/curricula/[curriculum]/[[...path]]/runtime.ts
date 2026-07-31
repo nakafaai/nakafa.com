@@ -14,7 +14,7 @@ import {
 } from "@repo/contents/_types/route/curriculum/card";
 import { InvalidPublicRouteSourceError } from "@repo/contents/_types/route/error";
 import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
-import { Effect } from "effect";
+import { Either, Function } from "effect";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import {
@@ -205,16 +205,18 @@ export async function resolveRuntimeCurriculumRoute(
         published.activeReleaseId
       );
     }
-    const reconciled = Effect.runSync(
-      reconcileMaterialSourceRoutes(locale, contentRoutes, model)
+    const reconciled = Either.getOrThrowWith(
+      reconcileMaterialSourceRoutes(locale, contentRoutes, model),
+      Function.identity
     );
-    const curriculumRoutes = Effect.runSync(
+    const curriculumRoutes = Either.getOrThrowWith(
       reconcileMaterialCurriculumRoutes(
         sourceRoutes,
         contentRoutes,
         reconciled,
         model
-      )
+      ),
+      Function.identity
     );
     materialCards = readCurriculumMaterialCards({
       contentRoutes: reconciled,

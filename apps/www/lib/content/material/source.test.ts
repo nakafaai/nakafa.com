@@ -7,7 +7,7 @@ import {
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
 import { PublicMaterialTopicRouteSchema } from "@repo/contents/_types/route/schema";
-import { Effect, Schema } from "effect";
+import { Effect, Either, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import type { MaterialSourceModel } from "@/lib/content/material/ownership";
 import {
@@ -71,44 +71,46 @@ describe("material source reconciliation", () => {
     ]);
   });
 
-  it("replaces found claims, removes tombstones, and preserves unclaimed routes", async () => {
-    await expect(
-      Effect.runPromise(
-        reconcileMaterialSourceRoutes(
-          "en",
-          [topicRoute, sourceRoute, nextRoute, idRoute],
-          {
-            claims: [
-              {
-                contentKey: previewProjection.contentKey,
-                kind: "found",
-                locale: "en",
-                projection: previewProjection,
-              },
-              {
-                contentKey: previewNextProjection.contentKey,
-                kind: "missing",
-                locale: "en",
-              },
-            ],
-            materials: [previewProjection, previewIdProjection],
-          }
-        )
-      )
-    ).resolves.toEqual([
+  it("replaces found claims, removes tombstones, and preserves unclaimed routes", () => {
+    const result = Either.getOrThrowWith(
+      reconcileMaterialSourceRoutes(
+        "en",
+        [topicRoute, sourceRoute, nextRoute, idRoute],
+        {
+          claims: [
+            {
+              contentKey: previewProjection.contentKey,
+              kind: "found",
+              locale: "en",
+              projection: previewProjection,
+            },
+            {
+              contentKey: previewNextProjection.contentKey,
+              kind: "missing",
+              locale: "en",
+            },
+          ],
+          materials: [previewProjection, previewIdProjection],
+        }
+      ),
+      (error) => error
+    );
+
+    expect(result).toEqual([
       topicRoute,
       idRoute,
       makePreviewPublicRoute(previewProjection),
     ]);
   });
 
-  it("uses the synchronous Effect fast path required by static prerender", () => {
+  it("returns a typed result without reading time during static prerender", () => {
     const dateNow = vi.spyOn(Date, "now");
-    const result = Effect.runSync(
+    const result = Either.getOrThrowWith(
       reconcileMaterialSourceRoutes("en", [sourceRoute], {
         claims: [],
         materials: [],
-      })
+      }),
+      (error) => error
     );
     const dateNowCalls = dateNow.mock.calls.length;
     dateNow.mockRestore();
@@ -138,7 +140,7 @@ describe("material source reconciliation", () => {
       locale: sourceRoute.locale,
       publicPath: renamedPath,
     };
-    const reconciled = Effect.runSync(
+    const reconciled = Either.getOrThrowWith(
       reconcileMaterialSourceRoutes(sourceRoute.locale, [sourceRoute], {
         claims: [
           {
@@ -149,9 +151,10 @@ describe("material source reconciliation", () => {
           },
         ],
         materials: [],
-      })
+      }),
+      (error) => error
     );
-    const renamed = Effect.runSync(
+    const renamed = Either.getOrThrowWith(
       reconcileMaterialCurriculumRoutes([concrete], [sourceRoute], reconciled, {
         claims: [
           {
@@ -162,9 +165,10 @@ describe("material source reconciliation", () => {
           },
         ],
         materials: [],
-      })
+      }),
+      (error) => error
     );
-    const removed = Effect.runSync(
+    const removed = Either.getOrThrowWith(
       reconcileMaterialCurriculumRoutes(
         [concrete],
         [sourceRoute],
@@ -179,7 +183,8 @@ describe("material source reconciliation", () => {
           ],
           materials: [],
         }
-      )
+      ),
+      (error) => error
     );
 
     expect(
@@ -190,7 +195,7 @@ describe("material source reconciliation", () => {
     ).not.toHaveProperty("canonicalPath");
   });
 
-  it("keeps one topic mapping stable while active lessons move", async () => {
+  it("keeps one topic mapping stable while active lessons move", () => {
     const curriculumRoute = Effect.runSync(listPublicCurriculumRoutes()).find(
       (route) => route.locale === sourceRoute.locale
     );
@@ -221,14 +226,15 @@ describe("material source reconciliation", () => {
       ],
       materials: [moved, movedNext],
     } satisfies MaterialSourceModel;
-    const reconciled = Effect.runSync(
+    const reconciled = Either.getOrThrowWith(
       reconcileMaterialSourceRoutes(
         sourceRoute.locale,
         [topicRoute, sourceRoute, nextRoute],
         model
-      )
+      ),
+      (error) => error
     );
-    const curriculumRoutes = await Effect.runPromise(
+    const curriculumRoutes = Either.getOrThrowWith(
       reconcileMaterialCurriculumRoutes(
         [
           {
@@ -240,7 +246,8 @@ describe("material source reconciliation", () => {
         [topicRoute, sourceRoute, nextRoute],
         reconciled,
         model
-      )
+      ),
+      (error) => error
     );
 
     expect(curriculumRoutes).toMatchObject([
@@ -257,36 +264,39 @@ describe("material source reconciliation", () => {
         expect.objectContaining({ publicPath: movedNext.publicPath }),
       ])
     );
-    await expect(
-      Effect.runPromise(
-        reconcileMaterialCurriculumRoutes(
-          [
+    const movedCurriculumRoutes = Either.getOrThrowWith(
+      reconcileMaterialCurriculumRoutes(
+        [
+          {
+            ...curriculumRoute,
+            canonicalPath: sourceRoute.parentPath,
+            materialKey: sourceRoute.materialKey,
+          },
+        ],
+        [topicRoute, sourceRoute, nextRoute],
+        [makePreviewPublicRoute(moved), nextRoute],
+        {
+          claims: [
+            ...model.claims,
             {
-              ...curriculumRoute,
-              canonicalPath: sourceRoute.parentPath,
-              materialKey: sourceRoute.materialKey,
+              contentKey: previewNextProjection.contentKey,
+              kind: "found",
+              locale: previewNextProjection.locale,
+              projection: previewNextProjection,
             },
           ],
-          [topicRoute, sourceRoute, nextRoute],
-          [makePreviewPublicRoute(moved), nextRoute],
-          {
-            claims: [
-              ...model.claims,
-              {
-                contentKey: previewNextProjection.contentKey,
-                kind: "found",
-                locale: previewNextProjection.locale,
-                projection: previewNextProjection,
-              },
-            ],
-            materials: [moved, previewNextProjection],
-          }
-        )
-      )
-    ).resolves.toMatchObject([{ canonicalPath: sourceRoute.parentPath }]);
+          materials: [moved, previewNextProjection],
+        }
+      ),
+      (error) => error
+    );
+
+    expect(movedCurriculumRoutes).toMatchObject([
+      { canonicalPath: sourceRoute.parentPath },
+    ]);
   });
 
-  it("preserves unrelated curriculum mappings and rejects missing replacements", async () => {
+  it("preserves unrelated curriculum mappings and rejects missing replacements", () => {
     const curriculumRoute = Effect.runSync(listPublicCurriculumRoutes()).find(
       (route) => route.locale === sourceRoute.locale
     );
@@ -309,61 +319,60 @@ describe("material source reconciliation", () => {
       canonicalPath: sourceRoute.parentPath,
     };
 
-    await expect(
-      Effect.runPromise(
-        reconcileMaterialCurriculumRoutes(
-          [curriculumRoute, unrelatedRoute],
-          [],
-          [],
-          model
-        )
+    const preserved = Either.getOrThrowWith(
+      reconcileMaterialCurriculumRoutes(
+        [curriculumRoute, unrelatedRoute],
+        [],
+        [],
+        model
+      ),
+      (error) => error
+    );
+
+    expect(preserved).toEqual([curriculumRoute, unrelatedRoute]);
+    expect(
+      reconcileMaterialCurriculumRoutes(
+        [{ ...curriculumRoute, canonicalPath: sourceRoute.publicPath }],
+        [sourceRoute],
+        [],
+        model
       )
-    ).resolves.toEqual([curriculumRoute, unrelatedRoute]);
-    await expect(
-      Effect.runPromise(
-        Effect.flip(
-          reconcileMaterialCurriculumRoutes(
-            [{ ...curriculumRoute, canonicalPath: sourceRoute.publicPath }],
-            [sourceRoute],
-            [],
-            model
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      locale: previewProjection.locale,
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "PublishedProjectionError",
+        locale: previewProjection.locale,
+      },
     });
   });
 
-  it("preserves a typed failure when a published projection cannot become a route", async () => {
+  it("preserves a typed failure when a published projection cannot become a route", () => {
     const malformed = structuredClone(previewProjection);
     Reflect.set(malformed, "publicPath", "");
 
-    await expect(
-      Effect.runPromise(
-        Effect.flip(
-          reconcileMaterialSourceRoutes("en", [sourceRoute], {
-            claims: [
-              {
-                contentKey: previewProjection.contentKey,
-                kind: "found",
-                locale: "en",
-                projection: malformed,
-              },
-            ],
-            materials: [],
-          })
-        )
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      locale: "en",
-      publicPath: "",
+    expect(
+      reconcileMaterialSourceRoutes("en", [sourceRoute], {
+        claims: [
+          {
+            contentKey: previewProjection.contentKey,
+            kind: "found",
+            locale: "en",
+            projection: malformed,
+          },
+        ],
+        materials: [],
+      })
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "PublishedProjectionError",
+        locale: "en",
+        publicPath: "",
+      },
     });
   });
 
-  it("rejects incompatible exact topic anchors", async () => {
+  it("rejects incompatible exact topic anchors", () => {
     const parentPath = PublicPathSchema.make(
       "subjects/mathematics/function-modeling"
     );
@@ -413,73 +422,70 @@ describe("material source reconciliation", () => {
       { projection: invalidTitle, routes: [] },
     ];
     for (const { projection, routes } of failures) {
-      await expect(
-        Effect.runPromise(
-          Effect.flip(
-            reconcileMaterialSourceRoutes("en", routes, {
-              claims: [
-                {
-                  contentKey: projection.contentKey,
-                  kind: "found",
-                  locale: "en",
-                  projection,
-                },
-              ],
-              materials: [],
-            })
-          )
-        )
-      ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+      expect(
+        reconcileMaterialSourceRoutes("en", routes, {
+          claims: [
+            {
+              contentKey: projection.contentKey,
+              kind: "found",
+              locale: "en",
+              projection,
+            },
+          ],
+          materials: [],
+        })
+      ).toMatchObject({
+        _tag: "Left",
+        left: { _tag: "PublishedProjectionError" },
+      });
     }
-    await expect(
-      Effect.runPromise(
-        Effect.flip(
-          reconcileMaterialSourceRoutes("en", [], {
-            claims: [
-              {
-                contentKey: moved.contentKey,
-                kind: "found",
-                locale: "en",
-                projection: moved,
-              },
-              {
-                contentKey: conflicting.contentKey,
-                kind: "found",
-                locale: "en",
-                projection: conflicting,
-              },
-            ],
-            materials: [],
-          })
-        )
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    expect(
+      reconcileMaterialSourceRoutes("en", [], {
+        claims: [
+          {
+            contentKey: moved.contentKey,
+            kind: "found",
+            locale: "en",
+            projection: moved,
+          },
+          {
+            contentKey: conflicting.contentKey,
+            kind: "found",
+            locale: "en",
+            projection: conflicting,
+          },
+        ],
+        materials: [],
+      })
+    ).toMatchObject({
+      _tag: "Left",
+      left: { _tag: "PublishedProjectionError" },
+    });
   });
 
-  it("rejects a published route owned by another source identity", async () => {
-    await expect(
-      Effect.runPromise(
-        Effect.flip(
-          reconcileMaterialSourceRoutes("en", [nextRoute], {
-            claims: [
-              {
-                contentKey: previewProjection.contentKey,
-                kind: "found",
-                locale: "en",
-                projection: {
-                  ...previewProjection,
-                  publicPath: PublicPathSchema.make(nextRoute.publicPath),
-                },
-              },
-            ],
-            materials: [],
-          })
-        )
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      locale: "en",
-      publicPath: nextRoute.publicPath,
+  it("rejects a published route owned by another source identity", () => {
+    expect(
+      reconcileMaterialSourceRoutes("en", [nextRoute], {
+        claims: [
+          {
+            contentKey: previewProjection.contentKey,
+            kind: "found",
+            locale: "en",
+            projection: {
+              ...previewProjection,
+              publicPath: PublicPathSchema.make(nextRoute.publicPath),
+            },
+          },
+        ],
+        materials: [],
+      })
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "PublishedProjectionError",
+        locale: "en",
+        publicPath: nextRoute.publicPath,
+      },
     });
   });
 });
