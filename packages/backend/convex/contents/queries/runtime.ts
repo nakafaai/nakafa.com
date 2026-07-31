@@ -6,16 +6,18 @@ import {
   getContentRouteByContentIdImpl,
   getContentRouteBySourcePathImpl,
   getContentRouteImpl,
-  getPublicRouteByPathImpl,
   listContentRouteCountsImpl,
   listContentRoutesByKindPrefixImpl,
   listContentRoutesByParentImpl,
   listContentRoutesByPrefixImpl,
   listLatestContentRoutePageImpl,
+} from "@repo/backend/convex/contents/runtime/contentRoutes";
+import { getCurriculumPageImpl } from "@repo/backend/convex/contents/runtime/curriculum";
+import {
+  getPublicRouteByPathImpl,
   listPublicRoutesByMaterialImpl,
   listPublicRoutesByParentImpl,
-} from "@repo/backend/convex/contents/runtime/catalog";
-import { getCurriculumPageImpl } from "@repo/backend/convex/contents/runtime/curriculum";
+} from "@repo/backend/convex/contents/runtime/publicRoutes";
 import {
   getQuranReferenceImpl,
   getQuranSurahMetadataImpl,
