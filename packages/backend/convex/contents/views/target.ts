@@ -335,6 +335,7 @@ const readSourceTarget = Effect.fn("contents.views.readSourceTarget")(
       !(
         route.kind === "article" ||
         route.kind === "curriculum-lesson" ||
+        route.kind === "tryout-exam" ||
         route.kind === "tryout-set"
       )
     ) {

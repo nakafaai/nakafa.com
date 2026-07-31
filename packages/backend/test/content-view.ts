@@ -3,6 +3,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { LearningContextStorage } from "@repo/backend/convex/contents/context";
 import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
 import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/spec";
+import type { ContentViewTargetInput } from "@repo/backend/convex/contents/views/target";
 import {
   type createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -136,7 +137,7 @@ export async function seedArticleViewer(ctx: MutationCtx, suffix: string) {
 }
 
 /** Inserts one source-owned curriculum lesson and its route projection. */
-export async function insertContentViewSubject(ctx: MutationCtx) {
+async function insertContentViewSubject(ctx: MutationCtx) {
   const topicId = await ctx.db.insert("curriculumTopics", {
     locale: "id",
     material: "mathematics",
@@ -177,7 +178,7 @@ export async function insertContentViewSubject(ctx: MutationCtx) {
 }
 
 /** Inserts one source-owned try-out set route projection. */
-export async function insertContentViewTryout(ctx: MutationCtx) {
+async function insertContentViewTryout(ctx: MutationCtx) {
   await insertContentViewRoute(ctx, {
     contentId: TRYOUT_VIEW_ID,
     kind: "tryout-set",
@@ -187,6 +188,53 @@ export async function insertContentViewTryout(ctx: MutationCtx) {
   });
 
   return { contentId: TRYOUT_VIEW_ID };
+}
+
+/** Inserts the source-owned target kinds supported by content views. */
+export async function insertContentViewSourceTargets(ctx: MutationCtx) {
+  const examRoute = "try-out/indonesia/snbt";
+  const examContentId = await insertContentViewRoute(ctx, {
+    contentId: "asset:id:catalog:tryout-exam:views",
+    kind: "tryout-exam",
+    route: examRoute,
+    section: "tryout",
+    title: "SNBT",
+  });
+  const subject = await insertContentViewSubject(ctx);
+  const tryout = await insertContentViewTryout(ctx);
+
+  return [
+    {
+      expectedRoute: SUBJECT_VIEW_ROUTE,
+      input: {
+        contentId: subject.contentId,
+        locale: "id",
+        publicPath: "materi/matematika/vektor/penjumlahan",
+        section: "material",
+      },
+    },
+    {
+      expectedRoute: TRYOUT_VIEW_ROUTE,
+      input: {
+        contentId: tryout.contentId,
+        locale: "id",
+        publicPath: TRYOUT_VIEW_ROUTE,
+        section: "tryout",
+      },
+    },
+    {
+      expectedRoute: examRoute,
+      input: {
+        contentId: examContentId,
+        locale: "id",
+        publicPath: examRoute,
+        section: "tryout",
+      },
+    },
+  ] satisfies readonly {
+    readonly expectedRoute: string;
+    readonly input: ContentViewTargetInput;
+  }[];
 }
 
 /** Returns the analytics partition for one popularity signal scope. */

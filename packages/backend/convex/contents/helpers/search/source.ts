@@ -37,11 +37,15 @@ export const readSourceSearchDocuments = Effect.fn(
   const claimed = new Set(
     claimedMaterials.map(({ contentKey, locale }) => `${locale}\0${contentKey}`)
   );
-  const candidateLimit = scanLimit + claimed.size;
   if (queryTexts.length === 0) {
     const groups = yield* Effect.all(
       sections.map((section) =>
-        browseSection(ctx, args.locale, section, candidateLimit)
+        browseSection(
+          ctx,
+          args.locale,
+          section,
+          sourceScanLimit(section, scanLimit, claimed.size)
+        )
       ),
       { concurrency: "unbounded" }
     );
@@ -53,7 +57,14 @@ export const readSourceSearchDocuments = Effect.fn(
   }
   const groups = yield* Effect.all(
     queryTexts.map((queryText) =>
-      searchQuery(ctx, args.locale, sections, queryText, candidateLimit)
+      searchQuery(
+        ctx,
+        args.locale,
+        sections,
+        queryText,
+        scanLimit,
+        claimed.size
+      )
     ),
     { concurrency: "unbounded" }
   );
@@ -63,6 +74,15 @@ export const readSourceSearchDocuments = Effect.fn(
     (document) => document.content_id
   );
 });
+
+/** Refills only material scans for exact claims removed after source reads. */
+function sourceScanLimit(
+  section: NakafaSection,
+  scanLimit: number,
+  claimedMaterialCount: number
+) {
+  return section === "material" ? scanLimit + claimedMaterialCount : scanLimit;
+}
 
 /** Removes exact-owned material identities from one bounded source group. */
 function removeClaimedMaterials(
@@ -82,11 +102,18 @@ const searchQuery = Effect.fn("contents.search.searchSourceQuery")(function* (
   locale: ContentSearchInput["locale"],
   sections: readonly NakafaSection[],
   queryText: string,
-  scanLimit: number
+  scanLimit: number,
+  claimedMaterialCount: number
 ) {
   const groups = yield* Effect.all(
     sections.map((section) =>
-      searchSection(ctx, locale, section, queryText, scanLimit)
+      searchSection(
+        ctx,
+        locale,
+        section,
+        queryText,
+        sourceScanLimit(section, scanLimit, claimedMaterialCount)
+      )
     ),
     { concurrency: "unbounded" }
   );

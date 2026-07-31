@@ -21,10 +21,7 @@ import {
   ARTICLE_VIEW_ROUTE,
   insertContentViewArticle,
   insertContentViewRoute,
-  insertContentViewSubject,
-  insertContentViewTryout,
-  SUBJECT_VIEW_ROUTE,
-  TRYOUT_VIEW_ROUTE,
+  insertContentViewSourceTargets,
 } from "@repo/backend/test/content-view";
 import {
   activateMaterialCatalog,
@@ -457,43 +454,18 @@ describe("contents/views/target", () => {
 
   it("resolves subject and try-out graph identities from source routes", async () => {
     const target = convexTest(schema, convexModules);
-    const fixtures = await target.mutation(async (ctx) => ({
-      subject: await insertContentViewSubject(ctx),
-      tryout: await insertContentViewTryout(ctx),
-    }));
+    const cases = await target.mutation(insertContentViewSourceTargets);
+    const results = await Promise.all(
+      cases.map(({ input }) =>
+        target.query((ctx) => runConvexProgram(loadContentTarget(ctx, input)))
+      )
+    );
 
-    const results = await Promise.all([
-      target.query((ctx) =>
-        runConvexProgram(
-          loadContentTarget(ctx, {
-            contentId: fixtures.subject.contentId,
-            locale: "id",
-            publicPath: "materi/matematika/vektor/penjumlahan",
-            section: "material",
-          })
-        )
-      ),
-      target.query((ctx) =>
-        runConvexProgram(
-          loadContentTarget(ctx, {
-            contentId: fixtures.tryout.contentId,
-            locale: "id",
-            publicPath: TRYOUT_VIEW_ROUTE,
-            section: "tryout",
-          })
-        )
-      ),
-    ]);
-
-    expect(results).toMatchObject([
-      {
-        content_id: fixtures.subject.contentId,
-        route: SUBJECT_VIEW_ROUTE,
-      },
-      {
-        content_id: fixtures.tryout.contentId,
-        route: TRYOUT_VIEW_ROUTE,
-      },
-    ]);
+    expect(results).toMatchObject(
+      cases.map(({ expectedRoute, input }) => ({
+        content_id: input.contentId,
+        route: expectedRoute,
+      }))
+    );
   });
 });
