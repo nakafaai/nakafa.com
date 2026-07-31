@@ -1,6 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import { loadActiveSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import { Effect } from "effect";
@@ -17,11 +18,7 @@ export const loadProgramOwner = Effect.fn("contentRelease.loadProgramOwner")(
       return { managed: false, selected };
     }
     const { active } = selected;
-    if (
-      active.state.materialManifestHash !== active.manifestHash ||
-      active.state.materialReleaseId !== active.releaseId ||
-      active.state.materialSequence !== active.sequence
-    ) {
+    if (!hasMaterialReadModel(active)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
         `Programs for ${locale} in active release ${active.releaseId} are waiting for materials.`

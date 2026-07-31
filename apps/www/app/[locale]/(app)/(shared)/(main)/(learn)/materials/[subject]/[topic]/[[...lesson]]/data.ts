@@ -2,32 +2,36 @@ import {
   isMaterialLessonRoute,
   readParentMaterialRoute,
 } from "@repo/contents/_types/route/content";
-import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
-import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
 import { readNamespaceSegment } from "@repo/contents/_types/route/path";
-import type {
-  PublicContentRoute,
-  PublicRoute,
-} from "@repo/contents/_types/route/schema";
+import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { notFound } from "next/navigation";
+import type { Locale } from "next-intl";
 import { getPublishedMaterialRoutes } from "@/lib/content/material/catalog";
+import {
+  readMaterialRoutes,
+  readMaterialSource,
+} from "@/lib/content/material/shell";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
 export type MaterialParams =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">["params"];
+export type MaterialRouteParams = Awaited<MaterialParams>;
 
-let materialRouteCache: readonly PublicContentRoute[] | undefined;
-
-/** Lazily decodes content routes when a framework route function needs them. */
-export function readMaterialRoutes() {
-  if (materialRouteCache) {
-    return materialRouteCache;
+/** Parses one localized OG slug into concrete material lesson params. */
+export function parseMaterialParams(
+  locale: Locale,
+  slug: readonly string[]
+): MaterialRouteParams | null {
+  const namespace = readNamespaceSegment("subject", locale);
+  if (!namespace || slug[0] !== namespace || slug.length < 4) {
+    return null;
   }
-
-  materialRouteCache = readStaticPublicContentRoutes();
-
-  return materialRouteCache;
+  const [, subject, topic, ...lesson] = slug;
+  if (!(subject && topic && lesson.length > 0)) {
+    return null;
+  }
+  return { lesson, locale, subject, topic };
 }
 
 /** Builds the exact localized path without consulting either content owner. */
@@ -57,24 +61,12 @@ export async function readMaterialRoute(params: MaterialParams) {
     return { locale, route: undefined };
   }
 
-  const route = readStaticPublicLearningIndex().resolveRouteByPath(
-    publicPath,
-    locale
-  );
+  const { route } = readMaterialSource(locale, publicPath);
 
   return {
     locale,
-    route: isProjectedMaterialContentRoute(route) ? route : undefined,
+    route,
   };
-}
-
-/** Narrows indexed public-route lookups to source-owned material rows only. */
-function isProjectedMaterialContentRoute(
-  route: PublicRoute | undefined
-): route is PublicContentRoute {
-  return Boolean(
-    route && (route.kind === "subject-topic" || route.kind === "subject-lesson")
-  );
 }
 
 /**

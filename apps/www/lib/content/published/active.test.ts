@@ -7,6 +7,7 @@ import {
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  fetchActiveContentIdentity,
   getActiveContentIdentity,
   readActiveContentIdentity,
 } from "@/lib/content/published/active";
@@ -55,6 +56,25 @@ describe("published active identity", () => {
     await expect(
       Effect.runPromise(readActiveContentIdentity())
     ).resolves.toBeNull();
+  });
+
+  it("decodes the framework-safe active identity", async () => {
+    const identity = {
+      manifestHash: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+      releaseId: ReleaseIdSchema.make("release-static"),
+      sequence: 4,
+    };
+    fetchQueryMock.mockResolvedValue(identity);
+
+    await expect(fetchActiveContentIdentity()).resolves.toEqual(identity);
+  });
+
+  it("rejects malformed framework-safe active identity", async () => {
+    fetchQueryMock.mockResolvedValue({ releaseId: "invalid release" });
+
+    await expect(fetchActiveContentIdentity()).rejects.toMatchObject({
+      _tag: "ParseError",
+    });
   });
 
   it("applies global invalidation to the cached framework boundary", async () => {

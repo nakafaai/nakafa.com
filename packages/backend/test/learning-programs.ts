@@ -84,11 +84,17 @@ export async function seedTestContentRoute(
   t: LearningProgramTest,
   {
     graph,
+    kind = "curriculum-topic",
+    locale = "id",
     route,
+    section = "material",
     title,
   }: {
     graph: TestGraph;
+    kind?: Doc<"contentRoutes">["kind"];
+    locale?: Doc<"contentRoutes">["locale"];
     route: string;
+    section?: Doc<"contentRoutes">["section"];
     title: string;
   }
 ) {
@@ -99,11 +105,11 @@ export async function seedTestContentRoute(
         authors: [],
         contentHash: `${graph.assetId}-hash`,
         content_id: graph.assetId,
-        kind: "curriculum-topic",
-        locale: "id",
+        kind,
+        locale,
         markdown: true,
         route,
-        section: "material",
+        section,
         sourcePath: route,
         syncedAt: TEST_NOW,
         title,

@@ -4,7 +4,6 @@ import * as route from "./route";
 
 const runtimeMocks = vi.hoisted(() => ({
   getMaterialApiContentPage: vi.fn(),
-  listApiStaticParams: vi.fn(),
 }));
 const loggingMocks = vi.hoisted(() => ({
   logError: vi.fn(),
@@ -27,7 +26,6 @@ vi.mock("@/lib/content/runtime", async (importOriginal) => {
   return {
     ...actual,
     getMaterialApiContentPage: runtimeMocks.getMaterialApiContentPage,
-    listApiStaticParams: runtimeMocks.listApiStaticParams,
   };
 });
 
@@ -45,17 +43,8 @@ describe("material content API route", () => {
     vi.clearAllMocks();
   });
 
-  it("generates static params from the Convex route catalog", async () => {
-    const params = [
-      { locale: "id", slug: ["high-school", "10", "mathematics"] },
-    ];
-    runtimeMocks.listApiStaticParams.mockResolvedValue(params);
-
-    await expect(route.generateStaticParams()).resolves.toEqual(params);
-    expect(runtimeMocks.listApiStaticParams).toHaveBeenCalledWith({
-      prefix: "material/",
-      section: "material",
-    });
+  it("reads every material page at request time", () => {
+    expect(route.dynamic).toBe("force-dynamic");
   });
 
   it("returns the pagination envelope for default material requests", async () => {

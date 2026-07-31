@@ -1,4 +1,5 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { selectUnmanagedAudioSource } from "@repo/backend/convex/audioStudies/helpers/sources";
 import {
   type AudioPlaybackArgs,
   AudioPlaybackIoError,
@@ -43,13 +44,21 @@ export const getAudioPlaybackBySlug = Effect.fn(
   if (!source) {
     return null;
   }
+  const unmanagedSource = yield* selectUnmanagedAudioSource(ctx, source).pipe(
+    Effect.mapError(toAudioPlaybackIoError)
+  );
+  if (!unmanagedSource) {
+    return null;
+  }
 
   const audio = yield* Effect.tryPromise({
     try: () =>
       ctx.db
         .query("contentAudios")
         .withIndex("by_content_id_and_locale", (q) =>
-          q.eq("content_id", source.content_id).eq("locale", args.locale)
+          q
+            .eq("content_id", unmanagedSource.content_id)
+            .eq("locale", args.locale)
         )
         .first(),
     catch: toAudioPlaybackIoError,

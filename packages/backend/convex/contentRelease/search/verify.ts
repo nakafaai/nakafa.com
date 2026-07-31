@@ -2,6 +2,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
 import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
 import { Effect } from "effect";
 
@@ -13,12 +14,27 @@ type SearchOwner = NonNullable<
 export const resolveSearchProjection = Effect.fn(
   "contentRelease.resolveSearchProjection"
 )(function* (ctx: QueryCtx, row: Doc<"contentIndex">, owner: SearchOwner) {
-  if (
-    !(
-      (row.family === "article" || row.family === "material") &&
-      owner.families.includes(row.family)
-    )
-  ) {
+  if (row.family === "article" && !owner.families.includes("article")) {
+    return yield* staleSearchRow(row);
+  }
+  if (row.family === "material" && !owner.families.includes("material")) {
+    if (!owner.materialReady) {
+      return yield* staleSearchRow(row);
+    }
+    const contentOwner = yield* loadContentOwner(
+      ctx,
+      row.contentKey,
+      row.locale,
+      owner.sequence
+    );
+    if (!contentOwner?.managed) {
+      return null;
+    }
+    if (contentOwner.family !== "material") {
+      return yield* staleSearchRow(row);
+    }
+  }
+  if (row.family !== "article" && row.family !== "material") {
     return yield* staleSearchRow(row);
   }
   const resolved = yield* resolvePublicProjection(

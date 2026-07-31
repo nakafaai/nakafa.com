@@ -27,7 +27,10 @@ import {
   inheritContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot";
-import { testMaterialGraph } from "@repo/backend/test/content-material";
+import {
+  testMaterialGraph,
+  testMaterialPublicPath,
+} from "@repo/backend/test/content-material";
 import {
   TEST_PROOF_RENDERER,
   testSignedArtifact,
@@ -41,9 +44,9 @@ import { Effect, Stream } from "effect";
 
 export const ingressReleaseId = ReleaseIdSchema.make("release-ingress");
 export const ingressArtifact = testSignedArtifact();
-const publicPath = PublicPathSchema.make("test/head-0");
+const publicPath = PublicPathSchema.make(testMaterialPublicPath(0));
 const sourcePath = CorpusSourcePathSchema.make(
-  "packages/corpus/test/head-0/en.mdx"
+  "packages/corpus/material/lesson/mathematics/technical-heads/head-0/en.mdx"
 );
 
 export const ingressItem = ContentReleaseItemSchema.make({
@@ -74,17 +77,17 @@ export const ingressRoute = ContentRouteItemSchema.make({
 
 export const ingressProjection = MaterialLessonProjectionSchema.make({
   contentKey: ingressArtifact.payload.contentKey,
-  graph: testMaterialGraph("head-0", "head-0"),
+  graph: testMaterialGraph("technical-heads", "head-0", "en", "mathematics"),
   kind: "subject-lesson",
   locale: "en",
-  materialKey: MaterialKeySchema.make("lesson.test.head-0"),
+  materialKey: MaterialKeySchema.make("lesson.mathematics.technical-heads"),
   metadata: {
     authors: [{ name: "Nakafa" }],
     date: "2026-07-22",
     title: "Technical Head",
   },
   order: 1,
-  parentPath: PublicPathSchema.make("test"),
+  parentPath: PublicPathSchema.make("subjects/mathematics/technical-heads"),
   publicPath,
   sectionKey: MaterialSectionSchema.make("head-0"),
   sitemap: true,

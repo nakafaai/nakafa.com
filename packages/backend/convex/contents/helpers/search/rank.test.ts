@@ -1,5 +1,6 @@
 import {
   type ContentSearchRankDocument,
+  matchesContentSearchQuery,
   rankContentSearchDocuments,
 } from "@repo/backend/convex/contents/helpers/search/rank";
 import { describe, expect, it } from "vitest";
@@ -21,6 +22,25 @@ function createSearchRow(
 }
 
 describe("rankContentSearchDocuments", () => {
+  it("matches complete terms and the final search prefix", () => {
+    expect(
+      matchesContentSearchQuery(
+        "Composition of linear functions",
+        "linear func"
+      )
+    ).toBe(true);
+    expect(
+      matchesContentSearchQuery(
+        "Composition of nonlinear functions",
+        "linear func"
+      )
+    ).toBe(false);
+    expect(
+      matchesContentSearchQuery("Composition of linear functions", "linear z")
+    ).toBe(false);
+    expect(matchesContentSearchQuery("Linear functions", "!!!")).toBe(false);
+  });
+
   it("keeps source try-out section metadata ahead of generic body hits", () => {
     const sectionRow = createSearchRow({
       description: "SNBT mathematical reasoning.",

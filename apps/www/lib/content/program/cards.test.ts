@@ -1,11 +1,17 @@
 // @vitest-environment node
 
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
-import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
+import {
+  MaterialKeySchema,
+  MaterialLessonProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import { readPublishedMaterialCards } from "@/lib/content/program/cards";
-import { previewProjection } from "@/test/content-preview";
+import {
+  previewNextProjection,
+  previewProjection,
+} from "@/test/content-preview";
 import {
   testProgramClass,
   testProgramContexts,
@@ -139,7 +145,31 @@ describe("published program material cards", () => {
     ]);
   });
 
-  it("rejects a context whose material is absent from the active release", async () => {
+  it("rejects a material context without a canonical path", async () => {
+    const context = testProgramContexts[0];
+    expect(context).toBeDefined();
+    if (!context) {
+      return;
+    }
+    const malformedContext = {
+      ...context,
+      canonicalPath: undefined,
+    };
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialCards({
+          contexts: [malformedContext],
+          groups: testProgramGroups,
+          locale: "en",
+          materials: [previewProjection],
+          route: testProgramSubject,
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+  });
+
+  it("omits a context whose material was tombstoned", async () => {
     const context = testProgramContexts[0];
     expect(context).toBeDefined();
     if (!context) {
@@ -157,6 +187,106 @@ describe("published program material cards", () => {
           groups: testProgramGroups,
           locale: "en",
           materials: [previewProjection],
+          route: testProgramSubject,
+        })
+      )
+    ).resolves.toEqual([]);
+  });
+
+  it("maps a stable material key to its one renamed parent", async () => {
+    const context = testProgramContexts[0];
+    const group = testProgramGroups[0];
+    expect(context).toBeDefined();
+    expect(group).toBeDefined();
+    if (!(context && group)) {
+      return;
+    }
+    const renamed = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+      ...previewProjection,
+      parentPath: "subjects/mathematics/renamed-functions",
+      publicPath:
+        "subjects/mathematics/renamed-functions/function-concept-renamed",
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialCards({
+          contexts: [context],
+          groups: [group],
+          locale: "en",
+          materials: [renamed],
+          route: testProgramSubject,
+        })
+      )
+    ).resolves.toMatchObject([
+      {
+        items: [
+          {
+            href: expect.stringContaining(renamed.publicPath),
+            title: renamed.metadata.title,
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("keeps source siblings when one exact lesson moves", async () => {
+    const context = testProgramContexts[0];
+    const group = testProgramGroups[0];
+    expect(context).toBeDefined();
+    expect(group).toBeDefined();
+    if (!(context && group)) {
+      return;
+    }
+    const moved = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+      ...previewProjection,
+      parentPath: "subjects/mathematics/moved-functions",
+      publicPath: "subjects/mathematics/moved-functions/function-concept-moved",
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialCards({
+          contexts: [context],
+          groups: [group],
+          locale: "en",
+          materials: [moved, previewNextProjection],
+          route: testProgramSubject,
+        })
+      )
+    ).resolves.toMatchObject([
+      {
+        items: [
+          { title: moved.metadata.title },
+          { title: previewNextProjection.metadata.title },
+        ],
+      },
+    ]);
+  });
+
+  it("rejects a renamed material key with ambiguous current parents", async () => {
+    const context = testProgramContexts[0];
+    const group = testProgramGroups[0];
+    expect(context).toBeDefined();
+    expect(group).toBeDefined();
+    if (!(context && group)) {
+      return;
+    }
+    const materials = ["first", "second"].map((suffix) =>
+      Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+        ...previewProjection,
+        parentPath: `subjects/mathematics/${suffix}-functions`,
+        publicPath: `subjects/mathematics/${suffix}-functions/function-concept`,
+      })
+    );
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialCards({
+          contexts: [context],
+          groups: [group],
+          locale: "en",
+          materials,
           route: testProgramSubject,
         }).pipe(Effect.flip)
       )

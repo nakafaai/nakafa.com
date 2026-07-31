@@ -25,6 +25,7 @@ const tables = {
     sourcePath: v.string(),
   })
     .index("by_contentKey_and_locale", ["contentKey", "locale"])
+    .index("by_locale_and_contentKey", ["locale", "contentKey"])
     .index("by_locale_and_assetId", ["locale", "assetId"])
     .index("by_locale_and_publicPath", ["locale", "publicPath"])
     .index("by_locale_and_date_and_contentKey", [
@@ -48,6 +49,20 @@ const tables = {
       "materialKey",
       "order",
       "publicPath",
+    ]),
+
+  /** Current exact material ownership selected by the active release. */
+  materialOwners: defineTable({
+    contentKey: v.string(),
+    locale: localeValidator,
+    releaseId: v.string(),
+    sequence: v.number(),
+  })
+    .index("by_contentKey_and_locale", ["contentKey", "locale"])
+    .index("by_releaseId_and_locale_and_contentKey", [
+      "releaseId",
+      "locale",
+      "contentKey",
     ]),
 
   /** Non-empty deterministic partitions for bounded material discovery. */

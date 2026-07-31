@@ -159,6 +159,9 @@ export async function insertTestState(
     ...(options.material
       ? {
           materialManifestHash: options.material.manifestHash,
+          materialOwnerManifestHash: options.material.manifestHash,
+          materialOwnerReleaseId: options.material.releaseId,
+          materialOwnerSequence: options.material.sequence,
           materialReleaseId: options.material.releaseId,
           materialSequence: options.material.sequence,
         }

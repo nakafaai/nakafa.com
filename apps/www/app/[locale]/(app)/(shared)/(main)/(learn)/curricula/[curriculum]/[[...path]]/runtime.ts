@@ -8,18 +8,32 @@ import type { LearningProgram as PublishedLearningProgram } from "@nakafa/aksara
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { findLearningProgramByKey } from "@repo/contents/_types/program/catalog";
 import { readCurriculumAncestors } from "@repo/contents/_types/route/curriculum";
+import {
+  readCurriculumMaterialCards,
+  readCurriculumMaterialPaths,
+} from "@repo/contents/_types/route/curriculum/card";
 import { InvalidPublicRouteSourceError } from "@repo/contents/_types/route/error";
 import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
+import { Either } from "effect";
+import { identity } from "effect/Function";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import {
   groupCurriculumChildren,
   listCurriculumStaticParams as listSourceStaticParams,
   readCurriculumRoutes,
+  readMaterialRoutes as readSourceMaterialRoutes,
   readCurriculumRootRoutes as readSourceRootRoutes,
   readCurriculumRouteModel as readSourceRouteModel,
   resolveCurriculumRoute as resolveSourceRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
+import { getPublishedMaterialShell } from "@/lib/content/material/route";
+import { expandMaterialCandidates } from "@/lib/content/material/shell";
+import {
+  readMaterialSourceCandidates,
+  reconcileMaterialCurriculumRoutes,
+  reconcileMaterialSourceRoutes,
+} from "@/lib/content/material/source";
 import { getPublishedMaterialCards } from "@/lib/content/program/cards";
 import {
   getPublishedProgramCatalog,
@@ -166,6 +180,52 @@ export async function resolveRuntimeCurriculumRoute(
   const sourceModel = readSourceRouteModel(source);
   const program = requireSourceCurriculumProgram(source.route.programKey);
   const sourceRoutes = readCurriculumRoutes();
+  let materialCards = sourceModel.materialCards;
+  const contentRoutes = readSourceMaterialRoutes();
+  const candidates = readMaterialSourceCandidates(
+    readCurriculumMaterialPaths(source.route, sourceRoutes),
+    locale,
+    contentRoutes
+  );
+  if (candidates.length > 0) {
+    let model = await getPublishedMaterialShell(
+      locale,
+      candidates,
+      published.activeReleaseId
+    );
+    const expandedCandidates = expandMaterialCandidates(
+      candidates,
+      model.claims.flatMap((claim) =>
+        claim.kind === "found" ? [claim.projection] : []
+      )
+    );
+    if (expandedCandidates !== candidates) {
+      model = await getPublishedMaterialShell(
+        locale,
+        expandedCandidates,
+        published.activeReleaseId
+      );
+    }
+    const reconciled = Either.getOrThrowWith(
+      reconcileMaterialSourceRoutes(locale, contentRoutes, model),
+      identity
+    );
+    const curriculumRoutes = Either.getOrThrowWith(
+      reconcileMaterialCurriculumRoutes(
+        locale,
+        sourceRoutes,
+        contentRoutes,
+        reconciled,
+        model
+      ),
+      identity
+    );
+    materialCards = readCurriculumMaterialCards({
+      contentRoutes: reconciled,
+      curriculumRoutes,
+      route: source.route,
+    });
+  }
   return {
     alternates: sourceRoutes.filter((candidate) =>
       isSamePublicRouteIdentity(source.route, candidate)
@@ -177,7 +237,7 @@ export async function resolveRuntimeCurriculumRoute(
     childRoutes: sourceModel.childRoutes,
     locale,
     managed: false,
-    materialCards: sourceModel.materialCards,
+    materialCards,
     program,
     route: source.route,
     sourcePath: `packages/contents/curriculum/${source.route.programKey}`,

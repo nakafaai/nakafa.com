@@ -1,24 +1,23 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import {
-  listArticleApiContentPageImpl,
-  listMaterialApiContentPageImpl,
-} from "@repo/backend/convex/contents/runtime/api";
+import { listArticleApiContentPageImpl } from "@repo/backend/convex/contents/runtime/api";
 import { getArticlePageImpl } from "@repo/backend/convex/contents/runtime/articles";
 import {
   getContentRouteArtifactPageImpl,
   getContentRouteByContentIdImpl,
   getContentRouteBySourcePathImpl,
   getContentRouteImpl,
-  getPublicRouteByPathImpl,
   listContentRouteCountsImpl,
   listContentRoutesByKindPrefixImpl,
   listContentRoutesByParentImpl,
   listContentRoutesByPrefixImpl,
-  listLatestContentRoutesImpl,
+  listLatestContentRoutePageImpl,
+} from "@repo/backend/convex/contents/runtime/contentRoutes";
+import { getCurriculumPageImpl } from "@repo/backend/convex/contents/runtime/curriculum";
+import {
+  getPublicRouteByPathImpl,
   listPublicRoutesByMaterialImpl,
   listPublicRoutesByParentImpl,
-} from "@repo/backend/convex/contents/runtime/catalog";
-import { getCurriculumPageImpl } from "@repo/backend/convex/contents/runtime/curriculum";
+} from "@repo/backend/convex/contents/runtime/publicRoutes";
 import {
   getQuranReferenceImpl,
   getQuranSurahMetadataImpl,
@@ -60,10 +59,8 @@ import {
   listContentRoutesByParentArgsValidator,
   listContentRoutesByPrefixArgsValidator,
   listContentRoutesPageReturnValidator,
-  listLatestContentRoutesArgsValidator,
-  listLatestContentRoutesReturnValidator,
-  listMaterialApiContentPageArgsValidator,
-  listMaterialApiContentPageReturnValidator,
+  listLatestContentRoutePageArgsValidator,
+  listLatestContentRoutePageReturnValidator,
   listQuranSurahsReturnValidator,
 } from "@repo/backend/convex/contents/runtime/spec";
 import {
@@ -130,11 +127,11 @@ export const getContentRouteArtifactPage = query({
   handler: (ctx, args) => getContentRouteArtifactPageImpl(ctx, args),
 });
 
-/** Lists newest dated content routes without scanning the full catalog. */
-export const listLatestContentRoutes = query({
-  args: listLatestContentRoutesArgsValidator,
-  returns: listLatestContentRoutesReturnValidator,
-  handler: (ctx, args) => listLatestContentRoutesImpl(ctx, args),
+/** Lists one newest-first page of dated content routes. */
+export const listLatestContentRoutePage = query({
+  args: listLatestContentRoutePageArgsValidator,
+  returns: listLatestContentRoutePageReturnValidator,
+  handler: (ctx, args) => listLatestContentRoutePageImpl(ctx, args),
 });
 
 /** Lists materialized route counts for one locale. */
@@ -215,14 +212,6 @@ export const listArticleApiContentPage = query({
   returns: listArticleApiContentPageReturnValidator,
   /** Runs a bounded article API content page query with generated argument typing. */
   handler: (ctx, args) => listArticleApiContentPageImpl(ctx, args),
-});
-
-/** Lists material API rows matching one route prefix. */
-export const listMaterialApiContentPage = query({
-  args: listMaterialApiContentPageArgsValidator,
-  returns: listMaterialApiContentPageReturnValidator,
-  /** Runs a bounded material API content page query with generated argument typing. */
-  handler: (ctx, args) => listMaterialApiContentPageImpl(ctx, args),
 });
 
 /** Lists synced Quran surah metadata rows. */

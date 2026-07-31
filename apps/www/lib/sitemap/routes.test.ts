@@ -27,12 +27,18 @@ const programMocks = vi.hoisted(() => ({
   readPublishedProgramBuckets: vi.fn(),
   readPublishedProgramSitemap: vi.fn(),
 }));
+const ownershipMocks = vi.hoisted(() => ({
+  filterMaterialContentRows: vi.fn(),
+  filterMaterialPublicPaths: vi.fn(),
+}));
+const activeMaterialReleaseId = "release-material";
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleSitemap: articleMocks.readPublishedArticleSitemap,
 }));
 vi.mock("@/lib/content/material/sitemap", () => materialMocks);
 vi.mock("@/lib/content/program/sitemap", () => programMocks);
+vi.mock("@/lib/sitemap/material", () => ownershipMocks);
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentSitemapPage: runtimeMocks.getRuntimeContentSitemapPage,
@@ -40,13 +46,24 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 }));
 
 beforeEach(() => {
+  ownershipMocks.filterMaterialContentRows
+    .mockReset()
+    .mockImplementation((_locale, rows) => Effect.succeed(rows));
+  ownershipMocks.filterMaterialPublicPaths
+    .mockReset()
+    .mockImplementation((_locale, paths) => Effect.succeed(paths));
   articleMocks.readPublishedArticleSitemap.mockReset();
   articleMocks.readPublishedArticleSitemap.mockReturnValue(
     Effect.succeed(null)
   );
   materialMocks.readPublishedMaterialBuckets.mockReset();
   materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-    Effect.succeed({ buckets: [], managed: false })
+    Effect.succeed({
+      activeReleaseId: null,
+      buckets: [],
+      managed: false,
+      materialCount: 0,
+    })
   );
   materialMocks.readPublishedMaterialSitemap.mockReset();
   materialMocks.readPublishedMaterialSitemap.mockReturnValue(
@@ -183,7 +200,12 @@ describe("sitemap route pages", () => {
       })
     );
     materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-      Effect.succeed({ buckets: ["abc"], managed: true })
+      Effect.succeed({
+        activeReleaseId: activeMaterialReleaseId,
+        buckets: ["abc"],
+        managed: true,
+        materialCount: 1,
+      })
     );
     programMocks.readPublishedProgramBuckets.mockReturnValue(
       Effect.succeed({ buckets: ["abc"], managed: true })
@@ -192,6 +214,33 @@ describe("sitemap route pages", () => {
     await expect(readPaths("public_en_0")).resolves.toEqual([
       "/try-out/indonesia/snbt",
     ]);
+    expect(ownershipMocks.filterMaterialPublicPaths).toHaveBeenCalledWith(
+      "en",
+      [
+        "curriculum/merdeka/class-10/mathematics",
+        "subjects/mathematics/functions/concept",
+        "try-out/indonesia/snbt",
+      ],
+      activeMaterialReleaseId
+    );
+  });
+
+  it("rejects retained source material pages after family cutover", async () => {
+    materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: activeMaterialReleaseId,
+        buckets: ["abc"],
+        managed: true,
+        materialCount: 1,
+      })
+    );
+
+    await expect(readFailure("content_en_material_0")).resolves.toMatchObject({
+      _tag: "SitemapPageNotFoundError",
+      pageId: "content_en_material_0",
+    });
+    expect(runtimeMocks.getRuntimeContentSitemapPage).not.toHaveBeenCalled();
+    expect(ownershipMocks.filterMaterialContentRows).not.toHaveBeenCalled();
   });
 
   it("fails when an id or its materialized page is missing", async () => {
@@ -279,6 +328,7 @@ function routeRow({
     kind,
     route,
     section,
+    sourcePath,
     syncedAt: 1,
   };
 }

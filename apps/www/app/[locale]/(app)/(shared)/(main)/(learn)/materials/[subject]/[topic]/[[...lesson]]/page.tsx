@@ -11,6 +11,7 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { listMaterialStaticParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
+import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata";
 import {
   readMaterialAlternates,
   readMaterialContentKey,
@@ -71,11 +72,7 @@ export async function generateMetadata({
   const source = await readMaterialMetadata(params);
   const { locale, metadata, route } = source;
   const path = toMaterialHref(route);
-  const routeTitle = "metadata" in route ? route.metadata.title : route.title;
-  const routeDescription =
-    "metadata" in route ? route.metadata.description : route.description;
-  const title = metadata?.title ?? routeTitle;
-  const description = metadata?.description ?? routeDescription ?? routeTitle;
+  const { description, title } = toMaterialMetadataCopy(source);
 
   return {
     title: { absolute: title },

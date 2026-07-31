@@ -5,14 +5,16 @@ import { Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   listMaterialStaticParams,
+  parseMaterialParams,
   readMaterialRequest,
   readMaterialRoute,
-  readMaterialRoutes,
   requireParentMaterialRoute,
   resolveMaterialRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import {
+  makePreviewPublicRoute,
   previewIdProjection,
+  previewNextProjection,
   previewProjection,
   previewPublicRoute,
 } from "@/test/content-preview";
@@ -57,19 +59,9 @@ const parentRoute = Schema.decodeUnknownSync(PublicContentRouteSchema)({
   publicPath: previewProjection.parentPath,
   title: previewProjection.topicTitle,
 });
-const idRoute = Schema.decodeUnknownSync(PublicContentRouteSchema)({
-  description: previewIdProjection.metadata.description,
-  kind: previewIdProjection.kind,
-  locale: previewIdProjection.locale,
-  materialKey: previewIdProjection.materialKey,
-  order: previewIdProjection.order,
-  parentPath: previewIdProjection.parentPath,
-  publicPath: previewIdProjection.publicPath,
-  sectionKey: previewIdProjection.sectionKey,
-  sitemap: previewIdProjection.sitemap,
-  sourcePath: previewIdProjection.contentKey,
-  title: previewIdProjection.metadata.title,
-});
+
+const idRoute = makePreviewPublicRoute(previewIdProjection);
+const nextRoute = makePreviewPublicRoute(previewNextProjection);
 
 /** Produces fresh framework params for one real material route. */
 function params(overrides?: Partial<typeof routeParams>) {
@@ -82,6 +74,7 @@ beforeEach(() => {
     parentRoute,
     previewPublicRoute,
     idRoute,
+    nextRoute,
   ]);
   mocks.readNamespaceSegment.mockReturnValue("subjects");
   mocks.resolveRouteByPath.mockReturnValue(previewPublicRoute);
@@ -97,6 +90,31 @@ beforeEach(() => {
 });
 
 describe("material route data", () => {
+  it("parses only concrete localized material slugs", () => {
+    expect(
+      parseMaterialParams("en", [
+        "subjects",
+        "mathematics",
+        "functions",
+        "concept",
+      ])
+    ).toEqual({
+      lesson: ["concept"],
+      locale: "en",
+      subject: "mathematics",
+      topic: "functions",
+    });
+    expect(
+      parseMaterialParams("en", ["subjects", "mathematics", "functions"])
+    ).toBeNull();
+    expect(
+      parseMaterialParams("en", ["articles", "politics", "example", "post"])
+    ).toBeNull();
+    expect(
+      parseMaterialParams("en", ["subjects", "", "functions", "concept"])
+    ).toBeNull();
+  });
+
   it("builds and resolves one exact localized material request", async () => {
     await expect(readMaterialRequest(params())).resolves.toEqual({
       locale: "en",
@@ -144,7 +162,6 @@ describe("material route data", () => {
       ...previewPublicRoute,
       kind: "article-category",
     });
-
     await expect(readMaterialRoute(params())).resolves.toEqual({
       locale: "en",
       route: undefined,
@@ -178,18 +195,12 @@ describe("material route data", () => {
         subject: "mathematics",
         topic: "function-composition-inverse-function",
       },
+      {
+        lesson: ["injective-surjective-bijective-function"],
+        subject: "mathematics",
+        topic: "function-composition-inverse-function",
+      },
     ]);
-    expect(readMaterialRoutes()).toEqual([
-      parentRoute,
-      previewPublicRoute,
-      idRoute,
-    ]);
-    expect(readMaterialRoutes()).toEqual([
-      parentRoute,
-      previewPublicRoute,
-      idRoute,
-    ]);
-    expect(mocks.readStaticPublicContentRoutes).toHaveBeenCalledOnce();
   });
 
   it("lists every source locale only when no locale is requested", async () => {
@@ -203,6 +214,11 @@ describe("material route data", () => {
         lesson: ["konsep-fungsi"],
         subject: "matematika",
         topic: "fungsi-komposisi-dan-fungsi-invers",
+      },
+      {
+        lesson: ["injective-surjective-bijective-function"],
+        subject: "mathematics",
+        topic: "function-composition-inverse-function",
       },
     ]);
     expect(mocks.getPublishedMaterialRoutes).not.toHaveBeenCalled();

@@ -7,6 +7,8 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
 import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
+import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -247,6 +249,51 @@ describe("curriculumLessons/queries", () => {
         route: "subjects/mathematics/topic-current-route/section-current-route",
         title: "Subject current-route",
         url: "https://nakafa.com/en/subjects/mathematics/topic-current-route/section-current-route",
+      }),
+    ]);
+  });
+
+  it("hydrates exact material cards without a source route row", async () => {
+    const t = createTrendingConvexTest();
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    await t.mutation(async (ctx) => {
+      const counterId = await ctx.db.insert("learningPopularityCounters", {
+        ...FUNCTION_MATERIAL.graph,
+        ...canonicalContext,
+        content_id: FUNCTION_MATERIAL.graph.assetId,
+        locale: FUNCTION_MATERIAL.locale,
+        materialDomain: "mathematics",
+        route: "subjects/mathematics/stale/function-concept",
+        score: 10,
+        section: "material",
+        scopeMode: "global",
+        sourcePath: FUNCTION_MATERIAL.contentKey,
+        title: "Stale Function Concept",
+        updatedAt: NOW,
+        windowKey: getDefaultPopularityWindow(),
+      });
+      const counter = await ctx.db.get(counterId);
+      if (!counter) {
+        expect.fail("Expected one exact material popularity counter.");
+      }
+      await learningPopularityRankings.insert(ctx, counter);
+    });
+
+    const results = await t.query(
+      api.curriculumLessons.queries.getTrendingSubjects,
+      {
+        locale: "en",
+        minViews: 5,
+        windowKey: getDefaultPopularityWindow(),
+      }
+    );
+
+    expect(results).toEqual([
+      expect.objectContaining({
+        assetId: FUNCTION_MATERIAL.graph.assetId,
+        materialDomain: "mathematics",
+        route: FUNCTION_MATERIAL.publicPath,
+        title: FUNCTION_MATERIAL.metadata.title,
       }),
     ]);
   });

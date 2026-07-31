@@ -58,6 +58,7 @@ const programContextValidator = v.object({
   managed: v.boolean(),
   mappingJson: v.union(v.string(), v.null()),
   parentJson: v.union(v.string(), v.null()),
+  resolvedCanonicalPath: v.union(v.string(), v.null()),
 });
 
 const programPathValidator = v.object({
@@ -89,6 +90,8 @@ export const catalog = query({
 /** Resolves a validated curriculum return context for one material route. */
 export const context = query({
   args: {
+    expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
+    contentKey: v.string(),
     locale: localeValidator,
     materialKey: v.string(),
     nodeKey: v.string(),
@@ -99,18 +102,25 @@ export const context = query({
   returns: programContextValidator,
   handler: (ctx, args) =>
     runConvexProgram(
-      readProgramContext(ctx, args.locale, {
-        materialKey: args.materialKey,
-        nodeKey: args.nodeKey,
-        parentPath: args.parentPath,
-        programKey: args.programKey,
-        publicPath: args.publicPath,
-      }).pipe(
+      readProgramContext(
+        ctx,
+        args.locale,
+        {
+          contentKey: args.contentKey,
+          materialKey: args.materialKey,
+          nodeKey: args.nodeKey,
+          parentPath: args.parentPath,
+          programKey: args.programKey,
+          publicPath: args.publicPath,
+        },
+        args.expectedActiveReleaseId
+      ).pipe(
         Effect.map(({ context: resolved, managed }) => ({
           groupJson: resolved?.groupJson ?? null,
           managed,
           mappingJson: resolved?.mappingJson ?? null,
           parentJson: resolved?.parentJson ?? null,
+          resolvedCanonicalPath: resolved?.resolvedCanonicalPath ?? null,
         }))
       )
     ),

@@ -10,6 +10,7 @@ import {
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { validateMaterialProjectionRoute } from "@repo/backend/convex/contentRelease/material/collision";
 import {
   loadExactVersion,
   loadRouteBinding,
@@ -94,7 +95,7 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
       `Upsert ${row.releaseId}/${row.index} has mismatched staged evidence.`
     );
   }
-  return {
+  const version = {
     artifactHash: change.artifactHash,
     compilerConfigHash: artifact.payload.compilerConfigHash,
     contentKey: row.contentKey,
@@ -111,6 +112,7 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
     sourceHash: artifact.payload.sourceHash,
     sourcePath: change.sourcePath,
   } satisfies WithoutSystemFields<Doc<"contentHeads">>;
+  return { projection, version };
 });
 
 /** Compares every persisted immutable head field without system metadata. */
@@ -142,7 +144,10 @@ export const writeUpsert = Effect.fn("contentRelease.writeUpsert")(function* (
   ctx: MutationCtx,
   row: Doc<"contentItems">
 ) {
-  const version = yield* upsertVersion(ctx, row);
+  const { projection, version } = yield* upsertVersion(ctx, row);
+  if (projection.kind === "subject-lesson") {
+    yield* validateMaterialProjectionRoute(ctx, projection);
+  }
   const existing = yield* loadExactVersion(
     ctx,
     row.contentKey,

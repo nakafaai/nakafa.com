@@ -1,7 +1,10 @@
+import type { PublicContentTarget } from "@repo/backend/client/content/request";
 import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
+import { readPublishedMaterialMarkdown } from "@repo/backend/client/nakafa/material";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { readQuranMarkdown } from "@repo/backend/client/nakafa/quran";
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
+import { verifyNakafaReleasePin } from "@repo/backend/client/nakafa/release";
 import type { RuntimeMdxPage } from "@repo/backend/client/nakafa/types";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
@@ -10,18 +13,38 @@ import { Effect, Option } from "effect";
 
 /** Reads full markdown for one normalized Nakafa content reference. */
 export const readNakafaMarkdown = Effect.fn("NakafaContent.readMarkdown")(
-  function* (convexUrl: string, input: string) {
+  function* (
+    convexUrl: string,
+    readContentTarget: () => PublicContentTarget,
+    input: string
+  ) {
     const ref = yield* resolveNakafaContentRef(convexUrl, input);
 
+    if (Option.isSome(ref) && ref.value.section === "quran") {
+      return yield* readQuranMarkdown(convexUrl, ref.value);
+    }
+
+    if (Option.isSome(ref) && ref.value.section !== "material") {
+      return yield* readMdxMarkdown(convexUrl, ref.value);
+    }
+
+    const published = yield* readPublishedMaterialMarkdown(
+      convexUrl,
+      readContentTarget,
+      input
+    );
+    if (published.managed) {
+      return published.markdown;
+    }
     if (Option.isNone(ref)) {
       return Option.none<NakafaAgentMarkdown>();
     }
 
-    if (ref.value.section === "quran") {
-      return yield* readQuranMarkdown(convexUrl, ref.value);
+    const markdown = yield* readMdxMarkdown(convexUrl, ref.value);
+    if (published.activeReleaseId !== undefined) {
+      yield* verifyNakafaReleasePin(convexUrl, published.activeReleaseId);
     }
-
-    return yield* readMdxMarkdown(convexUrl, ref.value);
+    return markdown;
   }
 );
 

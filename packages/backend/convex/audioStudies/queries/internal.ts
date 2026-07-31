@@ -3,8 +3,13 @@ import {
   scriptGenerationDataValidator,
   speechGenerationDataValidator,
 } from "@repo/backend/convex/audioStudies/generation/spec";
-import { getAudioContentSourceByContentId } from "@repo/backend/convex/audioStudies/helpers/sources";
+import {
+  getAudioContentSourceByContentId,
+  selectUnmanagedAudioSource,
+  toAudioContentLookup,
+} from "@repo/backend/convex/audioStudies/helpers/sources";
 import { graphContentIdValidator } from "@repo/backend/convex/contents/graph";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
@@ -26,19 +31,10 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
     }
 
     const contentAudio = {
-      alignmentId: audio.alignmentId,
-      assetId: audio.assetId,
-      conceptId: audio.conceptId,
-      contentHash: audio.contentHash,
-      content_id: audio.content_id,
-      contentType: audio.contentType,
-      learningObjectId: audio.learningObjectId,
-      lensId: audio.lensId,
-      locale: audio.locale,
-      route: audio.route,
+      ...toAudioContentLookup(audio),
+      status: audio.status,
       voiceId: audio.voiceId,
       voiceSettings: audio.voiceSettings,
-      status: audio.status,
     };
 
     if (audio.contentType === "article") {
@@ -62,6 +58,13 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
           locale: article.locale,
         },
       };
+    }
+
+    const unmanagedSource = await runConvexProgram(
+      selectUnmanagedAudioSource(ctx, contentAudio)
+    );
+    if (!unmanagedSource) {
+      return null;
     }
 
     const section = await ctx.db
@@ -102,6 +105,14 @@ export const getAudioForSpeechGeneration = internalQuery({
     if (!audio?.script) {
       return null;
     }
+    if (audio.contentType === "material") {
+      const unmanagedSource = await runConvexProgram(
+        selectUnmanagedAudioSource(ctx, toAudioContentLookup(audio))
+      );
+      if (!unmanagedSource) {
+        return null;
+      }
+    }
 
     return {
       script: audio.script,
@@ -126,6 +137,14 @@ export const verifyContentHash = internalQuery({
     if (!audio) {
       return false;
     }
+    if (audio.contentType === "material") {
+      const unmanagedSource = await runConvexProgram(
+        selectUnmanagedAudioSource(ctx, toAudioContentLookup(audio))
+      );
+      if (!unmanagedSource) {
+        return false;
+      }
+    }
 
     return audio.contentHash === args.expectedHash;
   },
@@ -137,7 +156,14 @@ export const getContentHash = internalQuery({
     content_id: graphContentIdValidator,
   },
   returns: nullable(v.string()),
-  handler: async (ctx, args) =>
-    (await getAudioContentSourceByContentId(ctx, args.content_id))
-      ?.contentHash ?? null,
+  handler: async (ctx, args) => {
+    const source = await getAudioContentSourceByContentId(ctx, args.content_id);
+    if (!source) {
+      return null;
+    }
+    const unmanagedSource = await runConvexProgram(
+      selectUnmanagedAudioSource(ctx, source)
+    );
+    return unmanagedSource?.contentHash ?? null;
+  },
 });

@@ -1,6 +1,9 @@
 // @vitest-environment node
 
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  PublicPathSchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -8,7 +11,7 @@ import {
   getPublishedMaterialContext,
   readPublishedMaterialContext,
 } from "@/lib/content/material/context";
-import { previewProjection } from "@/test/content-preview";
+import { previewProjection, previewPublicRoute } from "@/test/content-preview";
 import {
   testCurriculumRowJson,
   testProgramContexts,
@@ -37,6 +40,7 @@ const publishedContext = {
   managed: true,
   mappingJson: testCurriculumRowJson(mapping),
   parentJson: testCurriculumRowJson(testProgramSubject),
+  resolvedCanonicalPath: mapping.canonicalPath ?? null,
 };
 
 vi.mock("@/lib/content/cache", () => ({
@@ -92,12 +96,14 @@ describe("published material context", () => {
         managed: false,
         mappingJson: null,
         parentJson: null,
+        resolvedCanonicalPath: null,
       })
       .mockResolvedValueOnce({
         groupJson: null,
         managed: true,
         mappingJson: null,
         parentJson: null,
+        resolvedCanonicalPath: null,
       });
 
     await expect(
@@ -110,6 +116,57 @@ describe("published material context", () => {
         readPublishedMaterialContext("en", previewProjection, context)
       )
     ).resolves.toEqual({ managed: true, value: null });
+  });
+
+  it("pins a context read to the expected active release", async () => {
+    const activeReleaseId = ReleaseIdSchema.make("release-material");
+    fetchMock.mockResolvedValueOnce({
+      groupJson: null,
+      managed: false,
+      mappingJson: null,
+      parentJson: null,
+      resolvedCanonicalPath: null,
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialContext(
+          "en",
+          previewProjection,
+          context,
+          activeReleaseId
+        )
+      )
+    ).resolves.toEqual({ managed: false, value: null });
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        contentKey: previewProjection.contentKey,
+        expectedActiveReleaseId: activeReleaseId,
+      })
+    );
+  });
+
+  it("uses a source route path as the stable content identity", async () => {
+    fetchMock.mockResolvedValueOnce({
+      groupJson: null,
+      managed: false,
+      mappingJson: null,
+      parentJson: null,
+      resolvedCanonicalPath: null,
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialContext("en", previewPublicRoute, context)
+      )
+    ).resolves.toEqual({ managed: false, value: null });
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        contentKey: previewPublicRoute.sourcePath,
+      })
+    );
   });
 
   it("accepts course parents and falls back to the authored group title", async () => {
@@ -146,6 +203,34 @@ describe("published material context", () => {
     ).resolves.toMatchObject({
       managed: true,
       value: { label: group.title },
+    });
+  });
+
+  it("accepts a backend-verified renamed material parent", async () => {
+    const renamedParent = PublicPathSchema.make(
+      "subjects/mathematics/renamed-functions"
+    );
+    const renamedMaterial = {
+      ...previewProjection,
+      parentPath: renamedParent,
+      publicPath: PublicPathSchema.make(
+        `${renamedParent}/renamed-function-concept`
+      ),
+    };
+    fetchMock.mockResolvedValueOnce({
+      ...publishedContext,
+      resolvedCanonicalPath: renamedParent,
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialContext("en", renamedMaterial, context)
+      )
+    ).resolves.toMatchObject({
+      managed: true,
+      value: {
+        mapping: { canonicalPath: mapping.canonicalPath },
+      },
     });
   });
 
@@ -200,6 +285,9 @@ describe("published material context", () => {
           `${previewProjection.parentPath}/other-lesson`
         ),
       }),
+      resolvedCanonicalPath: PublicPathSchema.make(
+        `${previewProjection.parentPath}/other-lesson`
+      ),
     });
 
     await expect(

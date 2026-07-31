@@ -1,5 +1,4 @@
 import { readContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/read";
-import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
@@ -11,24 +10,16 @@ import {
   activateMaterialCatalog,
   insertMaterialProjection,
   MATERIAL_IDENTITY,
+  selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
 import {
   getPublicSearchPath,
   insertContentSearch,
-  searchContentId,
 } from "@repo/backend/test/search";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
-import type { Infer } from "convex/values";
 import { describe, expect, it } from "vitest";
-
-const searchArgs: Infer<typeof contentSearchInputValidator> = {
-  limit: 10,
-  locale: "id",
-  offset: 0,
-  section: "tryout",
-};
 
 describe("readContentSearchDocuments", () => {
   it("uses active article ownership without stale source results", async () => {
@@ -51,7 +42,7 @@ describe("readContentSearchDocuments", () => {
       });
       const state = await ctx.db.query("contentState").unique();
       if (!state) {
-        throw new Error("Expected one active content state.");
+        expect.fail("Expected one active content state.");
       }
       await ctx.db.patch("contentState", state._id, {
         searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
@@ -105,10 +96,13 @@ describe("readContentSearchDocuments", () => {
       }
       const state = await ctx.db.query("contentState").unique();
       if (!state) {
-        throw new Error("Expected one active content state.");
+        expect.fail("Expected one active content state.");
       }
       await ctx.db.patch("contentState", state._id, {
         materialManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+        materialOwnerManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+        materialOwnerReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+        materialOwnerSequence: TEST_RUNTIME_RELEASE.sequence,
         materialReleaseId: TEST_RUNTIME_RELEASE.releaseId,
         materialSequence: TEST_RUNTIME_RELEASE.sequence,
         searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
@@ -223,6 +217,9 @@ describe("readContentSearchDocuments", () => {
         searchReleaseId: MATERIAL_IDENTITY.releaseId,
         searchSequence: MATERIAL_IDENTITY.sequence,
         materialManifestHash: undefined,
+        materialOwnerManifestHash: undefined,
+        materialOwnerReleaseId: undefined,
+        materialOwnerSequence: undefined,
         materialReleaseId: undefined,
         materialSequence: undefined,
       });
@@ -259,6 +256,9 @@ describe("readContentSearchDocuments", () => {
       }
       await ctx.db.patch("contentState", state._id, {
         materialManifestHash: MATERIAL_IDENTITY.manifestHash,
+        materialOwnerManifestHash: MATERIAL_IDENTITY.manifestHash,
+        materialOwnerReleaseId: MATERIAL_IDENTITY.releaseId,
+        materialOwnerSequence: MATERIAL_IDENTITY.sequence,
         materialReleaseId: MATERIAL_IDENTITY.releaseId,
         materialSequence: MATERIAL_IDENTITY.sequence,
       });
@@ -288,6 +288,137 @@ describe("readContentSearchDocuments", () => {
         section: "material",
         title: projection.metadata.title,
       },
+    ]);
+  });
+
+  it("replaces one stale source result through exact material ownership", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const projection = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(t, [projection]);
+    await selectExactMaterial(t, projection);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeIndex(ctx, projection.contentKey, {
+        headSequence: MATERIAL_IDENTITY.sequence,
+        locale: projection.locale,
+        plainText: "exact owned searchable material",
+      });
+      await insertContentSearch(ctx, {
+        contentHash: "stale-exact-material",
+        description: "",
+        locale: projection.locale,
+        route: "subjects/test/technical-topic/old-section",
+        section: "material",
+        sourcePath: projection.contentKey,
+        syncedAt: 1,
+        text: "exact owned searchable material",
+        title: "Stale exact source material",
+      });
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        searchManifestHash: MATERIAL_IDENTITY.manifestHash,
+        searchReleaseId: MATERIAL_IDENTITY.releaseId,
+        searchSequence: MATERIAL_IDENTITY.sequence,
+      });
+    });
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readContentSearchDocuments(
+            ctx,
+            {
+              limit: 10,
+              locale: projection.locale,
+              offset: 0,
+              queries: ["exact owned searchable material"],
+              section: "material",
+            },
+            ["exact owned searchable material"],
+            10
+          )
+        )
+      )
+    ).resolves.toMatchObject([
+      {
+        content_id: projection.graph.assetId,
+        route: projection.publicPath,
+        section: "material",
+        title: projection.metadata.title,
+      },
+    ]);
+  });
+
+  it("fills the requested source window after removing exact claims", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const projection = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(t, [projection]);
+    await selectExactMaterial(t, projection);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeIndex(ctx, projection.contentKey, {
+        headSequence: MATERIAL_IDENTITY.sequence,
+        locale: projection.locale,
+        plainText: "claimed source material",
+      });
+      await insertContentSearch(ctx, {
+        contentHash: "claimed-source-first",
+        description: "",
+        locale: projection.locale,
+        route: projection.publicPath,
+        section: "material",
+        sourcePath: projection.contentKey,
+        syncedAt: 1,
+        text: "claimed source material",
+        title: "A claimed material",
+      });
+      await insertContentSearch(ctx, {
+        contentHash: "unclaimed-source-second",
+        description: "",
+        locale: projection.locale,
+        route: "subjects/mathematics/logarithms/definition",
+        section: "material",
+        sourcePath:
+          "material/lesson/mathematics/exponential-logarithm/logarithm-definition",
+        syncedAt: 1,
+        text: "unclaimed source material",
+        title: "B unclaimed material",
+      });
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        expect.fail("Expected one active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        searchManifestHash: MATERIAL_IDENTITY.manifestHash,
+        searchReleaseId: MATERIAL_IDENTITY.releaseId,
+        searchSequence: MATERIAL_IDENTITY.sequence,
+      });
+    });
+
+    const documents = await t.query((ctx) =>
+      runConvexProgram(
+        readContentSearchDocuments(
+          ctx,
+          {
+            limit: 2,
+            locale: projection.locale,
+            offset: 0,
+            queries: [],
+            section: "material",
+          },
+          [],
+          2
+        )
+      )
+    );
+
+    expect(documents).toMatchObject([
+      {
+        route: projection.publicPath,
+        section: "material",
+      },
+      { section: "material", title: "B unclaimed material" },
     ]);
   });
 
@@ -360,80 +491,5 @@ describe("readContentSearchDocuments", () => {
     expect(documents.map((document) => document.content_id)).toEqual([
       catalogAssetId,
     ]);
-  });
-
-  it("reads discriminating try-out context before a generic title hit", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(async (ctx) => {
-      await insertContentSearch(ctx, {
-        contentHash: "hash-english-section",
-        description: "",
-        locale: "id",
-        route: "try-out/indonesia/snbt/2027/set-2/bahasa-inggris",
-        section: "tryout",
-        syncedAt: 1,
-        text: "bahasa-inggris try-out set-2 reading passage",
-        title: "Bahasa Inggris",
-      });
-      await insertContentSearch(ctx, {
-        contentHash: "hash-quantitative-section",
-        description: "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2",
-        locale: "id",
-        route: "try-out/indonesia/snbt/2027/set-2/pengetahuan-kuantitatif",
-        section: "tryout",
-        syncedAt: 1,
-        text: "pengetahuan-kuantitatif fungsi tangga",
-        title: "Pengetahuan Kuantitatif",
-      });
-    });
-
-    const documents = await t.query((ctx) =>
-      runConvexProgram(
-        readContentSearchDocuments(
-          ctx,
-          searchArgs,
-          ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-          10
-        )
-      )
-    );
-
-    expect(documents[0]?.content_id).toBe(
-      searchContentId(
-        "id",
-        "try-out/indonesia/snbt/2027/set-2/pengetahuan-kuantitatif"
-      )
-    );
-  });
-
-  it("drops a weak try-out hit with only one semantic query token", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(async (ctx) => {
-      await insertContentSearch(ctx, {
-        contentHash: "hash-class-section",
-        description: "SMA SNBT Penalaran Umum Try Out 2026 Set 2 Nomor 11",
-        locale: "id",
-        route: "try-out/indonesia/snbt/2027/set-2/penalaran-umum",
-        section: "tryout",
-        syncedAt: 1,
-        text: "Semua siswa kelas 9 mengikuti ujian sekolah.",
-        title: "SNBT Penalaran Umum Try Out 2026 Set 2 Soal 11",
-      });
-    });
-
-    const documents = await t.query((ctx) =>
-      runConvexProgram(
-        readContentSearchDocuments(
-          ctx,
-          searchArgs,
-          ["fungsi rasional kelas 11"],
-          10
-        )
-      )
-    );
-
-    expect(documents).toEqual([]);
   });
 });

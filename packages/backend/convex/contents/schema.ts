@@ -331,6 +331,12 @@ const tables = {
       "kind",
       "route",
     ])
+    .index("by_locale_and_section_and_kind_and_sourcePath", [
+      "locale",
+      "section",
+      "kind",
+      "sourcePath",
+    ])
     .index("by_locale_and_section_and_kind_and_parentRoute_and_route", [
       "locale",
       "section",

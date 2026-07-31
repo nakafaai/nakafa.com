@@ -1,9 +1,12 @@
 import "server-only";
 
-import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  type GitCommitShaSchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { decodeMaterialJson } from "@/lib/content/material/decode";
@@ -22,6 +25,7 @@ import {
 
 /** Complete immutable data needed by one curriculum route page. */
 export interface PublishedProgramRoute {
+  readonly activeReleaseId: null | typeof ReleaseIdSchema.Type;
   readonly alternates: readonly PublishedCurriculumRoute[];
   readonly ancestors: readonly PublishedCurriculumRoute[];
   readonly children: readonly PublishedCurriculumRoute[];
@@ -59,8 +63,14 @@ export const readPublishedProgramRoute = Effect.fn(
     locale,
     publicPath,
   });
+  const activeReleaseId = yield* Schema.decodeUnknown(
+    Schema.NullOr(ReleaseIdSchema)
+  )(result.activeReleaseId).pipe(
+    Effect.mapError(() => new PublishedProjectionError({ locale, publicPath }))
+  );
   if (!result.managed) {
     return {
+      activeReleaseId,
       alternates: [],
       ancestors: [],
       children: [],
@@ -73,8 +83,12 @@ export const readPublishedProgramRoute = Effect.fn(
       sourceRevision: null,
     } satisfies PublishedProgramRoute;
   }
+  if (activeReleaseId === null) {
+    return yield* new PublishedProjectionError({ locale, publicPath });
+  }
   if (result.routeJson === null) {
     return {
+      activeReleaseId,
       alternates: [],
       ancestors: [],
       children: [],
@@ -120,6 +134,7 @@ export const readPublishedProgramRoute = Effect.fn(
     return yield* new PublishedProjectionError({ locale, publicPath });
   }
   return {
+    activeReleaseId,
     alternates,
     ancestors,
     children,

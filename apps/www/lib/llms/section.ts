@@ -2,7 +2,6 @@ import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
-import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
 import { getRuntimeContentRouteCounts } from "@/lib/content/runtime/routes";
 import {
   BASE_URL,
@@ -15,15 +14,23 @@ import {
   formatLlmsEntryLine,
   renderLlmsIndexText,
 } from "@/lib/llms/index-text";
+import { readMaterialLlmsInventory } from "@/lib/llms/material-pages";
 
 type ContentSection = Exclude<LlmsSection, "site">;
 
 /** One bounded section inventory and the runtime that owns its rows. */
-export interface LlmsSectionPages {
-  readonly owner: "published" | "source";
-  readonly pageCount: number;
-  readonly routeCount: number;
-}
+export type LlmsSectionPages =
+  | {
+      readonly owner: "mixed";
+      readonly pageCount: number;
+      readonly publishedRouteCount: number;
+      readonly sourceRouteCount: number;
+    }
+  | {
+      readonly owner: "published" | "source";
+      readonly pageCount: number;
+      readonly routeCount: number;
+    };
 
 /** Reads bounded page counts from the active owner of one content section. */
 export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(
@@ -39,14 +46,27 @@ export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(
       }
     }
     if (section === "material") {
-      const published = yield* readPublishedMaterialBuckets(locale);
-      if (published.managed) {
+      const inventory = yield* readMaterialLlmsInventory(locale);
+      if (inventory.owner === "mixed") {
         return {
-          owner: "published",
-          pageCount: published.buckets.length,
-          routeCount: published.materialCount,
+          owner: "mixed",
+          pageCount: inventory.pageCount,
+          publishedRouteCount: inventory.publishedRouteCount,
+          sourceRouteCount: inventory.sourceRouteCount,
         } satisfies LlmsSectionPages;
       }
+      if (inventory.owner === "published") {
+        return {
+          owner: "published",
+          pageCount: inventory.pageCount,
+          routeCount: inventory.publishedRouteCount,
+        } satisfies LlmsSectionPages;
+      }
+      return {
+        owner: "source",
+        pageCount: inventory.pageCount,
+        routeCount: inventory.sourceRouteCount,
+      } satisfies LlmsSectionPages;
     }
 
     const counts = yield* getRuntimeContentRouteCounts({ locale });
@@ -61,16 +81,13 @@ export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(
 );
 
 /** Builds a bounded section index from its active inventory owner. */
-export function buildLlmsSectionPageMapText({
-  locale,
-  owner,
-  pageCount,
-  routeCount,
-  section,
-}: LlmsSectionPages & {
-  readonly locale: Locale;
-  readonly section: ContentSection;
-}) {
+export function buildLlmsSectionPageMapText(
+  input: LlmsSectionPages & {
+    readonly locale: Locale;
+    readonly section: ContentSection;
+  }
+) {
+  const { locale, owner, pageCount, section } = input;
   const localeLabel = getLocaleLabel(locale);
   const sectionLabel = SECTION_LABELS[section];
   const lines = buildSectionPageMapLines({
@@ -83,10 +100,17 @@ export function buildLlmsSectionPageMapText({
     owner === "published"
       ? "bounded published partitions"
       : `bounded catalog pages of at most ${CONTENT_ROUTE_ARTIFACT_PAGE_SIZE} routes`;
+  if (input.owner === "mixed") {
+    return renderLlmsIndexText({
+      lines,
+      summary: `For AI agents: ${input.sourceRouteCount} ${localeLabel} source-catalog ${sectionLabel.toLowerCase()} routes are reconciled with ${input.publishedRouteCount} exact published routes across ${pageCount} bounded source pages and published partitions. Follow the page pattern, then its page-level \`.md\` links.`,
+      title: `Nakafa ${localeLabel} ${sectionLabel} Pages`,
+    });
+  }
 
   return renderLlmsIndexText({
     lines,
-    summary: `For AI agents: ${routeCount} ${localeLabel} ${sectionLabel.toLowerCase()} routes are split across ${pageCount} ${partitionLabel}. Follow the page pattern, then its page-level \`.md\` links.`,
+    summary: `For AI agents: ${input.routeCount} ${localeLabel} ${sectionLabel.toLowerCase()} routes are split across ${pageCount} ${partitionLabel}. Follow the page pattern, then its page-level \`.md\` links.`,
     title: `Nakafa ${localeLabel} ${sectionLabel} Pages`,
   });
 }

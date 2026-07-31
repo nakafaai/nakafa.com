@@ -250,6 +250,9 @@ export async function activateProgramSnapshot(
       candidateReleaseId: undefined,
       candidateSequence: undefined,
       materialManifestHash: TEST_MANIFEST_HASH,
+      materialOwnerManifestHash: TEST_MANIFEST_HASH,
+      materialOwnerReleaseId: TEST_RELEASE_ID,
+      materialOwnerSequence: 1,
       materialReleaseId: TEST_RELEASE_ID,
       materialSequence: 1,
     });

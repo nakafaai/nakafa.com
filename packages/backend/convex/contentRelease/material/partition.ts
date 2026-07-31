@@ -1,10 +1,12 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   CONTENT_BUCKET_SIZE,
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
+import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/material/owner";
+import { readVisibleMaterial } from "@repo/backend/convex/contentRelease/material/route";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { Effect } from "effect";
 
@@ -13,7 +15,7 @@ export const readMaterialPartition = Effect.fn(
   "contentRelease.readMaterialPartition"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadMaterialOwner>[1],
+  locale: Doc<"materialCatalog">["locale"],
   bucket: string
 ) {
   if (!isProjectionBucket(bucket)) {
@@ -22,9 +24,16 @@ export const readMaterialPartition = Effect.fn(
       `Material discovery bucket ${bucket} is invalid.`
     );
   }
-  const owner = yield* loadMaterialOwner(ctx, locale);
-  if (!(owner.managed && owner.active)) {
-    return { kind: "unmanaged" as const };
+  const owner = yield* loadMaterialCatalogOwner(ctx);
+  const activeReleaseId = owner.active?.releaseId ?? null;
+  if (!(owner.active && owner.ready)) {
+    return {
+      activeReleaseId,
+      kind: "unmanaged",
+    } satisfies {
+      readonly activeReleaseId: typeof activeReleaseId;
+      readonly kind: "unmanaged";
+    };
   }
   const count = yield* Effect.promise(() =>
     ctx.db
@@ -35,7 +44,13 @@ export const readMaterialPartition = Effect.fn(
       .unique()
   );
   if (!count) {
-    return { kind: "missing" as const };
+    return {
+      activeReleaseId,
+      kind: "missing",
+    } satisfies {
+      readonly activeReleaseId: typeof activeReleaseId;
+      readonly kind: "missing";
+    };
   }
   const rows = yield* Effect.promise(() =>
     ctx.db
@@ -55,8 +70,30 @@ export const readMaterialPartition = Effect.fn(
       `Material discovery bucket ${locale}/${bucket} has mismatched counts.`
     );
   }
-  return {
-    kind: "found" as const,
-    materials: yield* Effect.forEach(rows, verifyMaterial),
-  };
+  const materials = owner.familyManaged
+    ? yield* Effect.forEach(rows, (row) =>
+        verifyMaterial(row).pipe(
+          Effect.map((verified) => ({ ...verified, row }))
+        )
+      )
+    : (yield* Effect.forEach(rows, (row) =>
+        readVisibleMaterial(ctx, row, false)
+      )).filter((material) => material !== null);
+  return materials.length === 0
+    ? ({
+        activeReleaseId,
+        kind: "missing",
+      } satisfies {
+        readonly activeReleaseId: typeof activeReleaseId;
+        readonly kind: "missing";
+      })
+    : ({
+        activeReleaseId,
+        kind: "found",
+        materials,
+      } satisfies {
+        readonly activeReleaseId: typeof activeReleaseId;
+        readonly kind: "found";
+        readonly materials: typeof materials;
+      });
 });

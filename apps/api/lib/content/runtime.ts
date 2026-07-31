@@ -10,6 +10,10 @@ import type {
 } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { env } from "@/env";
+import {
+  readPublishedMaterialApiItem,
+  readPublishedMaterialGraphRoute,
+} from "@/lib/content/material";
 
 type RuntimeContentRoutePage = FunctionReturnType<
   typeof api.contents.queries.runtime.listContentRoutesByPrefix
@@ -21,7 +25,10 @@ type ArticleApiPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.listArticleApiContentPage
 >;
 type MaterialApiPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.listMaterialApiContentPage
+  typeof api.contentRelease.material.apiPage
+>;
+type MaterialApiRouteArgs = FunctionArgs<
+  typeof api.contentRelease.material.apiRoute
 >;
 type QuranSurahPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getQuranSurahPage
@@ -47,6 +54,35 @@ class ApiContentRuntimeReadError extends Schema.TaggedError<ApiContentRuntimeRea
     message: Schema.String,
   }
 ) {}
+
+/** Maps one signed material failure into the public API runtime contract. */
+function mapPublishedMaterialError(cause: unknown) {
+  return new ApiContentRuntimeReadError({
+    cause,
+    message: "Unable to read signed material content for the public API.",
+  });
+}
+
+/** Rejects a source fallback when ownership changed between runtime reads. */
+const verifyApiReleasePin = Effect.fn("api.content.verifyReleasePin")(
+  function* (expectedActiveReleaseId: string | null) {
+    const active = yield* fetchApiRuntimeQuery(
+      "activeContentRelease",
+      api.contentRelease.runtime.active.read,
+      {}
+    );
+    const activeReleaseId = active?.releaseId ?? null;
+    if (activeReleaseId !== expectedActiveReleaseId) {
+      return yield* new ApiContentRuntimeReadError({
+        cause: {
+          actualReleaseId: activeReleaseId,
+          expectedReleaseId: expectedActiveReleaseId,
+        },
+        message: "Content ownership changed during the public API read.",
+      });
+    }
+  }
+);
 
 /** Validates and narrows a locale segment from an API route. */
 export function parseApiLocale(locale: string): Locale | null {
@@ -111,20 +147,88 @@ export function getArticleApiContentPage(args: ArticleApiPageArgs) {
 /** Reads one page of material content rows from Convex. */
 export function getMaterialApiContentPage(args: MaterialApiPageArgs) {
   return fetchApiRuntimeQuery(
-    "listMaterialApiContentPage",
-    api.contents.queries.runtime.listMaterialApiContentPage,
+    "materialApiPage",
+    api.contentRelease.material.apiPage,
     args
+  ).pipe(
+    Effect.flatMap((result) =>
+      Effect.gen(function* () {
+        const page = yield* Effect.forEach(
+          result.page,
+          (entry) => {
+            if (entry.kind === "source") {
+              return Effect.succeed(entry.item);
+            }
+            if (result.activeReleaseId === null) {
+              return Effect.fail(
+                new ApiContentRuntimeReadError({
+                  cause: "missing active release",
+                  message:
+                    "Published material API entry has no active release.",
+                })
+              );
+            }
+            return readPublishedMaterialApiItem({
+              activeReleaseId: result.activeReleaseId,
+              locale: entry.locale,
+              publicPath: entry.publicPath,
+            }).pipe(Effect.mapError(mapPublishedMaterialError));
+          },
+          { concurrency: 4 }
+        );
+        yield* verifyApiReleasePin(result.activeReleaseId);
+        return {
+          continueCursor: result.continueCursor,
+          isDone: result.isDone,
+          page,
+        };
+      })
+    )
   );
 }
 
-/** Reads one route-catalog row by stable graph content ID. */
+/** Reads one ownership-aware route by stable graph content ID. */
 export function getApiContentRouteByContentId(
   args: ContentRouteByContentIdArgs
 ) {
+  const materialInput: MaterialApiRouteArgs = {
+    input: { contentId: args.contentId, kind: "content" },
+  };
   return fetchApiRuntimeQuery(
-    "getContentRouteByContentId",
-    api.contents.queries.runtime.getContentRouteByContentId,
-    args
+    "materialApiRoute",
+    api.contentRelease.material.apiRoute,
+    materialInput
+  ).pipe(
+    Effect.flatMap((material) => {
+      if (!material.managed) {
+        return Effect.gen(function* () {
+          const route = yield* fetchApiRuntimeQuery(
+            "getContentRouteByContentId",
+            api.contents.queries.runtime.getContentRouteByContentId,
+            args
+          );
+          yield* verifyApiReleasePin(material.activeReleaseId);
+          return route;
+        });
+      }
+      if (!material.route) {
+        return Effect.succeed(null);
+      }
+      if (material.activeReleaseId === null || material.syncedAt === null) {
+        return Effect.fail(
+          new ApiContentRuntimeReadError({
+            cause: "incomplete exact material identity",
+            message: "Published material graph route is incomplete.",
+          })
+        );
+      }
+      return readPublishedMaterialGraphRoute({
+        activeReleaseId: material.activeReleaseId,
+        locale: material.route.locale,
+        publicPath: material.route.publicPath,
+        syncedAt: material.syncedAt,
+      }).pipe(Effect.mapError(mapPublishedMaterialError));
+    })
   );
 }
 

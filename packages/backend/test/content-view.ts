@@ -1,12 +1,17 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { LearningContextStorage } from "@repo/backend/convex/contents/context";
 import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
 import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/spec";
+import type { ContentViewTargetInput } from "@repo/backend/convex/contents/views/target";
 import {
   type createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import {
+  createLearningGraphIdentityFromRoute,
+  type LearningGraphIdentity,
+} from "@repo/contents/_types/learning-graph";
 import { expect } from "vitest";
 
 export const CONTENT_VIEW_NOW = Date.UTC(2026, 4, 29, 10, 0, 0);
@@ -19,7 +24,7 @@ export const TRYOUT_VIEW_ID = "asset:id:catalog:tryout-set:views";
 export const canonicalViewContext = {
   contextKey: "canonical",
   contextMode: "canonical",
-} as const;
+} satisfies Pick<LearningContextStorage, "contextKey" | "contextMode">;
 
 /** Builds one canonical article-view mutation input. */
 export function makeArticleViewArgs(
@@ -36,9 +41,12 @@ export function makeArticleViewArgs(
 }
 
 /** Builds one route-catalog graph fixture from the route shape under test. */
-function getGraphFixture(route: string) {
+function getGraphFixture(
+  route: string,
+  locale: Doc<"contentRoutes">["locale"]
+) {
   const graph = createLearningGraphIdentityFromRoute({
-    locale: "id",
+    locale,
     route,
   });
 
@@ -54,13 +62,18 @@ export async function insertContentViewRoute(
   ctx: MutationCtx,
   source: {
     readonly contentId: string;
+    readonly graph?: LearningGraphIdentity;
     readonly kind: Doc<"contentRoutes">["kind"];
+    readonly locale?: Doc<"contentRoutes">["locale"];
+    readonly materialDomain?: Doc<"contentRoutes">["materialDomain"];
     readonly route: string;
     readonly section: Doc<"contentRoutes">["section"];
+    readonly sourcePath?: string;
     readonly title: string;
   }
 ) {
-  const graph = getGraphFixture(source.route);
+  const locale = source.locale ?? "id";
+  const graph = source.graph ?? getGraphFixture(source.route, locale);
 
   await ctx.db.insert("contentRoutes", {
     ...graph,
@@ -69,11 +82,12 @@ export async function insertContentViewRoute(
     contentHash: `route-hash-${source.contentId}`,
     content_id: source.contentId,
     kind: source.kind,
-    locale: "id",
+    locale,
     markdown: true,
+    ...(source.materialDomain ? { materialDomain: source.materialDomain } : {}),
     route: source.route,
     section: source.section,
-    sourcePath: source.route,
+    sourcePath: source.sourcePath ?? source.route,
     syncedAt: CONTENT_VIEW_NOW,
     title: source.title,
   });
@@ -123,7 +137,7 @@ export async function seedArticleViewer(ctx: MutationCtx, suffix: string) {
 }
 
 /** Inserts one source-owned curriculum lesson and its route projection. */
-export async function insertContentViewSubject(ctx: MutationCtx) {
+async function insertContentViewSubject(ctx: MutationCtx) {
   const topicId = await ctx.db.insert("curriculumTopics", {
     locale: "id",
     material: "mathematics",
@@ -164,7 +178,7 @@ export async function insertContentViewSubject(ctx: MutationCtx) {
 }
 
 /** Inserts one source-owned try-out set route projection. */
-export async function insertContentViewTryout(ctx: MutationCtx) {
+async function insertContentViewTryout(ctx: MutationCtx) {
   await insertContentViewRoute(ctx, {
     contentId: TRYOUT_VIEW_ID,
     kind: "tryout-set",
@@ -174,6 +188,53 @@ export async function insertContentViewTryout(ctx: MutationCtx) {
   });
 
   return { contentId: TRYOUT_VIEW_ID };
+}
+
+/** Inserts the source-owned target kinds supported by content views. */
+export async function insertContentViewSourceTargets(ctx: MutationCtx) {
+  const examRoute = "try-out/indonesia/snbt";
+  const examContentId = await insertContentViewRoute(ctx, {
+    contentId: "asset:id:catalog:tryout-exam:views",
+    kind: "tryout-exam",
+    route: examRoute,
+    section: "tryout",
+    title: "SNBT",
+  });
+  const subject = await insertContentViewSubject(ctx);
+  const tryout = await insertContentViewTryout(ctx);
+
+  return [
+    {
+      expectedRoute: SUBJECT_VIEW_ROUTE,
+      input: {
+        contentId: subject.contentId,
+        locale: "id",
+        publicPath: "materi/matematika/vektor/penjumlahan",
+        section: "material",
+      },
+    },
+    {
+      expectedRoute: TRYOUT_VIEW_ROUTE,
+      input: {
+        contentId: tryout.contentId,
+        locale: "id",
+        publicPath: TRYOUT_VIEW_ROUTE,
+        section: "tryout",
+      },
+    },
+    {
+      expectedRoute: examRoute,
+      input: {
+        contentId: examContentId,
+        locale: "id",
+        publicPath: examRoute,
+        section: "tryout",
+      },
+    },
+  ] satisfies readonly {
+    readonly expectedRoute: string;
+    readonly input: ContentViewTargetInput;
+  }[];
 }
 
 /** Returns the analytics partition for one popularity signal scope. */

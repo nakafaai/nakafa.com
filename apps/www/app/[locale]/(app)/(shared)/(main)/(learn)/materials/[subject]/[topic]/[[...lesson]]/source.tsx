@@ -13,13 +13,21 @@ import type { ReactNode } from "react";
 import {
   type MaterialParams,
   readMaterialRequest,
-  readMaterialRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { getMaterialPageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/runtime";
+import type { MaterialSourceClaim } from "@/lib/content/material/ownership";
+import {
+  type MaterialReleasePin,
+  verifyStaticMaterialReleasePin,
+} from "@/lib/content/material/release";
 import {
   getPublishedMaterialRoute,
   type PublishedMaterialRoute,
 } from "@/lib/content/material/route";
+import {
+  expandMaterialCandidates,
+  readMaterialSource,
+} from "@/lib/content/material/shell";
 import { importContentModuleOrNull } from "@/lib/content/module";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
@@ -48,21 +56,25 @@ interface PublishedOwner {
 }
 
 interface SourceOwner {
+  readonly activeReleaseId: MaterialReleasePin;
   readonly kind: "source";
   readonly locale: Locale;
   readonly route: PublicMaterialLessonRoute;
+  readonly sourceClaims: readonly MaterialSourceClaim[];
+  readonly sourceMaterials: readonly MaterialLessonProjection[];
 }
 
 type MaterialOwner = PreviewOwner | PublishedOwner | SourceOwner;
 
 interface MaterialPageFields {
-  readonly alternates: readonly MaterialLessonProjection[];
+  readonly alternates: readonly MaterialViewRoute[];
   readonly body: string;
   readonly children: ReactNode;
   readonly locale: Locale;
   readonly metadata: MaterialMetadata;
   readonly rendererDomain: RendererDomain | null;
   readonly siblings: readonly MaterialLessonProjection[];
+  readonly sourceClaims: readonly MaterialSourceClaim[];
   readonly sourceUrl: null | string;
 }
 
@@ -72,6 +84,8 @@ interface PreviewPageSource extends MaterialPageFields {
 }
 
 interface PublishedPageSource extends MaterialPageFields {
+  readonly activeReleaseId: Exclude<MaterialReleasePin, null>;
+  readonly familyManaged: boolean;
   readonly kind: "published";
   readonly route: MaterialLessonProjection;
 }
@@ -88,9 +102,10 @@ export type MaterialPageSource =
   | SourcePageSource;
 
 interface MaterialMetadataFields {
-  readonly alternates: readonly MaterialLessonProjection[];
+  readonly alternates: readonly MaterialViewRoute[];
   readonly locale: Locale;
   readonly metadata: MaterialMetadata | undefined;
+  readonly sourceClaims: readonly MaterialSourceClaim[];
 }
 
 interface PreviewMetadataSource extends MaterialMetadataFields {
@@ -99,6 +114,7 @@ interface PreviewMetadataSource extends MaterialMetadataFields {
 }
 
 interface PublishedMetadataSource extends MaterialMetadataFields {
+  readonly familyManaged: boolean;
   readonly kind: "published";
   readonly route: MaterialLessonProjection;
 }
@@ -129,7 +145,7 @@ async function readPreviewOwner(
 }
 
 /**
- * Selects one exclusive body owner before consulting the filesystem catalog.
+ * Selects one exclusive body owner before loading a filesystem body.
  *
  * An Aksara-owned deletion cannot fall through to the old source body.
  */
@@ -146,24 +162,53 @@ async function resolveMaterialOwner(
   if (!request.publicPath) {
     notFound();
   }
-  const published = await getPublishedMaterialRoute(
+  const source = readMaterialSource(request.locale, request.publicPath);
+  let published = await getPublishedMaterialRoute(
     request.locale,
-    request.publicPath
+    request.publicPath,
+    source.candidates
   );
+  if (
+    published.managed &&
+    !published.familyManaged &&
+    published.projection !== null
+  ) {
+    const candidates = expandMaterialCandidates(source.candidates, [
+      published.projection,
+    ]);
+    if (candidates !== source.candidates) {
+      published = await getPublishedMaterialRoute(
+        request.locale,
+        request.publicPath,
+        candidates,
+        published.activeReleaseId
+      );
+    }
+  }
   if (published.managed) {
     if (published.projection === null) {
       notFound();
     }
     return { kind: "published", model: published };
   }
-  const source = await readMaterialRoute(resolvedParams);
   if (!(source.route && isMaterialLessonRoute(source.route))) {
     notFound();
   }
+  const sourceClaim = published.sourceClaims.find(
+    (claim) =>
+      claim.contentKey === source.route.sourcePath &&
+      claim.locale === request.locale
+  );
+  if (sourceClaim) {
+    notFound();
+  }
   return {
+    activeReleaseId: published.activeReleaseId,
     kind: "source",
-    locale: source.locale,
+    locale: request.locale,
     route: source.route,
+    sourceClaims: published.sourceClaims,
+    sourceMaterials: published.sourceMaterials,
   };
 }
 
@@ -179,20 +224,27 @@ export async function readMaterialMetadata(
       locale: owner.preview.locale,
       metadata: owner.preview.metadata,
       route: owner.preview.projection,
+      sourceClaims: [],
     };
   }
   if (owner.kind === "published") {
     return {
       alternates: owner.model.alternates,
+      familyManaged: owner.model.familyManaged,
       kind: owner.kind,
       locale: owner.model.projection.locale,
       metadata: owner.model.projection.metadata,
       route: owner.model.projection,
+      sourceClaims: owner.model.sourceClaims,
     };
   }
   const source = await getMaterialPageData({
     locale: owner.locale,
     sourcePath: owner.route.sourcePath,
+  });
+  await verifyStaticMaterialReleasePin(owner.activeReleaseId, {
+    locale: owner.locale,
+    publicPath: owner.route.publicPath,
   });
   return {
     alternates: [],
@@ -200,6 +252,7 @@ export async function readMaterialMetadata(
     locale: owner.locale,
     metadata: source?.metadata,
     route: owner.route,
+    sourceClaims: owner.sourceClaims,
   };
 }
 
@@ -220,6 +273,7 @@ export async function readMaterialPage(
       rendererDomain: owner.preview.rendererDomain,
       route: owner.preview.projection,
       siblings: [owner.preview.projection],
+      sourceClaims: [],
       sourceUrl: null,
     };
   }
@@ -231,15 +285,18 @@ export async function readMaterialPage(
       publicPath: model.projection.publicPath,
     });
     return {
+      activeReleaseId: model.activeReleaseId,
       alternates: model.alternates,
       body: published.rawMdx,
       children: published.body,
+      familyManaged: model.familyManaged,
       kind: owner.kind,
       locale: model.projection.locale,
       metadata: published.metadata,
       rendererDomain: model.rendererDomain,
       route: model.projection,
       siblings: model.siblings,
+      sourceClaims: model.sourceClaims,
       sourceUrl: published.sourceRevision
         ? getAksaraUrl({
             path: published.sourcePath,
@@ -262,6 +319,10 @@ export async function readMaterialPage(
   if (!(source && content?.default)) {
     notFound();
   }
+  await verifyStaticMaterialReleasePin(owner.activeReleaseId, {
+    locale: owner.locale,
+    publicPath: owner.route.publicPath,
+  });
   const Content = content.default;
   return {
     alternates: [],
@@ -272,7 +333,8 @@ export async function readMaterialPage(
     metadata: source.metadata,
     rendererDomain: null,
     route: owner.route,
-    siblings: [],
+    siblings: owner.sourceMaterials,
+    sourceClaims: owner.sourceClaims,
     sourceUrl: getGithubUrl({
       path: `/packages/contents/${owner.route.sourcePath}/${owner.locale}.mdx`,
     }),

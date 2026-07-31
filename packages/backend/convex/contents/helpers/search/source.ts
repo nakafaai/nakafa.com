@@ -1,6 +1,8 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   appendSearchGroups,
+  type ContentSearchDocument,
   interleaveSearchGroups,
 } from "@repo/backend/convex/contents/helpers/search/groups";
 import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
@@ -10,7 +12,6 @@ import {
   getRouteSearchText,
 } from "@repo/backend/convex/contents/helpers/search/terms";
 import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
-import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import type { Infer } from "convex/values";
 import { Effect } from "effect";
 
@@ -24,33 +25,39 @@ export const readSourceSearchDocuments = Effect.fn(
   args: ContentSearchInput,
   queryTexts: readonly string[],
   scanLimit: number,
-  sections: readonly NakafaSection[]
+  sections: readonly NakafaSection[],
+  claimedMaterials: readonly Pick<
+    Doc<"materialOwners">,
+    "contentKey" | "locale"
+  >[]
 ) {
   if (sections.length === 0) {
     return [];
   }
+  const claimed = new Set(
+    claimedMaterials.map(({ contentKey, locale }) => `${locale}\0${contentKey}`)
+  );
   if (queryTexts.length === 0) {
     const groups = yield* Effect.all(
       sections.map((section) =>
-        browseSection(ctx, args.locale, section, NAKAFA_AGENT_SEARCH_WINDOW)
+        browseSection(
+          ctx,
+          args.locale,
+          section,
+          sourceScanLimit(section, scanLimit, claimed.size)
+        )
       ),
       { concurrency: "unbounded" }
     );
     return interleaveSearchGroups(
-      groups,
+      groups.map((documents) => removeClaimedMaterials(documents, claimed)),
       scanLimit,
       (document) => document.content_id
     );
   }
   const groups = yield* Effect.all(
     queryTexts.map((queryText) =>
-      searchQuery(
-        ctx,
-        args.locale,
-        sections,
-        queryText,
-        NAKAFA_AGENT_SEARCH_WINDOW
-      )
+      searchQuery(ctx, args.locale, sections, queryText, scanLimit, claimed)
     ),
     { concurrency: "unbounded" }
   );
@@ -61,17 +68,49 @@ export const readSourceSearchDocuments = Effect.fn(
   );
 });
 
+/** Refills only material scans for exact claims removed after source reads. */
+function sourceScanLimit(
+  section: NakafaSection,
+  scanLimit: number,
+  claimedMaterialCount: number
+) {
+  return section === "material" ? scanLimit + claimedMaterialCount : scanLimit;
+}
+
+/** Removes exact-owned material identities from one bounded source group. */
+function removeClaimedMaterials(
+  documents: readonly ContentSearchDocument[],
+  claimed: ReadonlySet<string>
+) {
+  return documents.filter(
+    (document) =>
+      document.section !== "material" ||
+      !claimed.has(`${document.locale}\0${document.sourcePath}`)
+  );
+}
+
 /** Searches one query fairly across every still-unmanaged section. */
 const searchQuery = Effect.fn("contents.search.searchSourceQuery")(function* (
   ctx: QueryCtx,
   locale: ContentSearchInput["locale"],
   sections: readonly NakafaSection[],
   queryText: string,
-  scanLimit: number
+  scanLimit: number,
+  claimedMaterials: ReadonlySet<string>
 ) {
   const groups = yield* Effect.all(
     sections.map((section) =>
-      searchSection(ctx, locale, section, queryText, scanLimit)
+      searchSection(
+        ctx,
+        locale,
+        section,
+        queryText,
+        sourceScanLimit(section, scanLimit, claimedMaterials.size)
+      ).pipe(
+        Effect.map((documents) =>
+          removeClaimedMaterials(documents, claimedMaterials)
+        )
+      )
     ),
     { concurrency: "unbounded" }
   );

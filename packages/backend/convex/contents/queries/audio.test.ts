@@ -10,19 +10,16 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
 import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
+import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-const REAL_VECTOR_PUBLISHED_AT = 1_744_416_000_000;
-const REAL_VECTOR_TOPIC_SLUG = "material/lesson/mathematics/vector-operations";
 const REAL_VECTOR_SECTION_SLUG =
   "material/lesson/mathematics/vector-operations/vector-addition";
-const REAL_VECTOR_TOPIC_SECTION_COUNT = 15;
-const REAL_DYNASTIC_ARTICLE_PUBLISHED_AT = 1_723_075_200_000;
 const REAL_DYNASTIC_ARTICLE_SLUG =
   "articles/politics/dynastic-politics-asian-values";
-const REAL_DYNASTIC_ARTICLE_ID = "dynastic-politics-asian-values";
 const audioRouteKinds = [
   "article",
   "curriculum-lesson",
@@ -109,73 +106,6 @@ describe("contents/queries/audio", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("articleContents", {
-        locale: "en",
-        slug: REAL_DYNASTIC_ARTICLE_SLUG,
-        category: "politics",
-        articleSlug: REAL_DYNASTIC_ARTICLE_ID,
-        title:
-          "Framing Dynastic Politics in Local Elections within Asian Values",
-        description:
-          "Power is passed down under the guise of practicing asian values.",
-        date: REAL_DYNASTIC_ARTICLE_PUBLISHED_AT,
-        body: "Article body",
-        contentHash: "article-en-hash",
-        syncedAt: 1,
-      });
-
-      await ctx.db.insert("curriculumLessons", {
-        topicId: await ctx.db.insert("curriculumTopics", {
-          material: "mathematics",
-          order: 0,
-          topic: "vector-operations",
-          title: "Vector and Operations",
-          locale: "en",
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
-          syncedAt: 1,
-        }),
-        locale: "en",
-        slug: REAL_VECTOR_SECTION_SLUG,
-        material: "mathematics",
-        order: 0,
-        topic: "vector-operations",
-        section: "vector-addition",
-        title: "Vector Addition",
-        description: "English vector addition",
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: "Vector and Operations",
-        body: "English subject body",
-        contentHash: "subject-en-hash",
-        syncedAt: 1,
-      });
-
-      await ctx.db.insert("curriculumLessons", {
-        topicId: await ctx.db.insert("curriculumTopics", {
-          material: "mathematics",
-          order: 0,
-          topic: "vector-operations",
-          title: "Vektor dan Operasinya",
-          locale: "id",
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
-          syncedAt: 1,
-        }),
-        locale: "id",
-        slug: REAL_VECTOR_SECTION_SLUG,
-        material: "mathematics",
-        order: 0,
-        topic: "vector-operations",
-        section: "vector-addition",
-        title: "Penjumlahan Vektor",
-        description: "Indonesian vector addition",
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: "Vektor dan Operasinya",
-        body: "Indonesian subject body",
-        contentHash: "subject-id-hash",
-        syncedAt: 1,
-      });
-
       await ctx.db.insert("audioContentSources", {
         ...getTestAudioContent({
           contentHash: "source-article-en-hash",
@@ -279,21 +209,6 @@ describe("contents/queries/audio", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("articleContents", {
-        locale: "en",
-        slug: REAL_DYNASTIC_ARTICLE_SLUG,
-        category: "politics",
-        articleSlug: REAL_DYNASTIC_ARTICLE_ID,
-        title:
-          "Framing Dynastic Politics in Local Elections within Asian Values",
-        description:
-          "Power is passed down under the guise of practicing asian values.",
-        date: REAL_DYNASTIC_ARTICLE_PUBLISHED_AT,
-        body: "Article body",
-        contentHash: "article-en-hash",
-        syncedAt: 1,
-      });
-
       const articleGraph = getGraph("en", REAL_DYNASTIC_ARTICLE_SLUG);
       await insertPopularityCounter(ctx, {
         graph: articleGraph,
@@ -303,32 +218,6 @@ describe("contents/queries/audio", () => {
         section: "articles",
         title: "Dynastic Politics",
       });
-      await ctx.db.insert("curriculumLessons", {
-        topicId: await ctx.db.insert("curriculumTopics", {
-          material: "mathematics",
-          order: 0,
-          topic: "vector-operations",
-          title: "Vector and Operations",
-          locale: "en",
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
-          syncedAt: 1,
-        }),
-        locale: "en",
-        slug: REAL_VECTOR_SECTION_SLUG,
-        material: "mathematics",
-        order: 0,
-        topic: "vector-operations",
-        section: "vector-addition",
-        title: "Vector Addition",
-        description: "English vector addition",
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: "Vector and Operations",
-        body: "English subject body",
-        contentHash: "subject-en-hash",
-        syncedAt: 1,
-      });
-
       const subjectGraph = getGraph("en", REAL_VECTOR_SECTION_SLUG);
       await insertPopularityCounter(ctx, {
         graph: subjectGraph,
@@ -337,6 +226,43 @@ describe("contents/queries/audio", () => {
         score: 40,
         section: "material",
         title: "Vector Addition",
+      });
+    });
+
+    const result = await t.query(
+      internal.contents.queries.audio.getPopularContentForAudioQueue,
+      {}
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it("skips source audio after exact material ownership activates", async () => {
+    const t = convexTest(schema, convexModules);
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    const source = getTestAudioContent({
+      contentHash: "source-function-hash",
+      locale: FUNCTION_MATERIAL.locale,
+      route: FUNCTION_MATERIAL.contentKey,
+    });
+    await t.mutation(async (ctx) => {
+      const graph = await insertContentRoute(ctx, {
+        kind: "curriculum-lesson",
+        locale: FUNCTION_MATERIAL.locale,
+        route: FUNCTION_MATERIAL.contentKey,
+        title: FUNCTION_MATERIAL.metadata.title,
+      });
+      await ctx.db.insert("audioContentSources", {
+        ...source,
+        syncedAt: 2,
+      });
+      await insertPopularityCounter(ctx, {
+        graph,
+        locale: FUNCTION_MATERIAL.locale,
+        route: FUNCTION_MATERIAL.contentKey,
+        score: 40,
+        section: "material",
+        title: FUNCTION_MATERIAL.metadata.title,
       });
     });
 
@@ -425,21 +351,6 @@ describe("contents/queries/audio", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("articleContents", {
-        locale: "en",
-        slug: REAL_DYNASTIC_ARTICLE_SLUG,
-        category: "politics",
-        articleSlug: REAL_DYNASTIC_ARTICLE_ID,
-        title:
-          "Framing Dynastic Politics in Local Elections within Asian Values",
-        description:
-          "Power is passed down under the guise of practicing asian values.",
-        date: REAL_DYNASTIC_ARTICLE_PUBLISHED_AT,
-        body: "Article body",
-        contentHash: "article-en-hash",
-        syncedAt: 1,
-      });
-
       await ctx.db.insert("audioContentSources", {
         ...getTestAudioContent({
           contentHash: "source-article-en-hash",
@@ -476,19 +387,6 @@ describe("contents/queries/audio", () => {
         index++
       ) {
         const slug = `articles/politics/audio-candidate-${index}`;
-        await ctx.db.insert("articleContents", {
-          locale: "en",
-          slug,
-          category: "politics",
-          articleSlug: `audio-candidate-${index}`,
-          title: `Audio Candidate ${index}`,
-          description: "Article description",
-          date: REAL_DYNASTIC_ARTICLE_PUBLISHED_AT + index,
-          body: "Article body",
-          contentHash: `article-${index}-hash`,
-          syncedAt: 1,
-        });
-
         await ctx.db.insert("audioContentSources", {
           ...getTestAudioContent({
             contentHash: `source-article-${index}-hash`,

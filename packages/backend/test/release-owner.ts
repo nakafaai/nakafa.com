@@ -90,6 +90,22 @@ export async function stageVerifiedOwner(
   identity: TestIdentity,
   releaseJson: string
 ) {
+  await t.mutation(async (ctx) => {
+    const key = await ctx.db
+      .query("contentKeys")
+      .withIndex("by_contentKey_and_locale", (query) =>
+        query.eq("contentKey", TEST_OWNER_KEY).eq("locale", "en")
+      )
+      .unique();
+    if (!key) {
+      await ctx.db.insert("contentKeys", {
+        contentKey: TEST_OWNER_KEY,
+        createdSequence: 0,
+        family: "material",
+        locale: "en",
+      });
+    }
+  });
   await t.mutation(internal.contentRelease.manifest.stageRelease, {
     releaseJson,
     rendererJson: testRendererJson(),

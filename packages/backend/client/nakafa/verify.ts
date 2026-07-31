@@ -1,5 +1,9 @@
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
-import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
+import {
+  getMaterialLookupInput,
+  resolveNakafaContentRef,
+} from "@repo/backend/client/nakafa/ref";
+import { verifyNakafaReleasePin } from "@repo/backend/client/nakafa/release";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect, Option } from "effect";
 
@@ -8,23 +12,46 @@ export function verifyNakafaContent(convexUrl: string, input: string) {
   return Effect.gen(function* () {
     const ref = yield* resolveNakafaContentRef(convexUrl, input);
 
+    if (Option.isSome(ref) && ref.value.section !== "material") {
+      return yield* verifySourceContent(convexUrl, ref.value.content_id);
+    }
+
+    const materialInput = getMaterialLookupInput(input);
+    let expectedActiveReleaseId: string | null | undefined;
+    if (Option.isSome(materialInput)) {
+      const material = yield* fetchNakafaRuntimeQuery(
+        convexUrl,
+        "lookupMaterial",
+        api.contentRelease.material.lookup,
+        { input: materialInput.value }
+      );
+      expectedActiveReleaseId = material.activeReleaseId;
+      if (material.managed) {
+        return material.route !== null;
+      }
+    }
+
     if (Option.isNone(ref)) {
       return false;
     }
 
-    const route = yield* fetchNakafaRuntimeQuery(
+    const verified = yield* verifySourceContent(
       convexUrl,
-      "getContentRouteByContentId",
-      api.contents.queries.runtime.getContentRouteByContentId,
-      {
-        contentId: ref.value.content_id,
-      }
+      ref.value.content_id
     );
-
-    if (!route) {
-      return false;
+    if (expectedActiveReleaseId !== undefined) {
+      yield* verifyNakafaReleasePin(convexUrl, expectedActiveReleaseId);
     }
-
-    return true;
+    return verified;
   });
+}
+
+/** Verifies one source-owned identity remains present in the active catalog. */
+function verifySourceContent(convexUrl: string, contentId: string) {
+  return fetchNakafaRuntimeQuery(
+    convexUrl,
+    "getContentRouteByContentId",
+    api.contents.queries.runtime.getContentRouteByContentId,
+    { contentId }
+  ).pipe(Effect.map((route) => route !== null));
 }

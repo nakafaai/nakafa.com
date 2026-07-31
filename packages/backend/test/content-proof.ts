@@ -40,7 +40,10 @@ import {
 } from "@nakafa/aksara-contracts/signature/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import {
+  testMaterialPublicPath,
+  testProjectionJson,
+} from "@repo/backend/test/content-material";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -132,7 +135,7 @@ export async function insertProofItem(
 /** Inserts one ordered route proof row. */
 export function insertProofRoute(ctx: MutationCtx, index: number) {
   const contentKey = `test:head-${index}`;
-  const publicPath = `test/head-${index}`;
+  const publicPath = testMaterialPublicPath(index);
   return ctx.db.insert("contentBindings", {
     batchHash: TEST_MANIFEST_HASH,
     batchIndex: 0,

@@ -1,3 +1,4 @@
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
 import * as publicLearningStatic from "@repo/contents/_types/route/learning/static";
@@ -17,12 +18,18 @@ import {
 const publishedMocks = vi.hoisted(() => ({
   materialContext: vi.fn(),
   materialRoute: vi.fn(),
+  materialSource: vi.fn(),
   programRoute: vi.fn(),
+  verifyReleasePin: vi.fn(),
 }));
+const activeReleaseId = ReleaseIdSchema.make("release-material");
 const activeMaterialRoute = {
+  activeReleaseId,
   alternates: [previewProjection, previewIdProjection],
+  familyManaged: true,
   managed: true,
   projection: previewProjection,
+  sourceClaims: [],
 };
 const idProgramSubject = readTestPublishedRoute(
   "kurikulum/merdeka/kelas-11/matematika",
@@ -35,19 +42,24 @@ vi.mock("@/lib/content/material/context", () => ({
 vi.mock("@/lib/content/material/route", () => ({
   readPublishedMaterialRoute: publishedMocks.materialRoute,
 }));
+vi.mock("@/lib/content/material/release", () => ({
+  verifyMaterialReleasePin: publishedMocks.verifyReleasePin,
+}));
+vi.mock("@/lib/content/material/shell", () => ({
+  readMaterialSource: publishedMocks.materialSource,
+}));
 vi.mock("@/lib/content/program/route", () => ({
   readPublishedProgramRoute: publishedMocks.programRoute,
 }));
 
-/**
- * Keeps contextual hrefs unchanged in tests that isolate locale projection
- * failures instead of material context validation.
- */
-function preserveContextualHref(
-  input: Parameters<PublicLearningIndex["toContextualMaterialHref"]>[0]
-) {
-  return input.href;
-}
+const emptyLearningIndex: PublicLearningIndex = {
+  projectMaterialContextToLocale: () => undefined,
+  projectRouteToLocale: () => undefined,
+  resolveMaterialHeaderLink: () => undefined,
+  resolveMaterialRouteBySource: () => undefined,
+  resolveRouteByPath: () => undefined,
+  toContextualMaterialHref: ({ href }) => href,
+};
 
 /** Resolves a localized href through the Effect boundary used by route callers. */
 function resolveHref(href: string, locale: "en" | "id") {
@@ -58,11 +70,32 @@ beforeEach(() => {
   publishedMocks.materialContext.mockReset();
   publishedMocks.materialRoute.mockReset();
   publishedMocks.programRoute.mockReset();
+  publishedMocks.verifyReleasePin.mockReset();
   publishedMocks.materialRoute.mockReturnValue(
-    Effect.succeed({ managed: false, projection: null })
+    Effect.succeed({
+      managed: false,
+      projection: null,
+      sourceClaims: [],
+    })
   );
+  publishedMocks.materialSource.mockReturnValue({
+    candidates: [
+      {
+        contentKey: previewProjection.contentKey,
+        locale: previewProjection.locale,
+      },
+      {
+        contentKey: previewIdProjection.contentKey,
+        locale: previewIdProjection.locale,
+      },
+    ],
+    route: previewPublicRoute,
+  });
   publishedMocks.programRoute.mockReturnValue(
     Effect.succeed({ managed: false, route: null })
+  );
+  publishedMocks.verifyReleasePin.mockImplementation((expected) =>
+    Effect.succeed(expected)
   );
 });
 
@@ -168,8 +201,10 @@ describe("resolveLocalizedNavigationHref", () => {
       .mockReturnValueOnce(
         Effect.succeed({
           alternates: [previewProjection],
+          familyManaged: true,
           managed: true,
           projection: previewProjection,
+          sourceClaims: [],
         })
       );
 
@@ -182,6 +217,15 @@ describe("resolveLocalizedNavigationHref", () => {
       );
       expect(result._tag).toBe("Failure");
     }
+  });
+
+  it("falls back to the static projection when no published source route exists", () => {
+    const href = `/${previewProjection.locale}/${previewProjection.publicPath}`;
+    publishedMocks.materialSource.mockReturnValueOnce({
+      candidates: [],
+      route: undefined,
+    });
+    expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);
   });
 
   it("keeps material context only while the active program verifies it", () => {
@@ -221,21 +265,13 @@ describe("resolveLocalizedNavigationHref", () => {
 
     expect(resolveHref(href, "id")).toContain("?ctx=merdeka~");
 
-    const missingSourceIndex: PublicLearningIndex = {
-      projectMaterialContextToLocale: () => undefined,
-      projectRouteToLocale: () => undefined,
-      resolveMaterialHeaderLink: () => undefined,
-      resolveMaterialRouteBySource: () => undefined,
-      resolveRouteByPath: () => undefined,
-      toContextualMaterialHref: preserveContextualHref,
-    };
     const missingTargetIndex: PublicLearningIndex = {
-      ...missingSourceIndex,
+      ...emptyLearningIndex,
       resolveMaterialRouteBySource: (_sourcePath, locale) =>
         locale === previewProjection.locale ? previewPublicRoute : undefined,
     };
     vi.spyOn(publicLearningStatic, "loadStaticPublicLearningIndex")
-      .mockImplementationOnce(() => Effect.succeed(missingSourceIndex))
+      .mockImplementationOnce(() => Effect.succeed(emptyLearningIndex))
       .mockImplementationOnce(() => Effect.succeed(missingTargetIndex));
 
     expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);
@@ -249,6 +285,7 @@ describe("resolveLocalizedNavigationHref", () => {
       "materi/matematika/fungsi-komposisi-dan-fungsi-invers/fungsi-berganti";
     publishedMocks.materialRoute.mockReturnValue(
       Effect.succeed({
+        activeReleaseId,
         alternates: [
           { ...previewProjection, publicPath: currentPath },
           { ...previewIdProjection, publicPath: targetPath },
@@ -390,12 +427,8 @@ describe("resolveLocalizedNavigationHref", () => {
     }
 
     const index: PublicLearningIndex = {
-      projectMaterialContextToLocale: () => undefined,
-      projectRouteToLocale: () => undefined,
-      resolveMaterialHeaderLink: () => undefined,
-      resolveMaterialRouteBySource: () => undefined,
+      ...emptyLearningIndex,
       resolveRouteByPath: () => idOnlyRoute,
-      toContextualMaterialHref: preserveContextualHref,
     };
 
     vi.spyOn(

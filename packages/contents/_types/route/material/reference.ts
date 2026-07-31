@@ -1,10 +1,6 @@
 import type { Locale } from "@repo/contents/_types/content";
-import {
-  isMaterialContentRoute,
-  isMaterialLessonRoute,
-} from "@repo/contents/_types/route/content";
 import { readCurriculumMaterialContext } from "@repo/contents/_types/route/curriculum/context";
-import { comparePublicRouteOrder } from "@repo/contents/_types/route/path";
+import { readMaterialLessonGroup } from "@repo/contents/_types/route/material/group";
 import type {
   PublicContentRoute,
   PublicCurriculumRoute,
@@ -74,7 +70,7 @@ export function listMaterialContextRefs({
       continue;
     }
 
-    for (const materialRoute of readMaterialLessonRoutes({
+    for (const materialRoute of readMaterialLessonGroup({
       contentRoutes,
       locale: curriculumRoute.locale,
       publicPath: curriculumRoute.canonicalPath,
@@ -145,44 +141,4 @@ function toMaterialContextRef({
 /** Builds the stable de-duplication key for one locale/source/context ref. */
 function readMaterialContextRefKey(ref: MaterialContextRef) {
   return [ref.locale, ref.sourcePath, ref.programKey, ref.nodeKey].join(":");
-}
-
-/**
- * Expands one canonical card material path into concrete lesson routes.
- *
- * A curriculum card can target either one lesson directly or a topic row whose
- * concrete children should all carry the same validated return context.
- */
-function readMaterialLessonRoutes({
-  contentRoutes,
-  locale,
-  publicPath,
-}: {
-  contentRoutes: readonly PublicContentRoute[];
-  locale: Locale;
-  publicPath: string;
-}): readonly MaterialLessonRoute[] {
-  const route = contentRoutes.find(
-    (candidate) =>
-      candidate.locale === locale &&
-      candidate.publicPath === publicPath &&
-      isMaterialContentRoute(candidate)
-  );
-
-  if (!route) {
-    return [];
-  }
-
-  if (isMaterialLessonRoute(route)) {
-    return [route];
-  }
-
-  return contentRoutes
-    .filter(
-      (candidate): candidate is MaterialLessonRoute =>
-        isMaterialLessonRoute(candidate) &&
-        candidate.locale === locale &&
-        candidate.parentPath === route.publicPath
-    )
-    .sort(comparePublicRouteOrder);
 }

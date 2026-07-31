@@ -1,3 +1,4 @@
+import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { Feed, type Item } from "feed";
@@ -5,12 +6,22 @@ import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
+import {
+  decodeMaterialReleasePin,
+  type MaterialReleasePin,
+} from "@/lib/content/material/release";
+import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
-import { listRuntimeLatestContentRoutes } from "@/lib/content/runtime/routes";
+import {
+  getRuntimeLatestContentRoutePage,
+  type RuntimeLatestContentRoute,
+  type RuntimeLatestContentRoutePage,
+} from "@/lib/content/runtime/routes";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const baseUrl = "https://nakafa.com";
 const RSS_CONTENT_ROUTE_LIMIT = 100;
+const RSS_SOURCE_PAGE_SIZE = 100;
 const rssHeaders = {
   "Content-Type": "application/rss+xml; charset=utf-8",
 };
@@ -95,11 +106,22 @@ export async function GET() {
 function getFeedContentRoutes() {
   return Effect.runPromise(
     Effect.gen(function* () {
+      const active = yield* readActiveContentIdentity();
+      const activeReleaseId = active?.releaseId ?? null;
       const routes = yield* Effect.forEach(
         routing.locales,
         (locale) =>
-          Effect.all([readFeedArticles(locale), readFeedMaterials(locale)]),
+          Effect.all([
+            readFeedArticles(locale),
+            readFeedMaterials(locale, activeReleaseId),
+          ]),
         { concurrency: routing.locales.length }
+      );
+      const latest = yield* readActiveContentIdentity();
+      yield* decodeMaterialReleasePin(
+        latest?.releaseId ?? null,
+        activeReleaseId,
+        { locale: routing.defaultLocale, publicPath: "rss.xml" }
       );
 
       return routes
@@ -119,11 +141,7 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
     RSS_CONTENT_ROUTE_LIMIT
   );
   if (!published.managed) {
-    return yield* listRuntimeLatestContentRoutes({
-      limit: RSS_CONTENT_ROUTE_LIMIT,
-      locale,
-      section: "articles",
-    });
+    return yield* readFeedSourceRoutes(locale, "articles", new Set(), 100);
   }
 
   return published.articles.map((article) => ({
@@ -138,25 +156,87 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
 
 /** Selects published materials after cutover and source rows before it. */
 const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
-  locale: (typeof routing.locales)[number]
+  locale: (typeof routing.locales)[number],
+  expectedActiveReleaseId: MaterialReleasePin
 ) {
   const published = yield* readPublishedLatestMaterials(
     locale,
     RSS_CONTENT_ROUTE_LIMIT
   );
-  if (!published.managed) {
-    return yield* listRuntimeLatestContentRoutes({
-      limit: RSS_CONTENT_ROUTE_LIMIT,
-      locale,
-      section: "material",
-    });
-  }
-  return published.materials.map((material) => ({
+  yield* decodeMaterialReleasePin(
+    published.activeReleaseId,
+    expectedActiveReleaseId,
+    { locale, publicPath: "rss.xml" }
+  );
+  const publishedRoutes = published.materials.map((material) => ({
     authors: material.authors,
     date: Date.parse(`${material.date}T00:00:00.000Z`),
     description: material.description,
     locale,
     route: material.publicPath,
+    sourcePath: material.sourcePath,
     title: material.title,
   }));
+  if (published.managed) {
+    return publishedRoutes;
+  }
+  const claimedContentKeys = new Set<string>(published.claimedContentKeys);
+  const sourceRoutes = yield* readFeedSourceRoutes(
+    locale,
+    "material",
+    claimedContentKeys,
+    RSS_CONTENT_ROUTE_LIMIT
+  );
+  return [...publishedRoutes, ...sourceRoutes]
+    .sort((left, right) => (right.date ?? 0) - (left.date ?? 0))
+    .slice(0, RSS_CONTENT_ROUTE_LIMIT);
+});
+
+/** Refills one source-owned feed after exact owners remove legacy rows. */
+const readFeedSourceRoutes = Effect.fn("www.rss.readSourceRoutes")(function* (
+  locale: (typeof routing.locales)[number],
+  section: "articles" | "material",
+  excludedContentKeys: ReadonlySet<string>,
+  limit: number
+) {
+  const sourceRowLimit =
+    limit + Math.min(excludedContentKeys.size, EXACT_SCOPE_LIMIT);
+  const routes: RuntimeLatestContentRoute[] = [];
+  let cursor: string | null = null;
+  let examinedRows = 0;
+  for (
+    let request = 0;
+    request < sourceRowLimit && examinedRows < sourceRowLimit;
+    request += 1
+  ) {
+    const pageLimit = Math.min(
+      RSS_SOURCE_PAGE_SIZE,
+      sourceRowLimit - examinedRows
+    );
+    const result: RuntimeLatestContentRoutePage =
+      yield* getRuntimeLatestContentRoutePage({
+        cursor,
+        limit: pageLimit,
+        locale,
+        section,
+      });
+    examinedRows += result.page.length;
+    for (const route of result.page) {
+      if (excludedContentKeys.has(route.sourcePath)) {
+        continue;
+      }
+      routes.push(route);
+      if (routes.length === limit) {
+        return routes;
+      }
+    }
+    if (result.isDone) {
+      return routes;
+    }
+    if (result.continueCursor === cursor) {
+      return routes;
+    }
+    cursor = result.continueCursor;
+  }
+  return routes;
 });

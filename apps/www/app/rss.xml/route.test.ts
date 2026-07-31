@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/rss.xml/route";
 
 const mockFetchRuntimeQuranSurahs = vi.hoisted(() => vi.fn());
-const mockListRuntimeLatestContentRoutes = vi.hoisted(() => vi.fn());
+const mockGetRuntimeLatestContentRoutePage = vi.hoisted(() => vi.fn());
+const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestArticles = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestMaterials = vi.hoisted(() => vi.fn());
 
@@ -16,6 +17,10 @@ vi.mock("@/lib/content/material/discovery", () => ({
   /** Supplies deterministic published material rows for the RSS route test. */
   readPublishedLatestMaterials: mockReadPublishedLatestMaterials,
 }));
+vi.mock("@/lib/content/published/active", () => ({
+  /** Supplies the final release identity for one RSS material reconciliation. */
+  readActiveContentIdentity: mockReadActiveContentIdentity,
+}));
 
 vi.mock("@/lib/content/runtime/pages", () => ({
   /** Supplies deterministic Quran rows for the RSS route test. */
@@ -24,7 +29,7 @@ vi.mock("@/lib/content/runtime/pages", () => ({
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   /** Supplies deterministic latest content route rows for the RSS route test. */
-  listRuntimeLatestContentRoutes: mockListRuntimeLatestContentRoutes,
+  getRuntimeLatestContentRoutePage: mockGetRuntimeLatestContentRoutePage,
 }));
 
 vi.mock("@/lib/utils/pages/quran", () => ({
@@ -41,7 +46,10 @@ vi.mock("next-intl/server", () => ({
 describe("rss route", () => {
   beforeEach(() => {
     mockFetchRuntimeQuranSurahs.mockReset();
-    mockListRuntimeLatestContentRoutes.mockReset();
+    mockGetRuntimeLatestContentRoutePage.mockReset();
+    mockReadActiveContentIdentity
+      .mockReset()
+      .mockReturnValue(Effect.succeed(null));
     mockReadPublishedLatestArticles.mockReset();
     mockReadPublishedLatestMaterials.mockReset();
 
@@ -57,29 +65,37 @@ describe("rss route", () => {
       Effect.succeed({ articles: [], managed: false })
     );
     mockReadPublishedLatestMaterials.mockReturnValue(
-      Effect.succeed({ managed: false, materials: [] })
+      Effect.succeed({
+        activeReleaseId: null,
+        claimedContentKeys: [],
+        managed: false,
+        materials: [],
+      })
     );
-    mockListRuntimeLatestContentRoutes.mockImplementation(({ section }) =>
-      Effect.succeed(
-        section === "articles"
-          ? [
-              {
-                authors: [{ name: "Nakafa" }],
-                date: Date.parse("2026-01-01T00:00:00.000Z"),
-                locale: "id",
-                route: "articles/politics/example",
-                title: "Article title",
-              },
-              {
-                authors: [{ name: "Nakafa" }],
-                description: "Undated article description",
-                locale: "id",
-                route: "articles/politics/undated",
-                title: "Undated article",
-              },
-            ]
-          : []
-      )
+    mockGetRuntimeLatestContentRoutePage.mockImplementation(({ section }) =>
+      Effect.succeed({
+        continueCursor: "",
+        isDone: true,
+        page:
+          section === "articles"
+            ? [
+                {
+                  authors: [{ name: "Nakafa" }],
+                  date: Date.parse("2026-01-01T00:00:00.000Z"),
+                  locale: "id",
+                  route: "articles/politics/example",
+                  title: "Article title",
+                },
+                {
+                  authors: [{ name: "Nakafa" }],
+                  description: "Undated article description",
+                  locale: "id",
+                  route: "articles/politics/undated",
+                  title: "Undated article",
+                },
+              ]
+            : [],
+      })
     );
   });
 
@@ -123,7 +139,7 @@ describe("rss route", () => {
 
     expect(text).toContain("<![CDATA[Published article]]>");
     expect(text).not.toContain("<![CDATA[Article title]]>");
-    expect(mockListRuntimeLatestContentRoutes).not.toHaveBeenCalledWith(
+    expect(mockGetRuntimeLatestContentRoutePage).not.toHaveBeenCalledWith(
       expect.objectContaining({ section: "articles" })
     );
   });
@@ -131,6 +147,8 @@ describe("rss route", () => {
   it("replaces source-backed materials after published ownership activates", async () => {
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: null,
+        claimedContentKeys: [],
         managed: true,
         materials: [
           {
@@ -148,8 +166,321 @@ describe("rss route", () => {
     const text = await (await GET()).text();
 
     expect(text).toContain("<![CDATA[Function Concept]]>");
-    expect(mockListRuntimeLatestContentRoutes).not.toHaveBeenCalledWith(
+    expect(mockGetRuntimeLatestContentRoutePage).not.toHaveBeenCalledWith(
       expect.objectContaining({ section: "material" })
+    );
+  });
+
+  it("merges exact material ownership without stale source routes", async () => {
+    const sourcePath =
+      "material/lesson/mathematics/function-composition-inverse-function/function-concept";
+    mockReadPublishedLatestMaterials.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: null,
+        claimedContentKeys: [sourcePath],
+        managed: false,
+        materials: [
+          {
+            authors: [{ name: "Nakafa" }],
+            date: "2026-07-24",
+            description:
+              "Understand functions as magic machines with interactive examples. Learn f(x) notation, input-output relationships, and the one-to-one rule.",
+            publicPath:
+              "subjects/mathematics/function-composition-inverse-function/function-concept",
+            sourcePath,
+            title: "Function Concept",
+          },
+        ],
+      })
+    );
+    mockGetRuntimeLatestContentRoutePage.mockImplementation(({ section }) =>
+      Effect.succeed({
+        continueCursor: "",
+        isDone: true,
+        page:
+          section === "material"
+            ? [
+                {
+                  authors: [{ name: "Nakafa" }],
+                  locale: "en",
+                  route: "subjects/mathematics/undated/concept",
+                  sourcePath: "material/lesson/mathematics/undated/concept",
+                  title: "Undated Material",
+                },
+                {
+                  authors: [{ name: "Nakafa" }],
+                  date: Date.parse("2026-07-23T00:00:00.000Z"),
+                  locale: "en",
+                  route:
+                    "subjects/mathematics/function-composition-inverse-function/old-function-concept",
+                  sourcePath,
+                  title: "Function Concept",
+                },
+                {
+                  authors: [{ name: "Nakafa" }],
+                  date: Date.parse("2026-07-22T00:00:00.000Z"),
+                  locale: "en",
+                  route: "subjects/mathematics/logarithms/definition",
+                  sourcePath:
+                    "material/lesson/mathematics/logarithms/definition",
+                  title: "Logarithm Definition",
+                },
+              ]
+            : [],
+      })
+    );
+
+    const text = await (await GET()).text();
+
+    expect(text).toContain(
+      "subjects/mathematics/function-composition-inverse-function/function-concept"
+    );
+    expect(text).toContain("<![CDATA[Logarithm Definition]]>");
+    expect(text).not.toContain(
+      "subjects/mathematics/function-composition-inverse-function/old-function-concept"
+    );
+  });
+
+  it("refills source materials after exact owners consume the first page", async () => {
+    const claimed = Array.from(
+      { length: 64 },
+      (_, index) => `material/lesson/test/claimed-${index + 1}`
+    );
+    mockReadPublishedLatestMaterials.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: null,
+        claimedContentKeys: claimed,
+        managed: false,
+        materials: [],
+      })
+    );
+    mockGetRuntimeLatestContentRoutePage.mockImplementation(
+      ({ cursor, locale, section }) => {
+        if (locale !== "en" || section !== "material") {
+          return Effect.succeed({
+            continueCursor: "",
+            isDone: true,
+            page: [],
+          });
+        }
+        if (cursor === "next") {
+          return Effect.succeed({
+            continueCursor: "",
+            isDone: true,
+            page: Array.from({ length: 63 }, (_, index) => ({
+              authors: [{ name: "Nakafa" }],
+              date: Date.parse("2026-07-22T00:00:00.000Z") - index,
+              locale: "en",
+              route: `subjects/test/refill-${index + 1}`,
+              sourcePath: `material/lesson/test/refill-${index + 1}`,
+              title: `Refill ${index + 1}`,
+            })),
+          });
+        }
+        return Effect.succeed({
+          continueCursor: "next",
+          isDone: false,
+          page: [
+            ...claimed.map((sourcePath, index) => ({
+              authors: [{ name: "Nakafa" }],
+              date: Date.parse("2026-07-24T00:00:00.000Z") - index,
+              locale: "en",
+              route: `subjects/test/claimed-${index + 1}`,
+              sourcePath,
+              title: `Claimed ${index + 1}`,
+            })),
+            ...Array.from({ length: 36 }, (_, index) => ({
+              authors: [{ name: "Nakafa" }],
+              date: Date.parse("2026-07-23T00:00:00.000Z") - index,
+              locale: "en",
+              route: `subjects/test/retained-${index + 1}`,
+              sourcePath: `material/lesson/test/retained-${index + 1}`,
+              title: `Retained ${index + 1}`,
+            })),
+          ],
+        });
+      }
+    );
+
+    const text = await (await GET()).text();
+
+    expect(text).toContain("<![CDATA[Retained 36]]>");
+    expect(text).toContain("<![CDATA[Refill 63]]>");
+    expect(text).not.toContain("<![CDATA[Claimed 1]]>");
+    expect(mockGetRuntimeLatestContentRoutePage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cursor: "next",
+        limit: 64,
+        locale: "en",
+        section: "material",
+      })
+    );
+  });
+
+  it("continues through short nonterminal source pages", async () => {
+    mockGetRuntimeLatestContentRoutePage.mockImplementation(
+      ({ cursor, locale, section }) => {
+        if (locale !== "en" || section !== "material") {
+          return Effect.succeed({
+            continueCursor: "",
+            isDone: true,
+            page: [],
+          });
+        }
+        const offset = cursor === "next" ? 60 : 0;
+        const count = cursor === "next" ? 40 : 60;
+        return Effect.succeed({
+          continueCursor: cursor === "next" ? "" : "next",
+          isDone: cursor === "next",
+          page: Array.from({ length: count }, (_, index) => ({
+            authors: [{ name: "Nakafa" }],
+            date: Date.parse("2026-07-24T00:00:00.000Z") - offset - index,
+            locale: "en",
+            route: `subjects/mathematics/source-${offset + index + 1}`,
+            sourcePath: `material/lesson/mathematics/source-${offset + index + 1}`,
+            title: `Source ${offset + index + 1}`,
+          })),
+        });
+      }
+    );
+
+    const text = await (await GET()).text();
+
+    expect(text).toContain("<![CDATA[Source 100]]>");
+    expect(mockGetRuntimeLatestContentRoutePage).toHaveBeenCalledWith({
+      cursor: "next",
+      limit: 40,
+      locale: "en",
+      section: "material",
+    });
+  });
+
+  it("bounds stalled and repeated source pages", async () => {
+    const claimed = Array.from(
+      { length: 64 },
+      (_, index) => `material/lesson/mathematics/claimed-${index + 1}`
+    );
+    mockReadPublishedLatestMaterials.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: null,
+        claimedContentKeys: claimed,
+        managed: false,
+        materials: [],
+      })
+    );
+    mockGetRuntimeLatestContentRoutePage.mockImplementation(
+      ({ cursor, limit, locale, section }) => {
+        if (locale !== "en") {
+          return Effect.succeed({
+            continueCursor: "",
+            isDone: true,
+            page: [],
+          });
+        }
+        if (section === "articles") {
+          return Effect.succeed({
+            continueCursor: cursor ?? "",
+            isDone: false,
+            page: [],
+          });
+        }
+        return Effect.succeed({
+          continueCursor: cursor === null ? "next" : "end",
+          isDone: false,
+          page: Array.from({ length: limit }, (_, index) => {
+            const sourcePath = claimed[index % claimed.length];
+            return {
+              authors: [{ name: "Nakafa" }],
+              date: Date.parse("2026-07-24T00:00:00.000Z") - index,
+              locale: "en",
+              route: `subjects/mathematics/claimed-${index + 1}`,
+              sourcePath,
+              title: `Claimed ${index + 1}`,
+            };
+          }),
+        });
+      }
+    );
+
+    const text = await (await GET()).text();
+
+    expect(text).not.toContain("<![CDATA[Claimed 1]]>");
+    expect(mockGetRuntimeLatestContentRoutePage).toHaveBeenCalledWith({
+      cursor: "next",
+      limit: 64,
+      locale: "en",
+      section: "material",
+    });
+  });
+
+  it("merges the full source window before applying the feed bound", async () => {
+    mockReadPublishedLatestMaterials.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: null,
+        claimedContentKeys: [],
+        managed: false,
+        materials: Array.from({ length: 64 }, (_, index) => ({
+          authors: [{ name: "Nakafa" }],
+          date: "2025-07-24",
+          publicPath: `subjects/test/published-${index + 1}`,
+          sourcePath: `material/lesson/test/published-${index + 1}`,
+          title: `Published ${index + 1}`,
+        })),
+      })
+    );
+    mockGetRuntimeLatestContentRoutePage.mockImplementation(
+      ({ locale, section }) =>
+        Effect.succeed({
+          continueCursor: "",
+          isDone: true,
+          page:
+            locale === "en" && section === "material"
+              ? Array.from({ length: 100 }, (_, index) => ({
+                  authors: [{ name: "Nakafa" }],
+                  date: Date.parse("2026-07-24T00:00:00.000Z") - index,
+                  locale: "en",
+                  route: `subjects/test/source-${index + 1}`,
+                  sourcePath: `material/lesson/test/source-${index + 1}`,
+                  title: `Source ${index + 1}`,
+                }))
+              : [],
+        })
+    );
+
+    const text = await (await GET()).text();
+
+    expect(text).toContain("<![CDATA[Source 100]]>");
+    expect(text).not.toContain("<![CDATA[Published 1]]>");
+    expect(mockGetRuntimeLatestContentRoutePage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        limit: 100,
+        locale: "en",
+        section: "material",
+      })
+    );
+  });
+
+  it("rejects the feed after its active release changes across locale reads", async () => {
+    mockReadPublishedLatestMaterials.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: "release-a",
+        claimedContentKeys: [],
+        managed: false,
+        materials: [],
+      })
+    );
+    mockReadActiveContentIdentity.mockReturnValue(
+      Effect.succeed({ releaseId: "release-a" })
+    );
+    mockReadActiveContentIdentity.mockReturnValueOnce(
+      Effect.succeed({ releaseId: "release-a" })
+    );
+    mockReadActiveContentIdentity.mockReturnValueOnce(
+      Effect.succeed({ releaseId: "release-b" })
+    );
+
+    await expect(GET()).rejects.toThrow(
+      '"actualReleaseId": "release-b", "expectedReleaseId": "release-a"'
     );
   });
 });

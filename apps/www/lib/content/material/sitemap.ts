@@ -4,6 +4,10 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
+  decodeMaterialReleasePin,
+  type MaterialReleasePin,
+} from "@/lib/content/material/release";
+import {
   fetchRuntimeQuery,
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
@@ -11,10 +15,18 @@ import {
 /** Reads non-empty material sitemap partitions for one localized catalog. */
 export const readPublishedMaterialBuckets = Effect.fn(
   "www.materials.readSitemapBuckets"
-)(function* (locale: Locale) {
-  return yield* readRuntimeQuery("contentRelease.material.sitemapBuckets", () =>
-    fetchRuntimeQuery(api.contentRelease.material.sitemapBuckets, { locale })
+)(function* (locale: Locale, expectedActiveReleaseId?: MaterialReleasePin) {
+  const result = yield* readRuntimeQuery(
+    "contentRelease.material.sitemapBuckets",
+    () =>
+      fetchRuntimeQuery(api.contentRelease.material.sitemapBuckets, { locale })
   );
+  const activeReleaseId = yield* decodeMaterialReleasePin(
+    result.activeReleaseId,
+    expectedActiveReleaseId,
+    { locale, publicPath: "materials" }
+  );
+  return { ...result, activeReleaseId };
 });
 
 /** Reads one complete verified material sitemap partition. */

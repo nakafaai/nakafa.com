@@ -2,8 +2,10 @@ import { CONTENT_SITEMAP_ROUTE_PAGE_SIZE } from "@repo/backend/convex/contents/s
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
+import { verifyMaterialReleasePin } from "@/lib/content/material/release";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
 import { readPublishedProgramBuckets } from "@/lib/content/program/sitemap";
+import { readActiveContentIdentity } from "@/lib/content/published/active";
 import {
   getRuntimeContentRouteCounts,
   getRuntimePublicSitemapCount,
@@ -23,6 +25,8 @@ export const readSitemapPageDescriptors = Effect.fn(
   "www.sitemap.pageDescriptors"
 )(function* () {
   const descriptors: SitemapPage[] = [{ id: SITEMAP_BASE_ID }];
+  const active = yield* readActiveContentIdentity();
+  const activeReleaseId = active?.releaseId ?? null;
 
   for (const locale of routing.locales) {
     const [
@@ -35,7 +39,7 @@ export const readSitemapPageDescriptors = Effect.fn(
       [
         readPublishedArticleBuckets(locale),
         getRuntimeContentRouteCounts({ locale }),
-        readPublishedMaterialBuckets(locale),
+        readPublishedMaterialBuckets(locale, activeReleaseId),
         readPublishedProgramBuckets(locale),
         getRuntimePublicSitemapCount({ locale }),
       ],
@@ -99,6 +103,11 @@ export const readSitemapPageDescriptors = Effect.fn(
       });
     }
   }
+
+  yield* verifyMaterialReleasePin(activeReleaseId, {
+    locale: routing.defaultLocale,
+    publicPath: "sitemap.xml",
+  });
 
   return descriptors;
 });

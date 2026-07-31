@@ -202,7 +202,7 @@ describe("contentRelease/ownership", () => {
     });
   });
 
-  it("fails visibly for duplicate ownership and mismatched projections", async () => {
+  it("fails visibly for ownership or projection drift", async () => {
     const duplicate = convexTest(schema, convexModules);
     await duplicate.mutation(async (ctx) => {
       await insertRuntimeRelease(ctx, ["article"]);
@@ -225,6 +225,23 @@ describe("contentRelease/ownership", () => {
       });
     });
     await expect(duplicate.query(resolve, routeArgs)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+
+    const wrongFamily = convexTest(schema, convexModules);
+    await wrongFamily.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx, ["article"]);
+      await insertRuntimeHead(ctx, "public", "test:wrong-family");
+      await ctx.db.insert("contentOwners", {
+        contentKey: "test:wrong-family",
+        family: "article",
+        locale: "en",
+        managed: true,
+        releaseId: TEST_RUNTIME_RELEASE.releaseId,
+        sequence: TEST_RUNTIME_RELEASE.sequence,
+      });
+    });
+    await expect(wrongFamily.query(resolve, routeArgs)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
 

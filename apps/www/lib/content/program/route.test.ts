@@ -88,6 +88,7 @@ describe("published program route", () => {
     );
 
     expect(model).toMatchObject({
+      activeReleaseId: "program-release",
       alternates: [{ locale: "en" }, { locale: "id" }],
       ancestors: [{ level: "track" }, { level: "class" }],
       contexts: expect.any(Array),
@@ -116,6 +117,7 @@ describe("published program route", () => {
         readPublishedProgramRoute("en", testProgramSubject.publicPath)
       )
     ).resolves.toMatchObject({
+      activeReleaseId: "program-release",
       managed: false,
       program: null,
       route: null,
@@ -135,6 +137,7 @@ describe("published program route", () => {
     await expect(
       Effect.runPromise(readPublishedProgramRoute("en", "curriculum/missing"))
     ).resolves.toMatchObject({
+      activeReleaseId: "program-release",
       managed: true,
       program: null,
       route: null,
@@ -143,6 +146,20 @@ describe("published program route", () => {
   });
 
   it.each([
+    [
+      "invalid active release",
+      {
+        ...routeResponse(),
+        activeReleaseId: "invalid release",
+      },
+    ],
+    [
+      "managed route without an active release",
+      {
+        ...routeResponse(),
+        activeReleaseId: null,
+      },
+    ],
     [
       "missing program",
       routeResponse({

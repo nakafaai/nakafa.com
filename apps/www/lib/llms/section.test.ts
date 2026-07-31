@@ -13,13 +13,13 @@ import {
 
 const mockGetRuntimeContentRouteCounts = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
-const mockReadPublishedMaterialBuckets = vi.hoisted(() => vi.fn());
+const mockReadMaterialInventory = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: mockReadPublishedArticleBuckets,
 }));
-vi.mock("@/lib/content/material/sitemap", () => ({
-  readPublishedMaterialBuckets: mockReadPublishedMaterialBuckets,
+vi.mock("@/lib/llms/material-pages", () => ({
+  readMaterialLlmsInventory: mockReadMaterialInventory,
 }));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
@@ -27,23 +27,32 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 }));
 
 const articleEntry: LlmsEntry = {
-  description: "Verified description",
-  href: `${BASE_URL}/en/articles/politics/article.md`,
-  route: "/articles/politics/article",
+  description:
+    "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
+  href: `${BASE_URL}/en/articles/politics/dynastic-politics-asian-values.md`,
+  route: "/articles/politics/dynastic-politics-asian-values",
   section: "articles",
-  segments: ["articles", "politics", "article"],
-  title: "Verified article",
+  segments: ["articles", "politics", "dynastic-politics-asian-values"],
+  title: "Framing Dynastic Politics in Local Elections within Asian Values",
 };
 
 beforeEach(() => {
   mockGetRuntimeContentRouteCounts.mockReset();
   mockReadPublishedArticleBuckets.mockReset();
-  mockReadPublishedMaterialBuckets.mockReset();
+  mockReadMaterialInventory.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
   );
-  mockReadPublishedMaterialBuckets.mockReturnValue(
-    Effect.succeed({ buckets: [], managed: false, materialCount: 0 })
+  mockReadMaterialInventory.mockReturnValue(
+    Effect.succeed({
+      activeReleaseId: null,
+      buckets: [],
+      owner: "source",
+      pageCount: 1,
+      publishedRouteCount: 0,
+      sourcePageCount: 1,
+      sourceRouteCount: 100,
+    })
   );
   mockGetRuntimeContentRouteCounts.mockReturnValue(
     Effect.succeed([
@@ -97,11 +106,15 @@ describe("llms section indexes", () => {
   });
 
   it("uses material partitions after their owner activates", async () => {
-    mockReadPublishedMaterialBuckets.mockReturnValue(
+    mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: "release-material",
         buckets: ["000", "abc"],
-        managed: true,
-        materialCount: 42,
+        owner: "published",
+        pageCount: 2,
+        publishedRouteCount: 42,
+        sourcePageCount: 0,
+        sourceRouteCount: 0,
       })
     );
 
@@ -115,6 +128,40 @@ describe("llms section indexes", () => {
       routeCount: 42,
     });
     expect(mockGetRuntimeContentRouteCounts).not.toHaveBeenCalled();
+  });
+
+  it("combines partial exact partitions with source catalog pages", async () => {
+    mockReadMaterialInventory.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: "release-material",
+        buckets: ["abc"],
+        owner: "mixed",
+        pageCount: 2,
+        publishedRouteCount: 1,
+        sourcePageCount: 1,
+        sourceRouteCount: 100,
+      })
+    );
+
+    const pages = await Effect.runPromise(
+      getLlmsSectionPages({ locale: "en", section: "material" })
+    );
+
+    expect(pages).toEqual({
+      owner: "mixed",
+      pageCount: 2,
+      publishedRouteCount: 1,
+      sourceRouteCount: 100,
+    });
+    expect(
+      buildLlmsSectionPageMapText({
+        ...pages,
+        locale: "en",
+        section: "material",
+      })
+    ).toContain(
+      "100 English source-catalog material routes are reconciled with 1 exact published routes"
+    );
   });
 
   it("renders empty, single, and multi-page navigation", () => {

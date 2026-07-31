@@ -96,6 +96,8 @@ const contentSitemapRouteValidator = v.object({
   kind: runtimeContentRouteValidator.fields.kind,
   route: runtimeContentRouteValidator.fields.route,
   section: runtimeContentRouteValidator.fields.section,
+  sourceParentPath: runtimeContentRouteValidator.fields.sourceParentPath,
+  sourcePath: runtimeContentRouteValidator.fields.sourcePath,
   syncedAt: runtimeContentRouteValidator.fields.syncedAt,
 });
 

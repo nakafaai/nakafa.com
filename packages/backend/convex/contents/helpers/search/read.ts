@@ -1,4 +1,5 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { loadExactMaterialOwners } from "@repo/backend/convex/contentRelease/material/exact";
 import { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
 import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
 import { interleaveSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
@@ -9,6 +10,7 @@ import {
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { readSourceSearchDocuments } from "@repo/backend/convex/contents/helpers/search/source";
 import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import type { Infer } from "convex/values";
 import { Effect } from "effect";
 
@@ -24,13 +26,22 @@ export const readContentSearchDocuments = Effect.fn(
   scanLimit: number
 ) {
   if (args.section === "quran" || args.section === "tryout") {
-    return yield* readSourceSearchDocuments(ctx, args, queryTexts, scanLimit, [
-      args.section,
-    ]);
+    return yield* readSourceSearchDocuments(
+      ctx,
+      args,
+      queryTexts,
+      scanLimit,
+      [args.section],
+      []
+    );
   }
   const owner = yield* loadSearchOwner(ctx);
   const publishedFamilies = getPublishedSearchFamilies(owner, args.section);
-  const sourceSections = getSourceSections(publishedFamilies, args.section);
+  const sourceSections = getSourceSections(owner, args.section);
+  const sourceClaims =
+    owner?.materialReady && !owner.families.includes("material")
+      ? yield* loadExactMaterialOwners(ctx, owner, args.locale)
+      : [];
   const [published, source] = yield* Effect.all(
     [
       owner && publishedFamilies.length > 0
@@ -47,8 +58,9 @@ export const readContentSearchDocuments = Effect.fn(
         ctx,
         args,
         queryTexts,
-        scanLimit,
-        sourceSections
+        NAKAFA_AGENT_SEARCH_WINDOW,
+        sourceSections,
+        sourceClaims
       ),
     ],
     { concurrency: "unbounded" }
@@ -62,15 +74,18 @@ export const readContentSearchDocuments = Effect.fn(
 
 /** Returns only sections whose source ownership remains with Nakafa. */
 function getSourceSections(
-  publishedFamilies: ReturnType<typeof getPublishedSearchFamilies>,
+  owner: Effect.Effect.Success<ReturnType<typeof loadSearchOwner>>,
   section: ContentSearchInput["section"]
 ) {
   const requested = section ? [section] : NAKAFA_CONTENT_SECTIONS;
   return requested.filter(
     (candidate): candidate is NakafaSection =>
       !(
-        (candidate === "articles" && publishedFamilies.includes("article")) ||
-        (candidate === "material" && publishedFamilies.includes("material"))
+        (candidate === "articles" &&
+          owner?.readyFamilies.includes("article")) ||
+        (candidate === "material" &&
+          owner?.materialReady &&
+          owner.families.includes("material"))
       )
   );
 }

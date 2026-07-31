@@ -1,6 +1,14 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import {
+  FUNCTION_MATERIAL,
+  makeMaterialProjection,
+} from "@repo/backend/test/content-material";
+import {
+  activateMaterialCatalog,
+  selectExactMaterial,
+} from "@repo/backend/test/material-catalog";
 import type { FunctionArgs } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -134,6 +142,85 @@ describe("contentSync/publicRoutes/internal", () => {
     expect(result.deleted).toBe(1);
     expect(shardStates.page).toEqual([]);
   });
+
+  it("rejects a later source sync that collides with an exact material", async () => {
+    const t = convexTest(schema, convexModules);
+    const selected = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(t, [selected]);
+    await selectExactMaterial(t, selected);
+    const compatible = makeRoute(selected.publicPath, "compatible", {
+      kind: selected.kind,
+      locale: selected.locale,
+      sourcePath: selected.contentKey,
+    });
+
+    await t.mutation(internal.contentSync.publicRoutes.internal.syncShards, {
+      shards: [makeShard(8, [compatible])],
+    });
+    await expect(
+      t.mutation(internal.contentSync.publicRoutes.internal.syncShards, {
+        shards: [
+          makeShard(8, [
+            makeRoute(selected.publicPath, "conflict", {
+              kind: selected.kind,
+              locale: selected.locale,
+              sourcePath: "material/lesson/test/retained",
+            }),
+          ]),
+        ],
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_ROUTE" },
+    });
+    const routes = await t.query(async (ctx) =>
+      ctx.db.query("publicRoutes").collect()
+    );
+
+    expect(routes).toEqual([
+      expect.objectContaining({
+        contentHash: "compatible",
+        sourcePath: selected.contentKey,
+      }),
+    ]);
+  });
+
+  it("blocks source sync until exact material ownership is ready", async () => {
+    const t = convexTest(schema, convexModules);
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    await selectExactMaterial(t, FUNCTION_MATERIAL);
+    await t.mutation(async (ctx) => {
+      const owner = await ctx.db.query("materialOwners").unique();
+      const state = await ctx.db.query("contentState").unique();
+      if (!(owner && state)) {
+        expect.fail("Expected synchronized exact material ownership.");
+      }
+      await ctx.db.delete(owner._id);
+      await ctx.db.patch(state._id, {
+        materialOwnerManifestHash: undefined,
+        materialOwnerReleaseId: undefined,
+        materialOwnerSequence: undefined,
+      });
+    });
+
+    await expect(
+      t.mutation(internal.contentSync.publicRoutes.internal.syncShards, {
+        shards: [
+          makeShard(8, [
+            makeRoute(FUNCTION_MATERIAL.publicPath, "source-sync", {
+              kind: FUNCTION_MATERIAL.kind,
+              locale: FUNCTION_MATERIAL.locale,
+              sourcePath: FUNCTION_MATERIAL.contentKey,
+            }),
+          ]),
+        ],
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
+    });
+    await expect(
+      t.query((ctx) => ctx.db.query("publicRoutes").take(1))
+    ).resolves.toEqual([]);
+  });
 });
 
 /** Builds one deterministic shard fixture. */
@@ -142,7 +229,11 @@ function makeShard(shard: number, routes: SyncRoute[]): SyncShard {
 }
 
 /** Builds one minimal public route sync row. */
-function makeRoute(publicPath: string, contentHash: string): SyncRoute {
+function makeRoute(
+  publicPath: string,
+  contentHash: string,
+  overrides: Partial<Pick<SyncRoute, "kind" | "locale" | "sourcePath">> = {}
+): SyncRoute {
   return {
     contentHash,
     kind: "subject-topic",
@@ -150,5 +241,6 @@ function makeRoute(publicPath: string, contentHash: string): SyncRoute {
     publicPath,
     sitemap: true,
     title: publicPath,
+    ...overrides,
   };
 }

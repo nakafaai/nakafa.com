@@ -8,6 +8,9 @@ import {
   getTestAudioIdentity,
 } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
+import { insertContentViewRoute } from "@repo/backend/test/content-view";
+import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -46,7 +49,7 @@ const subjectAudioSource = getTestAudioContent({
 });
 
 async function insertVectorSubject(ctx: MutationCtx) {
-  return await ctx.db.insert("curriculumLessons", {
+  const subjectId = await ctx.db.insert("curriculumLessons", {
     topicId: await ctx.db.insert("curriculumTopics", {
       material: "mathematics",
       order: 0,
@@ -71,6 +74,16 @@ async function insertVectorSubject(ctx: MutationCtx) {
     contentHash: REAL_VECTOR_ADDITION_EN.hash,
     syncedAt: 1,
   });
+  await insertContentViewRoute(ctx, {
+    contentId: subjectAudioIdentity.content_id,
+    kind: "curriculum-lesson",
+    locale: REAL_VECTOR_ADDITION_EN.locale,
+    materialDomain: "mathematics",
+    route: REAL_VECTOR_SECTION_SLUG,
+    section: "material",
+    title: REAL_VECTOR_ADDITION_EN.title,
+  });
+  return subjectId;
 }
 
 async function insertSubjectAudio(
@@ -172,6 +185,91 @@ describe("audioStudies/queries/internal", () => {
     });
   });
 
+  it("does not generate scripts from an exact material source", async () => {
+    const t = convexTest(schema, convexModules);
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    const exactAudio = getTestAudioIdentity({
+      locale: FUNCTION_MATERIAL.locale,
+      route: FUNCTION_MATERIAL.contentKey,
+    });
+    const audioId = await t.mutation(async (ctx) => {
+      await insertContentViewRoute(ctx, {
+        contentId: exactAudio.content_id,
+        graph: FUNCTION_MATERIAL.graph,
+        kind: "curriculum-lesson",
+        locale: FUNCTION_MATERIAL.locale,
+        materialDomain: "mathematics",
+        route: FUNCTION_MATERIAL.contentKey,
+        section: "material",
+        sourcePath: FUNCTION_MATERIAL.contentKey,
+        title: FUNCTION_MATERIAL.metadata.title,
+      });
+      return await ctx.db.insert("contentAudios", {
+        ...exactAudio,
+        contentHash: "source-hash",
+        generationAttempts: 0,
+        model: "eleven_v3",
+        status: "pending",
+        updatedAt: 1,
+        voiceId: "voice-1",
+      });
+    });
+
+    const result = await t.query(
+      internal.audioStudies.queries.internal
+        .getAudioAndContentForScriptGeneration,
+      { contentAudioId: audioId }
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it("stops queued speech work after an exact material activates", async () => {
+    const t = convexTest(schema, convexModules);
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    const exactAudio = getTestAudioIdentity({
+      locale: FUNCTION_MATERIAL.locale,
+      route: FUNCTION_MATERIAL.contentKey,
+    });
+    const audioId = await t.mutation(async (ctx) => {
+      await insertContentViewRoute(ctx, {
+        contentId: exactAudio.content_id,
+        graph: FUNCTION_MATERIAL.graph,
+        kind: "curriculum-lesson",
+        locale: FUNCTION_MATERIAL.locale,
+        materialDomain: "mathematics",
+        route: FUNCTION_MATERIAL.contentKey,
+        section: "material",
+        sourcePath: FUNCTION_MATERIAL.contentKey,
+        title: FUNCTION_MATERIAL.metadata.title,
+      });
+      return await ctx.db.insert("contentAudios", {
+        ...exactAudio,
+        contentHash: "source-hash",
+        generationAttempts: 1,
+        model: "eleven_v3",
+        script: "Previously queued narration",
+        status: "script-generated",
+        updatedAt: 1,
+        voiceId: "voice-1",
+      });
+    });
+
+    const [speech, hashMatches] = await Promise.all([
+      t.query(
+        internal.audioStudies.queries.internal.getAudioForSpeechGeneration,
+        { contentAudioId: audioId }
+      ),
+      t.query(internal.audioStudies.queries.internal.verifyContentHash, {
+        contentAudioId: audioId,
+        expectedHash: "source-hash",
+      }),
+    ]);
+
+    expect(speech).toBeNull();
+    expect(hashMatches).toBe(false);
+  });
+
   it("returns null when speech generation audio has no script", async () => {
     const t = convexTest(schema, convexModules);
 
@@ -259,13 +357,13 @@ describe("audioStudies/queries/internal", () => {
       route: "material/lesson/mathematics/vector-operations/vector-subtraction",
     });
 
-    await t.mutation(
-      async (ctx) =>
-        await syncAudioContentSource(ctx, {
-          ...subjectAudioSource,
-          syncedAt: 1,
-        })
-    );
+    await t.mutation(async (ctx) => {
+      await insertVectorSubject(ctx);
+      await syncAudioContentSource(ctx, {
+        ...subjectAudioSource,
+        syncedAt: 1,
+      });
+    });
 
     const [existingHash, missingHash] = await Promise.all([
       t.query(internal.audioStudies.queries.internal.getContentHash, {
@@ -278,5 +376,36 @@ describe("audioStudies/queries/internal", () => {
 
     expect(existingHash).toBe(REAL_VECTOR_ADDITION_EN.hash);
     expect(missingHash).toBeNull();
+  });
+
+  it("returns no source hash for an exact material", async () => {
+    const t = convexTest(schema, convexModules);
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    const exactSource = getTestAudioContent({
+      contentHash: "source-hash",
+      locale: FUNCTION_MATERIAL.locale,
+      route: FUNCTION_MATERIAL.contentKey,
+    });
+    await t.mutation(async (ctx) => {
+      await insertContentViewRoute(ctx, {
+        contentId: exactSource.content_id,
+        graph: FUNCTION_MATERIAL.graph,
+        kind: "curriculum-lesson",
+        locale: FUNCTION_MATERIAL.locale,
+        materialDomain: "mathematics",
+        route: FUNCTION_MATERIAL.contentKey,
+        section: "material",
+        sourcePath: FUNCTION_MATERIAL.contentKey,
+        title: FUNCTION_MATERIAL.metadata.title,
+      });
+      await syncAudioContentSource(ctx, { ...exactSource, syncedAt: 1 });
+    });
+
+    const result = await t.query(
+      internal.audioStudies.queries.internal.getContentHash,
+      { content_id: exactSource.content_id }
+    );
+
+    expect(result).toBeNull();
   });
 });

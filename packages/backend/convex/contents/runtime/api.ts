@@ -78,68 +78,6 @@ export async function listArticleApiContentPageImpl(
   };
 }
 
-/** Reads material API content rows by route prefix from the runtime table. */
-export async function listMaterialApiContentPageImpl(
-  ctx: QueryCtx,
-  args: ApiContentPrefixArgs
-) {
-  assertApiContentPageLimit(args.limit);
-  const prefix = cleanApiContentPrefix(args.prefix);
-
-  const page = await ctx.db
-    .query("curriculumLessons")
-    .withIndex("by_locale_and_slug", (q) =>
-      q
-        .eq("locale", args.locale)
-        .gte("slug", prefix)
-        .lt("slug", `${prefix}\uffff`)
-    )
-    .paginate({ cursor: args.cursor, numItems: args.limit });
-  const items = page.page.filter((section) =>
-    matchesRouteSegmentPrefix(section.slug, prefix)
-  );
-
-  return {
-    continueCursor: page.continueCursor,
-    isDone: page.isDone,
-    page: (
-      await Promise.all(
-        items.map(async (section) => {
-          const graph = await getApiContentGraphProjection(ctx, {
-            locale: section.locale,
-            sourcePath: section.slug,
-          });
-
-          if (!graph) {
-            return null;
-          }
-
-          const graphRef = toApiContentGraphRef(graph);
-
-          return {
-            ...graphRef,
-            locale: section.locale,
-            metadata: {
-              authors: await getContentAuthors(ctx, {
-                contentId: section._id,
-                contentType: "material",
-              }),
-              date: formatContentDate(section.date),
-              description: section.description,
-              subject: section.subject,
-              title: section.title,
-            },
-            raw: section.body,
-            slug: section.slug,
-            sourcePath: section.slug,
-            url: `${NAKAFA_CONTENT_BASE_URL}/${section.locale}/${graph.publicPath}`,
-          };
-        })
-      )
-    ).filter((item) => item !== null),
-  };
-}
-
 /** Loads graph identity from the durable route catalog instead of the slug. */
 async function getApiContentGraphProjection(
   ctx: QueryCtx,

@@ -6,12 +6,21 @@ import { getLlmsMarkdownText } from "@/lib/llms/content";
 
 const PUBLISHED_PATH =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
+const PUBLISHED_KEY =
+  "material/lesson/mathematics/function-composition-inverse-function/function-concept";
+const PUBLISHED_PARENT =
+  "subjects/mathematics/function-composition-inverse-function";
 const PUBLISHED_ARTICLE_PATH = "articles/politics/regional-elections-turmoil";
+const NEW_PATH = "subjects/mathematics/new-topic/new-lesson";
+const SOURCE_PATH = "material/lesson/chemistry/green-chemistry/definition";
+const SOURCE_PUBLIC_PATH = "subjects/chemistry/green-chemistry/definition";
+const SOURCE_PARENT = "subjects/chemistry/green-chemistry";
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetCachedLlmsMdxText = vi.hoisted(() => vi.fn());
 const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
 const mockGetLlmsLegalPageText = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
+const mockReadPublishedMaterialClaims = vi.hoisted(() => vi.fn());
 const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
@@ -19,6 +28,9 @@ const activeReleaseId = "release-active";
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimePublicRoute: mockGetRuntimePublicRoute,
+}));
+vi.mock("@/lib/content/material/ownership", () => ({
+  readPublishedMaterialClaims: mockReadPublishedMaterialClaims,
 }));
 
 vi.mock("@/lib/content/published/route", () => ({
@@ -81,6 +93,9 @@ describe("llms markdown content resolver", () => {
     mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
     mockGetLlmsLegalPageText.mockReset().mockReturnValue(Effect.succeed(null));
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
+    mockReadPublishedMaterialClaims
+      .mockReset()
+      .mockReturnValue(Effect.succeed([]));
     mockGetRuntimePublicRoute.mockReset();
     mockReadActiveContentRoute.mockReset();
     mockReadActiveContentIdentity
@@ -95,10 +110,11 @@ describe("llms markdown content resolver", () => {
       )
     );
     mockGetRuntimePublicRoute.mockImplementation(({ publicPath }) => {
-      if (publicPath === "subjects/chemistry/green-chemistry/definition") {
+      if (publicPath === SOURCE_PUBLIC_PATH) {
         return Effect.succeed({
           kind: "subject-lesson",
-          sourcePath: "material/lesson/chemistry/green-chemistry/definition",
+          parentPath: SOURCE_PARENT,
+          sourcePath: SOURCE_PATH,
         });
       }
 
@@ -106,8 +122,8 @@ describe("llms markdown content resolver", () => {
         return Effect.succeed({
           kind: "subject-lesson",
           locale: "en",
-          sourcePath:
-            "material/lesson/mathematics/function-composition-inverse-function/function-concept",
+          parentPath: PUBLISHED_PARENT,
+          sourcePath: PUBLISHED_KEY,
         });
       }
 
@@ -142,34 +158,33 @@ describe("llms markdown content resolver", () => {
   });
 
   it("reads a newly published material route without an old route row", async () => {
-    const publicPath = "subjects/mathematics/new-topic/new-lesson";
     mockReadActiveContentRoute.mockReturnValueOnce(
       Effect.succeed({ activeReleaseId, kind: "found" })
     );
     mockGetCachedPublishedText.mockResolvedValue("New markdown");
 
-    await expect(readMarkdown(publicPath)).resolves.toBe("New markdown");
+    await expect(readMarkdown(NEW_PATH)).resolves.toBe("New markdown");
 
     expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
       activeReleaseId,
       family: "material",
       locale: "en",
-      publicPath,
+      publicPath: NEW_PATH,
     });
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 
   it("does not fall back after an owned material route is deleted", async () => {
-    const publicPath = "subjects/chemistry/green-chemistry/definition";
     mockReadActiveContentRoute.mockReturnValueOnce(
       Effect.succeed({ activeReleaseId, kind: "missing" })
     );
 
-    await expect(readMarkdown(publicPath)).resolves.toBeNull();
+    await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBeNull();
 
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
     expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+    expect(mockReadPublishedMaterialClaims).not.toHaveBeenCalled();
   });
 
   it("reads an owned article body from the generic Aksara markdown seam", async () => {
@@ -205,20 +220,66 @@ describe("llms markdown content resolver", () => {
   });
 
   it("keys unmanaged source ownership to no active release", async () => {
-    const publicPath = "subjects/chemistry/green-chemistry/definition";
-    mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
+    mockReadActiveContentIdentity
+      .mockReturnValueOnce(Effect.succeed(null))
+      .mockReturnValueOnce(Effect.succeed(null));
     mockReadActiveContentRoute.mockReturnValueOnce(
       Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
     );
     mockGetCachedLlmsMdxText.mockResolvedValue("Source markdown");
 
-    await expect(readMarkdown(publicPath)).resolves.toBe("Source markdown");
+    await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBe(
+      "Source markdown"
+    );
     expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId: null,
       family: "material",
       locale: "en",
-      publicPath,
+      publicPath: SOURCE_PUBLIC_PATH,
     });
+    expect(mockReadPublishedMaterialClaims).toHaveBeenCalledWith(
+      "en",
+      [
+        {
+          contentKey: SOURCE_PATH,
+          locale: "en",
+          parentPath: SOURCE_PARENT,
+        },
+      ],
+      null
+    );
+  });
+
+  it("rejects source markdown when a release activates during the read", async () => {
+    mockReadActiveContentIdentity
+      .mockReturnValueOnce(Effect.succeed(null))
+      .mockReturnValueOnce(Effect.succeed({ releaseId: activeReleaseId }));
+    mockReadActiveContentRoute.mockReturnValueOnce(
+      Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
+    );
+    mockGetCachedLlmsMdxText.mockResolvedValue("Stale source markdown");
+
+    await expect(readMarkdown(SOURCE_PUBLIC_PATH)).rejects.toThrow(
+      `"actualReleaseId": "${activeReleaseId}", "expectedReleaseId": null`
+    );
+  });
+
+  it("fails closed on a claim without an active release", async () => {
+    mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
+    mockReadActiveContentRoute.mockReturnValueOnce(
+      Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
+    );
+    mockReadPublishedMaterialClaims.mockReturnValueOnce(
+      Effect.succeed([
+        {
+          contentKey: SOURCE_PATH,
+          kind: "missing",
+          locale: "en",
+        },
+      ])
+    );
+
+    await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBeNull();
   });
 
   it("returns Quran markdown before checking other content sources", async () => {
@@ -233,9 +294,7 @@ describe("llms markdown content resolver", () => {
   it("returns MDX markdown before route indexes", async () => {
     mockGetCachedLlmsMdxText.mockResolvedValue("MDX markdown");
 
-    await expect(
-      readMarkdown("material/lesson/chemistry/green-chemistry/definition", "id")
-    ).resolves.toBe("MDX markdown");
+    await expect(readMarkdown(SOURCE_PATH, "id")).resolves.toBe("MDX markdown");
 
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
@@ -243,19 +302,86 @@ describe("llms markdown content resolver", () => {
   it("resolves public material routes to source markdown without changing the public URL", async () => {
     mockGetCachedLlmsMdxText.mockResolvedValue("MDX markdown");
 
-    await expect(
-      readMarkdown("subjects/chemistry/green-chemistry/definition")
-    ).resolves.toBe("MDX markdown");
+    await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBe(
+      "MDX markdown"
+    );
 
     expect(mockGetCachedLlmsMdxText).toHaveBeenCalledWith({
-      cleanSlug: "material/lesson/chemistry/green-chemistry/definition",
+      cleanSlug: SOURCE_PATH,
       locale: "en",
-      publicSlug: "subjects/chemistry/green-chemistry/definition",
+      publicSlug: SOURCE_PUBLIC_PATH,
     });
     expect(mockGetRuntimePublicRoute).toHaveBeenCalledWith({
       locale: "en",
-      publicPath: "subjects/chemistry/green-chemistry/definition",
+      publicPath: SOURCE_PUBLIC_PATH,
     });
+  });
+
+  it.each([
+    {
+      contentKey: SOURCE_PATH,
+      kind: "missing",
+      locale: "en",
+    },
+    {
+      contentKey: SOURCE_PATH,
+      kind: "found",
+      locale: "en",
+      projection: {
+        publicPath: "subjects/chemistry/green-chemistry/renamed-definition",
+      },
+    },
+  ])(
+    "does not expose source markdown after exact $kind ownership",
+    async (claim) => {
+      mockReadPublishedMaterialClaims.mockReturnValueOnce(
+        Effect.succeed([claim])
+      );
+
+      await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBeNull();
+
+      expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
+      expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+    }
+  );
+
+  it("reads a same-path exact source claim from Aksara", async () => {
+    mockReadActiveContentRoute.mockReturnValueOnce(
+      Effect.succeed({ activeReleaseId, kind: "unmanaged" })
+    );
+    mockReadPublishedMaterialClaims.mockReturnValueOnce(
+      Effect.succeed([
+        {
+          contentKey: PUBLISHED_KEY,
+          kind: "found",
+          locale: "en",
+          projection: { publicPath: PUBLISHED_PATH },
+        },
+      ])
+    );
+    mockGetCachedPublishedText.mockResolvedValueOnce("Exact Aksara markdown");
+
+    await expect(readMarkdown(PUBLISHED_PATH)).resolves.toBe(
+      "Exact Aksara markdown"
+    );
+    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+      activeReleaseId,
+      family: "material",
+      locale: "en",
+      publicPath: PUBLISHED_PATH,
+    });
+    expect(mockReadPublishedMaterialClaims).toHaveBeenCalledWith(
+      "en",
+      [
+        {
+          contentKey: PUBLISHED_KEY,
+          locale: "en",
+          parentPath: PUBLISHED_PARENT,
+        },
+      ],
+      activeReleaseId
+    );
+    expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
   });
 
   it("does not invent markdown for curriculum context routes", async () => {
@@ -266,6 +392,20 @@ describe("llms markdown content resolver", () => {
 
   it("does not invent markdown for try-out catalog routes without a source document", async () => {
     await expectNoSourceMarkdown("try-out/indonesia/snbt");
+  });
+
+  it("reads indexed non-material routes from their source document", async () => {
+    mockGetRuntimePublicRoute.mockReturnValueOnce(
+      Effect.succeed({
+        kind: "tryout-set",
+        sourcePath: "question-bank/tryout/indonesia/snbt/2027/set-1",
+      })
+    );
+    mockGetCachedLlmsMdxText.mockResolvedValue("Tryout source");
+
+    await expect(
+      readMarkdown("try-out/indonesia/snbt/2027/set-1")
+    ).resolves.toBe("Tryout source");
   });
 
   it("does not invent markdown when an indexed public route has no source path", async () => {

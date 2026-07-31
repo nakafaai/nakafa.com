@@ -1,6 +1,10 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
+import { readExactMaterialSnapshot } from "@repo/backend/convex/contentRelease/material/exact";
+import {
+  loadMaterialCatalogOwner,
+  type loadMaterialOwner,
+} from "@repo/backend/convex/contentRelease/material/owner";
 import { readMaterialPartition } from "@repo/backend/convex/contentRelease/material/partition";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { Effect } from "effect";
@@ -9,7 +13,8 @@ const MATERIAL_DISCOVERY_LIMIT = 100;
 
 /** Selects the compact fields used by RSS, sitemap, and LLMS discovery. */
 function summarizeMaterial(
-  verified: Effect.Effect.Success<ReturnType<typeof verifyMaterial>>
+  verified: Effect.Effect.Success<ReturnType<typeof verifyMaterial>>,
+  sourcePath: string
 ) {
   const { projection } = verified;
   return {
@@ -17,6 +22,7 @@ function summarizeMaterial(
     date: projection.metadata.date,
     description: projection.metadata.description,
     publicPath: projection.publicPath,
+    sourcePath,
     title: projection.metadata.title,
   };
 }
@@ -47,14 +53,25 @@ export const readMaterialBucket = Effect.fn(
 ) {
   const partition = yield* readMaterialPartition(ctx, locale, bucket);
   if (partition.kind === "unmanaged") {
-    return { managed: false, materials: null };
+    return {
+      activeReleaseId: partition.activeReleaseId,
+      managed: false,
+      materials: null,
+    };
   }
   if (partition.kind === "missing") {
-    return { managed: true, materials: null };
+    return {
+      activeReleaseId: partition.activeReleaseId,
+      managed: true,
+      materials: null,
+    };
   }
   return {
+    activeReleaseId: partition.activeReleaseId,
     managed: true,
-    materials: partition.materials.map(summarizeMaterial),
+    materials: partition.materials.map((material) =>
+      summarizeMaterial(material, material.row.sourcePath)
+    ),
   };
 });
 
@@ -67,9 +84,29 @@ export const readLatestMaterials = Effect.fn(
   limit: number
 ) {
   yield* validateDiscoveryLimit(limit);
-  const owner = yield* loadMaterialOwner(ctx, locale);
-  if (!(owner.managed && owner.active)) {
-    return { managed: false, materials: [] };
+  const owner = yield* loadMaterialCatalogOwner(ctx);
+  const activeReleaseId = owner.active?.releaseId ?? null;
+  if (!(owner.active && owner.ready)) {
+    return {
+      activeReleaseId,
+      claimedContentKeys: [],
+      managed: false,
+      materials: [],
+    };
+  }
+  if (!owner.familyManaged) {
+    const exact = yield* readExactMaterialSnapshot(ctx, owner.active, locale);
+    return {
+      activeReleaseId,
+      claimedContentKeys: exact.owners.map(({ contentKey }) => contentKey),
+      managed: false,
+      materials: exact.materials
+        .sort((left, right) => right.row.date.localeCompare(left.row.date))
+        .slice(0, limit)
+        .map((material) =>
+          summarizeMaterial(material, material.row.sourcePath)
+        ),
+    };
   }
   const rows = yield* Effect.promise(() =>
     ctx.db
@@ -80,9 +117,15 @@ export const readLatestMaterials = Effect.fn(
       .order("desc")
       .take(limit)
   );
-  const verified = yield* Effect.forEach(rows, verifyMaterial);
+  const materials = yield* Effect.forEach(rows, (row) =>
+    verifyMaterial(row).pipe(
+      Effect.map((verified) => summarizeMaterial(verified, row.sourcePath))
+    )
+  );
   return {
+    activeReleaseId,
+    claimedContentKeys: [],
     managed: true,
-    materials: verified.map(summarizeMaterial),
+    materials,
   };
 });

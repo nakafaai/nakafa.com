@@ -6,6 +6,9 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 
+const activeMocks = vi.hoisted(() => ({
+  readActiveContentIdentity: vi.fn(),
+}));
 const runtimeMocks = vi.hoisted(() => ({
   getRuntimeContentRouteCounts: vi.fn(),
   getRuntimePublicSitemapCount: vi.fn(),
@@ -30,6 +33,10 @@ vi.mock("@/lib/content/program/sitemap", () => ({
   readPublishedProgramBuckets: programMocks.readPublishedProgramBuckets,
 }));
 
+vi.mock("@/lib/content/published/active", () => ({
+  readActiveContentIdentity: activeMocks.readActiveContentIdentity,
+}));
+
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRouteCounts: runtimeMocks.getRuntimeContentRouteCounts,
   getRuntimePublicSitemapCount: runtimeMocks.getRuntimePublicSitemapCount,
@@ -41,13 +48,20 @@ vi.mock("@repo/internationalization/src/routing", async () => {
 });
 
 beforeEach(() => {
+  activeMocks.readActiveContentIdentity.mockReset();
+  activeMocks.readActiveContentIdentity.mockReturnValue(Effect.succeed(null));
   articleMocks.readPublishedArticleBuckets.mockReset();
   articleMocks.readPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
   );
   materialMocks.readPublishedMaterialBuckets.mockReset();
   materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-    Effect.succeed({ buckets: [], managed: false, materialCount: 0 })
+    Effect.succeed({
+      activeReleaseId: null,
+      buckets: [],
+      managed: false,
+      materialCount: 0,
+    })
   );
   programMocks.readPublishedProgramBuckets.mockReset();
   programMocks.readPublishedProgramBuckets.mockReturnValue(
@@ -137,12 +151,20 @@ describe("sitemap page catalog", () => {
   });
 
   it("replaces material rows and adds curriculum partitions after cutover", async () => {
-    materialMocks.readPublishedMaterialBuckets.mockImplementation((locale) =>
-      Effect.succeed({
-        buckets: locale === "en" ? ["def"] : [],
-        managed: locale === "en",
-        materialCount: locale === "en" ? 2 : 0,
-      })
+    const activeReleaseId = "release-material";
+    activeMocks.readActiveContentIdentity.mockReturnValue(
+      Effect.succeed({ releaseId: activeReleaseId })
+    );
+    materialMocks.readPublishedMaterialBuckets.mockImplementation(
+      (locale, expectedReleaseId) => {
+        expect(expectedReleaseId).toBe(activeReleaseId);
+        return Effect.succeed({
+          activeReleaseId,
+          buckets: locale === "en" ? ["def"] : [],
+          managed: locale === "en",
+          materialCount: locale === "en" ? 2 : 0,
+        });
+      }
     );
     programMocks.readPublishedProgramBuckets.mockImplementation((locale) =>
       Effect.succeed({
@@ -173,6 +195,28 @@ describe("sitemap page catalog", () => {
         section: "material",
       })
     );
+  });
+
+  it("rejects descriptors assembled across material releases", async () => {
+    activeMocks.readActiveContentIdentity
+      .mockReturnValueOnce(Effect.succeed({ releaseId: "release-material" }))
+      .mockReturnValueOnce(Effect.succeed({ releaseId: "release-next" }));
+    materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: "release-material",
+        buckets: [],
+        managed: false,
+        materialCount: 0,
+      })
+    );
+
+    await expect(
+      Effect.runPromise(readSitemapPageDescriptors().pipe(Effect.flip))
+    ).resolves.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+      actualReleaseId: "release-next",
+      expectedReleaseId: "release-material",
+    });
   });
 
   it("splits counts into bounded XML descriptors", async () => {

@@ -8,15 +8,15 @@ import { getTranslations } from "next-intl/server";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
   getRuntimeContentRoute,
-  listRuntimeLatestContentRoutes,
+  getRuntimeLatestContentRoutePage,
 } from "@/lib/content/runtime/routes";
 
 type RuntimeContentSection = FunctionArgs<
   typeof api.contents.queries.runtime.listContentRoutesByPrefix
 >["section"];
 type LatestContentRoute = FunctionReturnType<
-  typeof api.contents.queries.runtime.listLatestContentRoutes
->[number];
+  typeof api.contents.queries.runtime.listLatestContentRoutePage
+>["page"][number];
 
 /** Expected failure raised when route metadata translations cannot be loaded. */
 class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
@@ -78,14 +78,17 @@ function getStaticParamRoutes(config: ParamConfig) {
     const routeGroups = yield* Effect.forEach(
       locales,
       (locale) =>
-        listRuntimeLatestContentRoutes({
+        getRuntimeLatestContentRoutePage({
+          cursor: null,
           limit: staticParamCandidateLimit,
           locale,
           section: config.basePath,
         }),
       { concurrency: locales.length }
     );
-    const routes = routeGroups.flat().map(getStaticParamRoutePath);
+    const routes = routeGroups.flatMap(({ page }) =>
+      page.map(getStaticParamRoutePath)
+    );
 
     return new Set(routes);
   });

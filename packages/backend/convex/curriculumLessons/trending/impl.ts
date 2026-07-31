@@ -8,6 +8,10 @@ import {
 } from "@repo/backend/convex/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
 import {
+  type ContentViewTarget,
+  loadContentTarget,
+} from "@repo/backend/convex/contents/views/target";
+import {
   type GetTrendingSubjectsArgs,
   maxTrendingSubjectsLimit,
   TrendingSubjectIoError,
@@ -106,21 +110,17 @@ const loadRankedPopularityCounters = Effect.fn(
 const loadCurrentTrendingRoute = Effect.fn(
   "curriculumLessons.trending.loadCurrentTrendingRoute"
 )(function* (ctx: QueryCtx, row: Doc<"learningPopularityCounters">) {
-  const route = yield* Effect.tryPromise({
-    try: () =>
-      ctx.db
-        .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", row.content_id))
-        .unique(),
-    catch: toTrendingSubjectIoError,
-  });
+  const route = yield* loadContentTarget(ctx, {
+    contentId: row.content_id,
+    locale: row.locale,
+    section: "material",
+  }).pipe(Effect.mapError(toTrendingSubjectIoError));
 
   if (
     !(
       route &&
       route.locale === row.locale &&
       route.kind === "curriculum-lesson" &&
-      route.section === "material" &&
       route.content_id === route.assetId
     )
   ) {
@@ -154,7 +154,7 @@ function toTrendingContentRef(
 /** Projects a ranked popularity row to the public homepage card shape. */
 function toTrendingSubject(
   row: Doc<"learningPopularityCounters">,
-  route: Doc<"contentRoutes">
+  route: ContentViewTarget
 ): TrendingSubject[] {
   if (!route.materialDomain) {
     return [];

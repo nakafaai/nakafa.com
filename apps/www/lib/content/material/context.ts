@@ -4,10 +4,12 @@ import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculu
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
+import type { PublicMaterialLessonRoute } from "@repo/contents/_types/route/schema";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
+import type { MaterialReleasePin } from "@/lib/content/material/release";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {
@@ -15,10 +17,15 @@ import {
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
 
-type PublishedMaterialIdentity = Pick<
-  MaterialLessonProjection,
-  "materialKey" | "parentPath" | "publicPath"
->;
+type PublishedMaterialIdentity =
+  | Pick<
+      MaterialLessonProjection,
+      "contentKey" | "materialKey" | "parentPath" | "publicPath"
+    >
+  | Pick<
+      PublicMaterialLessonRoute,
+      "materialKey" | "parentPath" | "publicPath" | "sourcePath"
+    >;
 
 /** Verified curriculum return link for one material lesson. */
 export interface PublishedMaterialContext {
@@ -36,10 +43,17 @@ export const readPublishedMaterialContext = Effect.fn(
 )(function* (
   locale: Locale,
   material: PublishedMaterialIdentity,
-  context: MaterialContextIdentity
+  context: MaterialContextIdentity,
+  expectedActiveReleaseId?: MaterialReleasePin
 ) {
+  const contentKey =
+    "contentKey" in material ? material.contentKey : material.sourcePath;
   const result = yield* readRuntimeQuery("contentRelease.program.context", () =>
     fetchRuntimeQuery(api.contentRelease.program.context, {
+      ...(expectedActiveReleaseId === undefined
+        ? {}
+        : { expectedActiveReleaseId }),
+      contentKey,
       locale,
       materialKey: material.materialKey,
       nodeKey: context.nodeKey,
@@ -54,14 +68,16 @@ export const readPublishedMaterialContext = Effect.fn(
   if (
     result.groupJson === null &&
     result.mappingJson === null &&
-    result.parentJson === null
+    result.parentJson === null &&
+    result.resolvedCanonicalPath === null
   ) {
     return { managed: true, value: null };
   }
   if (
     result.groupJson === null ||
     result.mappingJson === null ||
-    result.parentJson === null
+    result.parentJson === null ||
+    result.resolvedCanonicalPath === null
   ) {
     return yield* new PublishedProjectionError({
       locale,
@@ -85,8 +101,8 @@ export const readPublishedMaterialContext = Effect.fn(
     mapping.materialKey !== material.materialKey ||
     mapping.programKey !== context.programKey ||
     !(
-      mapping.canonicalPath === material.publicPath ||
-      mapping.canonicalPath === material.parentPath
+      result.resolvedCanonicalPath === material.publicPath ||
+      result.resolvedCanonicalPath === material.parentPath
     ) ||
     parent.locale !== locale ||
     parent.programKey !== context.programKey ||
@@ -115,12 +131,18 @@ export const readPublishedMaterialContext = Effect.fn(
 export async function getPublishedMaterialContext(
   locale: Locale,
   material: PublishedMaterialIdentity,
-  context: MaterialContextIdentity
+  context: MaterialContextIdentity,
+  expectedActiveReleaseId?: MaterialReleasePin
 ) {
   "use cache";
 
   const result = await Effect.runPromise(
-    readPublishedMaterialContext(locale, material, context)
+    readPublishedMaterialContext(
+      locale,
+      material,
+      context,
+      expectedActiveReleaseId
+    )
   );
   applyContentRuntimeCache();
   return result;

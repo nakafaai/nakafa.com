@@ -1,11 +1,5 @@
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
-import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
-import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
-import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
-import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
+import { resolveActiveRoute } from "@repo/backend/convex/contentRelease/scope/route";
 import {
   contentFamilyValidator,
   localeValidator,
@@ -31,89 +25,33 @@ const routeResultValidator = v.union(
   })
 );
 
-type ContentFamily = Infer<typeof contentFamilyValidator>;
-type ContentLocale = Infer<typeof localeValidator>;
 type RouteResult = Infer<typeof routeResultValidator>;
 
-/** Resolves one public route from the exact active publication sequence. */
-const resolveActiveRoute = Effect.fn("contentRelease.resolveActiveRoute")(
-  function* (
-    ctx: QueryCtx,
-    family: ContentFamily,
-    locale: ContentLocale,
-    publicPath: string
-  ) {
-    const active = yield* loadActiveIdentity(ctx);
-    if (!active) {
-      return {
-        activeReleaseId: null,
-        kind: "unmanaged",
-      } satisfies RouteResult;
-    }
-    const families = yield* loadReleaseFamilies(active.release);
-    const binding = yield* loadRouteBinding(
-      ctx,
-      locale,
-      publicPath,
-      active.sequence
-    );
-    const owner = binding?.contentKey
-      ? yield* loadContentOwner(
-          ctx,
-          binding.contentKey,
-          locale,
-          active.sequence
-        )
-      : null;
-    if (owner && owner.family !== family) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Route ${locale}/${publicPath} changed its ${family} ownership family.`
-      );
-    }
-    const managed = families.result.includes(family) || owner?.managed === true;
-    if (!managed) {
-      return {
-        activeReleaseId: active.releaseId,
-        kind: "unmanaged",
-      } satisfies RouteResult;
-    }
-    if (!binding || binding.operation === "delete") {
-      return {
-        activeReleaseId: active.releaseId,
-        kind: "missing",
-      } satisfies RouteResult;
-    }
-    if (!binding.contentKey) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Route ${locale}/${publicPath} lost its content identity.`
-      );
-    }
-    const projection = yield* resolvePublicProjection(
-      ctx,
-      binding.contentKey,
-      locale,
-      active.sequence
-    );
-    if (
-      !projection ||
-      projection.family !== family ||
-      projection.publicPath !== publicPath
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Route ${locale}/${publicPath} lost its ${family} projection.`
-      );
-    }
-
-    return {
-      activeReleaseId: active.releaseId,
-      kind: "found",
-      projectionJson: projection.projectionJson,
-    } satisfies RouteResult;
+/** Converts the internal route model into its public ownership contract. */
+function toRouteResult(
+  resolved: Effect.Effect.Success<ReturnType<typeof resolveActiveRoute>>
+): RouteResult {
+  if (!resolved.active) {
+    return { activeReleaseId: null, kind: "unmanaged" };
   }
-);
+  if (!resolved.managed) {
+    return {
+      activeReleaseId: resolved.active.releaseId,
+      kind: "unmanaged",
+    };
+  }
+  if (!resolved.projection) {
+    return {
+      activeReleaseId: resolved.active.releaseId,
+      kind: "missing",
+    };
+  }
+  return {
+    activeReleaseId: resolved.active.releaseId,
+    kind: "found",
+    projectionJson: resolved.projection.projectionJson,
+  };
+}
 
 /** Returns active public-route ownership without exposing artifact code. */
 export const resolve = query({
@@ -125,6 +63,8 @@ export const resolve = query({
   returns: routeResultValidator,
   handler: (ctx, args) =>
     runConvexProgram(
-      resolveActiveRoute(ctx, args.family, args.locale, args.publicPath)
+      resolveActiveRoute(ctx, args.family, args.locale, args.publicPath).pipe(
+        Effect.map(toRouteResult)
+      )
     ),
 });
