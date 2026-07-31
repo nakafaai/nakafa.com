@@ -2,260 +2,141 @@
 
 [![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/nakafaai/nakafa.com)
 
-## Overview
+Nakafa is a source-available educational platform for structured learning,
+assessments, Quran study, and political analysis. The production site is
+[nakafa.com](https://nakafa.com).
 
-**Nakafa** is a source-available educational platform providing structured learning content across multiple educational levels (elementary, middle, high school, university) with political analysis articles.
+This repository owns the React and Next.js applications, design system,
+transactional Convex backend, renderer implementations, user state, and
+product integrations. The separate
+[Aksara repository](https://github.com/nakafaai/aksara) owns authored content
+and signed publication artifacts for every scope that has completed cutover.
+During the migration, `packages/contents` still contains source for scopes that
+have not completed cutover and copies awaiting coordinated deletion for scopes
+already served from Aksara. Those copies are not active publication sources.
 
-Nakafa is **not open source** under the Open Source Definition because commercial,
-hosted, redistribution, modification, white-label, rebrand, and AI-training uses
-require prior written permission from PT. Nakafa Tekno Kreatif.
+## Toolchain
 
-**Live Site**: [nakafa.com](https://nakafa.com)
+`package.json` is the toolchain source of truth:
 
-## Quick Start
+- Node.js 24
+- pnpm 10.34.1
+- Turborepo
+- Next.js 16 and React 19
+- TypeScript 7 CLI with TypeScript 6 API compatibility
+- Convex
+- Vitest
+- Biome through Ultracite
 
-### Prerequisites
+Do not add `.npmrc`, `.node-version`, `.nvmrc`, or another package-manager
+contract unless the repository gains a measured need that `package.json`
+cannot express.
 
-- Node.js 22+
-- pnpm
-- Git
+## Setup
 
-### Installation
-
-```bash
-# Clone & install
+```sh
 git clone https://github.com/nakafaai/nakafa.com.git
 cd nakafa.com
-pnpm install
-
-# Start development
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+The main web app is available at [http://localhost:3000](http://localhost:3000).
 
-### Available Scripts
+For production-mode local verification:
 
-```bash
-pnpm dev          # Development server (Turbopack)
-pnpm build        # Production build
-pnpm start        # Production server
-pnpm lint         # Lint & format check
-pnpm test         # Run tests
-pnpm clean        # Clean dependencies
+```sh
+pnpm build
+pnpm start
 ```
 
-## Architecture
+## Repository layout
 
-### Customer Sync Flow (Convex + Polar)
+- `apps/www`: main Next.js application on port 3000
+- `apps/mcp`: MCP application on port 3001
+- `apps/api`: API application on port 3002
+- `apps/cas`: Python CAS service on port 3003
+- `apps/email`: email preview application on port 3004
+- `packages/backend`: Convex schema, functions, workflows, and integrations
+- `packages/design-system`: shared React components and renderer implementations
+- `packages/ai`: Effect-native AI capabilities
+- `packages/contents`: unactivated content source plus cutover copies awaiting
+  coordinated deletion
+- `packages/testing`: shared Vitest configuration
+- `packages/utilities`: generic cross-domain primitives
+- `repos/effect`: read-only Effect source pinned to the installed version
 
-The platform uses [Polar](https://polar.sh) for payments with bidirectional sync to Convex database.
+Read the nearest `AGENTS.md` before working. Convex changes also require
+`packages/backend/AGENTS.md` and the generated Convex guidelines. Effect work
+requires reading `repos/effect/AGENTS.md` plus the relevant implementation,
+tests, type-level tests, module structure, and API design in the vendored source.
 
-#### Signup Flow
+## Commands
 
-```mermaid
-flowchart LR
-    A[User Signup] --> B[Auth Trigger]
-    B --> C[syncCustomer]
-    C --> D[ensureCustomer]
-    D <--> E[(Polar API)]
-    D --> F[upsertCustomer]
-    F --> G[(Convex DB)]
-```
-
-#### Checkout Flow
-
-```mermaid
-flowchart LR
-    A[User Click] --> B[createProCheckoutUrl]
-    B --> C[Read Vercel request IP]
-    C --> D[generateCheckoutLink]
-    D --> E[requireCustomer]
-    E --> F[ensureCustomer]
-    F <--> G[(Polar API)]
-    E --> H[upsertCustomer]
-    H --> I[(Convex DB)]
-    D --> J[createCheckoutSession with customerIpAddress]
-    J --> G
-    G --> K[Checkout URL]
-```
-
-#### Webhook Flow
-
-```mermaid
-flowchart LR
-    A[(Polar API)] -->|webhook| B[Webhook Handler]
-    B -->|created/updated| C[upsertCustomer]
-    B -->|deleted| D[deleteCustomerById]
-    C --> E[(Convex DB)]
-    D --> E
-```
-
-#### Flow Summary
-
-| Flow | Trigger | Steps |
-| ------ | --------- | ------- |
-| **Signup** | User registers | Auth trigger → `syncCustomer` → `ensureCustomer` → `upsertCustomer` |
-| **Checkout** | User clicks buy | `requireCustomer` → `createCheckoutSession` → Redirect to Polar |
-| **Portal** | User opens settings | `requireCustomer` → `createCustomerPortalSession` → Redirect |
-| **Webhook** | Polar event | `upsertCustomer` or `deleteCustomerById` |
-
-#### Key Design Decisions
-
-- **Polar is source of truth** - Local DB is cache for fast queries
-- **Idempotent operations** - All mutations safe to retry
-- **Race condition handling** - `ensureCustomer` retries on create failure
-- **Edge case recovery** - Deleted from Polar → recreated on next checkout
-
-## Development
-
-### Project Documentation
-
-Detailed technical documentation available on [DeepWiki](https://deepwiki.com/nakafaai/nakafa.com) - covers architecture, design decisions, and development patterns.
-
-### Adding Content
-
-1. Navigate to appropriate level in `packages/contents/subject/`
-2. Create MDX files following existing structure
-3. Update data files in `_data/` directories
-4. Test locally with `pnpm dev`
-
-### Testing
-
-All tests use **Vitest** with jsdom environment and **global test functions** (no imports needed).
-
-#### Getting Started
-
-```bash
-# Run all tests
+```sh
+pnpm dev
+pnpm dev:all
+pnpm build
+pnpm start
 pnpm test
-
-# Test specific app
-pnpm --filter www test
+pnpm test:coverage
+pnpm lint
+pnpm format
+pnpm boundaries
+pnpm effect:source:check
 ```
 
-#### Test Commands
+There is no root typecheck script. Run the typecheck owned by each changed
+workspace, for example:
 
-| Command | Description |
-| --------- | ------------- |
-| `pnpm test` | Run all tests across all apps/packages |
-| `pnpm --filter www test` | Run tests for www app only |
-| `pnpm --filter www test:watch` | Watch mode - re-run on file changes |
-| `pnpm --filter www test:ui` | Open Vitest UI in browser |
-| `pnpm --filter www test:coverage` | Run tests with coverage report |
-
-#### Coverage
-
-Coverage reports are generated in terminal and HTML format:
-
-- Thresholds: 60% lines/functions, 50% branches, 60% statements
-- HTML report: `apps/www/coverage/index.html`
-- View locally after running `pnpm --filter www test:coverage`
-
-#### Writing Tests
-
-Tests are located in `**/__tests__/` or `**/*.test.ts|tsx` files.
-
-**Example test file:**
-
-```typescript
-import { describe, expect, it } from "vitest";
-import { getInitialName } from "./helper";
-
-describe("getInitialName", () => {
-  it("returns 'NF' for undefined", () => {
-    expect(getInitialName()).toBe("NF");
-  });
-
-  it("returns initials for full name", () => {
-    expect(getInitialName("John Doe")).toBe("JD");
-  });
-});
+```sh
+pnpm --filter www typecheck
+pnpm --filter @repo/backend typecheck
+pnpm --filter @repo/design-system typecheck
 ```
 
-#### Best Practices
+Tests use Vitest config files owned by each workspace. Keep tests colocated as
+`name.test.ts` or `name.test.tsx`, import the Vitest APIs they use, and preserve
+the workspace's configured per-file coverage gate. Do not create `__tests__`
+folders or duplicate test-only source modules.
 
-- **Test location**: Place tests next to source files in `__tests__/` directory
-- **One test file per source file**: Use descriptive names matching the source
-- **Arrange-Act-Assert**: Structure each test clearly
-- **Test behavior, not implementation**: Focus on what the function does
-- **Use globals**: No need to import `describe`, `it`, `expect` from vitest
-- **Mock external dependencies**: Use setup file for common mocks
+## Content ownership
 
-#### Test Setup
+Do not add substitute content or duplicate Aksara-owned source to this
+repository. Before changing educational content, verify the active ownership
+scope. Aksara-owned changes belong in `nakafaai/aksara`; remaining local scopes
+must follow `packages/contents` contracts until their coordinated cutover.
 
-Common mocks for Next.js routing, i18n, and browser APIs are pre-configured in `packages/testing/setup.ts`:
+Renderer and component implementations remain in Nakafa. Aksara content refers
+to reviewed renderer contracts and never carries duplicate React or TSX
+implementations.
 
-- `useRouter()` - Mocked router with all methods
-- `usePathname()` - Returns `/`
-- `useSearchParams()` - Returns empty URLSearchParams
-- `useTranslations()` - Returns key as translation
-- `matchMedia()` - Mocked MediaQueryList
+## Contributing
 
-### Contributing
-
-By submitting a contribution, you agree to the contribution terms in
-[`.github/CONTRIBUTING.md`](./.github/CONTRIBUTING.md). Do not submit code,
-content, data, designs, or other materials unless you have the right to grant
-those contribution rights.
-
-1. Fork repository
-2. Create feature branch: `git checkout -b feature/name`
-3. Make changes following established patterns
-4. Run `pnpm lint` and `pnpm test`
-5. Submit pull request
+Read [`AGENTS.md`](AGENTS.md) and
+[`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md). Submit a ready pull request
+from a branch, keep it current with `main`, resolve review conversations, and
+run the relevant exact-head checks before merge.
 
 ## License
 
-Nakafa uses a source-available license model.
+Nakafa uses a source-available license model and is not open source under the
+Open Source Definition.
 
 | Area | License or policy |
-| ------ | ------------------- |
-| Software source code | [Nakafa Source Available License 1.0](./LICENSE) |
-| Educational content, articles, exercises, datasets, and media | [Nakafa Content License 1.0](./CONTENT_LICENSE.md) |
-| Nakafa names, logos, domains, product names, UI identity, and brand assets | [Nakafa Trademark and Brand Policy](./TRADEMARKS.md) |
+| --- | --- |
+| Software source code | [Nakafa Source Available License 1.0](LICENSE) |
+| Educational content, articles, exercises, datasets, and media | [Nakafa Content License 1.0](CONTENT_LICENSE.md) |
+| Names, logos, domains, product names, UI identity, and brand assets | [Nakafa Trademark and Brand Policy](TRADEMARKS.md) |
 
-Allowed without written permission:
+Commercial, hosted, redistribution, modification, white-label, rebrand, and
+AI-training uses require prior written permission from PT. Nakafa Tekno
+Kreatif. See the license files for the complete terms.
 
-- View, inspect, and audit the source code.
-- Clone one copy for personal review.
-- Create a GitHub fork only to submit contributions back to Nakafa.
-- Run the unmodified software locally for personal, non-commercial learning,
-  research, testing, security review, or hobby evaluation.
-- Read Nakafa content for personal, non-commercial learning.
-- Submit contributions under [`.github/CONTRIBUTING.md`](./.github/CONTRIBUTING.md).
+Reference material:
 
-Not allowed without prior written permission:
-
-- Commercial or revenue-generating use.
-- Any hosted deployment outside your own local machine.
-- Use by a company, school, institution, nonprofit organization, government
-  organization, team, or client.
-- Redistribution, mirroring, packaging, resale, sublicensing, or publishing
-  copies.
-- Modification, derivative products, forked products, white-label use,
-  private-label use, or rebranding.
-- Scraping, bulk extraction, dataset creation, embeddings, AI training,
-  fine-tuning, benchmarking, or competing educational products.
-- Use of the Nakafa name, logos, domains, screenshots, UI identity, or brand
-  assets as your own brand.
+- [Open Source Definition](https://opensource.org/definition-annotated)
+- [GitHub licensing documentation](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)
+- [PolyForm licenses](https://polyformproject.org/licenses)
 
 For commercial licensing inquiries: <nakafaai@gmail.com>
-
-Reference sources behind this license model:
-
-- [Open Source Definition](https://opensource.org/definition-annotated) requires
-  free redistribution, derived works, and no field-of-use restrictions.
-- [GitHub licensing docs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)
-  explain that public source visibility does not automatically grant copyright
-  permissions beyond viewing and forking on GitHub.
-- [PolyForm licenses](https://polyformproject.org/licenses/) document common
-  source-available patterns for limited source-code rights.
-
-## Contact
-
-**Nabil Fatih** - [@nabilfatih](https://twitter.com/nabilfatih_) - <nakafaai@gmail.com>
-
----
-
-Built with ❤️ for learners everywhere

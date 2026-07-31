@@ -1,380 +1,127 @@
-# Backend Scripts
+# Backend scripts
 
-Sync MDX content and run backend integrity checks for Convex state.
+These scripts operate filesystem content projections and verify customer
+state. Package scripts in `packages/backend/package.json` are the command
+source of truth.
 
-## Quick Start
+## Content ownership
 
-```bash
-# Development (syncs all content, cleans stale, verifies)
+Aksara owns the activated article, material, and learning-program scopes.
+The current full and incremental orchestrators still traverse their local
+copies while final repository cleanup is pending. Those writes do not own the
+active Aksara runtime and must not be used to publish or repair an activated
+scope.
+
+Until their coordinated cutovers complete, Nakafa still owns:
+
+- try-out catalogs, question prompts, answers, choices, and IRT projections;
+- Quran source, search, Tafsir, and related read models.
+
+After each remaining scope moves to Aksara, delete its sync implementation,
+reset commands, tests, and documentation in the same migration.
+
+## Development setup
+
+Read [`../AGENTS.md`](../AGENTS.md) and use an isolated Agent Mode deployment.
+From the repository root:
+
+```sh
+worktree_name=$(basename "$PWD")
+pnpm --dir packages/backend exec convex deployment create \
+  "dev/$USER-codex/$worktree_name" \
+  --type dev \
+  --select \
+  --expiration "in 5 days"
+pnpm --dir packages/backend exec convex deployment token create agent-token --save-env
+pnpm --dir packages/backend exec convex dev --once
+```
+
+The selected deployment and its generated URLs belong only to that worktree.
+Do not copy Convex deployment identity from another task.
+
+## Validation and sync
+
+Use the scope command for content that Nakafa still owns:
+
+```sh
+pnpm --filter @repo/backend exec tsx scripts/sync-content.ts quran
+pnpm --filter @repo/backend exec tsx scripts/sync-content.ts tryouts
+```
+
+The broad commands below still include cutover copies and exist only until the
+remaining scope cutovers and final sync deletion finish:
+
+```sh
+pnpm --filter @repo/backend sync:validate
+pnpm --filter @repo/backend sync:verify
 pnpm --filter @repo/backend sync
-
-# Production
-pnpm --filter @repo/backend sync:prod
-```
-
-## Setup
-
-### 1. Authenticate with Convex
-
-```bash
-cd packages/backend
-npx convex dev
-```
-
-This stores your access token in `~/.convex/config.json`.
-
-### 2. Configure Environment
-
-Add to `packages/backend/.env.local`:
-
-```bash
-# Development (created by npx convex dev)
-CONVEX_URL=https://your-dev-project.convex.cloud
-
-# Production (find in Convex Dashboard -> Settings -> Deployment URL)
-CONVEX_PROD_URL=https://your-prod-project.convex.cloud
-```
-
-### 3. Deploy Functions to Production
-
-Before syncing to production, deploy the sync functions:
-
-```bash
-npx convex deploy
-```
-
-## Commands
-
-### Development
-
-| Command | Description |
-|---------|-------------|
-| `sync` | Full sync + clean + verify (recommended) |
-| `sync:incremental` | Sync only changed files since last sync (fast) |
-| `sync:validate` | Validate content without syncing (for CI) |
-| `sync:verify` | Verify database matches filesystem |
-| `sync:clean` | Find and remove stale content |
-| `sync:reset` | Delete synced content/runtime rows (authors optional, requires --force) |
-| `sync:reset:analytics` | Delete rebuildable analytics projections |
-| `sync:reset:audio` | Delete rebuildable audio projections |
-| `sync:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data, then run a full sync |
-
-### Production
-
-| Command | Description |
-|---------|-------------|
-| `sync:prod` | Full sync + clean + verify to production |
-| `sync:prod:incremental` | Incremental sync to production |
-| `sync:prod:verify` | Verify production database |
-| `sync:prod:clean` | Clean stale content in production |
-| `sync:prod:reset` | Delete synced content/runtime rows in production (authors optional, requires --force) |
-| `sync:prod:reset:analytics` | Delete production analytics projections |
-| `sync:prod:reset:audio` | Delete production audio source, generated audio, and audio queue rows |
-| `sync:prod:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync |
-
-### Integrity
-
-| Command | Description |
-|---------|-------------|
-| `customers:verify` | Verify user/customer/subscription cohesion in development |
-| `customers:verify:prod` | Verify user/customer/subscription cohesion in production |
-
-### Options
-
-| Flag | Description |
-|------|-------------|
-| `--locale en\|id` | Sync specific locale only (not supported by incremental sync) |
-| `--force` | Actually delete content (for clean/reset) |
-| `--authors` | Also delete authors (for clean/reset) |
-| `--sequential` | Run phases sequentially (debugging) |
-
-## Workflows
-
-### Development
-
-```bash
-# First time or after major changes
-pnpm --filter @repo/backend sync
-
-# Daily (only syncs changed files)
 pnpm --filter @repo/backend sync:incremental
-
-# Before commit (validates without syncing)
-pnpm --filter @repo/backend sync:validate
 ```
 
-### Production
+- `sync:validate` checks authored source without writing Convex.
+- `sync:verify` compares filesystem projections with the selected deployment.
+- `sync` performs a full clean, sync, verification, and cache invalidation pass.
+- `sync:incremental` uses the last successful Git revision and does not accept
+  `--locale` because its state is shared across locales.
 
-```bash
-# 1. Validate content
+Use `--locale en` or `--locale id` only with full, validate, verify, or clean
+operations. Use `--sequential` only for debugging one full sync.
+
+## Production
+
+Production commands require an approved deployment and data window. Re-run the
+read-only validation and dry-run gates immediately before any write:
+
+```sh
 pnpm --filter @repo/backend sync:validate
-
-# 2. Deploy functions to production
-cd packages/backend && npx convex deploy
-
-# 3. Sync content to production
+pnpm --filter @repo/backend sync:prod:verify
+pnpm --filter @repo/backend deploy
 pnpm --filter @repo/backend sync:prod
-
-# 4. Verify production data
 pnpm --filter @repo/backend sync:prod:verify
 ```
 
-### Reset (Start Fresh)
+Never deploy a worktree that would remove another task's active schema or
+indexes. Use the Convex CLI deletion guard and inspect the exact diff first.
 
-This rebuilds synced content and resettable runtime projections. Durable learning
-views and Continue Learning recents are preserved across the reset and rejoin the
-current content routes after sync.
+## Destructive operations
 
-```bash
-# See what would be deleted (dry run)
+Reset and clean commands are dry-run unless `--force` is present:
+
+```sh
+pnpm --filter @repo/backend sync:clean
 pnpm --filter @repo/backend sync:reset
-
-# Actually delete all content
-pnpm --filter @repo/backend sync:reset --force
-
-# Delete including authors
-pnpm --filter @repo/backend sync:reset --force --authors
-
-# Re-sync after reset
-pnpm --filter @repo/backend sync
-```
-
-For production (use with caution):
-
-```bash
-# Preview deletion
-pnpm --filter @repo/backend sync:prod:reset
-
-# Actually delete production content
-pnpm --filter @repo/backend sync:prod:reset --force
-```
-
-### Reset Content Analytics
-
-Use this when rebuildable analytics projections must be restarted, such as after
-an analytics projection shape change. It clears analytics queue rows, partition
-leases, popularity counts, and trending buckets. Durable learning views and the
-Continue Learning read model are preserved. If their identity contract changes,
-use an explicit backed-up migration instead of this generic reset.
-
-```bash
-# Preview deletion
 pnpm --filter @repo/backend sync:reset:analytics
-
-# Actually delete analytics rows
-pnpm --filter @repo/backend sync:reset:analytics --force
-```
-
-For production, run the reset only during an approved Convex write/deploy
-window. This command calls internal mutations from the deployed Convex bundle, so
-it is operational read-model reset tooling after those mutations are available.
-For a strict schema projection cutover where old production rows block deploying
-the current bundle, first use an approved deployment-compatible data cutover path
-to clear or migrate the analytics rows. Then deploy strict code, run this reset
-only if analytics rows still remain, and verify:
-
-```bash
-pnpm --filter @repo/backend deploy
-pnpm --filter @repo/backend sync:prod:reset:analytics --force
-pnpm --filter @repo/backend sync:prod:verify
-```
-
-### Reset Audio Read Models
-
-Use this when derived audio read models must be discarded and rebuilt from the
-content graph, such as after audio projection shape changes or generated audio
-storage corruption. It clears only audio source, generated audio, and audio queue
-rows; then a full sync rebuilds audio source projections.
-
-```bash
-# Preview deletion
 pnpm --filter @repo/backend sync:reset:audio
-
-# Actually delete audio read models
-pnpm --filter @repo/backend sync:reset:audio --force
-
-# Rebuild audio source projections
-pnpm --filter @repo/backend sync
-```
-
-For production, run the reset only during an approved Convex write/deploy
-window. This command calls internal mutations from the deployed Convex bundle, so
-it is operational read-model reset tooling after those mutations are available.
-For a strict schema projection cutover where old production rows block deploying
-the current bundle, first use an approved deployment-compatible data cutover path
-to clear or migrate the audio read-model rows, then deploy strict code, rebuild,
-and verify:
-
-```bash
-pnpm --filter @repo/backend sync:prod:reset:audio --force
-pnpm --filter @repo/backend deploy
-pnpm --filter @repo/backend sync:prod
-pnpm --filter @repo/backend sync:prod:verify
-```
-
-### Reset Tryouts + IRT Only
-
-```bash
-# Preview the tryout/IRT wipe
 pnpm --filter @repo/backend sync:reset:tryouts
-
-# Actually delete tryout definitions, access rows, entitlements, and IRT scale data
-pnpm --filter @repo/backend sync:reset:tryouts --force
-
-# Then rebuild the deleted tables with a full sync
-pnpm --filter @repo/backend sync
 ```
 
-`sync:reset:tryouts` clears incremental sync state on purpose. Do not follow it
-with `sync:incremental`; run a full sync so Convex rebuilds the deleted tryout
-and IRT tables coherently. It intentionally preserves
-`tryoutFreeAttemptClaims`: the one-free-tryout allowance belongs to the account,
-not to rebuildable try-out content or runtime rows.
+Production variants use the `sync:prod:*` scripts. Do not run them without an
+approved window, exact row-count proof, a recovery plan, and post-write
+verification. `--authors` extends a full reset to authors. Try-out and audio
+resets deliberately clear incremental state and must be followed by a full
+sync, never an incremental sync.
 
-For production (use with caution):
+`tryoutFreeAttemptClaims` is durable account state and is not reset with
+try-out content.
 
-```bash
-pnpm --filter @repo/backend sync:prod:reset:tryouts --force
-pnpm --filter @repo/backend sync:prod
+## Customer verification
+
+```sh
+pnpm --filter @repo/backend customers:verify
+pnpm --filter @repo/backend customers:verify:prod
 ```
 
-## Content Structure
-
-### Articles
-
-```
-packages/contents/articles/{category}/{slug}/
-  en.mdx       # English
-  id.mdx       # Indonesian
-  ref.ts       # References
-```
-
-### Materials
-
-```
-packages/contents/material/lesson/{subject}/{material}/
-  source.ts
-  {lesson}/
-    en.mdx
-    id.mdx
-```
-
-### Question Bank
-
-```
-packages/contents/question-bank/tryout/{country}/{exam}/{section}/{set}/
-  question-{number}/
-    question.en.mdx
-    question.id.mdx
-    answer.en.mdx
-    answer.id.mdx
-    choices.ts
-```
-
-**⚠️ IMPORTANT**: When adding new try-out questions, you MUST attach the question-bank source to the typed try-out source:
-
-1. Create question directories under `question-bank/tryout/{country}/{exam}/{section}/{set}/question-{number}/`
-2. Add MDX files and choices
-3. **Add track, set, and section placement** to `packages/contents/tryout/{country}/{exam}/source.ts`:
-
-```typescript
-{
-  key: "2027",
-  kind: "year",
-  order: 1,
-  routeSlugs: { en: "2027", id: "2027" },
-  translations: {
-    en: { title: "Year 2027" },
-    id: { title: "Tahun 2027" },
-  },
-  sets: [
-    {
-      key: "set-2",
-      order: 2,
-      routeSlugs: { en: "set-2", id: "set-2" },
-      translations: {
-        en: { title: "Set 2" },
-        id: { title: "Set 2" },
-      },
-      sections: [
-        {
-          key: "quantitative-knowledge",
-          order: 1,
-          questionCount: 20,
-          questionSourcePath:
-            "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-2",
-          routeSlugs: {
-            en: "quantitative-knowledge",
-            id: "pengetahuan-kuantitatif",
-          },
-          timeLimitSeconds: 1800,
-          translations: {
-            en: { title: "Quantitative Knowledge" },
-            id: { title: "Pengetahuan Kuantitatif" },
-          },
-        },
-      ],
-    },
-  ],
-}
-```
-
-If you forget step 3, sync verification reports missing question-bank source paths. Add the missing paths to the typed try-out source before syncing.
-
-## Troubleshooting
-
-### "CONVEX_URL not set"
-Run `npx convex dev` to create `.env.local`.
-
-### "CONVEX_PROD_URL not set"
-Add production URL from Convex Dashboard -> Settings -> Deployment URL.
-
-### "No access token"
-Run `npx convex dev` to authenticate.
-
-### "Could not find function"
-Deploy functions first: `npx convex deploy`
-
-### Sync shows 0 changes
-Content hash unchanged. This is normal for `sync:incremental`.
-
-## Scripts
-
-| Script | Purpose |
-|--------|---------|
-| `sync-content.ts` | Sync MDX content to Convex database |
-| `customers/verify.ts` | Verify user/customer/subscription cohesion |
+These commands verify user, customer, and subscription cohesion without
+changing content ownership.
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `sync-content.ts` | Main sync script |
-| `sync-content/` | Shared sync-content helpers, validation, and workflows |
-| `customers/` | Customer cohesion verification scripts |
-| `customers/verify.ts` | Dev/prod verification for user/customer/subscription cohesion |
-| `../convex/contentSync/mutations/` | Convex sync mutations split by concern |
-| `../convex/contentSync/queries/` | Convex verification queries split by concern |
-| `../.sync-state.json` | Dev incremental sync state (gitignored) |
-| `../.sync-state.prod.json` | Prod incremental sync state (gitignored) |
+- `sync-content.ts` is the CLI boundary.
+- `sync-content/` owns validation, projection, Convex calls, cleanup, and
+  verification until final filesystem sync deletion.
+- `customers/verify.ts` verifies customer state.
+- `.sync-state.json` and `.sync-state.prod.json` are ignored incremental state.
 
-## How Incremental Sync Works
-
-The incremental sync tracks the last successful sync using separate state files:
-- **Dev**: `.sync-state.json` - tracks dev database syncs
-- **Prod**: `.sync-state.prod.json` - tracks prod database syncs
-
-This ensures syncing to dev doesn't affect prod's incremental state and vice versa.
-
-Each state file contains:
-- `lastSyncTimestamp` - when the last sync completed
-- `lastSyncCommit` - git commit hash at last sync
-
-When you run `sync:incremental`, it:
-1. Loads the state file for the target environment
-2. Uses `git diff` to find files changed since `lastSyncCommit`
-3. Syncs affected article, curriculum, and tryout rows
-4. Runs the global stale-content cleanup only when a changed source path was deleted or renamed
-5. Rebuilds route artifacts only for affected locale and section targets
-6. Syncs Quran, public routes, and learning programs only when their sources changed
-7. Saves the new commit hash after successful sync
+Authored source paths remain under `packages/contents/question-bank`,
+`packages/contents/tryout`, and the Quran source modules until their Aksara
+cutovers complete.

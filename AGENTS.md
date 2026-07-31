@@ -6,8 +6,6 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 ## Source Of Truth
 
 - Use retrieval-led reasoning first. Read the repo, configs, docs, and generated files before changing code.
-- No Cursor rules were found in `.cursor/rules/` or `.cursorrules` when this guide was updated.
-- No Copilot instructions were found in `.github/copilot-instructions.md` when this guide was updated.
 - This root `AGENTS.md` is the baseline for the repo.
 - Also read any nested `AGENTS.md` files in the area you touch.
 - For Convex work, `packages/backend/AGENTS.md` is mandatory.
@@ -29,14 +27,19 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Main packages: `packages/backend`, `packages/design-system`, `packages/contents`, `packages/ai`, `packages/testing`
 - App-local alias: `@/*`
 - Cross-package alias: `@repo/*`
-- Educational MDX content lives in `packages/contents/`
+- Aksara owns authored content and publication for every explicitly activated
+  scope. During the migration, `packages/contents/` still contains source for
+  unactivated scopes plus copies awaiting coordinated deletion after cutover.
 
 ## Package Ownership
 
 - `packages/utilities` is for generic cross-domain primitives only. Do not put Nakafa content-domain constants, taxonomy, schemas, MDX/content metadata, or content-specific helpers there.
-- Content taxonomy constants and domain types live in `packages/contents/_types/taxonomy.ts`; callers import taxonomy constants and types directly from that module.
-- Content schema modules may derive Effect schemas from taxonomy values, but they must not re-export taxonomy constants or domain types.
-- `packages/contents` is the source of truth for content-domain types, taxonomy, metadata schemas, and authoring contracts. Backend/Convex may import only narrow pure modules from `packages/contents/_types` when runtime validators must share the same taxonomy.
+- For scopes still owned locally, content taxonomy constants and domain types live in `packages/contents/_types/taxonomy.ts`; callers import them directly from that module.
+- Local content schema modules may derive Effect schemas from taxonomy values, but they must not re-export taxonomy constants or domain types.
+- Aksara contracts and signed snapshots are authoritative for activated content
+  scopes. Filesystem copies for those scopes are deletion work, not editable or
+  publishable source. Do not create a second source of truth across both
+  repositories.
 
 ## Effect-Native Standard
 
@@ -67,10 +70,11 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Convex Helpers README: `https://github.com/get-convex/convex-helpers/blob/main/packages/convex-helpers/README.md`
 - Convex Aggregate: `https://www.convex.dev/components/aggregate`
 - Convex pagination: `https://docs.convex.dev/database/pagination`
+- Convex Agent Mode: `https://docs.convex.dev/cli/agent-mode`
 - Confect spec/impl model: `https://confect.dev/concepts/spec-impl-model`
 - Confect file naming conventions: `https://confect.dev/concepts/file-naming-conventions`
 - Effect docs: `https://effect.website/docs`
-- Effect LLM reference: `https://effect.website/llms.txt`
+- Effect source-vendoring guidance: `https://www.effect.website/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive`
 - Effect Cache: `https://effect.website/docs/caching/cache/`
 - Effect Platform filesystem: `https://effect.website/docs/platform/file-system/`
 - React effects guidance: `https://react.dev/learn/you-might-not-need-an-effect`
@@ -82,7 +86,8 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 ## Vendored References
 
 - External source references live under `repos/` as read-only Git subtrees.
-- `repos/effect` is pinned to the installed `effect` package version. Before writing or reviewing Effect code, read its `AGENTS.md`, then inspect the relevant implementation, tests, and type-level tests under `packages/effect`.
+- Follow the official Effect guidance on [vendoring source for coding agents](https://www.effect.website/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive).
+- `repos/effect` is pinned to the installed `effect` package version. Before writing or reviewing Effect code, read its `AGENTS.md`, then inspect the relevant implementation, tests, type-level tests, module structure, and API design under `packages/effect`.
 - Prefer the matching vendored source for Effect API shape and idioms instead of guessing from memory, generated declarations, or examples for another major version.
 - Never edit, import from, build, lint, or test `repos/effect` as Nakafa application code.
 - `pnpm effect:source:check` verifies that the installed and vendored Effect versions match. After committing an Effect dependency update, run `pnpm effect:source:update`; it pulls the matching release tag and creates one linear reference update commit.
@@ -194,7 +199,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Effect-native means effectful work is modeled with Effect; pure deterministic helpers should stay pure.
 - Model expected failures with `Schema.TaggedError` and specific domain error names.
 - Prefer `Effect.fn("scope.name")` for effectful exported functions and service methods so traces are named.
-- Use the documented stable `Context.Tag` plus `Layer` pattern for dependency contracts. `Effect.Service` may combine that contract with a default layer only when the module genuinely owns the default implementation and the repository deliberately accepts its experimental Effect 3.22 API; do not choose between them based only on whether a dependency is “business” or “infrastructure.”
+- Use the documented stable `Context.Tag` plus `Layer` pattern for dependency contracts. `Effect.Service` may combine that contract with a default layer only when the module genuinely owns the default implementation and the repository deliberately accepts its experimental Effect 3.22 API; do not choose between them based only on whether a dependency is "business" or "infrastructure."
 - Use `@effect/platform` and `@effect/platform-node` for Node filesystem and HTTP boundaries when those packages own the IO seam.
 - Prefer `Effect.Cache` or Effect cached effects for shared effectful cache state. Plain `Map` is acceptable inside one pure algorithm for grouping, deduplication, or indexing.
 - Use `Effect.try`, `Effect.tryPromise`, `Effect.acquireRelease`, and `Effect.sync` instead of raw `try/catch`, raw async wrappers, or hidden side effects.
@@ -224,7 +229,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
  
 ### Next.js: ALWAYS read docs before coding
  
-Before any Next.js work, find and read the relevant installed Next.js doc. With pnpm, resolve it with `find . -path '*/node_modules/next/dist/docs' -type d -print`; do not assume it exists at direct `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+Before any Next.js work, find and read the relevant installed Next.js doc. With pnpm, resolve it with `find . -path '*/node_modules/next/dist/docs' -type d -print`; do not assume it exists at direct `node_modules/next/dist/docs/`. Your training data is outdated; the docs are the source of truth.
  
 <!-- END:nextjs-agent-rules -->
 
@@ -243,6 +248,7 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 ## Convex Rules
 
 - Follow official Convex docs and the generated AI guidelines exactly.
+- Every concurrent Convex task must use an isolated deployment through Agent Mode as documented in `packages/backend/AGENTS.md`. Never use the shared personal dev deployment for new work.
 - Prefer Convex-first app-data mutations and queries. Do not add Next Server Actions or Route Handlers that only wrap Convex functions; use them only for real Next/framework boundaries such as cookies, headers, cache invalidation, or non-Convex integrations, and document that reason at the seam.
 - Use shared helpers and validators in `packages/backend/convex/lib/`.
 - Use auth helpers from `packages/backend/convex/lib/helpers/auth.ts`; do not reach for raw `ctx.auth` patterns first.

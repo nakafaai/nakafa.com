@@ -1,13 +1,7 @@
-<!-- convex-ai-start -->
+# Backend agent guide
 
-This project uses [Convex](https://convex.dev) as its backend.
-
-When working on Convex code, **always read
-`convex/_generated/ai/guidelines.md` first** for important guidelines on
-how to correctly use Convex APIs and patterns. The file contains rules that
-override what you may have learned about Convex from training data.
-
-Convex agent skills for common tasks can be installed by running
-`npx convex ai-files install`.
-
-<!-- convex-ai-end -->
+Read [`AGENTS.md`](AGENTS.md) and
+[`convex/_generated/ai/guidelines.md`](convex/_generated/ai/guidelines.md)
+before changing this package. Root `.agents/skills` is the canonical skill
+surface. Use pnpm and an isolated Convex Agent Mode deployment exactly as
+documented in `AGENTS.md`; do not install package-local skill copies.
