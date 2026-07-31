@@ -7,6 +7,7 @@ import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { insertContentViewRoute } from "@repo/backend/test/content-view";
 import {
   activateMaterialCatalog,
+  advanceMaterialCatalog,
   MATERIAL_IDENTITY,
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
@@ -14,6 +15,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const MATERIAL_PREFIX = "material/lesson/test";
+const MATERIAL_CURSOR_PATTERN = /^material-v1:/;
 
 describe("contentRelease/material/api", () => {
   it("reads only source content with a lightweight route projection", async () => {
@@ -183,7 +185,7 @@ describe("contentRelease/material/api", () => {
 
     expect(page).toEqual({
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
-      continueCursor: first.contentKey,
+      continueCursor: expect.stringMatching(MATERIAL_CURSOR_PATTERN),
       isDone: false,
       page: [
         {
@@ -193,6 +195,7 @@ describe("contentRelease/material/api", () => {
         },
       ],
     });
+    expect(page.continueCursor).not.toBe(first.contentKey);
     await expect(
       target.query(api.contentRelease.material.apiPage, {
         cursor: page.continueCursor,
@@ -221,6 +224,42 @@ describe("contentRelease/material/api", () => {
       managed: true,
       route: { locale: first.locale, publicPath: first.publicPath },
       syncedAt: Date.UTC(2026, 6, 23, 12),
+    });
+  });
+
+  it("rejects a cursor after its locale or active release changes", async () => {
+    const target = convexTest(schema, convexModules);
+    const first = makeMaterialProjection("en", 1);
+    const second = makeMaterialProjection("en", 2);
+    await activateMaterialCatalog(target, [first, second]);
+    const page = await target.query(api.contentRelease.material.apiPage, {
+      cursor: null,
+      limit: 1,
+      locale: "en",
+      prefix: MATERIAL_PREFIX,
+    });
+
+    await expect(
+      target.query(api.contentRelease.material.apiPage, {
+        cursor: page.continueCursor,
+        limit: 1,
+        locale: "id",
+        prefix: MATERIAL_PREFIX,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STALE_BASE" },
+    });
+
+    await advanceMaterialCatalog(target);
+    await expect(
+      target.query(api.contentRelease.material.apiPage, {
+        cursor: page.continueCursor,
+        limit: 1,
+        locale: "en",
+        prefix: MATERIAL_PREFIX,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STALE_BASE" },
     });
   });
 
@@ -283,7 +322,7 @@ describe("contentRelease/material/api", () => {
     });
     expect(first).toMatchObject({
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
-      continueCursor: makeMaterialProjection("en", 4).contentKey,
+      continueCursor: expect.stringMatching(MATERIAL_CURSOR_PATTERN),
       isDone: false,
       page: [
         {

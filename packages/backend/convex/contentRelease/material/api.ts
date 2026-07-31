@@ -4,6 +4,10 @@ import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
+import {
+  decodeMaterialApiCursor,
+  encodeMaterialApiCursor,
+} from "@repo/backend/convex/contentRelease/material/cursor";
 import { readExactMaterialSnapshot } from "@repo/backend/convex/contentRelease/material/exact";
 import { lookupMaterial } from "@repo/backend/convex/contentRelease/material/lookup";
 import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/material/owner";
@@ -53,7 +57,8 @@ function prefixRange(
   input: Effect.Effect.Success<ReturnType<typeof validatePageInput>>
 ) {
   const prefixStart = input.prefix === "" ? "" : `${input.prefix}/`;
-  if (input.cursor === null || input.cursor === input.prefix) {
+  const cursor = input.cursor?.contentKey ?? null;
+  if (cursor === null || cursor === input.prefix) {
     return {
       inclusive: true,
       lower: prefixStart,
@@ -62,7 +67,7 @@ function prefixRange(
   }
   return {
     inclusive: false,
-    lower: input.cursor,
+    lower: cursor,
     upper: `${prefixStart}\uffff`,
   };
 }
@@ -71,6 +76,7 @@ function prefixRange(
 const validatePageInput = Effect.fn("contentRelease.validateMaterialApiPage")(
   function* (input: MaterialApiPageInput) {
     const prefix = normalizePrefix(input.prefix);
+    const cursor = yield* decodeMaterialApiCursor(input.cursor);
     if (
       !Number.isSafeInteger(input.limit) ||
       input.limit < 1 ||
@@ -81,13 +87,13 @@ const validatePageInput = Effect.fn("contentRelease.validateMaterialApiPage")(
         `Material API pages accept 1 to ${MATERIAL_API_PAGE_LIMIT} rows.`
       );
     }
-    if (input.cursor !== null && !matchesPrefix(input.cursor, prefix)) {
+    if (cursor !== null && !matchesPrefix(cursor.contentKey, prefix)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         "Material API cursor does not belong to its requested prefix."
       );
     }
-    return { ...input, prefix };
+    return { ...input, cursor, prefix };
   }
 );
 
@@ -163,7 +169,7 @@ const readSourceCandidates = Effect.fn(
   const relevantClaimCount = Array.from(claimed).filter(
     (contentKey) =>
       matchesPrefix(contentKey, input.prefix) &&
-      (input.cursor === null || contentKey > input.cursor)
+      (input.cursor === null || contentKey > input.cursor.contentKey)
   ).length;
   const scanLimit = input.limit + relevantClaimCount + 1;
   const exact =
@@ -278,9 +284,9 @@ const readFamilyPage = Effect.fn("contentRelease.readMaterialFamilyApiPage")(
     const verified = yield* Effect.forEach(rows, (row) =>
       verifyMaterial(row).pipe(Effect.map((material) => ({ ...material, row })))
     );
-    return buildPage(
+    return yield* buildPage(
       activeReleaseId,
-      input.limit,
+      input,
       verified.map(publishedCandidate),
       rows.length <= input.limit,
       null
@@ -289,9 +295,9 @@ const readFamilyPage = Effect.fn("contentRelease.readMaterialFamilyApiPage")(
 );
 
 /** Builds one stable partner page from ordered reconciled candidates. */
-function buildPage(
+const buildPage = Effect.fn("contentRelease.buildMaterialApiPage")(function* (
   activeReleaseId: string | null,
-  limit: number,
+  input: Effect.Effect.Success<ReturnType<typeof validatePageInput>>,
   candidates: readonly ApiCandidate[],
   exhausted: boolean,
   advanceCursor: string | null
@@ -299,22 +305,32 @@ function buildPage(
   const ordered = candidates
     .slice()
     .sort((left, right) => left.contentKey.localeCompare(right.contentKey));
-  const selected = ordered.slice(0, limit);
-  const hasUnreturnedCandidate = ordered.length > limit;
+  const selected = ordered.slice(0, input.limit);
+  const hasUnreturnedCandidate = ordered.length > input.limit;
   const isDone = exhausted && !hasUnreturnedCandidate;
-  let continueCursor = "";
-  if (!isDone) {
-    continueCursor = hasUnreturnedCandidate
-      ? (selected.at(-1)?.contentKey ?? "")
-      : (advanceCursor ?? selected.at(-1)?.contentKey ?? "");
+  if (isDone) {
+    return {
+      activeReleaseId,
+      continueCursor: "",
+      isDone: true,
+      page: selected.map(({ entry }) => entry),
+    };
   }
+  const nextContentKey = hasUnreturnedCandidate
+    ? (selected.at(-1)?.contentKey ?? "")
+    : (advanceCursor ?? selected.at(-1)?.contentKey ?? "");
+  const continueCursor = yield* encodeMaterialApiCursor({
+    activeReleaseId,
+    contentKey: nextContentKey,
+    locale: input.locale,
+  });
   return {
     activeReleaseId,
     continueCursor,
-    isDone,
+    isDone: false,
     page: selected.map(({ entry }) => entry),
   };
-}
+});
 
 /** Reconciles source and exact material ownership for one partner API page. */
 export const readMaterialApiPage = Effect.fn(
@@ -323,6 +339,16 @@ export const readMaterialApiPage = Effect.fn(
   const input = yield* validatePageInput(rawInput);
   const catalog = yield* loadMaterialCatalogOwner(ctx);
   const activeReleaseId = catalog.active?.releaseId ?? null;
+  if (
+    input.cursor &&
+    (input.cursor.activeReleaseId !== activeReleaseId ||
+      input.cursor.locale !== input.locale)
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STALE_BASE",
+      "The active material release changed during partner API pagination."
+    );
+  }
   if (catalog.active && catalog.familyManaged) {
     return yield* readFamilyPage(ctx, input, catalog.active.releaseId);
   }
@@ -337,13 +363,13 @@ export const readMaterialApiPage = Effect.fn(
     .filter(
       ({ row }) =>
         matchesPrefix(row.contentKey, input.prefix) &&
-        (input.cursor === null || row.contentKey > input.cursor) &&
+        (input.cursor === null || row.contentKey > input.cursor.contentKey) &&
         (sourceBoundary === null || row.contentKey <= sourceBoundary)
     )
     .map(publishedCandidate);
-  return buildPage(
+  return yield* buildPage(
     activeReleaseId,
-    input.limit,
+    input,
     [...source.candidates, ...exactCandidates],
     source.exhausted,
     source.advanceCursor

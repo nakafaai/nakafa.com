@@ -1,4 +1,8 @@
 import {
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
@@ -27,6 +31,12 @@ export const MATERIAL_IDENTITY = {
   manifestHash: TEST_MANIFEST_HASH,
   releaseId: TEST_RELEASE_ID,
   sequence: 1,
+} satisfies TestIdentity;
+
+const NEXT_MATERIAL_IDENTITY = {
+  manifestHash: Sha256HashSchema.make(`sha256:${"3".repeat(64)}`),
+  releaseId: ReleaseIdSchema.make("release-next"),
+  sequence: 2,
 } satisfies TestIdentity;
 
 /** Inserts one projection into the immutable head and active material model. */
@@ -91,6 +101,37 @@ export async function activateMaterialCatalog(
     for (const projection of projections) {
       await insertMaterialProjection(ctx, projection);
     }
+  });
+}
+
+/** Advances the active material pointer without reusing the prior generation. */
+export async function advanceMaterialCatalog(
+  target: TestConvex<typeof schema>
+) {
+  await target.mutation(async (ctx) => {
+    await insertZeroRelease(ctx, {
+      ...NEXT_MATERIAL_IDENTITY,
+      base: MATERIAL_IDENTITY,
+      ownership: { base: ["material"], result: ["material"] },
+      role: "candidate",
+      status: "completed",
+    });
+    const state = await ctx.db.query("contentState").unique();
+    if (!state) {
+      throw new Error("Expected one active content state.");
+    }
+    await ctx.db.patch("contentState", state._id, {
+      activeManifestHash: NEXT_MATERIAL_IDENTITY.manifestHash,
+      activeReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
+      activeSequence: NEXT_MATERIAL_IDENTITY.sequence,
+      materialManifestHash: NEXT_MATERIAL_IDENTITY.manifestHash,
+      materialOwnerManifestHash: NEXT_MATERIAL_IDENTITY.manifestHash,
+      materialOwnerReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
+      materialOwnerSequence: NEXT_MATERIAL_IDENTITY.sequence,
+      materialReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
+      materialSequence: NEXT_MATERIAL_IDENTITY.sequence,
+      nextSequence: 3,
+    });
   });
 }
 
