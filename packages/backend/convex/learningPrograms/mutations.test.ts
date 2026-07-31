@@ -155,6 +155,13 @@ describe("learningPrograms/mutations", () => {
     );
 
     await seedLearningProgramCatalog(t);
+    await seedTestContentRoute(t, {
+      graph: snbtGraph,
+      kind: "tryout-set",
+      route: "try-out/indonesia/snbt/2027/set-1",
+      section: "tryout",
+      title: "SNBT Set 1",
+    });
     await syncTestGraphCoverage(t, {
       graph: snbtGraph,
       lensScope: "exam",
@@ -176,6 +183,13 @@ describe("learningPrograms/mutations", () => {
     );
 
     expect(result.interests).toEqual(["exam-prep"]);
+    expect(result.planItems).toEqual([
+      expect.objectContaining({
+        content_id: snbtGraph.assetId,
+        route: "try-out/indonesia/snbt/2027/set-1",
+        title: "SNBT Set 1",
+      }),
+    ]);
     await expect(
       authed.mutation(api.learningPrograms.mutations.selectLearningProgram, {
         interests: ["school-curriculum"],

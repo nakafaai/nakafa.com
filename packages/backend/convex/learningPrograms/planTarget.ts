@@ -12,15 +12,6 @@ export const loadLearningPlanTarget = Effect.fn(
   contentId: Doc<"learningProgramCoverage">["sampleContentId"],
   locale: Doc<"learningProgramCoverage">["locale"]
 ) {
-  const active = yield* loadContentTarget(ctx, {
-    contentId,
-    locale,
-    section: "material",
-  });
-  if (active) {
-    return { route: active.route, title: active.title };
-  }
-
   const source = yield* Effect.tryPromise({
     try: () =>
       ctx.db
@@ -31,6 +22,16 @@ export const loadLearningPlanTarget = Effect.fn(
         .unique(),
     catch: toContentViewIoError,
   });
+  const active = yield* loadContentTarget(ctx, {
+    contentId,
+    locale,
+    ...(source ? { publicPath: source.route } : {}),
+    section: source?.section ?? "material",
+  });
+  if (active) {
+    return { route: active.route, title: active.title };
+  }
+
   if (
     source?.kind !== "curriculum-topic" ||
     source.locale !== locale ||
