@@ -3,7 +3,10 @@ import "server-only";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { decodeMaterialReleasePin } from "@/lib/content/material/release";
+import {
+  decodeMaterialReleasePin,
+  type MaterialReleasePin,
+} from "@/lib/content/material/release";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
@@ -12,7 +15,7 @@ import {
 /** Reads non-empty material sitemap partitions for one localized catalog. */
 export const readPublishedMaterialBuckets = Effect.fn(
   "www.materials.readSitemapBuckets"
-)(function* (locale: Locale) {
+)(function* (locale: Locale, expectedActiveReleaseId?: MaterialReleasePin) {
   const result = yield* readRuntimeQuery(
     "contentRelease.material.sitemapBuckets",
     () =>
@@ -20,7 +23,7 @@ export const readPublishedMaterialBuckets = Effect.fn(
   );
   const activeReleaseId = yield* decodeMaterialReleasePin(
     result.activeReleaseId,
-    undefined,
+    expectedActiveReleaseId,
     { locale, publicPath: "materials" }
   );
   return { ...result, activeReleaseId };
