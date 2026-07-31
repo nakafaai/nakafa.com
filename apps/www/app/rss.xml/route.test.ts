@@ -460,7 +460,7 @@ describe("rss route", () => {
     );
   });
 
-  it("rejects source material reconciliation after active release changes", async () => {
+  it("rejects the feed after its active release changes across locale reads", async () => {
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
         activeReleaseId: "release-a",
@@ -470,6 +470,12 @@ describe("rss route", () => {
       })
     );
     mockReadActiveContentIdentity.mockReturnValue(
+      Effect.succeed({ releaseId: "release-a" })
+    );
+    mockReadActiveContentIdentity.mockReturnValueOnce(
+      Effect.succeed({ releaseId: "release-a" })
+    );
+    mockReadActiveContentIdentity.mockReturnValueOnce(
       Effect.succeed({ releaseId: "release-b" })
     );
 

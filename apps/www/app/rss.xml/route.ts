@@ -6,7 +6,10 @@ import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
-import { decodeMaterialReleasePin } from "@/lib/content/material/release";
+import {
+  decodeMaterialReleasePin,
+  type MaterialReleasePin,
+} from "@/lib/content/material/release";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
 import {
@@ -103,11 +106,22 @@ export async function GET() {
 function getFeedContentRoutes() {
   return Effect.runPromise(
     Effect.gen(function* () {
+      const active = yield* readActiveContentIdentity();
+      const activeReleaseId = active?.releaseId ?? null;
       const routes = yield* Effect.forEach(
         routing.locales,
         (locale) =>
-          Effect.all([readFeedArticles(locale), readFeedMaterials(locale)]),
+          Effect.all([
+            readFeedArticles(locale),
+            readFeedMaterials(locale, activeReleaseId),
+          ]),
         { concurrency: routing.locales.length }
+      );
+      const latest = yield* readActiveContentIdentity();
+      yield* decodeMaterialReleasePin(
+        latest?.releaseId ?? null,
+        activeReleaseId,
+        { locale: routing.defaultLocale, publicPath: "rss.xml" }
       );
 
       return routes
@@ -142,11 +156,17 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
 
 /** Selects published materials after cutover and source rows before it. */
 const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
-  locale: (typeof routing.locales)[number]
+  locale: (typeof routing.locales)[number],
+  expectedActiveReleaseId: MaterialReleasePin
 ) {
   const published = yield* readPublishedLatestMaterials(
     locale,
     RSS_CONTENT_ROUTE_LIMIT
+  );
+  yield* decodeMaterialReleasePin(
+    published.activeReleaseId,
+    expectedActiveReleaseId,
+    { locale, publicPath: "rss.xml" }
   );
   const publishedRoutes = published.materials.map((material) => ({
     authors: material.authors,
@@ -166,12 +186,6 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
     "material",
     claimedContentKeys,
     RSS_CONTENT_ROUTE_LIMIT
-  );
-  const active = yield* readActiveContentIdentity();
-  yield* decodeMaterialReleasePin(
-    active?.releaseId ?? null,
-    published.activeReleaseId,
-    { locale, publicPath: "rss.xml" }
   );
   return [...publishedRoutes, ...sourceRoutes]
     .sort((left, right) => (right.date ?? 0) - (left.date ?? 0))
