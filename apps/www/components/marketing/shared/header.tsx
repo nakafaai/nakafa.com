@@ -1,12 +1,13 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { HeaderContainer } from "@/components/marketing/shared/header-container";
 import { HeaderCta, LogoCta } from "@/components/marketing/shared/header-cta";
 import { Language } from "@/components/marketing/shared/language";
 
 export function Header() {
   const t = useTranslations("Marketing");
+  const locale = useLocale();
 
   return (
     <HeaderContainer>
@@ -16,7 +17,7 @@ export function Header() {
         <nav className="hidden items-center md:flex">
           <Button
             nativeButton={false}
-            render={<NavigationLink href="/">{t("about")}</NavigationLink>}
+            render={<a href={`/${locale}`}>{t("about")}</a>}
             variant="ghost"
           />
           <Button

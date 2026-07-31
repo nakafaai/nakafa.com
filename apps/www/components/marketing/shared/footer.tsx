@@ -92,12 +92,17 @@ export function Footer() {
               </span>
               <ul className="flex flex-col gap-2">
                 <li>
-                  <LinkItem href="/" label={t("about-us")} />
+                  <LinkItem
+                    href={`/${locale}`}
+                    label={t("about-us")}
+                    nativeAnchor
+                  />
                 </li>
                 <li>
                   <LinkItem
-                    href={{ pathname: "/", hash: "pricing" }}
+                    href={`/${locale}#pricing`}
                     label={tMarketing("pricing")}
+                    nativeAnchor
                   />
                 </li>
                 <li>
@@ -138,14 +143,14 @@ export function Footer() {
         </div>
       </div>
 
-      <NavigationLink
+      <a
         className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
-        href="/"
+        href={`/${locale}`}
       >
         <span className="mx-auto font-bold text-7xl transition-colors duration-300 ease-out hover:text-primary sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
           Nakafa
         </span>
-      </NavigationLink>
+      </a>
 
       <section className="w-full border-t">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 p-6 lg:flex-row">
@@ -184,21 +189,34 @@ export function Footer() {
   );
 }
 
+type LinkItemProps =
+  | {
+      href: ComponentProps<typeof NavigationLink>["href"];
+      label: string;
+      nativeAnchor?: false;
+    }
+  | {
+      href: string;
+      label: string;
+      nativeAnchor: true;
+    };
+
 /**
  * Renders one locale-aware footer destination with the shared text treatment.
  */
-function LinkItem({
-  href,
-  label,
-}: {
-  href: ComponentProps<typeof NavigationLink>["href"];
-  label: string;
-}) {
+function LinkItem({ href, label, nativeAnchor }: LinkItemProps) {
+  const className = "text-sm transition-colors ease-out hover:text-primary";
+
+  if (nativeAnchor) {
+    return (
+      <a className={className} href={href}>
+        {label}
+      </a>
+    );
+  }
+
   return (
-    <NavigationLink
-      className="text-sm transition-colors ease-out hover:text-primary"
-      href={href}
-    >
+    <NavigationLink className={className} href={href}>
       {label}
     </NavigationLink>
   );
