@@ -151,9 +151,6 @@ export const readPublishedMaterialClaims = Effect.fn(
   sourceCandidates: readonly MaterialSourceCandidate[],
   expectedActiveReleaseId?: MaterialReleasePin
 ) {
-  if (sourceCandidates.length === 0) {
-    return [];
-  }
   const identities = new Set(
     sourceCandidates.map(
       (candidate) => `${candidate.locale}\0${candidate.contentKey}`
@@ -182,6 +179,28 @@ const readPublishedMaterialClaimBatches = Effect.fn(
   initialReleaseId?: MaterialReleasePin
 ) {
   if (sourceCandidates.length === 0) {
+    if (initialReleaseId !== undefined) {
+      const result = yield* readRuntimeQuery(
+        "contentRelease.material.claims",
+        () =>
+          fetchRuntimeQuery(api.contentRelease.material.claims, {
+            expectedActiveReleaseId: initialReleaseId,
+            sourceCandidates: [],
+          })
+      );
+      const identity = { locale, publicPath: "materials" };
+      const activeReleaseId = yield* decodeMaterialReleasePin(
+        result.activeReleaseId,
+        initialReleaseId,
+        identity
+      );
+      const claims = yield* decodeMaterialClaims(
+        result.sourceClaims,
+        [],
+        identity
+      );
+      return { activeReleaseId, claims };
+    }
     return { activeReleaseId: initialReleaseId, claims: [] };
   }
   const batches: MaterialSourceCandidate[][] = [];

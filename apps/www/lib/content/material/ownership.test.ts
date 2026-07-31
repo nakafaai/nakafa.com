@@ -271,6 +271,31 @@ describe("published material ownership", () => {
     );
   });
 
+  it("rechecks a caller release even without source candidates", async () => {
+    fetchMock.mockResolvedValueOnce({
+      activeReleaseId: releaseId,
+      sourceClaims: [],
+    });
+
+    await expect(
+      Effect.runPromise(readPublishedMaterialClaims("en", [], releaseId))
+    ).resolves.toEqual([]);
+    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {
+      expectedActiveReleaseId: releaseId,
+      sourceCandidates: [],
+    });
+
+    fetchMock.mockResolvedValueOnce({
+      activeReleaseId: ReleaseIdSchema.make("next-release"),
+      sourceClaims: [],
+    });
+    await expect(
+      Effect.runPromise(
+        Effect.flip(readPublishedMaterialClaims("en", [], releaseId))
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedReleaseMismatchError" });
+  });
+
   it("rejects an invalid release identity before decoding claims", async () => {
     fetchMock.mockResolvedValueOnce({
       activeReleaseId: "",

@@ -10,6 +10,7 @@ import {
   loadMaterialProtection,
   type ProtectedMaterialRelease,
 } from "@repo/backend/convex/contentRelease/material/protection";
+import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { Effect } from "effect";
 
@@ -200,6 +201,7 @@ export const validateExactMaterialRoutes = Effect.fn(
   sequence: number,
   expected: readonly ExactMaterialOwner[]
 ) {
+  const parents = new Map<string, string>();
   for (const owner of expected) {
     const projection = yield* resolvePublicProjection(
       ctx,
@@ -216,6 +218,22 @@ export const validateExactMaterialRoutes = Effect.fn(
         `Exact material ${owner.contentKey}/${owner.locale} resolved a different family before activation.`
       );
     }
+    const decoded = yield* decodeProjectionJson(projection.projectionJson);
+    if (decoded.kind !== "subject-lesson") {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Exact material ${owner.contentKey}/${owner.locale} resolved a different family before activation.`
+      );
+    }
+    const group = `${decoded.locale}\0${decoded.materialKey}`;
+    const parentPath = parents.get(group);
+    if (parentPath !== undefined && parentPath !== decoded.parentPath) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Material ${decoded.locale}/${decoded.materialKey} would split one lesson group across parents.`
+      );
+    }
+    parents.set(group, decoded.parentPath);
     const [publicRoutes, contentRoutes] = yield* Effect.all([
       Effect.promise(() =>
         ctx.db

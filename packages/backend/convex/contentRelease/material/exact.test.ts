@@ -1,3 +1,4 @@
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import {
   finalizeExactMaterialOwners,
   loadExactMaterialOwners,
@@ -14,6 +15,7 @@ import {
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("contentRelease/material/exact", () => {
@@ -256,6 +258,61 @@ describe("contentRelease/material/exact", () => {
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_LIMIT" },
+    });
+  });
+
+  it("rejects exact owners that split one material group across parents", async () => {
+    const target = convexTest(schema, convexModules);
+    const first = makeMaterialProjection("en", 1);
+    const second = makeMaterialProjection("en", 2);
+    const conflicting = Schema.decodeUnknownSync(
+      MaterialLessonProjectionSchema
+    )({
+      ...second,
+      parentPath: "subjects/test/other-topic",
+      publicPath: "subjects/test/other-topic/section-2",
+    });
+    await activateMaterialCatalog(target, [first, conflicting]);
+    await selectExactMaterial(target, first);
+    await target.mutation(async (ctx) => {
+      await ctx.db.insert("contentKeys", {
+        contentKey: first.contentKey,
+        createdSequence: 0,
+        family: "material",
+        locale: first.locale,
+      });
+      await ctx.db.insert("contentKeys", {
+        contentKey: conflicting.contentKey,
+        createdSequence: 0,
+        family: "material",
+        locale: conflicting.locale,
+      });
+      await ctx.db.insert("contentOwners", {
+        contentKey: conflicting.contentKey,
+        family: "material",
+        locale: conflicting.locale,
+        managed: true,
+        releaseId: MATERIAL_IDENTITY.releaseId,
+        sequence: MATERIAL_IDENTITY.sequence,
+      });
+    });
+
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(
+          validateExactMaterialOwnerScope(ctx, {
+            releaseId: MATERIAL_IDENTITY.releaseId,
+            resultFamilies: ["article"],
+            sequence: MATERIAL_IDENTITY.sequence,
+          })
+        )
+      )
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message:
+          "Material en/lesson.test.topic would split one lesson group across parents.",
+      },
     });
   });
 });
