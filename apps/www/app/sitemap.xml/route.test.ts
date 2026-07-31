@@ -34,6 +34,7 @@ describe("sitemap index route", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toContain("application/xml");
+    expect(response.headers.get("Vercel-Cache-Tag")).toBe("content-sitemap");
     expect(text).toContain("<sitemapindex");
     expect(text).toContain("https://nakafa.com/sitemap/base.xml");
     expect(text).toContain("https://nakafa.com/sitemap/content_id_quran_0.xml");
