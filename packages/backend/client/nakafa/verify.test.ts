@@ -112,6 +112,27 @@ describe("verifyNakafaContent", () => {
     }
   );
 
+  it("rejects source material verification after a release activates", async () => {
+    runtimeMocks.fetchConvexRuntimeQuery
+      .mockResolvedValueOnce(materialRef)
+      .mockResolvedValueOnce({
+        activeReleaseId: null,
+        managed: false,
+        route: null,
+      })
+      .mockResolvedValueOnce(materialRef)
+      .mockResolvedValueOnce({ releaseId: "release-material" });
+
+    await expect(
+      Effect.runPromise(
+        verifyNakafaContent(convexUrl, materialRef.content_id).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "NakafaAgentDataReadError",
+      message: "Unable to complete one release-pinned Nakafa content read.",
+    });
+  });
+
   it("preserves typed runtime read failures instead of returning false", async () => {
     runtimeMocks.fetchConvexRuntimeQuery.mockRejectedValueOnce(
       new Error("runtime unavailable")

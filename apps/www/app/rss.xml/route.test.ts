@@ -5,6 +5,7 @@ import { GET } from "@/app/rss.xml/route";
 
 const mockFetchRuntimeQuranSurahs = vi.hoisted(() => vi.fn());
 const mockGetRuntimeLatestContentRoutePage = vi.hoisted(() => vi.fn());
+const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestArticles = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestMaterials = vi.hoisted(() => vi.fn());
 
@@ -15,6 +16,10 @@ vi.mock("@/lib/content/article/discovery", () => ({
 vi.mock("@/lib/content/material/discovery", () => ({
   /** Supplies deterministic published material rows for the RSS route test. */
   readPublishedLatestMaterials: mockReadPublishedLatestMaterials,
+}));
+vi.mock("@/lib/content/published/active", () => ({
+  /** Supplies the final release identity for one RSS material reconciliation. */
+  readActiveContentIdentity: mockReadActiveContentIdentity,
 }));
 
 vi.mock("@/lib/content/runtime/pages", () => ({
@@ -42,6 +47,9 @@ describe("rss route", () => {
   beforeEach(() => {
     mockFetchRuntimeQuranSurahs.mockReset();
     mockGetRuntimeLatestContentRoutePage.mockReset();
+    mockReadActiveContentIdentity
+      .mockReset()
+      .mockReturnValue(Effect.succeed(null));
     mockReadPublishedLatestArticles.mockReset();
     mockReadPublishedLatestMaterials.mockReset();
 
@@ -58,6 +66,7 @@ describe("rss route", () => {
     );
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: null,
         claimedContentKeys: [],
         managed: false,
         materials: [],
@@ -138,6 +147,7 @@ describe("rss route", () => {
   it("replaces source-backed materials after published ownership activates", async () => {
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: null,
         claimedContentKeys: [],
         managed: true,
         materials: [
@@ -166,6 +176,7 @@ describe("rss route", () => {
       "material/lesson/mathematics/function-composition-inverse-function/function-concept";
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: null,
         claimedContentKeys: [sourcePath],
         managed: false,
         materials: [
@@ -237,6 +248,7 @@ describe("rss route", () => {
     );
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: null,
         claimedContentKeys: claimed,
         managed: false,
         materials: [],
@@ -350,6 +362,7 @@ describe("rss route", () => {
     );
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: null,
         claimedContentKeys: claimed,
         managed: false,
         materials: [],
@@ -403,6 +416,7 @@ describe("rss route", () => {
   it("merges the full source window before applying the feed bound", async () => {
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: null,
         claimedContentKeys: [],
         managed: false,
         materials: Array.from({ length: 64 }, (_, index) => ({
@@ -443,6 +457,24 @@ describe("rss route", () => {
         locale: "en",
         section: "material",
       })
+    );
+  });
+
+  it("rejects source material reconciliation after active release changes", async () => {
+    mockReadPublishedLatestMaterials.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: "release-a",
+        claimedContentKeys: [],
+        managed: false,
+        materials: [],
+      })
+    );
+    mockReadActiveContentIdentity.mockReturnValue(
+      Effect.succeed({ releaseId: "release-b" })
+    );
+
+    await expect(GET()).rejects.toThrow(
+      '"actualReleaseId": "release-b", "expectedReleaseId": "release-a"'
     );
   });
 });

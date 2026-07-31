@@ -91,27 +91,23 @@ const validatePageInput = Effect.fn("contentRelease.validateMaterialApiPage")(
   }
 );
 
-/** Loads one source route projection needed by the legacy API item shape. */
-const loadSourceGraph = Effect.fn("contentRelease.loadMaterialSourceGraph")(
-  function* (ctx: QueryCtx, section: Doc<"curriculumLessons">) {
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("contentRoutes")
-        .withIndex("by_locale_and_sourcePath", (index) =>
-          index.eq("locale", section.locale).eq("sourcePath", section.slug)
-        )
-        .unique()
-    );
-  }
-);
-
-/** Converts one source-owned lesson into the established partner API item. */
+/** Converts one lightweight source route into the established partner API item. */
 const readSourceCandidate = Effect.fn(
   "contentRelease.readMaterialSourceApiItem"
-)(function* (ctx: QueryCtx, section: Doc<"curriculumLessons">) {
-  const graph = yield* loadSourceGraph(ctx, section);
-  if (!graph) {
-    return null;
+)(function* (ctx: QueryCtx, route: Doc<"contentRoutes">) {
+  const section = yield* Effect.promise(() =>
+    ctx.db
+      .query("curriculumLessons")
+      .withIndex("by_locale_and_slug", (index) =>
+        index.eq("locale", route.locale).eq("slug", route.sourcePath)
+      )
+      .unique()
+  );
+  if (!section) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Material route ${route.locale}/${route.sourcePath} has no source body.`
+    );
   }
   const authors = yield* Effect.tryPromise({
     try: () =>
@@ -126,14 +122,14 @@ const readSourceCandidate = Effect.fn(
       }),
   });
   return {
-    contentKey: section.slug,
+    contentKey: route.sourcePath,
     entry: {
       item: {
-        alignmentId: graph.alignmentId,
-        assetId: graph.assetId,
-        conceptId: graph.conceptId,
-        learningObjectId: graph.learningObjectId,
-        lensId: graph.lensId,
+        alignmentId: route.alignmentId,
+        assetId: route.assetId,
+        conceptId: route.conceptId,
+        learningObjectId: route.learningObjectId,
+        lensId: route.lensId,
         locale: section.locale,
         metadata: {
           authors,
@@ -147,9 +143,9 @@ const readSourceCandidate = Effect.fn(
           title: section.title,
         },
         raw: section.body,
-        slug: section.slug,
-        sourcePath: section.slug,
-        url: `${NAKAFA_CONTENT_BASE_URL}/${section.locale}/${graph.route}`,
+        slug: route.sourcePath,
+        sourcePath: route.sourcePath,
+        url: `${NAKAFA_CONTENT_BASE_URL}/${section.locale}/${route.route}`,
       },
       kind: "source",
     },
@@ -164,14 +160,25 @@ const readSourceCandidates = Effect.fn(
   input: Effect.Effect.Success<ReturnType<typeof validatePageInput>>,
   claimed: ReadonlySet<string>
 ) {
-  const scanLimit = input.limit + claimed.size + 1;
+  const relevantClaimCount = Array.from(claimed).filter(
+    (contentKey) =>
+      matchesPrefix(contentKey, input.prefix) &&
+      (input.cursor === null || contentKey > input.cursor)
+  ).length;
+  const scanLimit = input.limit + relevantClaimCount + 1;
   const exact =
     input.cursor === null && input.prefix !== ""
       ? yield* Effect.promise(() =>
           ctx.db
-            .query("curriculumLessons")
-            .withIndex("by_locale_and_slug", (index) =>
-              index.eq("locale", input.locale).eq("slug", input.prefix)
+            .query("contentRoutes")
+            .withIndex(
+              "by_locale_and_section_and_kind_and_sourcePath",
+              (index) =>
+                index
+                  .eq("locale", input.locale)
+                  .eq("section", "material")
+                  .eq("kind", "curriculum-lesson")
+                  .eq("sourcePath", input.prefix)
             )
             .unique()
         )
@@ -180,29 +187,35 @@ const readSourceCandidates = Effect.fn(
   const remaining = scanLimit - (exact === null ? 0 : 1);
   const descendants = yield* Effect.promise(() =>
     ctx.db
-      .query("curriculumLessons")
-      .withIndex("by_locale_and_slug", (index) => {
-        const locale = index.eq("locale", input.locale);
+      .query("contentRoutes")
+      .withIndex("by_locale_and_section_and_kind_and_sourcePath", (index) => {
+        const sourcePath = index
+          .eq("locale", input.locale)
+          .eq("section", "material")
+          .eq("kind", "curriculum-lesson");
         const lower = range.inclusive
-          ? locale.gte("slug", range.lower)
-          : locale.gt("slug", range.lower);
-        return lower.lt("slug", range.upper);
+          ? sourcePath.gte("sourcePath", range.lower)
+          : sourcePath.gt("sourcePath", range.lower);
+        return lower.lt("sourcePath", range.upper);
       })
       .take(remaining)
   );
   const rows = exact === null ? descendants : [exact, ...descendants];
-  if (rows.some((row) => !matchesPrefix(row.slug, input.prefix))) {
+  if (rows.some((row) => !matchesPrefix(row.sourcePath, input.prefix))) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Material API source scan escaped its requested prefix."
     );
   }
-  const candidates = yield* Effect.forEach(rows, (row) =>
-    claimed.has(row.slug) ? Effect.succeed(null) : readSourceCandidate(ctx, row)
+  const selected = rows
+    .filter((row) => !claimed.has(row.sourcePath))
+    .slice(0, input.limit + 1);
+  const candidates = yield* Effect.forEach(selected, (row) =>
+    readSourceCandidate(ctx, row)
   );
   return {
-    advanceCursor: rows.at(-1)?.slug ?? null,
-    candidates: candidates.filter((candidate) => candidate !== null),
+    advanceCursor: rows.at(-1)?.sourcePath ?? null,
+    candidates,
     exhausted: rows.length < scanLimit,
   };
 });

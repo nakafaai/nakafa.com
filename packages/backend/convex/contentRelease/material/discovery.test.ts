@@ -30,6 +30,7 @@ describe("contentRelease/material/discovery", () => {
     await expect(
       target.query((ctx) => runConvexProgram(readLatestMaterials(ctx, "en", 2)))
     ).resolves.toEqual({
+      activeReleaseId: null,
       claimedContentKeys: [],
       managed: false,
       materials: [],
@@ -86,6 +87,7 @@ describe("contentRelease/material/discovery", () => {
     await expect(
       target.query((ctx) => runConvexProgram(readLatestMaterials(ctx, "en", 1)))
     ).resolves.toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
       managed: true,
       materials: [{ date: "2026-07-24", title: "EN Section 2" }],
     });

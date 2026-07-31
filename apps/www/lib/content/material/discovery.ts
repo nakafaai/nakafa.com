@@ -93,6 +93,11 @@ export const readPublishedLatestMaterials = Effect.fn(
   const result = yield* readRuntimeQuery("contentRelease.material.latest", () =>
     fetchRuntimeQuery(api.contentRelease.material.latest, { limit, locale })
   );
+  const activeReleaseId = yield* decodeMaterialReleasePin(
+    result.activeReleaseId,
+    undefined,
+    { locale, publicPath: "materials" }
+  );
   const materials = yield* Effect.forEach(result.materials, (summary) =>
     decodeMaterialSummary(summary, locale)
   );
@@ -108,6 +113,7 @@ export const readPublishedLatestMaterials = Effect.fn(
     )
   );
   return {
+    activeReleaseId,
     claimedContentKeys,
     managed: result.managed,
     materials,

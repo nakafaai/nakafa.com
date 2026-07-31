@@ -2,6 +2,7 @@ import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedMaterialClaims } from "@/lib/content/material/ownership";
+import { decodeMaterialReleasePin } from "@/lib/content/material/release";
 import {
   type ActiveContentReleaseId,
   readActiveContentIdentity,
@@ -38,6 +39,12 @@ type MarkdownSource =
       readonly cleanSlug: string;
       readonly kind: "source";
       readonly publicSlug?: string;
+    }
+  | {
+      readonly activeReleaseId: ActiveContentReleaseId | null;
+      readonly cleanSlug: string;
+      readonly kind: "pinned-source";
+      readonly publicSlug: string;
     };
 
 /** One rejected Next cache read with its exact content owner preserved. */
@@ -58,7 +65,7 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
     });
   }
 
-  return yield* Effect.tryPromise({
+  const markdown = yield* Effect.tryPromise({
     catch: (cause) => new CacheFailure({ cause, owner: "source" }),
     try: () =>
       getCachedLlmsMdxText({
@@ -67,6 +74,18 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
         publicSlug: source.publicSlug,
       }),
   });
+  if (source.kind === "pinned-source") {
+    const active = yield* readActiveContentIdentity();
+    yield* decodeMaterialReleasePin(
+      active?.releaseId ?? null,
+      source.activeReleaseId,
+      {
+        locale,
+        publicPath: source.publicSlug,
+      }
+    );
+  }
+  return markdown;
 });
 
 /**
@@ -152,7 +171,7 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
     if (!publicRoute.sourcePath) {
       return null;
     }
-    if (publicRoute.kind === "subject-lesson" && active) {
+    if (publicRoute.kind === "subject-lesson") {
       const claims = yield* readPublishedMaterialClaims(
         locale,
         [
@@ -162,7 +181,7 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
             parentPath: publicRoute.parentPath,
           },
         ],
-        active.releaseId
+        active?.releaseId ?? null
       );
       const claim = claims.find(
         (candidate) =>
@@ -170,6 +189,9 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
           candidate.locale === locale
       );
       if (claim) {
+        if (!active) {
+          return null;
+        }
         if (
           claim.kind === "missing" ||
           claim.projection.publicPath !== cleanSlug
@@ -184,6 +206,13 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
         };
         return source;
       }
+      const source: MarkdownSource = {
+        activeReleaseId: active?.releaseId ?? null,
+        cleanSlug: publicRoute.sourcePath,
+        kind: "pinned-source",
+        publicSlug: cleanSlug,
+      };
+      return source;
     }
 
     const source: MarkdownSource = {

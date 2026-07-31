@@ -78,6 +78,7 @@ describe("published material discovery", () => {
 
   it("decodes newest materials and exact claimed source identities", async () => {
     fetchMock.mockResolvedValueOnce({
+      activeReleaseId,
       claimedContentKeys: [contentKey],
       managed: false,
       materials: [summary],
@@ -86,6 +87,7 @@ describe("published material discovery", () => {
     await expect(
       Effect.runPromise(readPublishedLatestMaterials("en", 10))
     ).resolves.toMatchObject({
+      activeReleaseId,
       claimedContentKeys: [contentKey],
       managed: false,
       materials: [{ sourcePath }],
@@ -100,6 +102,7 @@ describe("published material discovery", () => {
         materials: [{ ...summary, sourcePath: "" }],
       })
       .mockResolvedValueOnce({
+        activeReleaseId,
         claimedContentKeys: [""],
         managed: false,
         materials: [],

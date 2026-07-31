@@ -34,7 +34,11 @@ export const readPublishedMaterialMarkdown = Effect.fn(
 ) {
   const lookupInput = getMaterialLookupInput(input);
   if (Option.isNone(lookupInput)) {
-    return { managed: false, markdown: Option.none() };
+    return {
+      activeReleaseId: undefined,
+      managed: false,
+      markdown: Option.none(),
+    };
   }
 
   const lookup = yield* fetchNakafaRuntimeQuery(
@@ -45,6 +49,7 @@ export const readPublishedMaterialMarkdown = Effect.fn(
   );
   if (!(lookup.managed && lookup.route)) {
     return {
+      activeReleaseId: lookup.activeReleaseId,
       managed: lookup.managed,
       markdown: Option.none(),
     };
@@ -92,5 +97,9 @@ export const readPublishedMaterialMarkdown = Effect.fn(
     title: metadata.title,
   });
 
-  return { managed: true, markdown: Option.some(markdown) };
+  return {
+    activeReleaseId: lookup.activeReleaseId,
+    managed: true,
+    markdown: Option.some(markdown),
+  };
 });

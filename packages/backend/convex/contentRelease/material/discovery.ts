@@ -85,12 +85,19 @@ export const readLatestMaterials = Effect.fn(
 ) {
   yield* validateDiscoveryLimit(limit);
   const owner = yield* loadMaterialCatalogOwner(ctx);
+  const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.active && owner.ready)) {
-    return { claimedContentKeys: [], managed: false, materials: [] };
+    return {
+      activeReleaseId,
+      claimedContentKeys: [],
+      managed: false,
+      materials: [],
+    };
   }
   if (!owner.familyManaged) {
     const exact = yield* readExactMaterialSnapshot(ctx, owner.active, locale);
     return {
+      activeReleaseId,
       claimedContentKeys: exact.owners.map(({ contentKey }) => contentKey),
       managed: false,
       materials: exact.materials
@@ -116,6 +123,7 @@ export const readLatestMaterials = Effect.fn(
     )
   );
   return {
+    activeReleaseId,
     claimedContentKeys: [],
     managed: true,
     materials,

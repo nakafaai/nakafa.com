@@ -70,6 +70,7 @@ const materialSummaryValidator = v.object({
 });
 
 const materialDiscoveryValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   claimedContentKeys: v.array(v.string()),
   managed: v.boolean(),
   materials: v.array(materialSummaryValidator),

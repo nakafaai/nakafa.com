@@ -69,9 +69,21 @@ describe("Nakafa material reader", () => {
       )
     );
 
-    expect(invalid).toEqual({ managed: false, markdown: Option.none() });
-    expect(unmanaged).toEqual({ managed: false, markdown: Option.none() });
-    expect(missing).toEqual({ managed: true, markdown: Option.none() });
+    expect(invalid).toEqual({
+      activeReleaseId: undefined,
+      managed: false,
+      markdown: Option.none(),
+    });
+    expect(unmanaged).toEqual({
+      activeReleaseId: null,
+      managed: false,
+      markdown: Option.none(),
+    });
+    expect(missing).toEqual({
+      activeReleaseId,
+      managed: true,
+      markdown: Option.none(),
+    });
     expect(fetchNakafaRuntimeQuery).toHaveBeenCalledTimes(2);
     expect(readPublicContent).not.toHaveBeenCalled();
   });

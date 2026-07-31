@@ -6,6 +6,8 @@ import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
+import { decodeMaterialReleasePin } from "@/lib/content/material/release";
+import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
 import {
   getRuntimeLatestContentRoutePage,
@@ -164,6 +166,12 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
     "material",
     claimedContentKeys,
     RSS_CONTENT_ROUTE_LIMIT
+  );
+  const active = yield* readActiveContentIdentity();
+  yield* decodeMaterialReleasePin(
+    active?.releaseId ?? null,
+    published.activeReleaseId,
+    { locale, publicPath: "rss.xml" }
   );
   return [...publishedRoutes, ...sourceRoutes]
     .sort((left, right) => (right.date ?? 0) - (left.date ?? 0))

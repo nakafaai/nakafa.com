@@ -410,6 +410,7 @@ import type * as learningPrograms_mutations from "../learningPrograms/mutations.
 import type * as learningPrograms_omitted from "../learningPrograms/omitted.js";
 import type * as learningPrograms_planTarget from "../learningPrograms/planTarget.js";
 import type * as learningPrograms_queries from "../learningPrograms/queries.js";
+import type * as learningPrograms_reconcile from "../learningPrograms/reconcile.js";
 import type * as learningPrograms_sources from "../learningPrograms/sources.js";
 import type * as learningPrograms_sync from "../learningPrograms/sync.js";
 import type * as lib_attempts from "../lib/attempts.js";
@@ -936,6 +937,7 @@ declare const fullApi: ApiFromModules<{
   "learningPrograms/omitted": typeof learningPrograms_omitted;
   "learningPrograms/planTarget": typeof learningPrograms_planTarget;
   "learningPrograms/queries": typeof learningPrograms_queries;
+  "learningPrograms/reconcile": typeof learningPrograms_reconcile;
   "learningPrograms/sources": typeof learningPrograms_sources;
   "learningPrograms/sync": typeof learningPrograms_sync;
   "lib/attempts": typeof lib_attempts;

@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 const MATERIAL_PREFIX = "material/lesson/test";
 
 describe("contentRelease/material/api", () => {
-  it("reads source content and advances past an unprojected row", async () => {
+  it("reads only source content with a lightweight route projection", async () => {
     const target = convexTest(schema, convexModules);
     const missing = makeMaterialProjection("en", 1);
     const visible = makeMaterialProjection("en", 2);
@@ -34,7 +34,8 @@ describe("contentRelease/material/api", () => {
       })
     ).resolves.toMatchObject({
       activeReleaseId: null,
-      isDone: false,
+      continueCursor: "",
+      isDone: true,
       page: [
         {
           item: {
@@ -64,8 +65,8 @@ describe("contentRelease/material/api", () => {
       })
     ).resolves.toEqual({
       activeReleaseId: null,
-      continueCursor: secondMissing.contentKey,
-      isDone: false,
+      continueCursor: "",
+      isDone: true,
       page: [],
     });
   });
@@ -121,6 +122,49 @@ describe("contentRelease/material/api", () => {
       continueCursor: "",
       isDone: true,
       page: [],
+    });
+  });
+
+  it("skips claimed route rows before hydrating source bodies", async () => {
+    const target = convexTest(schema, convexModules);
+    const claimed = makeMaterialProjection("en", 1);
+    const visible = makeMaterialProjection("en", 2);
+    await activateMaterialCatalog(target);
+    await selectExactMaterial(target, claimed);
+    await target.mutation(async (ctx) => {
+      await insertSourceRoute(ctx, claimed);
+      await insertSourceMaterial(ctx, visible, true);
+    });
+
+    await expect(
+      target.query(api.contentRelease.material.apiPage, {
+        cursor: null,
+        limit: 10,
+        locale: "en",
+        prefix: MATERIAL_PREFIX,
+      })
+    ).resolves.toMatchObject({
+      page: [
+        { kind: "published", publicPath: claimed.publicPath },
+        { item: { slug: visible.contentKey }, kind: "source" },
+      ],
+    });
+  });
+
+  it("fails closed when an unclaimed route has no source body", async () => {
+    const target = convexTest(schema, convexModules);
+    const source = makeMaterialProjection("en", 1);
+    await target.mutation((ctx) => insertSourceRoute(ctx, source));
+
+    await expect(
+      target.query(api.contentRelease.material.apiPage, {
+        cursor: null,
+        limit: 1,
+        locale: "en",
+        prefix: MATERIAL_PREFIX,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });
 
@@ -237,20 +281,8 @@ describe("contentRelease/material/api", () => {
       locale: "en",
       prefix: MATERIAL_PREFIX,
     });
-    expect(first).toEqual({
+    expect(first).toMatchObject({
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
-      continueCursor: makeMaterialProjection("en", 3).contentKey,
-      isDone: false,
-      page: [],
-    });
-
-    const second = await target.query(api.contentRelease.material.apiPage, {
-      cursor: first.continueCursor,
-      limit: 1,
-      locale: "en",
-      prefix: MATERIAL_PREFIX,
-    });
-    expect(second).toMatchObject({
       continueCursor: makeMaterialProjection("en", 4).contentKey,
       isDone: false,
       page: [
@@ -262,7 +294,7 @@ describe("contentRelease/material/api", () => {
     });
     await expect(
       target.query(api.contentRelease.material.apiPage, {
-        cursor: second.continueCursor,
+        cursor: first.continueCursor,
         limit: 1,
         locale: "en",
         prefix: MATERIAL_PREFIX,
@@ -355,18 +387,26 @@ async function insertSourceMaterial(
     order: 0,
   });
   if (includeGraph) {
-    await insertContentViewRoute(ctx, {
-      contentId: projection.graph.assetId,
-      graph: projection.graph,
-      kind: "curriculum-lesson",
-      locale: projection.locale,
-      materialDomain: "mathematics",
-      route: projection.publicPath,
-      section: "material",
-      sourcePath: projection.contentKey,
-      title: projection.metadata.title,
-    });
+    await insertSourceRoute(ctx, projection);
   }
+}
+
+/** Inserts one lightweight route projection without requiring a source body. */
+async function insertSourceRoute(
+  ctx: MutationCtx,
+  projection: ReturnType<typeof makeMaterialProjection>
+) {
+  await insertContentViewRoute(ctx, {
+    contentId: projection.graph.assetId,
+    graph: projection.graph,
+    kind: "curriculum-lesson",
+    locale: projection.locale,
+    materialDomain: "mathematics",
+    route: projection.publicPath,
+    section: "material",
+    sourcePath: projection.contentKey,
+    title: projection.metadata.title,
+  });
 }
 
 /** Converts one selected exact material into its active deletion state. */

@@ -4,6 +4,7 @@ import { readPublishedMaterialMarkdown } from "@repo/backend/client/nakafa/mater
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { readQuranMarkdown } from "@repo/backend/client/nakafa/quran";
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
+import { verifyNakafaReleasePin } from "@repo/backend/client/nakafa/release";
 import type { RuntimeMdxPage } from "@repo/backend/client/nakafa/types";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
@@ -39,7 +40,11 @@ export const readNakafaMarkdown = Effect.fn("NakafaContent.readMarkdown")(
       return Option.none<NakafaAgentMarkdown>();
     }
 
-    return yield* readMdxMarkdown(convexUrl, ref.value);
+    const markdown = yield* readMdxMarkdown(convexUrl, ref.value);
+    if (published.activeReleaseId !== undefined) {
+      yield* verifyNakafaReleasePin(convexUrl, published.activeReleaseId);
+    }
+    return markdown;
   }
 );
 
