@@ -191,6 +191,7 @@ import type * as contentRelease_material from "../contentRelease/material.js";
 import type * as contentRelease_material_api from "../contentRelease/material/api.js";
 import type * as contentRelease_material_bucket from "../contentRelease/material/bucket.js";
 import type * as contentRelease_material_collision from "../contentRelease/material/collision.js";
+import type * as contentRelease_material_cursor from "../contentRelease/material/cursor.js";
 import type * as contentRelease_material_discovery from "../contentRelease/material/discovery.js";
 import type * as contentRelease_material_exact from "../contentRelease/material/exact.js";
 import type * as contentRelease_material_limits from "../contentRelease/material/limits.js";
@@ -720,6 +721,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material/api": typeof contentRelease_material_api;
   "contentRelease/material/bucket": typeof contentRelease_material_bucket;
   "contentRelease/material/collision": typeof contentRelease_material_collision;
+  "contentRelease/material/cursor": typeof contentRelease_material_cursor;
   "contentRelease/material/discovery": typeof contentRelease_material_discovery;
   "contentRelease/material/exact": typeof contentRelease_material_exact;
   "contentRelease/material/limits": typeof contentRelease_material_limits;
