@@ -101,7 +101,6 @@ const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
 const sourceBody = "## Function concept";
 const sourceUrl = "https://github.com/nakafaai/nakafa.com/source";
 const aksaraUrl = "https://github.com/nakafaai/aksara/source";
-
 /** Produces fresh framework params for one real material fixture. */
 function params() {
   return Promise.resolve(routeParams);
@@ -405,6 +404,7 @@ describe("material page source", () => {
       });
 
       await expect(readMaterialPage(params())).resolves.toEqual({
+        activeReleaseId,
         alternates: publishedModel.alternates,
         body: "## Published function concept",
         children: body,

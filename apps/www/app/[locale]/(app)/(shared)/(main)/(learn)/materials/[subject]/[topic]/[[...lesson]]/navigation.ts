@@ -235,7 +235,8 @@ export async function readMaterialNavigation(
   const published = await getPublishedMaterialContext(
     page.locale,
     page.route,
-    context
+    context,
+    page.activeReleaseId
   );
   if (!published.managed) {
     const index = readStaticPublicLearningIndex();

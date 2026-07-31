@@ -1,5 +1,8 @@
 // @vitest-environment node
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  PublicPathSchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -61,7 +64,9 @@ const pageFields = {
   sourceClaims: [],
   sourceUrl: null,
 };
+const activeReleaseId = ReleaseIdSchema.make("release-material");
 const publishedPage = {
+  activeReleaseId,
   alternates: [previewProjection, previewIdProjection],
   familyManaged: true,
   kind: "published",
@@ -383,7 +388,8 @@ describe("material lesson navigation", () => {
     expect(mocks.getPublishedMaterialContext).toHaveBeenCalledWith(
       "en",
       previewProjection,
-      context
+      context,
+      activeReleaseId
     );
   });
 

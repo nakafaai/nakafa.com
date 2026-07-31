@@ -84,6 +84,7 @@ interface PreviewPageSource extends MaterialPageFields {
 }
 
 interface PublishedPageSource extends MaterialPageFields {
+  readonly activeReleaseId: Exclude<MaterialReleasePin, null>;
   readonly familyManaged: boolean;
   readonly kind: "published";
   readonly route: MaterialLessonProjection;
@@ -293,6 +294,7 @@ export async function readMaterialPage(
       publicPath: model.projection.publicPath,
     });
     return {
+      activeReleaseId: model.activeReleaseId,
       alternates: model.alternates,
       body: published.rawMdx,
       children: published.body,
