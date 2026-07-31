@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/test/learning-programs";
 import {
   activateMaterialCatalog,
+  MATERIAL_IDENTITY,
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { describe, expect, it } from "vitest";
@@ -67,5 +68,58 @@ describe("learningPrograms/queries", () => {
         },
       ],
     });
+
+    await target.mutation(async (ctx) => {
+      const [binding, catalog, head] = await Promise.all([
+        ctx.db
+          .query("contentBindings")
+          .withIndex(
+            "by_locale_and_publicPath_and_sequence_and_index",
+            (index) =>
+              index
+                .eq("locale", material.locale)
+                .eq("publicPath", material.publicPath)
+                .eq("sequence", MATERIAL_IDENTITY.sequence)
+          )
+          .unique(),
+        ctx.db
+          .query("materialCatalog")
+          .withIndex("by_contentKey_and_locale", (index) =>
+            index
+              .eq("contentKey", material.contentKey)
+              .eq("locale", material.locale)
+          )
+          .unique(),
+        ctx.db
+          .query("contentHeads")
+          .withIndex("by_contentKey_and_locale_and_sequence", (index) =>
+            index
+              .eq("contentKey", material.contentKey)
+              .eq("locale", material.locale)
+              .eq("sequence", MATERIAL_IDENTITY.sequence)
+          )
+          .unique(),
+      ]);
+      if (!(binding && catalog && head)) {
+        throw new Error("Expected one complete exact material fixture.");
+      }
+      await ctx.db.delete("contentBindings", binding._id);
+      await ctx.db.delete("materialCatalog", catalog._id);
+      await ctx.db.patch("contentHeads", head._id, { operation: "delete" });
+    });
+
+    const tombstoned = await authed.query(
+      api.learningPrograms.queries.getActiveProfile,
+      { locale: "en" }
+    );
+    expect(tombstoned).toMatchObject({
+      planItems: [
+        {
+          content_id: material.graph.assetId,
+        },
+      ],
+    });
+    expect(tombstoned?.planItems[0]).not.toHaveProperty("route");
+    expect(tombstoned?.planItems[0]).not.toHaveProperty("title");
   });
 });

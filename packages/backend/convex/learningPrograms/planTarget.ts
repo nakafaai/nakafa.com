@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { loadMaterialIdentityOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { toContentViewIoError } from "@repo/backend/convex/contents/views/spec";
 import { loadContentTarget } from "@repo/backend/convex/contents/views/target";
 import { Effect } from "effect";
@@ -30,6 +31,17 @@ export const loadLearningPlanTarget = Effect.fn(
   });
   if (active) {
     return { route: active.route, title: active.title };
+  }
+
+  if (source?.section === "material") {
+    const owner = yield* loadMaterialIdentityOwner(
+      ctx,
+      source.sourcePath,
+      locale
+    ).pipe(Effect.mapError(toContentViewIoError));
+    if (owner.managed) {
+      return null;
+    }
   }
 
   if (
