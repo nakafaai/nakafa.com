@@ -1,3 +1,4 @@
+import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   inheritContentSnapshots,
@@ -11,8 +12,6 @@ import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release
 import {
   compareTryoutCatalog,
   compareTryoutPlacements,
-  tryoutCatalogIdentity,
-  tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import {
   digestTryoutCatalog,
@@ -28,6 +27,10 @@ import {
   TryoutPlacementSchema,
 } from "@nakafa/aksara-contracts/tryout/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  tryoutCatalogFacts,
+  tryoutPlacementFacts,
+} from "@repo/backend/convex/contentRelease/tryout/facts";
 import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
 import {
   TEST_MANIFEST_HASH,
@@ -39,7 +42,9 @@ import { Effect, Schema, Stream } from "effect";
 const artifactHash = Sha256HashSchema.make(`sha256:${"8".repeat(64)}`);
 
 /** Creates one hashed technical try-out country row. */
-export function makeTryoutCatalogRow(): Extract<
+export function makeTryoutCatalogRow(
+  locale: ContentLocale = "en"
+): Extract<
   ContentSnapshotRow,
   { readonly family: "tryout"; readonly rowKind: "catalog" }
 > {
@@ -48,17 +53,17 @@ export function makeTryoutCatalogRow(): Extract<
     countryKey: "indonesia",
     graph: {
       alignmentId: "alignment:tryout:technical:country",
-      assetId: "asset:en:tryout:technical:country",
+      assetId: `asset:${locale}:tryout:technical:country`,
       conceptId: "concept:tryout:technical:country",
       learningObjectId: "lo:tryout-technical-country",
       lensId: "lens:tryout:technical",
     },
     kind: "country",
-    locale: "en",
+    locale,
     order: 1,
     publicPath: "try-out/indonesia",
     sourceRevision: "technical-revision",
-    title: "Technical country",
+    title: locale === "en" ? "Technical country" : "Negara teknis",
   });
   return {
     family: "tryout",
@@ -68,7 +73,9 @@ export function makeTryoutCatalogRow(): Extract<
 }
 
 /** Creates one hashed technical try-out question placement. */
-export function makeTryoutPlacementRow(): Extract<
+export function makeTryoutPlacementRow(
+  locale: ContentLocale = "en"
+): Extract<
   ContentSnapshotRow,
   { readonly family: "tryout"; readonly rowKind: "placement" }
 > {
@@ -79,14 +86,14 @@ export function makeTryoutPlacementRow(): Extract<
     choices: [
       {
         isCorrect: true,
-        label: "Technical choice",
+        label: locale === "en" ? "Technical choice" : "Pilihan teknis",
         optionKey: "option-1",
         order: 1,
       },
     ],
     countryKey: "indonesia",
     examKey: "snbt",
-    locale: "en",
+    locale,
     questionArtifactHash: artifactHash,
     questionContentKey:
       "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question",
@@ -98,7 +105,7 @@ export function makeTryoutPlacementRow(): Extract<
     sectionKey: "quantitative-knowledge",
     setKey: "set-1",
     sourceRevision: "technical-revision",
-    title: "Technical question",
+    title: locale === "en" ? "Technical question" : "Pertanyaan teknis",
     trackKey: "2027",
   });
   return {
@@ -112,22 +119,25 @@ export function makeTryoutPlacementRow(): Extract<
 export const makeTryoutSnapshotManifest = Effect.fn(
   "backendTest.makeTryoutSnapshotManifest"
 )(function* () {
-  const catalog = makeTryoutCatalogRow();
-  const placement = makeTryoutPlacementRow();
+  const catalog = [makeTryoutCatalogRow("en"), makeTryoutCatalogRow("id")];
+  const placements = [
+    makeTryoutPlacementRow("en"),
+    makeTryoutPlacementRow("id"),
+  ];
   const catalogEvidence = yield* digestTryoutCatalog(
-    Stream.make(catalog.record)
+    Stream.fromIterable(catalog.map(({ record }) => record))
   );
   const placementEvidence = yield* digestTryoutPlacements(
-    Stream.make(placement.record)
+    Stream.fromIterable(placements.map(({ record }) => record))
   );
   const manifest = makeTryoutSnapshot({
     catalogDigest: catalogEvidence.digest,
-    counts: { country: 1, exam: 0, section: 0, set: 0, track: 0 },
+    counts: { country: 2, exam: 0, section: 0, set: 0, track: 0 },
     format: "tryout-v1",
     locales: ["en", "id"],
     placementCount: placementEvidence.count,
     placementDigest: placementEvidence.digest,
-    routeCount: 1,
+    routeCount: 2,
   });
   return {
     family: "tryout",
@@ -244,14 +254,9 @@ function insertCatalogRecord(
   index: number,
   record: ReturnType<typeof makeTryoutCatalogRecord>
 ) {
-  const { row } = record;
   return ctx.db.insert("tryoutCatalog", {
-    identity: tryoutCatalogIdentity(row),
+    ...tryoutCatalogFacts(record),
     index,
-    kind: row.kind,
-    locale: row.locale,
-    order: row.kind === "set" || row.kind === "section" ? row.order : 0,
-    publicPath: row.publicPath,
     rowHash: record.rowHash,
     rowJson: canonicalizeContentSnapshotRow({
       family: "tryout",
@@ -269,14 +274,9 @@ function insertPlacementRecord(
   index: number,
   record: ReturnType<typeof makeTryoutPlacementRecord>
 ) {
-  const { row } = record;
   return ctx.db.insert("tryoutPlacements", {
-    answerArtifactHash: row.answerArtifactHash,
-    identity: tryoutPlacementIdentity(row),
+    ...tryoutPlacementFacts(record),
     index,
-    locale: row.locale,
-    questionArtifactHash: row.questionArtifactHash,
-    questionOrder: row.questionOrder,
     rowHash: record.rowHash,
     rowJson: canonicalizeContentSnapshotRow({
       family: "tryout",

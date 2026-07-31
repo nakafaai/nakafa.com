@@ -189,6 +189,8 @@ const tables = {
   /** Immutable attempt placements with terminal answer-artifact bindings. */
   tryoutPlacements: defineTable({
     answerArtifactHash: v.string(),
+    countryKey: v.string(),
+    examKey: v.string(),
     identity: v.string(),
     index: v.number(),
     locale: localeValidator,
@@ -197,9 +199,22 @@ const tables = {
     rowHash: v.string(),
     rowJson: v.string(),
     snapshotId: v.string(),
+    sectionKey: v.string(),
+    setKey: v.string(),
+    trackKey: v.string(),
   })
     .index("by_snapshotId_and_index", ["snapshotId", "index"])
     .index("by_snapshotId_and_identity", ["snapshotId", "identity"])
+    .index("by_snapshotId_and_section_and_questionOrder", [
+      "snapshotId",
+      "locale",
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "setKey",
+      "sectionKey",
+      "questionOrder",
+    ])
     .index("by_questionArtifactHash", ["questionArtifactHash"])
     .index("by_answerArtifactHash", ["answerArtifactHash"]),
 };

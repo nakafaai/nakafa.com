@@ -1,25 +1,16 @@
 import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
-import {
-  tryoutCatalogIdentity,
-  tryoutPlacementIdentity,
-} from "@nakafa/aksara-contracts/tryout/identity";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  tryoutCatalogFacts,
+  tryoutPlacementFacts,
+} from "@repo/backend/convex/contentRelease/tryout/facts";
 import { Effect } from "effect";
 
 type TryoutRow = Extract<ContentSnapshotRow, { readonly family: "tryout" }>;
 type CatalogRow = Extract<TryoutRow, { readonly rowKind: "catalog" }>;
 type PlacementRow = Extract<TryoutRow, { readonly rowKind: "placement" }>;
-
-/** Derives one localized hierarchy identity and display order. */
-function catalogIdentity(source: CatalogRow) {
-  const row = source.record.row;
-  return {
-    identity: tryoutCatalogIdentity(row),
-    order: row.kind === "country" || row.kind === "exam" ? 0 : row.order,
-  };
-}
 
 /** Stores one immutable try-out hierarchy row without flattening its body. */
 export const stageTryoutCatalog = Effect.fn(
@@ -31,8 +22,7 @@ export const stageTryoutCatalog = Effect.fn(
   source: CatalogRow,
   rowJson: string
 ) {
-  const row = source.record.row;
-  const identity = catalogIdentity(source);
+  const facts = tryoutCatalogFacts(source.record);
   const byIndex = yield* Effect.promise(() =>
     ctx.db
       .query("tryoutCatalog")
@@ -45,7 +35,7 @@ export const stageTryoutCatalog = Effect.fn(
     ctx.db
       .query("tryoutCatalog")
       .withIndex("by_snapshotId_and_identity", (query) =>
-        query.eq("snapshotId", snapshotId).eq("identity", identity.identity)
+        query.eq("snapshotId", snapshotId).eq("identity", facts.identity)
       )
       .unique()
   );
@@ -64,11 +54,8 @@ export const stageTryoutCatalog = Effect.fn(
     return true;
   }
   const stored = {
-    ...identity,
+    ...facts,
     index,
-    kind: row.kind,
-    locale: row.locale,
-    publicPath: row.publicPath,
     rowHash: source.record.rowHash,
     rowJson,
     snapshotId,
@@ -91,8 +78,7 @@ export const stageTryoutPlacement = Effect.fn(
   source: PlacementRow,
   rowJson: string
 ) {
-  const row = source.record.row;
-  const identity = tryoutPlacementIdentity(row);
+  const facts = tryoutPlacementFacts(source.record);
   const byIndex = yield* Effect.promise(() =>
     ctx.db
       .query("tryoutPlacements")
@@ -105,7 +91,7 @@ export const stageTryoutPlacement = Effect.fn(
     ctx.db
       .query("tryoutPlacements")
       .withIndex("by_snapshotId_and_identity", (query) =>
-        query.eq("snapshotId", snapshotId).eq("identity", identity)
+        query.eq("snapshotId", snapshotId).eq("identity", facts.identity)
       )
       .unique()
   );
@@ -124,12 +110,8 @@ export const stageTryoutPlacement = Effect.fn(
     return true;
   }
   const stored = {
-    answerArtifactHash: row.answerArtifactHash,
-    identity,
+    ...facts,
     index,
-    locale: row.locale,
-    questionArtifactHash: row.questionArtifactHash,
-    questionOrder: row.questionOrder,
     rowHash: source.record.rowHash,
     rowJson,
     snapshotId,
