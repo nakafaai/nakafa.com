@@ -10,6 +10,7 @@ import {
   verifyCurriculum,
   verifyProgram,
 } from "@repo/backend/convex/contentRelease/program/verify";
+import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect } from "effect";
 
@@ -20,11 +21,14 @@ export const readProgramRoute = Effect.fn("contentRelease.readProgramRoute")(
     locale: Doc<"curriculumRoutes">["locale"],
     publicPath: string
   ) {
-    const owner = yield* loadProgramOwner(ctx, locale);
+    const [globalActive, owner] = yield* Effect.all([
+      loadActiveIdentity(ctx),
+      loadProgramOwner(ctx, locale),
+    ]);
     if (!(owner.managed && owner.selected)) {
       return {
-        activeManifestHash: owner.selected?.active.manifestHash ?? null,
-        activeReleaseId: owner.selected?.active.releaseId ?? null,
+        activeManifestHash: globalActive?.manifestHash ?? null,
+        activeReleaseId: globalActive?.releaseId ?? null,
         alternateJson: [],
         ancestorJson: [],
         childJson: [],

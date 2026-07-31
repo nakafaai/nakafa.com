@@ -11,7 +11,11 @@ import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
-import { insertMaterialProjection } from "@repo/backend/test/material-catalog";
+import {
+  activateMaterialCatalog,
+  insertMaterialProjection,
+  MATERIAL_IDENTITY,
+} from "@repo/backend/test/material-catalog";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
@@ -182,6 +186,23 @@ describe("contentRelease/program/route", () => {
     ).resolves.toMatchObject({
       managed: true,
       programJson: null,
+      routeJson: null,
+    });
+  });
+
+  it("preserves the active release while programs remain source-owned", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(target);
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          readProgramRoute(ctx, "en", "curriculum/technical-program-1")
+        )
+      )
+    ).resolves.toMatchObject({
+      activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: false,
       routeJson: null,
     });
   });
