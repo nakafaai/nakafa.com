@@ -6,6 +6,10 @@ import {
   tryoutCatalogFacts,
   tryoutPlacementFacts,
 } from "@repo/backend/convex/contentRelease/tryout/facts";
+import {
+  TRYOUT_CATALOG_DOCUMENT_LIMIT,
+  TRYOUT_PLACEMENT_DOCUMENT_LIMIT,
+} from "@repo/backend/convex/contentRelease/tryout/limits";
 import { Effect } from "effect";
 
 type TryoutRow = Extract<ContentSnapshotRow, { readonly family: "tryout" }>;
@@ -62,7 +66,8 @@ export const stageTryoutCatalog = Effect.fn(
   };
   yield* ensureDocumentSize(
     `Try-out snapshot ${snapshotId} row ${index}`,
-    stored
+    stored,
+    TRYOUT_CATALOG_DOCUMENT_LIMIT
   );
   yield* Effect.promise(() => ctx.db.insert("tryoutCatalog", stored));
   return false;
@@ -118,7 +123,8 @@ export const stageTryoutPlacement = Effect.fn(
   };
   yield* ensureDocumentSize(
     `Try-out snapshot ${snapshotId} placement ${index}`,
-    stored
+    stored,
+    TRYOUT_PLACEMENT_DOCUMENT_LIMIT
   );
   yield* Effect.promise(() => ctx.db.insert("tryoutPlacements", stored));
   return false;
