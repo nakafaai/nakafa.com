@@ -9,7 +9,10 @@ import {
 } from "@nakafa/aksara-contracts/program/curriculum";
 import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/row-hash";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
-import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
+import {
+  MaterialKeySchema,
+  MaterialLessonProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/material";
 import {
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
@@ -19,6 +22,8 @@ import { stageProgramRow } from "@repo/backend/convex/contentRelease/snapshot/pr
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { insertMaterialProjection } from "@repo/backend/test/material-catalog";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
@@ -187,6 +192,47 @@ describe("contentRelease/program/context", () => {
         groupJson: expect.any(String),
         mappingJson: expect.any(String),
         parentJson: expect.any(String),
+      },
+      managed: true,
+    });
+  });
+
+  it("resolves one renamed material group through its stable key", async () => {
+    const data = await Effect.runPromise(makeProgramSnapshotData());
+    const target = convexTest(schema, convexModules);
+    const source = makeMaterialProjection("en", 1);
+    const renamedParent = PublicPathSchema.make(
+      "subjects/test/renamed-technical-topic"
+    );
+    const renamed = MaterialLessonProjectionSchema.make({
+      ...source,
+      parentPath: renamedParent,
+      publicPath: PublicPathSchema.make(
+        `${renamedParent}/renamed-technical-section`
+      ),
+    });
+    await activateProgramSnapshot(target, data);
+    await stageRoutes(target, data.snapshotId, [
+      subjectRoute(),
+      groupRoute(),
+      mappingRoute(),
+    ]);
+    await target.mutation((ctx) => insertMaterialProjection(ctx, renamed));
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          readProgramContext(ctx, "en", {
+            ...CONTEXT_INPUT,
+            parentPath: renamed.parentPath,
+            publicPath: renamed.publicPath,
+          })
+        )
+      )
+    ).resolves.toMatchObject({
+      context: {
+        mappingJson: expect.any(String),
+        resolvedCanonicalPath: renamed.parentPath,
       },
       managed: true,
     });

@@ -40,6 +40,7 @@ const publishedContext = {
   managed: true,
   mappingJson: testCurriculumRowJson(mapping),
   parentJson: testCurriculumRowJson(testProgramSubject),
+  resolvedCanonicalPath: mapping.canonicalPath ?? null,
 };
 
 vi.mock("@/lib/content/cache", () => ({
@@ -95,12 +96,14 @@ describe("published material context", () => {
         managed: false,
         mappingJson: null,
         parentJson: null,
+        resolvedCanonicalPath: null,
       })
       .mockResolvedValueOnce({
         groupJson: null,
         managed: true,
         mappingJson: null,
         parentJson: null,
+        resolvedCanonicalPath: null,
       });
 
     await expect(
@@ -122,6 +125,7 @@ describe("published material context", () => {
       managed: false,
       mappingJson: null,
       parentJson: null,
+      resolvedCanonicalPath: null,
     });
 
     await expect(
@@ -177,6 +181,34 @@ describe("published material context", () => {
     });
   });
 
+  it("accepts a backend-verified renamed material parent", async () => {
+    const renamedParent = PublicPathSchema.make(
+      "subjects/mathematics/renamed-functions"
+    );
+    const renamedMaterial = {
+      ...previewProjection,
+      parentPath: renamedParent,
+      publicPath: PublicPathSchema.make(
+        `${renamedParent}/renamed-function-concept`
+      ),
+    };
+    fetchMock.mockResolvedValueOnce({
+      ...publishedContext,
+      resolvedCanonicalPath: renamedParent,
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialContext("en", renamedMaterial, context)
+      )
+    ).resolves.toMatchObject({
+      managed: true,
+      value: {
+        mapping: { canonicalPath: mapping.canonicalPath },
+      },
+    });
+  });
+
   it.each([
     [
       "partial rows",
@@ -228,6 +260,9 @@ describe("published material context", () => {
           `${previewProjection.parentPath}/other-lesson`
         ),
       }),
+      resolvedCanonicalPath: PublicPathSchema.make(
+        `${previewProjection.parentPath}/other-lesson`
+      ),
     });
 
     await expect(

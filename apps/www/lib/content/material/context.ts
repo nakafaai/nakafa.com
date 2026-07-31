@@ -67,14 +67,16 @@ export const readPublishedMaterialContext = Effect.fn(
   if (
     result.groupJson === null &&
     result.mappingJson === null &&
-    result.parentJson === null
+    result.parentJson === null &&
+    result.resolvedCanonicalPath === null
   ) {
     return { managed: true, value: null };
   }
   if (
     result.groupJson === null ||
     result.mappingJson === null ||
-    result.parentJson === null
+    result.parentJson === null ||
+    result.resolvedCanonicalPath === null
   ) {
     return yield* new PublishedProjectionError({
       locale,
@@ -98,8 +100,8 @@ export const readPublishedMaterialContext = Effect.fn(
     mapping.materialKey !== material.materialKey ||
     mapping.programKey !== context.programKey ||
     !(
-      mapping.canonicalPath === material.publicPath ||
-      mapping.canonicalPath === material.parentPath
+      result.resolvedCanonicalPath === material.publicPath ||
+      result.resolvedCanonicalPath === material.parentPath
     ) ||
     parent.locale !== locale ||
     parent.programKey !== context.programKey ||

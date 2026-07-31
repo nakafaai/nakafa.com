@@ -237,7 +237,7 @@ describe("contentRelease/program/route", () => {
     });
   });
 
-  it("rejects a material context whose published lesson is missing", async () => {
+  it("omits material projections removed after the program snapshot", async () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const target = convexTest(schema, convexModules);
     await activateProgramSnapshot(target, data);
@@ -247,8 +247,9 @@ describe("contentRelease/program/route", () => {
       target.query((ctx) =>
         runConvexProgram(readProgramRoute(ctx, "en", PROGRAM_ROOT))
       )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    ).resolves.toMatchObject({
+      managed: true,
+      materialJson: [],
     });
   });
 

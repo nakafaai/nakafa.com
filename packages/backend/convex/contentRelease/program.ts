@@ -58,6 +58,7 @@ const programContextValidator = v.object({
   managed: v.boolean(),
   mappingJson: v.union(v.string(), v.null()),
   parentJson: v.union(v.string(), v.null()),
+  resolvedCanonicalPath: v.union(v.string(), v.null()),
 });
 
 const programPathValidator = v.object({
@@ -117,6 +118,7 @@ export const context = query({
           managed,
           mappingJson: resolved?.mappingJson ?? null,
           parentJson: resolved?.parentJson ?? null,
+          resolvedCanonicalPath: resolved?.resolvedCanonicalPath ?? null,
         }))
       )
     ),

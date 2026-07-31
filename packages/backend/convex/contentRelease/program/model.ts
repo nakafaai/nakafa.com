@@ -220,12 +220,6 @@ const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
           )
           .take(Math.min(PROGRAM_RELATED_LIMIT, remaining) + 1)
       );
-      if (rows.length === 0) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Material ${route.locale}/${materialKey} is missing.`
-        );
-      }
       if (rows.length > PROGRAM_RELATED_LIMIT || rows.length > remaining) {
         return yield* releaseFail(
           "CONTENT_RELEASE_LIMIT",

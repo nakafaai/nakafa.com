@@ -1,6 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { PROGRAM_RELATED_LIMIT } from "@repo/backend/convex/contentRelease/program/limits";
 import { loadProgramRouteRow } from "@repo/backend/convex/contentRelease/program/model";
 import { loadProgramOwner } from "@repo/backend/convex/contentRelease/program/owner";
@@ -17,8 +18,8 @@ interface ProgramContextInput {
   readonly publicPath: string;
 }
 
-/** Checks whether one curriculum mapping owns the exact material target. */
-function ownsMaterial(
+/** Checks whether one curriculum mapping owns the stable material identity. */
+function ownsMaterialIdentity(
   context: Effect.Effect.Success<ReturnType<typeof verifyCurriculum>>,
   group: Effect.Effect.Success<ReturnType<typeof verifyCurriculum>>,
   parent: Effect.Effect.Success<ReturnType<typeof verifyCurriculum>>,
@@ -29,11 +30,48 @@ function ownsMaterial(
     context.materialContextParentPath === parent.publicPath &&
     context.materialContextPublicPath === group.publicPath &&
     context.materialKey === input.materialKey &&
-    context.programKey === input.programKey &&
-    (context.canonicalPath === input.publicPath ||
-      context.canonicalPath === input.parentPath)
+    context.programKey === input.programKey
   );
 }
+
+/** Resolves one renamed material path through its stable active material key. */
+const readRenamedMaterialPath = Effect.fn(
+  "contentRelease.readRenamedMaterialPath"
+)(function* (
+  ctx: QueryCtx,
+  locale: Doc<"curriculumRoutes">["locale"],
+  input: ProgramContextInput
+) {
+  const rows = yield* Effect.promise(() =>
+    ctx.db
+      .query("materialCatalog")
+      .withIndex(
+        "by_locale_and_materialKey_and_order_and_publicPath",
+        (index) =>
+          index.eq("locale", locale).eq("materialKey", input.materialKey)
+      )
+      .take(PROGRAM_RELATED_LIMIT + 1)
+  );
+  if (rows.length > PROGRAM_RELATED_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Material context ${locale}/${input.materialKey} exceeds ${PROGRAM_RELATED_LIMIT} rows.`
+    );
+  }
+  const materials = yield* Effect.forEach(rows, (row) => verifyMaterial(row));
+  const selected = materials.find(
+    ({ projection }) =>
+      projection.parentPath === input.parentPath &&
+      projection.publicPath === input.publicPath
+  );
+  if (!selected) {
+    return undefined;
+  }
+  const parentPaths = new Set(
+    materials.map(({ projection }) => projection.parentPath)
+  );
+  return parentPaths.size === 1 ? selected.projection.parentPath : undefined;
+});
 
 /** Resolves one valid curriculum return context for a material identity. */
 export const readProgramContext = Effect.fn(
@@ -116,9 +154,20 @@ export const readProgramContext = Effect.fn(
       Effect.map((context) => ({ context, row }))
     )
   );
-  const matches = contexts.filter(({ context }) =>
-    ownsMaterial(context, group, parent, input)
+  const identityMatches = contexts.filter(({ context }) =>
+    ownsMaterialIdentity(context, group, parent, input)
   );
+  const directMatches = identityMatches.filter(
+    ({ context }) =>
+      context.canonicalPath === input.publicPath ||
+      context.canonicalPath === input.parentPath
+  );
+  let matches = directMatches;
+  let resolvedCanonicalPath = directMatches.at(0)?.context.canonicalPath;
+  if (directMatches.length === 0) {
+    resolvedCanonicalPath = yield* readRenamedMaterialPath(ctx, locale, input);
+    matches = resolvedCanonicalPath ? identityMatches : [];
+  }
   if (matches.length > 1) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -135,6 +184,7 @@ export const readProgramContext = Effect.fn(
       mapping: match.context,
       mappingJson: match.row.rowJson,
       parentJson: storedParent.rowJson,
+      resolvedCanonicalPath,
     },
     managed: true,
   };

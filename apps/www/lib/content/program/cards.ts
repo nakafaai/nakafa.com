@@ -25,27 +25,50 @@ function toMaterialHref(
   });
 }
 
-/** Selects only material routes explicitly owned by one curriculum context. */
-function selectContextMaterials(
-  context: PublishedCurriculumRoute,
-  materials: readonly MaterialLessonProjection[]
-) {
-  if (!(context.materialKey && context.canonicalPath)) {
-    return [];
+/** Selects current material routes for one immutable curriculum mapping. */
+const selectMaterialRoutes = Effect.fn("NakafaProgram.selectMaterialRoutes")(
+  function* ({
+    canonicalPath,
+    locale,
+    materialKey,
+    materials,
+    publicPath,
+  }: {
+    readonly canonicalPath: NonNullable<
+      PublishedCurriculumRoute["canonicalPath"]
+    >;
+    readonly locale: Locale;
+    readonly materialKey: NonNullable<PublishedCurriculumRoute["materialKey"]>;
+    readonly materials: readonly MaterialLessonProjection[];
+    readonly publicPath: PublishedCurriculumRoute["publicPath"];
+  }) {
+    const materialGroup = materials.filter(
+      (material) => material.materialKey === materialKey
+    );
+    if (materialGroup.length === 0) {
+      return [];
+    }
+    const exact = materialGroup.find(
+      (material) => material.publicPath === canonicalPath
+    );
+    if (exact) {
+      return [exact];
+    }
+    const matchingParent = materialGroup.filter(
+      (material) => material.parentPath === canonicalPath
+    );
+    if (matchingParent.length > 0) {
+      return matchingParent;
+    }
+    const currentParents = new Set(
+      materialGroup.map(({ parentPath }) => parentPath)
+    );
+    if (currentParents.size === 1) {
+      return materialGroup;
+    }
+    return yield* new PublishedProjectionError({ locale, publicPath });
   }
-  const materialGroup = materials.filter(
-    (material) => material.materialKey === context.materialKey
-  );
-  const exact = materialGroup.find(
-    (material) => material.publicPath === context.canonicalPath
-  );
-  if (exact) {
-    return [exact];
-  }
-  return materialGroup.filter(
-    (material) => material.parentPath === context.canonicalPath
-  );
-}
+);
 
 /** Builds the established material-card model from published projections. */
 export const readPublishedMaterialCards = Effect.fn(
@@ -68,18 +91,29 @@ export const readPublishedMaterialCards = Effect.fn(
   }
   const cards: MaterialList = [];
   for (const group of groups) {
+    let hasMaterialContext = false;
     const selected = new Set<string>();
     for (const context of contexts) {
       if (context.materialContextPublicPath !== group.publicPath) {
         continue;
       }
-      const owned = selectContextMaterials(context, materials);
-      if (context.materialKey && owned.length === 0) {
+      if (!context.materialKey) {
+        continue;
+      }
+      hasMaterialContext = true;
+      if (!context.canonicalPath) {
         return yield* new PublishedProjectionError({
           locale,
           publicPath: route.publicPath,
         });
       }
+      const owned = yield* selectMaterialRoutes({
+        canonicalPath: context.canonicalPath,
+        locale,
+        materialKey: context.materialKey,
+        materials,
+        publicPath: route.publicPath,
+      });
       for (const material of owned) {
         selected.add(material.publicPath);
       }
@@ -97,6 +131,9 @@ export const readPublishedMaterialCards = Effect.fn(
     const title = group.materialCardTitle ?? group.title;
     const description = group.materialCardDescription;
     const firstItem = items.at(0);
+    if (!firstItem && hasMaterialContext) {
+      continue;
+    }
     if (!(description && firstItem)) {
       return yield* new PublishedProjectionError({
         locale,
