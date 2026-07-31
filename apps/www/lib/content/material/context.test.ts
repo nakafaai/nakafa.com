@@ -11,10 +11,7 @@ import {
   getPublishedMaterialContext,
   readPublishedMaterialContext,
 } from "@/lib/content/material/context";
-import {
-  previewProjection,
-  previewPublicRoute,
-} from "@/test/content-preview";
+import { previewProjection, previewPublicRoute } from "@/test/content-preview";
 import {
   testCurriculumRowJson,
   testProgramContexts,
