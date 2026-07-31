@@ -9,10 +9,7 @@ import {
 } from "@nakafa/aksara-contracts/program/curriculum";
 import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/row-hash";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
-import {
-  MaterialKeySchema,
-  MaterialLessonProjectionSchema,
-} from "@nakafa/aksara-contracts/projection/material";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import {
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
@@ -34,7 +31,8 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const PROGRAM_KEY = LearningProgramKeySchema.make("technical-program-1");
-const MATERIAL_KEY = MaterialKeySchema.make("lesson.test.topic");
+const SOURCE_MATERIAL = makeMaterialProjection("en", 1);
+const MATERIAL_KEY = SOURCE_MATERIAL.materialKey;
 const ROOT_PATH = PublicPathSchema.make("curriculum/technical-program-1");
 const SUBJECT_PATH = PublicPathSchema.make(
   "curriculum/technical-program-1/test-subject"
@@ -43,22 +41,42 @@ const GROUP_PATH = PublicPathSchema.make(
   "curriculum/technical-program-1/test-subject/test-group"
 );
 const GROUP_KEY = CurriculumNodeKeySchema.make("test-group");
-const MATERIAL_PARENT_PATH = PublicPathSchema.make(
-  "subjects/test/technical-topic"
-);
-const MATERIAL_PUBLIC_PATH = PublicPathSchema.make(
-  `${MATERIAL_PARENT_PATH}/technical-section`
-);
+const MATERIAL_PARENT_PATH = SOURCE_MATERIAL.parentPath;
+const MATERIAL_PUBLIC_PATH = SOURCE_MATERIAL.publicPath;
 const SOURCE_PATH = CorpusSourcePathSchema.make(
   "packages/corpus/curriculum/technical-program-1"
 );
 const CONTEXT_INPUT = {
+  contentKey: SOURCE_MATERIAL.contentKey,
   materialKey: MATERIAL_KEY,
   nodeKey: GROUP_KEY,
   parentPath: MATERIAL_PARENT_PATH,
   programKey: PROGRAM_KEY,
   publicPath: MATERIAL_PUBLIC_PATH,
 };
+
+/** Inserts one source-owned lesson route for renamed identity checks. */
+async function insertSourceMaterialRoute(
+  target: TestConvex<typeof schema>,
+  projection: ReturnType<typeof makeMaterialProjection>
+) {
+  await target.mutation((ctx) =>
+    ctx.db.insert("publicRoutes", {
+      contentHash: `source:${projection.contentKey}`,
+      kind: projection.kind,
+      locale: projection.locale,
+      materialKey: projection.materialKey,
+      order: projection.order,
+      parentPath: projection.parentPath,
+      publicPath: projection.publicPath,
+      sectionKey: projection.sectionKey,
+      sitemap: projection.sitemap,
+      sourcePath: projection.contentKey,
+      syncShard: 0,
+      title: projection.metadata.title,
+    })
+  );
+}
 
 /** Creates one curriculum subject that owns the material card list. */
 function subjectRoute(): CurriculumRoute {
@@ -197,10 +215,11 @@ describe("contentRelease/program/context", () => {
     });
   });
 
-  it("resolves one renamed material group through its stable key", async () => {
+  it("resolves a moved exact lesson while a source sibling keeps its old parent", async () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const target = convexTest(schema, convexModules);
-    const source = makeMaterialProjection("en", 1);
+    const source = SOURCE_MATERIAL;
+    const retainedSibling = makeMaterialProjection("en", 2);
     const renamedParent = PublicPathSchema.make(
       "subjects/test/renamed-technical-topic"
     );
@@ -217,7 +236,11 @@ describe("contentRelease/program/context", () => {
       groupRoute(),
       mappingRoute(),
     ]);
-    await target.mutation((ctx) => insertMaterialProjection(ctx, renamed));
+    await target.mutation(async (ctx) => {
+      await insertMaterialProjection(ctx, renamed);
+      await insertMaterialProjection(ctx, retainedSibling);
+    });
+    await insertSourceMaterialRoute(target, source);
 
     await expect(
       target.query((ctx) =>
@@ -339,12 +362,15 @@ describe("contentRelease/program/context", () => {
   it("rejects a sibling lesson when a mapping names one exact lesson", async () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const t = convexTest(schema, convexModules);
+    const sibling = makeMaterialProjection("en", 2);
     await activateProgramSnapshot(t, data);
     await stageRoutes(t, data.snapshotId, [
       subjectRoute(),
       groupRoute(),
       mappingRoute(1, MATERIAL_PUBLIC_PATH),
     ]);
+    await t.mutation((ctx) => insertMaterialProjection(ctx, sibling));
+    await insertSourceMaterialRoute(t, sibling);
 
     await expect(
       t.query((ctx) =>
@@ -359,7 +385,9 @@ describe("contentRelease/program/context", () => {
         runConvexProgram(
           readProgramContext(ctx, "en", {
             ...CONTEXT_INPUT,
-            publicPath: `${MATERIAL_PARENT_PATH}/other-section`,
+            contentKey: sibling.contentKey,
+            parentPath: sibling.parentPath,
+            publicPath: sibling.publicPath,
           })
         )
       )

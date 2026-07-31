@@ -17,17 +17,15 @@ import {
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
 
-interface PublishedMaterialIdentity {
-  readonly materialKey:
-    | MaterialLessonProjection["materialKey"]
-    | PublicMaterialLessonRoute["materialKey"];
-  readonly parentPath:
-    | MaterialLessonProjection["parentPath"]
-    | PublicMaterialLessonRoute["parentPath"];
-  readonly publicPath:
-    | MaterialLessonProjection["publicPath"]
-    | PublicMaterialLessonRoute["publicPath"];
-}
+type PublishedMaterialIdentity =
+  | Pick<
+      MaterialLessonProjection,
+      "contentKey" | "materialKey" | "parentPath" | "publicPath"
+    >
+  | Pick<
+      PublicMaterialLessonRoute,
+      "materialKey" | "parentPath" | "publicPath" | "sourcePath"
+    >;
 
 /** Verified curriculum return link for one material lesson. */
 export interface PublishedMaterialContext {
@@ -48,11 +46,14 @@ export const readPublishedMaterialContext = Effect.fn(
   context: MaterialContextIdentity,
   expectedActiveReleaseId?: MaterialReleasePin
 ) {
+  const contentKey =
+    "contentKey" in material ? material.contentKey : material.sourcePath;
   const result = yield* readRuntimeQuery("contentRelease.program.context", () =>
     fetchRuntimeQuery(api.contentRelease.program.context, {
       ...(expectedActiveReleaseId === undefined
         ? {}
         : { expectedActiveReleaseId }),
+      contentKey,
       locale,
       materialKey: material.materialKey,
       nodeKey: context.nodeKey,

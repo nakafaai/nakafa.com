@@ -63,6 +63,7 @@ const resolvePublishedContext = Effect.fn(
   nodeKey: string
 ) {
   const resolved = yield* readProgramContext(ctx, target.locale, {
+    contentKey: target.contentKey,
     materialKey: material.materialKey,
     nodeKey,
     parentPath: material.parentPath,

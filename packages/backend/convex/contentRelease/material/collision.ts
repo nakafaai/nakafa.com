@@ -5,11 +5,42 @@ import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/cat
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type { ExactMaterialOwner } from "@repo/backend/convex/contentRelease/material/plan";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
+import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
+import { readMaterialDomain } from "@repo/contents/_types/material/identity";
+import {
+  readDomainSlug,
+  readNamespaceSegment,
+} from "@repo/contents/_types/route/path";
 import { Effect } from "effect";
 
 interface StoredSourceRoute {
   readonly sourcePath?: string;
 }
+
+/** Rejects material routes outside their locale and subject domain namespace. */
+const validateMaterialRouteNamespace = Effect.fn(
+  "contentRelease.validateMaterialRouteNamespace"
+)(function* (projection: MaterialLessonProjection) {
+  const domain = readMaterialDomain(projection.materialKey);
+  const namespace = readNamespaceSegment("subject", projection.locale);
+  const domainSlug = domain
+    ? readDomainSlug(
+        MATERIAL_ROUTE_DOMAINS,
+        "lesson",
+        domain,
+        projection.locale
+      )
+    : undefined;
+  const prefix =
+    namespace && domainSlug ? `${namespace}/${domainSlug}/` : undefined;
+  if (prefix && projection.parentPath.startsWith(prefix)) {
+    return;
+  }
+  return yield* releaseFail(
+    "CONTENT_RELEASE_ROUTE",
+    `Exact material route ${projection.locale}/${projection.publicPath} is outside its subject namespace.`
+  );
+});
 
 /** Rejects duplicate or retained source owners for one exact material path. */
 const validateStoredSourceRoutes = Effect.fn(
@@ -41,6 +72,7 @@ const validateStoredSourceRoutes = Effect.fn(
 export const validateMaterialProjectionRoute = Effect.fn(
   "contentRelease.validateMaterialProjectionRoute"
 )(function* (ctx: MutationCtx, projection: MaterialLessonProjection) {
+  yield* validateMaterialRouteNamespace(projection);
   const [publicRoutes, contentRoutes] = yield* Effect.all([
     Effect.promise(() =>
       ctx.db

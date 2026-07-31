@@ -91,6 +91,7 @@ export const catalog = query({
 export const context = query({
   args: {
     expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
+    contentKey: v.string(),
     locale: localeValidator,
     materialKey: v.string(),
     nodeKey: v.string(),
@@ -105,6 +106,7 @@ export const context = query({
         ctx,
         args.locale,
         {
+          contentKey: args.contentKey,
           materialKey: args.materialKey,
           nodeKey: args.nodeKey,
           parentPath: args.parentPath,

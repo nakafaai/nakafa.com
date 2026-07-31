@@ -15,11 +15,10 @@ import {
 } from "@repo/backend/convex/contents/views/spec";
 import {
   localeValidator,
-  type Material,
   materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { SUBJECT_MATERIALS } from "@repo/contents/_types/taxonomy";
+import { readMaterialDomain } from "@repo/contents/_types/material/identity";
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 import { Effect } from "effect";
@@ -135,17 +134,6 @@ const resolveContentViewTargetInput = Effect.fn(
     section: route.section,
   } satisfies ResolvedContentViewTargetInput;
 });
-
-/** Reads the source-owned material domain from one stable material key. */
-function readMaterialDomain(materialKey: string): Material | undefined {
-  const identity = materialKey.slice("lesson.".length);
-  const separator = identity.indexOf(".");
-  if (separator < 1) {
-    return;
-  }
-  const domain = identity.slice(0, separator);
-  return SUBJECT_MATERIALS.find((candidate) => candidate === domain);
-}
 
 /** Resolves one active material by exact route or stable graph identity. */
 const readMaterialTarget = Effect.fn("contents.views.readMaterialTarget")(

@@ -1,12 +1,21 @@
-import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import {
+  PublicPathSchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  canonicalizeMaterialProjection,
+  MaterialLessonProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/material";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { validateExactMaterialRoutes } from "@repo/backend/convex/contentRelease/material/collision";
 import { validateSourceMaterialRoutes } from "@repo/backend/convex/contentRelease/material/routeGuard";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import {
+  FUNCTION_MATERIAL,
+  makeMaterialProjection,
+} from "@repo/backend/test/content-material";
 import { testTextHash } from "@repo/backend/test/content-release";
 import {
   insertZeroRelease,
@@ -36,7 +45,7 @@ type ContentRoute = WithoutSystemFields<Doc<"contentRoutes">>;
 describe("contentRelease/material/collision", () => {
   it("rejects exact routes that displace a retained source owner", async () => {
     const target = convexTest(schema, convexModules);
-    const selected = makeMaterialProjection("en", 1);
+    const selected = FUNCTION_MATERIAL;
     await activateMaterialCatalog(target, [selected]);
     const expected = [
       { contentKey: selected.contentKey, locale: selected.locale },
@@ -80,7 +89,7 @@ describe("contentRelease/material/collision", () => {
 
   it("rejects concrete routes with retained or duplicate source owners", async () => {
     const target = convexTest(schema, convexModules);
-    const selected = makeMaterialProjection("en", 1);
+    const selected = FUNCTION_MATERIAL;
     await activateMaterialCatalog(target, [selected]);
     const expected = [
       { contentKey: selected.contentKey, locale: selected.locale },
@@ -144,6 +153,29 @@ describe("contentRelease/material/collision", () => {
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects exact materials outside the localized subject namespace", async () => {
+    const target = convexTest(schema, convexModules);
+    const source = FUNCTION_MATERIAL;
+    const selected = MaterialLessonProjectionSchema.make({
+      ...source,
+      parentPath: PublicPathSchema.make("test"),
+      publicPath: PublicPathSchema.make(`test/${source.sectionKey}`),
+    });
+    await activateMaterialCatalog(target, [selected]);
+
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(
+          validateExactMaterialRoutes(ctx, MATERIAL_IDENTITY.sequence, [
+            { contentKey: selected.contentKey, locale: selected.locale },
+          ])
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_ROUTE" },
     });
   });
 

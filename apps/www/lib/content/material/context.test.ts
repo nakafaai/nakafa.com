@@ -11,7 +11,10 @@ import {
   getPublishedMaterialContext,
   readPublishedMaterialContext,
 } from "@/lib/content/material/context";
-import { previewProjection } from "@/test/content-preview";
+import {
+  previewProjection,
+  previewPublicRoute,
+} from "@/test/content-preview";
 import {
   testCurriculumRowJson,
   testProgramContexts,
@@ -140,7 +143,32 @@ describe("published material context", () => {
     ).resolves.toEqual({ managed: false, value: null });
     expect(fetchMock).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
+      expect.objectContaining({
+        contentKey: previewProjection.contentKey,
+        expectedActiveReleaseId: activeReleaseId,
+      })
+    );
+  });
+
+  it("uses a source route path as the stable content identity", async () => {
+    fetchMock.mockResolvedValueOnce({
+      groupJson: null,
+      managed: false,
+      mappingJson: null,
+      parentJson: null,
+      resolvedCanonicalPath: null,
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialContext("en", previewPublicRoute, context)
+      )
+    ).resolves.toEqual({ managed: false, value: null });
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        contentKey: previewPublicRoute.sourcePath,
+      })
     );
   });
 
