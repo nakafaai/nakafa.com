@@ -174,6 +174,26 @@ describe("contentRelease/material/model", () => {
     ]);
   });
 
+  it("scopes one moved exact lesson to its active parent", async () => {
+    const t = convexTest(schema, convexModules);
+    const source = makeMaterialProjection("en", 1);
+    const sourceSibling = makeMaterialProjection("en", 2);
+    const moved = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+      ...source,
+      parentPath: "subjects/test/moved-topic",
+      publicPath: "subjects/test/moved-topic/section-1",
+    });
+    await activateMaterialCatalog(t, [moved, sourceSibling]);
+    await selectExactMaterial(t, moved);
+
+    const result = await t.query((ctx) =>
+      runConvexProgram(readMaterialModel(ctx, moved.locale, moved.publicPath))
+    );
+
+    expect(decodeProjection(result.projectionJson ?? "")).toEqual(moved);
+    expect(result.siblingJson.map(decodeProjection)).toEqual([moved]);
+  });
+
   it("supports one exact material locale without claiming family parity", async () => {
     const t = convexTest(schema, convexModules);
     const projection = makeMaterialProjection("en", 1);
