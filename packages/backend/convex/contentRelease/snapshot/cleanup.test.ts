@@ -183,6 +183,8 @@ describe("contentRelease/snapshot/cleanup", () => {
       for (const index of [1]) {
         await ctx.db.insert("tryoutPlacements", {
           answerArtifactHash: `sha256:${"a".repeat(64)}`,
+          countryKey: "indonesia",
+          examKey: "snbt",
           identity: `placement-${index}`,
           index,
           locale: "en",
@@ -191,6 +193,9 @@ describe("contentRelease/snapshot/cleanup", () => {
           rowHash: `sha256:${index.toString(16).padStart(64, "0")}`,
           rowJson: "{}",
           snapshotId,
+          sectionKey: "quantitative-knowledge",
+          setKey: "set-1",
+          trackKey: "2027",
         });
       }
     });

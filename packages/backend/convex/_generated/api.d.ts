@@ -279,6 +279,13 @@ import type * as contentRelease_snapshot_tryout from "../contentRelease/snapshot
 import type * as contentRelease_spec from "../contentRelease/spec.js";
 import type * as contentRelease_status from "../contentRelease/status.js";
 import type * as contentRelease_sync from "../contentRelease/sync.js";
+import type * as contentRelease_tryout from "../contentRelease/tryout.js";
+import type * as contentRelease_tryout_catalog from "../contentRelease/tryout/catalog.js";
+import type * as contentRelease_tryout_facts from "../contentRelease/tryout/facts.js";
+import type * as contentRelease_tryout_limits from "../contentRelease/tryout/limits.js";
+import type * as contentRelease_tryout_owner from "../contentRelease/tryout/owner.js";
+import type * as contentRelease_tryout_section from "../contentRelease/tryout/section.js";
+import type * as contentRelease_tryout_verify from "../contentRelease/tryout/verify.js";
 import type * as contentRelease_verify from "../contentRelease/verify.js";
 import type * as contentRelease_verify_delete from "../contentRelease/verify/delete.js";
 import type * as contentRelease_verify_item from "../contentRelease/verify/item.js";
@@ -814,6 +821,13 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/spec": typeof contentRelease_spec;
   "contentRelease/status": typeof contentRelease_status;
   "contentRelease/sync": typeof contentRelease_sync;
+  "contentRelease/tryout": typeof contentRelease_tryout;
+  "contentRelease/tryout/catalog": typeof contentRelease_tryout_catalog;
+  "contentRelease/tryout/facts": typeof contentRelease_tryout_facts;
+  "contentRelease/tryout/limits": typeof contentRelease_tryout_limits;
+  "contentRelease/tryout/owner": typeof contentRelease_tryout_owner;
+  "contentRelease/tryout/section": typeof contentRelease_tryout_section;
+  "contentRelease/tryout/verify": typeof contentRelease_tryout_verify;
   "contentRelease/verify": typeof contentRelease_verify;
   "contentRelease/verify/delete": typeof contentRelease_verify_delete;
   "contentRelease/verify/item": typeof contentRelease_verify_item;

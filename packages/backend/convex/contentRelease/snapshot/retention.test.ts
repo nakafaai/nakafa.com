@@ -1,8 +1,8 @@
-import { tryoutPlacementIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import {
   hasSnapshotArtifactReference,
   isSnapshotReferenced,
 } from "@repo/backend/convex/contentRelease/snapshot/retention";
+import { tryoutPlacementFacts } from "@repo/backend/convex/contentRelease/tryout/facts";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -65,12 +65,10 @@ describe("contentRelease/snapshot/retention", () => {
     const placement = makeTryoutPlacementRow().record;
     await t.mutation((ctx) =>
       ctx.db.insert("tryoutPlacements", {
+        ...tryoutPlacementFacts(placement),
         answerArtifactHash: answerHash,
-        identity: tryoutPlacementIdentity(placement.row),
         index: 0,
-        locale: placement.row.locale,
         questionArtifactHash: TEST_ARTIFACT_HASH,
-        questionOrder: placement.row.questionOrder,
         rowHash: placement.rowHash,
         rowJson: "{}",
         snapshotId: `sha256:${"5".repeat(64)}`,

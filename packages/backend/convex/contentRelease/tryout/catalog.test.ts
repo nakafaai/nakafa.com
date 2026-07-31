@@ -1,0 +1,167 @@
+import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/spec";
+import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
+import { readTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import schema from "@repo/backend/convex/schema";
+import { convexModules } from "@repo/backend/convex/test.setup";
+import {
+  activateTryoutSnapshot,
+  makeTryoutCatalogRow,
+  makeTryoutPlacementRow,
+} from "@repo/backend/test/tryout-snapshot";
+import { convexTest } from "convex-test";
+import { Effect, Schema } from "effect";
+import { describe, expect, it } from "vitest";
+
+/** Creates one technical track used to break localized count symmetry. */
+function makeTechnicalTrack() {
+  return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+    countryKey: "indonesia",
+    description: "Technical track",
+    examKey: "snbt",
+    graph: {
+      alignmentId: "alignment:tryout:technical:track",
+      assetId: "asset:en:tryout:technical:track",
+      conceptId: "concept:tryout:technical:track",
+      learningObjectId: "lo:tryout-technical-track",
+      lensId: "lens:tryout:technical",
+    },
+    kind: "track",
+    locale: "en",
+    order: 1,
+    publicPath: "try-out/indonesia/snbt/2027",
+    questionCount: 1,
+    sectionCount: 1,
+    setCount: 1,
+    sourceRevision: "technical-revision",
+    title: "Technical track",
+    trackKey: "2027",
+    trackKind: "year",
+    visibleSectionCount: 1,
+  });
+}
+
+/** Activates the smallest coherent two-locale catalog. */
+async function activateCatalog() {
+  const t = convexTest(schema, convexModules);
+  const catalog = [
+    makeTryoutCatalogRow("en").record.row,
+    makeTryoutCatalogRow("id").record.row,
+  ];
+  const placements = [
+    makeTryoutPlacementRow("en").record.row,
+    makeTryoutPlacementRow("id").record.row,
+  ];
+  const snapshotId = await t.mutation((ctx) =>
+    activateTryoutSnapshot(ctx, { catalog, placements })
+  );
+  return { snapshotId, t };
+}
+
+describe("contentRelease/tryout/catalog", () => {
+  it("returns an unmanaged catalog before try-out publication", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.query((ctx) => runConvexProgram(readTryoutCatalog(ctx, "en")))
+    ).resolves.toMatchObject({ managed: false, rowJson: [] });
+  });
+
+  it("returns one verified localized hierarchy from the active snapshot", async () => {
+    const { snapshotId, t } = await activateCatalog();
+    const result = await t.query((ctx) =>
+      runConvexProgram(readTryoutCatalog(ctx, "id"))
+    );
+    const rows = await Effect.runPromise(
+      Effect.forEach(result.rowJson, decodeSnapshotRowJson)
+    );
+
+    expect(result).toMatchObject({ managed: true, snapshotId });
+    expect(rows).toMatchObject([
+      {
+        family: "tryout",
+        record: { row: { kind: "country", locale: "id" } },
+        rowKind: "catalog",
+      },
+    ]);
+  });
+
+  it("waits for active question ownership before exposing the catalog", async () => {
+    const { t } = await activateCatalog();
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected one technical release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        resultFamilies: ["material"],
+      });
+    });
+
+    await expect(
+      t.query((ctx) => runConvexProgram(readTryoutCatalog(ctx, "en")))
+    ).resolves.toMatchObject({ managed: false, rowJson: [] });
+  });
+
+  it("rejects asymmetric localized hierarchy counts", async () => {
+    const asymmetric = convexTest(schema, convexModules);
+    await asymmetric.mutation((ctx) =>
+      activateTryoutSnapshot(ctx, {
+        catalog: [
+          makeTryoutCatalogRow("en").record.row,
+          makeTryoutCatalogRow("id").record.row,
+          makeTechnicalTrack(),
+        ],
+        placements: [
+          makeTryoutPlacementRow("en").record.row,
+          makeTryoutPlacementRow("id").record.row,
+        ],
+      })
+    );
+    await expect(
+      asymmetric.query((ctx) => runConvexProgram(readTryoutCatalog(ctx, "en")))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("fails closed when one signed row disappears or changes indexed facts", async () => {
+    const missing = await activateCatalog();
+    await missing.t.mutation(async (ctx) => {
+      const row = await ctx.db
+        .query("tryoutCatalog")
+        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
+          index.eq("snapshotId", missing.snapshotId).eq("locale", "en")
+        )
+        .unique();
+      if (!row) {
+        throw new Error("Expected one English catalog row.");
+      }
+      await ctx.db.delete(row._id);
+    });
+    await expect(
+      missing.t.query((ctx) => runConvexProgram(readTryoutCatalog(ctx, "en")))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+
+    const changed = await activateCatalog();
+    await changed.t.mutation(async (ctx) => {
+      const row = await ctx.db
+        .query("tryoutCatalog")
+        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
+          index.eq("snapshotId", changed.snapshotId).eq("locale", "en")
+        )
+        .unique();
+      if (!row) {
+        throw new Error("Expected one English catalog row.");
+      }
+      await ctx.db.patch("tryoutCatalog", row._id, { order: 10 });
+    });
+    await expect(
+      changed.t.query((ctx) => runConvexProgram(readTryoutCatalog(ctx, "en")))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+});
