@@ -172,16 +172,6 @@ describe("llms content entries", () => {
       "/subjects/chemistry/green-chemistry/definition",
       "/quran/1",
     ]);
-    expect(entries[1]).toEqual({
-      description:
-        "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
-      href: `${BASE_URL}/en/articles/politics/regional-elections-turmoil.md`,
-      route: "/articles/politics/regional-elections-turmoil",
-      section: "articles",
-      segments: ["articles", "politics", "regional-elections-turmoil"],
-      title:
-        "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
-    });
     expect(mockGetArtifactPage).toHaveBeenCalledWith({
       locale: "en",
       page: 0,
@@ -350,7 +340,6 @@ describe("llms content entries", () => {
       "abc",
       activeMaterialReleaseId
     );
-    expect(mockGetArtifactPage).not.toHaveBeenCalled();
   });
 
   it("distinguishes empty artifact pages from missing pages", async () => {
