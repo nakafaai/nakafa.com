@@ -4,6 +4,7 @@ import { hasLocale, type Locale } from "next-intl";
 import { readOgMetadata } from "@/app/og/content";
 import { generateOGImage } from "@/lib/og";
 
+/** Renders the localized Open Graph image for one content route. */
 export async function GET(
   _req: NextRequest,
   ctx: RouteContext<"/[locale]/og/[...slug]">
