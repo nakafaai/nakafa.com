@@ -1,14 +1,34 @@
-import { validateExactMaterialRoutes } from "@repo/backend/convex/contentRelease/material/collision";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import {
+  validateExactMaterialRoutes,
+  validateSourceMaterialRoutes,
+} from "@repo/backend/convex/contentRelease/material/collision";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { testTextHash } from "@repo/backend/test/content-release";
+import {
+  insertZeroRelease,
+  type TestIdentity,
+} from "@repo/backend/test/content-state";
 import {
   activateMaterialCatalog,
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material-catalog";
+import {
+  insertRuntimeBinding,
+  insertRuntimeVersion,
+} from "@repo/backend/test/runtime-head";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
+
+const RECOVERY_IDENTITY = {
+  manifestHash: testTextHash("material-route-recovery"),
+  releaseId: ReleaseIdSchema.make("material-route-recovery"),
+  sequence: 2,
+} satisfies TestIdentity;
 
 describe("contentRelease/material/collision", () => {
   it("rejects exact routes that displace a retained source owner", async () => {
@@ -48,6 +68,81 @@ describe("contentRelease/material/collision", () => {
       target.mutation((ctx) =>
         runConvexProgram(
           validateExactMaterialRoutes(ctx, MATERIAL_IDENTITY.sequence, expected)
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_ROUTE" },
+    });
+  });
+
+  it("reserves exact routes selected by the retained recovery", async () => {
+    const target = convexTest(schema, convexModules);
+    const selected = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(target, [selected]);
+    await target.mutation(async (ctx) => {
+      await insertZeroRelease(ctx, {
+        ...RECOVERY_IDENTITY,
+        base: MATERIAL_IDENTITY,
+        ownership: { base: ["material"], result: [] },
+        role: "recovery",
+        status: "verified",
+      });
+      const state = await ctx.db.query("contentState").unique();
+      assert(state, "Expected active content state.");
+      await ctx.db.patch("contentState", state._id, {
+        recoveryManifestHash: RECOVERY_IDENTITY.manifestHash,
+        recoveryReleaseId: RECOVERY_IDENTITY.releaseId,
+        recoverySequence: RECOVERY_IDENTITY.sequence,
+      });
+      const projectionJson = canonicalizeMaterialProjection(selected);
+      await insertRuntimeVersion(ctx, "public", selected.contentKey, {
+        headReleaseId: RECOVERY_IDENTITY.releaseId,
+        headSequence: RECOVERY_IDENTITY.sequence,
+        locale: selected.locale,
+        projectionJson,
+        publicPath: selected.publicPath,
+        rendererDomain: "mathematics",
+      });
+      await insertRuntimeBinding(ctx, selected.contentKey, {
+        bindingReleaseId: RECOVERY_IDENTITY.releaseId,
+        bindingSequence: RECOVERY_IDENTITY.sequence,
+        locale: selected.locale,
+        publicPath: selected.publicPath,
+      });
+      await ctx.db.insert("contentOwners", {
+        contentKey: selected.contentKey,
+        family: "material",
+        locale: selected.locale,
+        managed: true,
+        releaseId: RECOVERY_IDENTITY.releaseId,
+        sequence: RECOVERY_IDENTITY.sequence,
+      });
+    });
+
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(
+          validateSourceMaterialRoutes(ctx, [
+            {
+              locale: selected.locale,
+              publicPath: selected.publicPath,
+              sourcePath: selected.contentKey,
+            },
+          ])
+        )
+      )
+    ).resolves.toBeNull();
+
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(
+          validateSourceMaterialRoutes(ctx, [
+            {
+              locale: selected.locale,
+              publicPath: selected.publicPath,
+              sourcePath: "material/lesson/test/another-owner",
+            },
+          ])
         )
       )
     ).rejects.toMatchObject({
