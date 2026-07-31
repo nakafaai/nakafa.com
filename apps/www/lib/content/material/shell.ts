@@ -68,11 +68,62 @@ export function readMaterialCandidates(
     parentPaths.add(sourceRoute.parentPath);
   }
 
-  return collectMaterialCandidates({
+  const candidates = collectMaterialCandidates({
     contentKey: projection.contentKey,
     locale: projection.locale,
     parentPaths,
   });
+  const identity = `${projection.locale}\0${projection.contentKey}`;
+  const selected = {
+    contentKey: projection.contentKey,
+    locale: projection.locale,
+    parentPath: projection.parentPath,
+  } satisfies MaterialSourceCandidate;
+  const selectedIndex = candidates.findIndex(
+    (candidate) => `${candidate.locale}\0${candidate.contentKey}` === identity
+  );
+  if (selectedIndex === -1) {
+    return [...candidates, selected];
+  }
+  return candidates.map((candidate, index) =>
+    index === selectedIndex ? selected : candidate
+  );
+}
+
+/** Expands one source shell with every active group revealed by exact claims. */
+export function expandMaterialCandidates(
+  candidates: readonly MaterialSourceCandidate[],
+  projections: readonly Pick<
+    MaterialLessonProjection,
+    "contentKey" | "locale" | "parentPath"
+  >[]
+) {
+  const expanded = new Map(
+    candidates.map((candidate) => [
+      `${candidate.locale}\0${candidate.contentKey}`,
+      candidate,
+    ])
+  );
+  for (const projection of projections) {
+    for (const candidate of readMaterialCandidates(projection)) {
+      if (candidate.locale !== projection.locale) {
+        continue;
+      }
+      expanded.set(`${candidate.locale}\0${candidate.contentKey}`, candidate);
+    }
+  }
+  const result = Array.from(expanded.values());
+  const unchanged =
+    result.length === candidates.length &&
+    result.every((candidate, index) => {
+      const current = candidates[index];
+      return (
+        current?.contentKey === candidate.contentKey &&
+        current.locale === candidate.locale &&
+        current.parentPath === candidate.parentPath
+      );
+    });
+  return unchanged ? candidates : result;
 }
 
 /** Collects locale counterparts and localized siblings for one source shell. */

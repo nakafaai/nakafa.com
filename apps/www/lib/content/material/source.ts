@@ -6,8 +6,12 @@ import type {
   PublicContentRoute,
   PublicCurriculumRoute,
   PublicMaterialLessonRoute,
+  PublicMaterialTopicRoute,
 } from "@repo/contents/_types/route/schema";
-import { PublicMaterialLessonRouteSchema } from "@repo/contents/_types/route/schema";
+import {
+  PublicMaterialLessonRouteSchema,
+  PublicMaterialTopicRouteSchema,
+} from "@repo/contents/_types/route/schema";
 import { Effect, Either, Schema } from "effect";
 import type { Locale } from "next-intl";
 import type {
@@ -66,12 +70,16 @@ export function reconcileMaterialCurriculumRoutes(
     string,
     PublicCurriculumRoute["canonicalPath"] | null
   >();
+  const activeParentPaths = new Map<
+    string,
+    Set<PublicMaterialLessonRoute["parentPath"]>
+  >();
+  const sourceLessons = sourceMaterials.filter(isMaterialLessonRoute);
+  const reconciledLessons = reconciledMaterials.filter(isMaterialLessonRoute);
   for (const claim of model.claims) {
-    const source = sourceMaterials.find(
+    const source = sourceLessons.find(
       (route) =>
-        isMaterialLessonRoute(route) &&
-        route.locale === claim.locale &&
-        route.sourcePath === claim.contentKey
+        route.locale === claim.locale && route.sourcePath === claim.contentKey
     );
     if (!source) {
       continue;
@@ -80,11 +88,9 @@ export function reconcileMaterialCurriculumRoutes(
       sourcePaths.set(`${claim.locale}\0${source.publicPath}`, null);
       continue;
     }
-    const replacement = reconciledMaterials.find(
+    const replacement = reconciledLessons.find(
       (route) =>
-        isMaterialLessonRoute(route) &&
-        route.locale === claim.locale &&
-        route.sourcePath === claim.contentKey
+        route.locale === claim.locale && route.sourcePath === claim.contentKey
     );
     if (!replacement) {
       return Effect.fail(
@@ -98,6 +104,20 @@ export function reconcileMaterialCurriculumRoutes(
       `${claim.locale}\0${source.publicPath}`,
       replacement.publicPath
     );
+    const parentIdentity = `${claim.locale}\0${source.materialKey}\0${source.parentPath}`;
+    const parents =
+      activeParentPaths.get(parentIdentity) ??
+      new Set<PublicMaterialLessonRoute["parentPath"]>();
+    if (parents.size > 0 && !parents.has(replacement.parentPath)) {
+      return Effect.fail(
+        new PublishedProjectionError({
+          locale: claim.locale,
+          publicPath: source.parentPath,
+        })
+      );
+    }
+    parents.add(replacement.parentPath);
+    activeParentPaths.set(parentIdentity, parents);
   }
 
   return Effect.succeed(
@@ -108,11 +128,21 @@ export function reconcileMaterialCurriculumRoutes(
       const replacement = sourcePaths.get(
         `${route.locale}\0${route.canonicalPath}`
       );
-      if (replacement === undefined) {
+      const parentReplacement = route.materialKey
+        ? activeParentPaths
+            .get(
+              `${route.locale}\0${route.materialKey}\0${route.canonicalPath}`
+            )
+            ?.values()
+            .next().value
+        : undefined;
+      const currentPath =
+        replacement === undefined ? parentReplacement : replacement;
+      if (currentPath === undefined) {
         return route;
       }
-      if (replacement !== null) {
-        return { ...route, canonicalPath: replacement };
+      if (currentPath !== null) {
+        return { ...route, canonicalPath: currentPath };
       }
       const { canonicalPath: _canonicalPath, ...withoutCanonicalPath } = route;
       return withoutCanonicalPath;
@@ -147,6 +177,7 @@ export function reconcileMaterialSourceRoutes(
     ...model.materials,
   ];
   const additions = new Map<string, PublicMaterialLessonRoute>();
+  const topicAdditions = new Map<string, PublicMaterialTopicRoute>();
   for (const projection of projections) {
     if (projection.locale !== locale) {
       continue;
@@ -179,9 +210,78 @@ export function reconcileMaterialSourceRoutes(
       `${decoded.right.locale}\0${decoded.right.sourcePath}`,
       decoded.right
     );
+    const parentPath = decoded.right.parentPath;
+    const existingTopic = routes.find(
+      (route) =>
+        route.locale === projection.locale && route.publicPath === parentPath
+    );
+    if (existingTopic) {
+      if (
+        existingTopic.kind !== "subject-topic" ||
+        existingTopic.materialKey !== projection.materialKey
+      ) {
+        return Effect.fail(
+          new PublishedProjectionError({
+            locale,
+            publicPath: parentPath,
+          })
+        );
+      }
+      continue;
+    }
+    const separator = projection.contentKey.lastIndexOf("/");
+    if (separator < 1) {
+      return Effect.fail(
+        new PublishedProjectionError({
+          locale,
+          publicPath: parentPath,
+        })
+      );
+    }
+    const decodedTopic = Schema.decodeUnknownEither(
+      PublicMaterialTopicRouteSchema
+    )(
+      {
+        kind: "subject-topic",
+        locale: projection.locale,
+        materialKey: projection.materialKey,
+        order: 0,
+        publicPath: parentPath,
+        sitemap: false,
+        sourcePath: projection.contentKey.slice(0, separator),
+        title: projection.topicTitle,
+      },
+      { onExcessProperty: "error" }
+    );
+    if (Either.isLeft(decodedTopic)) {
+      return Effect.fail(
+        new PublishedProjectionError({
+          locale,
+          publicPath: parentPath,
+        })
+      );
+    }
+    const topicIdentity = `${decodedTopic.right.locale}\0${decodedTopic.right.publicPath}`;
+    const existingAddition = topicAdditions.get(topicIdentity);
+    if (
+      existingAddition &&
+      existingAddition.materialKey !== decodedTopic.right.materialKey
+    ) {
+      return Effect.fail(
+        new PublishedProjectionError({
+          locale,
+          publicPath: parentPath,
+        })
+      );
+    }
+    topicAdditions.set(topicIdentity, decodedTopic.right);
   }
   const routesByPath = new Map<string, PublicContentRoute>();
-  for (const route of [...retained, ...additions.values()]) {
+  for (const route of [
+    ...retained,
+    ...topicAdditions.values(),
+    ...additions.values(),
+  ]) {
     const identity = `${route.locale}\0${route.publicPath}`;
     if (routesByPath.has(identity)) {
       return Effect.fail(

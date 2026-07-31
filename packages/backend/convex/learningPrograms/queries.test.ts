@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/convex/test.helpers";
 import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
 import {
+  getTestGraphIdentity,
   seedLearningProgramCatalog,
   seedTestContentRoute,
   selectTestProgram,
@@ -29,6 +30,7 @@ describe("learningPrograms/queries", () => {
       "subjects/mathematics/function-composition-inverse-function/old-concept";
     const routeId = await seedTestContentRoute(target, {
       graph: material.graph,
+      kind: "curriculum-lesson",
       locale: "en",
       route: oldRoute,
       title: "Old Function Concept",
@@ -121,5 +123,49 @@ describe("learningPrograms/queries", () => {
     });
     expect(tombstoned?.planItems[0]).not.toHaveProperty("route");
     expect(tombstoned?.planItems[0]).not.toHaveProperty("title");
+  });
+
+  it("preserves source curriculum topics under material family ownership", async () => {
+    const target = createConvexTestWithBetterAuth();
+    const identity = await target.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: TEST_NOW })
+    );
+    const sourcePath =
+      "material/lesson/mathematics/function-composition-inverse-function";
+    const topicRoute =
+      "subjects/mathematics/function-composition-inverse-function";
+    const graph = getTestGraphIdentity(sourcePath, "en");
+    const routeId = await seedTestContentRoute(target, {
+      graph,
+      locale: "en",
+      route: topicRoute,
+      title: "Function Composition and Inverse Function",
+    });
+    await target.mutation((ctx) => ctx.db.patch(routeId, { sourcePath }));
+    await seedLearningProgramCatalog(target);
+    await syncTestGraphCoverage(target, {
+      graph,
+      lensScope: "curriculum",
+      locale: "en",
+      programKey: "merdeka",
+    });
+    const { authed } = await selectTestProgram(target, identity, {
+      locale: "en",
+    });
+
+    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+
+    await expect(
+      authed.query(api.learningPrograms.queries.getActiveProfile, {
+        locale: "en",
+      })
+    ).resolves.toMatchObject({
+      planItems: [
+        {
+          route: topicRoute,
+          title: "Function Composition and Inverse Function",
+        },
+      ],
+    });
   });
 });

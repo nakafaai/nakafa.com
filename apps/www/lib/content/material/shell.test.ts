@@ -3,6 +3,7 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  expandMaterialCandidates,
   readMaterialCandidates,
   readMaterialRoutes,
   readMaterialSource,
@@ -89,7 +90,7 @@ describe("material source shell", () => {
       {
         contentKey: previewPublicRoute.sourcePath,
         locale: previewPublicRoute.locale,
-        parentPath: previewPublicRoute.parentPath,
+        parentPath: movedParentPath,
       },
       {
         contentKey: idRoute.sourcePath,
@@ -130,6 +131,74 @@ describe("material source shell", () => {
         contentKey: nextRoute.sourcePath,
         locale: nextRoute.locale,
         parentPath: nextRoute.parentPath,
+      },
+    ]);
+  });
+
+  it("expands one shell with active groups and preserves its fast path", () => {
+    const candidates = [
+      {
+        contentKey: previewPublicRoute.sourcePath,
+        locale: previewPublicRoute.locale,
+        parentPath: previewPublicRoute.parentPath,
+      },
+      {
+        contentKey: nextRoute.sourcePath,
+        locale: nextRoute.locale,
+        parentPath: nextRoute.parentPath,
+      },
+    ];
+
+    expect(expandMaterialCandidates(candidates, [])).toBe(candidates);
+    expect(
+      expandMaterialCandidates(candidates, [
+        {
+          contentKey: previewProjection.contentKey,
+          locale: previewProjection.locale,
+          parentPath: movedParentPath,
+        },
+      ])
+    ).toEqual([
+      {
+        contentKey: previewPublicRoute.sourcePath,
+        locale: previewPublicRoute.locale,
+        parentPath: movedParentPath,
+      },
+      {
+        contentKey: nextRoute.sourcePath,
+        locale: nextRoute.locale,
+        parentPath: nextRoute.parentPath,
+      },
+      {
+        contentKey: movedRoute.sourcePath,
+        locale: movedRoute.locale,
+        parentPath: movedRoute.parentPath,
+      },
+    ]);
+  });
+
+  it("adds a real locale counterpart absent from the source shell", () => {
+    expect(
+      readMaterialCandidates({
+        contentKey: previewNextProjection.contentKey,
+        locale: "id",
+        parentPath: previewIdProjection.parentPath,
+      })
+    ).toEqual([
+      {
+        contentKey: previewPublicRoute.sourcePath,
+        locale: "id",
+        parentPath: idRoute.parentPath,
+      },
+      {
+        contentKey: nextRoute.sourcePath,
+        locale: nextRoute.locale,
+        parentPath: nextRoute.parentPath,
+      },
+      {
+        contentKey: previewNextProjection.contentKey,
+        locale: "id",
+        parentPath: idRoute.parentPath,
       },
     ]);
   });

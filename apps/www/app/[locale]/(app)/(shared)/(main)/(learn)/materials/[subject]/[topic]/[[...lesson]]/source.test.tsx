@@ -31,6 +31,7 @@ import {
 
 const mocks = vi.hoisted(() => ({
   connection: vi.fn(),
+  expandMaterialCandidates: vi.fn(),
   getAksaraUrl: vi.fn(),
   getGithubUrl: vi.fn(),
   getMaterialPageData: vi.fn(),
@@ -40,7 +41,6 @@ const mocks = vi.hoisted(() => ({
   isMaterialLessonRoute: vi.fn(),
   notFound: vi.fn(),
   readMaterialPreview: vi.fn(),
-  readMaterialCandidates: vi.fn(),
   readMaterialRequest: vi.fn(),
   readMaterialSource: vi.fn(),
   renderPublishedMaterial: vi.fn(),
@@ -67,7 +67,7 @@ vi.mock("@/lib/content/material/release", () => ({
   verifyStaticMaterialReleasePin: mocks.verifyReleasePin,
 }));
 vi.mock("@/lib/content/material/shell", () => ({
-  readMaterialCandidates: mocks.readMaterialCandidates,
+  expandMaterialCandidates: mocks.expandMaterialCandidates,
   readMaterialSource: mocks.readMaterialSource,
 }));
 vi.mock("@/lib/content/module", () => ({
@@ -180,7 +180,7 @@ beforeEach(() => {
   mocks.verifyReleasePin
     .mockReset()
     .mockImplementation((releaseId) => Promise.resolve(releaseId));
-  mocks.readMaterialCandidates.mockReturnValue([]);
+  mocks.expandMaterialCandidates.mockImplementation((candidates) => candidates);
   mocks.readMaterialRequest.mockResolvedValue({
     locale: "en",
     publicPath: previewProjection.publicPath,
@@ -300,7 +300,7 @@ describe("material page source", () => {
       ],
       route: undefined,
     });
-    mocks.readMaterialCandidates.mockReturnValue(candidates);
+    mocks.expandMaterialCandidates.mockReturnValueOnce(candidates);
     mocks.getPublishedMaterialRoute
       .mockResolvedValueOnce(initial)
       .mockResolvedValueOnce(reconciled);
@@ -310,8 +310,14 @@ describe("material page source", () => {
       kind: "published",
       sourceClaims: reconciled.sourceClaims,
     });
-    expect(mocks.readMaterialCandidates).toHaveBeenCalledWith(
-      previewProjection
+    expect(mocks.expandMaterialCandidates).toHaveBeenCalledWith(
+      [
+        {
+          contentKey: previewNextProjection.contentKey,
+          locale: previewNextProjection.locale,
+        },
+      ],
+      [previewProjection]
     );
     expect(mocks.getPublishedMaterialRoute).toHaveBeenNthCalledWith(
       2,
@@ -339,8 +345,9 @@ describe("material page source", () => {
       kind: "published",
       route: previewProjection,
     });
-    expect(mocks.readMaterialCandidates).toHaveBeenCalledWith(
-      previewProjection
+    expect(mocks.expandMaterialCandidates).toHaveBeenCalledWith(
+      [],
+      [previewProjection]
     );
     expect(mocks.getPublishedMaterialRoute).toHaveBeenCalledTimes(1);
   });

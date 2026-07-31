@@ -77,6 +77,7 @@ describe("API content runtime", () => {
     runtimeClientMocks.fetchConvexRuntimeQuery
       .mockResolvedValueOnce(articlePage)
       .mockResolvedValueOnce(subjectPage)
+      .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(quranSurahPage)
       .mockResolvedValueOnce({
         activeReleaseId: null,
@@ -97,7 +98,7 @@ describe("API content runtime", () => {
         })
       )
     ).resolves.toEqual(articlePage);
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
       {
@@ -122,7 +123,7 @@ describe("API content runtime", () => {
       isDone: true,
       page: [],
     });
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
       {
@@ -204,6 +205,9 @@ describe("API content runtime", () => {
         },
       ],
     });
+    runtimeClientMocks.fetchConvexRuntimeQuery.mockResolvedValueOnce({
+      releaseId: "release-test",
+    });
     publishedMaterialMocks.readPublishedMaterialApiItem.mockReturnValue(
       Effect.succeed(publishedItem)
     );
@@ -229,6 +233,30 @@ describe("API content runtime", () => {
       locale: "en",
       publicPath: "subjects/test/published",
     });
+  });
+
+  it("rejects a source material page after ownership changes", async () => {
+    runtimeClientMocks.fetchConvexRuntimeQuery
+      .mockResolvedValueOnce({
+        activeReleaseId: "release-before",
+        continueCursor: "",
+        isDone: true,
+        page: [
+          { item: { slug: "material/lesson/test/source" }, kind: "source" },
+        ],
+      })
+      .mockResolvedValueOnce({ releaseId: "release-after" });
+
+    await expect(
+      Effect.runPromise(
+        getMaterialApiContentPage({
+          cursor: null,
+          limit: 10,
+          locale: "en",
+          prefix: "material/lesson/test",
+        })
+      )
+    ).rejects.toThrow("Content ownership changed during the public API read.");
   });
 
   it("rejects incomplete or failed signed material page reads", async () => {

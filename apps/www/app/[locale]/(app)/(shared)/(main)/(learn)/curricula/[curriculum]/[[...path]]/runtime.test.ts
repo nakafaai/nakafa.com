@@ -17,7 +17,11 @@ import {
   requireSourceCurriculumProgram,
   resolveRuntimeCurriculumRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
-import { previewProjection } from "@/test/content-preview";
+import type { MaterialSourceModel } from "@/lib/content/material/ownership";
+import {
+  previewNextProjection,
+  previewProjection,
+} from "@/test/content-preview";
 import {
   testProgramClass,
   testProgramContexts,
@@ -31,6 +35,7 @@ const catalogMock = vi.hoisted(() => vi.fn());
 const routesMock = vi.hoisted(() => vi.fn());
 const routeMock = vi.hoisted(() => vi.fn());
 const materialShellMock = vi.hoisted(() => vi.fn());
+const expandCandidatesMock = vi.hoisted(() => vi.fn());
 const revision = GitCommitShaSchema.make("a".repeat(40));
 
 vi.mock("@/lib/content/program/catalog", () => ({
@@ -42,6 +47,10 @@ vi.mock("@/lib/content/program/route", () => ({
 }));
 vi.mock("@/lib/content/material/route", () => ({
   getPublishedMaterialShell: materialShellMock,
+}));
+vi.mock("@/lib/content/material/shell", async (importOriginal) => ({
+  ...(await importOriginal()),
+  expandMaterialCandidates: expandCandidatesMock,
 }));
 vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: vi.fn(),
@@ -74,6 +83,9 @@ describe("curriculum runtime ownership", () => {
     catalogMock.mockReset();
     routesMock.mockReset();
     routeMock.mockReset();
+    expandCandidatesMock
+      .mockReset()
+      .mockImplementation((candidates) => candidates);
     materialShellMock.mockReset().mockResolvedValue({
       claims: [],
       materials: [],
@@ -176,6 +188,11 @@ describe("curriculum runtime ownership", () => {
           locale: "en",
           projection: renamed,
         },
+        {
+          contentKey: previewNextProjection.contentKey,
+          kind: "missing",
+          locale: "en",
+        },
       ],
       materials: [renamed],
     });
@@ -207,6 +224,74 @@ describe("curriculum runtime ownership", () => {
           contentKey: previewProjection.contentKey,
           locale: "en",
           parentPath: previewProjection.parentPath,
+        },
+      ]),
+      "program-release"
+    );
+  });
+
+  it("rereads expanded exact groups under one release pin", async () => {
+    routeMock.mockResolvedValueOnce(
+      publishedRoute({ managed: false, route: null })
+    );
+    const materialModel = {
+      claims: [
+        {
+          contentKey: previewProjection.contentKey,
+          kind: "found",
+          locale: previewProjection.locale,
+          projection: previewProjection,
+        },
+        {
+          contentKey: previewNextProjection.contentKey,
+          kind: "found",
+          locale: previewNextProjection.locale,
+          projection: previewNextProjection,
+        },
+      ],
+      materials: [previewProjection, previewNextProjection],
+    } satisfies MaterialSourceModel;
+    const expandedCandidates = [previewProjection, previewNextProjection].map(
+      (projection) => ({
+        contentKey: projection.contentKey,
+        locale: projection.locale,
+        parentPath: projection.parentPath,
+      })
+    );
+    expandCandidatesMock.mockReturnValueOnce(expandedCandidates);
+    materialShellMock
+      .mockResolvedValueOnce(materialModel)
+      .mockResolvedValueOnce(materialModel);
+
+    const model = await resolveRuntimeCurriculumRoute(
+      Promise.resolve({
+        curriculum: "merdeka",
+        locale: "en",
+        path: ["class-11", "mathematics"],
+      })
+    );
+
+    expect(model.materialCards.flatMap((card) => card.items)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ title: previewProjection.metadata.title }),
+        expect.objectContaining({
+          title: previewNextProjection.metadata.title,
+        }),
+      ])
+    );
+    expect(materialShellMock).toHaveBeenCalledTimes(2);
+    expect(materialShellMock).toHaveBeenLastCalledWith(
+      "en",
+      expect.arrayContaining([
+        {
+          contentKey: previewProjection.contentKey,
+          locale: previewProjection.locale,
+          parentPath: previewProjection.parentPath,
+        },
+        {
+          contentKey: previewNextProjection.contentKey,
+          locale: previewNextProjection.locale,
+          parentPath: previewNextProjection.parentPath,
         },
       ]),
       "program-release"

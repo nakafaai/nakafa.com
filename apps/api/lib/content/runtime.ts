@@ -152,34 +152,37 @@ export function getMaterialApiContentPage(args: MaterialApiPageArgs) {
     args
   ).pipe(
     Effect.flatMap((result) =>
-      Effect.forEach(
-        result.page,
-        (entry) => {
-          if (entry.kind === "source") {
-            return Effect.succeed(entry.item);
-          }
-          if (result.activeReleaseId === null) {
-            return Effect.fail(
-              new ApiContentRuntimeReadError({
-                cause: "missing active release",
-                message: "Published material API entry has no active release.",
-              })
-            );
-          }
-          return readPublishedMaterialApiItem({
-            activeReleaseId: result.activeReleaseId,
-            locale: entry.locale,
-            publicPath: entry.publicPath,
-          }).pipe(Effect.mapError(mapPublishedMaterialError));
-        },
-        { concurrency: 4 }
-      ).pipe(
-        Effect.map((page) => ({
+      Effect.gen(function* () {
+        const page = yield* Effect.forEach(
+          result.page,
+          (entry) => {
+            if (entry.kind === "source") {
+              return Effect.succeed(entry.item);
+            }
+            if (result.activeReleaseId === null) {
+              return Effect.fail(
+                new ApiContentRuntimeReadError({
+                  cause: "missing active release",
+                  message:
+                    "Published material API entry has no active release.",
+                })
+              );
+            }
+            return readPublishedMaterialApiItem({
+              activeReleaseId: result.activeReleaseId,
+              locale: entry.locale,
+              publicPath: entry.publicPath,
+            }).pipe(Effect.mapError(mapPublishedMaterialError));
+          },
+          { concurrency: 4 }
+        );
+        yield* verifyApiReleasePin(result.activeReleaseId);
+        return {
           continueCursor: result.continueCursor,
           isDone: result.isDone,
           page,
-        }))
-      )
+        };
+      })
     )
   );
 }

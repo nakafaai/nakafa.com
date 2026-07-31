@@ -33,6 +33,14 @@ export const loadLearningPlanTarget = Effect.fn(
     return { route: active.route, title: active.title };
   }
 
+  if (
+    source?.kind === "curriculum-topic" &&
+    source.locale === locale &&
+    source.section === "material"
+  ) {
+    return { route: source.route, title: source.title };
+  }
+
   if (source?.section === "material") {
     const owner = yield* loadMaterialIdentityOwner(
       ctx,
@@ -43,13 +51,5 @@ export const loadLearningPlanTarget = Effect.fn(
       return null;
     }
   }
-
-  if (
-    source?.kind !== "curriculum-topic" ||
-    source.locale !== locale ||
-    source.section !== "material"
-  ) {
-    return null;
-  }
-  return { route: source.route, title: source.title };
+  return null;
 });

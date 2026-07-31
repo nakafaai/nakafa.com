@@ -27,6 +27,7 @@ import {
   resolveCurriculumRoute as resolveSourceRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import { getPublishedMaterialShell } from "@/lib/content/material/route";
+import { expandMaterialCandidates } from "@/lib/content/material/shell";
 import {
   readMaterialSourceCandidates,
   reconcileMaterialCurriculumRoutes,
@@ -186,11 +187,24 @@ export async function resolveRuntimeCurriculumRoute(
     contentRoutes
   );
   if (candidates.length > 0) {
-    const model = await getPublishedMaterialShell(
+    let model = await getPublishedMaterialShell(
       locale,
       candidates,
       published.activeReleaseId
     );
+    const expandedCandidates = expandMaterialCandidates(
+      candidates,
+      model.claims.flatMap((claim) =>
+        claim.kind === "found" ? [claim.projection] : []
+      )
+    );
+    if (expandedCandidates !== candidates) {
+      model = await getPublishedMaterialShell(
+        locale,
+        expandedCandidates,
+        published.activeReleaseId
+      );
+    }
     const reconciled = Effect.runSync(
       reconcileMaterialSourceRoutes(locale, contentRoutes, model)
     );

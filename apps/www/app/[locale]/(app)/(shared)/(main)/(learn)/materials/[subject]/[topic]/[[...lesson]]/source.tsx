@@ -25,7 +25,7 @@ import {
   type PublishedMaterialRoute,
 } from "@/lib/content/material/route";
 import {
-  readMaterialCandidates,
+  expandMaterialCandidates,
   readMaterialSource,
 } from "@/lib/content/material/shell";
 import { importContentModuleOrNull } from "@/lib/content/module";
@@ -173,19 +173,10 @@ async function resolveMaterialOwner(
     !published.familyManaged &&
     published.projection !== null
   ) {
-    const candidates = readMaterialCandidates(published.projection);
-    const initialIdentities = new Set(
-      source.candidates.map(
-        (candidate) => `${candidate.locale}\0${candidate.contentKey}`
-      )
-    );
-    if (
-      candidates.length !== source.candidates.length ||
-      candidates.some(
-        (candidate) =>
-          !initialIdentities.has(`${candidate.locale}\0${candidate.contentKey}`)
-      )
-    ) {
+    const candidates = expandMaterialCandidates(source.candidates, [
+      published.projection,
+    ]);
+    if (candidates !== source.candidates) {
       published = await getPublishedMaterialRoute(
         request.locale,
         request.publicPath,

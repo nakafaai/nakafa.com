@@ -4,15 +4,19 @@ import {
   ContentKeySchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
-import { Effect } from "effect";
+import { PublicMaterialTopicRouteSchema } from "@repo/contents/_types/route/schema";
+import { Effect, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
+import type { MaterialSourceModel } from "@/lib/content/material/ownership";
 import {
   readMaterialSourceCandidates,
   reconcileMaterialCurriculumRoutes,
   reconcileMaterialSourceRoutes,
 } from "@/lib/content/material/source";
 import {
+  makeMaterialGraph,
   makePreviewPublicRoute,
   previewIdProjection,
   previewNextProjection,
@@ -25,11 +29,13 @@ const sourceRoute = makePreviewPublicRoute(previewProjection, {
 });
 const nextRoute = makePreviewPublicRoute(previewNextProjection);
 const idRoute = makePreviewPublicRoute(previewIdProjection);
-const topicRoute = {
+const topicRoute = Schema.decodeUnknownSync(PublicMaterialTopicRouteSchema)({
   ...sourceRoute,
-  kind: "subject-topic" as const,
+  kind: "subject-topic",
   publicPath: sourceRoute.parentPath,
-};
+  sourcePath:
+    "material/lesson/mathematics/function-composition-inverse-function",
+});
 
 describe("material source reconciliation", () => {
   it("extracts exact lesson identities from canonical curriculum paths", () => {
@@ -68,24 +74,32 @@ describe("material source reconciliation", () => {
   it("replaces found claims, removes tombstones, and preserves unclaimed routes", async () => {
     await expect(
       Effect.runPromise(
-        reconcileMaterialSourceRoutes("en", [sourceRoute, nextRoute, idRoute], {
-          claims: [
-            {
-              contentKey: previewProjection.contentKey,
-              kind: "found",
-              locale: "en",
-              projection: previewProjection,
-            },
-            {
-              contentKey: previewNextProjection.contentKey,
-              kind: "missing",
-              locale: "en",
-            },
-          ],
-          materials: [previewProjection, previewIdProjection],
-        })
+        reconcileMaterialSourceRoutes(
+          "en",
+          [topicRoute, sourceRoute, nextRoute, idRoute],
+          {
+            claims: [
+              {
+                contentKey: previewProjection.contentKey,
+                kind: "found",
+                locale: "en",
+                projection: previewProjection,
+              },
+              {
+                contentKey: previewNextProjection.contentKey,
+                kind: "missing",
+                locale: "en",
+              },
+            ],
+            materials: [previewProjection, previewIdProjection],
+          }
+        )
       )
-    ).resolves.toEqual([idRoute, makePreviewPublicRoute(previewProjection)]);
+    ).resolves.toEqual([
+      topicRoute,
+      idRoute,
+      makePreviewPublicRoute(previewProjection),
+    ]);
   });
 
   it("uses the synchronous Effect fast path required by static prerender", () => {
@@ -176,6 +190,104 @@ describe("material source reconciliation", () => {
     ).not.toHaveProperty("canonicalPath");
   });
 
+  it("moves one topic mapping to its deterministic active group", async () => {
+    const curriculumRoute = Effect.runSync(listPublicCurriculumRoutes()).find(
+      (route) => route.locale === sourceRoute.locale
+    );
+    if (!curriculumRoute) {
+      expect.fail("Expected one English curriculum route.");
+    }
+    const movedParentPath = PublicPathSchema.make(
+      "subjects/mathematics/function-modeling"
+    );
+    const moved = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+      ...previewProjection,
+      parentPath: movedParentPath,
+      publicPath: `${movedParentPath}/function-concept`,
+    });
+    const movedNext = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+      ...previewNextProjection,
+      parentPath: movedParentPath,
+      publicPath: `${movedParentPath}/injective-surjective-bijective-function`,
+    });
+    const model = {
+      claims: [
+        {
+          contentKey: moved.contentKey,
+          kind: "found",
+          locale: moved.locale,
+          projection: moved,
+        },
+      ],
+      materials: [moved, movedNext],
+    } satisfies MaterialSourceModel;
+    const reconciled = Effect.runSync(
+      reconcileMaterialSourceRoutes(
+        sourceRoute.locale,
+        [topicRoute, sourceRoute, nextRoute],
+        model
+      )
+    );
+    const curriculumRoutes = await Effect.runPromise(
+      reconcileMaterialCurriculumRoutes(
+        [
+          {
+            ...curriculumRoute,
+            canonicalPath: sourceRoute.parentPath,
+            materialKey: sourceRoute.materialKey,
+          },
+        ],
+        [topicRoute, sourceRoute, nextRoute],
+        reconciled,
+        model
+      )
+    );
+
+    expect(curriculumRoutes).toMatchObject([
+      { canonicalPath: movedParentPath },
+    ]);
+    expect(reconciled).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "subject-topic",
+          publicPath: movedParentPath,
+          title: moved.topicTitle,
+        }),
+        expect.objectContaining({ publicPath: moved.publicPath }),
+        expect.objectContaining({ publicPath: movedNext.publicPath }),
+      ])
+    );
+    await expect(
+      Effect.runPromise(
+        Effect.flip(
+          reconcileMaterialCurriculumRoutes(
+            [
+              {
+                ...curriculumRoute,
+                canonicalPath: sourceRoute.parentPath,
+                materialKey: sourceRoute.materialKey,
+              },
+            ],
+            [topicRoute, sourceRoute, nextRoute],
+            [makePreviewPublicRoute(moved), nextRoute],
+            {
+              claims: [
+                ...model.claims,
+                {
+                  contentKey: previewNextProjection.contentKey,
+                  kind: "found",
+                  locale: previewNextProjection.locale,
+                  projection: previewNextProjection,
+                },
+              ],
+              materials: [moved, previewNextProjection],
+            }
+          )
+        )
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+  });
+
   it("preserves unrelated curriculum mappings and rejects missing replacements", async () => {
     const curriculumRoute = Effect.runSync(listPublicCurriculumRoutes()).find(
       (route) => route.locale === sourceRoute.locale
@@ -187,13 +299,13 @@ describe("material source reconciliation", () => {
       claims: [
         {
           contentKey: previewProjection.contentKey,
-          kind: "found" as const,
+          kind: "found",
           locale: previewProjection.locale,
           projection: previewProjection,
         },
       ],
       materials: [],
-    };
+    } satisfies MaterialSourceModel;
     const unrelatedRoute = {
       ...curriculumRoute,
       canonicalPath: sourceRoute.parentPath,
@@ -251,6 +363,99 @@ describe("material source reconciliation", () => {
       locale: "en",
       publicPath: "",
     });
+  });
+
+  it("rejects incompatible exact topic anchors", async () => {
+    const parentPath = PublicPathSchema.make(
+      "subjects/mathematics/function-modeling"
+    );
+    const moved = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+      ...previewProjection,
+      parentPath,
+      publicPath: `${parentPath}/function-concept`,
+    });
+    const occupied = makePreviewPublicRoute(previewNextProjection, {
+      publicPath: parentPath,
+    });
+    const invalidKey = structuredClone(moved);
+    Reflect.set(invalidKey, "contentKey", "material");
+    const invalidTitle = structuredClone(moved);
+    Reflect.set(invalidTitle, "topicTitle", 1);
+    const conflicting = Schema.decodeUnknownSync(
+      MaterialLessonProjectionSchema
+    )({
+      ...previewNextProjection,
+      contentKey: ContentKeySchema.make(
+        "material/lesson/mathematics/function-modeling/absolute-value-function"
+      ),
+      graph: makeMaterialGraph(
+        "mathematics",
+        "function-modeling",
+        "absolute-value-function",
+        "en"
+      ),
+      materialKey: "lesson.mathematics.function-modeling",
+      metadata: {
+        authors: [{ name: "Nabil Akbarazzima Fatih" }],
+        date: "2025-05-18",
+        description:
+          "Learn absolute value functions with interactive graphs, transformations, and worked solutions. Learn properties, equations, and real applications.",
+        subject: "Functions and Their Modeling",
+        title: "Absolute Value Function",
+      },
+      parentPath,
+      publicPath: `${parentPath}/absolute-value-function`,
+      sectionKey: "absolute-value-function",
+      topicTitle: "Functions and Their Modeling",
+    });
+
+    const failures = [
+      { projection: moved, routes: [occupied] },
+      { projection: invalidKey, routes: [] },
+      { projection: invalidTitle, routes: [] },
+    ];
+    for (const { projection, routes } of failures) {
+      await expect(
+        Effect.runPromise(
+          Effect.flip(
+            reconcileMaterialSourceRoutes("en", routes, {
+              claims: [
+                {
+                  contentKey: projection.contentKey,
+                  kind: "found",
+                  locale: "en",
+                  projection,
+                },
+              ],
+              materials: [],
+            })
+          )
+        )
+      ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    }
+    await expect(
+      Effect.runPromise(
+        Effect.flip(
+          reconcileMaterialSourceRoutes("en", [], {
+            claims: [
+              {
+                contentKey: moved.contentKey,
+                kind: "found",
+                locale: "en",
+                projection: moved,
+              },
+              {
+                contentKey: conflicting.contentKey,
+                kind: "found",
+                locale: "en",
+                projection: conflicting,
+              },
+            ],
+            materials: [],
+          })
+        )
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
   });
 
   it("rejects a published route owned by another source identity", async () => {
