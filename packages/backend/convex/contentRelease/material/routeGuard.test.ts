@@ -1,4 +1,4 @@
-import { validateSourceMaterialRoute } from "@repo/backend/convex/contentRelease/material/routeGuard";
+import { validateSourceMaterialRoutes } from "@repo/backend/convex/contentRelease/material/routeGuard";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -36,11 +36,13 @@ describe("contentRelease/material/routeGuard", () => {
     await expect(
       target.mutation((ctx) =>
         runConvexProgram(
-          validateSourceMaterialRoute(ctx, {
-            locale: selected.locale,
-            publicPath: selected.publicPath,
-            sourcePath: selected.contentKey,
-          })
+          validateSourceMaterialRoutes(ctx, [
+            {
+              locale: selected.locale,
+              publicPath: selected.publicPath,
+              sourcePath: selected.contentKey,
+            },
+          ])
         )
       )
     ).resolves.toBeNull();
@@ -48,11 +50,49 @@ describe("contentRelease/material/routeGuard", () => {
     await expect(
       target.mutation((ctx) =>
         runConvexProgram(
-          validateSourceMaterialRoute(ctx, {
-            locale: selected.locale,
-            publicPath: selected.publicPath,
-            sourcePath: "material/lesson/test/another-owner",
-          })
+          validateSourceMaterialRoutes(ctx, [
+            {
+              locale: selected.locale,
+              publicPath: selected.publicPath,
+              sourcePath: "material/lesson/test/another-owner",
+            },
+          ])
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_ROUTE" },
+    });
+  });
+
+  it("protects every route owned by a full material release", async () => {
+    const target = convexTest(schema, convexModules);
+    const selected = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(target, [selected]);
+
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(
+          validateSourceMaterialRoutes(ctx, [
+            {
+              locale: selected.locale,
+              publicPath: selected.publicPath,
+              sourcePath: selected.contentKey,
+            },
+          ])
+        )
+      )
+    ).resolves.toBeNull();
+
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(
+          validateSourceMaterialRoutes(ctx, [
+            {
+              locale: selected.locale,
+              publicPath: selected.publicPath,
+              sourcePath: "material/lesson/test/another-owner",
+            },
+          ])
         )
       )
     ).rejects.toMatchObject({

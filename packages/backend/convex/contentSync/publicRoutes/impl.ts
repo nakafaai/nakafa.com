@@ -2,7 +2,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { validateSourceMaterialRoutes } from "@repo/backend/convex/contentRelease/material/collision";
+import { validateSourceMaterialRoutes } from "@repo/backend/convex/contentRelease/material/routeGuard";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import {
   PUBLIC_ROUTE_ROOT_SHARD,

@@ -17,17 +17,35 @@ interface SourceRoute {
   readonly sourcePath?: string;
 }
 
-/** Resolves one exact material owner through the path's immutable binding. */
+interface ProtectedMaterialScope {
+  readonly exact: boolean;
+  readonly release: ProtectedMaterialRelease;
+}
+
+interface ProtectedRouteOwner {
+  readonly contentKey: string;
+  readonly exact: boolean;
+}
+
+/** Resolves whether one retained release owns all or exact materials. */
+const loadProtectedScope = Effect.fn(
+  "contentRelease.loadProtectedMaterialScope"
+)(function* (release: ProtectedMaterialRelease) {
+  const families = yield* loadReleaseFamilies(release);
+  return {
+    exact: !families.result.includes("material"),
+    release,
+  } satisfies ProtectedMaterialScope;
+});
+
+/** Resolves one protected material owner through its immutable route binding. */
 const loadRouteOwner = Effect.fn("contentRelease.loadMaterialRouteOwner")(
   function* (
     ctx: MutationCtx,
-    release: ProtectedMaterialRelease,
+    scope: ProtectedMaterialScope,
     route: SourceRoute
   ) {
-    const families = yield* loadReleaseFamilies(release);
-    if (families.result.includes("material")) {
-      return null;
-    }
+    const { release } = scope;
     const binding = yield* loadRouteBinding(
       ctx,
       route.locale,
@@ -43,14 +61,16 @@ const loadRouteOwner = Effect.fn("contentRelease.loadMaterialRouteOwner")(
         `Release ${release.releaseId} route ${route.locale}/${route.publicPath} lost its content identity.`
       );
     }
-    const owner = yield* loadContentOwner(
-      ctx,
-      binding.contentKey,
-      route.locale,
-      release.sequence
-    );
-    if (!(owner?.managed && owner.family === "material")) {
-      return null;
+    if (scope.exact) {
+      const owner = yield* loadContentOwner(
+        ctx,
+        binding.contentKey,
+        route.locale,
+        release.sequence
+      );
+      if (!(owner?.managed && owner.family === "material")) {
+        return null;
+      }
     }
     const projection = yield* resolvePublicProjection(
       ctx,
@@ -67,71 +87,97 @@ const loadRouteOwner = Effect.fn("contentRelease.loadMaterialRouteOwner")(
         `Release ${release.releaseId} lost exact material route ${route.locale}/${route.publicPath}.`
       );
     }
-    return binding.contentKey;
+    return {
+      contentKey: binding.contentKey,
+      exact: scope.exact,
+    } satisfies ProtectedRouteOwner;
   }
 );
 
-/** Proves one active exact owner remains in the finalized owner snapshot. */
+/** Proves one active exact owner remains in its finalized owner snapshot. */
 const validateActiveOwner = Effect.fn(
   "contentRelease.validateActiveMaterialRouteOwner"
 )(function* (
   ctx: MutationCtx,
   active: ProtectedMaterialRelease,
   route: SourceRoute,
-  contentKey: string
+  owner: ProtectedRouteOwner
 ) {
-  const owner = yield* Effect.promise(() =>
+  if (!owner.exact) {
+    return owner.contentKey;
+  }
+  const stored = yield* Effect.promise(() =>
     ctx.db
       .query("materialOwners")
       .withIndex("by_contentKey_and_locale", (index) =>
-        index.eq("contentKey", contentKey).eq("locale", route.locale)
+        index.eq("contentKey", owner.contentKey).eq("locale", route.locale)
       )
       .unique()
   );
   if (
-    !owner ||
-    owner.releaseId !== active.releaseId ||
-    owner.sequence !== active.sequence
+    !stored ||
+    stored.releaseId !== active.releaseId ||
+    stored.sequence !== active.sequence
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active release ${active.releaseId} lost exact material owner ${contentKey}/${route.locale}.`
+      `Active release ${active.releaseId} lost exact material owner ${owner.contentKey}/${route.locale}.`
     );
   }
-  return contentKey;
+  return owner.contentKey;
 });
 
-/** Rejects one changed source route that collides with protected material. */
-export const validateSourceMaterialRoute = Effect.fn(
-  "contentRelease.validateSourceMaterialRoute"
-)(function* (ctx: MutationCtx, route: SourceRoute) {
+/** Rejects changed source routes that collide with protected materials. */
+export const validateSourceMaterialRoutes = Effect.fn(
+  "contentRelease.validateSourceMaterialRoutes"
+)(function* (ctx: MutationCtx, routes: readonly SourceRoute[]) {
   const protection = yield* loadMaterialProtection(ctx);
-  const activeOwner = protection.active
-    ? yield* loadRouteOwner(ctx, protection.active, route)
-    : null;
-  const protectedActiveOwner =
-    protection.active && activeOwner
-      ? yield* validateActiveOwner(ctx, protection.active, route, activeOwner)
-      : null;
-  const recoveryOwner = protection.recovery
-    ? yield* loadRouteOwner(ctx, protection.recovery, route)
-    : null;
-  if (
-    protectedActiveOwner &&
-    recoveryOwner &&
-    protectedActiveOwner !== recoveryOwner
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Active and retained recovery releases conflict on exact material route ${route.locale}/${route.publicPath}.`
-    );
-  }
-  const owner = protectedActiveOwner ?? recoveryOwner;
-  if (!owner || owner === route.sourcePath) {
-    return;
-  }
-  return yield* releaseFail(
-    "CONTENT_RELEASE_ROUTE",
-    `Source route ${route.locale}/${route.publicPath} conflicts with protected exact material ${owner}.`
+  const [active, recovery] = yield* Effect.all([
+    protection.active
+      ? loadProtectedScope(protection.active)
+      : Effect.succeed(null),
+    protection.recovery
+      ? loadProtectedScope(protection.recovery)
+      : Effect.succeed(null),
+  ]);
+  yield* Effect.forEach(
+    routes,
+    (route) =>
+      Effect.gen(function* () {
+        const activeOwner = active
+          ? yield* loadRouteOwner(ctx, active, route)
+          : null;
+        const protectedActiveOwner =
+          active && activeOwner
+            ? yield* validateActiveOwner(
+                ctx,
+                active.release,
+                route,
+                activeOwner
+              )
+            : null;
+        const recoveryOwner = recovery
+          ? yield* loadRouteOwner(ctx, recovery, route)
+          : null;
+        if (
+          protectedActiveOwner &&
+          recoveryOwner &&
+          protectedActiveOwner !== recoveryOwner.contentKey
+        ) {
+          return yield* releaseFail(
+            "CONTENT_RELEASE_INTEGRITY",
+            `Active and retained recovery releases conflict on material route ${route.locale}/${route.publicPath}.`
+          );
+        }
+        const owner = protectedActiveOwner ?? recoveryOwner?.contentKey;
+        if (!owner || owner === route.sourcePath) {
+          return;
+        }
+        return yield* releaseFail(
+          "CONTENT_RELEASE_ROUTE",
+          `Source route ${route.locale}/${route.publicPath} conflicts with protected material ${owner}.`
+        );
+      }),
+    { discard: true }
   );
 });

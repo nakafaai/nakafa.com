@@ -1,10 +1,8 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import {
-  validateExactMaterialRoutes,
-  validateSourceMaterialRoutes,
-} from "@repo/backend/convex/contentRelease/material/collision";
+import { validateExactMaterialRoutes } from "@repo/backend/convex/contentRelease/material/collision";
+import { validateSourceMaterialRoutes } from "@repo/backend/convex/contentRelease/material/routeGuard";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";

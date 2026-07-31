@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
 import type {
   GetPublicRouteByPathArgs,
@@ -40,7 +41,12 @@ export async function listContentRoutesByPrefixImpl(
         .gte("route", prefix)
         .lt("route", `${prefix}\uffff`)
     )
-    .paginate({ cursor: args.cursor, numItems: args.limit });
+    .paginate({
+      cursor: args.cursor,
+      maximumBytesRead: args.limit * READ_MODEL_DOCUMENT_LIMIT,
+      maximumRowsRead: args.limit,
+      numItems: args.limit,
+    });
 
   return {
     continueCursor: page.continueCursor,
@@ -69,7 +75,12 @@ export async function listContentRoutesByKindPrefixImpl(
         .gte("route", prefix)
         .lt("route", `${prefix}\uffff`)
     )
-    .paginate({ cursor: args.cursor, numItems: args.limit });
+    .paginate({
+      cursor: args.cursor,
+      maximumBytesRead: args.limit * READ_MODEL_DOCUMENT_LIMIT,
+      maximumRowsRead: args.limit,
+      numItems: args.limit,
+    });
 
   return {
     continueCursor: page.continueCursor,
@@ -101,7 +112,12 @@ export async function listContentRoutesByParentImpl(
             .eq("parentRoute", parentRoute)
       )
       .order("desc")
-      .paginate({ cursor: args.cursor, numItems: args.limit });
+      .paginate({
+        cursor: args.cursor,
+        maximumBytesRead: args.limit * READ_MODEL_DOCUMENT_LIMIT,
+        maximumRowsRead: args.limit,
+        numItems: args.limit,
+      });
 
     return toRuntimeContentRoutePage(page);
   }
@@ -117,7 +133,12 @@ export async function listContentRoutesByParentImpl(
           .eq("kind", args.kind)
           .eq("parentRoute", parentRoute)
     )
-    .paginate({ cursor: args.cursor, numItems: args.limit });
+    .paginate({
+      cursor: args.cursor,
+      maximumBytesRead: args.limit * READ_MODEL_DOCUMENT_LIMIT,
+      maximumRowsRead: args.limit,
+      numItems: args.limit,
+    });
 
   return toRuntimeContentRoutePage(page);
 }
@@ -184,6 +205,8 @@ export async function listLatestContentRoutePageImpl(
     .order("desc")
     .paginate({
       cursor: args.cursor,
+      maximumBytesRead: args.limit * READ_MODEL_DOCUMENT_LIMIT,
+      maximumRowsRead: args.limit,
       numItems: args.limit,
     });
 
@@ -250,7 +273,12 @@ export async function listPublicRoutesByParentImpl(
             .eq("kind", args.kind)
             .eq("parentPath", args.parentPath)
       )
-      .paginate({ cursor: args.cursor, numItems: args.limit });
+      .paginate({
+        cursor: args.cursor,
+        maximumBytesRead: args.limit * READ_MODEL_DOCUMENT_LIMIT,
+        maximumRowsRead: args.limit,
+        numItems: args.limit,
+      });
 
     return toRuntimePublicRoutePage(page);
   }
@@ -263,7 +291,12 @@ export async function listPublicRoutesByParentImpl(
         .eq("kind", args.kind)
         .eq("parentPath", args.parentPath)
     )
-    .paginate({ cursor: args.cursor, numItems: args.limit });
+    .paginate({
+      cursor: args.cursor,
+      maximumBytesRead: args.limit * READ_MODEL_DOCUMENT_LIMIT,
+      maximumRowsRead: args.limit,
+      numItems: args.limit,
+    });
 
   return toRuntimePublicRoutePage(page);
 }

@@ -58,7 +58,7 @@ const selectMaterialRoutes = Effect.fn("NakafaProgram.selectMaterialRoutes")(
       (material) => material.parentPath === canonicalPath
     );
     if (matchingParent.length > 0) {
-      return matchingParent;
+      return materialGroup;
     }
     const currentParents = new Set(
       materialGroup.map(({ parentPath }) => parentPath)

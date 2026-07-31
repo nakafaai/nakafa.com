@@ -8,7 +8,10 @@ import {
 import { Effect, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import { readPublishedMaterialCards } from "@/lib/content/program/cards";
-import { previewProjection } from "@/test/content-preview";
+import {
+  previewNextProjection,
+  previewProjection,
+} from "@/test/content-preview";
 import {
   testProgramClass,
   testProgramContexts,
@@ -222,6 +225,40 @@ describe("published program material cards", () => {
             href: expect.stringContaining(renamed.publicPath),
             title: renamed.metadata.title,
           },
+        ],
+      },
+    ]);
+  });
+
+  it("keeps source siblings when one exact lesson moves", async () => {
+    const context = testProgramContexts[0];
+    const group = testProgramGroups[0];
+    expect(context).toBeDefined();
+    expect(group).toBeDefined();
+    if (!(context && group)) {
+      return;
+    }
+    const moved = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+      ...previewProjection,
+      parentPath: "subjects/mathematics/moved-functions",
+      publicPath: "subjects/mathematics/moved-functions/function-concept-moved",
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialCards({
+          contexts: [context],
+          groups: [group],
+          locale: "en",
+          materials: [moved, previewNextProjection],
+          route: testProgramSubject,
+        })
+      )
+    ).resolves.toMatchObject([
+      {
+        items: [
+          { title: moved.metadata.title },
+          { title: previewNextProjection.metadata.title },
         ],
       },
     ]);

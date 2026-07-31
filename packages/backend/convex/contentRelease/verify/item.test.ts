@@ -187,6 +187,27 @@ describe("contentRelease/verify/item", () => {
     });
   });
 
+  it("rejects a material upsert that displaces a retained source route", async () => {
+    const target = convexTest(schema, convexModules);
+    await stageUpsertFixture(target);
+    await target.mutation((ctx) =>
+      ctx.db.insert("publicRoutes", {
+        contentHash: "retained-source-route",
+        kind: "subject-lesson",
+        locale: "en",
+        publicPath: "test/head-0",
+        sitemap: true,
+        sourcePath: "material/lesson/test/retained",
+        syncShard: 0,
+        title: "Retained source route",
+      })
+    );
+
+    await expect(target.mutation(verifyOnly)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_ROUTE" },
+    });
+  });
+
   it("rejects rollback drift and delete rows with bodies", async () => {
     const rollback = convexTest(schema, convexModules);
     await stageUpsertFixture(rollback);

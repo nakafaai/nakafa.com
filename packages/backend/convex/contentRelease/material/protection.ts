@@ -51,7 +51,7 @@ const loadRecoveryRelease = Effect.fn(
   return recovery;
 });
 
-/** Loads active and retained recovery identities that protect exact materials. */
+/** Loads active and retained recovery identities that protect materials. */
 export const loadMaterialProtection = Effect.fn(
   "contentRelease.loadMaterialProtection"
 )(function* (ctx: MutationCtx) {
@@ -59,8 +59,7 @@ export const loadMaterialProtection = Effect.fn(
   const state = catalog.active?.state ?? (yield* loadState(ctx));
   const recovery = yield* loadRecoveryRelease(ctx, state);
   return {
-    active:
-      catalog.active && !catalog.familyManaged ? catalog.active.release : null,
+    active: catalog.active?.release ?? null,
     recovery,
   };
 });
