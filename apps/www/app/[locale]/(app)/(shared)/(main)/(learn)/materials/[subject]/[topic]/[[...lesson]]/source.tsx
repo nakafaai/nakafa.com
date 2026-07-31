@@ -18,7 +18,7 @@ import { getMaterialPageData } from "@/app/[locale]/(app)/(shared)/(main)/(learn
 import type { MaterialSourceClaim } from "@/lib/content/material/ownership";
 import {
   type MaterialReleasePin,
-  verifyMaterialReleasePin,
+  verifyStaticMaterialReleasePin,
 } from "@/lib/content/material/release";
 import {
   getPublishedMaterialRoute,
@@ -250,12 +250,10 @@ export async function readMaterialMetadata(
     locale: owner.locale,
     sourcePath: owner.route.sourcePath,
   });
-  await Effect.runPromise(
-    verifyMaterialReleasePin(owner.activeReleaseId, {
-      locale: owner.locale,
-      publicPath: owner.route.publicPath,
-    })
-  );
+  await verifyStaticMaterialReleasePin(owner.activeReleaseId, {
+    locale: owner.locale,
+    publicPath: owner.route.publicPath,
+  });
   return {
     alternates: [],
     kind: owner.kind,
@@ -328,12 +326,10 @@ export async function readMaterialPage(
   if (!(source && content?.default)) {
     notFound();
   }
-  await Effect.runPromise(
-    verifyMaterialReleasePin(owner.activeReleaseId, {
-      locale: owner.locale,
-      publicPath: owner.route.publicPath,
-    })
-  );
+  await verifyStaticMaterialReleasePin(owner.activeReleaseId, {
+    locale: owner.locale,
+    publicPath: owner.route.publicPath,
+  });
   const Content = content.default;
   return {
     alternates: [],

@@ -64,7 +64,7 @@ vi.mock("@/lib/content/material/route", () => ({
   getPublishedMaterialRoute: mocks.getPublishedMaterialRoute,
 }));
 vi.mock("@/lib/content/material/release", () => ({
-  verifyMaterialReleasePin: mocks.verifyReleasePin,
+  verifyStaticMaterialReleasePin: mocks.verifyReleasePin,
 }));
 vi.mock("@/lib/content/material/shell", () => ({
   readMaterialCandidates: mocks.readMaterialCandidates,
@@ -180,7 +180,7 @@ beforeEach(() => {
   mocks.readMaterialPreview.mockReturnValue(Effect.succeed(Option.none()));
   mocks.verifyReleasePin
     .mockReset()
-    .mockImplementation((releaseId) => Effect.succeed(releaseId));
+    .mockImplementation((releaseId) => Promise.resolve(releaseId));
   mocks.readMaterialCandidates.mockReturnValue([]);
   mocks.readMaterialRequest.mockResolvedValue({
     locale: "en",
