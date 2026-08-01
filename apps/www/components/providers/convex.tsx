@@ -112,8 +112,13 @@ export function ConvexProvider({
   children: ReactNode;
   initialToken?: string | null;
 }) {
+  "use no memo";
+  // Convex custom auth requires passing the adapter Hook to its provider.
+  // https://docs.convex.dev/auth/advanced/custom-auth#client-side-integration
+
   return (
     <InitialTokenContext.Provider value={initialToken ?? null}>
+      {/* react-doctor-disable-next-line react-hooks-js/hooks -- Convex requires the auth Hook as a provider prop. */}
       <ConvexProviderWithAuth client={convex} useAuth={useBetterAuth}>
         {children}
       </ConvexProviderWithAuth>

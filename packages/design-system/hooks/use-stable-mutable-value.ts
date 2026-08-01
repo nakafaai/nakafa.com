@@ -1,19 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 
 /**
- * Creates one stable mutable value during render without recreating it on every
- * render.
+ * Creates one stable mutable value through React's lazy state initialization.
  *
- * @see https://react.dev/reference/react/useRef#avoiding-recreating-the-ref-contents
+ * @see https://react.dev/reference/react/useState#avoiding-recreating-the-initial-state
  */
 export function useStableMutableValue<T>(createValue: () => T): T {
-  const valueRef = useRef<T | null>(null);
-
-  if (valueRef.current === null) {
-    valueRef.current = createValue();
-  }
-
-  return valueRef.current;
+  const [value] = useState(createValue);
+  return value;
 }
