@@ -61,6 +61,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const [error, setError] = useState<DialogError>(null);
   const [isPending, setIsPending] = useState(false);
 
+  /** Keeps the confirmation dialog open while deletion work is in flight. */
   function handleOpenChange(nextOpen: boolean) {
     if (isPending && !nextOpen) {
       return;
@@ -73,27 +74,28 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
     }
   }
 
+  /** Runs the durable account-deletion flow from the browser event boundary. */
   async function handleDelete() {
     setError(null);
     setIsPending(true);
 
     const result = await Effect.runPromise(
-      Effect.gen(function* () {
-        const attempt = yield* loadOrCreateAccountDeletionAttempt(userId);
-        yield* deleteCurrentAccount({
-          attempt,
-          cancelPreparation: (attemptId) =>
-            cancelAccountDeletion({ attemptId }),
-          clearAttempt: clearAccountDeletionAttempt,
-          persist: saveAccountDeletionAttempt,
-          prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
-          reconcile: (attemptId) =>
-            convex.query(api.auth.deletion.getAccountDeletionAttemptStatus, {
-              attemptId,
-            }),
-        });
-        yield* clearDeletedAccountBrowserIdentity();
-      }).pipe(
+      loadOrCreateAccountDeletionAttempt(userId).pipe(
+        Effect.flatMap((attempt) =>
+          deleteCurrentAccount({
+            attempt,
+            cancelPreparation: (attemptId) =>
+              cancelAccountDeletion({ attemptId }),
+            clearAttempt: clearAccountDeletionAttempt,
+            persist: saveAccountDeletionAttempt,
+            prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
+            reconcile: (attemptId) =>
+              convex.query(api.auth.deletion.getAccountDeletionAttemptStatus, {
+                attemptId,
+              }),
+          })
+        ),
+        Effect.andThen(clearDeletedAccountBrowserIdentity()),
         Effect.either,
         Effect.ensuring(Effect.sync(() => setIsPending(false)))
       )
@@ -116,6 +118,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
     );
   }
 
+  /** Signs out an expired session before returning to the localized auth page. */
   async function handleReauthenticate() {
     setError(null);
     setIsPending(true);

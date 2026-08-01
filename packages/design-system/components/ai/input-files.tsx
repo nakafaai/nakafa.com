@@ -1,5 +1,6 @@
 "use client";
 
+import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import type {
   AttachmentsContext,
   PromptInputController,
@@ -41,14 +42,10 @@ export function usePromptInputFiles({
 }: PromptInputFilesOptions) {
   const [items, setItems] = useState<PromptInputFile[]>([]);
   const localItemsRef = useRef<PromptInputFile[]>([]);
-  const localUrlsRef = useRef(new Map<string, string>());
+  const localUrls = useStableMutableValue(() => new Map<string, string>());
   const files = controller ? controller.attachments.files : items;
   const fileCountRef = useRef(files.length);
-  const fileIdsRef = useRef<Set<string> | null>(null);
-  if (fileIdsRef.current === null) {
-    fileIdsRef.current = new Set(files.map((file) => file.id));
-  }
-  const fileIds = fileIdsRef.current;
+  const [fileIds] = useState(() => new Set(files.map((file) => file.id)));
 
   useLayoutEffect(() => {
     fileCountRef.current = files.length;
@@ -62,45 +59,51 @@ export function usePromptInputFiles({
     inputRef.current?.click();
   }, [inputRef]);
 
-  const addLocal = useCallback((selectedFiles: readonly File[]) => {
-    const next = selectedFiles.map((file): PromptInputFile => {
-      const id = nanoid();
-      const url = URL.createObjectURL(file);
-      localUrlsRef.current.set(id, url);
+  const addLocal = useCallback(
+    (selectedFiles: readonly File[]) => {
+      const next = selectedFiles.map((file): PromptInputFile => {
+        const id = nanoid();
+        const url = URL.createObjectURL(file);
+        localUrls.set(id, url);
 
-      return {
-        id,
-        type: "file",
-        url,
-        mediaType: file.type,
-        filename: file.name,
-      };
-    });
-    const nextItems = localItemsRef.current.concat(next);
-    localItemsRef.current = nextItems;
-    setItems(nextItems);
-  }, []);
+        return {
+          id,
+          type: "file",
+          url,
+          mediaType: file.type,
+          filename: file.name,
+        };
+      });
+      const nextItems = localItemsRef.current.concat(next);
+      localItemsRef.current = nextItems;
+      setItems(nextItems);
+    },
+    [localUrls]
+  );
 
-  const removeLocal = useCallback((id: string) => {
-    const url = localUrlsRef.current.get(id);
-    if (url) {
-      URL.revokeObjectURL(url);
-      localUrlsRef.current.delete(id);
-    }
+  const removeLocal = useCallback(
+    (id: string) => {
+      const url = localUrls.get(id);
+      if (url) {
+        URL.revokeObjectURL(url);
+        localUrls.delete(id);
+      }
 
-    const nextItems = localItemsRef.current.filter((file) => file.id !== id);
-    localItemsRef.current = nextItems;
-    setItems(nextItems);
-  }, []);
+      const nextItems = localItemsRef.current.filter((file) => file.id !== id);
+      localItemsRef.current = nextItems;
+      setItems(nextItems);
+    },
+    [localUrls]
+  );
 
   const clearLocal = useCallback(() => {
-    for (const url of localUrlsRef.current.values()) {
+    for (const url of localUrls.values()) {
       URL.revokeObjectURL(url);
     }
-    localUrlsRef.current.clear();
+    localUrls.clear();
     localItemsRef.current = [];
     setItems([]);
-  }, []);
+  }, [localUrls]);
 
   const add = useCallback(
     (fileList: File[] | FileList) => {
@@ -176,12 +179,12 @@ export function usePromptInputFiles({
       if (controller) {
         return;
       }
-      for (const url of localUrlsRef.current.values()) {
+      for (const url of localUrls.values()) {
         URL.revokeObjectURL(url);
       }
-      localUrlsRef.current.clear();
+      localUrls.clear();
     },
-    [controller]
+    [controller, localUrls]
   );
 
   const attachments = useMemo<AttachmentsContext>(

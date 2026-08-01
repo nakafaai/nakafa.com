@@ -34,12 +34,10 @@ export async function generateMetadata({
 
 /** Bind the resolved school route snapshot to the school subtree. */
 export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
-  const { children, params } = props;
-
   return (
     <Suspense fallback={null}>
-      <ResolvedSchoolRouteBoundary params={params}>
-        {children}
+      <ResolvedSchoolRouteBoundary params={props.params}>
+        {props.children}
       </ResolvedSchoolRouteBoundary>
     </Suspense>
   );
