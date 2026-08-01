@@ -178,6 +178,7 @@ import type * as contentRelease_ingress_current from "../contentRelease/ingress/
 import type * as contentRelease_ingress_decode from "../contentRelease/ingress/decode.js";
 import type * as contentRelease_ingress_dispatch from "../contentRelease/ingress/dispatch.js";
 import type * as contentRelease_ingress_failure from "../contentRelease/ingress/failure.js";
+import type * as contentRelease_ingress_group from "../contentRelease/ingress/group.js";
 import type * as contentRelease_ingress_lifecycle from "../contentRelease/ingress/lifecycle.js";
 import type * as contentRelease_ingress_read from "../contentRelease/ingress/read.js";
 import type * as contentRelease_ingress_response from "../contentRelease/ingress/response.js";
@@ -232,8 +233,10 @@ import type * as contentRelease_program_sitemap from "../contentRelease/program/
 import type * as contentRelease_program_verify from "../contentRelease/program/verify.js";
 import type * as contentRelease_projection from "../contentRelease/projection.js";
 import type * as contentRelease_proof_artifacts from "../contentRelease/proof/artifacts.js";
+import type * as contentRelease_proof_budget from "../contentRelease/proof/budget.js";
 import type * as contentRelease_proof_catalog from "../contentRelease/proof/catalog.js";
 import type * as contentRelease_proof_commit from "../contentRelease/proof/commit.js";
+import type * as contentRelease_proof_content from "../contentRelease/proof/content.js";
 import type * as contentRelease_proof_coordinator from "../contentRelease/proof/coordinator.js";
 import type * as contentRelease_proof_failure from "../contentRelease/proof/failure.js";
 import type * as contentRelease_proof_poll from "../contentRelease/proof/poll.js";
@@ -298,6 +301,7 @@ import type * as contentRelease_tryout_catalog from "../contentRelease/tryout/ca
 import type * as contentRelease_tryout_facts from "../contentRelease/tryout/facts.js";
 import type * as contentRelease_tryout_limits from "../contentRelease/tryout/limits.js";
 import type * as contentRelease_tryout_owner from "../contentRelease/tryout/owner.js";
+import type * as contentRelease_tryout_path from "../contentRelease/tryout/path.js";
 import type * as contentRelease_tryout_section from "../contentRelease/tryout/section.js";
 import type * as contentRelease_tryout_setIdentity from "../contentRelease/tryout/setIdentity.js";
 import type * as contentRelease_tryout_setIdentity_impl from "../contentRelease/tryout/setIdentity/impl.js";
@@ -750,6 +754,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/ingress/decode": typeof contentRelease_ingress_decode;
   "contentRelease/ingress/dispatch": typeof contentRelease_ingress_dispatch;
   "contentRelease/ingress/failure": typeof contentRelease_ingress_failure;
+  "contentRelease/ingress/group": typeof contentRelease_ingress_group;
   "contentRelease/ingress/lifecycle": typeof contentRelease_ingress_lifecycle;
   "contentRelease/ingress/read": typeof contentRelease_ingress_read;
   "contentRelease/ingress/response": typeof contentRelease_ingress_response;
@@ -804,8 +809,10 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/program/verify": typeof contentRelease_program_verify;
   "contentRelease/projection": typeof contentRelease_projection;
   "contentRelease/proof/artifacts": typeof contentRelease_proof_artifacts;
+  "contentRelease/proof/budget": typeof contentRelease_proof_budget;
   "contentRelease/proof/catalog": typeof contentRelease_proof_catalog;
   "contentRelease/proof/commit": typeof contentRelease_proof_commit;
+  "contentRelease/proof/content": typeof contentRelease_proof_content;
   "contentRelease/proof/coordinator": typeof contentRelease_proof_coordinator;
   "contentRelease/proof/failure": typeof contentRelease_proof_failure;
   "contentRelease/proof/poll": typeof contentRelease_proof_poll;
@@ -870,6 +877,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/tryout/facts": typeof contentRelease_tryout_facts;
   "contentRelease/tryout/limits": typeof contentRelease_tryout_limits;
   "contentRelease/tryout/owner": typeof contentRelease_tryout_owner;
+  "contentRelease/tryout/path": typeof contentRelease_tryout_path;
   "contentRelease/tryout/section": typeof contentRelease_tryout_section;
   "contentRelease/tryout/setIdentity": typeof contentRelease_tryout_setIdentity;
   "contentRelease/tryout/setIdentity/impl": typeof contentRelease_tryout_setIdentity_impl;
