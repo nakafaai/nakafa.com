@@ -1,3 +1,4 @@
+import type { TryoutScoring } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
@@ -20,12 +21,18 @@ export async function seedTryoutStartSet(
   args: {
     includeEntitlement?: boolean;
     isReady?: boolean;
+    scoringStrategy?: TryoutScoring;
     trackIsReady?: boolean;
     userId: Id<"users">;
     visibility: "internal-entry" | "visible";
   }
 ) {
-  const signed = await activateTryoutStartSource(ctx, args.visibility);
+  const scoringStrategy = args.scoringStrategy ?? "raw";
+  const signed = await activateTryoutStartSource(
+    ctx,
+    args.visibility,
+    scoringStrategy
+  );
   await ctx.db.insert("tryoutCountries", {
     countryKey: TRYOUT_START_COUNTRY,
     isActive: true,
@@ -43,7 +50,7 @@ export async function seedTryoutStartSet(
     locale: "id",
     order: 1,
     publicPath: `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}`,
-    scoringStrategy: "raw",
+    scoringStrategy,
     sourceRevision: "2026",
     syncedAt: TRYOUT_START_NOW,
     title: "TKA",
@@ -117,7 +124,7 @@ export async function seedTryoutStartSet(
     publicPath: setRoute,
     readyQuestionCount: 1,
     readyVisibleSectionCount: args.visibility === "visible" ? 1 : 0,
-    scoringStrategy: "raw",
+    scoringStrategy,
     sectionCount: 1,
     setKey: TRYOUT_START_SET,
     sourceRevision: "2026",

@@ -1,7 +1,9 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,
 } from "@nakafa/aksara-contracts/tryout/spec";
+import { TRYOUT_SET_QUESTION_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import {
   readTryoutSet,
   type TryoutSetIdentity,
@@ -103,6 +105,46 @@ describe("contentRelease/tryout/set", () => {
     await expect(
       t.query((ctx) => runConvexProgram(readTryoutSet(ctx, identity)))
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
+  it("rejects a set whose indexed owner identity was changed", async () => {
+    const { snapshotId, t } = await activateSet();
+    const setIdentity = tryoutCatalogIdentity({ ...identity, kind: "set" });
+    await t.mutation(async (ctx) => {
+      const stored = await ctx.db
+        .query("tryoutCatalog")
+        .withIndex("by_snapshotId_and_identity", (index) =>
+          index.eq("snapshotId", snapshotId).eq("identity", setIdentity)
+        )
+        .unique();
+
+      if (!stored) {
+        throw new Error("Expected one signed catalog row.");
+      }
+      await ctx.db.patch(stored._id, { setIdentity: "changed-set" });
+    });
+
+    await expect(
+      t.query((ctx) => runConvexProgram(readTryoutSet(ctx, identity)))
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
+  it("rejects a set beyond the aggregate placement budget", async () => {
+    const { t } = await activateSet((rows) =>
+      rows.map((row) => {
+        if (row.kind !== "set") {
+          return row;
+        }
+        return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+          ...row,
+          questionCount: TRYOUT_SET_QUESTION_LIMIT + 1,
+        });
+      })
+    );
+
+    await expect(
+      t.query((ctx) => runConvexProgram(readTryoutSet(ctx, identity)))
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } });
   });
 
   it("rejects an internal entry key bound to a visible section", async () => {

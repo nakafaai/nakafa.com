@@ -1,13 +1,18 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type {
-  TryoutSection,
-  TryoutSet,
+import {
+  type TryoutSet,
+  TryoutSetSchema,
 } from "@nakafa/aksara-contracts/tryout/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
-import { readTryoutSection } from "@repo/backend/convex/contentRelease/tryout/section";
-import { Effect } from "effect";
+import {
+  ReleaseError,
+  releaseFail,
+} from "@repo/backend/convex/contentRelease/error";
+import { TRYOUT_SET_QUESTION_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
+import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
+import { readTryoutSectionRows } from "@repo/backend/convex/contentRelease/tryout/section";
+import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
+import { Effect, Schema } from "effect";
 
 /** Stable authored keys that select one localized signed try-out set. */
 export type TryoutSetIdentity = Pick<
@@ -18,55 +23,93 @@ export type TryoutSetIdentity = Pick<
 /** Loads one complete verified set snapshot for immutable attempt creation. */
 export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
   function* (ctx: QueryCtx, identity: TryoutSetIdentity) {
-    const catalog = yield* loadTryoutCatalog(ctx, identity.locale);
-    if (!(catalog.managed && catalog.snapshotId)) {
+    const owner = yield* loadTryoutOwner(ctx);
+    if (!(owner.managed && owner.selected)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",
         "The active try-out snapshot is unavailable."
       );
     }
 
+    const { snapshotId } = owner.selected;
     const setIdentity = tryoutCatalogIdentity({ ...identity, kind: "set" });
-    const set = catalog.entries
-      .flatMap((entry) =>
-        entry.row.kind === "set"
-          ? [{ row: entry.row, rowHash: entry.rowHash }]
-          : []
-      )
-      .find(({ row }) => tryoutCatalogIdentity(row) === setIdentity);
-    if (!set) {
+    const storedSet = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutCatalog")
+        .withIndex("by_snapshotId_and_identity", (index) =>
+          index.eq("snapshotId", snapshotId).eq("identity", setIdentity)
+        )
+        .unique()
+    );
+    if (!storedSet) {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",
         `Try-out set ${setIdentity} is unavailable.`
       );
     }
-
-    const sectionRecords = catalog.entries
-      .flatMap((entry) =>
-        entry.row.kind === "section"
-          ? [{ row: entry.row, rowHash: entry.rowHash }]
-          : []
+    const catalogRow = yield* verifyTryoutCatalog(storedSet, snapshotId);
+    const setRow = yield* Schema.decodeUnknown(TryoutSetSchema)(
+      catalogRow
+    ).pipe(
+      Effect.mapError(
+        () =>
+          new ReleaseError({
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: `Try-out set ${setIdentity} changed its row kind.`,
+          })
       )
-      .filter(({ row }) => matchesSet(row, set.row))
-      .sort((left, right) => left.row.order - right.row.order);
-    const questionCount = sectionRecords.reduce(
-      (total, { row }) => total + row.questionCount,
+    );
+    if (setRow.questionCount > TRYOUT_SET_QUESTION_LIMIT) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_LIMIT",
+        `Try-out set ${setIdentity} exceeds ${TRYOUT_SET_QUESTION_LIMIT} placements.`
+      );
+    }
+    if (setRow.sectionCount > setRow.questionCount) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Try-out set ${setIdentity} has more sections than questions.`
+      );
+    }
+
+    const storedSections = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutCatalog")
+        .withIndex(
+          "by_snapshotId_and_setIdentity_and_kind_and_order",
+          (index) =>
+            index
+              .eq("snapshotId", snapshotId)
+              .eq("setIdentity", setIdentity)
+              .eq("kind", "section")
+        )
+        .take(setRow.sectionCount + 1)
+    );
+    if (storedSections.length !== setRow.sectionCount) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Try-out set ${setIdentity} lost one or more signed sections.`
+      );
+    }
+    const sections = yield* Effect.forEach(storedSections, (storedSection) =>
+      readTryoutSectionRows(ctx, snapshotId, storedSection)
+    );
+    const questionCount = sections.reduce(
+      (total, { section }) => total + section.row.questionCount,
       0
     );
-    if (
-      sectionRecords.length !== set.row.sectionCount ||
-      questionCount !== set.row.questionCount
-    ) {
+    const hasChangedOrder = sections.some(
+      ({ section }, index) => section.row.order !== index + 1
+    );
+    if (hasChangedOrder || questionCount !== setRow.questionCount) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Try-out set ${setIdentity} lost one or more signed sections.`
       );
     }
 
-    const sections = yield* Effect.forEach(sectionRecords, ({ row }) =>
-      readTryoutSection(ctx, row)
-    );
-    const entrySectionKey = set.row.internalEntrySectionKey;
+    const set = { row: setRow, rowHash: storedSet.rowHash };
+    const entrySectionKey = setRow.internalEntrySectionKey;
     if (
       entrySectionKey &&
       !sections.some(
@@ -80,8 +123,7 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
         `Try-out set ${setIdentity} lost its internal entry section.`
       );
     }
-
-    return { sections, set, setIdentity, snapshotId: catalog.snapshotId };
+    return { sections, set, setIdentity, snapshotId };
   }
 );
 
@@ -89,14 +131,3 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
 export type VerifiedTryoutSet = Effect.Effect.Success<
   ReturnType<typeof readTryoutSet>
 >;
-
-/** Checks whether one signed section belongs to one exact signed set. */
-function matchesSet(section: TryoutSection, set: TryoutSet) {
-  return (
-    section.countryKey === set.countryKey &&
-    section.examKey === set.examKey &&
-    section.locale === set.locale &&
-    section.trackKey === set.trackKey &&
-    section.setKey === set.setKey
-  );
-}

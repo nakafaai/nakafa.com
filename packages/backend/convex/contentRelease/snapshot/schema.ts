@@ -211,10 +211,12 @@ const tables = {
       "locale",
       "publicPath",
     ])
-    .index("by_snapshotId_and_setIdentity_and_kind_and_order", {
-      fields: ["snapshotId", "setIdentity", "kind", "order"],
-      staged: true,
-    }),
+    .index("by_snapshotId_and_setIdentity_and_kind_and_order", [
+      "snapshotId",
+      "setIdentity",
+      "kind",
+      "order",
+    ]),
 
   /** Immutable attempt placements with terminal answer-artifact bindings. */
   tryoutPlacements: defineTable({

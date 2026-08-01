@@ -61,8 +61,9 @@ export interface TryoutStartScope {
 export const tryoutStartErrorCode = {
   accessRequired: "TRYOUT_ACCESS_REQUIRED",
   attemptLimitReached: "TRYOUT_ATTEMPT_LIMIT_REACHED",
-  failed: "TRYOUT_START_FAILED",
   attemptNotFound: "TRYOUT_ATTEMPT_NOT_FOUND",
+  failed: "TRYOUT_START_FAILED",
+  irtScaleRequired: "TRYOUT_IRT_SCALE_REQUIRED",
   sectionCountMismatch: "TRYOUT_SECTION_COUNT_MISMATCH",
   sectionSnapshotMismatch: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
 } as const;

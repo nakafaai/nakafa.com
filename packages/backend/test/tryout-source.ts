@@ -8,6 +8,7 @@ import {
   TryoutCatalogRowSchema,
   type TryoutPlacement,
   TryoutPlacementSchema,
+  type TryoutScoring,
 } from "@nakafa/aksara-contracts/tryout/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testTextHash } from "@repo/backend/test/content-release";
@@ -28,10 +29,11 @@ const tryoutStartLocales: readonly ContentLocale[] = ["en", "id"];
 /** Activates the signed source that exactly matches the legacy start fixture. */
 export async function activateTryoutStartSource(
   ctx: MutationCtx,
-  visibility: "internal-entry" | "visible"
+  visibility: "internal-entry" | "visible",
+  scoringStrategy: TryoutScoring = "raw"
 ) {
   const catalog = tryoutStartLocales.flatMap((locale) =>
-    makeTryoutStartCatalog(locale, visibility)
+    makeTryoutStartCatalog(locale, visibility, scoringStrategy)
   );
   const placements = tryoutStartLocales.map(makeTryoutStartPlacement);
   const snapshotId = await activateTryoutSnapshot(ctx, {
@@ -85,7 +87,8 @@ export async function activateTryoutStartSource(
 /** Builds the localized set and section rows for the start fixture. */
 export function makeTryoutStartCatalog(
   locale: ContentLocale,
-  visibility: "internal-entry" | "visible"
+  visibility: "internal-entry" | "visible",
+  scoringStrategy: TryoutScoring = "raw"
 ): readonly TryoutCatalogRow[] {
   const internalEntry = visibility === "internal-entry";
   return Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))([
@@ -99,7 +102,7 @@ export function makeTryoutStartCatalog(
       order: 1,
       publicPath: setPath,
       questionCount: 1,
-      scoringStrategy: "raw",
+      scoringStrategy,
       sectionCount: 1,
       setKey: TRYOUT_START_SET,
       sourceRevision: "2026",

@@ -7,12 +7,12 @@ import {
   expireAttemptAtEffectiveTime,
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
-import { requireIrtScaleVersion } from "@repo/backend/convex/tryouts/runtime/irt/items";
 import {
   requireInternalEntrySection,
   startSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { createTryoutAttempt } from "@repo/backend/convex/tryouts/start/attempt";
+import { selectAttemptScale } from "@repo/backend/convex/tryouts/start/scale";
 import { alignTryoutSource } from "@repo/backend/convex/tryouts/start/source";
 import type {
   AttemptAccessFields,
@@ -79,7 +79,7 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
     const [attemptNumber, scaleVersion, access] = yield* Effect.all(
       [
         getNextAttemptNumber(ctx, input),
-        loadAttemptScaleVersion(ctx, input.set),
+        selectAttemptScale(ctx, input.set, input.source),
         requireAttemptAccess(ctx, input),
       ],
       { concurrency: "unbounded" }
@@ -258,19 +258,6 @@ const getNextAttemptNumber = Effect.fn("tryouts.start.getNextAttemptNumber")(
     return attempts.length + 1;
   }
 );
-
-/** Loads the immutable score scale required by an IRT attempt. */
-const loadAttemptScaleVersion = Effect.fn(
-  "tryouts.start.loadAttemptScaleVersion"
-)(function* (ctx: MutationCtx, set: TryoutSet) {
-  if (set.scoringStrategy !== "irt") {
-    return null;
-  }
-
-  return yield* tryStartPromise(() =>
-    requireIrtScaleVersion(ctx, { tryoutSetId: set._id })
-  );
-});
 
 /** Lifts one Convex promise into the typed start failure channel. */
 function tryStartPromise<A>(operation: () => Promise<A>) {

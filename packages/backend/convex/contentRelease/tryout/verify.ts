@@ -29,7 +29,8 @@ export const verifyTryoutCatalog = Effect.fn(
     facts.kind !== row.kind ||
     facts.locale !== row.locale ||
     facts.order !== row.order ||
-    facts.publicPath !== row.publicPath
+    facts.publicPath !== row.publicPath ||
+    facts.setIdentity !== row.setIdentity
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
