@@ -1,5 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import { PROOF_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
+import {
+  PROOF_PAGE_LIMIT,
+  RELEASE_PAGE_LIMIT,
+} from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
@@ -53,10 +56,13 @@ async function stagePagedFixture(t: TestConvex<typeof schema>) {
   const changes = Array.from({ length: itemCount }, (_, index) =>
     changeAt(index)
   );
-  for (const [batchIndex, batch] of [
-    changes.slice(0, 8),
-    changes.slice(8),
-  ].entries()) {
+  for (
+    let batchIndex = 0;
+    batchIndex * RELEASE_PAGE_LIMIT < changes.length;
+    batchIndex += 1
+  ) {
+    const batchStart = batchIndex * RELEASE_PAGE_LIMIT;
+    const batch = changes.slice(batchStart, batchStart + RELEASE_PAGE_LIMIT);
     await t.mutation(stageItems, {
       batchIndex,
       itemJson: batch.map(({ item }) => item),
