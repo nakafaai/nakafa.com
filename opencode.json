@@ -8,10 +8,6 @@
         "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
       }
     },
-    "ultracite": {
-      "type": "remote",
-      "url": "https://docs.ultracite.ai/mcp"
-    },
     "posthog": {
       "type": "remote",
       "url": "https://mcp-eu.posthog.com/mcp",
@@ -21,14 +17,22 @@
     },
     "convex": {
       "type": "local",
-      "command": ["npx", "-y", "convex@latest", "mcp", "start"]
+      "command": [
+        "pnpm",
+        "--dir",
+        "packages/backend",
+        "exec",
+        "convex",
+        "mcp",
+        "start"
+      ]
     },
-    "plate": {
+    "shadcn": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "shadcn@latest",
+        "pnpm",
+        "dlx",
+        "shadcn@4.16.1",
         "mcp",
         "--cwd",
         "packages/design-system"
