@@ -1,4 +1,4 @@
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -10,8 +10,13 @@ import {
   insertIrtScaleItem,
   insertTryoutAttempt,
   insertTryoutSectionAttempt,
+  insertTryoutUser,
   tryoutSectionSnapshot,
 } from "@repo/backend/test/tryout-runtime";
+import {
+  insertTryoutSectionSource,
+  makeAlignedTryoutSection,
+} from "@repo/backend/test/tryout-section";
 import {
   insertTryoutQuestionSource,
   insertTryoutSection,
@@ -27,53 +32,17 @@ const SET_PATH = "try-out/indonesia/snbt/2027/set-1";
 const FIRST_SECTION = "pengetahuan-kuantitatif";
 const SECOND_SECTION = "penalaran-matematika";
 
-async function insertSectionSource(ctx: MutationCtx, sectionKey: string) {
-  const sourcePath = `question-bank/tryout/indonesia/snbt/2027/set-1/${sectionKey}`;
-  const questionSetId = await insertTryoutQuestionSource(ctx, {
-    sectionKey,
-    sourcePath,
-  });
-  const question = await ctx.db
-    .query("questions")
-    .withIndex("by_questionSetId_and_number", (q) =>
-      q.eq("questionSetId", questionSetId).eq("number", 1)
-    )
-    .unique();
-
-  if (!question) {
-    throw new ConvexError({
-      code: "TRYOUT_QUESTION_NOT_FOUND",
-      message: "Expected try-out question fixture.",
-    });
-  }
-
-  await ctx.db.insert("questionChoices", {
-    isCorrect: true,
-    label: "A",
-    locale: "id",
-    optionKey: "a",
-    order: 1,
-    questionId: question._id,
-  });
-
-  return { questionId: question._id, questionSetId, sourcePath };
-}
-
 describe("tryouts/runtime/finish", () => {
   it("expires opened and unopened IRT sections before scoring", async () => {
     const t = convexTest(schema, convexModules);
-
     const snapshot = await t.mutation(async (ctx) => {
-      const userId = await ctx.db.insert("users", {
+      const userId = await insertTryoutUser(ctx, {
         authId: "auth-expire-irt",
-        credits: 0,
-        creditsResetAt: NOW,
         email: "expire-irt@example.com",
         name: "Expire IRT",
-        plan: "pro",
       });
-      const firstSource = await insertSectionSource(ctx, FIRST_SECTION);
-      const secondSource = await insertSectionSource(ctx, SECOND_SECTION);
+      const firstSource = await insertTryoutSectionSource(ctx, FIRST_SECTION);
+      const secondSource = await insertTryoutSectionSource(ctx, SECOND_SECTION);
       const tryoutSetId = await insertTryoutSet(ctx, {
         sectionCount: 2,
         totalQuestionCount: 2,
@@ -94,6 +63,18 @@ describe("tryouts/runtime/finish", () => {
         sectionKey: SECOND_SECTION,
         tryoutSetId,
       });
+      const firstSection = await ctx.db.get(firstSectionId);
+      const secondSection = await ctx.db.get(secondSectionId);
+      if (!(firstSection && secondSection)) {
+        throw new ConvexError({
+          code: "TRYOUT_SECTION_NOT_FOUND",
+          message: "Expected try-out section fixtures.",
+        });
+      }
+      const alignedSections = [
+        makeAlignedTryoutSection(firstSection),
+        makeAlignedTryoutSection(secondSection),
+      ];
       const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
         model: "2pl",
         publishedAt: NOW,
@@ -101,7 +82,6 @@ describe("tryouts/runtime/finish", () => {
         status: "provisional",
         tryoutSetId,
       });
-
       await insertIrtScaleItem(ctx, {
         questionId: firstSource.questionId,
         scaleVersionId,
@@ -124,6 +104,7 @@ describe("tryouts/runtime/finish", () => {
             publicPath: `${SET_PATH}/pengetahuan-kuantitatif`,
             questionSetId: firstSource.questionSetId,
             sectionKey: FIRST_SECTION,
+            signed: alignedSections[0]?.signed,
             sourcePath: firstSource.sourcePath,
             tryoutSectionId: firstSectionId,
           }),
@@ -132,6 +113,7 @@ describe("tryouts/runtime/finish", () => {
             publicPath: `${SET_PATH}/penalaran-matematika`,
             questionSetId: secondSource.questionSetId,
             sectionKey: SECOND_SECTION,
+            signed: alignedSections[1]?.signed,
             sourcePath: secondSource.sourcePath,
             tryoutSectionId: secondSectionId,
           }),
@@ -146,7 +128,6 @@ describe("tryouts/runtime/finish", () => {
         tryoutSectionId: firstSectionId,
       });
       const attempt = await ctx.db.get(attemptId);
-
       if (!attempt) {
         throw new ConvexError({
           code: "TRYOUT_ATTEMPT_NOT_FOUND",
@@ -154,8 +135,12 @@ describe("tryouts/runtime/finish", () => {
         });
       }
 
-      await createAttemptPlacements(ctx, { attempt });
-
+      await runConvexProgram(
+        createAttemptPlacements(ctx, {
+          attempt,
+          sections: alignedSections,
+        })
+      );
       const placement = await ctx.db
         .query("tryoutAttemptPlacements")
         .withIndex(
@@ -179,7 +164,7 @@ describe("tryouts/runtime/finish", () => {
         isCorrect: true,
         placementId: placement._id,
         questionId: firstSource.questionId,
-        selectedOptionId: "a",
+        selectedOptionId: "option-1",
         timeSpent: 1000,
         tryoutAttemptId: attemptId,
         tryoutSectionAttemptId: sectionAttemptId,
@@ -234,13 +219,10 @@ describe("tryouts/runtime/finish", () => {
     const t = convexTest(schema, convexModules);
 
     const completed = await t.mutation(async (ctx) => {
-      const userId = await ctx.db.insert("users", {
+      const userId = await insertTryoutUser(ctx, {
         authId: "auth-section-timeout",
-        credits: 0,
-        creditsResetAt: NOW,
         email: "section-timeout@example.com",
         name: "Section Timeout",
-        plan: "pro",
       });
       const sourcePath =
         "question-bank/tryout/indonesia/snbt/2027/set-1/penalaran-matematika";

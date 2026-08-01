@@ -1,8 +1,11 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import { makeAlignedTryoutSection } from "@repo/backend/test/tryout-section";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -10,7 +13,7 @@ import { describe, expect, it } from "vitest";
 const NOW = Date.UTC(2026, 6, 8, 12, 0, 0);
 const TRACK = "2027";
 const SECTION = "penalaran-matematika";
-const SOURCE = `question-bank/tryout/indonesia/snbt/${TRACK}/set-1/${SECTION}`;
+const SOURCE = `question-bank/tryout/indonesia/snbt/${SECTION}/set-1`;
 const SET_ROUTE = `try-out/indonesia/snbt/${TRACK}/set-1`;
 const ROUTE = `${SET_ROUTE}/${SECTION}`;
 
@@ -48,7 +51,7 @@ async function insertSource(ctx: MutationCtx) {
     isCorrect: true,
     label: "A",
     locale: "id",
-    optionKey: "a",
+    optionKey: "option-1",
     order: 1,
     questionId,
   });
@@ -108,6 +111,14 @@ async function insertRuntime(
     tryoutSetId,
     visibility: "visible",
   });
+  const section = await ctx.db.get(sectionId);
+  if (!section) {
+    throw new ConvexError({
+      code: "TRYOUT_FIXTURE_NOT_FOUND",
+      message: "Expected try-out section fixture.",
+    });
+  }
+  const aligned = makeAlignedTryoutSection(section, "2027");
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: NOW + 86_400_000,
     accessSourceKind: "free",
@@ -126,8 +137,10 @@ async function insertRuntime(
         questionCount: 1,
         questionSetId,
         questionSourcePath: SOURCE,
+        sectionIdentity: tryoutCatalogIdentity(aligned.signed.section.row),
         sectionKey: SECTION,
         sectionOrder: 1,
+        sectionRowHash: aligned.signed.section.rowHash,
         sourceRevision: "2026",
         timeLimitSeconds: 1800,
         tryoutSectionId: sectionId,
@@ -149,7 +162,10 @@ async function insertRuntime(
     });
   }
 
-  return attempt;
+  return {
+    attempt,
+    sections: [aligned],
+  };
 }
 
 describe("tryouts/runtime/placement", () => {
@@ -159,10 +175,10 @@ describe("tryouts/runtime/placement", () => {
     await expect(
       t.mutation(async (ctx) => {
         const questionSetId = await insertSource(ctx);
-        const attempt = await insertRuntime(ctx, questionSetId);
+        const runtime = await insertRuntime(ctx, questionSetId);
 
-        await createAttemptPlacements(ctx, { attempt });
+        await runConvexProgram(createAttemptPlacements(ctx, runtime));
       })
-    ).rejects.toThrow("TRYOUT_QUESTION_SNAPSHOT_MISMATCH");
+    ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
   });
 });

@@ -1,6 +1,8 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import type { AlignedTryoutSection } from "@repo/backend/convex/tryouts/start/source";
 import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
 import {
   insertTryoutQuestionSource,
@@ -11,16 +13,31 @@ import {
 } from "@repo/backend/test/tryouts";
 
 /** Returns the coherent terminal reason for one fixture status. */
-function getEndReason(status: TryoutStatus) {
+function getEndReason(
+  status: TryoutStatus
+): Doc<"tryoutAttempts">["endReason"] {
   if (status === "in-progress") {
     return null;
   }
 
   if (status === "expired") {
-    return "time-expired" as const;
+    return "time-expired";
   }
 
-  return "submitted" as const;
+  return "submitted";
+}
+
+/** Inserts one standard paid user for try-out runtime tests. */
+export function insertTryoutUser(
+  ctx: MutationCtx,
+  identity: Pick<Doc<"users">, "authId" | "email" | "name">
+) {
+  return ctx.db.insert("users", {
+    ...identity,
+    credits: 0,
+    creditsResetAt: TRYOUT_TEST_NOW,
+    plan: "pro",
+  });
 }
 
 /** Inserts one attempt and section state used by content access tests. */
@@ -91,6 +108,7 @@ export function tryoutSectionSnapshot(args: {
   questionSetId: Id<"questionSets">;
   sectionKey: string;
   sourcePath: string;
+  signed?: AlignedTryoutSection["signed"];
   tryoutSectionId: Id<"tryoutSections">;
 }) {
   return {
@@ -98,8 +116,12 @@ export function tryoutSectionSnapshot(args: {
     questionCount: 1,
     questionSetId: args.questionSetId,
     questionSourcePath: args.sourcePath,
+    sectionIdentity: args.signed
+      ? tryoutCatalogIdentity(args.signed.section.row)
+      : undefined,
     sectionKey: args.sectionKey,
     sectionOrder: args.order,
+    sectionRowHash: args.signed?.section.rowHash,
     sourceRevision: "2026",
     timeLimitSeconds: 1800,
     tryoutSectionId: args.tryoutSectionId,

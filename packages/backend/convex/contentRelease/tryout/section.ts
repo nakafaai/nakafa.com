@@ -27,7 +27,10 @@ export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(
   function* (ctx: QueryCtx, identity: TryoutSectionIdentity) {
     const owner = yield* loadTryoutOwner(ctx);
     if (!(owner.managed && owner.selected)) {
-      return null;
+      return yield* releaseFail(
+        "CONTENT_RELEASE_MISSING",
+        "The active try-out snapshot is unavailable."
+      );
     }
 
     const { snapshotId } = owner.selected;
@@ -93,10 +96,12 @@ export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(
     }
 
     const placements = yield* Effect.forEach(storedPlacements, (placement) =>
-      verifyTryoutPlacement(placement, snapshotId)
+      verifyTryoutPlacement(placement, snapshotId).pipe(
+        Effect.map((row) => ({ row, rowHash: placement.rowHash }))
+      )
     );
     const hasChangedOrder = placements.some(
-      ({ questionOrder }, index) => questionOrder !== index + 1
+      ({ row }, index) => row.questionOrder !== index + 1
     );
     if (hasChangedOrder) {
       return yield* releaseFail(
@@ -105,6 +110,10 @@ export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(
       );
     }
 
-    return { placements, section, snapshotId };
+    return {
+      placements,
+      section: { row: section, rowHash: storedSection.rowHash },
+      snapshotId,
+    };
   }
 );

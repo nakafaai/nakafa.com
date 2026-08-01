@@ -144,10 +144,7 @@ const tables = {
       "questionSourceKey",
       "sourceRevision",
     ])
-    .index("by_calibrationRunId", {
-      fields: ["calibrationRunId"],
-      staged: true,
-    })
+    .index("by_calibrationRunId", ["calibrationRunId"])
     .index("by_calibrationStatus", ["calibrationStatus"])
     .index("by_scaleVersionId_and_placementIdentity", [
       "scaleVersionId",

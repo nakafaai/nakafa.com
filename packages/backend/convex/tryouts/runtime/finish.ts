@@ -91,6 +91,9 @@ async function createExpiredSectionAttempt(
     endReason: "time-expired",
     expiresAt: args.attempt.expiresAt,
     lastActivityAt: args.now,
+    ...(args.snapshot.sectionIdentity
+      ? { sectionIdentity: args.snapshot.sectionIdentity }
+      : {}),
     sectionKey: args.snapshot.sectionKey,
     sectionOrder: args.snapshot.sectionOrder,
     score: getSectionScoreSnapshot(score),

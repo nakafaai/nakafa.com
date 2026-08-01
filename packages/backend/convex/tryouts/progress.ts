@@ -53,6 +53,9 @@ export async function writeTryoutSetProgress(
     latestAttemptId: args.attempt._id,
     locale: args.set.locale,
     publishedScore: args.publishedScore,
+    ...(args.attempt.setIdentity
+      ? { setIdentity: args.attempt.setIdentity }
+      : {}),
     setKey: args.set.setKey,
     status: args.status,
     statusRank: getTryoutStatusRank(args.status),

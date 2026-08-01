@@ -1,9 +1,12 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
+import type { VerifiedTryoutSet } from "@repo/backend/convex/contentRelease/tryout/set";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
+import type { AlignedTryoutSection } from "@repo/backend/convex/tryouts/start/source";
 import type {
   AttemptAccessFields,
   StartAttemptArgs,
@@ -31,8 +34,9 @@ interface CreateTryoutAttemptInput {
   readonly attemptNumber: number;
   readonly now: number;
   readonly scaleVersion: Doc<"irtScaleVersions"> | null;
-  readonly sections: Doc<"tryoutSections">[];
+  readonly sections: readonly AlignedTryoutSection[];
   readonly set: Doc<"tryoutSets">;
+  readonly source: VerifiedTryoutSet;
   readonly userId: Id<"users">;
 }
 
@@ -62,35 +66,45 @@ export const createTryoutAttempt = Effect.fn(
 function buildAttemptValues(
   input: CreateTryoutAttemptInput
 ): TryoutAttemptInsert {
+  const signedSet = input.source.set.row;
   return {
     ...input.access,
     attemptNumber: input.attemptNumber,
     completedAt: null,
     completedSectionKeys: [],
+    countryKey: signedSet.countryKey,
     endReason: null,
+    examKey: signedSet.examKey,
     expiresAt: Math.min(
       input.now + 3 * 24 * 60 * 60 * 1000,
       input.access.accessEndsAt
     ),
     lastActivityAt: input.now,
+    locale: signedSet.locale,
     scoreStatus: input.scaleVersion?.status ?? "official",
     scoringStrategy: input.set.scoringStrategy,
-    sectionSnapshots: input.sections.map((section) => ({
-      publicPath: section.publicPath,
-      questionCount: section.questionCount,
-      questionSetId: section.questionSetId,
-      questionSourcePath: section.questionSourcePath,
-      sectionKey: section.sectionKey,
-      sectionOrder: section.order,
-      sourceRevision: section.sourceRevision,
-      timeLimitSeconds: section.timeLimitSeconds,
-      tryoutSectionId: section._id,
+    sectionSnapshots: input.sections.map(({ legacy, signed }) => ({
+      publicPath: legacy.publicPath,
+      questionCount: legacy.questionCount,
+      questionSetId: legacy.questionSetId,
+      questionSourcePath: legacy.questionSourcePath,
+      sectionIdentity: tryoutCatalogIdentity(signed.section.row),
+      sectionKey: legacy.sectionKey,
+      sectionOrder: legacy.order,
+      sectionRowHash: signed.section.rowHash,
+      sourceRevision: legacy.sourceRevision,
+      timeLimitSeconds: legacy.timeLimitSeconds,
+      tryoutSectionId: legacy._id,
     })),
+    setIdentity: input.source.setIdentity,
+    setKey: signedSet.setKey,
     startedAt: input.now,
     status: "in-progress",
     totalCorrect: 0,
     totalQuestions: input.set.totalQuestionCount,
+    trackKey: signedSet.trackKey,
     tryoutSetId: input.set._id,
+    tryoutSnapshotId: input.source.snapshotId,
     userId: input.userId,
     ...(input.scaleVersion ? { scaleVersionId: input.scaleVersion._id } : {}),
   };
@@ -113,7 +127,10 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
         updatedAt: input.now,
       })
     );
-    yield* tryStartPromise(() => createAttemptPlacements(ctx, { attempt }));
+    yield* createAttemptPlacements(ctx, {
+      attempt,
+      sections: input.sections,
+    });
 
     if (input.args.entrySectionKey) {
       yield* tryStartPromise(() =>

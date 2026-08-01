@@ -1,5 +1,6 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { VerifiedTryoutSet } from "@repo/backend/convex/contentRelease/tryout/set";
 import { getIncludedAttemptAccess } from "@repo/backend/convex/tryouts/access/impl";
 import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/convex/tryouts/access/source";
 import {
@@ -12,6 +13,7 @@ import {
   startSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { createTryoutAttempt } from "@repo/backend/convex/tryouts/start/attempt";
+import { alignTryoutSource } from "@repo/backend/convex/tryouts/start/source";
 import type {
   AttemptAccessFields,
   StartAttemptArgs,
@@ -33,6 +35,7 @@ interface StartTryoutAttemptInput {
   readonly args: StartAttemptArgs;
   readonly now: number;
   readonly set: TryoutSet;
+  readonly source: VerifiedTryoutSet;
   readonly userId: Id<"users">;
 }
 
@@ -46,12 +49,17 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
       },
       { concurrency: "unbounded" }
     );
+    const sections = yield* alignTryoutSource(
+      input.set,
+      loaded.sections,
+      input.source
+    );
 
     if (input.args.entrySectionKey) {
       yield* tryStartPromise(() =>
         Promise.resolve(
           requireInternalEntrySection(
-            loaded.sections,
+            sections.map(({ legacy }) => legacy),
             input.args.entrySectionKey ?? ""
           )
         )
@@ -82,8 +90,9 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
       attemptNumber,
       now: input.now,
       scaleVersion,
-      sections: loaded.sections,
+      sections,
       set: input.set,
+      source: input.source,
       userId: input.userId,
     });
   }

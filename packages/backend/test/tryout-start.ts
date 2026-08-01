@@ -1,15 +1,17 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
+import {
+  activateTryoutStartSource,
+  TRYOUT_START_COUNTRY,
+  TRYOUT_START_EXAM,
+  TRYOUT_START_NOW,
+  TRYOUT_START_SECTION,
+  TRYOUT_START_SET,
+  TRYOUT_START_TRACK,
+} from "@repo/backend/test/tryout-source";
 
-export const TRYOUT_START_NOW = Date.UTC(2026, 6, 8, 12, 0, 0);
-export const TRYOUT_START_COUNTRY = "indonesia";
-export const TRYOUT_START_EXAM = "tka";
-export const TRYOUT_START_TRACK = "matematika";
-export const TRYOUT_START_SET = "set-1";
-export const TRYOUT_START_SECTION = "matematika";
-
-const sourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}/${TRYOUT_START_SECTION}`;
+const sourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_SECTION}/${TRYOUT_START_SET}`;
 const setRoute = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
 
 /** Seeds the smallest coherent catalog used by attempt start tests. */
@@ -23,6 +25,7 @@ export async function seedTryoutStartSet(
     visibility: "internal-entry" | "visible";
   }
 ) {
+  const signed = await activateTryoutStartSource(ctx, args.visibility);
   await ctx.db.insert("tryoutCountries", {
     countryKey: TRYOUT_START_COUNTRY,
     isActive: true,
@@ -86,7 +89,7 @@ export async function seedTryoutStartSet(
     number: 1,
     questionBody: "Question",
     questionSetId,
-    sourceKey: `${sourcePath}:question-1`,
+    sourceKey: `${sourcePath}/question-1`,
     sourcePath: `${sourcePath}/question-1`,
     sourceRevision: "2026",
     syncedAt: TRYOUT_START_NOW,
@@ -97,7 +100,7 @@ export async function seedTryoutStartSet(
     isCorrect: true,
     label: "A",
     locale: "id",
-    optionKey: "a",
+    optionKey: "option-1",
     order: 1,
     questionId,
   });
@@ -160,5 +163,5 @@ export async function seedTryoutStartSet(
     });
   }
 
-  return { tryoutSectionId, tryoutSetId };
+  return { ...signed, tryoutSectionId, tryoutSetId };
 }

@@ -12,6 +12,10 @@ import { ConvexError } from "convex/values";
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutSection = Doc<"tryoutSections">;
 
+interface StartSectionResult {
+  readonly kind: "started";
+}
+
 /** Ensures atomic section start is only used for a set-owned internal entry. */
 export function requireInternalEntrySection(
   sections: TryoutSection[],
@@ -46,7 +50,7 @@ export function loadPlacementSectionAttempt(
 export async function startSectionAttempt(
   ctx: MutationCtx,
   args: { attempt: TryoutAttempt; now: number; sectionKey: string }
-) {
+): Promise<StartSectionResult> {
   if (args.attempt.status !== "in-progress") {
     throw new ConvexError({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
@@ -68,7 +72,7 @@ export async function startSectionAttempt(
   const existing = await loadSectionAttempt(ctx, args);
 
   if (existing?.status === "in-progress" && args.now < existing.expiresAt) {
-    return { kind: "started" as const };
+    return { kind: "started" };
   }
 
   if (existing?.status === "in-progress") {
@@ -104,6 +108,9 @@ export async function startSectionAttempt(
     endReason: null,
     expiresAt,
     lastActivityAt: args.now,
+    ...(snapshot.sectionIdentity
+      ? { sectionIdentity: snapshot.sectionIdentity }
+      : {}),
     sectionKey: snapshot.sectionKey,
     sectionOrder: snapshot.sectionOrder,
     startedAt: args.now,
@@ -130,7 +137,7 @@ export async function startSectionAttempt(
     { expiresAt, sectionAttemptId }
   );
 
-  return { kind: "started" as const };
+  return { kind: "started" };
 }
 
 /** Loads one existing section attempt by its stable section key. */

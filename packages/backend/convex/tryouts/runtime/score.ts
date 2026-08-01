@@ -212,6 +212,12 @@ function insertAttemptScore(
     totalCorrect: args.score.totalCorrect,
     totalQuestions: args.score.totalQuestions,
     tryoutAttemptId: args.attempt._id,
+    ...(args.attempt.setIdentity && args.attempt.tryoutSnapshotId
+      ? {
+          setIdentity: args.attempt.setIdentity,
+          tryoutSnapshotId: args.attempt.tryoutSnapshotId,
+        }
+      : {}),
     tryoutSetId: args.attempt.tryoutSetId,
     userId: args.attempt.userId,
   };

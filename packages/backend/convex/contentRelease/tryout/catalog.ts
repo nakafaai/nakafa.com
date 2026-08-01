@@ -38,8 +38,8 @@ function localizedCounts(
   };
 }
 
-/** Reads the complete verified hierarchy for one active try-out locale. */
-export const readTryoutCatalog = Effect.fn("contentRelease.readTryoutCatalog")(
+/** Loads the complete verified hierarchy for one active try-out locale. */
+export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
   function* (ctx: QueryCtx, locale: ContentLocale) {
     const owner = yield* loadTryoutOwner(ctx);
     if (!(owner.managed && owner.selected)) {
@@ -47,7 +47,7 @@ export const readTryoutCatalog = Effect.fn("contentRelease.readTryoutCatalog")(
         activeManifestHash: owner.selected?.active.manifestHash ?? null,
         activeReleaseId: owner.selected?.active.releaseId ?? null,
         managed: false,
-        rowJson: [],
+        entries: [],
         snapshotId: owner.selected?.snapshotId ?? null,
         sourceRevision: null,
       };
@@ -91,9 +91,16 @@ export const readTryoutCatalog = Effect.fn("contentRelease.readTryoutCatalog")(
         `Try-out catalog for ${locale} does not match its signed count.`
       );
     }
-    const rows = yield* Effect.forEach(stored, (row) =>
-      verifyTryoutCatalog(row, snapshotId)
+    const entries = yield* Effect.forEach(stored, (storedRow) =>
+      verifyTryoutCatalog(storedRow, snapshotId).pipe(
+        Effect.map((row) => ({
+          row,
+          rowHash: storedRow.rowHash,
+          rowJson: storedRow.rowJson,
+        }))
+      )
     );
+    const rows = entries.map(({ row }) => row);
     if (JSON.stringify(countCatalog(rows)) !== JSON.stringify(expected)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -103,10 +110,25 @@ export const readTryoutCatalog = Effect.fn("contentRelease.readTryoutCatalog")(
     return {
       activeManifestHash: active.manifestHash,
       activeReleaseId: active.releaseId,
+      entries,
       managed: true,
-      rowJson: stored.map(({ rowJson }) => rowJson),
       snapshotId,
       sourceRevision: readSourceRevision(active),
+    };
+  }
+);
+
+/** Reads the canonical wire rows used by release diagnostics and previews. */
+export const readTryoutCatalog = Effect.fn("contentRelease.readTryoutCatalog")(
+  function* (ctx: QueryCtx, locale: ContentLocale) {
+    const catalog = yield* loadTryoutCatalog(ctx, locale);
+    return {
+      activeManifestHash: catalog.activeManifestHash,
+      activeReleaseId: catalog.activeReleaseId,
+      managed: catalog.managed,
+      rowJson: catalog.entries.map(({ rowJson }) => rowJson),
+      snapshotId: catalog.snapshotId,
+      sourceRevision: catalog.sourceRevision,
     };
   }
 );

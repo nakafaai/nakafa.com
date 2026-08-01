@@ -1,3 +1,4 @@
+import { rendererDomainValidator } from "@repo/backend/convex/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/convex/tryouts/access/source";
@@ -19,8 +20,10 @@ const tryoutSectionSnapshotValidator = v.object({
   questionCount: v.number(),
   questionSetId: v.id("questionSets"),
   questionSourcePath: v.string(),
+  sectionIdentity: v.optional(v.string()),
   sectionKey: tryoutRouteKeyValidator,
   sectionOrder: v.number(),
+  sectionRowHash: v.optional(v.string()),
   sourceRevision: v.string(),
   timeLimitSeconds: v.number(),
   tryoutSectionId: v.id("tryoutSections"),
@@ -71,10 +74,7 @@ const tables = {
     endReason: v.union(attemptEndReasonValidator, v.null()),
   })
     .index("by_status_and_expiresAt", ["status", "expiresAt"])
-    .index("by_tryoutSnapshotId", {
-      fields: ["tryoutSnapshotId"],
-      staged: true,
-    })
+    .index("by_tryoutSnapshotId", ["tryoutSnapshotId"])
     .index("by_userId_and_startedAt", ["userId", "startedAt"])
     .index("by_userId_and_status_and_expiresAt", [
       "userId",
@@ -153,6 +153,7 @@ const tables = {
   tryoutSectionAttempts: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
     tryoutSectionId: v.id("tryoutSections"),
+    sectionIdentity: v.optional(v.string()),
     sectionKey: tryoutRouteKeyValidator,
     sectionOrder: v.number(),
     status: tryoutStatusValidator,
@@ -181,8 +182,14 @@ const tables = {
     .index("by_status_and_expiresAt", ["status", "expiresAt"]),
 
   tryoutAttemptPlacements: defineTable({
+    answerArtifactHash: v.optional(v.string()),
+    answerContentKey: v.optional(v.string()),
     placementIdentity: v.optional(v.string()),
     placementRowHash: v.optional(v.string()),
+    questionArtifactHash: v.optional(v.string()),
+    questionContentKey: v.optional(v.string()),
+    rendererDomain: v.optional(rendererDomainValidator),
+    sectionIdentity: v.optional(v.string()),
     sectionKey: v.optional(tryoutRouteKeyValidator),
     tryoutAttemptId: v.id("tryoutAttempts"),
     tryoutSectionId: v.id("tryoutSections"),
@@ -236,6 +243,8 @@ const tables = {
   tryoutScores: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
     tryoutSetId: v.id("tryoutSets"),
+    tryoutSnapshotId: v.optional(v.string()),
+    setIdentity: v.optional(v.string()),
     userId: v.id("users"),
     scoringStrategy: tryoutScoringStrategyValidator,
     scoreStatus: tryoutScoreStatusValidator,

@@ -2,7 +2,10 @@ import {
   TryoutCatalogRowSchema,
   TryoutPlacementSchema,
 } from "@nakafa/aksara-contracts/tryout/spec";
-import { readTryoutSection } from "@repo/backend/convex/contentRelease/tryout/section";
+import {
+  readTryoutSection,
+  type TryoutSectionIdentity,
+} from "@repo/backend/convex/contentRelease/tryout/section";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -15,14 +18,14 @@ import { convexTest } from "convex-test";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-const identity = {
+const identity: TryoutSectionIdentity = {
   countryKey: "indonesia",
   examKey: "snbt",
   locale: "en",
   sectionKey: "quantitative-knowledge",
   setKey: "set-1",
   trackKey: "2027",
-} as const;
+};
 
 /** Creates one technical section with an explicit signed question count. */
 function makeTechnicalSection(locale: "en" | "id", questionCount = 1) {
@@ -91,22 +94,24 @@ describe("contentRelease/tryout/section", () => {
     ).resolves.toMatchObject({
       placements: [
         {
-          countryKey: "indonesia",
-          questionOrder: 1,
-          scope: "server",
+          row: {
+            countryKey: "indonesia",
+            questionOrder: 1,
+            scope: "server",
+          },
         },
       ],
-      section: { kind: "section", questionCount: 1 },
+      section: { row: { kind: "section", questionCount: 1 } },
       snapshotId,
     });
   });
 
-  it("returns null until try-out ownership becomes active", async () => {
+  it("fails closed until try-out ownership becomes active", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
       t.query((ctx) => runConvexProgram(readTryoutSection(ctx, identity)))
-    ).resolves.toBeNull();
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
   });
 
   it("fails closed for a missing section or placement", async () => {

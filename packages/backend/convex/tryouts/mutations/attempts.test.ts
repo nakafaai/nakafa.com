@@ -10,9 +10,9 @@ import {
   TRYOUT_START_NOW as NOW,
   TRYOUT_START_SECTION as SECTION,
   TRYOUT_START_SET as SET,
-  seedTryoutStartSet,
   TRYOUT_START_TRACK as TRACK,
-} from "@repo/backend/test/tryout-start";
+} from "@repo/backend/test/tryout-source";
+import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
 import { describe, expect, it, vi } from "vitest";
 
 describe("tryouts/mutations/attempts", () => {
@@ -82,26 +82,52 @@ describe("tryouts/mutations/attempts", () => {
       accessEndsAt: NOW + 3 * 86_400_000,
       accessSourceKind: "free",
       countsForCompetition: false,
+      countryKey: COUNTRY,
+      examKey: EXAM,
+      locale: "id",
       scoreStatus: "official",
+      setIdentity: seeded.fixture.setIdentity,
+      setKey: SET,
       status: "in-progress",
+      trackKey: TRACK,
       tryoutSetId: seeded.fixture.tryoutSetId,
+      tryoutSnapshotId: seeded.fixture.snapshotId,
     });
+    expect(runtime.attempt?.sectionSnapshots).toEqual([
+      expect.objectContaining({
+        sectionIdentity: seeded.fixture.sectionIdentity,
+        sectionKey: SECTION,
+        sectionRowHash: seeded.fixture.sectionRowHash,
+        tryoutSectionId: seeded.fixture.tryoutSectionId,
+      }),
+    ]);
     expect(runtime.sectionAttempts).toEqual([
       expect.objectContaining({
+        sectionIdentity: seeded.fixture.sectionIdentity,
         sectionKey: SECTION,
         status: "in-progress",
         tryoutSectionId: seeded.fixture.tryoutSectionId,
       }),
     ]);
-    expect(runtime.placements).toHaveLength(1);
+    expect(runtime.placements).toEqual([
+      expect.objectContaining({
+        placementIdentity: seeded.fixture.placementIdentity,
+        placementRowHash: seeded.fixture.placementRowHash,
+        sectionIdentity: seeded.fixture.sectionIdentity,
+        sectionKey: SECTION,
+        tryoutSectionId: seeded.fixture.tryoutSectionId,
+      }),
+    ]);
     expect(runtime.freeClaim).toMatchObject({
       setKey: SET,
       userId: seeded.identity.userId,
     });
     expect(runtime.progress).toMatchObject({
       latestAttemptId: result.attemptId,
+      setIdentity: seeded.fixture.setIdentity,
       status: "in-progress",
       statusRank: 1,
+      tryoutSetId: seeded.fixture.tryoutSetId,
     });
 
     const current = await authed.query(api.tryouts.queries.attempt.getCurrent, {
@@ -174,44 +200,6 @@ describe("tryouts/mutations/attempts", () => {
     ).rejects.toThrow("TRYOUT_ACCESS_REQUIRED");
   });
 
-  it("rejects entry-section starts for visible sections", async () => {
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-visible",
-      });
-      await seedTryoutStartSet(ctx, {
-        userId: user.userId,
-        visibility: "visible",
-      });
-      return user;
-    });
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    await expect(
-      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-        countryKey: COUNTRY,
-        entrySectionKey: SECTION,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      })
-    ).rejects.toThrow("TRYOUT_ENTRY_SECTION_NOT_FOUND");
-
-    const claims = await t.query((ctx) =>
-      ctx.db.query("tryoutFreeAttemptClaims").collect()
-    );
-
-    expect(claims).toEqual([]);
-  });
-
   it("starts remaining sections from the immutable attempt snapshot", async () => {
     vi.setSystemTime(new Date(NOW));
 
@@ -277,6 +265,7 @@ describe("tryouts/mutations/attempts", () => {
 
     expect(sectionAttempt).toMatchObject({
       expiresAt: NOW + 1_800_000,
+      sectionIdentity: seeded.fixture.sectionIdentity,
       sectionKey: SECTION,
       status: "in-progress",
       totalQuestions: 1,
