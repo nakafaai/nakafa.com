@@ -1,10 +1,12 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { quranRowFacts } from "@repo/backend/convex/contentRelease/quran/facts";
+import { quranRowDocumentLimit } from "@repo/backend/convex/contentRelease/quran/limits";
 import { Effect, Schema } from "effect";
 
 /** Authenticates one immutable Quran row and every indexed fact. */
@@ -27,6 +29,21 @@ export const verifyQuranRow = Effect.fn("contentRelease.verifyQuranRow")(
       );
     }
     const facts = quranRowFacts(decoded.record);
+    yield* ensureDocumentSize(
+      `Quran row ${row.identity}`,
+      {
+        firstVerse: row.firstVerse,
+        identity: row.identity,
+        index: row.index,
+        kind: row.kind,
+        locale: row.locale,
+        rowHash: row.rowHash,
+        rowJson: row.rowJson,
+        snapshotId: row.snapshotId,
+        surahNumber: row.surahNumber,
+      },
+      quranRowDocumentLimit(decoded.record.payload.kind)
+    );
     if (
       facts.identity !== row.identity ||
       facts.kind !== row.kind ||

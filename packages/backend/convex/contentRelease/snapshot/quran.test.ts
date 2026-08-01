@@ -1,10 +1,14 @@
-import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  PublicPathSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
+import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { stageQuranRow } from "@repo/backend/convex/contentRelease/snapshot/quran";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeQuranSurah } from "@repo/backend/test/quran-rows";
+import { makeQuranSearch, makeQuranSurah } from "@repo/backend/test/quran-rows";
 import { makeQuranSnapshotRow } from "@repo/backend/test/quran-snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
@@ -144,5 +148,39 @@ describe("contentRelease/snapshot/quran", () => {
         runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+  });
+
+  it("rejects a noncanonical signed Quran route", async () => {
+    const source = await Effect.runPromise(
+      makeQuranSnapshotRow(snapshotId, {
+        ...makeQuranSearch("id", 1),
+        route: PublicPathSchema.make("quran/noncanonical"),
+      })
+    );
+    const rowJson = canonicalizeContentSnapshotRow(source);
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
+  it("rejects a search row above its aggregate transaction budget", async () => {
+    const source = await Effect.runPromise(
+      makeQuranSnapshotRow(
+        snapshotId,
+        makeQuranSearch("en", 1, "x".repeat(QURAN_SEARCH_DOCUMENT_LIMIT))
+      )
+    );
+    const rowJson = canonicalizeContentSnapshotRow(source);
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
   });
 });

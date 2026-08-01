@@ -6,6 +6,10 @@ import {
   quranRowFacts,
   quranSearchFacts,
 } from "@repo/backend/convex/contentRelease/quran/facts";
+import {
+  QURAN_SEARCH_DOCUMENT_LIMIT,
+  quranRowDocumentLimit,
+} from "@repo/backend/convex/contentRelease/quran/limits";
 import { Effect } from "effect";
 
 type QuranRow = Extract<ContentSnapshotRow, { readonly family: "quran" }>;
@@ -23,6 +27,16 @@ export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Quran row ${index} is bound to another snapshot.`
+      );
+    }
+    if (
+      source.record.payload.kind === "quran-search" &&
+      source.record.payload.route !==
+        `quran/${source.record.payload.surahNumber}`
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Quran search row ${index} has a noncanonical route.`
       );
     }
     const facts = quranRowFacts(source.record);
@@ -48,12 +62,14 @@ export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
           };
     yield* ensureDocumentSize(
       `Quran snapshot ${snapshotId} row ${index}`,
-      stored
+      stored,
+      quranRowDocumentLimit(source.record.payload.kind)
     );
     if (searchStored !== null) {
       yield* ensureDocumentSize(
         `Quran snapshot ${snapshotId} search row ${index}`,
-        searchStored
+        searchStored,
+        QURAN_SEARCH_DOCUMENT_LIMIT
       );
     }
     const [byIndex, byIdentity, searchByIndex, searchByIdentity] =

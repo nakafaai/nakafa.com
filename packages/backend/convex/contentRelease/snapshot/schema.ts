@@ -172,12 +172,6 @@ const tables = {
       "kind",
       "surahNumber",
       "firstVerse",
-    ])
-    .index("by_snapshotId_and_kind_and_locale_and_surahNumber", [
-      "snapshotId",
-      "kind",
-      "locale",
-      "surahNumber",
     ]),
 
   /** Full-text index projection resolved back to one signed Quran row. */

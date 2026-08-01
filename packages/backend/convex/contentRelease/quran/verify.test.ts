@@ -3,6 +3,7 @@ import {
   QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -77,5 +78,27 @@ describe("contentRelease/quran/verify", () => {
         );
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
+  it("rejects a replayed row above its aggregate transaction budget", async () => {
+    const t = convexTest(schema, convexModules);
+    const snapshotId = await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [makeQuranSearch("en", 1)])
+    );
+    await t.mutation(async (ctx) => {
+      const row = await loadRow(ctx);
+      await ctx.db.patch("quranRows", row._id, {
+        identity: `search:en:1:${"x".repeat(QURAN_SEARCH_DOCUMENT_LIMIT)}`,
+      });
+    });
+
+    await expect(
+      t.query(async (ctx) => {
+        const row = await loadRow(ctx);
+        return runConvexProgram(
+          verifyQuranRow(row, snapshotId, QuranSearchRowSchema)
+        );
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
   });
 });
