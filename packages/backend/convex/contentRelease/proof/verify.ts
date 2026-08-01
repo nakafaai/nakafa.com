@@ -1,10 +1,9 @@
 "use node";
 
-import { verifyContentProjections } from "@nakafa/aksara-contracts/projection/verify";
-import type { ReleaseVerificationEvidence } from "@nakafa/aksara-contracts/release";
-import { verifyContentReleaseItems } from "@nakafa/aksara-contracts/release/items";
+import type {
+  ReleaseVerificationEvidence,
+} from "@nakafa/aksara-contracts/release";
 import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result-digest";
-import { verifyRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
 import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/routes";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
@@ -17,11 +16,10 @@ import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import {
   decodeReleaseJson,
   decodeRendererJson,
-  decodeRollbackJson,
-  parseStoredJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { verifyArtifacts } from "@repo/backend/convex/contentRelease/proof/artifacts";
 import type { RouteCatalogPage } from "@repo/backend/convex/contentRelease/proof/catalog";
+import { verifyContentStreams } from "@repo/backend/convex/contentRelease/proof/content";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import type { ProofState } from "@repo/backend/convex/contentRelease/proof/read";
 import { verifyReleaseSnapshots } from "@repo/backend/convex/contentRelease/proof/snapshot";
@@ -38,7 +36,7 @@ import type {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { makeFunctionReference } from "convex/server";
 import { type Infer, v } from "convex/values";
-import { Effect, Option, Stream } from "effect";
+import { Effect } from "effect";
 
 type Progress = Infer<typeof progressValidator>;
 type Status = Infer<typeof statusValidator>;
@@ -131,30 +129,10 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
         `Content release ${releaseId} no longer matches its frozen renderer.`
       );
     }
-    const itemStream = readProofStream(ctx, "item", releaseId).pipe(
-      Stream.mapEffect(({ itemJson }) => parseStoredJson(itemJson))
+    const { items, projections, rollback } = yield* verifyContentStreams(
+      release,
+      readProofStream(ctx, "item", releaseId)
     );
-    const projectionStream = readProofStream(ctx, "item", releaseId).pipe(
-      Stream.filterMap(({ projectionJson }) =>
-        Option.fromNullable(projectionJson)
-      ),
-      Stream.mapEffect(parseStoredJson)
-    );
-    const rollbackStream = readProofStream(ctx, "item", releaseId).pipe(
-      Stream.mapEffect(({ rollbackJson }) => decodeRollbackJson(rollbackJson))
-    );
-    const items = yield* verifyContentReleaseItems({
-      items: itemStream,
-      manifest: release.manifest,
-    }).pipe(Effect.mapError(contractFailure));
-    const projections = yield* verifyContentProjections({
-      manifest: release.manifest,
-      projections: projectionStream,
-    }).pipe(Effect.mapError(contractFailure));
-    const rollback = yield* verifyRollbackSnapshot({
-      entries: rollbackStream,
-      manifest: release.manifest,
-    }).pipe(Effect.mapError(contractFailure));
     const snapshots = yield* verifyReleaseSnapshots(
       ctx,
       release,

@@ -47,11 +47,14 @@ export const ARTIFACT_PAGE_COUNT = 4;
 /** Maximum artifact bytes read before maintenance yields a continuation. */
 export const ARTIFACT_PAGE_BYTES = 2 * 1024 * 1024;
 
-/** Maximum body-bearing records returned by one proof query. */
-export const PROOF_PAGE_LIMIT = 8;
+/** Maximum records considered by one byte-bounded proof transaction. */
+export const PROOF_PAGE_LIMIT = 16;
 
 /** Maximum complete proof-page response below Convex action limits. */
 export const PROOF_PAGE_BYTES = 4 * 1024 * 1024;
+
+/** Query capacity reserved before a proof transaction yields its continuation. */
+export const PROOF_QUERY_HEADROOM = 16;
 
 /** Minimum retention after an artifact stops being active or recoverable. */
 export const ROLLBACK_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;

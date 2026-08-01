@@ -18,6 +18,7 @@ import {
 } from "@repo/backend/convex/contentRelease/ingress/failure";
 import { advancePublication } from "@repo/backend/convex/contentRelease/ingress/lifecycle";
 import { readPublication } from "@repo/backend/convex/contentRelease/ingress/read";
+import { stagePublicationGroup } from "@repo/backend/convex/contentRelease/ingress/group";
 import {
   publicationFailure,
   publicationSuccess,
@@ -41,6 +42,9 @@ const performRequest = Effect.fn("contentRelease.performRequest")(function* (
   request: PublicationRequest,
   activeKeyId: string
 ) {
+  if (request.operation === "stageGroup") {
+    return yield* stagePublicationGroup(ctx, request, activeKeyId);
+  }
   if (
     request.operation === "stageRelease" ||
     request.operation === "stageRecovery" ||

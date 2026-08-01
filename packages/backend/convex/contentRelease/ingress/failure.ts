@@ -89,6 +89,7 @@ function conflictFailure(
   if (
     request.operation === "stageRelease" ||
     request.operation === "stageRecovery" ||
+    request.operation === "stageGroup" ||
     request.operation === "verify" ||
     request.operation === "activate" ||
     request.operation === "activateRecovery"
@@ -97,7 +98,7 @@ function conflictFailure(
       code: "CONTENT_RELEASE_CONFLICT",
       kind: "conflict",
       operation: request.operation,
-      releaseId: request.release.manifest.releaseId,
+      releaseId: requestReleaseId(request),
     };
   }
   if (

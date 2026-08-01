@@ -4,7 +4,7 @@ import {
   MAX_ARTIFACT_BATCH_BYTES,
   MAX_ARTIFACT_BATCH_COUNT,
 } from "@nakafa/aksara-contracts/transport/limits";
-import { StageArtifactBatchInputSchema } from "@nakafa/aksara-contracts/transport/request";
+import { StageArtifactBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {

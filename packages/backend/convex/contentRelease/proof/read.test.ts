@@ -11,6 +11,7 @@ import {
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
 import { insertTestRelease } from "@repo/backend/test/content-stage";
+import { PROOF_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -186,13 +187,14 @@ describe("contentRelease/proof/read", () => {
 
   it("caps proof streams by record and response size", async () => {
     const records = convexTest(schema, convexModules);
+    const recordCount = PROOF_PAGE_LIMIT + 1;
     await records.mutation(async (ctx) => {
       await insertTestRelease(ctx, {
-        itemCount: 9,
-        projectionCount: 9,
+        itemCount: recordCount,
+        projectionCount: recordCount,
         status: "verifying",
       });
-      for (let index = 0; index < 9; index += 1) {
+      for (let index = 0; index < recordCount; index += 1) {
         await insertProofItem(ctx, index);
         await insertProofRoute(ctx, index);
       }
@@ -203,13 +205,19 @@ describe("contentRelease/proof/read", () => {
         kind: "item",
         releaseId: TEST_RELEASE_ID,
       })
-    ).resolves.toMatchObject({ done: false, nextIndex: 7 });
+    ).resolves.toMatchObject({
+      done: false,
+      nextIndex: PROOF_PAGE_LIMIT - 1,
+    });
     await expect(
       records.query(routePage, {
         afterIndex: -1,
         releaseId: TEST_RELEASE_ID,
       })
-    ).resolves.toMatchObject({ done: false, nextIndex: 7 });
+    ).resolves.toMatchObject({
+      done: false,
+      nextIndex: PROOF_PAGE_LIMIT - 1,
+    });
 
     const bytes = convexTest(schema, convexModules);
     await bytes.mutation(async (ctx) => {

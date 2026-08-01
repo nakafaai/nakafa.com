@@ -84,6 +84,18 @@ const requests = {
     operation: "stageArtifactBatch",
     releaseId: TEST_RELEASE_ID,
   }),
+  stageGroup: request({
+    operation: "stageGroup",
+    releaseId: TEST_RELEASE_ID,
+    requests: [
+      {
+        batchIndex: 0,
+        items: [JSON.parse(testUpsertJson())],
+        operation: "stageItemBatch",
+        releaseId: TEST_RELEASE_ID,
+      },
+    ],
+  }),
   stageItemBatch: request({
     batchIndex: 0,
     items: [JSON.parse(testUpsertJson())],
@@ -207,6 +219,7 @@ describe("content publication failure mapping", () => {
       "abort",
       "stageRelease",
       "stageRecovery",
+      "stageGroup",
       "status",
       "verify",
       "activate",

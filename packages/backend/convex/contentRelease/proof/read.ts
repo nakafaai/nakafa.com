@@ -10,6 +10,7 @@ import {
   PROOF_PAGE_BYTES,
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
+import { hasProofTransactionHeadroom } from "@repo/backend/convex/contentRelease/proof/budget";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getConvexSize, type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -119,14 +120,19 @@ const routePageProgram = Effect.fn("contentRelease.routeProofPage")(function* (
       .withIndex("by_releaseId_and_index", (query) =>
         query.eq("releaseId", releaseId).gt("index", afterIndex)
       )
-      .take(PROOF_PAGE_LIMIT + 1)
+      .paginate({
+        cursor: null,
+        maximumBytesRead: PROOF_PAGE_BYTES,
+        maximumRowsRead: PROOF_PAGE_LIMIT,
+        numItems: PROOF_PAGE_LIMIT,
+      })
   );
-  const rows = stored.slice(0, PROOF_PAGE_LIMIT).map((row) => ({
+  const rows = stored.page.map((row) => ({
     index: row.index,
     routeJson: row.routeJson,
   }));
   return {
-    done: stored.length <= PROOF_PAGE_LIMIT,
+    done: stored.isDone,
     nextIndex: rows.at(-1)?.index ?? afterIndex,
     rows,
   };
@@ -187,10 +193,15 @@ const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
       .withIndex("by_releaseId_and_index", (query) =>
         query.eq("releaseId", releaseId).gt("index", afterIndex)
       )
-      .take(PROOF_PAGE_LIMIT + 1)
+      .paginate({
+        cursor: null,
+        maximumBytesRead: PROOF_PAGE_BYTES,
+        maximumRowsRead: PROOF_PAGE_LIMIT,
+        numItems: PROOF_PAGE_LIMIT,
+      })
   );
   const rows: ProofPage["rows"] = [];
-  for (const row of stored.slice(0, PROOF_PAGE_LIMIT)) {
+  for (const row of stored.page) {
     const artifactJson =
       kind === "artifact"
         ? yield* loadArtifactJson(ctx, row.itemJson)
@@ -217,11 +228,17 @@ const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
       break;
     }
     rows.push(next);
+    const metrics = yield* Effect.promise(() =>
+      ctx.meta.getTransactionMetrics()
+    );
+    if (!hasProofTransactionHeadroom(metrics)) {
+      break;
+    }
   }
   const nextIndex = rows.at(-1)?.index ?? afterIndex;
-  const consumedAll = rows.length === Math.min(stored.length, PROOF_PAGE_LIMIT);
+  const consumedAll = rows.length === stored.page.length;
   return {
-    done: consumedAll && stored.length <= PROOF_PAGE_LIMIT,
+    done: consumedAll && stored.isDone,
     nextIndex,
     rows,
   };
@@ -235,7 +252,7 @@ export const state = internalQuery({
     runConvexProgram(stateProgram(ctx, args.manifestHash, args.releaseId)),
 });
 
-/** Returns one bounded ordered page, with artifact bodies capped at eight. */
+/** Returns one byte-bounded ordered page with measured transaction headroom. */
 export const page = internalQuery({
   args: {
     afterIndex: v.number(),

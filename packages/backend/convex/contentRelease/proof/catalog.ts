@@ -21,6 +21,7 @@ import {
 } from "@repo/backend/convex/contentRelease/receipt";
 import {
   contentHeadValidator,
+  PROOF_PAGE_BYTES,
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -151,6 +152,7 @@ const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(function* (
       .order("asc")
       .paginate({
         cursor,
+        maximumBytesRead: PROOF_PAGE_BYTES,
         maximumRowsRead: PROOF_PAGE_LIMIT,
         numItems: PROOF_PAGE_LIMIT,
       })
@@ -190,6 +192,7 @@ const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(function* (
       .order("asc")
       .paginate({
         cursor,
+        maximumBytesRead: PROOF_PAGE_BYTES,
         maximumRowsRead: PROOF_PAGE_LIMIT,
         numItems: PROOF_PAGE_LIMIT,
       })
