@@ -3,7 +3,10 @@ import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot";
-import { loadActiveSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
+import {
+  loadActiveSnapshot,
+  loadSnapshotOwner,
+} from "@repo/backend/convex/contentRelease/runtime/snapshot";
 import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -18,7 +21,10 @@ import {
   type ProgramSnapshotData,
   stageProgramSnapshot,
 } from "@repo/backend/test/program-snapshot";
-import { makeBlockedQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+import {
+  activateQuranSource,
+  makeBlockedQuranSnapshot,
+} from "@repo/backend/test/quran-snapshot";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
@@ -59,10 +65,29 @@ async function activateProgram(
 }
 
 describe("contentRelease/runtime/snapshot", () => {
-  it("returns null before any active structured snapshot exists", async () => {
+  it("returns empty ownership before any active release exists", async () => {
     const t = convexTest(schema, convexModules);
     await expect(
       t.query((ctx) => runConvexProgram(loadActiveSnapshot(ctx, "program")))
+    ).resolves.toBeNull();
+    await expect(
+      t.query((ctx) => runConvexProgram(loadSnapshotOwner(ctx, "program")))
+    ).resolves.toEqual({ active: null, snapshot: null, snapshotId: null });
+  });
+
+  it("preserves an active release that does not own the requested snapshot", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(activateQuranSource);
+
+    await expect(
+      t.query((ctx) => runConvexProgram(loadSnapshotOwner(ctx, "quran")))
+    ).resolves.toMatchObject({
+      active: { releaseId: TEST_RELEASE_ID },
+      snapshot: null,
+      snapshotId: null,
+    });
+    await expect(
+      t.query((ctx) => runConvexProgram(loadActiveSnapshot(ctx, "quran")))
     ).resolves.toBeNull();
   });
 

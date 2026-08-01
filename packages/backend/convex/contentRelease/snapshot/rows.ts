@@ -17,6 +17,7 @@ type SnapshotChild =
     }
   | { readonly row: Doc<"programBuckets">; readonly table: "programBuckets" }
   | { readonly row: Doc<"quranRows">; readonly table: "quranRows" }
+  | { readonly row: Doc<"quranSearch">; readonly table: "quranSearch" }
   | { readonly row: Doc<"tryoutCatalog">; readonly table: "tryoutCatalog" }
   | {
       readonly row: Doc<"tryoutPlacements">;
@@ -113,15 +114,33 @@ export const loadSnapshotChildren = Effect.fn(
   }
 
   if (family === "quran") {
-    if (part !== undefined) {
+    const selected = part ?? "quran";
+    if (selected !== "quran" && selected !== "quran-search") {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Quran snapshot ${snapshotId} has a try-out cleanup part.`
+        `Quran snapshot ${snapshotId} has an invalid cleanup part.`
       );
+    }
+    if (selected === "quran") {
+      const page = yield* Effect.promise(() =>
+        ctx.db
+          .query("quranRows")
+          .withIndex("by_snapshotId_and_index", (query) =>
+            query.eq("snapshotId", snapshotId).gt("index", afterIndex)
+          )
+          .paginate(cleanupPage())
+      );
+      return {
+        children: page.page.map(
+          (row): SnapshotChild => ({ row, table: "quranRows" })
+        ),
+        done: page.isDone,
+        part: selected,
+      } satisfies ChildPage;
     }
     const page = yield* Effect.promise(() =>
       ctx.db
-        .query("quranRows")
+        .query("quranSearch")
         .withIndex("by_snapshotId_and_index", (query) =>
           query.eq("snapshotId", snapshotId).gt("index", afterIndex)
         )
@@ -129,9 +148,10 @@ export const loadSnapshotChildren = Effect.fn(
     );
     return {
       children: page.page.map(
-        (row): SnapshotChild => ({ row, table: "quranRows" })
+        (row): SnapshotChild => ({ row, table: "quranSearch" })
       ),
       done: page.isDone,
+      part: selected,
     } satisfies ChildPage;
   }
 
@@ -191,6 +211,10 @@ export const deleteSnapshotChild = Effect.fn(
   }
   if (child.table === "quranRows") {
     yield* Effect.promise(() => ctx.db.delete("quranRows", child.row._id));
+    return;
+  }
+  if (child.table === "quranSearch") {
+    yield* Effect.promise(() => ctx.db.delete("quranSearch", child.row._id));
     return;
   }
   if (child.table === "tryoutCatalog") {

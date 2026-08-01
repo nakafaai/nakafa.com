@@ -4,6 +4,7 @@ import { stageQuranRow } from "@repo/backend/convex/contentRelease/snapshot/qura
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { makeQuranSurah } from "@repo/backend/test/quran-rows";
 import { makeQuranSnapshotRow } from "@repo/backend/test/quran-snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
@@ -35,6 +36,14 @@ describe("contentRelease/snapshot/quran", () => {
       locale: "en",
       surahNumber: 1,
     });
+    await expect(
+      t.run((ctx) => ctx.db.query("quranSearch").unique())
+    ).resolves.toMatchObject({
+      identity: "search:en:1",
+      locale: "en",
+      text: "Technical search text",
+      surahNumber: 1,
+    });
   });
 
   it("rejects cross-snapshot rows and identity collisions", async () => {
@@ -55,6 +64,84 @@ describe("contentRelease/snapshot/quran", () => {
     await expect(
       collision.mutation((ctx) =>
         runConvexProgram(stageQuranRow(ctx, snapshotId, 1, source, rowJson))
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+  });
+
+  it("rejects a search projection that collides with its signed row", async () => {
+    const source = await Effect.runPromise(makeQuranSnapshotRow(snapshotId));
+    const rowJson = canonicalizeContentSnapshotRow(source);
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+    );
+    await t.mutation(async (ctx) => {
+      const search = await ctx.db.query("quranSearch").unique();
+      if (!search) {
+        throw new Error("Expected one technical Quran search projection.");
+      }
+      await ctx.db.patch("quranSearch", search._id, { text: "changed" });
+    });
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+  });
+
+  it("rejects an orphaned search projection", async () => {
+    const source = await Effect.runPromise(makeQuranSnapshotRow(snapshotId));
+    const rowJson = canonicalizeContentSnapshotRow(source);
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      ctx.db.insert("quranSearch", {
+        identity: "search:en:1",
+        index: 0,
+        locale: "en",
+        rowHash: source.record.rowHash,
+        snapshotId,
+        surahNumber: 1,
+        text: "Technical search text",
+      })
+    );
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+  });
+
+  it("keeps non-search rows free from orphaned search projections", async () => {
+    const source = await Effect.runPromise(
+      makeQuranSnapshotRow(snapshotId, makeQuranSurah(1))
+    );
+    const rowJson = canonicalizeContentSnapshotRow(source);
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+    );
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
+      )
+    ).resolves.toBe(true);
+    await t.mutation((ctx) =>
+      ctx.db.insert("quranSearch", {
+        identity: "search:en:1",
+        index: 0,
+        locale: "en",
+        rowHash: source.record.rowHash,
+        snapshotId,
+        surahNumber: 1,
+        text: "orphaned",
+      })
+    );
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
   });

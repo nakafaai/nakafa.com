@@ -14,14 +14,31 @@ import {
   QURAN_ATTRIBUTION_COUNT,
   QURAN_SEARCH_COUNT,
   QURAN_SURAH_COUNT,
-  QuranSearchRowSchema,
+  type QuranRowPayload,
 } from "@nakafa/aksara-contracts/quran/spec";
-import type {
-  ContentSnapshotManifest,
-  ContentSnapshotRow,
+import {
+  inheritContentSnapshots,
+  replaceContentSnapshot,
+} from "@nakafa/aksara-contracts/release/snapshot";
+import {
+  type ContentSnapshotManifest,
+  type ContentSnapshotRow,
+  canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot-data";
-import { TEST_DIGEST } from "@repo/backend/test/content-release";
-import { Effect, Schema } from "effect";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  quranRowFacts,
+  quranSearchFacts,
+} from "@repo/backend/convex/contentRelease/quran/facts";
+import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
+import {
+  TEST_DIGEST,
+  TEST_MANIFEST_HASH,
+  TEST_RELEASE_ID,
+} from "@repo/backend/test/content-release";
+import { insertTestRelease } from "@repo/backend/test/content-stage";
+import { makeQuranSearch } from "@repo/backend/test/quran-rows";
+import { Effect } from "effect";
 
 /** Builds one schema-valid blocked Quran manifest without authored text. */
 export function makeBlockedQuranSnapshot(): Extract<
@@ -56,26 +73,13 @@ export function makeBlockedQuranSnapshot(): Extract<
   };
 }
 
-/** Creates one snapshot-bound technical Quran search row. */
+/** Creates one snapshot-bound technical Quran row. */
 export const makeQuranSnapshotRow = Effect.fn(
   "backendTest.makeQuranSnapshotRow"
-)(function* (snapshotId: Sha256Hash) {
-  const payload = yield* Schema.decodeUnknown(QuranSearchRowSchema)({
-    description: "Technical Quran search row",
-    graph: {
-      alignmentId: "alignment:quran:quran-surah:1",
-      assetId: "asset:en:quran:quran-surah:1",
-      conceptId: "concept:quran:surah:1",
-      learningObjectId: "lo:quran-surah:1",
-      lensId: "lens:quran",
-    },
-    kind: "quran-search",
-    locale: "en",
-    route: "quran/1",
-    surahNumber: 1,
-    text: "Technical search text",
-    title: "Technical surah",
-  });
+)(function* (
+  snapshotId: Sha256Hash,
+  payload: QuranRowPayload = makeQuranSearch("en", 1, "Technical search text")
+) {
   const record = yield* bindQuranRow(snapshotId, payload);
   return {
     family: "quran",
@@ -116,3 +120,85 @@ export const makeQuranSnapshot = Effect.fn("backendTest.makeQuranSnapshot")(
     } satisfies ContentSnapshotManifest;
   }
 );
+
+/** Promotes the only staged technical release to the active slot. */
+async function completeTestRelease(ctx: MutationCtx) {
+  const [release, state] = await Promise.all([
+    ctx.db.query("contentReleases").unique(),
+    ctx.db.query("contentState").unique(),
+  ]);
+  if (!(release && state)) {
+    throw new Error("Expected one technical Quran release.");
+  }
+  await ctx.db.patch("contentReleases", release._id, {
+    completedAt: 1,
+    status: "completed",
+  });
+  await ctx.db.patch("contentState", state._id, {
+    activeManifestHash: TEST_MANIFEST_HASH,
+    activeReleaseId: TEST_RELEASE_ID,
+    activeSequence: 1,
+    candidateManifestHash: undefined,
+    candidateReleaseId: undefined,
+    candidateSequence: undefined,
+  });
+}
+
+/** Activates one source-backed release that does not yet own Quran. */
+export async function activateQuranSource(ctx: MutationCtx) {
+  await insertTestRelease(ctx);
+  await completeTestRelease(ctx);
+}
+
+/** Activates explicit technical rows under one approved Quran snapshot. */
+export async function activateQuranSnapshot(
+  ctx: MutationCtx,
+  payloads: readonly QuranRowPayload[]
+) {
+  const snapshot = await Effect.runPromise(makeQuranSnapshot());
+  const snapshotId = snapshot.manifest.snapshotId;
+  const records = await Effect.runPromise(
+    Effect.forEach(payloads, (payload) => bindQuranRow(snapshotId, payload))
+  );
+  const snapshots = {
+    ...inheritContentSnapshots(null),
+    quran: replaceContentSnapshot({
+      baseSnapshotId: null,
+      resultSnapshotId: snapshotId,
+      rowCount: records.length,
+      rowDigest: snapshotId,
+    }),
+  };
+  await insertTestRelease(ctx, { snapshots });
+  await ctx.db.insert("contentSnapshots", {
+    createdAt: 1,
+    family: "quran",
+    retainUntil: Number.MAX_SAFE_INTEGER,
+    snapshotId,
+    snapshotJson: encodeSnapshotJson(snapshot),
+    verifiedAt: 1,
+  });
+  for (const [index, record] of records.entries()) {
+    const search =
+      record.payload.kind === "quran-search"
+        ? quranSearchFacts(record.payload)
+        : null;
+    await ctx.db.insert("quranRows", {
+      ...quranRowFacts(record),
+      index,
+      rowHash: record.rowHash,
+      rowJson: canonicalizeContentSnapshotRow({ family: "quran", record }),
+      snapshotId,
+    });
+    if (search !== null) {
+      await ctx.db.insert("quranSearch", {
+        ...search,
+        index,
+        rowHash: record.rowHash,
+        snapshotId,
+      });
+    }
+  }
+  await completeTestRelease(ctx);
+  return snapshotId;
+}

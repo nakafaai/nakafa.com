@@ -16,6 +16,8 @@ const tables = {
         v.literal("program"),
         v.literal("curriculum"),
         v.literal("bucket"),
+        v.literal("quran"),
+        v.literal("quran-search"),
         v.literal("catalog"),
         v.literal("placement")
       )
@@ -164,7 +166,36 @@ const tables = {
     surahNumber: v.optional(v.number()),
   })
     .index("by_snapshotId_and_index", ["snapshotId", "index"])
-    .index("by_snapshotId_and_identity", ["snapshotId", "identity"]),
+    .index("by_snapshotId_and_identity", ["snapshotId", "identity"])
+    .index("by_snapshotId_and_kind_and_surahNumber_and_firstVerse", [
+      "snapshotId",
+      "kind",
+      "surahNumber",
+      "firstVerse",
+    ])
+    .index("by_snapshotId_and_kind_and_locale_and_surahNumber", [
+      "snapshotId",
+      "kind",
+      "locale",
+      "surahNumber",
+    ]),
+
+  /** Full-text index projection resolved back to one signed Quran row. */
+  quranSearch: defineTable({
+    identity: v.string(),
+    index: v.number(),
+    locale: localeValidator,
+    rowHash: v.string(),
+    snapshotId: v.string(),
+    surahNumber: v.number(),
+    text: v.string(),
+  })
+    .index("by_snapshotId_and_index", ["snapshotId", "index"])
+    .index("by_snapshotId_and_identity", ["snapshotId", "identity"])
+    .searchIndex("search_text", {
+      searchField: "text",
+      filterFields: ["snapshotId", "locale"],
+    }),
 
   /** Immutable localized try-out hierarchy selected by one snapshot. */
   tryoutCatalog: defineTable({
