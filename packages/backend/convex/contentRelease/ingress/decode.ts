@@ -61,10 +61,7 @@ function encodedRequestBytes(request: PublicationRequest) {
 }
 
 /** Checks one decoded operation against its own transport ceiling. */
-function hasValidRequestBytes(
-  request: PublicationRequest,
-  byteLength: number
-) {
+function hasValidRequestBytes(request: PublicationRequest, byteLength: number) {
   return byteLength <= publicationRequestLimit(request.operation);
 }
 

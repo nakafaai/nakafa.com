@@ -1,6 +1,9 @@
 // @vitest-environment node
 
-import { ContentKeySchema, ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  ContentKeySchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
 import {
   ContentReleaseItemSchema,
   ContentReleaseManifestSchema,

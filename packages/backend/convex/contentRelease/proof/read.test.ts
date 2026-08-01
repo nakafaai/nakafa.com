@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { PROOF_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
@@ -11,7 +12,6 @@ import {
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
 import { insertTestRelease } from "@repo/backend/test/content-stage";
-import { PROOF_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 

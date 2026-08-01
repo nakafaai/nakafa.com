@@ -28,18 +28,12 @@ describe("proof transaction budget", () => {
     ).toBe(true);
     expect(
       hasProofTransactionHeadroom(
-        transactionMetrics(
-          TRANSACTION_READ_HEADROOM - 1,
-          PROOF_QUERY_HEADROOM
-        )
+        transactionMetrics(TRANSACTION_READ_HEADROOM - 1, PROOF_QUERY_HEADROOM)
       )
     ).toBe(false);
     expect(
       hasProofTransactionHeadroom(
-        transactionMetrics(
-          TRANSACTION_READ_HEADROOM,
-          PROOF_QUERY_HEADROOM - 1
-        )
+        transactionMetrics(TRANSACTION_READ_HEADROOM, PROOF_QUERY_HEADROOM - 1)
       )
     ).toBe(false);
   });

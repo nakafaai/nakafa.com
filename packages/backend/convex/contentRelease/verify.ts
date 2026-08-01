@@ -7,9 +7,9 @@ import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
 import { hasProofTransactionHeadroom } from "@repo/backend/convex/contentRelease/proof/budget";
 import { validateContentOwners } from "@repo/backend/convex/contentRelease/scope/owner";
 import {
-  progressValidator,
   PROOF_PAGE_BYTES,
   PROOF_PAGE_LIMIT,
+  progressValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { checkItem } from "@repo/backend/convex/contentRelease/verify/item";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";

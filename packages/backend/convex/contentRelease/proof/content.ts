@@ -4,7 +4,10 @@ import { verifyContentProjections } from "@nakafa/aksara-contracts/projection/ve
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { verifyContentReleaseItems } from "@nakafa/aksara-contracts/release/items";
 import { verifyRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
-import { decodeRollbackJson, parseStoredJson } from "@repo/backend/convex/contentRelease/parse";
+import {
+  decodeRollbackJson,
+  parseStoredJson,
+} from "@repo/backend/convex/contentRelease/parse";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import type { ProofPage } from "@repo/backend/convex/contentRelease/proof/read";
 import { Effect, Option, Stream } from "effect";

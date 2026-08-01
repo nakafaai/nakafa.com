@@ -6,11 +6,11 @@ import {
   decodeItemJson,
   decodeReleaseJson,
 } from "@repo/backend/convex/contentRelease/parse";
+import { hasProofTransactionHeadroom } from "@repo/backend/convex/contentRelease/proof/budget";
 import {
   PROOF_PAGE_BYTES,
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
-import { hasProofTransactionHeadroom } from "@repo/backend/convex/contentRelease/proof/budget";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getConvexSize, type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
