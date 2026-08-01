@@ -81,7 +81,10 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Mantine Hooks docs: read before building new hook utilities.
 - Read installed Convex node modules when behavior matters.
 - Read Convex MCP code/docs when the change touches MCP or agent tooling.
-- Use Context7 for up-to-date library docs and Ultracite search for lint/style rules.
+- Use Context7 for current library docs. For lint and style behavior, read the
+  installed Ultracite package and the current
+  [official documentation](https://www.ultracite.ai/docs), then run the
+  repository-owned pnpm commands.
 
 ## Vendored References
 

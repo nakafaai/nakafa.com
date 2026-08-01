@@ -47,7 +47,9 @@ The main web app is available at [http://localhost:3000](http://localhost:3000).
 - Inspect recent history, the owning package, its config, and nearby tests.
 - Verify whether a content scope is owned by Aksara or by the remaining local
   `packages/contents` source.
-- For Effect work, inspect the pinned read-only `repos/effect` source.
+- For Effect work, read `repos/effect/AGENTS.md`, then inspect the matching
+  implementation, tests, type-level tests, module structure, and API design.
+  Treat the vendored subtree as read-only application reference material.
 - For Convex work, follow `packages/backend/AGENTS.md` and use an isolated Agent
   Mode deployment.
 
