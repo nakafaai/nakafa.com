@@ -127,35 +127,43 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
         `Content release ${releaseId} no longer matches its frozen renderer.`
       );
     }
-    const { items, projections, rollback } = yield* verifyContentStreams(
-      release,
-      readProofStream(ctx, "item", releaseId)
+    const evidence = yield* Effect.all(
+      {
+        artifacts: verifyArtifacts(
+          readProofStream(ctx, "artifact", releaseId),
+          releaseId,
+          renderer,
+          release.manifest.rendererContractVersion
+        ),
+        routeCatalog: verifyRouteCatalog(ctx, releaseId),
+        content: verifyContentStreams(
+          release,
+          readProofStream(ctx, "item", releaseId)
+        ),
+        storedItems: verifyStoredItems(ctx, releaseId, state.checkedIndex),
+        result: verifyResultCatalog({
+          expectedCount: release.manifest.resultCount,
+          expectedDigest: release.manifest.resultDigest,
+          heads: readResultStream(ctx, releaseId),
+          releaseId: release.manifest.releaseId,
+        }).pipe(Effect.mapError(contractFailure)),
+        routes: verifyContentRoutes({
+          manifest: release.manifest,
+          routes: readRouteStream(ctx, releaseId),
+        }).pipe(Effect.mapError(contractFailure)),
+        snapshots: verifyReleaseSnapshots(
+          ctx,
+          release,
+          state.role,
+          state.stagedSnapshotBatches,
+          state.stagedSnapshotRows
+        ),
+      },
+      { concurrency: "unbounded" }
     );
-    const snapshots = yield* verifyReleaseSnapshots(
-      ctx,
-      release,
-      state.role,
-      state.stagedSnapshotBatches,
-      state.stagedSnapshotRows
-    );
-    const routes = yield* verifyContentRoutes({
-      manifest: release.manifest,
-      routes: readRouteStream(ctx, releaseId),
-    }).pipe(Effect.mapError(contractFailure));
-    yield* verifyStoredItems(ctx, releaseId, state.checkedIndex);
-    yield* verifyRouteCatalog(ctx, releaseId);
-    const result = yield* verifyResultCatalog({
-      expectedCount: release.manifest.resultCount,
-      expectedDigest: release.manifest.resultDigest,
-      heads: readResultStream(ctx, releaseId),
-      releaseId: release.manifest.releaseId,
-    }).pipe(Effect.mapError(contractFailure));
-    const artifactCount = yield* verifyArtifacts(
-      readProofStream(ctx, "artifact", releaseId),
-      releaseId,
-      renderer,
-      release.manifest.rendererContractVersion
-    );
+    const { items, projections, rollback } = evidence.content;
+    const artifactCount = evidence.artifacts;
+    const { result, routes, snapshots } = evidence;
     const countersMatch =
       state.stagedItems === release.manifest.itemCount &&
       state.stagedItems === items.deleteCount + items.upsertCount &&
