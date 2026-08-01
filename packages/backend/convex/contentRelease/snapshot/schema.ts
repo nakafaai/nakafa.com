@@ -221,6 +221,7 @@ const tables = {
   /** Immutable attempt placements with terminal answer-artifact bindings. */
   tryoutPlacements: defineTable({
     answerArtifactHash: v.string(),
+    contentHash: v.string(),
     countryKey: v.string(),
     examKey: v.string(),
     identity: v.string(),

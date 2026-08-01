@@ -6,6 +6,7 @@ import {
 import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,
+  TryoutContentHashSchema,
   type TryoutPlacement,
   TryoutPlacementSchema,
   type TryoutScoring,
@@ -21,6 +22,9 @@ export const TRYOUT_START_EXAM = "tka";
 export const TRYOUT_START_TRACK = "matematika";
 export const TRYOUT_START_SET = "set-1";
 export const TRYOUT_START_SECTION = "matematika";
+export const TRYOUT_START_CONTENT_HASH = TryoutContentHashSchema.make(
+  "4".repeat(64)
+);
 
 const sourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_SECTION}/${TRYOUT_START_SET}`;
 const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
@@ -149,6 +153,7 @@ export function makeTryoutStartPlacement(
         order: 1,
       },
     ],
+    contentHash: TRYOUT_START_CONTENT_HASH,
     countryKey: TRYOUT_START_COUNTRY,
     examKey: TRYOUT_START_EXAM,
     locale,

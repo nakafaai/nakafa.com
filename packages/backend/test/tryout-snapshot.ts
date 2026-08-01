@@ -23,6 +23,7 @@ import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot-has
 import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,
+  TryoutContentHashSchema,
   type TryoutPlacement,
   TryoutPlacementSchema,
 } from "@nakafa/aksara-contracts/tryout/spec";
@@ -91,6 +92,9 @@ export function makeTryoutPlacementRow(
         order: 1,
       },
     ],
+    contentHash: TryoutContentHashSchema.make(
+      (locale === "en" ? "1" : "2").repeat(64)
+    ),
     countryKey: "indonesia",
     examKey: "snbt",
     locale,

@@ -4,6 +4,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
 import {
   activateTryoutStartSource,
+  TRYOUT_START_CONTENT_HASH,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_NOW,
@@ -90,7 +91,7 @@ export async function seedTryoutStartSet(
   });
   const questionId = await ctx.db.insert("questions", {
     answerBody: "Answer",
-    contentHash: "question-hash",
+    contentHash: TRYOUT_START_CONTENT_HASH,
     date: 0,
     locale: "id",
     number: 1,

@@ -77,7 +77,7 @@ describe("contentRelease/tryout/verify", () => {
     const changed = await activatePlacement();
     await changed.t.mutation((ctx) =>
       ctx.db.patch("tryoutPlacements", changed.placement._id, {
-        sectionKey: "changed-section",
+        contentHash: "7".repeat(64),
       })
     );
     const tampered = await changed.t.run((ctx) =>

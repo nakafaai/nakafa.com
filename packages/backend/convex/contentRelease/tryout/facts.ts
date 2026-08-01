@@ -42,6 +42,7 @@ export function tryoutPlacementFacts(record: TryoutPlacementRecord) {
   const { row } = record;
   return {
     answerArtifactHash: row.answerArtifactHash,
+    contentHash: row.contentHash,
     countryKey: row.countryKey,
     examKey: row.examKey,
     identity: tryoutPlacementIdentity(row),

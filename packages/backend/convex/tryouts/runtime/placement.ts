@@ -233,6 +233,7 @@ function matchesPlacement(
   signed: AlignedTryoutSection["signed"]["placements"][number]["row"]
 ) {
   return (
+    signed.contentHash === question.contentHash &&
     signed.sectionKey === section.sectionKey &&
     signed.questionOrder === question.number &&
     signed.questionSourcePath === toTryoutCorpusPath(question.sourcePath) &&

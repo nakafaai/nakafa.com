@@ -127,6 +127,7 @@ export const bindLegacyIrtItem = Effect.fn(
     question.number
   );
   if (
+    placement.row.contentHash !== question.contentHash ||
     placement.row.sourceRevision !== question.sourceRevision ||
     placement.row.questionSourcePath !==
       toTryoutCorpusPath(question.sourcePath) ||
@@ -196,6 +197,7 @@ function matchesLegacyQuestion(
 /** Checks one frozen legacy placement against its signed replacement. */
 function matchesLegacyPlacement(legacy: LegacyPlacement, row: TryoutPlacement) {
   return (
+    row.contentHash === legacy.contentHash &&
     row.questionOrder === legacy.questionOrder &&
     row.questionSourcePath === toTryoutCorpusPath(legacy.sourcePath) &&
     row.sourceRevision === legacy.sourceRevision &&

@@ -557,6 +557,7 @@ import type * as tryouts_sets_score from "../tryouts/sets/score.js";
 import type * as tryouts_sets_spec from "../tryouts/sets/spec.js";
 import type * as tryouts_start_attempt from "../tryouts/start/attempt.js";
 import type * as tryouts_start_impl from "../tryouts/start/impl.js";
+import type * as tryouts_start_scale from "../tryouts/start/scale.js";
 import type * as tryouts_start_source from "../tryouts/start/source.js";
 import type * as tryouts_start_spec from "../tryouts/start/spec.js";
 import type * as tryouts_status from "../tryouts/status.js";
@@ -1133,6 +1134,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/sets/spec": typeof tryouts_sets_spec;
   "tryouts/start/attempt": typeof tryouts_start_attempt;
   "tryouts/start/impl": typeof tryouts_start_impl;
+  "tryouts/start/scale": typeof tryouts_start_scale;
   "tryouts/start/source": typeof tryouts_start_source;
   "tryouts/start/spec": typeof tryouts_start_spec;
   "tryouts/status": typeof tryouts_status;

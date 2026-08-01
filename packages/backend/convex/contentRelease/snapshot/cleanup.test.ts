@@ -183,6 +183,7 @@ describe("contentRelease/snapshot/cleanup", () => {
       for (const index of [1]) {
         await ctx.db.insert("tryoutPlacements", {
           answerArtifactHash: `sha256:${"a".repeat(64)}`,
+          contentHash: "3".repeat(64),
           countryKey: "indonesia",
           examKey: "snbt",
           identity: `placement-${index}`,

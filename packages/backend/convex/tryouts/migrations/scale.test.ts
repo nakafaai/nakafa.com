@@ -39,4 +39,23 @@ describe("tryouts/migrations/scale", () => {
       )
     ).rejects.toThrow("conflicts with its signed snapshot identity");
   });
+
+  it("rejects matching IRT hashes that differ from signed content", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const { irtItemId, questionId, snapshotId } =
+      await t.mutation(seedTryoutMigration);
+    const alteredContentHash = "6".repeat(64);
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(questionId, { contentHash: alteredContentHash });
+      await ctx.db.patch(irtItemId, { contentHash: alteredContentHash });
+    });
+
+    await expect(
+      t.mutation(
+        internal.tryouts.migrations.item.migrateItems,
+        makeTryoutMigrationArgs(snapshotId)
+      )
+    ).rejects.toThrow("differs from its signed placement");
+  });
 });

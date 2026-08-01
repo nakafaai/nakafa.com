@@ -3,6 +3,8 @@ import {
   makeTryoutPlacementRecord,
 } from "@nakafa/aksara-contracts/tryout/row-hash";
 import {
+  TryoutContentHashSchema,
+  type TryoutPlacement,
   TryoutPlacementSchema,
   TryoutSectionSchema,
 } from "@nakafa/aksara-contracts/tryout/spec";
@@ -14,11 +16,19 @@ import { insertTryoutQuestionSource } from "@repo/backend/test/tryouts";
 import { ConvexError } from "convex/values";
 import { Schema } from "effect";
 
+export const TRYOUT_TEST_CONTENT_HASH = TryoutContentHashSchema.make(
+  "3".repeat(64)
+);
+
 /** Builds one signed section source that matches a legacy runtime fixture. */
 export function makeAlignedTryoutSection(
   section: Doc<"tryoutSections">,
-  sourceRevision = section.sourceRevision
+  options: {
+    readonly contentHash?: TryoutPlacement["contentHash"];
+    readonly sourceRevision?: TryoutPlacement["sourceRevision"];
+  } = {}
 ): AlignedTryoutSection {
+  const sourceRevision = options.sourceRevision ?? section.sourceRevision;
   const questionRoot = `${section.questionSourcePath}/question-1`;
   const signedSection = Schema.decodeUnknownSync(TryoutSectionSchema)({
     countryKey: section.countryKey,
@@ -49,6 +59,7 @@ export function makeAlignedTryoutSection(
         order: 1,
       },
     ],
+    contentHash: options.contentHash ?? TRYOUT_TEST_CONTENT_HASH,
     countryKey: section.countryKey,
     examKey: section.examKey,
     locale: section.locale,
@@ -86,6 +97,7 @@ export async function insertTryoutSectionSource(
 ) {
   const sourcePath = `question-bank/tryout/indonesia/snbt/${sectionKey}/set-1`;
   const questionSetId = await insertTryoutQuestionSource(ctx, {
+    contentHash: TRYOUT_TEST_CONTENT_HASH,
     sectionKey,
     sourcePath,
   });
@@ -112,7 +124,12 @@ export async function insertTryoutSectionSource(
     questionId: question._id,
   });
 
-  return { questionId: question._id, questionSetId, sourcePath };
+  return {
+    contentHash: TryoutContentHashSchema.make(question.contentHash),
+    questionId: question._id,
+    questionSetId,
+    sourcePath,
+  };
 }
 
 /** Builds a stable graph identity for one signed runtime fixture. */

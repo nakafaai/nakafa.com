@@ -75,7 +75,7 @@ export async function seedTryoutMigration(ctx: MutationCtx) {
   });
   const questionId = await ctx.db.insert("questions", {
     answerBody: "Technical answer",
-    contentHash: `${SOURCE_ROOT}:question-hash`,
+    contentHash: idPlacement.contentHash,
     date: 0,
     locale: "id",
     number: 1,
@@ -159,7 +159,7 @@ export async function seedTryoutMigration(ctx: MutationCtx) {
   });
   const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
     choiceSnapshots: [...idPlacement.choices],
-    contentHash: `${SOURCE_ROOT}:question-hash`,
+    contentHash: idPlacement.contentHash,
     questionId,
     questionOrder: 1,
     questionSourceKey: `${SOURCE_ROOT}:question-1`,
@@ -212,10 +212,10 @@ export async function seedTryoutMigration(ctx: MutationCtx) {
     tryoutSectionId,
     updatedAt: TRYOUT_MIGRATION_NOW,
   });
-  await ctx.db.insert("irtScaleItems", {
+  const irtItemId = await ctx.db.insert("irtScaleItems", {
     calibrationRunId,
     calibrationStatus: "calibrated",
-    contentHash: `${SOURCE_ROOT}:question-hash`,
+    contentHash: idPlacement.contentHash,
     correctRate: 1,
     difficulty: 0,
     discrimination: 1,
@@ -226,7 +226,13 @@ export async function seedTryoutMigration(ctx: MutationCtx) {
     sourceRevision: "2026",
   });
 
-  return { placementId, questionId, snapshotId, tryoutSectionId };
+  return {
+    irtItemId,
+    placementId,
+    questionId,
+    snapshotId,
+    tryoutSectionId,
+  };
 }
 
 /** Aligns one complete catalog locale with the frozen legacy revision. */

@@ -72,8 +72,12 @@ describe("tryouts/runtime/finish", () => {
         });
       }
       const alignedSections = [
-        makeAlignedTryoutSection(firstSection),
-        makeAlignedTryoutSection(secondSection),
+        makeAlignedTryoutSection(firstSection, {
+          contentHash: firstSource.contentHash,
+        }),
+        makeAlignedTryoutSection(secondSection, {
+          contentHash: secondSource.contentHash,
+        }),
       ];
       const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
         model: "2pl",
@@ -86,13 +90,11 @@ describe("tryouts/runtime/finish", () => {
         questionId: firstSource.questionId,
         scaleVersionId,
         sectionId: firstSectionId,
-        sourcePath: firstSource.sourcePath,
       });
       await insertIrtScaleItem(ctx, {
         questionId: secondSource.questionId,
         scaleVersionId,
         sectionId: secondSectionId,
-        sourcePath: secondSource.sourcePath,
       });
 
       const attemptId = await insertTryoutAttempt(ctx, {

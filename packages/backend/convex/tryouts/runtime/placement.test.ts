@@ -1,4 +1,8 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import {
+  TryoutContentHashSchema,
+  type TryoutPlacement,
+} from "@nakafa/aksara-contracts/tryout/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -6,7 +10,10 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import type { TryoutSectionSource } from "@repo/backend/convex/tryouts/start/source";
-import { makeAlignedTryoutSection } from "@repo/backend/test/tryout-section";
+import {
+  makeAlignedTryoutSection,
+  TRYOUT_TEST_CONTENT_HASH,
+} from "@repo/backend/test/tryout-section";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -19,7 +26,16 @@ const SET_ROUTE = `try-out/indonesia/snbt/${TRACK}/set-1`;
 const ROUTE = `${SET_ROUTE}/${SECTION}`;
 
 /** Insert the source graph required by placement scenarios. */
-async function insertSource(ctx: MutationCtx) {
+async function insertSource(
+  ctx: MutationCtx,
+  input: {
+    readonly contentHash: TryoutPlacement["contentHash"];
+    readonly sourceRevision: TryoutPlacement["sourceRevision"];
+  } = {
+    contentHash: TRYOUT_TEST_CONTENT_HASH,
+    sourceRevision: "2027",
+  }
+) {
   const questionSetId = await ctx.db.insert("questionSets", {
     contentHash: "question-set-hash",
     countryKey: "indonesia",
@@ -35,7 +51,7 @@ async function insertSource(ctx: MutationCtx) {
   });
   const questionId = await ctx.db.insert("questions", {
     answerBody: "Answer",
-    contentHash: "new-question-hash",
+    contentHash: input.contentHash,
     date: 0,
     locale: "id",
     number: 1,
@@ -43,7 +59,7 @@ async function insertSource(ctx: MutationCtx) {
     questionSetId,
     sourceKey: `${SOURCE}:question-1`,
     sourcePath: `${SOURCE}/question-1`,
-    sourceRevision: "2027",
+    sourceRevision: input.sourceRevision,
     syncedAt: NOW,
     title: "Question",
   });
@@ -63,7 +79,8 @@ async function insertSource(ctx: MutationCtx) {
 /** Insert an attempt runtime required by placement scenarios. */
 async function insertRuntime(
   ctx: MutationCtx,
-  questionSetId: Id<"questionSets">
+  questionSetId: Id<"questionSets">,
+  signedRevision = "2027"
 ) {
   const userId = await ctx.db.insert("users", {
     authId: "auth-placement",
@@ -119,7 +136,9 @@ async function insertRuntime(
       message: "Expected try-out section fixture.",
     });
   }
-  const aligned = makeAlignedTryoutSection(section, "2027");
+  const aligned = makeAlignedTryoutSection(section, {
+    sourceRevision: signedRevision,
+  });
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: NOW + 86_400_000,
     accessSourceKind: "free",
@@ -178,6 +197,22 @@ describe("tryouts/runtime/placement", () => {
       t.mutation(async (ctx) => {
         const questionSetId = await insertSource(ctx);
         const runtime = await insertRuntime(ctx, questionSetId);
+
+        await runConvexProgram(createAttemptPlacements(ctx, runtime));
+      })
+    ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
+  });
+
+  it("rejects question content that differs from its signed placement", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.mutation(async (ctx) => {
+        const questionSetId = await insertSource(ctx, {
+          contentHash: TryoutContentHashSchema.make("4".repeat(64)),
+          sourceRevision: "2026",
+        });
+        const runtime = await insertRuntime(ctx, questionSetId, "2026");
 
         await runConvexProgram(createAttemptPlacements(ctx, runtime));
       })

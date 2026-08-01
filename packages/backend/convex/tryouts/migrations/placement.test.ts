@@ -40,4 +40,23 @@ describe("tryouts/migrations/placement", () => {
       )
     ).rejects.toThrow("conflicts with its signed artifact identity");
   });
+
+  it("rejects matching legacy hashes that differ from signed content", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const { placementId, questionId, snapshotId } =
+      await t.mutation(seedTryoutMigration);
+    const alteredContentHash = "5".repeat(64);
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(questionId, { contentHash: alteredContentHash });
+      await ctx.db.patch(placementId, { contentHash: alteredContentHash });
+    });
+
+    await expect(
+      t.mutation(
+        internal.tryouts.migrations.placement.migratePlacements,
+        makeTryoutMigrationArgs(snapshotId)
+      )
+    ).rejects.toThrow("differs from its signed row");
+  });
 });

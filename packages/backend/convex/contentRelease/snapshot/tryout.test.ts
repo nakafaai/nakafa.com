@@ -65,6 +65,7 @@ describe("contentRelease/snapshot/tryout", () => {
       },
       placement: {
         answerArtifactHash: placement.record.row.answerArtifactHash,
+        contentHash: placement.record.row.contentHash,
         identity: tryoutPlacementIdentity(placement.record.row),
         questionArtifactHash: placement.record.row.questionArtifactHash,
         questionOrder: 1,

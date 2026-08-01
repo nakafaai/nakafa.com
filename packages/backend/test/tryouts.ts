@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 
 export const TRYOUT_TEST_NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
@@ -124,6 +124,7 @@ export async function insertTryoutSet(
 export async function insertTryoutQuestionSource(
   ctx: MutationCtx,
   args: {
+    contentHash?: Doc<"questions">["contentHash"];
     questionCount?: number;
     sectionKey?: string;
     setKey?: string;
@@ -153,7 +154,7 @@ export async function insertTryoutQuestionSource(
   if (args.withQuestion ?? true) {
     await ctx.db.insert("questions", {
       answerBody: "Answer",
-      contentHash: `${sourcePath}:question-hash`,
+      contentHash: args.contentHash ?? `${sourcePath}:question-hash`,
       date: 0,
       locale: "id",
       number: 1,

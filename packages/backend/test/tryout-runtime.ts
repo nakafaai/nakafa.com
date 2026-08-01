@@ -11,6 +11,7 @@ import {
   TRYOUT_SECTION_KEY,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
+import { ConvexError } from "convex/values";
 
 /** Returns the coherent terminal reason for one fixture status. */
 function getEndReason(
@@ -206,9 +207,16 @@ export async function insertIrtScaleItem(
     questionId: Id<"questions">;
     scaleVersionId: Id<"irtScaleVersions">;
     sectionId: Id<"tryoutSections">;
-    sourcePath: string;
   }
 ) {
+  const question = await ctx.db.get(args.questionId);
+  if (!question) {
+    throw new ConvexError({
+      code: "TRYOUT_QUESTION_NOT_FOUND",
+      message: "Expected the calibrated question fixture.",
+    });
+  }
+
   const calibrationRunId = await ctx.db.insert("irtCalibrationRuns", {
     attemptCount: 0,
     completedAt: TRYOUT_TEST_NOW,
@@ -226,12 +234,12 @@ export async function insertIrtScaleItem(
   await ctx.db.insert("irtScaleItems", {
     calibrationRunId,
     calibrationStatus: "provisional",
-    contentHash: `${args.sourcePath}:question-hash`,
+    contentHash: question.contentHash,
     correctRate: 0,
     difficulty: 0,
     discrimination: 1,
     questionId: args.questionId,
-    questionSourceKey: `${args.sourcePath}:question-1`,
+    questionSourceKey: question.sourceKey,
     responseCount: 0,
     scaleVersionId: args.scaleVersionId,
     sourceRevision: "2026",
