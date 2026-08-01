@@ -7,7 +7,10 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { toTryoutCorpusPath } from "@repo/backend/convex/contentRelease/tryout/path";
 import { TRYOUT_CHOICE_LIMIT } from "@repo/backend/convex/tryouts/questions";
-import type { AlignedTryoutSection } from "@repo/backend/convex/tryouts/start/source";
+import type {
+  AlignedTryoutSection,
+  TryoutSectionSource,
+} from "@repo/backend/convex/tryouts/start/source";
 import {
   TryoutStartError,
   toTryoutStartError,
@@ -75,10 +78,15 @@ export const createAttemptPlacements = Effect.fn(
   ctx: MutationCtx,
   args: {
     readonly attempt: TryoutAttempt;
-    readonly sections: readonly AlignedTryoutSection[];
+    readonly source: TryoutSectionSource;
   }
 ) {
-  for (const source of args.sections) {
+  if (args.source.kind === "local") {
+    yield* createLocalPlacements(ctx, args.attempt, args.source.sections);
+    return;
+  }
+
+  for (const source of args.source.sections) {
     const sectionIdentity = tryoutCatalogIdentity(source.signed.section.row);
     const snapshot = args.attempt.sectionSnapshots.find(
       (candidate) => candidate.tryoutSectionId === source.legacy._id
@@ -129,6 +137,36 @@ export const createAttemptPlacements = Effect.fn(
           title: question.title,
           tryoutAttemptId: args.attempt._id,
           tryoutSectionId: source.legacy._id,
+        })
+      );
+    }
+  }
+});
+
+/** Freezes the current local rows before signed ownership is activated. */
+const createLocalPlacements = Effect.fn(
+  "tryouts.runtime.createLocalPlacements"
+)(function* (
+  ctx: MutationCtx,
+  attempt: TryoutAttempt,
+  sections: readonly TryoutSection[]
+) {
+  for (const section of sections) {
+    const questions = yield* loadSectionQuestions(ctx, section);
+    for (const question of questions) {
+      const choiceSnapshots = yield* loadChoiceSnapshots(ctx, question);
+      yield* tryStartPromise(() =>
+        ctx.db.insert("tryoutAttemptPlacements", {
+          choiceSnapshots,
+          contentHash: question.contentHash,
+          questionId: question._id,
+          questionOrder: question.number,
+          questionSourceKey: question.sourceKey,
+          sourcePath: question.sourcePath,
+          sourceRevision: question.sourceRevision,
+          title: question.title,
+          tryoutAttemptId: attempt._id,
+          tryoutSectionId: section._id,
         })
       );
     }

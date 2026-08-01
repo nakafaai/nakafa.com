@@ -23,6 +23,53 @@ const startArgs: StartAttemptArgs = {
 };
 
 describe("tryouts/start/scale", () => {
+  it("uses the published local scale before signed ownership activates", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "tryout-local-scale",
+      });
+      const fixture = await seedTryoutStartSet(ctx, {
+        scoringStrategy: "irt",
+        userId: identity.userId,
+        visibility: "visible",
+      });
+      const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
+        model: "2pl",
+        publishedAt: NOW,
+        questionCount: 1,
+        status: "official",
+        tryoutSetId: fixture.tryoutSetId,
+      });
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one content state row.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        activeManifestHash: undefined,
+        activeReleaseId: undefined,
+        activeSequence: undefined,
+      });
+      return { identity, scaleVersionId };
+    });
+    const authed = t.withIdentity({
+      sessionId: seeded.identity.sessionId,
+      subject: seeded.identity.authUserId,
+    });
+
+    const result = await authed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      startArgs
+    );
+    const attempt = await t.query((ctx) => ctx.db.get(result.attemptId));
+
+    expect(attempt?.scaleVersionId).toBe(seeded.scaleVersionId);
+    expect(attempt).not.toHaveProperty("tryoutSnapshotId");
+  });
+
   it("requires the IRT scale bound to the exact signed snapshot", async () => {
     vi.setSystemTime(new Date(NOW));
 

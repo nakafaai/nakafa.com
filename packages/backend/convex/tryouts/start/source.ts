@@ -1,8 +1,14 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import { toTryoutCorpusPath } from "@repo/backend/convex/contentRelease/tryout/path";
-import type { VerifiedTryoutSet } from "@repo/backend/convex/contentRelease/tryout/set";
+import {
+  readTryoutSet,
+  type VerifiedTryoutSet,
+} from "@repo/backend/convex/contentRelease/tryout/set";
 import {
   TryoutStartError,
+  toTryoutStartError,
   tryoutStartErrorCode,
 } from "@repo/backend/convex/tryouts/start/spec";
 import { Effect } from "effect";
@@ -16,6 +22,56 @@ export interface AlignedTryoutSection {
   readonly legacy: LegacySection;
   readonly signed: SignedSection;
 }
+
+/** Local rows used only until signed try-out ownership is activated. */
+export interface LocalTryoutSource {
+  readonly kind: "local";
+  readonly sections: readonly LegacySection[];
+}
+
+/** Signed section rows authenticated against one immutable snapshot. */
+export interface SignedSectionSource {
+  readonly kind: "signed";
+  readonly sections: readonly AlignedTryoutSection[];
+}
+
+/** Placement source selected by the explicit publication ownership mode. */
+export type TryoutSectionSource = LocalTryoutSource | SignedSectionSource;
+
+/** Signed rows required after Aksara try-out ownership is activated. */
+export interface SignedTryoutSource extends SignedSectionSource {
+  readonly snapshot: VerifiedTryoutSet;
+}
+
+/** Explicit source selected from the active publication ownership state. */
+export type TryoutStartSource = LocalTryoutSource | SignedTryoutSource;
+
+/** Selects local rows before activation and fails closed afterward. */
+export const loadTryoutStartSource = Effect.fn(
+  "tryouts.start.loadTryoutStartSource"
+)(function* (
+  ctx: QueryCtx,
+  localSet: LegacySet,
+  localSections: readonly LegacySection[]
+) {
+  const owner = yield* loadTryoutOwner(ctx).pipe(
+    Effect.mapError(toTryoutStartError)
+  );
+  if (!owner.managed) {
+    const source: TryoutStartSource = {
+      kind: "local",
+      sections: localSections,
+    };
+    return source;
+  }
+
+  const snapshot = yield* readTryoutSet(ctx, localSet).pipe(
+    Effect.mapError(toTryoutStartError)
+  );
+  const sections = yield* alignTryoutSource(localSet, localSections, snapshot);
+  const source: TryoutStartSource = { kind: "signed", sections, snapshot };
+  return source;
+});
 
 /** Proves that the active legacy and signed set snapshots are identical. */
 export const alignTryoutSource = Effect.fn("tryouts.start.alignTryoutSource")(

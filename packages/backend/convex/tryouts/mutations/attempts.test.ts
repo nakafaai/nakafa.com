@@ -16,6 +16,66 @@ import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
 import { describe, expect, it, vi } from "vitest";
 
 describe("tryouts/mutations/attempts", () => {
+  it("keeps local attempt creation available before signed ownership activates", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "tryout-local",
+      });
+      const fixture = await seedTryoutStartSet(ctx, {
+        userId: identity.userId,
+        visibility: "visible",
+      });
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one content state row.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        activeManifestHash: undefined,
+        activeReleaseId: undefined,
+        activeSequence: undefined,
+      });
+      return { fixture, identity };
+    });
+    const authed = t.withIdentity({
+      sessionId: seeded.identity.sessionId,
+      subject: seeded.identity.authUserId,
+    });
+
+    const result = await authed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      {
+        countryKey: COUNTRY,
+        examKey: EXAM,
+        locale: "id",
+        setKey: SET,
+        trackKey: TRACK,
+      }
+    );
+    const runtime = await t.query(async (ctx) => ({
+      attempt: await ctx.db.get(result.attemptId),
+      placements: await ctx.db
+        .query("tryoutAttemptPlacements")
+        .withIndex("by_tryoutAttemptId_and_questionOrder", (query) =>
+          query.eq("tryoutAttemptId", result.attemptId)
+        )
+        .collect(),
+    }));
+
+    expect(runtime.attempt).toMatchObject({
+      status: "in-progress",
+      tryoutSetId: seeded.fixture.tryoutSetId,
+    });
+    expect(runtime.attempt).not.toHaveProperty("setIdentity");
+    expect(runtime.attempt).not.toHaveProperty("tryoutSnapshotId");
+    expect(runtime.placements).toHaveLength(1);
+    expect(runtime.placements[0]).not.toHaveProperty("placementIdentity");
+    expect(runtime.placements[0]).not.toHaveProperty("sectionIdentity");
+  });
+
   it("starts an internal entry section atomically with a new attempt", async () => {
     vi.setSystemTime(new Date(NOW));
 

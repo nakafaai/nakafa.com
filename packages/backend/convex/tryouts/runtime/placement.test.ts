@@ -5,6 +5,7 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import type { TryoutSectionSource } from "@repo/backend/convex/tryouts/start/source";
 import { makeAlignedTryoutSection } from "@repo/backend/test/tryout-section";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
@@ -162,10 +163,11 @@ async function insertRuntime(
     });
   }
 
-  return {
-    attempt,
+  const source: TryoutSectionSource = {
+    kind: "signed",
     sections: [aligned],
   };
+  return { attempt, source };
 }
 
 describe("tryouts/runtime/placement", () => {

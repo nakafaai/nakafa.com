@@ -138,7 +138,7 @@ describe("tryouts/runtime/finish", () => {
       await runConvexProgram(
         createAttemptPlacements(ctx, {
           attempt,
-          sections: alignedSections,
+          source: { kind: "signed", sections: alignedSections },
         })
       );
       const placement = await ctx.db

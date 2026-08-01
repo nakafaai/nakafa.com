@@ -1,6 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type { VerifiedTryoutSet } from "@repo/backend/convex/contentRelease/tryout/set";
+import { requireIrtScaleVersion } from "@repo/backend/convex/tryouts/runtime/irt/items";
+import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
 import {
   TryoutStartError,
   toTryoutStartError,
@@ -13,10 +14,17 @@ export const selectAttemptScale = Effect.fn("tryouts.start.selectAttemptScale")(
   function* (
     ctx: MutationCtx,
     set: Doc<"tryoutSets">,
-    source: VerifiedTryoutSet
+    source: TryoutStartSource
   ) {
     if (set.scoringStrategy !== "irt") {
       return null;
+    }
+
+    if (source.kind === "local") {
+      return yield* Effect.tryPromise({
+        catch: toTryoutStartError,
+        try: () => requireIrtScaleVersion(ctx, { tryoutSetId: set._id }),
+      });
     }
 
     const scale = yield* Effect.tryPromise({
@@ -28,8 +36,8 @@ export const selectAttemptScale = Effect.fn("tryouts.start.selectAttemptScale")(
             "by_tryoutSnapshotId_and_setIdentity_and_publishedAt",
             (query) =>
               query
-                .eq("tryoutSnapshotId", source.snapshotId)
-                .eq("setIdentity", source.setIdentity)
+                .eq("tryoutSnapshotId", source.snapshot.snapshotId)
+                .eq("setIdentity", source.snapshot.setIdentity)
           )
           .order("desc")
           .first(),

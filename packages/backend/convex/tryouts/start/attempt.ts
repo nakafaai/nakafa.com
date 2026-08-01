@@ -2,11 +2,10 @@ import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity"
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
-import type { VerifiedTryoutSet } from "@repo/backend/convex/contentRelease/tryout/set";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
-import type { AlignedTryoutSection } from "@repo/backend/convex/tryouts/start/source";
+import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
 import type {
   AttemptAccessFields,
   StartAttemptArgs,
@@ -34,9 +33,8 @@ interface CreateTryoutAttemptInput {
   readonly attemptNumber: number;
   readonly now: number;
   readonly scaleVersion: Doc<"irtScaleVersions"> | null;
-  readonly sections: readonly AlignedTryoutSection[];
   readonly set: Doc<"tryoutSets">;
-  readonly source: VerifiedTryoutSet;
+  readonly source: TryoutStartSource;
   readonly userId: Id<"users">;
 }
 
@@ -66,24 +64,49 @@ export const createTryoutAttempt = Effect.fn(
 function buildAttemptValues(
   input: CreateTryoutAttemptInput
 ): TryoutAttemptInsert {
-  const signedSet = input.source.set.row;
-  return {
+  const values: TryoutAttemptInsert = {
     ...input.access,
     attemptNumber: input.attemptNumber,
     completedAt: null,
     completedSectionKeys: [],
-    countryKey: signedSet.countryKey,
     endReason: null,
-    examKey: signedSet.examKey,
     expiresAt: Math.min(
       input.now + 3 * 24 * 60 * 60 * 1000,
       input.access.accessEndsAt
     ),
     lastActivityAt: input.now,
-    locale: signedSet.locale,
     scoreStatus: input.scaleVersion?.status ?? "official",
     scoringStrategy: input.set.scoringStrategy,
-    sectionSnapshots: input.sections.map(({ legacy, signed }) => ({
+    sectionSnapshots: localSections(input.source).map((section) => ({
+      publicPath: section.publicPath,
+      questionCount: section.questionCount,
+      questionSetId: section.questionSetId,
+      questionSourcePath: section.questionSourcePath,
+      sectionKey: section.sectionKey,
+      sectionOrder: section.order,
+      sourceRevision: section.sourceRevision,
+      timeLimitSeconds: section.timeLimitSeconds,
+      tryoutSectionId: section._id,
+    })),
+    startedAt: input.now,
+    status: "in-progress",
+    totalCorrect: 0,
+    totalQuestions: input.set.totalQuestionCount,
+    tryoutSetId: input.set._id,
+    userId: input.userId,
+    ...(input.scaleVersion ? { scaleVersionId: input.scaleVersion._id } : {}),
+  };
+  if (input.source.kind === "local") {
+    return values;
+  }
+
+  const signedSet = input.source.snapshot.set.row;
+  return {
+    ...values,
+    countryKey: signedSet.countryKey,
+    examKey: signedSet.examKey,
+    locale: signedSet.locale,
+    sectionSnapshots: input.source.sections.map(({ legacy, signed }) => ({
       publicPath: legacy.publicPath,
       questionCount: legacy.questionCount,
       questionSetId: legacy.questionSetId,
@@ -96,18 +119,19 @@ function buildAttemptValues(
       timeLimitSeconds: legacy.timeLimitSeconds,
       tryoutSectionId: legacy._id,
     })),
-    setIdentity: input.source.setIdentity,
+    setIdentity: input.source.snapshot.setIdentity,
     setKey: signedSet.setKey,
-    startedAt: input.now,
-    status: "in-progress",
-    totalCorrect: 0,
-    totalQuestions: input.set.totalQuestionCount,
     trackKey: signedSet.trackKey,
-    tryoutSetId: input.set._id,
-    tryoutSnapshotId: input.source.snapshotId,
-    userId: input.userId,
-    ...(input.scaleVersion ? { scaleVersionId: input.scaleVersion._id } : {}),
+    tryoutSnapshotId: input.source.snapshot.snapshotId,
   };
+}
+
+/** Returns the local section records stored by both source modes. */
+function localSections(source: TryoutStartSource) {
+  if (source.kind === "local") {
+    return source.sections;
+  }
+  return source.sections.map(({ legacy }) => legacy);
 }
 
 /** Persists all attempt-owned side effects after the snapshot row exists. */
@@ -129,7 +153,7 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
     );
     yield* createAttemptPlacements(ctx, {
       attempt,
-      sections: input.sections,
+      source: input.source,
     });
 
     if (input.args.entrySectionKey) {
