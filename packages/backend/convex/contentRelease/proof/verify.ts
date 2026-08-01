@@ -127,6 +127,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
         `Content release ${releaseId} no longer matches its frozen renderer.`
       );
     }
+    yield* verifyStoredItems(ctx, releaseId, state.checkedIndex);
     const evidence = yield* Effect.all(
       {
         artifacts: verifyArtifacts(
@@ -140,7 +141,6 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
           release,
           readProofStream(ctx, "item", releaseId)
         ),
-        storedItems: verifyStoredItems(ctx, releaseId, state.checkedIndex),
         result: verifyResultCatalog({
           expectedCount: release.manifest.resultCount,
           expectedDigest: release.manifest.resultDigest,
