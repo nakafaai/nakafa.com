@@ -4,17 +4,35 @@ import {
 } from "@nakafa/aksara-contracts/quran/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { quranSearchFacts } from "@repo/backend/convex/contentRelease/quran/facts";
-import { validateQuranSearch } from "@repo/backend/convex/contentRelease/quran/input";
-import { QURAN_SEARCH_RESULT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
+import {
+  QURAN_SEARCH_CHARACTER_LIMIT,
+  QURAN_SEARCH_DOCUMENT_LIMIT,
+  QURAN_SEARCH_RESULT_LIMIT,
+} from "@repo/backend/convex/contentRelease/quran/limits";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
+import { validateSearchQuery } from "@repo/backend/convex/contentRelease/search/input";
 import { Effect } from "effect";
 
 /** Resolves one search hit back to its exact authenticated Quran row. */
 const resolveQuranSearchHit = Effect.fn("contentRelease.resolveQuranSearchHit")(
   function* (ctx: QueryCtx, snapshotId: string, hit: Doc<"quranSearch">) {
+    yield* ensureDocumentSize(
+      `Quran search row ${hit.identity}`,
+      {
+        identity: hit.identity,
+        index: hit.index,
+        locale: hit.locale,
+        rowHash: hit.rowHash,
+        snapshotId: hit.snapshotId,
+        surahNumber: hit.surahNumber,
+        text: hit.text,
+      },
+      QURAN_SEARCH_DOCUMENT_LIMIT
+    );
     const signed = yield* readQuranRow(
       ctx,
       snapshotId,
@@ -45,7 +63,9 @@ export const searchQuran = Effect.fn("contentRelease.searchQuran")(function* (
   locale: QuranSearchRow["locale"],
   sourceQuery: string
 ) {
-  const query = yield* validateQuranSearch(sourceQuery);
+  const query = yield* validateSearchQuery(sourceQuery, {
+    characterLimit: QURAN_SEARCH_CHARACTER_LIMIT,
+  });
   const owner = yield* loadQuranOwner(ctx);
   if (owner.snapshotId === null) {
     return {

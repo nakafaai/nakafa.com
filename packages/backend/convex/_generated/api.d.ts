@@ -275,6 +275,7 @@ import type * as contentRelease_scope_family from "../contentRelease/scope/famil
 import type * as contentRelease_scope_owner from "../contentRelease/scope/owner.js";
 import type * as contentRelease_scope_route from "../contentRelease/scope/route.js";
 import type * as contentRelease_search from "../contentRelease/search.js";
+import type * as contentRelease_search_input from "../contentRelease/search/input.js";
 import type * as contentRelease_search_sync from "../contentRelease/search/sync.js";
 import type * as contentRelease_search_verify from "../contentRelease/search/verify.js";
 import type * as contentRelease_search_write from "../contentRelease/search/write.js";
@@ -832,6 +833,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/scope/owner": typeof contentRelease_scope_owner;
   "contentRelease/scope/route": typeof contentRelease_scope_route;
   "contentRelease/search": typeof contentRelease_search;
+  "contentRelease/search/input": typeof contentRelease_search_input;
   "contentRelease/search/sync": typeof contentRelease_search_sync;
   "contentRelease/search/verify": typeof contentRelease_search_verify;
   "contentRelease/search/write": typeof contentRelease_search_write;

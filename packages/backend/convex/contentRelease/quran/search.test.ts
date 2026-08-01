@@ -1,4 +1,5 @@
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
+import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { searchQuran } from "@repo/backend/convex/contentRelease/quran/search";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -60,5 +61,25 @@ describe("contentRelease/quran/search", () => {
     await expect(
       t.query((ctx) => runConvexProgram(searchQuran(ctx, "en", "mercy")))
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
+  it("rejects a search projection above its aggregate transaction budget", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [makeQuranSearch("en", 1, "mercy")])
+    );
+    await t.mutation(async (ctx) => {
+      const hit = await ctx.db.query("quranSearch").unique();
+      if (!hit) {
+        throw new Error("Expected one technical Quran search projection.");
+      }
+      await ctx.db.patch("quranSearch", hit._id, {
+        text: `mercy ${"x".repeat(QURAN_SEARCH_DOCUMENT_LIMIT)}`,
+      });
+    });
+
+    await expect(
+      t.query((ctx) => runConvexProgram(searchQuran(ctx, "en", "mercy")))
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
   });
 });

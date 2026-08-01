@@ -1,11 +1,6 @@
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import {
-  QURAN_REFERENCE_VERSE_LIMIT,
-  QURAN_SEARCH_CHARACTER_LIMIT,
-  QURAN_SEARCH_TERM_BYTE_LIMIT,
-  QURAN_SEARCH_TERM_LIMIT,
-} from "@repo/backend/convex/contentRelease/quran/limits";
+import { QURAN_REFERENCE_VERSE_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { Effect } from "effect";
 
 interface QuranReferenceInput {
@@ -54,28 +49,4 @@ export const validateQuranReference = Effect.fn(
     );
   }
   return { fromVerse: input.fromVerse, surahNumber, toVerse };
-});
-
-/** Normalizes one bounded full-text query before it reaches Convex search. */
-export const validateQuranSearch = Effect.fn(
-  "contentRelease.validateQuranSearch"
-)(function* (source: string) {
-  const query = source.trim().replaceAll(/\s+/gu, " ");
-  const terms = query.match(/[\p{Alphabetic}\p{Number}]+/gu) ?? [];
-  const encoder = new TextEncoder();
-  const hasOversizedTerm = terms.some(
-    (term) => encoder.encode(term).byteLength > QURAN_SEARCH_TERM_BYTE_LIMIT
-  );
-  if (
-    terms.length === 0 ||
-    query.length > QURAN_SEARCH_CHARACTER_LIMIT ||
-    terms.length > QURAN_SEARCH_TERM_LIMIT ||
-    hasOversizedTerm
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INVALID_REQUEST",
-      `Quran search accepts 1 to ${QURAN_SEARCH_TERM_LIMIT} terms of at most ${QURAN_SEARCH_TERM_BYTE_LIMIT} UTF-8 bytes within ${QURAN_SEARCH_CHARACTER_LIMIT} characters.`
-    );
-  }
-  return query;
 });
