@@ -83,7 +83,7 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
       `Rollback cursor ${request.afterIndex} exceeds release ${request.rollbackOf}.`
     );
   }
-  const rows = yield* Effect.promise(() =>
+  const rowPage = yield* Effect.promise(() =>
     ctx.db
       .query("contentItems")
       .withIndex("by_releaseId_and_index", (query) =>
@@ -91,10 +91,15 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
           .eq("releaseId", request.rollbackOf)
           .gt("index", request.afterIndex)
       )
-      .take(request.limit)
+      .paginate({
+        cursor: null,
+        maximumBytesRead: ROLLBACK_PAGE_BYTES,
+        maximumRowsRead: request.limit,
+        numItems: request.limit,
+      })
   );
   const records: RollbackRecord[] = [];
-  for (const [offset, row] of rows.entries()) {
+  for (const [offset, row] of rowPage.page.entries()) {
     if (row.index !== request.afterIndex + offset + 1) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
