@@ -70,6 +70,7 @@
   "devDependencies": {
     "@effect/platform": "0.97.0",
     "@effect/platform-node": "0.108.0",
+    "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^19.2.17",
     "@types/react-katex": "^3.0.4",

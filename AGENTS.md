@@ -33,6 +33,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 ## Package Ownership
 
+- `packages/testing` owns shared Vitest defaults by runtime. Node workspaces use
+  `@repo/testing/node`, React workspaces use `@repo/testing/react`, and each
+  workspace keeps only its local aliases, setup, projects, and coverage policy.
 - `packages/utilities` is for generic cross-domain primitives only. Do not put Nakafa content-domain constants, taxonomy, schemas, MDX/content metadata, or content-specific helpers there.
 - For scopes still owned locally, content taxonomy constants and domain types live in `packages/contents/_types/taxonomy.ts`; callers import them directly from that module.
 - Local content schema modules may derive Effect schemas from taxonomy values, but they must not re-export taxonomy constants or domain types.

@@ -1,26 +1,13 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
+import config from "@repo/testing/node";
+import { mergeConfig } from "vitest/config";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const config = defineConfig({
-  resolve: {
-    alias: {
-      "@repo": path.resolve(__dirname, "../"),
-    },
-  },
+export default mergeConfig(config, {
   test: {
     coverage: {
-      enabled: true,
-      provider: "istanbul",
       thresholds: {
         100: true,
         perFile: true,
       },
     },
-    environment: "node",
   },
 });
-
-export default config;

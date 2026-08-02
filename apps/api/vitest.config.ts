@@ -1,13 +1,11 @@
 import path from "node:path";
-import { defineConfig } from "vitest/config";
+import config from "@repo/testing/node";
+import { mergeConfig } from "vitest/config";
 
-const config = defineConfig({
+export default mergeConfig(config, {
   test: {
-    environment: "node",
     setupFiles: ["./lib/test-setup.ts"],
     coverage: {
-      enabled: true,
-      provider: "istanbul",
       thresholds: {
         100: true,
         perFile: true,
@@ -17,9 +15,6 @@ const config = defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./"),
-      "@repo": path.resolve(import.meta.dirname, "../../packages"),
     },
   },
 });
-
-export default config;

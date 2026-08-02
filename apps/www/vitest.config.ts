@@ -1,9 +1,6 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import config from "@repo/testing";
+import config from "@repo/testing/react";
 import { mergeConfig } from "vitest/config";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Keep this config aligned with the shared frontend Vitest baseline.
@@ -17,9 +14,9 @@ export default mergeConfig(config, {
   resolve: {
     alias: {
       /** Match the app's `@/` import alias inside tests. */
-      "@": __dirname,
+      "@": import.meta.dirname,
       /** Replace Next's import guard with one shared server-test boundary. */
-      "server-only": path.resolve(__dirname, "./test/server-only.ts"),
+      "server-only": path.resolve(import.meta.dirname, "./test/server-only.ts"),
     },
   },
   test: {

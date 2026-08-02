@@ -1,23 +1,18 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import config from "@repo/testing";
+import config from "@repo/testing/node";
 import { mergeConfig } from "vitest/config";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 /**
- * Keep this config aligned with the shared frontend Vitest baseline.
+ * Keep this config aligned with the shared Node Vitest baseline.
  * Do not weaken coverage or add app-local execution overrides here.
  */
 export default mergeConfig(config, {
   resolve: {
     alias: {
       /** Match the app's `@/` import alias inside tests. */
-      "@": __dirname,
+      "@": import.meta.dirname,
     },
   },
   test: {
-    environment: "node",
     coverage: {
       thresholds: {
         100: true,
