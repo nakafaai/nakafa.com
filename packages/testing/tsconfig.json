@@ -1,11 +1,5 @@
 {
-  "extends": "@repo/typescript-config/nextjs.json",
-  "compilerOptions": {
-    "paths": {
-      "@repo/*": ["../*"],
-      "@repo/testing/*": ["./*"]
-    }
-  },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "extends": "@repo/typescript-config/library.json",
+  "include": ["*.ts"],
   "exclude": ["node_modules"]
 }

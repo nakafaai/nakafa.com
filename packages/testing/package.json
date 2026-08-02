@@ -3,11 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#testing/*": "./*.ts"
+  },
+  "exports": {
+    "./node": "./node.ts",
+    "./react": "./react.ts"
+  },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
     "@vitejs/plugin-react": "^6.0.4",
     "@vitest/coverage-istanbul": "^4.1.10",
     "vitest": "^4.1.10"
