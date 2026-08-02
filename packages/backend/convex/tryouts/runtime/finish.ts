@@ -61,7 +61,7 @@ async function loadSectionResponses(
 ) {
   const responses = await ctx.db
     .query("tryoutResponses")
-    .withIndex("by_tryoutSectionAttemptId", (q) =>
+    .withIndex("by_tryoutSectionAttemptId_and_questionId", (q) =>
       q.eq("tryoutSectionAttemptId", section._id)
     )
     .take(section.totalQuestions + 1);

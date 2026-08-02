@@ -304,8 +304,6 @@ import type * as contentRelease_tryout_limits from "../contentRelease/tryout/lim
 import type * as contentRelease_tryout_owner from "../contentRelease/tryout/owner.js";
 import type * as contentRelease_tryout_path from "../contentRelease/tryout/path.js";
 import type * as contentRelease_tryout_section from "../contentRelease/tryout/section.js";
-import type * as contentRelease_tryout_setIdentity from "../contentRelease/tryout/setIdentity.js";
-import type * as contentRelease_tryout_setIdentity_impl from "../contentRelease/tryout/setIdentity/impl.js";
 import type * as contentRelease_tryout_set from "../contentRelease/tryout/set.js";
 import type * as contentRelease_tryout_sitemap from "../contentRelease/tryout/sitemap.js";
 import type * as contentRelease_tryout_verify from "../contentRelease/tryout/verify.js";
@@ -898,8 +896,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/tryout/owner": typeof contentRelease_tryout_owner;
   "contentRelease/tryout/path": typeof contentRelease_tryout_path;
   "contentRelease/tryout/section": typeof contentRelease_tryout_section;
-  "contentRelease/tryout/setIdentity": typeof contentRelease_tryout_setIdentity;
-  "contentRelease/tryout/setIdentity/impl": typeof contentRelease_tryout_setIdentity_impl;
   "contentRelease/tryout/set": typeof contentRelease_tryout_set;
   "contentRelease/tryout/sitemap": typeof contentRelease_tryout_sitemap;
   "contentRelease/tryout/verify": typeof contentRelease_tryout_verify;

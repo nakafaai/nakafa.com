@@ -239,12 +239,10 @@ const tables = {
     answeredAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_tryoutSectionAttemptId", ["tryoutSectionAttemptId"])
     .index("by_tryoutSectionAttemptId_and_questionId", [
       "tryoutSectionAttemptId",
       "questionId",
     ])
-    .index("by_tryoutAttemptId", ["tryoutAttemptId"])
     .index("by_tryoutAttemptId_and_questionId", [
       "tryoutAttemptId",
       "questionId",

@@ -1,9 +1,6 @@
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/row-hash";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/spec";
-import {
-  tryoutCatalogFacts,
-  tryoutCatalogSetIdentity,
-} from "@repo/backend/convex/contentRelease/tryout/facts";
+import { tryoutCatalogFacts } from "@repo/backend/convex/contentRelease/tryout/facts";
 import { makeTryoutCatalogRow } from "@repo/backend/test/tryout-snapshot";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -55,18 +52,21 @@ describe("contentRelease/tryout/facts", () => {
   it("derives one stable set identity for set and section rows", () => {
     const set = makeSetChild("set");
     const section = makeSetChild("section");
-    const setIdentity = tryoutCatalogSetIdentity(set);
+    const setIdentity = tryoutCatalogFacts(
+      makeTryoutCatalogRecord(set)
+    ).setIdentity;
 
     expect(tryoutCatalogFacts(makeTryoutCatalogRecord(set)).setIdentity).toBe(
       setIdentity
     );
-    expect(tryoutCatalogSetIdentity(section)).toBe(setIdentity);
+    expect(
+      tryoutCatalogFacts(makeTryoutCatalogRecord(section)).setIdentity
+    ).toBe(setIdentity);
   });
 
   it("stores no set identity for rows outside a set", () => {
     const country = makeTryoutCatalogRow().record;
 
     expect(tryoutCatalogFacts(country).setIdentity).toBeUndefined();
-    expect(tryoutCatalogSetIdentity(country.row)).toBeUndefined();
   });
 });
