@@ -517,6 +517,7 @@ import type * as tryouts_access_impl from "../tryouts/access/impl.js";
 import type * as tryouts_access_source from "../tryouts/access/source.js";
 import type * as tryouts_access_subscription from "../tryouts/access/subscription.js";
 import type * as tryouts_catalog_spec from "../tryouts/catalog/spec.js";
+import type * as tryouts_migrations_activate from "../tryouts/migrations/activate.js";
 import type * as tryouts_migrations_attempt from "../tryouts/migrations/attempt.js";
 import type * as tryouts_migrations_calibration from "../tryouts/migrations/calibration.js";
 import type * as tryouts_migrations_catalog from "../tryouts/migrations/catalog.js";
@@ -1099,6 +1100,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/access/source": typeof tryouts_access_source;
   "tryouts/access/subscription": typeof tryouts_access_subscription;
   "tryouts/catalog/spec": typeof tryouts_catalog_spec;
+  "tryouts/migrations/activate": typeof tryouts_migrations_activate;
   "tryouts/migrations/attempt": typeof tryouts_migrations_attempt;
   "tryouts/migrations/calibration": typeof tryouts_migrations_calibration;
   "tryouts/migrations/catalog": typeof tryouts_migrations_catalog;

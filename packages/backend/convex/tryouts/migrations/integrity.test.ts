@@ -34,10 +34,6 @@ async function migrateAll(
     internal.tryouts.migrations.placement.migratePlacements,
     args
   );
-  const scores = await t.mutation(
-    internal.tryouts.migrations.score.migrateScores,
-    args
-  );
   const items = await t.mutation(
     internal.tryouts.migrations.item.migrateItems,
     args
@@ -50,8 +46,17 @@ async function migrateAll(
     internal.tryouts.migrations.scale.migrateScales,
     args
   );
+  const attemptsActivated = await t.mutation(
+    internal.tryouts.migrations.activate.activateAttempts,
+    args
+  );
+  const scores = await t.mutation(
+    internal.tryouts.migrations.score.migrateScores,
+    args
+  );
   return [
     attempts,
+    attemptsActivated,
     progress,
     sections,
     placements,

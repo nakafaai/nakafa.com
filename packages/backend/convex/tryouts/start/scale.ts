@@ -4,7 +4,6 @@ import {
 } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { requireIrtScaleVersion } from "@repo/backend/convex/tryouts/runtime/irt/items";
 import type {
   SignedTryoutSource,
   TryoutStartSource,
@@ -36,10 +35,7 @@ export const selectAttemptScale = Effect.fn("tryouts.start.selectAttemptScale")(
     }
 
     if (source.kind === "local") {
-      return yield* Effect.tryPromise({
-        catch: toTryoutStartError,
-        try: () => requireIrtScaleVersion(ctx, { tryoutSetId: set._id }),
-      });
+      return yield* loadLocalScale(ctx, set);
     }
 
     const scale = yield* loadExactScale(ctx, set, source);
@@ -55,6 +51,30 @@ export const selectAttemptScale = Effect.fn("tryouts.start.selectAttemptScale")(
     });
   }
 );
+
+/** Loads the newest scale that still belongs to filesystem-authored content. */
+const loadLocalScale = Effect.fn("tryouts.start.loadLocalScale")(function* (
+  ctx: MutationCtx,
+  set: Doc<"tryoutSets">
+) {
+  const scale = yield* tryScalePromise(() =>
+    ctx.db
+      .query("irtScaleVersions")
+      .withIndex(
+        "by_tryoutSetId_and_tryoutSnapshotId_and_publishedAt",
+        (query) =>
+          query.eq("tryoutSetId", set._id).eq("tryoutSnapshotId", undefined)
+      )
+      .order("desc")
+      .first()
+  );
+  if (!scale) {
+    return yield* scaleError(
+      "Published filesystem IRT scale is required before scoring this try-out."
+    );
+  }
+  return scale;
+});
 
 /** Loads at most one scale bound to the exact signed snapshot. */
 const loadExactScale = Effect.fn("tryouts.start.loadExactScale")(function* (

@@ -85,7 +85,7 @@ export const readTryoutSectionContent = Effect.fn(
   });
 });
 
-/** Loads the latest attempt through stable identity before migration fallback. */
+/** Loads the actual latest attempt across signed and filesystem identities. */
 const loadOwnedAttempt = Effect.fn("tryouts.access.loadOwnedAttempt")(
   function* (
     ctx: QueryCtx,
@@ -111,15 +111,11 @@ const loadOwnedAttempt = Effect.fn("tryouts.access.loadOwnedAttempt")(
         .order("desc")
         .first()
     );
-    if (signedAttempt) {
-      return signedAttempt;
-    }
-
     const set = yield* tryContentPromise(() =>
       getActiveTryoutSet(ctx, input.args)
     );
     if (!set) {
-      return null;
+      return signedAttempt;
     }
 
     return yield* tryContentPromise(() =>

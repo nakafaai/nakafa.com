@@ -50,7 +50,7 @@ const migrateAttemptPage = Effect.fn("tryouts.migrations.migrateAttemptPage")(
   }
 );
 
-/** Adds signed set and section identities while retaining legacy references. */
+/** Prepares signed set and section identities while retaining local ownership. */
 const prepareAttempt = Effect.fn("tryouts.migrations.prepareAttempt")(
   function* (
     ctx: MutationCtx,
@@ -123,7 +123,6 @@ const prepareAttempt = Effect.fn("tryouts.migrations.prepareAttempt")(
       );
     }
     if (
-      attempt.tryoutSnapshotId === expectedSnapshotId &&
       attempt.setIdentity === set.identity &&
       attempt.countryKey === set.row.countryKey &&
       attempt.examKey === set.row.examKey &&
@@ -147,7 +146,6 @@ const prepareAttempt = Effect.fn("tryouts.migrations.prepareAttempt")(
       setIdentity: set.identity,
       setKey: set.row.setKey,
       trackKey: set.row.trackKey,
-      tryoutSnapshotId: expectedSnapshotId,
     };
   }
 );

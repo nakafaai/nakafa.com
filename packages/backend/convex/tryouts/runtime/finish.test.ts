@@ -87,12 +87,16 @@ describe("tryouts/runtime/finish", () => {
           message: "Expected signed try-out placement fixtures.",
         });
       }
+      const setIdentity = "tryout:set:expire-irt";
+      const tryoutSnapshotId = "tryout-snapshot:expire-irt";
       const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
         model: "2pl",
         publishedAt: NOW,
         questionCount: 2,
+        setIdentity,
         status: "provisional",
         tryoutSetId,
+        tryoutSnapshotId,
       });
       await insertIrtScaleItem(ctx, {
         placement: firstPlacement,
@@ -132,6 +136,15 @@ describe("tryouts/runtime/finish", () => {
         ],
         tryoutSetId,
         userId,
+      });
+      await ctx.db.patch(attemptId, {
+        countryKey: "indonesia",
+        examKey: "snbt",
+        locale: "id",
+        setIdentity,
+        setKey: "set-1",
+        trackKey: "2027",
+        tryoutSnapshotId,
       });
       const sectionAttemptId = await insertTryoutSectionAttempt(ctx, {
         expiresAt: EXPIRED_AT,

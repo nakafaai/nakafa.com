@@ -5,6 +5,15 @@ import { ConvexError } from "convex/values";
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
 
+/** Returns the single ownership mode that controls every IRT snapshot join. */
+export function getIrtOwnership(
+  attempt: Pick<TryoutAttempt, "tryoutSnapshotId">
+) {
+  return attempt.tryoutSnapshotId ? "signed" : "filesystem";
+}
+
+export type IrtOwnership = ReturnType<typeof getIrtOwnership>;
+
 /** Loads the IRT scale that should be used for one set or attempt snapshot. */
 export async function requireIrtScaleVersion(
   ctx: MutationCtx,
@@ -155,25 +164,27 @@ export async function loadAttemptScaleItems(
 export async function loadSectionScaleItems(
   ctx: MutationCtx,
   args: {
+    ownership: IrtOwnership;
     placements: TryoutPlacement[];
     scale: Doc<"irtScaleVersions">;
   }
 ) {
   return await Promise.all(
     args.placements.map(async (placement) => {
-      const items = placement.placementIdentity
-        ? await ctx.db
-            .query("irtScaleItems")
-            .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
-              query
-                .eq("scaleVersionId", args.scale._id)
-                .eq("placementIdentity", placement.placementIdentity)
-            )
-            .take(2)
-        : await loadLegacyScaleItems(ctx, args.scale._id, placement);
+      const items =
+        args.ownership === "signed"
+          ? await ctx.db
+              .query("irtScaleItems")
+              .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
+                query
+                  .eq("scaleVersionId", args.scale._id)
+                  .eq("placementIdentity", placement.placementIdentity)
+              )
+              .take(2)
+          : await loadLegacyScaleItems(ctx, args.scale._id, placement);
       const item = items.length === 1 ? items[0] : null;
 
-      if (item && matchesPlacementSnapshot(item, placement)) {
+      if (item && matchesPlacementSnapshot(item, placement, args.ownership)) {
         return item;
       }
 
@@ -188,10 +199,13 @@ export async function loadSectionScaleItems(
 /** Verifies that an IRT item belongs to the exact placed source snapshot. */
 export function matchesPlacementSnapshot(
   item: Doc<"irtScaleItems">,
-  placement: TryoutPlacement
+  placement: TryoutPlacement,
+  ownership: IrtOwnership
 ) {
-  if (placement.placementIdentity && placement.placementRowHash) {
+  if (ownership === "signed") {
     return (
+      placement.placementIdentity !== undefined &&
+      placement.placementRowHash !== undefined &&
       item.placementIdentity === placement.placementIdentity &&
       item.placementRowHash === placement.placementRowHash
     );

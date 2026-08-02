@@ -38,7 +38,8 @@ export const bindLegacyPlacement = Effect.fn(
   const trackKey = attempt?.trackKey;
   if (
     !attempt ||
-    attempt.tryoutSnapshotId !== expectedSnapshotId ||
+    (attempt.tryoutSnapshotId !== undefined &&
+      attempt.tryoutSnapshotId !== expectedSnapshotId) ||
     !countryKey ||
     !examKey ||
     !locale ||

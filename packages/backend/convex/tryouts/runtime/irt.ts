@@ -1,6 +1,7 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  getIrtOwnership,
   loadAttemptPlacements,
   loadAttemptScale,
   loadAttemptScaleItems,
@@ -24,6 +25,7 @@ export async function scoreIrtAttempt(
   }
 ): Promise<AttemptScore> {
   const scale = await loadAttemptScale(ctx, args.attempt);
+  const ownership = getIrtOwnership(args.attempt);
   const [items, placements] = await Promise.all([
     loadAttemptScaleItems(ctx, scale, args.attempt.totalQuestions),
     loadAttemptPlacements(ctx, args.attempt),
@@ -31,6 +33,7 @@ export async function scoreIrtAttempt(
 
   return buildIrtScore({
     items,
+    ownership,
     placements,
     responses: args.responses,
     scale,
@@ -51,11 +54,17 @@ export async function scoreIrtSection(
   }
 ): Promise<AttemptScore> {
   const scale = await loadAttemptScale(ctx, args.attempt);
+  const ownership = getIrtOwnership(args.attempt);
   const placements = await loadSectionPlacements(ctx, args);
-  const items = await loadSectionScaleItems(ctx, { placements, scale });
+  const items = await loadSectionScaleItems(ctx, {
+    ownership,
+    placements,
+    scale,
+  });
 
   return buildIrtScore({
     items,
+    ownership,
     placements,
     responses: args.responses,
     scale,

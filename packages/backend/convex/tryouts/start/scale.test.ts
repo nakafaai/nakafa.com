@@ -26,7 +26,7 @@ const startArgs: StartAttemptArgs = {
 };
 
 describe("tryouts/start/scale", () => {
-  it("uses the published local scale before signed ownership activates", async () => {
+  it("uses the local scale after signed ownership rolls back", async () => {
     vi.setSystemTime(new Date(NOW));
 
     const t = createConvexTestWithBetterAuth();
@@ -46,6 +46,15 @@ describe("tryouts/start/scale", () => {
         questionCount: 1,
         status: "official",
         tryoutSetId: fixture.tryoutSetId,
+      });
+      await ctx.db.insert("irtScaleVersions", {
+        model: "2pl",
+        publishedAt: NOW + 1,
+        questionCount: 1,
+        setIdentity: fixture.setIdentity,
+        status: "official",
+        tryoutSetId: fixture.tryoutSetId,
+        tryoutSnapshotId: fixture.snapshotId,
       });
       const state = await ctx.db.query("contentState").unique();
       if (!state) {

@@ -286,6 +286,44 @@ describe("tryouts/queries/access", () => {
     });
   });
 
+  it("prefers a newer filesystem attempt after ownership rolls back", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const signed = await seedTryoutContentAccessState(ctx, {
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        signed: true,
+        suffix: "content-signed-before-rollback",
+      });
+      const local = await seedTryoutContentAccessState(ctx, {
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        suffix: "content-local-after-rollback",
+      });
+      await ctx.db.patch(local.attemptId, {
+        attemptNumber: 2,
+        lastActivityAt: TRYOUT_TEST_NOW + 1,
+        startedAt: TRYOUT_TEST_NOW + 1,
+        tryoutSetId: signed.tryoutSetId,
+        userId: signed.identity.userId,
+      });
+      await ctx.db.delete(local.tryoutSetId);
+      return signed.identity;
+    });
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await expect(
+      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
+    ).resolves.toEqual({
+      answers: false,
+      kind: "filesystem",
+      questions: true,
+    });
+  });
+
   it("returns entitled answer selectors only after terminal review", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation((ctx) =>
