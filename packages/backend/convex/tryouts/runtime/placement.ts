@@ -2,15 +2,10 @@ import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
-import type { TryoutChoice } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { toTryoutCorpusPath } from "@repo/backend/convex/contentRelease/tryout/path";
 import { TRYOUT_CHOICE_LIMIT } from "@repo/backend/convex/tryouts/questions";
-import type {
-  AlignedTryoutSection,
-  TryoutSectionSource,
-} from "@repo/backend/convex/tryouts/start/source";
+import type { TryoutSectionSource } from "@repo/backend/convex/tryouts/start/source";
 import {
   TryoutStartError,
   toTryoutStartError,
@@ -71,7 +66,7 @@ export async function requireSnapshotSection(
   return section;
 }
 
-/** Freezes signed identities and legacy question state into new placements. */
+/** Freezes the selected local or authenticated signed placement snapshot. */
 export const createAttemptPlacements = Effect.fn(
   "tryouts.runtime.createAttemptPlacements"
 )(function* (
@@ -94,47 +89,32 @@ export const createAttemptPlacements = Effect.fn(
     if (
       !snapshot ||
       snapshot.sectionIdentity !== sectionIdentity ||
-      snapshot.sectionRowHash !== source.signed.section.rowHash
+      snapshot.sectionRowHash !== source.signed.section.rowHash ||
+      snapshot.questionCount !== source.signed.placements.length
     ) {
       return yield* startMismatch(
         "Try-out section changed before its attempt was frozen."
       );
     }
 
-    const questions = yield* loadSectionQuestions(ctx, source.legacy);
-    for (const [index, question] of questions.entries()) {
-      const placement = source.signed.placements[index];
-      if (!placement) {
-        return yield* startMismatch(
-          "Try-out signed placement count changed before attempt creation."
-        );
-      }
-      const choices = yield* loadChoiceSnapshots(ctx, question);
-      if (!matchesPlacement(source.legacy, question, choices, placement.row)) {
-        return yield* startMismatch(
-          `Try-out question ${question.number} differs from its signed placement.`
-        );
-      }
-
+    for (const placement of source.signed.placements) {
       yield* tryStartPromise(() =>
         ctx.db.insert("tryoutAttemptPlacements", {
           answerArtifactHash: placement.row.answerArtifactHash,
           answerContentKey: placement.row.answerContentKey,
-          choiceSnapshots: choices,
-          contentHash: question.contentHash,
+          choiceSnapshots: [...placement.row.choices],
+          contentHash: placement.row.contentHash,
           placementIdentity: tryoutPlacementIdentity(placement.row),
           placementRowHash: placement.rowHash,
           questionArtifactHash: placement.row.questionArtifactHash,
           questionContentKey: placement.row.questionContentKey,
-          questionId: question._id,
-          questionOrder: question.number,
-          questionSourceKey: question.sourceKey,
+          questionOrder: placement.row.questionOrder,
           rendererDomain: placement.row.rendererDomain,
           sectionIdentity,
-          sectionKey: source.legacy.sectionKey,
-          sourcePath: question.sourcePath,
-          sourceRevision: question.sourceRevision,
-          title: question.title,
+          sectionKey: placement.row.sectionKey,
+          sourcePath: placement.row.questionSourcePath,
+          sourceRevision: placement.row.sourceRevision,
+          title: placement.row.title,
           tryoutAttemptId: args.attempt._id,
           tryoutSectionId: source.legacy._id,
         })
@@ -224,44 +204,6 @@ const loadChoiceSnapshots = Effect.fn("tryouts.runtime.loadChoiceSnapshots")(
       .sort((left, right) => left.order - right.order);
   }
 );
-
-/** Checks one legacy question snapshot against its signed placement. */
-function matchesPlacement(
-  section: TryoutSection,
-  question: TryoutQuestion,
-  choices: readonly TryoutChoice[],
-  signed: AlignedTryoutSection["signed"]["placements"][number]["row"]
-) {
-  return (
-    signed.contentHash === question.contentHash &&
-    signed.sectionKey === section.sectionKey &&
-    signed.questionOrder === question.number &&
-    signed.questionSourcePath === toTryoutCorpusPath(question.sourcePath) &&
-    signed.sourceRevision === question.sourceRevision &&
-    signed.title === question.title &&
-    choicesMatch(choices, signed.choices)
-  );
-}
-
-/** Compares ordered choices without relying on object property order. */
-function choicesMatch(
-  legacy: readonly TryoutChoice[],
-  signed: readonly TryoutChoice[]
-) {
-  return (
-    legacy.length === signed.length &&
-    legacy.every((choice, index) => {
-      const candidate = signed[index];
-      return (
-        candidate !== undefined &&
-        candidate.isCorrect === choice.isCorrect &&
-        candidate.label === choice.label &&
-        candidate.optionKey === choice.optionKey &&
-        candidate.order === choice.order
-      );
-    })
-  );
-}
 
 /** Creates one typed fail-closed snapshot mismatch. */
 function startMismatch(message: string) {

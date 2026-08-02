@@ -2,6 +2,7 @@ import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import { TRYOUT_MIGRATION_PAGE_LIMIT } from "@repo/backend/convex/tryouts/migrations/spec";
 import {
   activateTryoutSnapshot,
   makeTryoutPlacementRow,
@@ -47,7 +48,7 @@ export function makeTryoutMigrationArgs(snapshotId: string, apply = true) {
     expectedProcessed: 0,
     expectedSnapshotId: snapshotId,
     expectedTotal: 1,
-    paginationOpts: { cursor: null, numItems: 50 },
+    paginationOpts: { cursor: null, numItems: TRYOUT_MIGRATION_PAGE_LIMIT },
   };
 }
 

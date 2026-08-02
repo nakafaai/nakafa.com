@@ -12,6 +12,7 @@ import {
   migrationPageResult,
   type TryoutMigrationArgs,
   tryoutMigrationArgs,
+  tryoutMigrationResultValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
@@ -82,5 +83,6 @@ const prepareItem = Effect.fn("tryouts.migrations.prepareItem")(function* (
 /** Migrates one bounded IRT scale-item page. */
 export const migrateItems = internalMutation({
   args: tryoutMigrationArgs,
+  returns: tryoutMigrationResultValidator,
   handler: (ctx, args) => runConvexProgram(migrateItemPage(ctx, args)),
 });

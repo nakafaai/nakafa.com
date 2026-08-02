@@ -11,6 +11,7 @@ import {
   migrationPageResult,
   type TryoutMigrationArgs,
   tryoutMigrationArgs,
+  tryoutMigrationResultValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
@@ -123,5 +124,6 @@ function hasPlacementConflict(
 /** Migrates one bounded attempt-placement page. */
 export const migratePlacements = internalMutation({
   args: tryoutMigrationArgs,
+  returns: tryoutMigrationResultValidator,
   handler: (ctx, args) => runConvexProgram(migratePlacementPage(ctx, args)),
 });

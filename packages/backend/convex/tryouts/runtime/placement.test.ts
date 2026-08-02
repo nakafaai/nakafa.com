@@ -190,31 +190,59 @@ async function insertRuntime(
 }
 
 describe("tryouts/runtime/placement", () => {
-  it("rejects question rows from a different source revision", async () => {
+  it("freezes signed state independently of legacy question rows", async () => {
+    const t = convexTest(schema, convexModules);
+
+    const placement = await t.mutation(async (ctx) => {
+      const questionSetId = await insertSource(ctx, {
+        contentHash: TryoutContentHashSchema.make("4".repeat(64)),
+        sourceRevision: "2026",
+      });
+      const runtime = await insertRuntime(ctx, questionSetId);
+
+      await runConvexProgram(createAttemptPlacements(ctx, runtime));
+      return await ctx.db
+        .query("tryoutAttemptPlacements")
+        .withIndex(
+          "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
+          (query) => query.eq("tryoutAttemptId", runtime.attempt._id)
+        )
+        .unique();
+    });
+
+    expect(placement).toMatchObject({
+      contentHash: TRYOUT_TEST_CONTENT_HASH,
+      sourceRevision: "2027",
+    });
+    expect(placement).not.toHaveProperty("questionId");
+  });
+
+  it("rejects an incomplete signed placement snapshot", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
       t.mutation(async (ctx) => {
         const questionSetId = await insertSource(ctx);
         const runtime = await insertRuntime(ctx, questionSetId);
+        const section = runtime.source.sections[0];
+        if (!section) {
+          throw new Error("Expected one signed section fixture.");
+        }
 
-        await runConvexProgram(createAttemptPlacements(ctx, runtime));
-      })
-    ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
-  });
-
-  it("rejects question content that differs from its signed placement", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await expect(
-      t.mutation(async (ctx) => {
-        const questionSetId = await insertSource(ctx, {
-          contentHash: TryoutContentHashSchema.make("4".repeat(64)),
-          sourceRevision: "2026",
-        });
-        const runtime = await insertRuntime(ctx, questionSetId, "2026");
-
-        await runConvexProgram(createAttemptPlacements(ctx, runtime));
+        await runConvexProgram(
+          createAttemptPlacements(ctx, {
+            attempt: runtime.attempt,
+            source: {
+              kind: "signed",
+              sections: [
+                {
+                  ...section,
+                  signed: { ...section.signed, placements: [] },
+                },
+              ],
+            },
+          })
+        );
       })
     ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
   });

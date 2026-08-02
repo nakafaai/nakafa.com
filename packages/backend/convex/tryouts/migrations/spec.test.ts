@@ -1,6 +1,7 @@
 import {
   migrationPageOptions,
   migrationPageResult,
+  TRYOUT_MIGRATION_PAGE_LIMIT,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
@@ -13,13 +14,13 @@ describe("tryouts/migrations/spec", () => {
         cursor: null,
         maximumBytesRead: 1,
         maximumRowsRead: 1,
-        numItems: 50,
+        numItems: TRYOUT_MIGRATION_PAGE_LIMIT,
       })
     ).toEqual({
       cursor: null,
-      maximumBytesRead: 4 * 1024 * 1024,
-      maximumRowsRead: 64,
-      numItems: 50,
+      maximumBytesRead: 1024 * 1024,
+      maximumRowsRead: TRYOUT_MIGRATION_PAGE_LIMIT,
+      numItems: TRYOUT_MIGRATION_PAGE_LIMIT,
     });
   });
 
@@ -29,7 +30,7 @@ describe("tryouts/migrations/spec", () => {
         validateMigrationPage({
           expectedProcessed: 0,
           expectedTotal: 2,
-          numItems: 50,
+          numItems: TRYOUT_MIGRATION_PAGE_LIMIT,
           page: { isDone: true, page: ["a", "b"] },
           table: "tryoutAttempts",
         })
@@ -50,23 +51,26 @@ describe("tryouts/migrations/spec", () => {
     });
   });
 
-  it.each([0, 51])("rejects an unsafe page size of %i", async (numItems) => {
-    await expect(
-      Effect.runPromise(
-        validateMigrationPage({
-          expectedProcessed: 0,
-          expectedTotal: 1,
-          numItems,
-          page: { isDone: true, page: ["a"] },
-          table: "tryoutAttempts",
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "TryoutMigrationError",
-      code: "TRYOUT_MIGRATION_INVALID",
-      message: "Try-out migration pages must contain 1 to 50 rows.",
-    });
-  });
+  it.each([0, TRYOUT_MIGRATION_PAGE_LIMIT + 1])(
+    "rejects an unsafe page size of %i",
+    async (numItems) => {
+      await expect(
+        Effect.runPromise(
+          validateMigrationPage({
+            expectedProcessed: 0,
+            expectedTotal: 1,
+            numItems,
+            page: { isDone: true, page: ["a"] },
+            table: "tryoutAttempts",
+          }).pipe(Effect.flip)
+        )
+      ).resolves.toMatchObject({
+        _tag: "TryoutMigrationError",
+        code: "TRYOUT_MIGRATION_INVALID",
+        message: `Try-out migration pages must contain 1 to ${TRYOUT_MIGRATION_PAGE_LIMIT} rows.`,
+      });
+    }
+  );
 
   it("rejects terminal progress that differs from the audited count", async () => {
     await expect(
@@ -74,7 +78,7 @@ describe("tryouts/migrations/spec", () => {
         validateMigrationPage({
           expectedProcessed: 0,
           expectedTotal: 1,
-          numItems: 50,
+          numItems: TRYOUT_MIGRATION_PAGE_LIMIT,
           page: { isDone: true, page: ["a", "b"] },
           table: "tryoutAttempts",
         }).pipe(Effect.flip)

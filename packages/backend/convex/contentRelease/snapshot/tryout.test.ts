@@ -73,6 +73,28 @@ describe("contentRelease/snapshot/tryout", () => {
     });
   });
 
+  it("accepts pre-hash placement rows during the additive migration", async () => {
+    const placement = makeTryoutPlacementRow();
+    const placementJson = canonicalizeContentSnapshotRow(placement);
+    const { contentHash: _contentHash, ...legacyFacts } = tryoutPlacementFacts(
+      placement.record
+    );
+    const t = convexTest(schema, convexModules);
+
+    const placementId = await t.mutation((ctx) =>
+      ctx.db.insert("tryoutPlacements", {
+        ...legacyFacts,
+        index: 0,
+        rowHash: placement.record.rowHash,
+        rowJson: placementJson,
+        snapshotId,
+      })
+    );
+    const stored = await t.run((ctx) => ctx.db.get(placementId));
+
+    expect(stored).not.toHaveProperty("contentHash");
+  });
+
   it("replays exact rows and rejects index or identity collisions", async () => {
     const catalog = makeTryoutCatalogRow();
     const rowJson = canonicalizeContentSnapshotRow(catalog);

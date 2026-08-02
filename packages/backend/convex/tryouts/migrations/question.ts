@@ -7,7 +7,6 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { toTryoutCorpusPath } from "@repo/backend/convex/contentRelease/tryout/path";
 import { verifyTryoutPlacement } from "@repo/backend/convex/contentRelease/tryout/verify";
-import { bindLegacySection } from "@repo/backend/convex/tryouts/migrations/catalog";
 import { migrationFail } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
 
@@ -21,23 +20,42 @@ export const bindLegacyPlacement = Effect.fn(
   expectedSnapshotId: string,
   legacy: LegacyPlacement
 ) {
-  const questionId = legacy.questionId;
   const tryoutSectionId = legacy.tryoutSectionId;
-  if (!(tryoutSectionId && questionId && legacy.contentHash)) {
+  if (!(tryoutSectionId && legacy.contentHash)) {
     return yield* migrationFail(
       "A legacy placement is missing its source identity."
     );
   }
 
-  const section = yield* bindLegacySection(
-    ctx,
-    expectedSnapshotId,
-    tryoutSectionId
+  const attempt = yield* Effect.promise(() =>
+    ctx.db.get(legacy.tryoutAttemptId)
   );
-  const question = yield* Effect.promise(() => ctx.db.get(questionId));
-  if (!(question && matchesLegacyQuestion(legacy, question))) {
+  const countryKey = attempt?.countryKey;
+  const examKey = attempt?.examKey;
+  const locale = attempt?.locale;
+  const setIdentity = attempt?.setIdentity;
+  const setKey = attempt?.setKey;
+  const trackKey = attempt?.trackKey;
+  if (
+    !attempt ||
+    attempt.tryoutSnapshotId !== expectedSnapshotId ||
+    !countryKey ||
+    !examKey ||
+    !locale ||
+    !setIdentity ||
+    !setKey ||
+    !trackKey
+  ) {
     return yield* migrationFail(
-      "A frozen legacy placement differs from its source question."
+      "A legacy placement's owning attempt is not prepared."
+    );
+  }
+  const section = attempt.sectionSnapshots.find(
+    (candidate) => candidate.tryoutSectionId === tryoutSectionId
+  );
+  if (!(section?.sectionIdentity && section.sectionRowHash)) {
+    return yield* migrationFail(
+      "A legacy placement's frozen section is not prepared."
     );
   }
 
@@ -47,12 +65,12 @@ export const bindLegacyPlacement = Effect.fn(
       .withIndex("by_snapshotId_and_section_and_questionOrder", (index) =>
         index
           .eq("snapshotId", expectedSnapshotId)
-          .eq("locale", section.row.locale)
-          .eq("countryKey", section.row.countryKey)
-          .eq("examKey", section.row.examKey)
-          .eq("trackKey", section.row.trackKey)
-          .eq("setKey", section.row.setKey)
-          .eq("sectionKey", section.row.sectionKey)
+          .eq("locale", locale)
+          .eq("countryKey", countryKey)
+          .eq("examKey", examKey)
+          .eq("trackKey", trackKey)
+          .eq("setKey", setKey)
+          .eq("sectionKey", section.sectionKey)
           .eq("questionOrder", legacy.questionOrder)
       )
       .unique()
@@ -72,7 +90,7 @@ export const bindLegacyPlacement = Effect.fn(
     identity: tryoutPlacementIdentity(row),
     row,
     rowHash: stored.rowHash,
-    sectionIdentity: section.identity,
+    sectionIdentity: section.sectionIdentity,
   };
 });
 
@@ -177,22 +195,6 @@ const bindQuestionPlacement = Effect.fn(
     rowHash: stored.rowHash,
   };
 });
-
-/** Checks one legacy question against its frozen attempt placement. */
-function matchesLegacyQuestion(
-  placement: LegacyPlacement,
-  question: Doc<"questions">
-) {
-  return (
-    placement.contentHash === question.contentHash &&
-    placement.questionOrder === question.number &&
-    placement.questionSourceKey === question.sourceKey &&
-    toTryoutCorpusPath(placement.sourcePath) ===
-      toTryoutCorpusPath(question.sourcePath) &&
-    placement.sourceRevision === question.sourceRevision &&
-    placement.title === question.title
-  );
-}
 
 /** Checks one frozen legacy placement against its signed replacement. */
 function matchesLegacyPlacement(legacy: LegacyPlacement, row: TryoutPlacement) {

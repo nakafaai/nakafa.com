@@ -14,6 +14,7 @@ import {
   migrationPageResult,
   type TryoutMigrationArgs,
   tryoutMigrationArgs,
+  tryoutMigrationResultValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
@@ -157,11 +158,13 @@ const prepareSection = Effect.fn("tryouts.migrations.prepareSection")(
 /** Migrates one bounded set-progress page. */
 export const migrateProgress = internalMutation({
   args: tryoutMigrationArgs,
+  returns: tryoutMigrationResultValidator,
   handler: (ctx, args) => runConvexProgram(migrateProgressPage(ctx, args)),
 });
 
 /** Migrates one bounded section-attempt page. */
 export const migrateSections = internalMutation({
   args: tryoutMigrationArgs,
+  returns: tryoutMigrationResultValidator,
   handler: (ctx, args) => runConvexProgram(migrateSectionPage(ctx, args)),
 });

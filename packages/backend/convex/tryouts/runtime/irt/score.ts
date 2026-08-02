@@ -47,10 +47,11 @@ function loadIrtItemAnswers(args: {
   const responsesByPlacement = new Map(
     args.responses.map((response) => [response.placementId, response])
   );
-  const placementsBySourceKey = getPlacementsBySourceKey(args.placements);
+  const placementsByIdentity = getPlacementsByIdentity(args.placements);
 
   return args.items.map((item): IrtItemAnswer => {
-    const placement = placementsBySourceKey.get(item.questionSourceKey);
+    const itemIdentity = getItemIdentity(item);
+    const placement = placementsByIdentity.get(itemIdentity);
 
     if (!(placement && matchesPlacementSnapshot(item, placement))) {
       throw new ConvexError({
@@ -66,20 +67,49 @@ function loadIrtItemAnswers(args: {
   });
 }
 
-/** Indexes placement snapshots by source key and rejects duplicate rows. */
-function getPlacementsBySourceKey(placements: TryoutPlacement[]) {
-  const placementsBySourceKey = new Map<string, TryoutPlacement>();
+/** Indexes placement snapshots by their signed or transitional identity. */
+function getPlacementsByIdentity(placements: TryoutPlacement[]) {
+  const placementsByIdentity = new Map<string, TryoutPlacement>();
 
   for (const placement of placements) {
-    if (placementsBySourceKey.has(placement.questionSourceKey)) {
+    const identity = getPlacementIdentity(placement);
+    if (placementsByIdentity.has(identity)) {
       throw new ConvexError({
         code: "TRYOUT_PLACEMENT_DUPLICATE",
-        message: "Try-out placement has a duplicate question source key.",
+        message: "Try-out placement has a duplicate immutable identity.",
       });
     }
 
-    placementsBySourceKey.set(placement.questionSourceKey, placement);
+    placementsByIdentity.set(identity, placement);
   }
 
-  return placementsBySourceKey;
+  return placementsByIdentity;
+}
+
+/** Returns the immutable join key for one attempt placement. */
+function getPlacementIdentity(placement: TryoutPlacement) {
+  if (placement.placementIdentity) {
+    return `signed:${placement.placementIdentity}`;
+  }
+  if (placement.questionSourceKey) {
+    return `filesystem:${placement.questionSourceKey}`;
+  }
+  throw new ConvexError({
+    code: "TRYOUT_PLACEMENT_IDENTITY_REQUIRED",
+    message: "Try-out placement has no immutable identity.",
+  });
+}
+
+/** Returns the immutable join key for one IRT scale item. */
+function getItemIdentity(item: Doc<"irtScaleItems">) {
+  if (item.placementIdentity) {
+    return `signed:${item.placementIdentity}`;
+  }
+  if (item.questionSourceKey) {
+    return `filesystem:${item.questionSourceKey}`;
+  }
+  throw new ConvexError({
+    code: "TRYOUT_IRT_IDENTITY_REQUIRED",
+    message: "IRT scale item has no immutable identity.",
+  });
 }

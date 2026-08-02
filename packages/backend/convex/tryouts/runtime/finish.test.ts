@@ -79,6 +79,14 @@ describe("tryouts/runtime/finish", () => {
           contentHash: secondSource.contentHash,
         }),
       ];
+      const firstPlacement = alignedSections[0]?.signed.placements[0];
+      const secondPlacement = alignedSections[1]?.signed.placements[0];
+      if (!(firstPlacement && secondPlacement)) {
+        throw new ConvexError({
+          code: "TRYOUT_PLACEMENT_NOT_FOUND",
+          message: "Expected signed try-out placement fixtures.",
+        });
+      }
       const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
         model: "2pl",
         publishedAt: NOW,
@@ -87,11 +95,13 @@ describe("tryouts/runtime/finish", () => {
         tryoutSetId,
       });
       await insertIrtScaleItem(ctx, {
+        placement: firstPlacement,
         questionId: firstSource.questionId,
         scaleVersionId,
         sectionId: firstSectionId,
       });
       await insertIrtScaleItem(ctx, {
+        placement: secondPlacement,
         questionId: secondSource.questionId,
         scaleVersionId,
         sectionId: secondSectionId,

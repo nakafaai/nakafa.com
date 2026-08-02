@@ -1,8 +1,9 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   type BulkSyncTryoutsArgs,
-  bulkSyncTryoutsImpl,
+  syncTryouts,
 } from "@repo/backend/convex/contentSync/tryouts/impl";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
@@ -17,9 +18,9 @@ describe("contentSync/tryouts/impl", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(seedOldTrack);
-    await t.mutation(async (ctx) => {
-      await bulkSyncTryoutsImpl(ctx, buildPayload(), { syncLegacyIrt: true });
-    });
+    await t.mutation((ctx) =>
+      runConvexProgram(syncTryouts(ctx, buildPayload()))
+    );
 
     const snapshot = await t.query(async (ctx) => {
       const route = await ctx.db

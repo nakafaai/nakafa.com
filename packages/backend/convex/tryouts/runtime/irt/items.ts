@@ -54,6 +54,18 @@ export async function loadAttemptScale(
     tryoutSetId: attempt.tryoutSetId,
   });
 
+  if (
+    attempt.tryoutSnapshotId &&
+    attempt.setIdentity &&
+    (scale.tryoutSnapshotId !== attempt.tryoutSnapshotId ||
+      scale.setIdentity !== attempt.setIdentity)
+  ) {
+    throw new ConvexError({
+      code: "TRYOUT_IRT_SCALE_REQUIRED",
+      message: "Attempt IRT scale belongs to another signed try-out.",
+    });
+  }
+
   if (scale.questionCount !== attempt.totalQuestions) {
     throw new ConvexError({
       code: "TRYOUT_IRT_SCALE_COUNT_MISMATCH",
@@ -124,7 +136,7 @@ export async function loadAttemptScaleItems(
 ) {
   const items = await ctx.db
     .query("irtScaleItems")
-    .withIndex("by_scaleVersionId_and_questionSourceKey", (query) =>
+    .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
       query.eq("scaleVersionId", scale._id)
     )
     .take(totalQuestions + 1);
@@ -149,14 +161,17 @@ export async function loadSectionScaleItems(
 ) {
   return await Promise.all(
     args.placements.map(async (placement) => {
-      const item = await ctx.db
-        .query("irtScaleItems")
-        .withIndex("by_scaleVersionId_and_questionSourceKey", (query) =>
-          query
-            .eq("scaleVersionId", args.scale._id)
-            .eq("questionSourceKey", placement.questionSourceKey)
-        )
-        .unique();
+      const items = placement.placementIdentity
+        ? await ctx.db
+            .query("irtScaleItems")
+            .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
+              query
+                .eq("scaleVersionId", args.scale._id)
+                .eq("placementIdentity", placement.placementIdentity)
+            )
+            .take(2)
+        : await loadLegacyScaleItems(ctx, args.scale._id, placement);
+      const item = items.length === 1 ? items[0] : null;
 
       if (item && matchesPlacementSnapshot(item, placement)) {
         return item;
@@ -175,9 +190,40 @@ export function matchesPlacementSnapshot(
   item: Doc<"irtScaleItems">,
   placement: TryoutPlacement
 ) {
+  if (placement.placementIdentity && placement.placementRowHash) {
+    return (
+      item.placementIdentity === placement.placementIdentity &&
+      item.placementRowHash === placement.placementRowHash
+    );
+  }
+
   return (
     item.contentHash === placement.contentHash &&
+    item.questionId !== undefined &&
     item.questionId === placement.questionId &&
     item.sourceRevision === placement.sourceRevision
   );
+}
+
+/** Loads one filesystem-owned scale item without weakening signed joins. */
+async function loadLegacyScaleItems(
+  ctx: MutationCtx,
+  scaleVersionId: Id<"irtScaleVersions">,
+  placement: TryoutPlacement
+) {
+  if (!placement.questionSourceKey) {
+    throw new ConvexError({
+      code: "TRYOUT_PLACEMENT_IDENTITY_REQUIRED",
+      message: "Try-out placement has no signed or filesystem identity.",
+    });
+  }
+
+  return await ctx.db
+    .query("irtScaleItems")
+    .withIndex("by_scaleVersionId_and_questionSourceKey", (query) =>
+      query
+        .eq("scaleVersionId", scaleVersionId)
+        .eq("questionSourceKey", placement.questionSourceKey)
+    )
+    .take(2);
 }

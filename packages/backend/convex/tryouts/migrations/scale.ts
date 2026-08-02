@@ -12,6 +12,7 @@ import {
   migrationPageResult,
   type TryoutMigrationArgs,
   tryoutMigrationArgs,
+  tryoutMigrationResultValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
@@ -122,5 +123,6 @@ export const bindLegacyScale = Effect.fn("tryouts.migrations.bindLegacyScale")(
 /** Migrates one bounded IRT scale-version page. */
 export const migrateScales = internalMutation({
   args: tryoutMigrationArgs,
+  returns: tryoutMigrationResultValidator,
   handler: (ctx, args) => runConvexProgram(migrateScalePage(ctx, args)),
 });

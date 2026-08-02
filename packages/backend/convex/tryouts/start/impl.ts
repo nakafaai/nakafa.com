@@ -43,18 +43,15 @@ interface StartTryoutAttemptInput {
 /** Starts or resumes one try-out attempt in the caller's atomic mutation. */
 export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
   function* (ctx: MutationCtx, input: StartTryoutAttemptInput) {
-    const loaded = yield* Effect.all(
-      {
-        latestAttempt: loadLatestAttempt(ctx, input),
-        sections: loadSections(ctx, input.set),
-      },
-      { concurrency: "unbounded" }
-    );
-    const source = yield* loadTryoutStartSource(
-      ctx,
-      input.set,
-      loaded.sections
-    );
+    const latestAttempt = yield* loadLatestAttempt(ctx, input);
+    const resumed = yield* resumeActiveAttempt(ctx, input, latestAttempt);
+
+    if (resumed) {
+      return { attemptId: resumed._id };
+    }
+
+    const localSections = yield* loadSections(ctx, input.set);
+    const source = yield* loadTryoutStartSource(ctx, input.set, localSections);
     const sections = sourceSections(source);
 
     if (input.args.entrySectionKey) {
@@ -68,20 +65,10 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
       );
     }
 
-    const resumed = yield* resumeActiveAttempt(
-      ctx,
-      input,
-      loaded.latestAttempt
-    );
-
-    if (resumed) {
-      return { attemptId: resumed._id };
-    }
-
     const [attemptNumber, scaleVersion, access] = yield* Effect.all(
       [
         getNextAttemptNumber(ctx, input),
-        selectAttemptScale(ctx, input.set, source),
+        selectAttemptScale(ctx, input.set, source, input.now),
         requireAttemptAccess(ctx, input),
       ],
       { concurrency: "unbounded" }

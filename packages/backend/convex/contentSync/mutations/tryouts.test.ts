@@ -3,11 +3,6 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
-  activateTryoutSnapshot,
-  makeTryoutCatalogRow,
-  makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout-snapshot";
-import {
   buildInternalEntryPayload,
   buildQuestions,
   buildSyncPayload,
@@ -248,46 +243,5 @@ describe("contentSync/mutations/tryouts", () => {
       status: "provisional",
     });
     expect(snapshot.itemCount).toBe(20);
-  });
-
-  it("stops provisioning legacy IRT scales after signed ownership activates", async () => {
-    const t = convexTest(schema, convexModules);
-    const payload = {
-      ...buildSyncPayload(),
-      questions: buildQuestions(),
-    };
-    await t.mutation(
-      internal.contentSync.mutations.tryouts.bulkSyncTryouts,
-      payload
-    );
-    await t.mutation(async (ctx) => {
-      for (const item of await ctx.db.query("irtScaleItems").collect()) {
-        await ctx.db.delete(item._id);
-      }
-      for (const scale of await ctx.db.query("irtScaleVersions").collect()) {
-        await ctx.db.delete(scale._id);
-      }
-    });
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog: [
-          makeTryoutCatalogRow("en").record.row,
-          makeTryoutCatalogRow("id").record.row,
-        ],
-        placements: [
-          makeTryoutPlacementRow("en").record.row,
-          makeTryoutPlacementRow("id").record.row,
-        ],
-      })
-    );
-
-    await t.mutation(
-      internal.contentSync.mutations.tryouts.bulkSyncTryouts,
-      payload
-    );
-
-    await expect(
-      t.query((ctx) => ctx.db.query("irtScaleVersions").collect())
-    ).resolves.toEqual([]);
   });
 });

@@ -309,6 +309,19 @@ describe("tryouts/mutations/attempts", () => {
         timeLimitSeconds: 60,
       })
     );
+    const resumed = await authed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      {
+        countryKey: COUNTRY,
+        examKey: EXAM,
+        locale: "id",
+        setKey: SET,
+        trackKey: TRACK,
+      }
+    );
+
+    expect(resumed).toEqual(attempt);
+
     await authed.mutation(api.tryouts.mutations.sections.start, {
       attemptId: attempt.attemptId,
       sectionKey: SECTION,

@@ -8,6 +8,19 @@ import { tryoutScoringStrategyValidator } from "@repo/backend/convex/tryouts/sco
 import { TRYOUT_ROUTE_KIND_VALUES } from "@repo/contents/_types/tryout/schema";
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
+import { Schema } from "effect";
+
+/** Row-level outcomes returned by every legacy try-out synchronization write. */
+export const TryoutSyncOutcomeSchema = Schema.Literal(
+  "created",
+  "unchanged",
+  "updated"
+);
+export type TryoutSyncOutcome = typeof TryoutSyncOutcomeSchema.Type;
+
+export const TRYOUT_CREATED: TryoutSyncOutcome = "created";
+export const TRYOUT_UNCHANGED: TryoutSyncOutcome = "unchanged";
+export const TRYOUT_UPDATED: TryoutSyncOutcome = "updated";
 
 const tryoutCatalogRowValidator = v.object({
   countryKey: v.string(),

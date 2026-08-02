@@ -20,9 +20,9 @@ import {
   stagedEvidence,
 } from "@repo/backend/convex/contentRelease/receipt";
 import {
+  CATALOG_PROOF_PAGE_LIMIT,
   contentHeadValidator,
   PROOF_PAGE_BYTES,
-  PROOF_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
@@ -153,8 +153,8 @@ const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(function* (
       .paginate({
         cursor,
         maximumBytesRead: PROOF_PAGE_BYTES,
-        maximumRowsRead: PROOF_PAGE_LIMIT,
-        numItems: PROOF_PAGE_LIMIT,
+        maximumRowsRead: CATALOG_PROOF_PAGE_LIMIT,
+        numItems: CATALOG_PROOF_PAGE_LIMIT,
       })
   );
   const heads: ContentHead[] = [];
@@ -193,8 +193,8 @@ const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(function* (
       .paginate({
         cursor,
         maximumBytesRead: PROOF_PAGE_BYTES,
-        maximumRowsRead: PROOF_PAGE_LIMIT,
-        numItems: PROOF_PAGE_LIMIT,
+        maximumRowsRead: CATALOG_PROOF_PAGE_LIMIT,
+        numItems: CATALOG_PROOF_PAGE_LIMIT,
       })
   );
   for (const path of stored.page) {

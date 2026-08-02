@@ -193,8 +193,10 @@ const tables = {
     sectionKey: v.optional(tryoutRouteKeyValidator),
     tryoutAttemptId: v.id("tryoutAttempts"),
     tryoutSectionId: v.id("tryoutSections"),
-    questionId: v.id("questions"),
-    questionSourceKey: v.string(),
+    /** Optional only while filesystem-owned attempts remain readable. */
+    questionId: v.optional(v.id("questions")),
+    /** Optional only while filesystem-owned IRT rows remain readable. */
+    questionSourceKey: v.optional(v.string()),
     questionOrder: v.number(),
     sourcePath: v.string(),
     title: v.string(),
@@ -222,7 +224,8 @@ const tables = {
     tryoutAttemptId: v.id("tryoutAttempts"),
     tryoutSectionAttemptId: v.id("tryoutSectionAttempts"),
     placementId: v.id("tryoutAttemptPlacements"),
-    questionId: v.id("questions"),
+    /** Optional only while filesystem-owned responses remain readable. */
+    questionId: v.optional(v.id("questions")),
     selectedOptionId: v.optional(v.string()),
     textAnswer: v.optional(v.string()),
     isCorrect: v.boolean(),
@@ -230,10 +233,12 @@ const tables = {
     answeredAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_tryoutSectionAttemptId", ["tryoutSectionAttemptId"])
     .index("by_tryoutSectionAttemptId_and_questionId", [
       "tryoutSectionAttemptId",
       "questionId",
     ])
+    .index("by_tryoutAttemptId", ["tryoutAttemptId"])
     .index("by_tryoutAttemptId_and_questionId", [
       "tryoutAttemptId",
       "questionId",

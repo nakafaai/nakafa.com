@@ -16,8 +16,35 @@ export type TryoutMigrationArgs = {
   >;
 };
 
-const MIGRATION_MAX_BYTES_READ = 4 * 1024 * 1024;
-const MIGRATION_MAX_ROWS_READ = 64;
+/** Bounded cursor result returned by every retry-safe migration mutation. */
+export const tryoutMigrationResultValidator = v.object({
+  changed: v.number(),
+  continueCursor: v.string(),
+  isDone: v.boolean(),
+  processed: v.number(),
+  scanned: v.number(),
+});
+
+/** Bounded cursor evidence returned by migration integrity queries. */
+export const tryoutMigrationProofValidator = v.object({
+  continueCursor: v.string(),
+  isDone: v.boolean(),
+  legacy: v.number(),
+  prepared: v.number(),
+  processed: v.number(),
+  scanned: v.number(),
+});
+
+/** Exact proof that every unsupported technical migration table is empty. */
+export const tryoutMigrationEmptyValidator = v.object({
+  empty: v.literal(true),
+});
+export type TryoutMigrationEmpty = Infer<typeof tryoutMigrationEmptyValidator>;
+
+const MIGRATION_MAX_BYTES_READ = 1024 * 1024;
+
+/** Maximum hydrated records processed by one migration transaction. */
+export const TRYOUT_MIGRATION_PAGE_LIMIT = 4;
 
 /** Applies server-owned scan ceilings to one operator pagination cursor. */
 export function migrationPageOptions(
@@ -26,7 +53,7 @@ export function migrationPageOptions(
   return {
     ...paginationOpts,
     maximumBytesRead: MIGRATION_MAX_BYTES_READ,
-    maximumRowsRead: MIGRATION_MAX_ROWS_READ,
+    maximumRowsRead: TRYOUT_MIGRATION_PAGE_LIMIT,
   };
 }
 
@@ -70,8 +97,10 @@ export function validateMigrationPage(input: {
   };
   readonly table: string;
 }): Effect.Effect<number, TryoutMigrationError> {
-  if (input.numItems < 1 || input.numItems > 50) {
-    return migrationFail("Try-out migration pages must contain 1 to 50 rows.");
+  if (input.numItems < 1 || input.numItems > TRYOUT_MIGRATION_PAGE_LIMIT) {
+    return migrationFail(
+      `Try-out migration pages must contain 1 to ${TRYOUT_MIGRATION_PAGE_LIMIT} rows.`
+    );
   }
 
   if (

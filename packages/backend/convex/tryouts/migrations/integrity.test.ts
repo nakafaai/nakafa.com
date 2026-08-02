@@ -1,6 +1,7 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type schema from "@repo/backend/convex/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { TRYOUT_MIGRATION_PAGE_LIMIT } from "@repo/backend/convex/tryouts/migrations/spec";
 import {
   makeTryoutMigrationArgs,
   seedTryoutMigration,
@@ -86,7 +87,7 @@ async function inspectTable(
         expectedProcessed: processed,
         expectedSnapshotId: snapshotId,
         expectedTotal,
-        paginationOpts: { cursor, numItems: 50 },
+        paginationOpts: { cursor, numItems: TRYOUT_MIGRATION_PAGE_LIMIT },
         table,
       }
     );

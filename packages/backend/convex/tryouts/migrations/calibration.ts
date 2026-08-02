@@ -14,6 +14,7 @@ import {
   migrationPageResult,
   type TryoutMigrationArgs,
   tryoutMigrationArgs,
+  tryoutMigrationResultValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
@@ -108,5 +109,6 @@ const prepareRun = Effect.fn("tryouts.migrations.prepareRun")(function* (
 /** Migrates one bounded IRT calibration-run page. */
 export const migrateRuns = internalMutation({
   args: tryoutMigrationArgs,
+  returns: tryoutMigrationResultValidator,
   handler: (ctx, args) => runConvexProgram(migrateRunPage(ctx, args)),
 });

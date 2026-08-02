@@ -4,9 +4,12 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import type { StartAttemptArgs } from "@repo/backend/convex/tryouts/start/spec";
+import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
 import {
   TRYOUT_START_COUNTRY as COUNTRY,
   TRYOUT_START_EXAM as EXAM,
+  makeTryoutStartCatalog,
+  makeTryoutStartPlacement,
   TRYOUT_START_NOW as NOW,
   TRYOUT_START_SET as SET,
   TRYOUT_START_TRACK as TRACK,
@@ -70,14 +73,114 @@ describe("tryouts/start/scale", () => {
     expect(attempt).not.toHaveProperty("tryoutSnapshotId");
   });
 
-  it("requires the IRT scale bound to the exact signed snapshot", async () => {
+  it("publishes one complete scale for every signed snapshot", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const firstIdentity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "tryout-first-scale",
+      });
+      const fixture = await seedTryoutStartSet(ctx, {
+        scoringStrategy: "irt",
+        userId: firstIdentity.userId,
+        visibility: "visible",
+      });
+      return { firstIdentity, fixture };
+    });
+    const firstAuthed = t.withIdentity({
+      sessionId: seeded.firstIdentity.sessionId,
+      subject: seeded.firstIdentity.authUserId,
+    });
+    const firstResult = await firstAuthed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      startArgs
+    );
+
+    const second = await t.mutation(async (ctx) => {
+      const [release, state] = await Promise.all([
+        ctx.db.query("contentReleases").unique(),
+        ctx.db.query("contentState").unique(),
+      ]);
+      if (!(release && state)) {
+        throw new Error("Expected the first active technical release.");
+      }
+      await ctx.db.delete("contentReleases", release._id);
+      await ctx.db.delete("contentState", state._id);
+
+      const locales = ["en", "id"] as const;
+      const catalog = locales.flatMap((locale) =>
+        makeTryoutStartCatalog(locale, "visible", "irt").map((row) =>
+          locale === "en" && row.kind === "set"
+            ? { ...row, title: "Set one" }
+            : row
+        )
+      );
+      const placements = locales.map(makeTryoutStartPlacement);
+      const snapshotId = await activateTryoutSnapshot(ctx, {
+        catalog,
+        placements,
+      });
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "tryout-second-scale",
+      });
+      return { identity, snapshotId };
+    });
+    const secondAuthed = t.withIdentity({
+      sessionId: second.identity.sessionId,
+      subject: second.identity.authUserId,
+    });
+    const secondResult = await secondAuthed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      startArgs
+    );
+
+    const proof = await t.query(async (ctx) => {
+      const firstAttempt = await ctx.db.get(firstResult.attemptId);
+      const secondAttempt = await ctx.db.get(secondResult.attemptId);
+      if (!(firstAttempt?.scaleVersionId && secondAttempt?.scaleVersionId)) {
+        throw new Error("Expected both signed attempts to freeze a scale.");
+      }
+      const firstScaleVersionId = firstAttempt.scaleVersionId;
+      const secondScaleVersionId = secondAttempt.scaleVersionId;
+
+      const firstScale = await ctx.db.get(firstScaleVersionId);
+      const secondScale = await ctx.db.get(secondScaleVersionId);
+      const firstItems = await ctx.db
+        .query("irtScaleItems")
+        .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
+          query.eq("scaleVersionId", firstScaleVersionId)
+        )
+        .collect();
+      const secondItems = await ctx.db
+        .query("irtScaleItems")
+        .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
+          query.eq("scaleVersionId", secondScaleVersionId)
+        )
+        .collect();
+      return { firstItems, firstScale, secondItems, secondScale };
+    });
+
+    expect(proof.firstScale?.tryoutSnapshotId).toBe(seeded.fixture.snapshotId);
+    expect(proof.secondScale?.tryoutSnapshotId).toBe(second.snapshotId);
+    expect(proof.secondScale?._id).not.toBe(proof.firstScale?._id);
+    expect(proof.firstItems).toHaveLength(1);
+    expect(proof.secondItems).toHaveLength(1);
+    expect(proof.secondItems[0]?.placementRowHash).toBe(
+      proof.firstItems[0]?.placementRowHash
+    );
+  });
+
+  it("rejects an incomplete scale bound to the exact snapshot", async () => {
     vi.setSystemTime(new Date(NOW));
 
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
-        suffix: "tryout-scale",
+        suffix: "tryout-incomplete-scale",
       });
       const fixture = await seedTryoutStartSet(ctx, {
         scoringStrategy: "irt",
@@ -86,14 +189,14 @@ describe("tryouts/start/scale", () => {
       });
       await ctx.db.insert("irtScaleVersions", {
         model: "2pl",
-        publishedAt: NOW + 1,
+        publishedAt: NOW,
         questionCount: 1,
         setIdentity: fixture.setIdentity,
         status: "official",
         tryoutSetId: fixture.tryoutSetId,
-        tryoutSnapshotId: "stale-snapshot",
+        tryoutSnapshotId: fixture.snapshotId,
       });
-      return { fixture, identity };
+      return { identity };
     });
     const authed = t.withIdentity({
       sessionId: seeded.identity.sessionId,
@@ -103,24 +206,5 @@ describe("tryouts/start/scale", () => {
     await expect(
       authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
     ).rejects.toThrow("TRYOUT_IRT_SCALE_REQUIRED");
-
-    const scaleVersionId = await t.mutation((ctx) =>
-      ctx.db.insert("irtScaleVersions", {
-        model: "2pl",
-        publishedAt: NOW,
-        questionCount: 1,
-        setIdentity: seeded.fixture.setIdentity,
-        status: "official",
-        tryoutSetId: seeded.fixture.tryoutSetId,
-        tryoutSnapshotId: seeded.fixture.snapshotId,
-      })
-    );
-    const result = await authed.mutation(
-      api.tryouts.mutations.attempts.startAttempt,
-      startArgs
-    );
-    const attempt = await t.query((ctx) => ctx.db.get(result.attemptId));
-
-    expect(attempt?.scaleVersionId).toBe(scaleVersionId);
   });
 });

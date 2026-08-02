@@ -1,4 +1,7 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import {
+  tryoutCatalogIdentity,
+  tryoutPlacementIdentity,
+} from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
@@ -204,6 +207,7 @@ export async function insertTryoutSectionAttempt(
 export async function insertIrtScaleItem(
   ctx: MutationCtx,
   args: {
+    placement: AlignedTryoutSection["signed"]["placements"][number];
     questionId: Id<"questions">;
     scaleVersionId: Id<"irtScaleVersions">;
     sectionId: Id<"tryoutSections">;
@@ -238,6 +242,8 @@ export async function insertIrtScaleItem(
     correctRate: 0,
     difficulty: 0,
     discrimination: 1,
+    placementIdentity: tryoutPlacementIdentity(args.placement.row),
+    placementRowHash: args.placement.rowHash,
     questionId: args.questionId,
     questionSourceKey: question.sourceKey,
     responseCount: 0,

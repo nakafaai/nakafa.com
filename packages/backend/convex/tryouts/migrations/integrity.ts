@@ -9,6 +9,9 @@ import { bindLegacySet } from "@repo/backend/convex/tryouts/migrations/catalog";
 import {
   migrationFail,
   migrationPageOptions,
+  type TryoutMigrationEmpty,
+  tryoutMigrationEmptyValidator,
+  tryoutMigrationProofValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
 import { paginationOptsValidator } from "convex/server";
@@ -221,7 +224,8 @@ const inspectEmptyTables = Effect.fn("tryouts.migrations.inspectEmptyTables")(
         `Try-out migration requires empty technical tables: ${occupied.join(", ")}.`
       );
     }
-    return { empty: true };
+    const result: TryoutMigrationEmpty = { empty: true };
+    return result;
   }
 );
 
@@ -268,11 +272,13 @@ function firstRow<TableName extends TableNames>(
 /** Reports one paginated migration proof surface. */
 export const inspect = internalQuery({
   args: proofArgs,
+  returns: tryoutMigrationProofValidator,
   handler: (ctx, args) => runConvexProgram(inspectMigrationPage(ctx, args)),
 });
 
 /** Proves that every unsupported technical queue is empty. */
 export const inspectEmpty = internalQuery({
   args: {},
+  returns: tryoutMigrationEmptyValidator,
   handler: (ctx) => runConvexProgram(inspectEmptyTables(ctx)),
 });

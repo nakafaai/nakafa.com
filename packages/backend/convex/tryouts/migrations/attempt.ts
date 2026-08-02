@@ -14,6 +14,7 @@ import {
   migrationPageResult,
   type TryoutMigrationArgs,
   tryoutMigrationArgs,
+  tryoutMigrationResultValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
@@ -227,5 +228,6 @@ function legacySnapshotMismatch(
 /** Migrates one bounded attempt-root page. */
 export const migrateAttempts = internalMutation({
   args: tryoutMigrationArgs,
+  returns: tryoutMigrationResultValidator,
   handler: (ctx, args) => runConvexProgram(migrateAttemptPage(ctx, args)),
 });

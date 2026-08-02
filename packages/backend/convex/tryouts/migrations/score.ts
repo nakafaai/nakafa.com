@@ -13,6 +13,7 @@ import {
   migrationPageResult,
   type TryoutMigrationArgs,
   tryoutMigrationArgs,
+  tryoutMigrationResultValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
@@ -99,5 +100,6 @@ const prepareScore = Effect.fn("tryouts.migrations.prepareScore")(function* (
 /** Migrates one bounded score page. */
 export const migrateScores = internalMutation({
   args: tryoutMigrationArgs,
+  returns: tryoutMigrationResultValidator,
   handler: (ctx, args) => runConvexProgram(migrateScorePage(ctx, args)),
 });

@@ -1,6 +1,5 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
-import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { buildAuthorCache } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import {
   getTryoutSet,
@@ -9,8 +8,8 @@ import {
   syncTryoutSection,
   syncTryoutSet,
   syncTryoutTrack,
-  type TryoutSyncOutcome,
 } from "@repo/backend/convex/contentSync/tryouts/catalog";
+import { validateTryoutBatch } from "@repo/backend/convex/contentSync/tryouts/error";
 import { syncIrtScaleForSet } from "@repo/backend/convex/contentSync/tryouts/irt";
 import {
   syncQuestion,
@@ -26,7 +25,9 @@ import type {
   SyncedTryoutSection,
   SyncedTryoutSet,
   SyncedTryoutTrack,
+  TryoutSyncOutcome,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
+import { Effect } from "effect";
 
 interface SyncTotals {
   created: number;
@@ -46,60 +47,61 @@ export interface BulkSyncTryoutsArgs {
 }
 
 /** Upserts one bounded try-out catalog and question-bank batch. */
-export async function bulkSyncTryoutsImpl(
+export const syncTryouts = Effect.fn("contentSync.tryout.sync")(function* (
   ctx: MutationCtx,
-  args: BulkSyncTryoutsArgs,
-  options: { readonly syncLegacyIrt: boolean }
+  args: BulkSyncTryoutsArgs
 ) {
-  assertTryoutBatchSizes(args);
+  yield* validateTryoutBatchSizes(args);
 
   const now = Date.now();
   const totals: SyncTotals = { created: 0, unchanged: 0, updated: 0 };
 
   for (const route of args.routes) {
-    await syncTryoutRoute(ctx, route, now);
+    yield* syncTryoutRoute(ctx, route, now);
   }
   for (const country of args.countries) {
-    addOutcome(totals, await syncTryoutCountry(ctx, country, now));
+    addOutcome(totals, yield* syncTryoutCountry(ctx, country, now));
   }
   for (const exam of args.exams) {
-    addOutcome(totals, await syncTryoutExam(ctx, exam, now));
+    addOutcome(totals, yield* syncTryoutExam(ctx, exam, now));
   }
   for (const track of args.tracks) {
-    addOutcome(totals, await syncTryoutTrack(ctx, track, now));
+    addOutcome(totals, yield* syncTryoutTrack(ctx, track, now));
   }
   for (const set of args.sets) {
-    addOutcome(totals, await syncTryoutSet(ctx, set, now));
+    addOutcome(totals, yield* syncTryoutSet(ctx, set, now));
   }
   for (const questionSet of args.questionSets) {
-    addOutcome(totals, await syncQuestionSet(ctx, questionSet, now));
+    addOutcome(totals, yield* syncQuestionSet(ctx, questionSet, now));
   }
-  const questionAuthorCache = await buildAuthorCache(
-    ctx,
-    args.questions.flatMap((question) =>
-      question.authors.map((author) => author.name)
+  const questionAuthorCache = yield* Effect.promise(() =>
+    buildAuthorCache(
+      ctx,
+      args.questions.flatMap((question) =>
+        question.authors.map((author) => author.name)
+      )
     )
   );
 
   for (const question of args.questions) {
     addOutcome(
       totals,
-      await syncQuestion(ctx, question, now, questionAuthorCache)
+      yield* syncQuestion(ctx, question, now, questionAuthorCache)
     );
   }
   for (const section of args.sections) {
-    addOutcome(totals, await syncTryoutSection(ctx, section, now));
+    addOutcome(totals, yield* syncTryoutSection(ctx, section, now));
   }
-  if (options.syncLegacyIrt) {
-    await syncIrtScalesForSections(ctx, args.sections, now);
-  }
+  yield* syncIrtScalesForSections(ctx, args.sections, now);
 
   return totals;
-}
+});
 
 /** Reject a combined try-out sync batch before any transactional writes. */
-function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
-  assertContentSyncBatchSize({
+const validateTryoutBatchSizes = Effect.fn(
+  "contentSync.tryout.validateBatchSizes"
+)(function* (args: BulkSyncTryoutsArgs) {
+  yield* validateTryoutBatch({
     functionName: "bulkSyncTryouts",
     limit: CONTENT_SYNC_BATCH_LIMITS.tryoutSets,
     received:
@@ -110,25 +112,25 @@ function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
       args.sections.length,
     unit: "try-out catalog rows",
   });
-  assertContentSyncBatchSize({
+  yield* validateTryoutBatch({
     functionName: "bulkSyncTryouts",
     limit: CONTENT_SYNC_BATCH_LIMITS.tryoutSets,
     received: args.routes.length,
     unit: "try-out route projections",
   });
-  assertContentSyncBatchSize({
+  yield* validateTryoutBatch({
     functionName: "bulkSyncTryouts",
     limit: CONTENT_SYNC_BATCH_LIMITS.questionSets,
     received: args.questionSets.length,
     unit: "question sets",
   });
-  assertContentSyncBatchSize({
+  yield* validateTryoutBatch({
     functionName: "bulkSyncTryouts",
     limit: CONTENT_SYNC_BATCH_LIMITS.questions,
     received: args.questions.length,
     unit: "questions",
   });
-}
+});
 
 /** Add one row-level sync outcome to the aggregate totals. */
 function addOutcome(totals: SyncTotals, outcome: TryoutSyncOutcome) {
@@ -136,21 +138,23 @@ function addOutcome(totals: SyncTotals, outcome: TryoutSyncOutcome) {
 }
 
 /** Synchronize each affected set's IRT scale once per section batch. */
-async function syncIrtScalesForSections(
-  ctx: MutationCtx,
-  sections: SyncedTryoutSection[],
-  syncedAt: number
-) {
-  const syncedSetIds = new Set<string>();
+const syncIrtScalesForSections = Effect.fn("contentSync.tryout.syncIrtScales")(
+  function* (
+    ctx: MutationCtx,
+    sections: SyncedTryoutSection[],
+    syncedAt: number
+  ) {
+    const syncedSetIds = new Set<string>();
 
-  for (const section of sections) {
-    const set = await getTryoutSet(ctx, section);
+    for (const section of sections) {
+      const set = yield* getTryoutSet(ctx, section);
 
-    if (syncedSetIds.has(set._id)) {
-      continue;
+      if (syncedSetIds.has(set._id)) {
+        continue;
+      }
+
+      syncedSetIds.add(set._id);
+      yield* syncIrtScaleForSet(ctx, { set, syncedAt });
     }
-
-    syncedSetIds.add(set._id);
-    await syncIrtScaleForSet(ctx, { set, syncedAt });
   }
-}
+);

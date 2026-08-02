@@ -28,7 +28,7 @@ const runtimeQuestionValidator = v.object({
   choices: v.array(runtimeChoiceValidator),
   contentHash: v.string(),
   placementId: v.id("tryoutAttemptPlacements"),
-  questionId: v.id("questions"),
+  questionId: v.optional(v.id("questions")),
   questionOrder: v.number(),
   response: v.union(runtimeResponseValidator, v.null()),
   sourcePath: v.string(),
@@ -50,7 +50,7 @@ async function loadRuntimeResponses(
 ) {
   const responses = await ctx.db
     .query("tryoutResponses")
-    .withIndex("by_tryoutSectionAttemptId_and_questionId", (q) =>
+    .withIndex("by_tryoutSectionAttemptId", (q) =>
       q.eq("tryoutSectionAttemptId", section._id)
     )
     .take(section.totalQuestions + 1);
@@ -155,7 +155,7 @@ export const getSection = query({
         })),
         contentHash: placement.contentHash,
         placementId: placement._id,
-        questionId: placement.questionId,
+        ...(placement.questionId ? { questionId: placement.questionId } : {}),
         questionOrder: placement.questionOrder,
         response: response
           ? {
