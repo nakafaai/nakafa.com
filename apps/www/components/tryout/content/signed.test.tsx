@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { decodeContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { readContent } from "@repo/backend/client/content/read";
 import { verifyContentRenderer } from "@repo/backend/content/verify";
@@ -33,22 +34,25 @@ const artifact = {
   artifactHash,
   payload: { rendererDomain: "mathematics" },
 };
-const selectorBase: Omit<TryoutQuestionSelector, "delivery"> = {
+const questionKey =
+  "question-bank/tryout/indonesia/tka/mathematics/set-1/question-1";
+const selectorBase: Omit<TryoutQuestionSelector, "contentKey" | "delivery"> = {
   artifactHash,
   contentHash: "technical-content-hash",
-  contentKey: "question-bank/tryout/technical/question-1/question",
   locale: "en",
   questionOrder: 1,
   snapshotId,
-  sourcePath: "packages/corpus/question-bank/tryout/technical/question-1",
+  sourcePath: `packages/corpus/${questionKey}`,
   sourceRevision: "technical-revision",
 };
 const question: TryoutQuestionSelector = {
   ...selectorBase,
+  contentKey: `${questionKey}/question`,
   delivery: "authenticated",
 };
 const answer: TryoutAnswerSelector = {
   ...selectorBase,
+  contentKey: `${questionKey}/answer`,
   delivery: "entitled",
 };
 
@@ -104,7 +108,11 @@ describe("tryout signed content", () => {
     });
     readMock
       .mockReset()
-      .mockReturnValue(Effect.succeed(protectedFound("authenticated")));
+      .mockImplementation((_target, input) =>
+        decodeContentRuntimeRequest(input).pipe(
+          Effect.as(protectedFound("authenticated"))
+        )
+      );
     registryMock.mockReset().mockReturnValue({});
     rendererMock.mockReset().mockReturnValue(Effect.void);
   });
@@ -125,7 +133,13 @@ describe("tryout signed content", () => {
         siteUrl: "https://content.example.test",
         token: "runtime-token",
       },
-      question
+      {
+        artifactHash: question.artifactHash,
+        contentKey: question.contentKey,
+        delivery: question.delivery,
+        locale: question.locale,
+        snapshotId: question.snapshotId,
+      }
     );
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
     expect(cacheTagMock).toHaveBeenCalledWith(
@@ -136,7 +150,11 @@ describe("tryout signed content", () => {
   });
 
   it("renders an entitled answer without changing its attempt identity", async () => {
-    readMock.mockReturnValue(Effect.succeed(protectedFound("entitled")));
+    readMock.mockImplementation((_target, input) =>
+      decodeContentRuntimeRequest(input).pipe(
+        Effect.as(protectedFound("entitled"))
+      )
+    );
 
     const content = await loadSignedAnswers([answer]);
 

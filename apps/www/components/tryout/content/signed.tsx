@@ -80,7 +80,13 @@ export const readSignedContent = Effect.fn("NakafaContent.readSignedTryout")(
         siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
         token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
       },
-      selector
+      {
+        artifactHash: selector.artifactHash,
+        contentKey: selector.contentKey,
+        delivery: selector.delivery,
+        locale: selector.locale,
+        snapshotId: selector.snapshotId,
+      }
     );
     if (found.delivery === "public") {
       return yield* new ContentRuntimeVerificationError({
