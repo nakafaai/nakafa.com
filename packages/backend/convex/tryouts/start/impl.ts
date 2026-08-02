@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import {
   type AttemptOwnerIdentity,
-  readLatestOwnedAttempt,
+  readLatestAttempt,
   readOwnedAttempts,
 } from "@repo/backend/convex/tryouts/runtime/lookup";
 import {
@@ -46,15 +46,19 @@ interface StartTryoutAttemptInput {
 /** Starts or resumes one try-out attempt in the caller's atomic mutation. */
 export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
   function* (ctx: MutationCtx, input: StartTryoutAttemptInput) {
-    const source = yield* loadTryoutStartSource(ctx, input.args);
-    const owner = resolveAttemptOwner(input, source);
-    const latestAttempt = yield* readLatestOwnedAttempt(ctx, owner);
+    const latestAttempt = yield* readLatestAttempt(
+      ctx,
+      input.args,
+      input.userId
+    ).pipe(Effect.mapError(toTryoutStartError));
     const resumed = yield* resumeActiveAttempt(ctx, input, latestAttempt);
 
     if (resumed) {
       return { attemptId: resumed._id };
     }
 
+    const source = yield* loadTryoutStartSource(ctx, input.args);
+    const owner = resolveAttemptOwner(input, source);
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
       yield* tryStartPromise(() =>
@@ -110,6 +114,13 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
 
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
+      const entrySection = attempt.sectionSnapshots.find(
+        (section) => section.sectionKey === entrySectionKey
+      );
+      if (!entrySection || entrySection.publicPath) {
+        return attempt;
+      }
+
       yield* startSectionAttempt(ctx, {
         attempt,
         now: input.now,

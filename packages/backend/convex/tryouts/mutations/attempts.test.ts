@@ -123,6 +123,60 @@ describe("tryouts/mutations/attempts", () => {
     expect(runtime.freeClaims).toEqual([]);
   });
 
+  it("resumes from the frozen attempt when the current entry key changed", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "tryout-changed-entry-resume",
+      });
+      const fixture = await seedTryoutStartSet(ctx, {
+        userId: identity.userId,
+        visibility: "internal-entry",
+      });
+      const attemptId = await insertTryoutAttempt(ctx, {
+        expiresAt: NOW + 86_400_000,
+        sectionSnapshots: [
+          {
+            publicPath: undefined,
+            questionCount: 1,
+            questionSourcePath: "question-bank/tryout/legacy-entry",
+            sectionKey: "legacy-entry",
+            sectionOrder: 1,
+            sourceRevision: "2025",
+            timeLimitSeconds: 1800,
+          },
+        ],
+        tryoutSetId: fixture.tryoutSetId,
+        userId: identity.userId,
+      });
+
+      return { attemptId, identity };
+    });
+    const authed = t.withIdentity({
+      sessionId: seeded.identity.sessionId,
+      subject: seeded.identity.authUserId,
+    });
+
+    await expect(
+      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
+        countryKey: COUNTRY,
+        entrySectionKey: SECTION,
+        examKey: EXAM,
+        locale: "id",
+        setKey: SET,
+        trackKey: TRACK,
+      })
+    ).resolves.toEqual({ attemptId: seeded.attemptId });
+
+    const sectionAttempts = await t.query((ctx) =>
+      ctx.db.query("tryoutSectionAttempts").collect()
+    );
+    expect(sectionAttempts).toEqual([]);
+  });
+
   it("starts an internal entry section atomically with a new attempt", async () => {
     vi.setSystemTime(new Date(NOW));
 
