@@ -38,6 +38,28 @@ function localizedCounts(
   };
 }
 
+/** Divides one signed global count into the exact expected locale inventory. */
+function localizedCount(count: number, localeCount: number) {
+  if (count % localeCount !== 0) {
+    return;
+  }
+  return count / localeCount;
+}
+
+/** Checks the five signed hierarchy counts without relying on key order. */
+function hasExpectedCounts(
+  actual: TryoutCatalogCounts,
+  expected: TryoutCatalogCounts
+) {
+  return (
+    actual.country === expected.country &&
+    actual.exam === expected.exam &&
+    actual.section === expected.section &&
+    actual.set === expected.set &&
+    actual.track === expected.track
+  );
+}
+
 /** Loads the complete verified hierarchy for one active try-out locale. */
 export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
   function* (ctx: QueryCtx, locale: ContentLocale) {
@@ -48,6 +70,7 @@ export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
         activeReleaseId: owner.selected?.active.releaseId ?? null,
         managed: false,
         entries: [],
+        routeCount: 0,
         snapshotId: owner.selected?.snapshotId ?? null,
         sourceRevision: null,
       };
@@ -59,9 +82,10 @@ export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
         "Active try-out owner selected another snapshot family."
       );
     }
-    const { counts, locales } = snapshot.manifest;
+    const { counts, locales, routeCount } = snapshot.manifest;
     const expected = localizedCounts(counts, locales.length);
-    if (!expected) {
+    const expectedRouteCount = localizedCount(routeCount, locales.length);
+    if (!(expected && expectedRouteCount !== undefined)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         "Active try-out catalog counts do not divide across its locales."
@@ -101,10 +125,19 @@ export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
       )
     );
     const rows = entries.map(({ row }) => row);
-    if (JSON.stringify(countCatalog(rows)) !== JSON.stringify(expected)) {
+    if (!hasExpectedCounts(countCatalog(rows), expected)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Try-out catalog for ${locale} changed its hierarchy counts.`
+      );
+    }
+    const actualRouteCount = rows.filter(
+      ({ publicPath }) => publicPath !== undefined
+    ).length;
+    if (actualRouteCount !== expectedRouteCount) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Try-out catalog for ${locale} changed its public route count.`
       );
     }
     return {
@@ -112,6 +145,7 @@ export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
       activeReleaseId: active.releaseId,
       entries,
       managed: true,
+      routeCount: actualRouteCount,
       snapshotId,
       sourceRevision: readSourceRevision(active),
     };

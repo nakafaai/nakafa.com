@@ -141,13 +141,19 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
   ) {
     const { attempt, input } = args;
 
-    yield* tryStartPromise(() =>
-      writeTryoutSetProgress(ctx, {
-        attempt,
-        publishedScore: null,
-        status: "in-progress",
-        updatedAt: input.now,
-      })
+    yield* writeTryoutSetProgress(ctx, {
+      attempt,
+      publishedScore: null,
+      status: "in-progress",
+      updatedAt: input.now,
+    }).pipe(
+      Effect.mapError(
+        (error) =>
+          new TryoutStartError({
+            code: error.code,
+            message: error.message,
+          })
+      )
     );
     yield* createAttemptPlacements(ctx, {
       attempt,
@@ -156,13 +162,11 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
 
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
-      yield* tryStartPromise(() =>
-        startSectionAttempt(ctx, {
-          attempt,
-          now: input.now,
-          sectionKey: entrySectionKey,
-        })
-      );
+      yield* startSectionAttempt(ctx, {
+        attempt,
+        now: input.now,
+        sectionKey: entrySectionKey,
+      }).pipe(Effect.mapError(toTryoutStartError));
     }
 
     yield* tryStartPromise(() =>

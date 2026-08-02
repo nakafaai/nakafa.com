@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   expireAttempt,
   finalizeSectionAttempt,
@@ -26,7 +27,7 @@ export const attempt = internalMutation({
       return null;
     }
 
-    await expireAttempt(ctx, { attempt: attemptRow, now });
+    await runConvexProgram(expireAttempt(ctx, { attempt: attemptRow, now }));
     return null;
   },
 });
@@ -60,16 +61,18 @@ export const section = internalMutation({
     }
 
     if (now >= attemptRow.expiresAt) {
-      await expireAttempt(ctx, { attempt: attemptRow, now });
+      await runConvexProgram(expireAttempt(ctx, { attempt: attemptRow, now }));
       return null;
     }
 
-    await finalizeSectionAttempt(ctx, {
-      attempt: attemptRow,
-      endReason: "time-expired",
-      now,
-      section: sectionRow,
-    });
+    await runConvexProgram(
+      finalizeSectionAttempt(ctx, {
+        attempt: attemptRow,
+        endReason: "time-expired",
+        now,
+        section: sectionRow,
+      })
+    );
 
     return null;
   },
@@ -89,7 +92,7 @@ export const sweep = internalMutation({
       .take(EXPIRY_SWEEP_LIMIT);
 
     for (const attemptRow of attempts) {
-      await expireAttempt(ctx, { attempt: attemptRow, now });
+      await runConvexProgram(expireAttempt(ctx, { attempt: attemptRow, now }));
     }
 
     const sections = await ctx.db
@@ -107,16 +110,20 @@ export const sweep = internalMutation({
       }
 
       if (now >= attemptRow.expiresAt) {
-        await expireAttempt(ctx, { attempt: attemptRow, now });
+        await runConvexProgram(
+          expireAttempt(ctx, { attempt: attemptRow, now })
+        );
         continue;
       }
 
-      await finalizeSectionAttempt(ctx, {
-        attempt: attemptRow,
-        endReason: "time-expired",
-        now,
-        section: sectionRow,
-      });
+      await runConvexProgram(
+        finalizeSectionAttempt(ctx, {
+          attempt: attemptRow,
+          endReason: "time-expired",
+          now,
+          section: sectionRow,
+        })
+      );
     }
 
     return null;

@@ -195,6 +195,63 @@ describe("proxy", () => {
     expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
   });
 
+  it("lets completed localized rewrites reach their internal app route", async () => {
+    const response = await requestProxy(
+      "/en/materials/mathematics/functions/function-concept",
+      { headers: { "x-next-intl-locale": "en" } }
+    );
+
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(runtimeMocks.readContent).not.toHaveBeenCalled();
+    expect(runtimeMocks.readPublic).not.toHaveBeenCalled();
+  });
+
+  it("lets the localized 404 rewrite reach global not-found", async () => {
+    const response = await requestProxy("/id/404", {
+      headers: { "x-next-intl-locale": "id" },
+    });
+
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(runtimeMocks.readContent).not.toHaveBeenCalled();
+    expect(runtimeMocks.readPublic).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["missing", undefined],
+    ["mismatched", { headers: { "x-next-intl-locale": "id" } }],
+    ["unsupported", { headers: { "x-next-intl-locale": "de" } }],
+  ])(
+    "rejects an internal app route with a %s locale hint",
+    async (_kind, init) => {
+      const response = await requestProxy(
+        "/en/materials/mathematics/functions/function-concept",
+        init
+      );
+
+      expect(response.status).toBe(404);
+      expect(response.headers.get("x-middleware-rewrite")).toBe(
+        "http://localhost:3000/en/404"
+      );
+      expect(
+        response.headers.get("x-middleware-request-x-next-intl-locale")
+      ).toBe("en");
+      expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(["/en", "/en/search"])(
+    "does not treat the public route %s as an internal rewrite",
+    async (path) => {
+      const response = await requestProxy(path, {
+        headers: { "x-next-intl-locale": "en" },
+      });
+
+      expectLocaleProxy(response);
+    }
+  );
+
   it("lets the selected next-intl preview rewrite reach the actual page", async () => {
     previewMocks.configured.mockReturnValueOnce(true);
     previewMocks.internal.mockReturnValueOnce(Effect.succeed(true));
@@ -230,15 +287,15 @@ describe("proxy", () => {
   );
 
   it.each([
-    ["/id/quran/999", "http://localhost:3000/id/_not-found", null],
+    ["/id/quran/999", "id", null],
     [
       "/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
-      "http://localhost:3000/en/_not-found",
+      "en",
       "curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
     ],
   ])(
     "returns a hard 404 for missing HTML route %s",
-    async (path, rewrite, projectedPath) => {
+    async (path, locale, projectedPath) => {
       if (projectedPath) {
         runtimeMocks.readPublic.mockReturnValueOnce(Effect.succeed(null));
       }
@@ -246,7 +303,12 @@ describe("proxy", () => {
 
       expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
       expect(response.status).toBe(404);
-      expect(response.headers.get("x-middleware-rewrite")).toBe(rewrite);
+      expect(response.headers.get("x-middleware-rewrite")).toBe(
+        `http://localhost:3000/${locale}/404`
+      );
+      expect(
+        response.headers.get("x-middleware-request-x-next-intl-locale")
+      ).toBe(locale);
       if (projectedPath) {
         expect(runtimeMocks.readPublic).toHaveBeenCalledWith({
           locale: "en",
@@ -330,7 +392,10 @@ describe("proxy", () => {
     const missing = await requestProxy(path);
     expect(missing.status).toBe(404);
     expect(missing.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/en/_not-found"
+      "http://localhost:3000/en/404"
+    );
+    expect(missing.headers.get("x-middleware-request-x-next-intl-locale")).toBe(
+      "en"
     );
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
     expect(runtimeMocks.readPublic).not.toHaveBeenCalled();

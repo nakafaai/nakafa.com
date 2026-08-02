@@ -31,10 +31,13 @@ import { Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@repo/backend/content/trust", async () => {
-  const { TEST_KEY_RESOLVER } = await import(
+  const { TEST_KEY_ID, TEST_KEY_RESOLVER } = await import(
     "@repo/backend/test/content-proof"
   );
-  return { contentKeyResolver: TEST_KEY_RESOLVER };
+  return {
+    activeContentSigningKeyId: TEST_KEY_ID,
+    contentKeyResolver: TEST_KEY_RESOLVER,
+  };
 });
 
 describe("content publication Node dispatch", () => {

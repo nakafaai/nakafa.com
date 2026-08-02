@@ -1,13 +1,18 @@
-import { internal } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
-  expireAttemptAtEffectiveTime,
+  TryoutRuntimeError,
+  tryRuntimePromise,
+  tryRuntimeSync,
+} from "@repo/backend/convex/tryouts/runtime/error";
+import {
   finalizeSectionAttempt,
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireSectionSnapshot } from "@repo/backend/convex/tryouts/runtime/placement";
+import { makeFunctionReference } from "convex/server";
 import { ConvexError } from "convex/values";
+import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type InternalEntrySection = Pick<
@@ -15,9 +20,12 @@ type InternalEntrySection = Pick<
   "sectionKey" | "visibility"
 >;
 
-interface StartSectionResult {
-  readonly kind: "started";
-}
+const expireSectionReference = makeFunctionReference<
+  "mutation",
+  { expiresAt: number; sectionAttemptId: Id<"tryoutSectionAttempts"> },
+  null
+>("tryouts/mutations/expiry:section");
+const startSectionResult = Object.freeze({ kind: "started" });
 
 /** Ensures atomic section start is only used for a set-owned internal entry. */
 export function requireInternalEntrySection(
@@ -69,100 +77,104 @@ export function loadPlacementSectionAttempt(
 }
 
 /** Starts one section attempt and its timer inside an active try-out attempt. */
-export async function startSectionAttempt(
+export const startSectionAttempt = Effect.fn(
+  "tryouts.runtime.startSectionAttempt"
+)(function* (
   ctx: MutationCtx,
   args: { attempt: TryoutAttempt; now: number; sectionKey: string }
-): Promise<StartSectionResult> {
+) {
   if (args.attempt.status !== "in-progress") {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       message: "Try-out attempt is not active.",
     });
   }
 
   if (args.now >= getAttemptExpiresAt(args.attempt)) {
-    await expireAttemptAtEffectiveTime(ctx, {
-      attempt: args.attempt,
-      now: args.now,
-    });
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       message: "Try-out attempt time has expired.",
     });
   }
 
-  const existing = await loadSectionAttempt(ctx, args);
+  const existing = yield* tryRuntimePromise(() =>
+    loadSectionAttempt(ctx, args)
+  );
 
   if (existing?.status === "in-progress" && args.now < existing.expiresAt) {
-    return { kind: "started" };
+    return startSectionResult;
   }
 
   if (existing?.status === "in-progress") {
-    await finalizeSectionAttempt(ctx, {
-      attempt: args.attempt,
-      endReason: "time-expired",
-      now: args.now,
-      section: existing,
-    });
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_SECTION_NOT_ACTIVE",
       message: "Try-out section time has expired.",
     });
   }
 
   if (existing) {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_SECTION_ALREADY_FINISHED",
       message: "Try-out section already finished.",
     });
   }
 
-  const currentAttempt = await requireNoParallelSectionTimer(ctx, args);
-  const snapshot = requireSectionSnapshot(currentAttempt, args.sectionKey);
+  const currentAttempt = yield* requireNoParallelSectionTimer(ctx, args);
+  const snapshot = yield* tryRuntimeSync(() =>
+    requireSectionSnapshot(currentAttempt, args.sectionKey)
+  );
   const expiresAt = Math.min(
     args.now + snapshot.timeLimitSeconds * 1000,
     getAttemptExpiresAt(currentAttempt)
   );
-  const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
-    answeredCount: 0,
-    completedAt: null,
-    correctAnswers: 0,
-    endReason: null,
-    expiresAt,
-    lastActivityAt: args.now,
-    ...(snapshot.sectionIdentity
-      ? { sectionIdentity: snapshot.sectionIdentity }
-      : {}),
-    sectionKey: snapshot.sectionKey,
-    sectionOrder: snapshot.sectionOrder,
-    startedAt: args.now,
-    status: "in-progress",
-    totalQuestions: snapshot.questionCount,
-    tryoutAttemptId: currentAttempt._id,
-    ...(snapshot.tryoutSectionId
-      ? { tryoutSectionId: snapshot.tryoutSectionId }
-      : {}),
-  });
-  const sectionAttempt = await ctx.db.get(sectionAttemptId);
+  const sectionAttemptId = yield* tryRuntimePromise(() =>
+    ctx.db.insert("tryoutSectionAttempts", {
+      answeredCount: 0,
+      completedAt: null,
+      correctAnswers: 0,
+      endReason: null,
+      expiresAt,
+      lastActivityAt: args.now,
+      ...(snapshot.sectionIdentity
+        ? { sectionIdentity: snapshot.sectionIdentity }
+        : {}),
+      sectionKey: snapshot.sectionKey,
+      sectionOrder: snapshot.sectionOrder,
+      startedAt: args.now,
+      status: "in-progress",
+      totalQuestions: snapshot.questionCount,
+      tryoutAttemptId: currentAttempt._id,
+      ...(snapshot.tryoutSectionId
+        ? { tryoutSectionId: snapshot.tryoutSectionId }
+        : {}),
+    })
+  );
+  const sectionAttempt = yield* tryRuntimePromise(() =>
+    ctx.db.get(sectionAttemptId)
+  );
 
   if (!sectionAttempt) {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_SECTION_NOT_FOUND",
       message: "Try-out section attempt not found.",
     });
   }
 
-  await ctx.db.patch(currentAttempt._id, {
-    lastActivityAt: args.now,
-  });
-  await ctx.scheduler.runAfter(
-    Math.max(0, expiresAt - args.now),
-    internal.tryouts.mutations.expiry.section,
-    { expiresAt, sectionAttemptId }
+  yield* tryRuntimePromise(() =>
+    ctx.db.patch(currentAttempt._id, {
+      lastActivityAt: args.now,
+    })
+  );
+  yield* tryRuntimePromise(() =>
+    ctx.scheduler.runAfter(
+      Math.max(0, expiresAt - args.now),
+      expireSectionReference,
+      { expiresAt, sectionAttemptId }
+    )
   );
 
-  return { kind: "started" };
-}
+  return startSectionResult;
+});
 
 /** Loads one existing section attempt by its stable section key. */
 function loadSectionAttempt(
@@ -199,11 +211,15 @@ async function loadSectionAttempts(ctx: MutationCtx, attempt: TryoutAttempt) {
 }
 
 /** Rejects or expires any other in-progress section timer. */
-async function requireNoParallelSectionTimer(
+const requireNoParallelSectionTimer = Effect.fn(
+  "tryouts.runtime.requireNoParallelSectionTimer"
+)(function* (
   ctx: MutationCtx,
   args: { attempt: TryoutAttempt; now: number; sectionKey: string }
 ) {
-  const sections = await loadSectionAttempts(ctx, args.attempt);
+  const sections = yield* tryRuntimePromise(() =>
+    loadSectionAttempts(ctx, args.attempt)
+  );
 
   for (const section of sections) {
     if (section.sectionKey === args.sectionKey) {
@@ -215,7 +231,7 @@ async function requireNoParallelSectionTimer(
     }
 
     if (args.now >= section.expiresAt) {
-      await finalizeSectionAttempt(ctx, {
+      yield* finalizeSectionAttempt(ctx, {
         attempt: args.attempt,
         endReason: "time-expired",
         now: args.now,
@@ -224,20 +240,22 @@ async function requireNoParallelSectionTimer(
       continue;
     }
 
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_SECTION_IN_PROGRESS",
       message: "Another try-out section is already in progress.",
     });
   }
 
-  const currentAttempt = await ctx.db.get(args.attempt._id);
+  const currentAttempt = yield* tryRuntimePromise(() =>
+    ctx.db.get(args.attempt._id)
+  );
 
   if (currentAttempt?.status !== "in-progress") {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       message: "Try-out attempt is not active.",
     });
   }
 
   return currentAttempt;
-}
+});

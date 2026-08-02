@@ -4,6 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
+import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
 import {
   TRYOUT_START_COUNTRY as COUNTRY,
   TRYOUT_START_EXAM as EXAM,
@@ -74,6 +75,52 @@ describe("tryouts/mutations/attempts", () => {
     expect(runtime.placements).toHaveLength(1);
     expect(runtime.placements[0]).not.toHaveProperty("placementIdentity");
     expect(runtime.placements[0]).not.toHaveProperty("sectionIdentity");
+  });
+
+  it("resumes a legacy attempt while signed ownership is active", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "tryout-signed-legacy-resume",
+      });
+      const fixture = await seedTryoutStartSet(ctx, {
+        userId: identity.userId,
+        visibility: "visible",
+      });
+      const attemptId = await insertTryoutAttempt(ctx, {
+        expiresAt: NOW + 86_400_000,
+        sectionSnapshots: [],
+        tryoutSetId: fixture.tryoutSetId,
+        userId: identity.userId,
+      });
+
+      return { attemptId, identity };
+    });
+    const authed = t.withIdentity({
+      sessionId: seeded.identity.sessionId,
+      subject: seeded.identity.authUserId,
+    });
+
+    await expect(
+      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
+        countryKey: COUNTRY,
+        examKey: EXAM,
+        locale: "id",
+        setKey: SET,
+        trackKey: TRACK,
+      })
+    ).resolves.toEqual({ attemptId: seeded.attemptId });
+
+    const runtime = await t.query(async (ctx) => ({
+      attempts: await ctx.db.query("tryoutAttempts").collect(),
+      freeClaims: await ctx.db.query("tryoutFreeAttemptClaims").collect(),
+    }));
+
+    expect(runtime.attempts).toHaveLength(1);
+    expect(runtime.freeClaims).toEqual([]);
   });
 
   it("starts an internal entry section atomically with a new attempt", async () => {

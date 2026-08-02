@@ -198,7 +198,7 @@ describe("tryouts/runtime/finish", () => {
         tryoutSectionAttemptId: sectionAttemptId,
         updatedAt: NOW - 5000,
       });
-      await expireAttempt(ctx, { attempt, now: NOW });
+      await runConvexProgram(expireAttempt(ctx, { attempt, now: NOW }));
 
       const sections = await ctx.db
         .query("tryoutSectionAttempts")
@@ -295,12 +295,14 @@ describe("tryouts/runtime/finish", () => {
         });
       }
 
-      await finalizeSectionAttempt(ctx, {
-        attempt,
-        endReason: "time-expired",
-        now: NOW,
-        section,
-      });
+      await runConvexProgram(
+        finalizeSectionAttempt(ctx, {
+          attempt,
+          endReason: "time-expired",
+          now: NOW,
+          section,
+        })
+      );
 
       return {
         attempt: await ctx.db.get(attemptId),

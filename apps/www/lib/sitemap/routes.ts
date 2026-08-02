@@ -1,5 +1,8 @@
 import { compareSitemapPaths } from "@repo/backend/convex/contents/sitemap/spec";
-import { routing } from "@repo/internationalization/src/routing";
+import {
+  PUBLIC_ROUTE_SURFACES,
+  type PublicRouteSurfaceKey,
+} from "@repo/contents/_types/route/surface";
 import { Data, Effect } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedArticleSitemap } from "@/lib/content/article/sitemap";
@@ -15,6 +18,10 @@ import {
   getRuntimeContentSitemapPage,
   getRuntimePublicSitemapPage,
 } from "@/lib/content/runtime/routes";
+import {
+  readPublishedTryoutSitemap,
+  readPublishedTryoutSitemapCount,
+} from "@/lib/content/tryout/sitemap";
 import { buildSitemapContentPageRoutes } from "@/lib/sitemap/content";
 import {
   getSitemapPageDescriptor,
@@ -23,6 +30,7 @@ import {
   isMaterialSitemapPage,
   isProgramSitemapPage,
   isPublicSitemapPage,
+  isTryoutSitemapPage,
 } from "@/lib/sitemap/identity";
 import {
   filterMaterialContentRows,
@@ -30,6 +38,9 @@ import {
 } from "@/lib/sitemap/material";
 
 const quranRootRoute = "/quran";
+type MaterialSitemapOwner = Effect.Effect.Success<
+  ReturnType<typeof readPublishedMaterialBuckets>
+>;
 
 /** A canonical sitemap page id whose route page does not exist. */
 export class SitemapPageNotFoundError extends Data.TaggedError(
@@ -59,17 +70,19 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     }
 
     if (isPublicSitemapPage(page)) {
-      const [artifact, materialOwner, programOwner] = yield* Effect.all(
-        [
-          getRuntimePublicSitemapPage({
-            locale: page.locale,
-            page: page.page,
-          }),
-          readPublishedMaterialBuckets(page.locale),
-          readPublishedProgramBuckets(page.locale),
-        ],
-        { concurrency: "unbounded" }
-      );
+      const [artifact, materialOwner, programOwner, tryoutOwner] =
+        yield* Effect.all(
+          [
+            getRuntimePublicSitemapPage({
+              locale: page.locale,
+              page: page.page,
+            }),
+            readPublishedMaterialBuckets(page.locale),
+            readPublishedProgramBuckets(page.locale),
+            readPublishedTryoutSitemapCount(page.locale),
+          ],
+          { concurrency: "unbounded" }
+        );
       if (!artifact) {
         return yield* new SitemapPageNotFoundError({ pageId });
       }
@@ -84,6 +97,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
           !isSourceOwnedPublicPath(path, page.locale, {
             material: materialOwner.managed,
             program: programOwner.managed,
+            tryout: tryoutOwner.managed,
           })
         ) {
           continue;
@@ -151,18 +165,42 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       };
     }
 
+    if (isTryoutSitemapPage(page)) {
+      const artifact = yield* readPublishedTryoutSitemap(
+        page.locale,
+        page.page
+      );
+      if (!artifact) {
+        return yield* new SitemapPageNotFoundError({ pageId });
+      }
+      return {
+        routes: artifact.paths
+          .map((publicPath) => ({
+            lastModified: undefined,
+            path: routeToPath(publicPath),
+          }))
+          .sort((left, right) => compareSitemapPaths(left.path, right.path)),
+      };
+    }
+
     if (!isContentSitemapPage(page)) {
       return {
         routes: baseRoutes.map((path) => ({ lastModified: undefined, path })),
       };
     }
 
-    const materialOwner =
-      page.section === "material"
-        ? yield* readPublishedMaterialBuckets(page.locale)
-        : null;
-    if (materialOwner?.managed) {
-      return yield* new SitemapPageNotFoundError({ pageId });
+    if (page.section === "tryout") {
+      const owner = yield* readPublishedTryoutSitemapCount(page.locale);
+      if (owner.managed) {
+        return yield* new SitemapPageNotFoundError({ pageId });
+      }
+    }
+    let materialOwner: MaterialSitemapOwner | null = null;
+    if (page.section === "material") {
+      materialOwner = yield* readPublishedMaterialBuckets(page.locale);
+      if (materialOwner.managed) {
+        return yield* new SitemapPageNotFoundError({ pageId });
+      }
     }
     const artifact = yield* getRuntimeContentSitemapPage({
       locale: page.locale,
@@ -172,13 +210,14 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     if (!artifact) {
       return yield* new SitemapPageNotFoundError({ pageId });
     }
-    const visibleRoutes = materialOwner
-      ? yield* filterMaterialContentRows(
-          page.locale,
-          artifact.routes,
-          materialOwner.activeReleaseId
-        )
-      : artifact.routes;
+    let visibleRoutes = artifact.routes;
+    if (materialOwner) {
+      visibleRoutes = yield* filterMaterialContentRows(
+        page.locale,
+        artifact.routes,
+        materialOwner.activeReleaseId
+      );
+    }
     return { routes: yield* buildSitemapContentPageRoutes(visibleRoutes) };
   }
 );
@@ -192,16 +231,37 @@ function routeToPath(route: string) {
 function isSourceOwnedPublicPath(
   path: string,
   locale: Locale,
-  managed: { readonly material: boolean; readonly program: boolean }
-) {
-  const materialPattern =
-    routing.pathnames["/materials/[subject]/[topic]/[[...lesson]]"][locale];
-  const programPattern =
-    routing.pathnames["/curricula/[curriculum]/[[...path]]"][locale];
-  const materialPrefix = materialPattern.slice(1, materialPattern.indexOf("["));
-  const programPrefix = programPattern.slice(1, programPattern.indexOf("["));
-  if (managed.material && path.startsWith(materialPrefix)) {
-    return false;
+  managed: {
+    readonly material: boolean;
+    readonly program: boolean;
+    readonly tryout: boolean;
   }
-  return !(managed.program && path.startsWith(programPrefix));
+) {
+  for (const surface of PUBLIC_ROUTE_SURFACES) {
+    if (!isManagedSurface(surface.key, managed)) {
+      continue;
+    }
+    if (path.startsWith(`${surface.routeSlugs[locale]}/`)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** Checks whether a public route surface has moved to signed ownership. */
+function isManagedSurface(
+  surface: PublicRouteSurfaceKey,
+  managed: {
+    readonly material: boolean;
+    readonly program: boolean;
+    readonly tryout: boolean;
+  }
+) {
+  if (surface === "subject") {
+    return managed.material;
+  }
+  if (surface === "curriculum") {
+    return managed.program;
+  }
+  return surface === "tryout" && managed.tryout;
 }

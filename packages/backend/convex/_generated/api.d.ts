@@ -307,6 +307,7 @@ import type * as contentRelease_tryout_section from "../contentRelease/tryout/se
 import type * as contentRelease_tryout_setIdentity from "../contentRelease/tryout/setIdentity.js";
 import type * as contentRelease_tryout_setIdentity_impl from "../contentRelease/tryout/setIdentity/impl.js";
 import type * as contentRelease_tryout_set from "../contentRelease/tryout/set.js";
+import type * as contentRelease_tryout_sitemap from "../contentRelease/tryout/sitemap.js";
 import type * as contentRelease_tryout_verify from "../contentRelease/tryout/verify.js";
 import type * as contentRelease_verify from "../contentRelease/verify.js";
 import type * as contentRelease_verify_delete from "../contentRelease/verify/delete.js";
@@ -519,7 +520,9 @@ import type * as tryouts_access_subscription from "../tryouts/access/subscriptio
 import type * as tryouts_catalog_filesystem_content from "../tryouts/catalog/filesystem/content.js";
 import type * as tryouts_catalog_filesystem_discovery from "../tryouts/catalog/filesystem/discovery.js";
 import type * as tryouts_catalog_hierarchy from "../tryouts/catalog/hierarchy.js";
+import type * as tryouts_catalog_metadata from "../tryouts/catalog/metadata.js";
 import type * as tryouts_catalog_published from "../tryouts/catalog/published.js";
+import type * as tryouts_catalog_route from "../tryouts/catalog/route.js";
 import type * as tryouts_catalog_spec from "../tryouts/catalog/spec.js";
 import type * as tryouts_migrations_activate from "../tryouts/migrations/activate.js";
 import type * as tryouts_migrations_attempt from "../tryouts/migrations/attempt.js";
@@ -552,6 +555,7 @@ import type * as tryouts_read from "../tryouts/read.js";
 import type * as tryouts_route from "../tryouts/route.js";
 import type * as tryouts_runtime_access from "../tryouts/runtime/access.js";
 import type * as tryouts_runtime_content from "../tryouts/runtime/content.js";
+import type * as tryouts_runtime_error from "../tryouts/runtime/error.js";
 import type * as tryouts_runtime_estimate from "../tryouts/runtime/estimate.js";
 import type * as tryouts_runtime_finish from "../tryouts/runtime/finish.js";
 import type * as tryouts_runtime_irt from "../tryouts/runtime/irt.js";
@@ -896,6 +900,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/tryout/setIdentity": typeof contentRelease_tryout_setIdentity;
   "contentRelease/tryout/setIdentity/impl": typeof contentRelease_tryout_setIdentity_impl;
   "contentRelease/tryout/set": typeof contentRelease_tryout_set;
+  "contentRelease/tryout/sitemap": typeof contentRelease_tryout_sitemap;
   "contentRelease/tryout/verify": typeof contentRelease_tryout_verify;
   "contentRelease/verify": typeof contentRelease_verify;
   "contentRelease/verify/delete": typeof contentRelease_verify_delete;
@@ -1108,7 +1113,9 @@ declare const fullApi: ApiFromModules<{
   "tryouts/catalog/filesystem/content": typeof tryouts_catalog_filesystem_content;
   "tryouts/catalog/filesystem/discovery": typeof tryouts_catalog_filesystem_discovery;
   "tryouts/catalog/hierarchy": typeof tryouts_catalog_hierarchy;
+  "tryouts/catalog/metadata": typeof tryouts_catalog_metadata;
   "tryouts/catalog/published": typeof tryouts_catalog_published;
+  "tryouts/catalog/route": typeof tryouts_catalog_route;
   "tryouts/catalog/spec": typeof tryouts_catalog_spec;
   "tryouts/migrations/activate": typeof tryouts_migrations_activate;
   "tryouts/migrations/attempt": typeof tryouts_migrations_attempt;
@@ -1141,6 +1148,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/route": typeof tryouts_route;
   "tryouts/runtime/access": typeof tryouts_runtime_access;
   "tryouts/runtime/content": typeof tryouts_runtime_content;
+  "tryouts/runtime/error": typeof tryouts_runtime_error;
   "tryouts/runtime/estimate": typeof tryouts_runtime_estimate;
   "tryouts/runtime/finish": typeof tryouts_runtime_finish;
   "tryouts/runtime/irt": typeof tryouts_runtime_irt;

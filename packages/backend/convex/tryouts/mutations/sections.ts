@@ -1,10 +1,10 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { mutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import {
-  expireAttemptAtEffectiveTime,
   finalizeSectionAttempt,
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
@@ -77,11 +77,13 @@ export const start = mutation({
     });
     const now = Date.now();
 
-    return startSectionAttempt(ctx, {
-      attempt,
-      now,
-      sectionKey: args.sectionKey,
-    });
+    return runConvexProgram(
+      startSectionAttempt(ctx, {
+        attempt,
+        now,
+        sectionKey: args.sectionKey,
+      })
+    );
   },
 });
 
@@ -111,7 +113,6 @@ export const complete = mutation({
     const now = Date.now();
 
     if (now >= getAttemptExpiresAt(attempt)) {
-      await expireAttemptAtEffectiveTime(ctx, { attempt, now });
       throw new ConvexError({
         code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
         message: "Try-out attempt time has expired.",
@@ -124,12 +125,14 @@ export const complete = mutation({
     });
     const endReason = getSectionEndReason(section, now);
 
-    await finalizeSectionAttempt(ctx, {
-      attempt,
-      endReason,
-      now,
-      section,
-    });
+    await runConvexProgram(
+      finalizeSectionAttempt(ctx, {
+        attempt,
+        endReason,
+        now,
+        section,
+      })
+    );
 
     return sectionCompletedResult();
   },

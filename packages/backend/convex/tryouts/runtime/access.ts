@@ -1,9 +1,6 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
-import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
   getTryoutSectionContentAccess,
   type TryoutAnswerSelector,
@@ -11,6 +8,7 @@ import {
   type TryoutSectionContentAccess,
   type TryoutSectionContentArgs,
 } from "@repo/backend/convex/tryouts/runtime/content";
+import { readLatestAttempt } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { Effect, Schema } from "effect";
 
 const noContentAccess: Extract<TryoutSectionContentAccess, { kind: "none" }> = {
@@ -39,10 +37,7 @@ export const readTryoutSectionContent = Effect.fn(
     return noContentAccess;
   }
 
-  const attempt = yield* loadOwnedAttempt(ctx, {
-    args,
-    userId: auth.appUser._id,
-  });
+  const attempt = yield* readLatestAttempt(ctx, args, auth.appUser._id);
   if (!attempt) {
     return noContentAccess;
   }
@@ -85,55 +80,6 @@ export const readTryoutSectionContent = Effect.fn(
     totalQuestions: section.totalQuestions,
   });
 });
-
-/** Loads the actual latest attempt across signed and filesystem identities. */
-const loadOwnedAttempt = Effect.fn("tryouts.access.loadOwnedAttempt")(
-  function* (
-    ctx: QueryCtx,
-    input: {
-      readonly args: TryoutSectionContentArgs;
-      readonly userId: Doc<"users">["_id"];
-    }
-  ) {
-    const setIdentity = tryoutCatalogIdentity({
-      countryKey: input.args.countryKey,
-      examKey: input.args.examKey,
-      kind: "set",
-      locale: input.args.locale,
-      setKey: input.args.setKey,
-      trackKey: input.args.trackKey,
-    });
-    const owner = yield* loadTryoutOwner(ctx);
-    if (owner.managed) {
-      return yield* tryContentPromise(() =>
-        ctx.db
-          .query("tryoutAttempts")
-          .withIndex("by_userId_and_setIdentity_and_startedAt", (index) =>
-            index.eq("userId", input.userId).eq("setIdentity", setIdentity)
-          )
-          .order("desc")
-          .first()
-      );
-    }
-
-    const set = yield* tryContentPromise(() =>
-      getActiveTryoutSet(ctx, input.args)
-    );
-    if (!set) {
-      return null;
-    }
-
-    return yield* tryContentPromise(() =>
-      ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutSetId_and_startedAt", (index) =>
-          index.eq("userId", input.userId).eq("tryoutSetId", set._id)
-        )
-        .order("desc")
-        .first()
-    );
-  }
-);
 
 /** Returns exact protected selectors from one immutable signed attempt. */
 const loadSignedContent = Effect.fn("tryouts.access.loadSignedContent")(

@@ -7,6 +7,7 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { RefContent } from "@/components/shared/ref-content";
 import { TryoutCountryPageClient } from "@/components/tryout/catalog/country.client";
+import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
 import { TryoutCountrySelector } from "@/components/tryout/catalog/selector.client";
 import { readTryoutCountryPage } from "@/components/tryout/catalog/server";
 import { readStaticTryoutCountryOptions } from "@/components/tryout/catalog/static";
@@ -19,6 +20,22 @@ export const unstable_instant = {
   prefetch: "runtime",
   samples: [{ params: { country: "indonesia", locale: "id" } }],
 };
+
+/** Builds route-owned metadata for one localized try-out country. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ country: string; locale: string }>;
+}) {
+  const { country, locale: localeParam } = await params;
+  const locale = getLocaleOrThrow(localeParam);
+
+  return generateTryoutRouteMetadata({
+    kind: "country",
+    locale,
+    publicPath: getTryoutHref({ country }).slice(1),
+  });
+}
 
 /** Renders active exam families for one try-out country. */
 export default function Page(props: {

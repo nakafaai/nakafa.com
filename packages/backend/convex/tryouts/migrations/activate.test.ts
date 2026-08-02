@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { finalizeAttemptScore } from "@repo/backend/convex/tryouts/runtime/score";
 import {
@@ -41,11 +42,13 @@ describe("tryouts/migrations/activate", () => {
       if (!activeAttempt) {
         throw new Error("Expected the active migration attempt.");
       }
-      await finalizeAttemptScore(ctx, {
-        attempt: activeAttempt,
-        endReason: "submitted",
-        now: activeAttempt.lastActivityAt + 1,
-      });
+      await runConvexProgram(
+        finalizeAttemptScore(ctx, {
+          attempt: activeAttempt,
+          endReason: "submitted",
+          now: activeAttempt.lastActivityAt + 1,
+        })
+      );
     });
     await expect(
       t.mutation(internal.tryouts.migrations.activate.activateAttempts, args)
@@ -62,6 +65,32 @@ describe("tryouts/migrations/activate", () => {
       scaleVersionId: expect.any(String),
       tryoutSnapshotId: snapshotId,
     });
+    await expect(
+      t.mutation(internal.tryouts.migrations.activate.activateAttempts, args)
+    ).resolves.toMatchObject({ changed: 0, isDone: true });
+  });
+
+  it("keeps raw attempt activation retry-safe without a scale", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const { snapshotId } = await t.mutation(seedTryoutMigration);
+    const args = makeTryoutMigrationArgs(snapshotId);
+
+    await t.mutation(internal.tryouts.migrations.attempt.migrateAttempts, args);
+    await t.mutation(
+      internal.tryouts.migrations.placement.migratePlacements,
+      args
+    );
+    await t.mutation(async (ctx) => {
+      const attempt = await ctx.db.query("tryoutAttempts").unique();
+      if (!attempt) {
+        throw new Error("Expected one migratable attempt.");
+      }
+      await ctx.db.patch(attempt._id, { scoringStrategy: "raw" });
+    });
+
+    await expect(
+      t.mutation(internal.tryouts.migrations.activate.activateAttempts, args)
+    ).resolves.toMatchObject({ changed: 1, isDone: true });
     await expect(
       t.mutation(internal.tryouts.migrations.activate.activateAttempts, args)
     ).resolves.toMatchObject({ changed: 0, isDone: true });

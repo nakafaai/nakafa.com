@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
 import { readTryoutSectionPage } from "@/components/tryout/catalog/server";
 import {
   readTryoutContentAccess,
@@ -38,6 +39,42 @@ export const unstable_instant = {
     },
   ],
 };
+
+/** Builds route-owned metadata for one localized try-out section. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{
+    country: string;
+    exam: string;
+    locale: string;
+    section: string;
+    set: string;
+    track: string;
+  }>;
+}) {
+  const {
+    country,
+    exam,
+    locale: localeParam,
+    section,
+    set,
+    track,
+  } = await params;
+  const locale = getLocaleOrThrow(localeParam);
+
+  return generateTryoutRouteMetadata({
+    kind: "section",
+    locale,
+    publicPath: getTryoutHref({
+      country,
+      exam,
+      section,
+      set,
+      track,
+    }).slice(1),
+  });
+}
 
 /** Renders one try-out section with public metadata and owned runtime content. */
 export default function Page(props: {

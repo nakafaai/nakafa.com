@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
+import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
 import { readTryoutTrackPage } from "@/components/tryout/catalog/server";
 import {
@@ -27,6 +28,27 @@ export const unstable_instant = {
     },
   ],
 };
+
+/** Builds route-owned metadata for one localized try-out track. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{
+    country: string;
+    exam: string;
+    locale: string;
+    track: string;
+  }>;
+}) {
+  const { country, exam, locale: localeParam, track } = await params;
+  const locale = getLocaleOrThrow(localeParam);
+
+  return generateTryoutRouteMetadata({
+    kind: "track",
+    locale,
+    publicPath: getTryoutHref({ country, exam, track }).slice(1),
+  });
+}
 
 /** Renders active try-out sets for one exam track. */
 export default function Page(props: {

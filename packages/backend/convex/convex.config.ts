@@ -13,6 +13,8 @@ const app = defineApp({
   // https://github.com/PostHog/posthog-js/tree/main/packages/convex#-migrating-from-v1
   // https://docs.convex.dev/components/authoring#environment-variables
   env: {
+    AKSARA_AGENT_SIGNING_KEY_ID: v.optional(v.string()),
+    AKSARA_AGENT_SIGNING_PUBLIC_KEY: v.optional(v.string()),
     AKSARA_PUBLICATION_TOKEN: v.string(),
     CONTENT_RUNTIME_TOKEN: v.string(),
     // Dedicated least-privilege key for permanent account erasure.

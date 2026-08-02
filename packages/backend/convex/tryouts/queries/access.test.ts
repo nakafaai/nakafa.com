@@ -63,11 +63,9 @@ const accessScenarios: readonly [
   ],
 ];
 
+type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
 type SelectorPatch = Partial<
-  Pick<
-    Doc<"tryoutAttemptPlacements">,
-    "answerArtifactHash" | "questionArtifactHash"
-  >
+  Pick<TryoutPlacement, "answerArtifactHash" | "questionArtifactHash">
 >;
 
 interface IncompleteSelectorScenario {
@@ -211,12 +209,11 @@ describe("tryouts/queries/access", () => {
       subject: identity.authUserId,
     });
 
-    expect(
-      await authed.query(
-        api.tryouts.queries.access.getSectionContent,
-        contentArgs
-      )
-    ).toEqual(noContent);
+    const result = await authed.query(
+      api.tryouts.queries.access.getSectionContent,
+      contentArgs
+    );
+    expect(result).toEqual(noContent);
   });
 
   it("rejects access when the user has no attempt", async () => {
@@ -235,12 +232,11 @@ describe("tryouts/queries/access", () => {
       subject: identity.authUserId,
     });
 
-    expect(
-      await authed.query(
-        api.tryouts.queries.access.getSectionContent,
-        contentArgs
-      )
-    ).toEqual(noContent);
+    const result = await authed.query(
+      api.tryouts.queries.access.getSectionContent,
+      contentArgs
+    );
+    expect(result).toEqual(noContent);
   });
 
   it("rejects access when the terminal attempt has no section", async () => {
@@ -319,19 +315,19 @@ describe("tryouts/queries/access", () => {
     });
   });
 
-  it("prefers a newer filesystem attempt after ownership rolls back", async () => {
+  it("prefers a newer filesystem attempt during signed migration", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const signed = await seedTryoutContentAccessState(ctx, {
         attemptStatus: "in-progress",
         sectionStatus: "in-progress",
         signed: true,
-        suffix: "content-signed-before-rollback",
+        suffix: "content-signed-before-migration",
       });
       const local = await seedTryoutContentAccessState(ctx, {
         attemptStatus: "in-progress",
         sectionStatus: "in-progress",
-        suffix: "content-local-after-rollback",
+        suffix: "content-local-during-migration",
       });
       await ctx.db.patch(local.attemptId, {
         attemptNumber: 2,
@@ -341,15 +337,6 @@ describe("tryouts/queries/access", () => {
         userId: signed.identity.userId,
       });
       await ctx.db.delete(local.tryoutSetId);
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        throw new Error("Expected one active signed content state.");
-      }
-      await ctx.db.patch(state._id, {
-        activeManifestHash: undefined,
-        activeReleaseId: undefined,
-        activeSequence: undefined,
-      });
       return signed.identity;
     });
     const authed = t.withIdentity({

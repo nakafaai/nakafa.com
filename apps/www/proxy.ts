@@ -1,8 +1,10 @@
 import { isPostHogProxyPathname } from "@repo/analytics/posthog/config";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
 import {
   AGENT_DISCOVERY_LINK_HEADER,
@@ -25,6 +27,8 @@ import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source"
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
+const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
+const CONTENT_NOT_FOUND_SEGMENT = "404";
 
 /**
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
@@ -70,11 +74,15 @@ export async function proxy(request: NextRequest) {
     hasPreviewConfig() &&
     (await Effect.runPromise(
       matchesInternalPreviewRoute({
-        localeHint: request.headers.get("x-next-intl-locale"),
+        localeHint: request.headers.get(NEXT_INTL_LOCALE_HEADER),
         pathname,
       })
     ))
   ) {
+    return NextResponse.next();
+  }
+
+  if (isLocalizedAppRewrite(request)) {
     return NextResponse.next();
   }
 
@@ -125,6 +133,29 @@ export async function proxy(request: NextRequest) {
   return routeLocalizedRequest(request);
 }
 
+/** Lets one completed next-intl rewrite reach its internal App Router path. */
+function isLocalizedAppRewrite(request: NextRequest) {
+  const localeHint = request.headers.get(NEXT_INTL_LOCALE_HEADER);
+  if (!(localeHint && hasLocale(routing.locales, localeHint))) {
+    return false;
+  }
+
+  const [locale, appSegment] = request.nextUrl.pathname
+    .split("/")
+    .filter(Boolean);
+  if (locale !== localeHint || !appSegment) {
+    return false;
+  }
+
+  if (appSegment === CONTENT_NOT_FOUND_SEGMENT) {
+    return true;
+  }
+
+  return PUBLIC_ROUTE_SURFACES.some(
+    (surface) => surface.appSegment === appSegment
+  );
+}
+
 /** Applies next-intl routing and Nakafa discovery headers once per pass. */
 function routeLocalizedRequest(request: NextRequest) {
   const response = handleLocalizedRequest(request);
@@ -150,11 +181,19 @@ function rewriteToContentNotFound(
   request: NextRequest,
   locale: (typeof routing.locales)[number]
 ) {
-  const rewriteUrl = new URL(`/${locale}/_not-found`, request.url);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(NEXT_INTL_LOCALE_HEADER, locale);
+  const rewriteUrl = new URL(
+    `/${locale}/${CONTENT_NOT_FOUND_SEGMENT}`,
+    request.url
+  );
 
   return NextResponse.rewrite(rewriteUrl, {
     headers: {
       "X-Robots-Tag": "noindex",
+    },
+    request: {
+      headers: requestHeaders,
     },
     status: 404,
   });

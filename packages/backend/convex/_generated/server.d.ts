@@ -25,6 +25,8 @@ import type { DataModel } from "./dataModel.js";
  * Typesafe environment variables declared in `convex.config.ts`.
  */
 type Env = {
+  readonly AKSARA_AGENT_SIGNING_KEY_ID: string | undefined;
+  readonly AKSARA_AGENT_SIGNING_PUBLIC_KEY: string | undefined;
   readonly AKSARA_PUBLICATION_TOKEN: string;
   readonly CONTENT_RUNTIME_TOKEN: string;
   readonly POSTHOG_ACCOUNT_DELETION_API_KEY: string;

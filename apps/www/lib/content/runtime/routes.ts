@@ -45,6 +45,12 @@ type ContentRouteArgs = FunctionArgs<
 type PublicRouteArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getPublicRouteByPath
 >;
+type TryoutRouteArgs = FunctionArgs<
+  typeof api.tryouts.queries.catalog.getRoute
+>;
+type TryoutMetadataArgs = FunctionArgs<
+  typeof api.tryouts.queries.catalog.getMetadata
+>;
 /** One bounded newest-first page from the content route catalog. */
 export type RuntimeLatestContentRoutePage = FunctionReturnType<
   typeof api.contents.queries.runtime.listLatestContentRoutePage
@@ -245,5 +251,23 @@ export const getRuntimePublicRoute = Effect.fn(
 )(function* (args: PublicRouteArgs) {
   return yield* readRuntimeQuery("getPublicRouteByPath", () =>
     fetchRuntimePublicRoute(args)
+  );
+});
+
+/** Resolves one localized public path against signed try-out ownership. */
+export const getRuntimeTryoutRoute = Effect.fn(
+  "www.contentRuntime.tryoutRoute"
+)(function* (args: TryoutRouteArgs) {
+  return yield* readRuntimeQuery("getTryoutRoute", () =>
+    fetchRuntimeQuery(api.tryouts.queries.catalog.getRoute, args)
+  );
+});
+
+/** Reads signed SEO copy and localized paths for one exact try-out route. */
+export const getRuntimeTryoutMetadata = Effect.fn(
+  "www.contentRuntime.tryoutMetadata"
+)(function* (args: TryoutMetadataArgs) {
+  return yield* readRuntimeQuery("getTryoutMetadata", () =>
+    fetchRuntimeQuery(api.tryouts.queries.catalog.getMetadata, args)
   );
 });

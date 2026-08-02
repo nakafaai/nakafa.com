@@ -1,11 +1,7 @@
 import { mutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import {
-  expireAttemptAtEffectiveTime,
-  finalizeSectionAttempt,
-  getAttemptExpiresAt,
-} from "@repo/backend/convex/tryouts/runtime/finish";
+import { getAttemptExpiresAt } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireOwnedAttempt } from "@repo/backend/convex/tryouts/runtime/score";
 import { loadPlacementSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { startTryoutAttempt } from "@repo/backend/convex/tryouts/start/impl";
@@ -82,7 +78,6 @@ export const saveResponse = mutation({
     const now = Date.now();
 
     if (now >= getAttemptExpiresAt(attempt)) {
-      await expireAttemptAtEffectiveTime(ctx, { attempt, now });
       throw new ConvexError({
         code: "TRYOUT_EXPIRED",
         message: "Try-out attempt time has expired.",
@@ -90,12 +85,6 @@ export const saveResponse = mutation({
     }
 
     if (now >= section.expiresAt) {
-      await finalizeSectionAttempt(ctx, {
-        attempt,
-        endReason: "time-expired",
-        now,
-        section,
-      });
       throw new ConvexError({
         code: "TRYOUT_EXPIRED",
         message: "Try-out attempt time has expired.",

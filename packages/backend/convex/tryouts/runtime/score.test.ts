@@ -1,3 +1,4 @@
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { finalizeAttemptScore } from "@repo/backend/convex/tryouts/runtime/score";
@@ -180,11 +181,13 @@ describe("tryouts/runtime/score", () => {
         });
       }
 
-      await finalizeAttemptScore(ctx, {
-        attempt,
-        endReason: "submitted",
-        now: NOW,
-      });
+      await runConvexProgram(
+        finalizeAttemptScore(ctx, {
+          attempt,
+          endReason: "submitted",
+          now: NOW,
+        })
+      );
 
       const score = await ctx.db
         .query("tryoutScores")

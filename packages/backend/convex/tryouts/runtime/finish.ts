@@ -1,5 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  TryoutRuntimeError,
+  tryRuntimePromise,
+} from "@repo/backend/convex/tryouts/runtime/error";
 import { getSectionScoreSnapshot } from "@repo/backend/convex/tryouts/runtime/result";
 import {
   finalizeAttemptScore,
@@ -7,6 +11,7 @@ import {
   summarizeResponses,
 } from "@repo/backend/convex/tryouts/runtime/score";
 import { ConvexError } from "convex/values";
+import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
@@ -19,32 +24,35 @@ export function getAttemptExpiresAt(attempt: TryoutAttempt) {
 }
 
 /** Expires an attempt using its entitlement-bounded timer. */
-export async function expireAttemptAtEffectiveTime(
-  ctx: MutationCtx,
-  args: { attempt: TryoutAttempt; now: number }
-) {
+export const expireAttemptAtEffectiveTime = Effect.fn(
+  "tryouts.runtime.expireAttemptAtEffectiveTime"
+)(function* (ctx: MutationCtx, args: { attempt: TryoutAttempt; now: number }) {
   const expiresAt = getAttemptExpiresAt(args.attempt);
 
   if (expiresAt === args.attempt.expiresAt) {
-    return expireAttempt(ctx, args);
+    return yield* expireAttempt(ctx, args);
   }
 
-  await ctx.db.patch(args.attempt._id, {
-    expiresAt,
-    lastActivityAt: args.now,
-  });
+  yield* tryRuntimePromise(() =>
+    ctx.db.patch(args.attempt._id, {
+      expiresAt,
+      lastActivityAt: args.now,
+    })
+  );
 
-  const currentAttempt = await ctx.db.get(args.attempt._id);
+  const currentAttempt = yield* tryRuntimePromise(() =>
+    ctx.db.get(args.attempt._id)
+  );
 
   if (!currentAttempt) {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_ATTEMPT_NOT_FOUND",
       message: "Try-out attempt not found.",
     });
   }
 
-  return expireAttempt(ctx, { attempt: currentAttempt, now: args.now });
-}
+  return yield* expireAttempt(ctx, { attempt: currentAttempt, now: args.now });
+});
 
 /** Loads bounded responses for one section attempt before finalizing it. */
 async function loadSectionResponses(
@@ -135,7 +143,9 @@ async function createMissingExpiredSectionAttempts(
 }
 
 /** Finalizes one section attempt and finalizes the parent attempt if complete. */
-export async function finalizeSectionAttempt(
+export const finalizeSectionAttempt = Effect.fn(
+  "tryouts.runtime.finalizeSectionAttempt"
+)(function* (
   ctx: MutationCtx,
   args: {
     attempt: TryoutAttempt;
@@ -143,120 +153,128 @@ export async function finalizeSectionAttempt(
     now: number;
     section: TryoutSectionAttempt;
   }
-): Promise<{ kind: "completed" }> {
-  const finalization = await getSectionFinalization(ctx, {
-    attempt: args.attempt,
-    section: args.section,
-  });
-
-  await ctx.db.patch(args.section._id, {
-    answeredCount: finalization.answeredCount,
-    completedAt: args.now,
-    correctAnswers: finalization.correctAnswers,
-    endReason: args.endReason,
-    lastActivityAt: args.now,
-    score: finalization.score,
-    status: args.endReason === "time-expired" ? "expired" : "completed",
-  });
-
-  const completedSectionKeys = Array.from(
-    new Set([...args.attempt.completedSectionKeys, args.section.sectionKey])
-  );
-  await ctx.db.patch(args.attempt._id, {
-    completedSectionKeys,
-    lastActivityAt: args.now,
-  });
-
-  if (completedSectionKeys.length < args.attempt.sectionSnapshots.length) {
-    return { kind: "completed" };
-  }
-
-  const currentAttempt = await ctx.db.get(args.attempt._id);
-
-  if (!currentAttempt) {
-    throw new ConvexError({
-      code: "TRYOUT_ATTEMPT_NOT_FOUND",
-      message: "Try-out attempt not found.",
-    });
-  }
-
-  await finalizeAttemptScore(ctx, {
-    attempt: currentAttempt,
-    endReason: "submitted",
-    now: args.now,
-  });
-
-  return { kind: "completed" };
-}
-
-/** Expires one whole attempt and any in-progress section attempts it owns. */
-export async function expireAttempt(
-  ctx: MutationCtx,
-  args: { attempt: TryoutAttempt; now: number }
 ) {
-  const sections = await ctx.db
-    .query("tryoutSectionAttempts")
-    .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
-      q.eq("tryoutAttemptId", args.attempt._id)
-    )
-    .take(args.attempt.sectionSnapshots.length + 1);
-
-  if (sections.length > args.attempt.sectionSnapshots.length) {
-    throw new ConvexError({
-      code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
-      message: "Try-out section attempt count exceeds the attempt snapshot.",
-    });
-  }
-
-  for (const section of sections) {
-    if (section.status !== "in-progress") {
-      continue;
-    }
-
+  const currentAttempt = yield* tryRuntimePromise(async () => {
     const finalization = await getSectionFinalization(ctx, {
       attempt: args.attempt,
-      section,
+      section: args.section,
     });
 
-    await ctx.db.patch(section._id, {
+    await ctx.db.patch(args.section._id, {
       answeredCount: finalization.answeredCount,
-      completedAt: args.attempt.expiresAt,
+      completedAt: args.now,
       correctAnswers: finalization.correctAnswers,
-      endReason: "time-expired",
+      endReason: args.endReason,
       lastActivityAt: args.now,
       score: finalization.score,
-      status: "expired",
+      status: args.endReason === "time-expired" ? "expired" : "completed",
+    });
+
+    const completedSectionKeys = Array.from(
+      new Set([...args.attempt.completedSectionKeys, args.section.sectionKey])
+    );
+    await ctx.db.patch(args.attempt._id, {
+      completedSectionKeys,
+      lastActivityAt: args.now,
+    });
+
+    if (completedSectionKeys.length < args.attempt.sectionSnapshots.length) {
+      return null;
+    }
+
+    const current = await ctx.db.get(args.attempt._id);
+    if (!current) {
+      throw new ConvexError({
+        code: "TRYOUT_ATTEMPT_NOT_FOUND",
+        message: "Try-out attempt not found.",
+      });
+    }
+
+    return current;
+  });
+
+  if (currentAttempt) {
+    yield* finalizeAttemptScore(ctx, {
+      attempt: currentAttempt,
+      endReason: "submitted",
+      now: args.now,
     });
   }
 
-  await createMissingExpiredSectionAttempts(ctx, {
-    attempt: args.attempt,
-    now: args.now,
-    sections,
-  });
+  return { kind: "completed" };
+});
 
-  await ctx.db.patch(args.attempt._id, {
-    completedSectionKeys: args.attempt.sectionSnapshots.map(
-      (section) => section.sectionKey
-    ),
-    lastActivityAt: args.now,
-  });
+/** Expires one whole attempt and any in-progress section attempts it owns. */
+export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
+  function* (ctx: MutationCtx, args: { attempt: TryoutAttempt; now: number }) {
+    const currentAttempt = yield* tryRuntimePromise(async () => {
+      const sections = await ctx.db
+        .query("tryoutSectionAttempts")
+        .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
+          q.eq("tryoutAttemptId", args.attempt._id)
+        )
+        .take(args.attempt.sectionSnapshots.length + 1);
 
-  const currentAttempt = await ctx.db.get(args.attempt._id);
+      if (sections.length > args.attempt.sectionSnapshots.length) {
+        throw new ConvexError({
+          code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
+          message:
+            "Try-out section attempt count exceeds the attempt snapshot.",
+        });
+      }
 
-  if (!currentAttempt) {
-    throw new ConvexError({
-      code: "TRYOUT_ATTEMPT_NOT_FOUND",
-      message: "Try-out attempt not found.",
+      for (const section of sections) {
+        if (section.status !== "in-progress") {
+          continue;
+        }
+
+        const finalization = await getSectionFinalization(ctx, {
+          attempt: args.attempt,
+          section,
+        });
+
+        await ctx.db.patch(section._id, {
+          answeredCount: finalization.answeredCount,
+          completedAt: args.attempt.expiresAt,
+          correctAnswers: finalization.correctAnswers,
+          endReason: "time-expired",
+          lastActivityAt: args.now,
+          score: finalization.score,
+          status: "expired",
+        });
+      }
+
+      await createMissingExpiredSectionAttempts(ctx, {
+        attempt: args.attempt,
+        now: args.now,
+        sections,
+      });
+
+      await ctx.db.patch(args.attempt._id, {
+        completedSectionKeys: args.attempt.sectionSnapshots.map(
+          (section) => section.sectionKey
+        ),
+        lastActivityAt: args.now,
+      });
+
+      const current = await ctx.db.get(args.attempt._id);
+      if (!current) {
+        throw new ConvexError({
+          code: "TRYOUT_ATTEMPT_NOT_FOUND",
+          message: "Try-out attempt not found.",
+        });
+      }
+
+      return current;
+    });
+
+    return yield* finalizeAttemptScore(ctx, {
+      attempt: currentAttempt,
+      endReason: "time-expired",
+      now: args.now,
     });
   }
-
-  return finalizeAttemptScore(ctx, {
-    attempt: currentAttempt,
-    endReason: "time-expired",
-    now: args.now,
-  });
-}
+);
 
 /** Calculates the immutable counters and score stored by one terminal section. */
 async function getSectionFinalization(

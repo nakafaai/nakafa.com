@@ -1,6 +1,10 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
 import { readTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import {
+  readTryoutSitemapCount,
+  readTryoutSitemapPage,
+} from "@repo/backend/convex/contentRelease/tryout/sitemap";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 
@@ -13,10 +17,40 @@ const tryoutCatalogValidator = v.object({
   sourceRevision: v.union(v.string(), v.null()),
 });
 
+const tryoutSitemapCountValidator = v.object({
+  managed: v.boolean(),
+  pageCount: v.number(),
+  routeCount: v.number(),
+});
+
+const tryoutSitemapPageValidator = v.union(
+  v.object({ paths: v.array(v.string()) }),
+  v.null()
+);
+
 /** Returns the verified active try-out hierarchy for one locale. */
 export const catalog = query({
   args: { locale: localeValidator },
   returns: tryoutCatalogValidator,
   handler: (ctx, { locale }) =>
     runConvexProgram(readTryoutCatalog(ctx, locale)),
+});
+
+/** Returns the bounded sitemap inventory for one active try-out locale. */
+export const sitemapCount = query({
+  args: { locale: localeValidator },
+  returns: tryoutSitemapCountValidator,
+  handler: (ctx, { locale }) =>
+    runConvexProgram(readTryoutSitemapCount(ctx, locale)),
+});
+
+/** Returns one exact verified try-out sitemap page. */
+export const sitemapPage = query({
+  args: {
+    locale: localeValidator,
+    page: v.number(),
+  },
+  returns: tryoutSitemapPageValidator,
+  handler: (ctx, { locale, page }) =>
+    runConvexProgram(readTryoutSitemapPage(ctx, locale, page)),
 });

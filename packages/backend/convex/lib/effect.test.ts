@@ -1,8 +1,10 @@
 import {
   getUnknownErrorMessage,
+  readConvexErrorData,
   runConvexActionProgram,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
+import { ConvexError } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -105,5 +107,18 @@ describe("lib/effect", () => {
   it("normalizes unknown thrown values into messages", () => {
     expect(getUnknownErrorMessage(new Error("Exploded"))).toBe("Exploded");
     expect(getUnknownErrorMessage("plain failure")).toBe("plain failure");
+  });
+
+  it("reads only complete typed Convex error payloads", () => {
+    expect(
+      readConvexErrorData(
+        new ConvexError({ code: "BOUNDARY_FAILURE", message: "Failed" })
+      )
+    ).toEqual({ code: "BOUNDARY_FAILURE", message: "Failed" });
+    expect(
+      readConvexErrorData(new ConvexError({ code: "MISSING" }))
+    ).toBeNull();
+    expect(readConvexErrorData(new ConvexError("opaque"))).toBeNull();
+    expect(readConvexErrorData(new Error("not Convex"))).toBeNull();
   });
 });

@@ -13,6 +13,11 @@ import {
   readFilesystemTrack,
 } from "@repo/backend/convex/tryouts/catalog/filesystem/discovery";
 import {
+  readTryoutMetadata,
+  tryoutMetadataArgsValidator,
+  tryoutMetadataReturnValidator,
+} from "@repo/backend/convex/tryouts/catalog/metadata";
+import {
   readPublishedCountryPage,
   readPublishedExamPage,
   readPublishedHubPage,
@@ -20,6 +25,7 @@ import {
   readPublishedSetPage,
   readPublishedTrackPage,
 } from "@repo/backend/convex/tryouts/catalog/published";
+import { readTryoutRoute } from "@repo/backend/convex/tryouts/catalog/route";
 import {
   publicTryoutCountryValidator,
   publicTryoutCountryWithExamCountValidator,
@@ -30,6 +36,26 @@ import {
   publicTryoutTrackValidator,
 } from "@repo/backend/convex/tryouts/queries/catalogModel";
 import { v } from "convex/values";
+
+/** Checks one exact public route against its active signed try-out owner. */
+export const getRoute = query({
+  args: {
+    locale: localeValidator,
+    publicPath: v.string(),
+  },
+  returns: v.object({
+    exists: v.boolean(),
+    managed: v.boolean(),
+  }),
+  handler: (ctx, args) => runConvexProgram(readTryoutRoute(ctx, args)),
+});
+
+/** Reads exact SEO copy and localized paths from signed try-out ownership. */
+export const getMetadata = query({
+  args: tryoutMetadataArgsValidator,
+  returns: tryoutMetadataReturnValidator,
+  handler: (ctx, args) => runConvexProgram(readTryoutMetadata(ctx, args)),
+});
 
 /** Reads the localized country-first try-out hub page model. */
 export const getHubPage = query({

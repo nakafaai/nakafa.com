@@ -122,9 +122,14 @@ export async function seedTryoutContentAccessState(
     ? await activateTryoutSnapshot(ctx, {
         catalog: [
           signedSource.snapshot.set.row,
+          { ...signedSource.snapshot.set.row, locale: "en" },
           signedSection.signed.section.row,
+          { ...signedSection.signed.section.row, locale: "en" },
         ],
-        placements: signedSection.signed.placements.map(({ row }) => row),
+        placements: signedSection.signed.placements.flatMap(({ row }) => [
+          row,
+          { ...row, locale: "en" },
+        ]),
       })
     : null;
   const setIdentity = tryoutCatalogIdentity({

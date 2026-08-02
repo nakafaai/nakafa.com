@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutExamPageClient } from "@/components/tryout/catalog/exam.client";
+import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
 import { readTryoutExamPage } from "@/components/tryout/catalog/server";
 import {
@@ -18,6 +19,22 @@ export const unstable_instant = {
   prefetch: "runtime",
   samples: [{ params: { country: "indonesia", exam: "tka", locale: "id" } }],
 };
+
+/** Builds route-owned metadata for one localized try-out exam. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ country: string; exam: string; locale: string }>;
+}) {
+  const { country, exam, locale: localeParam } = await params;
+  const locale = getLocaleOrThrow(localeParam);
+
+  return generateTryoutRouteMetadata({
+    kind: "exam",
+    locale,
+    publicPath: getTryoutHref({ country, exam }).slice(1),
+  });
+}
 
 /** Renders active try-out tracks for one country and exam family. */
 export default function Page(props: {

@@ -1,9 +1,13 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
+import {
+  getUnknownErrorMessage,
+  readConvexErrorData,
+} from "@repo/backend/convex/lib/effect";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import type { TryoutAttemptAccessSourceKind } from "@repo/backend/convex/tryouts/access/source";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
-import { ConvexError, type Infer, v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 import { Schema } from "effect";
 
@@ -86,21 +90,13 @@ export function toTryoutStartError(error: unknown) {
     return error;
   }
 
-  if (error instanceof ConvexError) {
-    const data = error.data;
-
-    if (typeof data === "object" && data !== null) {
-      const code = "code" in data ? data.code : undefined;
-      const message = "message" in data ? data.message : undefined;
-
-      if (typeof code === "string" && typeof message === "string") {
-        return new TryoutStartError({ code, message });
-      }
-    }
+  const data = readConvexErrorData(error);
+  if (data) {
+    return new TryoutStartError(data);
   }
 
   return new TryoutStartError({
     code: tryoutStartErrorCode.failed,
-    message: error instanceof Error ? error.message : String(error),
+    message: getUnknownErrorMessage(error),
   });
 }

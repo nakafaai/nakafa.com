@@ -6,6 +6,10 @@ import {
 } from "@repo/backend/convex/lib/attempts";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
 import {
+  TryoutRuntimeError,
+  tryRuntimePromise,
+} from "@repo/backend/convex/tryouts/runtime/error";
+import {
   scoreIrtAttempt,
   scoreIrtSection,
 } from "@repo/backend/convex/tryouts/runtime/irt";
@@ -15,6 +19,7 @@ import {
 } from "@repo/backend/convex/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/convex/tryouts/score";
 import { ConvexError } from "convex/values";
+import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutResponse = Doc<"tryoutResponses">;
@@ -77,7 +82,9 @@ export async function scoreTryoutSection(
 }
 
 /** Finalizes one attempt and stores the score snapshot exactly once. */
-export async function finalizeAttemptScore(
+export const finalizeAttemptScore = Effect.fn(
+  "tryouts.runtime.finalizeAttemptScore"
+)(function* (
   ctx: MutationCtx,
   args: {
     attempt: TryoutAttempt;
@@ -85,55 +92,75 @@ export async function finalizeAttemptScore(
     now: number;
   }
 ) {
-  const existingScore = await ctx.db
-    .query("tryoutScores")
-    .withIndex("by_tryoutAttemptId", (q) =>
-      q.eq("tryoutAttemptId", args.attempt._id)
-    )
-    .unique();
+  const existingScore = yield* tryRuntimePromise(() =>
+    ctx.db
+      .query("tryoutScores")
+      .withIndex("by_tryoutAttemptId", (q) =>
+        q.eq("tryoutAttemptId", args.attempt._id)
+      )
+      .unique()
+  );
 
   if (existingScore) {
     return { scoreId: existingScore._id };
   }
 
   if (args.attempt.status !== "in-progress") {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       message: "Try-out attempt is not active.",
     });
   }
 
-  const responses = await loadAttemptResponses(ctx, args.attempt);
-  const score = await scoreAttempt(ctx, {
-    attempt: args.attempt,
-    responses,
-    scoringStrategy: args.attempt.scoringStrategy,
-  });
-  const scoreId = await insertAttemptScore(ctx, {
-    attempt: args.attempt,
-    finalizedAt: args.now,
-    score,
-  });
+  const responses = yield* tryRuntimePromise(() =>
+    loadAttemptResponses(ctx, args.attempt)
+  );
+  const score = yield* tryRuntimePromise(() =>
+    Promise.resolve(
+      scoreAttempt(ctx, {
+        attempt: args.attempt,
+        responses,
+        scoringStrategy: args.attempt.scoringStrategy,
+      })
+    )
+  );
+  const scoreId = yield* tryRuntimePromise(() =>
+    insertAttemptScore(ctx, {
+      attempt: args.attempt,
+      finalizedAt: args.now,
+      score,
+    })
+  );
   const status = getAttemptStatusFromEndReason(args.endReason);
 
-  await ctx.db.patch(args.attempt._id, {
-    completedAt: args.now,
-    endReason: args.endReason,
-    lastActivityAt: args.now,
-    scoreStatus: score.scoreStatus,
-    status,
-    totalCorrect: score.totalCorrect,
-  });
+  yield* tryRuntimePromise(() =>
+    ctx.db.patch(args.attempt._id, {
+      completedAt: args.now,
+      endReason: args.endReason,
+      lastActivityAt: args.now,
+      scoreStatus: score.scoreStatus,
+      status,
+      totalCorrect: score.totalCorrect,
+    })
+  );
 
-  await writeTryoutSetProgress(ctx, {
+  yield* writeTryoutSetProgress(ctx, {
     attempt: args.attempt,
     publishedScore: score.publishedScore,
     status,
     updatedAt: args.now,
-  });
+  }).pipe(
+    Effect.mapError(
+      (error) =>
+        new TryoutRuntimeError({
+          code: error.code,
+          message: error.message,
+        })
+    )
+  );
 
   return { scoreId };
-}
+});
 
 /** Loads bounded responses for one complete try-out attempt. */
 async function loadAttemptResponses(ctx: MutationCtx, attempt: TryoutAttempt) {

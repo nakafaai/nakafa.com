@@ -102,9 +102,10 @@ const prepareActivation = Effect.fn("tryouts.migrations.prepareActivation")(
       attempt,
       set.identity
     );
+    const currentScaleVersionId = attempt.scaleVersionId ?? null;
     if (
       attempt.tryoutSnapshotId === expectedSnapshotId &&
-      attempt.scaleVersionId === scaleVersionId
+      currentScaleVersionId === scaleVersionId
     ) {
       return null;
     }

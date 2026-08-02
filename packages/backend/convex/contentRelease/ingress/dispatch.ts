@@ -2,9 +2,11 @@
 
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
-import { contentKeyResolver } from "@repo/backend/content/trust";
+import {
+  activeContentSigningKeyId,
+  contentKeyResolver,
+} from "@repo/backend/content/trust";
 import {
   type ActionCtx,
   internalAction,
@@ -93,7 +95,7 @@ export const dispatchPublication = Effect.fn(
 )(function* (
   ctx: ActionCtx,
   input: DispatchInput,
-  activeKeyId = ACTIVE_SIGNING_KEY_ID
+  activeKeyId = activeContentSigningKeyId
 ) {
   const decoded = yield* decodePublicationBody(
     input.source,
