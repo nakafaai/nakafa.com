@@ -1,9 +1,8 @@
-import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
 
 const runtimeMocks = vi.hoisted(() => ({
-  getRuntimeTryoutMetadata: vi.fn(),
+  readTryoutMetadata: vi.fn(),
 }));
 const navigationMocks = vi.hoisted(() => ({
   notFound: vi.fn(() => {
@@ -15,12 +14,12 @@ const translationMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/content/runtime/routes", () => runtimeMocks);
+vi.mock("@/components/tryout/catalog/server", () => runtimeMocks);
 vi.mock("next/navigation", () => navigationMocks);
 vi.mock("next-intl/server", () => translationMocks);
 
 beforeEach(() => {
-  runtimeMocks.getRuntimeTryoutMetadata.mockReset();
+  runtimeMocks.readTryoutMetadata.mockReset();
   navigationMocks.notFound.mockClear();
   translationMocks.getTranslations.mockReset();
   translationMocks.getTranslations.mockResolvedValue(
@@ -30,29 +29,26 @@ beforeEach(() => {
 
 describe("try-out route metadata", () => {
   it("uses signed copy and exact localized canonical paths", async () => {
-    runtimeMocks.getRuntimeTryoutMetadata.mockReturnValue(
-      Effect.succeed({
-        managed: true,
-        route: {
-          alternates: [
-            {
-              locale: "en",
-              publicPath:
-                "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
-            },
-            {
-              locale: "id",
-              publicPath:
-                "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
-            },
-          ],
-          description: "Signed section description",
-          publicPath:
-            "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
-          title: "Quantitative Knowledge",
-        },
-      })
-    );
+    runtimeMocks.readTryoutMetadata.mockResolvedValue({
+      managed: true,
+      route: {
+        alternates: [
+          {
+            locale: "en",
+            publicPath:
+              "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
+          },
+          {
+            locale: "id",
+            publicPath:
+              "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
+          },
+        ],
+        description: "Signed section description",
+        publicPath: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
+        title: "Quantitative Knowledge",
+      },
+    });
 
     const metadata = await generateTryoutRouteMetadata({
       kind: "section",
@@ -77,9 +73,10 @@ describe("try-out route metadata", () => {
   });
 
   it("uses the source registry and generic copy before activation", async () => {
-    runtimeMocks.getRuntimeTryoutMetadata.mockReturnValue(
-      Effect.succeed({ managed: false, route: null })
-    );
+    runtimeMocks.readTryoutMetadata.mockResolvedValue({
+      managed: false,
+      route: null,
+    });
 
     const metadata = await generateTryoutRouteMetadata({
       kind: "section",
@@ -99,9 +96,10 @@ describe("try-out route metadata", () => {
   });
 
   it("returns the route-level 404 for an unknown hierarchy path", async () => {
-    runtimeMocks.getRuntimeTryoutMetadata.mockReturnValue(
-      Effect.succeed({ managed: true, route: null })
-    );
+    runtimeMocks.readTryoutMetadata.mockResolvedValue({
+      managed: true,
+      route: null,
+    });
 
     await expect(
       generateTryoutRouteMetadata({
@@ -114,9 +112,10 @@ describe("try-out route metadata", () => {
   });
 
   it("returns the route-level 404 for an unknown static hierarchy path", async () => {
-    runtimeMocks.getRuntimeTryoutMetadata.mockReturnValue(
-      Effect.succeed({ managed: false, route: null })
-    );
+    runtimeMocks.readTryoutMetadata.mockResolvedValue({
+      managed: false,
+      route: null,
+    });
 
     await expect(
       generateTryoutRouteMetadata({

@@ -48,9 +48,6 @@ type PublicRouteArgs = FunctionArgs<
 type TryoutRouteArgs = FunctionArgs<
   typeof api.tryouts.queries.catalog.getRoute
 >;
-type TryoutMetadataArgs = FunctionArgs<
-  typeof api.tryouts.queries.catalog.getMetadata
->;
 /** One bounded newest-first page from the content route catalog. */
 export type RuntimeLatestContentRoutePage = FunctionReturnType<
   typeof api.contents.queries.runtime.listLatestContentRoutePage
@@ -260,14 +257,5 @@ export const getRuntimeTryoutRoute = Effect.fn(
 )(function* (args: TryoutRouteArgs) {
   return yield* readRuntimeQuery("getTryoutRoute", () =>
     fetchRuntimeQuery(api.tryouts.queries.catalog.getRoute, args)
-  );
-});
-
-/** Reads signed SEO copy and localized paths for one exact try-out route. */
-export const getRuntimeTryoutMetadata = Effect.fn(
-  "www.contentRuntime.tryoutMetadata"
-)(function* (args: TryoutMetadataArgs) {
-  return yield* readRuntimeQuery("getTryoutMetadata", () =>
-    fetchRuntimeQuery(api.tryouts.queries.catalog.getMetadata, args)
   );
 });

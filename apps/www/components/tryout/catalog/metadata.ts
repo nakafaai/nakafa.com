@@ -2,12 +2,11 @@ import "server-only";
 
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
 import { readStaticPublicTryoutRoutes } from "@repo/contents/_types/route/tryout/static";
-import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { getRuntimeTryoutMetadata } from "@/lib/content/runtime/routes";
+import { readTryoutMetadata } from "@/components/tryout/catalog/server";
 import { isSamePublicRouteIdentity } from "@/lib/routing/locale/identity";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
@@ -33,7 +32,7 @@ export async function generateTryoutRouteMetadata(
   input: TryoutMetadataInput
 ): Promise<Metadata> {
   const [published, tTryouts] = await Promise.all([
-    Effect.runPromise(getRuntimeTryoutMetadata(input)),
+    readTryoutMetadata(input),
     getTranslations({ locale: input.locale, namespace: "Tryouts" }),
   ]);
   const source = published.managed

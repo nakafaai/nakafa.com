@@ -2,8 +2,21 @@ import "server-only";
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
+import type { FunctionArgs } from "convex/server";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
+
+type TryoutMetadataArgs = FunctionArgs<
+  typeof api.tryouts.queries.catalog.getMetadata
+>;
+
+/** Reads exact signed route metadata from the tagged content cache. */
+export async function readTryoutMetadata(args: TryoutMetadataArgs) {
+  "use cache";
+  applyContentRuntimeCache();
+
+  return await fetchQuery(api.tryouts.queries.catalog.getMetadata, args);
+}
 
 /** Reads the public country-first try-out catalog from the tagged content cache. */
 export async function readTryoutHubPage(locale: Locale) {
