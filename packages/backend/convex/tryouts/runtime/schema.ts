@@ -69,6 +69,10 @@ const tables = {
     endReason: v.union(attemptEndReasonValidator, v.null()),
   })
     .index("by_status_and_expiresAt", ["status", "expiresAt"])
+    .index("by_tryoutSnapshotId", {
+      fields: ["tryoutSnapshotId"],
+      staged: true,
+    })
     .index("by_userId_and_startedAt", ["userId", "startedAt"])
     .index("by_userId_and_status_and_expiresAt", [
       "userId",

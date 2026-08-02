@@ -4,8 +4,25 @@ import {
 } from "@nakafa/aksara-contracts/tryout/identity";
 import type {
   TryoutCatalogRecord,
+  TryoutCatalogRow,
   TryoutPlacementRecord,
 } from "@nakafa/aksara-contracts/tryout/spec";
+
+/** Derives the canonical set identity shared by set and section rows. */
+export function tryoutCatalogSetIdentity(row: TryoutCatalogRow) {
+  if (row.kind !== "set" && row.kind !== "section") {
+    return;
+  }
+
+  return tryoutCatalogIdentity({
+    countryKey: row.countryKey,
+    examKey: row.examKey,
+    kind: "set",
+    locale: row.locale,
+    setKey: row.setKey,
+    trackKey: row.trackKey,
+  });
+}
 
 /** Derives the exact indexed facts stored beside one signed catalog row. */
 export function tryoutCatalogFacts(record: TryoutCatalogRecord) {
@@ -16,6 +33,7 @@ export function tryoutCatalogFacts(record: TryoutCatalogRecord) {
     locale: row.locale,
     order: row.kind === "country" || row.kind === "exam" ? 0 : row.order,
     publicPath: row.publicPath,
+    setIdentity: tryoutCatalogSetIdentity(row),
   };
 }
 

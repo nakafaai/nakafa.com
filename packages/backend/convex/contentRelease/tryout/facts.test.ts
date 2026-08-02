@@ -1,0 +1,72 @@
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/row-hash";
+import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/spec";
+import {
+  tryoutCatalogFacts,
+  tryoutCatalogSetIdentity,
+} from "@repo/backend/convex/contentRelease/tryout/facts";
+import { makeTryoutCatalogRow } from "@repo/backend/test/tryout-snapshot";
+import { Schema } from "effect";
+import { describe, expect, it } from "vitest";
+
+/** Creates one schema-decoded technical set or section row. */
+function makeSetChild(kind: "section" | "set") {
+  const common = {
+    countryKey: "indonesia",
+    examKey: "snbt",
+    graph: {
+      alignmentId: `alignment:tryout:technical:${kind}`,
+      assetId: `asset:en:tryout:technical:${kind}`,
+      conceptId: `concept:tryout:technical:${kind}`,
+      learningObjectId: `lo:tryout-technical-${kind}`,
+      lensId: "lens:tryout:technical",
+    },
+    locale: "en",
+    order: 1,
+    publicPath: `try-out/indonesia/snbt/2027/set-1/${kind}`,
+    questionCount: 1,
+    setKey: "set-1",
+    sourceRevision: "technical-revision",
+    title: `Technical ${kind}`,
+    trackKey: "2027",
+  };
+
+  if (kind === "set") {
+    return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+      ...common,
+      kind,
+      scoringStrategy: "irt",
+      sectionCount: 1,
+      visibleSectionCount: 1,
+    });
+  }
+
+  return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+    ...common,
+    kind,
+    questionSourcePath:
+      "packages/corpus/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1",
+    sectionKey: "quantitative-knowledge",
+    timeLimitSeconds: 60,
+    visibility: "visible",
+  });
+}
+
+describe("contentRelease/tryout/facts", () => {
+  it("derives one stable set identity for set and section rows", () => {
+    const set = makeSetChild("set");
+    const section = makeSetChild("section");
+    const setIdentity = tryoutCatalogSetIdentity(set);
+
+    expect(tryoutCatalogFacts(makeTryoutCatalogRecord(set)).setIdentity).toBe(
+      setIdentity
+    );
+    expect(tryoutCatalogSetIdentity(section)).toBe(setIdentity);
+  });
+
+  it("stores no set identity for rows outside a set", () => {
+    const country = makeTryoutCatalogRow().record;
+
+    expect(tryoutCatalogFacts(country).setIdentity).toBeUndefined();
+    expect(tryoutCatalogSetIdentity(country.row)).toBeUndefined();
+  });
+});
