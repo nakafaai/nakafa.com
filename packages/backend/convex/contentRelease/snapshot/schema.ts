@@ -176,6 +176,7 @@ const tables = {
     publicPath: v.optional(v.string()),
     rowHash: v.string(),
     rowJson: v.string(),
+    setIdentity: v.optional(v.string()),
     snapshotId: v.string(),
   })
     .index("by_snapshotId_and_index", ["snapshotId", "index"])
@@ -184,7 +185,11 @@ const tables = {
       "snapshotId",
       "locale",
       "publicPath",
-    ]),
+    ])
+    .index("by_snapshotId_and_setIdentity_and_kind_and_order", {
+      fields: ["snapshotId", "setIdentity", "kind", "order"],
+      staged: true,
+    }),
 
   /** Immutable attempt placements with terminal answer-artifact bindings. */
   tryoutPlacements: defineTable({
@@ -215,6 +220,14 @@ const tables = {
       "sectionKey",
       "questionOrder",
     ])
+    .index("by_snapshotId_and_questionArtifactHash", {
+      fields: ["snapshotId", "questionArtifactHash"],
+      staged: true,
+    })
+    .index("by_snapshotId_and_answerArtifactHash", {
+      fields: ["snapshotId", "answerArtifactHash"],
+      staged: true,
+    })
     .index("by_questionArtifactHash", ["questionArtifactHash"])
     .index("by_answerArtifactHash", ["answerArtifactHash"]),
 };

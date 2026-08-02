@@ -285,6 +285,8 @@ import type * as contentRelease_tryout_facts from "../contentRelease/tryout/fact
 import type * as contentRelease_tryout_limits from "../contentRelease/tryout/limits.js";
 import type * as contentRelease_tryout_owner from "../contentRelease/tryout/owner.js";
 import type * as contentRelease_tryout_section from "../contentRelease/tryout/section.js";
+import type * as contentRelease_tryout_setIdentity from "../contentRelease/tryout/setIdentity.js";
+import type * as contentRelease_tryout_setIdentity_impl from "../contentRelease/tryout/setIdentity/impl.js";
 import type * as contentRelease_tryout_verify from "../contentRelease/tryout/verify.js";
 import type * as contentRelease_verify from "../contentRelease/verify.js";
 import type * as contentRelease_verify_delete from "../contentRelease/verify/delete.js";
@@ -827,6 +829,8 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/tryout/limits": typeof contentRelease_tryout_limits;
   "contentRelease/tryout/owner": typeof contentRelease_tryout_owner;
   "contentRelease/tryout/section": typeof contentRelease_tryout_section;
+  "contentRelease/tryout/setIdentity": typeof contentRelease_tryout_setIdentity;
+  "contentRelease/tryout/setIdentity/impl": typeof contentRelease_tryout_setIdentity_impl;
   "contentRelease/tryout/verify": typeof contentRelease_tryout_verify;
   "contentRelease/verify": typeof contentRelease_verify;
   "contentRelease/verify/delete": typeof contentRelease_verify_delete;

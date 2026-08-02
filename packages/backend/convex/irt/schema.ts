@@ -105,6 +105,14 @@ const tables = {
     publishedAt: v.number(),
   })
     .index("by_tryoutSetId_and_publishedAt", ["tryoutSetId", "publishedAt"])
+    .index("by_tryoutSetId_and_tryoutSnapshotId_and_publishedAt", {
+      fields: ["tryoutSetId", "tryoutSnapshotId", "publishedAt"],
+      staged: true,
+    })
+    .index("by_setIdentity_and_publishedAt", {
+      fields: ["setIdentity", "publishedAt"],
+      staged: true,
+    })
     .index("by_tryoutSnapshotId_and_setIdentity_and_publishedAt", [
       "tryoutSnapshotId",
       "setIdentity",
@@ -136,6 +144,10 @@ const tables = {
       "questionSourceKey",
       "sourceRevision",
     ])
+    .index("by_calibrationRunId", {
+      fields: ["calibrationRunId"],
+      staged: true,
+    })
     .index("by_calibrationStatus", ["calibrationStatus"])
     .index("by_scaleVersionId_and_placementIdentity", [
       "scaleVersionId",
