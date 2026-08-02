@@ -1,9 +1,10 @@
-import { api } from "@repo/backend/convex/_generated/api";
+import { api, internal } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import type { StartAttemptArgs } from "@repo/backend/convex/tryouts/start/spec";
+import { makeTryoutMigrationArgs } from "@repo/backend/test/tryout-migration";
 import {
   TRYOUT_START_COUNTRY as COUNTRY,
   TRYOUT_START_EXAM as EXAM,
@@ -60,7 +61,7 @@ describe("tryouts/start/source", () => {
     vi.setSystemTime(new Date(NOW));
 
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
+    const seeded = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "tryout-signed-only",
@@ -71,11 +72,11 @@ describe("tryouts/start/source", () => {
       });
       await ctx.db.delete(fixture.tryoutSectionId);
       await ctx.db.delete(fixture.tryoutSetId);
-      return user;
+      return { snapshotId: fixture.snapshotId, user };
     });
     const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
+      sessionId: seeded.user.sessionId,
+      subject: seeded.user.authUserId,
     });
 
     const result = await authed.mutation(
@@ -108,6 +109,33 @@ describe("tryouts/start/source", () => {
       claims: await ctx.db.query("tryoutFreeAttemptClaims").collect(),
       placements: await ctx.db.query("tryoutAttemptPlacements").collect(),
     }));
+    await authed.mutation(api.tryouts.mutations.sections.complete, {
+      attemptId: result.attemptId,
+      sectionKey: SECTION,
+    });
+    const migrationArgs = makeTryoutMigrationArgs(seeded.snapshotId);
+    const migrationResults = await Promise.all([
+      t.mutation(
+        internal.tryouts.migrations.attempt.migrateAttempts,
+        migrationArgs
+      ),
+      t.mutation(
+        internal.tryouts.migrations.progress.migrateProgress,
+        migrationArgs
+      ),
+      t.mutation(
+        internal.tryouts.migrations.progress.migrateSections,
+        migrationArgs
+      ),
+      t.mutation(
+        internal.tryouts.migrations.placement.migratePlacements,
+        migrationArgs
+      ),
+      t.mutation(
+        internal.tryouts.migrations.score.migrateScores,
+        migrationArgs
+      ),
+    ]);
 
     expect(writes.attempt).toMatchObject({
       setIdentity: expect.any(String),
@@ -136,5 +164,6 @@ describe("tryouts/start/source", () => {
         status: "in-progress",
       }),
     ]);
+    expect(migrationResults.every(({ changed }) => changed === 0)).toBe(true);
   });
 });

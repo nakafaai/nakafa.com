@@ -6,6 +6,7 @@ import {
   bindLegacySet,
   requireTryoutSnapshot,
 } from "@repo/backend/convex/tryouts/migrations/catalog";
+import { isSignedScale } from "@repo/backend/convex/tryouts/migrations/signed";
 import {
   migrationFail,
   migrationPageOptions,
@@ -54,7 +55,6 @@ const prepareScale = Effect.fn("tryouts.migrations.prepareScale")(function* (
   expectedSnapshotId: string,
   scale: Doc<"irtScaleVersions">
 ) {
-  const set = yield* bindLegacyScale(ctx, expectedSnapshotId, scale);
   const items = yield* Effect.promise(() =>
     ctx.db
       .query("irtScaleItems")
@@ -75,6 +75,10 @@ const prepareScale = Effect.fn("tryouts.migrations.prepareScale")(function* (
       "An IRT scale cannot bind before every item is prepared."
     );
   }
+  if (isSignedScale(scale, expectedSnapshotId)) {
+    return null;
+  }
+  const set = yield* bindLegacyScale(ctx, expectedSnapshotId, scale);
   if (
     scale.tryoutSnapshotId === undefined &&
     scale.setIdentity === set.identity

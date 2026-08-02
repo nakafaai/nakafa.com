@@ -7,6 +7,10 @@ import {
   requireTryoutSnapshot,
 } from "@repo/backend/convex/tryouts/migrations/catalog";
 import {
+  hasLegacySectionSource,
+  isSignedScore,
+} from "@repo/backend/convex/tryouts/migrations/signed";
+import {
   hasMigrationConflict,
   migrationFail,
   migrationPageOptions,
@@ -55,15 +59,29 @@ const prepareScore = Effect.fn("tryouts.migrations.prepareScore")(function* (
   expectedSnapshotId: string,
   score: Doc<"tryoutScores">
 ) {
+  const attempt = yield* Effect.promise(() =>
+    ctx.db.get(score.tryoutAttemptId)
+  );
+  if (!attempt) {
+    return yield* migrationFail("A score lost its owning attempt.");
+  }
+  if (isSignedScore(score, attempt, expectedSnapshotId)) {
+    return null;
+  }
+  if (
+    score.tryoutSnapshotId === expectedSnapshotId &&
+    score.setIdentity !== undefined &&
+    !hasLegacySectionSource(attempt)
+  ) {
+    return yield* migrationFail(
+      "A signed score conflicts with its owning attempt."
+    );
+  }
   if (!score.tryoutSetId) {
     return yield* migrationFail("A score lost its legacy set reference.");
   }
-  const [set, attempt] = yield* Effect.all([
-    bindLegacySet(ctx, expectedSnapshotId, score.tryoutSetId),
-    Effect.promise(() => ctx.db.get(score.tryoutAttemptId)),
-  ]);
+  const set = yield* bindLegacySet(ctx, expectedSnapshotId, score.tryoutSetId);
   if (
-    !attempt ||
     attempt.userId !== score.userId ||
     attempt.scoringStrategy !== score.scoringStrategy ||
     attempt.totalCorrect !== score.totalCorrect ||

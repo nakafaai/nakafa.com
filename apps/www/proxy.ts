@@ -1,10 +1,8 @@
 import { isPostHogProxyPathname } from "@repo/analytics/posthog/config";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
-import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
 import {
   AGENT_DISCOVERY_LINK_HEADER,
@@ -28,7 +26,7 @@ const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
 const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
-const CONTENT_NOT_FOUND_SEGMENT = "404";
+const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
 
 /**
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
@@ -82,10 +80,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (isLocalizedAppRewrite(request)) {
-    return NextResponse.next();
-  }
-
   const routeDecision = resolveLlmsProxyRoute({
     acceptHeader: request.headers.get("accept"),
     pathname,
@@ -133,29 +127,6 @@ export async function proxy(request: NextRequest) {
   return routeLocalizedRequest(request);
 }
 
-/** Lets one completed next-intl rewrite reach its internal App Router path. */
-function isLocalizedAppRewrite(request: NextRequest) {
-  const localeHint = request.headers.get(NEXT_INTL_LOCALE_HEADER);
-  if (!(localeHint && hasLocale(routing.locales, localeHint))) {
-    return false;
-  }
-
-  const [locale, appSegment] = request.nextUrl.pathname
-    .split("/")
-    .filter(Boolean);
-  if (locale !== localeHint || !appSegment) {
-    return false;
-  }
-
-  if (appSegment === CONTENT_NOT_FOUND_SEGMENT) {
-    return true;
-  }
-
-  return PUBLIC_ROUTE_SURFACES.some(
-    (surface) => surface.appSegment === appSegment
-  );
-}
-
 /** Applies next-intl routing and Nakafa discovery headers once per pass. */
 function routeLocalizedRequest(request: NextRequest) {
   const response = handleLocalizedRequest(request);
@@ -184,7 +155,7 @@ function rewriteToContentNotFound(
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(NEXT_INTL_LOCALE_HEADER, locale);
   const rewriteUrl = new URL(
-    `/${locale}/${CONTENT_NOT_FOUND_SEGMENT}`,
+    `/${CONTENT_NOT_FOUND_SEGMENT}/${locale}`,
     request.url
   );
 
@@ -201,7 +172,7 @@ function rewriteToContentNotFound(
 
 export const config: ProxyConfig = {
   matcher: [
-    "/((?!_next/static|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
+    "/((?!_next/static|_not-found|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
     "/:rootFile([^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
   ],
 };

@@ -190,6 +190,17 @@ export const readAttemptHistoryPage = Effect.fn(
     if (!set) {
       return emptyAttemptPage();
     }
+    const retained = yield* Effect.promise(() =>
+      getActiveTryoutSetByPublicPath(ctx, path)
+    );
+    if (retained) {
+      return yield* paginateFilesystemAttempts(
+        ctx,
+        retained._id,
+        userId,
+        pagination
+      );
+    }
     return yield* Effect.promise(() =>
       ctx.db
         .query("tryoutAttempts")
@@ -209,16 +220,26 @@ export const readAttemptHistoryPage = Effect.fn(
   if (!set) {
     return emptyAttemptPage();
   }
-  return yield* Effect.promise(() =>
+  return yield* paginateFilesystemAttempts(ctx, set._id, userId, pagination);
+});
+
+/** Paginates the retained local identity while signed migration is additive. */
+function paginateFilesystemAttempts(
+  ctx: QueryCtx,
+  tryoutSetId: Doc<"tryoutSets">["_id"],
+  userId: UserId,
+  pagination: PaginationOptions
+) {
+  return Effect.promise(() =>
     ctx.db
       .query("tryoutAttempts")
       .withIndex("by_userId_and_tryoutSetId_and_startedAt", (index) =>
-        index.eq("userId", userId).eq("tryoutSetId", set._id)
+        index.eq("userId", userId).eq("tryoutSetId", tryoutSetId)
       )
       .order("desc")
       .paginate(pagination)
   );
-});
+}
 
 /** Returns the canonical empty attempt pagination result. */
 function emptyAttemptPage() {

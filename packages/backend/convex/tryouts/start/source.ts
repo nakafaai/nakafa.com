@@ -5,7 +5,10 @@ import {
   readTryoutSet,
   type VerifiedTryoutSet,
 } from "@repo/backend/convex/contentRelease/tryout/set";
-import { requireActiveReadyTryoutSet } from "@repo/backend/convex/tryouts/read";
+import {
+  getActiveTryoutSet,
+  requireActiveReadyTryoutSet,
+} from "@repo/backend/convex/tryouts/read";
 import type { StartAttemptArgs } from "@repo/backend/convex/tryouts/start/spec";
 import {
   TryoutStartError,
@@ -27,6 +30,8 @@ export interface FilesystemTryoutSource {
 /** Authenticated immutable rows used after signed ownership is activated. */
 export interface SignedTryoutSource {
   readonly kind: "signed";
+  /** Lookup-only key retained while the matching local shell still exists. */
+  readonly retainedTryoutSetId?: FilesystemSet["_id"];
   readonly snapshot: VerifiedTryoutSet;
 }
 
@@ -44,10 +49,15 @@ export const loadTryoutStartSource = Effect.fn(
     Effect.mapError(toTryoutStartError)
   );
   if (owner.managed) {
-    const snapshot = yield* readTryoutSet(ctx, args).pipe(
-      Effect.mapError(toTryoutStartError)
-    );
-    const source: TryoutStartSource = { kind: "signed", snapshot };
+    const [snapshot, retainedSet] = yield* Effect.all([
+      readTryoutSet(ctx, args).pipe(Effect.mapError(toTryoutStartError)),
+      tryStartPromise(() => getActiveTryoutSet(ctx, args)),
+    ]);
+    const source: TryoutStartSource = {
+      kind: "signed",
+      ...(retainedSet ? { retainedTryoutSetId: retainedSet._id } : {}),
+      snapshot,
+    };
     return source;
   }
 

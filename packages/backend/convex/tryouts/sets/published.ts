@@ -141,19 +141,27 @@ const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
   }
   const byIdentity = new Map<string, Progress>();
   for (const row of rows) {
-    if (!row.setIdentity) {
+    const identity = tryoutCatalogIdentity({
+      countryKey: row.countryKey,
+      examKey: row.examKey,
+      kind: "set",
+      locale: row.locale,
+      setKey: row.setKey,
+      trackKey: row.trackKey,
+    });
+    if (row.setIdentity && row.setIdentity !== identity) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        "Signed try-out progress lost its stable set identity."
+        "Signed try-out progress conflicts with its route identity."
       );
     }
-    if (byIdentity.has(row.setIdentity)) {
+    if (byIdentity.has(identity)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         "Signed try-out progress has duplicate set identities."
       );
     }
-    byIdentity.set(row.setIdentity, row);
+    byIdentity.set(identity, row);
   }
   return byIdentity;
 });

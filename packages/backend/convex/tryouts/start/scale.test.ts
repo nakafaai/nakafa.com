@@ -1,9 +1,10 @@
-import { api } from "@repo/backend/convex/_generated/api";
+import { api, internal } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import type { StartAttemptArgs } from "@repo/backend/convex/tryouts/start/spec";
+import { makeTryoutMigrationArgs } from "@repo/backend/test/tryout-migration";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
 import {
   TRYOUT_START_COUNTRY as COUNTRY,
@@ -106,6 +107,21 @@ describe("tryouts/start/scale", () => {
       api.tryouts.mutations.attempts.startAttempt,
       startArgs
     );
+    const migrationArgs = makeTryoutMigrationArgs(seeded.fixture.snapshotId);
+    const migrationResults = [
+      await t.mutation(
+        internal.tryouts.migrations.item.migrateItems,
+        migrationArgs
+      ),
+      await t.mutation(
+        internal.tryouts.migrations.calibration.migrateRuns,
+        migrationArgs
+      ),
+      await t.mutation(
+        internal.tryouts.migrations.scale.migrateScales,
+        migrationArgs
+      ),
+    ];
 
     const second = await t.mutation(async (ctx) => {
       const [release, state] = await Promise.all([
@@ -180,6 +196,7 @@ describe("tryouts/start/scale", () => {
     expect(proof.secondItems[0]?.placementRowHash).toBe(
       proof.firstItems[0]?.placementRowHash
     );
+    expect(migrationResults.every(({ changed }) => changed === 0)).toBe(true);
   });
 
   it("rejects an incomplete scale bound to the exact snapshot", async () => {

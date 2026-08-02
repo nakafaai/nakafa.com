@@ -5,6 +5,10 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireTryoutSnapshot } from "@repo/backend/convex/tryouts/migrations/catalog";
 import { bindLegacyPlacement } from "@repo/backend/convex/tryouts/migrations/question";
 import {
+  isSignedPlacement,
+  requireSignedAttempt,
+} from "@repo/backend/convex/tryouts/migrations/signed";
+import {
   hasMigrationConflict,
   migrationFail,
   migrationPageOptions,
@@ -54,6 +58,25 @@ const preparePlacement = Effect.fn("tryouts.migrations.preparePlacement")(
     expectedSnapshotId: string,
     placement: Doc<"tryoutAttemptPlacements">
   ) {
+    if (
+      !(
+        placement.tryoutSectionId ||
+        placement.questionId ||
+        placement.questionSourceKey
+      )
+    ) {
+      const attempt = yield* requireSignedAttempt(
+        ctx,
+        placement.tryoutAttemptId,
+        expectedSnapshotId
+      );
+      if (isSignedPlacement(placement, attempt)) {
+        return null;
+      }
+      return yield* migrationFail(
+        "A signed placement conflicts with its parent attempt."
+      );
+    }
     const signed = yield* bindLegacyPlacement(
       ctx,
       expectedSnapshotId,

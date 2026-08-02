@@ -535,6 +535,7 @@ import type * as tryouts_migrations_progress from "../tryouts/migrations/progres
 import type * as tryouts_migrations_question from "../tryouts/migrations/question.js";
 import type * as tryouts_migrations_scale from "../tryouts/migrations/scale.js";
 import type * as tryouts_migrations_score from "../tryouts/migrations/score.js";
+import type * as tryouts_migrations_signed from "../tryouts/migrations/signed.js";
 import type * as tryouts_migrations_spec from "../tryouts/migrations/spec.js";
 import type * as tryouts_mutations_access from "../tryouts/mutations/access.js";
 import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
@@ -1128,6 +1129,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/migrations/question": typeof tryouts_migrations_question;
   "tryouts/migrations/scale": typeof tryouts_migrations_scale;
   "tryouts/migrations/score": typeof tryouts_migrations_score;
+  "tryouts/migrations/signed": typeof tryouts_migrations_signed;
   "tryouts/migrations/spec": typeof tryouts_migrations_spec;
   "tryouts/mutations/access": typeof tryouts_mutations_access;
   "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;

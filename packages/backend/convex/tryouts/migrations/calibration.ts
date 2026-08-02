@@ -7,6 +7,7 @@ import {
   requireTryoutSnapshot,
 } from "@repo/backend/convex/tryouts/migrations/catalog";
 import { bindLegacyScale } from "@repo/backend/convex/tryouts/migrations/scale";
+import { isSignedCalibration } from "@repo/backend/convex/tryouts/migrations/signed";
 import {
   hasMigrationConflict,
   migrationFail,
@@ -56,6 +57,16 @@ const prepareRun = Effect.fn("tryouts.migrations.prepareRun")(function* (
   expectedSnapshotId: string,
   run: Doc<"irtCalibrationRuns">
 ) {
+  const signedScaleVersionId = run.scaleVersionId;
+  if (signedScaleVersionId) {
+    const scale = yield* Effect.promise(() => ctx.db.get(signedScaleVersionId));
+    if (!scale) {
+      return yield* migrationFail("An IRT run lost its scale version.");
+    }
+    if (isSignedCalibration(run, scale, expectedSnapshotId)) {
+      return null;
+    }
+  }
   if (!run.tryoutSectionId) {
     return yield* migrationFail("An IRT run lost its legacy section.");
   }

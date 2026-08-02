@@ -195,31 +195,9 @@ describe("proxy", () => {
     expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
   });
 
-  it("lets completed localized rewrites reach their internal app route", async () => {
-    const response = await requestProxy(
-      "/en/materials/mathematics/functions/function-concept",
-      { headers: { "x-next-intl-locale": "en" } }
-    );
-
-    expect(response.headers.get("x-middleware-next")).toBe("1");
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(runtimeMocks.readContent).not.toHaveBeenCalled();
-    expect(runtimeMocks.readPublic).not.toHaveBeenCalled();
-  });
-
-  it("lets the localized 404 rewrite reach global not-found", async () => {
-    const response = await requestProxy("/id/404", {
-      headers: { "x-next-intl-locale": "id" },
-    });
-
-    expect(response.headers.get("x-middleware-next")).toBe("1");
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(runtimeMocks.readContent).not.toHaveBeenCalled();
-    expect(runtimeMocks.readPublic).not.toHaveBeenCalled();
-  });
-
   it.each([
     ["missing", undefined],
+    ["matching", { headers: { "x-next-intl-locale": "en" } }],
     ["mismatched", { headers: { "x-next-intl-locale": "id" } }],
     ["unsupported", { headers: { "x-next-intl-locale": "de" } }],
   ])(
@@ -232,7 +210,7 @@ describe("proxy", () => {
 
       expect(response.status).toBe(404);
       expect(response.headers.get("x-middleware-rewrite")).toBe(
-        "http://localhost:3000/en/404"
+        "http://localhost:3000/_not-found/en"
       );
       expect(
         response.headers.get("x-middleware-request-x-next-intl-locale")
@@ -251,6 +229,12 @@ describe("proxy", () => {
       expectLocaleProxy(response);
     }
   );
+
+  it("keeps the internal not-found target outside the proxy matcher", () => {
+    expect(
+      unstable_doesMiddlewareMatch({ config, url: "/_not-found/id" })
+    ).toBe(false);
+  });
 
   it("lets the selected next-intl preview rewrite reach the actual page", async () => {
     previewMocks.configured.mockReturnValueOnce(true);
@@ -304,7 +288,7 @@ describe("proxy", () => {
       expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
       expect(response.status).toBe(404);
       expect(response.headers.get("x-middleware-rewrite")).toBe(
-        `http://localhost:3000/${locale}/404`
+        `http://localhost:3000/_not-found/${locale}`
       );
       expect(
         response.headers.get("x-middleware-request-x-next-intl-locale")
@@ -392,7 +376,7 @@ describe("proxy", () => {
     const missing = await requestProxy(path);
     expect(missing.status).toBe(404);
     expect(missing.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/en/404"
+      "http://localhost:3000/_not-found/en"
     );
     expect(missing.headers.get("x-middleware-request-x-next-intl-locale")).toBe(
       "en"

@@ -7,6 +7,10 @@ import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { bindLegacySet } from "@repo/backend/convex/tryouts/migrations/catalog";
 import {
+  hasLegacySectionSource,
+  isSignedAttempt,
+} from "@repo/backend/convex/tryouts/migrations/signed";
+import {
   migrationFail,
   migrationPageOptions,
   type TryoutMigrationEmpty,
@@ -114,7 +118,9 @@ const inspectMigrationPage = Effect.fn(
         "irtScaleVersions",
         args,
         (row) =>
-          row.setIdentity !== undefined && row.tryoutSnapshotId === undefined,
+          row.setIdentity !== undefined &&
+          (row.tryoutSnapshotId === undefined ||
+            row.tryoutSnapshotId === args.expectedSnapshotId),
         (row) => row.tryoutSetId !== undefined
       );
     case "scores":
@@ -176,17 +182,14 @@ const inspectAttemptRow = Effect.fn("tryouts.migrations.inspectAttemptRow")(
     expectedSnapshotId: string,
     row: Doc<"tryoutAttempts">
   ) {
+    const legacy = row.tryoutSetId !== undefined || hasLegacySectionSource(row);
+    if (isSignedAttempt(row, expectedSnapshotId)) {
+      return { legacy, prepared: true };
+    }
     const set = yield* bindLegacySet(ctx, expectedSnapshotId, row.tryoutSetId);
     return {
-      legacy:
-        row.tryoutSetId !== undefined ||
-        row.sectionSnapshots.some(
-          (section) =>
-            section.questionSetId !== undefined ||
-            section.tryoutSectionId !== undefined
-        ),
+      legacy,
       prepared:
-        row.tryoutSnapshotId === expectedSnapshotId &&
         row.setIdentity === set.identity &&
         row.countryKey === set.row.countryKey &&
         row.examKey === set.row.examKey &&

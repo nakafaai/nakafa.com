@@ -6,6 +6,7 @@ import {
   bindLegacySet,
   requireTryoutSnapshot,
 } from "@repo/backend/convex/tryouts/migrations/catalog";
+import { isSignedAttempt } from "@repo/backend/convex/tryouts/migrations/signed";
 import {
   hasMigrationConflict,
   migrationFail,
@@ -60,6 +61,9 @@ const prepareActivation = Effect.fn("tryouts.migrations.prepareActivation")(
     expectedSnapshotId: string,
     attempt: Doc<"tryoutAttempts">
   ) {
+    if (isSignedAttempt(attempt, expectedSnapshotId)) {
+      return null;
+    }
     const set = yield* bindLegacySet(
       ctx,
       expectedSnapshotId,

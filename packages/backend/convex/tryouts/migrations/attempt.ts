@@ -7,6 +7,7 @@ import {
   bindLegacySet,
   requireTryoutSnapshot,
 } from "@repo/backend/convex/tryouts/migrations/catalog";
+import { isSignedAttempt } from "@repo/backend/convex/tryouts/migrations/signed";
 import {
   hasMigrationConflict,
   migrationFail,
@@ -57,6 +58,9 @@ const prepareAttempt = Effect.fn("tryouts.migrations.prepareAttempt")(
     expectedSnapshotId: string,
     attempt: Doc<"tryoutAttempts">
   ) {
+    if (isSignedAttempt(attempt, expectedSnapshotId)) {
+      return null;
+    }
     if (!attempt.tryoutSetId) {
       return yield* migrationFail("An attempt lost its legacy set reference.");
     }

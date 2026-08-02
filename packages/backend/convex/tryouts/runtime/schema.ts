@@ -41,7 +41,7 @@ const tryoutChoiceSnapshotValidator = v.object({
 const tables = {
   tryoutAttempts: defineTable({
     userId: v.id("users"),
-    /** Present only for filesystem-owned and migrated attempts. */
+    /** Retained only while the matching local lookup shell exists. */
     tryoutSetId: v.optional(v.id("tryoutSets")),
     /** Present only for signed and migrated attempts. */
     tryoutSnapshotId: v.optional(v.string()),

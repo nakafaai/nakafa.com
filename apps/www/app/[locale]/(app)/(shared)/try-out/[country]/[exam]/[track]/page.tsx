@@ -6,10 +6,7 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
 import { readTryoutTrackPage } from "@/components/tryout/catalog/server";
-import {
-  readStaticTryoutExamOptions,
-  readStaticTryoutRoute,
-} from "@/components/tryout/catalog/static";
+import { readStaticTryoutExamOptions } from "@/components/tryout/catalog/static";
 import { TryoutTrackPageClient } from "@/components/tryout/catalog/track.client";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
@@ -82,15 +79,6 @@ async function TryoutTrackRoute({
   const countryPath = getTryoutHref({ country }).slice(1);
   const examPath = getTryoutHref({ country, exam }).slice(1);
   const trackPath = getTryoutHref({ country, exam, track }).slice(1);
-  const trackRoute = readStaticTryoutRoute({
-    kind: "tryout-track",
-    locale,
-    publicPath: trackPath,
-  });
-
-  if (!trackRoute) {
-    notFound();
-  }
 
   const page = await readTryoutTrackPage(locale, trackPath);
 
@@ -105,11 +93,6 @@ async function TryoutTrackRoute({
   const examOptions = readStaticTryoutExamOptions({
     countryPath,
     locale,
-  });
-  const examRoute = readStaticTryoutRoute({
-    kind: "tryout-exam",
-    locale,
-    publicPath: examPath,
   });
 
   return (
@@ -133,11 +116,11 @@ async function TryoutTrackRoute({
               },
               {
                 href: getTryoutHref({ country, exam }),
-                label: examRoute?.title ?? exam,
+                label: page.exam.title,
               },
-              { label: trackRoute?.title ?? track },
+              { label: page.track.title },
             ],
-            title: trackRoute?.title ?? tCommon("try-out"),
+            title: page.track.title,
           }}
         />
         <TryoutTrackPageClient locale={locale} page={page} />

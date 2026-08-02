@@ -17,6 +17,7 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout-source";
+import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
 import {
   insertTryoutCountry,
   insertTryoutExam,
@@ -229,6 +230,64 @@ describe("tryouts/queries/sets", () => {
     expect(after.page).toEqual([]);
     expect(filesystemRows).toEqual({ sections: [], sets: [] });
     expect(attempt.attemptId).toBeDefined();
+  });
+
+  it("joins signed sets with legacy progress during additive ownership", async () => {
+    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now: TRYOUT_START_NOW,
+        suffix: "signed-set-legacy-progress",
+      });
+      const fixture = await seedTryoutStartSet(ctx, {
+        userId: user.userId,
+        visibility: "visible",
+      });
+      const attemptId = await insertTryoutAttempt(ctx, {
+        sectionSnapshots: [],
+        tryoutSetId: fixture.tryoutSetId,
+        userId: user.userId,
+      });
+      await ctx.db.insert("tryoutSetProgress", {
+        attemptNumber: 1,
+        countryKey: TRYOUT_START_COUNTRY,
+        examKey: TRYOUT_START_EXAM,
+        latestAttemptId: attemptId,
+        locale: "id",
+        publishedScore: null,
+        setKey: TRYOUT_START_SET,
+        status: "in-progress",
+        statusRank: getTryoutStatusRank("in-progress"),
+        trackKey: TRYOUT_START_TRACK,
+        tryoutSetId: fixture.tryoutSetId,
+        updatedAt: TRYOUT_START_NOW,
+        userId: user.userId,
+      });
+      return user;
+    });
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    const sets = await authed.query(api.tryouts.queries.sets.list, {
+      countryKey: TRYOUT_START_COUNTRY,
+      examKey: TRYOUT_START_EXAM,
+      locale: "id",
+      paginationOpts: { cursor: null, numItems: 10 },
+      sort: { direction: "asc", field: "order" },
+      trackKey: TRYOUT_START_TRACK,
+    });
+
+    expect(sets.page).toMatchObject([
+      {
+        attemptStatus: "in-progress",
+        publishedScore: null,
+        setKey: TRYOUT_START_SET,
+      },
+    ]);
   });
 
   it("lists only sets whose complete graph is ready", async () => {

@@ -129,6 +129,9 @@ function buildAttemptValues(
     setKey: signedSet.setKey,
     totalQuestions: signedSet.questionCount,
     trackKey: signedSet.trackKey,
+    ...(input.source.retainedTryoutSetId
+      ? { tryoutSetId: input.source.retainedTryoutSetId }
+      : {}),
     tryoutSnapshotId: input.source.snapshot.snapshotId,
   };
 }

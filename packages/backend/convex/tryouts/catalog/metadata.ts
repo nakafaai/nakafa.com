@@ -1,9 +1,10 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
+import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { locales } from "@repo/utilities/locales";
+import type { locales } from "@repo/utilities/locales";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 import { Effect } from "effect";
@@ -43,39 +44,44 @@ interface TryoutMetadataInput {
 /** Reads one route and its localized counterparts from signed ownership. */
 export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
   function* (ctx: QueryCtx, input: TryoutMetadataInput) {
-    const currentCatalog = yield* loadTryoutCatalog(ctx, input.locale);
-    if (!currentCatalog.managed) {
+    const owner = yield* loadTryoutOwner(ctx);
+    if (!(owner.managed && owner.selected)) {
       return { managed: false, route: null };
     }
 
-    const current = findRoute(
-      currentCatalog.entries.map(({ row }) => row),
-      input.kind,
-      input.publicPath
+    const { snapshot, snapshotId } = owner.selected;
+    const storedCurrent = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutCatalog")
+        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
+          index
+            .eq("snapshotId", snapshotId)
+            .eq("locale", input.locale)
+            .eq("publicPath", input.publicPath)
+        )
+        .unique()
     );
-    if (!current?.publicPath) {
+    if (!storedCurrent) {
+      return { managed: true, route: null };
+    }
+    const current = yield* verifyTryoutCatalog(storedCurrent, snapshotId);
+    if (current.kind !== input.kind || !current.publicPath) {
       return { managed: true, route: null };
     }
     const currentPublicPath = current.publicPath;
 
-    const otherCatalogs = yield* Effect.forEach(
-      locales.filter((locale) => locale !== input.locale),
-      (locale) => loadTryoutCatalog(ctx, locale)
+    const alternateRows = yield* Effect.forEach(
+      snapshot.manifest.locales,
+      (locale) =>
+        readAlternate(ctx, {
+          current,
+          locale,
+          snapshotId,
+        })
     );
-    const routeIdentity = getLocaleIndependentIdentity(current);
-    const alternates = [currentCatalog, ...otherCatalogs].flatMap((catalog) => {
-      const alternate = catalog.entries
-        .map(({ row }) => row)
-        .find(
-          (row) =>
-            getLocaleIndependentIdentity(row) === routeIdentity &&
-            row.publicPath !== undefined
-        );
-
-      return alternate?.publicPath
-        ? [{ locale: alternate.locale, publicPath: alternate.publicPath }]
-        : [];
-    });
+    const alternates = alternateRows.flatMap((alternate) =>
+      alternate ? [alternate] : []
+    );
 
     return {
       managed: true,
@@ -89,16 +95,38 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
   }
 );
 
-/** Finds one exact public hierarchy row without accepting internal sections. */
-function findRoute(
-  rows: readonly TryoutCatalogRow[],
-  kind: TryoutRouteKind,
-  publicPath: string
-) {
-  return rows.find((row) => row.kind === kind && row.publicPath === publicPath);
-}
-
-/** Derives the stable hierarchy identity while deliberately ignoring locale. */
-function getLocaleIndependentIdentity(row: TryoutCatalogRow) {
-  return tryoutCatalogIdentity({ ...row, locale: locales[0] });
-}
+/** Reads one exact localized counterpart without loading another catalog. */
+const readAlternate = Effect.fn("tryouts.catalog.readMetadataAlternate")(
+  function* (
+    ctx: QueryCtx,
+    input: {
+      readonly current: TryoutCatalogRow;
+      readonly locale: (typeof locales)[number];
+      readonly snapshotId: string;
+    }
+  ) {
+    const identity = tryoutCatalogIdentity({
+      ...input.current,
+      locale: input.locale,
+    });
+    const stored = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutCatalog")
+        .withIndex("by_snapshotId_and_identity", (index) =>
+          index.eq("snapshotId", input.snapshotId).eq("identity", identity)
+        )
+        .unique()
+    );
+    if (!stored) {
+      return null;
+    }
+    const alternate = yield* verifyTryoutCatalog(stored, input.snapshotId);
+    if (!alternate.publicPath) {
+      return null;
+    }
+    return {
+      locale: alternate.locale,
+      publicPath: alternate.publicPath,
+    };
+  }
+);

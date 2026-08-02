@@ -2,7 +2,6 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getIncludedAttemptAccess } from "@repo/backend/convex/tryouts/access/impl";
 import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/convex/tryouts/access/source";
-import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
   expireAttemptAtEffectiveTime,
   getAttemptExpiresAt,
@@ -48,7 +47,7 @@ interface StartTryoutAttemptInput {
 export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
   function* (ctx: MutationCtx, input: StartTryoutAttemptInput) {
     const source = yield* loadTryoutStartSource(ctx, input.args);
-    const owner = yield* loadAttemptOwner(ctx, input, source);
+    const owner = resolveAttemptOwner(input, source);
     const latestAttempt = yield* readLatestOwnedAttempt(ctx, owner);
     const resumed = yield* resumeActiveAttempt(ctx, input, latestAttempt);
 
@@ -173,8 +172,7 @@ const requireAttemptAccess = Effect.fn("tryouts.start.requireAttemptAccess")(
 );
 
 /** Resolves both attempt identities retained during the additive migration. */
-const loadAttemptOwner = Effect.fn("tryouts.start.loadAttemptOwner")(function* (
-  ctx: MutationCtx,
+function resolveAttemptOwner(
   input: StartTryoutAttemptInput,
   source: TryoutStartSource
 ) {
@@ -185,15 +183,12 @@ const loadAttemptOwner = Effect.fn("tryouts.start.loadAttemptOwner")(function* (
     } satisfies AttemptOwnerIdentity;
   }
 
-  const legacy = yield* tryStartPromise(() =>
-    getActiveTryoutSet(ctx, input.args)
-  );
   return {
     setIdentity: source.snapshot.setIdentity,
-    tryoutSetId: legacy?._id,
+    tryoutSetId: source.retainedTryoutSetId,
     userId: input.userId,
   } satisfies AttemptOwnerIdentity;
-});
+}
 
 /** Returns the next bounded attempt number for one user and set. */
 const getNextAttemptNumber = Effect.fn("tryouts.start.getNextAttemptNumber")(

@@ -6,6 +6,10 @@ import { requireTryoutSnapshot } from "@repo/backend/convex/tryouts/migrations/c
 import { bindLegacyIrtItem } from "@repo/backend/convex/tryouts/migrations/question";
 import { bindLegacyScale } from "@repo/backend/convex/tryouts/migrations/scale";
 import {
+  isSignedScale,
+  isSignedScaleItem,
+} from "@repo/backend/convex/tryouts/migrations/signed";
+import {
   hasMigrationConflict,
   migrationFail,
   migrationPageOptions,
@@ -57,6 +61,14 @@ const prepareItem = Effect.fn("tryouts.migrations.prepareItem")(function* (
   const scale = yield* Effect.promise(() => ctx.db.get(item.scaleVersionId));
   if (!scale) {
     return yield* migrationFail("An IRT item lost its scale version.");
+  }
+  if (isSignedScale(scale, expectedSnapshotId)) {
+    if (isSignedScaleItem(item)) {
+      return null;
+    }
+    return yield* migrationFail(
+      "A signed IRT item lost its placement identity."
+    );
   }
   yield* bindLegacyScale(ctx, expectedSnapshotId, scale);
   const placement = yield* bindLegacyIrtItem(ctx, expectedSnapshotId, item);

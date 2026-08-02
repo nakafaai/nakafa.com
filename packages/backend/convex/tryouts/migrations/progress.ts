@@ -8,6 +8,11 @@ import {
   requireTryoutSnapshot,
 } from "@repo/backend/convex/tryouts/migrations/catalog";
 import {
+  isSignedProgress,
+  isSignedSectionAttempt,
+  requireSignedAttempt,
+} from "@repo/backend/convex/tryouts/migrations/signed";
+import {
   hasMigrationConflict,
   migrationFail,
   migrationPageOptions,
@@ -88,6 +93,14 @@ const prepareProgress = Effect.fn("tryouts.migrations.prepareProgress")(
     expectedSnapshotId: string,
     progress: Doc<"tryoutSetProgress">
   ) {
+    if (progress.setIdentity) {
+      const attempt = yield* Effect.promise(() =>
+        ctx.db.get(progress.latestAttemptId)
+      );
+      if (attempt && isSignedProgress(progress, attempt, expectedSnapshotId)) {
+        return null;
+      }
+    }
     if (!progress.tryoutSetId) {
       return yield* migrationFail("A progress row lost its legacy set.");
     }
@@ -126,6 +139,19 @@ const prepareSection = Effect.fn("tryouts.migrations.prepareSection")(
     expectedSnapshotId: string,
     attempt: Doc<"tryoutSectionAttempts">
   ) {
+    if (attempt.sectionIdentity && !attempt.tryoutSectionId) {
+      const parent = yield* requireSignedAttempt(
+        ctx,
+        attempt.tryoutAttemptId,
+        expectedSnapshotId
+      );
+      if (isSignedSectionAttempt(attempt, parent)) {
+        return null;
+      }
+      return yield* migrationFail(
+        "A section attempt conflicts with its signed parent attempt."
+      );
+    }
     if (!attempt.tryoutSectionId) {
       return yield* migrationFail("A section attempt lost its legacy section.");
     }
