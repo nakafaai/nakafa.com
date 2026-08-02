@@ -62,7 +62,7 @@ export interface TryoutStartScope {
   readonly userId: Id<"users">;
 }
 
-export const tryoutStartErrorCode = {
+export const tryoutStartErrorCode = Object.freeze({
   accessRequired: "TRYOUT_ACCESS_REQUIRED",
   attemptLimitReached: "TRYOUT_ATTEMPT_LIMIT_REACHED",
   attemptNotFound: "TRYOUT_ATTEMPT_NOT_FOUND",
@@ -70,7 +70,7 @@ export const tryoutStartErrorCode = {
   irtScaleRequired: "TRYOUT_IRT_SCALE_REQUIRED",
   sectionCountMismatch: "TRYOUT_SECTION_COUNT_MISMATCH",
   sectionSnapshotMismatch: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-} as const;
+});
 
 /** Expected domain failure raised while starting a try-out attempt. */
 export class TryoutStartError

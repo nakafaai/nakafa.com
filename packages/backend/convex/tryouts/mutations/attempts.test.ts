@@ -14,7 +14,25 @@ import {
   TRYOUT_START_TRACK as TRACK,
 } from "@repo/backend/test/tryout-source";
 import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
+import type { FunctionArgs } from "convex/server";
 import { describe, expect, it, vi } from "vitest";
+
+const startArgs: FunctionArgs<
+  typeof api.tryouts.mutations.attempts.startAttempt
+> = {
+  countryKey: COUNTRY,
+  examKey: EXAM,
+  locale: "id",
+  setKey: SET,
+  trackKey: TRACK,
+};
+
+const entryStartArgs: FunctionArgs<
+  typeof api.tryouts.mutations.attempts.startAttempt
+> = {
+  ...startArgs,
+  entrySectionKey: SECTION,
+};
 
 describe("tryouts/mutations/attempts", () => {
   it("keeps local attempt creation available before signed ownership activates", async () => {
@@ -48,13 +66,7 @@ describe("tryouts/mutations/attempts", () => {
 
     const result = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
-      {
-        countryKey: COUNTRY,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      }
+      startArgs
     );
     const runtime = await t.query(async (ctx) => ({
       attempt: await ctx.db.get(result.attemptId),
@@ -105,13 +117,7 @@ describe("tryouts/mutations/attempts", () => {
     });
 
     await expect(
-      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-        countryKey: COUNTRY,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      })
+      authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
     ).resolves.toEqual({ attemptId: seeded.attemptId });
 
     const runtime = await t.query(async (ctx) => ({
@@ -161,14 +167,10 @@ describe("tryouts/mutations/attempts", () => {
     });
 
     await expect(
-      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-        countryKey: COUNTRY,
-        entrySectionKey: SECTION,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      })
+      authed.mutation(
+        api.tryouts.mutations.attempts.startAttempt,
+        entryStartArgs
+      )
     ).resolves.toEqual({ attemptId: seeded.attemptId });
 
     const sectionAttempts = await t.query((ctx) =>
@@ -200,14 +202,7 @@ describe("tryouts/mutations/attempts", () => {
 
     const result = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
-      {
-        countryKey: COUNTRY,
-        entrySectionKey: SECTION,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      }
+      entryStartArgs
     );
     const runtime = await t.query(async (ctx) => {
       const attempt = await ctx.db.get(result.attemptId);
@@ -332,14 +327,7 @@ describe("tryouts/mutations/attempts", () => {
 
     const resumed = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
-      {
-        countryKey: COUNTRY,
-        entrySectionKey: SECTION,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      }
+      entryStartArgs
     );
 
     expect(resumed).toEqual(result);
@@ -353,13 +341,7 @@ describe("tryouts/mutations/attempts", () => {
     );
 
     await expect(
-      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-        countryKey: COUNTRY,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      })
+      authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
     ).rejects.toThrow("TRYOUT_ACCESS_REQUIRED");
   });
 
@@ -410,13 +392,7 @@ describe("tryouts/mutations/attempts", () => {
 
     const signed = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
-      {
-        countryKey: COUNTRY,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      }
+      startArgs
     );
     const history = await authed.query(api.tryouts.queries.history.list, {
       locale: "id",
@@ -459,13 +435,7 @@ describe("tryouts/mutations/attempts", () => {
     });
     const attempt = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
-      {
-        countryKey: COUNTRY,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      }
+      startArgs
     );
 
     const paidStart = await t.query(async (ctx) => ({
@@ -487,13 +457,7 @@ describe("tryouts/mutations/attempts", () => {
     );
     const resumed = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
-      {
-        countryKey: COUNTRY,
-        examKey: EXAM,
-        locale: "id",
-        setKey: SET,
-        trackKey: TRACK,
-      }
+      startArgs
     );
 
     expect(resumed).toEqual(attempt);

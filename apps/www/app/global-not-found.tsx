@@ -50,6 +50,7 @@ async function getNotFoundLocale() {
   return routing.defaultLocale;
 }
 
+/** Renders the global not-found boundary with the default locale fallback. */
 export default function GlobalNotFound() {
   const locale = routing.defaultLocale;
   const messages = dictionaries[locale].NotFound;
