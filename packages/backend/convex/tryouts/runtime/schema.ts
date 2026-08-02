@@ -18,7 +18,8 @@ import { v } from "convex/values";
 const tryoutSectionSnapshotValidator = v.object({
   publicPath: v.optional(v.string()),
   questionCount: v.number(),
-  questionSetId: v.id("questionSets"),
+  /** Present only for filesystem-owned attempt snapshots. */
+  questionSetId: v.optional(v.id("questionSets")),
   questionSourcePath: v.string(),
   sectionIdentity: v.optional(v.string()),
   sectionKey: tryoutRouteKeyValidator,
@@ -26,7 +27,8 @@ const tryoutSectionSnapshotValidator = v.object({
   sectionRowHash: v.optional(v.string()),
   sourceRevision: v.string(),
   timeLimitSeconds: v.number(),
-  tryoutSectionId: v.id("tryoutSections"),
+  /** Present only for filesystem-owned attempt snapshots. */
+  tryoutSectionId: v.optional(v.id("tryoutSections")),
 });
 
 const tryoutChoiceSnapshotValidator = v.object({
@@ -39,8 +41,9 @@ const tryoutChoiceSnapshotValidator = v.object({
 const tables = {
   tryoutAttempts: defineTable({
     userId: v.id("users"),
-    tryoutSetId: v.id("tryoutSets"),
-    /** Optional only during the stable Aksara identity backfill. */
+    /** Present only for filesystem-owned and migrated attempts. */
+    tryoutSetId: v.optional(v.id("tryoutSets")),
+    /** Present only for signed and migrated attempts. */
     tryoutSnapshotId: v.optional(v.string()),
     setIdentity: v.optional(v.string()),
     /** Frozen localized route prepared for the signed-runtime cutover. */
@@ -114,8 +117,9 @@ const tables = {
 
   tryoutSetProgress: defineTable({
     userId: v.id("users"),
-    tryoutSetId: v.id("tryoutSets"),
-    /** Optional only during the stable Aksara identity backfill. */
+    /** Present only for filesystem-owned and migrated progress. */
+    tryoutSetId: v.optional(v.id("tryoutSets")),
+    /** Present only for signed and migrated progress. */
     setIdentity: v.optional(v.string()),
     latestAttemptId: v.id("tryoutAttempts"),
     countryKey: tryoutRouteKeyValidator,
@@ -152,7 +156,8 @@ const tables = {
 
   tryoutSectionAttempts: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
-    tryoutSectionId: v.id("tryoutSections"),
+    /** Present only for filesystem-owned and migrated section attempts. */
+    tryoutSectionId: v.optional(v.id("tryoutSections")),
     sectionIdentity: v.optional(v.string()),
     sectionKey: tryoutRouteKeyValidator,
     sectionOrder: v.number(),
@@ -192,7 +197,8 @@ const tables = {
     sectionIdentity: v.optional(v.string()),
     sectionKey: v.optional(tryoutRouteKeyValidator),
     tryoutAttemptId: v.id("tryoutAttempts"),
-    tryoutSectionId: v.id("tryoutSections"),
+    /** Present only for filesystem-owned and migrated placements. */
+    tryoutSectionId: v.optional(v.id("tryoutSections")),
     /** Optional only while filesystem-owned attempts remain readable. */
     questionId: v.optional(v.id("questions")),
     /** Optional only while filesystem-owned IRT rows remain readable. */
@@ -247,7 +253,8 @@ const tables = {
 
   tryoutScores: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
-    tryoutSetId: v.id("tryoutSets"),
+    /** Present only for filesystem-owned and migrated score snapshots. */
+    tryoutSetId: v.optional(v.id("tryoutSets")),
     tryoutSnapshotId: v.optional(v.string()),
     setIdentity: v.optional(v.string()),
     userId: v.id("users"),

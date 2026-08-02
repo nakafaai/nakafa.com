@@ -19,6 +19,12 @@ describe("tryouts/migrations/scale", () => {
     await expect(
       t.mutation(internal.tryouts.migrations.scale.migrateScales, args)
     ).resolves.toMatchObject({ changed: 1, isDone: true });
+
+    const scale = await t.query((ctx) =>
+      ctx.db.query("irtScaleVersions").unique()
+    );
+    expect(scale?.setIdentity).toBeDefined();
+    expect(scale?.tryoutSnapshotId).toBeUndefined();
   });
 
   it("rejects a conflicting signed scale identity", async () => {

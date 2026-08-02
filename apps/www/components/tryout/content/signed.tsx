@@ -21,12 +21,13 @@ import { getRendererComponents } from "@/lib/content/renderer/components";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 type ProtectedSelector = TryoutAnswerSelector | TryoutQuestionSelector;
+const SIGNED_RENDER_CONCURRENCY = 4;
 
 /** Renders every authenticated question selector in attempt order. */
 export async function loadSignedQuestions(
   selectors: readonly TryoutQuestionSelector[]
 ) {
-  const entries = await Promise.all(selectors.map(renderSignedContent));
+  const entries = await Effect.runPromise(renderSignedSelectors(selectors));
 
   return entries.map(
     ({ body, contentHash, sourcePath, sourceRevision }) =>
@@ -43,7 +44,7 @@ export async function loadSignedQuestions(
 export async function loadSignedAnswers(
   selectors: readonly TryoutAnswerSelector[]
 ) {
-  const entries = await Promise.all(selectors.map(renderSignedContent));
+  const entries = await Effect.runPromise(renderSignedSelectors(selectors));
 
   return entries.map(
     ({ body, contentHash, sourcePath, sourceRevision }) =>
@@ -55,6 +56,20 @@ export async function loadSignedAnswers(
       }) satisfies TryoutAnswerContent
   );
 }
+
+/** Renders protected selectors with a bounded shared transport budget. */
+const renderSignedSelectors = Effect.fn("NakafaContent.renderSignedTryout")(
+  (selectors: readonly ProtectedSelector[]) =>
+    Effect.forEach(
+      selectors,
+      (selector) =>
+        Effect.tryPromise({
+          catch: (cause) => new ContentRuntimeVerificationError({ cause }),
+          try: () => renderSignedContent(selector),
+        }),
+      { concurrency: SIGNED_RENDER_CONCURRENCY }
+    )
+);
 
 /** Caches one verified JSX body under its exact signed artifact identity. */
 async function renderSignedContent(selector: ProtectedSelector) {

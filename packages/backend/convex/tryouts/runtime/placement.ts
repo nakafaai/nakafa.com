@@ -46,13 +46,23 @@ export async function requireSnapshotSection(
     snapshot: TryoutSectionSnapshot;
   }
 ): Promise<TryoutSection> {
-  const section = await ctx.db.get(args.snapshot.tryoutSectionId);
+  const tryoutSectionId = args.snapshot.tryoutSectionId;
+  const tryoutSetId = args.attempt.tryoutSetId;
+  const questionSetId = args.snapshot.questionSetId;
+  if (!(tryoutSectionId && tryoutSetId && questionSetId)) {
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_NOT_FOUND",
+      message: "Filesystem try-out section identity is missing.",
+    });
+  }
+
+  const section = await ctx.db.get(tryoutSectionId);
 
   if (
     !section ||
-    section.tryoutSetId !== args.attempt.tryoutSetId ||
+    section.tryoutSetId !== tryoutSetId ||
     section.sectionKey !== args.snapshot.sectionKey ||
-    section.questionSetId !== args.snapshot.questionSetId ||
+    section.questionSetId !== questionSetId ||
     section.questionSourcePath !== args.snapshot.questionSourcePath ||
     section.questionCount !== args.snapshot.questionCount ||
     section.sourceRevision !== args.snapshot.sourceRevision
@@ -76,28 +86,27 @@ export const createAttemptPlacements = Effect.fn(
     readonly source: TryoutSectionSource;
   }
 ) {
-  if (args.source.kind === "local") {
-    yield* createLocalPlacements(ctx, args.attempt, args.source.sections);
+  if (args.source.kind === "filesystem") {
+    yield* createFilesystemPlacements(ctx, args.attempt, args.source.sections);
     return;
   }
 
-  for (const source of args.source.sections) {
-    const sectionIdentity = tryoutCatalogIdentity(source.signed.section.row);
+  for (const source of args.source.snapshot.sections) {
+    const sectionIdentity = tryoutCatalogIdentity(source.section.row);
     const snapshot = args.attempt.sectionSnapshots.find(
-      (candidate) => candidate.tryoutSectionId === source.legacy._id
+      (candidate) => candidate.sectionIdentity === sectionIdentity
     );
     if (
       !snapshot ||
-      snapshot.sectionIdentity !== sectionIdentity ||
-      snapshot.sectionRowHash !== source.signed.section.rowHash ||
-      snapshot.questionCount !== source.signed.placements.length
+      snapshot.sectionRowHash !== source.section.rowHash ||
+      snapshot.questionCount !== source.placements.length
     ) {
       return yield* startMismatch(
         "Try-out section changed before its attempt was frozen."
       );
     }
 
-    for (const placement of source.signed.placements) {
+    for (const placement of source.placements) {
       yield* tryStartPromise(() =>
         ctx.db.insert("tryoutAttemptPlacements", {
           answerArtifactHash: placement.row.answerArtifactHash,
@@ -116,7 +125,6 @@ export const createAttemptPlacements = Effect.fn(
           sourceRevision: placement.row.sourceRevision,
           title: placement.row.title,
           tryoutAttemptId: args.attempt._id,
-          tryoutSectionId: source.legacy._id,
         })
       );
     }
@@ -124,8 +132,8 @@ export const createAttemptPlacements = Effect.fn(
 });
 
 /** Freezes the current local rows before signed ownership is activated. */
-const createLocalPlacements = Effect.fn(
-  "tryouts.runtime.createLocalPlacements"
+const createFilesystemPlacements = Effect.fn(
+  "tryouts.runtime.createFilesystemPlacements"
 )(function* (
   ctx: MutationCtx,
   attempt: TryoutAttempt,

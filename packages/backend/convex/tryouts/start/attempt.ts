@@ -33,7 +33,6 @@ interface CreateTryoutAttemptInput {
   readonly attemptNumber: number;
   readonly now: number;
   readonly scaleVersion: Doc<"irtScaleVersions"> | null;
-  readonly set: Doc<"tryoutSets">;
   readonly source: TryoutStartSource;
   readonly userId: Id<"users">;
 }
@@ -64,7 +63,7 @@ export const createTryoutAttempt = Effect.fn(
 function buildAttemptValues(
   input: CreateTryoutAttemptInput
 ): TryoutAttemptInsert {
-  const values: TryoutAttemptInsert = {
+  const values = {
     ...input.access,
     attemptNumber: input.attemptNumber,
     completedAt: null,
@@ -76,28 +75,36 @@ function buildAttemptValues(
     ),
     lastActivityAt: input.now,
     scoreStatus: input.scaleVersion?.status ?? "official",
-    scoringStrategy: input.set.scoringStrategy,
-    sectionSnapshots: localSections(input.source).map((section) => ({
-      publicPath: section.publicPath,
-      questionCount: section.questionCount,
-      questionSetId: section.questionSetId,
-      questionSourcePath: section.questionSourcePath,
-      sectionKey: section.sectionKey,
-      sectionOrder: section.order,
-      sourceRevision: section.sourceRevision,
-      timeLimitSeconds: section.timeLimitSeconds,
-      tryoutSectionId: section._id,
-    })),
     startedAt: input.now,
     status: "in-progress",
     totalCorrect: 0,
-    totalQuestions: input.set.totalQuestionCount,
-    tryoutSetId: input.set._id,
     userId: input.userId,
     ...(input.scaleVersion ? { scaleVersionId: input.scaleVersion._id } : {}),
-  };
-  if (input.source.kind === "local") {
-    return values;
+  } satisfies Partial<TryoutAttemptInsert>;
+  if (input.source.kind === "filesystem") {
+    const { set } = input.source;
+    return {
+      ...values,
+      countryKey: set.countryKey,
+      examKey: set.examKey,
+      locale: set.locale,
+      scoringStrategy: set.scoringStrategy,
+      sectionSnapshots: input.source.sections.map((section) => ({
+        publicPath: section.publicPath,
+        questionCount: section.questionCount,
+        questionSetId: section.questionSetId,
+        questionSourcePath: section.questionSourcePath,
+        sectionKey: section.sectionKey,
+        sectionOrder: section.order,
+        sourceRevision: section.sourceRevision,
+        timeLimitSeconds: section.timeLimitSeconds,
+        tryoutSectionId: section._id,
+      })),
+      setKey: set.setKey,
+      totalQuestions: set.totalQuestionCount,
+      trackKey: set.trackKey,
+      tryoutSetId: set._id,
+    };
   }
 
   const signedSet = input.source.snapshot.set.row;
@@ -106,32 +113,24 @@ function buildAttemptValues(
     countryKey: signedSet.countryKey,
     examKey: signedSet.examKey,
     locale: signedSet.locale,
-    sectionSnapshots: input.source.sections.map(({ legacy, signed }) => ({
-      publicPath: legacy.publicPath,
-      questionCount: legacy.questionCount,
-      questionSetId: legacy.questionSetId,
-      questionSourcePath: legacy.questionSourcePath,
-      sectionIdentity: tryoutCatalogIdentity(signed.section.row),
-      sectionKey: legacy.sectionKey,
-      sectionOrder: legacy.order,
-      sectionRowHash: signed.section.rowHash,
-      sourceRevision: legacy.sourceRevision,
-      timeLimitSeconds: legacy.timeLimitSeconds,
-      tryoutSectionId: legacy._id,
+    scoringStrategy: signedSet.scoringStrategy,
+    sectionSnapshots: input.source.snapshot.sections.map(({ section }) => ({
+      publicPath: section.row.publicPath,
+      questionCount: section.row.questionCount,
+      questionSourcePath: section.row.questionSourcePath,
+      sectionIdentity: tryoutCatalogIdentity(section.row),
+      sectionKey: section.row.sectionKey,
+      sectionOrder: section.row.order,
+      sectionRowHash: section.rowHash,
+      sourceRevision: section.row.sourceRevision,
+      timeLimitSeconds: section.row.timeLimitSeconds,
     })),
     setIdentity: input.source.snapshot.setIdentity,
     setKey: signedSet.setKey,
+    totalQuestions: signedSet.questionCount,
     trackKey: signedSet.trackKey,
     tryoutSnapshotId: input.source.snapshot.snapshotId,
   };
-}
-
-/** Returns the local section records stored by both source modes. */
-function localSections(source: TryoutStartSource) {
-  if (source.kind === "local") {
-    return source.sections;
-  }
-  return source.sections.map(({ legacy }) => legacy);
 }
 
 /** Persists all attempt-owned side effects after the snapshot row exists. */
@@ -146,7 +145,6 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
       writeTryoutSetProgress(ctx, {
         attempt,
         publishedScore: null,
-        set: input.set,
         status: "in-progress",
         updatedAt: input.now,
       })
@@ -156,12 +154,13 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
       source: input.source,
     });
 
-    if (input.args.entrySectionKey) {
+    const entrySectionKey = input.args.entrySectionKey;
+    if (entrySectionKey) {
       yield* tryStartPromise(() =>
         startSectionAttempt(ctx, {
           attempt,
           now: input.now,
-          sectionKey: input.args.entrySectionKey ?? "",
+          sectionKey: entrySectionKey,
         })
       );
     }
@@ -180,12 +179,12 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
         properties: {
           access_source: input.access.accessSourceKind,
           attempt_number: attempt.attemptNumber,
-          country_key: input.set.countryKey,
-          exam_key: input.set.examKey,
-          locale: input.set.locale,
+          country_key: input.args.countryKey,
+          exam_key: input.args.examKey,
+          locale: input.args.locale,
           score_status: attempt.scoreStatus,
-          set_key: input.set.setKey,
-          track_key: input.set.trackKey,
+          set_key: input.args.setKey,
+          track_key: input.args.trackKey,
         },
       },
       timestamp: new Date(input.now),

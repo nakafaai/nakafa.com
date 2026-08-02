@@ -24,21 +24,20 @@ type IrtScaleItem = Doc<"irtScaleItems">;
 
 /** Selects or creates the exact signed IRT scale frozen into one new attempt. */
 export const selectAttemptScale = Effect.fn("tryouts.start.selectAttemptScale")(
-  function* (
-    ctx: MutationCtx,
-    set: Doc<"tryoutSets">,
-    source: TryoutStartSource,
-    publishedAt: number
-  ) {
-    if (set.scoringStrategy !== "irt") {
+  function* (ctx: MutationCtx, source: TryoutStartSource, publishedAt: number) {
+    const scoringStrategy =
+      source.kind === "filesystem"
+        ? source.set.scoringStrategy
+        : source.snapshot.set.row.scoringStrategy;
+    if (scoringStrategy !== "irt") {
       return null;
     }
 
-    if (source.kind === "local") {
-      return yield* loadLocalScale(ctx, set);
+    if (source.kind === "filesystem") {
+      return yield* loadFilesystemScale(ctx, source.set);
     }
 
-    const scale = yield* loadExactScale(ctx, set, source);
+    const scale = yield* loadExactScale(ctx, source);
     if (scale) {
       yield* verifyScaleItems(ctx, scale, source);
       return scale;
@@ -46,40 +45,37 @@ export const selectAttemptScale = Effect.fn("tryouts.start.selectAttemptScale")(
 
     return yield* publishSignedScale(ctx, {
       publishedAt,
-      set,
       source,
     });
   }
 );
 
 /** Loads the newest scale that still belongs to filesystem-authored content. */
-const loadLocalScale = Effect.fn("tryouts.start.loadLocalScale")(function* (
-  ctx: MutationCtx,
-  set: Doc<"tryoutSets">
-) {
-  const scale = yield* tryScalePromise(() =>
-    ctx.db
-      .query("irtScaleVersions")
-      .withIndex(
-        "by_tryoutSetId_and_tryoutSnapshotId_and_publishedAt",
-        (query) =>
-          query.eq("tryoutSetId", set._id).eq("tryoutSnapshotId", undefined)
-      )
-      .order("desc")
-      .first()
-  );
-  if (!scale) {
-    return yield* scaleError(
-      "Published filesystem IRT scale is required before scoring this try-out."
+const loadFilesystemScale = Effect.fn("tryouts.start.loadFilesystemScale")(
+  function* (ctx: MutationCtx, set: Doc<"tryoutSets">) {
+    const scale = yield* tryScalePromise(() =>
+      ctx.db
+        .query("irtScaleVersions")
+        .withIndex(
+          "by_tryoutSetId_and_tryoutSnapshotId_and_publishedAt",
+          (query) =>
+            query.eq("tryoutSetId", set._id).eq("tryoutSnapshotId", undefined)
+        )
+        .order("desc")
+        .first()
     );
+    if (!scale) {
+      return yield* scaleError(
+        "Published filesystem IRT scale is required before scoring this try-out."
+      );
+    }
+    return scale;
   }
-  return scale;
-});
+);
 
 /** Loads at most one scale bound to the exact signed snapshot. */
 const loadExactScale = Effect.fn("tryouts.start.loadExactScale")(function* (
   ctx: MutationCtx,
-  set: Doc<"tryoutSets">,
   source: SignedTryoutSource
 ) {
   const scales = yield* tryScalePromise(() =>
@@ -102,10 +98,7 @@ const loadExactScale = Effect.fn("tryouts.start.loadExactScale")(function* (
   if (!scale) {
     return null;
   }
-  if (
-    scale.tryoutSetId !== set._id ||
-    scale.questionCount !== source.snapshot.set.row.questionCount
-  ) {
+  if (scale.questionCount !== source.snapshot.set.row.questionCount) {
     return yield* scaleError(
       "Signed IRT scale does not match its try-out set."
     );
@@ -119,7 +112,6 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
     ctx: MutationCtx,
     args: {
       publishedAt: number;
-      set: Doc<"tryoutSets">;
       source: SignedTryoutSource;
     }
   ) {
@@ -130,7 +122,7 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
       );
     }
 
-    const previous = yield* loadPreviousScale(ctx, args.set, args.source);
+    const previous = yield* loadPreviousScale(ctx, args.source);
     const previousItems = previous
       ? yield* loadScaleItemMap(ctx, previous)
       : new Map<string, IrtScaleItem>();
@@ -149,13 +141,13 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
         questionCount: placements.length,
         setIdentity: args.source.snapshot.setIdentity,
         status,
-        tryoutSetId: args.set._id,
         tryoutSnapshotId: args.source.snapshot.snapshotId,
       })
     );
 
-    for (const { signed } of args.source.sections) {
-      const sectionIdentity = tryoutCatalogIdentity(signed.section.row);
+    for (const { placements: sectionPlacements, section } of args.source
+      .snapshot.sections) {
+      const sectionIdentity = tryoutCatalogIdentity(section.row);
       const calibrationRunId = yield* tryScalePromise(() =>
         ctx.db.insert("irtCalibrationRuns", {
           attemptCount: 0,
@@ -163,7 +155,7 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
           iterationCount: 0,
           maxParameterDelta: 0,
           model: IRT_MODEL,
-          questionCount: signed.placements.length,
+          questionCount: sectionPlacements.length,
           responseCount: 0,
           scaleVersionId,
           sectionIdentity,
@@ -173,7 +165,7 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
         })
       );
 
-      for (const placement of signed.placements) {
+      for (const placement of sectionPlacements) {
         const identity = tryoutPlacementIdentity(placement.row);
         const previousItem = previousItems.get(identity);
         const reusable =
@@ -207,11 +199,7 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
 
 /** Loads the latest earlier signed scale for the same logical set. */
 const loadPreviousScale = Effect.fn("tryouts.start.loadPreviousScale")(
-  function* (
-    ctx: MutationCtx,
-    set: Doc<"tryoutSets">,
-    source: SignedTryoutSource
-  ) {
+  function* (ctx: MutationCtx, source: SignedTryoutSource) {
     const scale = yield* tryScalePromise(() =>
       ctx.db
         .query("irtScaleVersions")
@@ -221,11 +209,6 @@ const loadPreviousScale = Effect.fn("tryouts.start.loadPreviousScale")(
         .order("desc")
         .first()
     );
-    if (scale && scale.tryoutSetId !== set._id) {
-      return yield* scaleError(
-        "Signed IRT scale identity belongs to another try-out set."
-      );
-    }
     return scale;
   }
 );
@@ -282,8 +265,8 @@ const loadScaleItemMap = Effect.fn("tryouts.start.loadScaleItemMap")(function* (
 
 /** Flattens authenticated placements with their immutable identity fields. */
 function signedPlacements(source: SignedTryoutSource) {
-  return source.sections.flatMap(({ signed }) =>
-    signed.placements.map((placement) => ({
+  return source.snapshot.sections.flatMap(({ placements }) =>
+    placements.map((placement) => ({
       identity: tryoutPlacementIdentity(placement.row),
       rowHash: placement.rowHash,
     }))

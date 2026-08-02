@@ -1,11 +1,12 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
-import { toTryoutCorpusPath } from "@repo/backend/convex/contentRelease/tryout/path";
 import {
   readTryoutSet,
   type VerifiedTryoutSet,
 } from "@repo/backend/convex/contentRelease/tryout/set";
+import { requireActiveReadyTryoutSet } from "@repo/backend/convex/tryouts/read";
+import type { StartAttemptArgs } from "@repo/backend/convex/tryouts/start/spec";
 import {
   TryoutStartError,
   toTryoutStartError,
@@ -13,225 +14,89 @@ import {
 } from "@repo/backend/convex/tryouts/start/spec";
 import { Effect } from "effect";
 
-type LegacySection = Doc<"tryoutSections">;
-type LegacySet = Doc<"tryoutSets">;
-type SignedSection = VerifiedTryoutSet["sections"][number];
+type FilesystemSection = Doc<"tryoutSections">;
+type FilesystemSet = Doc<"tryoutSets">;
 
-/** One legacy section paired with its authenticated signed replacement. */
-export interface AlignedTryoutSection {
-  readonly legacy: LegacySection;
-  readonly signed: SignedSection;
+/** Filesystem rows used only before signed try-out ownership is activated. */
+export interface FilesystemTryoutSource {
+  readonly kind: "filesystem";
+  readonly sections: readonly FilesystemSection[];
+  readonly set: FilesystemSet;
 }
 
-/** Local rows used only until signed try-out ownership is activated. */
-export interface LocalTryoutSource {
-  readonly kind: "local";
-  readonly sections: readonly LegacySection[];
-}
-
-/** Signed section rows authenticated against one immutable snapshot. */
-export interface SignedSectionSource {
+/** Authenticated immutable rows used after signed ownership is activated. */
+export interface SignedTryoutSource {
   readonly kind: "signed";
-  readonly sections: readonly AlignedTryoutSection[];
-}
-
-/** Placement source selected by the explicit publication ownership mode. */
-export type TryoutSectionSource = LocalTryoutSource | SignedSectionSource;
-
-/** Signed rows required after Aksara try-out ownership is activated. */
-export interface SignedTryoutSource extends SignedSectionSource {
   readonly snapshot: VerifiedTryoutSet;
 }
 
-/** Explicit source selected from the active publication ownership state. */
-export type TryoutStartSource = LocalTryoutSource | SignedTryoutSource;
+/** Placement source selected by the explicit publication ownership mode. */
+export type TryoutSectionSource = FilesystemTryoutSource | SignedTryoutSource;
 
-/** Selects local rows before activation and fails closed afterward. */
+/** Explicit source selected from the active publication ownership state. */
+export type TryoutStartSource = TryoutSectionSource;
+
+/** Selects the complete filesystem or signed snapshot without cross-source joins. */
 export const loadTryoutStartSource = Effect.fn(
   "tryouts.start.loadTryoutStartSource"
-)(function* (
-  ctx: QueryCtx,
-  localSet: LegacySet,
-  localSections: readonly LegacySection[]
-) {
+)(function* (ctx: QueryCtx, args: StartAttemptArgs) {
   const owner = yield* loadTryoutOwner(ctx).pipe(
     Effect.mapError(toTryoutStartError)
   );
-  if (!owner.managed) {
-    const source: TryoutStartSource = {
-      kind: "local",
-      sections: localSections,
-    };
+  if (owner.managed) {
+    const snapshot = yield* readTryoutSet(ctx, args).pipe(
+      Effect.mapError(toTryoutStartError)
+    );
+    const source: TryoutStartSource = { kind: "signed", snapshot };
     return source;
   }
 
-  const snapshot = yield* readTryoutSet(ctx, localSet).pipe(
-    Effect.mapError(toTryoutStartError)
+  const set = yield* tryStartPromise(() =>
+    requireActiveReadyTryoutSet(ctx, args)
   );
-  const sections = yield* alignTryoutSource(localSet, localSections, snapshot);
-  const source: TryoutStartSource = { kind: "signed", sections, snapshot };
+  const sections = yield* loadFilesystemSections(ctx, set);
+  const source: TryoutStartSource = { kind: "filesystem", sections, set };
   return source;
 });
 
-/** Proves that the active legacy and signed set snapshots are identical. */
-export const alignTryoutSource = Effect.fn("tryouts.start.alignTryoutSource")(
-  function* (
-    legacySet: LegacySet,
-    legacySections: readonly LegacySection[],
-    signed: VerifiedTryoutSet
-  ) {
-    const setMismatch = findSetMismatch(legacySet, signed);
-    if (setMismatch) {
-      return yield* sourceMismatch(`set ${setMismatch}`);
-    }
-    if (legacySections.length !== signed.sections.length) {
-      return yield* sourceMismatch("section count");
-    }
+/** Loads and validates ordered filesystem sections before signed activation. */
+const loadFilesystemSections = Effect.fn(
+  "tryouts.start.loadFilesystemSections"
+)(function* (ctx: QueryCtx, set: FilesystemSet) {
+  const sections = yield* tryStartPromise(() =>
+    ctx.db
+      .query("tryoutSections")
+      .withIndex("by_tryoutSetId_and_order", (query) =>
+        query.eq("tryoutSetId", set._id)
+      )
+      .take(set.sectionCount + 1)
+  );
 
-    const sections: AlignedTryoutSection[] = [];
-    for (const [index, legacy] of legacySections.entries()) {
-      const signedSection = signed.sections[index];
-      if (!signedSection) {
-        return yield* sourceMismatch(`section ${index + 1}`);
-      }
-      const sectionMismatch = findSectionMismatch(
-        legacy,
-        legacySet,
-        signedSection
-      );
-      if (sectionMismatch) {
-        return yield* sourceMismatch(
-          `section ${legacy.sectionKey} ${sectionMismatch}`
-        );
-      }
-      sections.push({ legacy, signed: signedSection });
-    }
+  if (sections.length !== set.sectionCount) {
+    return yield* new TryoutStartError({
+      code: tryoutStartErrorCode.sectionCountMismatch,
+      message: "Try-out set section count is not synced.",
+    });
+  }
 
-    return sections;
+  const questionCount = sections.reduce(
+    (total, section) => total + section.questionCount,
+    0
+  );
+  const hasMixedRevision = sections.some(
+    (section) => section.sourceRevision !== set.sourceRevision
+  );
+  if (questionCount !== set.totalQuestionCount || hasMixedRevision) {
+    return yield* new TryoutStartError({
+      code: tryoutStartErrorCode.sectionSnapshotMismatch,
+      message: "Try-out set sections are not fully synced.",
+    });
   }
-);
 
-/** Finds the first authored set field that differs across both sources. */
-function findSetMismatch(legacy: LegacySet, signed: VerifiedTryoutSet) {
-  const row = signed.set.row;
-  if (legacy.countryKey !== row.countryKey) {
-    return "countryKey";
-  }
-  if (legacy.examKey !== row.examKey) {
-    return "examKey";
-  }
-  if (legacy.trackKey !== row.trackKey) {
-    return "trackKey";
-  }
-  if (legacy.setKey !== row.setKey) {
-    return "setKey";
-  }
-  if (legacy.locale !== row.locale) {
-    return "locale";
-  }
-  if (legacy.publicPath !== row.publicPath) {
-    return "publicPath";
-  }
-  if (legacy.title !== row.title) {
-    return "title";
-  }
-  if (legacy.description !== row.description) {
-    return "description";
-  }
-  if (legacy.scoringStrategy !== row.scoringStrategy) {
-    return "scoringStrategy";
-  }
-  if (legacy.internalEntrySectionKey !== row.internalEntrySectionKey) {
-    return "internalEntrySectionKey";
-  }
-  if (legacy.sectionCount !== row.sectionCount) {
-    return "sectionCount";
-  }
-  if (legacy.totalQuestionCount !== row.questionCount) {
-    return "questionCount";
-  }
-  if (legacy.readyQuestionCount !== row.questionCount) {
-    return "readyQuestionCount";
-  }
-  if (legacy.visibleSectionCount !== row.visibleSectionCount) {
-    return "visibleSectionCount";
-  }
-  if (legacy.readyVisibleSectionCount !== row.visibleSectionCount) {
-    return "readyVisibleSectionCount";
-  }
-  if (legacy.order !== row.order) {
-    return "order";
-  }
-  if (legacy.sourceRevision !== row.sourceRevision) {
-    return "sourceRevision";
-  }
-  return;
-}
+  return sections;
+});
 
-/** Finds the first authored section field that differs across both sources. */
-function findSectionMismatch(
-  legacy: LegacySection,
-  legacySet: LegacySet,
-  signed: SignedSection
-) {
-  const row = signed.section.row;
-  if (legacy.tryoutSetId !== legacySet._id) {
-    return "tryoutSetId";
-  }
-  if (legacy.countryKey !== row.countryKey) {
-    return "countryKey";
-  }
-  if (legacy.examKey !== row.examKey) {
-    return "examKey";
-  }
-  if (legacy.trackKey !== row.trackKey) {
-    return "trackKey";
-  }
-  if (legacy.setKey !== row.setKey) {
-    return "setKey";
-  }
-  if (legacy.sectionKey !== row.sectionKey) {
-    return "sectionKey";
-  }
-  if (legacy.locale !== row.locale) {
-    return "locale";
-  }
-  if (legacy.publicPath !== row.publicPath) {
-    return "publicPath";
-  }
-  if (legacy.title !== row.title) {
-    return "title";
-  }
-  if (legacy.description !== row.description) {
-    return "description";
-  }
-  if (legacy.questionCount !== row.questionCount) {
-    return "questionCount";
-  }
-  if (legacy.order !== row.order) {
-    return "order";
-  }
-  if (legacy.sourceRevision !== row.sourceRevision) {
-    return "sourceRevision";
-  }
-  if (legacy.timeLimitSeconds !== row.timeLimitSeconds) {
-    return "timeLimitSeconds";
-  }
-  if (legacy.visibility !== row.visibility) {
-    return "visibility";
-  }
-  if (
-    toTryoutCorpusPath(legacy.questionSourcePath) !== row.questionSourcePath
-  ) {
-    return "questionSourcePath";
-  }
-  return;
-}
-
-/** Raises one typed fail-closed source drift error. */
-function sourceMismatch(field: string) {
-  return new TryoutStartError({
-    code: tryoutStartErrorCode.sectionSnapshotMismatch,
-    message: `Legacy and signed try-out sources differ at ${field}.`,
-  });
+/** Lifts one Convex promise into the typed start failure channel. */
+function tryStartPromise<A>(operation: () => Promise<A>) {
+  return Effect.tryPromise({ catch: toTryoutStartError, try: operation });
 }

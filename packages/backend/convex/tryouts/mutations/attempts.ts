@@ -1,7 +1,6 @@
 import { mutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { requireActiveReadyTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
   expireAttemptAtEffectiveTime,
   finalizeSectionAttempt,
@@ -29,16 +28,11 @@ export const startAttempt = mutation({
           catch: toTryoutStartError,
           try: () => requireAuth(ctx),
         });
-        const set = yield* Effect.tryPromise({
-          catch: toTryoutStartError,
-          try: () => requireActiveReadyTryoutSet(ctx, args),
-        });
         const now = yield* Clock.currentTimeMillis;
 
         return yield* startTryoutAttempt(ctx, {
           args,
           now,
-          set,
           userId: appUser._id,
         });
       })

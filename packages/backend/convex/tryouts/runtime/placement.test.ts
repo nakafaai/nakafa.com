@@ -9,9 +9,9 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
-import type { TryoutSectionSource } from "@repo/backend/convex/tryouts/start/source";
 import {
   makeAlignedTryoutSection,
+  makeSignedTryoutSource,
   TRYOUT_TEST_CONTENT_HASH,
 } from "@repo/backend/test/tryout-section";
 import { ConvexError } from "convex/values";
@@ -129,8 +129,11 @@ async function insertRuntime(
     tryoutSetId,
     visibility: "visible",
   });
-  const section = await ctx.db.get(sectionId);
-  if (!section) {
+  const [section, set] = await Promise.all([
+    ctx.db.get(sectionId),
+    ctx.db.get(tryoutSetId),
+  ]);
+  if (!(section && set)) {
     throw new ConvexError({
       code: "TRYOUT_FIXTURE_NOT_FOUND",
       message: "Expected try-out section fixture.",
@@ -139,6 +142,7 @@ async function insertRuntime(
   const aligned = makeAlignedTryoutSection(section, {
     sourceRevision: signedRevision,
   });
+  const source = makeSignedTryoutSource(set, [aligned]);
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: NOW + 86_400_000,
     accessSourceKind: "free",
@@ -155,7 +159,6 @@ async function insertRuntime(
       {
         publicPath: ROUTE,
         questionCount: 1,
-        questionSetId,
         questionSourcePath: SOURCE,
         sectionIdentity: tryoutCatalogIdentity(aligned.signed.section.row),
         sectionKey: SECTION,
@@ -163,14 +166,19 @@ async function insertRuntime(
         sectionRowHash: aligned.signed.section.rowHash,
         sourceRevision: "2026",
         timeLimitSeconds: 1800,
-        tryoutSectionId: sectionId,
       },
     ],
     startedAt: NOW,
     status: "in-progress",
     totalCorrect: 0,
     totalQuestions: 1,
-    tryoutSetId,
+    countryKey: "indonesia",
+    examKey: "snbt",
+    locale: "id",
+    setIdentity: source.snapshot.setIdentity,
+    setKey: "set-1",
+    trackKey: TRACK,
+    tryoutSnapshotId: source.snapshot.snapshotId,
     userId,
   });
   const attempt = await ctx.db.get(attemptId);
@@ -182,10 +190,6 @@ async function insertRuntime(
     });
   }
 
-  const source: TryoutSectionSource = {
-    kind: "signed",
-    sections: [aligned],
-  };
   return { attempt, source };
 }
 
@@ -204,8 +208,11 @@ describe("tryouts/runtime/placement", () => {
       return await ctx.db
         .query("tryoutAttemptPlacements")
         .withIndex(
-          "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
-          (query) => query.eq("tryoutAttemptId", runtime.attempt._id)
+          "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
+          (query) =>
+            query
+              .eq("tryoutAttemptId", runtime.attempt._id)
+              .eq("sectionKey", SECTION)
         )
         .unique();
     });
@@ -224,7 +231,7 @@ describe("tryouts/runtime/placement", () => {
       t.mutation(async (ctx) => {
         const questionSetId = await insertSource(ctx);
         const runtime = await insertRuntime(ctx, questionSetId);
-        const section = runtime.source.sections[0];
+        const section = runtime.source.snapshot.sections[0];
         if (!section) {
           throw new Error("Expected one signed section fixture.");
         }
@@ -234,12 +241,10 @@ describe("tryouts/runtime/placement", () => {
             attempt: runtime.attempt,
             source: {
               kind: "signed",
-              sections: [
-                {
-                  ...section,
-                  signed: { ...section.signed, placements: [] },
-                },
-              ],
+              snapshot: {
+                ...runtime.source.snapshot,
+                sections: [{ ...section, placements: [] }],
+              },
             },
           })
         );

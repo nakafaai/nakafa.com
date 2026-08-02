@@ -1,6 +1,7 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
@@ -102,20 +103,24 @@ const loadOwnedAttempt = Effect.fn("tryouts.access.loadOwnedAttempt")(
       setKey: input.args.setKey,
       trackKey: input.args.trackKey,
     });
-    const signedAttempt = yield* tryContentPromise(() =>
-      ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_setIdentity_and_startedAt", (index) =>
-          index.eq("userId", input.userId).eq("setIdentity", setIdentity)
-        )
-        .order("desc")
-        .first()
-    );
+    const owner = yield* loadTryoutOwner(ctx);
+    if (owner.managed) {
+      return yield* tryContentPromise(() =>
+        ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_setIdentity_and_startedAt", (index) =>
+            index.eq("userId", input.userId).eq("setIdentity", setIdentity)
+          )
+          .order("desc")
+          .first()
+      );
+    }
+
     const set = yield* tryContentPromise(() =>
       getActiveTryoutSet(ctx, input.args)
     );
     if (!set) {
-      return signedAttempt;
+      return null;
     }
 
     return yield* tryContentPromise(() =>

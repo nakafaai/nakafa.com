@@ -53,8 +53,9 @@ export async function scoreTryoutSection(
   args: {
     attempt: TryoutAttempt;
     responses: TryoutResponse[];
+    sectionKey: string;
     totalQuestions: number;
-    tryoutSectionId: Id<"tryoutSections">;
+    tryoutSectionId?: Id<"tryoutSections">;
   }
 ) {
   if (args.attempt.scoringStrategy === "irt") {
@@ -102,15 +103,6 @@ export async function finalizeAttemptScore(
     });
   }
 
-  const set = await ctx.db.get(args.attempt.tryoutSetId);
-
-  if (!set) {
-    throw new ConvexError({
-      code: "TRYOUT_SET_NOT_FOUND",
-      message: "Try-out set not found.",
-    });
-  }
-
   const responses = await loadAttemptResponses(ctx, args.attempt);
   const score = await scoreAttempt(ctx, {
     attempt: args.attempt,
@@ -136,7 +128,6 @@ export async function finalizeAttemptScore(
   await writeTryoutSetProgress(ctx, {
     attempt: args.attempt,
     publishedScore: score.publishedScore,
-    set,
     status,
     updatedAt: args.now,
   });
@@ -218,7 +209,9 @@ function insertAttemptScore(
           tryoutSnapshotId: args.attempt.tryoutSnapshotId,
         }
       : {}),
-    tryoutSetId: args.attempt.tryoutSetId,
+    ...(args.attempt.tryoutSetId
+      ? { tryoutSetId: args.attempt.tryoutSetId }
+      : {}),
     userId: args.attempt.userId,
   };
 

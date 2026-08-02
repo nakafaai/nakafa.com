@@ -98,7 +98,8 @@ const tables = {
     tryoutSnapshotId: v.optional(v.string()),
     /** Optional only during the additive immutable-snapshot migration. */
     setIdentity: v.optional(v.string()),
-    tryoutSetId: v.id("tryoutSets"),
+    /** Present only for filesystem-owned and migrated scales. */
+    tryoutSetId: v.optional(v.id("tryoutSets")),
     model: irtOperationalModelValidator,
     status: irtScaleVersionStatusValidator,
     questionCount: v.number(),

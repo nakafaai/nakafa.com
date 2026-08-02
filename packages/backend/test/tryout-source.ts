@@ -37,7 +37,7 @@ export async function activateTryoutStartSource(
   scoringStrategy: TryoutScoring = "raw"
 ) {
   const catalog = tryoutStartLocales.flatMap((locale) =>
-    makeTryoutStartCatalog(locale, visibility, scoringStrategy)
+    makeTryoutStartHierarchy(locale, visibility, scoringStrategy)
   );
   const placements = tryoutStartLocales.map(makeTryoutStartPlacement);
   const snapshotId = await activateTryoutSnapshot(ctx, {
@@ -86,6 +86,66 @@ export async function activateTryoutStartSource(
     }),
     snapshotId,
   };
+}
+
+/** Builds the complete localized hierarchy around the signed start fixture. */
+export function makeTryoutStartHierarchy(
+  locale: ContentLocale,
+  visibility: "internal-entry" | "visible",
+  scoringStrategy: TryoutScoring = "raw"
+): readonly TryoutCatalogRow[] {
+  const countryPath = `try-out/${TRYOUT_START_COUNTRY}`;
+  const examPath = `${countryPath}/${TRYOUT_START_EXAM}`;
+  const trackPath = `${examPath}/${TRYOUT_START_TRACK}`;
+  const visibleSectionCount = visibility === "visible" ? 1 : 0;
+  const parents = Schema.decodeUnknownSync(
+    Schema.Array(TryoutCatalogRowSchema)
+  )([
+    {
+      countryCode: "ID",
+      countryKey: TRYOUT_START_COUNTRY,
+      graph: makeGraph(locale, "country"),
+      kind: "country",
+      locale,
+      order: 1,
+      publicPath: countryPath,
+      sourceRevision: "2026",
+      title: "Indonesia",
+    },
+    {
+      countryKey: TRYOUT_START_COUNTRY,
+      examKey: TRYOUT_START_EXAM,
+      graph: makeGraph(locale, "exam"),
+      kind: "exam",
+      locale,
+      order: 1,
+      publicPath: examPath,
+      scoringStrategy,
+      sourceRevision: "2026",
+      title: "TKA",
+    },
+    {
+      countryKey: TRYOUT_START_COUNTRY,
+      examKey: TRYOUT_START_EXAM,
+      graph: makeGraph(locale, "track"),
+      kind: "track",
+      locale,
+      order: 1,
+      publicPath: trackPath,
+      questionCount: 1,
+      sectionCount: 1,
+      setCount: 1,
+      sourceRevision: "2026",
+      title: locale === "id" ? "Matematika" : "Mathematics",
+      trackKey: TRYOUT_START_TRACK,
+      trackKind: "subject",
+      visibleSectionCount,
+    },
+  ]);
+  return [
+    ...parents,
+    ...makeTryoutStartCatalog(locale, visibility, scoringStrategy),
+  ];
 }
 
 /** Builds the localized set and section rows for the start fixture. */
@@ -172,7 +232,10 @@ export function makeTryoutStartPlacement(
 }
 
 /** Builds one stable graph identity for a technical signed row. */
-function makeGraph(locale: ContentLocale, kind: "section" | "set") {
+function makeGraph(
+  locale: ContentLocale,
+  kind: "country" | "exam" | "section" | "set" | "track"
+) {
   return {
     alignmentId: `alignment:tryout:start:${kind}`,
     assetId: `asset:${locale}:tryout:start:${kind}`,

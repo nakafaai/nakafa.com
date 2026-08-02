@@ -114,8 +114,7 @@ const inspectMigrationPage = Effect.fn(
         "irtScaleVersions",
         args,
         (row) =>
-          row.tryoutSnapshotId === args.expectedSnapshotId &&
-          row.setIdentity !== undefined,
+          row.setIdentity !== undefined && row.tryoutSnapshotId === undefined,
         (row) => row.tryoutSetId !== undefined
       );
     case "scores":

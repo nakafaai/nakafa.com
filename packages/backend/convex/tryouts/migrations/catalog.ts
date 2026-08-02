@@ -33,8 +33,14 @@ export const bindLegacySet = Effect.fn("tryouts.migrations.bindLegacySet")(
   function* (
     ctx: QueryCtx,
     expectedSnapshotId: string,
-    tryoutSetId: Id<"tryoutSets">
+    tryoutSetId: Id<"tryoutSets"> | undefined
   ) {
+    if (!tryoutSetId) {
+      return yield* migrationFail(
+        "A filesystem try-out set identity is missing."
+      );
+    }
+
     const legacy = yield* Effect.promise(() => ctx.db.get(tryoutSetId));
     if (!legacy) {
       return yield* migrationFail("A legacy try-out set is missing.");

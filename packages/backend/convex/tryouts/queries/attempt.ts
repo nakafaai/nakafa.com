@@ -1,20 +1,22 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   getSectionScoreResult,
   loadAttemptScoreResult,
 } from "@repo/backend/convex/tryouts/queries/score";
-import {
-  getActiveTryoutSet,
-  getActiveTryoutSetByPublicPath,
-} from "@repo/backend/convex/tryouts/read";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutCurrentSectionValidator } from "@repo/backend/convex/tryouts/runtime/content";
+import {
+  readLatestAttempt,
+  readLatestAttemptByPath,
+} from "@repo/backend/convex/tryouts/runtime/lookup";
 import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
+import { Effect, Schema } from "effect";
 
 const currentAttemptValidator = v.object({
   activeSectionKey: v.union(tryoutRouteKeyValidator, v.null()),
@@ -32,66 +34,69 @@ const currentAttemptValidator = v.object({
   totalQuestions: v.number(),
 });
 
-/** Loads bounded section attempt rows for resume-state derivation. */
-async function loadSectionAttempts(
-  ctx: QueryCtx,
-  attempt: Doc<"tryoutAttempts">
-) {
-  const sections = await ctx.db
-    .query("tryoutSectionAttempts")
-    .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
-      q.eq("tryoutAttemptId", attempt._id)
-    )
-    .take(attempt.sectionSnapshots.length + 1);
-
-  if (sections.length > attempt.sectionSnapshots.length) {
-    throw new ConvexError({
-      code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
-      message: "Try-out section attempt count exceeds the attempt snapshot.",
-    });
+/** Stable integrity failure while reading one immutable attempt snapshot. */
+class TryoutAttemptReadError extends Schema.TaggedError<TryoutAttemptReadError>()(
+  "TryoutAttemptReadError",
+  {
+    code: Schema.Literal("TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED"),
+    message: Schema.String,
   }
+) {}
 
-  return sections;
-}
+/** Loads bounded section attempt rows for resume-state derivation. */
+const loadSectionAttempts = Effect.fn("tryouts.attempt.loadSections")(
+  function* (ctx: QueryCtx, attempt: Doc<"tryoutAttempts">) {
+    const sections = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutSectionAttempts")
+        .withIndex("by_tryoutAttemptId_and_sectionOrder", (query) =>
+          query.eq("tryoutAttemptId", attempt._id)
+        )
+        .take(attempt.sectionSnapshots.length + 1)
+    );
+
+    if (sections.length > attempt.sectionSnapshots.length) {
+      return yield* new TryoutAttemptReadError({
+        code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
+        message: "Try-out section attempt count exceeds the attempt snapshot.",
+      });
+    }
+
+    return sections;
+  }
+);
 
 /** Reads the latest attempt snapshot for one resolved set row. */
-async function loadCurrentAttempt(
+const loadCurrentAttempt = Effect.fn("tryouts.attempt.loadCurrent")(function* (
   ctx: QueryCtx,
   args: {
-    sectionKey?: string;
-    set: Doc<"tryoutSets">;
-    userId: Doc<"users">["_id"];
+    readonly attempt: Doc<"tryoutAttempts">;
+    readonly sectionKey?: string;
   }
 ) {
-  const attempt = await ctx.db
-    .query("tryoutAttempts")
-    .withIndex("by_userId_and_tryoutSetId_and_startedAt", (q) =>
-      q.eq("userId", args.userId).eq("tryoutSetId", args.set._id)
-    )
-    .order("desc")
-    .first();
-
-  if (!attempt) {
-    return null;
-  }
-
+  const attempt = args.attempt;
   let section: Doc<"tryoutSectionAttempts"> | null = null;
 
   if (args.sectionKey) {
     const sectionKey = args.sectionKey;
 
-    section = await ctx.db
-      .query("tryoutSectionAttempts")
-      .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
-        q.eq("tryoutAttemptId", attempt._id).eq("sectionKey", sectionKey)
-      )
-      .unique();
+    section = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutSectionAttempts")
+        .withIndex("by_tryoutAttemptId_and_sectionKey", (query) =>
+          query.eq("tryoutAttemptId", attempt._id).eq("sectionKey", sectionKey)
+        )
+        .unique()
+    );
   }
 
-  const [sections, score] = await Promise.all([
-    loadSectionAttempts(ctx, attempt),
-    loadAttemptScoreResult(ctx, attempt),
-  ]);
+  const [sections, score] = yield* Effect.all(
+    [
+      loadSectionAttempts(ctx, attempt),
+      Effect.promise(() => loadAttemptScoreResult(ctx, attempt)),
+    ],
+    { concurrency: "unbounded" }
+  );
   const inProgressSection = sections.find(
     (sectionAttempt) => sectionAttempt.status === "in-progress"
   );
@@ -132,7 +137,7 @@ async function loadCurrentAttempt(
     status: attempt.status,
     totalQuestions: attempt.totalQuestions,
   };
-}
+});
 
 /** Reads the current user's latest try-out attempt for a public set identity. */
 export const getCurrent = query({
@@ -145,25 +150,25 @@ export const getCurrent = query({
     trackKey: tryoutRouteKeyValidator,
   },
   returns: v.union(v.null(), currentAttemptValidator),
-  handler: async (ctx, args) => {
-    const auth = await getOptionalAppUserForRead(ctx);
-
-    if (!auth) {
-      return null;
-    }
-
-    const set = await getActiveTryoutSet(ctx, args);
-
-    if (!set) {
-      return null;
-    }
-
-    return await loadCurrentAttempt(ctx, {
-      sectionKey: args.sectionKey,
-      set,
-      userId: auth.appUser._id,
-    });
-  },
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const auth = yield* Effect.promise(() =>
+          getOptionalAppUserForRead(ctx)
+        );
+        if (!auth) {
+          return null;
+        }
+        const attempt = yield* readLatestAttempt(ctx, args, auth.appUser._id);
+        if (!attempt) {
+          return null;
+        }
+        return yield* loadCurrentAttempt(ctx, {
+          attempt,
+          sectionKey: args.sectionKey,
+        });
+      })
+    ),
 });
 
 /** Reads the current user's latest try-out attempt for a localized set route. */
@@ -173,22 +178,24 @@ export const getCurrentByPublicPath = query({
     publicPath: v.string(),
   },
   returns: v.union(v.null(), currentAttemptValidator),
-  handler: async (ctx, args) => {
-    const auth = await getOptionalAppUserForRead(ctx);
-
-    if (!auth) {
-      return null;
-    }
-
-    const set = await getActiveTryoutSetByPublicPath(ctx, args);
-
-    if (!set) {
-      return null;
-    }
-
-    return await loadCurrentAttempt(ctx, {
-      set,
-      userId: auth.appUser._id,
-    });
-  },
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const auth = yield* Effect.promise(() =>
+          getOptionalAppUserForRead(ctx)
+        );
+        if (!auth) {
+          return null;
+        }
+        const attempt = yield* readLatestAttemptByPath(
+          ctx,
+          args,
+          auth.appUser._id
+        );
+        if (!attempt) {
+          return null;
+        }
+        return yield* loadCurrentAttempt(ctx, { attempt });
+      })
+    ),
 });

@@ -83,7 +83,7 @@ async function insertScoreGraph(ctx: MutationCtx) {
     throw new Error("Expected the inserted try-out score.");
   }
 
-  return { score, userId };
+  return { score, tryoutSetId, userId };
 }
 
 describe("triggers/tryouts/scores", () => {
@@ -163,8 +163,8 @@ describe("triggers/tryouts/scores", () => {
 
     await expect(
       t.mutation(async (ctx) => {
-        const { score } = await insertScoreGraph(ctx);
-        await ctx.db.delete("tryoutSets", score.tryoutSetId);
+        const { score, tryoutSetId } = await insertScoreGraph(ctx);
+        await ctx.db.delete("tryoutSets", tryoutSetId);
 
         await tryoutScoresHandler(ctx, {
           id: score._id,

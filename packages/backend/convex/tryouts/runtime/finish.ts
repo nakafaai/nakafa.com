@@ -80,8 +80,11 @@ async function createExpiredSectionAttempt(
   const score = await scoreTryoutSection(ctx, {
     attempt: args.attempt,
     responses: [],
+    sectionKey: args.snapshot.sectionKey,
     totalQuestions: args.snapshot.questionCount,
-    tryoutSectionId: args.snapshot.tryoutSectionId,
+    ...(args.snapshot.tryoutSectionId
+      ? { tryoutSectionId: args.snapshot.tryoutSectionId }
+      : {}),
   });
 
   await ctx.db.insert("tryoutSectionAttempts", {
@@ -268,8 +271,11 @@ async function getSectionFinalization(
   const score = await scoreTryoutSection(ctx, {
     attempt: args.attempt,
     responses,
+    sectionKey: args.section.sectionKey,
     totalQuestions: args.section.totalQuestions,
-    tryoutSectionId: args.section.tryoutSectionId,
+    ...(args.section.tryoutSectionId
+      ? { tryoutSectionId: args.section.tryoutSectionId }
+      : {}),
   });
 
   return {

@@ -124,10 +124,10 @@ describe("tryouts/mutations/attempts", () => {
         .collect();
       const progress = await ctx.db
         .query("tryoutSetProgress")
-        .withIndex("by_userId_and_tryoutSetId", (q) =>
+        .withIndex("by_userId_and_setIdentity", (q) =>
           q
             .eq("userId", seeded.identity.userId)
-            .eq("tryoutSetId", seeded.fixture.tryoutSetId)
+            .eq("setIdentity", seeded.fixture.setIdentity)
         )
         .unique();
       const freeClaim = await ctx.db
@@ -150,34 +150,36 @@ describe("tryouts/mutations/attempts", () => {
       setKey: SET,
       status: "in-progress",
       trackKey: TRACK,
-      tryoutSetId: seeded.fixture.tryoutSetId,
       tryoutSnapshotId: seeded.fixture.snapshotId,
     });
+    expect(runtime.attempt).not.toHaveProperty("tryoutSetId");
     expect(runtime.attempt?.sectionSnapshots).toEqual([
       expect.objectContaining({
         sectionIdentity: seeded.fixture.sectionIdentity,
         sectionKey: SECTION,
         sectionRowHash: seeded.fixture.sectionRowHash,
-        tryoutSectionId: seeded.fixture.tryoutSectionId,
       }),
     ]);
+    expect(runtime.attempt?.sectionSnapshots[0]).not.toHaveProperty(
+      "tryoutSectionId"
+    );
     expect(runtime.sectionAttempts).toEqual([
       expect.objectContaining({
         sectionIdentity: seeded.fixture.sectionIdentity,
         sectionKey: SECTION,
         status: "in-progress",
-        tryoutSectionId: seeded.fixture.tryoutSectionId,
       }),
     ]);
+    expect(runtime.sectionAttempts[0]).not.toHaveProperty("tryoutSectionId");
     expect(runtime.placements).toEqual([
       expect.objectContaining({
         placementIdentity: seeded.fixture.placementIdentity,
         placementRowHash: seeded.fixture.placementRowHash,
         sectionIdentity: seeded.fixture.sectionIdentity,
         sectionKey: SECTION,
-        tryoutSectionId: seeded.fixture.tryoutSectionId,
       }),
     ]);
+    expect(runtime.placements[0]).not.toHaveProperty("tryoutSectionId");
     expect(runtime.freeClaim).toMatchObject({
       setKey: SET,
       userId: seeded.identity.userId,
@@ -187,8 +189,8 @@ describe("tryouts/mutations/attempts", () => {
       setIdentity: seeded.fixture.setIdentity,
       status: "in-progress",
       statusRank: 1,
-      tryoutSetId: seeded.fixture.tryoutSetId,
     });
+    expect(runtime.progress).not.toHaveProperty("tryoutSetId");
 
     const current = await authed.query(api.tryouts.queries.attempt.getCurrent, {
       countryKey: COUNTRY,
@@ -342,7 +344,7 @@ describe("tryouts/mutations/attempts", () => {
       sectionKey: SECTION,
       status: "in-progress",
       totalQuestions: 1,
-      tryoutSectionId: seeded.fixture.tryoutSectionId,
     });
+    expect(sectionAttempt).not.toHaveProperty("tryoutSectionId");
   });
 });

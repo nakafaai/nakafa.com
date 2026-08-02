@@ -188,7 +188,11 @@ export async function listSetsByStatus(
     .paginate(args.paginationOpts);
   const rows = await Promise.all(
     page.page.map(async (progress) => {
-      const set = await ctx.db.get(progress.tryoutSetId);
+      const tryoutSetId = progress.tryoutSetId;
+      if (!tryoutSetId) {
+        return null;
+      }
+      const set = await ctx.db.get(tryoutSetId);
 
       if (!isReadyTrackSet(set, args)) {
         return null;

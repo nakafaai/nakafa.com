@@ -16,6 +16,7 @@ import {
 import {
   insertTryoutSectionSource,
   makeAlignedTryoutSection,
+  makeSignedTryoutSource,
 } from "@repo/backend/test/tryout-section";
 import {
   insertTryoutQuestionSource,
@@ -87,16 +88,22 @@ describe("tryouts/runtime/finish", () => {
           message: "Expected signed try-out placement fixtures.",
         });
       }
-      const setIdentity = "tryout:set:expire-irt";
-      const tryoutSnapshotId = "tryout-snapshot:expire-irt";
+      const set = await ctx.db.get(tryoutSetId);
+      if (!set) {
+        throw new ConvexError({
+          code: "TRYOUT_SET_NOT_FOUND",
+          message: "Expected try-out set fixture.",
+        });
+      }
+      const source = makeSignedTryoutSource(set, alignedSections);
       const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
         model: "2pl",
         publishedAt: NOW,
         questionCount: 2,
-        setIdentity,
+        setIdentity: source.snapshot.setIdentity,
         status: "provisional",
         tryoutSetId,
-        tryoutSnapshotId,
+        tryoutSnapshotId: source.snapshot.snapshotId,
       });
       await insertIrtScaleItem(ctx, {
         placement: firstPlacement,
@@ -141,10 +148,10 @@ describe("tryouts/runtime/finish", () => {
         countryKey: "indonesia",
         examKey: "snbt",
         locale: "id",
-        setIdentity,
+        setIdentity: source.snapshot.setIdentity,
         setKey: "set-1",
         trackKey: "2027",
-        tryoutSnapshotId,
+        tryoutSnapshotId: source.snapshot.snapshotId,
       });
       const sectionAttemptId = await insertTryoutSectionAttempt(ctx, {
         expiresAt: EXPIRED_AT,
@@ -163,17 +170,13 @@ describe("tryouts/runtime/finish", () => {
       await runConvexProgram(
         createAttemptPlacements(ctx, {
           attempt,
-          source: { kind: "signed", sections: alignedSections },
+          source,
         })
       );
       const placement = await ctx.db
         .query("tryoutAttemptPlacements")
-        .withIndex(
-          "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
-          (q) =>
-            q
-              .eq("tryoutAttemptId", attemptId)
-              .eq("tryoutSectionId", firstSectionId)
+        .withIndex("by_tryoutAttemptId_and_sectionKey_and_questionOrder", (q) =>
+          q.eq("tryoutAttemptId", attemptId).eq("sectionKey", FIRST_SECTION)
         )
         .unique();
 

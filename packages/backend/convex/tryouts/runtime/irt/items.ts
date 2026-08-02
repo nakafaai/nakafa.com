@@ -17,15 +17,12 @@ export type IrtOwnership = ReturnType<typeof getIrtOwnership>;
 /** Loads the IRT scale that should be used for one set or attempt snapshot. */
 export async function requireIrtScaleVersion(
   ctx: MutationCtx,
-  args: {
-    scaleVersionId?: Id<"irtScaleVersions">;
-    tryoutSetId: Id<"tryoutSets">;
-  }
+  attempt: TryoutAttempt
 ) {
-  if (args.scaleVersionId) {
-    const scale = await ctx.db.get(args.scaleVersionId);
+  if (attempt.scaleVersionId) {
+    const scale = await ctx.db.get(attempt.scaleVersionId);
 
-    if (scale?.tryoutSetId === args.tryoutSetId) {
+    if (scale && scaleBelongsToAttempt(scale, attempt)) {
       return scale;
     }
 
@@ -35,10 +32,17 @@ export async function requireIrtScaleVersion(
     });
   }
 
+  if (!attempt.tryoutSetId || attempt.tryoutSnapshotId) {
+    throw new ConvexError({
+      code: "TRYOUT_IRT_SCALE_REQUIRED",
+      message: "Attempt IRT scale is missing for this try-out.",
+    });
+  }
+
   const scale = await ctx.db
     .query("irtScaleVersions")
     .withIndex("by_tryoutSetId_and_publishedAt", (query) =>
-      query.eq("tryoutSetId", args.tryoutSetId)
+      query.eq("tryoutSetId", attempt.tryoutSetId)
     )
     .order("desc")
     .first();
@@ -58,15 +62,13 @@ export async function loadAttemptScale(
   ctx: MutationCtx,
   attempt: TryoutAttempt
 ) {
-  const scale = await requireIrtScaleVersion(ctx, {
-    scaleVersionId: attempt.scaleVersionId,
-    tryoutSetId: attempt.tryoutSetId,
-  });
+  const scale = await requireIrtScaleVersion(ctx, attempt);
 
   if (
     attempt.tryoutSnapshotId &&
     attempt.setIdentity &&
-    (scale.tryoutSnapshotId !== attempt.tryoutSnapshotId ||
+    ((scale.tryoutSnapshotId !== undefined &&
+      scale.tryoutSnapshotId !== attempt.tryoutSnapshotId) ||
       scale.setIdentity !== attempt.setIdentity)
   ) {
     throw new ConvexError({
@@ -112,20 +114,23 @@ export async function loadSectionPlacements(
   ctx: MutationCtx,
   args: {
     attempt: TryoutAttempt;
+    sectionKey: string;
     totalQuestions: number;
-    tryoutSectionId: Id<"tryoutSections">;
+    tryoutSectionId?: Id<"tryoutSections">;
   }
 ) {
-  const placements = await ctx.db
-    .query("tryoutAttemptPlacements")
-    .withIndex(
-      "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
-      (query) =>
-        query
-          .eq("tryoutAttemptId", args.attempt._id)
-          .eq("tryoutSectionId", args.tryoutSectionId)
-    )
-    .take(args.totalQuestions + 1);
+  const placements = args.attempt.tryoutSnapshotId
+    ? await ctx.db
+        .query("tryoutAttemptPlacements")
+        .withIndex(
+          "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
+          (query) =>
+            query
+              .eq("tryoutAttemptId", args.attempt._id)
+              .eq("sectionKey", args.sectionKey)
+        )
+        .take(args.totalQuestions + 1)
+    : await loadFilesystemSectionPlacements(ctx, args);
 
   if (placements.length !== args.totalQuestions) {
     throw new ConvexError({
@@ -135,6 +140,55 @@ export async function loadSectionPlacements(
   }
 
   return placements;
+}
+
+/** Loads filesystem placements only when their section identifier is present. */
+function loadFilesystemSectionPlacements(
+  ctx: MutationCtx,
+  args: {
+    attempt: TryoutAttempt;
+    totalQuestions: number;
+    tryoutSectionId?: Id<"tryoutSections">;
+  }
+) {
+  if (!args.tryoutSectionId) {
+    throw new ConvexError({
+      code: "TRYOUT_PLACEMENT_IDENTITY_REQUIRED",
+      message: "Filesystem try-out placement has no section identity.",
+    });
+  }
+
+  return ctx.db
+    .query("tryoutAttemptPlacements")
+    .withIndex(
+      "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
+      (query) =>
+        query
+          .eq("tryoutAttemptId", args.attempt._id)
+          .eq("tryoutSectionId", args.tryoutSectionId)
+    )
+    .take(args.totalQuestions + 1);
+}
+
+/** Verifies one frozen scale belongs to the same filesystem or signed attempt. */
+function scaleBelongsToAttempt(
+  scale: Doc<"irtScaleVersions">,
+  attempt: TryoutAttempt
+) {
+  if (!attempt.tryoutSnapshotId) {
+    return Boolean(
+      attempt.tryoutSetId && scale.tryoutSetId === attempt.tryoutSetId
+    );
+  }
+
+  return Boolean(
+    attempt.setIdentity &&
+      scale.setIdentity === attempt.setIdentity &&
+      (scale.tryoutSnapshotId === undefined ||
+        scale.tryoutSnapshotId === attempt.tryoutSnapshotId) &&
+      (scale.tryoutSetId === undefined ||
+        scale.tryoutSetId === attempt.tryoutSetId)
+  );
 }
 
 /** Loads every item in the attempt's complete scale snapshot. */

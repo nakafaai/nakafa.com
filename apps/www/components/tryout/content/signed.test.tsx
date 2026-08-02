@@ -5,7 +5,7 @@ import { decodeContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/sp
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { readContent } from "@repo/backend/client/content/read";
 import { verifyContentRenderer } from "@repo/backend/content/verify";
-import { Effect } from "effect";
+import { Cause, Effect, Option, Runtime } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
@@ -173,6 +173,47 @@ describe("tryout signed content", () => {
       components: expect.any(Object),
       rendererContractVersion: "1.0.0",
       rendererManifest: liveRenderer,
+    });
+  });
+
+  it("bounds concurrent protected artifact reads", async () => {
+    let activeReads = 0;
+    let peakReads = 0;
+    readMock.mockImplementation(() =>
+      Effect.async((resume) => {
+        activeReads += 1;
+        peakReads = Math.max(peakReads, activeReads);
+        const timer = setTimeout(() => {
+          activeReads -= 1;
+          resume(Effect.succeed(protectedFound("authenticated")));
+        }, 5);
+        return Effect.sync(() => clearTimeout(timer));
+      })
+    );
+
+    const content = await loadSignedQuestions(new Array(12).fill(question));
+
+    expect(content).toHaveLength(12);
+    expect(peakReads).toBe(4);
+  });
+
+  it("fails closed when one cached render rejects", async () => {
+    readMock.mockReturnValue(Effect.die("transport interrupted"));
+
+    const rejected = await Effect.runPromise(
+      Effect.tryPromise(() => loadSignedQuestions([question])).pipe(
+        Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.succeed(error)
+        )
+      )
+    );
+    if (!Runtime.isFiberFailure(rejected)) {
+      throw new Error("Expected an Effect FiberFailure.");
+    }
+    const failure = Cause.failureOption(rejected[Runtime.FiberFailureCauseId]);
+
+    expect(Option.getOrUndefined(failure)).toMatchObject({
+      _tag: "ContentRuntimeVerificationError",
     });
   });
 

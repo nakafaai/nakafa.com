@@ -167,15 +167,11 @@ const resolveScale = Effect.fn("tryouts.migrations.resolveAttemptScale")(
     if (attempt.scoringStrategy !== "irt") {
       return null;
     }
-    const scale = yield* loadScale(
-      ctx,
-      expectedSnapshotId,
-      attempt,
-      setIdentity
-    );
+    const scale = yield* loadScale(ctx, attempt, setIdentity);
     if (
       !scale ||
-      scale.tryoutSnapshotId !== expectedSnapshotId ||
+      (scale.tryoutSnapshotId !== undefined &&
+        scale.tryoutSnapshotId !== expectedSnapshotId) ||
       scale.setIdentity !== setIdentity ||
       scale.tryoutSetId !== attempt.tryoutSetId ||
       scale.questionCount !== attempt.totalQuestions
@@ -191,7 +187,6 @@ const resolveScale = Effect.fn("tryouts.migrations.resolveAttemptScale")(
 /** Loads an already-frozen scale or the latest prepared migration scale. */
 function loadScale(
   ctx: MutationCtx,
-  expectedSnapshotId: string,
   attempt: Doc<"tryoutAttempts">,
   setIdentity: string
 ) {
@@ -199,24 +194,16 @@ function loadScale(
   if (scaleVersionId) {
     return Effect.promise(() => ctx.db.get(scaleVersionId));
   }
-  return findLatestScale(ctx, expectedSnapshotId, setIdentity);
+  return findLatestScale(ctx, setIdentity);
 }
 
 /** Finds the latest prepared scale for one signed set snapshot. */
-function findLatestScale(
-  ctx: MutationCtx,
-  expectedSnapshotId: string,
-  setIdentity: string
-) {
+function findLatestScale(ctx: MutationCtx, setIdentity: string) {
   return Effect.promise(() =>
     ctx.db
       .query("irtScaleVersions")
-      .withIndex(
-        "by_tryoutSnapshotId_and_setIdentity_and_publishedAt",
-        (query) =>
-          query
-            .eq("tryoutSnapshotId", expectedSnapshotId)
-            .eq("setIdentity", setIdentity)
+      .withIndex("by_setIdentity_and_publishedAt", (query) =>
+        query.eq("setIdentity", setIdentity)
       )
       .order("desc")
       .first()

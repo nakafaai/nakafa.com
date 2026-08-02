@@ -49,8 +49,9 @@ export async function scoreIrtSection(
     attempt: TryoutAttempt;
     responses: TryoutResponse[];
     scoringStrategy: TryoutScoringStrategy;
+    sectionKey: string;
     totalQuestions: number;
-    tryoutSectionId: Id<"tryoutSections">;
+    tryoutSectionId?: Id<"tryoutSections">;
   }
 ): Promise<AttemptScore> {
   const scale = await loadAttemptScale(ctx, args.attempt);

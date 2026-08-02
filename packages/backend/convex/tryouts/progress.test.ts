@@ -16,11 +16,6 @@ describe("tryouts/progress", () => {
         suffix: "tryout-progress",
       });
       const tryoutSetId = await insertTryoutSet(ctx);
-      const set = await ctx.db.get(tryoutSetId);
-
-      if (!set) {
-        throw new Error("Expected try-out set fixture.");
-      }
 
       const firstAttemptId = await ctx.db.insert("tryoutAttempts", {
         accessEndsAt: TRYOUT_TEST_NOW + 1000,
@@ -51,14 +46,12 @@ describe("tryouts/progress", () => {
       await writeTryoutSetProgress(ctx, {
         attempt: firstAttempt,
         publishedScore: null,
-        set,
         status: "in-progress",
         updatedAt: TRYOUT_TEST_NOW,
       });
       await writeTryoutSetProgress(ctx, {
         attempt: firstAttempt,
         publishedScore: 75,
-        set,
         status: "completed",
         updatedAt: TRYOUT_TEST_NOW + 1,
       });
@@ -92,14 +85,12 @@ describe("tryouts/progress", () => {
       await writeTryoutSetProgress(ctx, {
         attempt: latestAttempt,
         publishedScore: 50,
-        set,
         status: "expired",
         updatedAt: TRYOUT_TEST_NOW + 2,
       });
       await writeTryoutSetProgress(ctx, {
         attempt: firstAttempt,
         publishedScore: null,
-        set,
         status: "in-progress",
         updatedAt: TRYOUT_TEST_NOW + 3,
       });
@@ -141,7 +132,6 @@ describe("tryouts/progress", () => {
           suffix: `tryout-progress-score-${scenario.status}`,
         });
         const tryoutSetId = await insertTryoutSet(ctx);
-        const set = await ctx.db.get(tryoutSetId);
         const attemptId = await ctx.db.insert("tryoutAttempts", {
           accessEndsAt: TRYOUT_TEST_NOW + 1000,
           accessSourceKind: "free",
@@ -164,14 +154,13 @@ describe("tryouts/progress", () => {
         });
         const attempt = await ctx.db.get(attemptId);
 
-        if (!(attempt && set)) {
+        if (!attempt) {
           throw new Error("Expected progress score fixtures.");
         }
 
         await writeTryoutSetProgress(ctx, {
           attempt,
           publishedScore: scenario.publishedScore,
-          set,
           status: scenario.status,
           updatedAt: TRYOUT_TEST_NOW,
         });

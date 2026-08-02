@@ -48,7 +48,7 @@ const migrateScalePage = Effect.fn("tryouts.migrations.migrateScalePage")(
   }
 );
 
-/** Adds signed snapshot ownership to one legacy IRT scale. */
+/** Adds stable set identity without consuming the rollback-owned scale. */
 const prepareScale = Effect.fn("tryouts.migrations.prepareScale")(function* (
   ctx: MutationCtx,
   expectedSnapshotId: string,
@@ -76,14 +76,14 @@ const prepareScale = Effect.fn("tryouts.migrations.prepareScale")(function* (
     );
   }
   if (
-    scale.tryoutSnapshotId === expectedSnapshotId &&
+    scale.tryoutSnapshotId === undefined &&
     scale.setIdentity === set.identity
   ) {
     return null;
   }
   return {
     setIdentity: set.identity,
-    tryoutSnapshotId: expectedSnapshotId,
+    tryoutSnapshotId: undefined,
   };
 });
 

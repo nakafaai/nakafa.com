@@ -1,14 +1,15 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { getSectionScoreResult } from "@repo/backend/convex/tryouts/queries/score";
-import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import {
   getTryoutSectionContentAccess,
   tryoutCurrentSectionValidator,
 } from "@repo/backend/convex/tryouts/runtime/content";
+import { readLatestAttempt } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { ConvexError, v } from "convex/values";
 
 const runtimeChoiceValidator = v.object({
@@ -65,6 +66,44 @@ async function loadRuntimeResponses(
   return new Map(responses.map((response) => [response.placementId, response]));
 }
 
+/** Loads placements through the immutable signed or filesystem section key. */
+async function loadRuntimePlacements(
+  ctx: QueryCtx,
+  attempt: Doc<"tryoutAttempts">,
+  section: Doc<"tryoutSectionAttempts">
+) {
+  if (attempt.tryoutSnapshotId) {
+    return await ctx.db
+      .query("tryoutAttemptPlacements")
+      .withIndex(
+        "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
+        (index) =>
+          index
+            .eq("tryoutAttemptId", attempt._id)
+            .eq("sectionKey", section.sectionKey)
+      )
+      .take(section.totalQuestions + 1);
+  }
+
+  if (!section.tryoutSectionId) {
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_NOT_FOUND",
+      message: "Filesystem try-out section identity is missing.",
+    });
+  }
+
+  return await ctx.db
+    .query("tryoutAttemptPlacements")
+    .withIndex(
+      "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
+      (index) =>
+        index
+          .eq("tryoutAttemptId", attempt._id)
+          .eq("tryoutSectionId", section.tryoutSectionId)
+    )
+    .take(section.totalQuestions + 1);
+}
+
 /** Reads the current user's section runtime with placements and answers. */
 export const getSection = query({
   args: {
@@ -83,19 +122,9 @@ export const getSection = query({
       return null;
     }
 
-    const set = await getActiveTryoutSet(ctx, args);
-
-    if (!set) {
-      return null;
-    }
-
-    const attempt = await ctx.db
-      .query("tryoutAttempts")
-      .withIndex("by_userId_and_tryoutSetId_and_startedAt", (q) =>
-        q.eq("userId", auth.appUser._id).eq("tryoutSetId", set._id)
-      )
-      .order("desc")
-      .first();
+    const attempt = await runConvexProgram(
+      readLatestAttempt(ctx, args, auth.appUser._id)
+    );
 
     if (!attempt) {
       return null;
@@ -121,18 +150,11 @@ export const getSection = query({
       return null;
     }
 
-    const placements = await ctx.db
-      .query("tryoutAttemptPlacements")
-      .withIndex(
-        "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
-        (q) =>
-          q
-            .eq("tryoutAttemptId", attempt._id)
-            .eq("tryoutSectionId", section.tryoutSectionId)
-      )
-      .take(section.totalQuestions + 1);
+    const placements = await loadRuntimePlacements(ctx, attempt, section);
 
-    if (placements.length > section.totalQuestions) {
+    const signedCountMismatch =
+      attempt.tryoutSnapshotId && placements.length !== section.totalQuestions;
+    if (signedCountMismatch || placements.length > section.totalQuestions) {
       throw new ConvexError({
         code: "TRYOUT_PLACEMENT_COUNT_EXCEEDED",
         message: "Try-out section has more placements than its snapshot count.",

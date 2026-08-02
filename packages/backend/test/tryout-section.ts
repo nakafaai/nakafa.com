@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import {
   makeTryoutCatalogRecord,
   makeTryoutPlacementRecord,
@@ -7,10 +8,14 @@ import {
   type TryoutPlacement,
   TryoutPlacementSchema,
   TryoutSectionSchema,
+  TryoutSetSchema,
 } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type { AlignedTryoutSection } from "@repo/backend/convex/tryouts/start/source";
+import type {
+  SignedTryoutSource,
+  TryoutStartSource,
+} from "@repo/backend/convex/tryouts/start/source";
 import { testTextHash } from "@repo/backend/test/content-release";
 import { insertTryoutQuestionSource } from "@repo/backend/test/tryouts";
 import { ConvexError } from "convex/values";
@@ -20,6 +25,12 @@ export const TRYOUT_TEST_CONTENT_HASH = TryoutContentHashSchema.make(
   "3".repeat(64)
 );
 
+/** Test-owned pair used to compare one filesystem section with signed rows. */
+export interface AlignedTryoutSectionFixture {
+  readonly filesystem: Doc<"tryoutSections">;
+  readonly signed: SignedTryoutSource["snapshot"]["sections"][number];
+}
+
 /** Builds one signed section source that matches a legacy runtime fixture. */
 export function makeAlignedTryoutSection(
   section: Doc<"tryoutSections">,
@@ -27,7 +38,7 @@ export function makeAlignedTryoutSection(
     readonly contentHash?: TryoutPlacement["contentHash"];
     readonly sourceRevision?: TryoutPlacement["sourceRevision"];
   } = {}
-): AlignedTryoutSection {
+): AlignedTryoutSectionFixture {
   const sourceRevision = options.sourceRevision ?? section.sourceRevision;
   const questionRoot = `${section.questionSourcePath}/question-1`;
   const signedSection = Schema.decodeUnknownSync(TryoutSectionSchema)({
@@ -81,11 +92,52 @@ export function makeAlignedTryoutSection(
   }
 
   return {
-    legacy: section,
+    filesystem: section,
     signed: {
       placements: [makeTryoutPlacementRecord(placement)],
       section: { row, rowHash },
       snapshotId: testTextHash("tryout-runtime-snapshot"),
+    },
+  };
+}
+
+/** Builds one complete signed source without retaining filesystem identifiers. */
+export function makeSignedTryoutSource(
+  set: Doc<"tryoutSets">,
+  sections: readonly AlignedTryoutSectionFixture[],
+  snapshotId = testTextHash("tryout-runtime-snapshot")
+): Extract<TryoutStartSource, { kind: "signed" }> {
+  const signedSet = Schema.decodeUnknownSync(TryoutSetSchema)({
+    countryKey: set.countryKey,
+    examKey: set.examKey,
+    graph: makeTryoutGraph(set.setKey),
+    internalEntrySectionKey: set.internalEntrySectionKey,
+    kind: "set",
+    locale: set.locale,
+    order: set.order,
+    publicPath: set.publicPath,
+    questionCount: set.totalQuestionCount,
+    scoringStrategy: set.scoringStrategy,
+    sectionCount: set.sectionCount,
+    setKey: set.setKey,
+    sourceRevision: set.sourceRevision,
+    title: set.title,
+    trackKey: set.trackKey,
+    visibleSectionCount: set.visibleSectionCount,
+  });
+  const record = makeTryoutCatalogRecord(signedSet);
+  if (record.row.kind !== "set") {
+    throw new Error("Expected one signed set record.");
+  }
+  const setRecord = { row: record.row, rowHash: record.rowHash };
+
+  return {
+    kind: "signed",
+    snapshot: {
+      sections: sections.map(({ signed }) => signed),
+      set: setRecord,
+      setIdentity: tryoutCatalogIdentity(setRecord.row),
+      snapshotId,
     },
   };
 }

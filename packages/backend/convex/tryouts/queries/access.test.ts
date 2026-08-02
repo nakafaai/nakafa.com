@@ -1,4 +1,5 @@
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -60,6 +61,38 @@ const accessScenarios: readonly [
     "expired",
     { answers: true, kind: "filesystem", questions: true },
   ],
+];
+
+type SelectorPatch = Partial<
+  Pick<
+    Doc<"tryoutAttemptPlacements">,
+    "answerArtifactHash" | "questionArtifactHash"
+  >
+>;
+
+interface IncompleteSelectorScenario {
+  readonly attemptStatus: TryoutStatus;
+  readonly message: string;
+  readonly patch: SelectorPatch;
+  readonly sectionStatus: TryoutStatus;
+  readonly selector: "answer" | "question";
+}
+
+const incompleteSelectorScenarios: readonly IncompleteSelectorScenario[] = [
+  {
+    attemptStatus: "in-progress",
+    message: "Signed try-out question selector is incomplete.",
+    patch: { questionArtifactHash: undefined },
+    sectionStatus: "in-progress",
+    selector: "question",
+  },
+  {
+    attemptStatus: "completed",
+    message: "Signed try-out answer selector is incomplete.",
+    patch: { answerArtifactHash: undefined },
+    sectionStatus: "completed",
+    selector: "answer",
+  },
 ];
 
 describe("tryouts/queries/access", () => {
@@ -308,6 +341,15 @@ describe("tryouts/queries/access", () => {
         userId: signed.identity.userId,
       });
       await ctx.db.delete(local.tryoutSetId);
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one active signed content state.");
+      }
+      await ctx.db.patch(state._id, {
+        activeManifestHash: undefined,
+        activeReleaseId: undefined,
+        activeSequence: undefined,
+      });
       return signed.identity;
     });
     const authed = t.withIdentity({
@@ -399,59 +441,33 @@ describe("tryouts/queries/access", () => {
     );
   });
 
-  it("fails closed when one signed question selector is incomplete", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        signed: true,
-        suffix: "content-signed-question",
+  it.each(incompleteSelectorScenarios)(
+    "fails closed when one signed $selector selector is incomplete",
+    async ({ attemptStatus, message, patch, sectionStatus, selector }) => {
+      const t = createConvexTestWithBetterAuth();
+      const seeded = await t.mutation(async (ctx) => {
+        const fixture = await seedTryoutContentAccessState(ctx, {
+          attemptStatus,
+          sectionStatus,
+          signed: true,
+          suffix: `content-signed-${selector}`,
+        });
+        if (!fixture.placementId) {
+          throw new Error("Expected a signed placement fixture.");
+        }
+        await ctx.db.patch(fixture.placementId, patch);
+        return fixture;
       });
-      if (!fixture.placementId) {
-        throw new Error("Expected a signed placement fixture.");
-      }
-      await ctx.db.patch(fixture.placementId, {
-        questionArtifactHash: undefined,
+      const authed = t.withIdentity({
+        sessionId: seeded.identity.sessionId,
+        subject: seeded.identity.authUserId,
       });
-      return fixture;
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
 
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
-    ).rejects.toThrow("Signed try-out question selector is incomplete.");
-  });
-
-  it("fails closed when one signed answer selector is incomplete", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "completed",
-        sectionStatus: "completed",
-        signed: true,
-        suffix: "content-signed-answer",
-      });
-      if (!fixture.placementId) {
-        throw new Error("Expected a signed placement fixture.");
-      }
-      await ctx.db.patch(fixture.placementId, {
-        answerArtifactHash: undefined,
-      });
-      return fixture;
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
-    ).rejects.toThrow("Signed try-out answer selector is incomplete.");
-  });
+      await expect(
+        authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
+      ).rejects.toThrow(message);
+    }
+  );
 
   it("maps duplicate section state into a typed read failure", async () => {
     const t = createConvexTestWithBetterAuth();
