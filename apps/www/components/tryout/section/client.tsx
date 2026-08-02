@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
-} from "@/components/tryout/content/load";
+} from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";

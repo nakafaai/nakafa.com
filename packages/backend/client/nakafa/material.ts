@@ -1,7 +1,7 @@
 import "server-only";
 
-import { readPublicContent } from "@repo/backend/client/content/read";
-import type { PublicContentTarget } from "@repo/backend/client/content/request";
+import { readContent } from "@repo/backend/client/content/read";
+import type { ContentRuntimeTarget } from "@repo/backend/client/content/request";
 import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { getMaterialLookupInput } from "@repo/backend/client/nakafa/ref";
@@ -14,7 +14,7 @@ import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/a
 import { projectMdxForAgentMarkdown } from "@repo/contents/_types/llms/mdx";
 import { Effect, Option } from "effect";
 
-type ContentTargetReader = () => PublicContentTarget;
+type ContentTargetReader = () => ContentRuntimeTarget;
 
 /** Maps one signed-content failure into the shared agent read contract. */
 function materialReadError(error: unknown) {
@@ -59,15 +59,19 @@ export const readPublishedMaterialMarkdown = Effect.fn(
     try: readContentTarget,
     catch: materialReadError,
   });
-  const found = yield* readPublicContent(target, lookup.route).pipe(
-    Effect.mapError(materialReadError)
-  );
+  const found = yield* readContent(target, {
+    delivery: "public",
+    ...lookup.route,
+  }).pipe(Effect.mapError(materialReadError));
   if (found.activeReleaseId !== lookup.activeReleaseId) {
     return yield* materialReadError(
       `Material lookup release ${lookup.activeReleaseId ?? "none"} changed before its signed read returned ${found.activeReleaseId ?? "none"}.`
     );
   }
-  if (found.projection.kind !== "subject-lesson") {
+  if (
+    found.delivery !== "public" ||
+    found.projection.kind !== "subject-lesson"
+  ) {
     return yield* materialReadError(
       "The signed material route resolved another content family."
     );

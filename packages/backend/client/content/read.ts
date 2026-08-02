@@ -1,52 +1,44 @@
 import "server-only";
 
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
-  PublicContentFailureError,
-  PublicContentMissingError,
-  PublicContentVerificationError,
+  ContentRuntimeFailureError,
+  ContentRuntimeMissingError,
+  ContentRuntimeVerificationError,
 } from "@repo/backend/client/content/errors";
 import {
-  fetchPublicContentRuntime,
-  type PublicContentTarget,
+  type ContentRuntimeTarget,
+  fetchContentRuntime,
 } from "@repo/backend/client/content/request";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { verifyContentEnvelope } from "@repo/backend/content/verify";
 import { Effect } from "effect";
 
-/** Canonical public identity accepted by signed content readers. */
-export interface PublicContentInput {
-  readonly locale: ContentLocale;
-  readonly publicPath: string;
-}
+/** Reads and authenticates one exact public or protected content artifact. */
+export const readContent = Effect.fn("NakafaContent.readContent")(function* (
+  target: ContentRuntimeTarget,
+  input: unknown
+) {
+  const exchange = yield* fetchContentRuntime(target, input);
+  const verified = yield* verifyContentEnvelope({
+    request: exchange.request,
+    response: exchange.response,
+  }).pipe(
+    Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
+    Effect.mapError((cause) => new ContentRuntimeVerificationError({ cause }))
+  );
 
-/** Reads and authenticates one exact public content artifact. */
-export const readPublicContent = Effect.fn("NakafaContent.readPublicContent")(
-  function* (target: PublicContentTarget, input: PublicContentInput) {
-    const exchange = yield* fetchPublicContentRuntime(target, {
-      delivery: "public",
-      locale: input.locale,
-      publicPath: input.publicPath,
-    });
-    const verified = yield* verifyContentEnvelope({
+  if (verified.kind === "missing") {
+    return yield* new ContentRuntimeMissingError({
       request: exchange.request,
-      response: exchange.response,
-    }).pipe(
-      Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
-      Effect.mapError((cause) => new PublicContentVerificationError({ cause }))
-    );
-
-    if (verified.kind === "missing") {
-      return yield* new PublicContentMissingError(input);
-    }
-    if (verified.kind === "failure") {
-      return yield* new PublicContentFailureError({
-        code: verified.code,
-        status: exchange.status,
-      });
-    }
-
-    return verified;
+    });
   }
-);
+  if (verified.kind === "failure") {
+    return yield* new ContentRuntimeFailureError({
+      code: verified.code,
+      status: exchange.status,
+    });
+  }
+
+  return verified;
+});

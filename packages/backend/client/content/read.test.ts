@@ -1,12 +1,14 @@
 // @vitest-environment node
 
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import type { PublicContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/spec";
 import {
-  PublicContentFailureError,
-  PublicContentMissingError,
-  PublicContentVerificationError,
+  ContentRuntimeFailureError,
+  ContentRuntimeMissingError,
+  ContentRuntimeVerificationError,
 } from "@repo/backend/client/content/errors";
-import { readPublicContent } from "@repo/backend/client/content/read";
-import { fetchPublicContentRuntime } from "@repo/backend/client/content/request";
+import { readContent } from "@repo/backend/client/content/read";
+import { fetchContentRuntime } from "@repo/backend/client/content/request";
 import { verifyContentEnvelope } from "@repo/backend/content/verify";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -17,14 +19,14 @@ const target = {
   siteUrl: "https://example.convex.site",
   token: "runtime-token",
 };
-const input = {
-  locale: "en" as const,
-  publicPath: "articles/politics/example",
+const input: Omit<PublicContentRuntimeRequest, "delivery"> = {
+  locale: "en",
+  publicPath: PublicPathSchema.make("articles/politics/example"),
 };
 
 vi.mock("server-only", () => ({}));
 vi.mock("@repo/backend/client/content/request", () => ({
-  fetchPublicContentRuntime: requestMock,
+  fetchContentRuntime: requestMock,
 }));
 vi.mock("@repo/backend/content/verify", () => ({
   verifyContentEnvelope: verifyMock,
@@ -40,6 +42,7 @@ describe("public content read", () => {
     const found = {
       activeReleaseId: "release-example",
       artifact: { payload: { rawMdx: "## Example" } },
+      delivery: "public",
       kind: "found",
       projection: { kind: "article" },
     };
@@ -52,9 +55,9 @@ describe("public content read", () => {
     verifyMock.mockReturnValue(Effect.succeed(found));
 
     await expect(
-      Effect.runPromise(readPublicContent(target, input))
+      Effect.runPromise(readContent(target, { delivery: "public", ...input }))
     ).resolves.toBe(found);
-    expect(fetchPublicContentRuntime).toHaveBeenCalledWith(target, {
+    expect(fetchContentRuntime).toHaveBeenCalledWith(target, {
       delivery: "public",
       ...input,
     });
@@ -93,15 +96,19 @@ describe("public content read", () => {
       );
 
     const missing = await Effect.runPromise(
-      readPublicContent(target, input).pipe(Effect.flip)
+      readContent(target, { delivery: "public", ...input }).pipe(Effect.flip)
     );
     const failure = await Effect.runPromise(
-      readPublicContent(target, input).pipe(Effect.flip)
+      readContent(target, { delivery: "public", ...input }).pipe(Effect.flip)
     );
 
-    expect(missing).toEqual(new PublicContentMissingError(input));
+    expect(missing).toEqual(
+      new ContentRuntimeMissingError({
+        request: { delivery: "public", ...input },
+      })
+    );
     expect(failure).toEqual(
-      new PublicContentFailureError({
+      new ContentRuntimeFailureError({
         code: "CONTENT_RUNTIME_INTERNAL",
         status: 500,
       })
@@ -120,7 +127,9 @@ describe("public content read", () => {
     verifyMock.mockReturnValue(Effect.fail(cause));
 
     await expect(
-      Effect.runPromise(readPublicContent(target, input).pipe(Effect.flip))
-    ).resolves.toEqual(new PublicContentVerificationError({ cause }));
+      Effect.runPromise(
+        readContent(target, { delivery: "public", ...input }).pipe(Effect.flip)
+      )
+    ).resolves.toEqual(new ContentRuntimeVerificationError({ cause }));
   });
 });

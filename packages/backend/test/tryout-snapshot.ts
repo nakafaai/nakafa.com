@@ -75,13 +75,17 @@ export function makeTryoutCatalogRow(
 
 /** Creates one hashed technical try-out question placement. */
 export function makeTryoutPlacementRow(
-  locale: ContentLocale = "en"
+  locale: ContentLocale = "en",
+  artifacts?: Pick<
+    TryoutPlacement,
+    "answerArtifactHash" | "questionArtifactHash"
+  >
 ): Extract<
   ContentSnapshotRow,
   { readonly family: "tryout"; readonly rowKind: "placement" }
 > {
   const row = Schema.decodeUnknownSync(TryoutPlacementSchema)({
-    answerArtifactHash: artifactHash,
+    answerArtifactHash: artifacts?.answerArtifactHash ?? artifactHash,
     answerContentKey:
       "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/answer",
     choices: [
@@ -98,7 +102,7 @@ export function makeTryoutPlacementRow(
     countryKey: "indonesia",
     examKey: "snbt",
     locale,
-    questionArtifactHash: artifactHash,
+    questionArtifactHash: artifacts?.questionArtifactHash ?? artifactHash,
     questionContentKey:
       "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question",
     questionOrder: 1,
@@ -174,8 +178,8 @@ export async function activateTryoutSnapshot(
       digestTryoutPlacements(Stream.fromIterable(placements)),
     ])
   );
-  const manifest = {
-    family: "tryout" as const,
+  const manifest: ContentSnapshotManifest = {
+    family: "tryout",
     manifest: makeTryoutSnapshot({
       catalogDigest: catalogEvidence.digest,
       counts: countCatalog(input.catalog),

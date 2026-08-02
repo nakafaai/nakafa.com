@@ -1,9 +1,9 @@
 import { createElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  loadTryoutAnswerContent,
-  loadTryoutQuestionContent,
-} from "@/components/tryout/content/load";
+  loadFilesystemAnswers,
+  loadFilesystemQuestions,
+} from "@/components/tryout/content/filesystem";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
 
@@ -21,22 +21,23 @@ const source = {
   sourceRevision: "2026",
 };
 
+/** Technical MDX component returned by the mocked filesystem loader. */
 function Content() {
   return createElement("p", null, "Content");
 }
 
-describe("tryout content loaders", () => {
+describe("tryout filesystem content", () => {
   beforeEach(() => {
     vi.mocked(applyContentRuntimeCache).mockReset();
     vi.mocked(importContentModuleOrNull).mockReset();
   });
 
-  it("loads question modules without importing answer content", async () => {
+  it("loads questions without importing answer content", async () => {
     vi.mocked(importContentModuleOrNull).mockResolvedValue({
       default: Content,
     });
 
-    const content = await loadTryoutQuestionContent({
+    const content = await loadFilesystemQuestions({
       locale: "id",
       questions: [source],
     });
@@ -50,20 +51,20 @@ describe("tryout content loaders", () => {
     );
   });
 
-  it("fails the question collection when one module is missing", async () => {
+  it("rejects a question collection with one missing module", async () => {
     vi.mocked(importContentModuleOrNull).mockResolvedValue(null);
 
     await expect(
-      loadTryoutQuestionContent({ locale: "id", questions: [source] })
+      loadFilesystemQuestions({ locale: "id", questions: [source] })
     ).resolves.toBeNull();
   });
 
-  it("loads only answer modules through the authorized loader", async () => {
+  it("loads answers only through the authorized answer capability", async () => {
     vi.mocked(importContentModuleOrNull).mockResolvedValue({
       default: Content,
     });
 
-    const content = await loadTryoutAnswerContent({
+    const content = await loadFilesystemAnswers({
       locale: "id",
       questions: [source],
     });
@@ -77,11 +78,11 @@ describe("tryout content loaders", () => {
     );
   });
 
-  it("fails the answer collection when one module is missing", async () => {
+  it("rejects an answer collection with one missing module", async () => {
     vi.mocked(importContentModuleOrNull).mockResolvedValue(null);
 
     await expect(
-      loadTryoutAnswerContent({ locale: "id", questions: [source] })
+      loadFilesystemAnswers({ locale: "id", questions: [source] })
     ).resolves.toBeNull();
   });
 });

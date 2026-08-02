@@ -24,7 +24,7 @@ const input = {
 };
 
 vi.mock("@repo/backend/client/content/read", () => ({
-  readPublicContent: readContentMock,
+  readContent: readContentMock,
 }));
 
 describe("published material API content", () => {
@@ -37,6 +37,7 @@ describe("published material API content", () => {
       Effect.succeed({
         activeReleaseId: input.activeReleaseId,
         artifact: { payload: { rawMdx: "## Signed body" } },
+        delivery: "public",
         projection,
       })
     );
@@ -83,7 +84,11 @@ describe("published material API content", () => {
         siteUrl: "https://test.convex.site",
         token: "test-runtime-token",
       },
-      { locale: "en", publicPath: projection.publicPath }
+      {
+        delivery: "public",
+        locale: "en",
+        publicPath: projection.publicPath,
+      }
     );
   });
 
@@ -92,6 +97,7 @@ describe("published material API content", () => {
       Effect.succeed({
         activeReleaseId: input.activeReleaseId,
         artifact: { payload: { rawMdx: "## Signed body" } },
+        delivery: "public",
         projection: baseProjection,
       })
     );
@@ -125,6 +131,7 @@ describe("published material API content", () => {
         Effect.succeed({
           activeReleaseId: "release-next",
           artifact: { payload: { rawMdx: "" } },
+          delivery: "public",
           projection,
         })
       )
@@ -132,6 +139,7 @@ describe("published material API content", () => {
         Effect.succeed({
           activeReleaseId: input.activeReleaseId,
           artifact: { payload: { rawMdx: "" } },
+          delivery: "public",
           projection: { kind: "article" },
         })
       );

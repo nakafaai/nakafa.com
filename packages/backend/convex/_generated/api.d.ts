@@ -272,6 +272,7 @@ import type * as contentRelease_runtime_active from "../contentRelease/runtime/a
 import type * as contentRelease_runtime_dispatch from "../contentRelease/runtime/dispatch.js";
 import type * as contentRelease_runtime_origin from "../contentRelease/runtime/origin.js";
 import type * as contentRelease_runtime_pin from "../contentRelease/runtime/pin.js";
+import type * as contentRelease_runtime_protected from "../contentRelease/runtime/protected.js";
 import type * as contentRelease_runtime_result from "../contentRelease/runtime/result.js";
 import type * as contentRelease_runtime_snapshot from "../contentRelease/runtime/snapshot.js";
 import type * as contentRelease_scope_family from "../contentRelease/scope/family.js";
@@ -544,6 +545,7 @@ import type * as tryouts_queries_sets from "../tryouts/queries/sets.js";
 import type * as tryouts_questions from "../tryouts/questions.js";
 import type * as tryouts_read from "../tryouts/read.js";
 import type * as tryouts_route from "../tryouts/route.js";
+import type * as tryouts_runtime_access from "../tryouts/runtime/access.js";
 import type * as tryouts_runtime_content from "../tryouts/runtime/content.js";
 import type * as tryouts_runtime_estimate from "../tryouts/runtime/estimate.js";
 import type * as tryouts_runtime_finish from "../tryouts/runtime/finish.js";
@@ -852,6 +854,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/runtime/dispatch": typeof contentRelease_runtime_dispatch;
   "contentRelease/runtime/origin": typeof contentRelease_runtime_origin;
   "contentRelease/runtime/pin": typeof contentRelease_runtime_pin;
+  "contentRelease/runtime/protected": typeof contentRelease_runtime_protected;
   "contentRelease/runtime/result": typeof contentRelease_runtime_result;
   "contentRelease/runtime/snapshot": typeof contentRelease_runtime_snapshot;
   "contentRelease/scope/family": typeof contentRelease_scope_family;
@@ -1124,6 +1127,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/questions": typeof tryouts_questions;
   "tryouts/read": typeof tryouts_read;
   "tryouts/route": typeof tryouts_route;
+  "tryouts/runtime/access": typeof tryouts_runtime_access;
   "tryouts/runtime/content": typeof tryouts_runtime_content;
   "tryouts/runtime/estimate": typeof tryouts_runtime_estimate;
   "tryouts/runtime/finish": typeof tryouts_runtime_finish;

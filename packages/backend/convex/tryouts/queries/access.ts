@@ -1,22 +1,23 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { getTryoutStartAccess } from "@repo/backend/convex/tryouts/access/impl";
-import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
-import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
+import { readTryoutSectionContent } from "@repo/backend/convex/tryouts/runtime/access";
 import {
-  getTryoutSectionContentAccess,
   tryoutSectionContentAccessValidator,
+  tryoutSectionContentArgs,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import {
   startAccessArgsValidator,
   toTryoutStartError,
   tryoutStartAccessValidator,
 } from "@repo/backend/convex/tryouts/start/spec";
+import type { Infer } from "convex/values";
 import { Effect } from "effect";
 
-const noContentAccess = { answers: false, questions: false };
+const anonymousStartAccess: Infer<typeof tryoutStartAccessValidator> = {
+  kind: "free-attempt",
+};
 
 /** Returns the advisory access state for the try-out start dialog. */
 export const getStartAccess = query({
@@ -31,7 +32,7 @@ export const getStartAccess = query({
         });
 
         if (!auth) {
-          return { kind: "free-attempt" } as const;
+          return anonymousStartAccess;
         }
 
         return yield* getTryoutStartAccess(ctx, {
@@ -44,51 +45,7 @@ export const getStartAccess = query({
 
 /** Authorizes server-rendered content for the current user's owned runtime. */
 export const getSectionContent = query({
-  args: {
-    countryKey: tryoutRouteKeyValidator,
-    examKey: tryoutRouteKeyValidator,
-    locale: localeValidator,
-    sectionKey: tryoutRouteKeyValidator,
-    setKey: tryoutRouteKeyValidator,
-    trackKey: tryoutRouteKeyValidator,
-  },
+  args: tryoutSectionContentArgs,
   returns: tryoutSectionContentAccessValidator,
-  handler: async (ctx, args) => {
-    const auth = await getOptionalAppUserForRead(ctx);
-
-    if (!auth) {
-      return noContentAccess;
-    }
-
-    const set = await getActiveTryoutSet(ctx, args);
-
-    if (!set) {
-      return noContentAccess;
-    }
-
-    const attempt = await ctx.db
-      .query("tryoutAttempts")
-      .withIndex("by_userId_and_tryoutSetId_and_startedAt", (q) =>
-        q.eq("userId", auth.appUser._id).eq("tryoutSetId", set._id)
-      )
-      .order("desc")
-      .first();
-
-    if (!attempt) {
-      return noContentAccess;
-    }
-
-    const section = await ctx.db
-      .query("tryoutSectionAttempts")
-      .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
-        q.eq("tryoutAttemptId", attempt._id).eq("sectionKey", args.sectionKey)
-      )
-      .unique();
-
-    if (!section) {
-      return noContentAccess;
-    }
-
-    return getTryoutSectionContentAccess(attempt.status, section.status);
-  },
+  handler: (ctx, args) => runConvexProgram(readTryoutSectionContent(ctx, args)),
 });

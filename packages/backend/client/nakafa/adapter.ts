@@ -1,5 +1,5 @@
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
-import type { PublicContentTarget } from "@repo/backend/client/content/request";
+import type { ContentRuntimeTarget } from "@repo/backend/client/content/request";
 import { readNakafaMarkdown } from "@repo/backend/client/nakafa/markdown";
 import { readNakafaQuranReference } from "@repo/backend/client/nakafa/quran";
 import { readNakafaTaxonomy } from "@repo/backend/client/nakafa/taxonomy";
@@ -7,7 +7,7 @@ import { verifyNakafaContent } from "@repo/backend/client/nakafa/verify";
 
 interface ConvexNakafaOptions {
   convexUrl: string;
-  readContentTarget: () => PublicContentTarget;
+  readContentTarget: () => ContentRuntimeTarget;
 }
 
 /** Creates the Convex-backed Nakafa read model adapter for apps and MCP. */

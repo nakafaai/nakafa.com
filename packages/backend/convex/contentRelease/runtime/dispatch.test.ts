@@ -28,6 +28,7 @@ import {
   TEST_ARTICLE_PROJECTION_JSON,
   TEST_ARTICLE_SOURCE,
 } from "@repo/backend/test/content-runtime";
+import { insertProtectedRuntime } from "@repo/backend/test/protected-runtime";
 import { insertSignedHead } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime-values";
 import { Effect } from "effect";
@@ -193,15 +194,34 @@ describe("contentRelease/runtime/dispatch", () => {
     );
   });
 
-  it("rejects non-public delivery before reading restricted heads", async () => {
+  it("authenticates protected question and answer artifacts", async () => {
     const t = createConvexTestWithBetterAuth();
-    await seedSigned(t, "authenticated");
+    const fixture = await t.mutation(insertProtectedRuntime);
 
-    await expect(
-      runDispatch(t, runtimeRequest("authenticated"))
-    ).resolves.toEqual({
-      body: '{"code":"CONTENT_RUNTIME_INVALID","kind":"failure"}',
-      status: 400,
+    const [question, answer] = await Promise.all([
+      runDispatch(t, JSON.stringify(fixture.question)),
+      runDispatch(t, JSON.stringify(fixture.answer)),
+    ]);
+
+    expect(question.status).toBe(200);
+    expect(JSON.parse(question.body)).toMatchObject({
+      artifact: {
+        artifactHash: fixture.question.artifactHash,
+        payload: { contentKey: fixture.question.contentKey },
+      },
+      delivery: "authenticated",
+      kind: "found",
+      snapshotId: fixture.snapshotId,
+    });
+    expect(answer.status).toBe(200);
+    expect(JSON.parse(answer.body)).toMatchObject({
+      artifact: {
+        artifactHash: fixture.answer.artifactHash,
+        payload: { contentKey: fixture.answer.contentKey },
+      },
+      delivery: "entitled",
+      kind: "found",
+      snapshotId: fixture.snapshotId,
     });
   });
 

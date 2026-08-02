@@ -1,42 +1,20 @@
 import type { Locale } from "next-intl";
-import { createElement, type ReactNode } from "react";
+import { createElement } from "react";
+import type {
+  TryoutAnswerContent,
+  TryoutFilesystemSource,
+  TryoutQuestionContent,
+} from "@/components/tryout/content/model";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
 
-export interface TryoutQuestionContent {
-  content: ReactNode;
-  contentHash: string;
-  sourcePath: string;
-  sourceRevision: string;
-}
-
-export interface TryoutAnswerContent {
-  answer: ReactNode;
-  contentHash: string;
-  sourcePath: string;
-  sourceRevision: string;
-}
-
-interface TryoutQuestionSource {
-  contentHash: string;
-  questionOrder: number;
-  sourcePath: string;
-  sourceRevision: string;
-}
-
-/**
- * Loads compiled try-out question MDX modules from the content source tree.
- *
- * Convex owns realtime question identity, ordering, choices, and attempt state;
- * the content package owns rich MDX rendering for diagrams, math, and authored
- * components.
- */
-export async function loadTryoutQuestionContent({
+/** Loads question MDX for one attempt created before signed ownership. */
+export async function loadFilesystemQuestions({
   locale,
   questions,
 }: {
-  locale: Locale;
-  questions: readonly TryoutQuestionSource[];
+  readonly locale: Locale;
+  readonly questions: readonly TryoutFilesystemSource[];
 }) {
   "use cache";
   applyContentRuntimeCache();
@@ -57,35 +35,26 @@ export async function loadTryoutQuestionContent({
         return null;
       }
 
-      return {
+      const content: TryoutQuestionContent = {
         content: createElement(questionModule.default),
         contentHash: question.contentHash,
         sourcePath: question.sourcePath,
         sourceRevision: question.sourceRevision,
       };
+      return content;
     })
   );
 
-  const content: TryoutQuestionContent[] = [];
-
-  for (const entry of entries) {
-    if (!entry) {
-      return null;
-    }
-
-    content.push(entry);
-  }
-
-  return content;
+  return collectContent(entries);
 }
 
-/** Loads answer MDX only after the route authorizes terminal review. */
-export async function loadTryoutAnswerContent({
+/** Loads answer MDX for one authorized pre-Aksara terminal attempt. */
+export async function loadFilesystemAnswers({
   locale,
   questions,
 }: {
-  locale: Locale;
-  questions: readonly TryoutQuestionSource[];
+  readonly locale: Locale;
+  readonly questions: readonly TryoutFilesystemSource[];
 }) {
   "use cache";
   applyContentRuntimeCache();
@@ -106,21 +75,27 @@ export async function loadTryoutAnswerContent({
         return null;
       }
 
-      return {
+      const content: TryoutAnswerContent = {
         answer: createElement(answerModule.default),
         contentHash: question.contentHash,
         sourcePath: question.sourcePath,
         sourceRevision: question.sourceRevision,
       };
+      return content;
     })
   );
-  const content: TryoutAnswerContent[] = [];
+
+  return collectContent(entries);
+}
+
+/** Rejects a partially available content collection. */
+function collectContent<A>(entries: readonly (A | null)[]) {
+  const content: A[] = [];
 
   for (const entry of entries) {
     if (!entry) {
       return null;
     }
-
     content.push(entry);
   }
 

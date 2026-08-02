@@ -1,3 +1,4 @@
+import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
@@ -5,13 +6,19 @@ import {
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import type {
+  TryoutAnswerSelector,
+  TryoutQuestionSelector,
+} from "@repo/backend/convex/tryouts/runtime/content";
 import type { AlignedTryoutSection } from "@repo/backend/convex/tryouts/start/source";
 import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
+import { testTextHash } from "@repo/backend/test/content-release";
 import {
   insertTryoutQuestionSource,
   insertTryoutSection,
   insertTryoutSet,
   TRYOUT_SECTION_KEY,
+  TRYOUT_SOURCE,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
 import { ConvexError } from "convex/values";
@@ -50,6 +57,7 @@ export async function seedTryoutContentAccessState(
   args: {
     attemptStatus: TryoutStatus;
     sectionStatus: TryoutStatus;
+    signed?: boolean;
     suffix: string;
   }
 ) {
@@ -65,6 +73,16 @@ export async function seedTryoutContentAccessState(
   });
   const attemptTerminal = args.attemptStatus !== "in-progress";
   const sectionTerminal = args.sectionStatus !== "in-progress";
+  const fixtureLocale: ContentLocale = "id";
+  const snapshotId = testTextHash(`${args.suffix}:snapshot`);
+  const setIdentity = tryoutCatalogIdentity({
+    countryKey: "indonesia",
+    examKey: "snbt",
+    kind: "set",
+    locale: "id",
+    setKey: "set-1",
+    trackKey: "2027",
+  });
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: TRYOUT_TEST_NOW + 3_600_000,
     accessSourceKind: "free",
@@ -84,6 +102,17 @@ export async function seedTryoutContentAccessState(
     totalQuestions: 1,
     tryoutSetId,
     userId: identity.userId,
+    ...(args.signed
+      ? {
+          countryKey: "indonesia",
+          examKey: "snbt",
+          locale: fixtureLocale,
+          setIdentity,
+          setKey: "set-1",
+          trackKey: "2027",
+          tryoutSnapshotId: snapshotId,
+        }
+      : {}),
   });
 
   const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
@@ -102,7 +131,74 @@ export async function seedTryoutContentAccessState(
     tryoutSectionId,
   });
 
-  return { identity, sectionAttemptId };
+  if (!args.signed) {
+    return {
+      attemptId,
+      identity,
+      placementId: null,
+      sectionAttemptId,
+      signedContent: null,
+      tryoutSetId,
+    };
+  }
+
+  const answerArtifactHash = testTextHash(`${args.suffix}:answer`);
+  const questionArtifactHash = testTextHash(`${args.suffix}:question`);
+  const sourcePath = `${TRYOUT_SOURCE}/question-1`;
+  const answerContentKey = `${sourcePath}/answer`;
+  const questionContentKey = `${sourcePath}/question`;
+  const contentHash = `${TRYOUT_SOURCE}:question-hash`;
+  const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
+    answerArtifactHash,
+    answerContentKey,
+    choiceSnapshots: [],
+    contentHash,
+    placementIdentity: `${args.suffix}:placement`,
+    placementRowHash: testTextHash(`${args.suffix}:placement-row`),
+    questionArtifactHash,
+    questionContentKey,
+    questionOrder: 1,
+    rendererDomain: "snbt-math",
+    sectionIdentity: `${args.suffix}:section`,
+    sectionKey: TRYOUT_SECTION_KEY,
+    sourcePath,
+    sourceRevision: "2026",
+    title: "Technical question",
+    tryoutAttemptId: attemptId,
+    tryoutSectionId,
+  });
+
+  const answer: TryoutAnswerSelector = {
+    artifactHash: answerArtifactHash,
+    contentHash,
+    contentKey: answerContentKey,
+    delivery: "entitled",
+    locale: fixtureLocale,
+    questionOrder: 1,
+    snapshotId,
+    sourcePath,
+    sourceRevision: "2026",
+  };
+  const question: TryoutQuestionSelector = {
+    artifactHash: questionArtifactHash,
+    contentHash,
+    contentKey: questionContentKey,
+    delivery: "authenticated",
+    locale: fixtureLocale,
+    questionOrder: 1,
+    snapshotId,
+    sourcePath,
+    sourceRevision: "2026",
+  };
+
+  return {
+    attemptId,
+    identity,
+    placementId,
+    sectionAttemptId,
+    signedContent: { answer, question },
+    tryoutSetId,
+  };
 }
 
 /** Builds the immutable section shape stored on an attempt. */

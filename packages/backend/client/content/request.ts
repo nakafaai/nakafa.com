@@ -21,7 +21,7 @@ import { Effect } from "effect";
 const RUNTIME_PATH = "/internal/content/runtime";
 
 /** Server-owned connection values for the private content runtime endpoint. */
-export type PublicContentTarget = ContentHttpTarget;
+export type ContentRuntimeTarget = ContentHttpTarget;
 
 /** One decoded server-runtime exchange before cryptographic verification. */
 export interface ContentRuntimeExchange {
@@ -71,18 +71,14 @@ const readRuntimeResponse = Effect.fn("NakafaContent.readRuntimeResponse")(
   }
 );
 
-/** Posts one exact public request through the private bounded Convex seam. */
-export const fetchPublicContentRuntime = Effect.fn(
-  "NakafaContent.fetchPublicContentRuntime"
-)(function* (target: PublicContentTarget, input: unknown) {
+/** Posts one exact request through the private bounded Convex seam. */
+export const fetchContentRuntime = Effect.fn(
+  "NakafaContent.fetchContentRuntime"
+)(function* (target: ContentRuntimeTarget, input: unknown) {
   yield* encodeContentRequest(input, MAX_RUNTIME_REQUEST_BYTES);
   const request = yield* decodeContentRuntimeRequest(input).pipe(
     Effect.mapError(() => new ContentTransportError({ reason: "request" }))
   );
-  if (request.delivery !== "public") {
-    return yield* new ContentTransportError({ reason: "delivery" });
-  }
-
   const source = JSON.stringify(request);
   const endpoint = yield* createContentEndpoint(target.siteUrl, RUNTIME_PATH);
   const response = yield* postContentRequest({
@@ -92,9 +88,10 @@ export const fetchPublicContentRuntime = Effect.fn(
   });
   const decoded = yield* readRuntimeResponse(response, endpoint);
 
-  return {
+  const exchange: ContentRuntimeExchange = {
     request,
     response: decoded,
     status: response.status,
-  } satisfies ContentRuntimeExchange;
+  };
+  return exchange;
 });

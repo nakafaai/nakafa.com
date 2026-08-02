@@ -1,14 +1,17 @@
-import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
-import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
-import type { RoutedContentProjection } from "@nakafa/aksara-contracts/projection/spec";
-import { verifyContentReleaseBundle } from "@nakafa/aksara-contracts/release/verify";
+import { ContentDeliveryClassSchema } from "@nakafa/aksara-contracts/delivery";
 import { verifyContentRendererCompatibility } from "@nakafa/aksara-contracts/renderer/compatibility";
 import {
   type ContentRuntimeFound,
   decodeContentRuntimeRequest,
   decodeContentRuntimeResponse,
 } from "@nakafa/aksara-contracts/runtime/spec";
-import { Effect, Schema } from "effect";
+import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
+import { Effect, Option, Schema } from "effect";
+
+const RuntimeFoundIdentitySchema = Schema.Struct({
+  delivery: ContentDeliveryClassSchema,
+  kind: Schema.Literal("found"),
+});
 
 /** A runtime response or live renderer does not match its trusted identity. */
 export class ContentEnvelopeMismatchError extends Schema.TaggedError<ContentEnvelopeMismatchError>()(
@@ -17,47 +20,18 @@ export class ContentEnvelopeMismatchError extends Schema.TaggedError<ContentEnve
     reason: Schema.Literal(
       "activeManifestHash",
       "activeReleaseId",
+      "artifactHash",
+      "contentKey",
       "delivery",
       "locale",
       "projectionHash",
       "publicPath",
       "rendererManifest",
+      "snapshotId",
       "sourcePath"
     ),
   }
 ) {}
-
-/** Checks one article path preserves its pair-grouped corpus identity. */
-function hasArticleSourcePath(
-  projection: Extract<RoutedContentProjection, { readonly kind: "article" }>,
-  sourcePath: string
-) {
-  const prefix = `packages/corpus/articles/${projection.category}/`;
-  const suffix = `/${projection.locale}.mdx`;
-  if (!(sourcePath.startsWith(prefix) && sourcePath.endsWith(suffix))) {
-    return false;
-  }
-
-  const sourceRoot = sourcePath.slice(prefix.length, -suffix.length);
-  const segments = sourceRoot.split("/");
-
-  return segments.length === 2 && segments.join("-") === projection.articleSlug;
-}
-
-/** Checks one source path exactly matches its projected content family. */
-function hasProjectionSourcePath(
-  projection: RoutedContentProjection,
-  sourcePath: string
-) {
-  if (projection.kind === "article") {
-    return hasArticleSourcePath(projection, sourcePath);
-  }
-
-  return (
-    sourcePath ===
-    `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`
-  );
-}
 
 /**
  * Verifies one signed runtime envelope without requiring a React registry.
@@ -76,51 +50,26 @@ export const verifyContentEnvelope = Effect.fn(
   readonly response: unknown;
 }) {
   const request = yield* decodeContentRuntimeRequest(requestInput);
+  const identity = Schema.decodeUnknownOption(RuntimeFoundIdentitySchema)(
+    responseInput
+  );
+  if (Option.isSome(identity) && identity.value.delivery !== request.delivery) {
+    return yield* new ContentEnvelopeMismatchError({ reason: "delivery" });
+  }
   const response = yield* decodeContentRuntimeResponse(responseInput);
-
   if (response.kind !== "found") {
     return response;
   }
-  if (response.delivery !== request.delivery) {
-    return yield* new ContentEnvelopeMismatchError({ reason: "delivery" });
-  }
-  if (response.projection.locale !== request.locale) {
-    return yield* new ContentEnvelopeMismatchError({ reason: "locale" });
-  }
-  if (response.projection.publicPath !== request.publicPath) {
-    return yield* new ContentEnvelopeMismatchError({ reason: "publicPath" });
-  }
-  if (!hasProjectionSourcePath(response.projection, response.sourcePath)) {
-    return yield* new ContentEnvelopeMismatchError({ reason: "sourcePath" });
-  }
 
-  const bundle = yield* verifyContentReleaseBundle({
-    release: response.release,
+  return yield* verifyContentRuntimeExchange({
     rendererManifest: response.rendererManifest,
-  });
-  if (response.activeReleaseId !== bundle.release.manifest.releaseId) {
-    return yield* new ContentEnvelopeMismatchError({
-      reason: "activeReleaseId",
-    });
-  }
-  if (response.activeManifestHash !== bundle.release.manifestHash) {
-    return yield* new ContentEnvelopeMismatchError({
-      reason: "activeManifestHash",
-    });
-  }
-  if (response.projectionHash !== hashContentProjection(response.projection)) {
-    return yield* new ContentEnvelopeMismatchError({
-      reason: "projectionHash",
-    });
-  }
-
-  yield* verifySignedContentArtifact({
-    artifact: response.artifact,
-    rendererContractVersion: bundle.release.manifest.rendererContractVersion,
-    rendererManifest: bundle.rendererManifest,
-  });
-
-  return response;
+    request,
+    response,
+  }).pipe(
+    Effect.catchTag("ContentRuntimeMismatchError", (error) =>
+      Effect.fail(new ContentEnvelopeMismatchError({ reason: error.reason }))
+    )
+  );
 });
 
 /** Requires the live app to route and support one verified signed artifact. */

@@ -3,8 +3,9 @@ import "server-only";
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
-import type { ContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
-import { readPublicContent } from "@repo/backend/client/content/read";
+import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
+import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
+import { readContent } from "@repo/backend/client/content/read";
 import { verifyContentRenderer } from "@repo/backend/content/verify";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Effect } from "effect";
@@ -25,16 +26,16 @@ export interface PublishedContentInput {
 
 /** Verified family-neutral data safe to return from a Next Cache Component. */
 export interface PublishedContentData {
-  readonly activeReleaseId: ContentRuntimeFound["activeReleaseId"];
-  readonly artifact: ContentRuntimeFound["artifact"];
+  readonly activeReleaseId: PublicContentRuntimeFound["activeReleaseId"];
+  readonly artifact: PublicContentRuntimeFound["artifact"];
   readonly projection: ContentProjection;
-  readonly rendererManifest: ContentRuntimeFound["rendererManifest"];
-  readonly sourcePath: ContentRuntimeFound["sourcePath"];
+  readonly rendererManifest: PublicContentRuntimeFound["rendererManifest"];
+  readonly sourcePath: PublicContentRuntimeFound["sourcePath"];
   readonly sourceRevision: GitCommitSha | null;
 }
 
 /** Returns exact Git provenance only for normal source-backed releases. */
-function readSourceRevision(found: ContentRuntimeFound) {
+function readSourceRevision(found: PublicContentRuntimeFound) {
   const { origin } = found.release.manifest;
   return origin.kind === "git" ? origin.sha : null;
 }
@@ -50,13 +51,22 @@ export const readPublishedContent = Effect.fn(
         key: "CONTENT_RUNTIME_TOKEN",
       }),
   });
-  const found = yield* readPublicContent(
+  const found = yield* readContent(
     {
       siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
       token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
     },
-    { locale: input.locale, publicPath: input.publicPath }
+    {
+      delivery: "public",
+      locale: input.locale,
+      publicPath: input.publicPath,
+    }
   );
+  if (found.delivery !== "public") {
+    return yield* new ContentRuntimeVerificationError({
+      cause: "Public content request returned protected delivery.",
+    });
+  }
   if (found.activeReleaseId !== input.activeReleaseId) {
     return yield* new PublishedReleaseMismatchError({
       actualReleaseId: found.activeReleaseId,
@@ -69,12 +79,13 @@ export const readPublishedContent = Effect.fn(
     rendererManifest: liveRenderer,
   });
 
-  return {
+  const data: PublishedContentData = {
     activeReleaseId: found.activeReleaseId,
     artifact: found.artifact,
     projection: found.projection,
     rendererManifest: found.rendererManifest,
     sourcePath: found.sourcePath,
     sourceRevision: readSourceRevision(found),
-  } satisfies PublishedContentData;
+  };
+  return data;
 });

@@ -248,14 +248,14 @@ const tables = {
       "sectionKey",
       "questionOrder",
     ])
-    .index("by_snapshotId_and_questionArtifactHash", {
-      fields: ["snapshotId", "questionArtifactHash"],
-      staged: true,
-    })
-    .index("by_snapshotId_and_answerArtifactHash", {
-      fields: ["snapshotId", "answerArtifactHash"],
-      staged: true,
-    })
+    .index("by_snapshotId_and_questionArtifactHash", [
+      "snapshotId",
+      "questionArtifactHash",
+    ])
+    .index("by_snapshotId_and_answerArtifactHash", [
+      "snapshotId",
+      "answerArtifactHash",
+    ])
     .index("by_questionArtifactHash", ["questionArtifactHash"])
     .index("by_answerArtifactHash", ["answerArtifactHash"]),
 };

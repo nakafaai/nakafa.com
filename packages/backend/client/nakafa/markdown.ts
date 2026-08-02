@@ -1,4 +1,4 @@
-import type { PublicContentTarget } from "@repo/backend/client/content/request";
+import type { ContentRuntimeTarget } from "@repo/backend/client/content/request";
 import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
 import { readPublishedMaterialMarkdown } from "@repo/backend/client/nakafa/material";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
@@ -15,7 +15,7 @@ import { Effect, Option } from "effect";
 export const readNakafaMarkdown = Effect.fn("NakafaContent.readMarkdown")(
   function* (
     convexUrl: string,
-    readContentTarget: () => PublicContentTarget,
+    readContentTarget: () => ContentRuntimeTarget,
     input: string
   ) {
     const ref = yield* resolveNakafaContentRef(convexUrl, input);
