@@ -8,9 +8,12 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { RefContent } from "@/components/shared/ref-content";
 import { TryoutCountryPageClient } from "@/components/tryout/catalog/country.client";
 import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
+import { buildTryoutCountryOptions } from "@/components/tryout/catalog/options";
 import { TryoutCountrySelector } from "@/components/tryout/catalog/selector.client";
-import { readTryoutCountryPage } from "@/components/tryout/catalog/server";
-import { readStaticTryoutCountryOptions } from "@/components/tryout/catalog/static";
+import {
+  readTryoutCountryPage,
+  readTryoutHubPage,
+} from "@/components/tryout/catalog/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -58,7 +61,10 @@ async function TryoutCountryRoute({
   const locale = getLocaleOrThrow(localeParam);
   const countryPath = getTryoutHref({ country }).slice(1);
 
-  const page = await readTryoutCountryPage(locale, countryPath);
+  const [page, hub] = await Promise.all([
+    readTryoutCountryPage(locale, countryPath),
+    readTryoutHubPage(locale),
+  ]);
 
   if (!page) {
     notFound();
@@ -68,7 +74,7 @@ async function TryoutCountryRoute({
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Tryouts" }),
   ]);
-  const countryOptions = readStaticTryoutCountryOptions(locale);
+  const countryOptions = buildTryoutCountryOptions(locale, hub.countries);
 
   return (
     <LayoutMaterial>

@@ -4,9 +4,12 @@ import { Suspense } from "react";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
+import { buildTryoutExamOptions } from "@/components/tryout/catalog/options";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
-import { readTryoutTrackPage } from "@/components/tryout/catalog/server";
-import { readStaticTryoutExamOptions } from "@/components/tryout/catalog/static";
+import {
+  readTryoutCountryPage,
+  readTryoutTrackPage,
+} from "@/components/tryout/catalog/server";
 import { TryoutTrackPageClient } from "@/components/tryout/catalog/track.client";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
@@ -80,9 +83,12 @@ async function TryoutTrackRoute({
   const examPath = getTryoutHref({ country, exam }).slice(1);
   const trackPath = getTryoutHref({ country, exam, track }).slice(1);
 
-  const page = await readTryoutTrackPage(locale, trackPath);
+  const [page, countryPage] = await Promise.all([
+    readTryoutTrackPage(locale, trackPath),
+    readTryoutCountryPage(locale, countryPath),
+  ]);
 
-  if (!page) {
+  if (!(page && countryPage)) {
     notFound();
   }
 
@@ -90,10 +96,7 @@ async function TryoutTrackRoute({
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Tryouts" }),
   ]);
-  const examOptions = readStaticTryoutExamOptions({
-    countryPath,
-    locale,
-  });
+  const examOptions = buildTryoutExamOptions(locale, countryPage.exams);
 
   return (
     <LayoutMaterial className="h-[calc(100svh-4rem)] flex-col overflow-clip lg:h-svh">
