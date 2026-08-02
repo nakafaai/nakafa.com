@@ -53,8 +53,8 @@ export const PROOF_PAGE_LIMIT = 64;
 /** Maximum complete proof-page response below Convex action limits. */
 export const PROOF_PAGE_BYTES = 4 * 1024 * 1024;
 
-/** Maximum identities whose effective heads may be hydrated in one query. */
-export const CATALOG_PROOF_PAGE_LIMIT = 8;
+/** Maximum route identities validated before yielding one proof query. */
+export const ROUTE_CATALOG_PAGE_LIMIT = 8;
 
 /** Query capacity reserved before a proof transaction yields its continuation. */
 export const PROOF_QUERY_HEADROOM = 16;

@@ -3,7 +3,10 @@
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { parseStoredJson } from "@repo/backend/convex/contentRelease/parse";
-import type { CatalogPage } from "@repo/backend/convex/contentRelease/proof/catalog";
+import type {
+  CatalogCursor,
+  CatalogPage,
+} from "@repo/backend/convex/contentRelease/proof/catalog";
 import type {
   ProofPage,
   RouteProofPage,
@@ -18,7 +21,7 @@ const proofPageReference = makeFunctionReference<
 >("contentRelease/proof/read:page");
 const catalogPageReference = makeFunctionReference<
   "query",
-  { cursor: null | string; releaseId: string },
+  { cursor: CatalogCursor | null; releaseId: string },
   CatalogPage
 >("contentRelease/proof/catalog:page");
 const routePageReference = makeFunctionReference<
@@ -47,16 +50,18 @@ export function readProofStream(
 
 /** Replays the complete effective catalog in canonical indexed order. */
 export function readResultStream(ctx: ActionCtx, releaseId: string) {
-  return Stream.paginateEffect(null, (cursor: null | string) =>
+  return Stream.paginateEffect(null, (cursor: CatalogCursor | null) =>
     callInternal(() =>
       ctx.runQuery(catalogPageReference, { cursor, releaseId })
     ).pipe(
-      Effect.map((page): readonly [CatalogPage, Option.Option<string>] => [
-        page,
-        page.done || page.nextCursor === null
-          ? Option.none()
-          : Option.some(page.nextCursor),
-      ])
+      Effect.map(
+        (page): readonly [CatalogPage, Option.Option<CatalogCursor>] => [
+          page,
+          page.done || page.nextCursor === null
+            ? Option.none()
+            : Option.some(page.nextCursor),
+        ]
+      )
     )
   ).pipe(Stream.flatMap(({ heads }) => Stream.fromIterable(heads)));
 }
