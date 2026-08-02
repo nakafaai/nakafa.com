@@ -29,6 +29,33 @@ describe("contentRelease/runtime/protected", () => {
     });
   });
 
+  it("allows one signed artifact to be shared by multiple placements", async () => {
+    const t = convexTest(schema, convexModules);
+    const fixture = await t.mutation(insertProtectedRuntime);
+    await t.mutation(async (ctx) => {
+      const stored = await ctx.db
+        .query("tryoutPlacements")
+        .withIndex("by_snapshotId_and_questionArtifactHash", (index) =>
+          index
+            .eq("snapshotId", fixture.snapshotId)
+            .eq("questionArtifactHash", fixture.question.artifactHash)
+        )
+        .first();
+      if (!stored) {
+        throw new Error("Expected protected placement.");
+      }
+      const { _creationTime, _id, ...placement } = stored;
+      await ctx.db.insert("tryoutPlacements", placement);
+    });
+
+    await expect(
+      t.query(readProtected, fixture.question)
+    ).resolves.toMatchObject({
+      delivery: "authenticated",
+      snapshotId: fixture.snapshotId,
+    });
+  });
+
   it("returns absence for selectors outside the retained snapshot", async () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertProtectedRuntime);

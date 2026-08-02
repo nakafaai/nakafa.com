@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -12,9 +13,18 @@ const SECTION_KEY = "pengetahuan-kuantitatif";
 const SECTION_SOURCE = `question-bank/tryout/indonesia/snbt/${TRACK_KEY}/set-1/${SECTION_KEY}`;
 const SET_ROUTE = `try-out/indonesia/snbt/${TRACK_KEY}/set-1`;
 const SECTION_ROUTE = `${SET_ROUTE}/${SECTION_KEY}`;
+const SET_IDENTITY = tryoutCatalogIdentity({
+  countryKey: "indonesia",
+  examKey: "snbt",
+  kind: "set",
+  locale: "id",
+  setKey: "set-1",
+  trackKey: TRACK_KEY,
+});
+const SNAPSHOT_ID = `sha256:${"a".repeat(64)}`;
 
 describe("tryouts/runtime/score", () => {
-  it("scores with the attempt strategy snapshot instead of the live set strategy", async () => {
+  it("scores from the frozen signed attempt after the local set is removed", async () => {
     const t = convexTest(schema, convexModules);
 
     const snapshot = await t.mutation(async (ctx) => {
@@ -99,9 +109,12 @@ describe("tryouts/runtime/score", () => {
         completedAt: null,
         completedSectionKeys: [SECTION_KEY],
         countsForCompetition: false,
+        countryKey: "indonesia",
         endReason: null,
+        examKey: "snbt",
         expiresAt: NOW + 86_400_000,
         lastActivityAt: NOW,
+        locale: "id",
         scoreStatus: "official",
         scoringStrategy: "raw",
         sectionSnapshots: [
@@ -117,10 +130,14 @@ describe("tryouts/runtime/score", () => {
             tryoutSectionId: sectionId,
           },
         ],
+        setIdentity: SET_IDENTITY,
+        setKey: "set-1",
         startedAt: NOW - 20_000,
         status: "in-progress",
         totalCorrect: 0,
         totalQuestions: 1,
+        trackKey: TRACK_KEY,
+        tryoutSnapshotId: SNAPSHOT_ID,
         tryoutSetId,
         userId,
       });
@@ -171,6 +188,7 @@ describe("tryouts/runtime/score", () => {
         updatedAt: NOW - 500,
       });
       await ctx.db.patch(tryoutSetId, { scoringStrategy: "irt" });
+      await ctx.db.delete(tryoutSetId);
 
       const attempt = await ctx.db.get(attemptId);
 
@@ -208,8 +226,10 @@ describe("tryouts/runtime/score", () => {
       publishedScore: 100,
       rawScore: 100,
       scoringStrategy: "raw",
+      setIdentity: SET_IDENTITY,
       totalCorrect: 1,
       totalQuestions: 1,
+      tryoutSnapshotId: SNAPSHOT_ID,
     });
   });
 });

@@ -62,7 +62,7 @@ const loadPlacement = Effect.fn("contentRelease.loadProtectedPlacement")(
               .eq("snapshotId", request.snapshotId)
               .eq("questionArtifactHash", request.artifactHash)
           )
-          .unique()
+          .first()
       );
     }
 
@@ -74,7 +74,7 @@ const loadPlacement = Effect.fn("contentRelease.loadProtectedPlacement")(
             .eq("snapshotId", request.snapshotId)
             .eq("answerArtifactHash", request.artifactHash)
         )
-        .unique()
+        .first()
     );
   }
 );
