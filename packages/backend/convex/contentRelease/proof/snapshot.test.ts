@@ -126,25 +126,25 @@ describe("contentRelease/proof/snapshot", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
   });
 
-  it("accepts only the exact zero-copy inverse for recovery", async () => {
+  it("accepts only the exact zero-copy inverse for rollback candidates and recovery", async () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const base = programRelease(data, "release-base");
-    const recoverySnapshots = invertContentSnapshots(base.manifest.snapshots);
-    const recoveryManifest = ContentReleaseManifestSchema.make({
+    const rollbackSnapshots = invertContentSnapshots(base.manifest.snapshots);
+    const rollbackManifest = ContentReleaseManifestSchema.make({
       ...testEmptyManifest(ReleaseIdSchema.make("release-recovery")),
       baseManifestHash: base.manifestHash,
       baseReleaseId: base.manifest.releaseId,
       baseResultCount: base.manifest.resultCount,
       baseResultDigest: base.manifest.resultDigest,
       origin: { kind: "rollback", releaseId: base.manifest.releaseId },
-      scope: testPublicationScope({ snapshots: recoverySnapshots }),
-      snapshots: recoverySnapshots,
+      scope: testPublicationScope({ snapshots: rollbackSnapshots }),
+      snapshots: rollbackSnapshots,
     });
-    const recovery = testSignedRelease(recoveryManifest);
+    const rollback = testSignedRelease(rollbackManifest);
     const driftSnapshots = inheritContentSnapshots(null);
     const drift = testSignedRelease(
       ContentReleaseManifestSchema.make({
-        ...recoveryManifest,
+        ...rollbackManifest,
         scope: testPublicationScope({ snapshots: driftSnapshots }),
         snapshots: driftSnapshots,
       })
@@ -155,11 +155,28 @@ describe("contentRelease/proof/snapshot", () => {
     await expect(
       t.action((ctx) =>
         runConvexProgram(
-          verifyReleaseSnapshots(ctx, recovery, "recovery", 0, 0)
+          verifyReleaseSnapshots(ctx, rollback, "candidate", 0, 0)
         )
       )
     ).resolves.toEqual({
-      snapshots: recovery.manifest.snapshots,
+      snapshots: rollback.manifest.snapshots,
+      stagedRows: 0,
+    });
+    await expect(
+      t.action((ctx) =>
+        runConvexProgram(
+          verifyReleaseSnapshots(ctx, rollback, "candidate", 1, 0)
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    await expect(
+      t.action((ctx) =>
+        runConvexProgram(
+          verifyReleaseSnapshots(ctx, rollback, "recovery", 0, 0)
+        )
+      )
+    ).resolves.toEqual({
+      snapshots: rollback.manifest.snapshots,
       stagedRows: 0,
     });
     await expect(

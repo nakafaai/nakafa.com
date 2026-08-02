@@ -152,7 +152,9 @@ export const verifyReleaseSnapshots = Effect.fn(
   stagedSnapshotRows: number
 ) {
   const previous = yield* loadPrevious(ctx, release);
-  if (role === "recovery") {
+  const restoresPrevious =
+    role === "recovery" || release.manifest.origin.kind === "rollback";
+  if (restoresPrevious) {
     if (
       previous === null ||
       stagedSnapshotBatches !== 0 ||
@@ -164,7 +166,7 @@ export const verifyReleaseSnapshots = Effect.fn(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Recovery ${release.manifest.releaseId} does not exactly invert structured snapshots.`
+        `Release ${release.manifest.releaseId} does not exactly invert structured snapshots.`
       );
     }
     return { snapshots: release.manifest.snapshots, stagedRows: 0 };
