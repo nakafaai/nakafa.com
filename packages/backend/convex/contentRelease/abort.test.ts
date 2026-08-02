@@ -1,10 +1,7 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { abortProgram } from "@repo/backend/convex/contentRelease/abort";
-import {
-  RELEASE_PAGE_LIMIT,
-  ROLLBACK_RETENTION_MS,
-} from "@repo/backend/convex/contentRelease/spec";
+import { ROLLBACK_RETENTION_MS } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -34,7 +31,6 @@ describe("contentRelease/abort", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(seedAbortRelease);
 
-    const first = await t.mutation((ctx) => abort(ctx));
     const completed = await t.mutation((ctx) => abort(ctx));
     const repeated = await t.mutation((ctx) => abort(ctx));
     const stored = await t.run(async (ctx) => ({
@@ -45,12 +41,6 @@ describe("contentRelease/abort", () => {
       state: await ctx.db.query("contentState").unique(),
     }));
 
-    expect(first).toEqual({
-      complete: false,
-      processedItems: RELEASE_PAGE_LIMIT,
-      releaseId: ABORT_RELEASE_ID,
-      totalItems: ABORT_ITEM_COUNT,
-    });
     expect(completed).toEqual({
       complete: true,
       processedItems: ABORT_ITEM_COUNT,
@@ -63,6 +53,38 @@ describe("contentRelease/abort", () => {
     expect(stored.owners).toHaveLength(0);
     expect(stored.release?.status).toBe("aborted");
     expect(stored.state?.candidateReleaseId).toBeUndefined();
+  });
+
+  it("resumes one byte-bounded large-row cleanup", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(seedAbortRelease);
+    await t.mutation(async (ctx) => {
+      const items = await ctx.db
+        .query("contentItems")
+        .withIndex("by_releaseId_and_index", (query) =>
+          query.eq("releaseId", ABORT_RELEASE_ID)
+        )
+        .take(ABORT_ITEM_COUNT / 2);
+      for (const item of items) {
+        await ctx.db.patch("contentItems", item._id, {
+          itemJson: "x".repeat(384 * 1024),
+        });
+      }
+    });
+
+    const first = await t.mutation((ctx) => abort(ctx));
+    let completed = first;
+    while (!completed.complete) {
+      completed = await t.mutation((ctx) => abort(ctx));
+    }
+
+    expect(first.complete).toBe(false);
+    expect(first.processedItems).toBeGreaterThan(0);
+    expect(first.processedItems).toBeLessThan(ABORT_ITEM_COUNT);
+    expect(completed).toMatchObject({
+      complete: true,
+      processedItems: ABORT_ITEM_COUNT,
+    });
   });
 
   it("removes staged path ownership before a later sequence can claim it", async () => {
@@ -146,7 +168,7 @@ describe("contentRelease/abort", () => {
       t.mutation((ctx) => abort(ctx, recovery.releaseId))
     ).resolves.toMatchObject({ complete: true });
     await expect(t.mutation((ctx) => abort(ctx))).resolves.toMatchObject({
-      complete: false,
+      complete: true,
     });
   });
 
@@ -267,12 +289,16 @@ describe("contentRelease/abort", () => {
 
     const corrupt = convexTest(schema, convexModules);
     await corrupt.mutation(seedAbortRelease);
-    await corrupt.mutation((ctx) => abort(ctx));
     await corrupt.mutation(async (ctx) => {
-      const remaining = await ctx.db.query("contentItems").collect();
-      for (const item of remaining) {
-        await ctx.db.delete("contentItems", item._id);
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected staged abort release.");
       }
+      await ctx.db.patch("contentReleases", release._id, {
+        abortedRows: ABORT_ITEM_COUNT,
+        abortingAt: Date.now(),
+        status: "aborting",
+      });
     });
     await expect(corrupt.mutation((ctx) => abort(ctx))).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
@@ -291,7 +317,6 @@ describe("contentRelease/abort", () => {
       });
     });
 
-    await t.mutation((ctx) => abort(ctx));
     await expect(t.mutation((ctx) => abort(ctx))).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });

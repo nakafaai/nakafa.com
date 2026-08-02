@@ -3,12 +3,14 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import {
+  ABORT_PAGE_BYTES,
+  ABORT_PAGE_LIMIT,
+  hasAbortTransactionHeadroom,
+} from "@repo/backend/convex/contentRelease/abort/budget";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { retainOrphanedArtifacts } from "@repo/backend/convex/contentRelease/retention";
-import {
-  EXACT_SCOPE_LIMIT,
-  RELEASE_PAGE_LIMIT,
-} from "@repo/backend/convex/contentRelease/spec";
+import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { Effect } from "effect";
 
 interface AbortCounts {
@@ -124,74 +126,161 @@ export const hasAbortResidue = Effect.fn("contentRelease.hasAbortResidue")(
   }
 );
 
-/** Deletes one bounded release-owned page and its staged directory identities. */
+/** Deletes one measured release-owned page and its staged directory identities. */
 export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
   function* (ctx: MutationCtx, releaseId: string, sequence: number) {
     yield* deleteOwnedOwners(ctx, releaseId);
-    const heads = yield* Effect.promise(() =>
+    const head = yield* Effect.promise(() =>
       ctx.db
         .query("contentHeads")
         .withIndex("by_releaseId_and_index", (query) =>
           query.eq("releaseId", releaseId)
         )
-        .take(RELEASE_PAGE_LIMIT)
+        .first()
     );
-    let remaining = RELEASE_PAGE_LIMIT - heads.length;
-    const bindings =
-      remaining === 0
-        ? []
-        : yield* Effect.promise(() =>
-            ctx.db
-              .query("contentBindings")
-              .withIndex("by_releaseId_and_index", (query) =>
-                query.eq("releaseId", releaseId)
-              )
-              .take(remaining)
-          );
-    remaining -= bindings.length;
-    const items =
-      remaining === 0
-        ? []
-        : yield* Effect.promise(() =>
-            ctx.db
-              .query("contentItems")
-              .withIndex("by_releaseId_and_index", (query) =>
-                query.eq("releaseId", releaseId)
-              )
-              .take(remaining)
-          );
-    remaining -= items.length;
-    const batches =
-      remaining === 0
-        ? []
-        : yield* Effect.promise(() =>
-            ctx.db
-              .query("snapshotBatches")
-              .withIndex("by_releaseId_and_family_and_batchIndex", (query) =>
-                query.eq("releaseId", releaseId)
-              )
-              .take(remaining)
-          );
-    for (const row of heads) {
-      yield* Effect.promise(() => ctx.db.delete("contentHeads", row._id));
+    if (head) {
+      const heads = yield* Effect.promise(() =>
+        ctx.db
+          .query("contentHeads")
+          .withIndex("by_releaseId_and_index", (query) =>
+            query.eq("releaseId", releaseId)
+          )
+          .paginate({
+            cursor: null,
+            maximumBytesRead: ABORT_PAGE_BYTES,
+            maximumRowsRead: ABORT_PAGE_LIMIT,
+            numItems: ABORT_PAGE_LIMIT,
+          })
+      );
+      let processed = 0;
+      for (const row of heads.page) {
+        yield* Effect.promise(() => ctx.db.delete("contentHeads", row._id));
+        if (row.artifactHash) {
+          yield* retainOrphanedArtifacts(ctx, [row.artifactHash]);
+        }
+        processed += 1;
+        const metrics = yield* Effect.promise(() =>
+          ctx.meta.getTransactionMetrics()
+        );
+        if (!hasAbortTransactionHeadroom(metrics)) {
+          return processed;
+        }
+      }
+      return processed;
     }
-    for (const row of bindings) {
-      yield* deleteOwnedPath(ctx, row.locale, row.publicPath, sequence);
-      yield* Effect.promise(() => ctx.db.delete("contentBindings", row._id));
-    }
-    for (const row of items) {
-      yield* deleteOwnedKey(ctx, row.contentKey, row.locale, sequence);
-      yield* Effect.promise(() => ctx.db.delete("contentItems", row._id));
-    }
-    yield* Effect.forEach(batches, (row) =>
-      Effect.promise(() => ctx.db.delete("snapshotBatches", row._id))
+
+    const binding = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentBindings")
+        .withIndex("by_releaseId_and_index", (query) =>
+          query.eq("releaseId", releaseId)
+        )
+        .first()
     );
-    yield* retainOrphanedArtifacts(
-      ctx,
-      [...heads, ...items].flatMap(({ artifactHash }) =>
-        artifactHash === undefined ? [] : [artifactHash]
-      )
+    if (binding) {
+      const bindings = yield* Effect.promise(() =>
+        ctx.db
+          .query("contentBindings")
+          .withIndex("by_releaseId_and_index", (query) =>
+            query.eq("releaseId", releaseId)
+          )
+          .paginate({
+            cursor: null,
+            maximumBytesRead: ABORT_PAGE_BYTES,
+            maximumRowsRead: ABORT_PAGE_LIMIT,
+            numItems: ABORT_PAGE_LIMIT,
+          })
+      );
+      let processed = 0;
+      for (const row of bindings.page) {
+        yield* deleteOwnedPath(ctx, row.locale, row.publicPath, sequence);
+        yield* Effect.promise(() => ctx.db.delete("contentBindings", row._id));
+        processed += 1;
+        const metrics = yield* Effect.promise(() =>
+          ctx.meta.getTransactionMetrics()
+        );
+        if (!hasAbortTransactionHeadroom(metrics)) {
+          return processed;
+        }
+      }
+      return processed;
+    }
+
+    const item = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentItems")
+        .withIndex("by_releaseId_and_index", (query) =>
+          query.eq("releaseId", releaseId)
+        )
+        .first()
     );
-    return heads.length + bindings.length + items.length + batches.length;
+    if (item) {
+      const items = yield* Effect.promise(() =>
+        ctx.db
+          .query("contentItems")
+          .withIndex("by_releaseId_and_index", (query) =>
+            query.eq("releaseId", releaseId)
+          )
+          .paginate({
+            cursor: null,
+            maximumBytesRead: ABORT_PAGE_BYTES,
+            maximumRowsRead: ABORT_PAGE_LIMIT,
+            numItems: ABORT_PAGE_LIMIT,
+          })
+      );
+      let processed = 0;
+      for (const row of items.page) {
+        yield* deleteOwnedKey(ctx, row.contentKey, row.locale, sequence);
+        yield* Effect.promise(() => ctx.db.delete("contentItems", row._id));
+        if (row.artifactHash) {
+          yield* retainOrphanedArtifacts(ctx, [row.artifactHash]);
+        }
+        processed += 1;
+        const metrics = yield* Effect.promise(() =>
+          ctx.meta.getTransactionMetrics()
+        );
+        if (!hasAbortTransactionHeadroom(metrics)) {
+          return processed;
+        }
+      }
+      return processed;
+    }
+
+    const batch = yield* Effect.promise(() =>
+      ctx.db
+        .query("snapshotBatches")
+        .withIndex("by_releaseId_and_family_and_batchIndex", (query) =>
+          query.eq("releaseId", releaseId)
+        )
+        .first()
+    );
+    if (!batch) {
+      return 0;
+    }
+    const batches = yield* Effect.promise(() =>
+      ctx.db
+        .query("snapshotBatches")
+        .withIndex("by_releaseId_and_family_and_batchIndex", (query) =>
+          query.eq("releaseId", releaseId)
+        )
+        .paginate({
+          cursor: null,
+          maximumBytesRead: ABORT_PAGE_BYTES,
+          maximumRowsRead: ABORT_PAGE_LIMIT,
+          numItems: ABORT_PAGE_LIMIT,
+        })
+    );
+    let processed = 0;
+    for (const row of batches.page) {
+      yield* Effect.promise(() => ctx.db.delete("snapshotBatches", row._id));
+      processed += 1;
+      const metrics = yield* Effect.promise(() =>
+        ctx.meta.getTransactionMetrics()
+      );
+      if (!hasAbortTransactionHeadroom(metrics)) {
+        return processed;
+      }
+    }
+    return processed;
   }
 );

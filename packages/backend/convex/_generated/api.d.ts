@@ -139,6 +139,7 @@ import type * as classes_validators from "../classes/validators.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
 import type * as contentRelease_abort from "../contentRelease/abort.js";
+import type * as contentRelease_abort_budget from "../contentRelease/abort/budget.js";
 import type * as contentRelease_abort_rows from "../contentRelease/abort/rows.js";
 import type * as contentRelease_accept from "../contentRelease/accept.js";
 import type * as contentRelease_activate from "../contentRelease/activate.js";
@@ -731,6 +732,7 @@ declare const fullApi: ApiFromModules<{
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
   "contentRelease/abort": typeof contentRelease_abort;
+  "contentRelease/abort/budget": typeof contentRelease_abort_budget;
   "contentRelease/abort/rows": typeof contentRelease_abort_rows;
   "contentRelease/accept": typeof contentRelease_accept;
   "contentRelease/activate": typeof contentRelease_activate;
