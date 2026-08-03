@@ -4,20 +4,23 @@ import vm from "node:vm";
 import { createThemeBootstrapScript } from "@repo/design-system/lib/theme/bootstrap";
 import {
   concreteThemeValues,
+  DEFAULT_THEME,
+  type ThemeValue,
   themes,
 } from "@repo/design-system/lib/theme/registry";
 import { describe, expect, it } from "vitest";
 
 interface BootstrapScenario {
-  defaultTheme?: "light" | "system";
+  defaultTheme?: ThemeValue;
   matchMediaFails?: boolean;
   storageFails?: boolean;
   storedTheme?: string;
   systemDark?: boolean;
 }
 
+/** Runs the document bootstrap against a controlled browser environment. */
 function runBootstrap({
-  defaultTheme = "light",
+  defaultTheme = DEFAULT_THEME,
   matchMediaFails = false,
   storageFails = false,
   storedTheme,
@@ -68,11 +71,14 @@ function runBootstrap({
 }
 
 describe("theme bootstrap", () => {
-  it("applies the official light default while preserving unrelated classes", () => {
-    const result = runBootstrap();
+  it("resolves the official system default while preserving unrelated classes", () => {
+    const light = runBootstrap();
+    const dark = runBootstrap({ systemDark: true });
 
-    expect(result.classes).toEqual(new Set(["font-variable", "light"]));
-    expect(result.colorScheme).toBe("light");
+    expect(light.classes).toEqual(new Set(["font-variable", "light"]));
+    expect(light.colorScheme).toBe("light");
+    expect(dark.classes).toEqual(new Set(["font-variable", "dark"]));
+    expect(dark.colorScheme).toBe("dark");
   });
 
   it("applies every persisted concrete theme with its owned appearance", () => {
@@ -97,13 +103,6 @@ describe("theme bootstrap", () => {
     expect(light.colorScheme).toBe("light");
     expect(dark.classes).toEqual(new Set(["font-variable", "dark"]));
     expect(dark.colorScheme).toBe("dark");
-  });
-
-  it("resolves a system first-visit default", () => {
-    const result = runBootstrap({ defaultTheme: "system", systemDark: true });
-
-    expect(result.classes).toEqual(new Set(["font-variable", "dark"]));
-    expect(result.colorScheme).toBe("dark");
   });
 
   it("falls back safely when browser preference APIs are unavailable", () => {
