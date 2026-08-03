@@ -48,7 +48,7 @@ export const ARTIFACT_PAGE_COUNT = 4;
 export const ARTIFACT_PAGE_BYTES = 2 * 1024 * 1024;
 
 /** Maximum records considered before byte and transaction proof guards yield. */
-export const PROOF_PAGE_LIMIT = 64;
+export const PROOF_PAGE_LIMIT = 128;
 
 /** Maximum complete proof-page response below Convex action limits. */
 export const PROOF_PAGE_BYTES = 4 * 1024 * 1024;
