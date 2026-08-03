@@ -74,6 +74,13 @@ const performRequest = Effect.fn("contentRelease.performRequest")(function* (
 /** Encodes one sanitized failure from a fully decoded request. */
 const encodeRequestFailure = Effect.fn("contentRelease.encodeRequestFailure")(
   function* (ctx: ActionCtx, request: PublicationRequest, error: ReleaseError) {
+    yield* Effect.logWarning("Content publication request rejected.").pipe(
+      Effect.annotateLogs({
+        code: error.code,
+        operation: request.operation,
+        reason: error.message,
+      })
+    );
     let activeReleaseId: null | ReleaseId = null;
     if (error.code === "CONTENT_RELEASE_STALE_BASE") {
       const current = yield* readCurrentPublication(ctx).pipe(Effect.either);
