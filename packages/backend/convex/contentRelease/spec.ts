@@ -47,11 +47,14 @@ export const ARTIFACT_PAGE_COUNT = 4;
 /** Maximum artifact bytes read before maintenance yields a continuation. */
 export const ARTIFACT_PAGE_BYTES = 2 * 1024 * 1024;
 
-/** Maximum records considered by one byte-bounded proof transaction. */
+/** Maximum records considered before byte and transaction proof guards yield. */
 export const PROOF_PAGE_LIMIT = 64;
 
 /** Maximum complete proof-page response below Convex action limits. */
 export const PROOF_PAGE_BYTES = 4 * 1024 * 1024;
+
+/** Maximum rollback records reconstructed by one Convex query transaction. */
+export const ROLLBACK_QUERY_PAGE_LIMIT = 64;
 
 /** Maximum route identities validated before yielding one proof query. */
 export const ROUTE_CATALOG_PAGE_LIMIT = 8;

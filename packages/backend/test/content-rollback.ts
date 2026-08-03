@@ -12,6 +12,7 @@ import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapsh
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import { testProjectionJson } from "@repo/backend/test/content-material";
+import { testSignedArtifact } from "@repo/backend/test/content-proof";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -136,9 +137,15 @@ async function insertVersion(
     readonly projectionJson: string;
     readonly releaseId: string;
     readonly sequence: number;
+    readonly sourceHash?: typeof Sha256HashSchema.Type;
     readonly sourcePath: string;
   },
-  compiledCode: string
+  compiledCode: string,
+  artifactJson = testArtifactJson({
+    artifactHash: options.artifactHash,
+    compiledCode,
+    contentKey: options.contentKey,
+  })
 ) {
   await ctx.db.insert("contentHeads", {
     artifactHash: options.artifactHash,
@@ -154,16 +161,12 @@ async function insertVersion(
     releaseId: options.releaseId,
     rendererDomain: "mathematics",
     sequence: options.sequence,
-    sourceHash: TEST_DIGEST,
+    sourceHash: options.sourceHash ?? TEST_DIGEST,
     sourcePath: options.sourcePath,
   });
   await ctx.db.insert("contentArtifacts", {
     artifactHash: options.artifactHash,
-    artifactJson: testArtifactJson({
-      artifactHash: options.artifactHash,
-      compiledCode,
-      contentKey: options.contentKey,
-    }),
+    artifactJson,
     createdAt: NOW,
     retainUntil: Number.MAX_SAFE_INTEGER,
   });
@@ -176,6 +179,7 @@ export async function insertRollbackItem(
   previousExists: boolean,
   compiledCode = "return {};",
   options?: {
+    readonly authenticatedArtifact?: boolean;
     readonly contentKey?: typeof ContentKeySchema.Type;
     readonly priorProjectionJson?: string;
     readonly priorSourcePath?: typeof CorpusSourcePathSchema.Type;
@@ -183,7 +187,11 @@ export async function insertRollbackItem(
 ) {
   const contentKey =
     options?.contentKey ?? ContentKeySchema.make(`test:head-${index}`);
-  const currentHash = rollbackArtifactHash(index, "current");
+  const signedArtifact = options?.authenticatedArtifact
+    ? testSignedArtifact("mathematics", { compiledCode, contentKey })
+    : undefined;
+  const currentHash =
+    signedArtifact?.artifactHash ?? rollbackArtifactHash(index, "current");
   const currentPath = `test/head-${index}`;
   const currentProjection = testProjectionJson({
     contentKey,
@@ -258,9 +266,11 @@ export async function insertRollbackItem(
       projectionJson: currentProjection,
       releaseId: TEST_RELEASE_ID,
       sequence: 1,
+      sourceHash: signedArtifact?.payload.sourceHash,
       sourcePath: `packages/corpus/test/head-${index}/en.mdx`,
     },
-    compiledCode
+    compiledCode,
+    signedArtifact ? JSON.stringify(signedArtifact) : undefined
   );
   if (previousExists) {
     await insertVersion(

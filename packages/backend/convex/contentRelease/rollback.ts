@@ -1,6 +1,7 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
   canonicalizeRollbackPage,
+  MAX_ROLLBACK_PAGE_BYTES,
   MAX_ROLLBACK_PAGE_RECORDS,
   type RollbackPage,
   RollbackPageRequestSchema,
@@ -23,11 +24,10 @@ import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { decodeRouteJson } from "@repo/backend/convex/contentRelease/parse";
 import { rollbackRecord } from "@repo/backend/convex/contentRelease/rollback/state";
 import { loadReadableSnapshot } from "@repo/backend/convex/contentRelease/snapshot";
+import { ROLLBACK_QUERY_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
-
-const ROLLBACK_PAGE_BYTES = 4 * 1024 * 1024;
 
 /** Proves one release is an exact active or verified-candidate rollback source. */
 const rollbackSource = Effect.fn("contentRelease.rollbackSource")(function* (
@@ -76,6 +76,12 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
     request.rollbackOf,
     request.rollbackOfManifestHash
   );
+  if (request.limit > ROLLBACK_QUERY_PAGE_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Rollback query pages require 1-${ROLLBACK_QUERY_PAGE_LIMIT} records.`
+    );
+  }
   const total = signed.manifest.itemCount;
   if (request.afterIndex >= total) {
     return yield* releaseFail(
@@ -93,7 +99,7 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
       )
       .paginate({
         cursor: null,
-        maximumBytesRead: ROLLBACK_PAGE_BYTES,
+        maximumBytesRead: MAX_ROLLBACK_PAGE_BYTES,
         maximumRowsRead: request.limit,
         numItems: request.limit,
       })
@@ -110,7 +116,7 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
     const candidate = makeRollbackPage(request, total, [...records, record]);
     if (
       new TextEncoder().encode(canonicalizeRollbackPage(candidate)).byteLength >
-      ROLLBACK_PAGE_BYTES
+      MAX_ROLLBACK_PAGE_BYTES
     ) {
       if (records.length === 0) {
         return yield* releaseFail(

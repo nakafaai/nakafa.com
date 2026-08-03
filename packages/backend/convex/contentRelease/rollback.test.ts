@@ -7,6 +7,7 @@ import {
   RoutePageSchema,
 } from "@nakafa/aksara-contracts/release/route-page";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { ROLLBACK_QUERY_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -190,6 +191,10 @@ describe("contentRelease/rollback", () => {
         rollbackOf: TEST_RELEASE_ID,
         rollbackOfManifestHash: "wrong",
       })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } });
+    await invalid.mutation((ctx) => activateRollbackFixture(ctx, 0));
+    await expect(
+      readPage(invalid, -1, ROLLBACK_QUERY_PAGE_LIMIT + 1)
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } });
 
     const inactive = convexTest(schema, convexModules);
