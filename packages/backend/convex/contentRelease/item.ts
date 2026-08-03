@@ -133,14 +133,27 @@ const ensureContentKey = Effect.fn("contentRelease.ensureContentKey")(
 export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
   function* (
     ctx: MutationCtx,
-    item: ContentReleaseItem,
-    itemJson: string,
-    batchIndex: number,
-    batchHash: string,
-    role: "candidate" | "recovery",
-    sequence: number,
-    priorSequence: number | undefined
+    input: {
+      readonly artifactReady: boolean;
+      readonly batchHash: string;
+      readonly batchIndex: number;
+      readonly item: ContentReleaseItem;
+      readonly itemJson: string;
+      readonly priorSequence: number | undefined;
+      readonly role: "candidate" | "recovery";
+      readonly sequence: number;
+    }
   ) {
+    const {
+      artifactReady,
+      batchHash,
+      batchIndex,
+      item,
+      itemJson,
+      priorSequence,
+      role,
+      sequence,
+    } = input;
     const atIndex = yield* loadItem(ctx, item.releaseId, item.index);
     const atIdentity = yield* loadIdentityItem(
       ctx,
@@ -179,7 +192,7 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
         item.change.operation === "upsert"
           ? item.change.artifactHash
           : undefined,
-      artifactReady: false,
+      artifactReady,
       contentKey: item.change.contentKey,
       index: item.index,
       itemBatchHash: batchHash,

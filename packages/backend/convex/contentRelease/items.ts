@@ -82,6 +82,7 @@ const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(function* (
   const batchHash = yield* hashBatch("item", releaseId, batchIndex, values);
   const { release, state } = yield* loadStaged(ctx, releaseId);
   const signed = yield* decodeReleaseJson(release.releaseJson);
+  const reusesStoredArtifacts = signed.manifest.origin.kind === "rollback";
   if (release.status !== "staging" || release.abortingAt !== undefined) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
@@ -125,19 +126,22 @@ const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(function* (
   }
   const priorSequence = stagedBaseSequence(release.role, state);
   for (const { item, itemJson } of entries) {
-    yield* stageContentItem(
-      ctx,
+    yield* stageContentItem(ctx, {
+      artifactReady:
+        reusesStoredArtifacts && item.change.operation === "upsert",
+      batchHash,
+      batchIndex,
       item,
       itemJson,
-      batchIndex,
-      batchHash,
-      release.role,
-      release.sequence,
-      priorSequence
-    );
+      priorSequence,
+      role: release.role,
+      sequence: release.sequence,
+    });
   }
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", release._id, {
+      stagedArtifacts:
+        release.stagedArtifacts + (reusesStoredArtifacts ? batchUpserts : 0),
       stagedDeletes: release.stagedDeletes + batchDeletes,
       stagedItems: release.stagedItems + items.length,
       stagedUpserts: release.stagedUpserts + batchUpserts,
