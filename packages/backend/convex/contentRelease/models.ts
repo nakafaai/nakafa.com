@@ -12,6 +12,7 @@ import { syncArticles } from "@repo/backend/convex/contentRelease/article/sync";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import { syncMaterials } from "@repo/backend/convex/contentRelease/material/sync";
+import { claimUnchangedReadModels } from "@repo/backend/convex/contentRelease/models/impact";
 import { syncSearch } from "@repo/backend/convex/contentRelease/search/sync";
 import { loadSyncRelease } from "@repo/backend/convex/contentRelease/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -196,7 +197,15 @@ export const scheduleReadModels = Effect.fn(
   "contentRelease.scheduleReadModels"
 )(function* (ctx: MutationCtx, releaseId: string) {
   const { release, signed, state } = yield* loadSyncRelease(ctx, releaseId);
-  if (hasCompletedReadModels(getReadModelOwnership(release, signed, state))) {
+  const claimedState = yield* claimUnchangedReadModels(
+    ctx,
+    release,
+    signed,
+    state
+  );
+  if (
+    hasCompletedReadModels(getReadModelOwnership(release, signed, claimedState))
+  ) {
     return;
   }
   const existingJobId = release.syncJobId;

@@ -217,6 +217,7 @@ import type * as contentRelease_material_verify from "../contentRelease/material
 import type * as contentRelease_material_write from "../contentRelease/material/write.js";
 import type * as contentRelease_model from "../contentRelease/model.js";
 import type * as contentRelease_models from "../contentRelease/models.js";
+import type * as contentRelease_models_impact from "../contentRelease/models/impact.js";
 import type * as contentRelease_ownership from "../contentRelease/ownership.js";
 import type * as contentRelease_paging from "../contentRelease/paging.js";
 import type * as contentRelease_parse from "../contentRelease/parse.js";
@@ -811,6 +812,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material/write": typeof contentRelease_material_write;
   "contentRelease/model": typeof contentRelease_model;
   "contentRelease/models": typeof contentRelease_models;
+  "contentRelease/models/impact": typeof contentRelease_models_impact;
   "contentRelease/ownership": typeof contentRelease_ownership;
   "contentRelease/paging": typeof contentRelease_paging;
   "contentRelease/parse": typeof contentRelease_parse;
