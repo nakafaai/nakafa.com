@@ -243,6 +243,7 @@ import type * as contentRelease_proof_coordinator from "../contentRelease/proof/
 import type * as contentRelease_proof_failure from "../contentRelease/proof/failure.js";
 import type * as contentRelease_proof_poll from "../contentRelease/proof/poll.js";
 import type * as contentRelease_proof_read from "../contentRelease/proof/read.js";
+import type * as contentRelease_proof_routes from "../contentRelease/proof/routes.js";
 import type * as contentRelease_proof_snapshot from "../contentRelease/proof/snapshot.js";
 import type * as contentRelease_proof_spec from "../contentRelease/proof/spec.js";
 import type * as contentRelease_proof_stream from "../contentRelease/proof/stream.js";
@@ -837,6 +838,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/proof/failure": typeof contentRelease_proof_failure;
   "contentRelease/proof/poll": typeof contentRelease_proof_poll;
   "contentRelease/proof/read": typeof contentRelease_proof_read;
+  "contentRelease/proof/routes": typeof contentRelease_proof_routes;
   "contentRelease/proof/snapshot": typeof contentRelease_proof_snapshot;
   "contentRelease/proof/spec": typeof contentRelease_proof_spec;
   "contentRelease/proof/stream": typeof contentRelease_proof_stream;

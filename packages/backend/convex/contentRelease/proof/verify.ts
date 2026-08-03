@@ -15,10 +15,10 @@ import {
   decodeReleaseJson,
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
-import type { RouteCatalogPage } from "@repo/backend/convex/contentRelease/proof/catalog";
 import { verifyContentStreams } from "@repo/backend/convex/contentRelease/proof/content";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import type { ProofState } from "@repo/backend/convex/contentRelease/proof/read";
+import type { RouteCatalogPage } from "@repo/backend/convex/contentRelease/proof/routes";
 import { verifyReleaseSnapshots } from "@repo/backend/convex/contentRelease/proof/snapshot";
 import {
   readProofStream,
@@ -47,7 +47,7 @@ const catalogRoutesReference = makeFunctionReference<
   "query",
   { cursor: null | string; releaseId: string },
   RouteCatalogPage
->("contentRelease/proof/catalog:routes");
+>("contentRelease/proof/routes:routes");
 const proofStateReference = makeFunctionReference<
   "query",
   { manifestHash: string; releaseId: string },

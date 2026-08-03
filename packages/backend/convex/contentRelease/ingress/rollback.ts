@@ -31,7 +31,7 @@ import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
-import { makeFunctionReference } from "convex/server";
+import { type DefaultFunctionArgs, makeFunctionReference } from "convex/server";
 import { Effect, Schema } from "effect";
 
 type RollbackRequest = Extract<
@@ -40,7 +40,7 @@ type RollbackRequest = Extract<
 >;
 type ReadContext = Pick<ActionCtx, "runQuery">;
 
-interface RollbackArgs extends Record<string, number | string> {
+interface RollbackArgs extends DefaultFunctionArgs {
   readonly afterIndex: number;
   readonly limit: number;
   readonly rollbackOf: string;
