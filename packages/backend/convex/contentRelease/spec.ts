@@ -53,9 +53,6 @@ export const PROOF_PAGE_LIMIT = 128;
 /** Maximum complete proof-page response below Convex action limits. */
 export const PROOF_PAGE_BYTES = 4 * 1024 * 1024;
 
-/** Maximum rollback records reconstructed by one Convex query transaction. */
-export const ROLLBACK_QUERY_PAGE_LIMIT = 64;
-
 /** Maximum route identities validated before yielding one proof query. */
 export const ROUTE_CATALOG_PAGE_LIMIT = 8;
 

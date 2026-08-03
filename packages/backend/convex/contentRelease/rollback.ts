@@ -24,7 +24,10 @@ import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { decodeRouteJson } from "@repo/backend/convex/contentRelease/parse";
 import { rollbackRecord } from "@repo/backend/convex/contentRelease/rollback/state";
 import { loadReadableSnapshot } from "@repo/backend/convex/contentRelease/snapshot";
-import { ROLLBACK_QUERY_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
+import {
+  RELEASE_PAGE_LIMIT,
+  ROUTE_CATALOG_PAGE_LIMIT,
+} from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
@@ -71,17 +74,17 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
         })
     )
   );
+  if (request.limit > RELEASE_PAGE_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Rollback query pages require 1-${RELEASE_PAGE_LIMIT} records.`
+    );
+  }
   const { signed } = yield* rollbackSource(
     ctx,
     request.rollbackOf,
     request.rollbackOfManifestHash
   );
-  if (request.limit > ROLLBACK_QUERY_PAGE_LIMIT) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_LIMIT",
-      `Rollback query pages require 1-${ROLLBACK_QUERY_PAGE_LIMIT} records.`
-    );
-  }
   const total = signed.manifest.itemCount;
   if (request.afterIndex >= total) {
     return yield* releaseFail(
@@ -171,6 +174,12 @@ const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
           })
       )
     );
+    if (request.limit > ROUTE_CATALOG_PAGE_LIMIT) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_LIMIT",
+        `Route rollback query pages require 1-${ROUTE_CATALOG_PAGE_LIMIT} records.`
+      );
+    }
     const { baseSequence, signed } = yield* rollbackSource(
       ctx,
       request.rollbackOf,

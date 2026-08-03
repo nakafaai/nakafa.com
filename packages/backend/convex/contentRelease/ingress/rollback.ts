@@ -10,7 +10,11 @@ import {
   RollbackPageSchema,
   type RollbackRecord,
 } from "@nakafa/aksara-contracts/release/rollback";
-import { RoutePageSchema } from "@nakafa/aksara-contracts/release/route-page";
+import {
+  type RoutePage,
+  RoutePageSchema,
+  type RouteRollbackRecord,
+} from "@nakafa/aksara-contracts/release/route-page";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -23,7 +27,10 @@ import {
   matchManifest,
 } from "@repo/backend/convex/contentRelease/ingress/current";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
-import { ROLLBACK_QUERY_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
+import {
+  RELEASE_PAGE_LIMIT,
+  ROUTE_CATALOG_PAGE_LIMIT,
+} from "@repo/backend/convex/contentRelease/spec";
 import { makeFunctionReference } from "convex/server";
 import { Effect, Schema } from "effect";
 
@@ -93,6 +100,23 @@ function makeRollbackPage(
   };
 }
 
+/** Creates one coherent route page from already validated records. */
+function makeRoutePage(
+  request: Extract<RollbackRequest, { readonly operation: "routePage" }>,
+  total: number,
+  records: readonly RouteRollbackRecord[]
+): RoutePage {
+  const nextIndex = records.at(-1)?.current.index ?? request.afterIndex;
+  return {
+    done: nextIndex === total - 1,
+    nextIndex,
+    records,
+    rollbackOf: request.rollbackOf,
+    rollbackOfManifestHash: request.rollbackOfManifestHash,
+    total,
+  };
+}
+
 /** Computes exact canonical bytes without repeatedly serializing prior records. */
 function rollbackPageBytes(page: RollbackPage, recordBytes: number) {
   const wrapper = canonicalizeRollbackPage({ ...page, records: [] });
@@ -101,7 +125,7 @@ function rollbackPageBytes(page: RollbackPage, recordBytes: number) {
 }
 
 /** Requires one query chunk to continue the exact aggregate cursor. */
-const validateChunk = Effect.fn("contentRelease.validateRollbackChunk")(
+const validateBodyChunk = Effect.fn("contentRelease.validateRollbackChunk")(
   function* (
     chunk: RollbackPage,
     request: Extract<RollbackRequest, { readonly operation: "rollbackPage" }>,
@@ -120,6 +144,31 @@ const validateChunk = Effect.fn("contentRelease.validateRollbackChunk")(
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Rollback source ${request.rollbackOf} returned a mismatched query chunk.`
+      );
+    }
+  }
+);
+
+/** Requires one route query chunk to continue the exact aggregate cursor. */
+const validateRouteChunk = Effect.fn("contentRelease.validateRouteChunk")(
+  function* (
+    chunk: RoutePage,
+    request: Extract<RollbackRequest, { readonly operation: "routePage" }>,
+    afterIndex: number,
+    limit: number,
+    total: number
+  ) {
+    const firstIndex = chunk.records[0]?.current.index ?? afterIndex + 1;
+    if (
+      chunk.rollbackOf !== request.rollbackOf ||
+      chunk.rollbackOfManifestHash !== request.rollbackOfManifestHash ||
+      chunk.total !== total ||
+      chunk.records.length > limit ||
+      firstIndex !== afterIndex + 1
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Route rollback source ${request.rollbackOf} returned a mismatched query chunk.`
       );
     }
   }
@@ -160,7 +209,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
     let recordBytes = 0;
     while (records.length < request.limit && afterIndex < total - 1) {
       const limit = Math.min(
-        ROLLBACK_QUERY_PAGE_LIMIT,
+        RELEASE_PAGE_LIMIT,
         request.limit - records.length
       );
       const source = yield* callInternal(() =>
@@ -176,7 +225,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
         RollbackPageSchema,
         "Rollback query page"
       );
-      yield* validateChunk(chunk, request, afterIndex, limit, total);
+      yield* validateBodyChunk(chunk, request, afterIndex, limit, total);
 
       for (const record of chunk.records) {
         const encodedBytes = textEncoder.encode(
@@ -212,6 +261,51 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
   }
 );
 
+/** Aggregates safe route query transactions into one external page. */
+const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
+  function* (
+    ctx: ReadContext,
+    request: Extract<RollbackRequest, { readonly operation: "routePage" }>,
+    total: number
+  ) {
+    if (request.afterIndex >= total) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_CONFLICT",
+        `Route cursor ${request.afterIndex} exceeds release ${request.rollbackOf}.`
+      );
+    }
+
+    const records: RouteRollbackRecord[] = [];
+    let afterIndex = request.afterIndex;
+    while (records.length < request.limit && afterIndex < total - 1) {
+      const limit = Math.min(
+        ROUTE_CATALOG_PAGE_LIMIT,
+        request.limit - records.length
+      );
+      const source = yield* callInternal(() =>
+        ctx.runQuery(routeRollbackReference, {
+          afterIndex,
+          limit,
+          rollbackOf: request.rollbackOf,
+          rollbackOfManifestHash: request.rollbackOfManifestHash,
+        })
+      );
+      const chunk = yield* decodePage(
+        source,
+        RoutePageSchema,
+        "Route rollback query page"
+      );
+      yield* validateRouteChunk(chunk, request, afterIndex, limit, total);
+      records.push(...chunk.records);
+      afterIndex = chunk.nextIndex;
+      if (chunk.done) {
+        break;
+      }
+    }
+    return makeRoutePage(request, total, records);
+  }
+);
+
 /** Reads one authenticated body or route rollback page. */
 export const readRollback = Effect.fn("contentRelease.readRollback")(function* (
   ctx: ReadContext,
@@ -226,13 +320,5 @@ export const readRollback = Effect.fn("contentRelease.readRollback")(function* (
   if (request.operation === "rollbackPage") {
     return yield* readBodyPage(ctx, request, bundle.release.manifest.itemCount);
   }
-  const source = yield* callInternal(() =>
-    ctx.runQuery(routeRollbackReference, {
-      afterIndex: request.afterIndex,
-      limit: request.limit,
-      rollbackOf: request.rollbackOf,
-      rollbackOfManifestHash: request.rollbackOfManifestHash,
-    })
-  );
-  return yield* decodePage(source, RoutePageSchema, "Route rollback page");
+  return yield* readRoutePage(ctx, request, bundle.release.manifest.routeCount);
 });
