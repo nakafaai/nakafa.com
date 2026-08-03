@@ -2,6 +2,7 @@ import { ArrowUpRight01Icon, Globe02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { cn } from "@repo/design-system/lib/utils";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import {
@@ -62,11 +63,17 @@ export async function Curricula({ locale }: { locale: Locale }) {
 
         <nav
           aria-label={t("navigation")}
-          className="grid grid-cols-2 gap-px border-t bg-border lg:grid-cols-4"
+          className="grid grid-cols-2 border-t lg:grid-cols-4"
         >
-          {curricula.map((curriculum) => (
+          {curricula.map((curriculum, index) => (
             <NavigationLink
-              className="group relative flex min-h-40 flex-col items-start justify-between bg-background p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-44 sm:p-6 lg:min-h-48 lg:p-8"
+              className={cn(
+                "group relative flex min-h-40 flex-col items-start justify-between bg-background p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-44 sm:p-6 lg:min-h-48 lg:p-8",
+                index % 2 === 1 && "border-l",
+                index >= 2 && "border-t",
+                index % 4 === 0 ? "lg:border-l-0" : "lg:border-l",
+                index >= 4 ? "lg:border-t" : "lg:border-t-0"
+              )}
               href={curriculum.href}
               key={curriculum.programKey}
             >
