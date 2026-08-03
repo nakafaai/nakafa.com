@@ -176,7 +176,13 @@ describe("tryouts/mutations/attempts", () => {
     const sectionAttempts = await t.query((ctx) =>
       ctx.db.query("tryoutSectionAttempts").collect()
     );
-    expect(sectionAttempts).toEqual([]);
+    expect(sectionAttempts).toMatchObject([
+      {
+        sectionKey: "legacy-entry",
+        status: "in-progress",
+        tryoutAttemptId: seeded.attemptId,
+      },
+    ]);
   });
 
   it("starts an internal entry section atomically with a new attempt", async () => {

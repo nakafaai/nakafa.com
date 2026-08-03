@@ -377,6 +377,25 @@ describe("tryouts/queries/sets", () => {
     expect(titlePage.page.map((set) => set.setKey)).toEqual(["set-2", "set-1"]);
   });
 
+  it.each([0, -1, 1.5])(
+    "rejects the invalid signed page size %s",
+    async (numItems) => {
+      const t = createConvexTestWithBetterAuth();
+      await t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"));
+
+      await expect(
+        t.query(api.tryouts.queries.sets.list, {
+          countryKey: TRYOUT_START_COUNTRY,
+          examKey: TRYOUT_START_EXAM,
+          locale: "id",
+          paginationOpts: { cursor: null, numItems },
+          sort: { direction: "asc", field: "order" },
+          trackKey: TRYOUT_START_TRACK,
+        })
+      ).rejects.toThrow("The try-out set page size is invalid.");
+    }
+  );
+
   it("filters attempted states before pagination and keeps unattempted separate", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {

@@ -110,7 +110,7 @@ export function StartTryoutButton({
     }
 
     if (activeAttempt && request.entrySectionKey) {
-      runEntrySection(request.entrySectionKey);
+      runEntrySection(attempt?.resumeSectionKey ?? request.entrySectionKey);
       return;
     }
 

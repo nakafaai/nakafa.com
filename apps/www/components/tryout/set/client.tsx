@@ -44,16 +44,26 @@ export function TryoutSetPageClient({
   );
   const entrySection = page.entrySection;
   const isInternalEntry = entrySection?.visibility === "internal-entry";
+  let runtimeSectionKey = entrySection?.sectionKey;
+  if (
+    currentAttempt?.status === "in-progress" &&
+    currentAttempt.resumeSectionKey
+  ) {
+    runtimeSectionKey = currentAttempt.resumeSectionKey;
+  }
   const shouldLoadRuntime =
-    isInternalEntry && currentAttempt !== undefined && currentAttempt !== null;
+    isInternalEntry &&
+    currentAttempt !== undefined &&
+    currentAttempt !== null &&
+    runtimeSectionKey !== undefined;
   const runtime = useQuery(
     api.tryouts.queries.runtime.getSection,
-    shouldLoadRuntime && entrySection
+    shouldLoadRuntime && runtimeSectionKey
       ? {
           countryKey: page.set.countryKey,
           examKey: page.set.examKey,
           locale: route.locale,
-          sectionKey: entrySection.sectionKey,
+          sectionKey: runtimeSectionKey,
           setKey: page.set.setKey,
           trackKey: page.set.trackKey,
         }

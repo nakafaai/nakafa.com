@@ -114,9 +114,16 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
 
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
-      const entrySection = attempt.sectionSnapshots.find(
+      const currentEntrySection = attempt.sectionSnapshots.find(
         (section) => section.sectionKey === entrySectionKey
       );
+      const entrySection =
+        currentEntrySection ??
+        attempt.sectionSnapshots.find(
+          (section) =>
+            section.publicPath === undefined &&
+            !attempt.completedSectionKeys.includes(section.sectionKey)
+        );
       if (!entrySection || entrySection.publicPath) {
         return attempt;
       }
@@ -124,7 +131,7 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
       yield* startSectionAttempt(ctx, {
         attempt,
         now: input.now,
-        sectionKey: entrySectionKey,
+        sectionKey: entrySection.sectionKey,
       }).pipe(Effect.mapError(toTryoutStartError));
     }
 

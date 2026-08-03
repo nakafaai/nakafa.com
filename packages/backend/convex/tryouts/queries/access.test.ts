@@ -315,6 +315,52 @@ describe("tryouts/queries/access", () => {
     });
   });
 
+  it("serves the active frozen section after its published key changes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const fixture = await seedTryoutContentAccessState(ctx, {
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        signed: true,
+        suffix: "content-signed-frozen-entry",
+      });
+      if (!fixture.placementId) {
+        throw new Error("Expected a signed placement fixture.");
+      }
+      await ctx.db.patch(fixture.attemptId, {
+        sectionSnapshots: [
+          {
+            questionCount: 1,
+            questionSourcePath: "question-bank/tryout/legacy-entry",
+            sectionKey: "legacy-entry",
+            sectionOrder: 1,
+            sourceRevision: "2026",
+            timeLimitSeconds: 1800,
+          },
+        ],
+      });
+      await ctx.db.patch(fixture.sectionAttemptId, {
+        sectionKey: "legacy-entry",
+      });
+      await ctx.db.patch(fixture.placementId, {
+        sectionKey: "legacy-entry",
+      });
+      return fixture;
+    });
+    const authed = t.withIdentity({
+      sessionId: seeded.identity.sessionId,
+      subject: seeded.identity.authUserId,
+    });
+
+    await expect(
+      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
+    ).resolves.toEqual({
+      answers: [],
+      kind: "signed",
+      questions: [seeded.signedContent?.question],
+    });
+  });
+
   it("prefers a newer filesystem attempt during signed migration", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {

@@ -42,7 +42,7 @@ export const readTryoutSectionContent = Effect.fn(
     return noContentAccess;
   }
 
-  const section = yield* tryContentPromise(() =>
+  const requestedSection = yield* tryContentPromise(() =>
     ctx.db
       .query("tryoutSectionAttempts")
       .withIndex("by_tryoutAttemptId_and_sectionKey", (index) =>
@@ -52,6 +52,7 @@ export const readTryoutSectionContent = Effect.fn(
       )
       .unique()
   );
+  const section = requestedSection ?? (yield* loadActiveSection(ctx, attempt));
   if (!section) {
     return noContentAccess;
   }
@@ -75,11 +76,36 @@ export const readTryoutSectionContent = Effect.fn(
     attempt,
     ctx,
     locale: args.locale,
-    sectionKey: args.sectionKey,
+    sectionKey: section.sectionKey,
     snapshotId,
     totalQuestions: section.totalQuestions,
   });
 });
+
+/** Resolves one bounded active section when its published route key changed. */
+const loadActiveSection = Effect.fn("tryouts.access.loadActiveSection")(
+  function* (ctx: QueryCtx, attempt: TryoutAttempt) {
+    if (attempt.status !== "in-progress") {
+      return null;
+    }
+
+    const sections = yield* tryContentPromise(() =>
+      ctx.db
+        .query("tryoutSectionAttempts")
+        .withIndex("by_tryoutAttemptId_and_sectionOrder", (index) =>
+          index.eq("tryoutAttemptId", attempt._id)
+        )
+        .take(attempt.sectionSnapshots.length + 1)
+    );
+    if (sections.length > attempt.sectionSnapshots.length) {
+      return yield* contentIntegrity(
+        "Try-out section attempt count exceeds its frozen snapshot."
+      );
+    }
+
+    return sections.find((section) => section.status === "in-progress") ?? null;
+  }
+);
 
 /** Returns exact protected selectors from one immutable signed attempt. */
 const loadSignedContent = Effect.fn("tryouts.access.loadSignedContent")(

@@ -30,11 +30,14 @@ interface ScoredSet extends JoinedSet {
   readonly progress: Progress & { readonly publishedScore: number };
 }
 
-/** Stable client failure for one invalid immutable-catalog cursor. */
-class PublishedSetCursorError extends Schema.TaggedError<PublishedSetCursorError>()(
-  "PublishedSetCursorError",
+/** Stable client failure for invalid immutable-catalog pagination. */
+class PublishedSetPaginationError extends Schema.TaggedError<PublishedSetPaginationError>()(
+  "PublishedSetPaginationError",
   {
-    code: Schema.Literal("INVALID_TRYOUT_SET_CURSOR"),
+    code: Schema.Literal(
+      "INVALID_TRYOUT_SET_CURSOR",
+      "INVALID_TRYOUT_SET_PAGE_SIZE"
+    ),
     message: Schema.String,
   }
 ) {}
@@ -222,6 +225,12 @@ const paginateSets = Effect.fn("tryouts.sets.paginatePublished")(function* (
       "Signed try-out catalog lost its snapshot identity."
     );
   }
+  if (!(Number.isSafeInteger(pagination.numItems) && pagination.numItems > 0)) {
+    return yield* new PublishedSetPaginationError({
+      code: "INVALID_TRYOUT_SET_PAGE_SIZE",
+      message: "The try-out set page size is invalid.",
+    });
+  }
   const offset = yield* decodeCursor(snapshotId, pagination.cursor);
   const size = Math.min(pagination.numItems, SIGNED_PAGE_LIMIT);
   const end = Math.min(offset + size, rows.length);
@@ -266,7 +275,7 @@ function decodeCursor(snapshotId: string, cursor: string | null) {
 
 /** Creates one typed invalid-cursor failure. */
 function cursorFailure() {
-  return new PublishedSetCursorError({
+  return new PublishedSetPaginationError({
     code: "INVALID_TRYOUT_SET_CURSOR",
     message: "The try-out set pagination cursor is invalid.",
   });
