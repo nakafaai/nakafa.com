@@ -183,6 +183,7 @@ import type * as contentRelease_ingress_group from "../contentRelease/ingress/gr
 import type * as contentRelease_ingress_lifecycle from "../contentRelease/ingress/lifecycle.js";
 import type * as contentRelease_ingress_read from "../contentRelease/ingress/read.js";
 import type * as contentRelease_ingress_response from "../contentRelease/ingress/response.js";
+import type * as contentRelease_ingress_rollback from "../contentRelease/ingress/rollback.js";
 import type * as contentRelease_ingress_route from "../contentRelease/ingress/route.js";
 import type * as contentRelease_ingress_snapshot from "../contentRelease/ingress/snapshot.js";
 import type * as contentRelease_ingress_stage from "../contentRelease/ingress/stage.js";
@@ -776,6 +777,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/ingress/lifecycle": typeof contentRelease_ingress_lifecycle;
   "contentRelease/ingress/read": typeof contentRelease_ingress_read;
   "contentRelease/ingress/response": typeof contentRelease_ingress_response;
+  "contentRelease/ingress/rollback": typeof contentRelease_ingress_rollback;
   "contentRelease/ingress/route": typeof contentRelease_ingress_route;
   "contentRelease/ingress/snapshot": typeof contentRelease_ingress_snapshot;
   "contentRelease/ingress/stage": typeof contentRelease_ingress_stage;
