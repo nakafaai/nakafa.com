@@ -821,6 +821,12 @@
     "projectile-range": "Range",
     "projectile-instantaneous-velocity": "Velocity at two seconds"
   },
+  "CurriculaSection": {
+    "headline": "Your curriculum may differ. <mark>Your learning still stays connected.</mark>",
+    "description": "Start from your school pathway. Lessons, Tryout, and Nina follow the curriculum you use.",
+    "cta": "Explore all curricula",
+    "navigation": "Available curricula"
+  },
   "SchoolsSection": {
     "badge": "For Schools",
     "headline": "Every school has <mark>different</mark> needs. We <mark>get it</mark>.",
