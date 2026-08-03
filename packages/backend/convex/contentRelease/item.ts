@@ -134,7 +134,6 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
   function* (
     ctx: MutationCtx,
     input: {
-      readonly artifactReady: boolean;
       readonly batchHash: string;
       readonly batchIndex: number;
       readonly item: ContentReleaseItem;
@@ -145,7 +144,6 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
     }
   ) {
     const {
-      artifactReady,
       batchHash,
       batchIndex,
       item,
@@ -192,7 +190,7 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
         item.change.operation === "upsert"
           ? item.change.artifactHash
           : undefined,
-      artifactReady,
+      artifactReady: false,
       contentKey: item.change.contentKey,
       index: item.index,
       itemBatchHash: batchHash,

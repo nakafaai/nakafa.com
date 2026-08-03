@@ -104,7 +104,7 @@ describe("contentRelease/items", () => {
     });
   });
 
-  it("reuses retained artifacts for rollback upserts", async () => {
+  it("requires rollback artifacts to use the normal staging proof", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       insertTestRelease(ctx, { originReleaseId: "release-base" })
@@ -116,10 +116,10 @@ describe("contentRelease/items", () => {
       release: await ctx.db.query("contentReleases").unique(),
     }));
 
-    expect(state.item).toMatchObject({ artifactReady: true });
+    expect(state.item).toMatchObject({ artifactReady: false });
     expect(state.item).not.toHaveProperty("artifactBatchHash");
     expect(state.item).not.toHaveProperty("artifactBatchIndex");
-    expect(state.release?.stagedArtifacts).toBe(1);
+    expect(state.release?.stagedArtifacts).toBe(0);
   });
 
   it("captures absent and tombstoned rollback states exactly", async () => {
