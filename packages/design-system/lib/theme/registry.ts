@@ -183,7 +183,7 @@ export type ThemeValue = (typeof themes)[number]["value"];
 export const THEME_STORAGE_KEY = "theme";
 
 /** First-visit theme shared by the localized document and next-themes. */
-export const DEFAULT_THEME = "light" satisfies ThemeValue;
+export const DEFAULT_THEME = "system" satisfies ThemeValue;
 
 /** Concrete class names managed on the document root. */
 export const concreteThemeValues = themes.flatMap((theme) =>

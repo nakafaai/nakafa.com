@@ -9,6 +9,7 @@ import {
   toRgbProjection,
 } from "@repo/design-system/lib/theme/contract";
 import {
+  DEFAULT_THEME,
   getThemeAppearance,
   getThemeShaderColor,
   themes,
@@ -21,6 +22,10 @@ const sources = await Effect.runPromise(
 );
 
 describe("theme registry", () => {
+  it("uses the browser preference for first-time visitors", () => {
+    expect(DEFAULT_THEME).toBe("system");
+  });
+
   it("defines every selectable theme exactly once", () => {
     const values = themes.map((theme) => theme.value);
 

@@ -278,6 +278,10 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    scrollbar-gutter: stable both-edges;
+  }
+
   body {
     @apply bg-background text-foreground selection:bg-primary selection:text-primary-foreground overscroll-y-none;
   }
