@@ -1,8 +1,7 @@
-import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
+import { ArrowUpRight01Icon, Globe02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { cn } from "@repo/design-system/lib/utils";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import {
@@ -14,6 +13,17 @@ import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 const CURRICULA_SHADER_PIXEL_BUDGET = 720_000;
+
+/** Renders a country flag when available and a global curriculum mark otherwise. */
+function CurriculumCountryMark({ countryCode }: { countryCode?: string }) {
+  return (
+    <CountryFlagIcon
+      className="h-auto w-6 rounded-xs ring-1 ring-foreground/10"
+      countryCode={countryCode}
+      fallback={<HugeIcons className="size-5 shrink-0" icon={Globe02Icon} />}
+    />
+  );
+}
 
 /** Lets learners enter Nakafa through the curriculum they already use. */
 export async function Curricula({ locale }: { locale: Locale }) {
@@ -52,23 +62,15 @@ export async function Curricula({ locale }: { locale: Locale }) {
 
         <nav
           aria-label={t("navigation")}
-          className="grid grid-cols-2 border-t lg:grid-cols-4"
+          className="grid grid-cols-2 gap-px border-t bg-border lg:grid-cols-4"
         >
-          {curricula.map((curriculum, index) => (
+          {curricula.map((curriculum) => (
             <NavigationLink
-              className={cn(
-                "group relative flex min-h-40 flex-col items-start justify-between p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-44 sm:p-6 lg:min-h-48 lg:p-8",
-                index % 2 === 0 && "border-r",
-                index < 2 && "border-b lg:border-b-0",
-                index < curricula.length - 1 && "lg:border-r"
-              )}
+              className="group relative flex min-h-40 flex-col items-start justify-between bg-background p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-44 sm:p-6 lg:min-h-48 lg:p-8"
               href={curriculum.href}
               key={curriculum.programKey}
             >
-              <CountryFlagIcon
-                className="h-auto w-6 rounded-xs ring-1 ring-foreground/10"
-                countryCode={curriculum.countryCode}
-              />
+              <CurriculumCountryMark countryCode={curriculum.countryCode} />
               <span className="max-w-52 text-pretty text-lg tracking-tight sm:text-xl">
                 {curriculum.title}
               </span>
