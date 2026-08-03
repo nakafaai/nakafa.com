@@ -2,6 +2,7 @@ import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { cn } from "@repo/design-system/lib/utils";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import {
@@ -21,9 +22,6 @@ export async function Curricula({ locale }: { locale: Locale }) {
     readRuntimeCurriculumCatalog(locale),
   ]);
   const curricula = readRuntimeCurriculumOptions(catalog, locale);
-  const cardPixelBudget = Math.floor(
-    CURRICULA_SHADER_PIXEL_BUDGET / Math.max(curricula.length, 1)
-  );
 
   return (
     <section
@@ -56,28 +54,31 @@ export async function Curricula({ locale }: { locale: Locale }) {
           aria-label={t("navigation")}
           className="grid grid-cols-2 border-t lg:grid-cols-4"
         >
-          {curricula.map((curriculum) => (
+          {curricula.map((curriculum, index) => (
             <NavigationLink
-              className="group relative min-h-64 overflow-hidden border-r border-b p-5 outline-none even:border-r-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-72 sm:p-6 lg:min-h-80 lg:border-r lg:p-8 lg:last:border-r-0"
+              className={cn(
+                "group relative flex min-h-40 flex-col items-start justify-between p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-44 sm:p-6 lg:min-h-48 lg:p-8",
+                index % 2 === 0 && "border-r",
+                index < 2 && "border-b lg:border-b-0",
+                index < curricula.length - 1 && "lg:border-r"
+              )}
               href={curriculum.href}
               key={curriculum.programKey}
             >
-              <CurriculaArt
-                maxPixelCount={cardPixelBudget}
-                programKey={curriculum.programKey}
+              <CountryFlagIcon
+                className="h-auto w-6 rounded-xs ring-1 ring-foreground/10"
+                countryCode={curriculum.countryCode}
               />
-              <span className="relative z-1 flex flex-col items-start gap-4">
-                <CountryFlagIcon
-                  className="h-auto w-6 rounded-xs ring-1 ring-foreground/10"
-                  countryCode={curriculum.countryCode}
-                />
-                <span className="max-w-52 text-pretty text-lg tracking-tight sm:text-xl">
-                  {curriculum.title}
-                </span>
+              <span className="max-w-52 text-pretty text-lg tracking-tight sm:text-xl">
+                {curriculum.title}
               </span>
             </NavigationLink>
           ))}
         </nav>
+
+        <div className="relative min-h-64 overflow-hidden border-t sm:min-h-72 lg:min-h-80">
+          <CurriculaArt maxPixelCount={CURRICULA_SHADER_PIXEL_BUDGET} />
+        </div>
       </div>
     </section>
   );
