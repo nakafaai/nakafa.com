@@ -4,14 +4,17 @@ import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
 import SG from "country-flag-icons/react/3x2/SG";
 import US from "country-flag-icons/react/3x2/US";
+import type { ReactNode } from "react";
 
 /** Renders one supported country flag without dynamic component lookup. */
 export function CountryFlagIcon({
   className,
   countryCode,
+  fallback = null,
 }: {
   className?: string;
   countryCode?: string;
+  fallback?: ReactNode;
 }) {
   const flagClassName = cn("size-4 shrink-0", className);
 
@@ -27,6 +30,6 @@ export function CountryFlagIcon({
     case "US":
       return <US aria-hidden className={flagClassName} />;
     default:
-      return null;
+      return fallback;
   }
 }

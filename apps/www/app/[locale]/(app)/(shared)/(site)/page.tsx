@@ -5,6 +5,7 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { Community } from "@/components/marketing/about/community";
+import { Curricula } from "@/components/marketing/about/curricula";
 import { Faq } from "@/components/marketing/about/faq";
 import { Features } from "@/components/marketing/about/features";
 import { Hero } from "@/components/marketing/about/hero";
@@ -138,6 +139,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         <Hero />
         <Logos />
         <Features />
+        <Curricula locale={locale} />
         <Trust locale={locale} />
         <Pricing />
         <Schools />

@@ -821,6 +821,12 @@
     "projectile-range": "Jangkauan",
     "projectile-instantaneous-velocity": "Kecepatan pada dua detik"
   },
+  "CurriculaSection": {
+    "headline": "Kurikulummu boleh berbeda. <mark>Alur belajarmu tetap menyatu.</mark>",
+    "description": "Mulai dari jalur sekolahmu. Materi, Tryout, dan Nina mengikuti kurikulum yang kamu gunakan.",
+    "cta": "Lihat semua kurikulum",
+    "navigation": "Kurikulum yang tersedia"
+  },
   "SchoolsSection": {
     "badge": "Untuk Sekolah",
     "headline": "Setiap sekolah punya kebutuhan <mark>berbeda</mark>. Kami <mark>mengerti</mark>.",
