@@ -168,21 +168,24 @@ const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
     activeKeyId: string
   ) {
     const verified = yield* loadEnvelope(ctx, request.releaseId);
-    yield* Effect.forEach(request.artifacts, (artifact) =>
-      requireActiveKey(
-        artifact.keyId,
-        activeKeyId,
-        `Artifact ${artifact.artifactHash}`
-      ).pipe(
-        Effect.andThen(
-          verifySignedContentArtifact({
-            artifact,
-            rendererContractVersion:
-              verified.signed.manifest.rendererContractVersion,
-            rendererManifest: verified.renderer,
-          }).pipe(Effect.mapError(contractFailure))
-        )
-      )
+    yield* Effect.forEach(
+      request.artifacts,
+      (artifact) =>
+        requireActiveKey(
+          artifact.keyId,
+          activeKeyId,
+          `Artifact ${artifact.artifactHash}`
+        ).pipe(
+          Effect.andThen(
+            verifySignedContentArtifact({
+              artifact,
+              rendererContractVersion:
+                verified.signed.manifest.rendererContractVersion,
+              rendererManifest: verified.renderer,
+            }).pipe(Effect.mapError(contractFailure))
+          )
+        ),
+      { concurrency: "unbounded", discard: true }
     );
   }
 );

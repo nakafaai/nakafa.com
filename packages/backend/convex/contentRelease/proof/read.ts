@@ -2,10 +2,7 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadRelease } from "@repo/backend/convex/contentRelease/model";
-import {
-  decodeItemJson,
-  decodeReleaseJson,
-} from "@repo/backend/convex/contentRelease/parse";
+import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
 import { hasProofTransactionHeadroom } from "@repo/backend/convex/contentRelease/proof/budget";
 import {
   PROOF_PAGE_BYTES,
@@ -16,9 +13,7 @@ import { getConvexSize, type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 import { Effect } from "effect";
 
-const proofKindValidator = literals("artifact", "item");
 const proofRowValidator = v.object({
-  artifactJson: v.optional(v.string()),
   index: v.number(),
   itemJson: v.string(),
   projectionJson: v.optional(v.string()),
@@ -138,37 +133,10 @@ const routePageProgram = Effect.fn("contentRelease.routeProofPage")(function* (
   };
 });
 
-/** Loads one signed artifact only for its exact staged upsert. */
-const loadArtifactJson = Effect.fn("contentRelease.loadProofArtifact")(
-  function* (ctx: QueryCtx, itemJson: string) {
-    const item = yield* decodeItemJson(itemJson);
-    const change = item.change;
-    if (change.operation === "delete") {
-      return;
-    }
-    const artifact = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentArtifacts")
-        .withIndex("by_artifactHash", (query) =>
-          query.eq("artifactHash", change.artifactHash)
-        )
-        .unique()
-    );
-    if (!artifact) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_MISSING",
-        `Artifact ${change.artifactHash} is missing during proof.`
-      );
-    }
-    return artifact.artifactJson;
-  }
-);
-
 /** Reads one bounded page for complete-stream Node verification. */
 const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
   ctx: QueryCtx,
   afterIndex: number,
-  kind: "artifact" | "item",
   releaseId: string
 ) {
   if (!Number.isSafeInteger(afterIndex) || afterIndex < -1) {
@@ -202,15 +170,10 @@ const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
   );
   const rows: ProofPage["rows"] = [];
   for (const row of stored.page) {
-    const artifactJson =
-      kind === "artifact"
-        ? yield* loadArtifactJson(ctx, row.itemJson)
-        : undefined;
     const next = {
-      artifactJson,
       index: row.index,
       itemJson: row.itemJson,
-      projectionJson: kind === "item" ? row.projectionJson : undefined,
+      projectionJson: row.projectionJson,
       rollbackJson: row.rollbackJson,
     };
     const candidate = {
@@ -256,14 +219,11 @@ export const state = internalQuery({
 export const page = internalQuery({
   args: {
     afterIndex: v.number(),
-    kind: proofKindValidator,
     releaseId: v.string(),
   },
   returns: proofPageValidator,
   handler: (ctx, args) =>
-    runConvexProgram(
-      pageProgram(ctx, args.afterIndex, args.kind, args.releaseId)
-    ),
+    runConvexProgram(pageProgram(ctx, args.afterIndex, args.releaseId)),
 });
 
 /** Returns one bounded canonical route page for Node verification. */

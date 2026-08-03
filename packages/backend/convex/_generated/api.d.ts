@@ -235,7 +235,6 @@ import type * as contentRelease_program_route from "../contentRelease/program/ro
 import type * as contentRelease_program_sitemap from "../contentRelease/program/sitemap.js";
 import type * as contentRelease_program_verify from "../contentRelease/program/verify.js";
 import type * as contentRelease_projection from "../contentRelease/projection.js";
-import type * as contentRelease_proof_artifacts from "../contentRelease/proof/artifacts.js";
 import type * as contentRelease_proof_budget from "../contentRelease/proof/budget.js";
 import type * as contentRelease_proof_catalog from "../contentRelease/proof/catalog.js";
 import type * as contentRelease_proof_commit from "../contentRelease/proof/commit.js";
@@ -830,7 +829,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/program/sitemap": typeof contentRelease_program_sitemap;
   "contentRelease/program/verify": typeof contentRelease_program_verify;
   "contentRelease/projection": typeof contentRelease_projection;
-  "contentRelease/proof/artifacts": typeof contentRelease_proof_artifacts;
   "contentRelease/proof/budget": typeof contentRelease_proof_budget;
   "contentRelease/proof/catalog": typeof contentRelease_proof_catalog;
   "contentRelease/proof/commit": typeof contentRelease_proof_commit;

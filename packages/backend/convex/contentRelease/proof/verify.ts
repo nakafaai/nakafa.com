@@ -15,7 +15,6 @@ import {
   decodeReleaseJson,
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
-import { verifyArtifacts } from "@repo/backend/convex/contentRelease/proof/artifacts";
 import type { RouteCatalogPage } from "@repo/backend/convex/contentRelease/proof/catalog";
 import { verifyContentStreams } from "@repo/backend/convex/contentRelease/proof/content";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
@@ -130,17 +129,8 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
     yield* verifyStoredItems(ctx, releaseId, state.checkedIndex);
     const evidence = yield* Effect.all(
       {
-        artifacts: verifyArtifacts(
-          readProofStream(ctx, "artifact", releaseId),
-          releaseId,
-          renderer,
-          release.manifest.rendererContractVersion
-        ),
         routeCatalog: verifyRouteCatalog(ctx, releaseId),
-        content: verifyContentStreams(
-          release,
-          readProofStream(ctx, "item", releaseId)
-        ),
+        content: verifyContentStreams(release, readProofStream(ctx, releaseId)),
         result: verifyResultCatalog({
           expectedCount: release.manifest.resultCount,
           expectedDigest: release.manifest.resultDigest,
@@ -162,7 +152,6 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       { concurrency: "unbounded" }
     );
     const { items, projections, rollback } = evidence.content;
-    const artifactCount = evidence.artifacts;
     const { result, routes, snapshots } = evidence;
     const countersMatch =
       state.stagedItems === release.manifest.itemCount &&
@@ -171,7 +160,6 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       release.manifest.upsertCount === items.upsertCount &&
       state.stagedDeletes === items.deleteCount &&
       state.stagedUpserts === items.upsertCount &&
-      state.stagedArtifacts === artifactCount &&
       state.stagedArtifacts === items.upsertCount &&
       state.stagedProjections === projections.count &&
       state.stagedProjections === items.upsertCount &&
@@ -207,7 +195,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       routeCount: routes.count,
       routeDigest: release.manifest.routeDigest,
       snapshots: snapshots.snapshots,
-      stagedArtifacts: artifactCount,
+      stagedArtifacts: state.stagedArtifacts,
       stagedRoutes: routes.count,
       stagedSnapshotRows: snapshots.stagedRows,
       upsertHeads: items.upsertCount,

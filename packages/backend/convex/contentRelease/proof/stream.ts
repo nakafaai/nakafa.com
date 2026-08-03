@@ -16,7 +16,7 @@ import { Effect, Option, Stream } from "effect";
 
 const proofPageReference = makeFunctionReference<
   "query",
-  { afterIndex: number; kind: "artifact" | "item"; releaseId: string },
+  { afterIndex: number; releaseId: string },
   ProofPage
 >("contentRelease/proof/read:page");
 const catalogPageReference = makeFunctionReference<
@@ -31,14 +31,10 @@ const routePageReference = makeFunctionReference<
 >("contentRelease/proof/read:routePage");
 
 /** Replays one complete bounded proof stream across indexed query pages. */
-export function readProofStream(
-  ctx: ActionCtx,
-  kind: "artifact" | "item",
-  releaseId: string
-) {
+export function readProofStream(ctx: ActionCtx, releaseId: string) {
   return Stream.paginateEffect(-1, (afterIndex) =>
     callInternal(() =>
-      ctx.runQuery(proofPageReference, { afterIndex, kind, releaseId })
+      ctx.runQuery(proofPageReference, { afterIndex, releaseId })
     ).pipe(
       Effect.map((page): readonly [ProofPage, Option.Option<number>] => [
         page,
