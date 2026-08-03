@@ -121,7 +121,10 @@ function ThreeCanvasComponent({
       }}
     >
       <Canvas
-        className={cn("size-full [&_canvas]:size-full", className)}
+        className={cn(
+          "size-full overflow-hidden rounded-[inherit] [&>div]:rounded-[inherit] [&_canvas]:size-full [&_canvas]:rounded-[inherit]",
+          className
+        )}
         dpr={[1, 2]}
         fallback={
           <div className="flex h-full w-full items-center justify-center">
