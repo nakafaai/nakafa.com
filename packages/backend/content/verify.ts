@@ -28,6 +28,8 @@ export class ContentEnvelopeMismatchError extends Schema.TaggedError<ContentEnve
       "publicPath",
       "rendererManifest",
       "snapshotId",
+      "snapshotManifestHash",
+      "snapshotReleaseId",
       "sourcePath"
     ),
   }

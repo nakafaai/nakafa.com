@@ -3,12 +3,19 @@ import "server-only";
 import { api } from "@repo/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import type { FunctionArgs } from "convex/server";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 
 type TryoutMetadataArgs = FunctionArgs<
   typeof api.tryouts.queries.catalog.getMetadata
 >;
+
+/** Expected failure while reading one authenticated frozen section route. */
+class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>()(
+  "TryoutCatalogReadError",
+  { cause: Schema.Unknown }
+) {}
 
 /** Reads exact signed route metadata from the tagged content cache. */
 export async function readTryoutMetadata(args: TryoutMetadataArgs) {
@@ -86,3 +93,18 @@ export async function readTryoutSectionPage(
     publicPath,
   });
 }
+
+/** Reads one route from the current user's immutable attempt snapshot. */
+export const readTryoutAttemptSectionPage = Effect.fn(
+  "www.tryout.catalog.readAttemptSectionPage"
+)(function* (token: string, locale: Locale, publicPath: string) {
+  return yield* Effect.tryPromise({
+    catch: (cause) => new TryoutCatalogReadError({ cause }),
+    try: () =>
+      fetchQuery(
+        api.tryouts.queries.catalog.getAttemptSectionPage,
+        { locale, publicPath },
+        { token }
+      ),
+  });
+});

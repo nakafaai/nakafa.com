@@ -70,6 +70,12 @@ export const readTryoutSectionContent = Effect.fn(
     > = { ...access, kind: "filesystem" };
     return filesystemAccess;
   }
+  const snapshotReleaseId = attempt.snapshotReleaseId;
+  if (!snapshotReleaseId) {
+    return yield* contentIntegrity(
+      "Signed try-out attempt lost its frozen release identity."
+    );
+  }
 
   return yield* loadSignedContent({
     access,
@@ -77,6 +83,7 @@ export const readTryoutSectionContent = Effect.fn(
     ctx,
     locale: args.locale,
     sectionKey: section.sectionKey,
+    snapshotReleaseId,
     snapshotId,
     totalQuestions: section.totalQuestions,
   });
@@ -115,6 +122,7 @@ const loadSignedContent = Effect.fn("tryouts.access.loadSignedContent")(
     readonly ctx: QueryCtx;
     readonly locale: TryoutSectionContentArgs["locale"];
     readonly sectionKey: string;
+    readonly snapshotReleaseId: string;
     readonly snapshotId: string;
     readonly totalQuestions: number;
   }) {
@@ -145,12 +153,22 @@ const loadSignedContent = Effect.fn("tryouts.access.loadSignedContent")(
     const content: Extract<TryoutSectionContentAccess, { kind: "signed" }> = {
       answers: input.access.answers
         ? yield* Effect.forEach(placements, (placement) =>
-            makeAnswerSelector(placement, input.locale, input.snapshotId)
+            makeAnswerSelector(
+              placement,
+              input.locale,
+              input.snapshotId,
+              input.snapshotReleaseId
+            )
           )
         : [],
       kind: "signed",
       questions: yield* Effect.forEach(placements, (placement) =>
-        makeQuestionSelector(placement, input.locale, input.snapshotId)
+        makeQuestionSelector(
+          placement,
+          input.locale,
+          input.snapshotId,
+          input.snapshotReleaseId
+        )
       ),
     };
     return content;
@@ -161,7 +179,8 @@ const loadSignedContent = Effect.fn("tryouts.access.loadSignedContent")(
 function makeQuestionSelector(
   placement: TryoutPlacement,
   locale: TryoutSectionContentArgs["locale"],
-  snapshotId: string
+  snapshotId: string,
+  snapshotReleaseId: string
 ) {
   if (
     !(
@@ -180,6 +199,7 @@ function makeQuestionSelector(
     delivery: "authenticated",
     locale,
     questionOrder: placement.questionOrder,
+    snapshotReleaseId,
     snapshotId,
     sourcePath: placement.sourcePath,
     sourceRevision: placement.sourceRevision,
@@ -191,7 +211,8 @@ function makeQuestionSelector(
 function makeAnswerSelector(
   placement: TryoutPlacement,
   locale: TryoutSectionContentArgs["locale"],
-  snapshotId: string
+  snapshotId: string,
+  snapshotReleaseId: string
 ) {
   if (!(placement.answerArtifactHash && placement.answerContentKey)) {
     return contentIntegrity("Signed try-out answer selector is incomplete.");
@@ -204,6 +225,7 @@ function makeAnswerSelector(
     delivery: "entitled",
     locale,
     questionOrder: placement.questionOrder,
+    snapshotReleaseId,
     snapshotId,
     sourcePath: placement.sourcePath,
     sourceRevision: placement.sourceRevision,

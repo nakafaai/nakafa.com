@@ -25,7 +25,7 @@ export const requireTryoutSnapshot = Effect.fn(
     );
   }
 
-  return owner.selected.snapshotId;
+  return owner.selected;
 });
 
 /** Authenticates one legacy set against its exact signed catalog row. */

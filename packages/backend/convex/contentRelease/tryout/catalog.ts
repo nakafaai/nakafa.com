@@ -1,9 +1,11 @@
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot-data";
 import type { TryoutCatalogCounts } from "@nakafa/aksara-contracts/tryout/snapshot";
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
+import { loadVerifiedSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
@@ -76,81 +78,118 @@ export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
       };
     }
     const { active, snapshot, snapshotId } = owner.selected;
-    if (snapshot.family !== "tryout") {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Active try-out owner selected another snapshot family."
-      );
-    }
-    const { counts, locales, routeCount } = snapshot.manifest;
-    const expected = localizedCounts(counts, locales.length);
-    const expectedRouteCount = localizedCount(routeCount, locales.length);
-    if (!(expected && expectedRouteCount !== undefined)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Active try-out catalog counts do not divide across its locales."
-      );
-    }
-    const total = Object.values(expected).reduce(
-      (count, value) => count + value,
-      0
-    );
-    if (total > TRYOUT_CATALOG_LIMIT) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_LIMIT",
-        `Try-out catalog exceeds ${TRYOUT_CATALOG_LIMIT} rows per locale.`
-      );
-    }
-    const stored = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
-          index.eq("snapshotId", snapshotId).eq("locale", locale)
-        )
-        .take(total + 1)
-    );
-    if (stored.length !== total) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Try-out catalog for ${locale} does not match its signed count.`
-      );
-    }
-    const entries = yield* Effect.forEach(stored, (storedRow) =>
-      verifyTryoutCatalog(storedRow, snapshotId).pipe(
-        Effect.map((row) => ({
-          row,
-          rowHash: storedRow.rowHash,
-          rowJson: storedRow.rowJson,
-        }))
-      )
-    );
-    const rows = entries.map(({ row }) => row);
-    if (!hasExpectedCounts(countCatalog(rows), expected)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Try-out catalog for ${locale} changed its hierarchy counts.`
-      );
-    }
-    const actualRouteCount = rows.filter(
-      ({ publicPath }) => publicPath !== undefined
-    ).length;
-    if (actualRouteCount !== expectedRouteCount) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Try-out catalog for ${locale} changed its public route count.`
-      );
-    }
-    return {
+    return yield* loadStoredTryoutCatalog(ctx, locale, {
       activeManifestHash: active.manifestHash,
       activeReleaseId: active.releaseId,
-      entries,
-      managed: true,
-      routeCount: actualRouteCount,
+      snapshot,
       snapshotId,
       sourceRevision: readSourceRevision(active),
-    };
+    });
   }
 );
+
+/** Loads one retained signed catalog for an authenticated frozen attempt. */
+export const loadTryoutSnapshotCatalog = Effect.fn(
+  "contentRelease.loadTryoutSnapshotCatalog"
+)(function* (ctx: QueryCtx, locale: ContentLocale, snapshotId: string) {
+  const { snapshot } = yield* loadVerifiedSnapshot(ctx, "tryout", snapshotId);
+  return yield* loadStoredTryoutCatalog(ctx, locale, {
+    activeManifestHash: null,
+    activeReleaseId: null,
+    snapshot,
+    snapshotId,
+    sourceRevision: null,
+  });
+});
+
+/** Verifies every stored row and signed count for one selected snapshot. */
+const loadStoredTryoutCatalog = Effect.fn(
+  "contentRelease.loadStoredTryoutCatalog"
+)(function* (
+  ctx: QueryCtx,
+  locale: ContentLocale,
+  selection: {
+    readonly activeManifestHash: string | null;
+    readonly activeReleaseId: string | null;
+    readonly snapshot: ContentSnapshotManifest;
+    readonly snapshotId: string;
+    readonly sourceRevision: string | null;
+  }
+) {
+  if (selection.snapshot.family !== "tryout") {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Selected try-out owner contains another snapshot family."
+    );
+  }
+  const { counts, locales, routeCount } = selection.snapshot.manifest;
+  const expected = localizedCounts(counts, locales.length);
+  const expectedRouteCount = localizedCount(routeCount, locales.length);
+  if (!(expected && expectedRouteCount !== undefined)) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Active try-out catalog counts do not divide across its locales."
+    );
+  }
+  const total = Object.values(expected).reduce(
+    (count, value) => count + value,
+    0
+  );
+  if (total > TRYOUT_CATALOG_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Try-out catalog exceeds ${TRYOUT_CATALOG_LIMIT} rows per locale.`
+    );
+  }
+  const stored = yield* Effect.promise(() =>
+    ctx.db
+      .query("tryoutCatalog")
+      .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
+        index.eq("snapshotId", selection.snapshotId).eq("locale", locale)
+      )
+      .take(total + 1)
+  );
+  if (stored.length !== total) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Try-out catalog for ${locale} does not match its signed count.`
+    );
+  }
+  const entries = yield* Effect.forEach(stored, (storedRow) =>
+    verifyTryoutCatalog(storedRow, selection.snapshotId).pipe(
+      Effect.map((row) => ({
+        row,
+        rowHash: storedRow.rowHash,
+        rowJson: storedRow.rowJson,
+      }))
+    )
+  );
+  const rows = entries.map(({ row }) => row);
+  if (!hasExpectedCounts(countCatalog(rows), expected)) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Try-out catalog for ${locale} changed its hierarchy counts.`
+    );
+  }
+  const actualRouteCount = rows.filter(
+    ({ publicPath }) => publicPath !== undefined
+  ).length;
+  if (actualRouteCount !== expectedRouteCount) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Try-out catalog for ${locale} changed its public route count.`
+    );
+  }
+  return {
+    activeManifestHash: selection.activeManifestHash,
+    activeReleaseId: selection.activeReleaseId,
+    entries,
+    managed: true,
+    routeCount: actualRouteCount,
+    snapshotId: selection.snapshotId,
+    sourceRevision: selection.sourceRevision,
+  };
+});
 
 /** Reads the canonical wire rows used by release diagnostics and previews. */
 export const readTryoutCatalog = Effect.fn("contentRelease.readTryoutCatalog")(

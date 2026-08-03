@@ -3,6 +3,7 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
+import { retainTryoutBundle } from "@repo/backend/convex/tryouts/runtime/bundle";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
@@ -41,6 +42,17 @@ interface CreateTryoutAttemptInput {
 export const createTryoutAttempt = Effect.fn(
   "tryouts.start.createTryoutAttempt"
 )(function* (ctx: MutationCtx, input: CreateTryoutAttemptInput) {
+  if (input.source.kind === "signed") {
+    yield* retainTryoutBundle(ctx, input.source.bundle, input.now).pipe(
+      Effect.mapError(
+        (error) =>
+          new TryoutStartError({
+            code: error.code,
+            message: error.message,
+          })
+      )
+    );
+  }
   const values = buildAttemptValues(input);
   const attemptId = yield* tryStartPromise(() =>
     ctx.db.insert("tryoutAttempts", values)
@@ -101,6 +113,7 @@ function buildAttemptValues(
         tryoutSectionId: section._id,
       })),
       setKey: set.setKey,
+      setPublicPath: set.publicPath,
       totalQuestions: set.totalQuestionCount,
       trackKey: set.trackKey,
       tryoutSetId: set._id,
@@ -127,6 +140,8 @@ function buildAttemptValues(
     })),
     setIdentity: input.source.snapshot.setIdentity,
     setKey: signedSet.setKey,
+    setPublicPath: signedSet.publicPath,
+    snapshotReleaseId: input.source.bundle.releaseId,
     totalQuestions: signedSet.questionCount,
     trackKey: signedSet.trackKey,
     ...(input.source.retainedTryoutSetId

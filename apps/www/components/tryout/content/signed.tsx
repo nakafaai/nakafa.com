@@ -101,6 +101,7 @@ export const readSignedContent = Effect.fn("NakafaContent.readSignedTryout")(
         delivery: selector.delivery,
         locale: selector.locale,
         snapshotId: selector.snapshotId,
+        snapshotReleaseId: selector.snapshotReleaseId,
       }
     );
     if (found.delivery === "public") {

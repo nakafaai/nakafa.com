@@ -556,6 +556,7 @@ import type * as tryouts_questions from "../tryouts/questions.js";
 import type * as tryouts_read from "../tryouts/read.js";
 import type * as tryouts_route from "../tryouts/route.js";
 import type * as tryouts_runtime_access from "../tryouts/runtime/access.js";
+import type * as tryouts_runtime_bundle from "../tryouts/runtime/bundle.js";
 import type * as tryouts_runtime_content from "../tryouts/runtime/content.js";
 import type * as tryouts_runtime_error from "../tryouts/runtime/error.js";
 import type * as tryouts_runtime_estimate from "../tryouts/runtime/estimate.js";
@@ -1151,6 +1152,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/read": typeof tryouts_read;
   "tryouts/route": typeof tryouts_route;
   "tryouts/runtime/access": typeof tryouts_runtime_access;
+  "tryouts/runtime/bundle": typeof tryouts_runtime_bundle;
   "tryouts/runtime/content": typeof tryouts_runtime_content;
   "tryouts/runtime/error": typeof tryouts_runtime_error;
   "tryouts/runtime/estimate": typeof tryouts_runtime_estimate;

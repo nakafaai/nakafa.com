@@ -43,6 +43,7 @@ const protectedRequest: ProtectedContentRuntimeRequest = {
   delivery: "authenticated",
   locale: "en",
   snapshotId: TEST_DIGEST,
+  snapshotReleaseId: TEST_RELEASE_ID,
 };
 const unsafeTargets: readonly [string, string][] = [
   ["not a URL", "url"],

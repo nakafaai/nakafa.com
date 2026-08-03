@@ -18,6 +18,7 @@ const tables = {
         v.literal("bucket"),
         v.literal("quran"),
         v.literal("quran-search"),
+        v.literal("bundle"),
         v.literal("catalog"),
         v.literal("placement")
       )

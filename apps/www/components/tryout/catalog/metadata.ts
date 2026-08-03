@@ -27,6 +27,22 @@ interface TryoutMetadataSource {
   readonly title: string;
 }
 
+interface RetainedTryoutMetadataSource {
+  readonly description?: string;
+  readonly title: string;
+}
+
+/** Creates private metadata for one authenticated retained attempt route. */
+export function createRetainedTryoutMetadata(
+  source: RetainedTryoutMetadataSource
+): Metadata {
+  return {
+    description: source.description,
+    robots: { follow: false, index: false },
+    title: { absolute: source.title },
+  };
+}
+
 /** Generates exact canonical metadata for one public try-out hierarchy route. */
 export async function generateTryoutRouteMetadata(
   input: TryoutMetadataInput

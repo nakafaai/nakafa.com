@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
+import {
+  createRetainedTryoutMetadata,
+  generateTryoutRouteMetadata,
+} from "@/components/tryout/catalog/metadata";
 
 const runtimeMocks = vi.hoisted(() => ({
   readTryoutMetadata: vi.fn(),
@@ -28,6 +31,19 @@ beforeEach(() => {
 });
 
 describe("try-out route metadata", () => {
+  it("keeps an authenticated retained route out of search indexes", () => {
+    expect(
+      createRetainedTryoutMetadata({
+        description: "Frozen attempt section",
+        title: "Quantitative Knowledge",
+      })
+    ).toEqual({
+      description: "Frozen attempt section",
+      robots: { follow: false, index: false },
+      title: { absolute: "Quantitative Knowledge" },
+    });
+  });
+
   it("uses signed copy and exact localized canonical paths", async () => {
     runtimeMocks.readTryoutMetadata.mockResolvedValue({
       managed: true,

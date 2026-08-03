@@ -9,8 +9,12 @@ import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
-import { decodeArtifactJson } from "@repo/backend/convex/contentRelease/parse";
-import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
+import {
+  decodeArtifactJson,
+  decodeReleaseJson,
+  decodeRendererJson,
+} from "@repo/backend/convex/contentRelease/parse";
+import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import { loadVerifiedSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
 import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
 import { verifyTryoutPlacement } from "@repo/backend/convex/contentRelease/tryout/verify";
@@ -24,18 +28,19 @@ const protectedArgsValidator = {
   contentKey: v.string(),
   delivery: v.union(v.literal("authenticated"), v.literal("entitled")),
   locale: localeValidator,
+  snapshotReleaseId: v.string(),
   snapshotId: v.string(),
 };
 
 const protectedResultValidator = v.union(
   v.null(),
   v.object({
-    activeManifestHash: v.string(),
-    activeReleaseId: v.string(),
     artifactJson: v.string(),
     delivery: protectedArgsValidator.delivery,
     releaseJson: v.string(),
     rendererJson: v.string(),
+    snapshotManifestHash: v.string(),
+    snapshotReleaseId: v.string(),
     snapshotId: v.string(),
     sourcePath: v.string(),
   })
@@ -102,15 +107,12 @@ function bodyIdentity(
 /** Loads one immutable artifact after exact retained-snapshot authorization. */
 const resolveProtected = Effect.fn("contentRelease.resolveProtected")(
   function* (ctx: QueryCtx, request: ProtectedContentRuntimeRequest) {
-    const active = yield* loadActiveIdentity(ctx);
-    if (!active) {
-      return null;
-    }
     const storedPlacement = yield* loadPlacement(ctx, request);
     if (!storedPlacement) {
       return null;
     }
     yield* loadVerifiedSnapshot(ctx, "tryout", request.snapshotId);
+    const bundle = yield* loadBundle(ctx, request);
     const placement = yield* verifyTryoutPlacement(
       storedPlacement,
       request.snapshotId
@@ -154,17 +156,57 @@ const resolveProtected = Effect.fn("contentRelease.resolveProtected")(
       );
     }
     return {
-      activeManifestHash: active.manifestHash,
-      activeReleaseId: active.releaseId,
       artifactJson: storedArtifact.artifactJson,
       delivery: request.delivery,
-      releaseJson: active.release.releaseJson,
-      rendererJson: active.release.rendererJson,
+      releaseJson: bundle.releaseJson,
+      rendererJson: bundle.rendererJson,
+      snapshotManifestHash: bundle.manifestHash,
+      snapshotReleaseId: bundle.releaseId,
       snapshotId: request.snapshotId,
       sourcePath,
     };
   }
 );
+
+/** Loads and verifies the immutable release bundle selected by one attempt. */
+const loadBundle = Effect.fn("contentRelease.loadProtectedBundle")(function* (
+  ctx: QueryCtx,
+  request: ProtectedContentRuntimeRequest
+) {
+  const stored = yield* Effect.promise(() =>
+    ctx.db
+      .query("tryoutBundles")
+      .withIndex("by_snapshotId_and_releaseId", (index) =>
+        index
+          .eq("snapshotId", request.snapshotId)
+          .eq("releaseId", request.snapshotReleaseId)
+      )
+      .unique()
+  );
+  if (!stored) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_MISSING",
+      `Protected try-out bundle ${request.snapshotReleaseId} is unavailable.`
+    );
+  }
+  const [release, renderer] = yield* Effect.all([
+    decodeReleaseJson(stored.releaseJson),
+    decodeRendererJson(stored.rendererJson),
+  ]);
+  const snapshot = release.manifest.snapshots.tryout;
+  if (
+    stored.manifestHash !== release.manifestHash ||
+    stored.releaseId !== release.manifest.releaseId ||
+    snapshot.resultSnapshotId !== request.snapshotId ||
+    !hasRendererIdentity(release.manifest, renderer)
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Protected try-out bundle ${request.snapshotReleaseId} changed its identity.`
+    );
+  }
+  return stored;
+});
 
 /** Decodes the internal Convex arguments before any storage lookup. */
 const readProtectedProgram = Effect.fn("contentRelease.readProtected")(

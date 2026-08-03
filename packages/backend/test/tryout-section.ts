@@ -16,7 +16,13 @@ import type {
   SignedTryoutSource,
   TryoutStartSource,
 } from "@repo/backend/convex/tryouts/start/source";
-import { testTextHash } from "@repo/backend/test/content-release";
+import {
+  TEST_MANIFEST_HASH,
+  TEST_RELEASE_ID,
+  testReleaseJson,
+  testRendererJson,
+  testTextHash,
+} from "@repo/backend/test/content-release";
 import { insertTryoutQuestionSource } from "@repo/backend/test/tryouts";
 import { ConvexError } from "convex/values";
 import { Schema } from "effect";
@@ -132,6 +138,13 @@ export function makeSignedTryoutSource(
   const setRecord = { row: record.row, rowHash: record.rowHash };
 
   return {
+    bundle: {
+      manifestHash: TEST_MANIFEST_HASH,
+      releaseId: TEST_RELEASE_ID,
+      releaseJson: testReleaseJson(),
+      rendererJson: testRendererJson(),
+      snapshotId,
+    },
     kind: "signed",
     snapshot: {
       sections: sections.map(({ signed }) => signed),

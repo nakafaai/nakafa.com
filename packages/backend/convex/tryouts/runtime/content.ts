@@ -26,6 +26,7 @@ const protectedSelectorFields = {
   contentKey: v.string(),
   locale: v.union(v.literal("en"), v.literal("id")),
   questionOrder: v.number(),
+  snapshotReleaseId: v.string(),
   snapshotId: v.string(),
   sourcePath: v.string(),
   sourceRevision: v.string(),

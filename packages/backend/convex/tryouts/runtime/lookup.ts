@@ -3,10 +3,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
-import {
-  readPublishedSet,
-  readPublishedSetByPath,
-} from "@repo/backend/convex/tryouts/catalog/hierarchy";
+import { readPublishedSetByPath } from "@repo/backend/convex/tryouts/catalog/hierarchy";
 import {
   getActiveTryoutSet,
   getActiveTryoutSetByPublicPath,
@@ -108,15 +105,18 @@ export const readLatestAttempt = Effect.fn("tryouts.runtime.readLatestAttempt")(
   function* (ctx: QueryCtx, identity: TryoutSetIdentity, userId: UserId) {
     const catalog = yield* loadTryoutCatalog(ctx, identity.locale);
     if (catalog.managed) {
-      const set = yield* readPublishedSet(catalog, identity);
-      if (!set) {
-        return null;
-      }
       const legacy = yield* Effect.promise(() =>
         getActiveTryoutSet(ctx, identity)
       );
       return yield* readLatestOwnedAttempt(ctx, {
-        setIdentity: tryoutCatalogIdentity(set),
+        setIdentity: tryoutCatalogIdentity({
+          countryKey: identity.countryKey,
+          examKey: identity.examKey,
+          kind: "set",
+          locale: identity.locale,
+          setKey: identity.setKey,
+          trackKey: identity.trackKey,
+        }),
         tryoutSetId: legacy?._id,
         userId,
       });
@@ -144,18 +144,38 @@ export const readLatestAttemptByPath = Effect.fn(
 )(function* (ctx: QueryCtx, path: PublicSetPath, userId: UserId) {
   const catalog = yield* loadTryoutCatalog(ctx, path.locale);
   if (catalog.managed) {
-    const set = yield* readPublishedSetByPath(catalog, path.publicPath);
-    if (!set) {
-      return null;
-    }
+    const signed = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutAttempts")
+        .withIndex(
+          "by_userId_and_locale_and_setPublicPath_and_startedAt",
+          (index) =>
+            index
+              .eq("userId", userId)
+              .eq("locale", path.locale)
+              .eq("setPublicPath", path.publicPath)
+        )
+        .order("desc")
+        .first()
+    );
     const legacy = yield* Effect.promise(() =>
       getActiveTryoutSetByPublicPath(ctx, path)
     );
-    return yield* readLatestOwnedAttempt(ctx, {
-      setIdentity: tryoutCatalogIdentity(set),
-      tryoutSetId: legacy?._id,
-      userId,
-    });
+    if (!legacy) {
+      return signed;
+    }
+    const filesystem = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutAttempts")
+        .withIndex("by_userId_and_tryoutSetId_and_startedAt", (index) =>
+          index.eq("userId", userId).eq("tryoutSetId", legacy._id)
+        )
+        .order("desc")
+        .first()
+    );
+    return selectLatestAttempt(
+      [signed, filesystem].filter((attempt) => attempt !== null)
+    );
   }
 
   const set = yield* Effect.promise(() =>

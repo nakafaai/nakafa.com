@@ -102,7 +102,7 @@ describe("projected public html route rejection", () => {
   });
 
   it("uses signed try-out ownership for exact routes and tombstones", async () => {
-    const pathname = "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning";
+    const pathname = "/en/try-out/indonesia/snbt/2027/set-1";
     mockGetRuntimeTryoutRoute
       .mockReturnValueOnce(Effect.succeed({ exists: true, managed: true }))
       .mockReturnValueOnce(Effect.succeed({ exists: false, managed: true }));
@@ -115,8 +115,20 @@ describe("projected public html route rejection", () => {
     ).resolves.toBe("en");
     expect(mockGetRuntimeTryoutRoute).toHaveBeenCalledWith({
       locale: "en",
-      publicPath: "try-out/indonesia/snbt/2027/set-1/general-reasoning",
+      publicPath: "try-out/indonesia/snbt/2027/set-1",
     });
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+  });
+
+  it("delegates section routes to active or authenticated page ownership", async () => {
+    await expect(
+      Effect.runPromise(
+        readProjectedHtmlRouteRejection(
+          "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning"
+        )
+      )
+    ).resolves.toBeNull();
+    expect(mockGetRuntimeTryoutRoute).not.toHaveBeenCalled();
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 

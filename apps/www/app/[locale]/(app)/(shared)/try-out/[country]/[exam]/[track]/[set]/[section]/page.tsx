@@ -1,8 +1,14 @@
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
-import { readTryoutSectionPage } from "@/components/tryout/catalog/server";
+import {
+  createRetainedTryoutMetadata,
+  generateTryoutRouteMetadata,
+} from "@/components/tryout/catalog/metadata";
+import {
+  readTryoutAttemptSectionPage,
+  readTryoutSectionPage,
+} from "@/components/tryout/catalog/server";
 import {
   readTryoutContentAccess,
   type TryoutContentAccess,
@@ -62,17 +68,37 @@ export async function generateMetadata({
     track,
   } = await params;
   const locale = getLocaleOrThrow(localeParam);
+  const publicPath = getTryoutHref({
+    country,
+    exam,
+    section,
+    set,
+    track,
+  }).slice(1);
+  const publicPage = await readTryoutSectionPage(locale, publicPath);
 
-  return generateTryoutRouteMetadata({
-    kind: "section",
-    locale,
-    publicPath: getTryoutHref({
-      country,
-      exam,
-      section,
-      set,
-      track,
-    }).slice(1),
+  if (publicPage) {
+    return generateTryoutRouteMetadata({
+      kind: "section",
+      locale,
+      publicPath,
+    });
+  }
+
+  const token = await getToken();
+  if (!token) {
+    notFound();
+  }
+  const retainedPage = await Effect.runPromise(
+    readTryoutAttemptSectionPage(token, locale, publicPath)
+  );
+  if (!retainedPage) {
+    notFound();
+  }
+
+  return createRetainedTryoutMetadata({
+    description: retainedPage.section.description,
+    title: retainedPage.section.title,
   });
 }
 
@@ -123,10 +149,16 @@ async function TryoutSectionRoute({
     set,
     track,
   }).slice(1);
-  const [page, token] = await Promise.all([
+  const [publicPage, token] = await Promise.all([
     readTryoutSectionPage(locale, sectionPath),
     getToken(),
   ]);
+  const attemptPage = token
+    ? await Effect.runPromise(
+        readTryoutAttemptSectionPage(token, locale, sectionPath)
+      )
+    : null;
+  const page = attemptPage ?? publicPage;
 
   if (!page) {
     notFound();

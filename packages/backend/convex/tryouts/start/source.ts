@@ -9,6 +9,7 @@ import {
   getActiveTryoutSet,
   requireActiveReadyTryoutSet,
 } from "@repo/backend/convex/tryouts/read";
+import type { TryoutBundleSource } from "@repo/backend/convex/tryouts/runtime/bundle";
 import type { StartAttemptArgs } from "@repo/backend/convex/tryouts/start/spec";
 import {
   TryoutStartError,
@@ -29,6 +30,7 @@ export interface FilesystemTryoutSource {
 
 /** Authenticated immutable rows used after signed ownership is activated. */
 export interface SignedTryoutSource {
+  readonly bundle: TryoutBundleSource;
   readonly kind: "signed";
   /** Lookup-only key retained while the matching local shell still exists. */
   readonly retainedTryoutSetId?: FilesystemSet["_id"];
@@ -48,24 +50,32 @@ export const loadTryoutStartSource = Effect.fn(
   const owner = yield* loadTryoutOwner(ctx).pipe(
     Effect.mapError(toTryoutStartError)
   );
-  if (owner.managed) {
-    const [snapshot, retainedSet] = yield* Effect.all([
-      readTryoutSet(ctx, args).pipe(Effect.mapError(toTryoutStartError)),
-      tryStartPromise(() => getActiveTryoutSet(ctx, args)),
-    ]);
-    const source: TryoutStartSource = {
-      kind: "signed",
-      ...(retainedSet ? { retainedTryoutSetId: retainedSet._id } : {}),
-      snapshot,
-    };
+  if (!(owner.managed && owner.selected)) {
+    const set = yield* tryStartPromise(() =>
+      requireActiveReadyTryoutSet(ctx, args)
+    );
+    const sections = yield* loadFilesystemSections(ctx, set);
+    const source: TryoutStartSource = { kind: "filesystem", sections, set };
     return source;
   }
 
-  const set = yield* tryStartPromise(() =>
-    requireActiveReadyTryoutSet(ctx, args)
-  );
-  const sections = yield* loadFilesystemSections(ctx, set);
-  const source: TryoutStartSource = { kind: "filesystem", sections, set };
+  const [snapshot, retainedSet] = yield* Effect.all([
+    readTryoutSet(ctx, args).pipe(Effect.mapError(toTryoutStartError)),
+    tryStartPromise(() => getActiveTryoutSet(ctx, args)),
+  ]);
+  const { active, snapshotId } = owner.selected;
+  const source: TryoutStartSource = {
+    bundle: {
+      manifestHash: active.manifestHash,
+      releaseId: active.releaseId,
+      releaseJson: active.release.releaseJson,
+      rendererJson: active.release.rendererJson,
+      snapshotId,
+    },
+    kind: "signed",
+    ...(retainedSet ? { retainedTryoutSetId: retainedSet._id } : {}),
+    snapshot,
+  };
   return source;
 });
 

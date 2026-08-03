@@ -11,7 +11,10 @@ import type {
   TryoutQuestionSelector,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
-import { testTextHash } from "@repo/backend/test/content-release";
+import {
+  TEST_RELEASE_ID,
+  testTextHash,
+} from "@repo/backend/test/content-release";
 import {
   type AlignedTryoutSectionFixture,
   insertTryoutSectionSource,
@@ -166,6 +169,8 @@ export async function seedTryoutContentAccessState(
           locale: fixtureLocale,
           setIdentity,
           setKey: "set-1",
+          setPublicPath: signedSource.snapshot.set.row.publicPath,
+          snapshotReleaseId: TEST_RELEASE_ID,
           trackKey: "2027",
           tryoutSnapshotId: snapshotId,
         }
@@ -233,6 +238,7 @@ export async function seedTryoutContentAccessState(
     locale: fixtureLocale,
     questionOrder: 1,
     snapshotId,
+    snapshotReleaseId: TEST_RELEASE_ID,
     sourcePath,
     sourceRevision: "2026",
   };
@@ -244,6 +250,7 @@ export async function seedTryoutContentAccessState(
     locale: fixtureLocale,
     questionOrder: 1,
     snapshotId,
+    snapshotReleaseId: TEST_RELEASE_ID,
     sourcePath,
     sourceRevision: "2026",
   };

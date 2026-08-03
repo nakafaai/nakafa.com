@@ -1,6 +1,10 @@
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import {
+  createConvexTestWithBetterAuth,
+  seedAuthenticatedUser,
+} from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
 import {
@@ -83,6 +87,57 @@ describe("tryouts/queries/catalog", () => {
     });
     expect(section).toMatchObject({
       questions: [],
+      section: { sectionKey: TRYOUT_START_SECTION },
+      set: { setKey: TRYOUT_START_SET },
+    });
+  });
+
+  it("serves a frozen attempt route after active ownership moves", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const sectionPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}/${TRYOUT_START_SECTION}`;
+    const identity = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now: 1_780_000_000_000,
+        suffix: "frozen-section",
+      });
+      await activateTryoutStartSource(ctx, "visible");
+      return user;
+    });
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    await authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
+      countryKey: TRYOUT_START_COUNTRY,
+      examKey: TRYOUT_START_EXAM,
+      locale: "id",
+      setKey: TRYOUT_START_SET,
+      trackKey: TRYOUT_START_TRACK,
+    });
+    await t.mutation(async (ctx) => {
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        activeManifestHash: undefined,
+        activeReleaseId: undefined,
+        activeSequence: undefined,
+      });
+    });
+
+    await expect(
+      t.query(api.tryouts.queries.catalog.getSectionPage, {
+        locale: "id",
+        publicPath: sectionPath,
+      })
+    ).resolves.toBeNull();
+    await expect(
+      authed.query(api.tryouts.queries.catalog.getAttemptSectionPage, {
+        locale: "id",
+        publicPath: sectionPath,
+      })
+    ).resolves.toMatchObject({
       section: { sectionKey: TRYOUT_START_SECTION },
       set: { setKey: TRYOUT_START_SET },
     });

@@ -7,7 +7,6 @@ import {
   bindLegacySet,
   requireTryoutSnapshot,
 } from "@repo/backend/convex/tryouts/migrations/catalog";
-import { isSignedAttempt } from "@repo/backend/convex/tryouts/migrations/signed";
 import {
   hasMigrationConflict,
   migrationFail,
@@ -18,12 +17,30 @@ import {
   tryoutMigrationResultValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
+import { retainTryoutBundle } from "@repo/backend/convex/tryouts/runtime/bundle";
 import { Effect } from "effect";
 
 /** Prepares one bounded page of attempt roots. */
 const migrateAttemptPage = Effect.fn("tryouts.migrations.migrateAttemptPage")(
   function* (ctx: MutationCtx, args: TryoutMigrationArgs) {
-    yield* requireTryoutSnapshot(ctx, args.expectedSnapshotId);
+    const owner = yield* requireTryoutSnapshot(ctx, args.expectedSnapshotId);
+    if (args.apply) {
+      yield* retainTryoutBundle(
+        ctx,
+        {
+          manifestHash: owner.active.manifestHash,
+          releaseId: owner.active.releaseId,
+          releaseJson: owner.active.release.releaseJson,
+          rendererJson: owner.active.release.rendererJson,
+          snapshotId: owner.snapshotId,
+        },
+        owner.active.release.createdAt
+      ).pipe(
+        Effect.catchTag("TryoutBundleError", (error) =>
+          migrationFail(error.message)
+        )
+      );
+    }
     const page = yield* Effect.promise(() =>
       ctx.db
         .query("tryoutAttempts")
@@ -38,7 +55,12 @@ const migrateAttemptPage = Effect.fn("tryouts.migrations.migrateAttemptPage")(
     });
     let changed = 0;
     for (const row of page.page) {
-      const patch = yield* prepareAttempt(ctx, args.expectedSnapshotId, row);
+      const patch = yield* prepareAttempt(
+        ctx,
+        args.expectedSnapshotId,
+        owner.active.releaseId,
+        row
+      );
       if (!patch) {
         continue;
       }
@@ -56,12 +78,15 @@ const prepareAttempt = Effect.fn("tryouts.migrations.prepareAttempt")(
   function* (
     ctx: MutationCtx,
     expectedSnapshotId: string,
+    snapshotReleaseId: string,
     attempt: Doc<"tryoutAttempts">
   ) {
-    if (isSignedAttempt(attempt, expectedSnapshotId)) {
-      return null;
-    }
     if (!attempt.tryoutSetId) {
+      if (
+        isSignedAttemptComplete(attempt, expectedSnapshotId, snapshotReleaseId)
+      ) {
+        return null;
+      }
       return yield* migrationFail("An attempt lost its legacy set reference.");
     }
     const set = yield* bindLegacySet(
@@ -133,6 +158,8 @@ const prepareAttempt = Effect.fn("tryouts.migrations.prepareAttempt")(
       attempt.trackKey === set.row.trackKey &&
       attempt.setKey === set.row.setKey &&
       attempt.locale === set.row.locale &&
+      attempt.setPublicPath === set.row.publicPath &&
+      attempt.snapshotReleaseId === snapshotReleaseId &&
       attempt.sectionSnapshots.every(
         (snapshot, index) =>
           snapshot.sectionIdentity ===
@@ -149,10 +176,36 @@ const prepareAttempt = Effect.fn("tryouts.migrations.prepareAttempt")(
       sectionSnapshots,
       setIdentity: set.identity,
       setKey: set.row.setKey,
+      setPublicPath: set.row.publicPath,
+      snapshotReleaseId,
       trackKey: set.row.trackKey,
     };
   }
 );
+
+/** Recognizes an attempt created directly from the current signed snapshot. */
+function isSignedAttemptComplete(
+  attempt: Doc<"tryoutAttempts">,
+  expectedSnapshotId: string,
+  snapshotReleaseId: string
+) {
+  return (
+    attempt.tryoutSnapshotId === expectedSnapshotId &&
+    attempt.snapshotReleaseId === snapshotReleaseId &&
+    attempt.countryKey !== undefined &&
+    attempt.examKey !== undefined &&
+    attempt.locale !== undefined &&
+    attempt.setIdentity !== undefined &&
+    attempt.setKey !== undefined &&
+    attempt.setPublicPath !== undefined &&
+    attempt.trackKey !== undefined &&
+    attempt.sectionSnapshots.every(
+      (snapshot) =>
+        snapshot.sectionIdentity !== undefined &&
+        snapshot.sectionRowHash !== undefined
+    )
+  );
+}
 
 /** Finds a conflicting signed identity already attached to one snapshot. */
 function signedSnapshotMismatch(

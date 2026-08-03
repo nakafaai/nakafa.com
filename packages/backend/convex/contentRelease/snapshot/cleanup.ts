@@ -143,6 +143,14 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
         done: false,
       };
     }
+    if (snapshot.family === "tryout" && children.part === "placement") {
+      yield* persistCleanup(ctx, snapshot, cutoff, undefined, "bundle");
+      return {
+        cursor: null,
+        deleted: children.children.length,
+        done: false,
+      };
+    }
     yield* Effect.promise(() =>
       ctx.db.delete("contentSnapshots", snapshot._id)
     );

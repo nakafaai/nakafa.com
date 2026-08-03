@@ -1,3 +1,4 @@
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import {
   type ProtectedContentRuntimeRequest,
   ProtectedContentRuntimeRequestSchema,
@@ -7,11 +8,8 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_PROOF_RENDERER,
   testSignedArtifact,
+  testSignedRelease,
 } from "@repo/backend/test/content-proof";
-import {
-  TEST_RUNTIME_ENVELOPE,
-  TEST_RUNTIME_RELEASE,
-} from "@repo/backend/test/runtime-values";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
@@ -30,6 +28,7 @@ interface ProtectedRuntimeFixture {
 function protectedRequest(
   placement: TryoutPlacement,
   snapshotId: string,
+  snapshotReleaseId: string,
   delivery: "authenticated" | "entitled"
 ) {
   const question = delivery === "authenticated";
@@ -42,6 +41,7 @@ function protectedRequest(
       : placement.answerContentKey,
     delivery,
     locale: placement.locale,
+    snapshotReleaseId,
     snapshotId,
   });
 }
@@ -105,16 +105,22 @@ export async function insertProtectedRuntime(
   if (!(release && state)) {
     throw new Error("Expected protected runtime release state.");
   }
-  await ctx.db.patch("contentReleases", release._id, {
-    releaseId: TEST_RUNTIME_RELEASE.releaseId,
-    releaseJson: JSON.stringify(TEST_RUNTIME_ENVELOPE),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
-    sequence: TEST_RUNTIME_RELEASE.sequence,
+  const storedRelease = Schema.decodeUnknownSync(SignedContentReleaseSchema)(
+    JSON.parse(release.releaseJson)
+  );
+  const signedRelease = testSignedRelease({
+    ...storedRelease.manifest,
+    rendererContractVersion: TEST_PROOF_RENDERER.rendererContractVersion,
+    rendererManifestHash: TEST_PROOF_RENDERER.hash,
   });
-  await ctx.db.patch("contentState", state._id, {
-    activeManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-    activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-    activeSequence: TEST_RUNTIME_RELEASE.sequence,
+  await ctx.db.insert("tryoutBundles", {
+    createdAt: 1,
+    index: 0,
+    manifestHash: signedRelease.manifestHash,
+    releaseId: signedRelease.manifest.releaseId,
+    releaseJson: JSON.stringify(signedRelease),
+    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    snapshotId,
   });
   await Promise.all(
     [enQuestion, enAnswer, idQuestion, idAnswer].map((artifact) =>
@@ -122,9 +128,19 @@ export async function insertProtectedRuntime(
     )
   );
   return {
-    answer: protectedRequest(enPlacement, snapshotId, "entitled"),
+    answer: protectedRequest(
+      enPlacement,
+      snapshotId,
+      signedRelease.manifest.releaseId,
+      "entitled"
+    ),
     placement: enPlacement,
-    question: protectedRequest(enPlacement, snapshotId, "authenticated"),
+    question: protectedRequest(
+      enPlacement,
+      snapshotId,
+      signedRelease.manifest.releaseId,
+      "authenticated"
+    ),
     snapshotId,
   };
 }

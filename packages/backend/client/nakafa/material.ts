@@ -63,17 +63,17 @@ export const readPublishedMaterialMarkdown = Effect.fn(
     delivery: "public",
     ...lookup.route,
   }).pipe(Effect.mapError(materialReadError));
-  if (found.activeReleaseId !== lookup.activeReleaseId) {
-    return yield* materialReadError(
-      `Material lookup release ${lookup.activeReleaseId ?? "none"} changed before its signed read returned ${found.activeReleaseId ?? "none"}.`
-    );
-  }
   if (
     found.delivery !== "public" ||
     found.projection.kind !== "subject-lesson"
   ) {
     return yield* materialReadError(
       "The signed material route resolved another content family."
+    );
+  }
+  if (found.activeReleaseId !== lookup.activeReleaseId) {
+    return yield* materialReadError(
+      `Material lookup release ${lookup.activeReleaseId ?? "none"} changed before its signed read returned ${found.activeReleaseId ?? "none"}.`
     );
   }
 

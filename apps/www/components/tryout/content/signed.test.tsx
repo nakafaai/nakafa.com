@@ -42,6 +42,7 @@ const selectorBase: Omit<TryoutQuestionSelector, "contentKey" | "delivery"> = {
   locale: "en",
   questionOrder: 1,
   snapshotId,
+  snapshotReleaseId: "release-technical",
   sourcePath: `packages/corpus/${questionKey}`,
   sourceRevision: "technical-revision",
 };
@@ -139,6 +140,7 @@ describe("tryout signed content", () => {
         delivery: question.delivery,
         locale: question.locale,
         snapshotId: question.snapshotId,
+        snapshotReleaseId: question.snapshotReleaseId,
       }
     );
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");

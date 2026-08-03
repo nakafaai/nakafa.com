@@ -155,21 +155,22 @@ const resolveProtectedRuntime = Effect.fn(
     Schema.decodeUnknown(CorpusSourcePathSchema)(row.sourcePath),
   ]).pipe(Effect.mapError(() => new RuntimeReadError()));
   if (
-    row.activeManifestHash !== release.manifestHash ||
-    row.activeReleaseId !== release.manifest.releaseId ||
+    row.snapshotManifestHash !== release.manifestHash ||
+    row.snapshotReleaseId !== release.manifest.releaseId ||
+    row.snapshotReleaseId !== request.snapshotReleaseId ||
     row.delivery !== request.delivery ||
     row.snapshotId !== request.snapshotId
   ) {
     return yield* new RuntimeReadError();
   }
   const response: ProtectedContentRuntimeFound = {
-    activeManifestHash: release.manifestHash,
-    activeReleaseId: release.manifest.releaseId,
     artifact,
     delivery: row.delivery,
     kind: "found",
     release,
     rendererManifest,
+    snapshotManifestHash: release.manifestHash,
+    snapshotReleaseId: release.manifest.releaseId,
     snapshotId: request.snapshotId,
     sourcePath,
   };

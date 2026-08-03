@@ -132,6 +132,8 @@ function attemptIsPrepared(
     attempt.trackKey === set.row.trackKey &&
     attempt.setKey === set.row.setKey &&
     attempt.locale === set.row.locale &&
+    attempt.setPublicPath === set.row.publicPath &&
+    attempt.snapshotReleaseId !== undefined &&
     attempt.sectionSnapshots.every(
       (section) =>
         section.sectionIdentity !== undefined &&

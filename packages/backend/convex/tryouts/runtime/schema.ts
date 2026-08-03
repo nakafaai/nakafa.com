@@ -39,14 +39,29 @@ const tryoutChoiceSnapshotValidator = v.object({
 });
 
 const tables = {
+  /** One immutable signed renderer bundle shared by attempts from one release. */
+  tryoutBundles: defineTable({
+    createdAt: v.number(),
+    index: v.number(),
+    manifestHash: v.string(),
+    releaseId: v.string(),
+    releaseJson: v.string(),
+    rendererJson: v.string(),
+    snapshotId: v.string(),
+  })
+    .index("by_snapshotId_and_index", ["snapshotId", "index"])
+    .index("by_snapshotId_and_releaseId", ["snapshotId", "releaseId"]),
+
   tryoutAttempts: defineTable({
     userId: v.id("users"),
     /** Retained only while the matching local lookup shell exists. */
     tryoutSetId: v.optional(v.id("tryoutSets")),
     /** Present only for signed and migrated attempts. */
     tryoutSnapshotId: v.optional(v.string()),
+    /** Present only for signed and migrated attempts. */
+    snapshotReleaseId: v.optional(v.string()),
     setIdentity: v.optional(v.string()),
-    /** Frozen localized route prepared for the signed-runtime cutover. */
+    /** Frozen localized route used to resume after a later catalog rename. */
     setPublicPath: v.optional(v.string()),
     countryKey: v.optional(tryoutRouteKeyValidator),
     examKey: v.optional(tryoutRouteKeyValidator),
@@ -94,10 +109,12 @@ const tables = {
       "setIdentity",
       "startedAt",
     ])
-    .index("by_userId_and_locale_and_setPublicPath_and_startedAt", {
-      fields: ["userId", "locale", "setPublicPath", "startedAt"],
-      staged: true,
-    })
+    .index("by_userId_and_locale_and_setPublicPath_and_startedAt", [
+      "userId",
+      "locale",
+      "setPublicPath",
+      "startedAt",
+    ])
     .index("by_accessCampaignId_and_startedAt", [
       "accessCampaignId",
       "startedAt",

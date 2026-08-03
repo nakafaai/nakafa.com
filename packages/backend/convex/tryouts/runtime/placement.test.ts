@@ -240,7 +240,7 @@ describe("tryouts/runtime/placement", () => {
           createAttemptPlacements(ctx, {
             attempt: runtime.attempt,
             source: {
-              kind: "signed",
+              ...runtime.source,
               snapshot: {
                 ...runtime.source.snapshot,
                 sections: [{ ...section, placements: [] }],

@@ -26,7 +26,9 @@ export function isSignedAttempt(
     attempt.examKey === undefined ||
     attempt.trackKey === undefined ||
     attempt.setKey === undefined ||
-    attempt.locale === undefined
+    attempt.locale === undefined ||
+    attempt.setPublicPath === undefined ||
+    attempt.snapshotReleaseId === undefined
   ) {
     return false;
   }

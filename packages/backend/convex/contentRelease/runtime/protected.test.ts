@@ -29,6 +29,27 @@ describe("contentRelease/runtime/protected", () => {
     });
   });
 
+  it("keeps the attempt renderer after active release compaction", async () => {
+    const t = convexTest(schema, convexModules);
+    const fixture = await t.mutation(insertProtectedRuntime);
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      const state = await ctx.db.query("contentState").unique();
+      if (!(release && state)) {
+        throw new Error("Expected active runtime state.");
+      }
+      await ctx.db.delete("contentReleases", release._id);
+      await ctx.db.delete("contentState", state._id);
+    });
+
+    await expect(
+      t.query(readProtected, fixture.question)
+    ).resolves.toMatchObject({
+      snapshotReleaseId: fixture.question.snapshotReleaseId,
+      snapshotId: fixture.snapshotId,
+    });
+  });
+
   it("allows one signed artifact to be shared by multiple placements", async () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertProtectedRuntime);
