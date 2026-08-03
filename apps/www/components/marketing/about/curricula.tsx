@@ -35,10 +35,7 @@ export async function Curricula({ locale }: { locale: Locale }) {
   const curricula = readRuntimeCurriculumOptions(catalog, locale);
 
   return (
-    <section
-      className="relative isolate z-0 border-b bg-background"
-      id="curricula"
-    >
+    <section className="relative isolate z-0 bg-background" id="curricula">
       <div className="mx-auto w-full max-w-7xl border-x">
         <div className="px-6 py-24 sm:py-28 lg:px-10 lg:py-32">
           <h2 className="max-w-4xl text-pretty text-3xl tracking-tight sm:text-4xl">

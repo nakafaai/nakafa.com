@@ -2,25 +2,16 @@
 
 import { useIntersection } from "@mantine/hooks";
 import { Warp } from "@paper-design/shaders-react";
-import { getThemeShaderColor } from "@repo/design-system/lib/theme/registry";
 import { useReducedMotion } from "motion/react";
-import { useTheme } from "next-themes";
-
-/** Adds an alpha channel to a theme registry RGB color. */
-function withAlpha(color: string, alpha: number) {
-  return color.replace("rgb(", "rgba(").replace(")", `, ${alpha})`);
-}
 
 /** Renders one shared curriculum field that pauses outside view. */
 export function CurriculaArt({ maxPixelCount }: { maxPixelCount: number }) {
-  const { resolvedTheme } = useTheme();
   const shouldReduceMotion = useReducedMotion() ?? false;
   const { ref, entry } = useIntersection({
     root: null,
     rootMargin: "240px",
     threshold: 0.05,
   });
-  const themeColor = getThemeShaderColor(resolvedTheme);
   const isMoving = entry?.isIntersecting && !shouldReduceMotion;
 
   return (
@@ -32,7 +23,7 @@ export function CurriculaArt({ maxPixelCount }: { maxPixelCount: number }) {
       <Warp
         className="size-full"
         colors={[
-          withAlpha(themeColor, 0.18),
+          "rgba(0, 0, 0, 0)",
           "#ee0000",
           "#ffffff",
           "#012169",
