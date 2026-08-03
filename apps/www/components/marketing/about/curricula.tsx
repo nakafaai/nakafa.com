@@ -85,7 +85,7 @@ export async function Curricula({ locale }: { locale: Locale }) {
           ))}
         </nav>
 
-        <div className="relative min-h-64 overflow-hidden border-t sm:min-h-72 lg:min-h-80">
+        <div className="relative min-h-80 overflow-hidden border-t sm:min-h-96 lg:min-h-[28rem]">
           <CurriculaArt maxPixelCount={CURRICULA_SHADER_PIXEL_BUDGET} />
         </div>
       </div>

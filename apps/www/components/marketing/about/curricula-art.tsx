@@ -26,7 +26,7 @@ export function CurriculaArt({ maxPixelCount }: { maxPixelCount: number }) {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 opacity-90 [mask-image:linear-gradient(to_bottom,transparent_0%,rgba(0,0,0,0.12)_12%,rgba(0,0,0,0.56)_36%,black_72%,black_100%)] dark:opacity-80"
+      className="pointer-events-none absolute inset-0 opacity-90 [mask-image:linear-gradient(to_bottom,black_0%,black_28%,rgba(0,0,0,0.78)_50%,rgba(0,0,0,0.28)_78%,transparent_100%)] dark:opacity-80"
       ref={ref}
     >
       <Warp
