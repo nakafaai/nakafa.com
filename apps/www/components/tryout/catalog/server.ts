@@ -93,7 +93,7 @@ export const readTryoutAttemptSetPage = Effect.fn(
   token: string,
   locale: Locale,
   publicPath: string,
-  attemptId: string
+  attemptId?: string
 ) {
   return yield* Effect.tryPromise({
     catch: (cause) => new TryoutCatalogReadError({ cause }),

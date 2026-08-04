@@ -60,6 +60,12 @@ describe("tryouts/queries/retained", () => {
     await t.mutation(activateRenamedTryoutStartSource);
     await expect(
       authed.query(api.tryouts.queries.retained.getAttemptSetPage, {
+        locale: "id",
+        publicPath: TRYOUT_RENAMED_SET_PATH,
+      })
+    ).resolves.toMatchObject({ attemptId: started.attemptId });
+    await expect(
+      authed.query(api.tryouts.queries.retained.getAttemptSetPage, {
         attemptId: started.attemptId,
         locale: "id",
         publicPath: setPath,
@@ -80,6 +86,12 @@ describe("tryouts/queries/retained", () => {
     await t.mutation(activateReusedTryoutStartPath);
     await expect(
       authed.query(api.tryouts.queries.retained.getAttemptSetPage, {
+        locale: "id",
+        publicPath: setPath,
+      })
+    ).resolves.toBeNull();
+    await expect(
+      authed.query(api.tryouts.queries.retained.getAttemptSetPage, {
         attemptId: started.attemptId,
         locale: "id",
         publicPath: setPath,
@@ -89,6 +101,15 @@ describe("tryouts/queries/retained", () => {
       attemptId: started.attemptId,
       page: { set: { setKey: TRYOUT_START_SET } },
     });
+    await t.mutation((ctx) =>
+      ctx.db.patch(started.attemptId, { completedAt: 1, status: "completed" })
+    );
+    await expect(
+      authed.query(api.tryouts.queries.retained.getAttemptSetPage, {
+        locale: "id",
+        publicPath: setPath,
+      })
+    ).resolves.toBeNull();
   });
 
   it("resolves filesystem destinations after active ownership moves", async () => {

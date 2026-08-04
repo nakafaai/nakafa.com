@@ -2,6 +2,7 @@ import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity"
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
 import { readPublishedSetByPath } from "@repo/backend/convex/tryouts/catalog/hierarchy";
 import {
@@ -108,8 +109,8 @@ export const readLatestOwnedAttempt = Effect.fn(
 /** Reads the latest attempt through the active signed or filesystem owner. */
 export const readLatestAttempt = Effect.fn("tryouts.runtime.readLatestAttempt")(
   function* (ctx: QueryCtx, identity: TryoutSetIdentity, userId: UserId) {
-    const catalog = yield* loadTryoutCatalog(ctx, identity.locale);
-    if (catalog.managed) {
+    const owner = yield* loadTryoutOwner(ctx);
+    if (owner.managed) {
       const legacy = yield* Effect.promise(() =>
         getActiveTryoutSet(ctx, identity)
       );

@@ -25,6 +25,7 @@ import type {
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import {
   getTryoutAttemptAuthHref,
+  getTryoutAttemptHref,
   getTryoutHref,
   readTryoutAttemptId,
   type TryoutRouteSearchParams,
@@ -124,6 +125,14 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   }
 
   const { attemptPage, token } = resolved;
+  if (!attemptId && attemptPage) {
+    redirect(
+      getTryoutAttemptHref(
+        attemptPage.page.set.publicPath,
+        attemptPage.attemptId
+      )
+    );
+  }
   const page = attemptPage?.page ?? resolved.publicPage;
   if (!page) {
     notFound();
@@ -217,14 +226,11 @@ async function readRoutePage(
     }
     return { attemptPage: null, authRequired: false, publicPage, token };
   }
-  if (!attemptId) {
-    return { attemptPage: null, authRequired: false, publicPage, token };
-  }
 
   const attemptPage = await Effect.runPromise(
     readTryoutAttemptSetPage(token, locale, publicPath, attemptId)
   );
-  if (!attemptPage) {
+  if (attemptId && !attemptPage) {
     return {
       attemptPage: null,
       authRequired: false,

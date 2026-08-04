@@ -96,7 +96,7 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     }
   }
   if (surface.key === "tryout") {
-    if (pathSegments.length === 5) {
+    if (pathSegments.length === 4 || pathSegments.length === 5) {
       return null;
     }
     const ownership = yield* getRuntimeTryoutRoute({ locale, publicPath });

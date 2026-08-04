@@ -19,17 +19,18 @@ import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
   matchesAttemptIdentity,
   readAttemptSetIdentity,
+  readLatestAttemptByPath,
   readOwnedAttemptById,
 } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { Effect } from "effect";
 
-/** Resolves one exact frozen set without replacing it from the active catalog. */
+/** Resolves an exact frozen set or the current route's in-progress attempt. */
 export const readAttemptSetPage = Effect.fn(
   "tryouts.retained.readAttemptSetPage"
 )(function* (
   ctx: QueryCtx,
   args: {
-    readonly attemptId: string;
+    readonly attemptId?: string;
     readonly locale: "en" | "id";
     readonly publicPath: string;
   }
@@ -38,19 +39,26 @@ export const readAttemptSetPage = Effect.fn(
   if (!auth) {
     return null;
   }
-  const attemptId = ctx.db.normalizeId("tryoutAttempts", args.attemptId);
-  if (!attemptId) {
+  const attempt = yield* readSetAttempt(ctx, args, auth.appUser._id);
+  if (!attempt?.setPublicPath) {
     return null;
   }
-  const attempt = yield* readOwnedAttemptById(ctx, attemptId, auth.appUser._id);
-  if (!attempt || attempt.setPublicPath !== args.publicPath) {
+  if (args.attemptId && attempt.setPublicPath !== args.publicPath) {
+    return null;
+  }
+  if (!args.attemptId && attempt.status !== "in-progress") {
     return null;
   }
   const identity = yield* readAttemptSetIdentity(ctx, attempt);
   if (identity?.locale !== args.locale) {
     return null;
   }
-  const page = yield* readRetainedSetPage(ctx, args, attempt, identity);
+  const page = yield* readRetainedSetPage(
+    ctx,
+    { locale: args.locale, publicPath: attempt.setPublicPath },
+    attempt,
+    identity
+  );
   if (!page) {
     return null;
   }
@@ -64,6 +72,26 @@ export const readAttemptSetPage = Effect.fn(
     attemptId: attempt._id,
     page,
   };
+});
+
+/** Selects an exact attempt or the newest attempt for the active route identity. */
+const readSetAttempt = Effect.fn("tryouts.retained.readSetAttempt")(function* (
+  ctx: QueryCtx,
+  args: {
+    readonly attemptId?: string;
+    readonly locale: "en" | "id";
+    readonly publicPath: string;
+  },
+  userId: Doc<"users">["_id"]
+) {
+  if (args.attemptId) {
+    const attemptId = ctx.db.normalizeId("tryoutAttempts", args.attemptId);
+    if (!attemptId) {
+      return null;
+    }
+    return yield* readOwnedAttemptById(ctx, attemptId, userId);
+  }
+  return yield* readLatestAttemptByPath(ctx, args, userId);
 });
 
 /** Resolves one frozen section without replacing it from the active catalog. */

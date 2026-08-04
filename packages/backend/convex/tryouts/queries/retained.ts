@@ -33,7 +33,7 @@ const sectionPageFields = {
 /** Reads one owned set from the user's exact frozen attempt snapshot. */
 export const getAttemptSetPage = query({
   args: {
-    attemptId: v.string(),
+    attemptId: v.optional(v.string()),
     locale: localeValidator,
     publicPath: v.string(),
   },

@@ -51,6 +51,12 @@ describe("tryouts/migrations/activate", () => {
       );
     });
     await expect(
+      t.run((ctx) => ctx.db.query("tryoutScores").unique())
+    ).resolves.toMatchObject({
+      setIdentity: expect.any(String),
+      tryoutSnapshotId: snapshotId,
+    });
+    await expect(
       t.mutation(internal.tryouts.migrations.activate.activateAttempts, args)
     ).rejects.toThrow("before its scale is prepared");
 
@@ -58,11 +64,10 @@ describe("tryouts/migrations/activate", () => {
     await t.mutation(internal.tryouts.migrations.scale.migrateScales, args);
     await expect(
       t.mutation(internal.tryouts.migrations.activate.activateAttempts, args)
-    ).rejects.toThrow("before its score is prepared");
-    await t.mutation(internal.tryouts.migrations.score.migrateScores, args);
-    await expect(
-      t.mutation(internal.tryouts.migrations.activate.activateAttempts, args)
     ).resolves.toMatchObject({ changed: 1, isDone: true });
+    await expect(
+      t.mutation(internal.tryouts.migrations.score.migrateScores, args)
+    ).resolves.toMatchObject({ changed: 0, isDone: true });
     await expect(
       t.run((ctx) => ctx.db.query("tryoutAttempts").unique())
     ).resolves.toMatchObject({
