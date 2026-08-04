@@ -235,6 +235,7 @@ import type * as contentRelease_program_route from "../contentRelease/program/ro
 import type * as contentRelease_program_sitemap from "../contentRelease/program/sitemap.js";
 import type * as contentRelease_program_verify from "../contentRelease/program/verify.js";
 import type * as contentRelease_projection from "../contentRelease/projection.js";
+import type * as contentRelease_proof_artifact from "../contentRelease/proof/artifact.js";
 import type * as contentRelease_proof_budget from "../contentRelease/proof/budget.js";
 import type * as contentRelease_proof_catalog from "../contentRelease/proof/catalog.js";
 import type * as contentRelease_proof_commit from "../contentRelease/proof/commit.js";
@@ -578,6 +579,7 @@ import type * as tryouts_runtime_sectionAttempt from "../tryouts/runtime/section
 import type * as tryouts_runtime_selectors from "../tryouts/runtime/selectors.js";
 import type * as tryouts_score from "../tryouts/score.js";
 import type * as tryouts_sets_catalog from "../tryouts/sets/catalog.js";
+import type * as tryouts_sets_page from "../tryouts/sets/page.js";
 import type * as tryouts_sets_published from "../tryouts/sets/published.js";
 import type * as tryouts_sets_score from "../tryouts/sets/score.js";
 import type * as tryouts_sets_spec from "../tryouts/sets/spec.js";
@@ -838,6 +840,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/program/sitemap": typeof contentRelease_program_sitemap;
   "contentRelease/program/verify": typeof contentRelease_program_verify;
   "contentRelease/projection": typeof contentRelease_projection;
+  "contentRelease/proof/artifact": typeof contentRelease_proof_artifact;
   "contentRelease/proof/budget": typeof contentRelease_proof_budget;
   "contentRelease/proof/catalog": typeof contentRelease_proof_catalog;
   "contentRelease/proof/commit": typeof contentRelease_proof_commit;
@@ -1181,6 +1184,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/runtime/selectors": typeof tryouts_runtime_selectors;
   "tryouts/score": typeof tryouts_score;
   "tryouts/sets/catalog": typeof tryouts_sets_catalog;
+  "tryouts/sets/page": typeof tryouts_sets_page;
   "tryouts/sets/published": typeof tryouts_sets_published;
   "tryouts/sets/score": typeof tryouts_sets_score;
   "tryouts/sets/spec": typeof tryouts_sets_spec;
