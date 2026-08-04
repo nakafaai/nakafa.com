@@ -6,7 +6,6 @@ import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { decodeSourceRevision } from "@/lib/content/published/origin";
 
 type TryoutMetadataArgs = FunctionArgs<
   typeof api.tryouts.queries.catalog.getMetadata
@@ -31,16 +30,9 @@ export async function readTryoutHubPage(locale: Locale) {
   "use cache";
   applyContentRuntimeCache();
 
-  const page = await fetchQuery(api.tryouts.queries.catalog.getHubPage, {
+  return await fetchQuery(api.tryouts.queries.catalog.getHubPage, {
     locale,
   });
-  const sourceRevision = await Effect.runPromise(
-    decodeSourceRevision(page.sourceRevision, {
-      locale,
-      publicPath: "try-out",
-    })
-  );
-  return { ...page, sourceRevision };
 }
 
 /** Reads one public country page from the tagged content cache. */
@@ -58,10 +50,7 @@ export async function readTryoutCountryPage(
   if (!page) {
     return null;
   }
-  const sourceRevision = await Effect.runPromise(
-    decodeSourceRevision(page.sourceRevision, { locale, publicPath })
-  );
-  return { ...page, sourceRevision };
+  return page;
 }
 
 /** Reads one public exam page from the tagged content cache. */
