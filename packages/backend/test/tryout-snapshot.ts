@@ -164,6 +164,7 @@ export async function activateTryoutSnapshot(
   input: {
     readonly catalog: readonly TryoutCatalogRow[];
     readonly placements: readonly TryoutPlacement[];
+    readonly releaseId?: string;
   }
 ) {
   const catalog = [...input.catalog]
@@ -202,7 +203,8 @@ export async function activateTryoutSnapshot(
       rowDigest: snapshotId,
     }),
   };
-  await insertTestRelease(ctx, { snapshots });
+  const releaseId = input.releaseId ?? TEST_RELEASE_ID;
+  await insertTestRelease(ctx, { releaseId, snapshots });
   await ctx.db.insert("contentSnapshots", {
     createdAt: 1,
     family: "tryout",
@@ -235,7 +237,7 @@ export async function activateTryoutSnapshot(
   });
   await ctx.db.patch("contentState", state._id, {
     activeManifestHash: TEST_MANIFEST_HASH,
-    activeReleaseId: TEST_RELEASE_ID,
+    activeReleaseId: releaseId,
     activeSequence: 1,
     candidateManifestHash: undefined,
     candidateReleaseId: undefined,

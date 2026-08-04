@@ -146,6 +146,7 @@ describe("tryouts/start/scale", () => {
       const snapshotId = await activateTryoutSnapshot(ctx, {
         catalog,
         placements,
+        releaseId: "release-test-second-scale",
       });
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
