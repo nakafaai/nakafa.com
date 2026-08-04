@@ -1,4 +1,5 @@
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
@@ -22,6 +23,12 @@ export const TRYOUT_START_EXAM = "tka";
 export const TRYOUT_START_TRACK = "matematika";
 export const TRYOUT_START_SET = "set-1";
 export const TRYOUT_START_SECTION = "matematika";
+export const TRYOUT_RENAMED_SET_PATH = PublicPathSchema.make(
+  `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/renamed-set`
+);
+const renamedSectionPath = PublicPathSchema.make(
+  `${TRYOUT_RENAMED_SET_PATH}/${TRYOUT_START_SECTION}`
+);
 export const TRYOUT_START_CONTENT_HASH = TryoutContentHashSchema.make(
   "4".repeat(64)
 );
@@ -86,6 +93,35 @@ export async function activateTryoutStartSource(
     }),
     snapshotId,
   };
+}
+
+/** Activates a renamed set route while retaining the original test snapshot. */
+export async function activateRenamedTryoutStartSource(ctx: MutationCtx) {
+  const state = await ctx.db.query("contentState").unique();
+  if (!state) {
+    throw new Error("Expected active content state before route rename.");
+  }
+  await ctx.db.delete(state._id);
+  const releases = await ctx.db.query("contentReleases").collect();
+  for (const release of releases) {
+    await ctx.db.delete(release._id);
+  }
+
+  const catalog = tryoutStartLocales.flatMap((locale) =>
+    makeTryoutStartHierarchy(locale, "visible").map((row) => {
+      if (row.kind === "set") {
+        return { ...row, publicPath: TRYOUT_RENAMED_SET_PATH };
+      }
+      if (row.kind === "section") {
+        return { ...row, publicPath: renamedSectionPath };
+      }
+      return row;
+    })
+  );
+  await activateTryoutSnapshot(ctx, {
+    catalog,
+    placements: tryoutStartLocales.map(makeTryoutStartPlacement),
+  });
 }
 
 /** Builds the complete localized hierarchy around the signed start fixture. */

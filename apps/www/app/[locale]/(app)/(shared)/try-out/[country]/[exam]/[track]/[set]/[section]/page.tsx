@@ -97,8 +97,8 @@ export async function generateMetadata({
   }
 
   return createRetainedTryoutMetadata({
-    description: retainedPage.section.description,
-    title: retainedPage.section.title,
+    description: retainedPage.page.section.description,
+    title: retainedPage.page.section.title,
   });
 }
 
@@ -158,7 +158,7 @@ async function TryoutSectionRoute({
         readTryoutAttemptSectionPage(token, locale, sectionPath)
       )
     : null;
-  const page = attemptPage ?? publicPage;
+  const page = attemptPage?.page ?? publicPage;
 
   if (!page) {
     notFound();
@@ -169,6 +169,7 @@ async function TryoutSectionRoute({
   if (token) {
     contentAccess = await Effect.runPromise(
       readTryoutContentAccess(token, {
+        ...(attemptPage ? { attemptId: attemptPage.attemptId } : {}),
         countryKey: page.set.countryKey,
         examKey: page.set.examKey,
         locale,

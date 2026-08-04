@@ -3,12 +3,11 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import {
   getTryoutSectionContentAccess,
-  type TryoutAnswerSelector,
-  type TryoutQuestionSelector,
   type TryoutSectionContentAccess,
   type TryoutSectionContentArgs,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import { readLatestAttempt } from "@repo/backend/convex/tryouts/runtime/lookup";
+import { loadTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
 import { Effect, Schema } from "effect";
 
 const noContentAccess: Extract<TryoutSectionContentAccess, { kind: "none" }> = {
@@ -16,7 +15,6 @@ const noContentAccess: Extract<TryoutSectionContentAccess, { kind: "none" }> = {
 };
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
 
 /** Stable failure while reading one attempt-owned content capability. */
 class TryoutContentReadError extends Schema.TaggedError<TryoutContentReadError>()(
@@ -37,7 +35,7 @@ export const readTryoutSectionContent = Effect.fn(
     return noContentAccess;
   }
 
-  const attempt = yield* readLatestAttempt(ctx, args, auth.appUser._id);
+  const attempt = yield* readContentAttempt(ctx, args, auth.appUser._id);
   if (!attempt) {
     return noContentAccess;
   }
@@ -77,7 +75,7 @@ export const readTryoutSectionContent = Effect.fn(
     );
   }
 
-  return yield* loadSignedContent({
+  return yield* loadTryoutSignedContent({
     access,
     attempt,
     ctx,
@@ -88,6 +86,45 @@ export const readTryoutSectionContent = Effect.fn(
     totalQuestions: section.totalQuestions,
   });
 });
+
+/** Resolves either one route-bound attempt or the latest logical set attempt. */
+const readContentAttempt = Effect.fn("tryouts.access.readContentAttempt")(
+  function* (
+    ctx: QueryCtx,
+    args: TryoutSectionContentArgs,
+    userId: Doc<"users">["_id"]
+  ) {
+    const attemptId = args.attemptId;
+    if (!attemptId) {
+      return yield* readLatestAttempt(ctx, args, userId);
+    }
+
+    const attempt = yield* tryContentPromise(() => ctx.db.get(attemptId));
+    if (!attempt || attempt.userId !== userId) {
+      return null;
+    }
+    if (!matchesContentIdentity(attempt, args)) {
+      return yield* contentIntegrity(
+        "Try-out content request differs from its frozen attempt identity."
+      );
+    }
+    return attempt;
+  }
+);
+
+/** Verifies route keys before an exact attempt may authorize protected content. */
+function matchesContentIdentity(
+  attempt: TryoutAttempt,
+  args: TryoutSectionContentArgs
+) {
+  return (
+    attempt.countryKey === args.countryKey &&
+    attempt.examKey === args.examKey &&
+    attempt.locale === args.locale &&
+    attempt.setKey === args.setKey &&
+    attempt.trackKey === args.trackKey
+  );
+}
 
 /** Resolves one bounded active section when its published route key changed. */
 const loadActiveSection = Effect.fn("tryouts.access.loadActiveSection")(
@@ -113,125 +150,6 @@ const loadActiveSection = Effect.fn("tryouts.access.loadActiveSection")(
     return sections.find((section) => section.status === "in-progress") ?? null;
   }
 );
-
-/** Returns exact protected selectors from one immutable signed attempt. */
-const loadSignedContent = Effect.fn("tryouts.access.loadSignedContent")(
-  function* (input: {
-    readonly access: { readonly answers: boolean; readonly questions: boolean };
-    readonly attempt: TryoutAttempt;
-    readonly ctx: QueryCtx;
-    readonly locale: TryoutSectionContentArgs["locale"];
-    readonly sectionKey: string;
-    readonly snapshotReleaseId: string;
-    readonly snapshotId: string;
-    readonly totalQuestions: number;
-  }) {
-    if (input.attempt.locale !== input.locale) {
-      return yield* contentIntegrity(
-        "Signed try-out attempt lost its locale or snapshot identity."
-      );
-    }
-
-    const placements = yield* tryContentPromise(() =>
-      input.ctx.db
-        .query("tryoutAttemptPlacements")
-        .withIndex(
-          "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
-          (index) =>
-            index
-              .eq("tryoutAttemptId", input.attempt._id)
-              .eq("sectionKey", input.sectionKey)
-        )
-        .take(input.totalQuestions + 1)
-    );
-    if (placements.length !== input.totalQuestions) {
-      return yield* contentIntegrity(
-        "Signed try-out section lost one or more frozen placements."
-      );
-    }
-
-    const content: Extract<TryoutSectionContentAccess, { kind: "signed" }> = {
-      answers: input.access.answers
-        ? yield* Effect.forEach(placements, (placement) =>
-            makeAnswerSelector(
-              placement,
-              input.locale,
-              input.snapshotId,
-              input.snapshotReleaseId
-            )
-          )
-        : [],
-      kind: "signed",
-      questions: yield* Effect.forEach(placements, (placement) =>
-        makeQuestionSelector(
-          placement,
-          input.locale,
-          input.snapshotId,
-          input.snapshotReleaseId
-        )
-      ),
-    };
-    return content;
-  }
-);
-
-/** Builds one authenticated question selector from a frozen placement. */
-function makeQuestionSelector(
-  placement: TryoutPlacement,
-  locale: TryoutSectionContentArgs["locale"],
-  snapshotId: string,
-  snapshotReleaseId: string
-) {
-  if (
-    !(
-      placement.questionArtifactHash &&
-      placement.questionContentKey &&
-      placement.sectionKey
-    )
-  ) {
-    return contentIntegrity("Signed try-out question selector is incomplete.");
-  }
-
-  const selector: TryoutQuestionSelector = {
-    artifactHash: placement.questionArtifactHash,
-    contentHash: placement.contentHash,
-    contentKey: placement.questionContentKey,
-    delivery: "authenticated",
-    locale,
-    questionOrder: placement.questionOrder,
-    snapshotReleaseId,
-    snapshotId,
-    sourcePath: placement.sourcePath,
-    sourceRevision: placement.sourceRevision,
-  };
-  return Effect.succeed(selector);
-}
-
-/** Builds one entitled answer selector from a frozen placement. */
-function makeAnswerSelector(
-  placement: TryoutPlacement,
-  locale: TryoutSectionContentArgs["locale"],
-  snapshotId: string,
-  snapshotReleaseId: string
-) {
-  if (!(placement.answerArtifactHash && placement.answerContentKey)) {
-    return contentIntegrity("Signed try-out answer selector is incomplete.");
-  }
-
-  const selector: TryoutAnswerSelector = {
-    artifactHash: placement.answerArtifactHash,
-    contentHash: placement.contentHash,
-    contentKey: placement.answerContentKey,
-    delivery: "entitled",
-    locale,
-    questionOrder: placement.questionOrder,
-    snapshotReleaseId,
-    snapshotId,
-    sourcePath: placement.sourcePath,
-    sourceRevision: placement.sourceRevision,
-  };
-  return Effect.succeed(selector);
-}
 
 /** Creates one typed fail-closed content integrity error. */
 function contentIntegrity(message: string) {

@@ -8,9 +8,11 @@ import {
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
 import {
+  activateRenamedTryoutStartSource,
   activateTryoutStartSource,
   makeTryoutStartHierarchy,
   makeTryoutStartPlacement,
+  TRYOUT_RENAMED_SET_PATH,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_SECTION,
@@ -107,13 +109,16 @@ describe("tryouts/queries/catalog", () => {
       sessionId: identity.sessionId,
       subject: identity.authUserId,
     });
-    await authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-      countryKey: TRYOUT_START_COUNTRY,
-      examKey: TRYOUT_START_EXAM,
-      locale: "id",
-      setKey: TRYOUT_START_SET,
-      trackKey: TRYOUT_START_TRACK,
-    });
+    const started = await authed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      {
+        countryKey: TRYOUT_START_COUNTRY,
+        examKey: TRYOUT_START_EXAM,
+        locale: "id",
+        setKey: TRYOUT_START_SET,
+        trackKey: TRYOUT_START_TRACK,
+      }
+    );
     await t.mutation(async (ctx) => {
       const state = await ctx.db.query("contentState").unique();
       if (!state) {
@@ -138,8 +143,58 @@ describe("tryouts/queries/catalog", () => {
         publicPath: sectionPath,
       })
     ).resolves.toMatchObject({
+      attemptId: started.attemptId,
+      page: {
+        section: { sectionKey: TRYOUT_START_SECTION },
+        set: { setKey: TRYOUT_START_SET },
+      },
+    });
+  });
+
+  it("serves the exact frozen attempt after its active route is renamed", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const sectionPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}/${TRYOUT_START_SECTION}`;
+    const identity = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now: 1_780_000_000_000,
+        suffix: "renamed-frozen-section",
+      });
+      await activateTryoutStartSource(ctx, "visible");
+      return user;
+    });
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    const started = await authed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      {
+        countryKey: TRYOUT_START_COUNTRY,
+        examKey: TRYOUT_START_EXAM,
+        locale: "id",
+        setKey: TRYOUT_START_SET,
+        trackKey: TRYOUT_START_TRACK,
+      }
+    );
+
+    await t.mutation(activateRenamedTryoutStartSource);
+
+    await expect(
+      authed.query(api.tryouts.queries.catalog.getAttemptSectionPage, {
+        locale: "id",
+        publicPath: sectionPath,
+      })
+    ).resolves.toMatchObject({
+      attemptId: started.attemptId,
+      page: { section: { sectionKey: TRYOUT_START_SECTION } },
+    });
+    await expect(
+      t.query(api.tryouts.queries.catalog.getSectionPage, {
+        locale: "id",
+        publicPath: `${TRYOUT_RENAMED_SET_PATH}/${TRYOUT_START_SECTION}`,
+      })
+    ).resolves.toMatchObject({
       section: { sectionKey: TRYOUT_START_SECTION },
-      set: { setKey: TRYOUT_START_SET },
     });
   });
 

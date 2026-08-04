@@ -33,6 +33,7 @@ const protectedSelectorFields = {
 };
 
 export const tryoutSectionContentArgs = {
+  attemptId: v.optional(v.id("tryoutAttempts")),
   countryKey: tryoutRouteKeyValidator,
   examKey: tryoutRouteKeyValidator,
   locale: localeValidator,

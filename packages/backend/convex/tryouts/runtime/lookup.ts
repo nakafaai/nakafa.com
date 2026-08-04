@@ -144,7 +144,21 @@ export const readLatestAttemptByPath = Effect.fn(
 )(function* (ctx: QueryCtx, path: PublicSetPath, userId: UserId) {
   const catalog = yield* loadTryoutCatalog(ctx, path.locale);
   if (catalog.managed) {
-    const signed = yield* Effect.promise(() =>
+    const activeSet = yield* readPublishedSetByPath(catalog, path.publicPath);
+    const signedByIdentity = activeSet
+      ? yield* Effect.promise(() =>
+          ctx.db
+            .query("tryoutAttempts")
+            .withIndex("by_userId_and_setIdentity_and_startedAt", (index) =>
+              index
+                .eq("userId", userId)
+                .eq("setIdentity", tryoutCatalogIdentity(activeSet))
+            )
+            .order("desc")
+            .first()
+        )
+      : null;
+    const signedByPath = yield* Effect.promise(() =>
       ctx.db
         .query("tryoutAttempts")
         .withIndex(
@@ -162,7 +176,9 @@ export const readLatestAttemptByPath = Effect.fn(
       getActiveTryoutSetByPublicPath(ctx, path)
     );
     if (!legacy) {
-      return signed;
+      return selectLatestAttempt(
+        [signedByIdentity, signedByPath].filter((attempt) => attempt !== null)
+      );
     }
     const filesystem = yield* Effect.promise(() =>
       ctx.db
@@ -174,7 +190,9 @@ export const readLatestAttemptByPath = Effect.fn(
         .first()
     );
     return selectLatestAttempt(
-      [signed, filesystem].filter((attempt) => attempt !== null)
+      [signedByIdentity, signedByPath, filesystem].filter(
+        (attempt) => attempt !== null
+      )
     );
   }
 

@@ -569,6 +569,7 @@ import type * as tryouts_runtime_placement from "../tryouts/runtime/placement.js
 import type * as tryouts_runtime_result from "../tryouts/runtime/result.js";
 import type * as tryouts_runtime_score from "../tryouts/runtime/score.js";
 import type * as tryouts_runtime_sectionAttempt from "../tryouts/runtime/sectionAttempt.js";
+import type * as tryouts_runtime_selectors from "../tryouts/runtime/selectors.js";
 import type * as tryouts_score from "../tryouts/score.js";
 import type * as tryouts_sets_catalog from "../tryouts/sets/catalog.js";
 import type * as tryouts_sets_published from "../tryouts/sets/published.js";
@@ -1165,6 +1166,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/runtime/result": typeof tryouts_runtime_result;
   "tryouts/runtime/score": typeof tryouts_runtime_score;
   "tryouts/runtime/sectionAttempt": typeof tryouts_runtime_sectionAttempt;
+  "tryouts/runtime/selectors": typeof tryouts_runtime_selectors;
   "tryouts/score": typeof tryouts_score;
   "tryouts/sets/catalog": typeof tryouts_sets_catalog;
   "tryouts/sets/published": typeof tryouts_sets_published;

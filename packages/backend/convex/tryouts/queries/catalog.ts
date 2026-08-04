@@ -42,14 +42,19 @@ import {
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const sectionPageValidator = v.union(
+const sectionPageFields = {
+  exam: publicTryoutExamValidator,
+  questions: v.array(publicTryoutQuestionContentValidator),
+  section: publicTryoutSectionValidator,
+  set: publicTryoutSetValidator,
+  track: publicTryoutTrackValidator,
+};
+const sectionPageValidator = v.union(v.null(), v.object(sectionPageFields));
+const attemptSectionPageValidator = v.union(
   v.null(),
   v.object({
-    exam: publicTryoutExamValidator,
-    questions: v.array(publicTryoutQuestionContentValidator),
-    section: publicTryoutSectionValidator,
-    set: publicTryoutSetValidator,
-    track: publicTryoutTrackValidator,
+    attemptId: v.id("tryoutAttempts"),
+    page: v.object(sectionPageFields),
   })
 );
 
@@ -216,7 +221,7 @@ export const getAttemptSectionPage = query({
     locale: localeValidator,
     publicPath: v.string(),
   },
-  returns: sectionPageValidator,
+  returns: attemptSectionPageValidator,
   handler: (ctx, args) => runConvexProgram(readAttemptSectionPage(ctx, args)),
 });
 
@@ -267,5 +272,9 @@ const readAttemptSectionPage = Effect.fn(
     args.locale,
     snapshotId
   );
-  return yield* readPublishedSectionPage(catalog, args.publicPath);
+  const page = yield* readPublishedSectionPage(catalog, args.publicPath);
+  if (!page) {
+    return null;
+  }
+  return { attemptId: attempt._id, page };
 });
