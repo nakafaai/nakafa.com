@@ -106,6 +106,34 @@ jobs:
           } >> "$GITHUB_ENV"
           rm "$HOME/.convex/config.json"
 
+      - name: Configure isolated backend
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        run: |
+          # Agent docs exercises content reads only. External integrations stay inert.
+          pnpm --dir packages/backend exec convex env set --force <<EOF
+          AI_GATEWAY_API_KEY=agent-docs-disabled
+          AKSARA_PUBLICATION_TOKEN=$CONTENT_RUNTIME_TOKEN
+          AUTH_GOOGLE_ID=agent-docs-disabled
+          AUTH_GOOGLE_SECRET=agent-docs-disabled
+          BETTER_AUTH_SECRET=agent-docs-inert-secret-00000000
+          CONTENT_RUNTIME_TOKEN=$CONTENT_RUNTIME_TOKEN
+          ELEVENLABS_API_KEY=agent-docs-disabled
+          FIRECRAWL_API_KEY=agent-docs-disabled
+          INTERNAL_CONTENT_API_KEY=$INTERNAL_CONTENT_API_KEY
+          JWKS=[]
+          NEXT_PUBLIC_POLAR_SERVER=sandbox
+          OPENWEATHER_API_KEY=agent-docs-disabled
+          POLAR_ACCESS_TOKEN=agent-docs-disabled
+          POLAR_WEBHOOK_SECRET=agent-docs-disabled
+          POSTHOG_ACCOUNT_DELETION_API_KEY=agent-docs-disabled
+          POSTHOG_HOST=https://example.invalid
+          POSTHOG_PROJECT_ID=0
+          POSTHOG_PROJECT_TOKEN=agent-docs-disabled
+          RESEND_API_KEY=agent-docs-disabled
+          RESEND_WEBHOOK_SECRET=agent-docs-disabled
+          SITE_URL=$SITE_URL
+          EOF
+
       - name: Deploy isolated backend
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm --dir packages/backend exec convex dev --once --typecheck enable --tail-logs disable
