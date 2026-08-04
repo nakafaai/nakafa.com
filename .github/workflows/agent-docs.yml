@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: agent-docs
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   agent-docs:
