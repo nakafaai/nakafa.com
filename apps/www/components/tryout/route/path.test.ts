@@ -4,6 +4,7 @@ import {
   getTryoutAttemptHref,
   getTryoutHref,
   getTryoutPublicPathHref,
+  hasTryoutAttemptCapability,
   readTryoutAttemptId,
 } from "@/components/tryout/route/path";
 
@@ -39,5 +40,18 @@ describe("tryout route paths", () => {
     expect(
       readTryoutAttemptId({ attemptId: ["first", "second"] })
     ).toBeUndefined();
+
+    expect(
+      hasTryoutAttemptCapability(new URLSearchParams("attemptId=attempt-id"))
+    ).toBe(true);
+    expect(hasTryoutAttemptCapability(new URLSearchParams())).toBe(false);
+    expect(hasTryoutAttemptCapability(new URLSearchParams("attemptId="))).toBe(
+      false
+    );
+    expect(
+      hasTryoutAttemptCapability(
+        new URLSearchParams("attemptId=first&attemptId=second")
+      )
+    ).toBe(false);
   });
 });

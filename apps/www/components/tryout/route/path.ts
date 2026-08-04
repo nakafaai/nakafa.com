@@ -57,3 +57,12 @@ export function readTryoutAttemptId(searchParams: TryoutRouteSearchParams) {
   }
   return attemptId;
 }
+
+/** Accepts exactly one non-empty attempt capability from one request URL. */
+export function hasTryoutAttemptCapability(searchParams: URLSearchParams) {
+  const attemptIds = searchParams.getAll(ATTEMPT_ID_PARAM);
+  if (attemptIds.length !== 1) {
+    return false;
+  }
+  return Boolean(attemptIds[0]);
+}

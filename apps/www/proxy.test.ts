@@ -44,6 +44,7 @@ const runtimeMocks = vi.hoisted(() => ({
   readMaterialClaims: vi.fn(),
   readProgramPath: vi.fn(),
   readPublic: vi.fn(),
+  readTryout: vi.fn(),
 }));
 const previewMocks = vi.hoisted(() => ({
   configured: vi.fn(),
@@ -74,6 +75,7 @@ vi.mock("@/lib/content/preview/route", () => ({
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: runtimeMocks.readContent,
   getRuntimePublicRoute: runtimeMocks.readPublic,
+  getRuntimeTryoutRoute: runtimeMocks.readTryout,
 }));
 vi.mock("@/lib/content/article/ownership", () => ({
   readPublishedArticleCategory: runtimeMocks.readArticleCategory,
@@ -101,6 +103,9 @@ describe("proxy", () => {
       .mockReturnValue(
         Effect.succeed({ kind: "subject-lesson", sitemap: true })
       );
+    runtimeMocks.readTryout
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ exists: false, managed: false }));
     runtimeMocks.readProgramPath
       .mockReset()
       .mockReturnValue(Effect.succeed({ managed: false, route: null }));
@@ -218,6 +223,34 @@ describe("proxy", () => {
       expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
     }
   );
+
+  it("hard-rejects a missing public try-out set before page rendering", async () => {
+    const path = "/en/try-out/indonesia/snbt/2027/missing-set";
+    runtimeMocks.readTryout.mockReturnValueOnce(
+      Effect.succeed({ exists: false, managed: true })
+    );
+
+    const response = await requestProxy(path);
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/_not-found/en"
+    );
+    expect(runtimeMocks.readTryout).toHaveBeenCalledWith({
+      locale: "en",
+      publicPath: "try-out/indonesia/snbt/2027/missing-set",
+    });
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+  });
+
+  it("delegates one retained attempt capability to the authenticated page", async () => {
+    const response = await requestProxy(
+      "/en/try-out/indonesia/snbt/2027/set-1?attemptId=attempt-id"
+    );
+
+    expectLocaleProxy(response);
+    expect(runtimeMocks.readTryout).not.toHaveBeenCalled();
+  });
 
   it.each(["/en", "/en/search"])(
     "does not treat the public route %s as an internal rewrite",

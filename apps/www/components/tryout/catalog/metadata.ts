@@ -1,7 +1,6 @@
 import "server-only";
 
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
-import { readStaticPublicTryoutRoutes } from "@repo/contents/_types/route/tryout/static";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -53,7 +52,7 @@ export async function generateTryoutRouteMetadata(
   ]);
   const source = published.managed
     ? published.route
-    : readStaticMetadata(input);
+    : await readStaticMetadata(input);
 
   if (!source) {
     notFound();
@@ -79,10 +78,19 @@ export async function generateTryoutRouteMetadata(
   };
 }
 
-/** Resolves route copy from the filesystem registry before signed ownership. */
-function readStaticMetadata(
-  input: TryoutMetadataInput
-): TryoutMetadataSource | null {
+/**
+ * Resolves route copy from the filesystem registry before signed ownership.
+ *
+ * This static-generation fallback stays on the framework Promise boundary so
+ * managed routes never load the retired corpus and prerendering does not start
+ * an Effect runtime that reads current time.
+ *
+ * @see https://nextjs.org/docs/messages/next-prerender-current-time
+ */
+async function readStaticMetadata(input: TryoutMetadataInput) {
+  const { readStaticPublicTryoutRoutes } = await import(
+    "@repo/contents/_types/route/tryout/static"
+  );
   const routes = readStaticPublicTryoutRoutes();
   const route = routes.find(
     (candidate) =>

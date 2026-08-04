@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
+import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import {
   AGENT_DISCOVERY_LINK_HEADER,
   LLMS_TEXT_PATH,
@@ -115,7 +116,12 @@ export async function proxy(request: NextRequest) {
   }
 
   const projectedRouteRejection = await Effect.runPromise(
-    readProjectedHtmlRouteRejection(pathname)
+    readProjectedHtmlRouteRejection({
+      hasAttemptCapability: hasTryoutAttemptCapability(
+        request.nextUrl.searchParams
+      ),
+      pathname,
+    })
   );
 
   if (projectedRouteRejection) {

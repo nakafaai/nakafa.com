@@ -12,6 +12,11 @@ import {
   getRuntimeTryoutRoute,
 } from "@/lib/content/runtime/routes";
 
+interface ProjectedHtmlRouteInput {
+  readonly hasAttemptCapability: boolean;
+  readonly pathname: string;
+}
+
 /** Resolves one material HTML route against a single active release snapshot. */
 const readProjectedMaterialRouteRejection = Effect.fn(
   "www.routing.publicHtml.materialRejection"
@@ -61,7 +66,7 @@ const readProjectedMaterialRouteRejection = Effect.fn(
  */
 export const readProjectedHtmlRouteRejection = Effect.fn(
   "www.routing.publicHtml.projectedRejection"
-)(function* (pathname: string) {
+)(function* ({ hasAttemptCapability, pathname }: ProjectedHtmlRouteInput) {
   const [locale, namespace, ...pathSegments] = pathname
     .split("/")
     .filter(Boolean);
@@ -96,7 +101,10 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     }
   }
   if (surface.key === "tryout") {
-    if (pathSegments.length === 4 || pathSegments.length === 5) {
+    if (
+      hasAttemptCapability &&
+      (pathSegments.length === 4 || pathSegments.length === 5)
+    ) {
       return null;
     }
     const ownership = yield* getRuntimeTryoutRoute({ locale, publicPath });
