@@ -19,6 +19,21 @@ describe("try-out migration content attestation", () => {
     ).toBe(true);
   });
 
+  it.each([
+    [
+      "0a7564382082ccc52179a832e50235b745409ae8b0432c43b4dc210cf3e66e45",
+      "9fb47d599b419ceac2b77564a78e41818674022b9495e41dae4afd9ba8479fde",
+    ],
+    [
+      "a0ba1ab3be661fb596614479bff8b12a3e34c5b9a0112d332a32bf5bc6456dcc",
+      "48818ebaa1b88d2a50471dc7bd5279c1e5dc67cdfdfe9d7f73005b4f9ad44f31",
+    ],
+  ])("accepts production-frozen renderer transition %#", (legacy, signed) => {
+    expect(
+      matchesSignedTryoutContent(legacy, TryoutContentHashSchema.make(signed))
+    ).toBe(true);
+  });
+
   it("rejects an unreviewed transition", () => {
     expect(
       matchesSignedTryoutContent(

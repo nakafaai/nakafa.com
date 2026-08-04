@@ -3,9 +3,10 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 
 /**
  * Exact source-audited hash transitions caused by Aksara's import-free renderer
- * bindings. All 58 pairs were verified from Nakafa b99bcc9 and Aksara 41b7165,
- * with identical paths, revisions, titles, and choices. This migration-only
- * evidence must be deleted after the cutover.
+ * bindings. All 58 pairs have identical paths, revisions, titles, and choices.
+ * The question 19 and 30 keys preserve the frozen production hashes from before
+ * Nakafa moved their local renderer imports into the design system. This
+ * migration-only evidence must be deleted after the cutover.
  */
 const ATTESTED_CONTENT_TRANSITIONS = new Map([
   [
@@ -109,7 +110,7 @@ const ATTESTED_CONTENT_TRANSITIONS = new Map([
     "9370554909b0474f6824170b9a27b0256a9691308eac951bb7745c3b37a2d9b8",
   ],
   [
-    "cfef3702966dbd9a0e97f0895b1314b8cc0ae5242788c789ec8b4f6321d37c6e",
+    "0a7564382082ccc52179a832e50235b745409ae8b0432c43b4dc210cf3e66e45",
     "9fb47d599b419ceac2b77564a78e41818674022b9495e41dae4afd9ba8479fde",
   ],
   [
@@ -133,7 +134,7 @@ const ATTESTED_CONTENT_TRANSITIONS = new Map([
     "03b99c27b74ff6ea0db4a1307ebcd1599dd5a376075dc46e8f3d8e608bdad969",
   ],
   [
-    "f7d33db72624e68ec85b38e228591e3f97211c4eb0870cd7ea7bc801b1cdf863",
+    "a0ba1ab3be661fb596614479bff8b12a3e34c5b9a0112d332a32bf5bc6456dcc",
     "48818ebaa1b88d2a50471dc7bd5279c1e5dc67cdfdfe9d7f73005b4f9ad44f31",
   ],
   [
