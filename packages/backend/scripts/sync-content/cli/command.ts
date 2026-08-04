@@ -148,13 +148,13 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
   type: string,
   options: SyncOptions
 ) {
-  if (type === "validate") {
-    yield* validate();
-    return;
-  }
-
   const config = yield* getConvexConfig(options);
   const ownership = yield* readContentSyncOwnership(config);
+
+  if (type === "validate") {
+    yield* validate(ownership);
+    return;
+  }
 
   switch (type) {
     case "articles":
