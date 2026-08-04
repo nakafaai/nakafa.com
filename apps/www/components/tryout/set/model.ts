@@ -4,7 +4,7 @@ import type { Locale } from "next-intl";
 import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
-} from "@/components/tryout/content/load";
+} from "@/components/tryout/content/model";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 
 /** Convex query contract for the set discovery page. */

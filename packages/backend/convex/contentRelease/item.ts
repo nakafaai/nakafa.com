@@ -4,7 +4,7 @@ import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
   type RollbackSnapshotState,
-} from "@nakafa/aksara-contracts/release/rollback";
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { resolveContentHead } from "@repo/backend/convex/contentRelease/catalog";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
@@ -133,14 +133,25 @@ const ensureContentKey = Effect.fn("contentRelease.ensureContentKey")(
 export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
   function* (
     ctx: MutationCtx,
-    item: ContentReleaseItem,
-    itemJson: string,
-    batchIndex: number,
-    batchHash: string,
-    role: "candidate" | "recovery",
-    sequence: number,
-    priorSequence: number | undefined
+    input: {
+      readonly batchHash: string;
+      readonly batchIndex: number;
+      readonly item: ContentReleaseItem;
+      readonly itemJson: string;
+      readonly priorSequence: number | undefined;
+      readonly role: "candidate" | "recovery";
+      readonly sequence: number;
+    }
   ) {
+    const {
+      batchHash,
+      batchIndex,
+      item,
+      itemJson,
+      priorSequence,
+      role,
+      sequence,
+    } = input;
     const atIndex = yield* loadItem(ctx, item.releaseId, item.index);
     const atIdentity = yield* loadIdentityItem(
       ctx,

@@ -18,6 +18,7 @@ const tables = {
         v.literal("bucket"),
         v.literal("quran"),
         v.literal("quran-search"),
+        v.literal("bundle"),
         v.literal("catalog"),
         v.literal("placement")
       )
@@ -211,14 +212,17 @@ const tables = {
       "locale",
       "publicPath",
     ])
-    .index("by_snapshotId_and_setIdentity_and_kind_and_order", {
-      fields: ["snapshotId", "setIdentity", "kind", "order"],
-      staged: true,
-    }),
+    .index("by_snapshotId_and_setIdentity_and_kind_and_order", [
+      "snapshotId",
+      "setIdentity",
+      "kind",
+      "order",
+    ]),
 
   /** Immutable attempt placements with terminal answer-artifact bindings. */
   tryoutPlacements: defineTable({
     answerArtifactHash: v.string(),
+    contentHash: v.optional(v.string()),
     countryKey: v.string(),
     examKey: v.string(),
     identity: v.string(),
@@ -245,14 +249,14 @@ const tables = {
       "sectionKey",
       "questionOrder",
     ])
-    .index("by_snapshotId_and_questionArtifactHash", {
-      fields: ["snapshotId", "questionArtifactHash"],
-      staged: true,
-    })
-    .index("by_snapshotId_and_answerArtifactHash", {
-      fields: ["snapshotId", "answerArtifactHash"],
-      staged: true,
-    })
+    .index("by_snapshotId_and_questionArtifactHash", [
+      "snapshotId",
+      "questionArtifactHash",
+    ])
+    .index("by_snapshotId_and_answerArtifactHash", [
+      "snapshotId",
+      "answerArtifactHash",
+    ])
     .index("by_questionArtifactHash", ["questionArtifactHash"])
     .index("by_answerArtifactHash", ["answerArtifactHash"]),
 };

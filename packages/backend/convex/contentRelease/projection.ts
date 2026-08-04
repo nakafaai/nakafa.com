@@ -2,11 +2,11 @@ import {
   type ContentProjection,
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
+import { StageProjectionBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
 import {
   MAX_PROJECTION_BATCH_BYTES,
   MAX_PROJECTION_BATCH_COUNT,
 } from "@nakafa/aksara-contracts/transport/limits";
-import { StageProjectionBatchInputSchema } from "@nakafa/aksara-contracts/transport/request";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   hashBatch,

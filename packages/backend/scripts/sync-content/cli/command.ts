@@ -17,6 +17,7 @@ import { syncTryouts } from "@repo/backend/scripts/sync-content/content/tryouts"
 import { validate } from "@repo/backend/scripts/sync-content/content/validate";
 import type { SyncOptions } from "@repo/backend/scripts/sync-content/contract/types";
 import { getConvexConfig } from "@repo/backend/scripts/sync-content/convex/client";
+import { readContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import {
   createContentRouteArtifactTargets,
   syncContentRouteArtifactPages,
@@ -26,10 +27,10 @@ import { syncPublicRoutes } from "@repo/backend/scripts/sync-content/routes/sync
 import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/runtime/cache";
 import { verify } from "@repo/backend/scripts/sync-content/verify/sync";
 import { syncFull } from "@repo/backend/scripts/sync-content/workflow/full";
+import { validateIncrementalSyncOptions } from "@repo/backend/scripts/sync-content/workflow/options";
 import {
   syncAll,
   syncIncremental,
-  validateIncrementalSyncOptions,
 } from "@repo/backend/scripts/sync-content/workflow/run";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
@@ -147,16 +148,17 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
   type: string,
   options: SyncOptions
 ) {
+  const config = yield* getConvexConfig(options);
+  const ownership = yield* readContentSyncOwnership(config);
+
   if (type === "validate") {
-    yield* validate();
+    yield* validate(ownership);
     return;
   }
 
-  const config = yield* getConvexConfig(options);
-
   switch (type) {
     case "articles":
-      yield* syncAuthors(config, options);
+      yield* syncAuthors(config, options, ownership);
       yield* syncArticles(config, options);
       yield* syncContentRouteArtifactPages(
         config,
@@ -173,52 +175,56 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       yield* invalidateContentRuntimeCache(options);
       return;
     case "subjects":
-      yield* syncAuthors(config, options);
+      yield* syncAuthors(config, options, ownership);
       yield* syncCurriculumTopics(config, options);
       yield* syncCurriculumLessons(config, options);
       yield* syncContentRouteArtifactPages(
         config,
         createContentRouteArtifactTargets(options.locale, ["material"])
       );
-      yield* syncPublicRoutes(config, options);
+      yield* syncPublicRoutes(config, options, ownership);
       yield* syncLearningPrograms(config, options);
       yield* invalidateContentRuntimeCache(options);
       return;
     case "curriculum-topics":
-      yield* syncAuthors(config, options);
+      yield* syncAuthors(config, options, ownership);
       yield* syncCurriculumTopics(config, options);
       yield* syncContentRouteArtifactPages(
         config,
         createContentRouteArtifactTargets(options.locale, ["material"])
       );
-      yield* syncPublicRoutes(config, options);
+      yield* syncPublicRoutes(config, options, ownership);
       yield* syncLearningPrograms(config, options);
       yield* invalidateContentRuntimeCache(options);
       return;
     case "curriculum-lessons":
-      yield* syncAuthors(config, options);
+      yield* syncAuthors(config, options, ownership);
       yield* syncCurriculumLessons(config, options);
       yield* syncContentRouteArtifactPages(
         config,
         createContentRouteArtifactTargets(options.locale, ["material"])
       );
-      yield* syncPublicRoutes(config, options);
+      yield* syncPublicRoutes(config, options, ownership);
       yield* syncLearningPrograms(config, options);
       yield* invalidateContentRuntimeCache(options);
       return;
     case "tryouts":
-      yield* syncAuthors(config, options);
-      yield* syncTryouts(config, options);
+      if (ownership.tryoutsManaged) {
+        log("Tryouts: signed Aksara ownership active");
+      } else {
+        yield* syncAuthors(config, options, ownership);
+        yield* syncTryouts(config, options);
+      }
       yield* syncContentRouteArtifactPages(
         config,
         createContentRouteArtifactTargets(options.locale, ["tryout"])
       );
-      yield* syncPublicRoutes(config, options);
+      yield* syncPublicRoutes(config, options, ownership);
       yield* syncLearningPrograms(config, options);
       yield* invalidateContentRuntimeCache(options);
       return;
     case "public-routes":
-      yield* syncPublicRoutes(config, options);
+      yield* syncPublicRoutes(config, options, ownership);
       yield* invalidateContentRuntimeCache(options);
       return;
     case "learning-programs":
@@ -247,7 +253,7 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
           config,
           createContentRouteArtifactTargets(routePageOptions.locale)
         );
-        yield* syncPublicRoutes(config, routePageOptions);
+        yield* syncPublicRoutes(config, routePageOptions, ownership);
         yield* syncLearningPrograms(config, routePageOptions);
         yield* invalidateContentRuntimeCache(routePageOptions);
       }

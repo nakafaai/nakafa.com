@@ -90,6 +90,7 @@ describe("contentRelease/items", () => {
     expect(state.keys).toHaveLength(2);
     expect(state.owners).toHaveLength(0);
     expect(state.release).toMatchObject({
+      stagedArtifacts: 0,
       stagedDeletes: 1,
       stagedItems: 2,
       stagedUpserts: 1,
@@ -101,6 +102,24 @@ describe("contentRelease/items", () => {
     expect(JSON.parse(deleted?.rollbackJson ?? "{}")).toMatchObject({
       snapshot: { state: "material" },
     });
+  });
+
+  it("requires rollback artifacts to use the normal staging proof", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      insertTestRelease(ctx, { originReleaseId: "release-base" })
+    );
+
+    await stage(t, [testUpsertJson()]);
+    const state = await t.run(async (ctx) => ({
+      item: await ctx.db.query("contentItems").unique(),
+      release: await ctx.db.query("contentReleases").unique(),
+    }));
+
+    expect(state.item).toMatchObject({ artifactReady: false });
+    expect(state.item).not.toHaveProperty("artifactBatchHash");
+    expect(state.item).not.toHaveProperty("artifactBatchIndex");
+    expect(state.release?.stagedArtifacts).toBe(0);
   });
 
   it("captures absent and tombstoned rollback states exactly", async () => {

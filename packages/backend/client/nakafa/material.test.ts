@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { readPublicContent } from "@repo/backend/client/content/read";
+import { readContent } from "@repo/backend/client/content/read";
 import { readPublishedMaterialMarkdown } from "@repo/backend/client/nakafa/material";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
@@ -21,7 +21,7 @@ vi.mock("@repo/backend/client/nakafa/query", () => ({
   fetchNakafaRuntimeQuery: queryMock,
 }));
 vi.mock("@repo/backend/client/content/read", () => ({
-  readPublicContent: readMock,
+  readContent: readMock,
 }));
 
 beforeEach(() => {
@@ -85,7 +85,7 @@ describe("Nakafa material reader", () => {
       markdown: Option.none(),
     });
     expect(fetchNakafaRuntimeQuery).toHaveBeenCalledTimes(2);
-    expect(readPublicContent).not.toHaveBeenCalled();
+    expect(readContent).not.toHaveBeenCalled();
   });
 
   it("reads verified raw MDX through the signed runtime", async () => {
@@ -108,6 +108,7 @@ describe("Nakafa material reader", () => {
               'export const metadata = { title: "Ignored" }\n\n## Actual lesson',
           },
         },
+        delivery: "public",
         projection,
       })
     );
@@ -131,7 +132,8 @@ describe("Nakafa material reader", () => {
         },
       }
     );
-    expect(readPublicContent).toHaveBeenCalledWith(target, {
+    expect(readContent).toHaveBeenCalledWith(target, {
+      delivery: "public",
       locale: projection.locale,
       publicPath: projection.publicPath,
     });
@@ -161,6 +163,7 @@ describe("Nakafa material reader", () => {
       Effect.succeed({
         activeReleaseId,
         artifact: { payload: { rawMdx: "## Body" } },
+        delivery: "public",
         projection: { ...projection, kind: "article" },
       }),
     ],
@@ -170,6 +173,7 @@ describe("Nakafa material reader", () => {
       Effect.succeed({
         activeReleaseId,
         artifact: { payload: { rawMdx: "## Body" } },
+        delivery: "public",
         projection: {
           ...projection,
           graph: { ...projection.graph, assetId: "invalid" },
@@ -182,6 +186,7 @@ describe("Nakafa material reader", () => {
       Effect.succeed({
         activeReleaseId,
         artifact: { payload: { rawMdx: "<" } },
+        delivery: "public",
         projection,
       }),
     ],
@@ -230,6 +235,7 @@ describe("Nakafa material reader", () => {
       Effect.succeed({
         activeReleaseId: "release-rebound",
         artifact: { payload: { rawMdx: "## Body" } },
+        delivery: "public",
         projection,
       })
     );

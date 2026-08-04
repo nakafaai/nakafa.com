@@ -1,13 +1,15 @@
-import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot";
+import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadStaged } from "@repo/backend/convex/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
+import { hasProofTransactionHeadroom } from "@repo/backend/convex/contentRelease/proof/budget";
 import { validateContentOwners } from "@repo/backend/convex/contentRelease/scope/owner";
 import {
+  PROOF_PAGE_BYTES,
+  PROOF_PAGE_LIMIT,
   progressValidator,
-  RELEASE_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
 import { checkItem } from "@repo/backend/convex/contentRelease/verify/item";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -84,10 +86,17 @@ const verifyProgram = Effect.fn("contentRelease.verifyItems")(function* (
       .withIndex("by_releaseId_and_index", (query) =>
         query.eq("releaseId", releaseId).gt("index", afterIndex)
       )
-      .take(RELEASE_PAGE_LIMIT + 1)
+      .paginate({
+        cursor: null,
+        maximumBytesRead: PROOF_PAGE_BYTES,
+        maximumRowsRead: PROOF_PAGE_LIMIT,
+        numItems: PROOF_PAGE_LIMIT,
+      })
   );
-  const page = rows.slice(0, RELEASE_PAGE_LIMIT);
-  for (const [offset, row] of page.entries()) {
+  let processed = 0;
+  let nextIndex = release.checkedIndex;
+  for (const row of rows.page) {
+    const offset = processed;
     const expectedIndex = release.checkedItems + offset;
     if (row.index !== expectedIndex) {
       return yield* releaseFail(
@@ -96,11 +105,17 @@ const verifyProgram = Effect.fn("contentRelease.verifyItems")(function* (
       );
     }
     yield* checkItem(ctx, row);
+    processed += 1;
+    nextIndex = row.index;
+    const metrics = yield* Effect.promise(() =>
+      ctx.meta.getTransactionMetrics()
+    );
+    if (!hasProofTransactionHeadroom(metrics)) {
+      break;
+    }
   }
-  const processed = page.length;
   const checkedItems = release.checkedItems + processed;
-  const nextIndex = page.at(-1)?.index ?? release.checkedIndex;
-  const done = rows.length <= RELEASE_PAGE_LIMIT;
+  const done = rows.isDone && processed === rows.page.length;
   if (done && checkedItems !== signed.manifest.itemCount) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

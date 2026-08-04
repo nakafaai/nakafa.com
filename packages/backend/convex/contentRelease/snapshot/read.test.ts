@@ -1,4 +1,4 @@
-import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot-data";
+import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";

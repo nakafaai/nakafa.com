@@ -1,8 +1,19 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import {
+  TryoutContentHashSchema,
+  type TryoutPlacement,
+} from "@nakafa/aksara-contracts/tryout/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import {
+  makeAlignedTryoutSection,
+  makeSignedTryoutSource,
+  TRYOUT_TEST_CONTENT_HASH,
+} from "@repo/backend/test/tryout-section";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -10,12 +21,21 @@ import { describe, expect, it } from "vitest";
 const NOW = Date.UTC(2026, 6, 8, 12, 0, 0);
 const TRACK = "2027";
 const SECTION = "penalaran-matematika";
-const SOURCE = `question-bank/tryout/indonesia/snbt/${TRACK}/set-1/${SECTION}`;
+const SOURCE = `question-bank/tryout/indonesia/snbt/${SECTION}/set-1`;
 const SET_ROUTE = `try-out/indonesia/snbt/${TRACK}/set-1`;
 const ROUTE = `${SET_ROUTE}/${SECTION}`;
 
 /** Insert the source graph required by placement scenarios. */
-async function insertSource(ctx: MutationCtx) {
+async function insertSource(
+  ctx: MutationCtx,
+  input: {
+    readonly contentHash: TryoutPlacement["contentHash"];
+    readonly sourceRevision: TryoutPlacement["sourceRevision"];
+  } = {
+    contentHash: TRYOUT_TEST_CONTENT_HASH,
+    sourceRevision: "2027",
+  }
+) {
   const questionSetId = await ctx.db.insert("questionSets", {
     contentHash: "question-set-hash",
     countryKey: "indonesia",
@@ -31,7 +51,7 @@ async function insertSource(ctx: MutationCtx) {
   });
   const questionId = await ctx.db.insert("questions", {
     answerBody: "Answer",
-    contentHash: "new-question-hash",
+    contentHash: input.contentHash,
     date: 0,
     locale: "id",
     number: 1,
@@ -39,7 +59,7 @@ async function insertSource(ctx: MutationCtx) {
     questionSetId,
     sourceKey: `${SOURCE}:question-1`,
     sourcePath: `${SOURCE}/question-1`,
-    sourceRevision: "2027",
+    sourceRevision: input.sourceRevision,
     syncedAt: NOW,
     title: "Question",
   });
@@ -48,7 +68,7 @@ async function insertSource(ctx: MutationCtx) {
     isCorrect: true,
     label: "A",
     locale: "id",
-    optionKey: "a",
+    optionKey: "option-1",
     order: 1,
     questionId,
   });
@@ -59,7 +79,8 @@ async function insertSource(ctx: MutationCtx) {
 /** Insert an attempt runtime required by placement scenarios. */
 async function insertRuntime(
   ctx: MutationCtx,
-  questionSetId: Id<"questionSets">
+  questionSetId: Id<"questionSets">,
+  signedRevision = "2027"
 ) {
   const userId = await ctx.db.insert("users", {
     authId: "auth-placement",
@@ -108,6 +129,20 @@ async function insertRuntime(
     tryoutSetId,
     visibility: "visible",
   });
+  const [section, set] = await Promise.all([
+    ctx.db.get(sectionId),
+    ctx.db.get(tryoutSetId),
+  ]);
+  if (!(section && set)) {
+    throw new ConvexError({
+      code: "TRYOUT_FIXTURE_NOT_FOUND",
+      message: "Expected try-out section fixture.",
+    });
+  }
+  const aligned = makeAlignedTryoutSection(section, {
+    sourceRevision: signedRevision,
+  });
+  const source = makeSignedTryoutSource(set, [aligned]);
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: NOW + 86_400_000,
     accessSourceKind: "free",
@@ -124,20 +159,26 @@ async function insertRuntime(
       {
         publicPath: ROUTE,
         questionCount: 1,
-        questionSetId,
         questionSourcePath: SOURCE,
+        sectionIdentity: tryoutCatalogIdentity(aligned.signed.section.row),
         sectionKey: SECTION,
         sectionOrder: 1,
+        sectionRowHash: aligned.signed.section.rowHash,
         sourceRevision: "2026",
         timeLimitSeconds: 1800,
-        tryoutSectionId: sectionId,
       },
     ],
     startedAt: NOW,
     status: "in-progress",
     totalCorrect: 0,
     totalQuestions: 1,
-    tryoutSetId,
+    countryKey: "indonesia",
+    examKey: "snbt",
+    locale: "id",
+    setIdentity: source.snapshot.setIdentity,
+    setKey: "set-1",
+    trackKey: TRACK,
+    tryoutSnapshotId: source.snapshot.snapshotId,
     userId,
   });
   const attempt = await ctx.db.get(attemptId);
@@ -149,20 +190,65 @@ async function insertRuntime(
     });
   }
 
-  return attempt;
+  return { attempt, source };
 }
 
 describe("tryouts/runtime/placement", () => {
-  it("rejects question rows from a different source revision", async () => {
+  it("freezes signed state independently of legacy question rows", async () => {
+    const t = convexTest(schema, convexModules);
+
+    const placement = await t.mutation(async (ctx) => {
+      const questionSetId = await insertSource(ctx, {
+        contentHash: TryoutContentHashSchema.make("4".repeat(64)),
+        sourceRevision: "2026",
+      });
+      const runtime = await insertRuntime(ctx, questionSetId);
+
+      await runConvexProgram(createAttemptPlacements(ctx, runtime));
+      return await ctx.db
+        .query("tryoutAttemptPlacements")
+        .withIndex(
+          "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
+          (query) =>
+            query
+              .eq("tryoutAttemptId", runtime.attempt._id)
+              .eq("sectionKey", SECTION)
+        )
+        .unique();
+    });
+
+    expect(placement).toMatchObject({
+      contentHash: TRYOUT_TEST_CONTENT_HASH,
+      sourceRevision: "2027",
+    });
+    expect(placement).not.toHaveProperty("questionId");
+  });
+
+  it("rejects an incomplete signed placement snapshot", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
       t.mutation(async (ctx) => {
         const questionSetId = await insertSource(ctx);
-        const attempt = await insertRuntime(ctx, questionSetId);
+        const runtime = await insertRuntime(ctx, questionSetId);
+        const section = runtime.source.snapshot.sections[0];
+        if (!section) {
+          throw new Error("Expected one signed section fixture.");
+        }
 
-        await createAttemptPlacements(ctx, { attempt });
+        await runConvexProgram(
+          createAttemptPlacements(ctx, {
+            attempt: runtime.attempt,
+            source: {
+              ...runtime.source,
+              snapshot: {
+                ...runtime.source.snapshot,
+                sections: [{ ...section, placements: [] }],
+              },
+            },
+          })
+        );
       })
-    ).rejects.toThrow("TRYOUT_QUESTION_SNAPSHOT_MISMATCH");
+    ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
   });
 });

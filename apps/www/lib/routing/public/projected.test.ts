@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 
 const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
+const mockGetRuntimeTryoutRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialClaims = vi.hoisted(() => vi.fn());
@@ -19,6 +20,7 @@ vi.mock("@/lib/content/material/ownership", () => ({
 }));
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimePublicRoute: mockGetRuntimePublicRoute,
+  getRuntimeTryoutRoute: mockGetRuntimeTryoutRoute,
 }));
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: mockReadActiveContentRoute,
@@ -30,10 +32,21 @@ vi.mock("@/lib/content/program/path", () => ({
   readPublishedProgramPath: mockReadPublishedProgramPath,
 }));
 
+/** Runs one projected route decision with an explicit attempt capability. */
+function readRejection(pathname: string, hasAttemptCapability = false) {
+  return Effect.runPromise(
+    readProjectedHtmlRouteRejection({ hasAttemptCapability, pathname })
+  );
+}
+
 describe("projected public html route rejection", () => {
   beforeEach(() => {
     mockGetRuntimePublicRoute.mockReset();
     mockGetRuntimePublicRoute.mockReturnValue(Effect.succeed(null));
+    mockGetRuntimeTryoutRoute.mockReset();
+    mockGetRuntimeTryoutRoute.mockReturnValue(
+      Effect.succeed({ exists: false, managed: false })
+    );
     mockReadActiveContentRoute.mockReset();
     mockReadActiveContentRoute.mockReturnValue(
       Effect.succeed({ activeReleaseId, kind: "unmanaged" })
@@ -55,11 +68,7 @@ describe("projected public html route rejection", () => {
     mockGetRuntimePublicRoute.mockReturnValue(Effect.succeed(null));
 
     await expect(
-      Effect.runPromise(
-        readProjectedHtmlRouteRejection(
-          "/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a"
-        )
-      )
+      readRejection("/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a")
     ).resolves.toBe("en");
     expect(mockGetRuntimePublicRoute).toHaveBeenCalledWith({
       locale: "en",
@@ -71,10 +80,6 @@ describe("projected public html route rejection", () => {
     const paths = [
       ["/en/subjects/chemistry/green-chemistry/definition", "subject-lesson"],
       ["/id/kurikulum/merdeka/kelas-10/biologi", "curriculum-context"],
-      [
-        "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
-        "tryout-section",
-      ],
     ] as const;
 
     for (const [pathname, kind] of paths) {
@@ -93,20 +98,72 @@ describe("projected public html route rejection", () => {
         })
       );
 
-      await expect(
-        Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
-      ).resolves.toBe(null);
+      await expect(readRejection(pathname)).resolves.toBe(null);
     }
+  });
+
+  it("uses signed try-out ownership for exact routes and tombstones", async () => {
+    const pathname = "/en/try-out/indonesia/snbt/2027";
+    mockGetRuntimeTryoutRoute
+      .mockReturnValueOnce(Effect.succeed({ exists: true, managed: true }))
+      .mockReturnValueOnce(Effect.succeed({ exists: false, managed: true }));
+
+    await expect(readRejection(pathname)).resolves.toBeNull();
+    await expect(readRejection(pathname)).resolves.toBe("en");
+    expect(mockGetRuntimeTryoutRoute).toHaveBeenCalledWith({
+      locale: "en",
+      publicPath: "try-out/indonesia/snbt/2027",
+    });
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+  });
+
+  it("requires signed ownership for public set and section routes", async () => {
+    const paths = [
+      "/en/try-out/indonesia/snbt/2027/set-1",
+      "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
+    ];
+    for (const pathname of paths) {
+      mockGetRuntimeTryoutRoute
+        .mockReturnValueOnce(Effect.succeed({ exists: true, managed: true }))
+        .mockReturnValueOnce(Effect.succeed({ exists: false, managed: true }));
+
+      await expect(readRejection(pathname)).resolves.toBeNull();
+      await expect(readRejection(pathname)).resolves.toBe("en");
+    }
+    expect(mockGetRuntimeTryoutRoute).toHaveBeenCalledTimes(4);
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+  });
+
+  it("delegates retained set and section capabilities to page ownership", async () => {
+    const paths = [
+      "/en/try-out/indonesia/snbt/2027/set-1",
+      "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
+    ];
+    for (const pathname of paths) {
+      await expect(readRejection(pathname, true)).resolves.toBeNull();
+    }
+    expect(mockGetRuntimeTryoutRoute).not.toHaveBeenCalled();
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+  });
+
+  it("uses the generic route projection before signed try-out ownership", async () => {
+    const pathname = "/en/try-out/indonesia/snbt";
+    mockGetRuntimePublicRoute
+      .mockReturnValueOnce(Effect.succeed({ kind: "tryout-exam" }))
+      .mockReturnValueOnce(Effect.succeed({ kind: "subject-topic" }));
+
+    await expect(readRejection(pathname)).resolves.toBeNull();
+    await expect(readRejection(pathname)).resolves.toBe("en");
+    expect(mockGetRuntimeTryoutRoute).toHaveBeenCalledTimes(2);
+    expect(mockGetRuntimePublicRoute).toHaveBeenCalledTimes(2);
   });
 
   it("accepts the exact local preview route before the Convex lookup", async () => {
     mockMatchesPreviewRoute.mockReturnValueOnce(Effect.succeed(true));
 
     await expect(
-      Effect.runPromise(
-        readProjectedHtmlRouteRejection(
-          "/en/subjects/mathematics/function-composition-inverse-function/function-concept"
-        )
+      readRejection(
+        "/en/subjects/mathematics/function-composition-inverse-function/function-concept"
       )
     ).resolves.toBe(null);
     expect(mockMatchesPreviewRoute).toHaveBeenCalledWith({
@@ -132,12 +189,8 @@ describe("projected public html route rejection", () => {
         Effect.succeed({ activeReleaseId, kind: "missing" })
       );
 
-    await expect(
-      Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
-    ).resolves.toBe("en");
+    await expect(readRejection(pathname)).resolves.toBeNull();
+    await expect(readRejection(pathname)).resolves.toBe("en");
     expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId,
       family: "material",
@@ -168,9 +221,7 @@ describe("projected public html route rejection", () => {
       ])
     );
 
-    await expect(
-      Effect.runPromise(readProjectedHtmlRouteRejection(`/en/${publicPath}`))
-    ).resolves.toBe("en");
+    await expect(readRejection(`/en/${publicPath}`)).resolves.toBe("en");
     expect(mockGetRuntimePublicRoute).toHaveBeenCalledTimes(1);
     expect(mockReadPublishedMaterialClaims).toHaveBeenCalledWith(
       "en",
@@ -200,11 +251,7 @@ describe("projected public html route rejection", () => {
     );
 
     await expect(
-      Effect.runPromise(
-        readProjectedHtmlRouteRejection(
-          "/en/subjects/chemistry/green-chemistry/definition"
-        )
-      )
+      readRejection("/en/subjects/chemistry/green-chemistry/definition")
     ).resolves.toBeNull();
     expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId: null,
@@ -225,15 +272,9 @@ describe("projected public html route rejection", () => {
       )
       .mockReturnValueOnce(Effect.succeed({ managed: true, route: null }));
 
-    await expect(
-      Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
-    ).resolves.toBe("en");
-    await expect(
-      Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
-    ).resolves.toBe("en");
+    await expect(readRejection(pathname)).resolves.toBeNull();
+    await expect(readRejection(pathname)).resolves.toBe("en");
+    await expect(readRejection(pathname)).resolves.toBe("en");
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 
@@ -251,18 +292,12 @@ describe("projected public html route rejection", () => {
         "/en/curriculum/merdeka/class-10/science",
         { kind: "subject-lesson", sitemap: true },
       ],
-      [
-        "/en/try-out/indonesia/snbt/2027/set-1/not-a-section",
-        { kind: "subject-lesson", sitemap: true },
-      ],
     ] as const;
 
     for (const [pathname, route] of paths) {
       mockGetRuntimePublicRoute.mockReturnValueOnce(Effect.succeed(route));
 
-      await expect(
-        Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
-      ).resolves.toBe("en");
+      await expect(readRejection(pathname)).resolves.toBe("en");
     }
   });
 
@@ -275,9 +310,7 @@ describe("projected public html route rejection", () => {
     ];
 
     for (const pathname of paths) {
-      await expect(
-        Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
-      ).resolves.toBe(null);
+      await expect(readRejection(pathname)).resolves.toBe(null);
     }
 
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();

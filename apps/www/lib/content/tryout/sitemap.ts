@@ -1,0 +1,27 @@
+import "server-only";
+
+import { api } from "@repo/backend/convex/_generated/api";
+import { Effect } from "effect";
+import type { Locale } from "next-intl";
+import {
+  fetchRuntimeQuery,
+  readRuntimeQuery,
+} from "@/lib/content/runtime/query";
+
+/** Reads the active signed try-out sitemap inventory for one locale. */
+export const readPublishedTryoutSitemapCount = Effect.fn(
+  "www.tryouts.readSitemapCount"
+)(function* (locale: Locale) {
+  return yield* readRuntimeQuery("contentRelease.tryout.sitemapCount", () =>
+    fetchRuntimeQuery(api.contentRelease.tryout.sitemapCount, { locale })
+  );
+});
+
+/** Reads one exact bounded signed try-out sitemap page. */
+export const readPublishedTryoutSitemap = Effect.fn(
+  "www.tryouts.readSitemapPage"
+)(function* (locale: Locale, page: number) {
+  return yield* readRuntimeQuery("contentRelease.tryout.sitemapPage", () =>
+    fetchRuntimeQuery(api.contentRelease.tryout.sitemapPage, { locale, page })
+  );
+});

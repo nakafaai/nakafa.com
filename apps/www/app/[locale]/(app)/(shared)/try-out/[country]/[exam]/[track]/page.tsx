@@ -3,12 +3,13 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
+import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
+import { buildTryoutExamOptions } from "@/components/tryout/catalog/options";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
-import { readTryoutTrackPage } from "@/components/tryout/catalog/server";
 import {
-  readStaticTryoutExamOptions,
-  readStaticTryoutRoute,
-} from "@/components/tryout/catalog/static";
+  readTryoutCountryPage,
+  readTryoutTrackPage,
+} from "@/components/tryout/catalog/server";
 import { TryoutTrackPageClient } from "@/components/tryout/catalog/track.client";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
@@ -27,6 +28,27 @@ export const unstable_instant = {
     },
   ],
 };
+
+/** Builds route-owned metadata for one localized try-out track. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{
+    country: string;
+    exam: string;
+    locale: string;
+    track: string;
+  }>;
+}) {
+  const { country, exam, locale: localeParam, track } = await params;
+  const locale = getLocaleOrThrow(localeParam);
+
+  return generateTryoutRouteMetadata({
+    kind: "track",
+    locale,
+    publicPath: getTryoutHref({ country, exam, track }).slice(1),
+  });
+}
 
 /** Renders active try-out sets for one exam track. */
 export default function Page(props: {
@@ -60,19 +82,13 @@ async function TryoutTrackRoute({
   const countryPath = getTryoutHref({ country }).slice(1);
   const examPath = getTryoutHref({ country, exam }).slice(1);
   const trackPath = getTryoutHref({ country, exam, track }).slice(1);
-  const trackRoute = readStaticTryoutRoute({
-    kind: "tryout-track",
-    locale,
-    publicPath: trackPath,
-  });
 
-  if (!trackRoute) {
-    notFound();
-  }
+  const [page, countryPage] = await Promise.all([
+    readTryoutTrackPage(locale, trackPath),
+    readTryoutCountryPage(locale, countryPath),
+  ]);
 
-  const page = await readTryoutTrackPage(locale, trackPath);
-
-  if (!page) {
+  if (!(page && countryPage)) {
     notFound();
   }
 
@@ -80,15 +96,7 @@ async function TryoutTrackRoute({
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Tryouts" }),
   ]);
-  const examOptions = readStaticTryoutExamOptions({
-    countryPath,
-    locale,
-  });
-  const examRoute = readStaticTryoutRoute({
-    kind: "tryout-exam",
-    locale,
-    publicPath: examPath,
-  });
+  const examOptions = buildTryoutExamOptions(locale, countryPage.exams);
 
   return (
     <LayoutMaterial className="h-[calc(100svh-4rem)] flex-col overflow-clip lg:h-svh">
@@ -111,11 +119,11 @@ async function TryoutTrackRoute({
               },
               {
                 href: getTryoutHref({ country, exam }),
-                label: examRoute?.title ?? exam,
+                label: page.exam.title,
               },
-              { label: trackRoute?.title ?? track },
+              { label: page.track.title },
             ],
-            title: trackRoute?.title ?? tCommon("try-out"),
+            title: page.track.title,
           }}
         />
         <TryoutTrackPageClient locale={locale} page={page} />

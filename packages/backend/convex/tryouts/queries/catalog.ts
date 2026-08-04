@@ -1,8 +1,32 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
-  loadQuestionContentRows,
-  loadReadySections,
+  readFilesystemSection,
+  readFilesystemSet,
+} from "@repo/backend/convex/tryouts/catalog/filesystem/content";
+import {
+  readFilesystemCountry,
+  readFilesystemExam,
+  readFilesystemHub,
+  readFilesystemTrack,
+} from "@repo/backend/convex/tryouts/catalog/filesystem/discovery";
+import {
+  readTryoutMetadata,
+  tryoutMetadataArgsValidator,
+  tryoutMetadataReturnValidator,
+} from "@repo/backend/convex/tryouts/catalog/metadata";
+import {
+  readPublishedCountryPage,
+  readPublishedExamPage,
+  readPublishedHubPage,
+  readPublishedSectionPage,
+  readPublishedSetPage,
+  readPublishedTrackPage,
+} from "@repo/backend/convex/tryouts/catalog/published";
+import { readTryoutRoute } from "@repo/backend/convex/tryouts/catalog/route";
+import {
   publicTryoutCountryValidator,
   publicTryoutCountryWithExamCountValidator,
   publicTryoutExamValidator,
@@ -10,16 +34,37 @@ import {
   publicTryoutSectionValidator,
   publicTryoutSetValidator,
   publicTryoutTrackValidator,
-  toPublicTryoutCountry,
-  toPublicTryoutExam,
-  toPublicTryoutSection,
-  toPublicTryoutSet,
-  toPublicTryoutTrack,
 } from "@repo/backend/convex/tryouts/queries/catalogModel";
-import { loadActiveTryoutSetParents } from "@repo/backend/convex/tryouts/queries/parents";
 import { v } from "convex/values";
 
-const CATALOG_PAGE_LIMIT = 100;
+const sectionPageFields = {
+  exam: publicTryoutExamValidator,
+  questions: v.array(publicTryoutQuestionContentValidator),
+  section: publicTryoutSectionValidator,
+  set: publicTryoutSetValidator,
+  track: publicTryoutTrackValidator,
+};
+const sectionPageValidator = v.union(v.null(), v.object(sectionPageFields));
+
+/** Checks one exact public route against its active signed try-out owner. */
+export const getRoute = query({
+  args: {
+    locale: localeValidator,
+    publicPath: v.string(),
+  },
+  returns: v.object({
+    exists: v.boolean(),
+    managed: v.boolean(),
+  }),
+  handler: (ctx, args) => runConvexProgram(readTryoutRoute(ctx, args)),
+});
+
+/** Reads exact SEO copy and localized paths from signed try-out ownership. */
+export const getMetadata = query({
+  args: tryoutMetadataArgsValidator,
+  returns: tryoutMetadataReturnValidator,
+  handler: (ctx, args) => runConvexProgram(readTryoutMetadata(ctx, args)),
+});
 
 /** Reads the localized country-first try-out hub page model. */
 export const getHubPage = query({
@@ -28,35 +73,17 @@ export const getHubPage = query({
   },
   returns: v.object({
     countries: v.array(publicTryoutCountryWithExamCountValidator),
+    managed: v.boolean(),
+    sourceRevision: v.union(v.string(), v.null()),
   }),
   handler: async (ctx, args) => {
-    const countries = await ctx.db
-      .query("tryoutCountries")
-      .withIndex("by_locale_and_isActive_and_order", (q) =>
-        q.eq("locale", args.locale).eq("isActive", true)
-      )
-      .take(CATALOG_PAGE_LIMIT);
-
-    const countryRows = await Promise.all(
-      countries.map(async (country) => {
-        const exams = await ctx.db
-          .query("tryoutExams")
-          .withIndex("by_countryKey_and_locale_and_isActive_and_order", (q) =>
-            q
-              .eq("countryKey", country.countryKey)
-              .eq("locale", args.locale)
-              .eq("isActive", true)
-          )
-          .take(CATALOG_PAGE_LIMIT);
-
-        return {
-          examCount: exams.length,
-          ...toPublicTryoutCountry(country),
-        };
-      })
-    );
-
-    return { countries: countryRows };
+    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
+    if (catalog.managed) {
+      const page = await runConvexProgram(readPublishedHubPage(catalog));
+      return { ...page, managed: true, sourceRevision: catalog.sourceRevision };
+    }
+    const page = await runConvexProgram(readFilesystemHub(ctx, args.locale));
+    return { ...page, managed: false, sourceRevision: null };
   },
 });
 
@@ -71,34 +98,22 @@ export const getCountryPage = query({
     v.object({
       country: publicTryoutCountryValidator,
       exams: v.array(publicTryoutExamValidator),
+      managed: v.boolean(),
+      sourceRevision: v.union(v.string(), v.null()),
     })
   ),
   handler: async (ctx, args) => {
-    const country = await ctx.db
-      .query("tryoutCountries")
-      .withIndex("by_locale_and_publicPath", (q) =>
-        q.eq("locale", args.locale).eq("publicPath", args.publicPath)
-      )
-      .unique();
-
-    if (!country?.isActive) {
-      return null;
+    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
+    if (catalog.managed) {
+      const page = await runConvexProgram(
+        readPublishedCountryPage(catalog, args.publicPath)
+      );
+      return page
+        ? { ...page, managed: true, sourceRevision: catalog.sourceRevision }
+        : null;
     }
-
-    const exams = await ctx.db
-      .query("tryoutExams")
-      .withIndex("by_countryKey_and_locale_and_isActive_and_order", (q) =>
-        q
-          .eq("countryKey", country.countryKey)
-          .eq("locale", args.locale)
-          .eq("isActive", true)
-      )
-      .take(CATALOG_PAGE_LIMIT);
-
-    return {
-      country: toPublicTryoutCountry(country),
-      exams: exams.map(toPublicTryoutExam),
-    };
+    const page = await runConvexProgram(readFilesystemCountry(ctx, args));
+    return page ? { ...page, managed: false, sourceRevision: null } : null;
   },
 });
 
@@ -117,49 +132,13 @@ export const getExamPage = query({
     })
   ),
   handler: async (ctx, args) => {
-    const exam = await ctx.db
-      .query("tryoutExams")
-      .withIndex("by_locale_and_publicPath", (q) =>
-        q.eq("locale", args.locale).eq("publicPath", args.publicPath)
-      )
-      .unique();
-
-    if (!exam?.isActive) {
-      return null;
+    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
+    if (catalog.managed) {
+      return await runConvexProgram(
+        readPublishedExamPage(catalog, args.publicPath)
+      );
     }
-
-    const [country, tracks] = await Promise.all([
-      ctx.db
-        .query("tryoutCountries")
-        .withIndex("by_countryKey_and_locale", (q) =>
-          q.eq("countryKey", exam.countryKey).eq("locale", args.locale)
-        )
-        .unique(),
-      ctx.db
-        .query("tryoutTracks")
-        .withIndex(
-          "by_countryKey_and_examKey_and_locale_and_isActive_and_order",
-          (q) =>
-            q
-              .eq("countryKey", exam.countryKey)
-              .eq("examKey", exam.examKey)
-              .eq("locale", args.locale)
-              .eq("isActive", true)
-        )
-        .take(CATALOG_PAGE_LIMIT),
-    ]);
-
-    if (!country?.isActive) {
-      return null;
-    }
-
-    const readyTracks = tracks.filter((track) => track.isReady);
-
-    return {
-      country: toPublicTryoutCountry(country),
-      exam: toPublicTryoutExam(exam),
-      tracks: readyTracks.map(toPublicTryoutTrack),
-    };
+    return await runConvexProgram(readFilesystemExam(ctx, args));
   },
 });
 
@@ -178,44 +157,13 @@ export const getTrackPage = query({
     })
   ),
   handler: async (ctx, args) => {
-    const track = await ctx.db
-      .query("tryoutTracks")
-      .withIndex("by_locale_and_publicPath", (q) =>
-        q.eq("locale", args.locale).eq("publicPath", args.publicPath)
-      )
-      .unique();
-
-    if (!(track?.isActive && track.isReady)) {
-      return null;
+    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
+    if (catalog.managed) {
+      return await runConvexProgram(
+        readPublishedTrackPage(catalog, args.publicPath)
+      );
     }
-
-    const [country, exam] = await Promise.all([
-      ctx.db
-        .query("tryoutCountries")
-        .withIndex("by_countryKey_and_locale", (q) =>
-          q.eq("countryKey", track.countryKey).eq("locale", args.locale)
-        )
-        .unique(),
-      ctx.db
-        .query("tryoutExams")
-        .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
-          q
-            .eq("countryKey", track.countryKey)
-            .eq("examKey", track.examKey)
-            .eq("locale", args.locale)
-        )
-        .unique(),
-    ]);
-
-    if (!(country?.isActive && exam?.isActive)) {
-      return null;
-    }
-
-    return {
-      country: toPublicTryoutCountry(country),
-      exam: toPublicTryoutExam(exam),
-      track: toPublicTryoutTrack(track),
-    };
+    return await runConvexProgram(readFilesystemTrack(ctx, args));
   },
 });
 
@@ -237,52 +185,13 @@ export const getSetPage = query({
     })
   ),
   handler: async (ctx, args) => {
-    const set = await ctx.db
-      .query("tryoutSets")
-      .withIndex("by_locale_and_publicPath", (q) =>
-        q.eq("locale", args.locale).eq("publicPath", args.publicPath)
-      )
-      .unique();
-
-    if (!(set?.isActive && set.isReady)) {
-      return null;
+    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
+    if (catalog.managed) {
+      return await runConvexProgram(
+        readPublishedSetPage(catalog, args.publicPath)
+      );
     }
-
-    const [parents, readySections] = await Promise.all([
-      loadActiveTryoutSetParents(ctx, set),
-      loadReadySections(ctx, set),
-    ]);
-
-    if (!parents) {
-      return null;
-    }
-
-    if (!readySections) {
-      return null;
-    }
-
-    const visibleSections = readySections.filter(
-      (section) => section.visibility === "visible" && section.publicPath
-    );
-    const entrySection =
-      readySections.find(
-        (section) => section.sectionKey === set.internalEntrySectionKey
-      ) ??
-      visibleSections[0] ??
-      null;
-    const entryQuestions =
-      entrySection?.visibility === "internal-entry"
-        ? await loadQuestionContentRows(ctx, entrySection)
-        : [];
-
-    return {
-      exam: toPublicTryoutExam(parents.exam),
-      entryQuestions,
-      entrySection: entrySection ? toPublicTryoutSection(entrySection) : null,
-      set: toPublicTryoutSet(set),
-      sections: visibleSections.map(toPublicTryoutSection),
-      track: toPublicTryoutTrack(parents.track),
-    };
+    return await runConvexProgram(readFilesystemSet(ctx, args));
   },
 });
 
@@ -292,59 +201,14 @@ export const getSectionPage = query({
     locale: localeValidator,
     publicPath: v.string(),
   },
-  returns: v.union(
-    v.null(),
-    v.object({
-      exam: publicTryoutExamValidator,
-      questions: v.array(publicTryoutQuestionContentValidator),
-      section: publicTryoutSectionValidator,
-      set: publicTryoutSetValidator,
-      track: publicTryoutTrackValidator,
-    })
-  ),
+  returns: sectionPageValidator,
   handler: async (ctx, args) => {
-    const section = await ctx.db
-      .query("tryoutSections")
-      .withIndex("by_locale_and_publicPath", (q) =>
-        q.eq("locale", args.locale).eq("publicPath", args.publicPath)
-      )
-      .unique();
-
-    if (!(section?.visibility === "visible" && section.publicPath)) {
-      return null;
+    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
+    if (catalog.managed) {
+      return await runConvexProgram(
+        readPublishedSectionPage(catalog, args.publicPath)
+      );
     }
-
-    const set = await ctx.db.get(section.tryoutSetId);
-
-    if (!(set?.isActive && set.isReady)) {
-      return null;
-    }
-
-    const [parents, readySections] = await Promise.all([
-      loadActiveTryoutSetParents(ctx, set),
-      loadReadySections(ctx, set),
-    ]);
-
-    if (!parents) {
-      return null;
-    }
-
-    const readySection = readySections?.find(
-      (item) => item._id === section._id
-    );
-
-    if (!readySection) {
-      return null;
-    }
-
-    const questions = await loadQuestionContentRows(ctx, readySection);
-
-    return {
-      exam: toPublicTryoutExam(parents.exam),
-      questions,
-      section: toPublicTryoutSection(section),
-      set: toPublicTryoutSet(set),
-      track: toPublicTryoutTrack(parents.track),
-    };
+    return await runConvexProgram(readFilesystemSection(ctx, args));
   },
 });

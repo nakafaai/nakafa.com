@@ -98,21 +98,20 @@ const tables = {
     tryoutSnapshotId: v.optional(v.string()),
     /** Optional only during the additive immutable-snapshot migration. */
     setIdentity: v.optional(v.string()),
-    tryoutSetId: v.id("tryoutSets"),
+    /** Present only for filesystem-owned and migrated scales. */
+    tryoutSetId: v.optional(v.id("tryoutSets")),
     model: irtOperationalModelValidator,
     status: irtScaleVersionStatusValidator,
     questionCount: v.number(),
     publishedAt: v.number(),
   })
     .index("by_tryoutSetId_and_publishedAt", ["tryoutSetId", "publishedAt"])
-    .index("by_tryoutSetId_and_tryoutSnapshotId_and_publishedAt", {
-      fields: ["tryoutSetId", "tryoutSnapshotId", "publishedAt"],
-      staged: true,
-    })
-    .index("by_setIdentity_and_publishedAt", {
-      fields: ["setIdentity", "publishedAt"],
-      staged: true,
-    })
+    .index("by_tryoutSetId_and_tryoutSnapshotId_and_publishedAt", [
+      "tryoutSetId",
+      "tryoutSnapshotId",
+      "publishedAt",
+    ])
+    .index("by_setIdentity_and_publishedAt", ["setIdentity", "publishedAt"])
     .index("by_tryoutSnapshotId_and_setIdentity_and_publishedAt", [
       "tryoutSnapshotId",
       "setIdentity",
@@ -126,10 +125,14 @@ const tables = {
     placementIdentity: v.optional(v.string()),
     /** Optional only during the additive immutable-placement migration. */
     placementRowHash: v.optional(v.string()),
-    questionId: v.id("questions"),
-    questionSourceKey: v.string(),
-    sourceRevision: v.string(),
-    contentHash: v.string(),
+    /** Optional only while filesystem-owned scale items remain readable. */
+    questionId: v.optional(v.id("questions")),
+    /** Optional only while filesystem-owned scale items remain readable. */
+    questionSourceKey: v.optional(v.string()),
+    /** Optional only while filesystem-owned scale items remain readable. */
+    sourceRevision: v.optional(v.string()),
+    /** Optional only while filesystem-owned scale items remain readable. */
+    contentHash: v.optional(v.string()),
     difficulty: v.number(),
     discrimination: v.number(),
     responseCount: v.number(),
@@ -144,10 +147,7 @@ const tables = {
       "questionSourceKey",
       "sourceRevision",
     ])
-    .index("by_calibrationRunId", {
-      fields: ["calibrationRunId"],
-      staged: true,
-    })
+    .index("by_calibrationRunId", ["calibrationRunId"])
     .index("by_calibrationStatus", ["calibrationStatus"])
     .index("by_scaleVersionId_and_placementIdentity", [
       "scaleVersionId",
@@ -159,7 +159,8 @@ const tables = {
     scaleVersionId: v.optional(v.id("irtScaleVersions")),
     /** Optional only during the additive immutable-snapshot migration. */
     sectionIdentity: v.optional(v.string()),
-    tryoutSectionId: v.id("tryoutSections"),
+    /** Optional only while filesystem-owned calibration runs remain readable. */
+    tryoutSectionId: v.optional(v.id("tryoutSections")),
     model: irtOperationalModelValidator,
     status: irtCalibrationRunStatusValidator,
     questionCount: v.number(),

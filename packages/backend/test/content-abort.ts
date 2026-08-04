@@ -1,6 +1,5 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { RELEASE_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import {
   TEST_MANIFEST_HASH,
   testReleaseJson,
@@ -9,7 +8,7 @@ import {
 } from "@repo/backend/test/content-release";
 
 export const ABORT_RELEASE_ID = "release-abort";
-export const ABORT_ITEM_COUNT = RELEASE_PAGE_LIMIT + 1;
+export const ABORT_ITEM_COUNT = 32;
 export const ABORT_BATCH_HASH = `sha256:${"0".repeat(64)}`;
 
 /** Creates one deterministic technical content key for abort tests. */
@@ -35,7 +34,7 @@ export function abortItemJson(index: number) {
   });
 }
 
-/** Seeds one invisible staged candidate spanning two abort pages. */
+/** Seeds one invisible candidate larger than the former eight-row ceiling. */
 export async function seedAbortRelease(ctx: MutationCtx) {
   const now = Date.UTC(2026, 6, 23, 12);
   await ctx.db.insert("contentReleases", {

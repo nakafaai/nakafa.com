@@ -1,15 +1,11 @@
-import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
 import { ArticlePreviewDocumentSchema } from "@nakafa/aksara-contracts/preview/document";
 import {
   LOCAL_PREVIEW_FORMAT,
-  PreviewFailedSchema,
   PreviewPendingSchema,
-  PreviewReadySchema,
 } from "@nakafa/aksara-contracts/preview/spec";
 import { ArticleRouteSchema } from "@nakafa/aksara-contracts/projection/article";
 import { Schema } from "effect";
 import {
-  testArticleArtifact,
   testArticleProjection,
   testArticleSourcePath,
 } from "@/test/content-article";
@@ -45,34 +41,3 @@ export const articlePendingManifest = Schema.decodeUnknownSync(
   revision: 1,
   status: "pending",
 });
-
-/** Creates one ready state for the real article and current renderer. */
-export function makeArticleReadyManifest(rendererManifestHash: Sha256Hash) {
-  return Schema.decodeUnknownSync(PreviewReadySchema)({
-    artifacts: [
-      {
-        artifactHash: testArticleArtifact.artifactHash,
-        artifactPath: `/v1/artifacts/${encodeURIComponent(testArticleArtifact.artifactHash)}`,
-        projection: testArticleProjection,
-      },
-    ],
-    document: articlePreviewDocument,
-    format: LOCAL_PREVIEW_FORMAT,
-    rendererManifestHash,
-    repositories: previewRepositories,
-    revision: 1,
-    status: "ready",
-  });
-}
-
-/** Creates one sanitized article compiler failure without stale content. */
-export function makeArticleFailedManifest() {
-  return Schema.decodeUnknownSync(PreviewFailedSchema)({
-    document: articlePreviewDocument,
-    failure: { code: "MDX_PARSE", message: "Compilation failed." },
-    format: LOCAL_PREVIEW_FORMAT,
-    repositories: previewRepositories,
-    revision: 1,
-    status: "failed",
-  });
-}

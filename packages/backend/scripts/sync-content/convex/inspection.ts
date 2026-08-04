@@ -10,15 +10,17 @@ import {
   GraphIdentityIntegritySchema,
   QuestionChoiceIntegrityPageSchema,
   QuestionIntegrityPageSchema,
+  StaleArticleCurriculumContentSchema,
   StaleContentPageSchema,
-  StaleContentSchema,
+  StaleTryoutContentSchema,
   TryoutScaleIntegrityPageSchema,
   UnusedAuthorsSchema,
 } from "@repo/backend/scripts/sync-content/contract/inspection";
 import { hasLocalizedSourceKey } from "@repo/backend/scripts/sync-content/contract/key";
 import type {
   ConvexConfig,
-  FilesystemSlugs,
+  FilesystemArticleCurriculumSlugs,
+  FilesystemTryoutSlugs,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexQuery } from "@repo/backend/scripts/sync-content/convex/client";
 import type {
@@ -199,37 +201,19 @@ const getGraphIdentityIntegrityForTarget = Effect.fn(
   return total;
 });
 
-/** Finds database content rows whose source slugs are no longer on disk. */
-export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
+/** Finds article and curriculum rows whose source slugs are no longer on disk. */
+export const getStaleArticleCurriculumContent = Effect.fn(
+  "sync.getStaleArticleCurriculumContent"
+)(function* (
   config: ConvexConfig,
-  filesystemSlugs: FilesystemSlugs
+  filesystemSlugs: FilesystemArticleCurriculumSlugs
 ) {
   const articleSlugSet = new Set(filesystemSlugs.articleSlugs);
   const curriculumTopicSlugSet = new Set(filesystemSlugs.curriculumTopicSlugs);
   const curriculumLessonSlugSet = new Set(
     filesystemSlugs.curriculumLessonSlugs
   );
-  const questionSetSourcePathSet = new Set(
-    filesystemSlugs.questionSetSourcePaths
-  );
-  const questionSourceKeySet = new Set(filesystemSlugs.questionSourceKeys);
-  const tryoutCountryKeySet = new Set(filesystemSlugs.tryoutCountryKeys);
-  const tryoutExamKeySet = new Set(filesystemSlugs.tryoutExamKeys);
-  const tryoutTrackKeySet = new Set(filesystemSlugs.tryoutTrackKeys);
-  const tryoutSetKeySet = new Set(filesystemSlugs.tryoutSetKeys);
-  const tryoutSectionKeySet = new Set(filesystemSlugs.tryoutSectionKeys);
-  const [
-    articles,
-    curriculumTopics,
-    curriculumLessons,
-    questionSets,
-    questions,
-    tryoutCountries,
-    tryoutExams,
-    tryoutTracks,
-    tryoutSets,
-    tryoutSections,
-  ] = yield* Effect.all([
+  const [articles, curriculumTopics, curriculumLessons] = yield* Effect.all([
     collectPages(
       config,
       internal.contentSync.queries.stale.listStaleContentPage,
@@ -248,51 +232,9 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
       buildStaleContentArgs("curriculumLessons"),
       StaleContentPageSchema
     ),
-    collectPages(
-      config,
-      internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("questionSets"),
-      StaleContentPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("questions"),
-      StaleContentPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("tryoutCountries"),
-      StaleContentPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("tryoutExams"),
-      StaleContentPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("tryoutTracks"),
-      StaleContentPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("tryoutSets"),
-      StaleContentPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("tryoutSections"),
-      StaleContentPageSchema
-    ),
   ]);
 
-  return yield* Schema.decodeUnknown(StaleContentSchema)({
+  return yield* Schema.decodeUnknown(StaleArticleCurriculumContentSchema)({
     staleArticles: articles.filter(
       (item) => !articleSlugSet.has(item.sourcePath)
     ),
@@ -302,29 +244,99 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     staleCurriculumLessons: curriculumLessons.filter(
       (item) => !curriculumLessonSlugSet.has(item.sourcePath)
     ),
-    staleQuestionSets: questionSets.filter(
-      (item) => !questionSetSourcePathSet.has(item.sourcePath)
-    ),
-    staleQuestions: questions.filter(
-      (item) => !questionSourceKeySet.has(getQuestionSourceKey(item))
-    ),
-    staleTryoutCountries: tryoutCountries.filter(
-      (item) => !hasLocalizedSourceKey(tryoutCountryKeySet, item)
-    ),
-    staleTryoutExams: tryoutExams.filter(
-      (item) => !hasLocalizedSourceKey(tryoutExamKeySet, item)
-    ),
-    staleTryoutTracks: tryoutTracks.filter(
-      (item) => !hasLocalizedSourceKey(tryoutTrackKeySet, item)
-    ),
-    staleTryoutSets: tryoutSets.filter(
-      (item) => !hasLocalizedSourceKey(tryoutSetKeySet, item)
-    ),
-    staleTryoutSections: tryoutSections.filter(
-      (item) => !hasLocalizedSourceKey(tryoutSectionKeySet, item)
-    ),
   });
 });
+
+/** Finds legacy tryout rows whose filesystem-owned identities disappeared. */
+export const getStaleTryoutContent = Effect.fn("sync.getStaleTryoutContent")(
+  function* (config: ConvexConfig, filesystemSlugs: FilesystemTryoutSlugs) {
+    const questionSetSourcePathSet = new Set(
+      filesystemSlugs.questionSetSourcePaths
+    );
+    const questionSourceKeySet = new Set(filesystemSlugs.questionSourceKeys);
+    const tryoutCountryKeySet = new Set(filesystemSlugs.tryoutCountryKeys);
+    const tryoutExamKeySet = new Set(filesystemSlugs.tryoutExamKeys);
+    const tryoutTrackKeySet = new Set(filesystemSlugs.tryoutTrackKeys);
+    const tryoutSetKeySet = new Set(filesystemSlugs.tryoutSetKeys);
+    const tryoutSectionKeySet = new Set(filesystemSlugs.tryoutSectionKeys);
+    const [
+      questionSets,
+      questions,
+      tryoutCountries,
+      tryoutExams,
+      tryoutTracks,
+      tryoutSets,
+      tryoutSections,
+    ] = yield* Effect.all([
+      collectPages(
+        config,
+        internal.contentSync.queries.stale.listStaleContentPage,
+        buildStaleContentArgs("questionSets"),
+        StaleContentPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.stale.listStaleContentPage,
+        buildStaleContentArgs("questions"),
+        StaleContentPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.stale.listStaleContentPage,
+        buildStaleContentArgs("tryoutCountries"),
+        StaleContentPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.stale.listStaleContentPage,
+        buildStaleContentArgs("tryoutExams"),
+        StaleContentPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.stale.listStaleContentPage,
+        buildStaleContentArgs("tryoutTracks"),
+        StaleContentPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.stale.listStaleContentPage,
+        buildStaleContentArgs("tryoutSets"),
+        StaleContentPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.stale.listStaleContentPage,
+        buildStaleContentArgs("tryoutSections"),
+        StaleContentPageSchema
+      ),
+    ]);
+
+    return yield* Schema.decodeUnknown(StaleTryoutContentSchema)({
+      staleQuestionSets: questionSets.filter(
+        (item) => !questionSetSourcePathSet.has(item.sourcePath)
+      ),
+      staleQuestions: questions.filter(
+        (item) => !questionSourceKeySet.has(getQuestionSourceKey(item))
+      ),
+      staleTryoutCountries: tryoutCountries.filter(
+        (item) => !hasLocalizedSourceKey(tryoutCountryKeySet, item)
+      ),
+      staleTryoutExams: tryoutExams.filter(
+        (item) => !hasLocalizedSourceKey(tryoutExamKeySet, item)
+      ),
+      staleTryoutTracks: tryoutTracks.filter(
+        (item) => !hasLocalizedSourceKey(tryoutTrackKeySet, item)
+      ),
+      staleTryoutSets: tryoutSets.filter(
+        (item) => !hasLocalizedSourceKey(tryoutSetKeySet, item)
+      ),
+      staleTryoutSections: tryoutSections.filter(
+        (item) => !hasLocalizedSourceKey(tryoutSectionKeySet, item)
+      ),
+    });
+  }
+);
 
 /** Summarizes missing content relationships for sync verification. */
 export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (

@@ -1,26 +1,89 @@
+import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import {
+  tryoutCatalogIdentity,
+  tryoutPlacementIdentity,
+} from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import type {
+  TryoutAnswerSelector,
+  TryoutQuestionSelector,
+} from "@repo/backend/convex/tryouts/runtime/content";
 import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
 import {
-  insertTryoutQuestionSource,
+  TEST_RELEASE_ID,
+  testTextHash,
+} from "@repo/backend/test/content-release";
+import {
+  type AlignedTryoutSectionFixture,
+  insertTryoutSectionSource,
+  makeAlignedTryoutSection,
+  makeSignedTryoutSource,
+} from "@repo/backend/test/tryout-section";
+import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
+import {
   insertTryoutSection,
   insertTryoutSet,
   TRYOUT_SECTION_KEY,
+  TRYOUT_SECTION_PATH,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
+import { ConvexError } from "convex/values";
+
+/** Reads the filesystem section used to derive a matching signed fixture. */
+async function readTryoutSection(
+  ctx: MutationCtx,
+  tryoutSectionId: Id<"tryoutSections">
+) {
+  const section = await ctx.db.get(tryoutSectionId);
+  if (!section) {
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_NOT_FOUND",
+      message: "Expected the try-out section fixture.",
+    });
+  }
+  return section;
+}
+
+/** Reads the filesystem set used to derive a matching signed fixture. */
+async function readTryoutSet(ctx: MutationCtx, tryoutSetId: Id<"tryoutSets">) {
+  const set = await ctx.db.get(tryoutSetId);
+  if (!set) {
+    throw new ConvexError({
+      code: "TRYOUT_SET_NOT_FOUND",
+      message: "Expected the try-out set fixture.",
+    });
+  }
+  return set;
+}
 
 /** Returns the coherent terminal reason for one fixture status. */
-function getEndReason(status: TryoutStatus) {
+function getEndReason(
+  status: TryoutStatus
+): Doc<"tryoutAttempts">["endReason"] {
   if (status === "in-progress") {
     return null;
   }
 
   if (status === "expired") {
-    return "time-expired" as const;
+    return "time-expired";
   }
 
-  return "submitted" as const;
+  return "submitted";
+}
+
+/** Inserts one standard paid user for try-out runtime tests. */
+export function insertTryoutUser(
+  ctx: MutationCtx,
+  identity: Pick<Doc<"users">, "authId" | "email" | "name">
+) {
+  return ctx.db.insert("users", {
+    ...identity,
+    credits: 0,
+    creditsResetAt: TRYOUT_TEST_NOW,
+    plan: "pro",
+  });
 }
 
 /** Inserts one attempt and section state used by content access tests. */
@@ -29,6 +92,7 @@ export async function seedTryoutContentAccessState(
   args: {
     attemptStatus: TryoutStatus;
     sectionStatus: TryoutStatus;
+    signed?: boolean;
     suffix: string;
   }
 ) {
@@ -37,13 +101,48 @@ export async function seedTryoutContentAccessState(
     suffix: args.suffix,
   });
   const tryoutSetId = await insertTryoutSet(ctx);
-  const questionSetId = await insertTryoutQuestionSource(ctx);
+  const questionSource = await insertTryoutSectionSource(
+    ctx,
+    TRYOUT_SECTION_KEY
+  );
   const tryoutSectionId = await insertTryoutSection(ctx, {
-    questionSetId,
+    publicPath: TRYOUT_SECTION_PATH,
+    questionSetId: questionSource.questionSetId,
+    questionSourcePath: questionSource.sourcePath,
     tryoutSetId,
   });
   const attemptTerminal = args.attemptStatus !== "in-progress";
   const sectionTerminal = args.sectionStatus !== "in-progress";
+  const fixtureLocale: ContentLocale = "id";
+  const signedSection = makeAlignedTryoutSection(
+    await readTryoutSection(ctx, tryoutSectionId)
+  );
+  const signedSource = makeSignedTryoutSource(
+    await readTryoutSet(ctx, tryoutSetId),
+    [signedSection]
+  );
+  const snapshotId = args.signed
+    ? await activateTryoutSnapshot(ctx, {
+        catalog: [
+          signedSource.snapshot.set.row,
+          { ...signedSource.snapshot.set.row, locale: "en" },
+          signedSection.signed.section.row,
+          { ...signedSection.signed.section.row, locale: "en" },
+        ],
+        placements: signedSection.signed.placements.flatMap(({ row }) => [
+          row,
+          { ...row, locale: "en" },
+        ]),
+      })
+    : null;
+  const setIdentity = tryoutCatalogIdentity({
+    countryKey: "indonesia",
+    examKey: "snbt",
+    kind: "set",
+    locale: "id",
+    setKey: "set-1",
+    trackKey: "2027",
+  });
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: TRYOUT_TEST_NOW + 3_600_000,
     accessSourceKind: "free",
@@ -63,6 +162,19 @@ export async function seedTryoutContentAccessState(
     totalQuestions: 1,
     tryoutSetId,
     userId: identity.userId,
+    ...(snapshotId
+      ? {
+          countryKey: "indonesia",
+          examKey: "snbt",
+          locale: fixtureLocale,
+          setIdentity,
+          setKey: "set-1",
+          setPublicPath: signedSource.snapshot.set.row.publicPath,
+          snapshotReleaseId: TEST_RELEASE_ID,
+          trackKey: "2027",
+          tryoutSnapshotId: snapshotId,
+        }
+      : {}),
   });
 
   const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
@@ -81,7 +193,76 @@ export async function seedTryoutContentAccessState(
     tryoutSectionId,
   });
 
-  return { identity, sectionAttemptId };
+  if (!snapshotId) {
+    return {
+      attemptId,
+      identity,
+      placementId: null,
+      sectionAttemptId,
+      signedContent: null,
+      tryoutSetId,
+    };
+  }
+
+  const answerArtifactHash = testTextHash(`${args.suffix}:answer`);
+  const questionArtifactHash = testTextHash(`${args.suffix}:question`);
+  const sourcePath = `${questionSource.sourcePath}/question-1`;
+  const answerContentKey = `${sourcePath}/answer`;
+  const questionContentKey = `${sourcePath}/question`;
+  const contentHash = questionSource.contentHash;
+  const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
+    answerArtifactHash,
+    answerContentKey,
+    choiceSnapshots: [],
+    contentHash,
+    placementIdentity: `${args.suffix}:placement`,
+    placementRowHash: testTextHash(`${args.suffix}:placement-row`),
+    questionArtifactHash,
+    questionContentKey,
+    questionOrder: 1,
+    rendererDomain: "snbt-math",
+    sectionIdentity: `${args.suffix}:section`,
+    sectionKey: TRYOUT_SECTION_KEY,
+    sourcePath,
+    sourceRevision: "2026",
+    title: "Technical question",
+    tryoutAttemptId: attemptId,
+    tryoutSectionId,
+  });
+
+  const answer: TryoutAnswerSelector = {
+    artifactHash: answerArtifactHash,
+    contentHash,
+    contentKey: answerContentKey,
+    delivery: "entitled",
+    locale: fixtureLocale,
+    questionOrder: 1,
+    snapshotId,
+    snapshotReleaseId: TEST_RELEASE_ID,
+    sourcePath,
+    sourceRevision: "2026",
+  };
+  const question: TryoutQuestionSelector = {
+    artifactHash: questionArtifactHash,
+    contentHash,
+    contentKey: questionContentKey,
+    delivery: "authenticated",
+    locale: fixtureLocale,
+    questionOrder: 1,
+    snapshotId,
+    snapshotReleaseId: TEST_RELEASE_ID,
+    sourcePath,
+    sourceRevision: "2026",
+  };
+
+  return {
+    attemptId,
+    identity,
+    placementId,
+    sectionAttemptId,
+    signedContent: { answer, question },
+    tryoutSetId,
+  };
 }
 
 /** Builds the immutable section shape stored on an attempt. */
@@ -91,18 +272,23 @@ export function tryoutSectionSnapshot(args: {
   questionSetId: Id<"questionSets">;
   sectionKey: string;
   sourcePath: string;
-  tryoutSectionId: Id<"tryoutSections">;
+  signed?: AlignedTryoutSectionFixture["signed"];
+  tryoutSectionId?: Id<"tryoutSections">;
 }) {
   return {
     publicPath: args.publicPath,
     questionCount: 1,
     questionSetId: args.questionSetId,
     questionSourcePath: args.sourcePath,
+    sectionIdentity: args.signed
+      ? tryoutCatalogIdentity(args.signed.section.row)
+      : undefined,
     sectionKey: args.sectionKey,
     sectionOrder: args.order,
+    sectionRowHash: args.signed?.section.rowHash,
     sourceRevision: "2026",
     timeLimitSeconds: 1800,
-    tryoutSectionId: args.tryoutSectionId,
+    ...(args.tryoutSectionId ? { tryoutSectionId: args.tryoutSectionId } : {}),
   };
 }
 
@@ -114,6 +300,7 @@ export async function insertTryoutAttempt(
     scaleVersionId?: Id<"irtScaleVersions">;
     scoringStrategy?: Doc<"tryoutAttempts">["scoringStrategy"];
     sectionSnapshots: Doc<"tryoutAttempts">["sectionSnapshots"];
+    setPublicPath?: string;
     status?: Doc<"tryoutAttempts">["status"];
     tryoutSetId: Id<"tryoutSets">;
     userId: Id<"users">;
@@ -136,6 +323,7 @@ export async function insertTryoutAttempt(
     scoreStatus: scoringStrategy === "irt" ? "provisional" : "official",
     scoringStrategy,
     sectionSnapshots: args.sectionSnapshots,
+    setPublicPath: args.setPublicPath,
     startedAt: TRYOUT_TEST_NOW - 20_000,
     status: args.status ?? "in-progress",
     totalCorrect: 0,
@@ -181,12 +369,20 @@ export async function insertTryoutSectionAttempt(
 export async function insertIrtScaleItem(
   ctx: MutationCtx,
   args: {
+    placement: AlignedTryoutSectionFixture["signed"]["placements"][number];
     questionId: Id<"questions">;
     scaleVersionId: Id<"irtScaleVersions">;
     sectionId: Id<"tryoutSections">;
-    sourcePath: string;
   }
 ) {
+  const question = await ctx.db.get(args.questionId);
+  if (!question) {
+    throw new ConvexError({
+      code: "TRYOUT_QUESTION_NOT_FOUND",
+      message: "Expected the calibrated question fixture.",
+    });
+  }
+
   const calibrationRunId = await ctx.db.insert("irtCalibrationRuns", {
     attemptCount: 0,
     completedAt: TRYOUT_TEST_NOW,
@@ -204,12 +400,14 @@ export async function insertIrtScaleItem(
   await ctx.db.insert("irtScaleItems", {
     calibrationRunId,
     calibrationStatus: "provisional",
-    contentHash: `${args.sourcePath}:question-hash`,
+    contentHash: question.contentHash,
     correctRate: 0,
     difficulty: 0,
     discrimination: 1,
+    placementIdentity: tryoutPlacementIdentity(args.placement.row),
+    placementRowHash: args.placement.rowHash,
     questionId: args.questionId,
-    questionSourceKey: `${args.sourcePath}:question-1`,
+    questionSourceKey: question.sourceKey,
     responseCount: 0,
     scaleVersionId: args.scaleVersionId,
     sourceRevision: "2026",

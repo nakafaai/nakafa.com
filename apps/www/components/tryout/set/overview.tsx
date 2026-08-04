@@ -58,7 +58,8 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
 function TryoutSetSections({ value }: { value: TryoutSetView }) {
   const tTryouts = useTranslations("Tryouts");
 
-  if (value.page.sections.length === 0) {
+  const sections = value.actionAttempt?.sectionRoutes ?? value.page.sections;
+  if (sections.length === 0) {
     return null;
   }
 

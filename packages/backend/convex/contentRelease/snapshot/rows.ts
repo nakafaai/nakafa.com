@@ -1,4 +1,4 @@
-import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot";
+import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
@@ -18,6 +18,7 @@ type SnapshotChild =
   | { readonly row: Doc<"programBuckets">; readonly table: "programBuckets" }
   | { readonly row: Doc<"quranRows">; readonly table: "quranRows" }
   | { readonly row: Doc<"quranSearch">; readonly table: "quranSearch" }
+  | { readonly row: Doc<"tryoutBundles">; readonly table: "tryoutBundles" }
   | { readonly row: Doc<"tryoutCatalog">; readonly table: "tryoutCatalog" }
   | {
       readonly row: Doc<"tryoutPlacements">;
@@ -174,9 +175,32 @@ export const loadSnapshotChildren = Effect.fn(
     } satisfies ChildPage;
   }
 
+  if (selected === "placement") {
+    const page = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutPlacements")
+        .withIndex("by_snapshotId_and_index", (query) =>
+          query.eq("snapshotId", snapshotId).gt("index", afterIndex)
+        )
+        .paginate(cleanupPage())
+    );
+    return {
+      children: page.page.map(
+        (row): SnapshotChild => ({ row, table: "tryoutPlacements" })
+      ),
+      done: page.isDone,
+      part: selected,
+    } satisfies ChildPage;
+  }
+  if (selected !== "bundle") {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Try-out snapshot ${snapshotId} has an invalid cleanup part.`
+    );
+  }
   const page = yield* Effect.promise(() =>
     ctx.db
-      .query("tryoutPlacements")
+      .query("tryoutBundles")
       .withIndex("by_snapshotId_and_index", (query) =>
         query.eq("snapshotId", snapshotId).gt("index", afterIndex)
       )
@@ -184,7 +208,7 @@ export const loadSnapshotChildren = Effect.fn(
   );
   return {
     children: page.page.map(
-      (row): SnapshotChild => ({ row, table: "tryoutPlacements" })
+      (row): SnapshotChild => ({ row, table: "tryoutBundles" })
     ),
     done: page.isDone,
     part: selected,
@@ -219,6 +243,10 @@ export const deleteSnapshotChild = Effect.fn(
   }
   if (child.table === "tryoutCatalog") {
     yield* Effect.promise(() => ctx.db.delete("tryoutCatalog", child.row._id));
+    return;
+  }
+  if (child.table === "tryoutBundles") {
+    yield* Effect.promise(() => ctx.db.delete("tryoutBundles", child.row._id));
     return;
   }
   yield* Effect.promise(() => ctx.db.delete("tryoutPlacements", child.row._id));

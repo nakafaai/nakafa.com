@@ -1,5 +1,9 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { bulkSyncTryoutsImpl } from "@repo/backend/convex/contentSync/tryouts/impl";
+import {
+  type BulkSyncTryoutsArgs,
+  syncTryouts,
+} from "@repo/backend/convex/contentSync/tryouts/impl";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
@@ -14,9 +18,9 @@ describe("contentSync/tryouts/impl", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(seedOldTrack);
-    await t.mutation(async (ctx) => {
-      await bulkSyncTryoutsImpl(ctx, buildPayload());
-    });
+    await t.mutation((ctx) =>
+      runConvexProgram(syncTryouts(ctx, buildPayload()))
+    );
 
     const snapshot = await t.query(async (ctx) => {
       const route = await ctx.db
@@ -54,7 +58,7 @@ describe("contentSync/tryouts/impl", () => {
 });
 
 /** Builds the smallest catalog payload that replaces one track path. */
-function buildPayload() {
+function buildPayload(): BulkSyncTryoutsArgs {
   return {
     countries: [],
     exams: [],
@@ -70,7 +74,7 @@ function buildPayload() {
         examKey: "tka",
         isActive: true,
         isReady: true,
-        locale: "id" as const,
+        locale: "id",
         order: 1,
         publicPath: NEW_TRACK_ROUTE,
         readyQuestionCount: 1,
@@ -79,7 +83,7 @@ function buildPayload() {
         sourceRevision: "2026",
         title: "Matematika",
         trackKey: "mathematics",
-        trackKind: "subject" as const,
+        trackKind: "subject",
       },
     ],
   };

@@ -1,3 +1,4 @@
+import { rendererDomainValidator } from "@repo/backend/convex/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/convex/tryouts/access/source";
@@ -17,13 +18,17 @@ import { v } from "convex/values";
 const tryoutSectionSnapshotValidator = v.object({
   publicPath: v.optional(v.string()),
   questionCount: v.number(),
-  questionSetId: v.id("questionSets"),
+  /** Present only for filesystem-owned attempt snapshots. */
+  questionSetId: v.optional(v.id("questionSets")),
   questionSourcePath: v.string(),
+  sectionIdentity: v.optional(v.string()),
   sectionKey: tryoutRouteKeyValidator,
   sectionOrder: v.number(),
+  sectionRowHash: v.optional(v.string()),
   sourceRevision: v.string(),
   timeLimitSeconds: v.number(),
-  tryoutSectionId: v.id("tryoutSections"),
+  /** Present only for filesystem-owned attempt snapshots. */
+  tryoutSectionId: v.optional(v.id("tryoutSections")),
 });
 
 const tryoutChoiceSnapshotValidator = v.object({
@@ -34,13 +39,29 @@ const tryoutChoiceSnapshotValidator = v.object({
 });
 
 const tables = {
+  /** One immutable signed renderer bundle shared by attempts from one release. */
+  tryoutBundles: defineTable({
+    createdAt: v.number(),
+    index: v.number(),
+    manifestHash: v.string(),
+    releaseId: v.string(),
+    releaseJson: v.string(),
+    rendererJson: v.string(),
+    snapshotId: v.string(),
+  })
+    .index("by_releaseId", ["releaseId"])
+    .index("by_snapshotId_and_index", ["snapshotId", "index"]),
+
   tryoutAttempts: defineTable({
     userId: v.id("users"),
-    tryoutSetId: v.id("tryoutSets"),
-    /** Optional only during the stable Aksara identity backfill. */
+    /** Retained only while the matching local lookup shell exists. */
+    tryoutSetId: v.optional(v.id("tryoutSets")),
+    /** Present only for signed and migrated attempts. */
     tryoutSnapshotId: v.optional(v.string()),
+    /** Present only for signed and migrated attempts. */
+    snapshotReleaseId: v.optional(v.string()),
     setIdentity: v.optional(v.string()),
-    /** Frozen localized route prepared for the signed-runtime cutover. */
+    /** Frozen localized route used to resume after a later catalog rename. */
     setPublicPath: v.optional(v.string()),
     countryKey: v.optional(tryoutRouteKeyValidator),
     examKey: v.optional(tryoutRouteKeyValidator),
@@ -71,10 +92,7 @@ const tables = {
     endReason: v.union(attemptEndReasonValidator, v.null()),
   })
     .index("by_status_and_expiresAt", ["status", "expiresAt"])
-    .index("by_tryoutSnapshotId", {
-      fields: ["tryoutSnapshotId"],
-      staged: true,
-    })
+    .index("by_tryoutSnapshotId", ["tryoutSnapshotId"])
     .index("by_userId_and_startedAt", ["userId", "startedAt"])
     .index("by_userId_and_status_and_expiresAt", [
       "userId",
@@ -91,10 +109,12 @@ const tables = {
       "setIdentity",
       "startedAt",
     ])
-    .index("by_userId_and_locale_and_setPublicPath_and_startedAt", {
-      fields: ["userId", "locale", "setPublicPath", "startedAt"],
-      staged: true,
-    })
+    .index("by_userId_and_locale_and_setPublicPath_and_startedAt", [
+      "userId",
+      "locale",
+      "setPublicPath",
+      "startedAt",
+    ])
     .index("by_accessCampaignId_and_startedAt", [
       "accessCampaignId",
       "startedAt",
@@ -114,8 +134,9 @@ const tables = {
 
   tryoutSetProgress: defineTable({
     userId: v.id("users"),
-    tryoutSetId: v.id("tryoutSets"),
-    /** Optional only during the stable Aksara identity backfill. */
+    /** Present only for filesystem-owned and migrated progress. */
+    tryoutSetId: v.optional(v.id("tryoutSets")),
+    /** Present only for signed and migrated progress. */
     setIdentity: v.optional(v.string()),
     latestAttemptId: v.id("tryoutAttempts"),
     countryKey: tryoutRouteKeyValidator,
@@ -131,17 +152,14 @@ const tables = {
   })
     .index("by_userId_and_tryoutSetId", ["userId", "tryoutSetId"])
     .index("by_userId_and_setIdentity", ["userId", "setIdentity"])
-    .index("by_userId_countryKey_examKey_trackKey_locale_setKey", {
-      fields: [
-        "userId",
-        "countryKey",
-        "examKey",
-        "trackKey",
-        "locale",
-        "setKey",
-      ],
-      staged: true,
-    })
+    .index("by_userId_countryKey_examKey_trackKey_locale_setKey", [
+      "userId",
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "locale",
+      "setKey",
+    ])
     .index("by_userId_and_track_and_publishedScore_and_setKey", [
       "userId",
       "countryKey",
@@ -163,7 +181,9 @@ const tables = {
 
   tryoutSectionAttempts: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
-    tryoutSectionId: v.id("tryoutSections"),
+    /** Present only for filesystem-owned and migrated section attempts. */
+    tryoutSectionId: v.optional(v.id("tryoutSections")),
+    sectionIdentity: v.optional(v.string()),
     sectionKey: tryoutRouteKeyValidator,
     sectionOrder: v.number(),
     status: tryoutStatusValidator,
@@ -192,13 +212,22 @@ const tables = {
     .index("by_status_and_expiresAt", ["status", "expiresAt"]),
 
   tryoutAttemptPlacements: defineTable({
+    answerArtifactHash: v.optional(v.string()),
+    answerContentKey: v.optional(v.string()),
     placementIdentity: v.optional(v.string()),
     placementRowHash: v.optional(v.string()),
+    questionArtifactHash: v.optional(v.string()),
+    questionContentKey: v.optional(v.string()),
+    rendererDomain: v.optional(rendererDomainValidator),
+    sectionIdentity: v.optional(v.string()),
     sectionKey: v.optional(tryoutRouteKeyValidator),
     tryoutAttemptId: v.id("tryoutAttempts"),
-    tryoutSectionId: v.id("tryoutSections"),
-    questionId: v.id("questions"),
-    questionSourceKey: v.string(),
+    /** Present only for filesystem-owned and migrated placements. */
+    tryoutSectionId: v.optional(v.id("tryoutSections")),
+    /** Optional only while filesystem-owned attempts remain readable. */
+    questionId: v.optional(v.id("questions")),
+    /** Optional only while filesystem-owned IRT rows remain readable. */
+    questionSourceKey: v.optional(v.string()),
     questionOrder: v.number(),
     sourcePath: v.string(),
     title: v.string(),
@@ -226,7 +255,8 @@ const tables = {
     tryoutAttemptId: v.id("tryoutAttempts"),
     tryoutSectionAttemptId: v.id("tryoutSectionAttempts"),
     placementId: v.id("tryoutAttemptPlacements"),
-    questionId: v.id("questions"),
+    /** Optional only while filesystem-owned responses remain readable. */
+    questionId: v.optional(v.id("questions")),
     selectedOptionId: v.optional(v.string()),
     textAnswer: v.optional(v.string()),
     isCorrect: v.boolean(),
@@ -246,7 +276,10 @@ const tables = {
 
   tryoutScores: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
-    tryoutSetId: v.id("tryoutSets"),
+    /** Present only for filesystem-owned and migrated score snapshots. */
+    tryoutSetId: v.optional(v.id("tryoutSets")),
+    tryoutSnapshotId: v.optional(v.string()),
+    setIdentity: v.optional(v.string()),
     userId: v.id("users"),
     scoringStrategy: tryoutScoringStrategyValidator,
     scoreStatus: tryoutScoreStatusValidator,

@@ -1,7 +1,7 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { PROOF_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import {
   insertProofItem,
   insertProofRoute,
@@ -91,7 +91,6 @@ describe("contentRelease/proof/read", () => {
     await expect(
       t.query(proofPage, {
         afterIndex: -2,
-        kind: "item",
         releaseId: TEST_RELEASE_ID,
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
@@ -104,7 +103,6 @@ describe("contentRelease/proof/read", () => {
     await expect(
       t.query(proofPage, {
         afterIndex: -1,
-        kind: "item",
         releaseId: TEST_RELEASE_ID,
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
@@ -116,7 +114,7 @@ describe("contentRelease/proof/read", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
   });
 
-  it("pages item, artifact, and route streams without delete bodies", async () => {
+  it("pages item and route streams without delete projections", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertTestRelease(ctx, {
@@ -141,12 +139,6 @@ describe("contentRelease/proof/read", () => {
 
     const items = await t.query(proofPage, {
       afterIndex: -1,
-      kind: "item",
-      releaseId: TEST_RELEASE_ID,
-    });
-    const artifacts = await t.query(proofPage, {
-      afterIndex: -1,
-      kind: "artifact",
       releaseId: TEST_RELEASE_ID,
     });
     const routes = await t.query(routePage, {
@@ -157,42 +149,21 @@ describe("contentRelease/proof/read", () => {
     expect(items).toMatchObject({ done: true, nextIndex: 1 });
     expect(items.rows).toHaveLength(2);
     expect(items.rows[0]?.projectionJson).toBeDefined();
-    expect(artifacts.rows[0]?.artifactJson).toBeDefined();
-    expect(artifacts.rows[1]?.artifactJson).toBeUndefined();
+    expect(items.rows[1]?.projectionJson).toBeUndefined();
     expect(routes).toMatchObject({ done: true, nextIndex: 1 });
     expect(routes.rows).toHaveLength(2);
   });
 
-  it("rejects an upsert whose immutable artifact disappeared", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertTestRelease(ctx, { status: "verifying" });
-      await insertProofItem(ctx, 0);
-      const artifact = await ctx.db.query("contentArtifacts").unique();
-      if (!artifact) {
-        throw new Error("Expected proof artifact.");
-      }
-      await ctx.db.delete("contentArtifacts", artifact._id);
-    });
-
-    await expect(
-      t.query(proofPage, {
-        afterIndex: -1,
-        kind: "artifact",
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
-  });
-
   it("caps proof streams by record and response size", async () => {
     const records = convexTest(schema, convexModules);
+    const recordCount = PROOF_PAGE_LIMIT + 1;
     await records.mutation(async (ctx) => {
       await insertTestRelease(ctx, {
-        itemCount: 9,
-        projectionCount: 9,
+        itemCount: recordCount,
+        projectionCount: recordCount,
         status: "verifying",
       });
-      for (let index = 0; index < 9; index += 1) {
+      for (let index = 0; index < recordCount; index += 1) {
         await insertProofItem(ctx, index);
         await insertProofRoute(ctx, index);
       }
@@ -200,16 +171,21 @@ describe("contentRelease/proof/read", () => {
     await expect(
       records.query(proofPage, {
         afterIndex: -1,
-        kind: "item",
         releaseId: TEST_RELEASE_ID,
       })
-    ).resolves.toMatchObject({ done: false, nextIndex: 7 });
+    ).resolves.toMatchObject({
+      done: false,
+      nextIndex: PROOF_PAGE_LIMIT - 1,
+    });
     await expect(
       records.query(routePage, {
         afterIndex: -1,
         releaseId: TEST_RELEASE_ID,
       })
-    ).resolves.toMatchObject({ done: false, nextIndex: 7 });
+    ).resolves.toMatchObject({
+      done: false,
+      nextIndex: PROOF_PAGE_LIMIT - 1,
+    });
 
     const bytes = convexTest(schema, convexModules);
     await bytes.mutation(async (ctx) => {
@@ -219,23 +195,23 @@ describe("contentRelease/proof/read", () => {
         status: "verifying",
       });
       for (let index = 0; index < 6; index += 1) {
-        await insertProofItem(
-          ctx,
-          index,
-          "upsert",
-          testArtifactJson({
-            artifactHash: `sha256:${(index + 1)
-              .toString(16)
-              .padStart(64, "0")}`,
-            compiledCode: "x".repeat(900_000),
-            contentKey: `test:head-${index}`,
-          })
-        );
+        await insertProofItem(ctx, index);
+        const row = await ctx.db
+          .query("contentItems")
+          .withIndex("by_releaseId_and_index", (query) =>
+            query.eq("releaseId", TEST_RELEASE_ID).eq("index", index)
+          )
+          .unique();
+        if (!row) {
+          throw new Error(`Expected proof row ${index}.`);
+        }
+        await ctx.db.patch("contentItems", row._id, {
+          projectionJson: "x".repeat(900_000),
+        });
       }
     });
     const page = await bytes.query(proofPage, {
       afterIndex: -1,
-      kind: "artifact",
       releaseId: TEST_RELEASE_ID,
     });
     expect(page.done).toBe(false);
@@ -251,18 +227,19 @@ describe("contentRelease/proof/read", () => {
         projectionCount: 1,
         status: "verifying",
       });
-      await insertProofItem(
-        ctx,
-        0,
-        "upsert",
-        testArtifactJson({ compiledCode: "x".repeat(4_200_000) })
-      );
+      await insertProofItem(ctx, 0);
+      const row = await ctx.db.query("contentItems").unique();
+      if (!row) {
+        throw new Error("Expected oversized proof row.");
+      }
+      await ctx.db.patch("contentItems", row._id, {
+        projectionJson: "x".repeat(4_200_000),
+      });
     });
 
     await expect(
       t.query(proofPage, {
         afterIndex: -1,
-        kind: "artifact",
         releaseId: TEST_RELEASE_ID,
       })
     ).rejects.toMatchObject({

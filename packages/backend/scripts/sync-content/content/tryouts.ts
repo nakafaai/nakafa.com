@@ -33,7 +33,6 @@ import {
   type TryoutSyncArgs,
 } from "@repo/backend/scripts/sync-content/tryout/batch";
 import { getTryoutSetQuestionCount } from "@repo/contents/_types/tryout/readiness";
-import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
@@ -86,6 +85,9 @@ export const syncTryouts = Effect.fn("sync.tryouts")(function* (
 const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
   selectedLocales: readonly Locale[]
 ) {
+  const { TRYOUT_SOURCES: tryoutSources } = yield* Effect.promise(
+    () => import("@repo/contents/_types/tryout/source")
+  );
   const countries = new Map<string, TryoutSyncArgs["countries"][number]>();
   const exams: TryoutSyncArgs["exams"] = [];
   const routes = new Map<string, SyncedTryoutRoute>();
@@ -95,7 +97,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
   const questions: TryoutSyncArgs["questions"] = [];
   const tracks: TryoutSyncArgs["tracks"] = [];
 
-  for (const source of TRYOUT_SOURCES) {
+  for (const source of tryoutSources) {
     for (const locale of selectedLocales) {
       const countrySlug = source.countryRouteSlugs[locale];
       const examSlug = source.examRouteSlugs[locale];

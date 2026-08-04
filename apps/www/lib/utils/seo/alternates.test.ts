@@ -104,8 +104,8 @@ describe("createLocalizedAlternates", () => {
     });
   });
 
-  it("builds hreflang alternates from projected material routes", () => {
-    const routes = Effect.runSync(listPublicRoutes());
+  it("builds hreflang alternates from projected material routes", async () => {
+    const routes = await Effect.runPromise(listPublicRoutes());
     const route = routes.find(
       (candidate) =>
         candidate.kind === "subject-lesson" &&
@@ -128,8 +128,8 @@ describe("createLocalizedAlternates", () => {
     });
   });
 
-  it("omits projected hreflang values when a locale route is absent", () => {
-    const routes = Effect.runSync(listPublicRoutes());
+  it("omits projected hreflang values when a locale route is absent", async () => {
+    const routes = await Effect.runPromise(listPublicRoutes());
     const route = routes.find(
       (candidate) =>
         candidate.kind === "subject-lesson" &&
@@ -166,8 +166,8 @@ describe("createLocalizedAlternates", () => {
     });
   });
 
-  it("builds hreflang alternates for localized material route identities", () => {
-    const routes = Effect.runSync(listPublicRoutes());
+  it("builds hreflang alternates for localized material route identities", async () => {
+    const routes = await Effect.runPromise(listPublicRoutes());
     const vectorConcept = routes.find(
       (candidate) =>
         candidate.kind === "subject-lesson" &&
@@ -191,8 +191,8 @@ describe("createLocalizedAlternates", () => {
     );
   });
 
-  it("builds hreflang alternates for curriculum contexts", () => {
-    const routes = Effect.runSync(listPublicRoutes());
+  it("builds hreflang alternates for curriculum contexts", async () => {
+    const routes = await Effect.runPromise(listPublicRoutes());
     const curriculum = routes.find(
       (candidate) =>
         candidate.kind === "curriculum-context" &&

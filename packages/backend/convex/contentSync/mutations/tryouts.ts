@@ -1,4 +1,5 @@
-import { bulkSyncTryoutsImpl } from "@repo/backend/convex/contentSync/tryouts/impl";
+import { syncTryouts } from "@repo/backend/convex/contentSync/tryouts/impl";
+import { requireFilesystemOwner } from "@repo/backend/convex/contentSync/tryouts/source";
 import {
   bulkSyncTryoutsResultValidator,
   deleteResultValidator,
@@ -12,16 +13,18 @@ import {
   syncedTryoutTrackValidator,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
 import {
-  deleteStaleQuestionSetsImpl,
-  deleteStaleQuestionsImpl,
-  deleteStaleTryoutCountriesImpl,
-  deleteStaleTryoutExamsImpl,
-  deleteStaleTryoutSectionsImpl,
-  deleteStaleTryoutSetsImpl,
-  deleteStaleTryoutTracksImpl,
+  deleteStaleTryoutCountries as deleteCountries,
+  deleteStaleTryoutExams as deleteExams,
+  deleteStaleQuestionSets as deleteQuestionSets,
+  deleteStaleQuestions as deleteQuestions,
+  deleteStaleTryoutSections as deleteSections,
+  deleteStaleTryoutSets as deleteSets,
+  deleteStaleTryoutTracks as deleteTracks,
 } from "@repo/backend/convex/contentSync/tryouts/stale";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 /** Upserts one bounded try-out catalog and question-bank batch. */
 export const bulkSyncTryouts = internalMutation({
@@ -36,7 +39,10 @@ export const bulkSyncTryouts = internalMutation({
     sections: v.array(syncedTryoutSectionValidator),
   },
   returns: bulkSyncTryoutsResultValidator,
-  handler: async (ctx, args) => await bulkSyncTryoutsImpl(ctx, args),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      requireFilesystemOwner(ctx).pipe(Effect.andThen(syncTryouts(ctx, args)))
+    ),
 });
 
 /** Deletes one bounded stale question batch with sync-owned choice rows. */
@@ -45,7 +51,12 @@ export const deleteStaleQuestions = internalMutation({
     questionIds: v.array(v.id("questions")),
   },
   returns: deleteResultValidator,
-  handler: async (ctx, args) => await deleteStaleQuestionsImpl(ctx, args),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      requireFilesystemOwner(ctx).pipe(
+        Effect.andThen(deleteQuestions(ctx, args))
+      )
+    ),
 });
 
 /** Deletes one bounded stale question-set batch after its sections are removed. */
@@ -54,7 +65,12 @@ export const deleteStaleQuestionSets = internalMutation({
     questionSetIds: v.array(v.id("questionSets")),
   },
   returns: deleteResultValidator,
-  handler: async (ctx, args) => await deleteStaleQuestionSetsImpl(ctx, args),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      requireFilesystemOwner(ctx).pipe(
+        Effect.andThen(deleteQuestionSets(ctx, args))
+      )
+    ),
 });
 
 /** Deletes one bounded stale try-out section batch. */
@@ -63,7 +79,12 @@ export const deleteStaleTryoutSections = internalMutation({
     sectionIds: v.array(v.id("tryoutSections")),
   },
   returns: deleteResultValidator,
-  handler: async (ctx, args) => await deleteStaleTryoutSectionsImpl(ctx, args),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      requireFilesystemOwner(ctx).pipe(
+        Effect.andThen(deleteSections(ctx, args))
+      )
+    ),
 });
 
 /** Deletes one bounded stale try-out set batch with direct section rows. */
@@ -72,7 +93,10 @@ export const deleteStaleTryoutSets = internalMutation({
     setIds: v.array(v.id("tryoutSets")),
   },
   returns: deleteResultValidator,
-  handler: async (ctx, args) => await deleteStaleTryoutSetsImpl(ctx, args),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      requireFilesystemOwner(ctx).pipe(Effect.andThen(deleteSets(ctx, args)))
+    ),
 });
 
 /** Deletes one bounded stale try-out track batch after direct set rows. */
@@ -81,7 +105,10 @@ export const deleteStaleTryoutTracks = internalMutation({
     trackIds: v.array(v.id("tryoutTracks")),
   },
   returns: deleteResultValidator,
-  handler: async (ctx, args) => await deleteStaleTryoutTracksImpl(ctx, args),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      requireFilesystemOwner(ctx).pipe(Effect.andThen(deleteTracks(ctx, args)))
+    ),
 });
 
 /** Deletes one bounded stale try-out exam batch. */
@@ -90,7 +117,10 @@ export const deleteStaleTryoutExams = internalMutation({
     examIds: v.array(v.id("tryoutExams")),
   },
   returns: deleteResultValidator,
-  handler: async (ctx, args) => await deleteStaleTryoutExamsImpl(ctx, args),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      requireFilesystemOwner(ctx).pipe(Effect.andThen(deleteExams(ctx, args)))
+    ),
 });
 
 /** Deletes one bounded stale try-out country batch. */
@@ -99,5 +129,10 @@ export const deleteStaleTryoutCountries = internalMutation({
     countryIds: v.array(v.id("tryoutCountries")),
   },
   returns: deleteResultValidator,
-  handler: async (ctx, args) => await deleteStaleTryoutCountriesImpl(ctx, args),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      requireFilesystemOwner(ctx).pipe(
+        Effect.andThen(deleteCountries(ctx, args))
+      )
+    ),
 });

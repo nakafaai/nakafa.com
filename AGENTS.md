@@ -273,10 +273,11 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 ## Testing Rules
 
 - Vitest is the standard test runner.
-- Every `name.test.ts` or `name.test.tsx` file must be colocated with and test the real `name.ts` or `name.tsx` Module. Do not add orphan concept, corpus, integration, or regression test filenames. Move essential assertions into the owning Module's test, and delete redundant assertions instead of creating a fake production Module to justify a test name.
-- Keep tests colocated as `*.test.ts` or `*.test.tsx`; do not create `__test__` or `__tests__` folders.
-- The root `check:tests` gate rejects orphan test names and nested test folders across every app and package.
-- Do not add final-code React component `.test.tsx` shell tests that mock child components just to render static markup. For app UI behavior, prefer route, data, or domain seams, or production-mode Browser/e2e checks. Existing historical `.test.tsx` files are not a mandate to delete unrelated tests outside the current PR scope.
+- Every `name.test.ts` file must be colocated with and test the real `name.ts` Module. Do not add orphan concept, corpus, integration, or regression test filenames. Move essential assertions into the owning TypeScript Module's test, and delete redundant assertions instead of creating a fake production Module to justify a test name.
+- Do not commit tests for `.tsx` Modules. Do not rename a React test from `*.test.tsx` to `*.test.ts` as a workaround. Put testable behavior in its owning `.ts` domain seam and use production-mode Browser or E2E acceptance for rendered React behavior.
+- Keep tests colocated as `*.test.ts`; do not create `__test__` or `__tests__` folders.
+- The root `check:tests` gate rejects `*.test.tsx`, tests without a real colocated `.ts` owner, and nested test folders across every app and package.
+- Do not add React component tests or shell tests that mock child components just to render static markup. Verify app UI through production-mode Browser or E2E checks.
 - Use `describe`, `it`/`test`, and focused assertions.
 - Keep tests readable and behavior-oriented.
 - Do not leave `.only` or `.skip` in committed code.

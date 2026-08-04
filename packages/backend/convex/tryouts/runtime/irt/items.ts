@@ -5,18 +5,24 @@ import { ConvexError } from "convex/values";
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
 
+/** Returns the single ownership mode that controls every IRT snapshot join. */
+export function getIrtOwnership(
+  attempt: Pick<TryoutAttempt, "tryoutSnapshotId">
+) {
+  return attempt.tryoutSnapshotId ? "signed" : "filesystem";
+}
+
+export type IrtOwnership = ReturnType<typeof getIrtOwnership>;
+
 /** Loads the IRT scale that should be used for one set or attempt snapshot. */
 export async function requireIrtScaleVersion(
   ctx: MutationCtx,
-  args: {
-    scaleVersionId?: Id<"irtScaleVersions">;
-    tryoutSetId: Id<"tryoutSets">;
-  }
+  attempt: TryoutAttempt
 ) {
-  if (args.scaleVersionId) {
-    const scale = await ctx.db.get(args.scaleVersionId);
+  if (attempt.scaleVersionId) {
+    const scale = await ctx.db.get(attempt.scaleVersionId);
 
-    if (scale?.tryoutSetId === args.tryoutSetId) {
+    if (scale && scaleBelongsToAttempt(scale, attempt)) {
       return scale;
     }
 
@@ -26,10 +32,17 @@ export async function requireIrtScaleVersion(
     });
   }
 
+  if (!attempt.tryoutSetId || attempt.tryoutSnapshotId) {
+    throw new ConvexError({
+      code: "TRYOUT_IRT_SCALE_REQUIRED",
+      message: "Attempt IRT scale is missing for this try-out.",
+    });
+  }
+
   const scale = await ctx.db
     .query("irtScaleVersions")
     .withIndex("by_tryoutSetId_and_publishedAt", (query) =>
-      query.eq("tryoutSetId", args.tryoutSetId)
+      query.eq("tryoutSetId", attempt.tryoutSetId)
     )
     .order("desc")
     .first();
@@ -49,10 +62,20 @@ export async function loadAttemptScale(
   ctx: MutationCtx,
   attempt: TryoutAttempt
 ) {
-  const scale = await requireIrtScaleVersion(ctx, {
-    scaleVersionId: attempt.scaleVersionId,
-    tryoutSetId: attempt.tryoutSetId,
-  });
+  const scale = await requireIrtScaleVersion(ctx, attempt);
+
+  if (
+    attempt.tryoutSnapshotId &&
+    attempt.setIdentity &&
+    ((scale.tryoutSnapshotId !== undefined &&
+      scale.tryoutSnapshotId !== attempt.tryoutSnapshotId) ||
+      scale.setIdentity !== attempt.setIdentity)
+  ) {
+    throw new ConvexError({
+      code: "TRYOUT_IRT_SCALE_REQUIRED",
+      message: "Attempt IRT scale belongs to another signed try-out.",
+    });
+  }
 
   if (scale.questionCount !== attempt.totalQuestions) {
     throw new ConvexError({
@@ -91,20 +114,23 @@ export async function loadSectionPlacements(
   ctx: MutationCtx,
   args: {
     attempt: TryoutAttempt;
+    sectionKey: string;
     totalQuestions: number;
-    tryoutSectionId: Id<"tryoutSections">;
+    tryoutSectionId?: Id<"tryoutSections">;
   }
 ) {
-  const placements = await ctx.db
-    .query("tryoutAttemptPlacements")
-    .withIndex(
-      "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
-      (query) =>
-        query
-          .eq("tryoutAttemptId", args.attempt._id)
-          .eq("tryoutSectionId", args.tryoutSectionId)
-    )
-    .take(args.totalQuestions + 1);
+  const placements = args.attempt.tryoutSnapshotId
+    ? await ctx.db
+        .query("tryoutAttemptPlacements")
+        .withIndex(
+          "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
+          (query) =>
+            query
+              .eq("tryoutAttemptId", args.attempt._id)
+              .eq("sectionKey", args.sectionKey)
+        )
+        .take(args.totalQuestions + 1)
+    : await loadFilesystemSectionPlacements(ctx, args);
 
   if (placements.length !== args.totalQuestions) {
     throw new ConvexError({
@@ -116,6 +142,55 @@ export async function loadSectionPlacements(
   return placements;
 }
 
+/** Loads filesystem placements only when their section identifier is present. */
+function loadFilesystemSectionPlacements(
+  ctx: MutationCtx,
+  args: {
+    attempt: TryoutAttempt;
+    totalQuestions: number;
+    tryoutSectionId?: Id<"tryoutSections">;
+  }
+) {
+  if (!args.tryoutSectionId) {
+    throw new ConvexError({
+      code: "TRYOUT_PLACEMENT_IDENTITY_REQUIRED",
+      message: "Filesystem try-out placement has no section identity.",
+    });
+  }
+
+  return ctx.db
+    .query("tryoutAttemptPlacements")
+    .withIndex(
+      "by_tryoutAttemptId_and_tryoutSectionId_and_questionOrder",
+      (query) =>
+        query
+          .eq("tryoutAttemptId", args.attempt._id)
+          .eq("tryoutSectionId", args.tryoutSectionId)
+    )
+    .take(args.totalQuestions + 1);
+}
+
+/** Verifies one frozen scale belongs to the same filesystem or signed attempt. */
+function scaleBelongsToAttempt(
+  scale: Doc<"irtScaleVersions">,
+  attempt: TryoutAttempt
+) {
+  if (!attempt.tryoutSnapshotId) {
+    return Boolean(
+      attempt.tryoutSetId && scale.tryoutSetId === attempt.tryoutSetId
+    );
+  }
+
+  return Boolean(
+    attempt.setIdentity &&
+      scale.setIdentity === attempt.setIdentity &&
+      (scale.tryoutSnapshotId === undefined ||
+        scale.tryoutSnapshotId === attempt.tryoutSnapshotId) &&
+      (scale.tryoutSetId === undefined ||
+        scale.tryoutSetId === attempt.tryoutSetId)
+  );
+}
+
 /** Loads every item in the attempt's complete scale snapshot. */
 export async function loadAttemptScaleItems(
   ctx: MutationCtx,
@@ -124,7 +199,7 @@ export async function loadAttemptScaleItems(
 ) {
   const items = await ctx.db
     .query("irtScaleItems")
-    .withIndex("by_scaleVersionId_and_questionSourceKey", (query) =>
+    .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
       query.eq("scaleVersionId", scale._id)
     )
     .take(totalQuestions + 1);
@@ -143,22 +218,27 @@ export async function loadAttemptScaleItems(
 export async function loadSectionScaleItems(
   ctx: MutationCtx,
   args: {
+    ownership: IrtOwnership;
     placements: TryoutPlacement[];
     scale: Doc<"irtScaleVersions">;
   }
 ) {
   return await Promise.all(
     args.placements.map(async (placement) => {
-      const item = await ctx.db
-        .query("irtScaleItems")
-        .withIndex("by_scaleVersionId_and_questionSourceKey", (query) =>
-          query
-            .eq("scaleVersionId", args.scale._id)
-            .eq("questionSourceKey", placement.questionSourceKey)
-        )
-        .unique();
+      const items =
+        args.ownership === "signed"
+          ? await ctx.db
+              .query("irtScaleItems")
+              .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
+                query
+                  .eq("scaleVersionId", args.scale._id)
+                  .eq("placementIdentity", placement.placementIdentity)
+              )
+              .take(2)
+          : await loadLegacyScaleItems(ctx, args.scale._id, placement);
+      const item = items.length === 1 ? items[0] : null;
 
-      if (item && matchesPlacementSnapshot(item, placement)) {
+      if (item && matchesPlacementSnapshot(item, placement, args.ownership)) {
         return item;
       }
 
@@ -173,11 +253,45 @@ export async function loadSectionScaleItems(
 /** Verifies that an IRT item belongs to the exact placed source snapshot. */
 export function matchesPlacementSnapshot(
   item: Doc<"irtScaleItems">,
-  placement: TryoutPlacement
+  placement: TryoutPlacement,
+  ownership: IrtOwnership
 ) {
+  if (ownership === "signed") {
+    return (
+      placement.placementIdentity !== undefined &&
+      placement.placementRowHash !== undefined &&
+      item.placementIdentity === placement.placementIdentity &&
+      item.placementRowHash === placement.placementRowHash
+    );
+  }
+
   return (
     item.contentHash === placement.contentHash &&
+    item.questionId !== undefined &&
     item.questionId === placement.questionId &&
     item.sourceRevision === placement.sourceRevision
   );
+}
+
+/** Loads one filesystem-owned scale item without weakening signed joins. */
+async function loadLegacyScaleItems(
+  ctx: MutationCtx,
+  scaleVersionId: Id<"irtScaleVersions">,
+  placement: TryoutPlacement
+) {
+  if (!placement.questionSourceKey) {
+    throw new ConvexError({
+      code: "TRYOUT_PLACEMENT_IDENTITY_REQUIRED",
+      message: "Try-out placement has no signed or filesystem identity.",
+    });
+  }
+
+  return await ctx.db
+    .query("irtScaleItems")
+    .withIndex("by_scaleVersionId_and_questionSourceKey", (query) =>
+      query
+        .eq("scaleVersionId", scaleVersionId)
+        .eq("questionSourceKey", placement.questionSourceKey)
+    )
+    .take(2);
 }

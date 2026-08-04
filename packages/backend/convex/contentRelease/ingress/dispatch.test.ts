@@ -31,16 +31,18 @@ import { Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@repo/backend/content/trust", async () => {
-  const { TEST_KEY_RESOLVER } = await import(
+  const { TEST_KEY_ID, TEST_KEY_RESOLVER } = await import(
     "@repo/backend/test/content-proof"
   );
-  return { contentKeyResolver: TEST_KEY_RESOLVER };
+  return {
+    activeContentSigningKeyId: TEST_KEY_ID,
+    contentKeyResolver: TEST_KEY_RESOLVER,
+  };
 });
 
 describe("content publication Node dispatch", () => {
   it("publishes one authenticated release through every lifecycle boundary", async () => {
     const t = convexTest(schema, convexModules);
-
     const candidateResponses = await publishIngressCandidate(t);
     expect(
       candidateResponses.every(({ ok }) => ok),
@@ -51,10 +53,7 @@ describe("content publication Node dispatch", () => {
     ).toEqual([
       "stageRelease",
       "current",
-      "stageItemBatch",
-      "stageRouteBatch",
-      "stageProjectionBatch",
-      "stageArtifactBatch",
+      "stageGroup",
       "status",
       "verify",
       "rollbackPage",
@@ -66,15 +65,15 @@ describe("content publication Node dispatch", () => {
       recoveryResponses.every(({ ok }) => ok),
       JSON.stringify(recoveryResponses)
     ).toBe(true);
-    expect(recoveryResponses[4]).toMatchObject({
+    expect(recoveryResponses[3]).toMatchObject({
       ok: true,
       value: { kind: "missing" },
     });
-    expect(recoveryResponses[9]).toMatchObject({
+    expect(recoveryResponses[8]).toMatchObject({
       ok: true,
       value: { kind: "completed" },
     });
-    expect(recoveryResponses[11]).toMatchObject({
+    expect(recoveryResponses[10]).toMatchObject({
       ok: true,
       value: { heads: [] },
     });
@@ -109,7 +108,6 @@ describe("content publication Node dispatch", () => {
       operation: "cleanup",
       releaseId: "release-cleanup-dispatch",
     });
-
     expect(first).toMatchObject({ ok: true, value: { complete: true } });
     expect(repeated).toEqual(first);
   });
@@ -172,7 +170,6 @@ describe("content publication Node dispatch", () => {
       release: ingressRelease,
       rendererManifest: TEST_PROOF_RENDERER,
     });
-
     expect(response).toMatchObject({
       failure: {
         activeReleaseId: "release-active",
@@ -199,7 +196,6 @@ describe("content publication Node dispatch", () => {
       release: ingressRelease,
       rendererManifest: TEST_PROOF_RENDERER,
     });
-
     expect(response).toMatchObject({
       failure: { code: "CONTENT_RELEASE_INTEGRITY", kind: "rejected" },
       ok: false,
@@ -237,7 +233,6 @@ describe("content publication Node dispatch", () => {
         operation: "status",
         releaseId: "release-active",
       });
-
       for (const result of [response, status]) {
         expect(result).toMatchObject({
           failure: { code: "CONTENT_RELEASE_INTEGRITY", kind: "rejected" },
@@ -264,7 +259,6 @@ describe("content publication Node dispatch", () => {
       limit: 10,
       operation: "headPage",
     });
-
     expect(response).toMatchObject({
       failure: { code: "CONTENT_RELEASE_INTEGRITY", kind: "rejected" },
       ok: false,
@@ -279,20 +273,17 @@ describe("content publication Node dispatch", () => {
         source: "{}",
       })
     );
-
     expect(result.status).toBe(400);
   });
 
   it("sanitizes a non-stale domain rejection", async () => {
     const t = convexTest(schema, convexModules);
-
     const response = await sendPublication(t, {
       batchIndex: 0,
       items: [ingressItem],
       operation: "stageItemBatch",
       releaseId: ingressReleaseId,
     });
-
     expect(response).toMatchObject({
       failure: { code: "CONTENT_RELEASE_MISSING", kind: "rejected" },
       ok: false,

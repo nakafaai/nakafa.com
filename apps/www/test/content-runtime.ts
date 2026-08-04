@@ -1,4 +1,4 @@
-import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
+import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import { Effect } from "effect";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import {

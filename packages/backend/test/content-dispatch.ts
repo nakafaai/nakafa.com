@@ -66,13 +66,7 @@ async function verifyPublication(
 export async function publishIngressCandidate(
   target: TestConvex<typeof schema>
 ) {
-  const requests = [
-    {
-      operation: "stageRelease",
-      release: ingressRelease,
-      rendererManifest: TEST_PROOF_RENDERER,
-    },
-    { operation: "current" },
+  const stagedRequests = [
     {
       batchIndex: 0,
       items: [ingressItem],
@@ -96,6 +90,19 @@ export async function publishIngressCandidate(
       batchIndex: 0,
       operation: "stageArtifactBatch",
       releaseId: ingressReleaseId,
+    },
+  ];
+  const requests = [
+    {
+      operation: "stageRelease",
+      release: ingressRelease,
+      rendererManifest: TEST_PROOF_RENDERER,
+    },
+    { operation: "current" },
+    {
+      operation: "stageGroup",
+      releaseId: ingressReleaseId,
+      requests: stagedRequests,
     },
     {
       manifestHash: ingressRelease.manifestHash,
@@ -139,12 +146,7 @@ export async function publishIngressCandidate(
 export async function publishIngressRecovery(
   target: TestConvex<typeof schema>
 ) {
-  const staging = [
-    {
-      operation: "stageRecovery",
-      release: ingressRecovery,
-      rendererManifest: TEST_PROOF_RENDERER,
-    },
+  const stagedRequests = [
     {
       batchIndex: 0,
       items: [ingressRecoveryItem],
@@ -156,6 +158,18 @@ export async function publishIngressRecovery(
       operation: "stageRouteBatch",
       releaseId: ingressRecoveryId,
       routes: [ingressRecoveryRoute],
+    },
+  ];
+  const staging = [
+    {
+      operation: "stageRecovery",
+      release: ingressRecovery,
+      rendererManifest: TEST_PROOF_RENDERER,
+    },
+    {
+      operation: "stageGroup",
+      releaseId: ingressRecoveryId,
+      requests: stagedRequests,
     },
   ];
   const responses = await Effect.runPromise(

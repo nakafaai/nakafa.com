@@ -4,6 +4,8 @@ import {
   MAX_PROJECTION_BATCH_BYTES,
   MAX_PUBLICATION_REQUEST_BYTES,
   MAX_ROUTE_BATCH_BYTES,
+  MAX_SNAPSHOT_BATCH_BYTES,
+  MAX_STAGE_GROUP_BYTES,
 } from "@nakafa/aksara-contracts/transport/limits";
 import { PublicationRequestSchema } from "@nakafa/aksara-contracts/transport/request";
 import {
@@ -11,6 +13,7 @@ import {
   publicationRequestLimit,
   validateRequestBytes,
 } from "@repo/backend/convex/contentRelease/ingress/decode";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import { testUpsertJson } from "@repo/backend/test/content-release";
 import { Effect, Either, Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -73,6 +76,45 @@ describe("content publication request decoding", () => {
     });
   });
 
+  it("rejects an oversized grouped child before dispatch", async () => {
+    const projectionRequest = Schema.decodeUnknownSync(
+      PublicationRequestSchema
+    )({
+      batchIndex: 0,
+      operation: "stageProjectionBatch",
+      projections: [JSON.parse(testProjectionJson())],
+      releaseId: "release-test",
+    });
+    expect(projectionRequest.operation).toBe("stageProjectionBatch");
+    if (projectionRequest.operation !== "stageProjectionBatch") {
+      return;
+    }
+    const [projection] = projectionRequest.projections;
+    const source = JSON.stringify({
+      operation: "stageGroup",
+      releaseId: projectionRequest.releaseId,
+      requests: [
+        {
+          ...projectionRequest,
+          projections: [
+            {
+              ...projection,
+              metadata: {
+                ...projection.metadata,
+                title: "x".repeat(MAX_PROJECTION_BATCH_BYTES),
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    await expect(decode(source)).resolves.toMatchObject({
+      _tag: "Left",
+      left: { code: "CONTENT_RELEASE_SIZE" },
+    });
+  });
+
   it("derives every operation ceiling from shared transport constants", () => {
     expect(publicationRequestLimit("stageArtifactBatch")).toBe(
       MAX_ARTIFACT_BATCH_BYTES
@@ -80,11 +122,15 @@ describe("content publication request decoding", () => {
     expect(publicationRequestLimit("stageItemBatch")).toBe(
       MAX_ITEM_BATCH_BYTES
     );
+    expect(publicationRequestLimit("stageGroup")).toBe(MAX_STAGE_GROUP_BYTES);
     expect(publicationRequestLimit("stageProjectionBatch")).toBe(
       MAX_PROJECTION_BATCH_BYTES
     );
     expect(publicationRequestLimit("stageRouteBatch")).toBe(
       MAX_ROUTE_BATCH_BYTES
+    );
+    expect(publicationRequestLimit("stageSnapshotBatch")).toBe(
+      MAX_SNAPSHOT_BATCH_BYTES
     );
     for (const operation of [
       "accept",
@@ -99,6 +145,7 @@ describe("content publication request decoding", () => {
       "routePage",
       "stageRecovery",
       "stageRelease",
+      "stageSnapshot",
       "status",
       "verify",
     ] as const) {

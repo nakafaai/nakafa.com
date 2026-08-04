@@ -1,11 +1,8 @@
 "use node";
 
-import { verifyContentProjections } from "@nakafa/aksara-contracts/projection/verify";
 import type { ReleaseVerificationEvidence } from "@nakafa/aksara-contracts/release";
-import { verifyContentReleaseItems } from "@nakafa/aksara-contracts/release/items";
-import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result-digest";
-import { verifyRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
-import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/routes";
+import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result/digest";
+import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/route/verify";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
@@ -17,13 +14,11 @@ import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import {
   decodeReleaseJson,
   decodeRendererJson,
-  decodeRollbackJson,
-  parseStoredJson,
 } from "@repo/backend/convex/contentRelease/parse";
-import { verifyArtifacts } from "@repo/backend/convex/contentRelease/proof/artifacts";
-import type { RouteCatalogPage } from "@repo/backend/convex/contentRelease/proof/catalog";
+import { verifyContentStreams } from "@repo/backend/convex/contentRelease/proof/content";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import type { ProofState } from "@repo/backend/convex/contentRelease/proof/read";
+import type { RouteCatalogPage } from "@repo/backend/convex/contentRelease/proof/routes";
 import { verifyReleaseSnapshots } from "@repo/backend/convex/contentRelease/proof/snapshot";
 import {
   readProofStream,
@@ -38,7 +33,7 @@ import type {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { makeFunctionReference } from "convex/server";
 import { type Infer, v } from "convex/values";
-import { Effect, Option, Stream } from "effect";
+import { Effect } from "effect";
 
 type Progress = Infer<typeof progressValidator>;
 type Status = Infer<typeof statusValidator>;
@@ -52,7 +47,7 @@ const catalogRoutesReference = makeFunctionReference<
   "query",
   { cursor: null | string; releaseId: string },
   RouteCatalogPage
->("contentRelease/proof/catalog:routes");
+>("contentRelease/proof/routes:routes");
 const proofStateReference = makeFunctionReference<
   "query",
   { manifestHash: string; releaseId: string },
@@ -131,55 +126,37 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
         `Content release ${releaseId} no longer matches its frozen renderer.`
       );
     }
-    const itemStream = readProofStream(ctx, "item", releaseId).pipe(
-      Stream.mapEffect(({ itemJson }) => parseStoredJson(itemJson))
-    );
-    const projectionStream = readProofStream(ctx, "item", releaseId).pipe(
-      Stream.filterMap(({ projectionJson }) =>
-        Option.fromNullable(projectionJson)
-      ),
-      Stream.mapEffect(parseStoredJson)
-    );
-    const rollbackStream = readProofStream(ctx, "item", releaseId).pipe(
-      Stream.mapEffect(({ rollbackJson }) => decodeRollbackJson(rollbackJson))
-    );
-    const items = yield* verifyContentReleaseItems({
-      items: itemStream,
-      manifest: release.manifest,
-    }).pipe(Effect.mapError(contractFailure));
-    const projections = yield* verifyContentProjections({
-      manifest: release.manifest,
-      projections: projectionStream,
-    }).pipe(Effect.mapError(contractFailure));
-    const rollback = yield* verifyRollbackSnapshot({
-      entries: rollbackStream,
-      manifest: release.manifest,
-    }).pipe(Effect.mapError(contractFailure));
-    const snapshots = yield* verifyReleaseSnapshots(
-      ctx,
-      release,
-      state.role,
-      state.stagedSnapshotBatches,
-      state.stagedSnapshotRows
-    );
-    const routes = yield* verifyContentRoutes({
-      manifest: release.manifest,
-      routes: readRouteStream(ctx, releaseId),
-    }).pipe(Effect.mapError(contractFailure));
     yield* verifyStoredItems(ctx, releaseId, state.checkedIndex);
-    yield* verifyRouteCatalog(ctx, releaseId);
-    const result = yield* verifyResultCatalog({
-      expectedCount: release.manifest.resultCount,
-      expectedDigest: release.manifest.resultDigest,
-      heads: readResultStream(ctx, releaseId),
-      releaseId: release.manifest.releaseId,
-    }).pipe(Effect.mapError(contractFailure));
-    const artifactCount = yield* verifyArtifacts(
-      readProofStream(ctx, "artifact", releaseId),
-      releaseId,
-      renderer,
-      release.manifest.rendererContractVersion
+    const evidence = yield* Effect.all(
+      {
+        routeCatalog: verifyRouteCatalog(ctx, releaseId),
+        content: verifyContentStreams(
+          release,
+          renderer,
+          readProofStream(ctx, releaseId)
+        ),
+        result: verifyResultCatalog({
+          expectedCount: release.manifest.resultCount,
+          expectedDigest: release.manifest.resultDigest,
+          heads: readResultStream(ctx, releaseId),
+          releaseId: release.manifest.releaseId,
+        }).pipe(Effect.mapError(contractFailure)),
+        routes: verifyContentRoutes({
+          manifest: release.manifest,
+          routes: readRouteStream(ctx, releaseId),
+        }).pipe(Effect.mapError(contractFailure)),
+        snapshots: verifyReleaseSnapshots(
+          ctx,
+          release,
+          state.role,
+          state.stagedSnapshotBatches,
+          state.stagedSnapshotRows
+        ),
+      },
+      { concurrency: "unbounded" }
     );
+    const { artifacts, items, projections, rollback } = evidence.content;
+    const { result, routes, snapshots } = evidence;
     const countersMatch =
       state.stagedItems === release.manifest.itemCount &&
       state.stagedItems === items.deleteCount + items.upsertCount &&
@@ -187,7 +164,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       release.manifest.upsertCount === items.upsertCount &&
       state.stagedDeletes === items.deleteCount &&
       state.stagedUpserts === items.upsertCount &&
-      state.stagedArtifacts === artifactCount &&
+      state.stagedArtifacts === artifacts &&
       state.stagedArtifacts === items.upsertCount &&
       state.stagedProjections === projections.count &&
       state.stagedProjections === items.upsertCount &&
@@ -223,7 +200,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       routeCount: routes.count,
       routeDigest: release.manifest.routeDigest,
       snapshots: snapshots.snapshots,
-      stagedArtifacts: artifactCount,
+      stagedArtifacts: artifacts,
       stagedRoutes: routes.count,
       stagedSnapshotRows: snapshots.stagedRows,
       upsertHeads: items.upsertCount,

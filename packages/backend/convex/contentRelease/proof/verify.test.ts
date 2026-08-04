@@ -1,7 +1,9 @@
 // @vitest-environment node
 
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
   ContentKeySchema,
+  Ed25519SignatureSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
@@ -9,15 +11,16 @@ import {
   ContentReleaseManifestSchema,
 } from "@nakafa/aksara-contracts/release";
 import { digestItems } from "@nakafa/aksara-contracts/release/digest";
+import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback/digest";
 import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
-} from "@nakafa/aksara-contracts/release/rollback";
-import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { recomputeProgram } from "@repo/backend/convex/contentRelease/proof/verify";
+import { encodeArtifactJson } from "@repo/backend/convex/contentRelease/wire";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -27,9 +30,14 @@ import {
   testProofRenderer,
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
-import { prepareContentProof } from "@repo/backend/test/content-verify";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
+import {
+  prepareContentProof,
+  recomputeContentProof,
+  stageUpsertFixture,
+} from "@repo/backend/test/content-verify";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect, Stream } from "effect";
+import { Effect, Schema, Stream } from "effect";
 import { describe, expect, it } from "vitest";
 
 const releaseId = ReleaseIdSchema.make("release-proof");
@@ -189,6 +197,18 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
   return signed.manifestHash;
 }
 
+/** Changes only the stored signature while preserving its claimed identity. */
+function tamperArtifactSignature(artifactJson: string) {
+  const artifact = Schema.decodeUnknownSync(SignedContentArtifactSchema)(
+    JSON.parse(artifactJson)
+  );
+  const firstCharacter = artifact.signature.startsWith("A") ? "B" : "A";
+  const signature = Ed25519SignatureSchema.make(
+    `${firstCharacter}${artifact.signature.slice(1)}`
+  );
+  return encodeArtifactJson({ ...artifact, signature });
+}
+
 describe("contentRelease/proof/verify", () => {
   it("recomputes an authenticated empty proof and commits it exactly once", async () => {
     const t = createProofTest();
@@ -288,5 +308,31 @@ describe("contentRelease/proof/verify", () => {
       });
     });
     await expect(runProof(counters)).rejects.toThrow("lost durable progress");
+  });
+
+  it("reauthenticates stored artifacts before committing proof", async () => {
+    const t = createProofTest();
+    await stageUpsertFixture(t);
+    const state = await t.run((ctx) => ctx.db.query("contentState").unique());
+    if (!state?.candidateManifestHash) {
+      throw new Error("Expected a candidate manifest for artifact proof.");
+    }
+    await t.mutation(async (ctx) => {
+      const artifact = await ctx.db.query("contentArtifacts").unique();
+      if (!artifact) {
+        throw new Error("Expected one staged artifact.");
+      }
+      await ctx.db.patch("contentArtifacts", artifact._id, {
+        artifactJson: tamperArtifactSignature(artifact.artifactJson),
+      });
+    });
+
+    await expect(
+      recomputeContentProof(t, state.candidateManifestHash, TEST_RELEASE_ID)
+    ).rejects.toThrow("Content release verification failed");
+    const release = await t.run((ctx) =>
+      ctx.db.query("contentReleases").unique()
+    );
+    expect(release?.proofJson).toBeUndefined();
   });
 });

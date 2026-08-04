@@ -1,4 +1,8 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import {
+  type PublicationScope,
+  PublicationScopeSchema,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { scheduleReadModels } from "@repo/backend/convex/contentRelease/models";
@@ -21,7 +25,14 @@ const ACTIVE = {
 } satisfies TestIdentity;
 
 /** Seeds one completed active release before any read model owns it. */
-async function seedActiveRelease(ctx: MutationCtx) {
+async function seedActiveRelease(
+  ctx: MutationCtx,
+  scope: PublicationScope = PublicationScopeSchema.make({
+    content: [],
+    families: ["article", "material", "question"],
+    snapshots: [],
+  })
+) {
   await insertZeroRelease(ctx, {
     ...ACTIVE,
     ownership: {
@@ -29,6 +40,7 @@ async function seedActiveRelease(ctx: MutationCtx) {
       result: ContentFamilySchema.literals,
     },
     role: "candidate",
+    scope,
     status: "completed",
   });
   await insertTestState(ctx, {
@@ -41,9 +53,149 @@ describe("contentRelease/models", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
+  it("claims unchanged models without scheduling empty scans", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      seedActiveRelease(
+        ctx,
+        PublicationScopeSchema.make({
+          content: [],
+          families: ["question"],
+          snapshots: ["tryout"],
+        })
+      )
+    );
+    await t.mutation((ctx) =>
+      runConvexProgram(scheduleReadModels(ctx, ACTIVE.releaseId))
+    );
+
+    const claimed = await t.run(async (ctx) => ({
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      release: await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (index) =>
+          index.eq("releaseId", ACTIVE.releaseId)
+        )
+        .unique(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+    expect(claimed.jobs).toHaveLength(0);
+    expect(claimed.release).toMatchObject({
+      articleIndex: -1,
+      materialIndex: -1,
+      searchIndex: -1,
+    });
+    expect(claimed.state).toMatchObject({
+      articleReleaseId: ACTIVE.releaseId,
+      materialOwnerReleaseId: ACTIVE.releaseId,
+      materialReleaseId: ACTIVE.releaseId,
+      searchReleaseId: ACTIVE.releaseId,
+    });
+    await expect(
+      t.query(internal.contentRelease.models.status, {
+        releaseId: ACTIVE.releaseId,
+      })
+    ).resolves.toEqual({
+      phase: "completed",
+      releaseId: ACTIVE.releaseId,
+    });
+  });
+
+  it("rebinds exact material owners when material rows are unchanged", async () => {
+    const t = convexTest(schema, convexModules);
+    const contentKey = "material:models-carried";
+    await t.mutation(async (ctx) => {
+      await seedActiveRelease(
+        ctx,
+        PublicationScopeSchema.make({
+          content: [],
+          families: ["question"],
+          snapshots: ["tryout"],
+        })
+      );
+      const release = await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (index) =>
+          index.eq("releaseId", ACTIVE.releaseId)
+        )
+        .unique();
+      if (!release) {
+        expect.fail("Expected the active release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        resultFamilies: ContentFamilySchema.literals.filter(
+          (family) => family !== "material"
+        ),
+      });
+      await ctx.db.insert("contentOwners", {
+        contentKey,
+        family: "material",
+        locale: "en",
+        managed: true,
+        releaseId: "release-models-prior",
+        sequence: 0,
+      });
+      await ctx.db.insert("materialOwners", {
+        contentKey,
+        locale: "en",
+        releaseId: "release-models-prior",
+        sequence: 0,
+      });
+      await runConvexProgram(scheduleReadModels(ctx, ACTIVE.releaseId));
+    });
+
+    await expect(
+      t.run((ctx) => ctx.db.query("materialOwners").unique())
+    ).resolves.toMatchObject({
+      contentKey,
+      releaseId: ACTIVE.releaseId,
+      sequence: ACTIVE.sequence,
+    });
+    await expect(
+      t.query(internal.contentRelease.models.status, {
+        releaseId: ACTIVE.releaseId,
+      })
+    ).resolves.toEqual({
+      phase: "completed",
+      releaseId: ACTIVE.releaseId,
+    });
+  });
+
+  it.each([
+    PublicationScopeSchema.make({
+      content: [],
+      families: ["article"],
+      snapshots: [],
+    }),
+    PublicationScopeSchema.make({
+      content: [],
+      families: ["material"],
+      snapshots: [],
+    }),
+  ])("claims models outside one single-family release", async (scope) => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => seedActiveRelease(ctx, scope));
+    await t.mutation((ctx) =>
+      runConvexProgram(scheduleReadModels(ctx, ACTIVE.releaseId))
+    );
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    await expect(
+      t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect())
+    ).resolves.toHaveLength(2);
+    await expect(
+      t.query(internal.contentRelease.models.status, {
+        releaseId: ACTIVE.releaseId,
+      })
+    ).resolves.toEqual({
+      phase: "completed",
+      releaseId: ACTIVE.releaseId,
+    });
+  });
+
   it("serializes every model under one generation-fenced lineage", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation(seedActiveRelease);
+    await t.mutation((ctx) => seedActiveRelease(ctx));
     await t.mutation((ctx) =>
       runConvexProgram(scheduleReadModels(ctx, ACTIVE.releaseId))
     );

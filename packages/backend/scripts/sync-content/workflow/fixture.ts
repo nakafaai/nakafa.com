@@ -29,6 +29,7 @@ interface WorkflowMockOptions {
     lastSyncCommit: string;
     lastSyncTimestamp: number;
   } | null;
+  tryoutsManaged?: boolean;
   verifyFails?: boolean;
 }
 
@@ -91,6 +92,13 @@ export async function loadWorkflow(
           message: "Unexpected Convex mutation call.",
         })
       ),
+    /** Returns the active content-source ownership used by workflow routing. */
+    callConvexQuery: () => {
+      events.push("readContentSyncOwnership");
+      return Effect.succeed({
+        tryoutsManaged: options.tryoutsManaged ?? false,
+      });
+    },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/cli/logging", () => ({
     /** Suppresses duration formatting noise in workflow tests. */

@@ -1,15 +1,19 @@
+import type { TryoutScoring } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
+import {
+  activateTryoutStartSource,
+  TRYOUT_START_CONTENT_HASH,
+  TRYOUT_START_COUNTRY,
+  TRYOUT_START_EXAM,
+  TRYOUT_START_NOW,
+  TRYOUT_START_SECTION,
+  TRYOUT_START_SET,
+  TRYOUT_START_TRACK,
+} from "@repo/backend/test/tryout-source";
 
-export const TRYOUT_START_NOW = Date.UTC(2026, 6, 8, 12, 0, 0);
-export const TRYOUT_START_COUNTRY = "indonesia";
-export const TRYOUT_START_EXAM = "tka";
-export const TRYOUT_START_TRACK = "matematika";
-export const TRYOUT_START_SET = "set-1";
-export const TRYOUT_START_SECTION = "matematika";
-
-const sourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}/${TRYOUT_START_SECTION}`;
+const sourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_SECTION}/${TRYOUT_START_SET}`;
 const setRoute = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
 
 /** Seeds the smallest coherent catalog used by attempt start tests. */
@@ -18,11 +22,18 @@ export async function seedTryoutStartSet(
   args: {
     includeEntitlement?: boolean;
     isReady?: boolean;
+    scoringStrategy?: TryoutScoring;
     trackIsReady?: boolean;
     userId: Id<"users">;
     visibility: "internal-entry" | "visible";
   }
 ) {
+  const scoringStrategy = args.scoringStrategy ?? "raw";
+  const signed = await activateTryoutStartSource(
+    ctx,
+    args.visibility,
+    scoringStrategy
+  );
   await ctx.db.insert("tryoutCountries", {
     countryKey: TRYOUT_START_COUNTRY,
     isActive: true,
@@ -40,7 +51,7 @@ export async function seedTryoutStartSet(
     locale: "id",
     order: 1,
     publicPath: `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}`,
-    scoringStrategy: "raw",
+    scoringStrategy,
     sourceRevision: "2026",
     syncedAt: TRYOUT_START_NOW,
     title: "TKA",
@@ -80,13 +91,13 @@ export async function seedTryoutStartSet(
   });
   const questionId = await ctx.db.insert("questions", {
     answerBody: "Answer",
-    contentHash: "question-hash",
+    contentHash: TRYOUT_START_CONTENT_HASH,
     date: 0,
     locale: "id",
     number: 1,
     questionBody: "Question",
     questionSetId,
-    sourceKey: `${sourcePath}:question-1`,
+    sourceKey: `${sourcePath}/question-1`,
     sourcePath: `${sourcePath}/question-1`,
     sourceRevision: "2026",
     syncedAt: TRYOUT_START_NOW,
@@ -97,7 +108,7 @@ export async function seedTryoutStartSet(
     isCorrect: true,
     label: "A",
     locale: "id",
-    optionKey: "a",
+    optionKey: "option-1",
     order: 1,
     questionId,
   });
@@ -114,7 +125,7 @@ export async function seedTryoutStartSet(
     publicPath: setRoute,
     readyQuestionCount: 1,
     readyVisibleSectionCount: args.visibility === "visible" ? 1 : 0,
-    scoringStrategy: "raw",
+    scoringStrategy,
     sectionCount: 1,
     setKey: TRYOUT_START_SET,
     sourceRevision: "2026",
@@ -160,5 +171,5 @@ export async function seedTryoutStartSet(
     });
   }
 
-  return { tryoutSectionId, tryoutSetId };
+  return { ...signed, tryoutSectionId, tryoutSetId };
 }

@@ -96,9 +96,12 @@ pnpm --filter @repo/design-system typecheck
 ```
 
 Tests use Vitest config files owned by each workspace. Keep tests colocated as
-`name.test.ts` or `name.test.tsx`, import the Vitest APIs they use, and preserve
-the workspace's configured per-file coverage gate. Do not create `__tests__`
-folders or duplicate test-only source modules.
+`name.test.ts`, import the Vitest APIs they use, and preserve the workspace's
+configured per-file coverage gate. Final tests only target real colocated `.ts`
+Modules. Do not commit tests for `.tsx` Modules, rename React tests to hide them
+as `.test.ts`, create `__tests__` folders, or add duplicate test-only source
+Modules. Verify rendered React behavior through production Browser or E2E
+acceptance.
 
 ## Content ownership
 

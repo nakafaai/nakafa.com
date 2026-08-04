@@ -11,8 +11,8 @@ import {
 import {
   ContentRouteBindSchema,
   ContentRouteDeleteSchema,
-} from "@nakafa/aksara-contracts/release/route";
-import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot";
+} from "@nakafa/aksara-contracts/release/route/spec";
+import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -47,11 +47,17 @@ export const ARTIFACT_PAGE_COUNT = 4;
 /** Maximum artifact bytes read before maintenance yields a continuation. */
 export const ARTIFACT_PAGE_BYTES = 2 * 1024 * 1024;
 
-/** Maximum body-bearing records returned by one proof query. */
-export const PROOF_PAGE_LIMIT = 8;
+/** Maximum records considered before byte and transaction proof guards yield. */
+export const PROOF_PAGE_LIMIT = 128;
 
 /** Maximum complete proof-page response below Convex action limits. */
 export const PROOF_PAGE_BYTES = 4 * 1024 * 1024;
+
+/** Maximum route identities validated before yielding one proof query. */
+export const ROUTE_CATALOG_PAGE_LIMIT = 8;
+
+/** Query capacity reserved before a proof transaction yields its continuation. */
+export const PROOF_QUERY_HEADROOM = 16;
 
 /** Minimum retention after an artifact stops being active or recoverable. */
 export const ROLLBACK_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;

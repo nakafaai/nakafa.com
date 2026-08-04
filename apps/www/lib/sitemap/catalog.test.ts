@@ -22,6 +22,9 @@ const materialMocks = vi.hoisted(() => ({
 const programMocks = vi.hoisted(() => ({
   readPublishedProgramBuckets: vi.fn(),
 }));
+const tryoutMocks = vi.hoisted(() => ({
+  readPublishedTryoutSitemapCount: vi.fn(),
+}));
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: articleMocks.readPublishedArticleBuckets,
@@ -32,6 +35,7 @@ vi.mock("@/lib/content/material/sitemap", () => ({
 vi.mock("@/lib/content/program/sitemap", () => ({
   readPublishedProgramBuckets: programMocks.readPublishedProgramBuckets,
 }));
+vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
 
 vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: activeMocks.readActiveContentIdentity,
@@ -66,6 +70,10 @@ beforeEach(() => {
   programMocks.readPublishedProgramBuckets.mockReset();
   programMocks.readPublishedProgramBuckets.mockReturnValue(
     Effect.succeed({ buckets: [], managed: false, routeCount: 0 })
+  );
+  tryoutMocks.readPublishedTryoutSitemapCount.mockReset();
+  tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
+    Effect.succeed({ managed: false, pageCount: 0, routeCount: 0 })
   );
   runtimeMocks.getRuntimeContentRouteCounts.mockReset();
   runtimeMocks.getRuntimePublicSitemapCount.mockReset();
@@ -193,6 +201,32 @@ describe("sitemap page catalog", () => {
         kind: "content",
         locale: "en",
         section: "material",
+      })
+    );
+  });
+
+  it("replaces legacy try-out rows with signed catalog pages", async () => {
+    tryoutMocks.readPublishedTryoutSitemapCount.mockImplementation((locale) =>
+      Effect.succeed({
+        managed: locale === "en",
+        pageCount: locale === "en" ? 1 : 0,
+        routeCount: locale === "en" ? 48 : 0,
+      })
+    );
+
+    const descriptors = await Effect.runPromise(readSitemapPageDescriptors());
+
+    expect(descriptors).toContainEqual({
+      id: "tryout_en_0",
+      kind: "tryout",
+      locale: "en",
+      page: 0,
+    });
+    expect(descriptors).not.toContainEqual(
+      expect.objectContaining({
+        kind: "content",
+        locale: "en",
+        section: "tryout",
       })
     );
   });

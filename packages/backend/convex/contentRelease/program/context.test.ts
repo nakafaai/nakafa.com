@@ -13,7 +13,7 @@ import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/project
 import {
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
 import { readProgramContext } from "@repo/backend/convex/contentRelease/program/context";
 import { stageProgramRow } from "@repo/backend/convex/contentRelease/snapshot/program";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";

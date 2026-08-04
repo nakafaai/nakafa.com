@@ -18,13 +18,16 @@ import {
 } from "@repo/backend/scripts/sync-content/cli/logging";
 import { parseLocale } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type { ValidationResult } from "@repo/backend/scripts/sync-content/contract/types";
+import type { ContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
 import { CONTENTS_DIR } from "@repo/backend/scripts/sync-content/runtime/paths";
 import { readMdxSlugManifest } from "@repo/contents/_lib/mdx-slugs/source";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
-import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { defaultLocale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
+
+type TryoutSources =
+  typeof import("@repo/contents/_types/tryout/source").TRYOUT_SOURCES;
 
 const QUESTION_FILE_PREFIX = "question.";
 const ANSWER_FILE_PREFIX = "answer.";
@@ -102,13 +105,17 @@ const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
 
 const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
   function* () {
-    const [questionFiles, answerFiles] = yield* Effect.all([
-      globFiles("question-bank/tryout/**/question.*.mdx"),
-      globFiles("question-bank/tryout/**/answer.*.mdx"),
-    ]);
+    const [{ TRYOUT_SOURCES: tryoutSources }, questionFiles, answerFiles] =
+      yield* Effect.all([
+        Effect.promise(() => import("@repo/contents/_types/tryout/source")),
+        globFiles("question-bank/tryout/**/question.*.mdx"),
+        globFiles("question-bank/tryout/**/answer.*.mdx"),
+      ]);
     const result = createValidationResult();
-    const expectedQuestionFiles =
-      listExpectedTryoutQuestionFiles(questionFiles);
+    const expectedQuestionFiles = listExpectedTryoutQuestionFiles(
+      questionFiles,
+      tryoutSources
+    );
     const expectedQuestionFileSet = new Set(expectedQuestionFiles);
     const expectedAnswerFiles = new Set<string>();
 
@@ -174,7 +181,10 @@ const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
   }
 );
 
-function listExpectedTryoutQuestionFiles(questionFiles: readonly string[]) {
+function listExpectedTryoutQuestionFiles(
+  questionFiles: readonly string[],
+  tryoutSources: TryoutSources
+) {
   const questionDirectories = new Set<string>();
 
   for (const file of questionFiles) {
@@ -185,7 +195,7 @@ function listExpectedTryoutQuestionFiles(questionFiles: readonly string[]) {
     questionDirectories.add(path.dirname(file));
   }
 
-  for (const exam of TRYOUT_SOURCES) {
+  for (const exam of tryoutSources) {
     for (const track of exam.tracks) {
       for (const set of track.sets) {
         for (const section of set.sections) {
@@ -241,7 +251,9 @@ const readLocalizedMdxLocale = Effect.fn("sync.readLocalizedMdxLocale")(
 );
 
 /** Validates content files without writing to Convex. */
-export const validate = Effect.fn("sync.validate")(function* () {
+export const validate = Effect.fn("sync.validate")(function* (
+  ownership: ContentSyncOwnership
+) {
   log("=== VALIDATE CONTENT ===\n");
   log("Validating all content files without syncing...\n");
 
@@ -249,7 +261,13 @@ export const validate = Effect.fn("sync.validate")(function* () {
   yield* readMdxSlugManifest();
   const articleResult = yield* validateArticles();
   const subjectResult = yield* validateSubjects();
-  const tryoutResult = yield* validateTryoutQuestions();
+  let tryoutResult = createValidationResult();
+
+  if (ownership.tryoutsManaged) {
+    log("Try-out: signed Aksara ownership active");
+  } else {
+    tryoutResult = yield* validateTryoutQuestions();
+  }
 
   const totalValid =
     articleResult.valid + subjectResult.valid + tryoutResult.valid;

@@ -183,6 +183,7 @@ describe("contentRelease/snapshot/cleanup", () => {
       for (const index of [1]) {
         await ctx.db.insert("tryoutPlacements", {
           answerArtifactHash: `sha256:${"a".repeat(64)}`,
+          contentHash: "3".repeat(64),
           countryKey: "indonesia",
           examKey: "snbt",
           identity: `placement-${index}`,
@@ -198,6 +199,15 @@ describe("contentRelease/snapshot/cleanup", () => {
           trackKey: "2027",
         });
       }
+      await ctx.db.insert("tryoutBundles", {
+        createdAt: 0,
+        index: 0,
+        manifestHash: `sha256:${"c".repeat(64)}`,
+        releaseId: "release-cleanup",
+        releaseJson: "{}",
+        rendererJson: "{}",
+        snapshotId,
+      });
     });
 
     await expect(
@@ -208,13 +218,27 @@ describe("contentRelease/snapshot/cleanup", () => {
     ).resolves.toMatchObject({ cleanupPart: "placement" });
     await expect(
       t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
+    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
     await expect(
       t.run(async (ctx) => ({
+        bundle: await ctx.db.query("tryoutBundles").take(1),
         catalog: await ctx.db.query("tryoutCatalog").take(1),
         placement: await ctx.db.query("tryoutPlacements").take(1),
       }))
-    ).resolves.toEqual({ catalog: [], placement: [] });
+    ).resolves.toEqual({
+      bundle: [expect.objectContaining({ snapshotId })],
+      catalog: [],
+      placement: [],
+    });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
+    await expect(
+      t.run(async (ctx) => ({
+        bundle: await ctx.db.query("tryoutBundles").take(1),
+        snapshot: await ctx.db.query("contentSnapshots").take(1),
+      }))
+    ).resolves.toEqual({ bundle: [], snapshot: [] });
   });
 
   it("cleans signed Quran rows and search projections in separate phases", async () => {

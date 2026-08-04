@@ -1,5 +1,7 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
-import { ContentRuntimeFailureCodeSchema } from "@nakafa/aksara-contracts/runtime/spec";
+import {
+  ContentRuntimeFailureCodeSchema,
+  ContentRuntimeRequestSchema,
+} from "@nakafa/aksara-contracts/runtime/spec";
 import { Schema } from "effect";
 
 /** The private Convex runtime exchange failed before verification. */
@@ -10,7 +12,6 @@ export class ContentTransportError extends Schema.TaggedError<ContentTransportEr
       "body",
       "content-length",
       "content-type",
-      "delivery",
       "fetch",
       "json",
       "request",
@@ -23,18 +24,15 @@ export class ContentTransportError extends Schema.TaggedError<ContentTransportEr
   }
 ) {}
 
-/** A requested public route has no active signed artifact. */
-export class PublicContentMissingError extends Schema.TaggedError<PublicContentMissingError>()(
-  "PublicContentMissingError",
-  {
-    locale: ContentLocaleSchema,
-    publicPath: Schema.String,
-  }
+/** One exact runtime request has no active or retained signed artifact. */
+export class ContentRuntimeMissingError extends Schema.TaggedError<ContentRuntimeMissingError>()(
+  "ContentRuntimeMissingError",
+  { request: ContentRuntimeRequestSchema }
 ) {}
 
 /** Convex rejected a signed runtime request with a sanitized code. */
-export class PublicContentFailureError extends Schema.TaggedError<PublicContentFailureError>()(
-  "PublicContentFailureError",
+export class ContentRuntimeFailureError extends Schema.TaggedError<ContentRuntimeFailureError>()(
+  "ContentRuntimeFailureError",
   {
     code: ContentRuntimeFailureCodeSchema,
     status: Schema.Number,
@@ -42,9 +40,7 @@ export class PublicContentFailureError extends Schema.TaggedError<PublicContentF
 ) {}
 
 /** A signed envelope failed cryptographic or identity verification. */
-export class PublicContentVerificationError extends Schema.TaggedError<PublicContentVerificationError>()(
-  "PublicContentVerificationError",
-  {
-    cause: Schema.Unknown,
-  }
+export class ContentRuntimeVerificationError extends Schema.TaggedError<ContentRuntimeVerificationError>()(
+  "ContentRuntimeVerificationError",
+  { cause: Schema.Unknown }
 ) {}

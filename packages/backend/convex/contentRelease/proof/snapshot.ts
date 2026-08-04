@@ -6,8 +6,8 @@ import {
   ContentSnapshotKindSchema,
   hasSameContentSnapshots,
   invertContentSnapshots,
-} from "@nakafa/aksara-contracts/release/snapshot";
-import { verifyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot-verify";
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { verifyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/verify";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
@@ -152,7 +152,9 @@ export const verifyReleaseSnapshots = Effect.fn(
   stagedSnapshotRows: number
 ) {
   const previous = yield* loadPrevious(ctx, release);
-  if (role === "recovery") {
+  const restoresPrevious =
+    role === "recovery" || release.manifest.origin.kind === "rollback";
+  if (restoresPrevious) {
     if (
       previous === null ||
       stagedSnapshotBatches !== 0 ||
@@ -164,7 +166,7 @@ export const verifyReleaseSnapshots = Effect.fn(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Recovery ${release.manifest.releaseId} does not exactly invert structured snapshots.`
+        `Release ${release.manifest.releaseId} does not exactly invert structured snapshots.`
       );
     }
     return { snapshots: release.manifest.snapshots, stagedRows: 0 };

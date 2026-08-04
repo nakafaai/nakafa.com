@@ -1,5 +1,5 @@
-import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
-import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
+import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   decodeArtifactJson,
   decodeItemJson,

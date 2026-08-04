@@ -1,8 +1,8 @@
+import { StageItemBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
 import {
   MAX_ITEM_BATCH_BYTES,
   MAX_ITEM_BATCH_COUNT,
 } from "@nakafa/aksara-contracts/transport/limits";
-import { StageItemBatchInputSchema } from "@nakafa/aksara-contracts/transport/request";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
@@ -125,16 +125,15 @@ const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(function* (
   }
   const priorSequence = stagedBaseSequence(release.role, state);
   for (const { item, itemJson } of entries) {
-    yield* stageContentItem(
-      ctx,
+    yield* stageContentItem(ctx, {
+      batchHash,
+      batchIndex,
       item,
       itemJson,
-      batchIndex,
-      batchHash,
-      release.role,
-      release.sequence,
-      priorSequence
-    );
+      priorSequence,
+      role: release.role,
+      sequence: release.sequence,
+    });
   }
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", release._id, {

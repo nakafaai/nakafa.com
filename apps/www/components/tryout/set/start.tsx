@@ -16,6 +16,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
+import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutStartDialog } from "@/components/tryout/set/start-dialog";
 import {
@@ -39,6 +40,7 @@ export interface StartTryoutRequest {
   examKey: string;
   locale: Locale;
   setKey: string;
+  successNavigation: "destination" | "stay";
   trackKey: string;
 }
 
@@ -110,7 +112,7 @@ export function StartTryoutButton({
     }
 
     if (activeAttempt && request.entrySectionKey) {
-      runEntrySection(request.entrySectionKey);
+      runEntrySection(attempt?.resumeSectionKey ?? request.entrySectionKey);
       return;
     }
 
@@ -140,6 +142,9 @@ export function StartTryoutButton({
     const program = startAttemptProgram({
       args: {
         countryKey: request.countryKey,
+        ...(directEntry
+          ? {}
+          : { destinationSectionKey: request.destinationSectionKey }),
         ...(request.entrySectionKey
           ? { entrySectionKey: request.entrySectionKey }
           : {}),
@@ -150,13 +155,22 @@ export function StartTryoutButton({
       },
       failureMessage: t("start-error"),
       mutation: startAttempt,
-      onSuccess: () =>
+      onSuccess: (result) =>
         Effect.sync(() => {
           dialog.close();
           toast.success(
             directEntry ? t("start-entry-success") : t("start-success"),
             { position: "bottom-center" }
           );
+          const href = getTryoutAttemptHref(
+            result.navigation.publicPath,
+            result.attemptId
+          );
+          if (request.successNavigation === "stay") {
+            router.replace(href);
+            return;
+          }
+          router.push(href);
         }),
       onUpgrade: onDenied,
     });
@@ -218,6 +232,7 @@ export function StartTryoutButton({
         href={request.destinationHref}
         onIntent={() =>
           prewarmData({
+            ...(attempt ? { attemptId: attempt.attemptId } : {}),
             countryKey: request.countryKey,
             examKey: request.examKey,
             kind: "section",

@@ -14,25 +14,13 @@ import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
+import type {
+  TryoutCountrySelectorOption,
+  TryoutExamSelectorOption,
+} from "@/components/tryout/catalog/options";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
 import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation.client";
-
-export type TryoutCountrySelectorOption = Readonly<{
-  countryCode: string;
-  countryKey: string;
-  href: string;
-  publicPath: string;
-  title: string;
-  value: string;
-}>;
-
-export type TryoutExamSelectorOption = Readonly<{
-  examKey: string;
-  href: string;
-  title: string;
-  value: string;
-}>;
 
 /** Renders the try-out country selector used by country-level pages. */
 export function TryoutCountrySelector({

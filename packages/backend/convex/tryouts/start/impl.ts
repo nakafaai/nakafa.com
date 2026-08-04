@@ -6,15 +6,25 @@ import {
   expireAttemptAtEffectiveTime,
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
-import { requireIrtScaleVersion } from "@repo/backend/convex/tryouts/runtime/irt/items";
+import {
+  type AttemptOwnerIdentity,
+  readLatestAttempt,
+  readOwnedAttempts,
+} from "@repo/backend/convex/tryouts/runtime/lookup";
 import {
   requireInternalEntrySection,
   startSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { createTryoutAttempt } from "@repo/backend/convex/tryouts/start/attempt";
+import { selectAttemptScale } from "@repo/backend/convex/tryouts/start/scale";
+import {
+  loadTryoutStartSource,
+  type TryoutStartSource,
+} from "@repo/backend/convex/tryouts/start/source";
 import type {
   AttemptAccessFields,
   StartAttemptArgs,
+  StartAttemptResult,
 } from "@repo/backend/convex/tryouts/start/spec";
 import {
   TryoutStartError,
@@ -27,106 +37,96 @@ const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS_PER_USER_SET = 100;
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
-type TryoutSet = Doc<"tryoutSets">;
 
 interface StartTryoutAttemptInput {
   readonly args: StartAttemptArgs;
   readonly now: number;
-  readonly set: TryoutSet;
   readonly userId: Id<"users">;
 }
 
 /** Starts or resumes one try-out attempt in the caller's atomic mutation. */
 export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
   function* (ctx: MutationCtx, input: StartTryoutAttemptInput) {
-    const loaded = yield* Effect.all(
-      {
-        latestAttempt: loadLatestAttempt(ctx, input),
-        sections: loadSections(ctx, input.set),
-      },
-      { concurrency: "unbounded" }
-    );
+    const latestAttempt = yield* readLatestAttempt(
+      ctx,
+      input.args,
+      input.userId
+    ).pipe(Effect.mapError(toTryoutStartError));
+    const resumed = yield* resumeActiveAttempt(ctx, input, latestAttempt);
 
-    if (input.args.entrySectionKey) {
+    if (resumed) {
+      return yield* resolveStartResult(resumed, input.args);
+    }
+
+    const source = yield* loadTryoutStartSource(ctx, input.args);
+    const owner = resolveAttemptOwner(input, source);
+    const entrySectionKey = input.args.entrySectionKey;
+    if (entrySectionKey) {
       yield* tryStartPromise(() =>
         Promise.resolve(
           requireInternalEntrySection(
-            loaded.sections,
-            input.args.entrySectionKey ?? ""
+            source.kind === "filesystem"
+              ? source.sections
+              : source.snapshot.sections.map(({ section }) => section.row),
+            entrySectionKey
           )
         )
       );
     }
 
-    const resumed = yield* resumeActiveAttempt(
-      ctx,
-      input,
-      loaded.latestAttempt
-    );
-
-    if (resumed) {
-      return { attemptId: resumed._id };
-    }
-
     const [attemptNumber, scaleVersion, access] = yield* Effect.all(
       [
-        getNextAttemptNumber(ctx, input),
-        loadAttemptScaleVersion(ctx, input.set),
+        getNextAttemptNumber(ctx, owner),
+        selectAttemptScale(ctx, source, input.now),
         requireAttemptAccess(ctx, input),
       ],
       { concurrency: "unbounded" }
     );
-    return yield* createTryoutAttempt(ctx, {
+    const attempt = yield* createTryoutAttempt(ctx, {
       access,
       args: input.args,
       attemptNumber,
       now: input.now,
       scaleVersion,
-      sections: loaded.sections,
-      set: input.set,
+      source,
       userId: input.userId,
     });
+    return yield* resolveStartResult(attempt, input.args);
   }
 );
 
-/** Loads and validates ordered section rows for one immutable snapshot. */
-const loadSections = Effect.fn("tryouts.start.loadSections")(function* (
-  ctx: MutationCtx,
-  set: TryoutSet
-) {
-  const sections = yield* tryStartPromise(() =>
-    ctx.db
-      .query("tryoutSections")
-      .withIndex("by_tryoutSetId_and_order", (query) =>
-        query.eq("tryoutSetId", set._id)
-      )
-      .take(set.sectionCount + 1)
-  );
+/** Binds post-start navigation to the exact immutable attempt snapshot. */
+const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
+  function* (attempt: TryoutAttempt, args: StartAttemptArgs) {
+    if (!args.destinationSectionKey) {
+      if (!attempt.setPublicPath) {
+        return yield* new TryoutStartError({
+          code: tryoutStartErrorCode.sectionSnapshotMismatch,
+          message: "Try-out set route is missing from the attempt snapshot.",
+        });
+      }
+      return {
+        attemptId: attempt._id,
+        navigation: { publicPath: attempt.setPublicPath },
+      } satisfies StartAttemptResult;
+    }
 
-  if (sections.length !== set.sectionCount) {
-    return yield* new TryoutStartError({
-      code: tryoutStartErrorCode.sectionCountMismatch,
-      message: "Try-out set section count is not synced.",
-    });
+    const destination = attempt.sectionSnapshots.find(
+      (section) => section.sectionKey === args.destinationSectionKey
+    );
+    if (!destination?.publicPath) {
+      return yield* new TryoutStartError({
+        code: tryoutStartErrorCode.sectionSnapshotMismatch,
+        message: "Try-out destination is missing from the attempt snapshot.",
+      });
+    }
+
+    return {
+      attemptId: attempt._id,
+      navigation: { publicPath: destination.publicPath },
+    } satisfies StartAttemptResult;
   }
-
-  const totalQuestions = sections.reduce(
-    (total, section) => total + section.questionCount,
-    0
-  );
-  const hasMixedRevision = sections.some(
-    (section) => section.sourceRevision !== set.sourceRevision
-  );
-
-  if (totalQuestions !== set.totalQuestionCount || hasMixedRevision) {
-    return yield* new TryoutStartError({
-      code: tryoutStartErrorCode.sectionSnapshotMismatch,
-      message: "Try-out set sections are not fully synced.",
-    });
-  }
-
-  return sections;
-});
+);
 
 /** Resumes a live attempt or expires its stale predecessor before a new start. */
 const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
@@ -140,20 +140,34 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
     }
 
     if (input.now >= getAttemptExpiresAt(attempt)) {
-      yield* tryStartPromise(() =>
-        expireAttemptAtEffectiveTime(ctx, { attempt, now: input.now })
-      );
+      yield* expireAttemptAtEffectiveTime(ctx, {
+        attempt,
+        now: input.now,
+      }).pipe(Effect.mapError(toTryoutStartError));
       return null;
     }
 
-    if (input.args.entrySectionKey) {
-      yield* tryStartPromise(() =>
-        startSectionAttempt(ctx, {
-          attempt,
-          now: input.now,
-          sectionKey: input.args.entrySectionKey ?? "",
-        })
+    const entrySectionKey = input.args.entrySectionKey;
+    if (entrySectionKey) {
+      const currentEntrySection = attempt.sectionSnapshots.find(
+        (section) => section.sectionKey === entrySectionKey
       );
+      const entrySection =
+        currentEntrySection ??
+        attempt.sectionSnapshots.find(
+          (section) =>
+            section.publicPath === undefined &&
+            !attempt.completedSectionKeys.includes(section.sectionKey)
+        );
+      if (!entrySection || entrySection.publicPath) {
+        return attempt;
+      }
+
+      yield* startSectionAttempt(ctx, {
+        attempt,
+        now: input.now,
+        sectionKey: entrySection.sectionKey,
+      }).pipe(Effect.mapError(toTryoutStartError));
     }
 
     return attempt;
@@ -210,35 +224,40 @@ const requireAttemptAccess = Effect.fn("tryouts.start.requireAttemptAccess")(
   }
 );
 
-/** Returns the latest bounded attempt for one user and set. */
-const loadLatestAttempt = Effect.fn("tryouts.start.loadLatestAttempt")(
-  function* (ctx: MutationCtx, input: StartTryoutAttemptInput) {
-    const attempts = yield* tryStartPromise(() =>
-      ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutSetId_and_startedAt", (query) =>
-          query.eq("userId", input.userId).eq("tryoutSetId", input.set._id)
-        )
-        .order("desc")
-        .take(1)
-    );
-
-    return attempts.at(0) ?? null;
+/** Resolves both attempt identities retained during the additive migration. */
+function resolveAttemptOwner(
+  input: StartTryoutAttemptInput,
+  source: TryoutStartSource
+) {
+  if (source.kind === "filesystem") {
+    return {
+      tryoutSetId: source.set._id,
+      userId: input.userId,
+    } satisfies AttemptOwnerIdentity;
   }
-);
+
+  return {
+    setIdentity: source.snapshot.setIdentity,
+    tryoutSetId: source.retainedTryoutSetId,
+    userId: input.userId,
+  } satisfies AttemptOwnerIdentity;
+}
 
 /** Returns the next bounded attempt number for one user and set. */
 const getNextAttemptNumber = Effect.fn("tryouts.start.getNextAttemptNumber")(
-  function* (ctx: MutationCtx, input: StartTryoutAttemptInput) {
-    const attempts = yield* tryStartPromise(() =>
-      ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutSetId_and_startedAt", (query) =>
-          query.eq("userId", input.userId).eq("tryoutSetId", input.set._id)
-        )
-        .take(MAX_ATTEMPTS_PER_USER_SET)
+  function* (ctx: MutationCtx, owner: AttemptOwnerIdentity) {
+    const attempts = yield* readOwnedAttempts(
+      ctx,
+      owner,
+      MAX_ATTEMPTS_PER_USER_SET
     );
+    return yield* readNextAttemptNumber(attempts);
+  }
+);
 
+/** Derives the next bounded attempt number from one owner-specific row set. */
+const readNextAttemptNumber = Effect.fn("tryouts.start.readAttemptNumber")(
+  function* (attempts: readonly TryoutAttempt[]) {
     if (attempts.length >= MAX_ATTEMPTS_PER_USER_SET) {
       return yield* new TryoutStartError({
         code: tryoutStartErrorCode.attemptLimitReached,
@@ -249,19 +268,6 @@ const getNextAttemptNumber = Effect.fn("tryouts.start.getNextAttemptNumber")(
     return attempts.length + 1;
   }
 );
-
-/** Loads the immutable score scale required by an IRT attempt. */
-const loadAttemptScaleVersion = Effect.fn(
-  "tryouts.start.loadAttemptScaleVersion"
-)(function* (ctx: MutationCtx, set: TryoutSet) {
-  if (set.scoringStrategy !== "irt") {
-    return null;
-  }
-
-  return yield* tryStartPromise(() =>
-    requireIrtScaleVersion(ctx, { tryoutSetId: set._id })
-  );
-});
 
 /** Lifts one Convex promise into the typed start failure channel. */
 function tryStartPromise<A>(operation: () => Promise<A>) {

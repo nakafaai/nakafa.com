@@ -10,12 +10,14 @@ import {
   getRuntimeContentRouteCounts,
   getRuntimePublicSitemapCount,
 } from "@/lib/content/runtime/routes";
+import { readPublishedTryoutSitemapCount } from "@/lib/content/tryout/sitemap";
 import {
   formatArticlePage,
   formatContentPage,
   formatMaterialPage,
   formatProgramPage,
   formatPublicPage,
+  formatTryoutPage,
   SITEMAP_BASE_ID,
   type SitemapPage,
 } from "@/lib/sitemap/identity";
@@ -35,6 +37,7 @@ export const readSitemapPageDescriptors = Effect.fn(
       materialBuckets,
       programBuckets,
       publicCount,
+      tryoutCount,
     ] = yield* Effect.all(
       [
         readPublishedArticleBuckets(locale),
@@ -42,6 +45,7 @@ export const readSitemapPageDescriptors = Effect.fn(
         readPublishedMaterialBuckets(locale, activeReleaseId),
         readPublishedProgramBuckets(locale),
         getRuntimePublicSitemapCount({ locale }),
+        readPublishedTryoutSitemapCount(locale),
       ],
       { concurrency: "unbounded" }
     );
@@ -62,6 +66,9 @@ export const readSitemapPageDescriptors = Effect.fn(
         continue;
       }
       if (count.section === "material" && materialBuckets.managed) {
+        continue;
+      }
+      if (count.section === "tryout" && tryoutCount.managed) {
         continue;
       }
       const pageCount = Math.ceil(
@@ -100,6 +107,14 @@ export const readSitemapPageDescriptors = Effect.fn(
         id: formatProgramPage(bucket, locale),
         kind: "program",
         locale,
+      });
+    }
+    for (let page = 0; page < tryoutCount.pageCount; page += 1) {
+      descriptors.push({
+        id: formatTryoutPage(locale, page),
+        kind: "tryout",
+        locale,
+        page,
       });
     }
   }

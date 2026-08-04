@@ -21,7 +21,7 @@
     "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "convex": "^1.42.3",
+    "convex": "^1.43.0",
     "effect": "catalog:",
     "express": "^5.2.1",
     "next": "16.2.11",

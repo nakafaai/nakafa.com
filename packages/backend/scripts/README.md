@@ -58,7 +58,8 @@ pnpm --filter @repo/backend sync
 pnpm --filter @repo/backend sync:incremental
 ```
 
-- `sync:validate` checks authored source without writing Convex.
+- `sync:validate` reads selected deployment ownership, then checks only the
+  filesystem-owned authored sources without writing Convex.
 - `sync:verify` compares filesystem projections with the selected deployment.
 - `sync` performs a full clean, sync, verification, and cache invalidation pass.
 - `sync:incremental` uses the last successful Git revision and does not accept

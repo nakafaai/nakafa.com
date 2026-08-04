@@ -1,9 +1,11 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import {
+  getTryoutAttemptHref,
   getTryoutHref,
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
@@ -24,6 +26,7 @@ import type {
 import { TryoutSetOverview } from "@/components/tryout/set/overview";
 
 interface TryoutSetPageClientProps {
+  attemptId?: Id<"tryoutAttempts">;
   content: TryoutSetContent;
   page: SetPage;
   route: TryoutSetRoute;
@@ -31,29 +34,57 @@ interface TryoutSetPageClientProps {
 
 /** Renders one realtime try-out set page from Convex. */
 export function TryoutSetPageClient({
+  attemptId,
   content,
   page,
   route,
 }: TryoutSetPageClientProps) {
-  const currentAttempt = useQuery(
+  const publicAttempt = useQuery(
     api.tryouts.queries.attempt.getCurrentByPublicPath,
-    {
-      locale: route.locale,
-      publicPath: page.set.publicPath,
-    }
+    attemptId
+      ? "skip"
+      : {
+          locale: route.locale,
+          publicPath: page.set.publicPath,
+        }
   );
-  const entrySection = page.entrySection;
-  const isInternalEntry = entrySection?.visibility === "internal-entry";
-  const shouldLoadRuntime =
-    isInternalEntry && currentAttempt !== undefined && currentAttempt !== null;
-  const runtime = useQuery(
-    api.tryouts.queries.runtime.getSection,
-    shouldLoadRuntime && entrySection
+  const retainedAttempt = useQuery(
+    api.tryouts.queries.attempt.getCurrent,
+    attemptId
       ? {
+          attemptId,
           countryKey: page.set.countryKey,
           examKey: page.set.examKey,
           locale: route.locale,
-          sectionKey: entrySection.sectionKey,
+          setKey: page.set.setKey,
+          trackKey: page.set.trackKey,
+        }
+      : "skip"
+  );
+  const currentAttempt = attemptId ? retainedAttempt : publicAttempt;
+  const entrySection = page.entrySection;
+  const isInternalEntry = entrySection?.visibility === "internal-entry";
+  let runtimeSectionKey = entrySection?.sectionKey;
+  if (
+    currentAttempt?.status === "in-progress" &&
+    currentAttempt.resumeSectionKey
+  ) {
+    runtimeSectionKey = currentAttempt.resumeSectionKey;
+  }
+  const shouldLoadRuntime =
+    isInternalEntry &&
+    currentAttempt !== undefined &&
+    currentAttempt !== null &&
+    runtimeSectionKey !== undefined;
+  const runtime = useQuery(
+    api.tryouts.queries.runtime.getSection,
+    shouldLoadRuntime && runtimeSectionKey
+      ? {
+          countryKey: page.set.countryKey,
+          examKey: page.set.examKey,
+          ...(attemptId ? { attemptId } : {}),
+          locale: route.locale,
+          sectionKey: runtimeSectionKey,
           setKey: page.set.setKey,
           trackKey: page.set.trackKey,
         }
@@ -80,7 +111,7 @@ export function TryoutSetPageClient({
     page.sections.find(
       (sectionItem) => sectionItem.sectionKey === resumeSectionKey
     ) ?? entrySection;
-  const destination = resumeSection
+  let destination = resumeSection
     ? {
         href: getEntrySectionHref({
           entrySection: resumeSection,
@@ -89,6 +120,18 @@ export function TryoutSetPageClient({
         sectionKey: resumeSection.sectionKey,
       }
     : null;
+  if (
+    activeAttempt?.resumeSectionKey &&
+    activeAttempt.resumeSectionPublicPath
+  ) {
+    destination = {
+      href: getTryoutAttemptHref(
+        activeAttempt.resumeSectionPublicPath,
+        activeAttempt.attemptId
+      ),
+      sectionKey: activeAttempt.resumeSectionKey,
+    };
+  }
   const view: TryoutSetView = {
     actionAttempt,
     activeAttempt,

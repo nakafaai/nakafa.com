@@ -1,4 +1,4 @@
-import type { ContentRouteItem } from "@nakafa/aksara-contracts/release/route";
+import type { ContentRouteItem } from "@nakafa/aksara-contracts/release/route/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   ensureDocumentSize,

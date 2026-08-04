@@ -4,12 +4,13 @@ import {
   GitCommitShaSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { PublicContentMissingError } from "@repo/backend/client/content/errors";
-import { readPublicContent } from "@repo/backend/client/content/read";
+import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
+import { readContent } from "@repo/backend/client/content/read";
 import { verifyContentRenderer } from "@repo/backend/content/verify";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { PublishedContentInput } from "@/lib/content/published/exchange";
 import { readPublishedContent } from "@/lib/content/published/exchange";
 import {
   previewProjection,
@@ -25,25 +26,48 @@ const liveRenderer = vi.hoisted(() => ({
   rendererContractVersion: "1.0.0",
 }));
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
-const found = {
+const locale: PublishedContentInput["locale"] = "en";
+
+interface FoundFixture {
+  readonly activeReleaseId: ReturnType<typeof ReleaseIdSchema.make>;
+  readonly artifact: typeof previewWireArtifact;
+  readonly delivery: "public";
+  readonly kind: "found";
+  readonly projection: typeof previewProjection;
+  readonly release: {
+    readonly manifest: {
+      readonly origin:
+        | { readonly kind: "git"; readonly sha: typeof sourceRevision }
+        | {
+            readonly kind: "rollback";
+            readonly releaseId: ReturnType<typeof ReleaseIdSchema.make>;
+          };
+    };
+  };
+  readonly rendererManifest: typeof liveRenderer;
+  readonly sourcePath: typeof previewSourcePath;
+}
+
+const found: FoundFixture = {
   activeReleaseId: ReleaseIdSchema.make("release-function-concept"),
   artifact: previewWireArtifact,
-  kind: "found" as const,
+  delivery: "public",
+  kind: "found",
   projection: previewProjection,
   release: {
-    manifest: { origin: { kind: "git" as const, sha: sourceRevision } },
+    manifest: { origin: { kind: "git", sha: sourceRevision } },
   },
   rendererManifest: liveRenderer,
   sourcePath: previewSourcePath,
 };
 const input = {
   activeReleaseId: found.activeReleaseId,
-  locale: "en" as const,
+  locale,
   publicPath: previewProjection.publicPath,
 };
 
 vi.mock("@repo/backend/client/content/read", () => ({
-  readPublicContent: readContentMock,
+  readContent: readContentMock,
 }));
 vi.mock("@repo/backend/content/verify", () => ({
   verifyContentRenderer: verifyRendererMock,
@@ -87,12 +111,16 @@ describe("published content exchange", () => {
       sourcePath: previewSourcePath,
       sourceRevision,
     });
-    expect(readPublicContent).toHaveBeenCalledWith(
+    expect(readContent).toHaveBeenCalledWith(
       {
         siteUrl: "https://example.convex.site",
         token: "runtime-token",
       },
-      { locale: input.locale, publicPath: input.publicPath }
+      {
+        delivery: "public",
+        locale: input.locale,
+        publicPath: input.publicPath,
+      }
     );
     expect(verifyContentRenderer).toHaveBeenCalledWith({
       found,
@@ -101,12 +129,12 @@ describe("published content exchange", () => {
   });
 
   it("omits immutable Git provenance for a forward rollback release", async () => {
-    const rollback = {
+    const rollback: FoundFixture = {
       ...found,
       release: {
         manifest: {
           origin: {
-            kind: "rollback" as const,
+            kind: "rollback",
             releaseId: found.activeReleaseId,
           },
         },
@@ -121,15 +149,25 @@ describe("published content exchange", () => {
 
   it("preserves signed-read and live-renderer failures", async () => {
     readContentMock.mockReturnValueOnce(
-      Effect.fail(new PublicContentMissingError(input))
+      Effect.fail(
+        new ContentRuntimeMissingError({
+          request: {
+            delivery: "public",
+            locale: input.locale,
+            publicPath: input.publicPath,
+          },
+        })
+      )
     );
 
     await expect(
       Effect.runPromise(readPublishedContent(input).pipe(Effect.flip))
     ).resolves.toMatchObject({
-      _tag: "PublicContentMissingError",
-      locale: input.locale,
-      publicPath: input.publicPath,
+      _tag: "ContentRuntimeMissingError",
+      request: {
+        locale: input.locale,
+        publicPath: input.publicPath,
+      },
     });
 
     readContentMock.mockReturnValueOnce(Effect.succeed(found));
@@ -154,7 +192,7 @@ describe("published content exchange", () => {
       key: "CONTENT_RUNTIME_TOKEN",
     });
     expect(contentRuntimeKeys).toHaveBeenCalledOnce();
-    expect(readPublicContent).not.toHaveBeenCalled();
+    expect(readContent).not.toHaveBeenCalled();
   });
 
   it("fails before rendering when activation changes after ownership", async () => {
@@ -171,6 +209,20 @@ describe("published content exchange", () => {
       _tag: "PublishedReleaseMismatchError",
       actualReleaseId: "release-next",
       expectedReleaseId: found.activeReleaseId,
+    });
+    expect(verifyRendererMock).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when a public read returns protected delivery", async () => {
+    readContentMock.mockReturnValue(
+      Effect.succeed({ ...found, delivery: "authenticated" })
+    );
+
+    await expect(
+      Effect.runPromise(readPublishedContent(input).pipe(Effect.flip))
+    ).resolves.toMatchObject({
+      _tag: "ContentRuntimeVerificationError",
+      cause: "Public content request returned protected delivery.",
     });
     expect(verifyRendererMock).not.toHaveBeenCalled();
   });

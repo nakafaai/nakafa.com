@@ -2,9 +2,11 @@
 
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
-import { contentKeyResolver } from "@repo/backend/content/trust";
+import {
+  activeContentSigningKeyId,
+  contentKeyResolver,
+} from "@repo/backend/content/trust";
 import {
   type ActionCtx,
   internalAction,
@@ -16,6 +18,7 @@ import {
   predecodeFailure,
   requestFailure,
 } from "@repo/backend/convex/contentRelease/ingress/failure";
+import { stagePublicationGroup } from "@repo/backend/convex/contentRelease/ingress/group";
 import { advancePublication } from "@repo/backend/convex/contentRelease/ingress/lifecycle";
 import { readPublication } from "@repo/backend/convex/contentRelease/ingress/read";
 import {
@@ -41,6 +44,9 @@ const performRequest = Effect.fn("contentRelease.performRequest")(function* (
   request: PublicationRequest,
   activeKeyId: string
 ) {
+  if (request.operation === "stageGroup") {
+    return yield* stagePublicationGroup(ctx, request, activeKeyId);
+  }
   if (
     request.operation === "stageRelease" ||
     request.operation === "stageRecovery" ||
@@ -68,6 +74,13 @@ const performRequest = Effect.fn("contentRelease.performRequest")(function* (
 /** Encodes one sanitized failure from a fully decoded request. */
 const encodeRequestFailure = Effect.fn("contentRelease.encodeRequestFailure")(
   function* (ctx: ActionCtx, request: PublicationRequest, error: ReleaseError) {
+    yield* Effect.logWarning("Content publication request rejected.").pipe(
+      Effect.annotateLogs({
+        code: error.code,
+        operation: request.operation,
+        reason: error.message,
+      })
+    );
     let activeReleaseId: null | ReleaseId = null;
     if (error.code === "CONTENT_RELEASE_STALE_BASE") {
       const current = yield* readCurrentPublication(ctx).pipe(Effect.either);
@@ -89,7 +102,7 @@ export const dispatchPublication = Effect.fn(
 )(function* (
   ctx: ActionCtx,
   input: DispatchInput,
-  activeKeyId = ACTIVE_SIGNING_KEY_ID
+  activeKeyId = activeContentSigningKeyId
 ) {
   const decoded = yield* decodePublicationBody(
     input.source,

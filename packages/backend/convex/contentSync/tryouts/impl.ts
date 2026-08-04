@@ -1,14 +1,17 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
-import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
+import { buildAuthorCache } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import {
-  buildAuthorCache,
-  deleteContentProjectionsBySourcePath,
-} from "@repo/backend/convex/contentSync/lib/syncHelpers";
-import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+  getTryoutSet,
+  syncTryoutCountry,
+  syncTryoutExam,
+  syncTryoutSection,
+  syncTryoutSet,
+  syncTryoutTrack,
+} from "@repo/backend/convex/contentSync/tryouts/catalog";
+import { validateTryoutBatch } from "@repo/backend/convex/contentSync/tryouts/error";
 import { syncIrtScaleForSet } from "@repo/backend/convex/contentSync/tryouts/irt";
 import {
-  getQuestionSet,
   syncQuestion,
   syncQuestionSet,
 } from "@repo/backend/convex/contentSync/tryouts/questionBank";
@@ -22,10 +25,9 @@ import type {
   SyncedTryoutSection,
   SyncedTryoutSet,
   SyncedTryoutTrack,
+  TryoutSyncOutcome,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
-import { ConvexError } from "convex/values";
-
-type SyncOutcome = "created" | "unchanged" | "updated";
+import { Effect } from "effect";
 
 interface SyncTotals {
   created: number;
@@ -45,57 +47,61 @@ export interface BulkSyncTryoutsArgs {
 }
 
 /** Upserts one bounded try-out catalog and question-bank batch. */
-export async function bulkSyncTryoutsImpl(
+export const syncTryouts = Effect.fn("contentSync.tryout.sync")(function* (
   ctx: MutationCtx,
   args: BulkSyncTryoutsArgs
 ) {
-  assertTryoutBatchSizes(args);
+  yield* validateTryoutBatchSizes(args);
 
   const now = Date.now();
   const totals: SyncTotals = { created: 0, unchanged: 0, updated: 0 };
 
   for (const route of args.routes) {
-    await syncTryoutRoute(ctx, route, now);
+    yield* syncTryoutRoute(ctx, route, now);
   }
   for (const country of args.countries) {
-    addOutcome(totals, await syncCountry(ctx, country, now));
+    addOutcome(totals, yield* syncTryoutCountry(ctx, country, now));
   }
   for (const exam of args.exams) {
-    addOutcome(totals, await syncExam(ctx, exam, now));
+    addOutcome(totals, yield* syncTryoutExam(ctx, exam, now));
   }
   for (const track of args.tracks) {
-    addOutcome(totals, await syncTrack(ctx, track, now));
+    addOutcome(totals, yield* syncTryoutTrack(ctx, track, now));
   }
   for (const set of args.sets) {
-    addOutcome(totals, await syncSet(ctx, set, now));
+    addOutcome(totals, yield* syncTryoutSet(ctx, set, now));
   }
   for (const questionSet of args.questionSets) {
-    addOutcome(totals, await syncQuestionSet(ctx, questionSet, now));
+    addOutcome(totals, yield* syncQuestionSet(ctx, questionSet, now));
   }
-  const questionAuthorCache = await buildAuthorCache(
-    ctx,
-    args.questions.flatMap((question) =>
-      question.authors.map((author) => author.name)
+  const questionAuthorCache = yield* Effect.promise(() =>
+    buildAuthorCache(
+      ctx,
+      args.questions.flatMap((question) =>
+        question.authors.map((author) => author.name)
+      )
     )
   );
 
   for (const question of args.questions) {
     addOutcome(
       totals,
-      await syncQuestion(ctx, question, now, questionAuthorCache)
+      yield* syncQuestion(ctx, question, now, questionAuthorCache)
     );
   }
   for (const section of args.sections) {
-    addOutcome(totals, await syncSection(ctx, section, now));
+    addOutcome(totals, yield* syncTryoutSection(ctx, section, now));
   }
-  await syncIrtScalesForSections(ctx, args.sections, now);
+  yield* syncIrtScalesForSections(ctx, args.sections, now);
 
   return totals;
-}
+});
 
 /** Reject a combined try-out sync batch before any transactional writes. */
-function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
-  assertContentSyncBatchSize({
+const validateTryoutBatchSizes = Effect.fn(
+  "contentSync.tryout.validateBatchSizes"
+)(function* (args: BulkSyncTryoutsArgs) {
+  yield* validateTryoutBatch({
     functionName: "bulkSyncTryouts",
     limit: CONTENT_SYNC_BATCH_LIMITS.tryoutSets,
     received:
@@ -106,307 +112,49 @@ function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
       args.sections.length,
     unit: "try-out catalog rows",
   });
-  assertContentSyncBatchSize({
+  yield* validateTryoutBatch({
     functionName: "bulkSyncTryouts",
     limit: CONTENT_SYNC_BATCH_LIMITS.tryoutSets,
     received: args.routes.length,
     unit: "try-out route projections",
   });
-  assertContentSyncBatchSize({
+  yield* validateTryoutBatch({
     functionName: "bulkSyncTryouts",
     limit: CONTENT_SYNC_BATCH_LIMITS.questionSets,
     received: args.questionSets.length,
     unit: "question sets",
   });
-  assertContentSyncBatchSize({
+  yield* validateTryoutBatch({
     functionName: "bulkSyncTryouts",
     limit: CONTENT_SYNC_BATCH_LIMITS.questions,
     received: args.questions.length,
     unit: "questions",
   });
-}
+});
 
 /** Add one row-level sync outcome to the aggregate totals. */
-function addOutcome(totals: SyncTotals, outcome: SyncOutcome) {
+function addOutcome(totals: SyncTotals, outcome: TryoutSyncOutcome) {
   totals[outcome]++;
 }
 
-/** Create, replace, or preserve one localized try-out country row. */
-async function syncCountry(
-  ctx: MutationCtx,
-  country: SyncedTryoutCountry,
-  syncedAt: number
-): Promise<SyncOutcome> {
-  const existing = await ctx.db
-    .query("tryoutCountries")
-    .withIndex("by_countryKey_and_locale", (q) =>
-      q.eq("countryKey", country.countryKey).eq("locale", country.locale)
-    )
-    .unique();
-
-  if (hasSameDescribedValues(country, existing)) {
-    return "unchanged";
-  }
-
-  const nextValues = { ...country, syncedAt };
-
-  if (existing) {
-    await deleteChangedPublicPathProjection(ctx, existing, nextValues);
-    await ctx.db.replace("tryoutCountries", existing._id, nextValues);
-    return "updated";
-  }
-
-  await ctx.db.insert("tryoutCountries", nextValues);
-  return "created";
-}
-
-/** Create, replace, or preserve one localized try-out exam row. */
-async function syncExam(
-  ctx: MutationCtx,
-  exam: SyncedTryoutExam,
-  syncedAt: number
-): Promise<SyncOutcome> {
-  const existing = await ctx.db
-    .query("tryoutExams")
-    .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
-      q
-        .eq("countryKey", exam.countryKey)
-        .eq("examKey", exam.examKey)
-        .eq("locale", exam.locale)
-    )
-    .unique();
-
-  if (hasSameDescribedValues(exam, existing)) {
-    return "unchanged";
-  }
-
-  const nextValues = { ...exam, syncedAt };
-
-  if (existing) {
-    await deleteChangedPublicPathProjection(ctx, existing, nextValues);
-    await ctx.db.replace("tryoutExams", existing._id, nextValues);
-    return "updated";
-  }
-
-  await ctx.db.insert("tryoutExams", nextValues);
-  return "created";
-}
-
-/** Create, replace, or preserve one localized try-out set row. */
-async function syncSet(
-  ctx: MutationCtx,
-  set: SyncedTryoutSet,
-  syncedAt: number
-): Promise<SyncOutcome> {
-  const existing = await ctx.db
-    .query("tryoutSets")
-    .withIndex(
-      "by_countryKey_and_examKey_and_trackKey_and_setKey_and_locale",
-      (q) =>
-        q
-          .eq("countryKey", set.countryKey)
-          .eq("examKey", set.examKey)
-          .eq("trackKey", set.trackKey)
-          .eq("setKey", set.setKey)
-          .eq("locale", set.locale)
-    )
-    .unique();
-
-  if (hasSameSetValues(set, existing)) {
-    return "unchanged";
-  }
-
-  const nextValues = { ...set, syncedAt };
-
-  if (existing) {
-    await deleteChangedPublicPathProjection(ctx, existing, nextValues);
-    await ctx.db.replace("tryoutSets", existing._id, nextValues);
-    return "updated";
-  }
-
-  await ctx.db.insert("tryoutSets", nextValues);
-  return "created";
-}
-
-/** Create, replace, or preserve one localized try-out track row. */
-async function syncTrack(
-  ctx: MutationCtx,
-  track: SyncedTryoutTrack,
-  syncedAt: number
-): Promise<SyncOutcome> {
-  const existing = await ctx.db
-    .query("tryoutTracks")
-    .withIndex("by_countryKey_and_examKey_and_trackKey_and_locale", (q) =>
-      q
-        .eq("countryKey", track.countryKey)
-        .eq("examKey", track.examKey)
-        .eq("trackKey", track.trackKey)
-        .eq("locale", track.locale)
-    )
-    .unique();
-
-  if (hasSameDescribedValues(track, existing)) {
-    return "unchanged";
-  }
-
-  const nextValues = { ...track, syncedAt };
-
-  if (existing) {
-    await deleteChangedPublicPathProjection(ctx, existing, nextValues);
-    await ctx.db.replace("tryoutTracks", existing._id, nextValues);
-    return "updated";
-  }
-
-  await ctx.db.insert("tryoutTracks", nextValues);
-  return "created";
-}
-
-/** Resolve parents and synchronize one localized try-out section row. */
-async function syncSection(
-  ctx: MutationCtx,
-  section: SyncedTryoutSection,
-  syncedAt: number
-): Promise<SyncOutcome> {
-  const [tryoutSet, questionSet] = await Promise.all([
-    getTryoutSet(ctx, section),
-    getQuestionSet(ctx, {
-      locale: section.locale,
-      sourcePath: section.questionSourcePath,
-    }),
-  ]);
-  const existing = await ctx.db
-    .query("tryoutSections")
-    .withIndex("by_tryoutSetId_and_sectionKey", (q) =>
-      q.eq("tryoutSetId", tryoutSet._id).eq("sectionKey", section.sectionKey)
-    )
-    .unique();
-  const nextValues = {
-    ...section,
-    questionSetId: questionSet._id,
-    tryoutSetId: tryoutSet._id,
-  };
-
-  if (hasSameSectionValues(nextValues, existing)) {
-    return "unchanged";
-  }
-
-  const writeValues = { ...nextValues, syncedAt };
-
-  if (existing) {
-    await deleteChangedPublicPathProjection(ctx, existing, nextValues);
-    await ctx.db.replace("tryoutSections", existing._id, writeValues);
-    return "updated";
-  }
-
-  await ctx.db.insert("tryoutSections", writeValues);
-  return "created";
-}
-
 /** Synchronize each affected set's IRT scale once per section batch. */
-async function syncIrtScalesForSections(
-  ctx: MutationCtx,
-  sections: SyncedTryoutSection[],
-  syncedAt: number
-) {
-  const syncedSetIds = new Set<string>();
-
-  for (const section of sections) {
-    const set = await getTryoutSet(ctx, section);
-
-    if (syncedSetIds.has(set._id)) {
-      continue;
-    }
-
-    syncedSetIds.add(set._id);
-    await syncIrtScaleForSet(ctx, { set, syncedAt });
-  }
-}
-
-/** Resolve the concrete parent set for one synchronized section. */
-async function getTryoutSet(
-  ctx: MutationCtx,
-  section: Pick<
-    SyncedTryoutSection,
-    "countryKey" | "examKey" | "locale" | "setKey" | "trackKey"
-  >
-) {
-  const tryoutSet = await ctx.db
-    .query("tryoutSets")
-    .withIndex(
-      "by_countryKey_and_examKey_and_trackKey_and_setKey_and_locale",
-      (q) =>
-        q
-          .eq("countryKey", section.countryKey)
-          .eq("examKey", section.examKey)
-          .eq("trackKey", section.trackKey)
-          .eq("setKey", section.setKey)
-          .eq("locale", section.locale)
-    )
-    .unique();
-
-  if (!tryoutSet) {
-    throw new ConvexError({
-      code: "TRYOUT_SYNC_SET_NOT_FOUND",
-      message: `Missing try-out set ${section.countryKey}/${section.examKey}/${section.trackKey}/${section.setKey}/${section.locale}.`,
-    });
-  }
-
-  return tryoutSet;
-}
-
-/** Checks source-owned optional fields that can disappear between sync runs. */
-function hasSameDescribedValues<TValues extends { description?: string }>(
-  nextValues: TValues,
-  existing: Partial<TValues> | null | undefined
-) {
-  return (
-    hasSameSyncValues(nextValues, existing) &&
-    existing?.description === nextValues.description
-  );
-}
-
-/** Compare all source-owned set fields that influence runtime behavior. */
-function hasSameSetValues(
-  nextValues: SyncedTryoutSet,
-  existing: Partial<SyncedTryoutSet> | null | undefined
-) {
-  return (
-    hasSameDescribedValues(nextValues, existing) &&
-    existing?.internalEntrySectionKey === nextValues.internalEntrySectionKey
-  );
-}
-
-/** Compare all source-owned section fields and resolved relationships. */
-function hasSameSectionValues(
-  nextValues: SyncedTryoutSection & {
-    questionSetId: string;
-    tryoutSetId: string;
-  },
-  existing: Partial<typeof nextValues> | null | undefined
-) {
-  return (
-    hasSameDescribedValues(nextValues, existing) &&
-    existing?.publicPath === nextValues.publicPath
-  );
-}
-
-/** Remove an obsolete route projection before replacing a public path. */
-async function deleteChangedPublicPathProjection(
-  ctx: MutationCtx,
-  existing:
-    | { locale: SyncedTryoutCountry["locale"]; publicPath?: string }
-    | null
-    | undefined,
-  nextValues: { publicPath?: string }
-) {
-  if (
-    !(existing?.publicPath && existing.publicPath !== nextValues.publicPath)
+const syncIrtScalesForSections = Effect.fn("contentSync.tryout.syncIrtScales")(
+  function* (
+    ctx: MutationCtx,
+    sections: SyncedTryoutSection[],
+    syncedAt: number
   ) {
-    return;
-  }
+    const syncedSetIds = new Set<string>();
 
-  await deleteContentProjectionsBySourcePath(ctx, {
-    locale: existing.locale,
-    route: existing.publicPath,
-  });
-}
+    for (const section of sections) {
+      const set = yield* getTryoutSet(ctx, section);
+
+      if (syncedSetIds.has(set._id)) {
+        continue;
+      }
+
+      syncedSetIds.add(set._id);
+      yield* syncIrtScaleForSet(ctx, { set, syncedAt });
+    }
+  }
+);

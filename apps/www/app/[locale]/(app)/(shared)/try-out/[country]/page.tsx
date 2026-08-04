@@ -7,18 +7,38 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { RefContent } from "@/components/shared/ref-content";
 import { TryoutCountryPageClient } from "@/components/tryout/catalog/country.client";
+import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
+import { buildTryoutCountryOptions } from "@/components/tryout/catalog/options";
 import { TryoutCountrySelector } from "@/components/tryout/catalog/selector.client";
-import { readTryoutCountryPage } from "@/components/tryout/catalog/server";
-import { readStaticTryoutCountryOptions } from "@/components/tryout/catalog/static";
+import {
+  readTryoutCountryPage,
+  readTryoutHubPage,
+} from "@/components/tryout/catalog/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
 
 export const unstable_instant = {
   prefetch: "runtime",
   samples: [{ params: { country: "indonesia", locale: "id" } }],
 };
+
+/** Builds route-owned metadata for one localized try-out country. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ country: string; locale: string }>;
+}) {
+  const { country, locale: localeParam } = await params;
+  const locale = getLocaleOrThrow(localeParam);
+
+  return generateTryoutRouteMetadata({
+    kind: "country",
+    locale,
+    publicPath: getTryoutHref({ country }).slice(1),
+  });
+}
 
 /** Renders active exam families for one try-out country. */
 export default function Page(props: {
@@ -41,7 +61,10 @@ async function TryoutCountryRoute({
   const locale = getLocaleOrThrow(localeParam);
   const countryPath = getTryoutHref({ country }).slice(1);
 
-  const page = await readTryoutCountryPage(locale, countryPath);
+  const [page, hub] = await Promise.all([
+    readTryoutCountryPage(locale, countryPath),
+    readTryoutHubPage(locale),
+  ]);
 
   if (!page) {
     notFound();
@@ -51,7 +74,18 @@ async function TryoutCountryRoute({
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Tryouts" }),
   ]);
-  const countryOptions = readStaticTryoutCountryOptions(locale);
+  const countryOptions = buildTryoutCountryOptions(locale, hub.countries);
+  let sourceUrl: string | undefined;
+  if (!page.managed) {
+    sourceUrl = getGithubUrl({
+      path: `/packages/contents/tryout/${country}`,
+    });
+  } else if (page.sourceRevision) {
+    sourceUrl = getAksaraTreeUrl({
+      path: `packages/corpus/tryout/${country}`,
+      revision: page.sourceRevision,
+    });
+  }
 
   return (
     <LayoutMaterial>
@@ -75,11 +109,7 @@ async function TryoutCountryRoute({
           <TryoutCountryPageClient page={page} />
         </LayoutContent>
         <FooterContent>
-          <RefContent
-            githubUrl={getGithubUrl({
-              path: `/packages/contents/tryout/${country}`,
-            })}
-          />
+          <RefContent githubUrl={sourceUrl} />
         </FooterContent>
       </LayoutMaterialContent>
     </LayoutMaterial>

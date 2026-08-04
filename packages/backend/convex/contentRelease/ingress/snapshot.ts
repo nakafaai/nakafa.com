@@ -5,19 +5,19 @@ import {
   hashCurriculumRow,
   hashProgramRow,
 } from "@nakafa/aksara-contracts/program/row-hash";
-import { hashProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot-hash";
+import { hashProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { hashQuranRow } from "@nakafa/aksara-contracts/quran/row-hash";
-import { hashQuranSnapshot } from "@nakafa/aksara-contracts/quran/snapshot-hash";
+import { hashQuranSnapshot } from "@nakafa/aksara-contracts/quran/snapshot/hash";
 import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import {
   makeTryoutCatalogRecord,
   makeTryoutPlacementRecord,
 } from "@nakafa/aksara-contracts/tryout/row-hash";
-import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot-hash";
+import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";

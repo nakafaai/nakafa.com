@@ -9,7 +9,7 @@ import type {
 } from "@nakafa/aksara-contracts/tryout/spec";
 
 /** Derives the canonical set identity shared by set and section rows. */
-export function tryoutCatalogSetIdentity(row: TryoutCatalogRow) {
+function catalogSetIdentity(row: TryoutCatalogRow) {
   if (row.kind !== "set" && row.kind !== "section") {
     return;
   }
@@ -33,7 +33,7 @@ export function tryoutCatalogFacts(record: TryoutCatalogRecord) {
     locale: row.locale,
     order: row.kind === "country" || row.kind === "exam" ? 0 : row.order,
     publicPath: row.publicPath,
-    setIdentity: tryoutCatalogSetIdentity(row),
+    setIdentity: catalogSetIdentity(row),
   };
 }
 
@@ -42,6 +42,7 @@ export function tryoutPlacementFacts(record: TryoutPlacementRecord) {
   const { row } = record;
   return {
     answerArtifactHash: row.answerArtifactHash,
+    contentHash: row.contentHash,
     countryKey: row.countryKey,
     examKey: row.examKey,
     identity: tryoutPlacementIdentity(row),

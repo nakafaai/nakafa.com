@@ -104,6 +104,36 @@ describe("sync-content workflows", () => {
     expect(events).not.toContain("saveSyncState");
   });
 
+  it("continues a full sync without filesystem tryouts after signed ownership activates", async () => {
+    const { events, workflow } = await loadWorkflow(
+      {
+        deleted: 0,
+        hasStale: false,
+      },
+      { tryoutsManaged: true }
+    );
+
+    await Effect.runPromise(workflow.syncFull(config, {}));
+
+    expect(events).toEqual(
+      expect.arrayContaining([
+        "clean",
+        "syncArticles",
+        "syncCurriculumTopics",
+        "syncCurriculumLessons",
+        "syncQuran",
+        "syncRoutePages",
+        "syncPublicRoutes",
+        "syncLearningPrograms",
+        "verify",
+        "invalidateContentRuntimeCache",
+        "saveSyncState",
+      ])
+    );
+    expect(events).toContain("readContentSyncOwnership");
+    expect(events).not.toContain("syncTryouts");
+  });
+
   it("rejects locale-scoped incremental sync before reading or advancing shared state", async () => {
     const { events, workflow } = await loadWorkflow({
       deleted: 0,
@@ -288,6 +318,39 @@ describe("sync-content workflows", () => {
     expect(events.indexOf("syncLearningPrograms")).toBeLessThan(
       events.indexOf("saveSyncState")
     );
+  });
+
+  it("skips a planned filesystem tryout phase after signed ownership activates", async () => {
+    const { events, workflow } = await loadWorkflow(
+      {
+        deleted: 0,
+        hasStale: false,
+      },
+      {
+        changedFiles: ["packages/contents/_types/route/tryout/path.ts"],
+        syncState: {
+          lastSyncCommit: "previous-commit",
+          lastSyncTimestamp: 1,
+        },
+        tryoutsManaged: true,
+      }
+    );
+
+    await Effect.runPromise(workflow.syncIncremental(config, {}));
+
+    expect(events).toEqual(
+      expect.arrayContaining([
+        "readContentSyncOwnership",
+        "syncCurriculumTopics",
+        "syncCurriculumLessons",
+        "syncRoutePages",
+        "syncPublicRoutes",
+        "syncLearningPrograms",
+        "invalidateContentRuntimeCache",
+        "saveSyncState",
+      ])
+    );
+    expect(events).not.toContain("syncTryouts");
   });
 
   it("resyncs article rows before route artifacts for graph-only changes", async () => {

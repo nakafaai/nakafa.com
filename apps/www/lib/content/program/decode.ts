@@ -1,6 +1,6 @@
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { LearningProgram } from "@nakafa/aksara-contracts/program/spec";
-import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot-data";
+import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";

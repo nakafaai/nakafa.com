@@ -1,14 +1,14 @@
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  inheritContentSnapshots,
-  replaceContentSnapshot,
-} from "@nakafa/aksara-contracts/release/snapshot";
 import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
-import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import {
+  inheritContentSnapshots,
+  replaceContentSnapshot,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   compareTryoutCatalog,
   compareTryoutPlacements,
@@ -19,10 +19,11 @@ import {
   makeTryoutCatalogRecord,
   makeTryoutPlacementRecord,
 } from "@nakafa/aksara-contracts/tryout/row-hash";
-import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot-hash";
+import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,
+  TryoutContentHashSchema,
   type TryoutPlacement,
   TryoutPlacementSchema,
 } from "@nakafa/aksara-contracts/tryout/spec";
@@ -74,13 +75,17 @@ export function makeTryoutCatalogRow(
 
 /** Creates one hashed technical try-out question placement. */
 export function makeTryoutPlacementRow(
-  locale: ContentLocale = "en"
+  locale: ContentLocale = "en",
+  artifacts?: Pick<
+    TryoutPlacement,
+    "answerArtifactHash" | "questionArtifactHash"
+  >
 ): Extract<
   ContentSnapshotRow,
   { readonly family: "tryout"; readonly rowKind: "placement" }
 > {
   const row = Schema.decodeUnknownSync(TryoutPlacementSchema)({
-    answerArtifactHash: artifactHash,
+    answerArtifactHash: artifacts?.answerArtifactHash ?? artifactHash,
     answerContentKey:
       "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/answer",
     choices: [
@@ -91,10 +96,13 @@ export function makeTryoutPlacementRow(
         order: 1,
       },
     ],
+    contentHash: TryoutContentHashSchema.make(
+      (locale === "en" ? "1" : "2").repeat(64)
+    ),
     countryKey: "indonesia",
     examKey: "snbt",
     locale,
-    questionArtifactHash: artifactHash,
+    questionArtifactHash: artifacts?.questionArtifactHash ?? artifactHash,
     questionContentKey:
       "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question",
     questionOrder: 1,
@@ -156,6 +164,7 @@ export async function activateTryoutSnapshot(
   input: {
     readonly catalog: readonly TryoutCatalogRow[];
     readonly placements: readonly TryoutPlacement[];
+    readonly releaseId?: string;
   }
 ) {
   const catalog = [...input.catalog]
@@ -170,8 +179,8 @@ export async function activateTryoutSnapshot(
       digestTryoutPlacements(Stream.fromIterable(placements)),
     ])
   );
-  const manifest = {
-    family: "tryout" as const,
+  const manifest: ContentSnapshotManifest = {
+    family: "tryout",
     manifest: makeTryoutSnapshot({
       catalogDigest: catalogEvidence.digest,
       counts: countCatalog(input.catalog),
@@ -194,7 +203,8 @@ export async function activateTryoutSnapshot(
       rowDigest: snapshotId,
     }),
   };
-  await insertTestRelease(ctx, { snapshots });
+  const releaseId = input.releaseId ?? TEST_RELEASE_ID;
+  await insertTestRelease(ctx, { releaseId, snapshots });
   await ctx.db.insert("contentSnapshots", {
     createdAt: 1,
     family: "tryout",
@@ -227,7 +237,7 @@ export async function activateTryoutSnapshot(
   });
   await ctx.db.patch("contentState", state._id, {
     activeManifestHash: TEST_MANIFEST_HASH,
-    activeReleaseId: TEST_RELEASE_ID,
+    activeReleaseId: releaseId,
     activeSequence: 1,
     candidateManifestHash: undefined,
     candidateReleaseId: undefined,

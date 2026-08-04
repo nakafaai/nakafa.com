@@ -1,7 +1,18 @@
+import {
+  tryoutCatalogIdentity,
+  tryoutPlacementIdentity,
+} from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { TRYOUT_CHOICE_LIMIT } from "@repo/backend/convex/tryouts/questions";
+import type { TryoutSectionSource } from "@repo/backend/convex/tryouts/start/source";
+import {
+  TryoutStartError,
+  toTryoutStartError,
+  tryoutStartErrorCode,
+} from "@repo/backend/convex/tryouts/start/spec";
 import { ConvexError } from "convex/values";
+import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutQuestion = Doc<"questions">;
@@ -27,7 +38,7 @@ export function requireSectionSnapshot(
   return snapshot;
 }
 
-/** Loads the live section row backing an attempt snapshot. */
+/** Loads the live legacy section row backing an attempt snapshot. */
 export async function requireSnapshotSection(
   ctx: MutationCtx,
   args: {
@@ -35,13 +46,23 @@ export async function requireSnapshotSection(
     snapshot: TryoutSectionSnapshot;
   }
 ): Promise<TryoutSection> {
-  const section = await ctx.db.get(args.snapshot.tryoutSectionId);
+  const tryoutSectionId = args.snapshot.tryoutSectionId;
+  const tryoutSetId = args.attempt.tryoutSetId;
+  const questionSetId = args.snapshot.questionSetId;
+  if (!(tryoutSectionId && tryoutSetId && questionSetId)) {
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_NOT_FOUND",
+      message: "Filesystem try-out section identity is missing.",
+    });
+  }
+
+  const section = await ctx.db.get(tryoutSectionId);
 
   if (
     !section ||
-    section.tryoutSetId !== args.attempt.tryoutSetId ||
+    section.tryoutSetId !== tryoutSetId ||
     section.sectionKey !== args.snapshot.sectionKey ||
-    section.questionSetId !== args.snapshot.questionSetId ||
+    section.questionSetId !== questionSetId ||
     section.questionSourcePath !== args.snapshot.questionSourcePath ||
     section.questionCount !== args.snapshot.questionCount ||
     section.sourceRevision !== args.snapshot.sourceRevision
@@ -55,113 +76,152 @@ export async function requireSnapshotSection(
   return section;
 }
 
-/** Freezes every question placement when an attempt starts. */
-export async function createAttemptPlacements(
+/** Freezes the selected local or authenticated signed placement snapshot. */
+export const createAttemptPlacements = Effect.fn(
+  "tryouts.runtime.createAttemptPlacements"
+)(function* (
   ctx: MutationCtx,
-  args: { attempt: TryoutAttempt }
-) {
-  for (const snapshot of args.attempt.sectionSnapshots) {
-    const section = await requireSnapshotSection(ctx, {
-      attempt: args.attempt,
-      snapshot,
-    });
-
-    await createSectionPlacements(ctx, {
-      attempt: args.attempt,
-      section,
-    });
+  args: {
+    readonly attempt: TryoutAttempt;
+    readonly source: TryoutSectionSource;
   }
-}
+) {
+  if (args.source.kind === "filesystem") {
+    yield* createFilesystemPlacements(ctx, args.attempt, args.source.sections);
+    return;
+  }
 
-/** Creates the immutable placements for one snapshotted section. */
-async function createSectionPlacements(
+  for (const source of args.source.snapshot.sections) {
+    const sectionIdentity = tryoutCatalogIdentity(source.section.row);
+    const snapshot = args.attempt.sectionSnapshots.find(
+      (candidate) => candidate.sectionIdentity === sectionIdentity
+    );
+    if (
+      !snapshot ||
+      snapshot.sectionRowHash !== source.section.rowHash ||
+      snapshot.questionCount !== source.placements.length
+    ) {
+      return yield* startMismatch(
+        "Try-out section changed before its attempt was frozen."
+      );
+    }
+
+    for (const placement of source.placements) {
+      yield* tryStartPromise(() =>
+        ctx.db.insert("tryoutAttemptPlacements", {
+          answerArtifactHash: placement.row.answerArtifactHash,
+          answerContentKey: placement.row.answerContentKey,
+          choiceSnapshots: [...placement.row.choices],
+          contentHash: placement.row.contentHash,
+          placementIdentity: tryoutPlacementIdentity(placement.row),
+          placementRowHash: placement.rowHash,
+          questionArtifactHash: placement.row.questionArtifactHash,
+          questionContentKey: placement.row.questionContentKey,
+          questionOrder: placement.row.questionOrder,
+          rendererDomain: placement.row.rendererDomain,
+          sectionIdentity,
+          sectionKey: placement.row.sectionKey,
+          sourcePath: placement.row.questionSourcePath,
+          sourceRevision: placement.row.sourceRevision,
+          title: placement.row.title,
+          tryoutAttemptId: args.attempt._id,
+        })
+      );
+    }
+  }
+});
+
+/** Freezes the current local rows before signed ownership is activated. */
+const createFilesystemPlacements = Effect.fn(
+  "tryouts.runtime.createFilesystemPlacements"
+)(function* (
   ctx: MutationCtx,
-  args: { attempt: TryoutAttempt; section: TryoutSection }
+  attempt: TryoutAttempt,
+  sections: readonly TryoutSection[]
 ) {
-  const questions = await loadSectionQuestions(ctx, args.section);
-  const snapshots = await Promise.all(
-    questions.map(async (question) => ({
-      choiceSnapshots: await loadChoiceSnapshots(ctx, question),
-      question,
-    }))
-  );
-
-  for (const snapshot of snapshots) {
-    const { choiceSnapshots, question } = snapshot;
-    await ctx.db.insert("tryoutAttemptPlacements", {
-      choiceSnapshots,
-      contentHash: question.contentHash,
-      questionId: question._id,
-      questionOrder: question.number,
-      questionSourceKey: question.sourceKey,
-      sourcePath: question.sourcePath,
-      sourceRevision: question.sourceRevision,
-      title: question.title,
-      tryoutAttemptId: args.attempt._id,
-      tryoutSectionId: args.section._id,
-    });
+  for (const section of sections) {
+    const questions = yield* loadSectionQuestions(ctx, section);
+    for (const question of questions) {
+      const choiceSnapshots = yield* loadChoiceSnapshots(ctx, question);
+      yield* tryStartPromise(() =>
+        ctx.db.insert("tryoutAttemptPlacements", {
+          choiceSnapshots,
+          contentHash: question.contentHash,
+          questionId: question._id,
+          questionOrder: question.number,
+          questionSourceKey: question.sourceKey,
+          sourcePath: question.sourcePath,
+          sourceRevision: question.sourceRevision,
+          title: question.title,
+          tryoutAttemptId: attempt._id,
+          tryoutSectionId: section._id,
+        })
+      );
+    }
   }
+});
+
+/** Loads the ordered legacy questions for one aligned section. */
+const loadSectionQuestions = Effect.fn("tryouts.runtime.loadSectionQuestions")(
+  function* (ctx: MutationCtx, section: TryoutSection) {
+    const questions = yield* tryStartPromise(() =>
+      ctx.db
+        .query("questions")
+        .withIndex("by_questionSetId_and_number", (query) =>
+          query.eq("questionSetId", section.questionSetId)
+        )
+        .take(section.questionCount + 1)
+    );
+    if (
+      questions.length !== section.questionCount ||
+      questions.some(
+        (question) => question.sourceRevision !== section.sourceRevision
+      )
+    ) {
+      return yield* startMismatch(
+        "Try-out section questions are not fully synced."
+      );
+    }
+    return questions;
+  }
+);
+
+/** Loads one deterministic legacy choice snapshot. */
+const loadChoiceSnapshots = Effect.fn("tryouts.runtime.loadChoiceSnapshots")(
+  function* (ctx: MutationCtx, question: TryoutQuestion) {
+    const choices = yield* tryStartPromise(() =>
+      ctx.db
+        .query("questionChoices")
+        .withIndex("by_questionId_and_locale", (query) =>
+          query.eq("questionId", question._id).eq("locale", question.locale)
+        )
+        .take(TRYOUT_CHOICE_LIMIT + 1)
+    );
+    if (choices.length === 0 || choices.length > TRYOUT_CHOICE_LIMIT) {
+      return yield* startMismatch(
+        "Try-out question choice count is outside the supported range."
+      );
+    }
+    return choices
+      .map(({ isCorrect, label, optionKey, order }) => ({
+        isCorrect,
+        label,
+        optionKey,
+        order,
+      }))
+      .sort((left, right) => left.order - right.order);
+  }
+);
+
+/** Creates one typed fail-closed snapshot mismatch. */
+function startMismatch(message: string) {
+  return new TryoutStartError({
+    code: tryoutStartErrorCode.sectionSnapshotMismatch,
+    message,
+  });
 }
 
-/** Loads the ordered question rows for one section. */
-async function loadSectionQuestions(ctx: MutationCtx, section: TryoutSection) {
-  const questions = await ctx.db
-    .query("questions")
-    .withIndex("by_questionSetId_and_number", (q) =>
-      q.eq("questionSetId", section.questionSetId)
-    )
-    .take(section.questionCount + 1);
-
-  if (questions.length !== section.questionCount) {
-    throw new ConvexError({
-      code: "TRYOUT_QUESTION_COUNT_MISMATCH",
-      message: "Try-out section question count is not synced.",
-    });
-  }
-
-  const hasMixedRevision = questions.some(
-    (question) => question.sourceRevision !== section.sourceRevision
-  );
-
-  if (hasMixedRevision) {
-    throw new ConvexError({
-      code: "TRYOUT_QUESTION_SNAPSHOT_MISMATCH",
-      message: "Try-out section questions are not fully synced.",
-    });
-  }
-
-  return questions;
-}
-
-/** Loads the ordered choice snapshot for one runtime placement. */
-async function loadChoiceSnapshots(ctx: MutationCtx, question: TryoutQuestion) {
-  const choices = await ctx.db
-    .query("questionChoices")
-    .withIndex("by_questionId_and_locale", (q) =>
-      q.eq("questionId", question._id).eq("locale", question.locale)
-    )
-    .take(TRYOUT_CHOICE_LIMIT + 1);
-
-  if (choices.length > TRYOUT_CHOICE_LIMIT) {
-    throw new ConvexError({
-      code: "TRYOUT_CHOICE_COUNT_EXCEEDED",
-      message: "Try-out question choice count exceeds the sync limit.",
-    });
-  }
-
-  if (choices.length === 0) {
-    throw new ConvexError({
-      code: "TRYOUT_CHOICE_COUNT_MISMATCH",
-      message: "Try-out question has no synced choices.",
-    });
-  }
-
-  return choices
-    .map((choice) => ({
-      isCorrect: choice.isCorrect,
-      label: choice.label,
-      optionKey: choice.optionKey,
-      order: choice.order,
-    }))
-    .sort((left, right) => left.order - right.order);
+/** Lifts one Convex promise into the typed start failure channel. */
+function tryStartPromise<A>(operation: () => Promise<A>) {
+  return Effect.tryPromise({ catch: toTryoutStartError, try: operation });
 }

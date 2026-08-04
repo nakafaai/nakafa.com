@@ -18,6 +18,43 @@ export function isSamePublicRouteIdentity(
     );
   }
 
+  if (left.kind === "tryout-country" && right.kind === "tryout-country") {
+    return left.countryKey === right.countryKey;
+  }
+
+  if (left.kind === "tryout-exam" && right.kind === "tryout-exam") {
+    return (
+      left.countryKey === right.countryKey && left.examKey === right.examKey
+    );
+  }
+
+  if (left.kind === "tryout-track" && right.kind === "tryout-track") {
+    return (
+      left.countryKey === right.countryKey &&
+      left.examKey === right.examKey &&
+      left.trackKey === right.trackKey
+    );
+  }
+
+  if (left.kind === "tryout-set" && right.kind === "tryout-set") {
+    return (
+      left.countryKey === right.countryKey &&
+      left.examKey === right.examKey &&
+      left.trackKey === right.trackKey &&
+      left.setKey === right.setKey
+    );
+  }
+
+  if (left.kind === "tryout-section" && right.kind === "tryout-section") {
+    return (
+      left.countryKey === right.countryKey &&
+      left.examKey === right.examKey &&
+      left.trackKey === right.trackKey &&
+      left.setKey === right.setKey &&
+      left.sectionKey === right.sectionKey
+    );
+  }
+
   return (
     "sourcePath" in left &&
     "sourcePath" in right &&

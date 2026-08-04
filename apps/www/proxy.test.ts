@@ -44,6 +44,7 @@ const runtimeMocks = vi.hoisted(() => ({
   readMaterialClaims: vi.fn(),
   readProgramPath: vi.fn(),
   readPublic: vi.fn(),
+  readTryout: vi.fn(),
 }));
 const previewMocks = vi.hoisted(() => ({
   configured: vi.fn(),
@@ -74,6 +75,7 @@ vi.mock("@/lib/content/preview/route", () => ({
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: runtimeMocks.readContent,
   getRuntimePublicRoute: runtimeMocks.readPublic,
+  getRuntimeTryoutRoute: runtimeMocks.readTryout,
 }));
 vi.mock("@/lib/content/article/ownership", () => ({
   readPublishedArticleCategory: runtimeMocks.readArticleCategory,
@@ -101,6 +103,9 @@ describe("proxy", () => {
       .mockReturnValue(
         Effect.succeed({ kind: "subject-lesson", sitemap: true })
       );
+    runtimeMocks.readTryout
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ exists: false, managed: false }));
     runtimeMocks.readProgramPath
       .mockReset()
       .mockReturnValue(Effect.succeed({ managed: false, route: null }));
@@ -195,6 +200,75 @@ describe("proxy", () => {
     expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
   });
 
+  it.each([
+    ["missing", undefined],
+    ["matching", { headers: { "x-next-intl-locale": "en" } }],
+    ["mismatched", { headers: { "x-next-intl-locale": "id" } }],
+    ["unsupported", { headers: { "x-next-intl-locale": "de" } }],
+  ])(
+    "rejects an internal app route with a %s locale hint",
+    async (_kind, init) => {
+      const response = await requestProxy(
+        "/en/materials/mathematics/functions/function-concept",
+        init
+      );
+
+      expect(response.status).toBe(404);
+      expect(response.headers.get("x-middleware-rewrite")).toBe(
+        "http://localhost:3000/_not-found/en"
+      );
+      expect(
+        response.headers.get("x-middleware-request-x-next-intl-locale")
+      ).toBe("en");
+      expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    }
+  );
+
+  it("hard-rejects a missing public try-out set before page rendering", async () => {
+    const path = "/en/try-out/indonesia/snbt/2027/missing-set";
+    runtimeMocks.readTryout.mockReturnValueOnce(
+      Effect.succeed({ exists: false, managed: true })
+    );
+
+    const response = await requestProxy(path);
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/_not-found/en"
+    );
+    expect(runtimeMocks.readTryout).toHaveBeenCalledWith({
+      locale: "en",
+      publicPath: "try-out/indonesia/snbt/2027/missing-set",
+    });
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+  });
+
+  it("delegates one retained attempt capability to the authenticated page", async () => {
+    const response = await requestProxy(
+      "/en/try-out/indonesia/snbt/2027/set-1?attemptId=attempt-id"
+    );
+
+    expectLocaleProxy(response);
+    expect(runtimeMocks.readTryout).not.toHaveBeenCalled();
+  });
+
+  it.each(["/en", "/en/search"])(
+    "does not treat the public route %s as an internal rewrite",
+    async (path) => {
+      const response = await requestProxy(path, {
+        headers: { "x-next-intl-locale": "en" },
+      });
+
+      expectLocaleProxy(response);
+    }
+  );
+
+  it("keeps the internal not-found target outside the proxy matcher", () => {
+    expect(
+      unstable_doesMiddlewareMatch({ config, url: "/_not-found/id" })
+    ).toBe(false);
+  });
+
   it("lets the selected next-intl preview rewrite reach the actual page", async () => {
     previewMocks.configured.mockReturnValueOnce(true);
     previewMocks.internal.mockReturnValueOnce(Effect.succeed(true));
@@ -230,15 +304,15 @@ describe("proxy", () => {
   );
 
   it.each([
-    ["/id/quran/999", "http://localhost:3000/id/_not-found", null],
+    ["/id/quran/999", "id", null],
     [
       "/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
-      "http://localhost:3000/en/_not-found",
+      "en",
       "curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
     ],
   ])(
     "returns a hard 404 for missing HTML route %s",
-    async (path, rewrite, projectedPath) => {
+    async (path, locale, projectedPath) => {
       if (projectedPath) {
         runtimeMocks.readPublic.mockReturnValueOnce(Effect.succeed(null));
       }
@@ -246,7 +320,12 @@ describe("proxy", () => {
 
       expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
       expect(response.status).toBe(404);
-      expect(response.headers.get("x-middleware-rewrite")).toBe(rewrite);
+      expect(response.headers.get("x-middleware-rewrite")).toBe(
+        `http://localhost:3000/_not-found/${locale}`
+      );
+      expect(
+        response.headers.get("x-middleware-request-x-next-intl-locale")
+      ).toBe(locale);
       if (projectedPath) {
         expect(runtimeMocks.readPublic).toHaveBeenCalledWith({
           locale: "en",
@@ -330,7 +409,10 @@ describe("proxy", () => {
     const missing = await requestProxy(path);
     expect(missing.status).toBe(404);
     expect(missing.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/en/_not-found"
+      "http://localhost:3000/_not-found/en"
+    );
+    expect(missing.headers.get("x-middleware-request-x-next-intl-locale")).toBe(
+      "en"
     );
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
     expect(runtimeMocks.readPublic).not.toHaveBeenCalled();

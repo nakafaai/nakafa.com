@@ -1,6 +1,6 @@
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/row-hash";
-import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { readProgramRoute } from "@repo/backend/convex/contentRelease/program/route";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";

@@ -3,7 +3,7 @@
 import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
-} from "@/components/tryout/content/load";
+} from "@/components/tryout/content/model";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
 import { TryoutRuntimeQuestion } from "@/components/tryout/runtime/question.client";

@@ -6,6 +6,7 @@ import {
   decodeItemJson,
   decodeReleaseJson,
 } from "@repo/backend/convex/contentRelease/parse";
+import { hasProofTransactionHeadroom } from "@repo/backend/convex/contentRelease/proof/budget";
 import {
   PROOF_PAGE_BYTES,
   PROOF_PAGE_LIMIT,
@@ -15,7 +16,6 @@ import { getConvexSize, type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 import { Effect } from "effect";
 
-const proofKindValidator = literals("artifact", "item");
 const proofRowValidator = v.object({
   artifactJson: v.optional(v.string()),
   index: v.number(),
@@ -119,39 +119,44 @@ const routePageProgram = Effect.fn("contentRelease.routeProofPage")(function* (
       .withIndex("by_releaseId_and_index", (query) =>
         query.eq("releaseId", releaseId).gt("index", afterIndex)
       )
-      .take(PROOF_PAGE_LIMIT + 1)
+      .paginate({
+        cursor: null,
+        maximumBytesRead: PROOF_PAGE_BYTES,
+        maximumRowsRead: PROOF_PAGE_LIMIT,
+        numItems: PROOF_PAGE_LIMIT,
+      })
   );
-  const rows = stored.slice(0, PROOF_PAGE_LIMIT).map((row) => ({
+  const rows = stored.page.map((row) => ({
     index: row.index,
     routeJson: row.routeJson,
   }));
   return {
-    done: stored.length <= PROOF_PAGE_LIMIT,
+    done: stored.isDone,
     nextIndex: rows.at(-1)?.index ?? afterIndex,
     rows,
   };
 });
 
-/** Loads one signed artifact only for its exact staged upsert. */
+/** Loads the signed artifact referenced by one exact staged upsert. */
 const loadArtifactJson = Effect.fn("contentRelease.loadProofArtifact")(
   function* (ctx: QueryCtx, itemJson: string) {
     const item = yield* decodeItemJson(itemJson);
-    const change = item.change;
-    if (change.operation === "delete") {
+    if (item.change.operation === "delete") {
       return;
     }
+    const artifactHash = item.change.artifactHash;
     const artifact = yield* Effect.promise(() =>
       ctx.db
         .query("contentArtifacts")
         .withIndex("by_artifactHash", (query) =>
-          query.eq("artifactHash", change.artifactHash)
+          query.eq("artifactHash", artifactHash)
         )
         .unique()
     );
     if (!artifact) {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",
-        `Artifact ${change.artifactHash} is missing during proof.`
+        `Artifact ${artifactHash} is missing during proof.`
       );
     }
     return artifact.artifactJson;
@@ -162,7 +167,6 @@ const loadArtifactJson = Effect.fn("contentRelease.loadProofArtifact")(
 const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
   ctx: QueryCtx,
   afterIndex: number,
-  kind: "artifact" | "item",
   releaseId: string
 ) {
   if (!Number.isSafeInteger(afterIndex) || afterIndex < -1) {
@@ -187,19 +191,21 @@ const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
       .withIndex("by_releaseId_and_index", (query) =>
         query.eq("releaseId", releaseId).gt("index", afterIndex)
       )
-      .take(PROOF_PAGE_LIMIT + 1)
+      .paginate({
+        cursor: null,
+        maximumBytesRead: PROOF_PAGE_BYTES,
+        maximumRowsRead: PROOF_PAGE_LIMIT,
+        numItems: PROOF_PAGE_LIMIT,
+      })
   );
   const rows: ProofPage["rows"] = [];
-  for (const row of stored.slice(0, PROOF_PAGE_LIMIT)) {
-    const artifactJson =
-      kind === "artifact"
-        ? yield* loadArtifactJson(ctx, row.itemJson)
-        : undefined;
+  for (const row of stored.page) {
+    const artifactJson = yield* loadArtifactJson(ctx, row.itemJson);
     const next = {
       artifactJson,
       index: row.index,
       itemJson: row.itemJson,
-      projectionJson: kind === "item" ? row.projectionJson : undefined,
+      projectionJson: row.projectionJson,
       rollbackJson: row.rollbackJson,
     };
     const candidate = {
@@ -217,11 +223,17 @@ const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
       break;
     }
     rows.push(next);
+    const metrics = yield* Effect.promise(() =>
+      ctx.meta.getTransactionMetrics()
+    );
+    if (!hasProofTransactionHeadroom(metrics)) {
+      break;
+    }
   }
   const nextIndex = rows.at(-1)?.index ?? afterIndex;
-  const consumedAll = rows.length === Math.min(stored.length, PROOF_PAGE_LIMIT);
+  const consumedAll = rows.length === stored.page.length;
   return {
-    done: consumedAll && stored.length <= PROOF_PAGE_LIMIT,
+    done: consumedAll && stored.isDone,
     nextIndex,
     rows,
   };
@@ -235,18 +247,15 @@ export const state = internalQuery({
     runConvexProgram(stateProgram(ctx, args.manifestHash, args.releaseId)),
 });
 
-/** Returns one bounded ordered page, with artifact bodies capped at eight. */
+/** Returns one byte-bounded ordered page with measured transaction headroom. */
 export const page = internalQuery({
   args: {
     afterIndex: v.number(),
-    kind: proofKindValidator,
     releaseId: v.string(),
   },
   returns: proofPageValidator,
   handler: (ctx, args) =>
-    runConvexProgram(
-      pageProgram(ctx, args.afterIndex, args.kind, args.releaseId)
-    ),
+    runConvexProgram(pageProgram(ctx, args.afterIndex, args.releaseId)),
 });
 
 /** Returns one bounded canonical route page for Node verification. */

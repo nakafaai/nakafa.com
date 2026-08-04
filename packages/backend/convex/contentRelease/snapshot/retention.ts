@@ -1,4 +1,4 @@
-import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot";
+import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   loadRelease,
@@ -6,6 +6,32 @@ import {
 } from "@repo/backend/convex/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect } from "effect";
+
+/** Checks indexed transaction history that still requires one try-out snapshot. */
+const hasTryoutRuntimeReference = Effect.fn(
+  "contentRelease.hasTryoutRuntimeReference"
+)(function* (ctx: MutationCtx, snapshotId: string) {
+  const [attempt, scale] = yield* Effect.all([
+    Effect.promise(() =>
+      ctx.db
+        .query("tryoutAttempts")
+        .withIndex("by_tryoutSnapshotId", (query) =>
+          query.eq("tryoutSnapshotId", snapshotId)
+        )
+        .first()
+    ),
+    Effect.promise(() =>
+      ctx.db
+        .query("irtScaleVersions")
+        .withIndex(
+          "by_tryoutSnapshotId_and_setIdentity_and_publishedAt",
+          (query) => query.eq("tryoutSnapshotId", snapshotId)
+        )
+        .first()
+    ),
+  ]);
+  return attempt !== null || scale !== null;
+});
 
 /** Collects release IDs directly protected by publication slots and history. */
 const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
@@ -47,6 +73,12 @@ export const isSnapshotReferenced = Effect.fn(
   family: ContentSnapshotKind,
   snapshotId: string
 ) {
+  if (
+    family === "tryout" &&
+    (yield* hasTryoutRuntimeReference(ctx, snapshotId))
+  ) {
+    return true;
+  }
   const releaseIds = yield* protectedReleases(ctx);
   for (const releaseId of releaseIds) {
     const release = yield* loadRelease(ctx, releaseId);

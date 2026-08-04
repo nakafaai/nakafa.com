@@ -1,11 +1,11 @@
 import {
-  type ContentSnapshotKind,
-  snapshotRowCount,
-} from "@nakafa/aksara-contracts/release/snapshot";
-import {
   type ContentSnapshotRow,
   contentSnapshotId,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
+import {
+  type ContentSnapshotKind,
+  snapshotRowCount,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {

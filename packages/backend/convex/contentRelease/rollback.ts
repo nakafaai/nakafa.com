@@ -1,17 +1,18 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
   canonicalizeRollbackPage,
+  MAX_ROLLBACK_PAGE_BYTES,
   MAX_ROLLBACK_PAGE_RECORDS,
   type RollbackPage,
   RollbackPageRequestSchema,
   type RollbackRecord,
-} from "@nakafa/aksara-contracts/release/rollback";
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   MAX_ROUTE_PAGE_RECORDS,
   type RoutePage,
   RoutePageRequestSchema,
   type RouteRollbackRecord,
-} from "@nakafa/aksara-contracts/release/route-page";
+} from "@nakafa/aksara-contracts/release/route/page";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
@@ -23,11 +24,13 @@ import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { decodeRouteJson } from "@repo/backend/convex/contentRelease/parse";
 import { rollbackRecord } from "@repo/backend/convex/contentRelease/rollback/state";
 import { loadReadableSnapshot } from "@repo/backend/convex/contentRelease/snapshot";
+import {
+  RELEASE_PAGE_LIMIT,
+  ROUTE_CATALOG_PAGE_LIMIT,
+} from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
-
-const ROLLBACK_PAGE_BYTES = 4 * 1024 * 1024;
 
 /** Proves one release is an exact active or verified-candidate rollback source. */
 const rollbackSource = Effect.fn("contentRelease.rollbackSource")(function* (
@@ -71,6 +74,12 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
         })
     )
   );
+  if (request.limit > RELEASE_PAGE_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Rollback query pages require 1-${RELEASE_PAGE_LIMIT} records.`
+    );
+  }
   const { signed } = yield* rollbackSource(
     ctx,
     request.rollbackOf,
@@ -83,7 +92,7 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
       `Rollback cursor ${request.afterIndex} exceeds release ${request.rollbackOf}.`
     );
   }
-  const rows = yield* Effect.promise(() =>
+  const rowPage = yield* Effect.promise(() =>
     ctx.db
       .query("contentItems")
       .withIndex("by_releaseId_and_index", (query) =>
@@ -91,10 +100,15 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
           .eq("releaseId", request.rollbackOf)
           .gt("index", request.afterIndex)
       )
-      .take(request.limit)
+      .paginate({
+        cursor: null,
+        maximumBytesRead: MAX_ROLLBACK_PAGE_BYTES,
+        maximumRowsRead: request.limit,
+        numItems: request.limit,
+      })
   );
   const records: RollbackRecord[] = [];
-  for (const [offset, row] of rows.entries()) {
+  for (const [offset, row] of rowPage.page.entries()) {
     if (row.index !== request.afterIndex + offset + 1) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -105,7 +119,7 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
     const candidate = makeRollbackPage(request, total, [...records, record]);
     if (
       new TextEncoder().encode(canonicalizeRollbackPage(candidate)).byteLength >
-      ROLLBACK_PAGE_BYTES
+      MAX_ROLLBACK_PAGE_BYTES
     ) {
       if (records.length === 0) {
         return yield* releaseFail(
@@ -160,6 +174,12 @@ const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
           })
       )
     );
+    if (request.limit > ROUTE_CATALOG_PAGE_LIMIT) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_LIMIT",
+        `Route rollback query pages require 1-${ROUTE_CATALOG_PAGE_LIMIT} records.`
+      );
+    }
     const { baseSequence, signed } = yield* rollbackSource(
       ctx,
       request.rollbackOf,

@@ -1,14 +1,19 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
+import {
+  getUnknownErrorMessage,
+  readConvexErrorData,
+} from "@repo/backend/convex/lib/effect";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import type { TryoutAttemptAccessSourceKind } from "@repo/backend/convex/tryouts/access/source";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
-import { ConvexError, type Infer, v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 import { Schema } from "effect";
 
 export const startAttemptArgsValidator = v.object({
   countryKey: tryoutRouteKeyValidator,
+  destinationSectionKey: v.optional(tryoutRouteKeyValidator),
   examKey: tryoutRouteKeyValidator,
   entrySectionKey: v.optional(tryoutRouteKeyValidator),
   locale: localeValidator,
@@ -19,6 +24,7 @@ export type StartAttemptArgs = Infer<typeof startAttemptArgsValidator>;
 
 export const startAttemptResultValidator = v.object({
   attemptId: v.id("tryoutAttempts"),
+  navigation: v.object({ publicPath: v.string() }),
 });
 export type StartAttemptResult = Infer<typeof startAttemptResultValidator>;
 
@@ -58,14 +64,15 @@ export interface TryoutStartScope {
   readonly userId: Id<"users">;
 }
 
-export const tryoutStartErrorCode = {
+export const tryoutStartErrorCode = Object.freeze({
   accessRequired: "TRYOUT_ACCESS_REQUIRED",
   attemptLimitReached: "TRYOUT_ATTEMPT_LIMIT_REACHED",
-  failed: "TRYOUT_START_FAILED",
   attemptNotFound: "TRYOUT_ATTEMPT_NOT_FOUND",
+  failed: "TRYOUT_START_FAILED",
+  irtScaleRequired: "TRYOUT_IRT_SCALE_REQUIRED",
   sectionCountMismatch: "TRYOUT_SECTION_COUNT_MISMATCH",
   sectionSnapshotMismatch: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-} as const;
+});
 
 /** Expected domain failure raised while starting a try-out attempt. */
 export class TryoutStartError
@@ -85,21 +92,13 @@ export function toTryoutStartError(error: unknown) {
     return error;
   }
 
-  if (error instanceof ConvexError) {
-    const data = error.data;
-
-    if (typeof data === "object" && data !== null) {
-      const code = "code" in data ? data.code : undefined;
-      const message = "message" in data ? data.message : undefined;
-
-      if (typeof code === "string" && typeof message === "string") {
-        return new TryoutStartError({ code, message });
-      }
-    }
+  const data = readConvexErrorData(error);
+  if (data) {
+    return new TryoutStartError(data);
   }
 
   return new TryoutStartError({
     code: tryoutStartErrorCode.failed,
-    message: error instanceof Error ? error.message : String(error),
+    message: getUnknownErrorMessage(error),
   });
 }

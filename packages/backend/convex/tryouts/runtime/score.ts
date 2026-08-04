@@ -4,7 +4,12 @@ import {
   type AttemptEndReason,
   getAttemptStatusFromEndReason,
 } from "@repo/backend/convex/lib/attempts";
-import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
+import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
+import { findTryoutBundleByRelease } from "@repo/backend/convex/tryouts/runtime/bundle";
+import {
+  TryoutRuntimeError,
+  tryRuntimePromise,
+} from "@repo/backend/convex/tryouts/runtime/error";
 import {
   scoreIrtAttempt,
   scoreIrtSection,
@@ -15,9 +20,15 @@ import {
 } from "@repo/backend/convex/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/convex/tryouts/score";
 import { ConvexError } from "convex/values";
+import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutResponse = Doc<"tryoutResponses">;
+
+interface AttemptScoreOwner {
+  readonly setIdentity: string;
+  readonly tryoutSnapshotId: string;
+}
 
 /** Loads one owned attempt or rejects it before mutating runtime rows. */
 export async function requireOwnedAttempt(
@@ -48,35 +59,40 @@ export function summarizeResponses(responses: TryoutResponse[]) {
 }
 
 /** Scores one terminal section with its parent attempt's frozen strategy. */
-export async function scoreTryoutSection(
-  ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
-    responses: TryoutResponse[];
-    totalQuestions: number;
-    tryoutSectionId: Id<"tryoutSections">;
-  }
-) {
-  if (args.attempt.scoringStrategy === "irt") {
-    const score = await scoreIrtSection(ctx, {
-      ...args,
+export const scoreTryoutSection = Effect.fn("tryouts.runtime.scoreSection")(
+  function* (
+    ctx: MutationCtx,
+    args: {
+      attempt: TryoutAttempt;
+      responses: TryoutResponse[];
+      sectionKey: string;
+      totalQuestions: number;
+      tryoutSectionId?: Id<"tryoutSections">;
+    }
+  ) {
+    if (args.attempt.scoringStrategy === "irt") {
+      return yield* tryRuntimePromise(() =>
+        scoreIrtSection(ctx, {
+          ...args,
+          scoringStrategy: args.attempt.scoringStrategy,
+        })
+      );
+    }
+
+    const { correctAnswers } = summarizeResponses(args.responses);
+
+    return scoreRawAnswers({
+      correctAnswers,
       scoringStrategy: args.attempt.scoringStrategy,
+      totalQuestions: args.totalQuestions,
     });
-
-    return score;
   }
-
-  const { correctAnswers } = summarizeResponses(args.responses);
-
-  return scoreRawAnswers({
-    correctAnswers,
-    scoringStrategy: args.attempt.scoringStrategy,
-    totalQuestions: args.totalQuestions,
-  });
-}
+);
 
 /** Finalizes one attempt and stores the score snapshot exactly once. */
-export async function finalizeAttemptScore(
+export const finalizeAttemptScore = Effect.fn(
+  "tryouts.runtime.finalizeAttemptScore"
+)(function* (
   ctx: MutationCtx,
   args: {
     attempt: TryoutAttempt;
@@ -84,64 +100,115 @@ export async function finalizeAttemptScore(
     now: number;
   }
 ) {
-  const existingScore = await ctx.db
-    .query("tryoutScores")
-    .withIndex("by_tryoutAttemptId", (q) =>
-      q.eq("tryoutAttemptId", args.attempt._id)
-    )
-    .unique();
+  const existingScore = yield* tryRuntimePromise(() =>
+    ctx.db
+      .query("tryoutScores")
+      .withIndex("by_tryoutAttemptId", (q) =>
+        q.eq("tryoutAttemptId", args.attempt._id)
+      )
+      .unique()
+  );
 
   if (existingScore) {
     return { scoreId: existingScore._id };
   }
 
   if (args.attempt.status !== "in-progress") {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       message: "Try-out attempt is not active.",
     });
   }
 
-  const set = await ctx.db.get(args.attempt.tryoutSetId);
-
-  if (!set) {
-    throw new ConvexError({
-      code: "TRYOUT_SET_NOT_FOUND",
-      message: "Try-out set not found.",
-    });
-  }
-
-  const responses = await loadAttemptResponses(ctx, args.attempt);
-  const score = await scoreAttempt(ctx, {
-    attempt: args.attempt,
-    responses,
-    scoringStrategy: args.attempt.scoringStrategy,
-  });
-  const scoreId = await insertAttemptScore(ctx, {
-    attempt: args.attempt,
-    finalizedAt: args.now,
-    score,
-  });
+  const responses = yield* tryRuntimePromise(() =>
+    loadAttemptResponses(ctx, args.attempt)
+  );
+  const score = yield* tryRuntimePromise(() =>
+    Promise.resolve(
+      scoreAttempt(ctx, {
+        attempt: args.attempt,
+        responses,
+        scoringStrategy: args.attempt.scoringStrategy,
+      })
+    )
+  );
+  const owner = yield* resolveAttemptScoreOwner(ctx, args.attempt);
+  const scoreId = yield* tryRuntimePromise(() =>
+    insertAttemptScore(ctx, {
+      attempt: args.attempt,
+      finalizedAt: args.now,
+      owner,
+      score,
+    })
+  );
   const status = getAttemptStatusFromEndReason(args.endReason);
 
-  await ctx.db.patch(args.attempt._id, {
-    completedAt: args.now,
-    endReason: args.endReason,
-    lastActivityAt: args.now,
-    scoreStatus: score.scoreStatus,
-    status,
-    totalCorrect: score.totalCorrect,
-  });
+  yield* tryRuntimePromise(() =>
+    ctx.db.patch(args.attempt._id, {
+      completedAt: args.now,
+      endReason: args.endReason,
+      lastActivityAt: args.now,
+      scoreStatus: score.scoreStatus,
+      status,
+      totalCorrect: score.totalCorrect,
+    })
+  );
 
-  await writeTryoutSetProgress(ctx, {
+  yield* writeTryoutSetProgress(ctx, {
     attempt: args.attempt,
     publishedScore: score.publishedScore,
-    set,
     status,
     updatedAt: args.now,
-  });
+  }).pipe(
+    Effect.mapError(
+      (error) =>
+        new TryoutRuntimeError({
+          code: error.code,
+          message: error.message,
+        })
+    )
+  );
 
   return { scoreId };
+});
+
+/** Resolves signed score ownership without activating a prepared attempt root. */
+const resolveAttemptScoreOwner = Effect.fn(
+  "tryouts.runtime.resolveAttemptScoreOwner"
+)(function* (ctx: MutationCtx, attempt: TryoutAttempt) {
+  const { setIdentity, snapshotReleaseId, tryoutSnapshotId } = attempt;
+  if (tryoutSnapshotId) {
+    if (!setIdentity) {
+      return yield* scoreOwnershipError();
+    }
+    return { setIdentity, tryoutSnapshotId };
+  }
+
+  if (!(setIdentity || snapshotReleaseId)) {
+    return null;
+  }
+  if (!(setIdentity && snapshotReleaseId)) {
+    return yield* scoreOwnershipError();
+  }
+
+  const bundle = yield* findTryoutBundleByRelease(ctx, snapshotReleaseId).pipe(
+    Effect.mapError(() => scoreOwnershipError())
+  );
+  if (!bundle) {
+    return yield* scoreOwnershipError();
+  }
+  return {
+    setIdentity,
+    tryoutSnapshotId: bundle.snapshotId,
+  };
+});
+
+/** Fails closed when a terminal score cannot prove its frozen owner. */
+function scoreOwnershipError() {
+  return new TryoutRuntimeError({
+    code: "TRYOUT_SCORE_OWNER_INVALID",
+    message: "Try-out score ownership does not match its frozen snapshot.",
+  });
 }
 
 /** Loads bounded responses for one complete try-out attempt. */
@@ -200,6 +267,7 @@ function insertAttemptScore(
   args: {
     attempt: TryoutAttempt;
     finalizedAt: number;
+    owner: AttemptScoreOwner | null;
     score: AttemptScore;
   }
 ) {
@@ -212,7 +280,10 @@ function insertAttemptScore(
     totalCorrect: args.score.totalCorrect,
     totalQuestions: args.score.totalQuestions,
     tryoutAttemptId: args.attempt._id,
-    tryoutSetId: args.attempt.tryoutSetId,
+    ...(args.owner ?? {}),
+    ...(args.attempt.tryoutSetId
+      ? { tryoutSetId: args.attempt.tryoutSetId }
+      : {}),
     userId: args.attempt.userId,
   };
 

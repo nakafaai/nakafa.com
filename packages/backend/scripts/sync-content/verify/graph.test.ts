@@ -119,7 +119,7 @@ describe("sync-content graph verification", () => {
     );
 
     await expect(
-      Effect.runPromise(verifyGraphIdentity(config, { locale: "id" }))
+      Effect.runPromise(verifyGraphIdentity(config, { locale: "id" }, false))
     ).resolves.toBe(true);
 
     getGraphIdentityIntegrityMock.mockReturnValue(
@@ -137,8 +137,21 @@ describe("sync-content graph verification", () => {
     );
 
     await expect(
-      Effect.runPromise(verifyGraphIdentity(config, { locale: "id" }))
+      Effect.runPromise(verifyGraphIdentity(config, { locale: "id" }, false))
     ).resolves.toBe(false);
+  });
+
+  it("skips local source alignment under signed Aksara ownership", async () => {
+    getGraphIdentityIntegrityMock.mockReturnValue(
+      Effect.succeed(cleanPersistedIntegrity())
+    );
+
+    await expect(
+      Effect.runPromise(verifyGraphIdentity(config, { locale: "id" }, true))
+    ).resolves.toBe(true);
+
+    expect(getGraphIdentityIntegrityMock).toHaveBeenCalledOnce();
+    expect(callConvexQueryMock).not.toHaveBeenCalled();
   });
 });
 

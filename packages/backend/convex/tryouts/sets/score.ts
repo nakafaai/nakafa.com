@@ -57,7 +57,11 @@ async function readScoredSets(
     .paginate({ ...args.paginationOpts, cursor });
   const rows = await Promise.all(
     page.page.map(async (progress) => {
-      const set = await ctx.db.get(progress.tryoutSetId);
+      const tryoutSetId = progress.tryoutSetId;
+      if (!tryoutSetId) {
+        return null;
+      }
+      const set = await ctx.db.get(tryoutSetId);
 
       if (!isReadyTrackSet(set, args)) {
         return null;

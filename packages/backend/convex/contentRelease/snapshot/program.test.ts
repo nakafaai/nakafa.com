@@ -8,7 +8,7 @@ import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
 import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { stageProgramRow } from "@repo/backend/convex/contentRelease/snapshot/program";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";

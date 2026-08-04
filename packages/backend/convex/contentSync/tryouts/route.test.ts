@@ -1,4 +1,6 @@
 import { syncTryoutRoute } from "@repo/backend/convex/contentSync/tryouts/route";
+import type { SyncedTryoutRoute } from "@repo/backend/convex/contentSync/tryouts/spec";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
@@ -24,25 +26,25 @@ describe("contentSync/tryouts/route", () => {
           )
           .unique(),
       }));
-    const route = {
+    const route: SyncedTryoutRoute = {
       contentHash: "track-hash",
       isReady: true,
-      kind: "tryout-track" as const,
-      locale: "id" as const,
+      kind: "tryout-track",
+      locale: "id",
       publicPath: TRACK_ROUTE,
       sourcePath: TRACK_ROUTE,
       title: "Matematika",
     };
 
-    await t.mutation(async (ctx) => await syncTryoutRoute(ctx, route, 1));
+    await t.mutation((ctx) => runConvexProgram(syncTryoutRoute(ctx, route, 1)));
 
     const published = await readRouteRows();
 
     expect(published.route).not.toBeNull();
     expect(published.search).not.toBeNull();
 
-    await t.mutation(
-      async (ctx) => await syncTryoutRoute(ctx, { ...route, isReady: false }, 2)
+    await t.mutation((ctx) =>
+      runConvexProgram(syncTryoutRoute(ctx, { ...route, isReady: false }, 2))
     );
 
     const rows = await readRouteRows();

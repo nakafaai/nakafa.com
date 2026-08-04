@@ -1,19 +1,21 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
+import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readTryoutContentAccess } from "@/components/tryout/content/access";
 
 vi.mock("convex/nextjs", () => ({ fetchQuery: vi.fn() }));
 
-const args = {
-  countryKey: "indonesia",
-  examKey: "snbt",
-  locale: "id" as const,
-  sectionKey: "penalaran-matematika",
-  setKey: "set-1",
-  trackKey: "2027",
-};
+const args: FunctionArgs<typeof api.tryouts.queries.access.getSectionContent> =
+  {
+    countryKey: "indonesia",
+    examKey: "snbt",
+    locale: "id",
+    sectionKey: "penalaran-matematika",
+    setKey: "set-1",
+    trackKey: "2027",
+  };
 
 describe("tryout server content access", () => {
   beforeEach(() => {

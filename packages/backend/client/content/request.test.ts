@@ -1,7 +1,18 @@
 // @vitest-environment node
 
-import { MAX_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
-import { fetchPublicContentRuntime } from "@repo/backend/client/content/request";
+import {
+  ContentKeySchema,
+  PublicPathSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  MAX_RUNTIME_RESPONSE_BYTES,
+  type ProtectedContentRuntimeRequest,
+  type PublicContentRuntimeRequest,
+} from "@nakafa/aksara-contracts/runtime/spec";
+import {
+  type ContentRuntimeTarget,
+  fetchContentRuntime,
+} from "@repo/backend/client/content/request";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
@@ -15,15 +26,31 @@ import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const endpoint = "https://example.convex.site/internal/content/runtime";
-const target = {
+const target: ContentRuntimeTarget = {
   siteUrl: "https://example.convex.site/ignored/path",
   token: "runtime-test-token",
 };
-const request = {
+const request: PublicContentRuntimeRequest = {
   delivery: "public",
   locale: "en",
-  publicPath: "test/head-0",
-} as const;
+  publicPath: PublicPathSchema.make("test/head-0"),
+};
+const protectedRequest: ProtectedContentRuntimeRequest = {
+  artifactHash: TEST_DIGEST,
+  contentKey: ContentKeySchema.make(
+    "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question"
+  ),
+  delivery: "authenticated",
+  locale: "en",
+  snapshotId: TEST_DIGEST,
+  snapshotReleaseId: TEST_RELEASE_ID,
+};
+const unsafeTargets: readonly [string, string][] = [
+  ["not a URL", "url"],
+  ["http://example.com", "url"],
+  ["ftp://localhost", "url"],
+  ["https://user:secret@example.com", "url"],
+];
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 
 vi.mock("server-only", () => ({}));
@@ -64,13 +91,13 @@ function foundBody() {
 
 /** Runs one request through the Effect test boundary. */
 function execute(input: unknown = request, runtimeTarget = target) {
-  return Effect.runPromise(fetchPublicContentRuntime(runtimeTarget, input));
+  return Effect.runPromise(fetchContentRuntime(runtimeTarget, input));
 }
 
 /** Exposes one request's typed failure value. */
 function reject(input: unknown = request, runtimeTarget = target) {
   return Effect.runPromise(
-    fetchPublicContentRuntime(runtimeTarget, input).pipe(Effect.flip)
+    fetchContentRuntime(runtimeTarget, input).pipe(Effect.flip)
   );
 }
 
@@ -83,7 +110,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("public content runtime request", () => {
+describe("content runtime request", () => {
   it("posts one bounded public no-store request to the fixed endpoint", async () => {
     const body = JSON.stringify({ kind: "missing" });
     fetchMock.mockResolvedValue(
@@ -168,17 +195,15 @@ describe("public content runtime request", () => {
     }
   );
 
-  it.each([
-    ["not a URL", "url"],
-    ["http://example.com", "url"],
-    ["ftp://localhost", "url"],
-    ["https://user:secret@example.com", "url"],
-  ] as const)("rejects unsafe target %s", async (siteUrl, reason) => {
-    await expect(
-      reject(request, { ...target, siteUrl })
-    ).resolves.toMatchObject({ reason });
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
+  it.each(unsafeTargets)(
+    "rejects unsafe target %s",
+    async (siteUrl, reason) => {
+      await expect(
+        reject(request, { ...target, siteUrl })
+      ).resolves.toMatchObject({ reason });
+      expect(fetchMock).not.toHaveBeenCalled();
+    }
+  );
 
   it("allows plain HTTP only for loopback infrastructure", async () => {
     fetchMock.mockResolvedValue(
@@ -195,7 +220,21 @@ describe("public content runtime request", () => {
     ).resolves.toMatchObject({ status: 404 });
   });
 
-  it.each([
+  it("posts an exact protected selector through the same bounded seam", async () => {
+    const body = JSON.stringify({ kind: "missing" });
+    fetchMock.mockResolvedValue(createResponse(body, 404));
+
+    await expect(execute(protectedRequest)).resolves.toMatchObject({
+      request: protectedRequest,
+      status: 404,
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      endpoint,
+      expect.objectContaining({ body: JSON.stringify(protectedRequest) })
+    );
+  });
+
+  const invalidResponses: readonly [Response, string][] = [
     [
       createResponse(
         JSON.stringify({ kind: "missing" }),
@@ -219,11 +258,16 @@ describe("public content runtime request", () => {
     [createResponse("{", 404), "json"],
     [createResponse("{}", 404), "json"],
     [createResponse(JSON.stringify({ kind: "missing" }), 200), "status"],
-  ] as const)("rejects an invalid response as %s", async (response, reason) => {
-    fetchMock.mockResolvedValue(response);
+  ];
 
-    await expect(reject()).resolves.toMatchObject({ reason });
-  });
+  it.each(invalidResponses)(
+    "rejects an invalid response as %s",
+    async (response, reason) => {
+      fetchMock.mockResolvedValue(response);
+
+      await expect(reject()).resolves.toMatchObject({ reason });
+    }
+  );
 
   it("rejects fetch, unreadable, invalid UTF-8, and oversized bodies", async () => {
     const unreadable = createResponse(
@@ -251,7 +295,7 @@ describe("public content runtime request", () => {
     });
   });
 
-  it("fails before network access for invalid or non-public requests", async () => {
+  it("fails before network access for invalid requests", async () => {
     const cyclic: { self?: unknown } = {};
     cyclic.self = cyclic;
 
@@ -265,9 +309,6 @@ describe("public content runtime request", () => {
     await expect(
       reject({ ...request, publicPath: "a".repeat(5000) })
     ).resolves.toMatchObject({ reason: "request-size" });
-    await expect(
-      reject({ ...request, delivery: "entitled" })
-    ).resolves.toMatchObject({ reason: "delivery" });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

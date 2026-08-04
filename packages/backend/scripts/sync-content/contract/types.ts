@@ -80,10 +80,13 @@ export interface ValidationResult {
   valid: number;
 }
 
-export interface FilesystemSlugs {
+export interface FilesystemArticleCurriculumSlugs {
   articleSlugs: string[];
   curriculumLessonSlugs: string[];
   curriculumTopicSlugs: string[];
+}
+
+export interface FilesystemTryoutSlugs {
   questionSetSourcePaths: string[];
   questionSourceKeys: string[];
   questionSourcePaths: string[];

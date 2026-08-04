@@ -1,11 +1,44 @@
-import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot";
-import { contentSnapshotId } from "@nakafa/aksara-contracts/release/snapshot-data";
+import { contentSnapshotId } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeSnapshotJson } from "@repo/backend/convex/contentRelease/parse";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { loadSnapshot } from "@repo/backend/convex/contentRelease/snapshot/manifest";
 import { Effect } from "effect";
+
+/** Loads and authenticates one retained immutable family snapshot. */
+export const loadVerifiedSnapshot = Effect.fn(
+  "contentRelease.loadVerifiedSnapshot"
+)(function* (ctx: QueryCtx, family: ContentSnapshotKind, snapshotId: string) {
+  const stored = yield* loadSnapshot(ctx, family, snapshotId);
+  if (!stored || stored.verifiedAt === undefined) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_MISSING",
+      `Verified ${family} snapshot ${snapshotId} is unavailable.`
+    );
+  }
+  const snapshot = yield* decodeSnapshotJson(stored.snapshotJson);
+  if (
+    snapshot.family !== family ||
+    contentSnapshotId(snapshot) !== snapshotId
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Verified ${family} snapshot lost its signed identity.`
+    );
+  }
+  if (
+    snapshot.family === "quran" &&
+    snapshot.manifest.provenanceStatus !== "approved"
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_UNSUPPORTED",
+      "Verified Quran snapshot has blocked provenance."
+    );
+  }
+  return { snapshot, stored };
+});
 
 /** Resolves active release ownership and its optional verified family snapshot. */
 export const loadSnapshotOwner = Effect.fn("contentRelease.loadSnapshotOwner")(
@@ -18,32 +51,11 @@ export const loadSnapshotOwner = Effect.fn("contentRelease.loadSnapshotOwner")(
     if (state.resultSnapshotId === null) {
       return { active, snapshot: null, snapshotId: null };
     }
-    const stored = yield* loadSnapshot(ctx, family, state.resultSnapshotId);
-    if (!stored || stored.verifiedAt === undefined) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_MISSING",
-        `Active ${family} snapshot ${state.resultSnapshotId} is unavailable.`
-      );
-    }
-    const snapshot = yield* decodeSnapshotJson(stored.snapshotJson);
-    if (
-      snapshot.family !== family ||
-      contentSnapshotId(snapshot) !== state.resultSnapshotId
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Active ${family} snapshot lost its signed identity.`
-      );
-    }
-    if (
-      snapshot.family === "quran" &&
-      snapshot.manifest.provenanceStatus !== "approved"
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_UNSUPPORTED",
-        "Active Quran snapshot has blocked provenance."
-      );
-    }
+    const { snapshot } = yield* loadVerifiedSnapshot(
+      ctx,
+      family,
+      state.resultSnapshotId
+    );
     return { active, snapshot, snapshotId: state.resultSnapshotId };
   }
 );

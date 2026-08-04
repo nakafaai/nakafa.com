@@ -7,9 +7,12 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 export const decodeSourceRevision = Effect.fn(
   "NakafaContent.decodeSourceRevision"
 )(function* (
-  source: null | string,
+  source: null | string | undefined,
   identity: { readonly locale: Locale; readonly publicPath: string }
 ) {
+  if (source === undefined) {
+    return null;
+  }
   if (source === null) {
     return null;
   }

@@ -3,7 +3,10 @@
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { parseStoredJson } from "@repo/backend/convex/contentRelease/parse";
-import type { CatalogPage } from "@repo/backend/convex/contentRelease/proof/catalog";
+import type {
+  CatalogCursor,
+  CatalogPage,
+} from "@repo/backend/convex/contentRelease/proof/catalog";
 import type {
   ProofPage,
   RouteProofPage,
@@ -13,12 +16,12 @@ import { Effect, Option, Stream } from "effect";
 
 const proofPageReference = makeFunctionReference<
   "query",
-  { afterIndex: number; kind: "artifact" | "item"; releaseId: string },
+  { afterIndex: number; releaseId: string },
   ProofPage
 >("contentRelease/proof/read:page");
 const catalogPageReference = makeFunctionReference<
   "query",
-  { cursor: null | string; releaseId: string },
+  { cursor: CatalogCursor | null; releaseId: string },
   CatalogPage
 >("contentRelease/proof/catalog:page");
 const routePageReference = makeFunctionReference<
@@ -28,14 +31,10 @@ const routePageReference = makeFunctionReference<
 >("contentRelease/proof/read:routePage");
 
 /** Replays one complete bounded proof stream across indexed query pages. */
-export function readProofStream(
-  ctx: ActionCtx,
-  kind: "artifact" | "item",
-  releaseId: string
-) {
+export function readProofStream(ctx: ActionCtx, releaseId: string) {
   return Stream.paginateEffect(-1, (afterIndex) =>
     callInternal(() =>
-      ctx.runQuery(proofPageReference, { afterIndex, kind, releaseId })
+      ctx.runQuery(proofPageReference, { afterIndex, releaseId })
     ).pipe(
       Effect.map((page): readonly [ProofPage, Option.Option<number>] => [
         page,
@@ -47,16 +46,18 @@ export function readProofStream(
 
 /** Replays the complete effective catalog in canonical indexed order. */
 export function readResultStream(ctx: ActionCtx, releaseId: string) {
-  return Stream.paginateEffect(null, (cursor: null | string) =>
+  return Stream.paginateEffect(null, (cursor: CatalogCursor | null) =>
     callInternal(() =>
       ctx.runQuery(catalogPageReference, { cursor, releaseId })
     ).pipe(
-      Effect.map((page): readonly [CatalogPage, Option.Option<string>] => [
-        page,
-        page.done || page.nextCursor === null
-          ? Option.none()
-          : Option.some(page.nextCursor),
-      ])
+      Effect.map(
+        (page): readonly [CatalogPage, Option.Option<CatalogCursor>] => [
+          page,
+          page.done || page.nextCursor === null
+            ? Option.none()
+            : Option.some(page.nextCursor),
+        ]
+      )
     )
   ).pipe(Stream.flatMap(({ heads }) => Stream.fromIterable(heads)));
 }

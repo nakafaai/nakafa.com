@@ -1,5 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import { collectFilesystemSlugs } from "@repo/backend/scripts/sync-content/cleanup/source";
+import {
+  collectFilesystemArticleCurriculumSlugs,
+  collectFilesystemTryoutSlugs,
+} from "@repo/backend/scripts/sync-content/cleanup/source";
 import {
   log,
   logStaleItems,
@@ -9,20 +12,23 @@ import { DeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/
 import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
+  FilesystemTryoutSlugs,
   StaleItem,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
 import {
-  getStaleContent,
+  getStaleArticleCurriculumContent,
+  getStaleTryoutContent,
   getUnusedAuthors,
 } from "@repo/backend/scripts/sync-content/convex/inspection";
+import { readContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import type {
   DefaultFunctionArgs,
   FunctionArgs,
   FunctionReference,
 } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 type DeleteStaleMutation = FunctionReference<
   "mutation",
@@ -30,6 +36,20 @@ type DeleteStaleMutation = FunctionReference<
   DefaultFunctionArgs,
   { deleted: number }
 >;
+type StaleTryoutContent = Effect.Effect.Success<
+  ReturnType<typeof getStaleTryoutContent>
+>;
+
+/** Creates an empty tryout cleanup result when Aksara owns the scope. */
+const emptyStaleTryoutContent = (): StaleTryoutContent => ({
+  staleQuestions: [],
+  staleQuestionSets: [],
+  staleTryoutCountries: [],
+  staleTryoutExams: [],
+  staleTryoutSections: [],
+  staleTryoutSets: [],
+  staleTryoutTracks: [],
+});
 
 type DeleteStaleArticleArgs = FunctionArgs<
   typeof internal.contentSync.mutations.articles.deleteStaleArticles
@@ -251,21 +271,53 @@ export const clean = Effect.fn("sync.clean")(function* (
     log("DRY RUN MODE (use --force to actually delete)\n");
   }
 
+  const ownership = yield* readContentSyncOwnership(config);
   log("Scanning filesystem...");
-  const slugs = yield* collectFilesystemSlugs();
-  log(`  Articles on disk: ${slugs.articleSlugs.length}`);
-  log(`  Curriculum topics on disk: ${slugs.curriculumTopicSlugs.length}`);
-  log(`  Curriculum lessons on disk: ${slugs.curriculumLessonSlugs.length}`);
-  log(`  Question sets on disk: ${slugs.questionSetSourcePaths.length}`);
-  log(`  Questions on disk: ${slugs.questionSourcePaths.length}`);
-  log(`  Try-out countries on disk: ${slugs.tryoutCountryKeys.length}`);
-  log(`  Try-out exams on disk: ${slugs.tryoutExamKeys.length}`);
-  log(`  Try-out tracks on disk: ${slugs.tryoutTrackKeys.length}`);
-  log(`  Try-out sets on disk: ${slugs.tryoutSetKeys.length}`);
-  log(`  Try-out sections on disk: ${slugs.tryoutSectionKeys.length}`);
+  const articleCurriculumSlugs =
+    yield* collectFilesystemArticleCurriculumSlugs();
+  log(`  Articles on disk: ${articleCurriculumSlugs.articleSlugs.length}`);
+  log(
+    `  Curriculum topics on disk: ${articleCurriculumSlugs.curriculumTopicSlugs.length}`
+  );
+  log(
+    `  Curriculum lessons on disk: ${articleCurriculumSlugs.curriculumLessonSlugs.length}`
+  );
+
+  const tryoutSlugs = ownership.tryoutsManaged
+    ? Option.none<FilesystemTryoutSlugs>()
+    : Option.some(yield* collectFilesystemTryoutSlugs());
+
+  if (Option.isNone(tryoutSlugs)) {
+    log("  Tryouts: signed Aksara ownership active");
+  } else {
+    log(
+      `  Question sets on disk: ${tryoutSlugs.value.questionSetSourcePaths.length}`
+    );
+    log(`  Questions on disk: ${tryoutSlugs.value.questionSourcePaths.length}`);
+    log(
+      `  Try-out countries on disk: ${tryoutSlugs.value.tryoutCountryKeys.length}`
+    );
+    log(`  Try-out exams on disk: ${tryoutSlugs.value.tryoutExamKeys.length}`);
+    log(
+      `  Try-out tracks on disk: ${tryoutSlugs.value.tryoutTrackKeys.length}`
+    );
+    log(`  Try-out sets on disk: ${tryoutSlugs.value.tryoutSetKeys.length}`);
+    log(
+      `  Try-out sections on disk: ${tryoutSlugs.value.tryoutSectionKeys.length}`
+    );
+  }
 
   log("\nQuerying database for stale content...");
-  const stale = yield* getStaleContent(config, slugs);
+  const staleTryouts = Option.isSome(tryoutSlugs)
+    ? yield* getStaleTryoutContent(config, tryoutSlugs.value)
+    : emptyStaleTryoutContent();
+  const stale = {
+    ...(yield* getStaleArticleCurriculumContent(
+      config,
+      articleCurriculumSlugs
+    )),
+    ...staleTryouts,
+  };
 
   const totalStale =
     stale.staleArticles.length +

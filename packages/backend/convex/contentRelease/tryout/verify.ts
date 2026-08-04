@@ -29,7 +29,8 @@ export const verifyTryoutCatalog = Effect.fn(
     facts.kind !== row.kind ||
     facts.locale !== row.locale ||
     facts.order !== row.order ||
-    facts.publicPath !== row.publicPath
+    facts.publicPath !== row.publicPath ||
+    facts.setIdentity !== row.setIdentity
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -58,6 +59,7 @@ export const verifyTryoutPlacement = Effect.fn(
   const facts = tryoutPlacementFacts(decoded.record);
   if (
     facts.answerArtifactHash !== row.answerArtifactHash ||
+    facts.contentHash !== row.contentHash ||
     facts.countryKey !== row.countryKey ||
     facts.examKey !== row.examKey ||
     facts.identity !== row.identity ||

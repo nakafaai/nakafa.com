@@ -42,6 +42,12 @@ export type SitemapPage =
       kind: "public";
       locale: Locale;
       page: number;
+    }
+  | {
+      id: string;
+      kind: "tryout";
+      locale: Locale;
+      page: number;
     };
 
 const contentSections: readonly RuntimeContentSection[] = [
@@ -83,6 +89,11 @@ export function formatPublicPage(locale: Locale, page: number) {
   return `public_${locale}_${page}`;
 }
 
+/** Formats one bounded signed try-out sitemap page id. */
+export function formatTryoutPage(locale: Locale, page: number) {
+  return `tryout_${locale}_${page}`;
+}
+
 /** Parses one canonical sitemap page identity. */
 export function getSitemapPageDescriptor(id: string): SitemapPage | null {
   if (id === SITEMAP_BASE_ID) {
@@ -96,12 +107,15 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
     return null;
   }
 
-  if (prefix === "public") {
+  if (prefix === "public" || prefix === "tryout") {
     if (segments.length !== 3) {
       return null;
     }
     const page = parsePageNumber(segments[2]);
-    return page === null ? null : { id, kind: "public", locale, page };
+    if (page === null) {
+      return null;
+    }
+    return { id, kind: prefix, locale, page };
   }
 
   if (prefix === "article") {
@@ -171,6 +185,13 @@ export function isPublicSitemapPage(
   page: SitemapPage
 ): page is Extract<SitemapPage, { kind: "public" }> {
   return "kind" in page && page.kind === "public";
+}
+
+/** Checks whether one page targets signed try-out routes. */
+export function isTryoutSitemapPage(
+  page: SitemapPage
+): page is Extract<SitemapPage, { kind: "tryout" }> {
+  return "kind" in page && page.kind === "tryout";
 }
 
 /** Parses one canonical non-negative sitemap page number. */

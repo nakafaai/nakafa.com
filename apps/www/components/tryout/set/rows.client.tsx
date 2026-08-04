@@ -6,11 +6,17 @@ import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { TryoutList } from "@/components/tryout/catalog/list";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import {
+  getTryoutAttemptHref,
+  getTryoutPublicPathHref,
+} from "@/components/tryout/route/path";
 
 type SetPageQuery = typeof api.tryouts.queries.catalog.getSetPage;
 type SetPage = NonNullable<FunctionReturnType<SetPageQuery>>;
 type SetSection = SetPage["sections"][number];
+type CurrentAttempt = NonNullable<
+  FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>
+>;
 type SectionStatus = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>
 >["status"];
@@ -33,15 +39,19 @@ export function TryoutSectionRows({
   const prewarmData = useTryoutDataIntent();
   const activeAttempt =
     value.attempt?.status === "in-progress" ? value.attempt : null;
+  const boundAttempt = value.attempt ?? null;
   const activeSectionKey = activeAttempt?.activeSectionKey ?? null;
   const completedSections = new Set(value.attempt?.completedSectionKeys ?? []);
   const currentSectionKey = activeAttempt?.resumeSectionKey ?? null;
+  const sections: readonly SectionRow[] =
+    boundAttempt?.sectionRoutes ?? value.sections;
 
   return (
     <TryoutList
       emptyLabel={value.emptyLabel}
-      rows={value.sections.flatMap((section) => {
-        if (!section.publicPath) {
+      rows={sections.flatMap((section) => {
+        const publicPath = section.publicPath;
+        if (!publicPath) {
           return [];
         }
 
@@ -49,10 +59,13 @@ export function TryoutSectionRows({
           {
             current: section.sectionKey === currentSectionKey,
             description: `${section.questionCount} ${value.questionUnitLabel}`,
-            href: getTryoutPublicPathHref(section.publicPath),
+            href: boundAttempt
+              ? getTryoutAttemptHref(publicPath, boundAttempt.attemptId)
+              : getTryoutPublicPathHref(publicPath),
             key: section.sectionKey,
             onIntent: () =>
               prewarmData({
+                ...(boundAttempt ? { attemptId: boundAttempt.attemptId } : {}),
                 countryKey: value.set.countryKey,
                 examKey: value.set.examKey,
                 kind: "section",
@@ -78,6 +91,11 @@ export function TryoutSectionRows({
     />
   );
 }
+
+type SectionRow = Pick<
+  SetSection | CurrentAttempt["sectionRoutes"][number],
+  "publicPath" | "questionCount" | "sectionKey" | "title"
+>;
 
 /** Resolves one nested section's canonical workflow status. */
 function getSectionStatus({

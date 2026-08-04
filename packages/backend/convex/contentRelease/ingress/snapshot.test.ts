@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
+import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   verifySnapshotBatch,
   verifySnapshotManifest,

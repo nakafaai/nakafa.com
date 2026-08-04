@@ -1,4 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import {
+  PROOF_PAGE_LIMIT,
+  RELEASE_PAGE_LIMIT,
+} from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
@@ -38,21 +42,27 @@ function changeAt(index: number) {
   };
 }
 
-/** Stages nine complete changes across two bounded transport batches. */
+/** Stages one more change than a complete proof transaction can verify. */
 async function stagePagedFixture(t: TestConvex<typeof schema>) {
+  const itemCount = PROOF_PAGE_LIMIT + 1;
   await t.mutation((ctx) =>
     insertTestRelease(ctx, {
-      itemCount: 9,
-      projectionCount: 9,
-      routeCount: 9,
-      upsertCount: 9,
+      itemCount,
+      projectionCount: itemCount,
+      routeCount: itemCount,
+      upsertCount: itemCount,
     })
   );
-  const changes = Array.from({ length: 9 }, (_, index) => changeAt(index));
-  for (const [batchIndex, batch] of [
-    changes.slice(0, 8),
-    changes.slice(8),
-  ].entries()) {
+  const changes = Array.from({ length: itemCount }, (_, index) =>
+    changeAt(index)
+  );
+  for (
+    let batchIndex = 0;
+    batchIndex * RELEASE_PAGE_LIMIT < changes.length;
+    batchIndex += 1
+  ) {
+    const batchStart = batchIndex * RELEASE_PAGE_LIMIT;
+    const batch = changes.slice(batchStart, batchStart + RELEASE_PAGE_LIMIT);
     await t.mutation(stageItems, {
       batchIndex,
       itemJson: batch.map(({ item }) => item),
@@ -131,8 +141,16 @@ describe("contentRelease/verify", () => {
       releaseId: TEST_RELEASE_ID,
     });
 
-    expect(first).toEqual({ done: false, nextIndex: 7, processed: 8 });
-    expect(second).toEqual({ done: true, nextIndex: 8, processed: 1 });
+    expect(first).toEqual({
+      done: false,
+      nextIndex: PROOF_PAGE_LIMIT - 1,
+      processed: PROOF_PAGE_LIMIT,
+    });
+    expect(second).toEqual({
+      done: true,
+      nextIndex: PROOF_PAGE_LIMIT,
+      processed: 1,
+    });
   });
 
   it("rejects incomplete staging and invalid verification state", async () => {

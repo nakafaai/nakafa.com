@@ -8,6 +8,26 @@ export interface ConvexTaggedError {
   readonly message: string;
 }
 
+/** Reads the stable code and message from one typed Convex error payload. */
+export function readConvexErrorData(error: unknown) {
+  if (!(error instanceof ConvexError)) {
+    return null;
+  }
+
+  const data = error.data;
+  if (typeof data !== "object" || data === null) {
+    return null;
+  }
+
+  const code = "code" in data ? data.code : undefined;
+  const message = "message" in data ? data.message : undefined;
+  if (typeof code !== "string" || typeof message !== "string") {
+    return null;
+  }
+
+  return { code, message };
+}
+
 const nanosPerMillisecond = 1_000_000n;
 
 const convexClock: Clock.Clock = {

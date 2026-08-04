@@ -1,6 +1,6 @@
 import path from "node:path";
 import { CONTENTS_DIR } from "@repo/backend/scripts/sync-content/runtime/paths";
-import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
+import type { TryoutExamSource } from "@repo/contents/_types/tryout/schema";
 import { locales } from "@repo/utilities/locales";
 
 interface TryoutFileCounts {
@@ -70,10 +70,12 @@ export function getTryoutFileCounts({
   answerFiles,
   choicesFiles,
   questionFiles,
+  tryoutSources,
 }: {
   answerFiles: readonly string[];
   choicesFiles: readonly string[];
   questionFiles: readonly string[];
+  tryoutSources: readonly TryoutExamSource[];
 }): TryoutFileCounts {
   const answerFileSet = new Set(answerFiles);
   const choicesFileSet = new Set(choicesFiles);
@@ -84,7 +86,7 @@ export function getTryoutFileCounts({
   let questionSourceDirectories = 0;
   let questionSetPlacements = 0;
 
-  for (const source of TRYOUT_SOURCES) {
+  for (const source of tryoutSources) {
     for (const track of source.tracks) {
       for (const set of track.sets) {
         for (const section of set.sections) {

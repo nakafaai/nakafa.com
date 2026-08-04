@@ -11,7 +11,7 @@ import {
   lookupNamespaceSegment,
   makePath,
 } from "@repo/contents/_types/route/path";
-import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
+import type { TryoutExamSource } from "@repo/contents/_types/tryout/schema";
 import { type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
@@ -19,68 +19,83 @@ const QUESTION_FILE_PREFIX = "question.";
 const QUESTION_FILE_SUFFIX = ".mdx";
 const TRYOUT_QUESTION_ROOT = "/question-bank/tryout/";
 
-/** Collects source slugs from the content files that should exist in Convex. */
-export const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
-  function* () {
-    const [articleFiles, lessonFiles, questionFiles] = yield* Effect.all([
-      globFiles("articles/**/*.mdx"),
-      globFiles("material/lesson/**/*.mdx"),
-      globFiles("question-bank/tryout/**/question.*.mdx"),
-    ]);
+/** Collects article and curriculum slugs that should exist in Convex. */
+export const collectFilesystemArticleCurriculumSlugs = Effect.fn(
+  "sync.collectFilesystemArticleCurriculumSlugs"
+)(function* () {
+  const [articleFiles, lessonFiles] = yield* Effect.all([
+    globFiles("articles/**/*.mdx"),
+    globFiles("material/lesson/**/*.mdx"),
+  ]);
 
-    const articleSlugs: string[] = [];
-    for (const file of articleFiles) {
-      const pathInfo = yield* parseArticlePath(file);
-      articleSlugs.push(pathInfo.slug);
-    }
-
-    const curriculumLessonSlugs: string[] = [];
-    for (const file of lessonFiles) {
-      const pathInfo = yield* parseMaterialLessonPath(file);
-      curriculumLessonSlugs.push(pathInfo.slug);
-    }
-
-    const curriculumTopicSlugs = listLessonRows().map((topic) => topic.slug);
-    const tryoutPaths = yield* collectTryoutPaths();
-    const questionSetSourcePaths = listActiveTryoutQuestionSetPaths();
-    const activeQuestionSourcePaths = new Set(listActiveTryoutQuestionPaths());
-    const questionSourcePaths = new Set<string>();
-    const questionSourceKeys = new Set<string>();
-
-    for (const file of questionFiles) {
-      const sourcePath = readQuestionSourcePath(file);
-
-      if (!activeQuestionSourcePaths.has(sourcePath)) {
-        continue;
-      }
-
-      const locale = yield* readQuestionLocale(file);
-
-      questionSourcePaths.add(sourcePath);
-      questionSourceKeys.add(getQuestionSourceKey(locale, sourcePath));
-    }
-
-    return {
-      articleSlugs,
-      curriculumLessonSlugs,
-      curriculumTopicSlugs,
-      questionSetSourcePaths,
-      questionSourceKeys: [...questionSourceKeys],
-      questionSourcePaths: [...questionSourcePaths],
-      ...tryoutPaths,
-    };
+  const articleSlugs: string[] = [];
+  for (const file of articleFiles) {
+    const pathInfo = yield* parseArticlePath(file);
+    articleSlugs.push(pathInfo.slug);
   }
-);
+
+  const curriculumLessonSlugs: string[] = [];
+  for (const file of lessonFiles) {
+    const pathInfo = yield* parseMaterialLessonPath(file);
+    curriculumLessonSlugs.push(pathInfo.slug);
+  }
+
+  return {
+    articleSlugs,
+    curriculumLessonSlugs,
+    curriculumTopicSlugs: listLessonRows().map((topic) => topic.slug),
+  };
+});
+
+/** Collects filesystem tryout identities only while the filesystem owns them. */
+export const collectFilesystemTryoutSlugs = Effect.fn(
+  "sync.collectFilesystemTryoutSlugs"
+)(function* () {
+  const [{ TRYOUT_SOURCES: tryoutSources }, questionFiles] = yield* Effect.all([
+    Effect.promise(() => import("@repo/contents/_types/tryout/source")),
+    globFiles("question-bank/tryout/**/question.*.mdx"),
+  ]);
+  const tryoutPaths = yield* collectTryoutPaths(tryoutSources);
+  const questionSetSourcePaths =
+    listActiveTryoutQuestionSetPaths(tryoutSources);
+  const activeQuestionSourcePaths = new Set(
+    listActiveTryoutQuestionPaths(tryoutSources)
+  );
+  const questionSourcePaths = new Set<string>();
+  const questionSourceKeys = new Set<string>();
+
+  for (const file of questionFiles) {
+    const sourcePath = readQuestionSourcePath(file);
+
+    if (!activeQuestionSourcePaths.has(sourcePath)) {
+      continue;
+    }
+
+    const locale = yield* readQuestionLocale(file);
+
+    questionSourcePaths.add(sourcePath);
+    questionSourceKeys.add(getQuestionSourceKey(locale, sourcePath));
+  }
+
+  return {
+    questionSetSourcePaths,
+    questionSourceKeys: [...questionSourceKeys],
+    questionSourcePaths: [...questionSourcePaths],
+    ...tryoutPaths,
+  };
+});
 
 /** Collects every source-owned try-out catalog identity, including unpublished sets. */
-const collectTryoutPaths = Effect.fn("sync.collectTryoutPaths")(function* () {
+const collectTryoutPaths = Effect.fn("sync.collectTryoutPaths")(function* (
+  tryoutSources: readonly TryoutExamSource[]
+) {
   const tryoutCountryKeys = new Set<string>();
   const tryoutExamKeys = new Set<string>();
   const tryoutTrackKeys = new Set<string>();
   const tryoutSetKeys = new Set<string>();
   const tryoutSectionKeys = new Set<string>();
 
-  for (const source of TRYOUT_SOURCES) {
+  for (const source of tryoutSources) {
     for (const locale of locales) {
       const tryoutPath = yield* makePath([
         yield* lookupNamespaceSegment("tryout", locale),
@@ -164,8 +179,10 @@ function getQuestionSourceKey(locale: Locale, sourcePath: string) {
 }
 
 /** Lists source-owned try-out question-set folders that should exist in Convex. */
-function listActiveTryoutQuestionSetPaths() {
-  return TRYOUT_SOURCES.flatMap((source) =>
+function listActiveTryoutQuestionSetPaths(
+  tryoutSources: readonly TryoutExamSource[]
+) {
+  return tryoutSources.flatMap((source) =>
     source.tracks.flatMap((track) =>
       track.sets.flatMap((set) =>
         set.sections.map((section) => section.questionSourcePath)
@@ -175,8 +192,10 @@ function listActiveTryoutQuestionSetPaths() {
 }
 
 /** Lists exact source-owned try-out question files that should exist in Convex. */
-function listActiveTryoutQuestionPaths() {
-  return TRYOUT_SOURCES.flatMap((source) =>
+function listActiveTryoutQuestionPaths(
+  tryoutSources: readonly TryoutExamSource[]
+) {
+  return tryoutSources.flatMap((source) =>
     source.tracks.flatMap((track) =>
       track.sets.flatMap((set) =>
         set.sections.flatMap((section) =>

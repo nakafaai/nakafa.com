@@ -27,6 +27,10 @@ const programMocks = vi.hoisted(() => ({
   readPublishedProgramBuckets: vi.fn(),
   readPublishedProgramSitemap: vi.fn(),
 }));
+const tryoutMocks = vi.hoisted(() => ({
+  readPublishedTryoutSitemap: vi.fn(),
+  readPublishedTryoutSitemapCount: vi.fn(),
+}));
 const ownershipMocks = vi.hoisted(() => ({
   filterMaterialContentRows: vi.fn(),
   filterMaterialPublicPaths: vi.fn(),
@@ -38,6 +42,7 @@ vi.mock("@/lib/content/article/sitemap", () => ({
 }));
 vi.mock("@/lib/content/material/sitemap", () => materialMocks);
 vi.mock("@/lib/content/program/sitemap", () => programMocks);
+vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
 vi.mock("@/lib/sitemap/material", () => ownershipMocks);
 
 vi.mock("@/lib/content/runtime/routes", () => ({
@@ -76,6 +81,12 @@ beforeEach(() => {
   programMocks.readPublishedProgramSitemap.mockReset();
   programMocks.readPublishedProgramSitemap.mockReturnValue(
     Effect.succeed(null)
+  );
+  tryoutMocks.readPublishedTryoutSitemap.mockReset();
+  tryoutMocks.readPublishedTryoutSitemap.mockReturnValue(Effect.succeed(null));
+  tryoutMocks.readPublishedTryoutSitemapCount.mockReset();
+  tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
+    Effect.succeed({ managed: false, pageCount: 0, routeCount: 0 })
   );
   runtimeMocks.getRuntimeContentSitemapPage.mockReset();
   runtimeMocks.getRuntimePublicSitemapPage.mockReset();
@@ -188,6 +199,27 @@ describe("sitemap route pages", () => {
     ]);
   });
 
+  it("serves signed try-out routes and rejects their legacy page", async () => {
+    tryoutMocks.readPublishedTryoutSitemap.mockReturnValue(
+      Effect.succeed({
+        paths: ["try-out/indonesia/snbt/2027/set-1", "try-out/indonesia"],
+      })
+    );
+    tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
+      Effect.succeed({ managed: true, pageCount: 1, routeCount: 2 })
+    );
+
+    await expect(readPaths("tryout_en_0")).resolves.toEqual([
+      "/try-out/indonesia",
+      "/try-out/indonesia/snbt/2027/set-1",
+    ]);
+    await expect(readFailure("content_en_tryout_0")).resolves.toMatchObject({
+      _tag: "SitemapPageNotFoundError",
+      pageId: "content_en_tryout_0",
+    });
+    expect(runtimeMocks.getRuntimeContentSitemapPage).not.toHaveBeenCalled();
+  });
+
   it("removes source-owned public rows after their family owner activates", async () => {
     runtimeMocks.getRuntimePublicSitemapPage.mockReturnValueOnce(
       Effect.succeed({
@@ -210,10 +242,11 @@ describe("sitemap route pages", () => {
     programMocks.readPublishedProgramBuckets.mockReturnValue(
       Effect.succeed({ buckets: ["abc"], managed: true })
     );
+    tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
+      Effect.succeed({ managed: true, pageCount: 1, routeCount: 1 })
+    );
 
-    await expect(readPaths("public_en_0")).resolves.toEqual([
-      "/try-out/indonesia/snbt",
-    ]);
+    await expect(readPaths("public_en_0")).resolves.toEqual([]);
     expect(ownershipMocks.filterMaterialPublicPaths).toHaveBeenCalledWith(
       "en",
       [
@@ -273,6 +306,10 @@ describe("sitemap route pages", () => {
     await expect(readFailure("program_en_abc")).resolves.toMatchObject({
       _tag: "SitemapPageNotFoundError",
       pageId: "program_en_abc",
+    });
+    await expect(readFailure("tryout_en_0")).resolves.toMatchObject({
+      _tag: "SitemapPageNotFoundError",
+      pageId: "tryout_en_0",
     });
   });
 });

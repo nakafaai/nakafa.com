@@ -22,7 +22,7 @@
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "ai": "^7.0.37",
-    "convex": "^1.42.3",
+    "convex": "^1.43.0",
     "dedent": "^1.7.2",
     "effect": "catalog:",
     "gpt-tokenizer": "^3.4.0",

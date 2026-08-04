@@ -1,6 +1,18 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { retainTryoutBundle } from "@repo/backend/convex/tryouts/runtime/bundle";
 import { finalizeAttemptScore } from "@repo/backend/convex/tryouts/runtime/score";
+import {
+  TEST_MANIFEST_HASH,
+  testReleaseJson,
+  testRendererJson,
+} from "@repo/backend/test/content-release";
+import {
+  insertTestState,
+  insertZeroRelease,
+} from "@repo/backend/test/content-state";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -11,12 +23,50 @@ const SECTION_KEY = "pengetahuan-kuantitatif";
 const SECTION_SOURCE = `question-bank/tryout/indonesia/snbt/${TRACK_KEY}/set-1/${SECTION_KEY}`;
 const SET_ROUTE = `try-out/indonesia/snbt/${TRACK_KEY}/set-1`;
 const SECTION_ROUTE = `${SET_ROUTE}/${SECTION_KEY}`;
+const SET_IDENTITY = tryoutCatalogIdentity({
+  countryKey: "indonesia",
+  examKey: "snbt",
+  kind: "set",
+  locale: "id",
+  setKey: "set-1",
+  trackKey: TRACK_KEY,
+});
+const SNAPSHOT_ID = `sha256:${"a".repeat(64)}`;
+const FROZEN_RELEASE_ID = "release-score-frozen";
+const LATER_RELEASE = {
+  manifestHash: `sha256:${"b".repeat(64)}`,
+  releaseId: "release-score-later",
+  sequence: 2,
+};
 
 describe("tryouts/runtime/score", () => {
-  it("scores with the attempt strategy snapshot instead of the live set strategy", async () => {
+  it("scores from the frozen bundle after the active release advances", async () => {
     const t = convexTest(schema, convexModules);
 
     const snapshot = await t.mutation(async (ctx) => {
+      await insertZeroRelease(ctx, {
+        ...LATER_RELEASE,
+        ownership: { base: [], result: [] },
+        role: "candidate",
+        status: "completed",
+      });
+      await insertTestState(ctx, {
+        active: LATER_RELEASE,
+        nextSequence: LATER_RELEASE.sequence + 1,
+      });
+      await runConvexProgram(
+        retainTryoutBundle(
+          ctx,
+          {
+            manifestHash: TEST_MANIFEST_HASH,
+            releaseId: FROZEN_RELEASE_ID,
+            releaseJson: testReleaseJson({ releaseId: FROZEN_RELEASE_ID }),
+            rendererJson: testRendererJson(),
+            snapshotId: SNAPSHOT_ID,
+          },
+          NOW
+        )
+      );
       const userId = await ctx.db.insert("users", {
         authId: "auth-score-snapshot",
         credits: 0,
@@ -98,9 +148,12 @@ describe("tryouts/runtime/score", () => {
         completedAt: null,
         completedSectionKeys: [SECTION_KEY],
         countsForCompetition: false,
+        countryKey: "indonesia",
         endReason: null,
+        examKey: "snbt",
         expiresAt: NOW + 86_400_000,
         lastActivityAt: NOW,
+        locale: "id",
         scoreStatus: "official",
         scoringStrategy: "raw",
         sectionSnapshots: [
@@ -116,10 +169,14 @@ describe("tryouts/runtime/score", () => {
             tryoutSectionId: sectionId,
           },
         ],
+        setIdentity: SET_IDENTITY,
+        setKey: "set-1",
+        snapshotReleaseId: FROZEN_RELEASE_ID,
         startedAt: NOW - 20_000,
         status: "in-progress",
         totalCorrect: 0,
         totalQuestions: 1,
+        trackKey: TRACK_KEY,
         tryoutSetId,
         userId,
       });
@@ -170,6 +227,7 @@ describe("tryouts/runtime/score", () => {
         updatedAt: NOW - 500,
       });
       await ctx.db.patch(tryoutSetId, { scoringStrategy: "irt" });
+      await ctx.db.delete(tryoutSetId);
 
       const attempt = await ctx.db.get(attemptId);
 
@@ -180,11 +238,13 @@ describe("tryouts/runtime/score", () => {
         });
       }
 
-      await finalizeAttemptScore(ctx, {
-        attempt,
-        endReason: "submitted",
-        now: NOW,
-      });
+      await runConvexProgram(
+        finalizeAttemptScore(ctx, {
+          attempt,
+          endReason: "submitted",
+          now: NOW,
+        })
+      );
 
       const score = await ctx.db
         .query("tryoutScores")
@@ -205,8 +265,10 @@ describe("tryouts/runtime/score", () => {
       publishedScore: 100,
       rawScore: 100,
       scoringStrategy: "raw",
+      setIdentity: SET_IDENTITY,
       totalCorrect: 1,
       totalQuestions: 1,
+      tryoutSnapshotId: SNAPSHOT_ID,
     });
   });
 });

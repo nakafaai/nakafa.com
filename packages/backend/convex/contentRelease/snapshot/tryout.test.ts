@@ -1,5 +1,5 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
@@ -65,11 +65,34 @@ describe("contentRelease/snapshot/tryout", () => {
       },
       placement: {
         answerArtifactHash: placement.record.row.answerArtifactHash,
+        contentHash: placement.record.row.contentHash,
         identity: tryoutPlacementIdentity(placement.record.row),
         questionArtifactHash: placement.record.row.questionArtifactHash,
         questionOrder: 1,
       },
     });
+  });
+
+  it("accepts pre-hash placement rows during the additive migration", async () => {
+    const placement = makeTryoutPlacementRow();
+    const placementJson = canonicalizeContentSnapshotRow(placement);
+    const { contentHash: _contentHash, ...legacyFacts } = tryoutPlacementFacts(
+      placement.record
+    );
+    const t = convexTest(schema, convexModules);
+
+    const placementId = await t.mutation((ctx) =>
+      ctx.db.insert("tryoutPlacements", {
+        ...legacyFacts,
+        index: 0,
+        rowHash: placement.record.rowHash,
+        rowJson: placementJson,
+        snapshotId,
+      })
+    );
+    const stored = await t.run((ctx) => ctx.db.get(placementId));
+
+    expect(stored).not.toHaveProperty("contentHash");
   });
 
   it("replays exact rows and rejects index or identity collisions", async () => {

@@ -107,7 +107,7 @@ function TryoutChoice({ value }: { value: TryoutChoiceValue }) {
     <TryoutChoiceSurface
       checked={checked}
       disabled={disabled}
-      id={`${question.questionId}-${choice.optionKey}`}
+      id={`${question.placementId}-${choice.optionKey}`}
       isCorrect={choice.isCorrect}
       label={choice.label}
       onSelect={onSelect}

@@ -7,7 +7,15 @@ import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { getRuntimePublicRoute } from "@/lib/content/runtime/routes";
+import {
+  getRuntimePublicRoute,
+  getRuntimeTryoutRoute,
+} from "@/lib/content/runtime/routes";
+
+interface ProjectedHtmlRouteInput {
+  readonly hasAttemptCapability: boolean;
+  readonly pathname: string;
+}
 
 /** Resolves one material HTML route against a single active release snapshot. */
 const readProjectedMaterialRouteRejection = Effect.fn(
@@ -58,7 +66,7 @@ const readProjectedMaterialRouteRejection = Effect.fn(
  */
 export const readProjectedHtmlRouteRejection = Effect.fn(
   "www.routing.publicHtml.projectedRejection"
-)(function* (pathname: string) {
+)(function* ({ hasAttemptCapability, pathname }: ProjectedHtmlRouteInput) {
   const [locale, namespace, ...pathSegments] = pathname
     .split("/")
     .filter(Boolean);
@@ -90,6 +98,18 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     const ownership = yield* readPublishedProgramPath(locale, publicPath);
     if (ownership.managed) {
       return ownership.route?.sitemap ? null : locale;
+    }
+  }
+  if (surface.key === "tryout") {
+    if (
+      hasAttemptCapability &&
+      (pathSegments.length === 4 || pathSegments.length === 5)
+    ) {
+      return null;
+    }
+    const ownership = yield* getRuntimeTryoutRoute({ locale, publicPath });
+    if (ownership.managed) {
+      return ownership.exists ? null : locale;
     }
   }
   const route = yield* getRuntimePublicRoute({ locale, publicPath });

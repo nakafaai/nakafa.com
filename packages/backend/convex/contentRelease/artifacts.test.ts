@@ -60,9 +60,11 @@ function insertDeleteItem(ctx: MutationCtx) {
 }
 
 describe("contentRelease/artifacts", () => {
-  it("stores one immutable artifact and replays its exact batch", async () => {
+  it("stages one rollback artifact and replays its exact batch", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertTestRelease(ctx));
+    await t.mutation((ctx) =>
+      insertTestRelease(ctx, { originReleaseId: "release-base" })
+    );
     await stageItem(t);
 
     const created = await stage(t, [testArtifactJson()]);

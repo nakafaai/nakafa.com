@@ -1,4 +1,4 @@
-import { collectFilesystemSlugs } from "@repo/backend/scripts/sync-content/cleanup/source";
+import { collectFilesystemTryoutSlugs } from "@repo/backend/scripts/sync-content/cleanup/source";
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -38,8 +38,8 @@ vi.mock("@repo/contents/_types/tryout/source", async (importOriginal) => {
 });
 
 describe("content cleanup source inventory", () => {
-  it("keeps unpublished try-out catalog rows source-owned", () => {
-    const slugs = Effect.runSync(collectFilesystemSlugs());
+  it("keeps unpublished try-out catalog rows source-owned", async () => {
+    const slugs = await Effect.runPromise(collectFilesystemTryoutSlugs());
 
     expect(slugs.tryoutTrackKeys).toEqual([
       "en:try-out/indonesia/snbt/2027",

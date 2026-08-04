@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
+import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import {
   AGENT_DISCOVERY_LINK_HEADER,
   LLMS_TEXT_PATH,
@@ -25,6 +26,8 @@ import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source"
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
+const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
+const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
 
 /**
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
@@ -70,7 +73,7 @@ export async function proxy(request: NextRequest) {
     hasPreviewConfig() &&
     (await Effect.runPromise(
       matchesInternalPreviewRoute({
-        localeHint: request.headers.get("x-next-intl-locale"),
+        localeHint: request.headers.get(NEXT_INTL_LOCALE_HEADER),
         pathname,
       })
     ))
@@ -113,7 +116,12 @@ export async function proxy(request: NextRequest) {
   }
 
   const projectedRouteRejection = await Effect.runPromise(
-    readProjectedHtmlRouteRejection(pathname)
+    readProjectedHtmlRouteRejection({
+      hasAttemptCapability: hasTryoutAttemptCapability(
+        request.nextUrl.searchParams
+      ),
+      pathname,
+    })
   );
 
   if (projectedRouteRejection) {
@@ -150,11 +158,19 @@ function rewriteToContentNotFound(
   request: NextRequest,
   locale: (typeof routing.locales)[number]
 ) {
-  const rewriteUrl = new URL(`/${locale}/_not-found`, request.url);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(NEXT_INTL_LOCALE_HEADER, locale);
+  const rewriteUrl = new URL(
+    `/${CONTENT_NOT_FOUND_SEGMENT}/${locale}`,
+    request.url
+  );
 
   return NextResponse.rewrite(rewriteUrl, {
     headers: {
       "X-Robots-Tag": "noindex",
+    },
+    request: {
+      headers: requestHeaders,
     },
     status: 404,
   });
@@ -162,7 +178,7 @@ function rewriteToContentNotFound(
 
 export const config: ProxyConfig = {
   matcher: [
-    "/((?!_next/static|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
+    "/((?!_next/static|_not-found|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
     "/:rootFile([^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
   ],
 };

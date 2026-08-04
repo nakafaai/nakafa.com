@@ -2,10 +2,15 @@ import "server-only";
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
-import type { FunctionArgs } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 
 type TryoutContentAccessArgs = FunctionArgs<
+  typeof api.tryouts.queries.access.getSectionContent
+>;
+
+/** Exact attempt-owned content capability returned by Convex. */
+export type TryoutContentAccess = FunctionReturnType<
   typeof api.tryouts.queries.access.getSectionContent
 >;
 

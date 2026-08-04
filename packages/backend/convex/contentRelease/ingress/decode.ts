@@ -5,6 +5,7 @@ import {
   MAX_PUBLICATION_REQUEST_BYTES,
   MAX_ROUTE_BATCH_BYTES,
   MAX_SNAPSHOT_BATCH_BYTES,
+  MAX_STAGE_GROUP_BYTES,
 } from "@nakafa/aksara-contracts/transport/limits";
 import {
   decodePublicationRequest,
@@ -27,6 +28,7 @@ const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   rollbackPage: MAX_PUBLICATION_REQUEST_BYTES,
   routePage: MAX_PUBLICATION_REQUEST_BYTES,
   stageArtifactBatch: MAX_ARTIFACT_BATCH_BYTES,
+  stageGroup: MAX_STAGE_GROUP_BYTES,
   stageItemBatch: MAX_ITEM_BATCH_BYTES,
   stageProjectionBatch: MAX_PROJECTION_BATCH_BYTES,
   stageRecovery: MAX_PUBLICATION_REQUEST_BYTES,
@@ -53,14 +55,33 @@ export function publicationRequestLimit(operation: PublicationOperation) {
   return REQUEST_LIMITS[operation];
 }
 
+/** Measures one decoded request using its exact UTF-8 JSON representation. */
+function encodedRequestBytes(request: PublicationRequest) {
+  return new TextEncoder().encode(JSON.stringify(request)).byteLength;
+}
+
+/** Checks one decoded operation against its own transport ceiling. */
+function hasValidRequestBytes(request: PublicationRequest, byteLength: number) {
+  return byteLength <= publicationRequestLimit(request.operation);
+}
+
 /** Enforces an operation-specific complete JSON request ceiling. */
 export function validateRequestBytes(
   request: PublicationRequest,
   byteLength: number
 ) {
-  return byteLength <= publicationRequestLimit(request.operation)
-    ? Effect.void
-    : Effect.fail(decodeError("CONTENT_RELEASE_SIZE"));
+  if (!hasValidRequestBytes(request, byteLength)) {
+    return Effect.fail(decodeError("CONTENT_RELEASE_SIZE"));
+  }
+  if (request.operation !== "stageGroup") {
+    return Effect.void;
+  }
+  const hasOversizedChild = request.requests.some(
+    (child) => !hasValidRequestBytes(child, encodedRequestBytes(child))
+  );
+  return hasOversizedChild
+    ? Effect.fail(decodeError("CONTENT_RELEASE_SIZE"))
+    : Effect.void;
 }
 
 /** Strictly parses and decodes one exact UTF-8 publication request body. */

@@ -3,12 +3,12 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { bindQuranRow } from "@nakafa/aksara-contracts/quran/row-hash";
+import { hashQuranSnapshot } from "@nakafa/aksara-contracts/quran/snapshot/hash";
 import {
   QURAN_SNAPSHOT_FORMAT,
   type QuranSnapshotManifest,
   QuranSnapshotManifestSchema,
-} from "@nakafa/aksara-contracts/quran/snapshot";
-import { hashQuranSnapshot } from "@nakafa/aksara-contracts/quran/snapshot-hash";
+} from "@nakafa/aksara-contracts/quran/snapshot/spec";
 import { QURAN_SOURCE_FILE_COUNT } from "@nakafa/aksara-contracts/quran/source";
 import {
   QURAN_ATTRIBUTION_COUNT,
@@ -17,14 +17,14 @@ import {
   type QuranRowPayload,
 } from "@nakafa/aksara-contracts/quran/spec";
 import {
-  inheritContentSnapshots,
-  replaceContentSnapshot,
-} from "@nakafa/aksara-contracts/release/snapshot";
-import {
   type ContentSnapshotManifest,
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
+import {
+  inheritContentSnapshots,
+  replaceContentSnapshot,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   quranRowFacts,
