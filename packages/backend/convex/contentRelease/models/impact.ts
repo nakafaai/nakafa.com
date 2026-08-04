@@ -3,6 +3,7 @@ import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { finalizeExactMaterialOwners } from "@repo/backend/convex/contentRelease/material/exact";
 import { Effect } from "effect";
 
 interface ReadModelImpact {
@@ -74,6 +75,7 @@ export const claimUnchangedReadModels = Effect.fn(
   }
 
   if (!impact.material) {
+    yield* finalizeExactMaterialOwners(ctx, release);
     const materialState = {
       materialManifestHash: signed.manifestHash,
       materialOwnerManifestHash: signed.manifestHash,
