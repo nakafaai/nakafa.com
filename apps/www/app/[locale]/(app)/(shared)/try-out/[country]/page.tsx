@@ -1,4 +1,3 @@
-import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -17,7 +16,6 @@ import {
 } from "@/components/tryout/catalog/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
-import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
 
@@ -83,18 +81,10 @@ async function TryoutCountryRoute({
       path: `/packages/contents/tryout/${country}`,
     });
   } else if (page.sourceRevision) {
-    const sourceRevision = await Effect.runPromise(
-      decodeSourceRevision(page.sourceRevision, {
-        locale,
-        publicPath: countryPath,
-      })
-    );
-    if (sourceRevision) {
-      sourceUrl = getAksaraTreeUrl({
-        path: `packages/corpus/tryout/${country}`,
-        revision: sourceRevision,
-      });
-    }
+    sourceUrl = getAksaraTreeUrl({
+      path: `packages/corpus/tryout/${country}`,
+      revision: page.sourceRevision,
+    });
   }
 
   return (

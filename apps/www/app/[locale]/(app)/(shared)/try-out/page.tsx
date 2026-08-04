@@ -1,5 +1,4 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { Effect } from "effect";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -11,7 +10,6 @@ import { RefContent } from "@/components/shared/ref-content";
 import { TryoutHubClient } from "@/components/tryout/catalog/hub.client";
 import { readTryoutHubPage } from "@/components/tryout/catalog/server";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
-import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -85,18 +83,10 @@ async function TryoutHubRoute({
   if (!page.managed) {
     sourceUrl = getGithubUrl({ path: "/packages/contents/tryout" });
   } else if (page.sourceRevision) {
-    const sourceRevision = await Effect.runPromise(
-      decodeSourceRevision(page.sourceRevision, {
-        locale,
-        publicPath: "try-out",
-      })
-    );
-    if (sourceRevision) {
-      sourceUrl = getAksaraTreeUrl({
-        path: "packages/corpus/tryout",
-        revision: sourceRevision,
-      });
-    }
+    sourceUrl = getAksaraTreeUrl({
+      path: "packages/corpus/tryout",
+      revision: page.sourceRevision,
+    });
   }
 
   return (

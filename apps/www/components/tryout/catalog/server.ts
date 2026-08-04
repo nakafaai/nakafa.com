@@ -6,6 +6,7 @@ import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { decodeSourceRevision } from "@/lib/content/published/origin";
 
 type TryoutMetadataArgs = FunctionArgs<
   typeof api.tryouts.queries.catalog.getMetadata
@@ -30,9 +31,22 @@ export async function readTryoutHubPage(locale: Locale) {
   "use cache";
   applyContentRuntimeCache();
 
-  return await fetchQuery(api.tryouts.queries.catalog.getHubPage, {
-    locale,
-  });
+  return await Effect.runPromise(
+    Effect.tryPromise({
+      catch: (cause) => new TryoutCatalogReadError({ cause }),
+      try: () =>
+        fetchQuery(api.tryouts.queries.catalog.getHubPage, {
+          locale,
+        }),
+    }).pipe(
+      Effect.flatMap((page) =>
+        decodeSourceRevision(page.sourceRevision, {
+          locale,
+          publicPath: "try-out",
+        }).pipe(Effect.map((sourceRevision) => ({ ...page, sourceRevision })))
+      )
+    )
+  );
 }
 
 /** Reads one public country page from the tagged content cache. */
@@ -43,14 +57,26 @@ export async function readTryoutCountryPage(
   "use cache";
   applyContentRuntimeCache();
 
-  const page = await fetchQuery(api.tryouts.queries.catalog.getCountryPage, {
-    locale,
-    publicPath,
-  });
-  if (!page) {
-    return null;
-  }
-  return page;
+  return await Effect.runPromise(
+    Effect.tryPromise({
+      catch: (cause) => new TryoutCatalogReadError({ cause }),
+      try: () =>
+        fetchQuery(api.tryouts.queries.catalog.getCountryPage, {
+          locale,
+          publicPath,
+        }),
+    }).pipe(
+      Effect.flatMap((page) => {
+        if (!page) {
+          return Effect.succeed(null);
+        }
+        return decodeSourceRevision(page.sourceRevision, {
+          locale,
+          publicPath,
+        }).pipe(Effect.map((sourceRevision) => ({ ...page, sourceRevision })));
+      })
+    )
+  );
 }
 
 /** Reads one public exam page from the tagged content cache. */
