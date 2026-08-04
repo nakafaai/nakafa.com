@@ -87,19 +87,22 @@ jobs:
             "$deploy_key_name" \
             --save-env "$deploy_key_file"
 
-          set -a
-          source packages/backend/.env.local
-          source "$deploy_key_file"
-          set +a
+          deploy_key="$(sed -n 's/^CONVEX_DEPLOY_KEY=//p' "$deploy_key_file")"
+          convex_url="$(sed -n 's/^VITE_CONVEX_URL=//p' packages/backend/.env.local)"
+          convex_site_url="$(sed -n 's/^VITE_CONVEX_SITE_URL=//p' packages/backend/.env.local)"
 
-          echo "::add-mask::$CONVEX_DEPLOY_KEY"
+          test -n "$deploy_key"
+          test -n "$convex_url"
+          test -n "$convex_site_url"
+
+          echo "::add-mask::$deploy_key"
           {
-            echo "CONVEX_DEPLOY_KEY=$CONVEX_DEPLOY_KEY"
-            echo "CONVEX_SITE_URL=$CONVEX_SITE_URL"
-            echo "CONVEX_URL=$CONVEX_URL"
+            echo "CONVEX_DEPLOY_KEY=$deploy_key"
+            echo "CONVEX_SITE_URL=$convex_site_url"
+            echo "CONVEX_URL=$convex_url"
             echo "AGENT_DOCS_DEPLOY_KEY_CREATED=true"
-            echo "NEXT_PUBLIC_CONVEX_SITE_URL=$CONVEX_SITE_URL"
-            echo "NEXT_PUBLIC_CONVEX_URL=$CONVEX_URL"
+            echo "NEXT_PUBLIC_CONVEX_SITE_URL=$convex_site_url"
+            echo "NEXT_PUBLIC_CONVEX_URL=$convex_url"
           } >> "$GITHUB_ENV"
           rm "$HOME/.convex/config.json"
 
