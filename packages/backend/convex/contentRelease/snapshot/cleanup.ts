@@ -127,6 +127,14 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
         done: false,
       };
     }
+    if (snapshot.family === "quran" && children.part === "quran") {
+      yield* persistCleanup(ctx, snapshot, cutoff, undefined, "quran-search");
+      return {
+        cursor: null,
+        deleted: children.children.length,
+        done: false,
+      };
+    }
     if (snapshot.family === "tryout" && children.part === "catalog") {
       yield* persistCleanup(ctx, snapshot, cutoff, undefined, "placement");
       return {

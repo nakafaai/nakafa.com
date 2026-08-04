@@ -217,6 +217,56 @@ describe("contentRelease/snapshot/cleanup", () => {
     ).resolves.toEqual({ catalog: [], placement: [] });
   });
 
+  it("cleans signed Quran rows and search projections in separate phases", async () => {
+    const snapshotId = `sha256:${"a".repeat(64)}`;
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentSnapshots", {
+        createdAt: 0,
+        family: "quran",
+        retainUntil: 0,
+        snapshotId,
+        snapshotJson: "{}",
+      });
+      await ctx.db.insert("quranRows", {
+        identity: "search:en:1",
+        index: 0,
+        kind: "quran-search",
+        locale: "en",
+        rowHash: `sha256:${"b".repeat(64)}`,
+        rowJson: "{}",
+        snapshotId,
+        surahNumber: 1,
+      });
+      await ctx.db.insert("quranSearch", {
+        identity: "search:en:1",
+        index: 0,
+        locale: "en",
+        rowHash: `sha256:${"b".repeat(64)}`,
+        snapshotId,
+        surahNumber: 1,
+        text: "technical search",
+      });
+    });
+
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
+    await expect(
+      t.run((ctx) => ctx.db.query("contentSnapshots").unique())
+    ).resolves.toMatchObject({ cleanupPart: "quran-search" });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
+    await expect(
+      t.run(async (ctx) => ({
+        rows: await ctx.db.query("quranRows").take(1),
+        search: await ctx.db.query("quranSearch").take(1),
+        snapshot: await ctx.db.query("contentSnapshots").take(1),
+      }))
+    ).resolves.toEqual({ rows: [], search: [], snapshot: [] });
+  });
+
   it("extends retained snapshots selected by protected release history", async () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const t = convexTest(schema, convexModules);

@@ -6,6 +6,7 @@ import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/materi
 import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
+import { validateSearchQuery } from "@repo/backend/convex/contentRelease/search/input";
 import { resolveSearchProjection } from "@repo/backend/convex/contentRelease/search/verify";
 import {
   contentFamilyValidator,
@@ -20,10 +21,6 @@ import {
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { Effect } from "effect";
-
-const SEARCH_TERM_LIMIT = 16;
-const SEARCH_TERM_BYTES = 32;
-const searchSeparator = /[\s\p{P}\p{S}]+/u;
 
 const projectionValidator = v.object({
   contentKey: v.string(),
@@ -46,29 +43,6 @@ const searchValidator = v.object({
 
 type ProjectionFamily = Infer<typeof contentFamilyValidator>;
 type ProjectionLocale = Infer<typeof localeValidator>;
-
-/** Decodes one query into the documented Convex full-text term budget. */
-const validateSearchQuery = Effect.fn("contentRelease.validateSearchQuery")(
-  function* (source: string) {
-    const queryText = source.trim();
-    const terms = queryText
-      .split(searchSeparator)
-      .filter((term) => term.length > 0);
-    if (
-      terms.length === 0 ||
-      terms.length > SEARCH_TERM_LIMIT ||
-      terms.some(
-        (term) => new TextEncoder().encode(term).byteLength > SEARCH_TERM_BYTES
-      )
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_LIMIT",
-        `Search accepts 1 to ${SEARCH_TERM_LIMIT} terms of at most ${SEARCH_TERM_BYTES} bytes.`
-      );
-    }
-    return queryText;
-  }
-);
 
 /** Loads active ownership only when its public search model is fully synced. */
 export const loadSearchOwner = Effect.fn("contentRelease.loadSearchOwner")(
