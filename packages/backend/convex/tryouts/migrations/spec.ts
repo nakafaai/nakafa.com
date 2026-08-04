@@ -115,7 +115,7 @@ export function validateMigrationPage(input: {
   const processed = input.expectedProcessed + input.page.page.length;
   const countMatches = input.page.isDone
     ? processed === input.expectedTotal
-    : processed < input.expectedTotal;
+    : processed <= input.expectedTotal;
 
   if (!countMatches) {
     return migrationFail(

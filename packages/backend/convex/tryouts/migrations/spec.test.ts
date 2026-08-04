@@ -90,7 +90,7 @@ describe("tryouts/migrations/spec", () => {
     });
   });
 
-  it("rejects an incomplete page that consumes the audited count", async () => {
+  it("accepts an exact full page followed by terminal cursor proof", async () => {
     await expect(
       Effect.runPromise(
         validateMigrationPage({
@@ -99,12 +99,37 @@ describe("tryouts/migrations/spec", () => {
           numItems: 1,
           page: { isDone: false, page: ["b"] },
           table: "tryoutAttempts",
+        })
+      )
+    ).resolves.toBe(2);
+    await expect(
+      Effect.runPromise(
+        validateMigrationPage({
+          expectedProcessed: 2,
+          expectedTotal: 2,
+          numItems: 1,
+          page: { isDone: true, page: [] },
+          table: "tryoutAttempts",
+        })
+      )
+    ).resolves.toBe(2);
+  });
+
+  it("rejects a cursor page that exceeds the audited count", async () => {
+    await expect(
+      Effect.runPromise(
+        validateMigrationPage({
+          expectedProcessed: 2,
+          expectedTotal: 2,
+          numItems: 1,
+          page: { isDone: false, page: ["c"] },
+          table: "tryoutAttempts",
         }).pipe(Effect.flip)
       )
     ).resolves.toMatchObject({
       _tag: "TryoutMigrationError",
       code: "TRYOUT_MIGRATION_INVALID",
-      message: "tryoutAttempts expected 2 rows but reached 2.",
+      message: "tryoutAttempts expected 2 rows but reached 3.",
     });
   });
 
