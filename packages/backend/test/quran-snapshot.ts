@@ -17,14 +17,14 @@ import {
   type QuranRowPayload,
 } from "@nakafa/aksara-contracts/quran/spec";
 import {
-  inheritContentSnapshots,
-  replaceContentSnapshot,
-} from "@nakafa/aksara-contracts/release/snapshot/spec";
-import {
   type ContentSnapshotManifest,
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import {
+  inheritContentSnapshots,
+  replaceContentSnapshot,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   quranRowFacts,
