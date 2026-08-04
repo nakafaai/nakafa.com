@@ -9,7 +9,7 @@ import {
   getTryoutSectionContentAccess,
   tryoutCurrentSectionValidator,
 } from "@repo/backend/convex/tryouts/runtime/content";
-import { readLatestAttempt } from "@repo/backend/convex/tryouts/runtime/lookup";
+import { readRouteAttempt } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { ConvexError, v } from "convex/values";
 
 const runtimeChoiceValidator = v.object({
@@ -107,6 +107,7 @@ async function loadRuntimePlacements(
 /** Reads the current user's section runtime with placements and answers. */
 export const getSection = query({
   args: {
+    attemptId: v.optional(v.id("tryoutAttempts")),
     countryKey: tryoutRouteKeyValidator,
     examKey: tryoutRouteKeyValidator,
     locale: localeValidator,
@@ -123,7 +124,7 @@ export const getSection = query({
     }
 
     const attempt = await runConvexProgram(
-      readLatestAttempt(ctx, args, auth.appUser._id)
+      readRouteAttempt(ctx, args, auth.appUser._id)
     );
 
     if (!attempt) {

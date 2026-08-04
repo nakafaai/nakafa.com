@@ -24,6 +24,7 @@ import {
 import type {
   AttemptAccessFields,
   StartAttemptArgs,
+  StartAttemptResult,
 } from "@repo/backend/convex/tryouts/start/spec";
 import {
   TryoutStartError,
@@ -54,7 +55,7 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
     const resumed = yield* resumeActiveAttempt(ctx, input, latestAttempt);
 
     if (resumed) {
-      return { attemptId: resumed._id };
+      return yield* resolveStartResult(resumed, input.args);
     }
 
     const source = yield* loadTryoutStartSource(ctx, input.args);
@@ -81,7 +82,7 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
       ],
       { concurrency: "unbounded" }
     );
-    return yield* createTryoutAttempt(ctx, {
+    const attempt = yield* createTryoutAttempt(ctx, {
       access,
       args: input.args,
       attemptNumber,
@@ -90,6 +91,37 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
       source,
       userId: input.userId,
     });
+    return yield* resolveStartResult(attempt, input.args);
+  }
+);
+
+/** Binds post-start navigation to the exact immutable attempt snapshot. */
+const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
+  function* (attempt: TryoutAttempt, args: StartAttemptArgs) {
+    if (!args.destinationSectionKey) {
+      return {
+        attemptId: attempt._id,
+        navigation: { kind: "stay" },
+      } satisfies StartAttemptResult;
+    }
+
+    const destination = attempt.sectionSnapshots.find(
+      (section) => section.sectionKey === args.destinationSectionKey
+    );
+    if (!destination?.publicPath) {
+      return yield* new TryoutStartError({
+        code: tryoutStartErrorCode.sectionSnapshotMismatch,
+        message: "Try-out destination is missing from the attempt snapshot.",
+      });
+    }
+
+    return {
+      attemptId: attempt._id,
+      navigation: {
+        kind: "destination",
+        publicPath: destination.publicPath,
+      },
+    } satisfies StartAttemptResult;
   }
 );
 

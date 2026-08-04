@@ -545,6 +545,7 @@ import type * as tryouts_mutations_sections from "../tryouts/mutations/sections.
 import type * as tryouts_progress from "../tryouts/progress.js";
 import type * as tryouts_queries_access from "../tryouts/queries/access.js";
 import type * as tryouts_queries_attempt from "../tryouts/queries/attempt.js";
+import type * as tryouts_queries_attemptSections from "../tryouts/queries/attemptSections.js";
 import type * as tryouts_queries_catalog from "../tryouts/queries/catalog.js";
 import type * as tryouts_queries_catalogModel from "../tryouts/queries/catalogModel.js";
 import type * as tryouts_queries_history from "../tryouts/queries/history.js";
@@ -1142,6 +1143,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/progress": typeof tryouts_progress;
   "tryouts/queries/access": typeof tryouts_queries_access;
   "tryouts/queries/attempt": typeof tryouts_queries_attempt;
+  "tryouts/queries/attemptSections": typeof tryouts_queries_attemptSections;
   "tryouts/queries/catalog": typeof tryouts_queries_catalog;
   "tryouts/queries/catalogModel": typeof tryouts_queries_catalogModel;
   "tryouts/queries/history": typeof tryouts_queries_history;

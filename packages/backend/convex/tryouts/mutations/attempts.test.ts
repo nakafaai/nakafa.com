@@ -6,12 +6,14 @@ import {
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
 import {
+  activateRenamedTryoutStartSource,
   TRYOUT_START_COUNTRY as COUNTRY,
   TRYOUT_START_EXAM as EXAM,
   TRYOUT_START_NOW as NOW,
   TRYOUT_START_SECTION as SECTION,
   TRYOUT_START_SET as SET,
   TRYOUT_START_TRACK as TRACK,
+  TRYOUT_RENAMED_SET_PATH,
 } from "@repo/backend/test/tryout-source";
 import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
 import type { FunctionArgs } from "convex/server";
@@ -33,11 +35,9 @@ const entryStartArgs: FunctionArgs<
   ...startArgs,
   entrySectionKey: SECTION,
 };
-
 describe("tryouts/mutations/attempts", () => {
   it("keeps local attempt creation available before signed ownership activates", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -63,10 +63,29 @@ describe("tryouts/mutations/attempts", () => {
       sessionId: seeded.identity.sessionId,
       subject: seeded.identity.authUserId,
     });
-
+    await expect(
+      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
+        ...startArgs,
+        destinationSectionKey: "missing",
+      })
+    ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
     const result = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
-      startArgs
+      { ...startArgs, destinationSectionKey: SECTION }
+    );
+    if (result.navigation.kind !== "destination") {
+      throw new Error("Expected local start navigation.");
+    }
+    const pageArgs: FunctionArgs<
+      typeof api.tryouts.queries.catalog.getAttemptSectionPage
+    > = {
+      attemptId: result.attemptId,
+      locale: "id",
+      publicPath: result.navigation.publicPath,
+    };
+    const page = await authed.query(
+      api.tryouts.queries.catalog.getAttemptSectionPage,
+      pageArgs
     );
     const runtime = await t.query(async (ctx) => ({
       attempt: await ctx.db.get(result.attemptId),
@@ -77,21 +96,26 @@ describe("tryouts/mutations/attempts", () => {
         )
         .collect(),
     }));
-
     expect(runtime.attempt).toMatchObject({
       status: "in-progress",
       tryoutSetId: seeded.fixture.tryoutSetId,
     });
     expect(runtime.attempt).not.toHaveProperty("setIdentity");
     expect(runtime.attempt).not.toHaveProperty("tryoutSnapshotId");
+    expect(page).toMatchObject({ attemptId: result.attemptId });
     expect(runtime.placements).toHaveLength(1);
     expect(runtime.placements[0]).not.toHaveProperty("placementIdentity");
     expect(runtime.placements[0]).not.toHaveProperty("sectionIdentity");
+    await t.mutation((ctx) =>
+      ctx.db.patch(seeded.fixture.tryoutSectionId, { sourceRevision: "2028" })
+    );
+    await expect(
+      authed.query(api.tryouts.queries.catalog.getAttemptSectionPage, pageArgs)
+    ).resolves.toBeNull();
   });
 
   it("resumes a legacy attempt while signed ownership is active", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -108,30 +132,25 @@ describe("tryouts/mutations/attempts", () => {
         tryoutSetId: fixture.tryoutSetId,
         userId: identity.userId,
       });
-
       return { attemptId, identity };
     });
     const authed = t.withIdentity({
       sessionId: seeded.identity.sessionId,
       subject: seeded.identity.authUserId,
     });
-
     await expect(
       authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
-    ).resolves.toEqual({ attemptId: seeded.attemptId });
-
+    ).resolves.toMatchObject({ attemptId: seeded.attemptId });
     const runtime = await t.query(async (ctx) => ({
       attempts: await ctx.db.query("tryoutAttempts").collect(),
       freeClaims: await ctx.db.query("tryoutFreeAttemptClaims").collect(),
     }));
-
     expect(runtime.attempts).toHaveLength(1);
     expect(runtime.freeClaims).toEqual([]);
   });
 
   it("resumes from the frozen attempt when the current entry key changed", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -158,21 +177,18 @@ describe("tryouts/mutations/attempts", () => {
         tryoutSetId: fixture.tryoutSetId,
         userId: identity.userId,
       });
-
       return { attemptId, identity };
     });
     const authed = t.withIdentity({
       sessionId: seeded.identity.sessionId,
       subject: seeded.identity.authUserId,
     });
-
     await expect(
       authed.mutation(
         api.tryouts.mutations.attempts.startAttempt,
         entryStartArgs
       )
-    ).resolves.toEqual({ attemptId: seeded.attemptId });
-
+    ).resolves.toMatchObject({ attemptId: seeded.attemptId });
     const sectionAttempts = await t.query((ctx) =>
       ctx.db.query("tryoutSectionAttempts").collect()
     );
@@ -187,7 +203,6 @@ describe("tryouts/mutations/attempts", () => {
 
   it("starts an internal entry section atomically with a new attempt", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -198,14 +213,12 @@ describe("tryouts/mutations/attempts", () => {
         userId: identity.userId,
         visibility: "internal-entry",
       });
-
       return { fixture, identity };
     });
     const authed = t.withIdentity({
       sessionId: seeded.identity.sessionId,
       subject: seeded.identity.authUserId,
     });
-
     const result = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
       entryStartArgs
@@ -239,7 +252,6 @@ describe("tryouts/mutations/attempts", () => {
 
       return { attempt, freeClaim, placements, progress, sectionAttempts };
     });
-
     expect(runtime.attempt).toMatchObject({
       accessEndsAt: NOW + 3 * 86_400_000,
       accessSourceKind: "free",
@@ -293,7 +305,6 @@ describe("tryouts/mutations/attempts", () => {
       statusRank: 1,
       tryoutSetId: seeded.fixture.tryoutSetId,
     });
-
     const current = await authed.query(api.tryouts.queries.attempt.getCurrent, {
       countryKey: COUNTRY,
       examKey: EXAM,
@@ -302,7 +313,6 @@ describe("tryouts/mutations/attempts", () => {
       setKey: SET,
       trackKey: TRACK,
     });
-
     expect(current).toMatchObject({
       activeSectionKey: SECTION,
       score: null,
@@ -330,14 +340,11 @@ describe("tryouts/mutations/attempts", () => {
       section: { score: null },
     });
     expect(sectionRuntime?.questions).toHaveLength(1);
-
     const resumed = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
       entryStartArgs
     );
-
     expect(resumed).toEqual(result);
-
     await t.mutation((ctx) =>
       ctx.db.patch(result.attemptId, {
         completedAt: NOW + 1,
@@ -345,7 +352,6 @@ describe("tryouts/mutations/attempts", () => {
         status: "completed",
       })
     );
-
     await expect(
       authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
     ).rejects.toThrow("TRYOUT_ACCESS_REQUIRED");
@@ -353,7 +359,6 @@ describe("tryouts/mutations/attempts", () => {
 
   it("keeps legacy history visible while signed ownership is additive", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -388,14 +393,12 @@ describe("tryouts/mutations/attempts", () => {
         tryoutSetId: fixture.tryoutSetId,
         userId: identity.userId,
       });
-
       return { fixture, identity, legacyAttemptId };
     });
     const authed = t.withIdentity({
       sessionId: seeded.identity.sessionId,
       subject: seeded.identity.authUserId,
     });
-
     const signed = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
       startArgs
@@ -406,7 +409,6 @@ describe("tryouts/mutations/attempts", () => {
       publicPath: `try-out/${COUNTRY}/${EXAM}/${TRACK}/${SET}`,
     });
     const signedAttempt = await t.query((ctx) => ctx.db.get(signed.attemptId));
-
     expect(signedAttempt).toMatchObject({
       setIdentity: seeded.fixture.setIdentity,
       tryoutSetId: seeded.fixture.tryoutSetId,
@@ -420,7 +422,6 @@ describe("tryouts/mutations/attempts", () => {
 
   it("starts remaining sections from the immutable attempt snapshot", async () => {
     vi.setSystemTime(new Date(NOW));
-
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -439,9 +440,10 @@ describe("tryouts/mutations/attempts", () => {
       sessionId: seeded.identity.sessionId,
       subject: seeded.identity.authUserId,
     });
+    await t.mutation(activateRenamedTryoutStartSource);
     const attempt = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
-      startArgs
+      { ...startArgs, destinationSectionKey: SECTION }
     );
 
     const paidStart = await t.query(async (ctx) => ({
@@ -454,6 +456,10 @@ describe("tryouts/mutations/attempts", () => {
       countsForCompetition: true,
     });
     expect(paidStart.claims).toEqual([]);
+    expect(attempt.navigation).toEqual({
+      kind: "destination",
+      publicPath: `${TRYOUT_RENAMED_SET_PATH}/${SECTION}`,
+    });
 
     await t.mutation((ctx) =>
       ctx.db.patch(seeded.fixture.tryoutSectionId, {
@@ -463,7 +469,7 @@ describe("tryouts/mutations/attempts", () => {
     );
     const resumed = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
-      startArgs
+      { ...startArgs, destinationSectionKey: SECTION }
     );
 
     expect(resumed).toEqual(attempt);

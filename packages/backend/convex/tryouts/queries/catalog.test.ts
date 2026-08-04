@@ -9,10 +9,13 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
 import {
   activateRenamedTryoutStartSource,
+  activateReusedTryoutStartPath,
   activateTryoutStartSource,
   makeTryoutStartHierarchy,
   makeTryoutStartPlacement,
   TRYOUT_RENAMED_SET_PATH,
+  TRYOUT_REUSED_SECTION,
+  TRYOUT_REUSED_SET,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_SECTION,
@@ -41,9 +44,7 @@ describe("tryouts/queries/catalog", () => {
     const trackPath = `${examPath}/${TRYOUT_START_TRACK}`;
     const setPath = `${trackPath}/${TRYOUT_START_SET}`;
     const sectionPath = `${setPath}/${TRYOUT_START_SECTION}`;
-
     await t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"));
-
     const hub = await t.query(api.tryouts.queries.catalog.getHubPage, {
       locale: "id",
     });
@@ -67,7 +68,6 @@ describe("tryouts/queries/catalog", () => {
       locale: "id",
       publicPath: sectionPath,
     });
-
     expect(hub.countries).toEqual([
       expect.objectContaining({
         countryKey: TRYOUT_START_COUNTRY,
@@ -94,7 +94,7 @@ describe("tryouts/queries/catalog", () => {
     });
   });
 
-  it("serves a frozen attempt route after active ownership moves", async () => {
+  it("resolves filesystem destinations after active ownership moves", async () => {
     const t = createConvexTestWithBetterAuth();
     const sectionPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}/${TRYOUT_START_SECTION}`;
     const identity = await t.mutation(async (ctx) => {
@@ -119,7 +119,7 @@ describe("tryouts/queries/catalog", () => {
         trackKey: TRYOUT_START_TRACK,
       }
     );
-    await t.mutation(async (ctx) => {
+    const filesystem = await t.mutation(async (ctx) => {
       const state = await ctx.db.query("contentState").unique();
       if (!state) {
         throw new Error("Expected active content state.");
@@ -129,8 +129,34 @@ describe("tryouts/queries/catalog", () => {
         activeReleaseId: undefined,
         activeSequence: undefined,
       });
+      await insertTryoutCountry(ctx);
+      await insertTryoutExam(ctx, TRYOUT_START_EXAM);
+      await insertTryoutTrack(ctx, {
+        examKey: TRYOUT_START_EXAM,
+        publicPath: `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}`,
+        trackKey: TRYOUT_START_TRACK,
+        trackKind: "subject",
+      });
+      const setId = await insertTryoutSet(ctx, {
+        examKey: TRYOUT_START_EXAM,
+        publicPath: TRYOUT_RENAMED_SET_PATH,
+        trackKey: TRYOUT_START_TRACK,
+      });
+      const questionSetId = await insertTryoutQuestionSource(ctx, {
+        examKey: TRYOUT_START_EXAM,
+        sectionKey: TRYOUT_START_SECTION,
+        sourcePath: `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}/${TRYOUT_START_SECTION}`,
+      });
+      const sectionId = await insertTryoutSection(ctx, {
+        examKey: TRYOUT_START_EXAM,
+        publicPath: `${TRYOUT_RENAMED_SET_PATH}/${TRYOUT_START_SECTION}`,
+        questionSetId,
+        sectionKey: TRYOUT_START_SECTION,
+        trackKey: TRYOUT_START_TRACK,
+        tryoutSetId: setId,
+      });
+      return { sectionId, setId };
     });
-
     await expect(
       t.query(api.tryouts.queries.catalog.getSectionPage, {
         locale: "id",
@@ -143,15 +169,56 @@ describe("tryouts/queries/catalog", () => {
         publicPath: sectionPath,
       })
     ).resolves.toMatchObject({
+      activeSectionPublicPath: `${TRYOUT_RENAMED_SET_PATH}/${TRYOUT_START_SECTION}`,
+      activeSetPublicPath: TRYOUT_RENAMED_SET_PATH,
       attemptId: started.attemptId,
       page: {
         section: { sectionKey: TRYOUT_START_SECTION },
         set: { setKey: TRYOUT_START_SET },
       },
     });
+
+    await t.mutation((ctx) =>
+      ctx.db.patch("tryoutSections", filesystem.sectionId, {
+        sectionKey: "replacement",
+      })
+    );
+    await expect(
+      authed.query(api.tryouts.queries.catalog.getAttemptSectionPage, {
+        locale: "id",
+        publicPath: sectionPath,
+      })
+    ).resolves.toMatchObject({
+      activeSectionPublicPath: null,
+      activeSetPublicPath: TRYOUT_RENAMED_SET_PATH,
+    });
+    await t.mutation((ctx) =>
+      ctx.db.patch("tryoutSets", filesystem.setId, { isReady: false })
+    );
+    await expect(
+      authed.query(api.tryouts.queries.catalog.getAttemptSectionPage, {
+        locale: "id",
+        publicPath: sectionPath,
+      })
+    ).resolves.toMatchObject({
+      activeSectionPublicPath: null,
+      activeSetPublicPath: null,
+    });
+    await t.mutation((ctx) =>
+      ctx.db.patch("tryoutSets", filesystem.setId, { isActive: false })
+    );
+    await expect(
+      authed.query(api.tryouts.queries.catalog.getAttemptSectionPage, {
+        locale: "id",
+        publicPath: sectionPath,
+      })
+    ).resolves.toMatchObject({
+      activeSectionPublicPath: null,
+      activeSetPublicPath: null,
+    });
   });
 
-  it("serves the exact frozen attempt after its active route is renamed", async () => {
+  it("serves the frozen attempt after its public route changes owner", async () => {
     const t = createConvexTestWithBetterAuth();
     const sectionPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}/${TRYOUT_START_SECTION}`;
     const identity = await t.mutation(async (ctx) => {
@@ -176,15 +243,15 @@ describe("tryouts/queries/catalog", () => {
         trackKey: TRYOUT_START_TRACK,
       }
     );
-
     await t.mutation(activateRenamedTryoutStartSource);
-
     await expect(
       authed.query(api.tryouts.queries.catalog.getAttemptSectionPage, {
         locale: "id",
         publicPath: sectionPath,
       })
     ).resolves.toMatchObject({
+      activeSectionPublicPath: `${TRYOUT_RENAMED_SET_PATH}/${TRYOUT_START_SECTION}`,
+      activeSetPublicPath: TRYOUT_RENAMED_SET_PATH,
       attemptId: started.attemptId,
       page: { section: { sectionKey: TRYOUT_START_SECTION } },
     });
@@ -196,6 +263,37 @@ describe("tryouts/queries/catalog", () => {
     ).resolves.toMatchObject({
       section: { sectionKey: TRYOUT_START_SECTION },
     });
+
+    await t.mutation(activateReusedTryoutStartPath);
+    const active = await t.query(api.tryouts.queries.catalog.getSectionPage, {
+      locale: "id",
+      publicPath: sectionPath,
+    });
+    const retained = await authed.query(
+      api.tryouts.queries.catalog.getAttemptSectionPage,
+      { locale: "id", publicPath: sectionPath }
+    );
+    expect(active).toMatchObject({
+      section: { sectionKey: TRYOUT_REUSED_SECTION },
+      set: { setKey: TRYOUT_REUSED_SET },
+    });
+    expect(retained).toBeNull();
+    await t.mutation((ctx) =>
+      ctx.db.patch(started.attemptId, { completedAt: 1, status: "completed" })
+    );
+    await expect(
+      authed.query(api.tryouts.queries.catalog.getAttemptSectionPage, {
+        locale: "id",
+        publicPath: sectionPath,
+      })
+    ).resolves.toBeNull();
+    await expect(
+      authed.query(api.tryouts.queries.catalog.getAttemptSectionPage, {
+        attemptId: started.attemptId,
+        locale: "id",
+        publicPath: sectionPath,
+      })
+    ).resolves.toMatchObject({ attemptId: started.attemptId });
   });
 
   it("fails closed when a signed set loses its internal entry section", async () => {
@@ -216,7 +314,6 @@ describe("tryouts/queries/catalog", () => {
         placements: locales.map(makeTryoutStartPlacement),
       })
     );
-
     await expect(
       t.query(api.tryouts.queries.catalog.getSetPage, {
         locale: "id",
@@ -227,7 +324,6 @@ describe("tryouts/queries/catalog", () => {
 
   it("hides exam page tracks until their materialized readiness is true", async () => {
     const t = convexTest(schema, convexModules);
-
     await t.mutation(async (ctx) => {
       await insertTryoutCountry(ctx);
       await insertTryoutExam(ctx);
@@ -238,35 +334,29 @@ describe("tryouts/queries/catalog", () => {
         trackKey: "2028",
       });
     });
-
     const page = await t.query(api.tryouts.queries.catalog.getExamPage, {
       locale: "id",
       publicPath: TRYOUT_EXAM_PATH,
     });
-
     expect(page?.tracks.map((track) => track.trackKey)).toEqual(["2027"]);
   });
 
   it("does not expose legacy exam-to-set paths as track pages", async () => {
     const t = convexTest(schema, convexModules);
-
     await t.mutation(async (ctx) => {
       await insertTryoutCountry(ctx);
       await insertTryoutExam(ctx);
       await insertTryoutTrack(ctx);
     });
-
     const page = await t.query(api.tryouts.queries.catalog.getTrackPage, {
       locale: "id",
       publicPath: `${TRYOUT_EXAM_PATH}/set-1`,
     });
-
     expect(page).toBeNull();
   });
 
   it("hides set pages until every section row is synced", async () => {
     const t = convexTest(schema, convexModules);
-
     await t.mutation(async (ctx) => {
       await insertTryoutCountry(ctx);
       await insertTryoutExam(ctx);

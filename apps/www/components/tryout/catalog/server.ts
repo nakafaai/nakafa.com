@@ -97,13 +97,18 @@ export async function readTryoutSectionPage(
 /** Reads one route from the current user's immutable attempt snapshot. */
 export const readTryoutAttemptSectionPage = Effect.fn(
   "www.tryout.catalog.readAttemptSectionPage"
-)(function* (token: string, locale: Locale, publicPath: string) {
+)(function* (
+  token: string,
+  locale: Locale,
+  publicPath: string,
+  attemptId?: string
+) {
   return yield* Effect.tryPromise({
     catch: (cause) => new TryoutCatalogReadError({ cause }),
     try: () =>
       fetchQuery(
         api.tryouts.queries.catalog.getAttemptSectionPage,
-        { locale, publicPath },
+        { attemptId, locale, publicPath },
         { token }
       ),
   });

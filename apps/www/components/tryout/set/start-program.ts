@@ -3,6 +3,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   StartAttemptArgs,
+  StartAttemptResult,
   TryoutPaywallSource,
 } from "@repo/backend/convex/tryouts/start/spec";
 import { Effect } from "effect";
@@ -17,8 +18,8 @@ import {
 interface StartAttemptProgramInput {
   readonly args: StartAttemptArgs;
   readonly failureMessage: string;
-  readonly mutation: (args: StartAttemptArgs) => Promise<unknown>;
-  readonly onSuccess: () => Effect.Effect<void>;
+  readonly mutation: (args: StartAttemptArgs) => Promise<StartAttemptResult>;
+  readonly onSuccess: (result: StartAttemptResult) => Effect.Effect<void>;
   readonly onUpgrade: () => Effect.Effect<void>;
 }
 
@@ -28,7 +29,7 @@ export function startAttemptProgram(input: StartAttemptProgramInput) {
     try: () => input.mutation(input.args),
     catch: toTryoutClientRequestError,
   }).pipe(
-    Effect.tap(() => input.onSuccess()),
+    Effect.tap((result) => input.onSuccess(result)),
     Effect.catchAll((error) => {
       if (isTryoutAccessRequired(error)) {
         return input.onUpgrade();

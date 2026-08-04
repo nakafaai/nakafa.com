@@ -68,7 +68,7 @@ export const createTryoutAttempt = Effect.fn(
 
   yield* persistAttemptStart(ctx, { attempt, input });
 
-  return { attemptId };
+  return attempt;
 });
 
 /** Builds the complete immutable attempt row before any related writes. */

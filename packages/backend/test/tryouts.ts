@@ -80,6 +80,7 @@ export async function insertTryoutTrack(
 export async function insertTryoutSet(
   ctx: MutationCtx,
   args: {
+    examKey?: string;
     internalEntrySectionKey?: string;
     isReady?: boolean;
     order?: number;
@@ -92,6 +93,7 @@ export async function insertTryoutSet(
     visibleSectionCount?: number;
   } = {}
 ) {
+  const examKey = args.examKey ?? "snbt";
   const trackKey = args.trackKey ?? "2027";
   const setKey = args.setKey ?? "set-1";
   const totalQuestionCount = args.totalQuestionCount ?? 1;
@@ -99,7 +101,7 @@ export async function insertTryoutSet(
 
   return await ctx.db.insert("tryoutSets", {
     countryKey: "indonesia",
-    examKey: "snbt",
+    examKey,
     internalEntrySectionKey: args.internalEntrySectionKey,
     isActive: true,
     isReady: args.isReady ?? true,
@@ -125,6 +127,7 @@ export async function insertTryoutQuestionSource(
   ctx: MutationCtx,
   args: {
     contentHash?: Doc<"questions">["contentHash"];
+    examKey?: string;
     questionCount?: number;
     sectionKey?: string;
     setKey?: string;
@@ -140,7 +143,7 @@ export async function insertTryoutQuestionSource(
   const questionSetId = await ctx.db.insert("questionSets", {
     contentHash: `${sourcePath}:hash`,
     countryKey: "indonesia",
-    examKey: "snbt",
+    examKey: args.examKey ?? "snbt",
     locale: "id",
     questionCount,
     sectionKey,
@@ -175,6 +178,7 @@ export async function insertTryoutQuestionSource(
 export async function insertTryoutSection(
   ctx: MutationCtx,
   args: {
+    examKey?: string;
     order?: number;
     publicPath?: string;
     questionCount?: number;
@@ -190,7 +194,7 @@ export async function insertTryoutSection(
 ) {
   return await ctx.db.insert("tryoutSections", {
     countryKey: "indonesia",
-    examKey: "snbt",
+    examKey: args.examKey ?? "snbt",
     locale: "id",
     order: args.order ?? 1,
     publicPath: args.publicPath,

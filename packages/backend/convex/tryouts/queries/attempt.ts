@@ -4,14 +4,18 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
+  loadAttemptSectionRoutes,
+  tryoutAttemptSectionRouteValidator,
+} from "@repo/backend/convex/tryouts/queries/attemptSections";
+import {
   getSectionScoreResult,
   loadAttemptScoreResult,
 } from "@repo/backend/convex/tryouts/queries/score";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutCurrentSectionValidator } from "@repo/backend/convex/tryouts/runtime/content";
 import {
-  readLatestAttempt,
   readLatestAttemptByPath,
+  readRouteAttempt,
 } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
@@ -29,6 +33,7 @@ const currentAttemptValidator = v.object({
   resumeSectionKey: v.union(tryoutRouteKeyValidator, v.null()),
   score: v.union(tryoutScoreResultValidator, v.null()),
   section: v.union(tryoutCurrentSectionValidator, v.null()),
+  sectionRoutes: v.array(tryoutAttemptSectionRouteValidator),
   startedAt: v.number(),
   status: tryoutStatusValidator,
   totalQuestions: v.number(),
@@ -90,10 +95,11 @@ const loadCurrentAttempt = Effect.fn("tryouts.attempt.loadCurrent")(function* (
     );
   }
 
-  const [sections, score] = yield* Effect.all(
+  const [sections, score, sectionRoutes] = yield* Effect.all(
     [
       loadSectionAttempts(ctx, attempt),
       Effect.promise(() => loadAttemptScoreResult(ctx, attempt)),
+      loadAttemptSectionRoutes(ctx, attempt),
     ],
     { concurrency: "unbounded" }
   );
@@ -133,6 +139,7 @@ const loadCurrentAttempt = Effect.fn("tryouts.attempt.loadCurrent")(function* (
           totalQuestions: section.totalQuestions,
         }
       : null,
+    sectionRoutes,
     startedAt: attempt.startedAt,
     status: attempt.status,
     totalQuestions: attempt.totalQuestions,
@@ -142,6 +149,7 @@ const loadCurrentAttempt = Effect.fn("tryouts.attempt.loadCurrent")(function* (
 /** Reads the current user's latest try-out attempt for a public set identity. */
 export const getCurrent = query({
   args: {
+    attemptId: v.optional(v.id("tryoutAttempts")),
     countryKey: tryoutRouteKeyValidator,
     examKey: tryoutRouteKeyValidator,
     locale: localeValidator,
@@ -159,7 +167,7 @@ export const getCurrent = query({
         if (!auth) {
           return null;
         }
-        const attempt = yield* readLatestAttempt(ctx, args, auth.appUser._id);
+        const attempt = yield* readRouteAttempt(ctx, args, auth.appUser._id);
         if (!attempt) {
           return null;
         }

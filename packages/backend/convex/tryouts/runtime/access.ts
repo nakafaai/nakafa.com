@@ -6,7 +6,12 @@ import {
   type TryoutSectionContentAccess,
   type TryoutSectionContentArgs,
 } from "@repo/backend/convex/tryouts/runtime/content";
-import { readLatestAttempt } from "@repo/backend/convex/tryouts/runtime/lookup";
+import {
+  matchesAttemptIdentity,
+  readAttemptSetIdentity,
+  readOwnedAttemptById,
+  readRouteAttempt,
+} from "@repo/backend/convex/tryouts/runtime/lookup";
 import { loadTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
 import { Effect, Schema } from "effect";
 
@@ -96,14 +101,15 @@ const readContentAttempt = Effect.fn("tryouts.access.readContentAttempt")(
   ) {
     const attemptId = args.attemptId;
     if (!attemptId) {
-      return yield* readLatestAttempt(ctx, args, userId);
+      return yield* readRouteAttempt(ctx, args, userId);
     }
 
-    const attempt = yield* tryContentPromise(() => ctx.db.get(attemptId));
-    if (!attempt || attempt.userId !== userId) {
+    const attempt = yield* readOwnedAttemptById(ctx, attemptId, userId);
+    if (!attempt) {
       return null;
     }
-    if (!matchesContentIdentity(attempt, args)) {
+    const attemptIdentity = yield* readAttemptSetIdentity(ctx, attempt);
+    if (!(attemptIdentity && matchesAttemptIdentity(attemptIdentity, args))) {
       return yield* contentIntegrity(
         "Try-out content request differs from its frozen attempt identity."
       );
@@ -111,20 +117,6 @@ const readContentAttempt = Effect.fn("tryouts.access.readContentAttempt")(
     return attempt;
   }
 );
-
-/** Verifies route keys before an exact attempt may authorize protected content. */
-function matchesContentIdentity(
-  attempt: TryoutAttempt,
-  args: TryoutSectionContentArgs
-) {
-  return (
-    attempt.countryKey === args.countryKey &&
-    attempt.examKey === args.examKey &&
-    attempt.locale === args.locale &&
-    attempt.setKey === args.setKey &&
-    attempt.trackKey === args.trackKey
-  );
-}
 
 /** Resolves one bounded active section when its published route key changed. */
 const loadActiveSection = Effect.fn("tryouts.access.loadActiveSection")(

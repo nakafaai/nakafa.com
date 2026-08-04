@@ -10,7 +10,7 @@ import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { StartSectionButton } from "@/components/tryout/section/start";
 import type { TryoutSummarySection } from "@/components/tryout/section/summary";
 import {
@@ -30,6 +30,12 @@ interface TryoutSummarySet {
   trackKey: string;
 }
 
+/** Canonical destination and post-start behavior for one section route. */
+export interface TryoutStartDestination {
+  href: string;
+  successNavigation: StartTryoutRequest["successNavigation"];
+}
+
 /** Cohesive state needed to select one valid section summary action. */
 export interface TryoutSummaryActionValue {
   activeAttempt: NonNullable<CurrentAttempt> | null;
@@ -42,6 +48,7 @@ export interface TryoutSummaryActionValue {
   sectionHref: string;
   set: TryoutSummarySet;
   startAttemptSectionKey?: string;
+  startDestination: TryoutStartDestination | null;
 }
 
 interface ResumeSectionValue {
@@ -61,25 +68,27 @@ export function TryoutSummaryAction({
 }) {
   const tTryouts = useTranslations("Tryouts");
   const prewarmData = useTryoutDataIntent();
+  const startDestination = value.startDestination;
+  const returnAction = (
+    <TryoutIntentLink
+      className={cn(buttonVariants(), "w-full sm:w-auto")}
+      href={value.returnHref}
+      onIntent={() =>
+        prewarmData({
+          directEntry: null,
+          kind: "set",
+          locale: value.locale,
+          publicPath: value.returnHref.slice(1),
+        })
+      }
+    >
+      <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
+      {tTryouts("back-to-set-cta")}
+    </TryoutIntentLink>
+  );
 
   if (value.sectionFinished && value.completedAction === "return") {
-    return (
-      <TryoutIntentLink
-        className={cn(buttonVariants(), "w-full sm:w-auto")}
-        href={value.returnHref}
-        onIntent={() =>
-          prewarmData({
-            directEntry: null,
-            kind: "set",
-            locale: value.locale,
-            publicPath: value.returnHref.slice(1),
-          })
-        }
-      >
-        <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
-        {tTryouts("back-to-set-cta")}
-      </TryoutIntentLink>
-    );
+    return returnAction;
   }
 
   if (value.activeAttempt && !value.activeAttempt.section) {
@@ -101,15 +110,20 @@ export function TryoutSummaryAction({
     return null;
   }
 
+  if (!startDestination) {
+    return returnAction;
+  }
+
   const request: StartTryoutRequest = {
-    authRedirectHref: value.sectionHref,
+    authRedirectHref: startDestination.href,
     countryKey: value.set.countryKey,
-    destinationHref: value.sectionHref,
+    destinationHref: startDestination.href,
     destinationSectionKey: value.section.sectionKey,
     entrySectionKey: value.startAttemptSectionKey,
     examKey: value.set.examKey,
     locale: value.locale,
     setKey: value.set.setKey,
+    successNavigation: startDestination.successNavigation,
     trackKey: value.set.trackKey,
   };
 
@@ -129,6 +143,7 @@ function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
         href={resumeHref}
         onIntent={() =>
           prewarmData({
+            attemptId: value.activeAttempt.attemptId,
             countryKey: value.set.countryKey,
             examKey: value.set.examKey,
             kind: "section",
@@ -166,7 +181,10 @@ function getResumeHref(value: ResumeSectionValue) {
   }
 
   if (activeAttempt.resumeSectionPublicPath) {
-    return getTryoutPublicPathHref(activeAttempt.resumeSectionPublicPath);
+    return getTryoutAttemptHref(
+      activeAttempt.resumeSectionPublicPath,
+      activeAttempt.attemptId
+    );
   }
 
   return value.returnHref;

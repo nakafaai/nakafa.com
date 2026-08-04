@@ -6,6 +6,13 @@ interface TryoutHrefInput {
   track?: string;
 }
 
+const ATTEMPT_ID_PARAM = "attemptId";
+
+export type TryoutRouteSearchParams = Record<
+  string,
+  string | string[] | undefined
+>;
+
 /** Builds a public try-out href from already-localized route segments. */
 export function getTryoutHref({
   country,
@@ -24,4 +31,29 @@ export function getTryoutHref({
 /** Converts a Convex publicPath row into the href expected by localized links. */
 export function getTryoutPublicPathHref(publicPath: string) {
   return `/${publicPath}`;
+}
+
+/** Builds a route capability that binds navigation to one owned attempt. */
+export function getTryoutAttemptHref(publicPath: string, attemptId: string) {
+  const searchParams = new URLSearchParams({ [ATTEMPT_ID_PARAM]: attemptId });
+  return `${getTryoutPublicPathHref(publicPath)}?${searchParams.toString()}`;
+}
+
+/** Preserves an exact attempt capability through localized authentication. */
+export function getTryoutAttemptAuthHref(
+  locale: string,
+  publicPath: string,
+  attemptId: string
+) {
+  const redirectHref = `/${locale}${getTryoutAttemptHref(publicPath, attemptId)}`;
+  return `/${locale}/auth?redirect=${encodeURIComponent(redirectHref)}`;
+}
+
+/** Reads one untrusted attempt capability for server-side verification. */
+export function readTryoutAttemptId(searchParams: TryoutRouteSearchParams) {
+  const attemptId = searchParams[ATTEMPT_ID_PARAM];
+  if (typeof attemptId !== "string" || attemptId.length === 0) {
+    return;
+  }
+  return attemptId;
 }

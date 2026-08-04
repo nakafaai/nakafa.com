@@ -169,6 +169,31 @@ export const readPublishedSet = Effect.fn("tryouts.catalog.readPublishedSet")(
   }
 );
 
+/** Finds one visible signed section by its stable authored identity. */
+export const readPublishedSection = Effect.fn(
+  "tryouts.catalog.readPublishedSection"
+)(function* (
+  catalog: PublishedCatalog,
+  identity: TrackIdentity & {
+    readonly sectionKey: string;
+    readonly setKey: string;
+  }
+) {
+  const index = yield* indexPublishedCatalog(catalog);
+  return (
+    index.sections.find(
+      (section) =>
+        section.countryKey === identity.countryKey &&
+        section.examKey === identity.examKey &&
+        section.trackKey === identity.trackKey &&
+        section.setKey === identity.setKey &&
+        section.sectionKey === identity.sectionKey &&
+        section.locale === identity.locale &&
+        section.visibility === "visible"
+    ) ?? null
+  );
+});
+
 /** Finds one signed set by its localized public path. */
 export const readPublishedSetByPath = Effect.fn(
   "tryouts.catalog.readPublishedSetByPath"

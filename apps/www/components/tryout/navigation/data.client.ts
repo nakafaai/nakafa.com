@@ -1,9 +1,9 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useConvex, useConvexAuth } from "convex/react";
 import type { Locale } from "next-intl";
-import { useCallback } from "react";
 
 export type TryoutDataIntent =
   | {
@@ -19,6 +19,7 @@ export type TryoutDataIntent =
       publicPath: string;
     }
   | {
+      attemptId?: Id<"tryoutAttempts">;
       countryKey: string;
       examKey: string;
       kind: "section";
@@ -39,52 +40,50 @@ export function useTryoutDataIntent() {
   const convex = useConvex();
   const { isAuthenticated, isLoading } = useConvexAuth();
 
-  return useCallback(
-    (intent: TryoutDataIntent) => {
-      if (isLoading || !isAuthenticated) {
-        return false;
-      }
+  return function prewarmTryoutData(intent: TryoutDataIntent) {
+    if (isLoading || !isAuthenticated) {
+      return false;
+    }
 
-      if (intent.kind === "set") {
+    if (intent.kind === "set") {
+      convex.prewarmQuery({
+        args: {
+          locale: intent.locale,
+          publicPath: intent.publicPath,
+        },
+        query: api.tryouts.queries.attempt.getCurrentByPublicPath,
+      });
+
+      if (intent.directEntry) {
         convex.prewarmQuery({
           args: {
+            ...intent.directEntry,
             locale: intent.locale,
-            publicPath: intent.publicPath,
           },
-          query: api.tryouts.queries.attempt.getCurrentByPublicPath,
+          query: api.tryouts.queries.runtime.getSection,
         });
-
-        if (intent.directEntry) {
-          convex.prewarmQuery({
-            args: {
-              ...intent.directEntry,
-              locale: intent.locale,
-            },
-            query: api.tryouts.queries.runtime.getSection,
-          });
-        }
-        return true;
       }
-
-      const args = {
-        countryKey: intent.countryKey,
-        examKey: intent.examKey,
-        locale: intent.locale,
-        sectionKey: intent.sectionKey,
-        setKey: intent.setKey,
-        trackKey: intent.trackKey,
-      };
-
-      convex.prewarmQuery({
-        args,
-        query: api.tryouts.queries.attempt.getCurrent,
-      });
-      convex.prewarmQuery({
-        args,
-        query: api.tryouts.queries.runtime.getSection,
-      });
       return true;
-    },
-    [convex, isAuthenticated, isLoading]
-  );
+    }
+
+    const args = {
+      ...(intent.attemptId ? { attemptId: intent.attemptId } : {}),
+      countryKey: intent.countryKey,
+      examKey: intent.examKey,
+      locale: intent.locale,
+      sectionKey: intent.sectionKey,
+      setKey: intent.setKey,
+      trackKey: intent.trackKey,
+    };
+
+    convex.prewarmQuery({
+      args,
+      query: api.tryouts.queries.attempt.getCurrent,
+    });
+    convex.prewarmQuery({
+      args,
+      query: api.tryouts.queries.runtime.getSection,
+    });
+    return true;
+  };
 }

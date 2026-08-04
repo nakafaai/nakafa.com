@@ -93,7 +93,10 @@ describe("tryouts/runtime/selectors", () => {
     });
 
     await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
+      authed.query(api.tryouts.queries.access.getSectionContent, {
+        ...contentArgs,
+        attemptId: seeded.attemptId,
+      })
     ).resolves.toEqual({
       answers: [seeded.signedContent?.answer],
       kind: "signed",
@@ -175,7 +178,10 @@ describe("tryouts/runtime/selectors", () => {
       });
 
       await expect(
-        authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
+        authed.query(api.tryouts.queries.access.getSectionContent, {
+          ...contentArgs,
+          attemptId: seeded.attemptId,
+        })
       ).rejects.toThrow(message);
     }
   );

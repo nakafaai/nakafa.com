@@ -1,5 +1,6 @@
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
 import {
   loadQuestionContentRows,
   loadReadySections,
@@ -9,11 +10,16 @@ import {
   toPublicTryoutTrack,
 } from "@repo/backend/convex/tryouts/queries/catalogModel";
 import { loadActiveTryoutSetParents } from "@repo/backend/convex/tryouts/queries/parents";
+import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import { Effect } from "effect";
 
 interface CatalogPath {
   readonly locale: ContentLocale;
   readonly publicPath: string;
+}
+
+interface FilesystemSectionIdentity extends TryoutSetIdentity {
+  readonly sectionKey: string;
 }
 
 /** Reads one filesystem-owned set with its ready sections. */
@@ -108,5 +114,37 @@ export const readFilesystemSection = Effect.fn(
     section: toPublicTryoutSection(section),
     set: toPublicTryoutSet(set),
     track: toPublicTryoutTrack(parents.track),
+  };
+});
+
+/** Resolves current filesystem routes by the frozen authored identity. */
+export const readFilesystemDestinationPaths = Effect.fn(
+  "tryouts.catalog.readFilesystemDestinationPaths"
+)(function* (ctx: QueryCtx, identity: FilesystemSectionIdentity) {
+  const set = yield* Effect.promise(() => getActiveTryoutSet(ctx, identity));
+  if (!set) {
+    return {
+      activeSectionPublicPath: null,
+      activeSetPublicPath: null,
+    };
+  }
+
+  const page = yield* readFilesystemSet(ctx, {
+    locale: identity.locale,
+    publicPath: set.publicPath,
+  });
+  if (!page) {
+    return {
+      activeSectionPublicPath: null,
+      activeSetPublicPath: null,
+    };
+  }
+
+  const section = page.sections.find(
+    (candidate) => candidate.sectionKey === identity.sectionKey
+  );
+  return {
+    activeSectionPublicPath: section?.publicPath ?? null,
+    activeSetPublicPath: page.set.publicPath,
   };
 });

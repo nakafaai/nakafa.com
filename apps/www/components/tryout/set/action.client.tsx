@@ -46,6 +46,7 @@ export function TryoutSetAction({ value }: { value: TryoutSetActionValue }) {
     examKey: value.set.examKey,
     locale: value.locale,
     setKey: value.set.setKey,
+    successNavigation: "destination",
     trackKey: value.set.trackKey,
   };
 

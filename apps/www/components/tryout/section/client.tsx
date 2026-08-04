@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -20,6 +21,7 @@ import {
   type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import type { TryoutStartDestination } from "@/components/tryout/section/action.client";
 import {
   getTryoutFinishedSectionDescription,
   getTryoutFinishedSectionStatus,
@@ -31,10 +33,20 @@ import { TryoutMeta } from "@/components/tryout/shell/meta";
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
 
 interface TryoutSectionPageClientProps {
+  binding: TryoutSectionRouteBinding;
   content: TryoutSectionAssets;
   page: NonNullable<FunctionReturnType<SectionPageQuery>>;
   route: TryoutSectionRoute;
+  setHref: string;
 }
+
+type TryoutSectionRouteBinding =
+  | { kind: "active" }
+  | {
+      attemptId: Id<"tryoutAttempts">;
+      kind: "retained";
+      startHref: string | null;
+    };
 
 interface TryoutSectionAssets {
   answers: readonly TryoutAnswerContent[];
@@ -52,11 +64,14 @@ interface TryoutSectionRoute {
 
 /** Renders one realtime try-out section page from Convex. */
 export function TryoutSectionPageClient({
+  binding,
   content,
   page,
   route,
+  setHref,
 }: TryoutSectionPageClientProps) {
   const runtimeArgs = {
+    ...(binding.kind === "retained" ? { attemptId: binding.attemptId } : {}),
     countryKey: page.set.countryKey,
     examKey: page.set.examKey,
     locale: route.locale,
@@ -86,13 +101,6 @@ export function TryoutSectionPageClient({
   const sectionAttempt = actionAttempt?.section ?? null;
   const runtimeState = getTryoutRuntimeState({ activeAttempt, now, runtime });
   const hasActiveSection = currentAttempt?.section?.status === "in-progress";
-  const setHref = getTryoutHref({
-    country: route.country,
-    exam: route.exam,
-    set: route.set,
-    track: route.track,
-  });
-
   if (hasActiveSection && runtimeState.kind === "none") {
     return null;
   }
@@ -107,6 +115,7 @@ export function TryoutSectionPageClient({
   const attemptFinished = Boolean(
     currentAttempt && currentAttempt.status !== "in-progress"
   );
+  const startDestination = getStartDestination(binding, route);
 
   let status = tTryouts("part-head-needs-tryout");
 
@@ -157,6 +166,7 @@ export function TryoutSectionPageClient({
               runtimeState,
               sectionStatus,
               setHref,
+              startDestination,
             }}
           />
         </div>
@@ -182,6 +192,7 @@ function TryoutSectionBody({
     runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
     sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
     setHref: string;
+    startDestination: TryoutStartDestination | null;
   };
 }) {
   if (value.runtimeState.kind === "active") {
@@ -225,8 +236,10 @@ function TryoutSectionBody({
             attempt: value.actionAttempt,
             locale: value.route.locale,
             page: value.page,
+            returnHref: value.setHref,
             route: value.route,
             sectionStatus: value.sectionStatus,
+            startDestination: value.startDestination,
           }}
         />
         <TryoutRuntime
@@ -249,9 +262,33 @@ function TryoutSectionBody({
         attempt: value.actionAttempt,
         locale: value.route.locale,
         page: value.page,
+        returnHref: value.setHref,
         route: value.route,
         sectionStatus: value.sectionStatus,
+        startDestination: value.startDestination,
       }}
     />
   );
+}
+
+/** Selects how a start action leaves an active or retained section route. */
+function getStartDestination(
+  binding: TryoutSectionRouteBinding,
+  route: TryoutSectionRoute
+): TryoutStartDestination | null {
+  if (binding.kind === "active") {
+    return {
+      href: getTryoutHref(route),
+      successNavigation: "stay",
+    };
+  }
+
+  if (!binding.startHref) {
+    return null;
+  }
+
+  return {
+    href: binding.startHref,
+    successNavigation: "destination",
+  };
 }

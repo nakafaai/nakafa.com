@@ -23,6 +23,8 @@ export const TRYOUT_START_EXAM = "tka";
 export const TRYOUT_START_TRACK = "matematika";
 export const TRYOUT_START_SET = "set-1";
 export const TRYOUT_START_SECTION = "matematika";
+export const TRYOUT_REUSED_SET = "set-2";
+export const TRYOUT_REUSED_SECTION = "aljabar";
 export const TRYOUT_RENAMED_SET_PATH = PublicPathSchema.make(
   `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/renamed-set`
 );
@@ -97,15 +99,7 @@ export async function activateTryoutStartSource(
 
 /** Activates a renamed set route while retaining the original test snapshot. */
 export async function activateRenamedTryoutStartSource(ctx: MutationCtx) {
-  const state = await ctx.db.query("contentState").unique();
-  if (!state) {
-    throw new Error("Expected active content state before route rename.");
-  }
-  await ctx.db.delete(state._id);
-  const releases = await ctx.db.query("contentReleases").collect();
-  for (const release of releases) {
-    await ctx.db.delete(release._id);
-  }
+  await clearActiveTryoutSnapshot(ctx);
 
   const catalog = tryoutStartLocales.flatMap((locale) =>
     makeTryoutStartHierarchy(locale, "visible").map((row) => {
@@ -121,6 +115,41 @@ export async function activateRenamedTryoutStartSource(ctx: MutationCtx) {
   await activateTryoutSnapshot(ctx, {
     catalog,
     placements: tryoutStartLocales.map(makeTryoutStartPlacement),
+  });
+}
+
+/** Activates a different logical set at the original public path. */
+export async function activateReusedTryoutStartPath(ctx: MutationCtx) {
+  await clearActiveTryoutSnapshot(ctx);
+
+  const catalog = tryoutStartLocales.flatMap((locale) =>
+    Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))(
+      makeTryoutStartHierarchy(locale, "visible").map((row) => {
+        if (row.kind === "set") {
+          return {
+            ...row,
+            graph: makeGraph(locale, "set", "reused"),
+            setKey: TRYOUT_REUSED_SET,
+            title: "Set 2",
+          };
+        }
+        if (row.kind === "section") {
+          return {
+            ...row,
+            graph: makeGraph(locale, "section", "reused"),
+            questionSourcePath: `packages/corpus/${reusedSourcePath}`,
+            sectionKey: TRYOUT_REUSED_SECTION,
+            setKey: TRYOUT_REUSED_SET,
+            title: "Aljabar",
+          };
+        }
+        return row;
+      })
+    )
+  );
+  await activateTryoutSnapshot(ctx, {
+    catalog,
+    placements: tryoutStartLocales.map(makeReusedTryoutStartPlacement),
   });
 }
 
@@ -270,13 +299,44 @@ export function makeTryoutStartPlacement(
 /** Builds one stable graph identity for a technical signed row. */
 function makeGraph(
   locale: ContentLocale,
-  kind: "country" | "exam" | "section" | "set" | "track"
+  kind: "country" | "exam" | "section" | "set" | "track",
+  owner = "start"
 ) {
   return {
-    alignmentId: `alignment:tryout:start:${kind}`,
-    assetId: `asset:${locale}:tryout:start:${kind}`,
-    conceptId: `concept:tryout:start:${kind}`,
-    learningObjectId: `lo:tryout-start-${kind}`,
-    lensId: "lens:tryout:start",
+    alignmentId: `alignment:tryout:${owner}:${kind}`,
+    assetId: `asset:${locale}:tryout:${owner}:${kind}`,
+    conceptId: `concept:tryout:${owner}:${kind}`,
+    learningObjectId: `lo:tryout-${owner}-${kind}`,
+    lensId: `lens:tryout:${owner}`,
   };
+}
+
+const reusedSourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}`;
+
+/** Builds one replacement placement whose public path belongs to another set. */
+function makeReusedTryoutStartPlacement(locale: ContentLocale) {
+  const questionRoot = `${reusedSourcePath}/question-1`;
+  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+    ...makeTryoutStartPlacement(locale),
+    answerContentKey: `${questionRoot}/answer`,
+    questionContentKey: `${questionRoot}/question`,
+    questionSourcePath: `packages/corpus/${questionRoot}`,
+    sectionKey: TRYOUT_REUSED_SECTION,
+    setKey: TRYOUT_REUSED_SET,
+    title: "Replacement question",
+  });
+}
+
+/** Clears only the active release pointer before activating another fixture. */
+async function clearActiveTryoutSnapshot(ctx: MutationCtx) {
+  const state = await ctx.db.query("contentState").unique();
+  if (!state) {
+    throw new Error("Expected active content state before source replacement.");
+  }
+  await ctx.db.delete(state._id);
+
+  const releases = await ctx.db.query("contentReleases").collect();
+  for (const release of releases) {
+    await ctx.db.delete(release._id);
+  }
 }

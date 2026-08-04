@@ -41,16 +41,8 @@ const accessScenarios: readonly [
   ],
   ["in-progress", "completed", noContent],
   ["completed", "in-progress", noContent],
-  [
-    "completed",
-    "completed",
-    { answers: true, kind: "filesystem", questions: true },
-  ],
-  [
-    "expired",
-    "expired",
-    { answers: true, kind: "filesystem", questions: true },
-  ],
+  ["completed", "completed", noContent],
+  ["expired", "expired", noContent],
 ];
 
 describe("tryouts/runtime/access", () => {
@@ -129,7 +121,7 @@ describe("tryouts/runtime/access", () => {
   });
 
   it.each(accessScenarios)(
-    "authorizes attempt=%s section=%s",
+    "authorizes unbound attempt=%s section=%s",
     async (attemptStatus, sectionStatus, expected) => {
       const t = createConvexTestWithBetterAuth();
       const seeded = await t.mutation((ctx) =>
@@ -152,6 +144,33 @@ describe("tryouts/runtime/access", () => {
       ).toEqual(expected);
     }
   );
+
+  it("requires an exact capability to review terminal content", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation((ctx) =>
+      seedTryoutContentAccessState(ctx, {
+        attemptStatus: "completed",
+        sectionStatus: "completed",
+        signed: true,
+        suffix: "content-terminal-capability",
+      })
+    );
+    const authed = t.withIdentity({
+      sessionId: seeded.identity.sessionId,
+      subject: seeded.identity.authUserId,
+    });
+
+    await expect(
+      authed.query(api.tryouts.queries.access.getSectionContent, {
+        ...contentArgs,
+        attemptId: seeded.attemptId,
+      })
+    ).resolves.toEqual({
+      answers: [seeded.signedContent?.answer],
+      kind: "signed",
+      questions: [seeded.signedContent?.question],
+    });
+  });
 
   it("serves the active frozen section after its published key changes", async () => {
     const t = createConvexTestWithBetterAuth();

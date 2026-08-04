@@ -158,6 +158,10 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
         sectionHref: entryHref,
         set: value.page.set,
         startAttemptSectionKey: value.entrySection.sectionKey,
+        startDestination: {
+          href: entryHref,
+          successNavigation: "stay",
+        },
       }}
     />
   );

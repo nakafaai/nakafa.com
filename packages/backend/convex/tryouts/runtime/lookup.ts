@@ -1,5 +1,5 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
@@ -24,6 +24,11 @@ export interface AttemptOwnerIdentity {
 interface PublicSetPath {
   readonly locale: TryoutSetIdentity["locale"];
   readonly publicPath: string;
+}
+
+interface AttemptRouteSelector extends TryoutSetIdentity {
+  readonly attemptId?: Id<"tryoutAttempts">;
+  readonly sectionKey?: string;
 }
 
 /** Selects the newest attempt after deduplicating dual-index migration rows. */
@@ -138,6 +143,109 @@ export const readLatestAttempt = Effect.fn("tryouts.runtime.readLatestAttempt")(
   }
 );
 
+/** Reads one exact attempt only when it belongs to the current app user. */
+export const readOwnedAttemptById = Effect.fn(
+  "tryouts.runtime.readOwnedAttemptById"
+)(function* (ctx: QueryCtx, attemptId: Id<"tryoutAttempts">, userId: UserId) {
+  const attempt = yield* Effect.promise(() => ctx.db.get(attemptId));
+  if (attempt?.userId !== userId) {
+    return null;
+  }
+  return attempt;
+});
+
+/** Resolves the signed identity or the still-owned filesystem source of an attempt. */
+export const readAttemptSetIdentity = Effect.fn(
+  "tryouts.runtime.readAttemptSetIdentity"
+)(function* (ctx: QueryCtx, attempt: TryoutAttempt) {
+  const preparedIdentity = readPreparedAttemptSetIdentity(attempt);
+  if (preparedIdentity) {
+    return preparedIdentity;
+  }
+
+  if (hasPartialAttemptSetIdentity(attempt) || attempt.tryoutSnapshotId) {
+    return null;
+  }
+
+  const tryoutSetId = attempt.tryoutSetId;
+  if (!tryoutSetId) {
+    return null;
+  }
+  const set = yield* Effect.promise(() => ctx.db.get(tryoutSetId));
+  if (!set) {
+    return null;
+  }
+  return {
+    countryKey: set.countryKey,
+    examKey: set.examKey,
+    locale: set.locale,
+    setKey: set.setKey,
+    trackKey: set.trackKey,
+  };
+});
+
+/** Checks that route keys select one resolved logical set identity. */
+export function matchesAttemptIdentity(
+  attemptIdentity: TryoutSetIdentity,
+  routeIdentity: TryoutSetIdentity
+) {
+  return (
+    attemptIdentity.countryKey === routeIdentity.countryKey &&
+    attemptIdentity.examKey === routeIdentity.examKey &&
+    attemptIdentity.locale === routeIdentity.locale &&
+    attemptIdentity.setKey === routeIdentity.setKey &&
+    attemptIdentity.trackKey === routeIdentity.trackKey
+  );
+}
+
+/** Reads an exact route-bound attempt or the latest logical set attempt. */
+export const readRouteAttempt = Effect.fn("tryouts.runtime.readRouteAttempt")(
+  function* (ctx: QueryCtx, selector: AttemptRouteSelector, userId: UserId) {
+    const attemptId = selector.attemptId;
+    if (!attemptId) {
+      const attempt = yield* readLatestAttempt(ctx, selector, userId);
+      if (selector.sectionKey && attempt?.status !== "in-progress") {
+        return null;
+      }
+      return attempt;
+    }
+
+    const attempt = yield* readOwnedAttemptById(ctx, attemptId, userId);
+    if (!attempt) {
+      return null;
+    }
+    const attemptIdentity = yield* readAttemptSetIdentity(ctx, attempt);
+    if (
+      !(attemptIdentity && matchesAttemptIdentity(attemptIdentity, selector))
+    ) {
+      return null;
+    }
+    return attempt;
+  }
+);
+
+/** Reads the complete identity already persisted on a prepared attempt. */
+function readPreparedAttemptSetIdentity(
+  attempt: TryoutAttempt
+): TryoutSetIdentity | null {
+  const { countryKey, examKey, locale, setKey, trackKey } = attempt;
+  if (!(countryKey && examKey && locale && setKey && trackKey)) {
+    return null;
+  }
+  return { countryKey, examKey, locale, setKey, trackKey };
+}
+
+/** Detects a malformed partial identity instead of guessing from mixed sources. */
+function hasPartialAttemptSetIdentity(attempt: TryoutAttempt) {
+  return [
+    attempt.countryKey,
+    attempt.examKey,
+    attempt.locale,
+    attempt.setKey,
+    attempt.trackKey,
+  ].some((value) => value !== undefined);
+}
+
 /** Reads the latest attempt for one localized public set route. */
 export const readLatestAttemptByPath = Effect.fn(
   "tryouts.runtime.readLatestAttemptByPath"
@@ -145,19 +253,17 @@ export const readLatestAttemptByPath = Effect.fn(
   const catalog = yield* loadTryoutCatalog(ctx, path.locale);
   if (catalog.managed) {
     const activeSet = yield* readPublishedSetByPath(catalog, path.publicPath);
-    const signedByIdentity = activeSet
-      ? yield* Effect.promise(() =>
-          ctx.db
-            .query("tryoutAttempts")
-            .withIndex("by_userId_and_setIdentity_and_startedAt", (index) =>
-              index
-                .eq("userId", userId)
-                .eq("setIdentity", tryoutCatalogIdentity(activeSet))
-            )
-            .order("desc")
-            .first()
-        )
-      : null;
+    if (activeSet) {
+      const legacy = yield* Effect.promise(() =>
+        getActiveTryoutSet(ctx, activeSet)
+      );
+      return yield* readLatestOwnedAttempt(ctx, {
+        setIdentity: tryoutCatalogIdentity(activeSet),
+        tryoutSetId: legacy?._id,
+        userId,
+      });
+    }
+
     const signedByPath = yield* Effect.promise(() =>
       ctx.db
         .query("tryoutAttempts")
@@ -176,9 +282,7 @@ export const readLatestAttemptByPath = Effect.fn(
       getActiveTryoutSetByPublicPath(ctx, path)
     );
     if (!legacy) {
-      return selectLatestAttempt(
-        [signedByIdentity, signedByPath].filter((attempt) => attempt !== null)
-      );
+      return signedByPath;
     }
     const filesystem = yield* Effect.promise(() =>
       ctx.db
@@ -190,9 +294,7 @@ export const readLatestAttemptByPath = Effect.fn(
         .first()
     );
     return selectLatestAttempt(
-      [signedByIdentity, signedByPath, filesystem].filter(
-        (attempt) => attempt !== null
-      )
+      [signedByPath, filesystem].filter((attempt) => attempt !== null)
     );
   }
 

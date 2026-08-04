@@ -13,6 +13,7 @@ import { Schema } from "effect";
 
 export const startAttemptArgsValidator = v.object({
   countryKey: tryoutRouteKeyValidator,
+  destinationSectionKey: v.optional(tryoutRouteKeyValidator),
   examKey: tryoutRouteKeyValidator,
   entrySectionKey: v.optional(tryoutRouteKeyValidator),
   locale: localeValidator,
@@ -23,6 +24,10 @@ export type StartAttemptArgs = Infer<typeof startAttemptArgsValidator>;
 
 export const startAttemptResultValidator = v.object({
   attemptId: v.id("tryoutAttempts"),
+  navigation: v.union(
+    v.object({ kind: v.literal("stay") }),
+    v.object({ kind: v.literal("destination"), publicPath: v.string() })
+  ),
 });
 export type StartAttemptResult = Infer<typeof startAttemptResultValidator>;
 

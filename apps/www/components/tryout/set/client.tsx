@@ -4,6 +4,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import {
+  getTryoutAttemptHref,
   getTryoutHref,
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
@@ -90,7 +91,7 @@ export function TryoutSetPageClient({
     page.sections.find(
       (sectionItem) => sectionItem.sectionKey === resumeSectionKey
     ) ?? entrySection;
-  const destination = resumeSection
+  let destination = resumeSection
     ? {
         href: getEntrySectionHref({
           entrySection: resumeSection,
@@ -99,6 +100,18 @@ export function TryoutSetPageClient({
         sectionKey: resumeSection.sectionKey,
       }
     : null;
+  if (
+    activeAttempt?.resumeSectionKey &&
+    activeAttempt.resumeSectionPublicPath
+  ) {
+    destination = {
+      href: getTryoutAttemptHref(
+        activeAttempt.resumeSectionPublicPath,
+        activeAttempt.attemptId
+      ),
+      sectionKey: activeAttempt.resumeSectionKey,
+    };
+  }
   const view: TryoutSetView = {
     actionAttempt,
     activeAttempt,
