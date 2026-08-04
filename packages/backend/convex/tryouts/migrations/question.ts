@@ -7,6 +7,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { toTryoutCorpusPath } from "@repo/backend/convex/contentRelease/tryout/path";
 import { verifyTryoutPlacement } from "@repo/backend/convex/contentRelease/tryout/verify";
+import { matchesSignedTryoutContent } from "@repo/backend/convex/tryouts/migrations/contentAttestation";
 import { migrationFail } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
 
@@ -20,8 +21,9 @@ export const bindLegacyPlacement = Effect.fn(
   expectedSnapshotId: string,
   legacy: LegacyPlacement
 ) {
+  const legacyContentHash = legacy.contentHash;
   const tryoutSectionId = legacy.tryoutSectionId;
-  if (!(tryoutSectionId && legacy.contentHash)) {
+  if (!(tryoutSectionId && legacyContentHash)) {
     return yield* migrationFail(
       "A legacy placement is missing its source identity."
     );
@@ -81,7 +83,7 @@ export const bindLegacyPlacement = Effect.fn(
   }
 
   const row = yield* verifyTryoutPlacement(stored, expectedSnapshotId);
-  if (!matchesLegacyPlacement(legacy, row)) {
+  if (!matchesLegacyPlacement(legacy, legacyContentHash, row)) {
     return yield* migrationFail(
       `Legacy placement ${stored.identity} differs from its signed row.`
     );
@@ -146,7 +148,10 @@ export const bindLegacyIrtItem = Effect.fn(
     question.number
   );
   if (
-    placement.row.contentHash !== question.contentHash ||
+    !matchesSignedTryoutContent(
+      question.contentHash,
+      placement.row.contentHash
+    ) ||
     placement.row.sourceRevision !== question.sourceRevision ||
     placement.row.questionSourcePath !==
       toTryoutCorpusPath(question.sourcePath) ||
@@ -198,9 +203,13 @@ const bindQuestionPlacement = Effect.fn(
 });
 
 /** Checks one frozen legacy placement against its signed replacement. */
-function matchesLegacyPlacement(legacy: LegacyPlacement, row: TryoutPlacement) {
+function matchesLegacyPlacement(
+  legacy: LegacyPlacement,
+  legacyContentHash: Doc<"questions">["contentHash"],
+  row: TryoutPlacement
+) {
   return (
-    row.contentHash === legacy.contentHash &&
+    matchesSignedTryoutContent(legacyContentHash, row.contentHash) &&
     row.questionOrder === legacy.questionOrder &&
     row.questionSourcePath === toTryoutCorpusPath(legacy.sourcePath) &&
     row.sourceRevision === legacy.sourceRevision &&
