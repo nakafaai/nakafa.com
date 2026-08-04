@@ -131,17 +131,20 @@ const tables = {
   })
     .index("by_userId_and_tryoutSetId", ["userId", "tryoutSetId"])
     .index("by_userId_and_setIdentity", ["userId", "setIdentity"])
-    .index("by_userId_and_route", {
-      fields: [
-        "userId",
-        "countryKey",
-        "examKey",
-        "trackKey",
-        "locale",
-        "setKey",
-      ],
-      staged: true,
-    })
+    .index(
+      "by_userId_and_countryKey_and_examKey_and_trackKey_and_locale_and_setKey",
+      {
+        fields: [
+          "userId",
+          "countryKey",
+          "examKey",
+          "trackKey",
+          "locale",
+          "setKey",
+        ],
+        staged: true,
+      }
+    )
     .index("by_userId_and_track_and_publishedScore_and_setKey", [
       "userId",
       "countryKey",
