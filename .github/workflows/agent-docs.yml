@@ -19,18 +19,14 @@ jobs:
     timeout-minutes: 40
     env:
       CONTENT_RUNTIME_TOKEN: ci-agent-docs
-      CONVEX_SITE_URL: ${{ vars.AGENT_DOCS_CONVEX_SITE_URL }}
-      CONVEX_URL: ${{ vars.AGENT_DOCS_CONVEX_URL }}
       INTERNAL_CONTENT_API_KEY: ci-agent-docs
       NEXT_PUBLIC_APP_URL: http://localhost:3000
-      NEXT_PUBLIC_CONVEX_SITE_URL: ${{ vars.AGENT_DOCS_CONVEX_SITE_URL }}
-      NEXT_PUBLIC_CONVEX_URL: ${{ vars.AGENT_DOCS_CONVEX_URL }}
       NEXT_PUBLIC_MCP_URL: https://mcp.nakafa.com
       NEXT_PUBLIC_POSTHOG_KEY: phc_agent_docs_ci
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
       POSTHOG_PROXY_HOST: https://t.nakafa.com
       SITE_URL: http://localhost:3000
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]') }}
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -62,16 +58,57 @@ jobs:
       - name: Run tests
         run: pnpm test
 
-      - name: Deploy isolated backend
+      - name: Authenticate Convex CLI
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
+          CONVEX_ACCESS_TOKEN: ${{ secrets.AGENT_DOCS_CONVEX_ACCESS_TOKEN }}
+        run: |
+          install -d -m 700 "$HOME/.convex"
+          jq -n --arg accessToken "$CONVEX_ACCESS_TOKEN" \
+            '{accessToken: $accessToken}' > "$HOME/.convex/config.json"
+          chmod 600 "$HOME/.convex/config.json"
+
+      - name: Create isolated backend
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        run: |
+          deployment_reference="dev/agent-docs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          pnpm --dir packages/backend exec convex deployment create \
+            "nakafa:nakafa:${deployment_reference}" \
+            --type dev \
+            --select \
+            --expiration "in 1 day"
+
+      - name: Deploy isolated backend
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm --dir packages/backend exec convex dev --once --typecheck enable --tail-logs disable
+
+      - name: Export isolated backend credentials
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        run: |
+          deploy_key_name="agent-docs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          deploy_key_file="$RUNNER_TEMP/agent-docs-convex.env"
+          pnpm --dir packages/backend exec convex deployment token create \
+            "$deploy_key_name" \
+            --save-env "$deploy_key_file"
+
+          set -a
+          source packages/backend/.env.local
+          source "$deploy_key_file"
+          set +a
+
+          echo "::add-mask::$CONVEX_DEPLOY_KEY"
+          {
+            echo "CONVEX_DEPLOY_KEY=$CONVEX_DEPLOY_KEY"
+            echo "CONVEX_SITE_URL=$CONVEX_SITE_URL"
+            echo "CONVEX_URL=$CONVEX_URL"
+            echo "AGENT_DOCS_DEPLOY_KEY_CREATED=true"
+            echo "NEXT_PUBLIC_CONVEX_SITE_URL=$CONVEX_SITE_URL"
+            echo "NEXT_PUBLIC_CONVEX_URL=$CONVEX_URL"
+          } >> "$GITHUB_ENV"
+          rm "$HOME/.convex/config.json"
 
       - name: Sync real content
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
         run: pnpm --filter @repo/backend sync
 
       - name: Build production app
@@ -116,3 +153,19 @@ jobs:
           if [ -f /tmp/nakafa-www.pid ]; then
             kill "$(cat /tmp/nakafa-www.pid)" || true
           fi
+
+      - name: Revoke isolated backend credential
+        if: always() && env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_DEPLOY_KEY_CREATED == 'true'
+        env:
+          CONVEX_ACCESS_TOKEN: ${{ secrets.AGENT_DOCS_CONVEX_ACCESS_TOKEN }}
+          CONVEX_DEPLOY_KEY: <ignore_deploy_key>
+        run: |
+          install -d -m 700 "$HOME/.convex"
+          jq -n --arg accessToken "$CONVEX_ACCESS_TOKEN" \
+            '{accessToken: $accessToken}' > "$HOME/.convex/config.json"
+          chmod 600 "$HOME/.convex/config.json"
+
+          deploy_key_name="agent-docs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          pnpm --dir packages/backend exec convex deployment token delete \
+            "$deploy_key_name"
+          rm "$HOME/.convex/config.json"
