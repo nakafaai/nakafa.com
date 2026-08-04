@@ -92,7 +92,9 @@ const createExpiredSectionAttempt = Effect.fn(
       status: "expired",
       totalQuestions: args.snapshot.questionCount,
       tryoutAttemptId: args.attempt._id,
-      tryoutSectionId: args.snapshot.tryoutSectionId,
+      ...(args.snapshot.tryoutSectionId
+        ? { tryoutSectionId: args.snapshot.tryoutSectionId }
+        : {}),
     })
   );
 });

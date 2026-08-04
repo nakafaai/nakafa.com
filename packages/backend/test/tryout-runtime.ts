@@ -273,7 +273,7 @@ export function tryoutSectionSnapshot(args: {
   sectionKey: string;
   sourcePath: string;
   signed?: AlignedTryoutSectionFixture["signed"];
-  tryoutSectionId: Id<"tryoutSections">;
+  tryoutSectionId?: Id<"tryoutSections">;
 }) {
   return {
     publicPath: args.publicPath,
@@ -288,7 +288,7 @@ export function tryoutSectionSnapshot(args: {
     sectionRowHash: args.signed?.section.rowHash,
     sourceRevision: "2026",
     timeLimitSeconds: 1800,
-    tryoutSectionId: args.tryoutSectionId,
+    ...(args.tryoutSectionId ? { tryoutSectionId: args.tryoutSectionId } : {}),
   };
 }
 

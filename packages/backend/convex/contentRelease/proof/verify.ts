@@ -130,7 +130,11 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
     const evidence = yield* Effect.all(
       {
         routeCatalog: verifyRouteCatalog(ctx, releaseId),
-        content: verifyContentStreams(release, readProofStream(ctx, releaseId)),
+        content: verifyContentStreams(
+          release,
+          renderer,
+          readProofStream(ctx, releaseId)
+        ),
         result: verifyResultCatalog({
           expectedCount: release.manifest.resultCount,
           expectedDigest: release.manifest.resultDigest,
@@ -151,7 +155,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       },
       { concurrency: "unbounded" }
     );
-    const { items, projections, rollback } = evidence.content;
+    const { artifacts, items, projections, rollback } = evidence.content;
     const { result, routes, snapshots } = evidence;
     const countersMatch =
       state.stagedItems === release.manifest.itemCount &&
@@ -160,6 +164,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       release.manifest.upsertCount === items.upsertCount &&
       state.stagedDeletes === items.deleteCount &&
       state.stagedUpserts === items.upsertCount &&
+      state.stagedArtifacts === artifacts &&
       state.stagedArtifacts === items.upsertCount &&
       state.stagedProjections === projections.count &&
       state.stagedProjections === items.upsertCount &&
@@ -195,7 +200,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       routeCount: routes.count,
       routeDigest: release.manifest.routeDigest,
       snapshots: snapshots.snapshots,
-      stagedArtifacts: state.stagedArtifacts,
+      stagedArtifacts: artifacts,
       stagedRoutes: routes.count,
       stagedSnapshotRows: snapshots.stagedRows,
       upsertHeads: items.upsertCount,

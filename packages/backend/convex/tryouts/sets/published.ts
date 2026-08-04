@@ -1,46 +1,28 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import type { PublishedCatalog } from "@repo/backend/convex/tryouts/catalog/hierarchy";
 import { readPublishedTrackSets } from "@repo/backend/convex/tryouts/catalog/hierarchy";
-import { toPublicPublishedSet } from "@repo/backend/convex/tryouts/catalog/published";
+import {
+  type PublishedSetRow,
+  paginatePublishedSets,
+} from "@repo/backend/convex/tryouts/sets/page";
 import type {
   ListArgs,
   StatusArgs,
   TrackIdentity,
   UnattemptedArgs,
 } from "@repo/backend/convex/tryouts/sets/spec";
-import { Effect, Schema } from "effect";
-
-const SIGNED_CURSOR_PREFIX = "signed:";
-const SIGNED_PAGE_LIMIT = 100;
+import { Effect } from "effect";
 
 type Progress = Doc<"tryoutSetProgress">;
 type User = Doc<"users">;
 
-interface JoinedSet {
-  readonly progress: Progress | null;
-  readonly set: TryoutSet;
-}
-
-interface ScoredSet extends JoinedSet {
+interface ScoredSet extends PublishedSetRow {
   readonly progress: Progress & { readonly publishedScore: number };
 }
-
-/** Stable client failure for invalid immutable-catalog pagination. */
-class PublishedSetPaginationError extends Schema.TaggedError<PublishedSetPaginationError>()(
-  "PublishedSetPaginationError",
-  {
-    code: Schema.Literal(
-      "INVALID_TRYOUT_SET_CURSOR",
-      "INVALID_TRYOUT_SET_PAGE_SIZE"
-    ),
-    message: Schema.String,
-  }
-) {}
 
 /** Lists one signed catalog page with optional authenticated progress. */
 export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
@@ -55,7 +37,7 @@ export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
       return emptyPage();
     }
     const sorted = sortJoinedSets(joined, args.sort);
-    return yield* paginateSets(catalog, args.paginationOpts, sorted);
+    return yield* paginatePublishedSets(catalog, args.paginationOpts, sorted);
   }
 );
 
@@ -75,7 +57,7 @@ export const listPublishedSetsByStatus = Effect.fn(
   const rows = joined.filter(
     ({ progress }) => progress?.status === args.status
   );
-  return yield* paginateSets(catalog, args.paginationOpts, rows);
+  return yield* paginatePublishedSets(catalog, args.paginationOpts, rows);
 });
 
 /** Lists signed sets without progress for the current optional user. */
@@ -92,7 +74,7 @@ export const listPublishedUnattemptedSets = Effect.fn(
     return emptyPage();
   }
   const rows = joined.filter(({ progress }) => progress === null);
-  return yield* paginateSets(catalog, args.paginationOpts, rows);
+  return yield* paginatePublishedSets(catalog, args.paginationOpts, rows);
 });
 
 /** Joins every authored set with at most one stable user progress row. */
@@ -169,8 +151,11 @@ const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
   return byIdentity;
 });
 
-/** Sorts signed set rows before immutable offset pagination. */
-function sortJoinedSets(rows: readonly JoinedSet[], sort: ListArgs["sort"]) {
+/** Sorts signed set rows before revision-bound pagination. */
+function sortJoinedSets(
+  rows: readonly PublishedSetRow[],
+  sort: ListArgs["sort"]
+) {
   if (sort.field === "publishedScore") {
     return sortByScore(rows, sort.direction);
   }
@@ -193,7 +178,7 @@ function sortJoinedSets(rows: readonly JoinedSet[], sort: ListArgs["sort"]) {
 
 /** Sorts scored rows first and leaves unscored rows in authored order. */
 function sortByScore(
-  rows: readonly JoinedSet[],
+  rows: readonly PublishedSetRow[],
   direction: ListArgs["sort"]["direction"]
 ) {
   const scored = rows.filter(hasPublishedScore);
@@ -208,77 +193,8 @@ function sortByScore(
 }
 
 /** Narrows one joined row to progress with a real published score. */
-function hasPublishedScore(row: JoinedSet): row is ScoredSet {
+function hasPublishedScore(row: PublishedSetRow): row is ScoredSet {
   return row.progress !== null && row.progress.publishedScore !== null;
-}
-
-/** Paginates one immutable signed list with a snapshot-bound cursor. */
-const paginateSets = Effect.fn("tryouts.sets.paginatePublished")(function* (
-  catalog: PublishedCatalog,
-  pagination: ListArgs["paginationOpts"],
-  rows: readonly JoinedSet[]
-) {
-  const snapshotId = catalog.snapshotId;
-  if (!snapshotId) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Signed try-out catalog lost its snapshot identity."
-    );
-  }
-  if (!(Number.isSafeInteger(pagination.numItems) && pagination.numItems > 0)) {
-    return yield* new PublishedSetPaginationError({
-      code: "INVALID_TRYOUT_SET_PAGE_SIZE",
-      message: "The try-out set page size is invalid.",
-    });
-  }
-  const offset = yield* decodeCursor(snapshotId, pagination.cursor);
-  const size = Math.min(pagination.numItems, SIGNED_PAGE_LIMIT);
-  const end = Math.min(offset + size, rows.length);
-  const page = rows.slice(offset, end).map(projectJoinedSet);
-  const isDone = end >= rows.length;
-  return {
-    continueCursor: isDone ? "" : encodeCursor(snapshotId, end),
-    isDone,
-    page,
-  };
-});
-
-/** Projects one signed set plus optional user progress into the public row. */
-function projectJoinedSet({ progress, set }: JoinedSet) {
-  return {
-    ...toPublicPublishedSet(set),
-    attemptStatus: progress?.status ?? null,
-    publishedScore: progress?.publishedScore ?? null,
-  };
-}
-
-/** Encodes an offset under its immutable snapshot identity. */
-function encodeCursor(snapshotId: string, offset: number) {
-  return `${SIGNED_CURSOR_PREFIX}${snapshotId}:${offset}`;
-}
-
-/** Decodes a snapshot-bound cursor or returns a typed client error. */
-function decodeCursor(snapshotId: string, cursor: string | null) {
-  if (cursor === null) {
-    return Effect.succeed(0);
-  }
-  const prefix = `${SIGNED_CURSOR_PREFIX}${snapshotId}:`;
-  if (!cursor.startsWith(prefix)) {
-    return cursorFailure();
-  }
-  const value = Number(cursor.slice(prefix.length));
-  if (!(Number.isSafeInteger(value) && value >= 0)) {
-    return cursorFailure();
-  }
-  return Effect.succeed(value);
-}
-
-/** Creates one typed invalid-cursor failure. */
-function cursorFailure() {
-  return new PublishedSetPaginationError({
-    code: "INVALID_TRYOUT_SET_CURSOR",
-    message: "The try-out set pagination cursor is invalid.",
-  });
 }
 
 /** Returns the shared empty immutable page shape. */

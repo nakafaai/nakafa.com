@@ -138,7 +138,6 @@ describe("tryouts/runtime/finish", () => {
             sectionKey: SECOND_SECTION,
             signed: alignedSections[1]?.signed,
             sourcePath: secondSource.sourcePath,
-            tryoutSectionId: secondSectionId,
           }),
         ],
         tryoutSetId,
@@ -241,6 +240,7 @@ describe("tryouts/runtime/finish", () => {
         },
       ],
     });
+    expect(snapshot.sections[1]).not.toHaveProperty("tryoutSectionId");
   });
 
   it("completes the parent after its final section", async () => {
