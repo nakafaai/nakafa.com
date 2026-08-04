@@ -6,8 +6,11 @@ import {
   bindLegacySet,
   requireTryoutSnapshot,
 } from "@repo/backend/convex/tryouts/migrations/catalog";
+import { resolvePreparedScale } from "@repo/backend/convex/tryouts/migrations/scale";
 import {
   hasLegacySectionSource,
+  isPreparedAttempt,
+  isPreparedScore,
   isSignedScore,
 } from "@repo/backend/convex/tryouts/migrations/signed";
 import {
@@ -90,26 +93,31 @@ const prepareScore = Effect.fn("tryouts.migrations.prepareScore")(function* (
     return yield* migrationFail("A score differs from its owning attempt.");
   }
   if (
-    attempt.tryoutSnapshotId !== expectedSnapshotId ||
-    attempt.setIdentity !== set.identity
+    hasMigrationConflict(attempt.tryoutSnapshotId, expectedSnapshotId) ||
+    !isPreparedAttempt(attempt, set)
   ) {
     return yield* migrationFail("A score's owning attempt is not prepared.");
   }
+  const scaleVersionId = yield* resolvePreparedScale(
+    ctx,
+    expectedSnapshotId,
+    attempt,
+    set.identity
+  );
   if (
     hasMigrationConflict(score.tryoutSnapshotId, expectedSnapshotId) ||
-    hasMigrationConflict(score.setIdentity, set.identity)
+    hasMigrationConflict(score.setIdentity, set.identity) ||
+    hasMigrationConflict(score.scaleVersionId, scaleVersionId)
   ) {
     return yield* migrationFail(
       "A score conflicts with its signed snapshot identity."
     );
   }
-  if (
-    score.tryoutSnapshotId === expectedSnapshotId &&
-    score.setIdentity === set.identity
-  ) {
+  if (isPreparedScore(score, attempt, expectedSnapshotId, scaleVersionId)) {
     return null;
   }
   return {
+    ...(scaleVersionId ? { scaleVersionId } : {}),
     setIdentity: set.identity,
     tryoutSnapshotId: expectedSnapshotId,
   };

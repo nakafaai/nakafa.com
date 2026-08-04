@@ -6,7 +6,12 @@ import {
   bindLegacySet,
   requireTryoutSnapshot,
 } from "@repo/backend/convex/tryouts/migrations/catalog";
-import { isSignedAttempt } from "@repo/backend/convex/tryouts/migrations/signed";
+import { resolvePreparedScale } from "@repo/backend/convex/tryouts/migrations/scale";
+import {
+  isPreparedAttempt,
+  isPreparedScore,
+  isSignedAttempt,
+} from "@repo/backend/convex/tryouts/migrations/signed";
 import {
   hasMigrationConflict,
   migrationFail,
@@ -77,7 +82,7 @@ const prepareActivation = Effect.fn("tryouts.migrations.prepareActivation")(
         "An attempt conflicts with its signed snapshot identity."
       );
     }
-    if (!attemptIsPrepared(attempt, set)) {
+    if (!isPreparedAttempt(attempt, set)) {
       return yield* migrationFail(
         "An attempt cannot activate before its route and sections are prepared."
       );
@@ -100,11 +105,17 @@ const prepareActivation = Effect.fn("tryouts.migrations.prepareActivation")(
       );
     }
 
-    const scaleVersionId = yield* resolveScale(
+    const scaleVersionId = yield* resolvePreparedScale(
       ctx,
       expectedSnapshotId,
       attempt,
       set.identity
+    );
+    yield* requirePreparedScore(
+      ctx,
+      expectedSnapshotId,
+      attempt,
+      scaleVersionId
     );
     const currentScaleVersionId = attempt.scaleVersionId ?? null;
     if (
@@ -119,28 +130,6 @@ const prepareActivation = Effect.fn("tryouts.migrations.prepareActivation")(
     };
   }
 );
-
-/** Verifies the route and every frozen section before root activation. */
-function attemptIsPrepared(
-  attempt: Doc<"tryoutAttempts">,
-  set: Effect.Effect.Success<ReturnType<typeof bindLegacySet>>
-) {
-  return (
-    attempt.setIdentity === set.identity &&
-    attempt.countryKey === set.row.countryKey &&
-    attempt.examKey === set.row.examKey &&
-    attempt.trackKey === set.row.trackKey &&
-    attempt.setKey === set.row.setKey &&
-    attempt.locale === set.row.locale &&
-    attempt.setPublicPath === set.row.publicPath &&
-    attempt.snapshotReleaseId !== undefined &&
-    attempt.sectionSnapshots.every(
-      (section) =>
-        section.sectionIdentity !== undefined &&
-        section.sectionRowHash !== undefined
-    )
-  );
-}
 
 /** Verifies one placement belongs to a prepared frozen section. */
 function placementIsPrepared(
@@ -163,59 +152,47 @@ function placementIsPrepared(
   );
 }
 
-/** Resolves the exact signed scale frozen into an activated IRT attempt. */
-const resolveScale = Effect.fn("tryouts.migrations.resolveAttemptScale")(
-  function* (
-    ctx: MutationCtx,
-    expectedSnapshotId: string,
-    attempt: Doc<"tryoutAttempts">,
-    setIdentity: string
-  ) {
-    if (attempt.scoringStrategy !== "irt") {
-      return null;
-    }
-    const scale = yield* loadScale(ctx, attempt, setIdentity);
-    if (
-      !scale ||
-      (scale.tryoutSnapshotId !== undefined &&
-        scale.tryoutSnapshotId !== expectedSnapshotId) ||
-      scale.setIdentity !== setIdentity ||
-      scale.tryoutSetId !== attempt.tryoutSetId ||
-      scale.questionCount !== attempt.totalQuestions
-    ) {
+/** Requires terminal scoring to be signed before root activation. */
+const requirePreparedScore = Effect.fn(
+  "tryouts.migrations.requirePreparedScore"
+)(function* (
+  ctx: MutationCtx,
+  expectedSnapshotId: string,
+  attempt: Doc<"tryoutAttempts">,
+  scaleVersionId: Doc<"tryoutScores">["scaleVersionId"] | null
+) {
+  const score = yield* Effect.promise(() =>
+    ctx.db
+      .query("tryoutScores")
+      .withIndex("by_tryoutAttemptId", (query) =>
+        query.eq("tryoutAttemptId", attempt._id)
+      )
+      .unique()
+  );
+  if (attempt.status === "in-progress") {
+    if (score) {
       return yield* migrationFail(
-        "An IRT attempt cannot activate before its scale is prepared."
+        "An active attempt cannot activate with a finalized score."
       );
     }
-    return scale._id;
+    return;
   }
-);
-
-/** Loads an already-frozen scale or the latest prepared migration scale. */
-function loadScale(
-  ctx: MutationCtx,
-  attempt: Doc<"tryoutAttempts">,
-  setIdentity: string
-) {
-  const scaleVersionId = attempt.scaleVersionId;
-  if (scaleVersionId) {
-    return Effect.promise(() => ctx.db.get(scaleVersionId));
-  }
-  return findLatestScale(ctx, setIdentity);
-}
-
-/** Finds the latest prepared scale for one signed set snapshot. */
-function findLatestScale(ctx: MutationCtx, setIdentity: string) {
-  return Effect.promise(() =>
-    ctx.db
-      .query("irtScaleVersions")
-      .withIndex("by_setIdentity_and_publishedAt", (query) =>
-        query.eq("setIdentity", setIdentity)
+  if (
+    !(
+      score &&
+      isPreparedScore(
+        score,
+        attempt,
+        expectedSnapshotId,
+        scaleVersionId ?? null
       )
-      .order("desc")
-      .first()
-  );
-}
+    )
+  ) {
+    return yield* migrationFail(
+      "A terminal attempt cannot activate before its score is prepared."
+    );
+  }
+});
 
 /** Activates one bounded attempt page after all child migrations finish. */
 export const activateAttempts = internalMutation({

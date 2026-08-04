@@ -1,6 +1,7 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type { bindLegacySet } from "@repo/backend/convex/tryouts/migrations/catalog";
 import { migrationFail } from "@repo/backend/convex/tryouts/migrations/spec";
 import { Effect } from "effect";
 
@@ -12,6 +13,28 @@ export function hasLegacySectionSource(attempt: TryoutAttempt) {
     (section) =>
       section.questionSetId !== undefined ||
       section.tryoutSectionId !== undefined
+  );
+}
+
+/** Checks the additive route and section identity before root activation. */
+export function isPreparedAttempt(
+  attempt: TryoutAttempt,
+  set: Effect.Effect.Success<ReturnType<typeof bindLegacySet>>
+) {
+  return (
+    attempt.setIdentity === set.identity &&
+    attempt.countryKey === set.row.countryKey &&
+    attempt.examKey === set.row.examKey &&
+    attempt.trackKey === set.row.trackKey &&
+    attempt.setKey === set.row.setKey &&
+    attempt.locale === set.row.locale &&
+    attempt.setPublicPath === set.row.publicPath &&
+    attempt.snapshotReleaseId !== undefined &&
+    attempt.sectionSnapshots.every(
+      (section) =>
+        section.sectionIdentity !== undefined &&
+        section.sectionRowHash !== undefined
+    )
   );
 }
 
@@ -197,10 +220,27 @@ export function isSignedScore(
 ) {
   return (
     isSignedAttempt(attempt, expectedSnapshotId) &&
+    isPreparedScore(
+      score,
+      attempt,
+      expectedSnapshotId,
+      attempt.scaleVersionId ?? null
+    )
+  );
+}
+
+/** Checks one score before its owning attempt crosses the activation seam. */
+export function isPreparedScore(
+  score: Doc<"tryoutScores">,
+  attempt: TryoutAttempt,
+  expectedSnapshotId: string,
+  scaleVersionId: Id<"irtScaleVersions"> | null
+) {
+  return (
     score.tryoutSnapshotId === expectedSnapshotId &&
     score.setIdentity === attempt.setIdentity &&
     score.tryoutSetId === attempt.tryoutSetId &&
-    score.scaleVersionId === attempt.scaleVersionId &&
+    (score.scaleVersionId ?? null) === scaleVersionId &&
     score.userId === attempt.userId &&
     score.scoringStrategy === attempt.scoringStrategy &&
     score.scoreStatus === attempt.scoreStatus &&

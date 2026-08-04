@@ -130,7 +130,8 @@ const inspectMigrationPage = Effect.fn(
         args,
         (row) =>
           row.tryoutSnapshotId === args.expectedSnapshotId &&
-          row.setIdentity !== undefined,
+          row.setIdentity !== undefined &&
+          (row.scoringStrategy !== "irt" || row.scaleVersionId !== undefined),
         (row) => row.tryoutSetId !== undefined
       );
     case "sectionAttempts":

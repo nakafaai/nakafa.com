@@ -1,5 +1,8 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
@@ -123,6 +126,55 @@ export const bindLegacyScale = Effect.fn("tryouts.migrations.bindLegacyScale")(
     return set;
   }
 );
+
+/** Resolves the prepared scale that will be frozen into an IRT attempt. */
+export const resolvePreparedScale = Effect.fn(
+  "tryouts.migrations.resolvePreparedScale"
+)(function* (
+  ctx: QueryCtx,
+  expectedSnapshotId: string,
+  attempt: Doc<"tryoutAttempts">,
+  setIdentity: string
+) {
+  if (attempt.scoringStrategy !== "irt") {
+    return null;
+  }
+  const scale = yield* loadPreparedScale(ctx, attempt, setIdentity);
+  if (
+    !scale ||
+    (scale.tryoutSnapshotId !== undefined &&
+      scale.tryoutSnapshotId !== expectedSnapshotId) ||
+    scale.setIdentity !== setIdentity ||
+    scale.tryoutSetId !== attempt.tryoutSetId ||
+    scale.questionCount !== attempt.totalQuestions
+  ) {
+    return yield* migrationFail(
+      "An IRT attempt cannot bind before its scale is prepared."
+    );
+  }
+  return scale._id;
+});
+
+/** Loads an already-frozen scale or the latest prepared migration scale. */
+function loadPreparedScale(
+  ctx: QueryCtx,
+  attempt: Doc<"tryoutAttempts">,
+  setIdentity: string
+) {
+  const scaleVersionId = attempt.scaleVersionId;
+  if (scaleVersionId) {
+    return Effect.promise(() => ctx.db.get(scaleVersionId));
+  }
+  return Effect.promise(() =>
+    ctx.db
+      .query("irtScaleVersions")
+      .withIndex("by_setIdentity_and_publishedAt", (query) =>
+        query.eq("setIdentity", setIdentity)
+      )
+      .order("desc")
+      .first()
+  );
+}
 
 /** Migrates one bounded IRT scale-version page. */
 export const migrateScales = internalMutation({
