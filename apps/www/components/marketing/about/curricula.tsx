@@ -38,7 +38,7 @@ export async function Curricula({ locale }: { locale: Locale }) {
     <section className="relative isolate z-0 bg-background" id="curricula">
       <div className="mx-auto w-full max-w-7xl border-x">
         <div className="px-6 py-24 sm:py-28 lg:px-10 lg:py-32">
-          <h2 className="max-w-4xl text-pretty text-3xl tracking-tight sm:text-4xl">
+          <h2 className="max-w-4xl text-balance text-3xl tracking-tight sm:text-4xl">
             {t.rich("headline", {
               mark: (chunks) => <mark>{chunks}</mark>,
             })}
@@ -75,7 +75,7 @@ export async function Curricula({ locale }: { locale: Locale }) {
               key={curriculum.programKey}
             >
               <CurriculumCountryMark countryCode={curriculum.countryCode} />
-              <span className="max-w-52 text-pretty text-lg tracking-tight sm:text-xl">
+              <span className="max-w-52 text-balance text-lg tracking-tight sm:text-xl">
                 {curriculum.title}
               </span>
             </NavigationLink>

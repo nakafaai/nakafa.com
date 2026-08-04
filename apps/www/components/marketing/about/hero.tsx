@@ -22,9 +22,9 @@ export function Hero() {
         <HeroArt />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-7xl items-end px-6 pt-72 pb-20 sm:items-center sm:py-24 md:px-8 md:py-32">
+      <div className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-7xl items-end px-6 pt-72 pb-20 sm:items-center sm:py-24 md:py-32 lg:px-10">
         <div className="relative z-2 max-w-3xl">
-          <h1 className="fade-in slide-in-from-bottom-3 animation-duration-500 motion-reduce:slide-in-from-bottom-0 motion-reduce:animation-duration-200 mb-0 animate-in fill-mode-both font-medium text-5xl tracking-tight ease-[cubic-bezier(0.23,1,0.32,1)] sm:text-6xl md:text-7xl xl:text-8xl">
+          <h1 className="fade-in slide-in-from-bottom-3 animation-duration-500 motion-reduce:slide-in-from-bottom-0 motion-reduce:animation-duration-200 mb-0 animate-in text-balance fill-mode-both font-medium text-5xl tracking-tight ease-[cubic-bezier(0.23,1,0.32,1)] sm:text-6xl md:text-7xl xl:text-8xl">
             {t.rich("title", {
               mark: (chunks) => <mark>{chunks}</mark>,
             })}
