@@ -5,6 +5,7 @@ import {
   getUnknownErrorMessage,
   readConvexErrorData,
 } from "@repo/backend/convex/lib/effect";
+import { ensureTryoutProgressWithinReadBudget } from "@repo/backend/convex/tryouts/progress/size";
 import type {
   TryoutStatus,
   TryoutStatusRank,
@@ -58,6 +59,9 @@ export const writeTryoutSetProgress = Effect.fn(
   yield* validateProgressScore(args.status, args.publishedScore);
   const identity = yield* resolveProgressIdentity(ctx, args.attempt);
   const current = yield* loadProgress(ctx, args.attempt, identity);
+  if (current) {
+    yield* ensureTryoutProgressWithinReadBudget(current);
+  }
 
   if (current && current.attemptNumber > args.attempt.attemptNumber) {
     yield* persistProgressIdentity(ctx, current, identity);
@@ -82,10 +86,12 @@ export const writeTryoutSetProgress = Effect.fn(
   };
 
   if (current) {
+    yield* ensureTryoutProgressWithinReadBudget({ ...current, ...values });
     yield* tryProgressPromise(() => ctx.db.patch(current._id, values));
     return current._id;
   }
 
+  yield* ensureTryoutProgressWithinReadBudget(values);
   return yield* tryProgressPromise(() =>
     ctx.db.insert("tryoutSetProgress", values)
   );
@@ -208,12 +214,12 @@ const persistProgressIdentity = Effect.fn(
     return;
   }
 
-  yield* tryProgressPromise(() =>
-    ctx.db.patch(current._id, {
-      ...(needsSignedIdentity ? { setIdentity } : {}),
-      ...(needsFilesystemIdentity ? { tryoutSetId } : {}),
-    })
-  );
+  const patch = {
+    ...(needsSignedIdentity ? { setIdentity } : {}),
+    ...(needsFilesystemIdentity ? { tryoutSetId } : {}),
+  };
+  yield* ensureTryoutProgressWithinReadBudget({ ...current, ...patch });
+  yield* tryProgressPromise(() => ctx.db.patch(current._id, patch));
 });
 
 /** Enforces that only terminal progress can expose a persisted score. */

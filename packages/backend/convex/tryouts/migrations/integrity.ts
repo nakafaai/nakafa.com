@@ -18,6 +18,7 @@ import {
   tryoutMigrationProofValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
+import { isTryoutProgressWithinReadBudget } from "@repo/backend/convex/tryouts/progress/size";
 import { paginationOptsValidator } from "convex/server";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
@@ -101,7 +102,9 @@ const inspectMigrationPage = Effect.fn(
         ctx,
         "tryoutSetProgress",
         args,
-        (row) => row.setIdentity !== undefined,
+        (row) =>
+          row.setIdentity !== undefined &&
+          isTryoutProgressWithinReadBudget(row),
         (row) => row.tryoutSetId !== undefined
       );
     case "responses":

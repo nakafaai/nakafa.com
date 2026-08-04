@@ -4,7 +4,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
+import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
 import { insertTryoutSet, TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { Effect } from "effect";

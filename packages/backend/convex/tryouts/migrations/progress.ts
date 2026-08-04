@@ -22,6 +22,7 @@ import {
   tryoutMigrationResultValidator,
   validateMigrationPage,
 } from "@repo/backend/convex/tryouts/migrations/spec";
+import { ensureTryoutProgressWithinReadBudget } from "@repo/backend/convex/tryouts/progress/size";
 import { Effect } from "effect";
 
 /** Prepares one bounded page of set progress rows. */
@@ -93,6 +94,7 @@ const prepareProgress = Effect.fn("tryouts.migrations.prepareProgress")(
     expectedSnapshotId: string,
     progress: Doc<"tryoutSetProgress">
   ) {
+    yield* ensureTryoutProgressWithinReadBudget(progress);
     if (progress.setIdentity) {
       const attempt = yield* Effect.promise(() =>
         ctx.db.get(progress.latestAttemptId)
@@ -128,6 +130,10 @@ const prepareProgress = Effect.fn("tryouts.migrations.prepareProgress")(
     if (progress.setIdentity === set.identity) {
       return null;
     }
+    yield* ensureTryoutProgressWithinReadBudget({
+      ...progress,
+      setIdentity: set.identity,
+    });
     return { setIdentity: set.identity };
   }
 );

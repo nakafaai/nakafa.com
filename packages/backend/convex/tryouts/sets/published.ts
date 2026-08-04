@@ -2,9 +2,13 @@ import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity"
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
+import {
+  TRYOUT_CATALOG_LIMIT,
+  TRYOUT_PROGRESS_QUERY_LIMIT,
+} from "@repo/backend/convex/contentRelease/tryout/limits";
 import type { PublishedCatalog } from "@repo/backend/convex/tryouts/catalog/hierarchy";
 import { readPublishedTrackSets } from "@repo/backend/convex/tryouts/catalog/hierarchy";
+import { isTryoutProgressWithinReadBudget } from "@repo/backend/convex/tryouts/progress/size";
 import {
   type PublishedSetRow,
   paginatePublishedSets,
@@ -116,12 +120,18 @@ const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
           .eq("trackKey", identity.trackKey)
           .eq("locale", identity.locale)
       )
-      .take(TRYOUT_CATALOG_LIMIT + 1)
+      .take(TRYOUT_PROGRESS_QUERY_LIMIT)
   );
   if (rows.length > TRYOUT_CATALOG_LIMIT) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
       "Signed try-out progress exceeds the catalog row budget."
+    );
+  }
+  if (rows.some((row) => !isTryoutProgressWithinReadBudget(row))) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Signed try-out progress exceeds its catalog read budget."
     );
   }
   const byIdentity = new Map<string, Progress>();

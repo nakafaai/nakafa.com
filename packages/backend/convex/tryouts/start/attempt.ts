@@ -2,7 +2,7 @@ import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity"
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
-import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
+import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
 import { retainTryoutBundle } from "@repo/backend/convex/tryouts/runtime/bundle";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";

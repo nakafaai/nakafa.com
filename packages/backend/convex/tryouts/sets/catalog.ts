@@ -1,6 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/progress";
+import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/progress/write";
 import {
   loadReadySections,
   toPublicTryoutSet,

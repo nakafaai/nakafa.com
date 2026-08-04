@@ -4,7 +4,7 @@ import {
   type AttemptEndReason,
   getAttemptStatusFromEndReason,
 } from "@repo/backend/convex/lib/attempts";
-import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
+import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
 import { findTryoutBundleByRelease } from "@repo/backend/convex/tryouts/runtime/bundle";
 import {
   TryoutRuntimeError,

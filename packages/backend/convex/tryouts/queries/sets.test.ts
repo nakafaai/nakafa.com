@@ -7,7 +7,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/progress";
+import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/progress/write";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
 import {
   activateTryoutStartSource,
