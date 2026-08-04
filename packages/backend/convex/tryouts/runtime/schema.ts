@@ -40,6 +40,8 @@ const tables = {
     /** Optional only during the stable Aksara identity backfill. */
     tryoutSnapshotId: v.optional(v.string()),
     setIdentity: v.optional(v.string()),
+    /** Frozen localized route prepared for the signed-runtime cutover. */
+    setPublicPath: v.optional(v.string()),
     countryKey: v.optional(tryoutRouteKeyValidator),
     examKey: v.optional(tryoutRouteKeyValidator),
     trackKey: v.optional(tryoutRouteKeyValidator),
@@ -89,6 +91,10 @@ const tables = {
       "setIdentity",
       "startedAt",
     ])
+    .index("by_userId_and_locale_and_setPublicPath_and_startedAt", {
+      fields: ["userId", "locale", "setPublicPath", "startedAt"],
+      staged: true,
+    })
     .index("by_accessCampaignId_and_startedAt", [
       "accessCampaignId",
       "startedAt",
