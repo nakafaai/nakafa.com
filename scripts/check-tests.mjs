@@ -3,8 +3,8 @@ import path from "node:path";
 import process from "node:process";
 
 const REPOSITORY_ROOT = process.cwd();
-const SOURCE_EXTENSIONS = [".ts", ".tsx"];
 const TEST_FILE_PATTERN = /\.test\.tsx?$/;
+const TSX_TEST_FILE_PATTERN = /\.test\.tsx$/;
 const TEST_DIRECTORIES = new Set(["__test__", "__tests__"]);
 const IGNORED_DIRECTORIES = new Set([
   ".git",
@@ -47,12 +47,10 @@ function readFiles(directory) {
   return files;
 }
 
-/** Returns whether a test has a colocated source Module with the same name. */
+/** Returns whether a test has a colocated TypeScript Module with the same name. */
 function hasColocatedOwner(testPath) {
   const ownerPath = testPath.replace(TEST_FILE_PATTERN, "");
-  return SOURCE_EXTENSIONS.some((extension) =>
-    existsSync(`${ownerPath}${extension}`)
-  );
+  return existsSync(`${ownerPath}.ts`);
 }
 
 const files = ["apps", "packages"].flatMap((directory) =>
@@ -60,18 +58,31 @@ const files = ["apps", "packages"].flatMap((directory) =>
 );
 const tests = files.filter((file) => TEST_FILE_PATTERN.test(file));
 const orphanTests = tests.filter((test) => !hasColocatedOwner(test));
+const tsxTestFiles = tests.filter((test) => TSX_TEST_FILE_PATTERN.test(test));
 const nestedTestFiles = files.filter((file) =>
   file.split(path.sep).some((segment) => TEST_DIRECTORIES.has(segment))
 );
 
-if (orphanTests.length === 0 && nestedTestFiles.length === 0) {
+if (
+  orphanTests.length === 0 &&
+  tsxTestFiles.length === 0 &&
+  nestedTestFiles.length === 0
+) {
   process.stdout.write("Test ownership checks passed.\n");
   process.exit(0);
 }
 
 if (orphanTests.length > 0) {
   process.stderr.write(
-    `Every test must have a colocated source Module with the same name:\n${orphanTests
+    `Every final test must have a colocated .ts Module with the same name; React and TSX behavior belongs in Browser or E2E acceptance:\n${orphanTests
+      .map((file) => `  - ${path.relative(REPOSITORY_ROOT, file)}`)
+      .join("\n")}\n`
+  );
+}
+
+if (tsxTestFiles.length > 0) {
+  process.stderr.write(
+    `Final code must not contain .test.tsx files:\n${tsxTestFiles
       .map((file) => `  - ${path.relative(REPOSITORY_ROOT, file)}`)
       .join("\n")}\n`
   );
