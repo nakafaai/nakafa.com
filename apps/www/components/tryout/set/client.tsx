@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import {
@@ -25,6 +26,7 @@ import type {
 import { TryoutSetOverview } from "@/components/tryout/set/overview";
 
 interface TryoutSetPageClientProps {
+  attemptId?: Id<"tryoutAttempts">;
   content: TryoutSetContent;
   page: SetPage;
   route: TryoutSetRoute;
@@ -32,17 +34,34 @@ interface TryoutSetPageClientProps {
 
 /** Renders one realtime try-out set page from Convex. */
 export function TryoutSetPageClient({
+  attemptId,
   content,
   page,
   route,
 }: TryoutSetPageClientProps) {
-  const currentAttempt = useQuery(
+  const publicAttempt = useQuery(
     api.tryouts.queries.attempt.getCurrentByPublicPath,
-    {
-      locale: route.locale,
-      publicPath: page.set.publicPath,
-    }
+    attemptId
+      ? "skip"
+      : {
+          locale: route.locale,
+          publicPath: page.set.publicPath,
+        }
   );
+  const retainedAttempt = useQuery(
+    api.tryouts.queries.attempt.getCurrent,
+    attemptId
+      ? {
+          attemptId,
+          countryKey: page.set.countryKey,
+          examKey: page.set.examKey,
+          locale: route.locale,
+          setKey: page.set.setKey,
+          trackKey: page.set.trackKey,
+        }
+      : "skip"
+  );
+  const currentAttempt = attemptId ? retainedAttempt : publicAttempt;
   const entrySection = page.entrySection;
   const isInternalEntry = entrySection?.visibility === "internal-entry";
   let runtimeSectionKey = entrySection?.sectionKey;
@@ -63,6 +82,7 @@ export function TryoutSetPageClient({
       ? {
           countryKey: page.set.countryKey,
           examKey: page.set.examKey,
+          ...(attemptId ? { attemptId } : {}),
           locale: route.locale,
           sectionKey: runtimeSectionKey,
           setKey: page.set.setKey,

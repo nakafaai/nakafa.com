@@ -99,9 +99,15 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
 const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
   function* (attempt: TryoutAttempt, args: StartAttemptArgs) {
     if (!args.destinationSectionKey) {
+      if (!attempt.setPublicPath) {
+        return yield* new TryoutStartError({
+          code: tryoutStartErrorCode.sectionSnapshotMismatch,
+          message: "Try-out set route is missing from the attempt snapshot.",
+        });
+      }
       return {
         attemptId: attempt._id,
-        navigation: { kind: "stay" },
+        navigation: { publicPath: attempt.setPublicPath },
       } satisfies StartAttemptResult;
     }
 
@@ -117,10 +123,7 @@ const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
 
     return {
       attemptId: attempt._id,
-      navigation: {
-        kind: "destination",
-        publicPath: destination.publicPath,
-      },
+      navigation: { publicPath: destination.publicPath },
     } satisfies StartAttemptResult;
   }
 );

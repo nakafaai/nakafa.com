@@ -73,18 +73,15 @@ describe("tryouts/mutations/attempts", () => {
       api.tryouts.mutations.attempts.startAttempt,
       { ...startArgs, destinationSectionKey: SECTION }
     );
-    if (result.navigation.kind !== "destination") {
-      throw new Error("Expected local start navigation.");
-    }
     const pageArgs: FunctionArgs<
-      typeof api.tryouts.queries.catalog.getAttemptSectionPage
+      typeof api.tryouts.queries.retained.getAttemptSectionPage
     > = {
       attemptId: result.attemptId,
       locale: "id",
       publicPath: result.navigation.publicPath,
     };
     const page = await authed.query(
-      api.tryouts.queries.catalog.getAttemptSectionPage,
+      api.tryouts.queries.retained.getAttemptSectionPage,
       pageArgs
     );
     const runtime = await t.query(async (ctx) => ({
@@ -110,11 +107,11 @@ describe("tryouts/mutations/attempts", () => {
       ctx.db.patch(seeded.fixture.tryoutSectionId, { sourceRevision: "2028" })
     );
     await expect(
-      authed.query(api.tryouts.queries.catalog.getAttemptSectionPage, pageArgs)
+      authed.query(api.tryouts.queries.retained.getAttemptSectionPage, pageArgs)
     ).resolves.toBeNull();
   });
 
-  it("resumes a legacy attempt while signed ownership is active", async () => {
+  it("rejects an unmigrated attempt while signed ownership is active", async () => {
     vi.setSystemTime(new Date(NOW));
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
@@ -140,7 +137,7 @@ describe("tryouts/mutations/attempts", () => {
     });
     await expect(
       authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
-    ).resolves.toMatchObject({ attemptId: seeded.attemptId });
+    ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
     const runtime = await t.query(async (ctx) => ({
       attempts: await ctx.db.query("tryoutAttempts").collect(),
       freeClaims: await ctx.db.query("tryoutFreeAttemptClaims").collect(),
@@ -174,6 +171,7 @@ describe("tryouts/mutations/attempts", () => {
             timeLimitSeconds: 1800,
           },
         ],
+        setPublicPath: `try-out/${COUNTRY}/${EXAM}/${TRACK}/${SET}`,
         tryoutSetId: fixture.tryoutSetId,
         userId: identity.userId,
       });
@@ -222,6 +220,9 @@ describe("tryouts/mutations/attempts", () => {
     const result = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
       entryStartArgs
+    );
+    expect(result.navigation.publicPath).toBe(
+      `try-out/${COUNTRY}/${EXAM}/${TRACK}/${SET}`
     );
     const runtime = await t.query(async (ctx) => {
       const attempt = await ctx.db.get(result.attemptId);
@@ -457,7 +458,6 @@ describe("tryouts/mutations/attempts", () => {
     });
     expect(paidStart.claims).toEqual([]);
     expect(attempt.navigation).toEqual({
-      kind: "destination",
       publicPath: `${TRYOUT_RENAMED_SET_PATH}/${SECTION}`,
     });
 

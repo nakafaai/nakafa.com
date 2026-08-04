@@ -162,18 +162,15 @@ export function StartTryoutButton({
             directEntry ? t("start-entry-success") : t("start-success"),
             { position: "bottom-center" }
           );
-          if (result.navigation.kind === "destination") {
-            const href = getTryoutAttemptHref(
-              result.navigation.publicPath,
-              result.attemptId
-            );
-            if (request.successNavigation === "stay") {
-              router.replace(href);
-              return;
-            }
-            router.push(href);
+          const href = getTryoutAttemptHref(
+            result.navigation.publicPath,
+            result.attemptId
+          );
+          if (request.successNavigation === "stay") {
+            router.replace(href);
             return;
           }
+          router.push(href);
         }),
       onUpgrade: onDenied,
     });

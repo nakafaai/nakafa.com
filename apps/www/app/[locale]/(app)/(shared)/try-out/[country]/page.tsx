@@ -17,7 +17,7 @@ import {
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
 
 export const unstable_instant = {
   prefetch: "runtime",
@@ -75,6 +75,17 @@ async function TryoutCountryRoute({
     getTranslations({ locale, namespace: "Tryouts" }),
   ]);
   const countryOptions = buildTryoutCountryOptions(locale, hub.countries);
+  let sourceUrl: string | undefined;
+  if (!page.managed) {
+    sourceUrl = getGithubUrl({
+      path: `/packages/contents/tryout/${country}`,
+    });
+  } else if (page.sourceRevision) {
+    sourceUrl = getAksaraTreeUrl({
+      path: `packages/corpus/tryout/${country}`,
+      revision: page.sourceRevision,
+    });
+  }
 
   return (
     <LayoutMaterial>
@@ -98,11 +109,7 @@ async function TryoutCountryRoute({
           <TryoutCountryPageClient page={page} />
         </LayoutContent>
         <FooterContent>
-          <RefContent
-            githubUrl={getGithubUrl({
-              path: `/packages/contents/tryout/${country}`,
-            })}
-          />
+          <RefContent githubUrl={sourceUrl} />
         </FooterContent>
       </LayoutMaterialContent>
     </LayoutMaterial>

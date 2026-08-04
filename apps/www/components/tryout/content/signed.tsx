@@ -23,13 +23,20 @@ import { rendererManifest } from "@/lib/content/renderer/manifest";
 type ProtectedSelector = TryoutAnswerSelector | TryoutQuestionSelector;
 const SIGNED_RENDER_CONCURRENCY = 4;
 
-/** Renders every authenticated question selector in attempt order. */
-export async function loadSignedQuestions(
-  selectors: readonly TryoutQuestionSelector[]
-) {
-  const entries = await Effect.runPromise(renderSignedSelectors(selectors));
-
-  return entries.map(
+/** Renders protected questions and answers under one shared transport budget. */
+export const loadSignedTryoutContent = Effect.fn(
+  "NakafaContent.loadSignedTryout"
+)(function* (input: {
+  readonly answers: readonly TryoutAnswerSelector[];
+  readonly questions: readonly TryoutQuestionSelector[];
+}) {
+  const entries = yield* renderSignedSelectors([
+    ...input.questions,
+    ...input.answers,
+  ]);
+  const questionEntries = entries.slice(0, input.questions.length);
+  const answerEntries = entries.slice(input.questions.length);
+  const questions = questionEntries.map(
     ({ body, contentHash, sourcePath, sourceRevision }) =>
       ({
         content: body,
@@ -38,15 +45,7 @@ export async function loadSignedQuestions(
         sourceRevision,
       }) satisfies TryoutQuestionContent
   );
-}
-
-/** Renders every entitled answer selector in attempt order. */
-export async function loadSignedAnswers(
-  selectors: readonly TryoutAnswerSelector[]
-) {
-  const entries = await Effect.runPromise(renderSignedSelectors(selectors));
-
-  return entries.map(
+  const answers = answerEntries.map(
     ({ body, contentHash, sourcePath, sourceRevision }) =>
       ({
         answer: body,
@@ -55,7 +54,8 @@ export async function loadSignedAnswers(
         sourceRevision,
       }) satisfies TryoutAnswerContent
   );
-}
+  return { answers, questions };
+});
 
 /** Renders protected selectors with a bounded shared transport budget. */
 const renderSignedSelectors = Effect.fn("NakafaContent.renderSignedTryout")(

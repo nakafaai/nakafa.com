@@ -1,8 +1,15 @@
 import { Effect } from "effect";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
-import { readTryoutSetPage } from "@/components/tryout/catalog/server";
+import {
+  createRetainedTryoutMetadata,
+  generateTryoutRouteMetadata,
+} from "@/components/tryout/catalog/metadata";
+import {
+  readTryoutAttemptSetPage,
+  readTryoutSetPage,
+} from "@/components/tryout/catalog/server";
 import {
   readTryoutContentAccess,
   type TryoutContentAccess,
@@ -15,14 +22,29 @@ import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
 } from "@/components/tryout/content/model";
+import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import {
-  loadSignedAnswers,
-  loadSignedQuestions,
-} from "@/components/tryout/content/signed";
-import { getTryoutHref } from "@/components/tryout/route/path";
+  getTryoutAttemptAuthHref,
+  getTryoutHref,
+  readTryoutAttemptId,
+  type TryoutRouteSearchParams,
+} from "@/components/tryout/route/path";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+
+interface TryoutSetParams {
+  country: string;
+  exam: string;
+  locale: string;
+  set: string;
+  track: string;
+}
+
+interface TryoutSetPageProps {
+  params: Promise<TryoutSetParams>;
+  searchParams: Promise<TryoutRouteSearchParams>;
+}
 
 export const unstable_instant = {
   prefetch: "runtime",
@@ -35,6 +57,7 @@ export const unstable_instant = {
         set: "set-1",
         track: "matematika",
       },
+      searchParams: { attemptId: null },
     },
   ],
 };
@@ -42,63 +65,66 @@ export const unstable_instant = {
 /** Builds route-owned metadata for one localized try-out set. */
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<{
-    country: string;
-    exam: string;
-    locale: string;
-    set: string;
-    track: string;
-  }>;
-}) {
+  searchParams,
+}: TryoutSetPageProps) {
   const { country, exam, locale: localeParam, set, track } = await params;
+  const attemptId = readTryoutAttemptId(await searchParams);
   const locale = getLocaleOrThrow(localeParam);
+  const publicPath = getTryoutHref({ country, exam, set, track }).slice(1);
+  const resolved = await readRoutePage(locale, publicPath, attemptId);
 
-  return generateTryoutRouteMetadata({
-    kind: "set",
-    locale,
-    publicPath: getTryoutHref({ country, exam, set, track }).slice(1),
-  });
+  if (resolved.authRequired) {
+    const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
+    return createRetainedTryoutMetadata({
+      description: tTryouts("metadata-description"),
+      title: tTryouts("title"),
+    });
+  }
+  if (resolved.attemptPage) {
+    const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
+    return createRetainedTryoutMetadata({
+      description:
+        resolved.attemptPage.page.set.description ??
+        tTryouts("metadata-description"),
+      title: resolved.attemptPage.page.set.title,
+    });
+  }
+  if (resolved.publicPage) {
+    return generateTryoutRouteMetadata({
+      kind: "set",
+      locale,
+      publicPath,
+    });
+  }
+  notFound();
 }
 
 /** Renders one try-out set and its section list. */
-export default function Page(props: {
-  params: Promise<{
-    country: string;
-    exam: string;
-    locale: string;
-    set: string;
-    track: string;
-  }>;
-}) {
+export default function Page(props: TryoutSetPageProps) {
   return (
     <Suspense fallback={null}>
-      <TryoutSetRoute params={props.params} />
+      <TryoutSetRoute params={props.params} searchParams={props.searchParams} />
     </Suspense>
   );
 }
 
-/** Resolves one cached public set inside its route-owned boundary. */
-async function TryoutSetRoute({
-  params,
-}: {
-  params: Promise<{
-    country: string;
-    exam: string;
-    locale: string;
-    set: string;
-    track: string;
-  }>;
-}) {
+/** Resolves one public or explicitly retained set inside its route boundary. */
+async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   const { country, exam, locale: localeParam, set, track } = await params;
+  const attemptId = readTryoutAttemptId(await searchParams);
   const locale = getLocaleOrThrow(localeParam);
   const setPath = getTryoutHref({ country, exam, set, track }).slice(1);
+  const resolved = await readRoutePage(locale, setPath, attemptId);
 
-  const [page, token] = await Promise.all([
-    readTryoutSetPage(locale, setPath),
-    getToken(),
-  ]);
+  if (resolved.authRequired && attemptId) {
+    redirect(getTryoutAttemptAuthHref(locale, setPath, attemptId));
+  }
+  if (resolved.authRequired) {
+    notFound();
+  }
 
+  const { attemptPage, token } = resolved;
+  const page = attemptPage?.page ?? resolved.publicPage;
   if (!page) {
     notFound();
   }
@@ -109,6 +135,7 @@ async function TryoutSetRoute({
   if (token && entrySection?.visibility === "internal-entry") {
     contentAccess = await Effect.runPromise(
       readTryoutContentAccess(token, {
+        ...(attemptPage ? { attemptId: attemptPage.attemptId } : {}),
         countryKey: page.set.countryKey,
         examKey: page.set.examKey,
         locale,
@@ -149,17 +176,61 @@ async function TryoutSetRoute({
   }
 
   if (contentAccess.kind === "signed") {
-    [questions, answers] = await Promise.all([
-      loadSignedQuestions(contentAccess.questions),
-      loadSignedAnswers(contentAccess.answers),
-    ]);
+    const content = await Effect.runPromise(
+      loadSignedTryoutContent({
+        answers: contentAccess.answers,
+        questions: contentAccess.questions,
+      })
+    );
+    questions = content.questions;
+    answers = content.answers;
   }
 
   return (
     <TryoutSetPageClient
+      attemptId={attemptPage?.attemptId}
       content={{ entryAnswers: answers, entryQuestions: questions }}
       page={page}
       route={{ country, exam, locale, set, track }}
     />
   );
+}
+
+/** Resolves active public content or one explicitly owned frozen attempt. */
+async function readRoutePage(
+  locale: ReturnType<typeof getLocaleOrThrow>,
+  publicPath: string,
+  attemptId?: string
+) {
+  const [publicPage, token] = await Promise.all([
+    readTryoutSetPage(locale, publicPath),
+    getToken(),
+  ]);
+  if (!token) {
+    if (attemptId) {
+      return {
+        attemptPage: null,
+        authRequired: true,
+        publicPage: null,
+        token,
+      };
+    }
+    return { attemptPage: null, authRequired: false, publicPage, token };
+  }
+  if (!attemptId) {
+    return { attemptPage: null, authRequired: false, publicPage, token };
+  }
+
+  const attemptPage = await Effect.runPromise(
+    readTryoutAttemptSetPage(token, locale, publicPath, attemptId)
+  );
+  if (!attemptPage) {
+    return {
+      attemptPage: null,
+      authRequired: false,
+      publicPage: null,
+      token,
+    };
+  }
+  return { attemptPage, authRequired: false, publicPage, token };
 }

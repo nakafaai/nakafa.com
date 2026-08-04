@@ -300,6 +300,7 @@ export async function insertTryoutAttempt(
     scaleVersionId?: Id<"irtScaleVersions">;
     scoringStrategy?: Doc<"tryoutAttempts">["scoringStrategy"];
     sectionSnapshots: Doc<"tryoutAttempts">["sectionSnapshots"];
+    setPublicPath?: string;
     status?: Doc<"tryoutAttempts">["status"];
     tryoutSetId: Id<"tryoutSets">;
     userId: Id<"users">;
@@ -322,6 +323,7 @@ export async function insertTryoutAttempt(
     scoreStatus: scoringStrategy === "irt" ? "provisional" : "official",
     scoringStrategy,
     sectionSnapshots: args.sectionSnapshots,
+    setPublicPath: args.setPublicPath,
     startedAt: TRYOUT_TEST_NOW - 20_000,
     status: args.status ?? "in-progress",
     totalCorrect: 0,

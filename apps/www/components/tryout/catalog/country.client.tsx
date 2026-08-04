@@ -19,7 +19,9 @@ type CountryPageQuery = typeof api.tryouts.queries.catalog.getCountryPage;
 export function TryoutCountryPageClient({
   page,
 }: {
-  page: NonNullable<FunctionReturnType<CountryPageQuery>>;
+  page: {
+    readonly exams: NonNullable<FunctionReturnType<CountryPageQuery>>["exams"];
+  };
 }) {
   if (page.exams.length === 0) {
     return <ComingSoon />;

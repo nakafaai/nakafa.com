@@ -87,7 +87,7 @@ describe("tryouts/queries/attempt", () => {
       attemptId: started.attemptId,
     });
     const page = await authed.query(
-      api.tryouts.queries.catalog.getAttemptSectionPage,
+      api.tryouts.queries.retained.getAttemptSectionPage,
       {
         attemptId: started.attemptId,
         locale: "id",

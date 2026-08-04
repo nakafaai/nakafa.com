@@ -18,7 +18,11 @@ import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation.client";
 
 interface TryoutHubClientProps {
   locale: Locale;
-  page: FunctionReturnType<typeof api.tryouts.queries.catalog.getHubPage>;
+  page: {
+    readonly countries: FunctionReturnType<
+      typeof api.tryouts.queries.catalog.getHubPage
+    >["countries"];
+  };
 }
 
 type HubCountry = FunctionReturnType<

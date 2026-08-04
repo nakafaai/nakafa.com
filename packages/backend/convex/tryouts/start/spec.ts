@@ -24,10 +24,7 @@ export type StartAttemptArgs = Infer<typeof startAttemptArgsValidator>;
 
 export const startAttemptResultValidator = v.object({
   attemptId: v.id("tryoutAttempts"),
-  navigation: v.union(
-    v.object({ kind: v.literal("stay") }),
-    v.object({ kind: v.literal("destination"), publicPath: v.string() })
-  ),
+  navigation: v.object({ publicPath: v.string() }),
 });
 export type StartAttemptResult = Infer<typeof startAttemptResultValidator>;
 

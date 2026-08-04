@@ -22,10 +22,7 @@ import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
 } from "@/components/tryout/content/model";
-import {
-  loadSignedAnswers,
-  loadSignedQuestions,
-} from "@/components/tryout/content/signed";
+import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import {
   getTryoutAttemptAuthHref,
   getTryoutHref,
@@ -217,10 +214,14 @@ async function TryoutSectionRoute({
   }
 
   if (contentAccess.kind === "signed") {
-    [questions, answers] = await Promise.all([
-      loadSignedQuestions(contentAccess.questions),
-      loadSignedAnswers(contentAccess.answers),
-    ]);
+    const content = await Effect.runPromise(
+      loadSignedTryoutContent({
+        answers: contentAccess.answers,
+        questions: contentAccess.questions,
+      })
+    );
+    questions = content.questions;
+    answers = content.answers;
   }
 
   return (
