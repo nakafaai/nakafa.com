@@ -23,8 +23,8 @@ describe("contentRelease/search/input", () => {
       )
     ).resolves.toBe(Array.from({ length: 16 }, () => "term").join("-"));
     await expect(
-      Effect.runPromise(validateSearchQuery("x".repeat(32)))
-    ).resolves.toBe("x".repeat(32));
+      Effect.runPromise(validateSearchQuery("x".repeat(31)))
+    ).resolves.toBe("x".repeat(31));
     await expect(
       Effect.runPromise(validateSearchQuery("bounded", { characterLimit: 7 }))
     ).resolves.toBe("bounded");
@@ -36,12 +36,19 @@ describe("contentRelease/search/input", () => {
       (_, index) => `term${index}`
     ).join("-");
     const oversizedVocalizedTerm = `ا${"ّ".repeat(16)}`;
+    const hiddenSeventeenTerms = Array.from({ length: 17 }, () => "x").join(
+      "\u200d"
+    );
 
     await expect(result(" ")).resolves.toMatchObject({
       _tag: "Left",
       left: { code: "CONTENT_RELEASE_LIMIT" },
     });
     await expect(result(seventeenTerms)).resolves.toMatchObject({
+      _tag: "Left",
+      left: { code: "CONTENT_RELEASE_LIMIT" },
+    });
+    await expect(result(hiddenSeventeenTerms)).resolves.toMatchObject({
       _tag: "Left",
       left: { code: "CONTENT_RELEASE_LIMIT" },
     });
@@ -53,7 +60,7 @@ describe("contentRelease/search/input", () => {
       _tag: "Left",
       left: { code: "CONTENT_RELEASE_LIMIT" },
     });
-    await expect(result("x".repeat(33))).resolves.toMatchObject({
+    await expect(result("x".repeat(32))).resolves.toMatchObject({
       _tag: "Left",
       left: { code: "CONTENT_RELEASE_LIMIT" },
     });
