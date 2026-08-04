@@ -134,14 +134,16 @@ const loadSetProgress = Effect.fn("tryouts.sets.loadPublishedSetProgress")(
     const rows = yield* Effect.promise(() =>
       ctx.db
         .query("tryoutSetProgress")
-        .withIndex("by_userId_and_route", (query) =>
-          query
-            .eq("userId", user._id)
-            .eq("countryKey", set.countryKey)
-            .eq("examKey", set.examKey)
-            .eq("trackKey", set.trackKey)
-            .eq("locale", set.locale)
-            .eq("setKey", set.setKey)
+        .withIndex(
+          "by_userId_and_countryKey_and_examKey_and_trackKey_and_locale_and_setKey",
+          (query) =>
+            query
+              .eq("userId", user._id)
+              .eq("countryKey", set.countryKey)
+              .eq("examKey", set.examKey)
+              .eq("trackKey", set.trackKey)
+              .eq("locale", set.locale)
+              .eq("setKey", set.setKey)
         )
         .take(TRYOUT_PROGRESS_IDENTITY_LIMIT)
     );
