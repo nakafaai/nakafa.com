@@ -13,15 +13,19 @@ export const TRYOUT_SECTION_LIMIT = 256;
 /** Compact progress ceiling reserved for every possible catalog set row. */
 export const TRYOUT_PROGRESS_DOCUMENT_LIMIT = 2 * 1024;
 
-/** Query ceiling that detects one progress row beyond the catalog inventory. */
-export const TRYOUT_PROGRESS_QUERY_LIMIT = TRYOUT_CATALOG_LIMIT + 1;
+/** Rows read for one route to detect duplicate user progress. */
+export const TRYOUT_PROGRESS_IDENTITY_LIMIT = 2;
+
+/** Maximum progress rows read across every possible catalog set. */
+export const TRYOUT_PROGRESS_READ_LIMIT =
+  TRYOUT_CATALOG_LIMIT * TRYOUT_PROGRESS_IDENTITY_LIMIT;
 
 const TRYOUT_READ_BUDGET = TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM;
 const TRYOUT_OWNER_READS = 3;
 const TRYOUT_ROW_BUDGET =
   TRYOUT_READ_BUDGET - TRYOUT_OWNER_READS * CONTENT_DOCUMENT_LIMIT;
 const TRYOUT_PROGRESS_READ_BUDGET =
-  TRYOUT_PROGRESS_QUERY_LIMIT * TRYOUT_PROGRESS_DOCUMENT_LIMIT;
+  TRYOUT_PROGRESS_READ_LIMIT * TRYOUT_PROGRESS_DOCUMENT_LIMIT;
 
 /** Per-row ceiling that keeps catalog and progress hydration within budget. */
 export const TRYOUT_CATALOG_DOCUMENT_LIMIT = Math.floor(

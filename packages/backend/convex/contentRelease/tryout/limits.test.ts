@@ -8,7 +8,7 @@ import {
   TRYOUT_CATALOG_LIMIT,
   TRYOUT_PLACEMENT_DOCUMENT_LIMIT,
   TRYOUT_PROGRESS_DOCUMENT_LIMIT,
-  TRYOUT_PROGRESS_QUERY_LIMIT,
+  TRYOUT_PROGRESS_READ_LIMIT,
   TRYOUT_SECTION_LIMIT,
   TRYOUT_SET_QUESTION_LIMIT,
 } from "@repo/backend/convex/contentRelease/tryout/limits";
@@ -21,7 +21,7 @@ describe("contentRelease/tryout/limits", () => {
     const catalogBytes =
       ownerBytes +
       TRYOUT_CATALOG_LIMIT * TRYOUT_CATALOG_DOCUMENT_LIMIT +
-      TRYOUT_PROGRESS_QUERY_LIMIT * TRYOUT_PROGRESS_DOCUMENT_LIMIT;
+      TRYOUT_PROGRESS_READ_LIMIT * TRYOUT_PROGRESS_DOCUMENT_LIMIT;
     const catalogOverflowBytes =
       ownerBytes + (TRYOUT_CATALOG_LIMIT + 1) * TRYOUT_CATALOG_DOCUMENT_LIMIT;
     const sectionBytes =

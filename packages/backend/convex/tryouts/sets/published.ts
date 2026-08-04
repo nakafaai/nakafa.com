@@ -1,11 +1,9 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import {
-  TRYOUT_CATALOG_LIMIT,
-  TRYOUT_PROGRESS_QUERY_LIMIT,
-} from "@repo/backend/convex/contentRelease/tryout/limits";
+import { TRYOUT_PROGRESS_IDENTITY_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import type { PublishedCatalog } from "@repo/backend/convex/tryouts/catalog/hierarchy";
 import { readPublishedTrackSets } from "@repo/backend/convex/tryouts/catalog/hierarchy";
 import { isTryoutProgressWithinReadBudget } from "@repo/backend/convex/tryouts/progress/size";
@@ -94,7 +92,7 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
       return null;
     }
     const progress = user
-      ? yield* loadProgress(ctx, identity, user)
+      ? yield* loadProgress(ctx, found.sets, user)
       : new Map<string, Progress>();
     return found.sets.map((set) => ({
       progress: progress.get(tryoutCatalogIdentity(set)) ?? null,
@@ -103,63 +101,76 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
   }
 );
 
-/** Loads the bounded current-user progress rows for one authored track. */
+/** Loads progress only for the exact sets in the active signed catalog. */
 const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
   ctx: QueryCtx,
-  identity: TrackIdentity,
+  sets: readonly TryoutSet[],
   user: User
 ) {
-  const rows = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutSetProgress")
-      .withIndex("by_userId_and_track_and_publishedScore_and_setKey", (query) =>
-        query
-          .eq("userId", user._id)
-          .eq("countryKey", identity.countryKey)
-          .eq("examKey", identity.examKey)
-          .eq("trackKey", identity.trackKey)
-          .eq("locale", identity.locale)
-      )
-      .take(TRYOUT_PROGRESS_QUERY_LIMIT)
+  const entries = yield* Effect.forEach(
+    sets,
+    (set) => loadSetProgress(ctx, set, user),
+    { concurrency: "unbounded" }
   );
-  if (rows.length > TRYOUT_CATALOG_LIMIT) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_LIMIT",
-      "Signed try-out progress exceeds the catalog row budget."
-    );
-  }
-  if (rows.some((row) => !isTryoutProgressWithinReadBudget(row))) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Signed try-out progress exceeds its catalog read budget."
-    );
-  }
   const byIdentity = new Map<string, Progress>();
-  for (const row of rows) {
-    const identity = tryoutCatalogIdentity({
-      countryKey: row.countryKey,
-      examKey: row.examKey,
-      kind: "set",
-      locale: row.locale,
-      setKey: row.setKey,
-      trackKey: row.trackKey,
-    });
+  for (const entry of entries) {
+    if (!entry) {
+      continue;
+    }
+    if (byIdentity.has(entry.identity)) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Signed try-out catalog has duplicate set identities."
+      );
+    }
+    byIdentity.set(entry.identity, entry.row);
+  }
+  return byIdentity;
+});
+
+/** Reads at most one user progress row for one exact authored route. */
+const loadSetProgress = Effect.fn("tryouts.sets.loadPublishedSetProgress")(
+  function* (ctx: QueryCtx, set: TryoutSet, user: User) {
+    const rows = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutSetProgress")
+        .withIndex("by_userId_and_route", (query) =>
+          query
+            .eq("userId", user._id)
+            .eq("countryKey", set.countryKey)
+            .eq("examKey", set.examKey)
+            .eq("trackKey", set.trackKey)
+            .eq("locale", set.locale)
+            .eq("setKey", set.setKey)
+        )
+        .take(TRYOUT_PROGRESS_IDENTITY_LIMIT)
+    );
+    if (rows.length > 1) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Signed try-out progress has duplicate route identities."
+      );
+    }
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+    if (!isTryoutProgressWithinReadBudget(row)) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Signed try-out progress exceeds its catalog read budget."
+      );
+    }
+    const identity = tryoutCatalogIdentity(set);
     if (row.setIdentity && row.setIdentity !== identity) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         "Signed try-out progress conflicts with its route identity."
       );
     }
-    if (byIdentity.has(identity)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Signed try-out progress has duplicate set identities."
-      );
-    }
-    byIdentity.set(identity, row);
+    return { identity, row };
   }
-  return byIdentity;
-});
+);
 
 /** Sorts signed set rows before revision-bound pagination. */
 function sortJoinedSets(

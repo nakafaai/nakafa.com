@@ -152,6 +152,14 @@ const tables = {
   })
     .index("by_userId_and_tryoutSetId", ["userId", "tryoutSetId"])
     .index("by_userId_and_setIdentity", ["userId", "setIdentity"])
+    .index("by_userId_and_route", [
+      "userId",
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "locale",
+      "setKey",
+    ])
     .index("by_userId_and_track_and_publishedScore_and_setKey", [
       "userId",
       "countryKey",
