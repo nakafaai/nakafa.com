@@ -529,6 +529,7 @@ import type * as tryouts_migrations_activate from "../tryouts/migrations/activat
 import type * as tryouts_migrations_attempt from "../tryouts/migrations/attempt.js";
 import type * as tryouts_migrations_calibration from "../tryouts/migrations/calibration.js";
 import type * as tryouts_migrations_catalog from "../tryouts/migrations/catalog.js";
+import type * as tryouts_migrations_contentAttestation from "../tryouts/migrations/contentAttestation.js";
 import type * as tryouts_migrations_integrity from "../tryouts/migrations/integrity.js";
 import type * as tryouts_migrations_item from "../tryouts/migrations/item.js";
 import type * as tryouts_migrations_placement from "../tryouts/migrations/placement.js";
@@ -1127,6 +1128,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/migrations/attempt": typeof tryouts_migrations_attempt;
   "tryouts/migrations/calibration": typeof tryouts_migrations_calibration;
   "tryouts/migrations/catalog": typeof tryouts_migrations_catalog;
+  "tryouts/migrations/contentAttestation": typeof tryouts_migrations_contentAttestation;
   "tryouts/migrations/integrity": typeof tryouts_migrations_integrity;
   "tryouts/migrations/item": typeof tryouts_migrations_item;
   "tryouts/migrations/placement": typeof tryouts_migrations_placement;
