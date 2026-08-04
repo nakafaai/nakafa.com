@@ -1,4 +1,4 @@
-import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
+import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";

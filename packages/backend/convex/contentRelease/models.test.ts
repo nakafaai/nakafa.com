@@ -2,7 +2,7 @@ import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import {
   type PublicationScope,
   PublicationScopeSchema,
-} from "@nakafa/aksara-contracts/release/snapshot";
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { scheduleReadModels } from "@repo/backend/convex/contentRelease/models";

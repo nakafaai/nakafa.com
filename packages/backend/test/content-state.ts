@@ -1,8 +1,8 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
-import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot";
-import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
+import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_PROOF_RENDERER,

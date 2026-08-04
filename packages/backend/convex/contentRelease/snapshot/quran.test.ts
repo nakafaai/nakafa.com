@@ -2,7 +2,7 @@ import {
   PublicPathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { stageQuranRow } from "@repo/backend/convex/contentRelease/snapshot/quran";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";

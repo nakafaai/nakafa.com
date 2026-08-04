@@ -12,26 +12,26 @@ import {
   makeCurriculumSnapshotRow,
   makeProgramSnapshotRow,
 } from "@nakafa/aksara-contracts/program/row-hash";
+import { hashProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import {
   PROGRAM_SNAPSHOT_FORMAT,
   type ProgramSnapshotInput,
   ProgramSnapshotSchema,
-} from "@nakafa/aksara-contracts/program/snapshot";
-import { hashProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot-hash";
+} from "@nakafa/aksara-contracts/program/snapshot/spec";
 import {
   type LearningProgram,
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
 import {
-  inheritContentSnapshots,
-  replaceContentSnapshot,
-} from "@nakafa/aksara-contracts/release/snapshot";
-import {
   type ContentSnapshotManifest,
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
+import {
+  inheritContentSnapshots,
+  replaceContentSnapshot,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
 import type schema from "@repo/backend/convex/schema";
 import {

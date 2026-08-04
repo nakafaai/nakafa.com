@@ -11,11 +11,11 @@ import {
   ContentReleaseManifestSchema,
 } from "@nakafa/aksara-contracts/release";
 import { digestItems } from "@nakafa/aksara-contracts/release/digest";
+import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback/digest";
 import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
-} from "@nakafa/aksara-contracts/release/rollback";
-import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";

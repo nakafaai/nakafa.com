@@ -1,5 +1,5 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot";
+import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { getReadModelImpact } from "@repo/backend/convex/contentRelease/models/impact";
 import { describe, expect, it } from "vitest";
 

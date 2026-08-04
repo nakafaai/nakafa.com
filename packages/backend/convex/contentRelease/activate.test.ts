@@ -1,6 +1,6 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
-import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
-import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
+import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";

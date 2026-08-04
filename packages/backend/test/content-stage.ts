@@ -4,7 +4,7 @@ import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type {
   ContentSnapshotSet,
   PublicationScope,
-} from "@nakafa/aksara-contracts/release/snapshot";
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_DIGEST,

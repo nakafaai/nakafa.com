@@ -1,6 +1,6 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot";
+import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { finalizeExactMaterialOwners } from "@repo/backend/convex/contentRelease/material/exact";

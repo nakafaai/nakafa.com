@@ -1,4 +1,4 @@
-import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
+import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import {

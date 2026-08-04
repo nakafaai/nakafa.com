@@ -1,6 +1,6 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
-import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot";
+import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type schema from "@repo/backend/convex/schema";
 import {

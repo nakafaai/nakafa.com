@@ -26,11 +26,11 @@ import {
 } from "@nakafa/aksara-contracts/release";
 import { digestItems } from "@nakafa/aksara-contracts/release/digest";
 import { hashContentReleaseManifest } from "@nakafa/aksara-contracts/release/hash";
-import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
-import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
-import { digestRoutes } from "@nakafa/aksara-contracts/release/route-digest";
+import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback/digest";
+import { digestRoutes } from "@nakafa/aksara-contracts/release/route/digest";
 import { canonicalizeContentReleaseSigningInput } from "@nakafa/aksara-contracts/release/signing";
-import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
+import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { createRendererManifest } from "@nakafa/aksara-contracts/renderer/manifest";

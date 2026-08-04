@@ -1,7 +1,7 @@
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,
-} from "@nakafa/aksara-contracts/release/snapshot";
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";

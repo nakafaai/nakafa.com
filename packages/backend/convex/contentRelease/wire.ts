@@ -14,12 +14,12 @@ import { canonicalizeContentReleaseItem } from "@nakafa/aksara-contracts/release
 import {
   type ContentRouteItemSchema,
   canonicalizeContentRouteItem,
-} from "@nakafa/aksara-contracts/release/route";
+} from "@nakafa/aksara-contracts/release/route/spec";
 import {
   type ContentSnapshotManifestSchema,
   type ContentSnapshotRowSchema,
   canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 
 /** Stores one signed release without introducing a second wire canonicalizer. */

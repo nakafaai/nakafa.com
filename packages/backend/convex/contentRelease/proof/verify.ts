@@ -1,8 +1,8 @@
 "use node";
 
 import type { ReleaseVerificationEvidence } from "@nakafa/aksara-contracts/release";
-import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result-digest";
-import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/routes";
+import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result/digest";
+import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/route/verify";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";

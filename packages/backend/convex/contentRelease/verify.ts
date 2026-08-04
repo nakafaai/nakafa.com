@@ -1,4 +1,4 @@
-import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot";
+import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";

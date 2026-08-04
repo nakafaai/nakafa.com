@@ -5,12 +5,12 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { ProgramSnapshotSchema } from "@nakafa/aksara-contracts/program/snapshot";
+import { ProgramSnapshotSchema } from "@nakafa/aksara-contracts/program/snapshot/spec";
 import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
 import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/stage";
 import schema from "@repo/backend/convex/schema";

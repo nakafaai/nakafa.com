@@ -7,8 +7,8 @@ import {
 import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
-} from "@nakafa/aksara-contracts/release/rollback";
-import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot";
+} from "@nakafa/aksara-contracts/release/rollback/spec";
+import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import { testProjectionJson } from "@repo/backend/test/content-material";

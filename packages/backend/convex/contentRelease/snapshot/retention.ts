@@ -1,4 +1,4 @@
-import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot";
+import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   loadRelease,

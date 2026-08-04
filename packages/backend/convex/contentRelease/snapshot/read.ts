@@ -1,4 +1,4 @@
-import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot-data";
+import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";

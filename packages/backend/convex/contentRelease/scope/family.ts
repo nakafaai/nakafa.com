@@ -3,7 +3,7 @@ import {
   ContentFamilySchema,
 } from "@nakafa/aksara-contracts/content";
 import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
-import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot";
+import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,

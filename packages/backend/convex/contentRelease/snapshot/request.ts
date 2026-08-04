@@ -1,4 +1,4 @@
-import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot";
+import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   MAX_SNAPSHOT_BATCH_BYTES,
   MAX_SNAPSHOT_BATCH_COUNT,

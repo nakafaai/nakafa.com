@@ -6,8 +6,8 @@ import {
   ContentSnapshotKindSchema,
   hasSameContentSnapshots,
   invertContentSnapshots,
-} from "@nakafa/aksara-contracts/release/snapshot";
-import { verifyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot-verify";
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { verifyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/verify";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";

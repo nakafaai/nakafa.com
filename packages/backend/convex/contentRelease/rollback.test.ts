@@ -1,11 +1,11 @@
 import {
   type RollbackPage,
   RollbackPageSchema,
-} from "@nakafa/aksara-contracts/release/rollback";
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   type RoutePage,
   RoutePageSchema,
-} from "@nakafa/aksara-contracts/release/route-page";
+} from "@nakafa/aksara-contracts/release/route/page";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   RELEASE_PAGE_LIMIT,

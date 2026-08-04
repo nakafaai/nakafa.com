@@ -1,7 +1,7 @@
 import {
   type ContentSnapshotManifest,
   contentSnapshotId,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,

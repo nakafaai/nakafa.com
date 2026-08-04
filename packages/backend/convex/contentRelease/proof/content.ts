@@ -3,7 +3,7 @@
 import { verifyContentProjections } from "@nakafa/aksara-contracts/projection/verify";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { verifyContentReleaseItems } from "@nakafa/aksara-contracts/release/items";
-import { verifyRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
+import { verifyRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback/digest";
 import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
 import {
   decodeRollbackJson,

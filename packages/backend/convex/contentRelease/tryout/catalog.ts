@@ -1,6 +1,6 @@
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
-import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot-data";
-import type { TryoutCatalogCounts } from "@nakafa/aksara-contracts/tryout/snapshot";
+import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { TryoutCatalogCounts } from "@nakafa/aksara-contracts/tryout/snapshot/spec";
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";

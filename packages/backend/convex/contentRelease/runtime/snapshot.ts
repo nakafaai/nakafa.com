@@ -1,5 +1,5 @@
-import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot";
-import { contentSnapshotId } from "@nakafa/aksara-contracts/release/snapshot-data";
+import { contentSnapshotId } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeSnapshotJson } from "@repo/backend/convex/contentRelease/parse";

@@ -13,7 +13,7 @@ import {
 import {
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
 import { findLearningProgramByKey } from "@repo/contents/_types/program/catalog";
 import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
 import { Schema } from "effect";

@@ -11,8 +11,8 @@ import {
 import {
   ContentRouteBindSchema,
   ContentRouteDeleteSchema,
-} from "@nakafa/aksara-contracts/release/route";
-import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot";
+} from "@nakafa/aksara-contracts/release/route/spec";
+import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";

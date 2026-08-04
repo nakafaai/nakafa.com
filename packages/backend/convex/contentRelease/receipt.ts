@@ -2,7 +2,7 @@ import type {
   ContentReleaseManifest,
   SignedContentRelease,
 } from "@nakafa/aksara-contracts/release";
-import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot";
+import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeReceiptJson } from "@repo/backend/convex/contentRelease/parse";

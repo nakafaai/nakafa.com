@@ -17,16 +17,16 @@ import {
 } from "@nakafa/aksara-contracts/release";
 import { digestItems } from "@nakafa/aksara-contracts/release/digest";
 import { MaterialHeadSchema } from "@nakafa/aksara-contracts/release/head";
-import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result";
-import { digestResultCatalog } from "@nakafa/aksara-contracts/release/result-digest";
-import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback";
-import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback-digest";
-import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route";
-import { digestRoutes } from "@nakafa/aksara-contracts/release/route-digest";
+import { digestResultCatalog } from "@nakafa/aksara-contracts/release/result/digest";
+import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback/digest";
+import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
+import { digestRoutes } from "@nakafa/aksara-contracts/release/route/digest";
+import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
 import {
   inheritContentSnapshots,
   invertContentSnapshots,
-} from "@nakafa/aksara-contracts/release/snapshot";
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   testMaterialGraph,
   testMaterialPublicPath,

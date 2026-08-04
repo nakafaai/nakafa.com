@@ -5,7 +5,7 @@ import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
 import {
   inheritContentSnapshots,
   invertContentSnapshots,
-} from "@nakafa/aksara-contracts/release/snapshot";
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { verifyReleaseSnapshots } from "@repo/backend/convex/contentRelease/proof/snapshot";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";

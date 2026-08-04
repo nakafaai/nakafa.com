@@ -1,14 +1,14 @@
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  inheritContentSnapshots,
-  replaceContentSnapshot,
-} from "@nakafa/aksara-contracts/release/snapshot";
 import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot-data";
-import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
+} from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import {
+  inheritContentSnapshots,
+  replaceContentSnapshot,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   compareTryoutCatalog,
   compareTryoutPlacements,
@@ -19,7 +19,7 @@ import {
   makeTryoutCatalogRecord,
   makeTryoutPlacementRecord,
 } from "@nakafa/aksara-contracts/tryout/row-hash";
-import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot-hash";
+import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,

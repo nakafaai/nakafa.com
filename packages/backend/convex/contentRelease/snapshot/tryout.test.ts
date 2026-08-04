@@ -1,5 +1,5 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot-data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,

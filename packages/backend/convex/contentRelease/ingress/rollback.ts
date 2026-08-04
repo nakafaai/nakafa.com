@@ -9,12 +9,12 @@ import {
   type RollbackPage,
   RollbackPageSchema,
   type RollbackRecord,
-} from "@nakafa/aksara-contracts/release/rollback";
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   type RoutePage,
   RoutePageSchema,
   type RouteRollbackRecord,
-} from "@nakafa/aksara-contracts/release/route-page";
+} from "@nakafa/aksara-contracts/release/route/page";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {

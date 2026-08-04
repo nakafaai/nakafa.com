@@ -2,7 +2,7 @@ import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,
-} from "@nakafa/aksara-contracts/release/snapshot";
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   loadActiveSnapshot,
   loadSnapshotOwner,
