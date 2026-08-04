@@ -60,33 +60,35 @@ export function summarizeResponses(responses: TryoutResponse[]) {
 }
 
 /** Scores one terminal section with its parent attempt's frozen strategy. */
-export async function scoreTryoutSection(
-  ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
-    responses: TryoutResponse[];
-    sectionKey: string;
-    totalQuestions: number;
-    tryoutSectionId?: Id<"tryoutSections">;
-  }
-) {
-  if (args.attempt.scoringStrategy === "irt") {
-    const score = await scoreIrtSection(ctx, {
-      ...args,
+export const scoreTryoutSection = Effect.fn("tryouts.runtime.scoreSection")(
+  function* (
+    ctx: MutationCtx,
+    args: {
+      attempt: TryoutAttempt;
+      responses: TryoutResponse[];
+      sectionKey: string;
+      totalQuestions: number;
+      tryoutSectionId?: Id<"tryoutSections">;
+    }
+  ) {
+    if (args.attempt.scoringStrategy === "irt") {
+      return yield* tryRuntimePromise(() =>
+        scoreIrtSection(ctx, {
+          ...args,
+          scoringStrategy: args.attempt.scoringStrategy,
+        })
+      );
+    }
+
+    const { correctAnswers } = summarizeResponses(args.responses);
+
+    return scoreRawAnswers({
+      correctAnswers,
       scoringStrategy: args.attempt.scoringStrategy,
+      totalQuestions: args.totalQuestions,
     });
-
-    return score;
   }
-
-  const { correctAnswers } = summarizeResponses(args.responses);
-
-  return scoreRawAnswers({
-    correctAnswers,
-    scoringStrategy: args.attempt.scoringStrategy,
-    totalQuestions: args.totalQuestions,
-  });
-}
+);
 
 /** Finalizes one attempt and stores the score snapshot exactly once. */
 export const finalizeAttemptScore = Effect.fn(

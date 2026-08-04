@@ -249,6 +249,28 @@ describe("tryouts/queries/retained", () => {
       }
     );
     await t.mutation(activateRenamedTryoutStartSource);
+    await t.mutation(async (ctx) => {
+      const source = await ctx.db
+        .query("tryoutCatalog")
+        .filter((query) =>
+          query.eq(query.field("publicPath"), TRYOUT_RENAMED_SET_PATH)
+        )
+        .first();
+      if (!source) {
+        throw new Error("Expected the active renamed set row.");
+      }
+      await ctx.db.insert("tryoutCatalog", {
+        identity: "unreferenced-active-catalog-row",
+        index: 10_000,
+        kind: "set",
+        locale: "id",
+        order: 10_000,
+        publicPath: "try-out/unreferenced-active-set",
+        rowHash: source.rowHash,
+        rowJson: source.rowJson,
+        snapshotId: source.snapshotId,
+      });
+    });
     await expect(
       authed.query(api.tryouts.queries.retained.getAttemptSectionPage, {
         locale: "id",

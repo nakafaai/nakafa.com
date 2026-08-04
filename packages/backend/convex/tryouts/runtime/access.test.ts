@@ -172,7 +172,7 @@ describe("tryouts/runtime/access", () => {
     });
   });
 
-  it("serves the active frozen section after its published key changes", async () => {
+  it("does not load frozen content for another active route section", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const fixture = await seedTryoutContentAccessState(ctx, {
@@ -211,11 +211,7 @@ describe("tryouts/runtime/access", () => {
 
     await expect(
       authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
-    ).resolves.toEqual({
-      answers: [],
-      kind: "signed",
-      questions: [seeded.signedContent?.question],
-    });
+    ).resolves.toEqual(noContent);
   });
 
   it("prefers a newer filesystem attempt during signed migration", async () => {
@@ -372,33 +368,6 @@ describe("tryouts/runtime/access", () => {
       authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
     ).rejects.toThrow(
       "Signed try-out attempt lost its frozen release identity."
-    );
-  });
-
-  it("fails closed when active section rows exceed the frozen snapshot", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        signed: true,
-        suffix: "content-section-overflow",
-      });
-      await ctx.db.patch(fixture.attemptId, { sectionSnapshots: [] });
-      return fixture;
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, {
-        ...contentArgs,
-        sectionKey: "renamed-section",
-      })
-    ).rejects.toThrow(
-      "Try-out section attempt count exceeds its frozen snapshot."
     );
   });
 

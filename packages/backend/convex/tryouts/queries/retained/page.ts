@@ -1,16 +1,11 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
+import { readTryoutDestinationPaths } from "@repo/backend/convex/tryouts/catalog/destination";
 import {
   readFilesystemDestinationPaths,
   readFilesystemSection,
 } from "@repo/backend/convex/tryouts/catalog/filesystem/content";
-import {
-  readPublishedSection,
-  readPublishedSet,
-} from "@repo/backend/convex/tryouts/catalog/hierarchy";
-import { readPublishedSectionPage } from "@repo/backend/convex/tryouts/catalog/published";
 import {
   readRetainedSectionPage,
   readRetainedSetPage,
@@ -63,10 +58,17 @@ export const readAttemptSetPage = Effect.fn(
     return null;
   }
 
-  const activeCatalog = yield* loadTryoutCatalog(ctx, args.locale);
-  const activeSet = activeCatalog.managed
-    ? yield* readPublishedSet(activeCatalog, identity)
-    : yield* Effect.promise(() => getActiveTryoutSet(ctx, identity));
+  const activePaths = yield* readTryoutDestinationPaths(ctx, identity);
+  if (activePaths.managed) {
+    return {
+      activeSetPublicPath: activePaths.activeSetPublicPath,
+      attemptId: attempt._id,
+      page,
+    };
+  }
+  const activeSet = yield* Effect.promise(() =>
+    getActiveTryoutSet(ctx, identity)
+  );
   return {
     activeSetPublicPath: activeSet?.publicPath ?? null,
     attemptId: attempt._id,
@@ -147,24 +149,31 @@ export const readAttemptSectionPage = Effect.fn(
     return null;
   }
 
-  const activeCatalog = yield* loadTryoutCatalog(ctx, args.locale);
+  const activePaths = yield* readTryoutDestinationPaths(ctx, {
+    ...identity,
+    requestedSectionPublicPath: args.publicPath,
+    sectionKey: snapshot.sectionKey,
+  });
   if (!args.attemptId) {
-    const activePage = activeCatalog.managed
-      ? yield* readPublishedSectionPage(activeCatalog, args.publicPath)
-      : yield* readFilesystemSection(ctx, args);
-    if (activePage) {
-      const activeIdentity = {
-        countryKey: activePage.set.countryKey,
-        examKey: activePage.set.examKey,
-        locale: args.locale,
-        setKey: activePage.set.setKey,
-        trackKey: activePage.set.trackKey,
-      };
-      if (
-        !matchesAttemptIdentity(identity, activeIdentity) ||
-        activePage.section.sectionKey !== snapshot.sectionKey
-      ) {
-        return null;
+    if (activePaths.managed && activePaths.requestedSectionMatches === false) {
+      return null;
+    }
+    if (!activePaths.managed) {
+      const activePage = yield* readFilesystemSection(ctx, args);
+      if (activePage) {
+        const activeIdentity = {
+          countryKey: activePage.set.countryKey,
+          examKey: activePage.set.examKey,
+          locale: args.locale,
+          setKey: activePage.set.setKey,
+          trackKey: activePage.set.trackKey,
+        };
+        if (!matchesAttemptIdentity(identity, activeIdentity)) {
+          return null;
+        }
+        if (activePage.section.sectionKey !== snapshot.sectionKey) {
+          return null;
+        }
       }
     }
   }
@@ -177,21 +186,16 @@ export const readAttemptSectionPage = Effect.fn(
     setKey: page.set.setKey,
     trackKey: page.set.trackKey,
   };
-  if (!activeCatalog.managed) {
+  if (!activePaths.managed) {
     const activePaths = yield* readFilesystemDestinationPaths(
       ctx,
       activeIdentity
     );
     return { ...activePaths, attemptId: attempt._id, page };
   }
-  const activeSet = yield* readPublishedSet(activeCatalog, activeIdentity);
-  const activeSection = yield* readPublishedSection(
-    activeCatalog,
-    activeIdentity
-  );
   return {
-    activeSectionPublicPath: activeSection?.publicPath ?? null,
-    activeSetPublicPath: activeSet?.publicPath ?? null,
+    activeSectionPublicPath: activePaths.activeSectionPublicPath,
+    activeSetPublicPath: activePaths.activeSetPublicPath,
     attemptId: attempt._id,
     page,
   };

@@ -19,8 +19,6 @@ const noContentAccess: Extract<TryoutSectionContentAccess, { kind: "none" }> = {
   kind: "none",
 };
 
-type TryoutAttempt = Doc<"tryoutAttempts">;
-
 /** Stable failure while reading one attempt-owned content capability. */
 class TryoutContentReadError extends Schema.TaggedError<TryoutContentReadError>()(
   "TryoutContentReadError",
@@ -55,12 +53,14 @@ export const readTryoutSectionContent = Effect.fn(
       )
       .unique()
   );
-  const section = requestedSection ?? (yield* loadActiveSection(ctx, attempt));
-  if (!section) {
+  if (!requestedSection) {
     return noContentAccess;
   }
 
-  const access = getTryoutSectionContentAccess(attempt.status, section.status);
+  const access = getTryoutSectionContentAccess(
+    attempt.status,
+    requestedSection.status
+  );
   if (!access.questions) {
     return noContentAccess;
   }
@@ -85,10 +85,10 @@ export const readTryoutSectionContent = Effect.fn(
     attempt,
     ctx,
     locale: args.locale,
-    sectionKey: section.sectionKey,
+    sectionKey: requestedSection.sectionKey,
     snapshotReleaseId,
     snapshotId,
-    totalQuestions: section.totalQuestions,
+    totalQuestions: requestedSection.totalQuestions,
   });
 });
 
@@ -115,31 +115,6 @@ const readContentAttempt = Effect.fn("tryouts.access.readContentAttempt")(
       );
     }
     return attempt;
-  }
-);
-
-/** Resolves one bounded active section when its published route key changed. */
-const loadActiveSection = Effect.fn("tryouts.access.loadActiveSection")(
-  function* (ctx: QueryCtx, attempt: TryoutAttempt) {
-    if (attempt.status !== "in-progress") {
-      return null;
-    }
-
-    const sections = yield* tryContentPromise(() =>
-      ctx.db
-        .query("tryoutSectionAttempts")
-        .withIndex("by_tryoutAttemptId_and_sectionOrder", (index) =>
-          index.eq("tryoutAttemptId", attempt._id)
-        )
-        .take(attempt.sectionSnapshots.length + 1)
-    );
-    if (sections.length > attempt.sectionSnapshots.length) {
-      return yield* contentIntegrity(
-        "Try-out section attempt count exceeds its frozen snapshot."
-      );
-    }
-
-    return sections.find((section) => section.status === "in-progress") ?? null;
   }
 );
 

@@ -518,6 +518,7 @@ import type * as triggers_tryouts_scores from "../triggers/tryouts/scores.js";
 import type * as tryouts_access_impl from "../tryouts/access/impl.js";
 import type * as tryouts_access_source from "../tryouts/access/source.js";
 import type * as tryouts_access_subscription from "../tryouts/access/subscription.js";
+import type * as tryouts_catalog_destination from "../tryouts/catalog/destination.js";
 import type * as tryouts_catalog_filesystem_content from "../tryouts/catalog/filesystem/content.js";
 import type * as tryouts_catalog_filesystem_discovery from "../tryouts/catalog/filesystem/discovery.js";
 import type * as tryouts_catalog_hierarchy from "../tryouts/catalog/hierarchy.js";
@@ -1120,6 +1121,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/access/impl": typeof tryouts_access_impl;
   "tryouts/access/source": typeof tryouts_access_source;
   "tryouts/access/subscription": typeof tryouts_access_subscription;
+  "tryouts/catalog/destination": typeof tryouts_catalog_destination;
   "tryouts/catalog/filesystem/content": typeof tryouts_catalog_filesystem_content;
   "tryouts/catalog/filesystem/discovery": typeof tryouts_catalog_filesystem_discovery;
   "tryouts/catalog/hierarchy": typeof tryouts_catalog_hierarchy;
