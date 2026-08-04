@@ -10,7 +10,7 @@ export function Schools() {
     <section className="border-b">
       <div className="scroll-mt-28" id="schools">
         <div className="mx-auto w-full max-w-7xl border-x">
-          <div className="flex flex-col gap-6 px-6 py-24">
+          <div className="flex flex-col gap-6 px-6 py-24 lg:px-10">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-sm">
                 <HugeIcons className="size-4" icon={School01Icon} />

@@ -62,10 +62,14 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
 
   return (
     <div className="grid lg:grid-cols-2 lg:divide-x">
-      <div className="flex flex-col gap-6 px-6 py-12">
+      <div className="flex flex-col gap-6 px-6 py-12 lg:px-10">
         <div className="grid gap-2">
-          <h3 className="font-semibold text-3xl">{t("free-title")}</h3>
-          <p className="text-muted-foreground">{t("free-description")}</p>
+          <h3 className="text-balance font-semibold text-3xl">
+            {t("free-title")}
+          </h3>
+          <p className="text-pretty text-muted-foreground">
+            {t("free-description")}
+          </p>
           <div className="pt-2">
             <NumberFormat
               className="font-semibold text-4xl tracking-tight"
@@ -101,10 +105,14 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 px-6 py-12">
+      <div className="flex flex-col gap-6 px-6 py-12 lg:px-10">
         <div className="grid gap-2">
-          <h3 className="font-semibold text-3xl">{t("pro-title")}</h3>
-          <p className="text-muted-foreground">{t("pro-description")}</p>
+          <h3 className="text-balance font-semibold text-3xl">
+            {t("pro-title")}
+          </h3>
+          <p className="text-pretty text-muted-foreground">
+            {t("pro-description")}
+          </p>
           <div className="flex items-baseline gap-1 pt-2">
             <NumberFormat
               className="font-semibold text-4xl tracking-tight"
@@ -166,7 +174,7 @@ export function Pricing() {
           <PricingDithering />
         </div>
 
-        <div className="scroll-mt-28 px-6 pb-12" id="pricing">
+        <div className="scroll-mt-28 px-6 pb-12 lg:px-10" id="pricing">
           <h2 className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl">
             {t.rich("headline", {
               mark: (chunks) => <mark>{chunks}</mark>,

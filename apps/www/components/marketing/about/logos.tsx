@@ -44,7 +44,7 @@ export function Logos() {
 
   return (
     <section className="grid scroll-mt-28 gap-12 py-36" id="logos">
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6">
+      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 lg:px-10">
         <div className="grid gap-6">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-sm">
