@@ -2,7 +2,17 @@ import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity"
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { retainTryoutBundle } from "@repo/backend/convex/tryouts/runtime/bundle";
 import { finalizeAttemptScore } from "@repo/backend/convex/tryouts/runtime/score";
+import {
+  TEST_MANIFEST_HASH,
+  testReleaseJson,
+  testRendererJson,
+} from "@repo/backend/test/content-release";
+import {
+  insertTestState,
+  insertZeroRelease,
+} from "@repo/backend/test/content-state";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -22,12 +32,41 @@ const SET_IDENTITY = tryoutCatalogIdentity({
   trackKey: TRACK_KEY,
 });
 const SNAPSHOT_ID = `sha256:${"a".repeat(64)}`;
+const FROZEN_RELEASE_ID = "release-score-frozen";
+const LATER_RELEASE = {
+  manifestHash: `sha256:${"b".repeat(64)}`,
+  releaseId: "release-score-later",
+  sequence: 2,
+};
 
 describe("tryouts/runtime/score", () => {
-  it("scores from the frozen signed attempt after the local set is removed", async () => {
+  it("scores from the frozen bundle after the active release advances", async () => {
     const t = convexTest(schema, convexModules);
 
     const snapshot = await t.mutation(async (ctx) => {
+      await insertZeroRelease(ctx, {
+        ...LATER_RELEASE,
+        ownership: { base: [], result: [] },
+        role: "candidate",
+        status: "completed",
+      });
+      await insertTestState(ctx, {
+        active: LATER_RELEASE,
+        nextSequence: LATER_RELEASE.sequence + 1,
+      });
+      await runConvexProgram(
+        retainTryoutBundle(
+          ctx,
+          {
+            manifestHash: TEST_MANIFEST_HASH,
+            releaseId: FROZEN_RELEASE_ID,
+            releaseJson: testReleaseJson({ releaseId: FROZEN_RELEASE_ID }),
+            rendererJson: testRendererJson(),
+            snapshotId: SNAPSHOT_ID,
+          },
+          NOW
+        )
+      );
       const userId = await ctx.db.insert("users", {
         authId: "auth-score-snapshot",
         credits: 0,
@@ -132,12 +171,12 @@ describe("tryouts/runtime/score", () => {
         ],
         setIdentity: SET_IDENTITY,
         setKey: "set-1",
+        snapshotReleaseId: FROZEN_RELEASE_ID,
         startedAt: NOW - 20_000,
         status: "in-progress",
         totalCorrect: 0,
         totalQuestions: 1,
         trackKey: TRACK_KEY,
-        tryoutSnapshotId: SNAPSHOT_ID,
         tryoutSetId,
         userId,
       });

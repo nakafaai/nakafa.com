@@ -3,6 +3,7 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  findTryoutBundleByRelease,
   retainTryoutBundle,
   type TryoutBundleSource,
 } from "@repo/backend/convex/tryouts/runtime/bundle";
@@ -36,11 +37,15 @@ describe("tryouts/runtime/bundle", () => {
       const second = await runConvexProgram(
         retainTryoutBundle(ctx, source, NOW + 1)
       );
+      const found = await runConvexProgram(
+        findTryoutBundleByRelease(ctx, source.releaseId)
+      );
       const rows = await ctx.db.query("tryoutBundles").collect();
-      return { first, rows, second };
+      return { first, found, rows, second };
     });
 
     expect(result.first).toEqual(result.second);
+    expect(result.found?._id).toEqual(result.first);
     expect(result.rows).toHaveLength(1);
     expect(result.rows[0]).toMatchObject({
       ...source,
@@ -59,6 +64,25 @@ describe("tryouts/runtime/bundle", () => {
           retainTryoutBundle(
             ctx,
             { ...source, rendererJson: testRendererJson(TEST_MANIFEST_HASH) },
+            NOW + 1
+          )
+        );
+      })
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_BUNDLE_CONFLICT" },
+    });
+  });
+
+  it("rejects a changed snapshot for an existing release identity", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.mutation(async (ctx) => {
+        await runConvexProgram(retainTryoutBundle(ctx, source, NOW));
+        await runConvexProgram(
+          retainTryoutBundle(
+            ctx,
+            { ...source, snapshotId: TEST_MANIFEST_HASH },
             NOW + 1
           )
         );

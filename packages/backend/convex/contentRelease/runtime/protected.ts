@@ -19,6 +19,7 @@ import { loadVerifiedSnapshot } from "@repo/backend/convex/contentRelease/runtim
 import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
 import { verifyTryoutPlacement } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { findTryoutBundleByRelease } from "@repo/backend/convex/tryouts/runtime/bundle";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
@@ -173,15 +174,17 @@ const loadBundle = Effect.fn("contentRelease.loadProtectedBundle")(function* (
   ctx: QueryCtx,
   request: ProtectedContentRuntimeRequest
 ) {
-  const stored = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutBundles")
-      .withIndex("by_snapshotId_and_releaseId", (index) =>
-        index
-          .eq("snapshotId", request.snapshotId)
-          .eq("releaseId", request.snapshotReleaseId)
-      )
-      .unique()
+  const stored = yield* findTryoutBundleByRelease(
+    ctx,
+    request.snapshotReleaseId
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Protected try-out bundle ${request.snapshotReleaseId} could not be read.`,
+        })
+    )
   );
   if (!stored) {
     return yield* releaseFail(
@@ -197,6 +200,7 @@ const loadBundle = Effect.fn("contentRelease.loadProtectedBundle")(function* (
   if (
     stored.manifestHash !== release.manifestHash ||
     stored.releaseId !== release.manifest.releaseId ||
+    stored.snapshotId !== request.snapshotId ||
     snapshot.resultSnapshotId !== request.snapshotId ||
     !hasRendererIdentity(release.manifest, renderer)
   ) {

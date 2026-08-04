@@ -1,14 +1,13 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import {
   type AttemptEndReason,
   getAttemptStatusFromEndReason,
 } from "@repo/backend/convex/lib/attempts";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress";
+import { findTryoutBundleByRelease } from "@repo/backend/convex/tryouts/runtime/bundle";
 import {
   TryoutRuntimeError,
-  toTryoutRuntimeError,
   tryRuntimePromise,
 } from "@repo/backend/convex/tryouts/runtime/error";
 import {
@@ -192,18 +191,15 @@ const resolveAttemptScoreOwner = Effect.fn(
     return yield* scoreOwnershipError();
   }
 
-  const owner = yield* loadTryoutOwner(ctx).pipe(
-    Effect.mapError(toTryoutRuntimeError)
+  const bundle = yield* findTryoutBundleByRelease(ctx, snapshotReleaseId).pipe(
+    Effect.mapError(() => scoreOwnershipError())
   );
-  if (
-    !(owner.managed && owner.selected) ||
-    owner.selected.active.releaseId !== snapshotReleaseId
-  ) {
+  if (!bundle) {
     return yield* scoreOwnershipError();
   }
   return {
     setIdentity,
-    tryoutSnapshotId: owner.selected.snapshotId,
+    tryoutSnapshotId: bundle.snapshotId,
   };
 });
 

@@ -49,8 +49,8 @@ const tables = {
     rendererJson: v.string(),
     snapshotId: v.string(),
   })
-    .index("by_snapshotId_and_index", ["snapshotId", "index"])
-    .index("by_snapshotId_and_releaseId", ["snapshotId", "releaseId"]),
+    .index("by_releaseId", ["releaseId"])
+    .index("by_snapshotId_and_index", ["snapshotId", "index"]),
 
   tryoutAttempts: defineTable({
     userId: v.id("users"),

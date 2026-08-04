@@ -1,5 +1,8 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { Effect, Schema } from "effect";
 
@@ -18,39 +21,51 @@ export class TryoutBundleError extends Schema.TaggedError<TryoutBundleError>()(
   {
     code: Schema.Literal(
       "TRYOUT_BUNDLE_CONFLICT",
+      "TRYOUT_BUNDLE_READ_FAILED",
       "TRYOUT_BUNDLE_WRITE_FAILED"
     ),
     message: Schema.String,
   }
 ) {}
 
+type ReadCtx = MutationCtx | QueryCtx;
+
+/** Reads one retained bundle through its globally unique release identity. */
+export const findTryoutBundleByRelease = Effect.fn(
+  "tryouts.runtime.findTryoutBundleByRelease"
+)(function* (ctx: ReadCtx, releaseId: string) {
+  return yield* tryBundlePromise(
+    "TRYOUT_BUNDLE_READ_FAILED",
+    "Unable to read the retained try-out runtime bundle.",
+    () =>
+      ctx.db
+        .query("tryoutBundles")
+        .withIndex("by_releaseId", (index) => index.eq("releaseId", releaseId))
+        .unique()
+  );
+});
+
 /** Stores or reuses one exact release bundle before an attempt references it. */
 export const retainTryoutBundle = Effect.fn(
   "tryouts.runtime.retainTryoutBundle"
 )(function* (ctx: MutationCtx, source: TryoutBundleSource, createdAt: number) {
-  const stored = yield* tryBundlePromise(() =>
-    ctx.db
-      .query("tryoutBundles")
-      .withIndex("by_snapshotId_and_releaseId", (index) =>
-        index
-          .eq("snapshotId", source.snapshotId)
-          .eq("releaseId", source.releaseId)
-      )
-      .unique()
-  );
+  const stored = yield* findTryoutBundleByRelease(ctx, source.releaseId);
   if (stored) {
     yield* verifyStoredBundle(stored, source);
     return stored._id;
   }
 
-  const latest = yield* tryBundlePromise(() =>
-    ctx.db
-      .query("tryoutBundles")
-      .withIndex("by_snapshotId_and_index", (index) =>
-        index.eq("snapshotId", source.snapshotId)
-      )
-      .order("desc")
-      .first()
+  const latest = yield* tryBundlePromise(
+    "TRYOUT_BUNDLE_READ_FAILED",
+    "Unable to read the retained try-out runtime bundle.",
+    () =>
+      ctx.db
+        .query("tryoutBundles")
+        .withIndex("by_snapshotId_and_index", (index) =>
+          index.eq("snapshotId", source.snapshotId)
+        )
+        .order("desc")
+        .first()
   );
   const row = {
     ...source,
@@ -69,7 +84,11 @@ export const retainTryoutBundle = Effect.fn(
         })
     )
   );
-  return yield* tryBundlePromise(() => ctx.db.insert("tryoutBundles", row));
+  return yield* tryBundlePromise(
+    "TRYOUT_BUNDLE_WRITE_FAILED",
+    "Unable to retain the try-out runtime bundle.",
+    () => ctx.db.insert("tryoutBundles", row)
+  );
 });
 
 /** Rejects reuse of one release identity with different signed bytes. */
@@ -77,6 +96,7 @@ const verifyStoredBundle = Effect.fn("tryouts.runtime.verifyStoredBundle")(
   function* (stored: Doc<"tryoutBundles">, source: TryoutBundleSource) {
     if (
       stored.manifestHash === source.manifestHash &&
+      stored.snapshotId === source.snapshotId &&
       stored.releaseJson === source.releaseJson &&
       stored.rendererJson === source.rendererJson
     ) {
@@ -92,12 +112,16 @@ const verifyStoredBundle = Effect.fn("tryouts.runtime.verifyStoredBundle")(
 );
 
 /** Lifts one bundle storage operation into its typed failure channel. */
-function tryBundlePromise<A>(operation: () => Promise<A>) {
+function tryBundlePromise<A>(
+  code: TryoutBundleError["code"],
+  message: string,
+  operation: () => Promise<A>
+) {
   return Effect.tryPromise({
     catch: () =>
       new TryoutBundleError({
-        code: "TRYOUT_BUNDLE_WRITE_FAILED",
-        message: "Unable to retain the try-out runtime bundle.",
+        code,
+        message,
       }),
     try: operation,
   });
