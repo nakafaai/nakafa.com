@@ -331,10 +331,11 @@ export const readAttemptHistoryPage = Effect.fn(
     if (!set) {
       return emptyAttemptPage();
     }
+    const setIdentity = tryoutCatalogIdentity(set);
     const retained = yield* Effect.promise(() =>
       getActiveTryoutSetByPublicPath(ctx, path)
     );
-    if (retained) {
+    if (retained && matchesAttemptIdentity(retained, set)) {
       return yield* paginateFilesystemAttempts(
         ctx,
         retained._id,
@@ -346,9 +347,7 @@ export const readAttemptHistoryPage = Effect.fn(
       ctx.db
         .query("tryoutAttempts")
         .withIndex("by_userId_and_setIdentity_and_startedAt", (index) =>
-          index
-            .eq("userId", userId)
-            .eq("setIdentity", tryoutCatalogIdentity(set))
+          index.eq("userId", userId).eq("setIdentity", setIdentity)
         )
         .order("desc")
         .paginate(pagination)

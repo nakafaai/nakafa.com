@@ -5,6 +5,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
 import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 12, 12, 0, 0);
@@ -41,11 +42,16 @@ async function insertHistoryAttempt(
   args: {
     attemptNumber: number;
     publishedScore: number;
+    setIdentity?: string;
     startedAt: number;
-    tryoutSetId: Id<"tryoutSets">;
+    tryoutSetId?: Id<"tryoutSets">;
     userId: Id<"users">;
   }
 ) {
+  const owner = {
+    ...(args.setIdentity ? { setIdentity: args.setIdentity } : {}),
+    ...(args.tryoutSetId ? { tryoutSetId: args.tryoutSetId } : {}),
+  };
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: args.startedAt + 3_600_000,
     accessSourceKind: "free",
@@ -63,7 +69,7 @@ async function insertHistoryAttempt(
     status: "completed",
     totalCorrect: args.publishedScore / 10,
     totalQuestions: 10,
-    tryoutSetId: args.tryoutSetId,
+    ...owner,
     userId: args.userId,
   });
 
@@ -76,7 +82,7 @@ async function insertHistoryAttempt(
     totalCorrect: args.publishedScore / 10,
     totalQuestions: 10,
     tryoutAttemptId: attemptId,
-    tryoutSetId: args.tryoutSetId,
+    ...owner,
     userId: args.userId,
   });
 
@@ -163,6 +169,53 @@ describe("tryouts/queries/history", () => {
       isDone: true,
       page: [],
     });
+  });
+
+  it("ignores a stale filesystem set when the signed route reuses its path", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "tryout-history-reused-path",
+      });
+      const fixture = await seedTryoutStartSet(ctx, {
+        userId: identity.userId,
+        visibility: "visible",
+      });
+      await ctx.db.patch(fixture.tryoutSetId, { setKey: "retired-set" });
+      await insertHistoryAttempt(ctx, {
+        attemptNumber: 1,
+        publishedScore: 70,
+        startedAt: NOW - 20_000,
+        tryoutSetId: fixture.tryoutSetId,
+        userId: identity.userId,
+      });
+      const signedAttemptId = await insertHistoryAttempt(ctx, {
+        attemptNumber: 1,
+        publishedScore: 90,
+        setIdentity: fixture.setIdentity,
+        startedAt: NOW - 10_000,
+        userId: identity.userId,
+      });
+
+      return { identity, signedAttemptId };
+    });
+    const authed = t.withIdentity({
+      sessionId: seeded.identity.sessionId,
+      subject: seeded.identity.authUserId,
+    });
+
+    const history = await authed.query(api.tryouts.queries.history.list, {
+      locale: "id",
+      paginationOpts: { cursor: null, numItems: 25 },
+      publicPath: SET_PATH,
+    });
+
+    expect(history.page.map(({ attemptId }) => attemptId)).toEqual([
+      seeded.signedAttemptId,
+    ]);
   });
 
   it("caps each requested page at twenty-five attempts", async () => {
