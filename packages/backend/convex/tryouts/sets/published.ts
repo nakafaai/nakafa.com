@@ -135,7 +135,7 @@ const loadSetProgress = Effect.fn("tryouts.sets.loadPublishedSetProgress")(
       ctx.db
         .query("tryoutSetProgress")
         .withIndex(
-          "by_userId_and_countryKey_and_examKey_and_trackKey_and_locale_and_setKey",
+          "by_userId_countryKey_examKey_trackKey_locale_setKey",
           (query) =>
             query
               .eq("userId", user._id)
