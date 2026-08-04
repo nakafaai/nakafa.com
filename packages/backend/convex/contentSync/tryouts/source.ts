@@ -3,13 +3,22 @@ import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owne
 import { tryoutSyncFail } from "@repo/backend/convex/contentSync/tryouts/error";
 import { Effect } from "effect";
 
+/** Reads the active publication owner that routes filesystem sync behavior. */
+export const loadTryoutSyncOwnership = Effect.fn(
+  "contentSync.tryout.loadOwnership"
+)(function* (ctx: QueryCtx) {
+  const owner = yield* loadTryoutOwner(ctx);
+
+  return { tryoutsManaged: owner.managed };
+});
+
 /** Rejects filesystem synchronization after signed Aksara ownership activates. */
 export const requireFilesystemOwner = Effect.fn(
   "contentSync.tryout.requireFilesystemOwner"
 )(function* (ctx: QueryCtx) {
-  const owner = yield* loadTryoutOwner(ctx);
+  const ownership = yield* loadTryoutSyncOwnership(ctx);
 
-  if (!owner.managed) {
+  if (!ownership.tryoutsManaged) {
     return;
   }
 

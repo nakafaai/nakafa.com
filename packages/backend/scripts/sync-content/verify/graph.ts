@@ -81,13 +81,24 @@ export const getTryoutGraphIdentityAlignment = Effect.fn(
   return result;
 });
 
-/** Verifies persisted graph structure and local try-out source alignment together. */
+/** Verifies persisted graph structure and any filesystem-owned source alignment. */
 export const verifyGraphIdentity = Effect.fn("sync.verifyGraphIdentity")(
-  function* (config: ConvexConfig, options: SyncOptions) {
+  function* (
+    config: ConvexConfig,
+    options: SyncOptions,
+    tryoutsManaged: boolean
+  ) {
     const persisted = yield* getGraphIdentityIntegrity(config);
-    const tryouts = yield* getTryoutGraphIdentityAlignment(config, options);
-
     const persistedMatches = logPersistedGraphIdentity(persisted);
+
+    if (tryoutsManaged) {
+      log(
+        "Signed Aksara ownership active; skipped local try-out graph alignment"
+      );
+      return persistedMatches;
+    }
+
+    const tryouts = yield* getTryoutGraphIdentityAlignment(config, options);
     const tryoutsMatch = logTryoutGraphIdentityAlignment(tryouts);
 
     return persistedMatches && tryoutsMatch;

@@ -335,6 +335,7 @@ import type * as contentSync_publicRoutes_spec from "../contentSync/publicRoutes
 import type * as contentSync_queries_authors from "../contentSync/queries/authors.js";
 import type * as contentSync_queries_counts from "../contentSync/queries/counts.js";
 import type * as contentSync_queries_integrity from "../contentSync/queries/integrity.js";
+import type * as contentSync_queries_ownership from "../contentSync/queries/ownership.js";
 import type * as contentSync_queries_stale from "../contentSync/queries/stale.js";
 import type * as contentSync_reset_impl from "../contentSync/reset/impl.js";
 import type * as contentSync_reset_internal from "../contentSync/reset/internal.js";
@@ -941,6 +942,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/queries/authors": typeof contentSync_queries_authors;
   "contentSync/queries/counts": typeof contentSync_queries_counts;
   "contentSync/queries/integrity": typeof contentSync_queries_integrity;
+  "contentSync/queries/ownership": typeof contentSync_queries_ownership;
   "contentSync/queries/stale": typeof contentSync_queries_stale;
   "contentSync/reset/impl": typeof contentSync_reset_impl;
   "contentSync/reset/internal": typeof contentSync_reset_internal;

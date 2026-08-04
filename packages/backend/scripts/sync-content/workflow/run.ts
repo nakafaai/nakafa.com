@@ -31,6 +31,7 @@ import type {
   SyncResult,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
+import { readContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import {
   createContentRouteArtifactTargets,
   syncContentRouteArtifactPages,
@@ -56,6 +57,13 @@ import { readIncrementalSyncPlan } from "@repo/backend/scripts/sync-content/work
 import { logSyncSummary } from "@repo/backend/scripts/sync-content/workflow/summary";
 import { Effect } from "effect";
 
+/** Creates an empty result for a sync phase that has no source-owned work. */
+const createSyncResult = (): SyncResult => ({
+  created: 0,
+  unchanged: 0,
+  updated: 0,
+});
+
 /** Rejects locale scoping that could advance shared incremental sync state incompletely. */
 export const validateIncrementalSyncOptions = Effect.fn(
   "sync.validateIncrementalOptions"
@@ -76,6 +84,7 @@ export const syncAll = Effect.fn("sync.all")(function* (
   options: SyncOptions
 ) {
   const metrics = createMetrics();
+  const ownership = yield* readContentSyncOwnership(config);
   log("=== CONTENT SYNC ===\n");
 
   if (options.locale) {
@@ -96,7 +105,7 @@ export const syncAll = Effect.fn("sync.all")(function* (
   let curriculumTopicResult: SyncResult;
   let curriculumLessonResult: SyncResult;
   let quranResult: SyncResult;
-  let tryoutResult: SyncResult;
+  let tryoutResult = createSyncResult();
   let routePageResult: SyncResult;
   let publicRouteResult: SyncResult;
   let learningProgramResult: SyncResult;
@@ -134,12 +143,16 @@ export const syncAll = Effect.fn("sync.all")(function* (
       quranResult.created + quranResult.updated + quranResult.unchanged
     );
 
-    const tryoutPhase = startPhase(metrics, "Tryouts");
-    tryoutResult = yield* syncTryouts(config, options);
-    endPhase(
-      tryoutPhase,
-      tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged
-    );
+    if (ownership.tryoutsManaged) {
+      log("Tryouts: signed Aksara ownership active");
+    } else {
+      const tryoutPhase = startPhase(metrics, "Tryouts");
+      tryoutResult = yield* syncTryouts(config, options);
+      endPhase(
+        tryoutPhase,
+        tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged
+      );
+    }
 
     const routePagePhase = startPhase(metrics, "Route Pages");
     routePageResult = yield* syncContentRouteArtifactPages(
@@ -195,11 +208,15 @@ export const syncAll = Effect.fn("sync.all")(function* (
     log(`  Quran:              ${formatSyncResult(quranResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase3Start)}`);
 
-    log("Phase 4: Syncing tryouts...");
-    const phase4Start = performance.now();
-    tryoutResult = yield* syncTryouts(config, options);
-    log(`  Tryouts:            ${formatSyncResult(tryoutResult)}`);
-    log(`  Duration: ${formatDuration(performance.now() - phase4Start)}`);
+    if (ownership.tryoutsManaged) {
+      log("Phase 4: Tryouts use signed Aksara ownership");
+    } else {
+      log("Phase 4: Syncing tryouts...");
+      const phase4Start = performance.now();
+      tryoutResult = yield* syncTryouts(config, options);
+      log(`  Tryouts:            ${formatSyncResult(tryoutResult)}`);
+      log(`  Duration: ${formatDuration(performance.now() - phase4Start)}`);
+    }
 
     log("Phase 5: Materializing route artifact pages...");
     const phase5Start = performance.now();
@@ -332,36 +349,17 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   }
 
   const syncPlan = readIncrementalSyncPlan(changedFilesArray);
+  const ownership = yield* readContentSyncOwnership(config);
   const contentFilesWereDeleted = deletedFiles.size > 0;
 
-  let articleResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
-  let curriculumTopicResult: SyncResult = {
-    created: 0,
-    updated: 0,
-    unchanged: 0,
-  };
-  let curriculumLessonResult: SyncResult = {
-    created: 0,
-    updated: 0,
-    unchanged: 0,
-  };
-  let tryoutResult: SyncResult = {
-    created: 0,
-    updated: 0,
-    unchanged: 0,
-  };
-  let quranResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
-  let routePageResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
-  let publicRouteResult: SyncResult = {
-    created: 0,
-    updated: 0,
-    unchanged: 0,
-  };
-  let learningProgramResult: SyncResult = {
-    created: 0,
-    unchanged: 0,
-    updated: 0,
-  };
+  let articleResult = createSyncResult();
+  let curriculumTopicResult = createSyncResult();
+  let curriculumLessonResult = createSyncResult();
+  let tryoutResult = createSyncResult();
+  let quranResult = createSyncResult();
+  let routePageResult = createSyncResult();
+  let publicRouteResult = createSyncResult();
+  let learningProgramResult = createSyncResult();
 
   let routePageOptions = options;
   let routeArtifactTargets = syncPlan.routeArtifactTargets;
@@ -403,6 +401,11 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
       curriculumLessonResult = yield* syncCurriculumLessons(config, options);
       addPhaseMetrics(metrics, "Curriculum Topics", curriculumTopicResult);
       addPhaseMetrics(metrics, "Curriculum Lessons", curriculumLessonResult);
+      continue;
+    }
+
+    if (ownership.tryoutsManaged) {
+      log("Tryouts: signed Aksara ownership active");
       continue;
     }
 

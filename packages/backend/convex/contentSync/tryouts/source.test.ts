@@ -1,5 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import { requireFilesystemOwner } from "@repo/backend/convex/contentSync/tryouts/source";
+import {
+  loadTryoutSyncOwnership,
+  requireFilesystemOwner,
+} from "@repo/backend/convex/contentSync/tryouts/source";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -19,6 +22,9 @@ describe("contentSync/tryouts/source", () => {
     await expect(
       t.query((ctx) => runConvexProgram(requireFilesystemOwner(ctx)))
     ).resolves.toBeNull();
+    await expect(
+      t.query((ctx) => runConvexProgram(loadTryoutSyncOwnership(ctx)))
+    ).resolves.toEqual({ tryoutsManaged: false });
   });
 
   it("rejects every filesystem mutation after signed ownership activates", async () => {
@@ -88,5 +94,8 @@ describe("contentSync/tryouts/source", () => {
     await expect(
       t.query((ctx) => ctx.db.query("tryoutSets").first())
     ).resolves.toBeNull();
+    await expect(
+      t.query((ctx) => runConvexProgram(loadTryoutSyncOwnership(ctx)))
+    ).resolves.toEqual({ tryoutsManaged: true });
   });
 });

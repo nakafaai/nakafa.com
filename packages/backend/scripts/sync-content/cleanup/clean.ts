@@ -17,6 +17,7 @@ import {
   getStaleContent,
   getUnusedAuthors,
 } from "@repo/backend/scripts/sync-content/convex/inspection";
+import { readContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import type {
   DefaultFunctionArgs,
   FunctionArgs,
@@ -251,33 +252,42 @@ export const clean = Effect.fn("sync.clean")(function* (
     log("DRY RUN MODE (use --force to actually delete)\n");
   }
 
+  const ownership = yield* readContentSyncOwnership(config);
   log("Scanning filesystem...");
   const slugs = yield* collectFilesystemSlugs();
   log(`  Articles on disk: ${slugs.articleSlugs.length}`);
   log(`  Curriculum topics on disk: ${slugs.curriculumTopicSlugs.length}`);
   log(`  Curriculum lessons on disk: ${slugs.curriculumLessonSlugs.length}`);
-  log(`  Question sets on disk: ${slugs.questionSetSourcePaths.length}`);
-  log(`  Questions on disk: ${slugs.questionSourcePaths.length}`);
-  log(`  Try-out countries on disk: ${slugs.tryoutCountryKeys.length}`);
-  log(`  Try-out exams on disk: ${slugs.tryoutExamKeys.length}`);
-  log(`  Try-out tracks on disk: ${slugs.tryoutTrackKeys.length}`);
-  log(`  Try-out sets on disk: ${slugs.tryoutSetKeys.length}`);
-  log(`  Try-out sections on disk: ${slugs.tryoutSectionKeys.length}`);
+  if (ownership.tryoutsManaged) {
+    log("  Tryouts: signed Aksara ownership active");
+  } else {
+    log(`  Question sets on disk: ${slugs.questionSetSourcePaths.length}`);
+    log(`  Questions on disk: ${slugs.questionSourcePaths.length}`);
+    log(`  Try-out countries on disk: ${slugs.tryoutCountryKeys.length}`);
+    log(`  Try-out exams on disk: ${slugs.tryoutExamKeys.length}`);
+    log(`  Try-out tracks on disk: ${slugs.tryoutTrackKeys.length}`);
+    log(`  Try-out sets on disk: ${slugs.tryoutSetKeys.length}`);
+    log(`  Try-out sections on disk: ${slugs.tryoutSectionKeys.length}`);
+  }
 
   log("\nQuerying database for stale content...");
   const stale = yield* getStaleContent(config, slugs);
 
-  const totalStale =
+  let totalStale =
     stale.staleArticles.length +
     stale.staleCurriculumTopics.length +
-    stale.staleCurriculumLessons.length +
-    stale.staleQuestionSets.length +
-    stale.staleQuestions.length +
-    stale.staleTryoutCountries.length +
-    stale.staleTryoutExams.length +
-    stale.staleTryoutTracks.length +
-    stale.staleTryoutSets.length +
-    stale.staleTryoutSections.length;
+    stale.staleCurriculumLessons.length;
+
+  if (!ownership.tryoutsManaged) {
+    totalStale +=
+      stale.staleQuestionSets.length +
+      stale.staleQuestions.length +
+      stale.staleTryoutCountries.length +
+      stale.staleTryoutExams.length +
+      stale.staleTryoutTracks.length +
+      stale.staleTryoutSets.length +
+      stale.staleTryoutSections.length;
+  }
 
   let hasStale = false;
   let deleted = 0;
@@ -290,13 +300,15 @@ export const clean = Effect.fn("sync.clean")(function* (
     logStaleItems("Stale articles", stale.staleArticles);
     logStaleItems("\nStale curriculum topics", stale.staleCurriculumTopics);
     logStaleItems("\nStale curriculum lessons", stale.staleCurriculumLessons);
-    logStaleItems("\nStale question sets", stale.staleQuestionSets);
-    logStaleItems("\nStale questions", stale.staleQuestions);
-    logStaleItems("\nStale try-out countries", stale.staleTryoutCountries);
-    logStaleItems("\nStale try-out exams", stale.staleTryoutExams);
-    logStaleItems("\nStale try-out tracks", stale.staleTryoutTracks);
-    logStaleItems("\nStale try-out sets", stale.staleTryoutSets);
-    logStaleItems("\nStale try-out sections", stale.staleTryoutSections);
+    if (!ownership.tryoutsManaged) {
+      logStaleItems("\nStale question sets", stale.staleQuestionSets);
+      logStaleItems("\nStale questions", stale.staleQuestions);
+      logStaleItems("\nStale try-out countries", stale.staleTryoutCountries);
+      logStaleItems("\nStale try-out exams", stale.staleTryoutExams);
+      logStaleItems("\nStale try-out tracks", stale.staleTryoutTracks);
+      logStaleItems("\nStale try-out sets", stale.staleTryoutSets);
+      logStaleItems("\nStale try-out sections", stale.staleTryoutSections);
+    }
 
     if (options.force) {
       log("\nDeleting stale content...");
@@ -325,62 +337,64 @@ export const clean = Effect.fn("sync.clean")(function* (
         "stale curriculum lessons",
         BATCH_SIZES.staleCurriculumLessons
       );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleQuestions,
-        buildDeleteStaleQuestionArgs,
-        stale.staleQuestions,
-        "stale questions",
-        BATCH_SIZES.staleQuestions
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleTryoutSections,
-        buildDeleteStaleTryoutSectionArgs,
-        stale.staleTryoutSections,
-        "stale try-out sections",
-        BATCH_SIZES.staleTryoutSections
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleQuestionSets,
-        buildDeleteStaleQuestionSetArgs,
-        stale.staleQuestionSets,
-        "stale question sets",
-        BATCH_SIZES.staleQuestionSets
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleTryoutSets,
-        buildDeleteStaleTryoutSetArgs,
-        stale.staleTryoutSets,
-        "stale try-out sets",
-        BATCH_SIZES.staleTryoutSets
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleTryoutTracks,
-        buildDeleteStaleTryoutTrackArgs,
-        stale.staleTryoutTracks,
-        "stale try-out tracks",
-        BATCH_SIZES.staleTryoutTracks
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleTryoutExams,
-        buildDeleteStaleTryoutExamArgs,
-        stale.staleTryoutExams,
-        "stale try-out exams",
-        BATCH_SIZES.staleTryoutExams
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleTryoutCountries,
-        buildDeleteStaleTryoutCountryArgs,
-        stale.staleTryoutCountries,
-        "stale try-out countries",
-        BATCH_SIZES.staleTryoutCountries
-      );
+      if (!ownership.tryoutsManaged) {
+        deleted += yield* deleteStaleItems(
+          config,
+          internal.contentSync.mutations.tryouts.deleteStaleQuestions,
+          buildDeleteStaleQuestionArgs,
+          stale.staleQuestions,
+          "stale questions",
+          BATCH_SIZES.staleQuestions
+        );
+        deleted += yield* deleteStaleItems(
+          config,
+          internal.contentSync.mutations.tryouts.deleteStaleTryoutSections,
+          buildDeleteStaleTryoutSectionArgs,
+          stale.staleTryoutSections,
+          "stale try-out sections",
+          BATCH_SIZES.staleTryoutSections
+        );
+        deleted += yield* deleteStaleItems(
+          config,
+          internal.contentSync.mutations.tryouts.deleteStaleQuestionSets,
+          buildDeleteStaleQuestionSetArgs,
+          stale.staleQuestionSets,
+          "stale question sets",
+          BATCH_SIZES.staleQuestionSets
+        );
+        deleted += yield* deleteStaleItems(
+          config,
+          internal.contentSync.mutations.tryouts.deleteStaleTryoutSets,
+          buildDeleteStaleTryoutSetArgs,
+          stale.staleTryoutSets,
+          "stale try-out sets",
+          BATCH_SIZES.staleTryoutSets
+        );
+        deleted += yield* deleteStaleItems(
+          config,
+          internal.contentSync.mutations.tryouts.deleteStaleTryoutTracks,
+          buildDeleteStaleTryoutTrackArgs,
+          stale.staleTryoutTracks,
+          "stale try-out tracks",
+          BATCH_SIZES.staleTryoutTracks
+        );
+        deleted += yield* deleteStaleItems(
+          config,
+          internal.contentSync.mutations.tryouts.deleteStaleTryoutExams,
+          buildDeleteStaleTryoutExamArgs,
+          stale.staleTryoutExams,
+          "stale try-out exams",
+          BATCH_SIZES.staleTryoutExams
+        );
+        deleted += yield* deleteStaleItems(
+          config,
+          internal.contentSync.mutations.tryouts.deleteStaleTryoutCountries,
+          buildDeleteStaleTryoutCountryArgs,
+          stale.staleTryoutCountries,
+          "stale try-out countries",
+          BATCH_SIZES.staleTryoutCountries
+        );
+      }
     } else if (options.prod) {
       log("\nTo delete stale content, run:");
       log("  pnpm --filter @repo/backend sync:prod:clean --force");
