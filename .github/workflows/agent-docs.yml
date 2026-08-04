@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
+      AGENT_DOCS_RUN_IDENTITY: agent-docs-${{ github.run_id }}-${{ github.run_attempt }}
       CONTENT_RUNTIME_TOKEN: ci-agent-docs
       INTERNAL_CONTENT_API_KEY: ci-agent-docs
       NEXT_PUBLIC_APP_URL: http://localhost:3000
@@ -71,20 +72,20 @@ jobs:
       - name: Create isolated backend
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
-          deployment_reference="dev/agent-docs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          deployment_reference="nakafa:nakafa:dev/$AGENT_DOCS_RUN_IDENTITY"
           pnpm --dir packages/backend exec convex deployment create \
-            "nakafa:nakafa:${deployment_reference}" \
+            "$deployment_reference" \
             --type dev \
             --select \
             --expiration "in 1 day"
+          echo "AGENT_DOCS_DEPLOY_KEY_CLEANUP_ARMED=true" >> "$GITHUB_ENV"
 
       - name: Export isolated backend credentials
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
-          deploy_key_name="agent-docs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          deploy_key_file="$RUNNER_TEMP/agent-docs-convex.env"
+          deploy_key_file="$RUNNER_TEMP/$AGENT_DOCS_RUN_IDENTITY.env"
           pnpm --dir packages/backend exec convex deployment token create \
-            "$deploy_key_name" \
+            "$AGENT_DOCS_RUN_IDENTITY" \
             --save-env "$deploy_key_file"
 
           deploy_key="$(sed -n 's/^CONVEX_DEPLOY_KEY=//p' "$deploy_key_file")"
@@ -100,7 +101,6 @@ jobs:
             echo "CONVEX_DEPLOY_KEY=$deploy_key"
             echo "CONVEX_SITE_URL=$convex_site_url"
             echo "CONVEX_URL=$convex_url"
-            echo "AGENT_DOCS_DEPLOY_KEY_CREATED=true"
             echo "NEXT_PUBLIC_CONVEX_SITE_URL=$convex_site_url"
             echo "NEXT_PUBLIC_CONVEX_URL=$convex_url"
           } >> "$GITHUB_ENV"
@@ -186,17 +186,39 @@ jobs:
           fi
 
       - name: Revoke isolated backend credential
-        if: always() && env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_DEPLOY_KEY_CREATED == 'true'
+        if: always() && env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         env:
           CONVEX_ACCESS_TOKEN: ${{ secrets.AGENT_DOCS_CONVEX_ACCESS_TOKEN }}
           CONVEX_DEPLOY_KEY: <ignore_deploy_key>
         run: |
+          config_path="$HOME/.convex/config.json"
+          trap 'rm -f "$config_path"' EXIT
+
           install -d -m 700 "$HOME/.convex"
           jq -n --arg accessToken "$CONVEX_ACCESS_TOKEN" \
-            '{accessToken: $accessToken}' > "$HOME/.convex/config.json"
-          chmod 600 "$HOME/.convex/config.json"
+            '{accessToken: $accessToken}' > "$config_path"
+          chmod 600 "$config_path"
 
-          deploy_key_name="agent-docs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          pnpm --dir packages/backend exec convex deployment token delete \
-            "$deploy_key_name"
-          rm "$HOME/.convex/config.json"
+          if [ "${AGENT_DOCS_DEPLOY_KEY_CLEANUP_ARMED:-false}" != "true" ]; then
+            exit 0
+          fi
+
+          deployment_reference="nakafa:nakafa:dev/$AGENT_DOCS_RUN_IDENTITY"
+          if delete_output="$(
+            pnpm --dir packages/backend exec convex deployment token delete \
+              "$AGENT_DOCS_RUN_IDENTITY" \
+              --deployment "$deployment_reference" 2>&1
+          )"; then
+            printf '%s\n' "$delete_output"
+            exit 0
+          fi
+
+          case "$delete_output" in
+            *"DeployKeyNotFound: Deploy key not found"*)
+              printf 'No deploy key was created for %s.\n' "$AGENT_DOCS_RUN_IDENTITY"
+              ;;
+            *)
+              printf '%s\n' "$delete_output" >&2
+              exit 1
+              ;;
+          esac
