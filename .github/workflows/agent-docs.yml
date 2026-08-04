@@ -78,10 +78,6 @@ jobs:
             --select \
             --expiration "in 1 day"
 
-      - name: Deploy isolated backend
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        run: pnpm --dir packages/backend exec convex dev --once --typecheck enable --tail-logs disable
-
       - name: Export isolated backend credentials
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
@@ -106,6 +102,10 @@ jobs:
             echo "NEXT_PUBLIC_CONVEX_URL=$CONVEX_URL"
           } >> "$GITHUB_ENV"
           rm "$HOME/.convex/config.json"
+
+      - name: Deploy isolated backend
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        run: pnpm --dir packages/backend exec convex dev --once --typecheck enable --tail-logs disable
 
       - name: Sync real content
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
