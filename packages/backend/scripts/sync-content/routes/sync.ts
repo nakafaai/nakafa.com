@@ -19,6 +19,7 @@ import {
   callConvexMutation,
   callConvexQuery,
 } from "@repo/backend/scripts/sync-content/convex/client";
+import type { ContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import {
   type PublicRouteProjection,
   readPublicRouteProjection,
@@ -45,10 +46,11 @@ class PublicRouteShardOverflowError extends Schema.TaggedError<PublicRouteShardO
 /** Syncs only changed public route shards and skips stable projections. */
 export const syncPublicRoutes = Effect.fn("sync.publicRoutes")(function* (
   config: ConvexConfig,
-  options: SyncOptions
+  options: SyncOptions,
+  ownership: ContentSyncOwnership
 ) {
   const startTime = performance.now();
-  const projection = yield* readPublicRouteProjection();
+  const projection = yield* readPublicRouteProjection(ownership);
   const rootState = yield* callConvexQuery(
     config,
     internal.contentSync.publicRoutes.internal.getRootState,

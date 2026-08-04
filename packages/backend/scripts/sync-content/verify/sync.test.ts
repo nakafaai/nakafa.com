@@ -1,7 +1,10 @@
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/contract/types";
 import { verify } from "@repo/backend/scripts/sync-content/verify/sync";
 import { Effect } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const globFilesMock = vi.hoisted(() => vi.fn());
+const tryoutSourceLoadMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@repo/backend/scripts/sync-content/cli/logging", () => ({
   log: () => undefined,
@@ -58,8 +61,7 @@ vi.mock("@repo/backend/scripts/sync-content/convex/ownership", () => ({
 }));
 
 vi.mock("@repo/backend/scripts/sync-content/runtime/files", () => ({
-  globFiles: (pattern: string) =>
-    Effect.succeed(pattern === "articles/**/*.mdx" ? ["articles/id.mdx"] : []),
+  globFiles: globFilesMock,
 }));
 
 vi.mock("@repo/backend/scripts/sync-content/verify/graph", () => ({
@@ -74,17 +76,6 @@ vi.mock("@repo/backend/scripts/sync-content/verify/summary", () => ({
   logVerifySuccess: () => undefined,
 }));
 
-vi.mock("@repo/backend/scripts/sync-content/verify/tryouts", () => ({
-  getTryoutFileCounts: () => ({
-    activeAnswerFiles: 0,
-    activeChoicesFiles: 0,
-    activeQuestionFiles: 0,
-    localizedQuestionFiles: 100,
-    localizedQuestionSets: 10,
-    questionSourceDirectories: 50,
-  }),
-}));
-
 vi.mock("@repo/contents/_lib/quran", () => ({
   readQuranMetadata: () => Effect.succeed([{ numberOfVerses: 1 }]),
 }));
@@ -94,9 +85,11 @@ vi.mock("@repo/contents/_types/material/registry", () => ({
   listLessonRows: () => [],
 }));
 
-vi.mock("@repo/contents/_types/tryout/source", () => ({
-  TRYOUT_SOURCES: [],
-}));
+vi.mock("@repo/contents/_types/tryout/source", () => {
+  tryoutSourceLoadMock();
+
+  return { TRYOUT_SOURCES: [] };
+});
 
 const config: ConvexConfig = {
   accessToken: "test-token",
@@ -104,7 +97,22 @@ const config: ConvexConfig = {
 };
 
 describe("content verification", () => {
+  beforeEach(() => {
+    globFilesMock.mockReset();
+    globFilesMock.mockImplementation((pattern: string) =>
+      Effect.succeed(pattern === "articles/**/*.mdx" ? ["articles/id.mdx"] : [])
+    );
+    tryoutSourceLoadMock.mockClear();
+  });
+
   it("ignores obsolete filesystem tryout checks under signed ownership", async () => {
     await expect(Effect.runPromise(verify(config))).resolves.toBeUndefined();
+
+    expect(tryoutSourceLoadMock).not.toHaveBeenCalled();
+    expect(
+      globFilesMock.mock.calls.some(([pattern]) =>
+        String(pattern).includes("question-bank/tryout/")
+      )
+    ).toBe(false);
   });
 });

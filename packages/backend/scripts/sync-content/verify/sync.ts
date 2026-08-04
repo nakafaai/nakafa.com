@@ -24,9 +24,8 @@ import {
   listLessonMaterialSources,
   listLessonRows,
 } from "@repo/contents/_types/material/registry";
-import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { locales } from "@repo/utilities/locales";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /** Logs a bounded integrity sample and reports whether the verifier found issues. */
 const logIntegrityList = (
@@ -91,6 +90,36 @@ function getExpectedCurriculumCounts() {
   };
 }
 
+/** Loads filesystem tryout evidence only while the filesystem owns the scope. */
+const readTryoutVerificationSource = Effect.fn(
+  "sync.readTryoutVerificationSource"
+)(function* () {
+  const [
+    { TRYOUT_SOURCES: tryoutSources },
+    questionFiles,
+    answerFiles,
+    choicesFiles,
+  ] = yield* Effect.all([
+    Effect.promise(() => import("@repo/contents/_types/tryout/source")),
+    globFiles("question-bank/tryout/**/question.*.mdx"),
+    globFiles("question-bank/tryout/**/answer.*.mdx"),
+    globFiles("question-bank/tryout/**/choices.ts"),
+  ]);
+
+  return {
+    answerFiles,
+    choicesFiles,
+    fileCounts: getTryoutFileCounts({
+      answerFiles,
+      choicesFiles,
+      questionFiles,
+      tryoutSources,
+    }),
+    questionFiles,
+    sourceCount: tryoutSources.length,
+  };
+});
+
 /** Verifies filesystem content counts against Convex read models. */
 export const verify = Effect.fn("sync.verify")(function* (
   config: ConvexConfig,
@@ -99,30 +128,17 @@ export const verify = Effect.fn("sync.verify")(function* (
   log("=== VERIFY CONTENT ===\n");
   const ownership = yield* readContentSyncOwnership(config);
 
-  const [
-    articleFiles,
-    lessonFiles,
-    questionFiles,
-    answerFiles,
-    choicesFiles,
-    refFiles,
-  ] = yield* Effect.all([
+  const [articleFiles, lessonFiles, refFiles] = yield* Effect.all([
     globFiles("articles/**/*.mdx"),
     globFiles("material/lesson/**/*.mdx"),
-    globFiles("question-bank/tryout/**/question.*.mdx"),
-    globFiles("question-bank/tryout/**/answer.*.mdx"),
-    globFiles("question-bank/tryout/**/choices.ts"),
     globFiles("articles/**/ref.ts"),
   ]);
 
   const lessonSourceCount = listLessonMaterialSources().length;
-  const tryoutSourceCount = TRYOUT_SOURCES.length;
   const expectedCurriculumCounts = getExpectedCurriculumCounts();
-  const tryoutFileCounts = getTryoutFileCounts({
-    answerFiles,
-    choicesFiles,
-    questionFiles,
-  });
+  const tryoutSource = ownership.tryoutsManaged
+    ? Option.none()
+    : Option.some(yield* readTryoutVerificationSource());
 
   log("=== FILESYSTEM ===\n");
   log("Articles:");
@@ -146,27 +162,30 @@ export const verify = Effect.fn("sync.verify")(function* (
   }
 
   log("\nTry-Out Question Bank:");
-  if (ownership.tryoutsManaged) {
+  if (Option.isNone(tryoutSource)) {
     log("  Signed Aksara ownership active");
   } else {
-    log(`  Try-out sources:     ${tryoutSourceCount}`);
-    log(`  Question files:      ${questionFiles.length} (question.*.mdx)`);
+    const source = tryoutSource.value;
+    log(`  Try-out sources:     ${source.sourceCount}`);
+    log(
+      `  Question files:      ${source.questionFiles.length} (question.*.mdx)`
+    );
     for (const locale of locales) {
-      const count = questionFiles.filter((file) =>
+      const count = source.questionFiles.filter((file) =>
         file.endsWith(`.${locale}.mdx`)
       ).length;
       log(`    - ${locale}: ${count}`);
     }
-    log(`  Answer files:        ${answerFiles.length} (answer.*.mdx)`);
-    log(`  Choices files:       ${choicesFiles.length} (choices.ts)`);
+    log(`  Answer files:        ${source.answerFiles.length} (answer.*.mdx)`);
+    log(`  Choices files:       ${source.choicesFiles.length} (choices.ts)`);
     log(
-      `  Active question files: ${tryoutFileCounts.activeQuestionFiles}/${tryoutFileCounts.localizedQuestionFiles}`
+      `  Active question files: ${source.fileCounts.activeQuestionFiles}/${source.fileCounts.localizedQuestionFiles}`
     );
     log(
-      `  Active answer files:   ${tryoutFileCounts.activeAnswerFiles}/${tryoutFileCounts.localizedQuestionFiles}`
+      `  Active answer files:   ${source.fileCounts.activeAnswerFiles}/${source.fileCounts.localizedQuestionFiles}`
     );
     log(
-      `  Active choices files:  ${tryoutFileCounts.activeChoicesFiles}/${tryoutFileCounts.questionSourceDirectories}`
+      `  Active choices files:  ${source.fileCounts.activeChoicesFiles}/${source.fileCounts.questionSourceDirectories}`
     );
   }
 
@@ -237,7 +256,8 @@ export const verify = Effect.fn("sync.verify")(function* (
       label: "Curriculum Lessons",
     }) && allMatch;
 
-  if (!ownership.tryoutsManaged) {
+  if (Option.isSome(tryoutSource)) {
+    const tryoutFileCounts = tryoutSource.value.fileCounts;
     allMatch =
       logCountMatch({
         actual: tryoutFileCounts.activeQuestionFiles,
@@ -287,7 +307,7 @@ export const verify = Effect.fn("sync.verify")(function* (
     `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files x ${locales.length} locales)`
   );
 
-  if (!ownership.tryoutsManaged) {
+  if (Option.isSome(tryoutSource)) {
     const avgChoicesPerQuestion =
       counts.questions > 0 ? counts.questionChoices / counts.questions : 0;
     log(
@@ -297,9 +317,11 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`Content-Author links: ${counts.contentAuthors} in DB`);
 
   if (
-    !ownership.tryoutsManaged &&
-    tryoutFileCounts.activeAnswerFiles !== tryoutFileCounts.activeQuestionFiles
+    Option.isSome(tryoutSource) &&
+    tryoutSource.value.fileCounts.activeAnswerFiles !==
+      tryoutSource.value.fileCounts.activeQuestionFiles
   ) {
+    const tryoutFileCounts = tryoutSource.value.fileCounts;
     logError(
       `Active answer files (${tryoutFileCounts.activeAnswerFiles}) != active question files (${tryoutFileCounts.activeQuestionFiles})`
     );
@@ -316,7 +338,7 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   const integrity = integrityResult.right;
 
-  if (!ownership.tryoutsManaged) {
+  if (Option.isSome(tryoutSource)) {
     allMatch =
       !logIntegrityList(
         "orphan question-choice owner IDs",
@@ -342,7 +364,7 @@ export const verify = Effect.fn("sync.verify")(function* (
       integrity.sectionsWithoutTopics,
       `All ${integrity.totalSections} sections have topics`
     ) && allMatch;
-  if (!ownership.tryoutsManaged) {
+  if (Option.isSome(tryoutSource)) {
     allMatch =
       !logIntegrityList(
         "active tryouts without published scales",

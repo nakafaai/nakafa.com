@@ -4,6 +4,7 @@ import {
   PUBLIC_ROUTE_SYNC_VERSION,
 } from "@repo/backend/convex/contentSync/publicRoutes/spec";
 import { computeHash } from "@repo/backend/scripts/lib/mdx-parser/content";
+import type { ContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import { listPublicRoutes } from "@repo/contents/_types/route/projection";
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import type { FunctionArgs } from "convex/server";
@@ -38,8 +39,10 @@ class PublicRouteProjectionError extends Schema.TaggedError<PublicRouteProjectio
 /** Builds deterministic route shards and hashes from the source projection. */
 export const readPublicRouteProjection = Effect.fn(
   "sync.readPublicRouteProjection"
-)(function* () {
-  const sourceRoutes = yield* listPublicRoutes();
+)(function* (ownership: ContentSyncOwnership) {
+  const sourceRoutes = yield* listPublicRoutes(
+    ownership.tryoutsManaged ? { tryouts: [] } : {}
+  );
 
   return yield* buildPublicRouteProjection(sourceRoutes);
 });

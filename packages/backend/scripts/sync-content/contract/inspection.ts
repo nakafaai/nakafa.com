@@ -215,10 +215,13 @@ const PaginationPageSchema = Schema.Struct({
   isDone: Schema.Boolean,
 });
 
-export const StaleContentSchema = Schema.Struct({
+export const StaleArticleCurriculumContentSchema = Schema.Struct({
   staleArticles: Schema.Array(StaleArticleSchema),
   staleCurriculumTopics: Schema.Array(StaleCurriculumTopicSchema),
   staleCurriculumLessons: Schema.Array(StaleCurriculumLessonSchema),
+});
+
+export const StaleTryoutContentSchema = Schema.Struct({
   staleQuestionSets: Schema.Array(StaleQuestionSetSchema),
   staleQuestions: Schema.Array(StaleQuestionSchema),
   staleTryoutCountries: Schema.Array(StaleTryoutCountrySchema),

@@ -1,6 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
-import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import { clean } from "@repo/backend/scripts/sync-content/cleanup/clean";
 import {
   formatDuration,
@@ -53,6 +52,7 @@ import {
   finalizeMetrics,
   startPhase,
 } from "@repo/backend/scripts/sync-content/workflow/metrics";
+import { validateIncrementalSyncOptions } from "@repo/backend/scripts/sync-content/workflow/options";
 import { readIncrementalSyncPlan } from "@repo/backend/scripts/sync-content/workflow/plan";
 import { logSyncSummary } from "@repo/backend/scripts/sync-content/workflow/summary";
 import { Effect } from "effect";
@@ -62,20 +62,6 @@ const createSyncResult = (): SyncResult => ({
   created: 0,
   unchanged: 0,
   updated: 0,
-});
-
-/** Rejects locale scoping that could advance shared incremental sync state incompletely. */
-export const validateIncrementalSyncOptions = Effect.fn(
-  "sync.validateIncrementalOptions"
-)(function* (options: SyncOptions) {
-  if (!options.locale) {
-    return;
-  }
-
-  return yield* new ScriptFailureError({
-    message:
-      "Incremental sync does not support --locale because sync state is shared across locales",
-  });
 });
 
 /** Runs the complete content sync in dependency-safe phases. */
@@ -95,7 +81,11 @@ export const syncAll = Effect.fn("sync.all")(function* (
   }
 
   log("Phase 0: Pre-syncing authors...");
-  const authorResult = yield* syncAuthors(config, { ...options, quiet: true });
+  const authorResult = yield* syncAuthors(
+    config,
+    { ...options, quiet: true },
+    ownership
+  );
   log(
     `  Authors: ${authorResult.created} new, ${authorResult.existing} existing`
   );
@@ -167,7 +157,7 @@ export const syncAll = Effect.fn("sync.all")(function* (
     );
 
     const publicRoutePhase = startPhase(metrics, "Public Routes");
-    publicRouteResult = yield* syncPublicRoutes(config, options);
+    publicRouteResult = yield* syncPublicRoutes(config, options, ownership);
     endPhase(
       publicRoutePhase,
       publicRouteResult.created +
@@ -229,7 +219,7 @@ export const syncAll = Effect.fn("sync.all")(function* (
 
     log("Phase 6: Syncing learning programs and coverage...");
     const phase6Start = performance.now();
-    publicRouteResult = yield* syncPublicRoutes(config, options);
+    publicRouteResult = yield* syncPublicRoutes(config, options, ownership);
     log(`  Public Routes:    ${formatSyncResult(publicRouteResult)}`);
     learningProgramResult = yield* syncLearningPrograms(config, options);
     log(`  Learning Programs:   ${formatSyncResult(learningProgramResult)}`);
@@ -317,8 +307,11 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
 
   log(`Changed files: ${changedFiles.size}\n`);
   const changedFilesArray = [...changedFiles];
-  const changedAuthorNames =
-    yield* collectAuthorNamesFromFiles(changedFilesArray);
+  const ownership = yield* readContentSyncOwnership(config);
+  const changedAuthorNames = yield* collectAuthorNamesFromFiles(
+    changedFilesArray,
+    ownership
+  );
 
   if (changedAuthorNames.length > 0) {
     log("Phase 0: Pre-syncing authors from changed files...");
@@ -349,7 +342,6 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   }
 
   const syncPlan = readIncrementalSyncPlan(changedFilesArray);
-  const ownership = yield* readContentSyncOwnership(config);
   const contentFilesWereDeleted = deletedFiles.size > 0;
 
   let articleResult = createSyncResult();
@@ -443,7 +435,11 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   }
 
   if (syncPlan.refreshPublicRoutes) {
-    publicRouteResult = yield* syncPublicRoutes(config, routePageOptions);
+    publicRouteResult = yield* syncPublicRoutes(
+      config,
+      routePageOptions,
+      ownership
+    );
     addPhaseMetrics(metrics, "Public Routes", publicRouteResult);
     learningProgramResult = yield* syncLearningPrograms(
       config,

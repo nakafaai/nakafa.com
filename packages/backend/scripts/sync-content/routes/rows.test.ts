@@ -41,7 +41,9 @@ function isOwnedMaterialContextRoute(
 
 describe("sync-content/routes/rows", () => {
   it("serializes explicit material-context ownership into Convex shards", async () => {
-    const projection = await Effect.runPromise(readPublicRouteProjection());
+    const projection = await Effect.runPromise(
+      readPublicRouteProjection({ tryoutsManaged: false })
+    );
     const route = projection.shards
       .flatMap((shard) => shard.routes)
       .find(
@@ -57,6 +59,18 @@ describe("sync-content/routes/rows", () => {
       materialContextPublicPath:
         "kurikulum/merdeka/kelas-10/matematika/sistem-persamaan-dan-pertidaksamaan-linear",
     });
+  });
+
+  it("omits filesystem tryout routes after signed ownership activates", async () => {
+    const projection = await Effect.runPromise(
+      readPublicRouteProjection({ tryoutsManaged: true })
+    );
+
+    expect(
+      projection.shards
+        .flatMap((shard) => shard.routes)
+        .some((route) => route.kind.startsWith("tryout-"))
+    ).toBe(false);
   });
 
   it("rejects duplicate exact material-context identities before sync", async () => {

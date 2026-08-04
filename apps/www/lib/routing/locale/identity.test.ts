@@ -44,8 +44,8 @@ describe("isSamePublicRouteIdentity", () => {
     expect(isSamePublicRouteIdentity(country, exam)).toBe(false);
   });
 
-  it("matches curriculum and authored content through their stable keys", () => {
-    const routes = Effect.runSync(listPublicRoutes());
+  it("matches curriculum and authored content through their stable keys", async () => {
+    const routes = await Effect.runPromise(listPublicRoutes());
     const curriculum = routes.find(
       (candidate) => candidate.kind === "curriculum-context"
     );

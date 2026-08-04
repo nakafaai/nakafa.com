@@ -6,24 +6,30 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const callConvexMutationMock = vi.hoisted(() => vi.fn());
-const getStaleContentMock = vi.hoisted(() => vi.fn());
+const collectFilesystemTryoutSlugsMock = vi.hoisted(() => vi.fn());
+const getStaleArticleCurriculumContentMock = vi.hoisted(() => vi.fn());
+const getStaleTryoutContentMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@repo/backend/scripts/sync-content/cleanup/source", () => ({
-  collectFilesystemSlugs: () =>
+  collectFilesystemArticleCurriculumSlugs: () =>
     Effect.succeed({
       articleSlugs: [],
       curriculumLessonSlugs: [],
       curriculumTopicSlugs: [],
-      questionSetSourcePaths: [],
-      questionSourceKeys: [],
-      questionSourcePaths: [],
-      tryoutCountryKeys: [],
-      tryoutExamKeys: [],
-      tryoutSectionKeys: [],
-      tryoutSetKeys: [],
-      tryoutTrackKeys: [],
     }),
+  collectFilesystemTryoutSlugs: collectFilesystemTryoutSlugsMock,
 }));
+
+const emptyFilesystemTryoutSlugs = {
+  questionSetSourcePaths: [],
+  questionSourceKeys: [],
+  questionSourcePaths: [],
+  tryoutCountryKeys: [],
+  tryoutExamKeys: [],
+  tryoutSectionKeys: [],
+  tryoutSetKeys: [],
+  tryoutTrackKeys: [],
+};
 
 vi.mock("@repo/backend/scripts/sync-content/cli/logging", () => ({
   log: () => undefined,
@@ -36,7 +42,8 @@ vi.mock("@repo/backend/scripts/sync-content/convex/client", () => ({
 }));
 
 vi.mock("@repo/backend/scripts/sync-content/convex/inspection", () => ({
-  getStaleContent: getStaleContentMock,
+  getStaleArticleCurriculumContent: getStaleArticleCurriculumContentMock,
+  getStaleTryoutContent: getStaleTryoutContentMock,
   getUnusedAuthors: () => Effect.succeed({ unusedAuthors: [] }),
 }));
 
@@ -58,12 +65,21 @@ const staleItem = {
 beforeEach(() => {
   callConvexMutationMock.mockReset();
   callConvexMutationMock.mockReturnValue(Effect.succeed({ deleted: 1 }));
-  getStaleContentMock.mockReset();
-  getStaleContentMock.mockReturnValue(
+  collectFilesystemTryoutSlugsMock.mockReset();
+  collectFilesystemTryoutSlugsMock.mockReturnValue(
+    Effect.succeed(emptyFilesystemTryoutSlugs)
+  );
+  getStaleArticleCurriculumContentMock.mockReset();
+  getStaleArticleCurriculumContentMock.mockReturnValue(
     Effect.succeed({
       staleArticles: [staleItem],
       staleCurriculumLessons: [],
       staleCurriculumTopics: [],
+    })
+  );
+  getStaleTryoutContentMock.mockReset();
+  getStaleTryoutContentMock.mockReturnValue(
+    Effect.succeed({
       staleQuestions: [staleItem],
       staleQuestionSets: [staleItem],
       staleTryoutCountries: [staleItem],
@@ -82,6 +98,8 @@ describe("content cleanup", () => {
     ).resolves.toEqual({ deleted: 1, hasStale: true });
 
     expect(callConvexMutationMock).toHaveBeenCalledTimes(1);
+    expect(collectFilesystemTryoutSlugsMock).not.toHaveBeenCalled();
+    expect(getStaleTryoutContentMock).not.toHaveBeenCalled();
     expect(getFunctionName(callConvexMutationMock.mock.calls[0]?.[1])).toBe(
       getFunctionName(
         internal.contentSync.mutations.articles.deleteStaleArticles

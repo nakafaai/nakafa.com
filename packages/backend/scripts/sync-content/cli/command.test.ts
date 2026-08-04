@@ -25,6 +25,7 @@ const syncResult: SyncResult = {
 interface CliTestOptions {
   cleanDeleted?: number;
   learningProgramFails?: boolean;
+  tryoutsManaged?: boolean;
 }
 
 /** Loads the CLI with mocked sync dependencies and records command ordering. */
@@ -65,6 +66,10 @@ const loadCli = async (options: CliTestOptions = {}) => {
       events.push("getConvexConfig");
       return Effect.succeed(config);
     },
+  }));
+  vi.doMock("@repo/backend/scripts/sync-content/convex/ownership", () => ({
+    readContentSyncOwnership: () =>
+      Effect.succeed({ tryoutsManaged: options.tryoutsManaged ?? false }),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/content/tryouts", () => ({
     syncTryouts: recordSync("syncTryouts"),
@@ -146,6 +151,8 @@ const loadCli = async (options: CliTestOptions = {}) => {
   vi.doMock("@repo/backend/scripts/sync-content/workflow/run", () => ({
     syncAll: recordSync("syncAll"),
     syncIncremental: recordSync("syncIncremental"),
+  }));
+  vi.doMock("@repo/backend/scripts/sync-content/workflow/options", () => ({
     /** Mirrors the workflow boundary so parser tests exercise its shared validation call. */
     validateIncrementalSyncOptions: (syncOptions: SyncOptions) => {
       if (!syncOptions.locale) {
@@ -307,6 +314,20 @@ describe("sync-content cli", () => {
       "invalidateContentRuntimeCache",
     ]);
     expect(invalidatedOptions).toEqual([options]);
+  });
+
+  it("does not read filesystem tryouts after signed ownership activates", async () => {
+    const { cli, events } = await loadCli({ tryoutsManaged: true });
+
+    await Effect.runPromise(cli.runCommand("tryouts", { locale: "id" }));
+
+    expect(events).toEqual([
+      "getConvexConfig",
+      "syncContentRouteArtifactPages",
+      "syncPublicRoutes",
+      "syncLearningPrograms",
+      "invalidateContentRuntimeCache",
+    ]);
   });
 
   it.each([

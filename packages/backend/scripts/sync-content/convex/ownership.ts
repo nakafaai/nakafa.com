@@ -6,6 +6,9 @@ import { Effect, Schema } from "effect";
 const ContentSyncOwnershipSchema = Schema.Struct({
   tryoutsManaged: Schema.Boolean,
 });
+export type ContentSyncOwnership = Schema.Schema.Type<
+  typeof ContentSyncOwnershipSchema
+>;
 
 /** Reads the signed publication ownership that governs legacy sync phases. */
 export const readContentSyncOwnership = Effect.fn(
