@@ -15,6 +15,7 @@ Briefly describe your changes and what they accomplish.
 
 - Tests pass: `pnpm test`
 - No new lint errors: `pnpm lint`
+- Dependency audit passes: `pnpm security:audit`
 - Relevant workspace type checks pass, for example `pnpm --filter www typecheck`
 - Manual testing (desktop/mobile)
 - Contribution terms reviewed: `LICENSE`, `CONTENT_LICENSE.md`, and `TRADEMARKS.md`

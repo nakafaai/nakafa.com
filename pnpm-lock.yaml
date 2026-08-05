@@ -557,7 +557,7 @@ importers:
         specifier: 'catalog:'
         version: 3.22.1
       posthog-js:
-        specifier: ^1.411.0
+        specifier: 1.411.0
         version: 1.411.0
       posthog-node:
         specifier: ^5.47.10
