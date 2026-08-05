@@ -6,6 +6,7 @@ import {
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { readQuranChunks } from "@repo/backend/convex/contentRelease/quran/chunks";
+import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
 import { validateQuranReference } from "@repo/backend/convex/contentRelease/quran/input";
 import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
@@ -63,7 +64,7 @@ export const readQuranReference = Effect.fn(
   const search = yield* readQuranRow(
     ctx,
     owner.snapshotId,
-    `search:${request.locale}:${input.surahNumber}`,
+    quranSearchIdentity(request.locale, input.surahNumber),
     QuranSearchRowSchema
   );
   return {

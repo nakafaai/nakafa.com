@@ -5,6 +5,7 @@ import {
   readTryoutSitemapCount,
   readTryoutSitemapPage,
 } from "@repo/backend/convex/contentRelease/tryout/sitemap";
+import { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/tryout/taxonomy";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 
@@ -25,6 +26,17 @@ const tryoutSitemapPageValidator = v.union(
   v.object({ paths: v.array(v.string()) }),
   v.null()
 );
+
+const taxonomyOptionValidator = v.object({
+  id: v.string(),
+  label: v.string(),
+});
+
+const tryoutTaxonomyValidator = v.object({
+  countries: v.array(taxonomyOptionValidator),
+  exams: v.array(taxonomyOptionValidator),
+  routeCount: v.number(),
+});
 
 /** Returns the verified active try-out hierarchy for one locale. */
 export const catalog = query({
@@ -51,4 +63,12 @@ export const sitemapPage = query({
   returns: tryoutSitemapPageValidator,
   handler: (ctx, { locale, page }) =>
     runConvexProgram(readTryoutSitemapPage(ctx, locale, page)),
+});
+
+/** Returns signed localized Tryout options and their public route count. */
+export const taxonomy = query({
+  args: { locale: localeValidator },
+  returns: tryoutTaxonomyValidator,
+  handler: (ctx, { locale }) =>
+    runConvexProgram(readTryoutTaxonomy(ctx, locale)),
 });

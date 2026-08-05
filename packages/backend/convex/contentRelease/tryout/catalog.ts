@@ -7,9 +7,9 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { loadVerifiedSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
-import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
+import { findTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /** Counts each hierarchy kind in one verified localized catalog. */
 function countCatalog(rows: readonly TryoutCatalogRow[]) {
@@ -62,18 +62,38 @@ function hasExpectedCounts(
   );
 }
 
-/** Loads the complete verified hierarchy for one active try-out locale. */
-export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
+/** Finds the complete verified hierarchy when signed try-out is active. */
+export const findTryoutCatalog = Effect.fn("contentRelease.findTryoutCatalog")(
   function* (ctx: QueryCtx, locale: ContentLocale) {
-    const owner = yield* loadTryoutOwner(ctx);
-    const { active, snapshot, snapshotId } = owner;
-    return yield* loadStoredTryoutCatalog(ctx, locale, {
+    const owner = yield* findTryoutOwner(ctx);
+    if (Option.isNone(owner)) {
+      return Option.none();
+    }
+
+    const { active, snapshot, snapshotId } = owner.value;
+    const catalog = yield* loadStoredTryoutCatalog(ctx, locale, {
       activeManifestHash: active.manifestHash,
       activeReleaseId: active.releaseId,
       snapshot,
       snapshotId,
       sourceRevision: readSourceRevision(active),
     });
+    return Option.some(catalog);
+  }
+);
+
+/** Loads the complete verified hierarchy for one active try-out locale. */
+export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
+  function* (ctx: QueryCtx, locale: ContentLocale) {
+    const catalog = yield* findTryoutCatalog(ctx, locale);
+    if (Option.isSome(catalog)) {
+      return catalog.value;
+    }
+
+    return yield* releaseFail(
+      "CONTENT_RELEASE_MISSING",
+      "The active signed try-out snapshot is unavailable."
+    );
   }
 );
 
@@ -147,6 +167,7 @@ const loadStoredTryoutCatalog = Effect.fn(
   const entries = yield* Effect.forEach(stored, (storedRow) =>
     verifyTryoutCatalog(storedRow, selection.snapshotId).pipe(
       Effect.map((row) => ({
+        index: storedRow.index,
         row,
         rowHash: storedRow.rowHash,
         rowJson: storedRow.rowJson,

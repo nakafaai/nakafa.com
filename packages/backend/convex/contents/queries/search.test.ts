@@ -1,10 +1,17 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { makeQuranSearch } from "@repo/backend/test/quran-rows";
+import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
 import {
   getPublicSearchPath,
   insertContentSearch,
   searchContentId,
 } from "@repo/backend/test/search";
+import {
+  activateTryoutSnapshot,
+  makeTryoutCatalogRow,
+  makeTryoutPlacementRow,
+} from "@repo/backend/test/tryout-snapshot";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import { describe, expect, it } from "vitest";
 
@@ -170,6 +177,114 @@ describe("contents/queries/search:search", () => {
     expect(result.items.map((item) => item.title)).toEqual([
       "Hukum Kekekalan Massa",
       "Stoikiometri",
+    ]);
+  });
+
+  it("never falls back to obsolete Quran or Tryout source rows", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const tryout = makeTryoutCatalogRow("en").record.row;
+    const tryoutPublicPath = tryout.publicPath;
+    if (tryoutPublicPath === undefined) {
+      expect.fail("Expected one public technical Tryout row.");
+    }
+
+    await t.mutation(async (ctx) => {
+      await insertContentSearch(ctx, {
+        contentHash: "legacy-quran",
+        description: "Obsolete Quran source row.",
+        locale: "en",
+        route: "quran/1",
+        section: "quran",
+        syncedAt: 1,
+        text: "legacy signed cutover",
+        title: "Legacy Quran",
+      });
+      await insertContentSearch(ctx, {
+        contentHash: "legacy-tryout",
+        description: "Obsolete Tryout source row.",
+        graph: tryout.graph,
+        locale: "en",
+        route: tryoutPublicPath,
+        section: "tryout",
+        syncedAt: 1,
+        text: "legacy signed cutover",
+        title: "Legacy Tryout",
+      });
+    });
+
+    const quran = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "en",
+      offset: 0,
+      queries: ["legacy signed cutover"],
+      section: "quran",
+    });
+    const tryoutResult = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "en",
+      offset: 0,
+      queries: ["legacy signed cutover"],
+      section: "tryout",
+    });
+
+    expect(quran.items).toEqual([]);
+    expect(tryoutResult.items).toEqual([]);
+  });
+
+  it("returns signed Quran rows through the unified search query", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranSearch("en", 1, "signed mercy guidance"),
+      ])
+    );
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "en",
+      offset: 0,
+      queries: ["signed mercy"],
+      section: "quran",
+    });
+
+    expect(result.items).toMatchObject([
+      {
+        content_id: "asset:en:quran:quran-surah:1",
+        route: "quran/1",
+        section: "quran",
+      },
+    ]);
+  });
+
+  it("returns signed Tryout rows through the unified search query", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation((ctx) =>
+      activateTryoutSnapshot(ctx, {
+        catalog: [
+          makeTryoutCatalogRow("en").record.row,
+          makeTryoutCatalogRow("id").record.row,
+        ],
+        placements: [
+          makeTryoutPlacementRow("en").record.row,
+          makeTryoutPlacementRow("id").record.row,
+        ],
+      })
+    );
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "en",
+      offset: 0,
+      queries: ["Technical country"],
+      section: "tryout",
+    });
+
+    expect(result.items).toMatchObject([
+      {
+        content_id: "asset:en:tryout:technical:country",
+        route: "try-out/indonesia",
+        section: "tryout",
+      },
     ]);
   });
 

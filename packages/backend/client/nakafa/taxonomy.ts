@@ -11,6 +11,7 @@ import {
   NAKAFA_MCP_INFORMATIONAL_ROOT,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
+import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import {
   ARTICLE_CATEGORIES,
   BACHELOR_MATERIALS,
@@ -20,27 +21,30 @@ import {
   SUBJECT_CATEGORIES,
 } from "@repo/contents/_types/taxonomy";
 import { defaultLocale, type Locale, locales } from "@repo/utilities/locales";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
-/** Reads public taxonomy from pure constants and Convex runtime counts. */
+/** Reads public taxonomy from constants and active signed publications. */
 export function readNakafaTaxonomy(
   convexUrl: string,
   locale: Locale = defaultLocale
 ) {
   return Effect.gen(function* () {
-    const [contentCounts, quranResult, tryout] = yield* Effect.all([
-      getContentCounts(convexUrl),
+    const [signedInventory, quranResult] = yield* Effect.all([
+      readSignedInventory(convexUrl, locale),
       fetchNakafaRuntimeQuery(
         convexUrl,
         "contentRelease.quran.surahs",
         api.contentRelease.quran.surahs,
         {}
       ),
-      readTryoutTaxonomy(convexUrl, locale),
     ]);
     const quran = yield* decodePublishedQuranCatalog(quranResult).pipe(
       Effect.mapError(toNakafaQuranDataReadError)
     );
+    const contentCounts = signedInventory.contentCounts.map((item) => ({
+      ...item,
+      count: item.count + quran.surahs.length,
+    }));
 
     return yield* decodeNakafaTaxonomy({
       articles: {
@@ -53,7 +57,7 @@ export function readNakafaTaxonomy(
         recommended: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
         root_note: `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only.`,
       },
-      tryout,
+      tryout: signedInventory.tryout,
       locale,
       locales,
       quran: {
@@ -75,68 +79,79 @@ export function readNakafaTaxonomy(
   });
 }
 
-/** Reads country and exam labels from the active signed try-out catalog. */
-const readTryoutTaxonomy = Effect.fn("nakafa.taxonomy.readTryout")(function* (
-  convexUrl: string,
-  locale: Locale
-) {
-  const hub = yield* fetchNakafaRuntimeQuery(
-    convexUrl,
-    "getTryoutHubPage",
-    api.tryouts.queries.catalog.getHubPage,
-    { locale }
-  );
-  const countryPages = yield* Effect.forEach(
-    hub.countries,
-    (country) =>
-      fetchNakafaRuntimeQuery(
-        convexUrl,
-        "getTryoutCountryPage",
-        api.tryouts.queries.catalog.getCountryPage,
-        { locale, publicPath: country.publicPath }
-      ),
-    { concurrency: Math.max(1, hub.countries.length) }
-  );
-  const examOptions = new Map<string, string>();
+/** Reads every locale's search inventory from active signed publications. */
+const readSignedInventory = Effect.fn("nakafa.taxonomy.readSignedInventory")(
+  function* (convexUrl: string, selectedLocale: Locale) {
+    const inventories = yield* Effect.forEach(
+      locales,
+      (locale) => readLocaleSignedInventory(convexUrl, locale),
+      { concurrency: locales.length }
+    );
+    const selected = Option.fromNullable(
+      inventories.find(({ locale }) => locale === selectedLocale)
+    );
+    if (Option.isNone(selected)) {
+      return yield* new NakafaAgentDataReadError({
+        cause: `Unsupported taxonomy locale ${selectedLocale}.`,
+        message: "Unable to read signed Nakafa content inventory.",
+      });
+    }
 
-  for (const page of countryPages) {
-    if (!page) {
-      continue;
-    }
-    for (const exam of page.exams) {
-      examOptions.set(exam.examKey, exam.title);
-    }
+    return {
+      contentCounts: inventories.map(({ count, locale }) => ({
+        count,
+        locale,
+      })),
+      tryout: selected.value.tryout,
+    };
+  }
+);
+
+/** Reads one locale's article, material, and Tryout signed counts. */
+const readLocaleSignedInventory = Effect.fn(
+  "nakafa.taxonomy.readLocaleSignedInventory"
+)(function* (convexUrl: string, locale: Locale) {
+  const [articles, materials, tryout] = yield* Effect.all([
+    fetchNakafaRuntimeQuery(
+      convexUrl,
+      "readArticleSitemapBuckets",
+      api.contentRelease.article.sitemapBuckets,
+      { locale }
+    ),
+    fetchNakafaRuntimeQuery(
+      convexUrl,
+      "readMaterialSitemapBuckets",
+      api.contentRelease.material.sitemapBuckets,
+      { locale }
+    ),
+    fetchNakafaRuntimeQuery(
+      convexUrl,
+      "readTryoutTaxonomy",
+      api.contentRelease.tryout.taxonomy,
+      { locale }
+    ),
+  ]);
+  if (!articles.managed) {
+    return yield* missingSignedInventory("article", locale);
+  }
+  if (!materials.managed) {
+    return yield* missingSignedInventory("material", locale);
   }
 
   return {
-    countries: hub.countries.map((country) => ({
-      id: country.countryKey,
-      label: country.title,
-    })),
-    exams: Array.from(examOptions, ([id, label]) => ({ id, label })),
+    count: articles.articleCount + materials.materialCount + tryout.routeCount,
+    locale,
+    tryout: {
+      countries: tryout.countries,
+      exams: tryout.exams,
+    },
   };
 });
 
-/** Reads materialized synced content route counts per locale. */
-function getContentCounts(convexUrl: string) {
-  return Effect.forEach(
-    locales,
-    (locale) => readLocaleContentCount(convexUrl, locale),
-    { concurrency: locales.length }
-  );
-}
-
-/** Reads one locale's materialized route-count rows and sums them. */
-function readLocaleContentCount(convexUrl: string, locale: Locale) {
-  return fetchNakafaRuntimeQuery(
-    convexUrl,
-    "listContentRouteCounts",
-    api.contents.queries.runtime.listContentRouteCounts,
-    { locale }
-  ).pipe(
-    Effect.map((counts) => ({
-      count: counts.reduce((total, row) => total + row.count, 0),
-      locale,
-    }))
-  );
+/** Fails closed when one activated signed search family is unavailable. */
+function missingSignedInventory(family: string, locale: Locale) {
+  return new NakafaAgentDataReadError({
+    cause: `Signed ${family} inventory is unmanaged for ${locale}.`,
+    message: "Unable to read signed Nakafa content inventory.",
+  });
 }
