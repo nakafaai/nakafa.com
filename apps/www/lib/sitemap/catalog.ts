@@ -68,7 +68,7 @@ export const readSitemapPageDescriptors = Effect.fn(
       if (count.section === "material") {
         continue;
       }
-      if (count.section === "tryout" && tryoutCount.managed) {
+      if (count.section === "tryout") {
         continue;
       }
       const pageCount = Math.ceil(

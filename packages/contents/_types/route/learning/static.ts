@@ -9,7 +9,6 @@ import {
   type PublicLearningIndex,
 } from "@repo/contents/_types/route/learning/public";
 import { listPublicRoutes } from "@repo/contents/_types/route/projection";
-import { readStaticPublicTryoutRoutes } from "@repo/contents/_types/route/tryout/static";
 import { Effect } from "effect";
 
 let staticPublicLearningIndex: PublicLearningIndex | undefined;
@@ -28,10 +27,9 @@ export function readStaticPublicLearningIndex() {
 
   const contentRoutes = readStaticPublicContentRoutes();
   const curriculumRoutes = readStaticPublicCurriculumRoutes();
-  const tryoutRoutes = readStaticPublicTryoutRoutes();
 
   staticPublicLearningIndex = createPublicLearningIndex({
-    routes: [...contentRoutes, ...curriculumRoutes, ...tryoutRoutes],
+    routes: [...contentRoutes, ...curriculumRoutes],
   });
 
   return staticPublicLearningIndex;

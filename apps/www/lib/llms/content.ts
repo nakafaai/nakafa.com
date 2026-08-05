@@ -26,6 +26,12 @@ const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
   )
 );
 
+const TRYOUT_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
+  PUBLIC_ROUTE_SURFACES.flatMap((surface) =>
+    surface.key === "tryout" ? Object.values(surface.routeSlugs) : []
+  )
+);
+
 type MarkdownSource =
   | {
       readonly activeReleaseId: ActiveContentReleaseId;
@@ -135,6 +141,10 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
       if (publishedFamily === "material" || segmentCount >= 3) {
         return null;
       }
+    }
+
+    if (TRYOUT_ROUTE_SEGMENTS.has(routeSegment)) {
+      return null;
     }
 
     if (!PROJECTED_PUBLIC_ROUTE_SEGMENTS.has(routeSegment)) {

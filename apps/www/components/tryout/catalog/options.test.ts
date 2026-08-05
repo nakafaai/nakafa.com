@@ -1,3 +1,4 @@
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { describe, expect, it } from "vitest";
 import {
   buildTryoutCountryOptions,
@@ -13,7 +14,7 @@ describe("try-out catalog options", () => {
           countryKey: "germany",
           description: "German exams",
           examCount: 1,
-          publicPath: "try-out/germany",
+          publicPath: PublicPathSchema.make("try-out/germany"),
           title: "Germany",
         },
       ])
@@ -35,7 +36,7 @@ describe("try-out catalog options", () => {
         {
           description: "Ujian baru",
           examKey: "ujian-baru",
-          publicPath: "try-out/indonesia/ujian-baru",
+          publicPath: PublicPathSchema.make("try-out/indonesia/ujian-baru"),
           scoringStrategy: "irt",
           title: "Ujian Baru",
         },

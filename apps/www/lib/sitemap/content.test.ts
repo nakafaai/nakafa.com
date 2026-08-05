@@ -70,7 +70,7 @@ describe("sitemap content routes", () => {
 
   it("uses sync dates for undated content and leaves Quran undated", () => {
     const undated = {
-      ...routeRow("try-out/indonesia/snbt/2027/set-1", "tryout", 50),
+      ...routeRow("articles/politics/article", "articles", 50),
       date: undefined,
     };
     const quran = routeRow("quran/1", "quran", 40);
@@ -78,11 +78,11 @@ describe("sitemap content routes", () => {
     expect(
       Effect.runSync(buildSitemapContentPageRoutes([undated, quran]))
     ).toEqual([
-      { lastModified: undefined, path: "/quran/1" },
       {
         lastModified: 50,
-        path: "/try-out/indonesia/snbt/2027/set-1",
+        path: "/articles/politics/article",
       },
+      { lastModified: undefined, path: "/quran/1" },
     ]);
   });
 });
@@ -95,7 +95,7 @@ function routeRow(
   sourcePath = route,
   kindOverride?: RuntimeContentRoute["kind"]
 ): RuntimeContentRoute {
-  const projection = getSourceRouteProjectionForRoute(sourcePath, "en");
+  const projection = getSourceRouteProjectionForRoute(sourcePath);
   const kind = kindOverride ?? projection?.kind;
 
   if (!kind) {

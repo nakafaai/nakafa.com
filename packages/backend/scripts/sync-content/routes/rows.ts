@@ -39,7 +39,7 @@ class PublicRouteProjectionError extends Schema.TaggedError<PublicRouteProjectio
 export const readPublicRouteProjection = Effect.fn(
   "sync.readPublicRouteProjection"
 )(function* () {
-  const sourceRoutes = yield* listPublicRoutes({ tryouts: [] });
+  const sourceRoutes = yield* listPublicRoutes();
 
   return yield* buildPublicRouteProjection(sourceRoutes);
 });

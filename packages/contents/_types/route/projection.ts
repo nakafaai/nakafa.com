@@ -14,16 +14,5 @@ export const listPublicRoutes = Effect.fn("contents.route.listAll")(function* (
     listPublicContentRoutes(inputs),
     listPublicCurriculumRoutes(inputs),
   ]);
-  const tryoutRoutes =
-    inputs.tryouts?.length === 0
-      ? []
-      : yield* Effect.promise(
-          () => import("@repo/contents/_types/route/tryout")
-        ).pipe(
-          Effect.flatMap(({ listPublicTryoutRoutes }) =>
-            listPublicTryoutRoutes(inputs)
-          )
-        );
-
-  return yield* uniqueRoutes([...routes.flat(), ...tryoutRoutes]);
+  return yield* uniqueRoutes(routes.flat());
 });

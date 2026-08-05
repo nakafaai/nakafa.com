@@ -8,21 +8,23 @@ type TryoutHubPage = FunctionReturnType<
 type TryoutCountryPage = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.catalog.getCountryPage>
 >;
+type TryoutCountry = TryoutHubPage["countries"][number];
+type TryoutExam = TryoutCountryPage["exams"][number];
 
 export type TryoutCountrySelectorOption = Readonly<{
-  countryCode: string;
-  countryKey: string;
+  countryCode: TryoutCountry["countryCode"];
+  countryKey: TryoutCountry["countryKey"];
   href: string;
-  publicPath: string;
-  title: string;
-  value: string;
+  publicPath: TryoutCountry["publicPath"];
+  title: TryoutCountry["title"];
+  value: TryoutCountry["publicPath"];
 }>;
 
 export type TryoutExamSelectorOption = Readonly<{
-  examKey: string;
+  examKey: TryoutExam["examKey"];
   href: string;
-  title: string;
-  value: string;
+  title: TryoutExam["title"];
+  value: TryoutExam["publicPath"];
 }>;
 
 /** Projects active country rows into localized selector options. */

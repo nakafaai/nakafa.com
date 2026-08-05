@@ -7,6 +7,7 @@ import { readPublishedMaterialContext } from "@/lib/content/material/context";
 import type { MaterialReleasePin } from "@/lib/content/material/release";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { readPublishedProgramRoute } from "@/lib/content/program/route";
+import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 import { MissingLocalizedRouteProjectionError } from "@/lib/routing/locale/error";
 import {
   readMaterialContextQuery,
@@ -96,6 +97,21 @@ export const readPublishedLocalizedHref = Effect.fn(
       target,
     });
     return toNavigationHref(target.publicPath, suffix);
+  }
+
+  if (surface?.key === "tryout") {
+    const target = yield* readPublishedTryoutLocalizedPath({
+      currentLocale,
+      locale,
+      publicPath,
+    });
+    if (!target) {
+      return yield* new MissingLocalizedRouteProjectionError({
+        locale,
+        publicPath,
+      });
+    }
+    return toNavigationHref(target, "");
   }
 
   if (surface?.key !== "curriculum") {

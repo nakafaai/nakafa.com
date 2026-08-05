@@ -11,7 +11,7 @@ import { TryoutHubClient } from "@/components/tryout/catalog/hub.client";
 import { readTryoutHubPage } from "@/components/tryout/catalog/server";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
@@ -79,15 +79,12 @@ async function TryoutHubRoute({
     getTranslations({ locale, namespace: "Common" }),
   ]);
   const title = tCommon("try-out");
-  let sourceUrl: string | undefined;
-  if (!page.managed) {
-    sourceUrl = getGithubUrl({ path: "/packages/contents/tryout" });
-  } else if (page.sourceRevision) {
-    sourceUrl = getAksaraTreeUrl({
-      path: "packages/corpus/tryout",
-      revision: page.sourceRevision,
-    });
-  }
+  const sourceUrl = page.sourceRevision
+    ? getAksaraTreeUrl({
+        path: "packages/corpus/tryout",
+        revision: page.sourceRevision,
+      })
+    : undefined;
 
   return (
     <>

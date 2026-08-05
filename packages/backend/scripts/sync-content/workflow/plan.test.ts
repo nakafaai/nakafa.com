@@ -17,7 +17,7 @@ const everyRouteArtifactTarget = [
 describe("readIncrementalSyncPlan", () => {
   it("plans curriculum rows when route projection modules change", () => {
     expect(
-      readIncrementalSyncPlan(["packages/contents/_types/route/tryout.ts"])
+      readIncrementalSyncPlan(["packages/contents/_types/route/path.ts"])
     ).toEqual({
       refreshPublicRoutes: true,
       refreshQuran: false,
@@ -29,7 +29,7 @@ describe("readIncrementalSyncPlan", () => {
   it("normalizes absolute route projection paths before planning row resyncs", () => {
     expect(
       readIncrementalSyncPlan([
-        "/Users/nabilfatih/.codex/worktrees/5c82/nakafa.com/packages/contents/_types/route/tryout.ts",
+        "/Users/nabilfatih/.codex/worktrees/5c82/nakafa.com/packages/contents/_types/route/path.ts",
       ])
     ).toEqual({
       refreshPublicRoutes: true,
@@ -145,28 +145,14 @@ describe("readIncrementalSyncPlan", () => {
     });
   });
 
-  it("ignores retired local try-out source content", () => {
-    expect(
-      readIncrementalSyncPlan([
-        "packages/contents/question-bank/tryout/indonesia/snbt/general-reasoning/set-1/question-1/question.id.mdx",
-      ])
-    ).toEqual({
+  it("normalizes content-root relative Quran paths", () => {
+    expect(readIncrementalSyncPlan(["quran/source.ts"])).toEqual({
       refreshPublicRoutes: false,
-      refreshQuran: false,
-      routeArtifactTargets: [],
-      rowPhases: [],
-    });
-  });
-
-  it("ignores retired content-root relative try-out paths", () => {
-    expect(
-      readIncrementalSyncPlan([
-        "question-bank/tryout/indonesia/snbt/general-reasoning/set-1/question-1/question.id.mdx",
-      ])
-    ).toEqual({
-      refreshPublicRoutes: false,
-      refreshQuran: false,
-      routeArtifactTargets: [],
+      refreshQuran: true,
+      routeArtifactTargets: [
+        { locale: "en", section: "quran" },
+        { locale: "id", section: "quran" },
+      ],
       rowPhases: [],
     });
   });

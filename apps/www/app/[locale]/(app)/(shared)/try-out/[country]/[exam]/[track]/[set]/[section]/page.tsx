@@ -14,10 +14,6 @@ import {
   readTryoutContentAccess,
   type TryoutContentAccess,
 } from "@/components/tryout/content/access";
-import {
-  loadFilesystemAnswers,
-  loadFilesystemQuestions,
-} from "@/components/tryout/content/filesystem";
 import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
@@ -186,32 +182,6 @@ async function TryoutSectionRoute({
 
   let questions: readonly TryoutQuestionContent[] = [];
   let answers: readonly TryoutAnswerContent[] = [];
-
-  if (contentAccess.kind === "filesystem" && contentAccess.questions) {
-    const questionContent = await loadFilesystemQuestions({
-      locale,
-      questions: page.questions,
-    });
-
-    if (!questionContent) {
-      notFound();
-    }
-
-    questions = questionContent;
-  }
-
-  if (contentAccess.kind === "filesystem" && contentAccess.answers) {
-    const answerContent = await loadFilesystemAnswers({
-      locale,
-      questions: page.questions,
-    });
-
-    if (!answerContent) {
-      notFound();
-    }
-
-    answers = answerContent;
-  }
 
   if (contentAccess.kind === "signed") {
     const content = await Effect.runPromise(

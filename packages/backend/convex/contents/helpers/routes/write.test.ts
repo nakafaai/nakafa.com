@@ -19,13 +19,6 @@ describe("syncContentRoute", () => {
       "material/lesson/chemistry/atomic-structure/electron-configuration",
       "material/lesson/chemistry/atomic-structure",
     ],
-    ["try-out/indonesia/snbt", "try-out/indonesia"],
-    ["try-out/indonesia/snbt/2027", "try-out/indonesia/snbt"],
-    ["try-out/indonesia/snbt/2027/set-1", "try-out/indonesia/snbt/2027"],
-    [
-      "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
-      "try-out/indonesia/snbt/2027/set-1",
-    ],
   ])("derives the parent route for %s", async (route, sourceParentPath) => {
     const t = convexTest(schema, convexModules);
 
@@ -141,7 +134,7 @@ describe("syncContentRoute", () => {
 
 /** Builds one source row from the shared graph source-route projection spec. */
 function contentRouteSource(route: string) {
-  const projection = getSourceRouteProjectionForRoute(route, "id");
+  const projection = getSourceRouteProjectionForRoute(route);
 
   if (!projection) {
     throw new Error(`Expected graph source-route projection for ${route}.`);

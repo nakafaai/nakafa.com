@@ -223,31 +223,10 @@ describe("llms markdown content resolver", () => {
 
   it("does not invent markdown for try-out catalog routes without a source document", async () => {
     await expectNoSourceMarkdown("try-out/indonesia/snbt");
-  });
-
-  it("reads indexed non-material routes from their source document", async () => {
-    mockGetRuntimePublicRoute.mockReturnValueOnce(
-      Effect.succeed({
-        kind: "tryout-set",
-        sourcePath: "question-bank/tryout/indonesia/snbt/2027/set-1",
-      })
-    );
-    mockGetCachedLlmsMdxText.mockResolvedValue("Tryout source");
-
     await expect(
       readMarkdown("try-out/indonesia/snbt/2027/set-1")
-    ).resolves.toBe("Tryout source");
-  });
-
-  it("does not invent markdown when an indexed public route has no source path", async () => {
-    mockGetRuntimePublicRoute.mockReturnValueOnce(
-      Effect.succeed({ kind: "tryout-set" })
-    );
-
-    await expect(
-      readMarkdown("try-out/indonesia/snbt/2027/no-source")
     ).resolves.toBeNull();
-
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
   });
 
@@ -328,7 +307,7 @@ describe("llms markdown content resolver", () => {
     const error = new Error("route lookup failed");
     mockGetRuntimePublicRoute.mockReturnValueOnce(Effect.fail(error));
 
-    await expect(readMarkdown("try-out/indonesia/custom")).rejects.toThrow(
+    await expect(readMarkdown("curriculum/custom")).rejects.toThrow(
       error.message
     );
   });

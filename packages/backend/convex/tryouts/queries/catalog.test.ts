@@ -51,6 +51,14 @@ describe("tryouts/queries/catalog", () => {
       locale: "id",
       publicPath: sectionPath,
     });
+    const localizedPath = await t.query(
+      api.tryouts.queries.catalog.getLocalizedPath,
+      {
+        currentLocale: "id",
+        locale: "en",
+        publicPath: sectionPath,
+      }
+    );
 
     expect(hub).toMatchObject({
       countries: [
@@ -78,6 +86,7 @@ describe("tryouts/queries/catalog", () => {
       section: { sectionKey: TRYOUT_START_SECTION },
       set: { setKey: TRYOUT_START_SET },
     });
+    expect(localizedPath).toBe(sectionPath);
   });
 
   it("fails closed when a signed set loses its internal entry section", async () => {

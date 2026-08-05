@@ -24,12 +24,12 @@ describe("published try-out sitemap", () => {
 
   it("reads route inventory and one exact bounded page", async () => {
     fetchMock
-      .mockResolvedValueOnce({ managed: true, pageCount: 1, routeCount: 2 })
+      .mockResolvedValueOnce({ pageCount: 1, routeCount: 2 })
       .mockResolvedValueOnce({ paths: ["try-out/alpha", "try-out/zeta"] });
 
     await expect(
       Effect.runPromise(readPublishedTryoutSitemapCount("en"))
-    ).resolves.toEqual({ managed: true, pageCount: 1, routeCount: 2 });
+    ).resolves.toEqual({ pageCount: 1, routeCount: 2 });
     await expect(
       Effect.runPromise(readPublishedTryoutSitemap("en", 0))
     ).resolves.toEqual({ paths: ["try-out/alpha", "try-out/zeta"] });

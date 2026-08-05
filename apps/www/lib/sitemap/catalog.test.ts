@@ -74,7 +74,7 @@ beforeEach(() => {
   );
   tryoutMocks.readPublishedTryoutSitemapCount.mockReset();
   tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
-    Effect.succeed({ managed: false, pageCount: 0, routeCount: 0 })
+    Effect.succeed({ pageCount: 0, routeCount: 0 })
   );
   runtimeMocks.getRuntimeContentRouteCounts.mockReset();
   runtimeMocks.getRuntimePublicSitemapCount.mockReset();
@@ -101,13 +101,6 @@ describe("sitemap page catalog", () => {
     ).resolves.toEqual([
       { id: "base" },
       { id: "public_en_0", kind: "public", locale: "en", page: 0 },
-      {
-        id: "content_en_tryout_0",
-        kind: "content",
-        locale: "en",
-        page: 0,
-        section: "tryout",
-      },
       { id: "public_id_0", kind: "public", locale: "id", page: 0 },
       {
         id: "content_id_quran_0",
@@ -193,7 +186,6 @@ describe("sitemap page catalog", () => {
   it("replaces legacy try-out rows with signed catalog pages", async () => {
     tryoutMocks.readPublishedTryoutSitemapCount.mockImplementation((locale) =>
       Effect.succeed({
-        managed: locale === "en",
         pageCount: locale === "en" ? 1 : 0,
         routeCount: locale === "en" ? 48 : 0,
       })

@@ -15,6 +15,7 @@ const publishedMocks = vi.hoisted(() => ({
   materialContext: vi.fn(),
   materialRoute: vi.fn(),
   programRoute: vi.fn(),
+  tryoutPath: vi.fn(),
 }));
 const activeReleaseId = ReleaseIdSchema.make("release-material");
 const activeMaterialRoute = {
@@ -36,35 +37,15 @@ vi.mock("@/lib/content/material/route", () => ({
 vi.mock("@/lib/content/program/route", () => ({
   readPublishedProgramRoute: publishedMocks.programRoute,
 }));
+vi.mock("@/lib/content/tryout/path", () => ({
+  readPublishedTryoutLocalizedPath: publishedMocks.tryoutPath,
+}));
 vi.mock("@repo/contents/_types/route/learning/static", () => ({
-  loadStaticPublicLearningIndex: () => {
-    const counterparts = new Map([
-      ["try-out/indonesia", "try-out/indonesia"],
-      [
-        "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
-        "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
-      ],
-    ]);
-    return Effect.succeed({
-      projectRouteToLocale: (route: { publicPath: string }) => {
-        const publicPath = counterparts.get(route.publicPath);
-        if (!publicPath) {
-          return;
-        }
-        return { kind: "tryout-section", locale: "en", publicPath };
-      },
-      resolveRouteByPath: (publicPath: string, locale: string) => {
-        const isUntranslated = publicPath === "try-out/indonesia/untranslated";
-        if (
-          locale !== "id" ||
-          !(counterparts.has(publicPath) || isUntranslated)
-        ) {
-          return;
-        }
-        return { kind: "tryout-section", locale, publicPath };
-      },
-    });
-  },
+  loadStaticPublicLearningIndex: () =>
+    Effect.succeed({
+      projectRouteToLocale: () => undefined,
+      resolveRouteByPath: () => undefined,
+    }),
 }));
 
 /** Resolves a localized href through the Effect boundary used by callers. */
@@ -82,6 +63,16 @@ beforeEach(() => {
   publishedMocks.programRoute
     .mockReset()
     .mockReturnValue(Effect.succeed({ alternates: [], route: null }));
+  publishedMocks.tryoutPath.mockReset().mockImplementation(({ publicPath }) => {
+    const counterparts = new Map([
+      ["try-out/indonesia", "try-out/indonesia"],
+      [
+        "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
+        "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
+      ],
+    ]);
+    return Effect.succeed(counterparts.get(publicPath) ?? null);
+  });
 });
 
 describe("resolveLocalizedNavigationHref", () => {

@@ -28,7 +28,6 @@ const programMocks = vi.hoisted(() => ({
 }));
 const tryoutMocks = vi.hoisted(() => ({
   readPublishedTryoutSitemap: vi.fn(),
-  readPublishedTryoutSitemapCount: vi.fn(),
 }));
 
 vi.mock("@/lib/content/article/sitemap", () => ({
@@ -62,10 +61,6 @@ beforeEach(() => {
   );
   tryoutMocks.readPublishedTryoutSitemap.mockReset();
   tryoutMocks.readPublishedTryoutSitemap.mockReturnValue(Effect.succeed(null));
-  tryoutMocks.readPublishedTryoutSitemapCount.mockReset();
-  tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
-    Effect.succeed({ managed: false, pageCount: 0, routeCount: 0 })
-  );
   runtimeMocks.getRuntimeContentSitemapPage.mockReset();
   runtimeMocks.getRuntimePublicSitemapPage.mockReset();
   runtimeMocks.getRuntimeContentSitemapPage.mockImplementation(({ section }) =>
@@ -119,9 +114,8 @@ describe("sitemap route pages", () => {
       "/security-policy",
       "/terms-of-service",
     ]);
-    await expect(readPaths("content_en_tryout_0")).resolves.toEqual([
-      "/try-out/indonesia/snbt/2027/set-1",
-      "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
+    await expect(readPaths("content_en_quran_0")).resolves.toEqual([
+      "/quran/1",
     ]);
     await expect(
       Effect.runPromise(readSitemapRoutePage("public_en_0"))
@@ -175,10 +169,6 @@ describe("sitemap route pages", () => {
         paths: ["try-out/indonesia/snbt/2027/set-1", "try-out/indonesia"],
       })
     );
-    tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
-      Effect.succeed({ managed: true, pageCount: 1, routeCount: 2 })
-    );
-
     await expect(readPaths("tryout_en_0")).resolves.toEqual([
       "/try-out/indonesia",
       "/try-out/indonesia/snbt/2027/set-1",
@@ -204,10 +194,6 @@ describe("sitemap route pages", () => {
     programMocks.readPublishedProgramBuckets.mockReturnValue(
       Effect.succeed({ buckets: ["abc"], managed: true })
     );
-    tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
-      Effect.succeed({ managed: true, pageCount: 1, routeCount: 1 })
-    );
-
     await expect(readPaths("public_en_0")).resolves.toEqual([]);
   });
 
@@ -274,30 +260,22 @@ function readFailure(pageId: string) {
 
 const routeRows = [
   routeRow({
-    locale: "en",
-    route: "try-out/indonesia/snbt/2027/set-1",
-    section: "tryout",
-  }),
-  routeRow({
-    locale: "en",
-    route: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
-    section: "tryout",
+    route: "quran/1",
+    section: "quran",
   }),
 ];
 
 /** Builds one route-catalog fixture row for sitemap tests. */
 function routeRow({
-  locale,
   route,
   section,
   sourcePath = route,
 }: {
-  locale: "en";
   route: string;
   section: SourceRegistryRoot;
   sourcePath?: string;
 }): RuntimeContentRoute {
-  const kind = getSourceRouteProjectionForRoute(sourcePath, locale)?.kind;
+  const kind = getSourceRouteProjectionForRoute(sourcePath)?.kind;
   if (!kind) {
     throw new Error(`Expected graph route kind for ${sourcePath}.`);
   }
