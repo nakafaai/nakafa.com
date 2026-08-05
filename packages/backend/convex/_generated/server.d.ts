@@ -29,7 +29,6 @@ type Env = {
   readonly AKSARA_AGENT_SIGNING_PUBLIC_KEY: string | undefined;
   readonly AKSARA_PUBLICATION_TOKEN: string;
   readonly CONTENT_RUNTIME_TOKEN: string;
-  readonly CONTENT_RUNTIME_TOKEN_PREVIOUS: string | undefined;
   readonly POSTHOG_ACCOUNT_DELETION_API_KEY: string;
   readonly POSTHOG_HOST: string;
   readonly POSTHOG_PROJECT_ID: string;

@@ -24,9 +24,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const RUNTIME_PATH = "/internal/content/runtime";
 const RUNTIME_TOKEN = "technical-runtime-token";
-const PREVIOUS_RUNTIME_TOKEN = "previous-runtime-token";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
-const previousRuntimeTokenName = "CONTENT_RUNTIME_TOKEN_PREVIOUS";
 const polarName = "POLAR_WEBHOOK_SECRET";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
@@ -70,7 +68,6 @@ beforeEach(() => {
 
 afterEach(() => {
   delete process.env[runtimeTokenName];
-  delete process.env[previousRuntimeTokenName];
   delete process.env[polarName];
 });
 
@@ -106,19 +103,6 @@ describe("content runtime HTTP route", () => {
       kind: "failure",
     });
     expect(pulls).toBe(0);
-    expectPrivate(response);
-  });
-
-  it("accepts the previous server secret during credential rotation", async () => {
-    process.env[previousRuntimeTokenName] = PREVIOUS_RUNTIME_TOKEN;
-    const response = await post(
-      createConvexTestWithBetterAuth(),
-      runtimeRequest("public"),
-      { "x-nakafa-content-token": PREVIOUS_RUNTIME_TOKEN }
-    );
-
-    expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ kind: "missing" });
     expectPrivate(response);
   });
 
