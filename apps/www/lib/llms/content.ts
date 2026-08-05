@@ -8,16 +8,11 @@ import {
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
 import { getLlmsLegalPageText } from "@/lib/llms/legal";
-import { getCachedLlmsMdxText } from "@/lib/llms/mdx";
 import {
   getCachedPublishedText,
   type PublishedMarkdownInput,
 } from "@/lib/llms/published";
 import { getQuranLlmsText } from "@/lib/llms/quran";
-
-const PROJECTED_PUBLIC_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
-  PUBLIC_ROUTE_SURFACES.flatMap((surface) => Object.values(surface.routeSlugs))
-);
 
 const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
   PUBLIC_ROUTE_SURFACES.flatMap((surface) =>
@@ -25,60 +20,34 @@ const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
   )
 );
 
-const TRYOUT_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
-  PUBLIC_ROUTE_SURFACES.flatMap((surface) =>
-    surface.key === "tryout" ? Object.values(surface.routeSlugs) : []
-  )
-);
-
-type MarkdownSource =
-  | {
-      readonly activeReleaseId: ActiveContentReleaseId;
-      readonly family: PublishedMarkdownInput["family"];
-      readonly kind: "published";
-      readonly publicPath: string;
-    }
-  | {
-      readonly cleanSlug: string;
-      readonly kind: "source";
-      readonly publicSlug?: string;
-    };
+interface PublishedMarkdownSource {
+  readonly activeReleaseId: ActiveContentReleaseId;
+  readonly family: PublishedMarkdownInput["family"];
+  readonly publicPath: string;
+}
 
 /** One rejected Next cache read with its exact content owner preserved. */
 class CacheFailure extends Schema.TaggedError<CacheFailure>()("CacheFailure", {
   cause: Schema.Unknown,
-  owner: Schema.Literal("index", "published", "source"),
+  owner: Schema.Literal("index", "published"),
 }) {}
 
-/** Reads cached markdown from the one explicit owner selected for a route. */
+/** Reads cached markdown from the signed owner selected for a route. */
 const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
-  source: MarkdownSource,
+  source: PublishedMarkdownSource,
   locale: Locale
 ) {
-  if (source.kind === "published") {
-    return yield* Effect.tryPromise({
-      catch: (cause) => new CacheFailure({ cause, owner: "published" }),
-      try: () => readPublishedMarkdown(source, locale),
-    });
-  }
-
-  const markdown = yield* Effect.tryPromise({
-    catch: (cause) => new CacheFailure({ cause, owner: "source" }),
-    try: () =>
-      getCachedLlmsMdxText({
-        cleanSlug: source.cleanSlug,
-        locale,
-        publicSlug: source.publicSlug,
-      }),
+  return yield* Effect.tryPromise({
+    catch: (cause) => new CacheFailure({ cause, owner: "published" }),
+    try: () => readPublishedMarkdown(source, locale),
   });
-  return markdown;
 });
 
 /**
  * Resolves cached markdown for one agent-facing route.
  *
- * The source chain is ordered from concrete page sources to derived indexes:
- * Quran, MDX content, legal MDX, then sitemap-derived section or listing
+ * The source chain is ordered from concrete page owners to derived indexes:
+ * Quran, signed content, legal MDX, then sitemap-derived section or listing
  * indexes. A null result means the route has no markdown source.
  */
 export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
@@ -88,9 +57,9 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
       return quranText;
     }
 
-    const source = yield* getLlmsMarkdownSource({ cleanSlug, locale });
-    if (source) {
-      const mdxText = yield* readCachedMarkdown(source, locale);
+    const published = yield* getPublishedMarkdownSource({ cleanSlug, locale });
+    if (published) {
+      const mdxText = yield* readCachedMarkdown(published, locale);
       if (mdxText) {
         return mdxText;
       }
@@ -111,47 +80,31 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
   }
 );
 
-/** Resolves projected public content paths to the internal markdown source path. */
-const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
+/** Resolves one public route to its active signed markdown owner. */
+const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
     const routeSegment = readRouteSegment(cleanSlug);
     const publishedFamily = readPublishedFamily(routeSegment);
-    const active = publishedFamily ? yield* readActiveContentIdentity() : null;
-    if (publishedFamily) {
-      const activeRoute = yield* readActiveContentRoute({
-        activeReleaseId: active?.releaseId ?? null,
-        family: publishedFamily,
-        locale,
-        publicPath: cleanSlug,
-      });
-      if (activeRoute.kind === "found") {
-        const source: MarkdownSource = {
-          activeReleaseId: activeRoute.activeReleaseId,
-          family: publishedFamily,
-          kind: "published",
-          publicPath: cleanSlug,
-        };
-        return source;
-      }
-      if (activeRoute.kind === "missing") {
-        return null;
-      }
-      const segmentCount = cleanSlug.split("/").filter(Boolean).length;
-      if (publishedFamily === "material" || segmentCount >= 3) {
-        return null;
-      }
-    }
-
-    if (TRYOUT_ROUTE_SEGMENTS.has(routeSegment)) {
+    if (!publishedFamily) {
       return null;
     }
 
-    if (PROJECTED_PUBLIC_ROUTE_SEGMENTS.has(routeSegment)) {
+    const active = yield* readActiveContentIdentity();
+    const activeRoute = yield* readActiveContentRoute({
+      activeReleaseId: active?.releaseId ?? null,
+      family: publishedFamily,
+      locale,
+      publicPath: cleanSlug,
+    });
+    if (activeRoute.kind !== "found") {
       return null;
     }
 
-    const source: MarkdownSource = { cleanSlug, kind: "source" };
-    return source;
+    return {
+      activeReleaseId: activeRoute.activeReleaseId,
+      family: publishedFamily,
+      publicPath: cleanSlug,
+    };
   }
 );
 
@@ -175,7 +128,7 @@ function readPublishedFamily(
 
 /** Reads one family-specific published markdown cache without source fallback. */
 function readPublishedMarkdown(
-  source: Extract<MarkdownSource, { readonly kind: "published" }>,
+  source: PublishedMarkdownSource,
   locale: Locale
 ) {
   const input = {
