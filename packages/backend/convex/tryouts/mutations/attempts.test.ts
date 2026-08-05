@@ -8,6 +8,7 @@ import { testTextHash } from "@repo/backend/test/content-release";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
 import {
   activateRenamedTryoutStartSource,
+  activateReusedTryoutStartPath,
   TRYOUT_START_COUNTRY as COUNTRY,
   TRYOUT_START_EXAM as EXAM,
   TRYOUT_START_NOW as NOW,
@@ -64,8 +65,7 @@ describe("tryouts/mutations/attempts", () => {
             timeLimitSeconds: 1800,
           },
         ],
-        setPublicPath: `try-out/${COUNTRY}/${EXAM}/${TRACK}/${SET}`,
-        tryoutSetId: fixture.tryoutSetId,
+        set: fixture.set,
         userId: identity.userId,
       });
       return { attemptId, identity };
@@ -167,9 +167,6 @@ describe("tryouts/mutations/attempts", () => {
         sectionRowHash: seeded.fixture.sectionRowHash,
       }),
     ]);
-    expect(runtime.attempt?.sectionSnapshots[0]).not.toHaveProperty(
-      "tryoutSectionId"
-    );
     expect(runtime.sectionAttempts).toEqual([
       expect.objectContaining({
         sectionIdentity: seeded.fixture.sectionIdentity,
@@ -177,7 +174,6 @@ describe("tryouts/mutations/attempts", () => {
         status: "in-progress",
       }),
     ]);
-    expect(runtime.sectionAttempts[0]).not.toHaveProperty("tryoutSectionId");
     expect(runtime.placements).toEqual([
       expect.objectContaining({
         placementIdentity: seeded.fixture.placementIdentity,
@@ -186,7 +182,6 @@ describe("tryouts/mutations/attempts", () => {
         sectionKey: SECTION,
       }),
     ]);
-    expect(runtime.placements[0]).not.toHaveProperty("tryoutSectionId");
     expect(runtime.freeClaim).toMatchObject({
       setKey: SET,
       userId: seeded.identity.userId,
@@ -289,12 +284,7 @@ describe("tryouts/mutations/attempts", () => {
       publicPath: `${TRYOUT_RENAMED_SET_PATH}/${SECTION}`,
     });
 
-    await t.mutation((ctx) =>
-      ctx.db.patch(seeded.fixture.tryoutSectionId, {
-        sourceRevision: "2027",
-        timeLimitSeconds: 60,
-      })
-    );
+    await t.mutation(activateReusedTryoutStartPath);
     const resumed = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
       { ...startArgs, destinationSectionKey: SECTION }
@@ -323,6 +313,5 @@ describe("tryouts/mutations/attempts", () => {
       status: "in-progress",
       totalQuestions: 1,
     });
-    expect(sectionAttempt).not.toHaveProperty("tryoutSectionId");
   });
 });

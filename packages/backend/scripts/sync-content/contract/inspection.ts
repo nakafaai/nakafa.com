@@ -12,8 +12,7 @@ const SyncSectionSchema = Schema.Literal(...NAKAFA_CONTENT_SECTIONS);
 const ContentTypeSchema = Schema.Literal(...CONTENT_TYPE_VALUES);
 const ContentIdSchema = Schema.Union(
   ConvexIdSchema("articleContents"),
-  ConvexIdSchema("curriculumLessons"),
-  ConvexIdSchema("questions")
+  ConvexIdSchema("curriculumLessons")
 );
 
 /** Counts every read-model table inspected by cleanup and import verification. */
@@ -36,9 +35,6 @@ export const ContentCountsSchema = Schema.Struct({
   contentSearch: Schema.Number,
   learningEngagementQueue: Schema.Number,
   learningViews: Schema.Number,
-  questionChoices: Schema.Number,
-  questions: Schema.Number,
-  questionSets: Schema.Number,
   irtCalibrationRuns: Schema.Number,
   irtScaleItems: Schema.Number,
   irtScaleVersions: Schema.Number,
@@ -59,15 +55,11 @@ export const ContentCountsSchema = Schema.Struct({
   tryoutAccessGrants: Schema.Number,
   tryoutAccessLinks: Schema.Number,
   tryoutAttempts: Schema.Number,
+  tryoutSetProgress: Schema.Number,
   tryoutAttemptPlacements: Schema.Number,
-  tryoutCountries: Schema.Number,
-  tryoutExams: Schema.Number,
   tryoutResponses: Schema.Number,
   tryoutScores: Schema.Number,
   tryoutSectionAttempts: Schema.Number,
-  tryoutSections: Schema.Number,
-  tryoutSets: Schema.Number,
-  tryoutTracks: Schema.Number,
   tryoutEntitlements: Schema.Number,
 });
 

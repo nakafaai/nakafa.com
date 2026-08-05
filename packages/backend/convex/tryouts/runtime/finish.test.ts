@@ -14,15 +14,10 @@ import {
   tryoutSectionSnapshot,
 } from "@repo/backend/test/tryout-runtime";
 import {
-  insertTryoutSectionSource,
-  makeAlignedTryoutSection,
+  makeSignedTryoutSection,
   makeSignedTryoutSource,
 } from "@repo/backend/test/tryout-section";
-import {
-  insertTryoutQuestionSource,
-  insertTryoutSection,
-  insertTryoutSet,
-} from "@repo/backend/test/tryouts";
+import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -42,43 +37,25 @@ describe("tryouts/runtime/finish", () => {
         email: "expire-irt@example.com",
         name: "Expire IRT",
       });
-      const firstSource = await insertTryoutSectionSource(ctx, FIRST_SECTION);
-      const secondSource = await insertTryoutSectionSource(ctx, SECOND_SECTION);
-      const tryoutSetId = await insertTryoutSet(ctx, {
+      const set = makeTryoutSet({
+        questionCount: 2,
         sectionCount: 2,
-        totalQuestionCount: 2,
         visibleSectionCount: 2,
       });
-      const firstSectionId = await insertTryoutSection(ctx, {
+      const firstSection = makeTryoutSection({
         publicPath: `${SET_PATH}/pengetahuan-kuantitatif`,
-        questionSetId: firstSource.questionSetId,
-        questionSourcePath: firstSource.sourcePath,
+        questionSourcePath: `packages/corpus/question-bank/tryout/indonesia/snbt/${FIRST_SECTION}/set-1`,
         sectionKey: FIRST_SECTION,
-        tryoutSetId,
       });
-      const secondSectionId = await insertTryoutSection(ctx, {
+      const secondSection = makeTryoutSection({
         order: 2,
         publicPath: `${SET_PATH}/penalaran-matematika`,
-        questionSetId: secondSource.questionSetId,
-        questionSourcePath: secondSource.sourcePath,
+        questionSourcePath: `packages/corpus/question-bank/tryout/indonesia/snbt/${SECOND_SECTION}/set-1`,
         sectionKey: SECOND_SECTION,
-        tryoutSetId,
       });
-      const firstSection = await ctx.db.get(firstSectionId);
-      const secondSection = await ctx.db.get(secondSectionId);
-      if (!(firstSection && secondSection)) {
-        throw new ConvexError({
-          code: "TRYOUT_SECTION_NOT_FOUND",
-          message: "Expected try-out section fixtures.",
-        });
-      }
       const alignedSections = [
-        makeAlignedTryoutSection(firstSection, {
-          contentHash: firstSource.contentHash,
-        }),
-        makeAlignedTryoutSection(secondSection, {
-          contentHash: secondSource.contentHash,
-        }),
+        makeSignedTryoutSection(firstSection),
+        makeSignedTryoutSection(secondSection),
       ];
       const firstPlacement = alignedSections[0]?.signed.placements[0];
       const secondPlacement = alignedSections[1]?.signed.placements[0];
@@ -86,13 +63,6 @@ describe("tryouts/runtime/finish", () => {
         throw new ConvexError({
           code: "TRYOUT_PLACEMENT_NOT_FOUND",
           message: "Expected signed try-out placement fixtures.",
-        });
-      }
-      const set = await ctx.db.get(tryoutSetId);
-      if (!set) {
-        throw new ConvexError({
-          code: "TRYOUT_SET_NOT_FOUND",
-          message: "Expected try-out set fixture.",
         });
       }
       const source = makeSignedTryoutSource(set, alignedSections);
@@ -118,31 +88,16 @@ describe("tryouts/runtime/finish", () => {
         scaleVersionId,
         sectionSnapshots: [
           tryoutSectionSnapshot({
-            order: 1,
-            publicPath: `${SET_PATH}/pengetahuan-kuantitatif`,
-            sectionKey: FIRST_SECTION,
             signed: alignedSections[0]?.signed,
-            sourcePath: firstSource.sourcePath,
           }),
           tryoutSectionSnapshot({
-            order: 2,
-            publicPath: `${SET_PATH}/penalaran-matematika`,
-            sectionKey: SECOND_SECTION,
             signed: alignedSections[1]?.signed,
-            sourcePath: secondSource.sourcePath,
           }),
         ],
-        tryoutSetId,
+        set,
+        snapshotId: source.snapshot.snapshotId,
+        snapshotReleaseId: source.bundle.releaseId,
         userId,
-      });
-      await ctx.db.patch(attemptId, {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        setIdentity: source.snapshot.setIdentity,
-        setKey: "set-1",
-        trackKey: "2027",
-        tryoutSnapshotId: source.snapshot.snapshotId,
       });
       const sectionAttemptId = await insertTryoutSectionAttempt(ctx, {
         expiresAt: EXPIRED_AT,
@@ -230,7 +185,6 @@ describe("tryouts/runtime/finish", () => {
         },
       ],
     });
-    expect(snapshot.sections[1]).not.toHaveProperty("tryoutSectionId");
   });
 
   it("completes the parent after its final section", async () => {
@@ -244,37 +198,16 @@ describe("tryouts/runtime/finish", () => {
       });
       const sourcePath =
         "question-bank/tryout/indonesia/snbt/penalaran-matematika/set-1";
-      const questionSetId = await insertTryoutQuestionSource(ctx, {
-        sourcePath,
-        withQuestion: false,
-      });
-      const tryoutSetId = await insertTryoutSet(ctx);
-      const tryoutSectionId = await insertTryoutSection(ctx, {
+      const set = makeTryoutSet();
+      const section = makeTryoutSection({
         publicPath: `${SET_PATH}/penalaran-matematika`,
-        questionSetId,
-        questionSourcePath: sourcePath,
-        tryoutSetId,
+        questionSourcePath: `packages/corpus/${sourcePath}`,
       });
-      const tryoutSection = await ctx.db.get(tryoutSectionId);
-      if (!tryoutSection) {
-        throw new ConvexError({
-          code: "TRYOUT_SECTION_NOT_FOUND",
-          message: "Expected the try-out section fixture.",
-        });
-      }
-      const signedSection = makeAlignedTryoutSection(tryoutSection).signed;
+      const signedSection = makeSignedTryoutSection(section).signed;
       const attemptId = await insertTryoutAttempt(ctx, {
         scoringStrategy: "raw",
-        sectionSnapshots: [
-          tryoutSectionSnapshot({
-            order: 1,
-            publicPath: `${SET_PATH}/penalaran-matematika`,
-            sectionKey: "penalaran-matematika",
-            signed: signedSection,
-            sourcePath,
-          }),
-        ],
-        tryoutSetId,
+        sectionSnapshots: [tryoutSectionSnapshot({ signed: signedSection })],
+        set,
         userId,
       });
       const sectionId = await insertTryoutSectionAttempt(ctx, {
@@ -282,9 +215,9 @@ describe("tryouts/runtime/finish", () => {
         tryoutAttemptId: attemptId,
       });
       const attempt = await ctx.db.get(attemptId);
-      const section = await ctx.db.get(sectionId);
+      const sectionAttempt = await ctx.db.get(sectionId);
 
-      if (!(attempt && section)) {
+      if (!(attempt && sectionAttempt)) {
         throw new ConvexError({
           code: "TRYOUT_FIXTURE_INCOMPLETE",
           message: "Expected try-out attempt and section fixtures.",
@@ -296,7 +229,7 @@ describe("tryouts/runtime/finish", () => {
           attempt,
           endReason: "time-expired",
           now: NOW,
-          section,
+          section: sectionAttempt,
         })
       );
 

@@ -13,5 +13,25 @@ describe("contentSync/reset spec", () => {
     expect(resettableTableNames).not.toContain("learningViews");
     expect(resettableTableNames).not.toContain("userLearningRecents");
     expect(resettableTableNames).not.toContain("tryoutFreeAttemptClaims");
+
+    const durableTryoutTables = [
+      "irtCalibrationRuns",
+      "irtScaleItems",
+      "irtScaleVersions",
+      "tryoutAccessCampaigns",
+      "tryoutAccessGrants",
+      "tryoutAccessLinks",
+      "tryoutAccessTargets",
+      "tryoutAttemptPlacements",
+      "tryoutAttempts",
+      "tryoutEntitlements",
+      "tryoutResponses",
+      "tryoutScores",
+      "tryoutSectionAttempts",
+      "tryoutSetProgress",
+    ];
+    for (const tableName of durableTryoutTables) {
+      expect(resettableTableNames).not.toContain(tableName);
+    }
   });
 });

@@ -1,10 +1,15 @@
+import { contentCountTables } from "@repo/backend/convex/contentSync/tables";
+import { ContentCountsSchema } from "@repo/backend/scripts/sync-content/contract/inspection";
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/contract/types";
 import { verify } from "@repo/backend/scripts/sync-content/verify/sync";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const globFilesMock = vi.hoisted(() => vi.fn());
-const tryoutSourceLoadMock = vi.hoisted(() => vi.fn());
+
+const counts = Schema.decodeUnknownSync(ContentCountsSchema)(
+  Object.fromEntries(contentCountTables.map(({ field }) => [field, 0]))
+);
 
 vi.mock("@repo/backend/scripts/sync-content/cli/logging", () => ({
   log: () => undefined,
@@ -15,49 +20,21 @@ vi.mock("@repo/backend/scripts/sync-content/cli/logging", () => ({
 vi.mock("@repo/backend/scripts/sync-content/convex/counts", () => ({
   getContentCounts: () =>
     Effect.succeed({
-      articleReferences: 0,
+      ...counts,
       articles: 1,
-      authors: 0,
-      contentAuthors: 0,
-      contentRoutes: 0,
-      contentSearch: 0,
-      curriculumLessons: 0,
-      curriculumTopics: 0,
-      learningProgramCoverage: 0,
-      learningProgramSources: 0,
-      learningPrograms: 0,
-      publicRoutes: 0,
-      publicRouteSyncState: 0,
       quranSurahs: 1,
       quranVerses: 1,
-      questionChoices: 0,
-      questions: 999,
-      questionSets: 999,
-      tryoutCountries: 999,
-      tryoutExams: 999,
-      tryoutSections: 999,
-      tryoutSets: 999,
-      tryoutTracks: 999,
     }),
 }));
 
 vi.mock("@repo/backend/scripts/sync-content/convex/inspection", () => ({
   getDataIntegrity: () =>
     Effect.succeed({
-      activeTryoutsWithoutScale: ["obsolete-scale"],
       articlesWithoutReferences: [],
-      orphanQuestionChoiceIds: ["obsolete-choice"],
-      questionsWithoutAuthors: ["obsolete-author"],
-      questionsWithoutChoices: ["obsolete-question"],
       sectionsWithoutTopics: [],
       totalArticles: 1,
-      totalQuestions: 999,
       totalSections: 0,
     }),
-}));
-
-vi.mock("@repo/backend/scripts/sync-content/convex/ownership", () => ({
-  readContentSyncOwnership: () => Effect.succeed({ tryoutsManaged: true }),
 }));
 
 vi.mock("@repo/backend/scripts/sync-content/runtime/files", () => ({
@@ -85,12 +62,6 @@ vi.mock("@repo/contents/_types/material/registry", () => ({
   listLessonRows: () => [],
 }));
 
-vi.mock("@repo/contents/_types/tryout/source", () => {
-  tryoutSourceLoadMock();
-
-  return { TRYOUT_SOURCES: [] };
-});
-
 const config: ConvexConfig = {
   accessToken: "test-token",
   url: "https://example.convex.cloud",
@@ -102,17 +73,15 @@ describe("content verification", () => {
     globFilesMock.mockImplementation((pattern: string) =>
       Effect.succeed(pattern === "articles/**/*.mdx" ? ["articles/id.mdx"] : [])
     );
-    tryoutSourceLoadMock.mockClear();
   });
 
-  it("ignores obsolete filesystem tryout checks under signed ownership", async () => {
+  it("verifies every Nakafa-owned filesystem source", async () => {
     await expect(Effect.runPromise(verify(config))).resolves.toBeUndefined();
 
-    expect(tryoutSourceLoadMock).not.toHaveBeenCalled();
-    expect(
-      globFilesMock.mock.calls.some(([pattern]) =>
-        String(pattern).includes("question-bank/tryout/")
-      )
-    ).toBe(false);
+    expect(globFilesMock.mock.calls).toEqual([
+      ["articles/**/*.mdx"],
+      ["material/lesson/**/*.mdx"],
+      ["articles/**/ref.ts"],
+    ]);
   });
 });

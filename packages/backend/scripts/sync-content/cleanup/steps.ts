@@ -120,11 +120,6 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "article references",
   },
   {
-    label: "Deleting question choices...",
-    mutation: reset.deleteQuestionChoicesBatch,
-    resultLabel: "question choices",
-  },
-  {
     label: "Deleting audio generation queue...",
     mutation: reset.deleteAudioGenerationQueueBatch,
     resultLabel: "audio generation queue entries",
@@ -138,111 +133,6 @@ export const RESET_STEPS: ResetStep[] = [
     label: "Deleting audio content sources...",
     mutation: reset.deleteAudioContentSourcesBatch,
     resultLabel: "audio content sources",
-  },
-  {
-    label: "Deleting try-out responses...",
-    mutation: reset.deleteTryoutResponsesBatch,
-    resultLabel: "try-out responses",
-  },
-  {
-    label: "Deleting try-out attempt placements...",
-    mutation: reset.deleteTryoutAttemptPlacementsBatch,
-    resultLabel: "try-out attempt placements",
-  },
-  {
-    label: "Deleting try-out section attempts...",
-    mutation: reset.deleteTryoutSectionAttemptsBatch,
-    resultLabel: "try-out section attempts",
-  },
-  {
-    label: "Deleting try-out scores...",
-    mutation: reset.deleteTryoutScoresBatch,
-    resultLabel: "try-out scores",
-  },
-  {
-    label: "Deleting IRT scale items...",
-    mutation: reset.deleteIrtScaleItemsBatch,
-    resultLabel: "IRT scale items",
-  },
-  {
-    label: "Deleting IRT calibration runs...",
-    mutation: reset.deleteIrtCalibrationRunsBatch,
-    resultLabel: "IRT calibration runs",
-  },
-  {
-    label: "Deleting try-out set progress...",
-    mutation: reset.deleteTryoutSetProgressBatch,
-    resultLabel: "try-out set progress rows",
-  },
-  {
-    label: "Deleting try-out attempts...",
-    mutation: reset.deleteTryoutAttemptsBatch,
-    resultLabel: "try-out attempts",
-  },
-  {
-    label: "Deleting try-out entitlements...",
-    mutation: reset.deleteTryoutEntitlementsBatch,
-    resultLabel: "try-out entitlements",
-  },
-  {
-    label: "Deleting try-out access grants...",
-    mutation: reset.deleteTryoutAccessGrantsBatch,
-    resultLabel: "try-out access grants",
-  },
-  {
-    label: "Deleting try-out access links...",
-    mutation: reset.deleteTryoutAccessLinksBatch,
-    resultLabel: "try-out access links",
-  },
-  {
-    label: "Deleting try-out access targets...",
-    mutation: reset.deleteTryoutAccessTargetsBatch,
-    resultLabel: "try-out access targets",
-  },
-  {
-    label: "Deleting try-out access campaigns...",
-    mutation: reset.deleteTryoutAccessCampaignsBatch,
-    resultLabel: "try-out access campaigns",
-  },
-  {
-    label: "Deleting try-out sections...",
-    mutation: reset.deleteTryoutSectionsBatch,
-    resultLabel: "try-out sections",
-  },
-  {
-    label: "Deleting questions...",
-    mutation: reset.deleteQuestionsBatch,
-    resultLabel: "questions",
-  },
-  {
-    label: "Deleting question sets...",
-    mutation: reset.deleteQuestionSetsBatch,
-    resultLabel: "question sets",
-  },
-  {
-    label: "Deleting try-out sets...",
-    mutation: reset.deleteTryoutSetsBatch,
-    resultLabel: "try-out sets",
-  },
-  {
-    label: "Deleting try-out tracks...",
-    mutation: reset.deleteTryoutTracksBatch,
-    resultLabel: "try-out tracks",
-  },
-  {
-    label: "Deleting try-out exams...",
-    mutation: reset.deleteTryoutExamsBatch,
-    resultLabel: "try-out exams",
-  },
-  {
-    label: "Deleting try-out countries...",
-    mutation: reset.deleteTryoutCountriesBatch,
-    resultLabel: "try-out countries",
-  },
-  {
-    label: "Deleting IRT scale versions...",
-    mutation: reset.deleteIrtScaleVersionsBatch,
-    resultLabel: "IRT scale versions",
   },
   {
     label: "Deleting curriculum lessons...",

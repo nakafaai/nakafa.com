@@ -6,10 +6,9 @@ import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/cons
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { deleteContentRoutesBySourcePath } from "@repo/backend/convex/contents/helpers/routes/write";
 import { deleteContentSearchBySourcePath } from "@repo/backend/convex/contents/helpers/search/write";
-import {
-  type ContentType,
-  type Locale,
-  SUPPORTED_CONTENT_LOCALES,
+import type {
+  ContentType,
+  Locale,
 } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError, type Infer, v } from "convex/values";
 
@@ -207,33 +206,6 @@ export async function deleteArticleReferencesForArticle(
   }
 }
 
-/** Delete all choices for one question under the sync safety limits. */
-export async function deleteQuestionChoicesForQuestion(
-  ctx: MutationCtx,
-  questionId: Id<"questions">
-) {
-  const choiceLimit =
-    CONTENT_SYNC_BATCH_LIMITS.questionChoices *
-    SUPPORTED_CONTENT_LOCALES.length;
-  const existingChoices = await ctx.db
-    .query("questionChoices")
-    .withIndex("by_questionId_and_locale", (q) =>
-      q.eq("questionId", questionId)
-    )
-    .take(choiceLimit + 1);
-
-  if (existingChoices.length > choiceLimit) {
-    throw new ConvexError({
-      code: "CONTENT_SYNC_CHOICE_COUNT_EXCEEDED",
-      message: "Existing question choice count exceeds the safe sync limit.",
-    });
-  }
-
-  for (const choice of existingChoices) {
-    await ctx.db.delete("questionChoices", choice._id);
-  }
-}
-
 /** Delete synced search and route projections by their graph source identity. */
 export async function deleteContentProjectionsBySourcePath(
   ctx: MutationCtx,
@@ -243,25 +215,6 @@ export async function deleteContentProjectionsBySourcePath(
 
   await deleteContentSearchBySourcePath(ctx, source);
   await deleteContentRoutesBySourcePath(ctx, source);
-}
-
-/** Delete one question together with its sync-managed dependent rows. */
-export async function deleteQuestion(
-  ctx: MutationCtx,
-  questionId: Id<"questions">
-) {
-  const question = await ctx.db.get(questionId);
-
-  if (question) {
-    await deleteContentProjectionsBySourcePath(ctx, {
-      locale: question.locale,
-      route: question.sourcePath,
-    });
-  }
-
-  await deleteContentAuthorLinks(ctx, questionId, "question");
-  await deleteQuestionChoicesForQuestion(ctx, questionId);
-  await ctx.db.delete("questions", questionId);
 }
 
 /** Delete one curriculum lesson together with its sync-managed author links. */

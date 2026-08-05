@@ -56,8 +56,9 @@ export async function activateTryoutStartSource(
   const section = catalog.find(
     (row) => row.kind === "section" && row.locale === "id"
   );
+  const set = catalog.find((row) => row.kind === "set" && row.locale === "id");
   const placement = placements.find(({ locale }) => locale === "id");
-  if (!(section && placement)) {
+  if (!(section?.kind === "section" && set?.kind === "set" && placement)) {
     throw new Error("Expected one Indonesian signed try-out source.");
   }
 
@@ -85,14 +86,8 @@ export async function activateTryoutStartSource(
     sectionCatalogId: storedSection._id,
     sectionIdentity,
     sectionRowHash: storedSection.rowHash,
-    setIdentity: tryoutCatalogIdentity({
-      countryKey: TRYOUT_START_COUNTRY,
-      examKey: TRYOUT_START_EXAM,
-      kind: "set",
-      locale: "id",
-      setKey: TRYOUT_START_SET,
-      trackKey: TRYOUT_START_TRACK,
-    }),
+    set,
+    setIdentity: tryoutCatalogIdentity(set),
     snapshotId,
   };
 }

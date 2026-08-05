@@ -2,9 +2,9 @@
 
 ## Status
 
-Measured and implemented through 2026-07-11. This document separates billing
-evidence, runtime evidence, shipped architecture, and remaining operational
-work. A short log sample is not treated as proof of a full monthly invoice.
+Architecture verified through 2026-08-04. Billing and log measurements below
+retain their exact historical dates. A short log sample is not treated as proof
+of a full monthly invoice.
 
 ## Billing Snapshot
 
@@ -72,6 +72,9 @@ row had to change.
 
 ### Try-out discovery
 
+- Aksara owns authored try-out content and publishes a signed snapshot.
+- Nakafa reads the verified active snapshot directly. It has no authored
+  question-bank or try-out catalog tables.
 - `tryoutSetProgress` stores one compact latest-state row only after a user has
   attempted a set. It does not create a user-by-catalog cross product.
 - Attempt start and finalization update the progress row in the same Convex
@@ -88,13 +91,17 @@ row had to change.
 - Dead projection tables and 1,105 obsolete projection rows per environment were
   removed.
 - The obsolete `materialLocales` data path was removed.
+- The empty authored `questionChoices`, `questions`, `questionSets`,
+  `tryoutCountries`, `tryoutExams`, `tryoutTracks`, `tryoutSets`, and
+  `tryoutSections` production tables were removed after signed-runtime
+  acceptance and zero-row proof.
 - No-change content synchronization performs no redundant mutation batches.
 - One-time repair and migration functions were removed after dev and production
   verification.
 
 ## Post-change Evidence
 
-### Runtime sample
+### 2026-07-11 runtime sample
 
 A fresh production sample after the content read changes contained 745 completed
 executions, about 3.5 MB read, and zero errors:
@@ -110,17 +117,26 @@ The corresponding development sample was dominated by deliberate reset,
 migration, Quran rebuild, and integrity verification work. It must not be used
 as a normal-traffic projection.
 
-### Synchronization and integrity
+### 2026-07-11 synchronization and integrity
 
 - Production public-route rebuild: 1,276 routes across 1,236 occupied shards.
 - Immediate second public-route sync: 1,276 unchanged routes and zero writes.
-- Dev and production content verification both pass with 840 questions, 4,200
-  choices, 10 sets, 34 sections, and zero orphan choices.
 - Dev and production Quran verification pass with 114 surahs and 6,236 verses.
-- Dev and production both have 0 try-out attempts and 0 progress rows after
-  the canonical reset and rebuild; no browser verification data remains.
 - The latest 100 dev and production Convex executions had no non-null errors at
   the final verification point.
+
+### 2026-08-04 signed cutover
+
+- The active production release is `quran-tryout-cutover-20260804-a48d644`.
+- Signed article, material, learning-program, Quran, and try-out publication is
+  the authored-content source of truth.
+- Production retained 8 try-out attempts, 7 progress rows, 20 section attempts,
+  650 placements, 11 responses, 7 scores, 28 calibration runs, 4 IRT scale
+  versions, and 600 IRT scale items after the authored table removal and final
+  schema deployment.
+- Content reset preserves signed publication, try-out runtime, access,
+  entitlements, scoring, and IRT state. It deletes only rebuildable local
+  projections.
 
 ### Recovery evidence
 
@@ -137,15 +153,15 @@ deployment data.
 
 Millions of localized content records are partitioned by source identity,
 locale, route family, and bounded route shards. Hot user state remains in
-Convex, while static authoring truth remains in the repository and is projected
-incrementally. Queries use equality-prefixed indexes and cursor pagination; no
-runtime query added by this work collects a globally growing table.
+Convex. Aksara owns static authoring truth and sends signed projections to
+Nakafa. Queries use equality-prefixed indexes and cursor pagination; no runtime
+query added by this work collects a globally growing table.
 
-Try-out growth is partitioned by country, exam, track, locale, and set. Progress
-storage grows with actual user participation, not with every possible user and
-set pair. Status pagination reads the attempted index directly; the sparse
-unattempted stream advances through the already indexed track catalog in bounded
-pages.
+Try-out runtime growth is partitioned by signed release identity, locale, set,
+and user activity. Progress storage grows with actual participation, not with
+every possible user and set pair. Status pagination reads the attempted index
+directly; the sparse unattempted stream advances through the signed catalog in
+bounded pages.
 
 ## Remaining Operations
 

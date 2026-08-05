@@ -21,7 +21,6 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout-source";
-import { insertTryoutSet } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -45,21 +44,16 @@ describe("tryouts/sets/page", () => {
   it("invalidates a loaded cursor when user progress changes its rows", async () => {
     const t = convexTest(schema, convexModules);
     const progressId = await t.mutation(async (ctx) => {
-      await activateTryoutStartSource(ctx, "visible");
+      const fixture = await activateTryoutStartSource(ctx, "visible");
       const userId = await insertTryoutUser(ctx, {
         authId: "auth-signed-page",
         email: "signed-page@example.com",
         name: "Signed Page",
       });
-      const tryoutSetId = await insertTryoutSet(ctx, {
-        examKey: TRYOUT_START_EXAM,
-        setKey: TRYOUT_START_SET,
-        trackKey: TRYOUT_START_TRACK,
-      });
       const attemptId = await insertTryoutAttempt(ctx, {
         scoringStrategy: "raw",
         sectionSnapshots: [],
-        tryoutSetId,
+        set: fixture.set,
         userId,
       });
       return ctx.db.insert("tryoutSetProgress", {

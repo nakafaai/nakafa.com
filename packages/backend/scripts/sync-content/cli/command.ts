@@ -96,7 +96,7 @@ const printUsage = (): void => {
   log("  public-routes         - Sync the source-owned public route catalog");
   log("  sync:clean            - Find and remove stale content");
   log(
-    "  sync:reset            - Delete synced content/runtime rows (authors optional, requires --force)"
+    "  sync:reset            - Delete rebuildable local projections (authors optional, requires --force)"
   );
   log(
     "  sync:reset:analytics  - Delete analytics queues, leases, and popularity projections"
@@ -110,7 +110,7 @@ const printUsage = (): void => {
   log("  sync:prod:verify      - Verify production database");
   log("  sync:prod:clean       - Clean stale content in production");
   log(
-    "  sync:prod:reset       - Delete synced content/runtime rows in production (authors optional)"
+    "  sync:prod:reset       - Delete rebuildable local projections in production (authors optional)"
   );
   log(
     "  sync:prod:reset:analytics - Delete analytics queues, leases, and popularity projections in production"

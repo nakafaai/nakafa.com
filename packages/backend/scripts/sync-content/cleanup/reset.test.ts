@@ -97,18 +97,32 @@ describe("sync-content reset", () => {
     expect(log).not.toHaveBeenCalledWith("\nTo delete all content, run:");
   });
 
-  it("preserves program catalog and learner history rows", async () => {
+  it("preserves program catalog, learner history, access, and scoring rows", async () => {
     await runReset(
       {
+        irtCalibrationRuns: 28,
+        irtScaleItems: 600,
+        irtScaleVersions: 4,
         learningProgramSources: 5,
         learningPrograms: 4,
         learningViews: 20_000,
+        tryoutAccessCampaigns: 1,
+        tryoutAccessGrants: 4,
+        tryoutAccessLinks: 3,
+        tryoutAccessTargets: 2,
+        tryoutAttemptPlacements: 650,
+        tryoutAttempts: 8,
+        tryoutEntitlements: 5,
+        tryoutResponses: 11,
+        tryoutScores: 7,
+        tryoutSectionAttempts: 20,
+        tryoutSetProgress: 6,
         userLearningRecents: 500,
       },
       true
     );
 
-    expect(log).toHaveBeenCalledWith("  Total preserved items: 20509");
+    expect(log).toHaveBeenCalledWith("  Total preserved items: 21858");
     expect(logSuccess).toHaveBeenCalledWith(
       "\nReset-managed content is already empty. Nothing to delete."
     );

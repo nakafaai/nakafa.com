@@ -26,17 +26,15 @@ beforeEach(() => {
 });
 
 describe("tryouts/runtime/selectors", () => {
-  it("returns signed selectors without the pre-Aksara set row", async () => {
+  it("returns signed selectors for the active attempt", async () => {
     const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
+    const seeded = await t.mutation((ctx) =>
+      seedTryoutContentAccessState(ctx, {
         attemptStatus: "in-progress",
         sectionStatus: "in-progress",
         suffix: "content-signed-active",
-      });
-      await ctx.db.delete(fixture.tryoutSetId);
-      return fixture;
-    });
+      })
+    );
     const authed = t.withIdentity({
       sessionId: seeded.identity.sessionId,
       subject: seeded.identity.authUserId,
