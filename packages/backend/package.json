@@ -10,6 +10,7 @@
     "dev": "convex dev --tail-logs",
     "generate-schema": "cd convex/betterAuth && AUTH_GOOGLE_ID=schema-generation AUTH_GOOGLE_SECRET=schema-generation auth generate --yes && pnpm --workspace-root exec ultracite fix packages/backend/convex/betterAuth/schema.ts",
     "insights": "convex insights",
+    "runtime:tables": "tsx --conditions=import scripts/content-runtime/main.ts",
     "seed": "convex dev --once && convex run init",
     "setup": "convex dev --once",
     "sync": "tsx scripts/sync-content.ts full",
