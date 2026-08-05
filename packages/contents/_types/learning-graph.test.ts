@@ -66,66 +66,6 @@ describe("learning graph identity", () => {
     expect(first.assetId).toBe(second.assetId);
   });
 
-  it("keeps exam alignment separate from concrete try-out objects", () => {
-    const exam = readGraphIdentityFixture({
-      kind: "tryout-exam",
-      locale: "en",
-      route: "try-out/indonesia/snbt",
-    });
-    const track = readGraphIdentityFixture({
-      kind: "tryout-track",
-      locale: "en",
-      route: "try-out/indonesia/snbt/2027",
-    });
-    const set = readGraphIdentityFixture({
-      kind: "tryout-set",
-      locale: "en",
-      route: "try-out/indonesia/snbt/2027/set-1",
-    });
-    const section = readGraphIdentityFixture({
-      kind: "tryout-section",
-      locale: "en",
-      route: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
-    });
-
-    expect(exam.lensId).toBe("lens:tryout:indonesia:snbt");
-    expect(track.lensId).toBe(exam.lensId);
-    expect(set.lensId).toBe(exam.lensId);
-    expect(section.lensId).toBe(exam.lensId);
-    expect(section.assetId).toBe(
-      "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:2027:set-1:quantitative-knowledge"
-    );
-  });
-
-  it("keeps non-locale graph IDs stable across localized try-out routes", () => {
-    const english = readGraphIdentityFixture({
-      kind: "tryout-track",
-      locale: "en",
-      route: "try-out/indonesia/tka/mathematics",
-    });
-    const indonesian = readGraphIdentityFixture({
-      kind: "tryout-track",
-      locale: "id",
-      route: "try-out/indonesia/tka/matematika",
-    });
-
-    expect({
-      alignmentId: indonesian.alignmentId,
-      conceptId: indonesian.conceptId,
-      learningObjectId: indonesian.learningObjectId,
-      lensId: indonesian.lensId,
-    }).toEqual({
-      alignmentId: english.alignmentId,
-      conceptId: english.conceptId,
-      learningObjectId: english.learningObjectId,
-      lensId: english.lensId,
-    });
-    expect(english.learningObjectId).toBe(
-      "lo:tryout-track:indonesia:tka:mathematics"
-    );
-    expect(english.assetId).not.toBe(indonesian.assetId);
-  });
-
   it("supports non-route Quran graph identity", () => {
     expect(
       readGraphIdentityFixture({

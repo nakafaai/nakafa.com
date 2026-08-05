@@ -1,7 +1,11 @@
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { readTryoutMetadata } from "@repo/backend/convex/tryouts/catalog/metadata";
+import {
+  readTryoutLocalizedPath,
+  readTryoutMetadata,
+} from "@repo/backend/convex/tryouts/catalog/metadata";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
@@ -119,6 +123,48 @@ describe("tryouts/catalog/metadata", () => {
         ],
       },
     });
+  });
+
+  it("resolves one exact localized path through signed identity", async () => {
+    const t = convexTest(schema, convexModules);
+    const englishPath = PublicPathSchema.make("try-out/indonesia");
+    const english = makeTryoutCatalogRow("en").record.row;
+    const indonesian = {
+      ...makeTryoutCatalogRow("id").record.row,
+      publicPath: PublicPathSchema.make("try-out/indonesia-id"),
+    };
+    await t.mutation((ctx) =>
+      activateTryoutSnapshot(ctx, {
+        catalog: [english, indonesian],
+        placements: [
+          makeTryoutPlacementRow("en").record.row,
+          makeTryoutPlacementRow("id").record.row,
+        ],
+      })
+    );
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readTryoutLocalizedPath(ctx, {
+            currentLocale: "en",
+            locale: "id",
+            publicPath: englishPath,
+          })
+        )
+      )
+    ).resolves.toBe(indonesian.publicPath);
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readTryoutLocalizedPath(ctx, {
+            currentLocale: "en",
+            locale: "id",
+            publicPath: "try-out/missing",
+          })
+        )
+      )
+    ).resolves.toBeNull();
   });
 
   it("rejects a route requested through the wrong hierarchy kind", async () => {

@@ -93,9 +93,7 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
       return null;
     }
     const ownership = yield* getRuntimeTryoutRoute({ locale, publicPath });
-    if (ownership.managed) {
-      return ownership.exists ? null : locale;
-    }
+    return ownership.exists ? null : locale;
   }
   const route = yield* getRuntimePublicRoute({ locale, publicPath });
   if (!route) {

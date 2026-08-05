@@ -15,7 +15,7 @@ export function readNakafaContentRefFixture(
   route: string,
   section: NakafaAgentSection
 ): NakafaAgentContentRef {
-  const projection = getSourceRouteProjectionForRoute(route, locale);
+  const projection = getSourceRouteProjectionForRoute(route);
 
   if (!projection || projection.sourceRoot !== section) {
     throw createInvalidFixtureError(route);

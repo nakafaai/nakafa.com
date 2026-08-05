@@ -17,6 +17,10 @@ vi.mock("@repo/backend/client/runtime", () => ({
 const CountArgsSchema = Schema.Struct({
   locale: LocaleSchema,
 });
+const TryoutCountryArgsSchema = Schema.Struct({
+  locale: LocaleSchema,
+  publicPath: Schema.String,
+});
 
 beforeEach(() => {
   runtimeMocks.fetchConvexRuntimeQuery.mockReset();
@@ -41,8 +45,18 @@ describe("readNakafaTaxonomy", () => {
     ]);
     expect(taxonomy.tools).toContain("nakafa_get_quran_reference");
     expect(taxonomy.subject.materials).toContain("mathematics");
+    expect(taxonomy.tryout).toEqual({
+      countries: [{ id: "indonesia", label: "Indonesia" }],
+      exams: [{ id: "snbt", label: "SNBT" }],
+    });
     expect(calledRuntimeQueries()).toContain(
       getFunctionName(api.contents.queries.runtime.listContentRouteCounts)
+    );
+    expect(calledRuntimeQueries()).toContain(
+      getFunctionName(api.tryouts.queries.catalog.getHubPage)
+    );
+    expect(calledRuntimeQueries()).toContain(
+      getFunctionName(api.tryouts.queries.catalog.getCountryPage)
     );
     expect(calledRuntimeQueries()).not.toContain(
       getFunctionName(api.contents.queries.runtime.listContentRoutesByPrefix)
@@ -68,6 +82,48 @@ function readRuntimeFixture(
     getFunctionName(api.contents.queries.runtime.listContentRouteCounts)
   ) {
     return Promise.resolve(readContentRouteCounts(args));
+  }
+
+  if (
+    getFunctionName(query) ===
+    getFunctionName(api.tryouts.queries.catalog.getHubPage)
+  ) {
+    return Promise.resolve({
+      countries: [
+        {
+          countryCode: "ID",
+          countryKey: "indonesia",
+          examCount: 1,
+          publicPath: "try-out/indonesia",
+          title: "Indonesia",
+        },
+      ],
+      sourceRevision: "test-revision",
+    });
+  }
+
+  if (
+    getFunctionName(query) ===
+    getFunctionName(api.tryouts.queries.catalog.getCountryPage)
+  ) {
+    const input = Schema.decodeUnknownSync(TryoutCountryArgsSchema)(args);
+    return Promise.resolve({
+      country: {
+        countryCode: "ID",
+        countryKey: "indonesia",
+        publicPath: input.publicPath,
+        title: "Indonesia",
+      },
+      exams: [
+        {
+          countryKey: "indonesia",
+          examKey: "snbt",
+          publicPath: `${input.publicPath}/snbt`,
+          title: "SNBT",
+        },
+      ],
+      sourceRevision: "test-revision",
+    });
   }
 
   return Promise.reject(new Error("Unhandled taxonomy query fixture."));

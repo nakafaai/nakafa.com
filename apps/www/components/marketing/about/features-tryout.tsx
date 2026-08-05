@@ -1,15 +1,24 @@
-import choices from "@repo/contents/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/choices";
-import QuestionEn from "@repo/contents/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question.en.mdx";
-import QuestionId from "@repo/contents/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question.id.mdx";
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
-import { FeaturesTryoutChoices } from "@/components/marketing/about/features-tryout-choices";
+import { ChoiceCardContent } from "@/components/shared/choice/card";
+import { choiceCardVariants } from "@/components/shared/choice/variants";
+import { ChoiceCardVisual } from "@/components/shared/choice/visual";
+import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 
-/** Uses a real Nakafa question and the production Tryout choice surface. */
-export function FeaturesTryout() {
+type TryoutCountry = FunctionReturnType<
+  typeof api.tryouts.queries.catalog.getHubPage
+>["countries"][number];
+
+/** Shows the signed production try-out catalog inside the marketing story. */
+export function FeaturesTryout({
+  countries,
+}: {
+  readonly countries: readonly TryoutCountry[];
+}) {
   const locale = useLocale();
   const t = useTranslations("Features");
-  const Question = locale === "id" ? QuestionId : QuestionEn;
-  const localizedChoices = locale === "id" ? choices.id : choices.en;
 
   return (
     <div className="relative flex min-h-[38rem] flex-col overflow-hidden border-b bg-background lg:col-span-5 lg:min-h-[40rem]">
@@ -19,12 +28,25 @@ export function FeaturesTryout() {
         })}
       </h3>
       <article className="mt-auto px-8 pt-10 pb-8 lg:px-10 lg:pt-12 lg:pb-10">
-        <section className="my-6">
-          <Question />
-        </section>
-        <section className="my-8">
-          <FeaturesTryoutChoices choices={localizedChoices} />
-        </section>
+        <div className="grid grid-cols-2 gap-3">
+          {countries.slice(0, 4).map((country) => (
+            <TryoutIntentLink
+              className={choiceCardVariants()}
+              href={`/${locale}/${country.publicPath}`}
+              key={country.countryKey}
+            >
+              <ChoiceCardVisual seed={country.publicPath}>
+                <CountryFlagIcon
+                  className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
+                  countryCode={country.countryCode}
+                />
+              </ChoiceCardVisual>
+              <ChoiceCardContent>
+                <h4>{country.title}</h4>
+              </ChoiceCardContent>
+            </TryoutIntentLink>
+          ))}
+        </div>
       </article>
     </div>
   );

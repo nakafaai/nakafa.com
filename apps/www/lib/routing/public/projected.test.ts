@@ -41,7 +41,7 @@ describe("projected public html route rejection", () => {
     mockGetRuntimePublicRoute.mockReturnValue(Effect.succeed(null));
     mockGetRuntimeTryoutRoute.mockReset();
     mockGetRuntimeTryoutRoute.mockReturnValue(
-      Effect.succeed({ exists: false, managed: false })
+      Effect.succeed({ exists: false })
     );
     mockReadActiveContentRoute.mockReset();
     mockReadActiveContentRoute.mockReturnValue(
@@ -98,8 +98,8 @@ describe("projected public html route rejection", () => {
   it("uses signed try-out ownership for exact routes and tombstones", async () => {
     const pathname = "/en/try-out/indonesia/snbt/2027";
     mockGetRuntimeTryoutRoute
-      .mockReturnValueOnce(Effect.succeed({ exists: true, managed: true }))
-      .mockReturnValueOnce(Effect.succeed({ exists: false, managed: true }));
+      .mockReturnValueOnce(Effect.succeed({ exists: true }))
+      .mockReturnValueOnce(Effect.succeed({ exists: false }));
 
     await expect(readRejection(pathname)).resolves.toBeNull();
     await expect(readRejection(pathname)).resolves.toBe("en");
@@ -117,8 +117,8 @@ describe("projected public html route rejection", () => {
     ];
     for (const pathname of paths) {
       mockGetRuntimeTryoutRoute
-        .mockReturnValueOnce(Effect.succeed({ exists: true, managed: true }))
-        .mockReturnValueOnce(Effect.succeed({ exists: false, managed: true }));
+        .mockReturnValueOnce(Effect.succeed({ exists: true }))
+        .mockReturnValueOnce(Effect.succeed({ exists: false }));
 
       await expect(readRejection(pathname)).resolves.toBeNull();
       await expect(readRejection(pathname)).resolves.toBe("en");
@@ -137,18 +137,6 @@ describe("projected public html route rejection", () => {
     }
     expect(mockGetRuntimeTryoutRoute).not.toHaveBeenCalled();
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
-  });
-
-  it("uses the generic route projection before signed try-out ownership", async () => {
-    const pathname = "/en/try-out/indonesia/snbt";
-    mockGetRuntimePublicRoute
-      .mockReturnValueOnce(Effect.succeed({ kind: "tryout-exam" }))
-      .mockReturnValueOnce(Effect.succeed({ kind: "subject-topic" }));
-
-    await expect(readRejection(pathname)).resolves.toBeNull();
-    await expect(readRejection(pathname)).resolves.toBe("en");
-    expect(mockGetRuntimeTryoutRoute).toHaveBeenCalledTimes(2);
-    expect(mockGetRuntimePublicRoute).toHaveBeenCalledTimes(2);
   });
 
   it("accepts the exact local preview route before the Convex lookup", async () => {

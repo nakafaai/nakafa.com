@@ -2,8 +2,6 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-  CONST_CHOICES_REGEX,
-  DEFAULT_EXPORT_REGEX,
   METADATA_REGEX,
   MULTIPLE_NEWLINES_REGEX,
   REFERENCES_REGEX,
@@ -14,7 +12,6 @@ import {
   type Reference,
   ReferenceSchema,
 } from "@repo/contents/_types/content";
-import { QuestionChoicesSchema } from "@repo/contents/_types/question-bank/choices";
 import { Effect, Option, Schema } from "effect";
 
 class MdxReadError extends Schema.TaggedError<MdxReadError>()("MdxReadError", {
@@ -99,58 +96,6 @@ export const readMdxFile = Effect.fn("mdx.readMdxFile")(function* (
     filePath,
   };
 });
-
-/** Reads optional question choices, returning null when no valid choices exist. */
-export const readQuestionChoices = Effect.fn("mdx.readQuestionChoices")(
-  function* (questionDir: string) {
-    const choicesPath = join(questionDir, "choices.ts");
-    const file = yield* Effect.either(
-      Effect.tryPromise({
-        try: () => readFile(choicesPath, "utf8"),
-        catch: (error) =>
-          new MdxReadError({
-            message: error instanceof Error ? error.message : String(error),
-          }),
-      })
-    );
-
-    if (file._tag === "Left") {
-      return null;
-    }
-
-    const objectMatch =
-      file.right.match(DEFAULT_EXPORT_REGEX) ??
-      file.right.match(CONST_CHOICES_REGEX);
-
-    if (!objectMatch) {
-      return null;
-    }
-
-    const choicesObject = yield* Effect.either(
-      Effect.try({
-        try: () => new Function(`return ${objectMatch[1]}`)(),
-        catch: (error) =>
-          new MdxReadError({
-            message: error instanceof Error ? error.message : String(error),
-          }),
-      })
-    );
-
-    if (choicesObject._tag === "Left") {
-      return null;
-    }
-
-    const parseResult = Schema.decodeUnknownOption(QuestionChoicesSchema)(
-      choicesObject.right
-    );
-
-    if (parseResult._tag === "None") {
-      return null;
-    }
-
-    return parseResult.value;
-  }
-);
 
 /** Reads optional article references, dropping invalid entries instead of failing sync. */
 export const readArticleReferences = Effect.fn("mdx.readArticleReferences")(

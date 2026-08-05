@@ -1,8 +1,9 @@
+import { listPublicArticleRoutes } from "@repo/contents/_types/route/article";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
 import { createPublicLearningIndex } from "@repo/contents/_types/route/learning/public";
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
-import { readStaticPublicTryoutRoutes } from "@repo/contents/_types/route/tryout/static";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 type MaterialLessonRoute = Extract<
@@ -13,9 +14,9 @@ type MaterialLessonRoute = Extract<
 /** Builds the production-shaped static route rows used by index tests. */
 function readStaticRoutes() {
   return [
+    ...Effect.runSync(listPublicArticleRoutes()),
     ...readStaticPublicContentRoutes(),
     ...readStaticPublicCurriculumRoutes(),
-    ...readStaticPublicTryoutRoutes(),
   ];
 }
 
@@ -40,7 +41,7 @@ function requireMaterialLessonRoute(
 }
 
 describe("createPublicLearningIndex", () => {
-  it("resolves exact routes and try-out section locale projection by keyed lookup", () => {
+  it("resolves exact material routes by keyed lookup", () => {
     const index = createPublicLearningIndex({ routes: readStaticRoutes() });
 
     expect(
@@ -60,31 +61,6 @@ describe("createPublicLearningIndex", () => {
       )
     ).toMatchObject({
       publicPath: "materi/ai-ds/metode-linear-ai/sistem-persamaan-linear",
-    });
-
-    expect(
-      index.resolveRouteByPath(
-        "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
-        "id"
-      )
-    ).toMatchObject({
-      countryKey: "indonesia",
-      examKey: "snbt",
-      kind: "tryout-section",
-      sectionKey: "quantitative-knowledge",
-      setKey: "set-1",
-      trackKey: "2027",
-    });
-
-    const idTryoutRoute = requireRoute(
-      index.resolveRouteByPath(
-        "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
-        "id"
-      )
-    );
-
-    expect(index.projectRouteToLocale(idTryoutRoute, "en")).toMatchObject({
-      publicPath: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     });
   });
 

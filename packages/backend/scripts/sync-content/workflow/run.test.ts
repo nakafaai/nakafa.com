@@ -262,7 +262,7 @@ describe("sync-content workflows", () => {
         hasStale: false,
       },
       {
-        changedFiles: ["packages/contents/_types/route/tryout/path.ts"],
+        changedFiles: ["packages/contents/_types/route/path.ts"],
         syncState: {
           lastSyncCommit: "previous-commit",
           lastSyncTimestamp: 1,

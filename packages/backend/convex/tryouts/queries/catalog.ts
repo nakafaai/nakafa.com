@@ -3,7 +3,9 @@ import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/ca
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
+  readTryoutLocalizedPath,
   readTryoutMetadata,
+  tryoutLocalizedPathArgsValidator,
   tryoutMetadataArgsValidator,
   tryoutMetadataReturnValidator,
 } from "@repo/backend/convex/tryouts/catalog/metadata";
@@ -51,6 +53,13 @@ export const getMetadata = query({
   args: tryoutMetadataArgsValidator,
   returns: tryoutMetadataReturnValidator,
   handler: (ctx, args) => runConvexProgram(readTryoutMetadata(ctx, args)),
+});
+
+/** Resolves one signed try-out route to its exact localized counterpart. */
+export const getLocalizedPath = query({
+  args: tryoutLocalizedPathArgsValidator,
+  returns: v.union(v.string(), v.null()),
+  handler: (ctx, args) => runConvexProgram(readTryoutLocalizedPath(ctx, args)),
 });
 
 /** Reads the localized country-first try-out hub page model. */

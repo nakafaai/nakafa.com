@@ -23,14 +23,6 @@ export interface TryoutAnswerContent {
   readonly sourceRevision: string;
 }
 
-/** Minimum filesystem identity retained only for pre-Aksara attempts. */
-export interface TryoutFilesystemSource {
-  readonly contentHash: string;
-  readonly questionOrder: number;
-  readonly sourcePath: string;
-  readonly sourceRevision: string;
-}
-
 /** Exact signed question selector authorized by Convex. */
 export type TryoutQuestionSelector = SignedContentAccess["questions"][number];
 

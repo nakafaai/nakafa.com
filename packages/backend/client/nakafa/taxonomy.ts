@@ -15,7 +15,6 @@ import {
   NUMERIC_GRADES,
   SUBJECT_CATEGORIES,
 } from "@repo/contents/_types/taxonomy";
-import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { defaultLocale, type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
@@ -25,7 +24,7 @@ export function readNakafaTaxonomy(
   locale: Locale = defaultLocale
 ) {
   return Effect.gen(function* () {
-    const [contentCounts, surahs] = yield* Effect.all([
+    const [contentCounts, surahs, tryout] = yield* Effect.all([
       getContentCounts(convexUrl),
       fetchNakafaRuntimeQuery(
         convexUrl,
@@ -33,6 +32,7 @@ export function readNakafaTaxonomy(
         api.contents.queries.runtime.listQuranSurahs,
         {}
       ),
+      readTryoutTaxonomy(convexUrl, locale),
     ]);
 
     return yield* decodeNakafaTaxonomy({
@@ -46,10 +46,7 @@ export function readNakafaTaxonomy(
         recommended: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
         root_note: `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only.`,
       },
-      tryout: {
-        countries: getTryoutCountryOptions(locale),
-        exams: getTryoutExamOptions(locale),
-      },
+      tryout,
       locale,
       locales,
       quran: {
@@ -71,24 +68,47 @@ export function readNakafaTaxonomy(
   });
 }
 
-/** Derives supported try-out countries from source-controlled exam programs. */
-function getTryoutCountryOptions(locale: Locale) {
-  const options = new Map<string, string>();
+/** Reads country and exam labels from the active signed try-out catalog. */
+const readTryoutTaxonomy = Effect.fn("nakafa.taxonomy.readTryout")(function* (
+  convexUrl: string,
+  locale: Locale
+) {
+  const hub = yield* fetchNakafaRuntimeQuery(
+    convexUrl,
+    "getTryoutHubPage",
+    api.tryouts.queries.catalog.getHubPage,
+    { locale }
+  );
+  const countryPages = yield* Effect.forEach(
+    hub.countries,
+    (country) =>
+      fetchNakafaRuntimeQuery(
+        convexUrl,
+        "getTryoutCountryPage",
+        api.tryouts.queries.catalog.getCountryPage,
+        { locale, publicPath: country.publicPath }
+      ),
+    { concurrency: Math.max(1, hub.countries.length) }
+  );
+  const examOptions = new Map<string, string>();
 
-  for (const source of TRYOUT_SOURCES) {
-    options.set(source.countryKey, source.countryTranslations[locale].title);
+  for (const page of countryPages) {
+    if (!page) {
+      continue;
+    }
+    for (const exam of page.exams) {
+      examOptions.set(exam.examKey, exam.title);
+    }
   }
 
-  return Array.from(options, ([id, label]) => ({ id, label }));
-}
-
-/** Derives supported try-out exams from source-controlled exam programs. */
-function getTryoutExamOptions(locale: Locale) {
-  return TRYOUT_SOURCES.map((source) => ({
-    id: source.examKey,
-    label: source.examTranslations[locale].title,
-  }));
-}
+  return {
+    countries: hub.countries.map((country) => ({
+      id: country.countryKey,
+      label: country.title,
+    })),
+    exams: Array.from(examOptions, ([id, label]) => ({ id, label })),
+  };
+});
 
 /** Reads materialized synced content route counts per locale. */
 function getContentCounts(convexUrl: string) {

@@ -15,6 +15,12 @@ export const tryoutMetadataArgsValidator = {
   publicPath: v.string(),
 };
 
+export const tryoutLocalizedPathArgsValidator = {
+  currentLocale: localeValidator,
+  locale: localeValidator,
+  publicPath: v.string(),
+};
+
 const tryoutAlternateValidator = v.object({
   locale: localeValidator,
   publicPath: v.string(),
@@ -40,26 +46,25 @@ interface TryoutMetadataInput {
   readonly publicPath: string;
 }
 
+interface TryoutLocalizedPathInput {
+  readonly currentLocale: (typeof locales)[number];
+  readonly locale: (typeof locales)[number];
+  readonly publicPath: string;
+}
+
 /** Reads one route and its localized counterparts from signed ownership. */
 export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
   function* (ctx: QueryCtx, input: TryoutMetadataInput) {
     const owner = yield* loadTryoutOwner(ctx);
     const { snapshot, snapshotId } = owner;
-    const storedCurrent = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
-          index
-            .eq("snapshotId", snapshotId)
-            .eq("locale", input.locale)
-            .eq("publicPath", input.publicPath)
-        )
-        .unique()
-    );
-    if (!storedCurrent) {
+    const current = yield* readCurrentRoute(ctx, {
+      locale: input.locale,
+      publicPath: input.publicPath,
+      snapshotId,
+    });
+    if (!current) {
       return { route: null };
     }
-    const current = yield* verifyTryoutCatalog(storedCurrent, snapshotId);
     if (current.kind !== input.kind || !current.publicPath) {
       return { route: null };
     }
@@ -86,6 +91,59 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
         title: current.title,
       },
     };
+  }
+);
+
+/** Resolves one exact signed route to its target-locale public path. */
+export const readTryoutLocalizedPath = Effect.fn(
+  "tryouts.catalog.readLocalizedPath"
+)(function* (ctx: QueryCtx, input: TryoutLocalizedPathInput) {
+  const owner = yield* loadTryoutOwner(ctx);
+  const current = yield* readCurrentRoute(ctx, {
+    locale: input.currentLocale,
+    publicPath: input.publicPath,
+    snapshotId: owner.snapshotId,
+  });
+  if (!current) {
+    return null;
+  }
+
+  const alternate = yield* readAlternate(ctx, {
+    current,
+    locale: input.locale,
+    snapshotId: owner.snapshotId,
+  });
+  if (!alternate) {
+    return null;
+  }
+  return alternate.publicPath;
+});
+
+/** Reads and verifies one exact current route from the active signed catalog. */
+const readCurrentRoute = Effect.fn("tryouts.catalog.readCurrentRoute")(
+  function* (
+    ctx: QueryCtx,
+    input: {
+      readonly locale: (typeof locales)[number];
+      readonly publicPath: string;
+      readonly snapshotId: string;
+    }
+  ) {
+    const stored = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutCatalog")
+        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
+          index
+            .eq("snapshotId", input.snapshotId)
+            .eq("locale", input.locale)
+            .eq("publicPath", input.publicPath)
+        )
+        .unique()
+    );
+    if (!stored) {
+      return null;
+    }
+    return yield* verifyTryoutCatalog(stored, input.snapshotId);
   }
 );
 

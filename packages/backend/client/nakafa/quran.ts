@@ -44,7 +44,7 @@ export function readQuranMarkdown(
   ref: NakafaAgentContentRef
 ) {
   return Effect.gen(function* () {
-    const surahNumber = getQuranSurahNumberForRoute(ref.route, ref.locale);
+    const surahNumber = getQuranSurahNumberForRoute(ref.route);
 
     if (surahNumber === null) {
       return Option.none<NakafaAgentMarkdown>();

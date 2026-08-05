@@ -22,44 +22,6 @@ function readRouteIdentityKey(route: PublicRoute) {
     return ["curriculum", route.programKey, route.nodeKey].join(":");
   }
 
-  if (route.kind === "tryout-country") {
-    return ["tryout-country", route.countryKey].join(":");
-  }
-
-  if (route.kind === "tryout-exam") {
-    return ["tryout-exam", route.countryKey, route.examKey].join(":");
-  }
-
-  if (route.kind === "tryout-track") {
-    return [
-      "tryout-track",
-      route.countryKey,
-      route.examKey,
-      route.trackKey,
-    ].join(":");
-  }
-
-  if (route.kind === "tryout-set") {
-    return [
-      "tryout-set",
-      route.countryKey,
-      route.examKey,
-      route.trackKey,
-      route.setKey,
-    ].join(":");
-  }
-
-  if (route.kind === "tryout-section") {
-    return [
-      "tryout-section",
-      route.countryKey,
-      route.examKey,
-      route.trackKey,
-      route.setKey,
-      route.sectionKey,
-    ].join(":");
-  }
-
   return [route.kind, route.sourcePath].join(":");
 }
 

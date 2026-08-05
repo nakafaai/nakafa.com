@@ -8,7 +8,6 @@ import {
   ProgramNavigationLevelSchema,
 } from "@repo/contents/_types/program/schema";
 import { PublicRoutePathSchema } from "@repo/contents/_types/route/segment";
-import { TryoutKeySchema } from "@repo/contents/_types/tryout/schema";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -39,11 +38,6 @@ export const PUBLIC_ROUTE_KIND_VALUES = [
   "curriculum-context",
   "subject-lesson",
   "subject-topic",
-  "tryout-country",
-  "tryout-exam",
-  "tryout-section",
-  "tryout-set",
-  "tryout-track",
 ] as const;
 
 export const PublicRouteKindSchema = Schema.Literal(
@@ -123,65 +117,10 @@ export type PublicCurriculumRoute = SchemaType<
   typeof PublicCurriculumRouteSchema
 >;
 
-const PublicTryoutRouteBaseSchema = Schema.extend(
-  PublicRouteBaseSchema,
-  Schema.Struct({
-    countryKey: TryoutKeySchema,
-    order: Schema.Int.pipe(Schema.nonNegative()),
-    sourceRevision: Schema.String,
-  })
-);
-
-export const PublicTryoutRouteSchema = Schema.Union(
-  Schema.extend(
-    PublicTryoutRouteBaseSchema,
-    Schema.Struct({
-      kind: Schema.Literal("tryout-country"),
-    })
-  ),
-  Schema.extend(
-    Schema.extend(PublicTryoutRouteBaseSchema, PublicRouteParentSchema),
-    Schema.Struct({
-      examKey: TryoutKeySchema,
-      kind: Schema.Literal("tryout-exam"),
-    })
-  ),
-  Schema.extend(
-    Schema.extend(PublicTryoutRouteBaseSchema, PublicRouteParentSchema),
-    Schema.Struct({
-      examKey: TryoutKeySchema,
-      kind: Schema.Literal("tryout-track"),
-      trackKey: TryoutKeySchema,
-    })
-  ),
-  Schema.extend(
-    Schema.extend(PublicTryoutRouteBaseSchema, PublicRouteParentSchema),
-    Schema.Struct({
-      examKey: TryoutKeySchema,
-      kind: Schema.Literal("tryout-set"),
-      setKey: TryoutKeySchema,
-      trackKey: TryoutKeySchema,
-    })
-  ),
-  Schema.extend(
-    Schema.extend(PublicTryoutRouteBaseSchema, PublicRouteParentSchema),
-    Schema.Struct({
-      examKey: TryoutKeySchema,
-      kind: Schema.Literal("tryout-section"),
-      sectionKey: TryoutKeySchema,
-      setKey: TryoutKeySchema,
-      trackKey: TryoutKeySchema,
-    })
-  )
-);
-
-export type PublicTryoutRoute = SchemaType<typeof PublicTryoutRouteSchema>;
-
 export const PublicRouteSchema = Schema.Union(
   PublicArticleRouteSchema,
   PublicContentRouteSchema,
-  PublicCurriculumRouteSchema,
-  PublicTryoutRouteSchema
+  PublicCurriculumRouteSchema
 );
 
 export type PublicRoute = SchemaType<typeof PublicRouteSchema>;

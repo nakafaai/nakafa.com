@@ -50,10 +50,7 @@ export function getLearningGraphIdentity(source: LearningGraphSource) {
 export function createLearningGraphIdentityFromRoute(
   source: Omit<LearningGraphSource, "kind">
 ) {
-  const projection = getSourceRouteProjectionForRoute(
-    source.route,
-    source.locale
-  );
+  const projection = getSourceRouteProjectionForRoute(source.route);
 
   if (!projection) {
     return null;

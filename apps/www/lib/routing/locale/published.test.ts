@@ -12,6 +12,7 @@ const publishedMocks = vi.hoisted(() => ({
   materialContext: vi.fn(),
   materialRoute: vi.fn(),
   programRoute: vi.fn(),
+  tryoutPath: vi.fn(),
 }));
 const activeReleaseId = ReleaseIdSchema.make("material-release");
 const idProgramSubject = readTestPublishedRoute(
@@ -27,6 +28,9 @@ vi.mock("@/lib/content/material/route", () => ({
 }));
 vi.mock("@/lib/content/program/route", () => ({
   readPublishedProgramRoute: publishedMocks.programRoute,
+}));
+vi.mock("@/lib/content/tryout/path", () => ({
+  readPublishedTryoutLocalizedPath: publishedMocks.tryoutPath,
 }));
 
 beforeEach(() => {
@@ -44,6 +48,7 @@ beforeEach(() => {
       route: testProgramSubject,
     })
   );
+  publishedMocks.tryoutPath.mockReset().mockReturnValue(Effect.succeed(null));
 });
 
 /** Reads one English material route through its Indonesian signed target. */
@@ -122,6 +127,31 @@ describe("published localized route ownership", () => {
         })
       )
     ).toBeNull();
+  });
+
+  it("projects signed try-out counterparts and fails closed for tombstones", () => {
+    publishedMocks.tryoutPath
+      .mockReturnValueOnce(
+        Effect.succeed(
+          "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
+        )
+      )
+      .mockReturnValueOnce(Effect.succeed(null));
+    const read = () =>
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "id",
+          locale: "en",
+          publicPath:
+            "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
+          search: "",
+        })
+      );
+
+    expect(read()).toBe(
+      "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
+    );
+    expect(read).toThrow();
   });
 
   it("fails closed for curriculum tombstones and missing counterparts", () => {

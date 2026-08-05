@@ -2,13 +2,12 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
+import type { TryoutCountrySelectorOption } from "@/components/tryout/catalog/options";
 
-export interface TryoutPreferenceOption {
-  countryCode: string;
-  countryKey: string;
-  publicPath: string;
-  title: string;
-}
+export type TryoutPreferenceOption = Pick<
+  TryoutCountrySelectorOption,
+  "countryCode" | "countryKey" | "publicPath" | "title"
+>;
 
 /** Return a try-out mutation that updates the matching localized preference. */
 export function useSetPreferredTryoutMutation(
