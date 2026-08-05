@@ -5,19 +5,13 @@ import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { getSectionScoreResult } from "@repo/backend/convex/tryouts/queries/score";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
+import { tryoutRuntimeChoiceValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import {
   getTryoutSectionContentAccess,
   tryoutCurrentSectionValidator,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import { readRouteAttempt } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { ConvexError, v } from "convex/values";
-
-const runtimeChoiceValidator = v.object({
-  isCorrect: v.optional(v.boolean()),
-  label: v.string(),
-  optionKey: v.string(),
-  order: v.number(),
-});
 
 const runtimeResponseValidator = v.object({
   answeredAt: v.number(),
@@ -26,7 +20,7 @@ const runtimeResponseValidator = v.object({
 });
 
 const runtimeQuestionValidator = v.object({
-  choices: v.array(runtimeChoiceValidator),
+  choices: v.array(tryoutRuntimeChoiceValidator),
   contentHash: v.string(),
   placementId: v.id("tryoutAttemptPlacements"),
   questionOrder: v.number(),

@@ -3,6 +3,7 @@ import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/convex/tryouts/access/source";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
+import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import {
   tryoutScoreStatusValidator,
   tryoutScoringStrategyValidator,
@@ -25,13 +26,6 @@ const tryoutSectionSnapshotValidator = v.object({
   sectionRowHash: v.string(),
   sourceRevision: v.string(),
   timeLimitSeconds: v.number(),
-});
-
-const tryoutChoiceSnapshotValidator = v.object({
-  isCorrect: v.boolean(),
-  label: v.string(),
-  optionKey: v.string(),
-  order: v.number(),
 });
 
 const tables = {

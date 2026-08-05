@@ -3,6 +3,10 @@ import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/ca
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
+  featuredTryoutValidator,
+  readFeaturedTryout,
+} from "@repo/backend/convex/tryouts/catalog/featured";
+import {
   readTryoutLocalizedPath,
   readTryoutMetadata,
   tryoutLocalizedPathArgsValidator,
@@ -35,6 +39,16 @@ const sectionPageFields = {
   track: publicTryoutTrackValidator,
 };
 const sectionPageValidator = v.union(v.null(), v.object(sectionPageFields));
+
+/** Reads the one signed question demonstrated on the marketing landing page. */
+export const getFeaturedQuestion = query({
+  args: {
+    locale: localeValidator,
+  },
+  returns: featuredTryoutValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(readFeaturedTryout(ctx, args.locale)),
+});
 
 /** Checks one exact public route against its active signed try-out owner. */
 export const getRoute = query({
