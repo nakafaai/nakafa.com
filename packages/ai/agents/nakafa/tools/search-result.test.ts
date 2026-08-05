@@ -1,5 +1,4 @@
 import {
-  combineSearchResults,
   formatSearchGroup,
   getSearchTokens,
   rankSearchResult,
@@ -76,75 +75,6 @@ describe("Nakafa search results", () => {
       rankSearchResult(result, ["quantitative"]).items.map((item) => item.title)
     ).toEqual(["Quantitative Knowledge", "Quantitative Practice", "General"]);
     expect(rankSearchResult(result, []).items).toBe(result.items);
-  });
-
-  it("returns one query result without rebuilding its page", () => {
-    const result = searchResult([searchItem("single", "Single")]);
-
-    expect(
-      combineSearchResults(
-        { limit: 10, offset: 0, queries: ["single"] },
-        [result],
-        ["single"]
-      )
-    ).toBe(result);
-  });
-
-  it("interleaves, deduplicates, and paginates multiple query pages", () => {
-    const first = searchItem("first", "First");
-    const second = searchItem("second", "Second");
-    const combined = combineSearchResults(
-      { limit: 2, offset: 5, queries: ["first", "second", "empty"] },
-      [
-        searchResult([first, second]),
-        searchResult([first], { hasMore: true }),
-        searchResult([]),
-      ],
-      []
-    );
-
-    expect(combined).toMatchObject({
-      count: 2,
-      has_more: true,
-      items: [first, second],
-      next_offset: 7,
-      offset: 5,
-    });
-  });
-
-  it("marks a truncated local aggregate as paginated", () => {
-    const combined = combineSearchResults(
-      { limit: 1, offset: 0, queries: ["alpha", "beta"] },
-      [
-        searchResult([searchItem("alpha", "Alpha")]),
-        searchResult([searchItem("beta", "Beta")]),
-      ],
-      []
-    );
-
-    expect(combined).toMatchObject({
-      count: 1,
-      has_more: true,
-      next_offset: 1,
-    });
-  });
-
-  it("returns a complete ranked aggregate without a next offset", () => {
-    const combined = combineSearchResults(
-      { limit: 2, offset: 0, queries: ["quantitative", "general"] },
-      [
-        searchResult([searchItem("general", "General")]),
-        searchResult([searchItem("quantitative", "Quantitative Knowledge")]),
-      ],
-      ["quantitative"]
-    );
-
-    expect(combined.items.map((item) => item.title)).toEqual([
-      "Quantitative Knowledge",
-      "General",
-    ]);
-    expect(combined).toMatchObject({ count: 2, has_more: false });
-    expect(combined).not.toHaveProperty("next_offset");
   });
 
   it("formats scoped and unscoped search evidence", () => {

@@ -4,49 +4,10 @@ import type {
   NakafaAgentSearchResult,
 } from "@repo/contents/_lib/agent/schema/search";
 
-type SearchResultInput = Pick<
-  NakafaAgentSearchInput,
-  "limit" | "offset" | "queries"
->;
+type SearchResultInput = Pick<NakafaAgentSearchInput, "queries">;
 
 const searchTokenPattern = /[\p{L}\p{N}]+/gu;
 const routeSeparatorPattern = /[/_-]+/gu;
-
-/** Builds the bounded aggregate consumed by Nakafa follow-up routing. */
-export function combineSearchResults(
-  input: SearchResultInput,
-  results: NakafaAgentSearchResult[],
-  queryTokens: string[]
-) {
-  if (results.length === 1) {
-    return results[0];
-  }
-
-  const ranked = rankSearchItems(
-    interleaveSearchItems(results.map((result) => result.items)),
-    queryTokens
-  );
-  const items = ranked.slice(0, input.limit);
-  const nextOffset = input.offset + items.length;
-  const hasMore =
-    ranked.length > items.length || results.some((result) => result.has_more);
-  const result = {
-    count: items.length,
-    has_more: hasMore,
-    items,
-    limit: input.limit,
-    offset: input.offset,
-  };
-
-  if (!hasMore) {
-    return result;
-  }
-
-  return {
-    ...result,
-    next_offset: nextOffset,
-  };
-}
 
 /** Applies query relevance before the UI and agent consume search evidence. */
 export function rankSearchResult(
@@ -91,29 +52,7 @@ export function formatSearchGroup(
   ].join("\n");
 }
 
-/** Merges query-specific pages without letting one query dominate. */
-function interleaveSearchItems(groups: NakafaAgentSearchResult["items"][]) {
-  const ranked: NakafaAgentSearchResult["items"] = [];
-  const seen = new Set<string>();
-  const maxLength = Math.max(0, ...groups.map((items) => items.length));
-
-  for (let index = 0; index < maxLength; index++) {
-    for (const items of groups) {
-      const item = items[index];
-
-      if (!item || seen.has(item.content_id)) {
-        continue;
-      }
-
-      ranked.push(item);
-      seen.add(item.content_id);
-    }
-  }
-
-  return ranked;
-}
-
-/** Applies query relevance after search and multi-query merging. */
+/** Applies query relevance while preserving stable equal-score order. */
 function rankSearchItems(
   items: NakafaAgentSearchResult["items"],
   tokens: string[]

@@ -344,6 +344,7 @@ describe("nakafa search tool", () => {
 
   it("preserves alternate query variants for one section", async () => {
     const { parts, writer } = createWriter();
+    const capturedQueries: string[][] = [];
     const output = await Effect.runPromise(
       search({
         input: {
@@ -359,8 +360,10 @@ describe("nakafa search tool", () => {
       }).pipe(
         Effect.provideService(NakafaSearch, {
           /** Returns one subject result for multi-query token forwarding. */
-          search: (input) =>
-            Effect.succeed(
+          search: (input) => {
+            capturedQueries.push(input.queries ?? []);
+
+            return Effect.succeed(
               searchResult({
                 count: 1,
                 has_more: false,
@@ -377,7 +380,8 @@ describe("nakafa search tool", () => {
                 limit: input.limit,
                 offset: input.offset,
               })
-            ),
+            );
+          },
         })
       )
     );
@@ -385,24 +389,19 @@ describe("nakafa search tool", () => {
     expect(output.text).toContain("Hukum Kekekalan Massa");
     expect(output.text).toContain('- Query: "hukum kekekalan massa"');
     expect(output.result).toEqual(expect.objectContaining({ count: 1 }));
+    expect(capturedQueries).toEqual([
+      ["kimia kelas 10", "hukum kekekalan massa", "stoikiometri"],
+    ]);
     expect(
       getSearchParts(parts)
         .filter((part) => part.status === "loading")
         .map((part) => part.input.queries)
-    ).toEqual([
-      ["kimia kelas 10"],
-      ["hukum kekekalan massa"],
-      ["stoikiometri"],
-    ]);
+    ).toEqual([["kimia kelas 10", "hukum kekekalan massa", "stoikiometri"]]);
     expect(
       getSearchParts(parts)
         .filter((part) => part.status === "done")
         .map((part) => part.input.queries)
-    ).toEqual([
-      ["kimia kelas 10"],
-      ["hukum kekekalan massa"],
-      ["stoikiometri"],
-    ]);
+    ).toEqual([["kimia kelas 10", "hukum kekekalan massa", "stoikiometri"]]);
   });
 
   it("executes the model-provided try-out query unchanged", async () => {
