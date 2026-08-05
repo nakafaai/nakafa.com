@@ -276,7 +276,7 @@
   "Holy": {
     "holy": "Holy",
     "quran": "Quran",
-    "quran-description": "Read the Quran with verse-by-verse translation and tafsir.",
+    "quran-description": "Read the Quran with verse-by-verse translation.",
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
