@@ -258,9 +258,6 @@ export const readPublishedLocalizedHref = Effect.fn(
   }
 
   const current = yield* readPublishedProgramRoute(currentLocale, publicPath);
-  if (!current.managed) {
-    return null;
-  }
   if (!current.route) {
     return yield* new MissingLocalizedRouteProjectionError({
       locale,

@@ -92,7 +92,7 @@ beforeEach(() => {
     route: previewPublicRoute,
   });
   publishedMocks.programRoute.mockReturnValue(
-    Effect.succeed({ managed: false, route: null })
+    Effect.succeed({ alternates: [], route: null })
   );
   publishedMocks.verifyReleasePin.mockImplementation((expected) =>
     Effect.succeed(expected)
@@ -150,16 +150,6 @@ describe("resolveLocalizedNavigationHref", () => {
     );
   });
 
-  it("projects curriculum pages by program and node identity", () => {
-    expect(resolveHref("/id/kurikulum/merdeka/kelas-10/biologi", "en")).toBe(
-      "/curriculum/merdeka/class-10/biology"
-    );
-
-    expect(resolveHref("/en/curriculum/merdeka/class-10/biology", "id")).toBe(
-      "/kurikulum/merdeka/kelas-10/biologi"
-    );
-  });
-
   it("projects active material and curriculum owners without static rows", () => {
     publishedMocks.materialRoute.mockReturnValue(
       Effect.succeed(activeMaterialRoute)
@@ -183,7 +173,6 @@ describe("resolveLocalizedNavigationHref", () => {
           testProgramSubject,
           idProgramSubject,
         ],
-        managed: true,
         route: testProgramSubject,
       })
     );
@@ -310,11 +299,10 @@ describe("resolveLocalizedNavigationHref", () => {
 
   it("fails closed for active curriculum tombstones and missing locale rows", () => {
     publishedMocks.programRoute
-      .mockReturnValueOnce(Effect.succeed({ managed: true, route: null }))
+      .mockReturnValueOnce(Effect.succeed({ alternates: [], route: null }))
       .mockReturnValueOnce(
         Effect.succeed({
           alternates: [],
-          managed: true,
           route: testProgramSubject,
         })
       );

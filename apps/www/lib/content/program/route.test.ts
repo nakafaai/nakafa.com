@@ -93,7 +93,6 @@ describe("published program route", () => {
       ancestors: [{ level: "track" }, { level: "class" }],
       contexts: expect.any(Array),
       groups: expect.any(Array),
-      managed: true,
       materials: [{ metadata: { title: "Function Concept" } }],
       program: { key: "merdeka" },
       route: { publicPath: testProgramSubject.publicPath },
@@ -102,7 +101,7 @@ describe("published program route", () => {
     expect(cacheMock).toHaveBeenCalledOnce();
   });
 
-  it("preserves an unmanaged family without decoding route bytes", async () => {
+  it("rejects an unmanaged family", async () => {
     fetchMock.mockResolvedValueOnce(
       routeResponse({
         managed: false,
@@ -114,15 +113,11 @@ describe("published program route", () => {
 
     await expect(
       Effect.runPromise(
-        readPublishedProgramRoute("en", testProgramSubject.publicPath)
+        readPublishedProgramRoute("en", testProgramSubject.publicPath).pipe(
+          Effect.flip
+        )
       )
-    ).resolves.toMatchObject({
-      activeReleaseId: "program-release",
-      managed: false,
-      program: null,
-      route: null,
-      sourceRevision: null,
-    });
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
   });
 
   it("distinguishes a managed missing route", async () => {
@@ -138,7 +133,6 @@ describe("published program route", () => {
       Effect.runPromise(readPublishedProgramRoute("en", "curriculum/missing"))
     ).resolves.toMatchObject({
       activeReleaseId: "program-release",
-      managed: true,
       program: null,
       route: null,
       sourceRevision: revision,
