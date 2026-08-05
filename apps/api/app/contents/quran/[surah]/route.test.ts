@@ -29,24 +29,40 @@ afterEach(() => {
 });
 
 describe("Quran content API route", () => {
-  it("returns the requested locale from the signed publication", async () => {
+  it("returns the complete multilingual signed publication row", async () => {
     quranMocks.readQuranApiPage.mockReturnValue(
       Effect.succeed({
-        surah: { englishName: "Al-Faatiha", number: 1 },
-        verses: [{ number: 1, translation: "In the name of Allah." }],
+        surah: { name: { transliteration: "Al-Faatiha" }, number: 1 },
+        verses: [
+          {
+            number: { inSurah: 1 },
+            translation: {
+              en: { footnotes: "", text: "In the name of Allah." },
+              id: { footnotes: "", text: "Dengan nama Allah." },
+            },
+          },
+        ],
       })
     );
 
     const response = await GET(
-      new Request("http://localhost/contents/en/quran/1"),
-      { params: Promise.resolve({ locale: "en", surah: "1" }) }
+      new Request("http://localhost/contents/quran/1"),
+      { params: Promise.resolve({ surah: "1" }) }
     );
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      englishName: "Al-Faatiha",
+      name: { transliteration: "Al-Faatiha" },
       number: 1,
-      verses: [{ number: 1, translation: "In the name of Allah." }],
+      verses: [
+        {
+          number: { inSurah: 1 },
+          translation: {
+            en: { footnotes: "", text: "In the name of Allah." },
+            id: { footnotes: "", text: "Dengan nama Allah." },
+          },
+        },
+      ],
     });
     expect(quranMocks.readQuranApiPage).toHaveBeenCalledWith({
       locale: "en",
@@ -54,23 +70,10 @@ describe("Quran content API route", () => {
     });
   });
 
-  it("rejects invalid locales before reading Convex", async () => {
-    const response = await GET(
-      new Request("http://localhost/contents/de/quran/1"),
-      { params: Promise.resolve({ locale: "de", surah: "1" }) }
-    );
-
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      error: "Invalid locale. Supported locales: en, id.",
-    });
-    expect(quranMocks.readQuranApiPage).not.toHaveBeenCalled();
-  });
-
   it("rejects non-canonical surah segments before reading Convex", async () => {
     const response = await GET(
-      new Request("http://localhost/contents/id/quran/01"),
-      { params: Promise.resolve({ locale: "id", surah: "01" }) }
+      new Request("http://localhost/contents/quran/01"),
+      { params: Promise.resolve({ surah: "01" }) }
     );
 
     expect(response.status).toBe(404);
@@ -78,20 +81,19 @@ describe("Quran content API route", () => {
     expect(quranMocks.readQuranApiPage).not.toHaveBeenCalled();
   });
 
-  it("logs signed publication failures with locale and surah context", async () => {
+  it("logs signed publication failures with surah context", async () => {
     const readError = new Error("Publication unavailable");
     quranMocks.readQuranApiPage.mockReturnValue(Effect.fail(readError));
 
     const response = await GET(
-      new Request("http://localhost/contents/id/quran/1"),
-      { params: Promise.resolve({ locale: "id", surah: "1" }) }
+      new Request("http://localhost/contents/quran/1"),
+      { params: Promise.resolve({ surah: "1" }) }
     );
 
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ error: "Failed to fetch surah." });
     expect(loggingMocks.logError).toHaveBeenCalledWith(readError, {
       service: "api-quran",
-      locale: "id",
       surah: 1,
       message: "Failed to fetch surah.",
     });
@@ -103,8 +105,8 @@ describe("Quran content API route", () => {
     );
 
     const response = await GET(
-      new Request("http://localhost/contents/en/quran/2"),
-      { params: Promise.resolve({ locale: "en", surah: "2" }) }
+      new Request("http://localhost/contents/quran/2"),
+      { params: Promise.resolve({ surah: "2" }) }
     );
 
     expect(response.status).toBe(500);
@@ -112,7 +114,6 @@ describe("Quran content API route", () => {
       new Error("Publication unavailable"),
       {
         service: "api-quran",
-        locale: "en",
         surah: 2,
         message: "Failed to fetch surah.",
       }
