@@ -355,7 +355,8 @@ import type * as contents_helpers_search_excerpt from "../contents/helpers/searc
 import type * as contents_helpers_search_groups from "../contents/helpers/search/groups.js";
 import type * as contents_helpers_search_input from "../contents/helpers/search/input.js";
 import type * as contents_helpers_search_published from "../contents/helpers/search/published.js";
-import type * as contents_helpers_search_quran from "../contents/helpers/search/quran.js";
+import type * as contents_helpers_search_quran_candidates from "../contents/helpers/search/quran/candidates.js";
+import type * as contents_helpers_search_quran_read from "../contents/helpers/search/quran/read.js";
 import type * as contents_helpers_search_rank from "../contents/helpers/search/rank.js";
 import type * as contents_helpers_search_read from "../contents/helpers/search/read.js";
 import type * as contents_helpers_search_result from "../contents/helpers/search/result.js";
@@ -931,7 +932,8 @@ declare const fullApi: ApiFromModules<{
   "contents/helpers/search/groups": typeof contents_helpers_search_groups;
   "contents/helpers/search/input": typeof contents_helpers_search_input;
   "contents/helpers/search/published": typeof contents_helpers_search_published;
-  "contents/helpers/search/quran": typeof contents_helpers_search_quran;
+  "contents/helpers/search/quran/candidates": typeof contents_helpers_search_quran_candidates;
+  "contents/helpers/search/quran/read": typeof contents_helpers_search_quran_read;
   "contents/helpers/search/rank": typeof contents_helpers_search_rank;
   "contents/helpers/search/read": typeof contents_helpers_search_read;
   "contents/helpers/search/result": typeof contents_helpers_search_result;

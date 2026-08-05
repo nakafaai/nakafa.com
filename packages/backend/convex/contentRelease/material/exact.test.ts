@@ -5,6 +5,7 @@ import {
   readExactMaterialSnapshot,
   validateExactMaterialOwnerScope,
 } from "@repo/backend/convex/contentRelease/material/exact";
+import { MATERIAL_EXACT_LOCALE_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -227,7 +228,7 @@ describe("contentRelease/material/exact", () => {
   it("rejects exact material search ownership above one locale window", async () => {
     const target = convexTest(schema, convexModules);
     await target.mutation(async (ctx) => {
-      for (let index = 0; index < 33; index += 1) {
+      for (let index = 0; index <= MATERIAL_EXACT_LOCALE_LIMIT; index += 1) {
         const contentKey = `material/lesson/test/locale-${index}`;
         await ctx.db.insert("contentKeys", {
           contentKey,

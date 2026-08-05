@@ -1,5 +1,5 @@
 import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
-import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
+import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 
 /** Maximum permanent material identities rebuilt by one baseline mutation. */
 export const MATERIAL_BASELINE_LIMIT = 8;
@@ -19,7 +19,8 @@ export const MATERIAL_SOURCE_LIMIT =
   ContentLocaleSchema.literals.length;
 
 /**
- * Maximum exact owners in one locale that search can hydrate within one
- * transaction.
+ * Maximum exact owners in one locale within the complete release scope.
  */
-export const MATERIAL_EXACT_LOCALE_LIMIT = NAKAFA_AGENT_SEARCH_WINDOW;
+export const MATERIAL_EXACT_LOCALE_LIMIT = Math.floor(
+  EXACT_SCOPE_LIMIT / ContentLocaleSchema.literals.length
+);

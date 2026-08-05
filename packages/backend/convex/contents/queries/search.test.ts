@@ -256,6 +256,32 @@ describe("contents/queries/search:search", () => {
     ]);
   });
 
+  it("addresses the final result in the shared signed search window", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(
+        ctx,
+        Array.from({ length: NAKAFA_AGENT_SEARCH_WINDOW + 1 }, (_, index) =>
+          makeQuranSearch("en", index + 1, `search window ${index + 1}`)
+        )
+      )
+    );
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 1,
+      locale: "en",
+      offset: NAKAFA_AGENT_SEARCH_WINDOW - 1,
+      section: "quran",
+    });
+
+    expect(result).toMatchObject({
+      count: 1,
+      has_more: false,
+      items: [{ route: `quran/${NAKAFA_AGENT_SEARCH_WINDOW}` }],
+      offset: NAKAFA_AGENT_SEARCH_WINDOW - 1,
+    });
+  });
+
   it("returns signed Tryout rows through the unified search query", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation((ctx) =>
@@ -353,8 +379,9 @@ describe("contents/queries/search:search", () => {
       }
     });
 
-    const limit = 10;
+    const limit = Math.ceil(NAKAFA_AGENT_SEARCH_WINDOW / 2);
     const offset = NAKAFA_AGENT_SEARCH_WINDOW - limit;
+    const continuationOffset = limit;
     const browseResult = await t.query(api.contents.queries.search.search, {
       limit,
       locale: "id",
@@ -371,9 +398,9 @@ describe("contents/queries/search:search", () => {
     const naturalContinuation = await t.query(
       api.contents.queries.search.search,
       {
-        limit: 20,
+        limit,
         locale: "id",
-        offset: 20,
+        offset: continuationOffset,
         queries: ["searchcap"],
         section: "articles",
       }
@@ -388,10 +415,10 @@ describe("contents/queries/search:search", () => {
       has_more: false,
     });
     expect(naturalContinuation).toMatchObject({
-      count: NAKAFA_AGENT_SEARCH_WINDOW - 20,
+      count: NAKAFA_AGENT_SEARCH_WINDOW - continuationOffset,
       has_more: false,
-      limit: 20,
-      offset: 20,
+      limit,
+      offset: continuationOffset,
     });
   });
 

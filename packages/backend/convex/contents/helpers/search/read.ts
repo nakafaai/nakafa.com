@@ -7,7 +7,7 @@ import {
   getPublishedSearchFamilies,
   readPublishedSearchDocuments,
 } from "@repo/backend/convex/contents/helpers/search/published";
-import { readSignedQuranSearchDocuments } from "@repo/backend/convex/contents/helpers/search/quran";
+import { readSignedQuranSearchDocuments } from "@repo/backend/convex/contents/helpers/search/quran/read";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { readSourceSearchDocuments } from "@repo/backend/convex/contents/helpers/search/source";
 import { readSignedTryoutSearchDocuments } from "@repo/backend/convex/contents/helpers/search/tryout";

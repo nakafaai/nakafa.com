@@ -14,7 +14,7 @@ export const validateSearchQuery = Effect.fn(
   "contentRelease.validateSearchQuery"
 )(function* (source: string, limits: SearchQueryLimits = {}) {
   const query = source.trim().replaceAll(/\s+/gu, " ");
-  const terms = query.match(searchTermPattern) ?? [];
+  const terms = getSearchTerms(query);
   const exceedsCharacterLimit =
     limits.characterLimit !== undefined && query.length > limits.characterLimit;
   const encoder = new TextEncoder();
@@ -38,3 +38,8 @@ export const validateSearchQuery = Effect.fn(
   }
   return query;
 });
+
+/** Extracts the terms Convex counts in one full-text search expression. */
+function getSearchTerms(query: string) {
+  return query.match(searchTermPattern) ?? [];
+}
