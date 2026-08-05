@@ -1,5 +1,6 @@
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
 import routeSchema from "@repo/backend/convex/contents/schema/routes";
+import { tryoutBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
 import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content-runtime/tables";
 import { describe, expect, it } from "vitest";
 
@@ -10,6 +11,7 @@ describe("content runtime tables", () => {
     );
     const expected = [
       ...releaseTables,
+      ...Object.keys(tryoutBundleSchema),
       ...Object.keys(routeSchema),
       "contentState",
     ];
