@@ -38,10 +38,15 @@ const runtimeRoute = Effect.fn("contentRelease.runtimeRoute")(function* (
   ctx: ActionCtx,
   request: Request
 ) {
-  const trustedServer = yield* matchesHttpSecret(
-    request.headers.get("x-nakafa-content-token") ?? "",
-    env.CONTENT_RUNTIME_TOKEN
-  ).pipe(Effect.either);
+  const candidate = request.headers.get("x-nakafa-content-token") ?? "";
+  const currentMatch = matchesHttpSecret(candidate, env.CONTENT_RUNTIME_TOKEN);
+  const previousMatch = env.CONTENT_RUNTIME_TOKEN_PREVIOUS
+    ? matchesHttpSecret(candidate, env.CONTENT_RUNTIME_TOKEN_PREVIOUS)
+    : Effect.succeed(false);
+  const trustedServer = yield* Effect.all([currentMatch, previousMatch]).pipe(
+    Effect.map(([current, previous]) => current || previous),
+    Effect.either
+  );
   if (Either.isLeft(trustedServer)) {
     return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
   }
