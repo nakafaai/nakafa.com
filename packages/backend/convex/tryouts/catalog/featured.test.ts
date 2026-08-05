@@ -12,7 +12,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 describe("tryouts/catalog/featured", () => {
-  it("returns the first authored signed question without exposing its answer", async () => {
+  it("returns the first visible signed question for the public landing demo", async () => {
     const t = convexTest(schema, convexModules);
     const source = makeTryoutStartPlacement("id");
     await t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"));
@@ -44,6 +44,17 @@ describe("tryouts/catalog/featured", () => {
       },
     });
     expect(featured.question).not.toHaveProperty("answerArtifactHash");
+  });
+
+  it("does not expose an internal-entry section on the public landing", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => activateTryoutStartSource(ctx, "internal-entry"));
+
+    await expect(
+      t.query((ctx) => runConvexProgram(readFeaturedTryout(ctx, "id")))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
   });
 
   it("requires one active signed hierarchy", async () => {

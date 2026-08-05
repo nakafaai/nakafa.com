@@ -16,7 +16,9 @@ import {
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-/** Public model for the one signed question demonstrated on the landing page. */
+/**
+ * Public model for the signed landing demo, including its visible answer feedback.
+ */
 export const featuredTryoutValidator = v.object({
   choices: v.array(tryoutChoiceSnapshotValidator),
   question: tryoutQuestionSelectorValidator,
@@ -63,7 +65,7 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     }
 
     const sections = yield* readPublishedSetSections(index, set);
-    const section = sections.at(0);
+    const section = sections.find(({ visibility }) => visibility === "visible");
     if (!section) {
       return yield* missingFeaturedTryout("section");
     }
