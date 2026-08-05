@@ -65,29 +65,14 @@ export const readTryoutSectionContent = Effect.fn(
     return noContentAccess;
   }
 
-  const snapshotId = attempt.tryoutSnapshotId;
-  if (!snapshotId) {
-    const filesystemAccess: Extract<
-      TryoutSectionContentAccess,
-      { kind: "filesystem" }
-    > = { ...access, kind: "filesystem" };
-    return filesystemAccess;
-  }
-  const snapshotReleaseId = attempt.snapshotReleaseId;
-  if (!snapshotReleaseId) {
-    return yield* contentIntegrity(
-      "Signed try-out attempt lost its frozen release identity."
-    );
-  }
-
   return yield* loadTryoutSignedContent({
     access,
     attempt,
     ctx,
     locale: args.locale,
     sectionKey: requestedSection.sectionKey,
-    snapshotReleaseId,
-    snapshotId,
+    snapshotReleaseId: attempt.snapshotReleaseId,
+    snapshotId: attempt.tryoutSnapshotId,
     totalQuestions: requestedSection.totalQuestions,
   });
 });
@@ -108,8 +93,8 @@ const readContentAttempt = Effect.fn("tryouts.access.readContentAttempt")(
     if (!attempt) {
       return null;
     }
-    const attemptIdentity = yield* readAttemptSetIdentity(ctx, attempt);
-    if (!(attemptIdentity && matchesAttemptIdentity(attemptIdentity, args))) {
+    const attemptIdentity = readAttemptSetIdentity(attempt);
+    if (!matchesAttemptIdentity(attemptIdentity, args)) {
       return yield* contentIntegrity(
         "Try-out content request differs from its frozen attempt identity."
       );

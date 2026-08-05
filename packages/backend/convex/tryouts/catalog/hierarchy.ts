@@ -28,11 +28,6 @@ export interface PublishedCatalogIndex {
 export const indexPublishedCatalog = Effect.fn(
   "tryouts.catalog.indexPublishedCatalog"
 )(function* (catalog: PublishedCatalog) {
-  if (!catalog.managed) {
-    return yield* catalogIntegrity(
-      "Published try-out catalog was read before ownership activation."
-    );
-  }
   const countries: TryoutCountry[] = [];
   const exams: TryoutExam[] = [];
   const sections: TryoutSection[] = [];

@@ -69,9 +69,6 @@ const createExpiredSectionAttempt = Effect.fn(
     responses: [],
     sectionKey: args.snapshot.sectionKey,
     totalQuestions: args.snapshot.questionCount,
-    ...(args.snapshot.tryoutSectionId
-      ? { tryoutSectionId: args.snapshot.tryoutSectionId }
-      : {}),
   });
 
   yield* tryRuntimePromise(() =>
@@ -82,9 +79,7 @@ const createExpiredSectionAttempt = Effect.fn(
       endReason: "time-expired",
       expiresAt: args.attempt.expiresAt,
       lastActivityAt: args.now,
-      ...(args.snapshot.sectionIdentity
-        ? { sectionIdentity: args.snapshot.sectionIdentity }
-        : {}),
+      sectionIdentity: args.snapshot.sectionIdentity,
       sectionKey: args.snapshot.sectionKey,
       sectionOrder: args.snapshot.sectionOrder,
       score: getSectionScoreSnapshot(score),
@@ -92,9 +87,6 @@ const createExpiredSectionAttempt = Effect.fn(
       status: "expired",
       totalQuestions: args.snapshot.questionCount,
       tryoutAttemptId: args.attempt._id,
-      ...(args.snapshot.tryoutSectionId
-        ? { tryoutSectionId: args.snapshot.tryoutSectionId }
-        : {}),
     })
   );
 });
@@ -269,7 +261,7 @@ const loadSectionResponses = Effect.fn("tryouts.runtime.loadSectionResponses")(
     const responses = yield* tryRuntimePromise(() =>
       ctx.db
         .query("tryoutResponses")
-        .withIndex("by_tryoutSectionAttemptId_and_questionId", (query) =>
+        .withIndex("by_tryoutSectionAttemptId_and_answeredAt", (query) =>
           query.eq("tryoutSectionAttemptId", section._id)
         )
         .take(section.totalQuestions + 1)
@@ -301,9 +293,6 @@ const readSectionFinalization = Effect.fn(
     responses,
     sectionKey: args.section.sectionKey,
     totalQuestions: args.section.totalQuestions,
-    ...(args.section.tryoutSectionId
-      ? { tryoutSectionId: args.section.tryoutSectionId }
-      : {}),
   });
 
   return {

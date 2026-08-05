@@ -1,30 +1,28 @@
 import { readIncrementalSyncPlan } from "@repo/backend/scripts/sync-content/workflow/plan";
 import { describe, expect, it } from "vitest";
 
-const materialAndTryoutTargets = [
+const materialTargets = [
   { locale: "en", section: "material" },
   { locale: "id", section: "material" },
-  { locale: "en", section: "tryout" },
-  { locale: "id", section: "tryout" },
 ];
 
 const everyRouteArtifactTarget = [
   { locale: "en", section: "articles" },
   { locale: "id", section: "articles" },
-  ...materialAndTryoutTargets,
+  ...materialTargets,
   { locale: "en", section: "quran" },
   { locale: "id", section: "quran" },
 ];
 
 describe("readIncrementalSyncPlan", () => {
-  it("plans curriculum and try-out row resyncs when route projection modules change", () => {
+  it("plans curriculum rows when route projection modules change", () => {
     expect(
       readIncrementalSyncPlan(["packages/contents/_types/route/tryout.ts"])
     ).toEqual({
       refreshPublicRoutes: true,
       refreshQuran: false,
-      routeArtifactTargets: materialAndTryoutTargets,
-      rowPhases: ["curriculum", "tryouts"],
+      routeArtifactTargets: materialTargets,
+      rowPhases: ["curriculum"],
     });
   });
 
@@ -36,8 +34,8 @@ describe("readIncrementalSyncPlan", () => {
     ).toEqual({
       refreshPublicRoutes: true,
       refreshQuran: false,
-      routeArtifactTargets: materialAndTryoutTargets,
-      rowPhases: ["curriculum", "tryouts"],
+      routeArtifactTargets: materialTargets,
+      rowPhases: ["curriculum"],
     });
   });
 
@@ -48,7 +46,7 @@ describe("readIncrementalSyncPlan", () => {
       refreshPublicRoutes: true,
       refreshQuran: true,
       routeArtifactTargets: everyRouteArtifactTarget,
-      rowPhases: ["articles", "curriculum", "tryouts"],
+      rowPhases: ["articles", "curriculum"],
     });
   });
 
@@ -59,7 +57,7 @@ describe("readIncrementalSyncPlan", () => {
       refreshPublicRoutes: true,
       refreshQuran: true,
       routeArtifactTargets: everyRouteArtifactTarget,
-      rowPhases: ["articles", "curriculum", "tryouts"],
+      rowPhases: ["articles", "curriculum"],
     });
   });
 
@@ -72,29 +70,29 @@ describe("readIncrementalSyncPlan", () => {
       refreshPublicRoutes: true,
       refreshQuran: true,
       routeArtifactTargets: everyRouteArtifactTarget,
-      rowPhases: ["articles", "curriculum", "tryouts"],
+      rowPhases: ["articles", "curriculum"],
     });
   });
 
-  it("plans curriculum and try-out rows when shared material route domains change", () => {
+  it("plans curriculum rows when shared material route domains change", () => {
     expect(
       readIncrementalSyncPlan(["packages/contents/_types/material/domain.ts"])
     ).toEqual({
       refreshPublicRoutes: true,
       refreshQuran: false,
-      routeArtifactTargets: materialAndTryoutTargets,
-      rowPhases: ["curriculum", "tryouts"],
+      routeArtifactTargets: materialTargets,
+      rowPhases: ["curriculum"],
     });
   });
 
-  it("plans curriculum and try-out rows when shared material registry entries change", () => {
+  it("plans curriculum rows when shared material registry entries change", () => {
     expect(
       readIncrementalSyncPlan(["packages/contents/_types/material/source.ts"])
     ).toEqual({
       refreshPublicRoutes: true,
       refreshQuran: false,
-      routeArtifactTargets: materialAndTryoutTargets,
-      rowPhases: ["curriculum", "tryouts"],
+      routeArtifactTargets: materialTargets,
+      rowPhases: ["curriculum"],
     });
   });
 
@@ -105,7 +103,7 @@ describe("readIncrementalSyncPlan", () => {
       refreshPublicRoutes: true,
       refreshQuran: true,
       routeArtifactTargets: everyRouteArtifactTarget,
-      rowPhases: ["articles", "curriculum", "tryouts"],
+      rowPhases: ["articles", "curriculum"],
     });
   });
 
@@ -116,7 +114,7 @@ describe("readIncrementalSyncPlan", () => {
       refreshPublicRoutes: true,
       refreshQuran: true,
       routeArtifactTargets: everyRouteArtifactTarget,
-      rowPhases: ["articles", "curriculum", "tryouts"],
+      rowPhases: ["articles", "curriculum"],
     });
   });
 
@@ -136,40 +134,40 @@ describe("readIncrementalSyncPlan", () => {
     });
   });
 
-  it("plans curriculum and try-out rows when program catalog entries change", () => {
+  it("plans curriculum rows when program catalog entries change", () => {
     expect(
       readIncrementalSyncPlan(["packages/contents/_types/program/catalog.ts"])
     ).toEqual({
       refreshPublicRoutes: true,
       refreshQuran: false,
-      routeArtifactTargets: materialAndTryoutTargets,
-      rowPhases: ["curriculum", "tryouts"],
+      routeArtifactTargets: materialTargets,
+      rowPhases: ["curriculum"],
     });
   });
 
-  it("plans try-out rows when try-out source content changes", () => {
+  it("ignores retired local try-out source content", () => {
     expect(
       readIncrementalSyncPlan([
         "packages/contents/question-bank/tryout/indonesia/snbt/general-reasoning/set-1/question-1/question.id.mdx",
       ])
     ).toEqual({
-      refreshPublicRoutes: true,
+      refreshPublicRoutes: false,
       refreshQuran: false,
-      routeArtifactTargets: [{ locale: "id", section: "tryout" }],
-      rowPhases: ["tryouts"],
+      routeArtifactTargets: [],
+      rowPhases: [],
     });
   });
 
-  it("normalizes content-root relative try-out paths before planning row resyncs", () => {
+  it("ignores retired content-root relative try-out paths", () => {
     expect(
       readIncrementalSyncPlan([
         "question-bank/tryout/indonesia/snbt/general-reasoning/set-1/question-1/question.id.mdx",
       ])
     ).toEqual({
-      refreshPublicRoutes: true,
+      refreshPublicRoutes: false,
       refreshQuran: false,
-      routeArtifactTargets: [{ locale: "id", section: "tryout" }],
-      rowPhases: ["tryouts"],
+      routeArtifactTargets: [],
+      rowPhases: [],
     });
   });
 

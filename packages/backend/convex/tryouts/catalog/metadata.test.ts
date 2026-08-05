@@ -38,7 +38,7 @@ async function activateCatalog() {
 }
 
 describe("tryouts/catalog/metadata", () => {
-  it("delegates metadata before signed ownership activates", async () => {
+  it("requires an active signed try-out publication", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
@@ -51,7 +51,7 @@ describe("tryouts/catalog/metadata", () => {
           })
         )
       )
-    ).resolves.toEqual({ managed: false, route: null });
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
   });
 
   it("returns signed copy and both localized canonical paths", async () => {
@@ -68,7 +68,6 @@ describe("tryouts/catalog/metadata", () => {
         )
       )
     ).resolves.toMatchObject({
-      managed: true,
       route: {
         alternates: [
           { locale: "en", publicPath: "try-out/indonesia" },
@@ -113,7 +112,6 @@ describe("tryouts/catalog/metadata", () => {
         )
       )
     ).resolves.toMatchObject({
-      managed: true,
       route: {
         alternates: [
           { locale: "en", publicPath: "try-out/indonesia" },
@@ -136,7 +134,7 @@ describe("tryouts/catalog/metadata", () => {
           })
         )
       )
-    ).resolves.toEqual({ managed: true, route: null });
+    ).resolves.toEqual({ route: null });
   });
 
   it("omits an absent localized counterpart", async () => {
@@ -163,7 +161,6 @@ describe("tryouts/catalog/metadata", () => {
         )
       )
     ).resolves.toMatchObject({
-      managed: true,
       route: {
         alternates: [{ locale: "en", publicPath: "try-out/indonesia" }],
       },
@@ -204,7 +201,6 @@ describe("tryouts/catalog/metadata", () => {
         )
       )
     ).resolves.toMatchObject({
-      managed: true,
       route: {
         alternates: [{ locale: "en", publicPath }],
       },
@@ -224,6 +220,6 @@ describe("tryouts/catalog/metadata", () => {
           })
         )
       )
-    ).resolves.toEqual({ managed: true, route: null });
+    ).resolves.toEqual({ route: null });
   });
 });

@@ -6,7 +6,6 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/contract/types";
-import type { ContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import type { ContentRouteArtifactTarget } from "@repo/backend/scripts/sync-content/routes/artifacts";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
@@ -26,7 +25,6 @@ const syncResult: SyncResult = {
 interface CliTestOptions {
   cleanDeleted?: number;
   learningProgramFails?: boolean;
-  tryoutsManaged?: boolean;
 }
 
 /** Loads the CLI with mocked sync dependencies and records command ordering. */
@@ -34,7 +32,6 @@ const loadCli = async (options: CliTestOptions = {}) => {
   const artifactTargets: (readonly ContentRouteArtifactTarget[])[] = [];
   const events: string[] = [];
   const invalidatedOptions: SyncOptions[] = [];
-  const validatedOwnership: ContentSyncOwnership[] = [];
 
   /** Builds a successful sync command that records when it runs. */
   const recordSync = (event: string) => () => {
@@ -69,13 +66,6 @@ const loadCli = async (options: CliTestOptions = {}) => {
       return Effect.succeed(config);
     },
   }));
-  vi.doMock("@repo/backend/scripts/sync-content/convex/ownership", () => ({
-    readContentSyncOwnership: () =>
-      Effect.succeed({ tryoutsManaged: options.tryoutsManaged ?? false }),
-  }));
-  vi.doMock("@repo/backend/scripts/sync-content/content/tryouts", () => ({
-    syncTryouts: recordSync("syncTryouts"),
-  }));
   vi.doMock("@repo/backend/scripts/sync-content/content/programs", () => ({
     /** Records targeted learning-program sync calls and optional failures. */
     syncLearningPrograms: () => {
@@ -108,18 +98,13 @@ const loadCli = async (options: CliTestOptions = {}) => {
   vi.doMock("@repo/backend/scripts/sync-content/cleanup/audio", () => ({
     resetAudio: recordSync("resetAudio"),
   }));
-  vi.doMock("@repo/backend/scripts/sync-content/cleanup/tryouts", () => ({
-    resetTryouts: recordSync("resetTryouts"),
-  }));
   vi.doMock("@repo/backend/scripts/sync-content/content/curriculum", () => ({
     syncCurriculumLessons: recordSync("syncCurriculumLessons"),
     syncCurriculumTopics: recordSync("syncCurriculumTopics"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/content/validate", () => ({
-    /** Records the ownership contract used to select validation sources. */
-    validate: (ownership: ContentSyncOwnership) => {
+    validate: () => {
       events.push("validate");
-      validatedOwnership.push(ownership);
       return Effect.void;
     },
   }));
@@ -182,7 +167,6 @@ const loadCli = async (options: CliTestOptions = {}) => {
     cli,
     events,
     invalidatedOptions,
-    validatedOwnership,
   };
 };
 
@@ -242,15 +226,12 @@ describe("sync-content cli", () => {
     }
   );
 
-  it("reads signed ownership before selecting validation sources", async () => {
-    const { cli, events, validatedOwnership } = await loadCli({
-      tryoutsManaged: true,
-    });
+  it("runs validation after resolving Convex config", async () => {
+    const { cli, events } = await loadCli();
 
     await Effect.runPromise(cli.runCommand("validate", {}));
 
     expect(events).toEqual(["getConvexConfig", "validate"]);
-    expect(validatedOwnership).toEqual([{ tryoutsManaged: true }]);
   });
 
   it("invalidates content runtime cache after targeted learning-program sync", async () => {
@@ -314,16 +295,6 @@ describe("sync-content cli", () => {
         "syncLearningPrograms",
       ],
     ],
-    [
-      "tryouts",
-      [
-        "syncAuthors",
-        "syncTryouts",
-        "syncContentRouteArtifactPages",
-        "syncPublicRoutes",
-        "syncLearningPrograms",
-      ],
-    ],
     ["public-routes", ["syncPublicRoutes"]],
     ["all", ["syncAll"]],
   ])("refreshes derived data and cache after %s", async (command, steps) => {
@@ -340,27 +311,12 @@ describe("sync-content cli", () => {
     expect(invalidatedOptions).toEqual([options]);
   });
 
-  it("does not read filesystem tryouts after signed ownership activates", async () => {
-    const { cli, events } = await loadCli({ tryoutsManaged: true });
-
-    await Effect.runPromise(cli.runCommand("tryouts", { locale: "id" }));
-
-    expect(events).toEqual([
-      "getConvexConfig",
-      "syncContentRouteArtifactPages",
-      "syncPublicRoutes",
-      "syncLearningPrograms",
-      "invalidateContentRuntimeCache",
-    ]);
-  });
-
   it.each([
     ["articles", "articles"],
     ["quran", "quran"],
     ["subjects", "material"],
     ["curriculum-topics", "material"],
     ["curriculum-lessons", "material"],
-    ["tryouts", "tryout"],
   ] as const)(
     "limits %s route artifacts to its owning section",
     async (command, section) => {
@@ -372,17 +328,14 @@ describe("sync-content cli", () => {
     }
   );
 
-  it.each([
-    ["reset", "reset"],
-    ["reset-tryouts", "resetTryouts"],
-  ])("invalidates cache after forced %s", async (command, resetEvent) => {
+  it("invalidates cache after a forced reset", async () => {
     const { cli, events } = await loadCli();
 
-    await Effect.runPromise(cli.runCommand(command, { force: true }));
+    await Effect.runPromise(cli.runCommand("reset", { force: true }));
 
     expect(events).toEqual([
       "getConvexConfig",
-      resetEvent,
+      "reset",
       "invalidateContentRuntimeCache",
     ]);
   });

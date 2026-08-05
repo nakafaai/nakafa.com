@@ -24,7 +24,6 @@ import schoolsSchema from "@repo/backend/convex/schools/schema";
 import subscriptionsSchema from "@repo/backend/convex/subscriptions/schema";
 import tryoutAccessSchema from "@repo/backend/convex/tryoutAccess/schema";
 import tryoutCatalogSchema from "@repo/backend/convex/tryouts/catalog/schema";
-import tryoutLeaderboardSchema from "@repo/backend/convex/tryouts/leaderboard/schema";
 import tryoutRuntimeSchema from "@repo/backend/convex/tryouts/runtime/schema";
 import usersSchema from "@repo/backend/convex/users/schema";
 import { defineSchema } from "convex/server";
@@ -59,7 +58,6 @@ export default defineSchema(
     ...tryoutAccessSchema,
     ...tryoutCatalogSchema,
     ...tryoutRuntimeSchema,
-    ...tryoutLeaderboardSchema,
   },
   {
     schemaValidation: true,

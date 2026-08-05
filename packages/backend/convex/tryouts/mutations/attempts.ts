@@ -145,7 +145,6 @@ export const saveResponse = mutation({
       answeredAt: now,
       isCorrect,
       placementId: placement._id,
-      ...(placement.questionId ? { questionId: placement.questionId } : {}),
       selectedOptionId: args.selectedOptionId,
       timeSpent: args.timeSpent,
       tryoutAttemptId: placement.tryoutAttemptId,

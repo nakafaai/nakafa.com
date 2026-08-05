@@ -50,7 +50,7 @@ const captureTryoutScoreEvent = Effect.fn(
       )
     );
   }
-  const identity = yield* resolveScoreIdentity(ctx, attempt, score);
+  const identity = readScoreIdentity(attempt);
 
   yield* captureProductEvent(ctx, {
     distinctId: score.userId,
@@ -74,57 +74,16 @@ const captureTryoutScoreEvent = Effect.fn(
   }).pipe(Effect.mapError(toTryoutScoreAnalyticsError));
 });
 
-/** Resolves analytics identity from the immutable attempt or its filesystem set. */
-const resolveScoreIdentity = Effect.fn("triggers.tryouts.resolveScoreIdentity")(
-  function* (
-    ctx: GenericMutationCtx<DataModel>,
-    attempt: DataModel["tryoutAttempts"]["document"],
-    score: DataModel["tryoutScores"]["document"]
-  ) {
-    if (
-      attempt.countryKey &&
-      attempt.examKey &&
-      attempt.locale &&
-      attempt.setKey &&
-      attempt.trackKey
-    ) {
-      return {
-        countryKey: attempt.countryKey,
-        examKey: attempt.examKey,
-        locale: attempt.locale,
-        setKey: attempt.setKey,
-        trackKey: attempt.trackKey,
-      };
-    }
-
-    const tryoutSetId = score.tryoutSetId;
-    if (!tryoutSetId) {
-      return yield* new TryoutScoreAnalyticsError({
-        code: tryoutScoreAnalyticsFailedCode,
-        message: "A completed try-out score has no stable set identity.",
-      });
-    }
-
-    const set = yield* Effect.tryPromise({
-      catch: toTryoutScoreAnalyticsError,
-      try: () => ctx.db.get("tryoutSets", tryoutSetId),
-    });
-    if (!set) {
-      return yield* new TryoutScoreAnalyticsError({
-        code: tryoutScoreAnalyticsFailedCode,
-        message: "A completed try-out score is missing its filesystem set.",
-      });
-    }
-
-    return {
-      countryKey: set.countryKey,
-      examKey: set.examKey,
-      locale: set.locale,
-      setKey: set.setKey,
-      trackKey: set.trackKey,
-    };
-  }
-);
+/** Reads analytics identity from the immutable signed attempt. */
+function readScoreIdentity(attempt: DataModel["tryoutAttempts"]["document"]) {
+  return {
+    countryKey: attempt.countryKey,
+    examKey: attempt.examKey,
+    locale: attempt.locale,
+    setKey: attempt.setKey,
+    trackKey: attempt.trackKey,
+  };
+}
 
 /** Runs completed-score analytics at the registered Convex trigger boundary. */
 export async function tryoutScoresHandler(

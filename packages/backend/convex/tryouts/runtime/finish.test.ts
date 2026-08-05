@@ -102,20 +102,15 @@ describe("tryouts/runtime/finish", () => {
         questionCount: 2,
         setIdentity: source.snapshot.setIdentity,
         status: "provisional",
-        tryoutSetId,
         tryoutSnapshotId: source.snapshot.snapshotId,
       });
       await insertIrtScaleItem(ctx, {
         placement: firstPlacement,
-        questionId: firstSource.questionId,
         scaleVersionId,
-        sectionId: firstSectionId,
       });
       await insertIrtScaleItem(ctx, {
         placement: secondPlacement,
-        questionId: secondSource.questionId,
         scaleVersionId,
-        sectionId: secondSectionId,
       });
 
       const attemptId = await insertTryoutAttempt(ctx, {
@@ -125,16 +120,13 @@ describe("tryouts/runtime/finish", () => {
           tryoutSectionSnapshot({
             order: 1,
             publicPath: `${SET_PATH}/pengetahuan-kuantitatif`,
-            questionSetId: firstSource.questionSetId,
             sectionKey: FIRST_SECTION,
             signed: alignedSections[0]?.signed,
             sourcePath: firstSource.sourcePath,
-            tryoutSectionId: firstSectionId,
           }),
           tryoutSectionSnapshot({
             order: 2,
             publicPath: `${SET_PATH}/penalaran-matematika`,
-            questionSetId: secondSource.questionSetId,
             sectionKey: SECOND_SECTION,
             signed: alignedSections[1]?.signed,
             sourcePath: secondSource.sourcePath,
@@ -156,7 +148,6 @@ describe("tryouts/runtime/finish", () => {
         expiresAt: EXPIRED_AT,
         sectionKey: FIRST_SECTION,
         tryoutAttemptId: attemptId,
-        tryoutSectionId: firstSectionId,
       });
       const attempt = await ctx.db.get(attemptId);
       if (!attempt) {
@@ -190,7 +181,6 @@ describe("tryouts/runtime/finish", () => {
         answeredAt: NOW - 5000,
         isCorrect: true,
         placementId: placement._id,
-        questionId: firstSource.questionId,
         selectedOptionId: "option-1",
         timeSpent: 1000,
         tryoutAttemptId: attemptId,
@@ -253,7 +243,7 @@ describe("tryouts/runtime/finish", () => {
         name: "Section Timeout",
       });
       const sourcePath =
-        "question-bank/tryout/indonesia/snbt/2027/set-1/penalaran-matematika";
+        "question-bank/tryout/indonesia/snbt/penalaran-matematika/set-1";
       const questionSetId = await insertTryoutQuestionSource(ctx, {
         sourcePath,
         withQuestion: false,
@@ -265,16 +255,23 @@ describe("tryouts/runtime/finish", () => {
         questionSourcePath: sourcePath,
         tryoutSetId,
       });
+      const tryoutSection = await ctx.db.get(tryoutSectionId);
+      if (!tryoutSection) {
+        throw new ConvexError({
+          code: "TRYOUT_SECTION_NOT_FOUND",
+          message: "Expected the try-out section fixture.",
+        });
+      }
+      const signedSection = makeAlignedTryoutSection(tryoutSection).signed;
       const attemptId = await insertTryoutAttempt(ctx, {
         scoringStrategy: "raw",
         sectionSnapshots: [
           tryoutSectionSnapshot({
             order: 1,
             publicPath: `${SET_PATH}/penalaran-matematika`,
-            questionSetId,
             sectionKey: "penalaran-matematika",
+            signed: signedSection,
             sourcePath,
-            tryoutSectionId,
           }),
         ],
         tryoutSetId,
@@ -283,7 +280,6 @@ describe("tryouts/runtime/finish", () => {
       const sectionId = await insertTryoutSectionAttempt(ctx, {
         expiresAt: NOW,
         tryoutAttemptId: attemptId,
-        tryoutSectionId,
       });
       const attempt = await ctx.db.get(attemptId);
       const section = await ctx.db.get(sectionId);

@@ -4,6 +4,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { activateTryoutStartSource } from "@repo/backend/test/tryout-source";
 import { describe, expect, it } from "vitest";
 
 const NOW = 1_798_752_000_000;
@@ -74,11 +75,11 @@ describe("learningPreferences", () => {
 
   it("saves and reads the authenticated user's preferred try-out country", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
-    );
-
-    await syncTryoutCountries(t);
+    const identity = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, { now: NOW });
+      await activateTryoutStartSource(ctx, "visible");
+      return user;
+    });
 
     await expect(
       t.query(api.learningPreferences.queries.getCurrentTryout, {
@@ -194,23 +195,5 @@ async function syncPrograms(
   await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
     programs: getLearningProgramCatalogInputs(),
     syncedAt: NOW,
-  });
-}
-
-/** Syncs the source-owned try-out country needed by preference tests. */
-async function syncTryoutCountries(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>
-) {
-  await t.mutation(async (ctx) => {
-    await ctx.db.insert("tryoutCountries", {
-      countryKey: "indonesia",
-      isActive: true,
-      locale: "id",
-      order: 1,
-      publicPath: "try-out/indonesia",
-      sourceRevision: "test",
-      syncedAt: NOW,
-      title: "Indonesia",
-    });
   });
 }

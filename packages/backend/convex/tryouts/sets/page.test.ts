@@ -81,7 +81,6 @@ describe("tryouts/sets/page", () => {
         status: "in-progress",
         statusRank: 1,
         trackKey: TRYOUT_START_TRACK,
-        tryoutSetId,
         updatedAt: 1,
         userId,
       });
@@ -89,9 +88,6 @@ describe("tryouts/sets/page", () => {
 
     const failure = await t.query(async (ctx) => {
       const catalog = await Effect.runPromise(loadTryoutCatalog(ctx, "id"));
-      if (!catalog.managed) {
-        throw new Error("Expected a managed signed try-out catalog.");
-      }
       const firstSet = catalog.entries.find(
         ({ row }) => row.kind === "set" && row.locale === "id"
       )?.row;

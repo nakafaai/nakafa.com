@@ -41,39 +41,40 @@ describe("sync-content inspection", () => {
     );
   });
 
-  it("reports choices whose question owner no longer exists", async () => {
-    const questionPath = getFunctionName(
-      internal.contentSync.queries.integrity.listIntegrityQuestionsPage
+  it("reports articles without references", async () => {
+    const articlePath = getFunctionName(
+      internal.contentSync.queries.integrity.listIntegrityArticlesPage
     );
-    const choicePath = getFunctionName(
-      internal.contentSync.queries.integrity.listIntegrityQuestionChoicesPage
+    const referencePath = getFunctionName(
+      internal.contentSync.queries.integrity.listIntegrityArticleReferencesPage
     );
 
     callConvexQueryMock.mockImplementation(
       (_config: ConvexConfig, query: FunctionReference<"query">) => {
         const path = getFunctionName(query);
 
-        if (path === questionPath) {
+        if (path === articlePath) {
           return Effect.succeed({
             ...emptyPage,
             page: [
               {
-                id: "question-current",
+                id: "article-with-reference",
                 locale: "id",
-                sourcePath: "tryouts/current/question.1.mdx",
+                sourcePath: "articles/with-reference",
+              },
+              {
+                id: "article-without-reference",
+                locale: "id",
+                sourcePath: "articles/without-reference",
               },
             ],
           });
         }
 
-        if (path === choicePath) {
+        if (path === referencePath) {
           return Effect.succeed({
             ...emptyPage,
-            page: [
-              { questionId: "question-current" },
-              { questionId: "question-orphan" },
-              { questionId: "question-orphan" },
-            ],
+            page: [{ articleId: "article-with-reference" }],
           });
         }
 
@@ -83,6 +84,8 @@ describe("sync-content inspection", () => {
 
     const integrity = await Effect.runPromise(getDataIntegrity(config));
 
-    expect(integrity.orphanQuestionChoiceIds).toEqual(["question-orphan"]);
+    expect(integrity.articlesWithoutReferences).toEqual([
+      "articles/without-reference (id)",
+    ]);
   });
 });

@@ -7,10 +7,6 @@ import {
   graphIdentityTargetValidator,
 } from "@repo/backend/convex/contentSync/integrity/graph";
 import {
-  listIntegrityTryoutScalesPageImpl,
-  tryoutScaleIntegrityItemValidator,
-} from "@repo/backend/convex/contentSync/integrity/tryouts";
-import {
   contentTypeValidator,
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
@@ -25,16 +21,6 @@ const staleContentItemValidator = v.object({
   id: v.id("articleContents"),
   locale: localeValidator,
   sourcePath: v.string(),
-});
-
-const questionIntegrityItemValidator = v.object({
-  id: v.id("questions"),
-  locale: localeValidator,
-  sourcePath: v.string(),
-});
-
-const questionChoiceIntegrityItemValidator = v.object({
-  questionId: v.id("questions"),
 });
 
 const contentAuthorIntegrityItemValidator = v.object({
@@ -72,46 +58,6 @@ function getCurriculumLessonIntegrityItem(
 
   return item;
 }
-
-/** Returns one bounded question page for sync integrity verification. */
-export const listIntegrityQuestionsPage = internalQuery({
-  args: {
-    paginationOpts: paginationOptsValidator,
-  },
-  returns: paginationResultValidator(questionIntegrityItemValidator),
-  handler: async (ctx, args) => {
-    const page = await ctx.db.query("questions").paginate(args.paginationOpts);
-
-    return {
-      ...page,
-      page: page.page.map((question) => ({
-        id: question._id,
-        locale: question.locale,
-        sourcePath: question.sourcePath,
-      })),
-    };
-  },
-});
-
-/** Returns one bounded question-choice page for sync integrity verification. */
-export const listIntegrityQuestionChoicesPage = internalQuery({
-  args: {
-    paginationOpts: paginationOptsValidator,
-  },
-  returns: paginationResultValidator(questionChoiceIntegrityItemValidator),
-  handler: async (ctx, args) => {
-    const page = await ctx.db
-      .query("questionChoices")
-      .paginate(args.paginationOpts);
-
-    return {
-      ...page,
-      page: page.page.map((choice) => ({
-        questionId: choice.questionId,
-      })),
-    };
-  },
-});
 
 /** Returns one bounded content-author page for sync integrity verification. */
 export const listIntegrityContentAuthorsPage = internalQuery({
@@ -194,15 +140,6 @@ export const listIntegrityCurriculumLessonsPage = internalQuery({
       page: page.page.map(getCurriculumLessonIntegrityItem),
     };
   },
-});
-
-/** Returns one bounded try-out scale page for sync integrity verification. */
-export const listIntegrityTryoutScalesPage = internalQuery({
-  args: {
-    paginationOpts: paginationOptsValidator,
-  },
-  returns: paginationResultValidator(tryoutScaleIntegrityItemValidator),
-  handler: listIntegrityTryoutScalesPageImpl,
 });
 
 /** Summarizes strict graph identity invariants for one paginated target slice. */

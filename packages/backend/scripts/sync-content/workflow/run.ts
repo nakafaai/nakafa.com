@@ -19,7 +19,6 @@ import {
 } from "@repo/backend/scripts/sync-content/content/curriculum";
 import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/content/programs";
 import { syncQuran } from "@repo/backend/scripts/sync-content/content/quran";
-import { syncTryouts } from "@repo/backend/scripts/sync-content/content/tryouts";
 import {
   AuthorSyncResultSchema,
   BATCH_SIZES,
@@ -30,7 +29,6 @@ import type {
   SyncResult,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
-import { readContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import {
   createContentRouteArtifactTargets,
   syncContentRouteArtifactPages,
@@ -70,7 +68,6 @@ export const syncAll = Effect.fn("sync.all")(function* (
   options: SyncOptions
 ) {
   const metrics = createMetrics();
-  const ownership = yield* readContentSyncOwnership(config);
   log("=== CONTENT SYNC ===\n");
 
   if (options.locale) {
@@ -81,11 +78,10 @@ export const syncAll = Effect.fn("sync.all")(function* (
   }
 
   log("Phase 0: Pre-syncing authors...");
-  const authorResult = yield* syncAuthors(
-    config,
-    { ...options, quiet: true },
-    ownership
-  );
+  const authorResult = yield* syncAuthors(config, {
+    ...options,
+    quiet: true,
+  });
   log(
     `  Authors: ${authorResult.created} new, ${authorResult.existing} existing`
   );
@@ -95,7 +91,6 @@ export const syncAll = Effect.fn("sync.all")(function* (
   let curriculumTopicResult: SyncResult;
   let curriculumLessonResult: SyncResult;
   let quranResult: SyncResult;
-  let tryoutResult = createSyncResult();
   let routePageResult: SyncResult;
   let publicRouteResult: SyncResult;
   let learningProgramResult: SyncResult;
@@ -133,17 +128,6 @@ export const syncAll = Effect.fn("sync.all")(function* (
       quranResult.created + quranResult.updated + quranResult.unchanged
     );
 
-    if (ownership.tryoutsManaged) {
-      log("Tryouts: signed Aksara ownership active");
-    } else {
-      const tryoutPhase = startPhase(metrics, "Tryouts");
-      tryoutResult = yield* syncTryouts(config, options);
-      endPhase(
-        tryoutPhase,
-        tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged
-      );
-    }
-
     const routePagePhase = startPhase(metrics, "Route Pages");
     routePageResult = yield* syncContentRouteArtifactPages(
       config,
@@ -157,7 +141,7 @@ export const syncAll = Effect.fn("sync.all")(function* (
     );
 
     const publicRoutePhase = startPhase(metrics, "Public Routes");
-    publicRouteResult = yield* syncPublicRoutes(config, options, ownership);
+    publicRouteResult = yield* syncPublicRoutes(config, options);
     endPhase(
       publicRoutePhase,
       publicRouteResult.created +
@@ -198,38 +182,27 @@ export const syncAll = Effect.fn("sync.all")(function* (
     log(`  Quran:              ${formatSyncResult(quranResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase3Start)}`);
 
-    if (ownership.tryoutsManaged) {
-      log("Phase 4: Tryouts use signed Aksara ownership");
-    } else {
-      log("Phase 4: Syncing tryouts...");
-      const phase4Start = performance.now();
-      tryoutResult = yield* syncTryouts(config, options);
-      log(`  Tryouts:            ${formatSyncResult(tryoutResult)}`);
-      log(`  Duration: ${formatDuration(performance.now() - phase4Start)}`);
-    }
-
-    log("Phase 5: Materializing route artifact pages...");
-    const phase5Start = performance.now();
+    log("Phase 4: Materializing route artifact pages...");
+    const phase4Start = performance.now();
     routePageResult = yield* syncContentRouteArtifactPages(
       config,
       createContentRouteArtifactTargets(options.locale)
     );
     log(`  Route Pages:         ${formatSyncResult(routePageResult)}`);
-    log(`  Duration: ${formatDuration(performance.now() - phase5Start)}`);
+    log(`  Duration: ${formatDuration(performance.now() - phase4Start)}`);
 
-    log("Phase 6: Syncing learning programs and coverage...");
-    const phase6Start = performance.now();
-    publicRouteResult = yield* syncPublicRoutes(config, options, ownership);
+    log("Phase 5: Syncing learning programs and coverage...");
+    const phase5Start = performance.now();
+    publicRouteResult = yield* syncPublicRoutes(config, options);
     log(`  Public Routes:    ${formatSyncResult(publicRouteResult)}`);
     learningProgramResult = yield* syncLearningPrograms(config, options);
     log(`  Learning Programs:   ${formatSyncResult(learningProgramResult)}`);
-    log(`  Duration: ${formatDuration(performance.now() - phase6Start)}`);
+    log(`  Duration: ${formatDuration(performance.now() - phase5Start)}`);
 
     addPhaseMetrics(metrics, "Articles", articleResult);
     addPhaseMetrics(metrics, "Curriculum Topics", curriculumTopicResult);
     addPhaseMetrics(metrics, "Curriculum Lessons", curriculumLessonResult);
     addPhaseMetrics(metrics, "Quran", quranResult);
-    addPhaseMetrics(metrics, "Tryouts", tryoutResult);
     addPhaseMetrics(metrics, "Route Pages", routePageResult);
     addPhaseMetrics(metrics, "Public Routes", publicRouteResult);
     addPhaseMetrics(metrics, "Learning Programs", learningProgramResult);
@@ -242,7 +215,6 @@ export const syncAll = Effect.fn("sync.all")(function* (
     curriculumTopicResult,
     curriculumLessonResult,
     quranResult,
-    tryoutResult,
     routePageResult,
     publicRouteResult,
     learningProgramResult
@@ -307,11 +279,8 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
 
   log(`Changed files: ${changedFiles.size}\n`);
   const changedFilesArray = [...changedFiles];
-  const ownership = yield* readContentSyncOwnership(config);
-  const changedAuthorNames = yield* collectAuthorNamesFromFiles(
-    changedFilesArray,
-    ownership
-  );
+  const changedAuthorNames =
+    yield* collectAuthorNamesFromFiles(changedFilesArray);
 
   if (changedAuthorNames.length > 0) {
     log("Phase 0: Pre-syncing authors from changed files...");
@@ -347,7 +316,6 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   let articleResult = createSyncResult();
   let curriculumTopicResult = createSyncResult();
   let curriculumLessonResult = createSyncResult();
-  let tryoutResult = createSyncResult();
   let quranResult = createSyncResult();
   let routePageResult = createSyncResult();
   let publicRouteResult = createSyncResult();
@@ -393,17 +361,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
       curriculumLessonResult = yield* syncCurriculumLessons(config, options);
       addPhaseMetrics(metrics, "Curriculum Topics", curriculumTopicResult);
       addPhaseMetrics(metrics, "Curriculum Lessons", curriculumLessonResult);
-      continue;
     }
-
-    if (ownership.tryoutsManaged) {
-      log("Tryouts: signed Aksara ownership active");
-      continue;
-    }
-
-    log("Try-out source rows changed - syncing...");
-    tryoutResult = yield* syncTryouts(config, options);
-    addPhaseMetrics(metrics, "Tryouts", tryoutResult);
   }
 
   if (!plannedRowPhases.has("articles")) {
@@ -412,10 +370,6 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   if (!plannedRowPhases.has("curriculum")) {
     log("Curriculum: no changes");
   }
-  if (!plannedRowPhases.has("tryouts")) {
-    log("Tryouts: no changes");
-  }
-
   if (syncPlan.refreshQuran) {
     quranResult = yield* syncQuran(config, {
       ...options,
@@ -435,11 +389,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   }
 
   if (syncPlan.refreshPublicRoutes) {
-    publicRouteResult = yield* syncPublicRoutes(
-      config,
-      routePageOptions,
-      ownership
-    );
+    publicRouteResult = yield* syncPublicRoutes(config, routePageOptions);
     addPhaseMetrics(metrics, "Public Routes", publicRouteResult);
     learningProgramResult = yield* syncLearningPrograms(
       config,
@@ -457,7 +407,6 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     articleResult.created +
     curriculumTopicResult.created +
     curriculumLessonResult.created +
-    tryoutResult.created +
     quranResult.created +
     routePageResult.created +
     publicRouteResult.created +
@@ -466,7 +415,6 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     articleResult.updated +
     curriculumTopicResult.updated +
     curriculumLessonResult.updated +
-    tryoutResult.updated +
     quranResult.updated +
     routePageResult.updated +
     publicRouteResult.updated +

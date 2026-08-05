@@ -4,15 +4,13 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import type { TryoutSectionContentAccess } from "@repo/backend/convex/tryouts/runtime/content";
-import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime";
 import {
-  insertTryoutSet,
   TRYOUT_SECTION_KEY,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
 import type { FunctionArgs } from "convex/server";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const contentArgs: FunctionArgs<
   typeof api.tryouts.queries.access.getSectionContent
@@ -29,130 +27,26 @@ const noContent: Extract<TryoutSectionContentAccess, { kind: "none" }> = {
   kind: "none",
 };
 
-const accessScenarios: readonly [
-  TryoutStatus,
-  TryoutStatus,
-  TryoutSectionContentAccess,
-][] = [
-  [
-    "in-progress",
-    "in-progress",
-    { answers: false, kind: "filesystem", questions: true },
-  ],
-  ["in-progress", "completed", noContent],
-  ["completed", "in-progress", noContent],
-  ["completed", "completed", noContent],
-  ["expired", "expired", noContent],
-];
+beforeEach(() => {
+  vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
+});
 
 describe("tryouts/runtime/access", () => {
   it("rejects anonymous content access", async () => {
     const t = createConvexTestWithBetterAuth();
 
-    expect(
-      await t.query(api.tryouts.queries.access.getSectionContent, contentArgs)
-    ).toEqual(noContent);
+    await expect(
+      t.query(api.tryouts.queries.access.getSectionContent, contentArgs)
+    ).resolves.toEqual(noContent);
   });
 
-  it("rejects access when the active set does not exist", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, {
-        now: TRYOUT_TEST_NOW,
-        suffix: "content-missing-set",
-      })
-    );
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    const result = await authed.query(
-      api.tryouts.queries.access.getSectionContent,
-      contentArgs
-    );
-    expect(result).toEqual(noContent);
-  });
-
-  it("rejects access when the user has no attempt", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: TRYOUT_TEST_NOW,
-        suffix: "content-missing-attempt",
-      });
-      await insertTryoutSet(ctx);
-      return user;
-    });
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    const result = await authed.query(
-      api.tryouts.queries.access.getSectionContent,
-      contentArgs
-    );
-    expect(result).toEqual(noContent);
-  });
-
-  it("rejects access when the terminal attempt has no section", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "completed",
-        sectionStatus: "completed",
-        suffix: "content-missing-section",
-      });
-      await ctx.db.delete(fixture.sectionAttemptId);
-      return fixture;
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-
-    expect(
-      await authed.query(
-        api.tryouts.queries.access.getSectionContent,
-        contentArgs
-      )
-    ).toEqual(noContent);
-  });
-
-  it.each(accessScenarios)(
-    "authorizes unbound attempt=%s section=%s",
-    async (attemptStatus, sectionStatus, expected) => {
-      const t = createConvexTestWithBetterAuth();
-      const seeded = await t.mutation((ctx) =>
-        seedTryoutContentAccessState(ctx, {
-          attemptStatus,
-          sectionStatus,
-          suffix: `content-${attemptStatus}-${sectionStatus}`,
-        })
-      );
-      const authed = t.withIdentity({
-        sessionId: seeded.identity.sessionId,
-        subject: seeded.identity.authUserId,
-      });
-
-      expect(
-        await authed.query(
-          api.tryouts.queries.access.getSectionContent,
-          contentArgs
-        )
-      ).toEqual(expected);
-    }
-  );
-
-  it("requires an exact capability to review terminal content", async () => {
+  it("returns signed questions for the active section", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation((ctx) =>
       seedTryoutContentAccessState(ctx, {
-        attemptStatus: "completed",
-        sectionStatus: "completed",
-        signed: true,
-        suffix: "content-terminal-capability",
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        suffix: "content-active",
       })
     );
     const authed = t.withIdentity({
@@ -161,49 +55,23 @@ describe("tryouts/runtime/access", () => {
     });
 
     await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, {
-        ...contentArgs,
-        attemptId: seeded.attemptId,
-      })
+      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
     ).resolves.toEqual({
-      answers: [seeded.signedContent?.answer],
+      answers: [],
       kind: "signed",
-      questions: [seeded.signedContent?.question],
+      questions: [seeded.signedContent.question],
     });
   });
 
-  it("does not load frozen content for another active route section", async () => {
+  it("requires an exact capability to review terminal content", async () => {
     const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        signed: true,
-        suffix: "content-signed-frozen-entry",
-      });
-      if (!fixture.placementId) {
-        throw new Error("Expected a signed placement fixture.");
-      }
-      await ctx.db.patch(fixture.attemptId, {
-        sectionSnapshots: [
-          {
-            questionCount: 1,
-            questionSourcePath: "question-bank/tryout/legacy-entry",
-            sectionKey: "legacy-entry",
-            sectionOrder: 1,
-            sourceRevision: "2026",
-            timeLimitSeconds: 1800,
-          },
-        ],
-      });
-      await ctx.db.patch(fixture.sectionAttemptId, {
-        sectionKey: "legacy-entry",
-      });
-      await ctx.db.patch(fixture.placementId, {
-        sectionKey: "legacy-entry",
-      });
-      return fixture;
-    });
+    const seeded = await t.mutation((ctx) =>
+      seedTryoutContentAccessState(ctx, {
+        attemptStatus: "completed",
+        sectionStatus: "completed",
+        suffix: "content-terminal",
+      })
+    );
     const authed = t.withIdentity({
       sessionId: seeded.identity.sessionId,
       subject: seeded.identity.authUserId,
@@ -212,84 +80,15 @@ describe("tryouts/runtime/access", () => {
     await expect(
       authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
     ).resolves.toEqual(noContent);
-  });
-
-  it("prefers a newer filesystem attempt during signed migration", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const signed = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        signed: true,
-        suffix: "content-signed-before-migration",
-      });
-      const local = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        suffix: "content-local-during-migration",
-      });
-      await ctx.db.patch(local.attemptId, {
-        attemptNumber: 2,
-        lastActivityAt: TRYOUT_TEST_NOW + 1,
-        startedAt: TRYOUT_TEST_NOW + 1,
-        tryoutSetId: signed.tryoutSetId,
-        userId: signed.identity.userId,
-      });
-      await ctx.db.delete(local.tryoutSetId);
-      return signed.identity;
-    });
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
-    ).resolves.toEqual({
-      answers: false,
-      kind: "filesystem",
-      questions: true,
-    });
-  });
-
-  it("binds protected content to the route-selected attempt", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const signed = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        signed: true,
-        suffix: "content-route-selected",
-      });
-      const newer = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        suffix: "content-route-newer",
-      });
-      await ctx.db.patch(newer.attemptId, {
-        attemptNumber: 2,
-        lastActivityAt: TRYOUT_TEST_NOW + 1,
-        startedAt: TRYOUT_TEST_NOW + 1,
-        tryoutSetId: signed.tryoutSetId,
-        userId: signed.identity.userId,
-      });
-      await ctx.db.delete(newer.tryoutSetId);
-      return signed;
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-
     await expect(
       authed.query(api.tryouts.queries.access.getSectionContent, {
         ...contentArgs,
         attemptId: seeded.attemptId,
       })
     ).resolves.toEqual({
-      answers: [],
+      answers: [seeded.signedContent.answer],
       kind: "signed",
-      questions: [seeded.signedContent?.question],
+      questions: [seeded.signedContent.question],
     });
   });
 
@@ -299,12 +98,11 @@ describe("tryouts/runtime/access", () => {
       const owner = await seedTryoutContentAccessState(ctx, {
         attemptStatus: "in-progress",
         sectionStatus: "in-progress",
-        signed: true,
-        suffix: "content-owned-attempt",
+        suffix: "content-owner",
       });
       const reader = await seedAuthenticatedUser(ctx, {
         now: TRYOUT_TEST_NOW,
-        suffix: "content-other-reader",
+        suffix: "content-reader",
       });
       return { owner, reader };
     });
@@ -327,7 +125,6 @@ describe("tryouts/runtime/access", () => {
       seedTryoutContentAccessState(ctx, {
         attemptStatus: "in-progress",
         sectionStatus: "in-progress",
-        signed: true,
         suffix: "content-route-mismatch",
       })
     );
@@ -345,66 +142,6 @@ describe("tryouts/runtime/access", () => {
     ).rejects.toThrow(
       "Try-out content request differs from its frozen attempt identity."
     );
-  });
-
-  it("fails closed when a signed attempt loses its release identity", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        signed: true,
-        suffix: "content-missing-release",
-      });
-      await ctx.db.patch(fixture.attemptId, { snapshotReleaseId: undefined });
-      return fixture;
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
-    ).rejects.toThrow(
-      "Signed try-out attempt lost its frozen release identity."
-    );
-  });
-
-  it("returns no content when a renamed route has no active section", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const fixture = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "completed",
-        signed: true,
-        suffix: "content-renamed-completed-section",
-      });
-      await ctx.db.patch(fixture.attemptId, {
-        sectionSnapshots: [
-          {
-            questionCount: 1,
-            questionSourcePath: "question-bank/tryout/completed-section",
-            sectionKey: TRYOUT_SECTION_KEY,
-            sectionOrder: 1,
-            sourceRevision: "2026",
-            timeLimitSeconds: 1800,
-          },
-        ],
-      });
-      return fixture;
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, {
-        ...contentArgs,
-        sectionKey: "renamed-section",
-      })
-    ).resolves.toEqual(noContent);
   });
 
   it("maps duplicate section state into a typed read failure", async () => {
@@ -434,7 +171,6 @@ describe("tryouts/runtime/access", () => {
         status: section.status,
         totalQuestions: section.totalQuestions,
         tryoutAttemptId: section.tryoutAttemptId,
-        tryoutSectionId: section.tryoutSectionId,
       });
       return fixture;
     });

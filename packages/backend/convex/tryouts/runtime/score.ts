@@ -5,7 +5,6 @@ import {
   getAttemptStatusFromEndReason,
 } from "@repo/backend/convex/lib/attempts";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
-import { findTryoutBundleByRelease } from "@repo/backend/convex/tryouts/runtime/bundle";
 import {
   TryoutRuntimeError,
   tryRuntimePromise,
@@ -67,7 +66,6 @@ export const scoreTryoutSection = Effect.fn("tryouts.runtime.scoreSection")(
       responses: TryoutResponse[];
       sectionKey: string;
       totalQuestions: number;
-      tryoutSectionId?: Id<"tryoutSections">;
     }
   ) {
     if (args.attempt.scoringStrategy === "irt") {
@@ -132,7 +130,7 @@ export const finalizeAttemptScore = Effect.fn(
       })
     )
   );
-  const owner = yield* resolveAttemptScoreOwner(ctx, args.attempt);
+  const owner = readAttemptScoreOwner(args.attempt);
   const scoreId = yield* tryRuntimePromise(() =>
     insertAttemptScore(ctx, {
       attempt: args.attempt,
@@ -172,50 +170,19 @@ export const finalizeAttemptScore = Effect.fn(
   return { scoreId };
 });
 
-/** Resolves signed score ownership without activating a prepared attempt root. */
-const resolveAttemptScoreOwner = Effect.fn(
-  "tryouts.runtime.resolveAttemptScoreOwner"
-)(function* (ctx: MutationCtx, attempt: TryoutAttempt) {
-  const { setIdentity, snapshotReleaseId, tryoutSnapshotId } = attempt;
-  if (tryoutSnapshotId) {
-    if (!setIdentity) {
-      return yield* scoreOwnershipError();
-    }
-    return { setIdentity, tryoutSnapshotId };
-  }
-
-  if (!(setIdentity || snapshotReleaseId)) {
-    return null;
-  }
-  if (!(setIdentity && snapshotReleaseId)) {
-    return yield* scoreOwnershipError();
-  }
-
-  const bundle = yield* findTryoutBundleByRelease(ctx, snapshotReleaseId).pipe(
-    Effect.mapError(() => scoreOwnershipError())
-  );
-  if (!bundle) {
-    return yield* scoreOwnershipError();
-  }
+/** Reads score ownership from the immutable signed attempt. */
+function readAttemptScoreOwner(attempt: TryoutAttempt): AttemptScoreOwner {
   return {
-    setIdentity,
-    tryoutSnapshotId: bundle.snapshotId,
+    setIdentity: attempt.setIdentity,
+    tryoutSnapshotId: attempt.tryoutSnapshotId,
   };
-});
-
-/** Fails closed when a terminal score cannot prove its frozen owner. */
-function scoreOwnershipError() {
-  return new TryoutRuntimeError({
-    code: "TRYOUT_SCORE_OWNER_INVALID",
-    message: "Try-out score ownership does not match its frozen snapshot.",
-  });
 }
 
 /** Loads bounded responses for one complete try-out attempt. */
 async function loadAttemptResponses(ctx: MutationCtx, attempt: TryoutAttempt) {
   const responses = await ctx.db
     .query("tryoutResponses")
-    .withIndex("by_tryoutAttemptId_and_questionId", (q) =>
+    .withIndex("by_tryoutAttemptId_and_answeredAt", (q) =>
       q.eq("tryoutAttemptId", attempt._id)
     )
     .take(attempt.totalQuestions + 1);
@@ -267,7 +234,7 @@ function insertAttemptScore(
   args: {
     attempt: TryoutAttempt;
     finalizedAt: number;
-    owner: AttemptScoreOwner | null;
+    owner: AttemptScoreOwner;
     score: AttemptScore;
   }
 ) {
@@ -280,10 +247,7 @@ function insertAttemptScore(
     totalCorrect: args.score.totalCorrect,
     totalQuestions: args.score.totalQuestions,
     tryoutAttemptId: args.attempt._id,
-    ...(args.owner ?? {}),
-    ...(args.attempt.tryoutSetId
-      ? { tryoutSetId: args.attempt.tryoutSetId }
-      : {}),
+    ...args.owner,
     userId: args.attempt.userId,
   };
 

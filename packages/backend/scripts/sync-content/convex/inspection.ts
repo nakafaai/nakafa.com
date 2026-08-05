@@ -8,19 +8,13 @@ import {
   DataIntegritySchema,
   GraphIdentityIntegrityPageSchema,
   GraphIdentityIntegritySchema,
-  QuestionChoiceIntegrityPageSchema,
-  QuestionIntegrityPageSchema,
   StaleArticleCurriculumContentSchema,
   StaleContentPageSchema,
-  StaleTryoutContentSchema,
-  TryoutScaleIntegrityPageSchema,
   UnusedAuthorsSchema,
 } from "@repo/backend/scripts/sync-content/contract/inspection";
-import { hasLocalizedSourceKey } from "@repo/backend/scripts/sync-content/contract/key";
 import type {
   ConvexConfig,
   FilesystemArticleCurriculumSlugs,
-  FilesystemTryoutSlugs,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexQuery } from "@repo/backend/scripts/sync-content/convex/client";
 import type {
@@ -247,128 +241,11 @@ export const getStaleArticleCurriculumContent = Effect.fn(
   });
 });
 
-/** Finds legacy tryout rows whose filesystem-owned identities disappeared. */
-export const getStaleTryoutContent = Effect.fn("sync.getStaleTryoutContent")(
-  function* (config: ConvexConfig, filesystemSlugs: FilesystemTryoutSlugs) {
-    const questionSetSourcePathSet = new Set(
-      filesystemSlugs.questionSetSourcePaths
-    );
-    const questionSourceKeySet = new Set(filesystemSlugs.questionSourceKeys);
-    const tryoutCountryKeySet = new Set(filesystemSlugs.tryoutCountryKeys);
-    const tryoutExamKeySet = new Set(filesystemSlugs.tryoutExamKeys);
-    const tryoutTrackKeySet = new Set(filesystemSlugs.tryoutTrackKeys);
-    const tryoutSetKeySet = new Set(filesystemSlugs.tryoutSetKeys);
-    const tryoutSectionKeySet = new Set(filesystemSlugs.tryoutSectionKeys);
-    const [
-      questionSets,
-      questions,
-      tryoutCountries,
-      tryoutExams,
-      tryoutTracks,
-      tryoutSets,
-      tryoutSections,
-    ] = yield* Effect.all([
-      collectPages(
-        config,
-        internal.contentSync.queries.stale.listStaleContentPage,
-        buildStaleContentArgs("questionSets"),
-        StaleContentPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.stale.listStaleContentPage,
-        buildStaleContentArgs("questions"),
-        StaleContentPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.stale.listStaleContentPage,
-        buildStaleContentArgs("tryoutCountries"),
-        StaleContentPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.stale.listStaleContentPage,
-        buildStaleContentArgs("tryoutExams"),
-        StaleContentPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.stale.listStaleContentPage,
-        buildStaleContentArgs("tryoutTracks"),
-        StaleContentPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.stale.listStaleContentPage,
-        buildStaleContentArgs("tryoutSets"),
-        StaleContentPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.stale.listStaleContentPage,
-        buildStaleContentArgs("tryoutSections"),
-        StaleContentPageSchema
-      ),
-    ]);
-
-    return yield* Schema.decodeUnknown(StaleTryoutContentSchema)({
-      staleQuestionSets: questionSets.filter(
-        (item) => !questionSetSourcePathSet.has(item.sourcePath)
-      ),
-      staleQuestions: questions.filter(
-        (item) => !questionSourceKeySet.has(getQuestionSourceKey(item))
-      ),
-      staleTryoutCountries: tryoutCountries.filter(
-        (item) => !hasLocalizedSourceKey(tryoutCountryKeySet, item)
-      ),
-      staleTryoutExams: tryoutExams.filter(
-        (item) => !hasLocalizedSourceKey(tryoutExamKeySet, item)
-      ),
-      staleTryoutTracks: tryoutTracks.filter(
-        (item) => !hasLocalizedSourceKey(tryoutTrackKeySet, item)
-      ),
-      staleTryoutSets: tryoutSets.filter(
-        (item) => !hasLocalizedSourceKey(tryoutSetKeySet, item)
-      ),
-      staleTryoutSections: tryoutSections.filter(
-        (item) => !hasLocalizedSourceKey(tryoutSectionKeySet, item)
-      ),
-    });
-  }
-);
-
 /** Summarizes missing content relationships for sync verification. */
 export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   config: ConvexConfig
 ) {
-  const [
-    questions,
-    choices,
-    contentAuthors,
-    references,
-    articles,
-    sections,
-    tryoutScales,
-  ] = yield* Effect.all([
-    collectPages(
-      config,
-      internal.contentSync.queries.integrity.listIntegrityQuestionsPage,
-      (paginationOpts) => ({ paginationOpts }),
-      QuestionIntegrityPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.integrity.listIntegrityQuestionChoicesPage,
-      (paginationOpts) => ({ paginationOpts }),
-      QuestionChoiceIntegrityPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.integrity.listIntegrityContentAuthorsPage,
-      (paginationOpts) => ({ paginationOpts }),
-      ContentAuthorIntegrityPageSchema
-    ),
+  const [references, articles, sections] = yield* Effect.all([
     collectPages(
       config,
       internal.contentSync.queries.integrity.listIntegrityArticleReferencesPage,
@@ -387,64 +264,22 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
       (paginationOpts) => ({ paginationOpts }),
       CurriculumLessonIntegrityPageSchema
     ),
-    collectPages(
-      config,
-      internal.contentSync.queries.integrity.listIntegrityTryoutScalesPage,
-      (paginationOpts) => ({ paginationOpts }),
-      TryoutScaleIntegrityPageSchema
-    ),
   ]);
-  const questionIdsWithChoices = new Set(
-    choices.map((choice) => choice.questionId)
-  );
-  const questionIds = new Set(questions.map((question) => question.id));
-  const questionIdsWithAuthors = new Set(
-    contentAuthors
-      .filter((authorLink) => authorLink.contentType === "question")
-      .map((authorLink) => authorLink.contentId)
-  );
   const articleIdsWithReferences = new Set(
     references.map((reference) => reference.articleId)
   );
 
   return yield* Schema.decodeUnknown(DataIntegritySchema)({
-    orphanQuestionChoiceIds: Array.from(
-      new Set(
-        choices
-          .filter((choice) => !questionIds.has(choice.questionId))
-          .map((choice) => choice.questionId)
-      )
-    ),
-    questionsWithoutChoices: questions
-      .filter((question) => !questionIdsWithChoices.has(question.id))
-      .map((question) => `${question.sourcePath} (${question.locale})`),
-    questionsWithoutAuthors: questions
-      .filter((question) => !questionIdsWithAuthors.has(question.id))
-      .map((question) => `${question.sourcePath} (${question.locale})`),
     articlesWithoutReferences: articles
       .filter((article) => !articleIdsWithReferences.has(article.id))
       .map((article) => `${article.sourcePath} (${article.locale})`),
     sectionsWithoutTopics: sections
       .filter((section) => !section.topicId)
       .map((section) => `${section.slug} (${section.locale})`),
-    activeTryoutsWithoutScale: tryoutScales
-      .filter(
-        (set) =>
-          set.isActive &&
-          set.scoringStrategy === "irt" &&
-          !set.hasPublishedScale
-      )
-      .map((set) => `${set.publicPath} (${set.locale})`),
-    totalQuestions: questions.length,
     totalArticles: articles.length,
     totalSections: sections.length,
   });
 });
-
-/** Builds the locale-qualified source key for one persisted question row. */
-function getQuestionSourceKey(item: { locale: string; sourcePath: string }) {
-  return `${item.locale}:${item.sourcePath}`;
-}
 
 /** Summarizes graph identity violations across persisted read models and chat previews. */
 export const getGraphIdentityIntegrity = Effect.fn(

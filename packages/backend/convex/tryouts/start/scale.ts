@@ -4,10 +4,7 @@ import {
 } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type {
-  SignedTryoutSource,
-  TryoutStartSource,
-} from "@repo/backend/convex/tryouts/start/source";
+import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
 import {
   TryoutStartError,
   toTryoutStartError,
@@ -25,16 +22,9 @@ type IrtScaleItem = Doc<"irtScaleItems">;
 /** Selects or creates the exact signed IRT scale frozen into one new attempt. */
 export const selectAttemptScale = Effect.fn("tryouts.start.selectAttemptScale")(
   function* (ctx: MutationCtx, source: TryoutStartSource, publishedAt: number) {
-    const scoringStrategy =
-      source.kind === "filesystem"
-        ? source.set.scoringStrategy
-        : source.snapshot.set.row.scoringStrategy;
+    const scoringStrategy = source.snapshot.set.row.scoringStrategy;
     if (scoringStrategy !== "irt") {
       return null;
-    }
-
-    if (source.kind === "filesystem") {
-      return yield* loadFilesystemScale(ctx, source.set);
     }
 
     const scale = yield* loadExactScale(ctx, source);
@@ -50,33 +40,10 @@ export const selectAttemptScale = Effect.fn("tryouts.start.selectAttemptScale")(
   }
 );
 
-/** Loads the newest scale that still belongs to filesystem-authored content. */
-const loadFilesystemScale = Effect.fn("tryouts.start.loadFilesystemScale")(
-  function* (ctx: MutationCtx, set: Doc<"tryoutSets">) {
-    const scale = yield* tryScalePromise(() =>
-      ctx.db
-        .query("irtScaleVersions")
-        .withIndex(
-          "by_tryoutSetId_and_tryoutSnapshotId_and_publishedAt",
-          (query) =>
-            query.eq("tryoutSetId", set._id).eq("tryoutSnapshotId", undefined)
-        )
-        .order("desc")
-        .first()
-    );
-    if (!scale) {
-      return yield* scaleError(
-        "Published filesystem IRT scale is required before scoring this try-out."
-      );
-    }
-    return scale;
-  }
-);
-
 /** Loads at most one scale bound to the exact signed snapshot. */
 const loadExactScale = Effect.fn("tryouts.start.loadExactScale")(function* (
   ctx: MutationCtx,
-  source: SignedTryoutSource
+  source: TryoutStartSource
 ) {
   const scales = yield* tryScalePromise(() =>
     ctx.db
@@ -112,7 +79,7 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
     ctx: MutationCtx,
     args: {
       publishedAt: number;
-      source: SignedTryoutSource;
+      source: TryoutStartSource;
     }
   ) {
     const placements = signedPlacements(args.source);
@@ -199,7 +166,7 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
 
 /** Loads the latest earlier signed scale for the same logical set. */
 const loadPreviousScale = Effect.fn("tryouts.start.loadPreviousScale")(
-  function* (ctx: MutationCtx, source: SignedTryoutSource) {
+  function* (ctx: MutationCtx, source: TryoutStartSource) {
     const scale = yield* tryScalePromise(() =>
       ctx.db
         .query("irtScaleVersions")
@@ -217,7 +184,7 @@ const loadPreviousScale = Effect.fn("tryouts.start.loadPreviousScale")(
 const verifyScaleItems = Effect.fn("tryouts.start.verifyScaleItems")(function* (
   ctx: MutationCtx,
   scale: IrtScale,
-  source: SignedTryoutSource
+  source: TryoutStartSource
 ) {
   const items = yield* loadScaleItemMap(ctx, scale);
   const placements = signedPlacements(source);
@@ -250,10 +217,7 @@ const loadScaleItemMap = Effect.fn("tryouts.start.loadScaleItemMap")(function* (
 
   const itemsByIdentity = new Map<string, IrtScaleItem>();
   for (const item of items) {
-    if (
-      !item.placementIdentity ||
-      itemsByIdentity.has(item.placementIdentity)
-    ) {
+    if (itemsByIdentity.has(item.placementIdentity)) {
       return yield* scaleError(
         "Signed IRT scale has a missing or duplicate item identity."
       );
@@ -264,7 +228,7 @@ const loadScaleItemMap = Effect.fn("tryouts.start.loadScaleItemMap")(function* (
 });
 
 /** Flattens authenticated placements with their immutable identity fields. */
-function signedPlacements(source: SignedTryoutSource) {
+function signedPlacements(source: TryoutStartSource) {
   return source.snapshot.sections.flatMap(({ placements }) =>
     placements.map((placement) => ({
       identity: tryoutPlacementIdentity(placement.row),

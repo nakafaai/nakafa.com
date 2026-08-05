@@ -1,10 +1,9 @@
-import { api, internal } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import type { StartAttemptArgs } from "@repo/backend/convex/tryouts/start/spec";
-import { makeTryoutMigrationArgs } from "@repo/backend/test/tryout-migration";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
 import {
   TRYOUT_START_COUNTRY as COUNTRY,
@@ -27,62 +26,6 @@ const startArgs: StartAttemptArgs = {
 };
 
 describe("tryouts/start/scale", () => {
-  it("uses the local scale after signed ownership rolls back", async () => {
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-local-scale",
-      });
-      const fixture = await seedTryoutStartSet(ctx, {
-        scoringStrategy: "irt",
-        userId: identity.userId,
-        visibility: "visible",
-      });
-      const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
-        model: "2pl",
-        publishedAt: NOW,
-        questionCount: 1,
-        status: "official",
-        tryoutSetId: fixture.tryoutSetId,
-      });
-      await ctx.db.insert("irtScaleVersions", {
-        model: "2pl",
-        publishedAt: NOW + 1,
-        questionCount: 1,
-        setIdentity: fixture.setIdentity,
-        status: "official",
-        tryoutSetId: fixture.tryoutSetId,
-        tryoutSnapshotId: fixture.snapshotId,
-      });
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        throw new Error("Expected one content state row.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        activeManifestHash: undefined,
-        activeReleaseId: undefined,
-        activeSequence: undefined,
-      });
-      return { identity, scaleVersionId };
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-
-    const result = await authed.mutation(
-      api.tryouts.mutations.attempts.startAttempt,
-      startArgs
-    );
-    const attempt = await t.query((ctx) => ctx.db.get(result.attemptId));
-
-    expect(attempt?.scaleVersionId).toBe(seeded.scaleVersionId);
-    expect(attempt).not.toHaveProperty("tryoutSnapshotId");
-  });
-
   it("publishes one complete scale for every signed snapshot", async () => {
     vi.setSystemTime(new Date(NOW));
 
@@ -107,22 +50,6 @@ describe("tryouts/start/scale", () => {
       api.tryouts.mutations.attempts.startAttempt,
       startArgs
     );
-    const migrationArgs = makeTryoutMigrationArgs(seeded.fixture.snapshotId);
-    const migrationResults = [
-      await t.mutation(
-        internal.tryouts.migrations.item.migrateItems,
-        migrationArgs
-      ),
-      await t.mutation(
-        internal.tryouts.migrations.calibration.migrateRuns,
-        migrationArgs
-      ),
-      await t.mutation(
-        internal.tryouts.migrations.scale.migrateScales,
-        migrationArgs
-      ),
-    ];
-
     const second = await t.mutation(async (ctx) => {
       const [release, state] = await Promise.all([
         ctx.db.query("contentReleases").unique(),
@@ -197,7 +124,6 @@ describe("tryouts/start/scale", () => {
     expect(proof.secondItems[0]?.placementRowHash).toBe(
       proof.firstItems[0]?.placementRowHash
     );
-    expect(migrationResults.every(({ changed }) => changed === 0)).toBe(true);
   });
 
   it("rejects an incomplete scale bound to the exact snapshot", async () => {
@@ -220,7 +146,6 @@ describe("tryouts/start/scale", () => {
         questionCount: 1,
         setIdentity: fixture.setIdentity,
         status: "official",
-        tryoutSetId: fixture.tryoutSetId,
         tryoutSnapshotId: fixture.snapshotId,
       });
       return { identity };

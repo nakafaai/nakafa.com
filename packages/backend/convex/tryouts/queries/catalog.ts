@@ -3,16 +3,6 @@ import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/ca
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
-  readFilesystemSection,
-  readFilesystemSet,
-} from "@repo/backend/convex/tryouts/catalog/filesystem/content";
-import {
-  readFilesystemCountry,
-  readFilesystemExam,
-  readFilesystemHub,
-  readFilesystemTrack,
-} from "@repo/backend/convex/tryouts/catalog/filesystem/discovery";
-import {
   readTryoutMetadata,
   tryoutMetadataArgsValidator,
   tryoutMetadataReturnValidator,
@@ -30,7 +20,6 @@ import {
   publicTryoutCountryValidator,
   publicTryoutCountryWithExamCountValidator,
   publicTryoutExamValidator,
-  publicTryoutQuestionContentValidator,
   publicTryoutSectionValidator,
   publicTryoutSetValidator,
   publicTryoutTrackValidator,
@@ -39,7 +28,6 @@ import { v } from "convex/values";
 
 const sectionPageFields = {
   exam: publicTryoutExamValidator,
-  questions: v.array(publicTryoutQuestionContentValidator),
   section: publicTryoutSectionValidator,
   set: publicTryoutSetValidator,
   track: publicTryoutTrackValidator,
@@ -54,7 +42,6 @@ export const getRoute = query({
   },
   returns: v.object({
     exists: v.boolean(),
-    managed: v.boolean(),
   }),
   handler: (ctx, args) => runConvexProgram(readTryoutRoute(ctx, args)),
 });
@@ -73,17 +60,12 @@ export const getHubPage = query({
   },
   returns: v.object({
     countries: v.array(publicTryoutCountryWithExamCountValidator),
-    managed: v.boolean(),
     sourceRevision: v.union(v.string(), v.null()),
   }),
   handler: async (ctx, args) => {
     const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
-    if (catalog.managed) {
-      const page = await runConvexProgram(readPublishedHubPage(catalog));
-      return { ...page, managed: true, sourceRevision: catalog.sourceRevision };
-    }
-    const page = await runConvexProgram(readFilesystemHub(ctx, args.locale));
-    return { ...page, managed: false, sourceRevision: null };
+    const page = await runConvexProgram(readPublishedHubPage(catalog));
+    return { ...page, sourceRevision: catalog.sourceRevision };
   },
 });
 
@@ -98,22 +80,15 @@ export const getCountryPage = query({
     v.object({
       country: publicTryoutCountryValidator,
       exams: v.array(publicTryoutExamValidator),
-      managed: v.boolean(),
       sourceRevision: v.union(v.string(), v.null()),
     })
   ),
   handler: async (ctx, args) => {
     const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
-    if (catalog.managed) {
-      const page = await runConvexProgram(
-        readPublishedCountryPage(catalog, args.publicPath)
-      );
-      return page
-        ? { ...page, managed: true, sourceRevision: catalog.sourceRevision }
-        : null;
-    }
-    const page = await runConvexProgram(readFilesystemCountry(ctx, args));
-    return page ? { ...page, managed: false, sourceRevision: null } : null;
+    const page = await runConvexProgram(
+      readPublishedCountryPage(catalog, args.publicPath)
+    );
+    return page ? { ...page, sourceRevision: catalog.sourceRevision } : null;
   },
 });
 
@@ -133,12 +108,9 @@ export const getExamPage = query({
   ),
   handler: async (ctx, args) => {
     const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
-    if (catalog.managed) {
-      return await runConvexProgram(
-        readPublishedExamPage(catalog, args.publicPath)
-      );
-    }
-    return await runConvexProgram(readFilesystemExam(ctx, args));
+    return await runConvexProgram(
+      readPublishedExamPage(catalog, args.publicPath)
+    );
   },
 });
 
@@ -158,12 +130,9 @@ export const getTrackPage = query({
   ),
   handler: async (ctx, args) => {
     const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
-    if (catalog.managed) {
-      return await runConvexProgram(
-        readPublishedTrackPage(catalog, args.publicPath)
-      );
-    }
-    return await runConvexProgram(readFilesystemTrack(ctx, args));
+    return await runConvexProgram(
+      readPublishedTrackPage(catalog, args.publicPath)
+    );
   },
 });
 
@@ -177,7 +146,6 @@ export const getSetPage = query({
     v.null(),
     v.object({
       exam: publicTryoutExamValidator,
-      entryQuestions: v.array(publicTryoutQuestionContentValidator),
       entrySection: v.union(publicTryoutSectionValidator, v.null()),
       set: publicTryoutSetValidator,
       sections: v.array(publicTryoutSectionValidator),
@@ -186,12 +154,9 @@ export const getSetPage = query({
   ),
   handler: async (ctx, args) => {
     const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
-    if (catalog.managed) {
-      return await runConvexProgram(
-        readPublishedSetPage(catalog, args.publicPath)
-      );
-    }
-    return await runConvexProgram(readFilesystemSet(ctx, args));
+    return await runConvexProgram(
+      readPublishedSetPage(catalog, args.publicPath)
+    );
   },
 });
 
@@ -204,11 +169,8 @@ export const getSectionPage = query({
   returns: sectionPageValidator,
   handler: async (ctx, args) => {
     const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
-    if (catalog.managed) {
-      return await runConvexProgram(
-        readPublishedSectionPage(catalog, args.publicPath)
-      );
-    }
-    return await runConvexProgram(readFilesystemSection(ctx, args));
+    return await runConvexProgram(
+      readPublishedSectionPage(catalog, args.publicPath)
+    );
   },
 });

@@ -25,26 +25,8 @@ async function insertScoreGraph(ctx: MutationCtx) {
     name: "Try-out Score Trigger",
     plan: "free",
   });
-  const tryoutSetId = await ctx.db.insert("tryoutSets", {
-    countryKey: "indonesia",
-    examKey: "snbt",
-    isActive: true,
-    isReady: true,
-    locale: "id",
-    order: 1,
-    publicPath: "try-out/indonesia/snbt/2027/set-1",
-    readyQuestionCount: 10,
-    readyVisibleSectionCount: 1,
-    scoringStrategy: "raw",
-    sectionCount: 1,
-    setKey: "set-1",
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    title: "Set 1",
-    totalQuestionCount: 10,
-    trackKey: "2027",
-    visibleSectionCount: 1,
-  });
+  const setIdentity = "tryout:set:indonesia:snbt:2027:id:set-1";
+  const tryoutSnapshotId = `sha256:${"1".repeat(64)}`;
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: NOW + 86_400_000,
     accessSourceKind: "free",
@@ -62,8 +44,16 @@ async function insertScoreGraph(ctx: MutationCtx) {
     status: "completed",
     totalCorrect: 8,
     totalQuestions: 10,
-    tryoutSetId,
     userId,
+    countryKey: "indonesia",
+    examKey: "snbt",
+    locale: "id",
+    setIdentity,
+    setKey: "set-1",
+    setPublicPath: "try-out/indonesia/snbt/2027/set-1",
+    snapshotReleaseId: "release-test-score-trigger",
+    trackKey: "2027",
+    tryoutSnapshotId,
   });
   const scoreId = await ctx.db.insert("tryoutScores", {
     finalizedAt: NOW,
@@ -74,7 +64,8 @@ async function insertScoreGraph(ctx: MutationCtx) {
     totalCorrect: 8,
     totalQuestions: 10,
     tryoutAttemptId: attemptId,
-    tryoutSetId,
+    tryoutSnapshotId,
+    setIdentity,
     userId,
   });
   const score = await ctx.db.get("tryoutScores", scoreId);
@@ -83,7 +74,7 @@ async function insertScoreGraph(ctx: MutationCtx) {
     throw new Error("Expected the inserted try-out score.");
   }
 
-  return { score, tryoutSetId, userId };
+  return { score, userId };
 }
 
 describe("triggers/tryouts/scores", () => {
@@ -156,27 +147,5 @@ describe("triggers/tryouts/scores", () => {
     );
 
     expect(scheduledJobs).toHaveLength(0);
-  });
-
-  it("rejects a score whose immutable set graph is missing", async () => {
-    const t = createTryoutScoreTriggerTest();
-
-    await expect(
-      t.mutation(async (ctx) => {
-        const { score, tryoutSetId } = await insertScoreGraph(ctx);
-        await ctx.db.delete("tryoutSets", tryoutSetId);
-
-        await tryoutScoresHandler(ctx, {
-          id: score._id,
-          newDoc: score,
-          oldDoc: null,
-          operation: "insert",
-        });
-      })
-    ).rejects.toMatchObject({
-      data: {
-        code: "TRYOUT_SCORE_ANALYTICS_FAILED",
-      },
-    });
   });
 });

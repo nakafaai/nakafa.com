@@ -18,16 +18,7 @@ export const readTryoutDestinationPaths = Effect.fn(
   "tryouts.catalog.readDestinationPaths"
 )(function* (ctx: QueryCtx, identity: TryoutDestinationIdentity) {
   const owner = yield* loadTryoutOwner(ctx);
-  if (!(owner.managed && owner.selected)) {
-    return {
-      activeSectionPublicPath: null,
-      activeSetPublicPath: null,
-      managed: false,
-      requestedSectionMatches: null,
-    };
-  }
-
-  const { snapshotId } = owner.selected;
+  const { snapshotId } = owner;
   const setIdentity = tryoutCatalogIdentity({
     countryKey: identity.countryKey,
     examKey: identity.examKey,
@@ -82,7 +73,6 @@ export const readTryoutDestinationPaths = Effect.fn(
         ? (section.publicPath ?? null)
         : null,
     activeSetPublicPath: set?.publicPath ?? null,
-    managed: true,
     requestedSectionMatches,
   };
 });

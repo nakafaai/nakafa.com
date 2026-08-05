@@ -1,3 +1,4 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { api } from "@repo/backend/convex/_generated/api";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import {
@@ -5,7 +6,6 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/progress/write";
-import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
 import {
   activateTryoutStartSource,
   TRYOUT_START_COUNTRY,
@@ -14,7 +14,6 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout-source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
 import type { FunctionArgs } from "convex/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -70,6 +69,14 @@ describe("tryouts/sets/published", () => {
           latestAttemptId: attempt.attemptId,
           locale: "id",
           publishedScore: index,
+          setIdentity: tryoutCatalogIdentity({
+            countryKey: TRYOUT_START_COUNTRY,
+            examKey: TRYOUT_START_EXAM,
+            kind: "set",
+            locale: "id",
+            setKey: `retired-${index}`,
+            trackKey: TRYOUT_START_TRACK,
+          }),
           setKey: `retired-${index}`,
           status: "completed",
           statusRank: getTryoutStatusRank("completed"),
@@ -110,63 +117,5 @@ describe("tryouts/sets/published", () => {
     expect(after.page).toEqual([]);
     expect(filesystemRows).toEqual({ sections: [], sets: [] });
     expect(attempt.attemptId).toBeDefined();
-  });
-
-  it("joins signed sets with legacy progress during additive ownership", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
-
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: TRYOUT_START_NOW,
-        suffix: "signed-set-legacy-progress",
-      });
-      const fixture = await seedTryoutStartSet(ctx, {
-        userId: user.userId,
-        visibility: "visible",
-      });
-      const attemptId = await insertTryoutAttempt(ctx, {
-        sectionSnapshots: [],
-        tryoutSetId: fixture.tryoutSetId,
-        userId: user.userId,
-      });
-      await ctx.db.insert("tryoutSetProgress", {
-        attemptNumber: 1,
-        countryKey: TRYOUT_START_COUNTRY,
-        examKey: TRYOUT_START_EXAM,
-        latestAttemptId: attemptId,
-        locale: "id",
-        publishedScore: null,
-        setKey: TRYOUT_START_SET,
-        status: "in-progress",
-        statusRank: getTryoutStatusRank("in-progress"),
-        trackKey: TRYOUT_START_TRACK,
-        tryoutSetId: fixture.tryoutSetId,
-        updatedAt: TRYOUT_START_NOW,
-        userId: user.userId,
-      });
-      return user;
-    });
-    const authed = t.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    const sets = await authed.query(api.tryouts.queries.sets.list, {
-      countryKey: TRYOUT_START_COUNTRY,
-      examKey: TRYOUT_START_EXAM,
-      locale: "id",
-      paginationOpts: { cursor: null, numItems: 10 },
-      sort: { direction: "asc", field: "order" },
-      trackKey: TRYOUT_START_TRACK,
-    });
-
-    expect(sets.page).toMatchObject([
-      {
-        attemptStatus: "in-progress",
-        publishedScore: null,
-        setKey: TRYOUT_START_SET,
-      },
-    ]);
   });
 });

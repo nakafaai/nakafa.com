@@ -34,27 +34,18 @@ class TryoutAttemptSectionReadError extends Schema.TaggedError<TryoutAttemptSect
 export const loadAttemptSectionRoutes = Effect.fn(
   "tryouts.attempt.loadSectionRoutes"
 )(function* (ctx: QueryCtx, attempt: TryoutAttempt) {
-  if (attempt.tryoutSnapshotId) {
-    return yield* loadSignedSectionRoutes(ctx, attempt);
-  }
-  return yield* loadFilesystemSectionRoutes(ctx, attempt);
+  return yield* loadSignedSectionRoutes(ctx, attempt);
 });
 
 /** Reads immutable visible rows from one retained signed catalog snapshot. */
 const loadSignedSectionRoutes = Effect.fn(
   "tryouts.attempt.loadSignedSectionRoutes"
 )(function* (ctx: QueryCtx, attempt: TryoutAttempt) {
-  const countryKey = attempt.countryKey;
-  const examKey = attempt.examKey;
-  const locale = attempt.locale;
-  const setKey = attempt.setKey;
-  const snapshotId = attempt.tryoutSnapshotId;
-  const trackKey = attempt.trackKey;
-  if (!(countryKey && examKey && locale && setKey && snapshotId && trackKey)) {
-    return yield* snapshotMismatch();
-  }
-
-  const catalog = yield* loadTryoutSnapshotCatalog(ctx, locale, snapshotId);
+  const catalog = yield* loadTryoutSnapshotCatalog(
+    ctx,
+    attempt.locale,
+    attempt.tryoutSnapshotId
+  );
   const routes: TryoutAttemptSectionRoute[] = [];
   for (const snapshot of attempt.sectionSnapshots) {
     const publicPath = snapshot.publicPath;
@@ -62,55 +53,14 @@ const loadSignedSectionRoutes = Effect.fn(
       continue;
     }
     const section = yield* readPublishedSection(catalog, {
-      countryKey,
-      examKey,
-      locale,
+      countryKey: attempt.countryKey,
+      examKey: attempt.examKey,
+      locale: attempt.locale,
       sectionKey: snapshot.sectionKey,
-      setKey,
-      trackKey,
+      setKey: attempt.setKey,
+      trackKey: attempt.trackKey,
     });
     if (!(section && matchesSignedSnapshot(section, snapshot, publicPath))) {
-      return yield* snapshotMismatch();
-    }
-    routes.push({
-      publicPath,
-      questionCount: snapshot.questionCount,
-      sectionKey: snapshot.sectionKey,
-      title: section.title,
-    });
-  }
-  return routes;
-});
-
-/** Reads visible rows while the exact filesystem source still exists. */
-const loadFilesystemSectionRoutes = Effect.fn(
-  "tryouts.attempt.loadFilesystemSectionRoutes"
-)(function* (ctx: QueryCtx, attempt: TryoutAttempt) {
-  const tryoutSetId = attempt.tryoutSetId;
-  if (!tryoutSetId) {
-    return [];
-  }
-  const set = yield* Effect.promise(() => ctx.db.get(tryoutSetId));
-  if (!set) {
-    return yield* snapshotMismatch();
-  }
-
-  const routes: TryoutAttemptSectionRoute[] = [];
-  for (const snapshot of attempt.sectionSnapshots) {
-    const publicPath = snapshot.publicPath;
-    if (!publicPath) {
-      continue;
-    }
-    const sectionId = snapshot.tryoutSectionId;
-    if (!sectionId) {
-      return yield* snapshotMismatch();
-    }
-    const section = yield* Effect.promise(() => ctx.db.get(sectionId));
-    if (
-      !(
-        section && matchesFilesystemSnapshot(section, set, snapshot, publicPath)
-      )
-    ) {
       return yield* snapshotMismatch();
     }
     routes.push({
@@ -134,31 +84,6 @@ function matchesSignedSnapshot(
     section.questionCount === snapshot.questionCount &&
     section.sourceRevision === snapshot.sourceRevision &&
     section.timeLimitSeconds === snapshot.timeLimitSeconds
-  );
-}
-
-/** Checks one filesystem section against its exact frozen route source. */
-function matchesFilesystemSnapshot(
-  section: Doc<"tryoutSections">,
-  set: Doc<"tryoutSets">,
-  snapshot: TryoutSectionSnapshot,
-  publicPath: string
-) {
-  return (
-    section.countryKey === set.countryKey &&
-    section.examKey === set.examKey &&
-    section.locale === set.locale &&
-    section.order === snapshot.sectionOrder &&
-    section.publicPath === publicPath &&
-    section.questionCount === snapshot.questionCount &&
-    section.questionSetId === snapshot.questionSetId &&
-    section.questionSourcePath === snapshot.questionSourcePath &&
-    section.sectionKey === snapshot.sectionKey &&
-    section.setKey === set.setKey &&
-    section.sourceRevision === snapshot.sourceRevision &&
-    section.timeLimitSeconds === snapshot.timeLimitSeconds &&
-    section.trackKey === set.trackKey &&
-    section.tryoutSetId === set._id
   );
 }
 

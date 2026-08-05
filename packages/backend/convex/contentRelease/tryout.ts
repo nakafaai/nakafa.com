@@ -11,14 +11,12 @@ import { v } from "convex/values";
 const tryoutCatalogValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),
   activeReleaseId: v.union(v.string(), v.null()),
-  managed: v.boolean(),
   rowJson: v.array(v.string()),
-  snapshotId: v.union(v.string(), v.null()),
+  snapshotId: v.string(),
   sourceRevision: v.union(v.string(), v.null()),
 });
 
 const tryoutSitemapCountValidator = v.object({
-  managed: v.boolean(),
   pageCount: v.number(),
   routeCount: v.number(),
 });

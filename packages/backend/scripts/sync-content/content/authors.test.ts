@@ -24,8 +24,8 @@ vi.mock("@repo/backend/scripts/lib/mdx-parser/content", () => ({
         authors: [
           { name: "Nakafa Author" },
           {
-            name: file.includes("question.")
-              ? "Practice Author"
+            name: file.includes("articles/")
+              ? "Article Author"
               : "Nakafa Author",
           },
         ],
@@ -42,48 +42,31 @@ describe("content author sync", () => {
 
   it("collects authors from current material source layouts", async () => {
     const authors = await Effect.runPromise(
-      collectAllAuthorNames(
-        { locale: "id", quiet: true },
-        { tryoutsManaged: false }
-      )
+      collectAllAuthorNames({ locale: "id", quiet: true })
     );
 
     expect(globCalls).toEqual([
       "articles/**/id.mdx",
       "material/lesson/**/id.mdx",
-      "question-bank/tryout/**/question.id.mdx",
-      "question-bank/tryout/**/answer.id.mdx",
     ]);
     expect(globCalls).not.toContain("curriculum/**/id.mdx");
     expect(globCalls).not.toContain("assessment/**/_question/id.mdx");
-    expect(authors).toEqual(["Nakafa Author", "Practice Author"]);
+    expect(authors).toEqual(["Nakafa Author", "Article Author"]);
   });
 
-  it("does not read tryout authors after signed ownership activates", async () => {
+  it("collects changed author files directly", async () => {
     const allAuthors = await Effect.runPromise(
-      collectAllAuthorNames(
-        { locale: "id", quiet: true },
-        { tryoutsManaged: true }
-      )
+      collectAllAuthorNames({ locale: "id", quiet: true })
     );
     const changedAuthors = await Effect.runPromise(
-      collectAuthorNamesFromFiles(
-        [
-          "packages/contents/articles/example/id.mdx",
-          "packages/contents/question-bank/tryout/example/question.id.mdx",
-        ],
-        { tryoutsManaged: true }
-      )
+      collectAuthorNamesFromFiles(["packages/contents/articles/example/id.mdx"])
     );
 
     expect(globCalls).toEqual([
       "articles/**/id.mdx",
       "material/lesson/**/id.mdx",
     ]);
-    expect(
-      readCalls.some((file) => file.includes("question-bank/tryout/"))
-    ).toBe(false);
-    expect(allAuthors).toEqual(["Nakafa Author"]);
-    expect(changedAuthors).toEqual(["Nakafa Author"]);
+    expect(allAuthors).toEqual(["Nakafa Author", "Article Author"]);
+    expect(changedAuthors).toEqual(["Nakafa Author", "Article Author"]);
   });
 });

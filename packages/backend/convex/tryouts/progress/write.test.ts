@@ -1,5 +1,4 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -25,36 +24,6 @@ type ProgressScoreMismatch = Pick<
 > & {
   readonly message: string;
 };
-
-/** Inserts one attempt carrying both ownership identities during cutover. */
-async function seedDualIdentityAttempt(ctx: MutationCtx, suffix: string) {
-  const user = await seedAuthenticatedUser(ctx, {
-    now: TRYOUT_TEST_NOW,
-    suffix,
-  });
-  const tryoutSetId = await insertTryoutSet(ctx);
-  const attemptId = await insertTryoutAttempt(ctx, {
-    scoringStrategy: "raw",
-    sectionSnapshots: [],
-    tryoutSetId,
-    userId: user.userId,
-  });
-  await ctx.db.patch(attemptId, {
-    countryKey: "indonesia",
-    examKey: "snbt",
-    locale: "id",
-    setIdentity: SIGNED_SET_IDENTITY,
-    setKey: "set-1",
-    trackKey: "2027",
-  });
-  const attempt = await ctx.db.get(attemptId);
-
-  if (!attempt) {
-    throw new Error("Expected a dual-identity attempt fixture.");
-  }
-
-  return { attempt, tryoutSetId, userId: user.userId };
-}
 
 /** Verifies that one invalid progress score pair fails through the typed seam. */
 async function expectProgressScoreMismatch(scenario: ProgressScoreMismatch) {
@@ -165,8 +134,8 @@ describe("tryouts/progress", () => {
 
       return await ctx.db
         .query("tryoutSetProgress")
-        .withIndex("by_userId_and_tryoutSetId", (q) =>
-          q.eq("userId", user.userId).eq("tryoutSetId", tryoutSetId)
+        .withIndex("by_userId_and_setIdentity", (query) =>
+          query.eq("userId", user.userId).eq("setIdentity", SIGNED_SET_IDENTITY)
         )
         .unique();
     });
@@ -193,105 +162,5 @@ describe("tryouts/progress", () => {
       publishedScore: null,
       status: "completed",
     });
-  });
-
-  it.each(Object.freeze(["filesystem", "signed"]))(
-    "reconciles one %s progress row with both attempt identities",
-    async (existingIdentity) => {
-      const t = createConvexTestWithBetterAuth();
-
-      const progress = await t.mutation(async (ctx) => {
-        const fixture = await seedDualIdentityAttempt(
-          ctx,
-          `tryout-progress-${existingIdentity}`
-        );
-        const identity =
-          existingIdentity === "filesystem"
-            ? { tryoutSetId: fixture.tryoutSetId }
-            : { setIdentity: SIGNED_SET_IDENTITY };
-        await ctx.db.insert("tryoutSetProgress", {
-          attemptNumber: 1,
-          countryKey: "indonesia",
-          examKey: "snbt",
-          ...identity,
-          latestAttemptId: fixture.attempt._id,
-          locale: "id",
-          publishedScore: null,
-          setKey: "set-1",
-          status: "in-progress",
-          statusRank: 1,
-          trackKey: "2027",
-          updatedAt: TRYOUT_TEST_NOW,
-          userId: fixture.userId,
-        });
-
-        await Effect.runPromise(
-          writeTryoutSetProgress(ctx, {
-            attempt: fixture.attempt,
-            publishedScore: null,
-            status: "in-progress",
-            updatedAt: TRYOUT_TEST_NOW + 1,
-          })
-        );
-
-        return await ctx.db
-          .query("tryoutSetProgress")
-          .withIndex("by_userId_and_setIdentity", (query) =>
-            query
-              .eq("userId", fixture.userId)
-              .eq("setIdentity", SIGNED_SET_IDENTITY)
-          )
-          .unique();
-      });
-
-      expect(progress).toMatchObject({
-        setIdentity: SIGNED_SET_IDENTITY,
-        tryoutSetId: expect.any(String),
-      });
-    }
-  );
-
-  it("rejects progress rows split across signed and filesystem identities", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await expect(
-      t.mutation(async (ctx) => {
-        const fixture = await seedDualIdentityAttempt(
-          ctx,
-          "tryout-progress-conflict"
-        );
-        const values = Object.freeze({
-          attemptNumber: 1,
-          countryKey: "indonesia",
-          examKey: "snbt",
-          latestAttemptId: fixture.attempt._id,
-          locale: "id",
-          publishedScore: null,
-          setKey: "set-1",
-          status: "in-progress",
-          statusRank: 1,
-          trackKey: "2027",
-          updatedAt: TRYOUT_TEST_NOW,
-          userId: fixture.userId,
-        });
-        await ctx.db.insert("tryoutSetProgress", {
-          ...values,
-          tryoutSetId: fixture.tryoutSetId,
-        });
-        await ctx.db.insert("tryoutSetProgress", {
-          ...values,
-          setIdentity: SIGNED_SET_IDENTITY,
-        });
-
-        await Effect.runPromise(
-          writeTryoutSetProgress(ctx, {
-            attempt: fixture.attempt,
-            publishedScore: null,
-            status: "in-progress",
-            updatedAt: TRYOUT_TEST_NOW + 1,
-          })
-        );
-      })
-    ).rejects.toThrow("Try-out progress has conflicting set identities.");
   });
 });

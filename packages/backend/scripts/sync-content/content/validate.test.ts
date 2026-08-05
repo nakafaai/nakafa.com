@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { validate } from "./validate";
 
 const globPatterns = vi.hoisted((): string[] => []);
-const sourceLoads = vi.hoisted(() => ({ count: 0 }));
 
 vi.mock("@repo/backend/scripts/sync-content/runtime/files", () => ({
   /** Records validation globs without touching the filesystem. */
@@ -21,11 +20,6 @@ vi.mock("@repo/contents/_types/material/registry", () => ({
   listLessonRows: () => [],
 }));
 
-vi.mock("@repo/contents/_types/tryout/source", () => {
-  sourceLoads.count++;
-  return { TRYOUT_SOURCES: [] };
-});
-
 vi.mock("@repo/backend/scripts/sync-content/cli/logging", () => ({
   formatDuration: () => "0ms",
   log: () => undefined,
@@ -38,12 +32,9 @@ describe("content validation", () => {
     globPatterns.length = 0;
   });
 
-  it("does not load filesystem tryouts after signed ownership activates", async () => {
-    expect(sourceLoads.count).toBe(0);
+  it("validates only Nakafa-owned filesystem scopes", async () => {
+    await Effect.runPromise(validate());
 
-    await Effect.runPromise(validate({ tryoutsManaged: true }));
-
-    expect(sourceLoads.count).toBe(0);
     expect(globPatterns).toEqual([
       "articles/**/*.mdx",
       "material/lesson/**/*.mdx",

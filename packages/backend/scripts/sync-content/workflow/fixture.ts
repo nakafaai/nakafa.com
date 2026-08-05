@@ -29,7 +29,6 @@ interface WorkflowMockOptions {
     lastSyncCommit: string;
     lastSyncTimestamp: number;
   } | null;
-  tryoutsManaged?: boolean;
   verifyFails?: boolean;
 }
 
@@ -92,13 +91,13 @@ export async function loadWorkflow(
           message: "Unexpected Convex mutation call.",
         })
       ),
-    /** Returns the active content-source ownership used by workflow routing. */
-    callConvexQuery: () => {
-      events.push("readContentSyncOwnership");
-      return Effect.succeed({
-        tryoutsManaged: options.tryoutsManaged ?? false,
-      });
-    },
+    /** Fails if direct incremental-only query calls are reached by this workflow test. */
+    callConvexQuery: () =>
+      Effect.fail(
+        new ScriptFailureError({
+          message: "Unexpected Convex query call.",
+        })
+      ),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/cli/logging", () => ({
     /** Suppresses duration formatting noise in workflow tests. */
@@ -195,10 +194,6 @@ export async function loadWorkflow(
     syncCurriculumLessons: () => syncStep("syncCurriculumLessons"),
     /** Records curriculum topic sync calls. */
     syncCurriculumTopics: () => syncStep("syncCurriculumTopics"),
-  }));
-  vi.doMock("@repo/backend/scripts/sync-content/content/tryouts", () => ({
-    /** Records try-out sync calls. */
-    syncTryouts: () => syncStep("syncTryouts"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/verify/sync", () => ({
     /** Records verification calls. */

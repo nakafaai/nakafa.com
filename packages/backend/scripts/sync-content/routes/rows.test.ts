@@ -41,9 +41,7 @@ function isOwnedMaterialContextRoute(
 
 describe("sync-content/routes/rows", () => {
   it("serializes explicit material-context ownership into Convex shards", async () => {
-    const projection = await Effect.runPromise(
-      readPublicRouteProjection({ tryoutsManaged: false })
-    );
+    const projection = await Effect.runPromise(readPublicRouteProjection());
     const route = projection.shards
       .flatMap((shard) => shard.routes)
       .find(
@@ -61,10 +59,8 @@ describe("sync-content/routes/rows", () => {
     });
   });
 
-  it("omits filesystem tryout routes after signed ownership activates", async () => {
-    const projection = await Effect.runPromise(
-      readPublicRouteProjection({ tryoutsManaged: true })
-    );
+  it("omits Aksara-owned tryout routes", async () => {
+    const projection = await Effect.runPromise(readPublicRouteProjection());
 
     expect(
       projection.shards

@@ -25,28 +25,7 @@ export const contentCountTables = [
   { field: "tryoutAttemptPlacements", tableName: "tryoutAttemptPlacements" },
   { field: "tryoutResponses", tableName: "tryoutResponses" },
   { field: "tryoutScores", tableName: "tryoutScores" },
-  { field: "tryoutLeaderboardScopes", tableName: "tryoutLeaderboardScopes" },
-  {
-    field: "tryoutLeaderboardEntries",
-    tableName: "tryoutLeaderboardEntries",
-  },
-  {
-    field: "tryoutLeaderboardUserStats",
-    tableName: "tryoutLeaderboardUserStats",
-  },
-  { field: "irtCalibrationQueue", tableName: "irtCalibrationQueue" },
-  { field: "irtCalibrationAttempts", tableName: "irtCalibrationAttempts" },
-  { field: "irtCalibrationCacheStats", tableName: "irtCalibrationCacheStats" },
   { field: "irtCalibrationRuns", tableName: "irtCalibrationRuns" },
-  { field: "irtScaleQualityChecks", tableName: "irtScaleQualityChecks" },
-  {
-    field: "irtScaleQualityRefreshQueue",
-    tableName: "irtScaleQualityRefreshQueue",
-  },
-  {
-    field: "irtScalePublicationQueue",
-    tableName: "irtScalePublicationQueue",
-  },
   { field: "irtScaleVersions", tableName: "irtScaleVersions" },
   { field: "irtScaleItems", tableName: "irtScaleItems" },
   { field: "contentSearch", tableName: "contentSearch" },

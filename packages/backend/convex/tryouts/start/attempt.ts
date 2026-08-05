@@ -42,17 +42,15 @@ interface CreateTryoutAttemptInput {
 export const createTryoutAttempt = Effect.fn(
   "tryouts.start.createTryoutAttempt"
 )(function* (ctx: MutationCtx, input: CreateTryoutAttemptInput) {
-  if (input.source.kind === "signed") {
-    yield* retainTryoutBundle(ctx, input.source.bundle, input.now).pipe(
-      Effect.mapError(
-        (error) =>
-          new TryoutStartError({
-            code: error.code,
-            message: error.message,
-          })
-      )
-    );
-  }
+  yield* retainTryoutBundle(ctx, input.source.bundle, input.now).pipe(
+    Effect.mapError(
+      (error) =>
+        new TryoutStartError({
+          code: error.code,
+          message: error.message,
+        })
+    )
+  );
   const values = buildAttemptValues(input);
   const attemptId = yield* tryStartPromise(() =>
     ctx.db.insert("tryoutAttempts", values)
@@ -93,33 +91,6 @@ function buildAttemptValues(
     userId: input.userId,
     ...(input.scaleVersion ? { scaleVersionId: input.scaleVersion._id } : {}),
   } satisfies Partial<TryoutAttemptInsert>;
-  if (input.source.kind === "filesystem") {
-    const { set } = input.source;
-    return {
-      ...values,
-      countryKey: set.countryKey,
-      examKey: set.examKey,
-      locale: set.locale,
-      scoringStrategy: set.scoringStrategy,
-      sectionSnapshots: input.source.sections.map((section) => ({
-        publicPath: section.publicPath,
-        questionCount: section.questionCount,
-        questionSetId: section.questionSetId,
-        questionSourcePath: section.questionSourcePath,
-        sectionKey: section.sectionKey,
-        sectionOrder: section.order,
-        sourceRevision: section.sourceRevision,
-        timeLimitSeconds: section.timeLimitSeconds,
-        tryoutSectionId: section._id,
-      })),
-      setKey: set.setKey,
-      setPublicPath: set.publicPath,
-      totalQuestions: set.totalQuestionCount,
-      trackKey: set.trackKey,
-      tryoutSetId: set._id,
-    };
-  }
-
   const signedSet = input.source.snapshot.set.row;
   return {
     ...values,
@@ -144,9 +115,6 @@ function buildAttemptValues(
     snapshotReleaseId: input.source.bundle.releaseId,
     totalQuestions: signedSet.questionCount,
     trackKey: signedSet.trackKey,
-    ...(input.source.retainedTryoutSetId
-      ? { tryoutSetId: input.source.retainedTryoutSetId }
-      : {}),
     tryoutSnapshotId: input.source.snapshot.snapshotId,
   };
 }

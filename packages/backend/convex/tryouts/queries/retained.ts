@@ -3,7 +3,6 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   publicTryoutExamValidator,
-  publicTryoutQuestionContentValidator,
   publicTryoutSectionValidator,
   publicTryoutSetValidator,
   publicTryoutTrackValidator,
@@ -16,7 +15,6 @@ import { v } from "convex/values";
 
 const setPageFields = {
   exam: publicTryoutExamValidator,
-  entryQuestions: v.array(publicTryoutQuestionContentValidator),
   entrySection: v.union(publicTryoutSectionValidator, v.null()),
   set: publicTryoutSetValidator,
   sections: v.array(publicTryoutSectionValidator),
@@ -24,7 +22,6 @@ const setPageFields = {
 };
 const sectionPageFields = {
   exam: publicTryoutExamValidator,
-  questions: v.array(publicTryoutQuestionContentValidator),
   section: publicTryoutSectionValidator,
   set: publicTryoutSetValidator,
   track: publicTryoutTrackValidator,

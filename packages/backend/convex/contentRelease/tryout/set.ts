@@ -24,14 +24,7 @@ export type TryoutSetIdentity = Pick<
 export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
   function* (ctx: QueryCtx, identity: TryoutSetIdentity) {
     const owner = yield* loadTryoutOwner(ctx);
-    if (!(owner.managed && owner.selected)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_MISSING",
-        "The active try-out snapshot is unavailable."
-      );
-    }
-
-    const { snapshotId } = owner.selected;
+    const { snapshotId } = owner;
     const setIdentity = tryoutCatalogIdentity({ ...identity, kind: "set" });
     const storedSet = yield* Effect.promise(() =>
       ctx.db
