@@ -11,9 +11,9 @@ import {
   getLlmsSectionPages,
 } from "@/lib/llms/section";
 
-const mockGetRuntimeContentRouteCounts = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
 const mockReadMaterialInventory = vi.hoisted(() => vi.fn());
+const mockReadQuranInventory = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: mockReadPublishedArticleBuckets,
@@ -21,9 +21,8 @@ vi.mock("@/lib/content/article/sitemap", () => ({
 vi.mock("@/lib/llms/material-pages", () => ({
   readMaterialLlmsInventory: mockReadMaterialInventory,
 }));
-
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentRouteCounts: mockGetRuntimeContentRouteCounts,
+vi.mock("@/lib/llms/quran", () => ({
+  readQuranLlmsInventory: mockReadQuranInventory,
 }));
 
 const articleEntry: LlmsEntry = {
@@ -37,9 +36,9 @@ const articleEntry: LlmsEntry = {
 };
 
 beforeEach(() => {
-  mockGetRuntimeContentRouteCounts.mockReset();
   mockReadPublishedArticleBuckets.mockReset();
   mockReadMaterialInventory.mockReset();
+  mockReadQuranInventory.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({
       articleCount: 250,
@@ -54,12 +53,8 @@ beforeEach(() => {
       routeCount: 100,
     })
   );
-  mockGetRuntimeContentRouteCounts.mockReturnValue(
-    Effect.succeed([
-      { count: 250, locale: "en", section: "articles", syncedAt: 1 },
-      { count: 100, locale: "en", section: "material", syncedAt: 1 },
-      { count: 114, locale: "en", section: "quran", syncedAt: 1 },
-    ])
+  mockReadQuranInventory.mockReturnValue(
+    Effect.succeed({ pageCount: 1, routeCount: 114 })
   );
 });
 
@@ -70,11 +65,10 @@ describe("llms section indexes", () => {
         getLlmsSectionPages({ locale: "en", section: "articles" })
       )
     ).resolves.toEqual({
-      owner: "published",
       pageCount: 3,
       routeCount: 250,
     });
-    expect(mockGetRuntimeContentRouteCounts).not.toHaveBeenCalled();
+    expect(mockReadQuranInventory).not.toHaveBeenCalled();
   });
 
   it("reads signed material counts without source discovery", async () => {
@@ -83,7 +77,6 @@ describe("llms section indexes", () => {
         getLlmsSectionPages({ locale: "en", section: "material" })
       )
     ).resolves.toEqual({
-      owner: "published",
       pageCount: 1,
       routeCount: 100,
     });
@@ -105,27 +98,26 @@ describe("llms section indexes", () => {
         getLlmsSectionPages({ locale: "en", section: "material" })
       )
     ).resolves.toEqual({
-      owner: "published",
       pageCount: 2,
       routeCount: 42,
     });
-    expect(mockGetRuntimeContentRouteCounts).not.toHaveBeenCalled();
+    expect(mockReadQuranInventory).not.toHaveBeenCalled();
   });
 
-  it("reads runtime section counts and handles an empty inventory", async () => {
+  it("reads the signed Quran inventory and handles an empty release", async () => {
     await expect(
       Effect.runPromise(getLlmsSectionPages({ locale: "en", section: "quran" }))
     ).resolves.toEqual({
-      owner: "source",
-      pageCount: 2,
+      pageCount: 1,
       routeCount: 114,
     });
 
-    mockGetRuntimeContentRouteCounts.mockReturnValueOnce(Effect.succeed([]));
+    mockReadQuranInventory.mockReturnValueOnce(
+      Effect.succeed({ pageCount: 0, routeCount: 0 })
+    );
     await expect(
       Effect.runPromise(getLlmsSectionPages({ locale: "id", section: "quran" }))
     ).resolves.toEqual({
-      owner: "source",
       pageCount: 0,
       routeCount: 0,
     });
@@ -134,21 +126,18 @@ describe("llms section indexes", () => {
   it("renders empty, single, and multi-page navigation", () => {
     const empty = buildLlmsSectionPageMapText({
       locale: "en",
-      owner: "published",
       pageCount: 0,
       routeCount: 0,
       section: "articles",
     });
     const single = buildLlmsSectionPageMapText({
       locale: "en",
-      owner: "published",
       pageCount: 1,
       routeCount: 4,
       section: "articles",
     });
     const multiple = buildLlmsSectionPageMapText({
       locale: "en",
-      owner: "source",
       pageCount: 3,
       routeCount: 250,
       section: "articles",
@@ -159,7 +148,7 @@ describe("llms section indexes", () => {
     expect(single).toContain(`${BASE_URL}/llms/en/articles/page/0/llms.txt`);
     expect(single).not.toContain("last bounded content page");
     expect(multiple).toContain(`${BASE_URL}/llms/en/articles/page/2/llms.txt`);
-    expect(multiple).toContain("at most 100 routes");
+    expect(multiple).toContain("3 bounded published partitions");
   });
 
   it("renders verified listing and page entries including empty states", () => {

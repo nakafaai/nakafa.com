@@ -3,18 +3,14 @@ import {
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
-import { PublishedProjectionError } from "@/lib/content/published/errors";
-
-/** Exact public identity used to report malformed material projections. */
-export interface MaterialProjectionIdentity {
-  readonly locale: Locale;
-  readonly publicPath: string;
-}
+import {
+  PublishedProjectionError,
+  type PublishedProjectionIdentity,
+} from "@/lib/content/published/errors";
 
 /** Creates the public failure returned for malformed material projection data. */
 export function makeMaterialProjectionError(
-  identity: MaterialProjectionIdentity
+  identity: PublishedProjectionIdentity
 ) {
   return new PublishedProjectionError(identity);
 }
@@ -22,7 +18,7 @@ export function makeMaterialProjectionError(
 /** Strictly decodes one material projection and its requested route identity. */
 export const decodeMaterialProjection = Effect.fn(
   "NakafaMaterial.decodeProjection"
-)(function* (input: unknown, identity: MaterialProjectionIdentity) {
+)(function* (input: unknown, identity: PublishedProjectionIdentity) {
   const projection = yield* Schema.decodeUnknown(
     MaterialLessonProjectionSchema
   )(input, { onExcessProperty: "error" }).pipe(
@@ -39,7 +35,7 @@ export const decodeMaterialProjection = Effect.fn(
 
 /** Parses one canonical material projection encoded by the backend. */
 export const decodeMaterialJson = Effect.fn("NakafaMaterial.decodeJson")(
-  function* (source: string, identity: MaterialProjectionIdentity) {
+  function* (source: string, identity: PublishedProjectionIdentity) {
     const input = yield* Effect.try({
       catch: () => makeMaterialProjectionError(identity),
       try: (): unknown => JSON.parse(source),

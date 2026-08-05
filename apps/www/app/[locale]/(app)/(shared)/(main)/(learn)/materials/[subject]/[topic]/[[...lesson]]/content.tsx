@@ -4,14 +4,13 @@ import type {
 } from "@nakafa/aksara-contracts/projection/material";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect, Option } from "effect";
+import { io } from "next/cache";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import type { ReactNode } from "react";
 import {
   type MaterialParams,
   readMaterialRequest,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
-import type { MaterialReleasePin } from "@/lib/content/material/release";
 import {
   getPublishedMaterialRoute,
   type PublishedMaterialRoute,
@@ -22,6 +21,7 @@ import {
   readMaterialPreview,
 } from "@/lib/content/preview/material";
 import { renderPublishedMaterial } from "@/lib/content/published/material";
+import type { ContentReleasePin } from "@/lib/content/published/release";
 import { getAksaraUrl } from "@/lib/utils/github";
 
 interface PreviewOwner {
@@ -56,7 +56,7 @@ interface PreviewContent extends MaterialFields {
 }
 
 interface PublishedContent extends MaterialFields {
-  readonly activeReleaseId: Exclude<MaterialReleasePin, null>;
+  readonly activeReleaseId: Exclude<ContentReleasePin, null>;
   readonly body: string;
   readonly children: ReactNode;
   readonly kind: "published";
@@ -79,7 +79,7 @@ async function readPreviewOwner(
   if (!hasPreviewConfig()) {
     return Option.none();
   }
-  await connection();
+  await io();
   return Option.map(
     await Effect.runPromise(readMaterialPreview({ params })),
     (preview) => ({ kind: "preview", preview })

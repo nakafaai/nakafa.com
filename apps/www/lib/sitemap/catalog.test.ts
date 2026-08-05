@@ -1,17 +1,11 @@
 // @vitest-environment node
 
-import type { Locale } from "@repo/contents/_types/content";
-import type { SourceRegistryRoot } from "@repo/contents/_types/graph/schema";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 
 const activeMocks = vi.hoisted(() => ({
   readActiveContentIdentity: vi.fn(),
-}));
-const runtimeMocks = vi.hoisted(() => ({
-  getRuntimeContentRouteCounts: vi.fn(),
-  getRuntimePublicSitemapCount: vi.fn(),
 }));
 const articleMocks = vi.hoisted(() => ({
   readPublishedArticleBuckets: vi.fn(),
@@ -21,6 +15,9 @@ const materialMocks = vi.hoisted(() => ({
 }));
 const programMocks = vi.hoisted(() => ({
   readPublishedProgramBuckets: vi.fn(),
+}));
+const quranMocks = vi.hoisted(() => ({
+  readPublishedQuranCatalog: vi.fn(),
 }));
 const tryoutMocks = vi.hoisted(() => ({
   readPublishedTryoutSitemapCount: vi.fn(),
@@ -35,15 +32,11 @@ vi.mock("@/lib/content/material/sitemap", () => ({
 vi.mock("@/lib/content/program/sitemap", () => ({
   readPublishedProgramBuckets: programMocks.readPublishedProgramBuckets,
 }));
+vi.mock("@/lib/content/quran/publication", () => quranMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
 
 vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: activeMocks.readActiveContentIdentity,
-}));
-
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentRouteCounts: runtimeMocks.getRuntimeContentRouteCounts,
-  getRuntimePublicSitemapCount: runtimeMocks.getRuntimePublicSitemapCount,
 }));
 
 vi.mock("@repo/internationalization/src/routing", async () => {
@@ -72,25 +65,16 @@ beforeEach(() => {
   programMocks.readPublishedProgramBuckets.mockReturnValue(
     Effect.succeed({ buckets: [], managed: false, routeCount: 0 })
   );
+  quranMocks.readPublishedQuranCatalog.mockReset();
+  quranMocks.readPublishedQuranCatalog.mockReturnValue(
+    Effect.succeed({
+      activeReleaseId: "release-material",
+      surahs: [{ number: 1 }],
+    })
+  );
   tryoutMocks.readPublishedTryoutSitemapCount.mockReset();
   tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
     Effect.succeed({ pageCount: 0, routeCount: 0 })
-  );
-  runtimeMocks.getRuntimeContentRouteCounts.mockReset();
-  runtimeMocks.getRuntimePublicSitemapCount.mockReset();
-  runtimeMocks.getRuntimeContentRouteCounts.mockImplementation(({ locale }) =>
-    Effect.succeed(
-      locale === "en"
-        ? [
-            countRow("en", "articles", 1),
-            countRow("en", "material", 2),
-            countRow("en", "tryout", 2),
-          ]
-        : [countRow("id", "quran", 101)]
-    )
-  );
-  runtimeMocks.getRuntimePublicSitemapCount.mockReturnValue(
-    Effect.succeed({ count: 1, pageCount: 1 })
   );
 });
 
@@ -100,15 +84,8 @@ describe("sitemap page catalog", () => {
       Effect.runPromise(readSitemapPageDescriptors())
     ).resolves.toEqual([
       { id: "base" },
-      { id: "public_en_0", kind: "public", locale: "en", page: 0 },
-      { id: "public_id_0", kind: "public", locale: "id", page: 0 },
-      {
-        id: "content_id_quran_0",
-        kind: "content",
-        locale: "id",
-        page: 0,
-        section: "quran",
-      },
+      { id: "quran_en", kind: "quran", locale: "en" },
+      { id: "quran_id", kind: "quran", locale: "id" },
     ]);
   });
 
@@ -128,13 +105,6 @@ describe("sitemap page catalog", () => {
       kind: "article",
       locale: "en",
     });
-    expect(descriptors).not.toContainEqual(
-      expect.objectContaining({
-        kind: "content",
-        locale: "en",
-        section: "articles",
-      })
-    );
   });
 
   it("replaces material rows and adds curriculum partitions after cutover", async () => {
@@ -174,13 +144,6 @@ describe("sitemap page catalog", () => {
       kind: "program",
       locale: "en",
     });
-    expect(descriptors).not.toContainEqual(
-      expect.objectContaining({
-        kind: "content",
-        locale: "en",
-        section: "material",
-      })
-    );
   });
 
   it("replaces legacy try-out rows with signed catalog pages", async () => {
@@ -199,17 +162,9 @@ describe("sitemap page catalog", () => {
       locale: "en",
       page: 0,
     });
-    expect(descriptors).not.toContainEqual(
-      expect.objectContaining({
-        kind: "content",
-        locale: "en",
-        section: "tryout",
-      })
-    );
   });
 
-  it("propagates a missing active material publication", async () => {
-    activeMocks.readActiveContentIdentity.mockReturnValue(Effect.succeed(null));
+  it("propagates a missing signed material inventory", async () => {
     materialMocks.readPublishedMaterialBuckets.mockReturnValue(
       Effect.fail(new Error("Signed material inventory is unavailable."))
     );
@@ -219,7 +174,20 @@ describe("sitemap page catalog", () => {
     ).rejects.toThrow("Signed material inventory is unavailable.");
   });
 
-  it("rejects descriptors assembled across material releases", async () => {
+  it("rejects a missing active publication before reading families", async () => {
+    activeMocks.readActiveContentIdentity.mockReturnValue(Effect.succeed(null));
+
+    await expect(
+      Effect.runPromise(readSitemapPageDescriptors().pipe(Effect.flip))
+    ).resolves.toMatchObject({
+      _tag: "PublishedProjectionError",
+      locale: "en",
+      publicPath: "sitemap.xml",
+    });
+    expect(quranMocks.readPublishedQuranCatalog).not.toHaveBeenCalled();
+  });
+
+  it("rejects descriptors assembled across publication releases", async () => {
     activeMocks.readActiveContentIdentity
       .mockReturnValueOnce(Effect.succeed({ releaseId: "release-material" }))
       .mockReturnValueOnce(Effect.succeed({ releaseId: "release-next" }));
@@ -240,37 +208,30 @@ describe("sitemap page catalog", () => {
     });
   });
 
-  it("splits counts into bounded XML descriptors", async () => {
-    runtimeMocks.getRuntimeContentRouteCounts.mockImplementation(({ locale }) =>
-      Effect.succeed(locale === "en" ? [countRow("en", "quran", 1001)] : [])
+  it("rejects a Quran catalog from another active release", async () => {
+    quranMocks.readPublishedQuranCatalog.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: "release-next",
+        surahs: [{ number: 1 }],
+      })
     );
-    runtimeMocks.getRuntimePublicSitemapCount.mockReturnValue(
-      Effect.succeed(null)
+
+    await expect(
+      Effect.runPromise(readSitemapPageDescriptors().pipe(Effect.flip))
+    ).resolves.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+      actualReleaseId: "release-next",
+      expectedReleaseId: "release-material",
+    });
+  });
+
+  it("omits Quran pages when the signed catalog is empty", async () => {
+    quranMocks.readPublishedQuranCatalog.mockReturnValue(
+      Effect.succeed({ activeReleaseId: "release-material", surahs: [] })
     );
 
     await expect(
       Effect.runPromise(readSitemapPageDescriptors())
-    ).resolves.toEqual([
-      { id: "base" },
-      {
-        id: "content_en_quran_0",
-        kind: "content",
-        locale: "en",
-        page: 0,
-        section: "quran",
-      },
-      {
-        id: "content_en_quran_1",
-        kind: "content",
-        locale: "en",
-        page: 1,
-        section: "quran",
-      },
-    ]);
+    ).resolves.toEqual([{ id: "base" }]);
   });
 });
-
-/** Builds one route-count fixture row for sitemap catalog tests. */
-function countRow(locale: Locale, section: SourceRegistryRoot, count: number) {
-  return { count, locale, section, syncedAt: 1 };
-}

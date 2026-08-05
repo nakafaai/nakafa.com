@@ -3,11 +3,11 @@ import "server-only";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import {
-  decodeMaterialReleasePin,
-  type MaterialReleasePin,
-} from "@/lib/content/material/release";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
+import {
+  type ContentReleasePin,
+  decodeContentReleasePin,
+} from "@/lib/content/published/release";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
@@ -16,13 +16,13 @@ import {
 /** Reads non-empty material sitemap partitions for one localized catalog. */
 export const readPublishedMaterialBuckets = Effect.fn(
   "www.materials.readSitemapBuckets"
-)(function* (locale: Locale, expectedActiveReleaseId?: MaterialReleasePin) {
+)(function* (locale: Locale, expectedActiveReleaseId?: ContentReleasePin) {
   const result = yield* readRuntimeQuery(
     "contentRelease.material.sitemapBuckets",
     () =>
       fetchRuntimeQuery(api.contentRelease.material.sitemapBuckets, { locale })
   );
-  const activeReleaseId = yield* decodeMaterialReleasePin(
+  const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,
     { locale, publicPath: "materials" }

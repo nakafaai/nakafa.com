@@ -5,12 +5,12 @@ import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
-import {
-  decodeMaterialReleasePin,
-  type MaterialReleasePin,
-} from "@/lib/content/material/release";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
+import {
+  type ContentReleasePin,
+  decodeContentReleasePin,
+} from "@/lib/content/published/release";
 
 const baseUrl = "https://nakafa.com";
 const RSS_CONTENT_ROUTE_LIMIT = 100;
@@ -90,7 +90,7 @@ function getFeedContentRoutes() {
         { concurrency: routing.locales.length }
       );
       const latest = yield* readActiveContentIdentity();
-      yield* decodeMaterialReleasePin(
+      yield* decodeContentReleasePin(
         latest?.releaseId ?? null,
         activeReleaseId,
         { locale: routing.defaultLocale, publicPath: "rss.xml" }
@@ -125,13 +125,13 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
 /** Selects signed published materials. */
 const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
   locale: (typeof routing.locales)[number],
-  expectedActiveReleaseId: MaterialReleasePin
+  expectedActiveReleaseId: ContentReleasePin
 ) {
   const published = yield* readPublishedLatestMaterials(
     locale,
     RSS_CONTENT_ROUTE_LIMIT
   );
-  yield* decodeMaterialReleasePin(
+  yield* decodeContentReleasePin(
     published.activeReleaseId,
     expectedActiveReleaseId,
     { locale, publicPath: "rss.xml" }

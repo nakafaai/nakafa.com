@@ -22,11 +22,11 @@ import {
   isMaterialSibling,
   makeMaterialProjectionError,
 } from "@/lib/content/material/decode";
-import {
-  decodeMaterialReleasePin,
-  type MaterialReleasePin,
-} from "@/lib/content/material/release";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
+import {
+  type ContentReleasePin,
+  decodeContentReleasePin,
+} from "@/lib/content/published/release";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
@@ -60,11 +60,11 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
   function* (
     activeManifestHash: null | string,
     activeReleaseId: null | string,
-    expectedActiveReleaseId: MaterialReleasePin | undefined,
+    expectedActiveReleaseId: ContentReleasePin | undefined,
     locale: Locale,
     publicPath: string
   ) {
-    const releaseId = yield* decodeMaterialReleasePin(
+    const releaseId = yield* decodeContentReleasePin(
       activeReleaseId,
       expectedActiveReleaseId,
       { locale, publicPath }
@@ -90,7 +90,7 @@ export const readPublishedMaterialRoute = Effect.fn(
 )(function* (
   locale: Locale,
   publicPath: string,
-  expectedActiveReleaseId?: MaterialReleasePin
+  expectedActiveReleaseId?: ContentReleasePin
 ) {
   const result = yield* readRuntimeQuery("contentRelease.material.route", () =>
     fetchRuntimeQuery(api.contentRelease.material.route, {
@@ -185,7 +185,7 @@ export const readPublishedMaterialRoute = Effect.fn(
 export async function getPublishedMaterialRoute(
   locale: Locale,
   publicPath: string,
-  expectedActiveReleaseId?: MaterialReleasePin
+  expectedActiveReleaseId?: ContentReleasePin
 ) {
   "use cache";
 
