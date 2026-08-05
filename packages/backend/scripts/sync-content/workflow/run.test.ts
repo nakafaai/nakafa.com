@@ -104,14 +104,11 @@ describe("sync-content workflows", () => {
     expect(events).not.toContain("saveSyncState");
   });
 
-  it("continues a full sync without filesystem tryouts after signed ownership activates", async () => {
-    const { events, workflow } = await loadWorkflow(
-      {
-        deleted: 0,
-        hasStale: false,
-      },
-      { tryoutsManaged: true }
-    );
+  it("continues a full sync after local try-out ownership is removed", async () => {
+    const { events, workflow } = await loadWorkflow({
+      deleted: 0,
+      hasStale: false,
+    });
 
     await Effect.runPromise(workflow.syncFull(config, {}));
 
@@ -130,8 +127,6 @@ describe("sync-content workflows", () => {
         "saveSyncState",
       ])
     );
-    expect(events).toContain("readContentSyncOwnership");
-    expect(events).not.toContain("syncTryouts");
   });
 
   it("rejects locale-scoped incremental sync before reading or advancing shared state", async () => {
@@ -282,7 +277,6 @@ describe("sync-content workflows", () => {
       expect.arrayContaining([
         "syncCurriculumTopics",
         "syncCurriculumLessons",
-        "syncTryouts",
         "syncRoutePages",
         "syncPublicRoutes",
         "syncLearningPrograms",
@@ -298,15 +292,10 @@ describe("sync-content workflows", () => {
     expect(events.indexOf("syncCurriculumLessons")).toBeLessThan(
       events.indexOf("syncRoutePages")
     );
-    expect(events.indexOf("syncTryouts")).toBeLessThan(
-      events.indexOf("syncRoutePages")
-    );
     expect(routeArtifactTargets).toEqual([
       [
         { locale: "en", section: "material" },
         { locale: "id", section: "material" },
-        { locale: "en", section: "tryout" },
-        { locale: "id", section: "tryout" },
       ],
     ]);
     expect(events.indexOf("syncRoutePages")).toBeLessThan(
@@ -318,39 +307,6 @@ describe("sync-content workflows", () => {
     expect(events.indexOf("syncLearningPrograms")).toBeLessThan(
       events.indexOf("saveSyncState")
     );
-  });
-
-  it("skips a planned filesystem tryout phase after signed ownership activates", async () => {
-    const { events, workflow } = await loadWorkflow(
-      {
-        deleted: 0,
-        hasStale: false,
-      },
-      {
-        changedFiles: ["packages/contents/_types/route/tryout/path.ts"],
-        syncState: {
-          lastSyncCommit: "previous-commit",
-          lastSyncTimestamp: 1,
-        },
-        tryoutsManaged: true,
-      }
-    );
-
-    await Effect.runPromise(workflow.syncIncremental(config, {}));
-
-    expect(events).toEqual(
-      expect.arrayContaining([
-        "readContentSyncOwnership",
-        "syncCurriculumTopics",
-        "syncCurriculumLessons",
-        "syncRoutePages",
-        "syncPublicRoutes",
-        "syncLearningPrograms",
-        "invalidateContentRuntimeCache",
-        "saveSyncState",
-      ])
-    );
-    expect(events).not.toContain("syncTryouts");
   });
 
   it("resyncs article rows before route artifacts for graph-only changes", async () => {
@@ -376,7 +332,6 @@ describe("sync-content workflows", () => {
         "syncArticles",
         "syncCurriculumTopics",
         "syncCurriculumLessons",
-        "syncTryouts",
         "syncQuran",
         "syncRoutePages",
         "syncPublicRoutes",
@@ -392,10 +347,7 @@ describe("sync-content workflows", () => {
     expect(events.indexOf("syncCurriculumLessons")).toBeLessThan(
       events.indexOf("syncRoutePages")
     );
-    expect(events.indexOf("syncTryouts")).toBeLessThan(
-      events.indexOf("syncRoutePages")
-    );
-    expect(routeArtifactTargets[0]).toHaveLength(8);
+    expect(routeArtifactTargets[0]).toHaveLength(6);
     expect(events.indexOf("syncRoutePages")).toBeLessThan(
       events.indexOf("syncPublicRoutes")
     );
@@ -430,7 +382,6 @@ describe("sync-content workflows", () => {
     expect(events).not.toContain("syncArticles");
     expect(events).not.toContain("syncCurriculumTopics");
     expect(events).not.toContain("syncCurriculumLessons");
-    expect(events).not.toContain("syncTryouts");
     expect(events).not.toContain("syncPublicRoutes");
     expect(events).not.toContain("syncLearningPrograms");
     expect(routeArtifactTargets).toEqual([

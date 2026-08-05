@@ -183,7 +183,6 @@ export const readPublishedSetPage = Effect.fn(
   const entrySection = yield* readEntrySection(set, sections, visibleSections);
   return {
     exam: toPublicExam(parents.exam),
-    entryQuestions: [],
     entrySection: entrySection ? toPublicSection(entrySection) : null,
     set: toPublicPublishedSet(set),
     sections: visibleSections.map(toPublicSection),
@@ -213,7 +212,6 @@ export const readPublishedSectionPage = Effect.fn(
   yield* readPublishedSetSections(index, set);
   return {
     exam: toPublicExam(parents.exam),
-    questions: [],
     section: toPublicSection(section),
     set: toPublicPublishedSet(set),
     track: toPublicTrack(parents.track),

@@ -140,35 +140,8 @@ export const deleteTryoutResponsesBatch =
   createBatchDeleteMutation("tryoutResponses");
 export const deleteTryoutScoresBatch =
   createBatchDeleteMutation("tryoutScores");
-export const deleteTryoutLeaderboardScopesBatch = createBatchDeleteMutation(
-  "tryoutLeaderboardScopes"
-);
-export const deleteTryoutLeaderboardEntriesBatch = createBatchDeleteMutation(
-  "tryoutLeaderboardEntries"
-);
-export const deleteTryoutLeaderboardUserStatsBatch = createBatchDeleteMutation(
-  "tryoutLeaderboardUserStats"
-);
-export const deleteIrtScalePublicationQueueBatch = createBatchDeleteMutation(
-  "irtScalePublicationQueue"
-);
 export const deleteIrtScaleItemsBatch =
   createBatchDeleteMutation("irtScaleItems");
-export const deleteIrtCalibrationQueueBatch = createBatchDeleteMutation(
-  "irtCalibrationQueue"
-);
-export const deleteIrtCalibrationAttemptsBatch = createBatchDeleteMutation(
-  "irtCalibrationAttempts"
-);
-export const deleteIrtCalibrationCacheStatsBatch = createBatchDeleteMutation(
-  "irtCalibrationCacheStats"
-);
-export const deleteIrtScaleQualityChecksBatch = createBatchDeleteMutation(
-  "irtScaleQualityChecks"
-);
-export const deleteIrtScaleQualityRefreshQueueBatch = createBatchDeleteMutation(
-  "irtScaleQualityRefreshQueue"
-);
 export const deleteTryoutAttemptsBatch =
   createBatchDeleteMutation("tryoutAttempts");
 export const deleteTryoutSetProgressBatch =

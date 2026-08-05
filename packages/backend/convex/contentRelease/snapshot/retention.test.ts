@@ -5,13 +5,23 @@ import {
 import { tryoutPlacementFacts } from "@repo/backend/convex/contentRelease/tryout/facts";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import {
+  createConvexTestWithBetterAuth,
+  seedAuthenticatedUser,
+} from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { TEST_ARTIFACT_HASH } from "@repo/backend/test/content-release";
 import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
-import { seedTryoutMigration } from "@repo/backend/test/tryout-migration";
 import { makeTryoutPlacementRow } from "@repo/backend/test/tryout-snapshot";
+import {
+  TRYOUT_START_COUNTRY,
+  TRYOUT_START_EXAM,
+  TRYOUT_START_NOW,
+  TRYOUT_START_SET,
+  TRYOUT_START_TRACK,
+} from "@repo/backend/test/tryout-source";
+import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -98,47 +108,55 @@ describe("contentRelease/snapshot/retention", () => {
 
   it("protects try-out snapshots referenced by attempts and IRT scales", async () => {
     const t = createConvexTestWithBetterAuth();
-    await t.mutation(seedTryoutMigration);
-    const transactionSnapshotId = `sha256:${"7".repeat(64)}`;
-
-    await t.mutation(async (ctx) => {
-      const attempt = await ctx.db.query("tryoutAttempts").unique();
-      if (!attempt) {
-        throw new Error("Expected one technical try-out attempt.");
-      }
-      await ctx.db.patch("tryoutAttempts", attempt._id, {
-        tryoutSnapshotId: transactionSnapshotId,
+    const seeded = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: TRYOUT_START_NOW,
+        suffix: "snapshot-retention",
       });
+      const fixture = await seedTryoutStartSet(ctx, {
+        scoringStrategy: "irt",
+        userId: identity.userId,
+        visibility: "visible",
+      });
+      return { fixture, identity };
     });
+    const authed = t.withIdentity({
+      sessionId: seeded.identity.sessionId,
+      subject: seeded.identity.authUserId,
+    });
+    await authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
+      countryKey: TRYOUT_START_COUNTRY,
+      examKey: TRYOUT_START_EXAM,
+      locale: "id",
+      setKey: TRYOUT_START_SET,
+      trackKey: TRYOUT_START_TRACK,
+    });
+
     await expect(
       t.mutation((ctx) =>
         runConvexProgram(
-          isSnapshotReferenced(ctx, "tryout", transactionSnapshotId)
+          isSnapshotReferenced(ctx, "tryout", seeded.fixture.snapshotId)
         )
       )
     ).resolves.toBe(true);
 
+    const scaleSnapshotId = `sha256:${"7".repeat(64)}`;
     await t.mutation(async (ctx) => {
-      const [attempt, scale] = await Promise.all([
-        ctx.db.query("tryoutAttempts").unique(),
-        ctx.db.query("irtScaleVersions").unique(),
-      ]);
-      if (!(attempt && scale)) {
-        throw new Error("Expected technical try-out history.");
-      }
-      await ctx.db.patch("tryoutAttempts", attempt._id, {
-        tryoutSnapshotId: undefined,
-      });
-      await ctx.db.patch("irtScaleVersions", scale._id, {
-        tryoutSnapshotId: transactionSnapshotId,
+      await ctx.db.insert("irtScaleVersions", {
+        model: "2pl",
+        publishedAt: TRYOUT_START_NOW,
+        questionCount: 1,
+        setIdentity: seeded.fixture.setIdentity,
+        status: "provisional",
+        tryoutSnapshotId: scaleSnapshotId,
       });
     });
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(
-          isSnapshotReferenced(ctx, "tryout", transactionSnapshotId)
-        )
+        runConvexProgram(isSnapshotReferenced(ctx, "tryout", scaleSnapshotId))
       )
     ).resolves.toBe(true);
   });
 });
+
+import { api } from "@repo/backend/convex/_generated/api";

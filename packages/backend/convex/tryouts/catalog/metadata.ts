@@ -21,7 +21,6 @@ const tryoutAlternateValidator = v.object({
 });
 
 export const tryoutMetadataReturnValidator = v.object({
-  managed: v.boolean(),
   route: v.union(
     v.null(),
     v.object({
@@ -45,11 +44,7 @@ interface TryoutMetadataInput {
 export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
   function* (ctx: QueryCtx, input: TryoutMetadataInput) {
     const owner = yield* loadTryoutOwner(ctx);
-    if (!(owner.managed && owner.selected)) {
-      return { managed: false, route: null };
-    }
-
-    const { snapshot, snapshotId } = owner.selected;
+    const { snapshot, snapshotId } = owner;
     const storedCurrent = yield* Effect.promise(() =>
       ctx.db
         .query("tryoutCatalog")
@@ -62,11 +57,11 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
         .unique()
     );
     if (!storedCurrent) {
-      return { managed: true, route: null };
+      return { route: null };
     }
     const current = yield* verifyTryoutCatalog(storedCurrent, snapshotId);
     if (current.kind !== input.kind || !current.publicPath) {
-      return { managed: true, route: null };
+      return { route: null };
     }
     const currentPublicPath = current.publicPath;
 
@@ -84,7 +79,6 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
     );
 
     return {
-      managed: true,
       route: {
         alternates,
         description: current.description,

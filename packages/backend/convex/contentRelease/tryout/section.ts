@@ -27,14 +27,7 @@ export type TryoutSectionIdentity = Pick<
 export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(
   function* (ctx: QueryCtx, identity: TryoutSectionIdentity) {
     const owner = yield* loadTryoutOwner(ctx);
-    if (!(owner.managed && owner.selected)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_MISSING",
-        "The active try-out snapshot is unavailable."
-      );
-    }
-
-    const { snapshotId } = owner.selected;
+    const { snapshotId } = owner;
 
     const catalogIdentity = tryoutCatalogIdentity({
       ...identity,

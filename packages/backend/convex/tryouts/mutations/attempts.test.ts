@@ -4,6 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
+import { testTextHash } from "@repo/backend/test/content-release";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
 import {
   activateRenamedTryoutStartSource,
@@ -36,116 +37,6 @@ const entryStartArgs: FunctionArgs<
   entrySectionKey: SECTION,
 };
 describe("tryouts/mutations/attempts", () => {
-  it("keeps local attempt creation available before signed ownership activates", async () => {
-    vi.setSystemTime(new Date(NOW));
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-local",
-      });
-      const fixture = await seedTryoutStartSet(ctx, {
-        userId: identity.userId,
-        visibility: "visible",
-      });
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        throw new Error("Expected one content state row.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        activeManifestHash: undefined,
-        activeReleaseId: undefined,
-        activeSequence: undefined,
-      });
-      return { fixture, identity };
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-    await expect(
-      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-        ...startArgs,
-        destinationSectionKey: "missing",
-      })
-    ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
-    const result = await authed.mutation(
-      api.tryouts.mutations.attempts.startAttempt,
-      { ...startArgs, destinationSectionKey: SECTION }
-    );
-    const pageArgs: FunctionArgs<
-      typeof api.tryouts.queries.retained.getAttemptSectionPage
-    > = {
-      attemptId: result.attemptId,
-      locale: "id",
-      publicPath: result.navigation.publicPath,
-    };
-    const page = await authed.query(
-      api.tryouts.queries.retained.getAttemptSectionPage,
-      pageArgs
-    );
-    const runtime = await t.query(async (ctx) => ({
-      attempt: await ctx.db.get(result.attemptId),
-      placements: await ctx.db
-        .query("tryoutAttemptPlacements")
-        .withIndex("by_tryoutAttemptId_and_questionOrder", (query) =>
-          query.eq("tryoutAttemptId", result.attemptId)
-        )
-        .collect(),
-    }));
-    expect(runtime.attempt).toMatchObject({
-      status: "in-progress",
-      tryoutSetId: seeded.fixture.tryoutSetId,
-    });
-    expect(runtime.attempt).not.toHaveProperty("setIdentity");
-    expect(runtime.attempt).not.toHaveProperty("tryoutSnapshotId");
-    expect(page).toMatchObject({ attemptId: result.attemptId });
-    expect(runtime.placements).toHaveLength(1);
-    expect(runtime.placements[0]).not.toHaveProperty("placementIdentity");
-    expect(runtime.placements[0]).not.toHaveProperty("sectionIdentity");
-    await t.mutation((ctx) =>
-      ctx.db.patch(seeded.fixture.tryoutSectionId, { sourceRevision: "2028" })
-    );
-    await expect(
-      authed.query(api.tryouts.queries.retained.getAttemptSectionPage, pageArgs)
-    ).resolves.toBeNull();
-  });
-
-  it("rejects an unmigrated attempt while signed ownership is active", async () => {
-    vi.setSystemTime(new Date(NOW));
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-signed-legacy-resume",
-      });
-      const fixture = await seedTryoutStartSet(ctx, {
-        userId: identity.userId,
-        visibility: "visible",
-      });
-      const attemptId = await insertTryoutAttempt(ctx, {
-        expiresAt: NOW + 86_400_000,
-        sectionSnapshots: [],
-        tryoutSetId: fixture.tryoutSetId,
-        userId: identity.userId,
-      });
-      return { attemptId, identity };
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-    await expect(
-      authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
-    ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
-    const runtime = await t.query(async (ctx) => ({
-      attempts: await ctx.db.query("tryoutAttempts").collect(),
-      freeClaims: await ctx.db.query("tryoutFreeAttemptClaims").collect(),
-    }));
-    expect(runtime.attempts).toHaveLength(1);
-    expect(runtime.freeClaims).toEqual([]);
-  });
-
   it("resumes from the frozen attempt when the current entry key changed", async () => {
     vi.setSystemTime(new Date(NOW));
     const t = createConvexTestWithBetterAuth();
@@ -164,9 +55,11 @@ describe("tryouts/mutations/attempts", () => {
           {
             publicPath: undefined,
             questionCount: 1,
-            questionSourcePath: "question-bank/tryout/legacy-entry",
-            sectionKey: "legacy-entry",
+            questionSourcePath: "question-bank/tryout/frozen-entry",
+            sectionIdentity: "tryout:section:frozen-entry",
+            sectionKey: "frozen-entry",
             sectionOrder: 1,
+            sectionRowHash: testTextHash("frozen-entry"),
             sourceRevision: "2025",
             timeLimitSeconds: 1800,
           },
@@ -192,7 +85,7 @@ describe("tryouts/mutations/attempts", () => {
     );
     expect(sectionAttempts).toMatchObject([
       {
-        sectionKey: "legacy-entry",
+        sectionKey: "frozen-entry",
         status: "in-progress",
         tryoutAttemptId: seeded.attemptId,
       },
@@ -265,7 +158,6 @@ describe("tryouts/mutations/attempts", () => {
       setKey: SET,
       status: "in-progress",
       trackKey: TRACK,
-      tryoutSetId: seeded.fixture.tryoutSetId,
       tryoutSnapshotId: seeded.fixture.snapshotId,
     });
     expect(runtime.attempt?.sectionSnapshots).toEqual([
@@ -304,7 +196,6 @@ describe("tryouts/mutations/attempts", () => {
       setIdentity: seeded.fixture.setIdentity,
       status: "in-progress",
       statusRank: 1,
-      tryoutSetId: seeded.fixture.tryoutSetId,
     });
     const current = await authed.query(api.tryouts.queries.attempt.getCurrent, {
       countryKey: COUNTRY,
@@ -356,69 +247,6 @@ describe("tryouts/mutations/attempts", () => {
     await expect(
       authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
     ).rejects.toThrow("TRYOUT_ACCESS_REQUIRED");
-  });
-
-  it("keeps legacy history visible while signed ownership is additive", async () => {
-    vi.setSystemTime(new Date(NOW));
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-signed-history",
-      });
-      const fixture = await seedTryoutStartSet(ctx, {
-        includeEntitlement: true,
-        userId: identity.userId,
-        visibility: "visible",
-      });
-      const legacyAttemptId = await insertTryoutAttempt(ctx, {
-        scoringStrategy: "raw",
-        sectionSnapshots: [],
-        status: "completed",
-        tryoutSetId: fixture.tryoutSetId,
-        userId: identity.userId,
-      });
-      await ctx.db.patch(legacyAttemptId, {
-        completedAt: NOW - 10_000,
-        endReason: "submitted",
-      });
-      await ctx.db.insert("tryoutScores", {
-        finalizedAt: NOW - 10_000,
-        publishedScore: 0,
-        rawScore: 0,
-        scoreStatus: "official",
-        scoringStrategy: "raw",
-        totalCorrect: 0,
-        totalQuestions: 0,
-        tryoutAttemptId: legacyAttemptId,
-        tryoutSetId: fixture.tryoutSetId,
-        userId: identity.userId,
-      });
-      return { fixture, identity, legacyAttemptId };
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-    const signed = await authed.mutation(
-      api.tryouts.mutations.attempts.startAttempt,
-      startArgs
-    );
-    const history = await authed.query(api.tryouts.queries.history.list, {
-      locale: "id",
-      paginationOpts: { cursor: null, numItems: 25 },
-      publicPath: `try-out/${COUNTRY}/${EXAM}/${TRACK}/${SET}`,
-    });
-    const signedAttempt = await t.query((ctx) => ctx.db.get(signed.attemptId));
-    expect(signedAttempt).toMatchObject({
-      setIdentity: seeded.fixture.setIdentity,
-      tryoutSetId: seeded.fixture.tryoutSetId,
-      tryoutSnapshotId: seeded.fixture.snapshotId,
-    });
-    expect(history.page.map(({ attemptId }) => attemptId)).toEqual([
-      signed.attemptId,
-      seeded.legacyAttemptId,
-    ]);
   });
 
   it("starts remaining sections from the immutable attempt snapshot", async () => {

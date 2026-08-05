@@ -1,6 +1,6 @@
 import { mutation } from "@repo/backend/convex/functions";
 import {
-  getActiveTryoutCountryByKey,
+  readActiveTryoutCountry,
   toTryoutCountryOption,
   upsertPreferredTryoutCountry,
 } from "@repo/backend/convex/learningPreferences/impl";
@@ -67,11 +67,12 @@ export const setPreferredTryoutCountry = mutation({
   returns: currentTryoutPreferenceValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
-    const country = await getActiveTryoutCountryByKey({
-      countryKey: args.preferredTryoutCountryKey,
-      ctx,
-      locale: args.locale,
-    });
+    const country = await runConvexProgram(
+      readActiveTryoutCountry(ctx, {
+        countryKey: args.preferredTryoutCountryKey,
+        locale: args.locale,
+      })
+    );
 
     if (!country) {
       throw new ConvexError({

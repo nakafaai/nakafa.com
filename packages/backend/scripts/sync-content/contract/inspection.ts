@@ -4,7 +4,6 @@ import {
   ConvexIdSchema,
   mutableArraySchema,
 } from "@repo/backend/scripts/sync-content/contract/schemas";
-import { TryoutScoringStrategySchema } from "@repo/contents/_types/tryout/schema";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
@@ -40,13 +39,7 @@ export const ContentCountsSchema = Schema.Struct({
   questionChoices: Schema.Number,
   questions: Schema.Number,
   questionSets: Schema.Number,
-  irtCalibrationAttempts: Schema.Number,
-  irtCalibrationCacheStats: Schema.Number,
-  irtCalibrationQueue: Schema.Number,
   irtCalibrationRuns: Schema.Number,
-  irtScalePublicationQueue: Schema.Number,
-  irtScaleQualityChecks: Schema.Number,
-  irtScaleQualityRefreshQueue: Schema.Number,
   irtScaleItems: Schema.Number,
   irtScaleVersions: Schema.Number,
   learningProgramCoverage: Schema.Number,
@@ -69,9 +62,6 @@ export const ContentCountsSchema = Schema.Struct({
   tryoutAttemptPlacements: Schema.Number,
   tryoutCountries: Schema.Number,
   tryoutExams: Schema.Number,
-  tryoutLeaderboardEntries: Schema.Number,
-  tryoutLeaderboardScopes: Schema.Number,
-  tryoutLeaderboardUserStats: Schema.Number,
   tryoutResponses: Schema.Number,
   tryoutScores: Schema.Number,
   tryoutSectionAttempts: Schema.Number,
@@ -82,13 +72,8 @@ export const ContentCountsSchema = Schema.Struct({
 });
 
 export const DataIntegritySchema = Schema.Struct({
-  orphanQuestionChoiceIds: Schema.Array(Schema.String),
-  questionsWithoutChoices: Schema.Array(Schema.String),
-  questionsWithoutAuthors: Schema.Array(Schema.String),
   articlesWithoutReferences: Schema.Array(Schema.String),
   sectionsWithoutTopics: Schema.Array(Schema.String),
-  activeTryoutsWithoutScale: Schema.Array(Schema.String),
-  totalQuestions: Schema.Number,
   totalArticles: Schema.Number,
   totalSections: Schema.Number,
 });
@@ -137,14 +122,7 @@ const StaleItemSchema = Schema.Struct({
   id: Schema.Union(
     ConvexIdSchema("articleContents"),
     ConvexIdSchema("curriculumTopics"),
-    ConvexIdSchema("curriculumLessons"),
-    ConvexIdSchema("questionSets"),
-    ConvexIdSchema("questions"),
-    ConvexIdSchema("tryoutCountries"),
-    ConvexIdSchema("tryoutExams"),
-    ConvexIdSchema("tryoutTracks"),
-    ConvexIdSchema("tryoutSets"),
-    ConvexIdSchema("tryoutSections")
+    ConvexIdSchema("curriculumLessons")
   ),
   locale: SyncLocaleSchema,
   sourcePath: Schema.String,
@@ -168,48 +146,6 @@ const StaleCurriculumLessonSchema = Schema.Struct({
   sourcePath: Schema.String,
 });
 
-const StaleQuestionSetSchema = Schema.Struct({
-  id: ConvexIdSchema("questionSets"),
-  locale: SyncLocaleSchema,
-  sourcePath: Schema.String,
-});
-
-const StaleQuestionSchema = Schema.Struct({
-  id: ConvexIdSchema("questions"),
-  locale: SyncLocaleSchema,
-  sourcePath: Schema.String,
-});
-
-const StaleTryoutCountrySchema = Schema.Struct({
-  id: ConvexIdSchema("tryoutCountries"),
-  locale: SyncLocaleSchema,
-  sourcePath: Schema.String,
-});
-
-const StaleTryoutExamSchema = Schema.Struct({
-  id: ConvexIdSchema("tryoutExams"),
-  locale: SyncLocaleSchema,
-  sourcePath: Schema.String,
-});
-
-const StaleTryoutTrackSchema = Schema.Struct({
-  id: ConvexIdSchema("tryoutTracks"),
-  locale: SyncLocaleSchema,
-  sourcePath: Schema.String,
-});
-
-const StaleTryoutSetSchema = Schema.Struct({
-  id: ConvexIdSchema("tryoutSets"),
-  locale: SyncLocaleSchema,
-  sourcePath: Schema.String,
-});
-
-const StaleTryoutSectionSchema = Schema.Struct({
-  id: ConvexIdSchema("tryoutSections"),
-  locale: SyncLocaleSchema,
-  sourcePath: Schema.String,
-});
-
 const PaginationPageSchema = Schema.Struct({
   continueCursor: Schema.String,
   isDone: Schema.Boolean,
@@ -219,16 +155,6 @@ export const StaleArticleCurriculumContentSchema = Schema.Struct({
   staleArticles: Schema.Array(StaleArticleSchema),
   staleCurriculumTopics: Schema.Array(StaleCurriculumTopicSchema),
   staleCurriculumLessons: Schema.Array(StaleCurriculumLessonSchema),
-});
-
-export const StaleTryoutContentSchema = Schema.Struct({
-  staleQuestionSets: Schema.Array(StaleQuestionSetSchema),
-  staleQuestions: Schema.Array(StaleQuestionSchema),
-  staleTryoutCountries: Schema.Array(StaleTryoutCountrySchema),
-  staleTryoutExams: Schema.Array(StaleTryoutExamSchema),
-  staleTryoutSections: Schema.Array(StaleTryoutSectionSchema),
-  staleTryoutSets: Schema.Array(StaleTryoutSetSchema),
-  staleTryoutTracks: Schema.Array(StaleTryoutTrackSchema),
 });
 
 export const StaleContentPageSchema = Schema.mutable(
@@ -245,34 +171,6 @@ export const ArticleIntegrityPageSchema = Schema.mutable(
     PaginationPageSchema,
     Schema.Struct({
       page: mutableArraySchema(StaleArticleSchema),
-    })
-  )
-);
-
-export const QuestionIntegrityPageSchema = Schema.mutable(
-  Schema.extend(
-    PaginationPageSchema,
-    Schema.Struct({
-      page: mutableArraySchema(
-        Schema.Struct({
-          id: ConvexIdSchema("questions"),
-          locale: SyncLocaleSchema,
-          sourcePath: Schema.String,
-        })
-      ),
-    })
-  )
-);
-
-export const QuestionChoiceIntegrityPageSchema = Schema.mutable(
-  Schema.extend(
-    PaginationPageSchema,
-    Schema.Struct({
-      page: mutableArraySchema(
-        Schema.Struct({
-          questionId: ConvexIdSchema("questions"),
-        })
-      ),
     })
   )
 );
@@ -314,24 +212,6 @@ export const CurriculumLessonIntegrityPageSchema = Schema.mutable(
           locale: SyncLocaleSchema,
           slug: Schema.String,
           topicId: Schema.optional(ConvexIdSchema("curriculumTopics")),
-        })
-      ),
-    })
-  )
-);
-
-export const TryoutScaleIntegrityPageSchema = Schema.mutable(
-  Schema.extend(
-    PaginationPageSchema,
-    Schema.Struct({
-      page: mutableArraySchema(
-        Schema.Struct({
-          id: ConvexIdSchema("tryoutSets"),
-          isActive: Schema.Boolean,
-          locale: SyncLocaleSchema,
-          publicPath: Schema.String,
-          scoringStrategy: TryoutScoringStrategySchema,
-          hasPublishedScale: Schema.Boolean,
         })
       ),
     })

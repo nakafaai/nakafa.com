@@ -1,6 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import {
-  getCurrentTryoutCountry,
+  readCurrentTryoutCountry,
   toTryoutCountryOption,
 } from "@repo/backend/convex/learningPreferences/impl";
 import {
@@ -88,11 +88,12 @@ export const getCurrentTryout = query({
       return null;
     }
 
-    const preference = await getCurrentTryoutCountry({
-      ctx,
-      locale: args.locale,
-      userId: user.appUser._id,
-    });
+    const preference = await runConvexProgram(
+      readCurrentTryoutCountry(ctx, {
+        locale: args.locale,
+        userId: user.appUser._id,
+      })
+    );
 
     if (!preference) {
       return null;

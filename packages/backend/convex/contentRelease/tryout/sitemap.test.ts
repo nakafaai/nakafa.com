@@ -67,15 +67,15 @@ function makeInternalSection(locale: "en" | "id") {
 }
 
 describe("contentRelease/tryout/sitemap", () => {
-  it("reports no signed pages before try-out ownership activates", async () => {
+  it("requires an active signed try-out publication", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
       t.query((ctx) => runConvexProgram(readTryoutSitemapCount(ctx, "en")))
-    ).resolves.toEqual({ managed: false, pageCount: 0, routeCount: 0 });
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
     await expect(
       t.query((ctx) => runConvexProgram(readTryoutSitemapPage(ctx, "en", 0)))
-    ).resolves.toBeNull();
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
   });
 
   it("returns only sorted public paths from the active signed catalog", async () => {
@@ -100,7 +100,7 @@ describe("contentRelease/tryout/sitemap", () => {
 
     await expect(
       t.query((ctx) => runConvexProgram(readTryoutSitemapCount(ctx, "en")))
-    ).resolves.toEqual({ managed: true, pageCount: 1, routeCount: 2 });
+    ).resolves.toEqual({ pageCount: 1, routeCount: 2 });
     await expect(
       t.query((ctx) => runConvexProgram(readTryoutSitemapPage(ctx, "en", 0)))
     ).resolves.toEqual({ paths: ["try-out/alpha", "try-out/zeta"] });

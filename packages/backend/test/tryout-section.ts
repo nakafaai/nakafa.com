@@ -12,10 +12,7 @@ import {
 } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type {
-  SignedTryoutSource,
-  TryoutStartSource,
-} from "@repo/backend/convex/tryouts/start/source";
+import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
@@ -34,7 +31,7 @@ export const TRYOUT_TEST_CONTENT_HASH = TryoutContentHashSchema.make(
 /** Test-owned pair used to compare one filesystem section with signed rows. */
 export interface AlignedTryoutSectionFixture {
   readonly filesystem: Doc<"tryoutSections">;
-  readonly signed: SignedTryoutSource["snapshot"]["sections"][number];
+  readonly signed: TryoutStartSource["snapshot"]["sections"][number];
 }
 
 /** Builds one signed section source that matches a legacy runtime fixture. */
@@ -112,7 +109,7 @@ export function makeSignedTryoutSource(
   set: Doc<"tryoutSets">,
   sections: readonly AlignedTryoutSectionFixture[],
   snapshotId = testTextHash("tryout-runtime-snapshot")
-): Extract<TryoutStartSource, { kind: "signed" }> {
+): TryoutStartSource {
   const signedSet = Schema.decodeUnknownSync(TryoutSetSchema)({
     countryKey: set.countryKey,
     examKey: set.examKey,
@@ -145,7 +142,6 @@ export function makeSignedTryoutSource(
       rendererJson: testRendererJson(),
       snapshotId,
     },
-    kind: "signed",
     snapshot: {
       sections: sections.map(({ signed }) => signed),
       set: setRecord,

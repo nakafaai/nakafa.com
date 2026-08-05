@@ -37,13 +37,11 @@ describe("tryouts/start/source", () => {
     );
 
     expect(source).toMatchObject({
-      kind: "signed",
       snapshot: {
         setIdentity: expect.any(String),
         snapshotId: expect.any(String),
       },
     });
-    expect(source).not.toHaveProperty("retainedTryoutSetId");
   });
 
   it("resumes one logical set after its public path changes", async () => {

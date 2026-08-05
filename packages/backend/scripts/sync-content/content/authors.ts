@@ -13,11 +13,8 @@ import type {
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
-import type { ContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
 import { Effect } from "effect";
-
-const TRYOUT_SOURCE_PATH = "question-bank/tryout/";
 
 const readAuthorNames = Effect.fn("sync.readAuthorNames")(function* (
   file: string
@@ -33,7 +30,7 @@ const readAuthorNames = Effect.fn("sync.readAuthorNames")(function* (
 
 /** Collects all unique content author names for the requested locale. */
 export const collectAllAuthorNames = Effect.fn("sync.collectAllAuthorNames")(
-  function* (options: SyncOptions, ownership: ContentSyncOwnership) {
+  function* (options: SyncOptions) {
     const authorNames: string[] = [];
     const patterns = [
       options.locale
@@ -43,17 +40,6 @@ export const collectAllAuthorNames = Effect.fn("sync.collectAllAuthorNames")(
         ? `material/lesson/**/${options.locale}.mdx`
         : "material/lesson/**/*.mdx",
     ];
-
-    if (!ownership.tryoutsManaged) {
-      patterns.push(
-        options.locale
-          ? `question-bank/tryout/**/question.${options.locale}.mdx`
-          : "question-bank/tryout/**/question.*.mdx",
-        options.locale
-          ? `question-bank/tryout/**/answer.${options.locale}.mdx`
-          : "question-bank/tryout/**/answer.*.mdx"
-      );
-    }
 
     for (const pattern of patterns) {
       const files = yield* globFiles(pattern);
@@ -70,14 +56,10 @@ export const collectAllAuthorNames = Effect.fn("sync.collectAllAuthorNames")(
 /** Collects unique author names from a known set of changed content files. */
 export const collectAuthorNamesFromFiles = Effect.fn(
   "sync.collectAuthorNamesFromFiles"
-)(function* (filePaths: string[], ownership: ContentSyncOwnership) {
+)(function* (filePaths: string[]) {
   const authorNames: string[] = [];
 
   for (const file of filePaths) {
-    if (ownership.tryoutsManaged && isTryoutSourceFile(file)) {
-      continue;
-    }
-
     authorNames.push(...(yield* readAuthorNames(file)));
   }
 
@@ -87,8 +69,7 @@ export const collectAuthorNamesFromFiles = Effect.fn(
 /** Syncs missing content authors before content rows reference them. */
 export const syncAuthors = Effect.fn("sync.authors")(function* (
   config: ConvexConfig,
-  options: SyncOptions,
-  ownership: ContentSyncOwnership
+  options: SyncOptions
 ) {
   const startTime = performance.now();
 
@@ -96,7 +77,7 @@ export const syncAuthors = Effect.fn("sync.authors")(function* (
     log("Collecting author names from content files...");
   }
 
-  const authorNames = yield* collectAllAuthorNames(options, ownership);
+  const authorNames = yield* collectAllAuthorNames(options);
 
   if (!options.quiet) {
     log(`Unique authors found: ${authorNames.length}`);
@@ -139,8 +120,3 @@ export const syncAuthors = Effect.fn("sync.authors")(function* (
 
   return { created, existing, durationMs };
 });
-
-/** Detects one changed file owned by the legacy tryout filesystem scope. */
-function isTryoutSourceFile(file: string) {
-  return file.replaceAll("\\", "/").includes(TRYOUT_SOURCE_PATH);
-}

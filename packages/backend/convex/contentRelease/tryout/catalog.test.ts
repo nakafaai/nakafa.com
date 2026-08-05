@@ -59,12 +59,12 @@ async function activateCatalog() {
 }
 
 describe("contentRelease/tryout/catalog", () => {
-  it("returns an unmanaged catalog before try-out publication", async () => {
+  it("requires an active signed try-out publication", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
       t.query((ctx) => runConvexProgram(readTryoutCatalog(ctx, "en")))
-    ).resolves.toMatchObject({ managed: false, rowJson: [] });
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
   });
 
   it("returns one verified localized hierarchy from the active snapshot", async () => {
@@ -76,7 +76,7 @@ describe("contentRelease/tryout/catalog", () => {
       Effect.forEach(result.rowJson, decodeSnapshotRowJson)
     );
 
-    expect(result).toMatchObject({ managed: true, snapshotId });
+    expect(result).toMatchObject({ snapshotId });
     expect(rows).toMatchObject([
       {
         family: "tryout",
@@ -86,7 +86,7 @@ describe("contentRelease/tryout/catalog", () => {
     ]);
   });
 
-  it("waits for active question ownership before exposing the catalog", async () => {
+  it("requires active signed question ownership", async () => {
     const { t } = await activateCatalog();
     await t.mutation(async (ctx) => {
       const release = await ctx.db.query("contentReleases").unique();
@@ -100,7 +100,7 @@ describe("contentRelease/tryout/catalog", () => {
 
     await expect(
       t.query((ctx) => runConvexProgram(readTryoutCatalog(ctx, "en")))
-    ).resolves.toMatchObject({ managed: false, rowJson: [] });
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
   });
 
   it("rejects asymmetric localized hierarchy counts", async () => {

@@ -29,7 +29,7 @@ async function activateCatalog() {
 }
 
 describe("tryouts/catalog/route", () => {
-  it("delegates route ownership before a signed try-out release", async () => {
+  it("requires an active signed try-out publication", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
@@ -41,7 +41,7 @@ describe("tryouts/catalog/route", () => {
           })
         )
       )
-    ).resolves.toEqual({ exists: false, managed: false });
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
   });
 
   it("accepts only exact routes from the active signed snapshot", async () => {
@@ -56,7 +56,7 @@ describe("tryouts/catalog/route", () => {
           })
         )
       )
-    ).resolves.toEqual({ exists: true, managed: true });
+    ).resolves.toEqual({ exists: true });
     await expect(
       t.query((ctx) =>
         runConvexProgram(
@@ -66,7 +66,7 @@ describe("tryouts/catalog/route", () => {
           })
         )
       )
-    ).resolves.toEqual({ exists: false, managed: true });
+    ).resolves.toEqual({ exists: false });
   });
 
   it("fails closed when indexed route facts differ from the signed row", async () => {

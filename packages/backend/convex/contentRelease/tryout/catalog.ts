@@ -66,18 +66,7 @@ function hasExpectedCounts(
 export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
   function* (ctx: QueryCtx, locale: ContentLocale) {
     const owner = yield* loadTryoutOwner(ctx);
-    if (!(owner.managed && owner.selected)) {
-      return {
-        activeManifestHash: owner.selected?.active.manifestHash ?? null,
-        activeReleaseId: owner.selected?.active.releaseId ?? null,
-        managed: false,
-        entries: [],
-        routeCount: 0,
-        snapshotId: owner.selected?.snapshotId ?? null,
-        sourceRevision: null,
-      };
-    }
-    const { active, snapshot, snapshotId } = owner.selected;
+    const { active, snapshot, snapshotId } = owner;
     return yield* loadStoredTryoutCatalog(ctx, locale, {
       activeManifestHash: active.manifestHash,
       activeReleaseId: active.releaseId,
@@ -184,7 +173,6 @@ const loadStoredTryoutCatalog = Effect.fn(
     activeManifestHash: selection.activeManifestHash,
     activeReleaseId: selection.activeReleaseId,
     entries,
-    managed: true,
     routeCount: actualRouteCount,
     snapshotId: selection.snapshotId,
     sourceRevision: selection.sourceRevision,
@@ -198,7 +186,6 @@ export const readTryoutCatalog = Effect.fn("contentRelease.readTryoutCatalog")(
     return {
       activeManifestHash: catalog.activeManifestHash,
       activeReleaseId: catalog.activeReleaseId,
-      managed: catalog.managed,
       rowJson: catalog.entries.map(({ rowJson }) => rowJson),
       snapshotId: catalog.snapshotId,
       sourceRevision: catalog.sourceRevision,

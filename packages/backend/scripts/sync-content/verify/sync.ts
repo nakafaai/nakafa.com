@@ -13,26 +13,23 @@ import type {
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/convex/counts";
 import { getDataIntegrity } from "@repo/backend/scripts/sync-content/convex/inspection";
-import { readContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
 import { verifyGraphIdentity } from "@repo/backend/scripts/sync-content/verify/graph";
 import { verifyQuranRuntime } from "@repo/backend/scripts/sync-content/verify/quran";
 import { logVerifySuccess } from "@repo/backend/scripts/sync-content/verify/summary";
-import { getTryoutFileCounts } from "@repo/backend/scripts/sync-content/verify/tryouts";
 import { readQuranMetadata } from "@repo/contents/_lib/quran";
 import {
   listLessonMaterialSources,
   listLessonRows,
 } from "@repo/contents/_types/material/registry";
 import { locales } from "@repo/utilities/locales";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
-/** Logs a bounded integrity sample and reports whether the verifier found issues. */
 const logIntegrityList = (
   title: string,
   items: readonly string[],
   successMessage: string
-): boolean => {
+) => {
   if (items.length === 0) {
     logSuccess(successMessage);
     return false;
@@ -48,7 +45,6 @@ const logIntegrityList = (
   return true;
 };
 
-/** Logs one equality check and returns whether it matched. */
 function logCountMatch({
   actual,
   expected,
@@ -67,7 +63,6 @@ function logCountMatch({
   return false;
 }
 
-/** Builds the Quran count targets from the content authoring source. */
 function getExpectedQuranCounts() {
   return readQuranMetadata().pipe(
     Effect.map((surahs) => ({
@@ -77,7 +72,6 @@ function getExpectedQuranCounts() {
   );
 }
 
-/** Builds curriculum count targets from the source-owned material registry. */
 function getExpectedCurriculumCounts() {
   const materialTopics = listLessonRows();
 
@@ -90,55 +84,20 @@ function getExpectedCurriculumCounts() {
   };
 }
 
-/** Loads filesystem tryout evidence only while the filesystem owns the scope. */
-const readTryoutVerificationSource = Effect.fn(
-  "sync.readTryoutVerificationSource"
-)(function* () {
-  const [
-    { TRYOUT_SOURCES: tryoutSources },
-    questionFiles,
-    answerFiles,
-    choicesFiles,
-  ] = yield* Effect.all([
-    Effect.promise(() => import("@repo/contents/_types/tryout/source")),
-    globFiles("question-bank/tryout/**/question.*.mdx"),
-    globFiles("question-bank/tryout/**/answer.*.mdx"),
-    globFiles("question-bank/tryout/**/choices.ts"),
-  ]);
-
-  return {
-    answerFiles,
-    choicesFiles,
-    fileCounts: getTryoutFileCounts({
-      answerFiles,
-      choicesFiles,
-      questionFiles,
-      tryoutSources,
-    }),
-    questionFiles,
-    sourceCount: tryoutSources.length,
-  };
-});
-
-/** Verifies filesystem content counts against Convex read models. */
+/** Verifies Nakafa-owned filesystem content against its Convex read models. */
 export const verify = Effect.fn("sync.verify")(function* (
   config: ConvexConfig,
   options: SyncOptions = {}
 ) {
   log("=== VERIFY CONTENT ===\n");
-  const ownership = yield* readContentSyncOwnership(config);
 
   const [articleFiles, lessonFiles, refFiles] = yield* Effect.all([
     globFiles("articles/**/*.mdx"),
     globFiles("material/lesson/**/*.mdx"),
     globFiles("articles/**/ref.ts"),
   ]);
-
   const lessonSourceCount = listLessonMaterialSources().length;
   const expectedCurriculumCounts = getExpectedCurriculumCounts();
-  const tryoutSource = ownership.tryoutsManaged
-    ? Option.none()
-    : Option.some(yield* readTryoutVerificationSource());
 
   log("=== FILESYSTEM ===\n");
   log("Articles:");
@@ -152,7 +111,7 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`  Reference files:     ${refFiles.length} (ref.ts)`);
 
   log("\nCurriculum:");
-  log(`  Material sources:        ${lessonSourceCount}`);
+  log(`  Material sources:    ${lessonSourceCount}`);
   log(`  Total MDX files:     ${lessonFiles.length}`);
   for (const locale of locales) {
     const count = lessonFiles.filter((file) =>
@@ -160,36 +119,6 @@ export const verify = Effect.fn("sync.verify")(function* (
     ).length;
     log(`    - ${locale}: ${count}`);
   }
-
-  log("\nTry-Out Question Bank:");
-  if (Option.isNone(tryoutSource)) {
-    log("  Signed Aksara ownership active");
-  } else {
-    const source = tryoutSource.value;
-    log(`  Try-out sources:     ${source.sourceCount}`);
-    log(
-      `  Question files:      ${source.questionFiles.length} (question.*.mdx)`
-    );
-    for (const locale of locales) {
-      const count = source.questionFiles.filter((file) =>
-        file.endsWith(`.${locale}.mdx`)
-      ).length;
-      log(`    - ${locale}: ${count}`);
-    }
-    log(`  Answer files:        ${source.answerFiles.length} (answer.*.mdx)`);
-    log(`  Choices files:       ${source.choicesFiles.length} (choices.ts)`);
-    log(
-      `  Active question files: ${source.fileCounts.activeQuestionFiles}/${source.fileCounts.localizedQuestionFiles}`
-    );
-    log(
-      `  Active answer files:   ${source.fileCounts.activeAnswerFiles}/${source.fileCounts.localizedQuestionFiles}`
-    );
-    log(
-      `  Active choices files:  ${source.fileCounts.activeChoicesFiles}/${source.fileCounts.questionSourceDirectories}`
-    );
-  }
-
-  log("\n=== DATABASE ===\n");
 
   const countsResult = yield* Effect.either(getContentCounts(config));
   if (countsResult._tag === "Left") {
@@ -200,49 +129,22 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   const counts = countsResult.right;
   const expectedQuranCounts = yield* getExpectedQuranCounts();
-
-  log("Content tables:");
+  log("\n=== DATABASE ===\n");
   log(`  articleContents:     ${counts.articles}`);
-  log(`  curriculumTopics:       ${counts.curriculumTopics}`);
-  log(`  curriculumLessons:     ${counts.curriculumLessons}`);
-  log(`  questionSets:        ${counts.questionSets}`);
-  log(`  questions:           ${counts.questions}`);
-  log(`  questionChoices:     ${counts.questionChoices}`);
+  log(`  curriculumTopics:    ${counts.curriculumTopics}`);
+  log(`  curriculumLessons:   ${counts.curriculumLessons}`);
   log(`  contentSearch:       ${counts.contentSearch}`);
   log(`  contentRoutes:       ${counts.contentRoutes}`);
   log(`  publicRoutes:        ${counts.publicRoutes}`);
-  log(`  publicRouteState:    ${counts.publicRouteSyncState}`);
-  log(`  learningPrograms:    ${counts.learningPrograms}`);
-  log(`  learningProgramSrcs: ${counts.learningProgramSources}`);
-  log(`  learningProgramCov:  ${counts.learningProgramCoverage}`);
   log(`  quranSurahs:         ${counts.quranSurahs}`);
   log(`  quranVerses:         ${counts.quranVerses}`);
-  log(`  tryoutCountries:     ${counts.tryoutCountries}`);
-  log(`  tryoutExams:         ${counts.tryoutExams}`);
-  log(`  tryoutTracks:        ${counts.tryoutTracks}`);
-  log(`  tryoutSets:          ${counts.tryoutSets}`);
-  log(`  tryoutSections:      ${counts.tryoutSections}`);
-
-  log("\nRelated tables:");
-  log(`  authors:             ${counts.authors}`);
-  log(`  contentAuthors:      ${counts.contentAuthors} (content-author links)`);
-  log(`  articleReferences:   ${counts.articleReferences}`);
 
   log("\n=== VERIFICATION ===\n");
-
-  let allMatch = true;
-
-  if (counts.articles === articleFiles.length) {
-    logSuccess(
-      `Articles: ${counts.articles} in DB = ${articleFiles.length} files`
-    );
-  } else {
-    logError(
-      `Articles: ${counts.articles} in DB != ${articleFiles.length} files`
-    );
-    allMatch = false;
-  }
-
+  let allMatch = logCountMatch({
+    actual: counts.articles,
+    expected: articleFiles.length,
+    label: "Articles",
+  });
   allMatch =
     logCountMatch({
       actual: counts.curriculumTopics,
@@ -255,41 +157,6 @@ export const verify = Effect.fn("sync.verify")(function* (
       expected: expectedCurriculumCounts.curriculumLessons,
       label: "Curriculum Lessons",
     }) && allMatch;
-
-  if (Option.isSome(tryoutSource)) {
-    const tryoutFileCounts = tryoutSource.value.fileCounts;
-    allMatch =
-      logCountMatch({
-        actual: tryoutFileCounts.activeQuestionFiles,
-        expected: tryoutFileCounts.localizedQuestionFiles,
-        label: "Active Question Files",
-      }) && allMatch;
-    allMatch =
-      logCountMatch({
-        actual: tryoutFileCounts.activeAnswerFiles,
-        expected: tryoutFileCounts.localizedQuestionFiles,
-        label: "Active Answer Files",
-      }) && allMatch;
-    allMatch =
-      logCountMatch({
-        actual: tryoutFileCounts.activeChoicesFiles,
-        expected: tryoutFileCounts.questionSourceDirectories,
-        label: "Active Choices Files",
-      }) && allMatch;
-    allMatch =
-      logCountMatch({
-        actual: counts.questions,
-        expected: tryoutFileCounts.localizedQuestionFiles,
-        label: "Questions",
-      }) && allMatch;
-    allMatch =
-      logCountMatch({
-        actual: counts.questionSets,
-        expected: tryoutFileCounts.localizedQuestionSets,
-        label: "Question Sets",
-      }) && allMatch;
-  }
-
   allMatch =
     logCountMatch({
       actual: counts.quranSurahs,
@@ -304,29 +171,9 @@ export const verify = Effect.fn("sync.verify")(function* (
     }) && allMatch;
 
   log(
-    `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files x ${locales.length} locales)`
+    `References: ${counts.articleReferences} in DB from ${refFiles.length} ref.ts files across ${locales.length} locales`
   );
-
-  if (Option.isSome(tryoutSource)) {
-    const avgChoicesPerQuestion =
-      counts.questions > 0 ? counts.questionChoices / counts.questions : 0;
-    log(
-      `Choices: ${counts.questionChoices} in DB (~${avgChoicesPerQuestion.toFixed(1)} per question)`
-    );
-  }
-  log(`Content-Author links: ${counts.contentAuthors} in DB`);
-
-  if (
-    Option.isSome(tryoutSource) &&
-    tryoutSource.value.fileCounts.activeAnswerFiles !==
-      tryoutSource.value.fileCounts.activeQuestionFiles
-  ) {
-    const tryoutFileCounts = tryoutSource.value.fileCounts;
-    logError(
-      `Active answer files (${tryoutFileCounts.activeAnswerFiles}) != active question files (${tryoutFileCounts.activeQuestionFiles})`
-    );
-    allMatch = false;
-  }
+  log(`Content-author links: ${counts.contentAuthors} in DB`);
 
   log("\n=== DATA INTEGRITY ===\n");
   const integrityResult = yield* Effect.either(getDataIntegrity(config));
@@ -337,42 +184,12 @@ export const verify = Effect.fn("sync.verify")(function* (
   }
 
   const integrity = integrityResult.right;
-
-  if (Option.isSome(tryoutSource)) {
-    allMatch =
-      !logIntegrityList(
-        "orphan question-choice owner IDs",
-        integrity.orphanQuestionChoiceIds,
-        "No question choices reference deleted questions"
-      ) && allMatch;
-    allMatch =
-      !logIntegrityList(
-        "questions without choices",
-        integrity.questionsWithoutChoices,
-        `All ${integrity.totalQuestions} questions have choices`
-      ) && allMatch;
-    allMatch =
-      !logIntegrityList(
-        "questions without authors",
-        integrity.questionsWithoutAuthors,
-        `All ${integrity.totalQuestions} questions have authors`
-      ) && allMatch;
-  }
   allMatch =
     !logIntegrityList(
       "sections without topics",
       integrity.sectionsWithoutTopics,
       `All ${integrity.totalSections} sections have topics`
     ) && allMatch;
-  if (Option.isSome(tryoutSource)) {
-    allMatch =
-      !logIntegrityList(
-        "active tryouts without published scales",
-        integrity.activeTryoutsWithoutScale,
-        `All ${counts.tryoutSets} active tryout sets have published scales`
-      ) && allMatch;
-  }
-
   const articlesWithRefs =
     integrity.totalArticles - integrity.articlesWithoutReferences.length;
   log(
@@ -380,15 +197,12 @@ export const verify = Effect.fn("sync.verify")(function* (
   );
 
   log("\n=== GRAPH IDENTITY ===\n");
-  const graphIdentityResult = yield* Effect.either(
-    verifyGraphIdentity(config, options, ownership.tryoutsManaged)
-  );
+  const graphIdentityResult = yield* Effect.either(verifyGraphIdentity(config));
   if (graphIdentityResult._tag === "Left") {
     return yield* new ScriptFailureError({
       message: `Failed to verify graph identity: ${getUnknownMessage(graphIdentityResult.left)}`,
     });
   }
-
   allMatch = graphIdentityResult.right && allMatch;
 
   log("\n=== QURAN RUNTIME ===\n");
@@ -409,11 +223,6 @@ export const verify = Effect.fn("sync.verify")(function* (
   }
 
   logError("Content mismatch detected!");
-  if (options.prod) {
-    log("\nRun 'pnpm --filter @repo/backend sync:prod' to fix");
-  } else {
-    log("\nRun 'pnpm --filter @repo/backend sync' to fix");
-  }
   return yield* new ScriptFailureError({
     message: "Content verification failed.",
   });

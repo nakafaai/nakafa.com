@@ -14,10 +14,9 @@ import { Effect, Schema } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type ProgressIdentity = Pick<
-  Doc<"tryoutSetProgress">,
-  "countryKey" | "examKey" | "locale" | "setKey" | "trackKey"
-> &
-  Pick<TryoutAttempt, "setIdentity" | "tryoutSetId">;
+  TryoutAttempt,
+  "countryKey" | "examKey" | "locale" | "setIdentity" | "setKey" | "trackKey"
+>;
 
 /** Expected failure while persisting compact try-out progress. */
 export class TryoutProgressError
@@ -57,14 +56,13 @@ export const writeTryoutSetProgress = Effect.fn(
   }
 ) {
   yield* validateProgressScore(args.status, args.publishedScore);
-  const identity = yield* resolveProgressIdentity(ctx, args.attempt);
+  const identity = readProgressIdentity(args.attempt);
   const current = yield* loadProgress(ctx, args.attempt, identity);
   if (current) {
     yield* ensureTryoutProgressWithinReadBudget(current);
   }
 
   if (current && current.attemptNumber > args.attempt.attemptNumber) {
-    yield* persistProgressIdentity(ctx, current, identity);
     return current._id;
   }
 
@@ -75,12 +73,11 @@ export const writeTryoutSetProgress = Effect.fn(
     latestAttemptId: args.attempt._id,
     locale: identity.locale,
     publishedScore: args.publishedScore,
-    ...(identity.setIdentity ? { setIdentity: identity.setIdentity } : {}),
+    setIdentity: identity.setIdentity,
     setKey: identity.setKey,
     status: args.status,
     statusRank: getTryoutStatusRank(args.status),
     trackKey: identity.trackKey,
-    ...(identity.tryoutSetId ? { tryoutSetId: identity.tryoutSetId } : {}),
     updatedAt: args.updatedAt,
     userId: args.attempt.userId,
   };
@@ -97,54 +94,17 @@ export const writeTryoutSetProgress = Effect.fn(
   );
 });
 
-/** Resolves progress identity from the immutable attempt before any live source. */
-const resolveProgressIdentity = Effect.fn(
-  "tryouts.progress.resolveProgressIdentity"
-)(function* (ctx: Pick<MutationCtx, "db">, attempt: TryoutAttempt) {
-  if (
-    attempt.countryKey &&
-    attempt.examKey &&
-    attempt.locale &&
-    attempt.setKey &&
-    attempt.trackKey
-  ) {
-    return {
-      countryKey: attempt.countryKey,
-      examKey: attempt.examKey,
-      locale: attempt.locale,
-      setIdentity: attempt.setIdentity,
-      setKey: attempt.setKey,
-      trackKey: attempt.trackKey,
-      tryoutSetId: attempt.tryoutSetId,
-    };
-  }
-
-  const tryoutSetId = attempt.tryoutSetId;
-  if (!tryoutSetId) {
-    return yield* new TryoutProgressError({
-      code: "TRYOUT_PROGRESS_IDENTITY_REQUIRED",
-      message: "Try-out progress has no stable set identity.",
-    });
-  }
-
-  const set = yield* tryProgressPromise(() => ctx.db.get(tryoutSetId));
-  if (!set) {
-    return yield* new TryoutProgressError({
-      code: "TRYOUT_SET_NOT_FOUND",
-      message: "Try-out set not found.",
-    });
-  }
-
+/** Reads progress identity from the immutable signed attempt snapshot. */
+function readProgressIdentity(attempt: TryoutAttempt): ProgressIdentity {
   return {
-    countryKey: set.countryKey,
-    examKey: set.examKey,
-    locale: set.locale,
+    countryKey: attempt.countryKey,
+    examKey: attempt.examKey,
+    locale: attempt.locale,
     setIdentity: attempt.setIdentity,
-    setKey: set.setKey,
-    trackKey: set.trackKey,
-    tryoutSetId: set._id,
+    setKey: attempt.setKey,
+    trackKey: attempt.trackKey,
   };
-});
+}
 
 /** Loads the one compact progress row owned by the attempt identity. */
 const loadProgress = Effect.fn("tryouts.progress.loadProgress")(function* (
@@ -152,74 +112,16 @@ const loadProgress = Effect.fn("tryouts.progress.loadProgress")(function* (
   attempt: TryoutAttempt,
   identity: ProgressIdentity
 ) {
-  let signed: Doc<"tryoutSetProgress"> | null = null;
-  if (identity.setIdentity) {
-    signed = yield* tryProgressPromise(() =>
-      ctx.db
-        .query("tryoutSetProgress")
-        .withIndex("by_userId_and_setIdentity", (query) =>
-          query
-            .eq("userId", attempt.userId)
-            .eq("setIdentity", identity.setIdentity)
-        )
-        .unique()
-    );
-  }
-
-  let filesystem: Doc<"tryoutSetProgress"> | null = null;
-  if (identity.tryoutSetId) {
-    filesystem = yield* tryProgressPromise(() =>
-      ctx.db
-        .query("tryoutSetProgress")
-        .withIndex("by_userId_and_tryoutSetId", (query) =>
-          query
-            .eq("userId", attempt.userId)
-            .eq("tryoutSetId", identity.tryoutSetId)
-        )
-        .unique()
-    );
-  }
-
-  if (signed && filesystem && signed._id !== filesystem._id) {
-    return yield* new TryoutProgressError({
-      code: "TRYOUT_PROGRESS_CONFLICT",
-      message: "Try-out progress has conflicting set identities.",
-    });
-  }
-
-  if (!(identity.setIdentity || identity.tryoutSetId)) {
-    return yield* new TryoutProgressError({
-      code: "TRYOUT_PROGRESS_IDENTITY_REQUIRED",
-      message: "Try-out progress has no stable set identity.",
-    });
-  }
-
-  return signed ?? filesystem;
-});
-
-/** Backfills missing identity keys without replacing newer progress state. */
-const persistProgressIdentity = Effect.fn(
-  "tryouts.progress.persistProgressIdentity"
-)(function* (
-  ctx: Pick<MutationCtx, "db">,
-  current: Doc<"tryoutSetProgress">,
-  identity: ProgressIdentity
-) {
-  const setIdentity = identity.setIdentity;
-  const tryoutSetId = identity.tryoutSetId;
-  const needsSignedIdentity = setIdentity && !current.setIdentity;
-  const needsFilesystemIdentity = tryoutSetId && !current.tryoutSetId;
-
-  if (!(needsSignedIdentity || needsFilesystemIdentity)) {
-    return;
-  }
-
-  const patch = {
-    ...(needsSignedIdentity ? { setIdentity } : {}),
-    ...(needsFilesystemIdentity ? { tryoutSetId } : {}),
-  };
-  yield* ensureTryoutProgressWithinReadBudget({ ...current, ...patch });
-  yield* tryProgressPromise(() => ctx.db.patch(current._id, patch));
+  return yield* tryProgressPromise(() =>
+    ctx.db
+      .query("tryoutSetProgress")
+      .withIndex("by_userId_and_setIdentity", (query) =>
+        query
+          .eq("userId", attempt.userId)
+          .eq("setIdentity", identity.setIdentity)
+      )
+      .unique()
+  );
 });
 
 /** Enforces that only terminal progress can expose a persisted score. */

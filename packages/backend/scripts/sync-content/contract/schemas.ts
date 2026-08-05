@@ -31,21 +31,12 @@ export const BATCH_SIZES = {
   authors: CONTENT_SYNC_BATCH_LIMITS.authors,
   curriculumTopics: CONTENT_SYNC_BATCH_LIMITS.curriculumTopics,
   curriculumLessons: CONTENT_SYNC_BATCH_LIMITS.curriculumLessons,
-  questionSets: CONTENT_SYNC_BATCH_LIMITS.questionSets,
-  questions: CONTENT_SYNC_BATCH_LIMITS.questions,
   quranSurahs: CONTENT_SYNC_BATCH_LIMITS.quranSurahs,
   quranVerses: CONTENT_SYNC_BATCH_LIMITS.quranVerses,
   quranSearchDocuments: CONTENT_SYNC_BATCH_LIMITS.quranSearchDocuments,
   staleArticles: CONTENT_SYNC_BATCH_LIMITS.staleArticles,
   staleCurriculumTopics: CONTENT_SYNC_BATCH_LIMITS.staleCurriculumTopics,
   staleCurriculumLessons: CONTENT_SYNC_BATCH_LIMITS.staleCurriculumLessons,
-  staleQuestionSets: CONTENT_SYNC_BATCH_LIMITS.staleQuestionSets,
-  staleQuestions: CONTENT_SYNC_BATCH_LIMITS.staleQuestions,
-  staleTryoutCountries: CONTENT_SYNC_BATCH_LIMITS.staleTryoutCountries,
-  staleTryoutExams: CONTENT_SYNC_BATCH_LIMITS.staleTryoutExams,
-  staleTryoutSections: CONTENT_SYNC_BATCH_LIMITS.staleTryoutSections,
-  staleTryoutSets: CONTENT_SYNC_BATCH_LIMITS.staleTryoutSets,
-  staleTryoutTracks: CONTENT_SYNC_BATCH_LIMITS.staleTryoutTracks,
   unusedAuthors: CONTENT_SYNC_BATCH_LIMITS.unusedAuthors,
 } as const;
 
@@ -197,8 +188,6 @@ export const ContentSearchResultSchema = Schema.mutable(
     offset: Schema.Number,
   })
 );
-
-export const TryoutSyncResultSchema = SyncSummarySchema;
 
 export const QuestionSetSyncResultSchema = SyncSummarySchema;
 

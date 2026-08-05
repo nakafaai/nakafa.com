@@ -65,9 +65,7 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
       yield* tryStartPromise(() =>
         Promise.resolve(
           requireInternalEntrySection(
-            source.kind === "filesystem"
-              ? source.sections
-              : source.snapshot.sections.map(({ section }) => section.row),
+            source.snapshot.sections.map(({ section }) => section.row),
             entrySectionKey
           )
         )
@@ -224,21 +222,13 @@ const requireAttemptAccess = Effect.fn("tryouts.start.requireAttemptAccess")(
   }
 );
 
-/** Resolves both attempt identities retained during the additive migration. */
+/** Resolves the signed set identity that owns one user's attempts. */
 function resolveAttemptOwner(
   input: StartTryoutAttemptInput,
   source: TryoutStartSource
 ) {
-  if (source.kind === "filesystem") {
-    return {
-      tryoutSetId: source.set._id,
-      userId: input.userId,
-    } satisfies AttemptOwnerIdentity;
-  }
-
   return {
     setIdentity: source.snapshot.setIdentity,
-    tryoutSetId: source.retainedTryoutSetId,
     userId: input.userId,
   } satisfies AttemptOwnerIdentity;
 }

@@ -120,16 +120,7 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Tryout Placements:     ${counts.tryoutAttemptPlacements}`);
   log(`  Tryout Responses:      ${counts.tryoutResponses}`);
   log(`  Tryout Scores:         ${counts.tryoutScores}`);
-  log(`  Tryout Leaderboards:   ${counts.tryoutLeaderboardScopes}`);
-  log(`  Tryout Leaderboard Rows:${counts.tryoutLeaderboardEntries}`);
-  log(`  Tryout Leaderboard Stats:${counts.tryoutLeaderboardUserStats}`);
-  log(`  IRT Calibration Queue: ${counts.irtCalibrationQueue}`);
-  log(`  IRT Calibration Rows:  ${counts.irtCalibrationAttempts}`);
-  log(`  IRT Cache Stats:       ${counts.irtCalibrationCacheStats}`);
   log(`  IRT Calibration Runs:  ${counts.irtCalibrationRuns}`);
-  log(`  IRT Scale Quality:     ${counts.irtScaleQualityChecks}`);
-  log(`  IRT Scale Quality Q:   ${counts.irtScaleQualityRefreshQueue}`);
-  log(`  IRT Scale Queue:       ${counts.irtScalePublicationQueue}`);
   log(`  IRT Scale Versions:    ${counts.irtScaleVersions}`);
   log(`  IRT Scale Items:       ${counts.irtScaleItems}`);
   log(`  Curriculum Lessons:    ${counts.curriculumLessons}`);
@@ -162,16 +153,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.tryoutAttemptPlacements +
     counts.tryoutResponses +
     counts.tryoutScores +
-    counts.tryoutLeaderboardScopes +
-    counts.tryoutLeaderboardEntries +
-    counts.tryoutLeaderboardUserStats +
-    counts.irtCalibrationQueue +
-    counts.irtCalibrationAttempts +
-    counts.irtCalibrationCacheStats +
     counts.irtCalibrationRuns +
-    counts.irtScaleQualityChecks +
-    counts.irtScaleQualityRefreshQueue +
-    counts.irtScalePublicationQueue +
     counts.irtScaleVersions +
     counts.irtScaleItems;
   const totalDerived =

@@ -1,8 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import {
-  collectFilesystemArticleCurriculumSlugs,
-  collectFilesystemTryoutSlugs,
-} from "@repo/backend/scripts/sync-content/cleanup/source";
+import { collectFilesystemArticleCurriculumSlugs } from "@repo/backend/scripts/sync-content/cleanup/source";
 import {
   log,
   logStaleItems,
@@ -12,23 +9,20 @@ import { DeleteResultSchema } from "@repo/backend/scripts/sync-content/contract/
 import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
-  FilesystemTryoutSlugs,
   StaleItem,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
 import {
   getStaleArticleCurriculumContent,
-  getStaleTryoutContent,
   getUnusedAuthors,
 } from "@repo/backend/scripts/sync-content/convex/inspection";
-import { readContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import type {
   DefaultFunctionArgs,
   FunctionArgs,
   FunctionReference,
 } from "convex/server";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
 type DeleteStaleMutation = FunctionReference<
   "mutation",
@@ -36,20 +30,6 @@ type DeleteStaleMutation = FunctionReference<
   DefaultFunctionArgs,
   { deleted: number }
 >;
-type StaleTryoutContent = Effect.Effect.Success<
-  ReturnType<typeof getStaleTryoutContent>
->;
-
-/** Creates an empty tryout cleanup result when Aksara owns the scope. */
-const emptyStaleTryoutContent = (): StaleTryoutContent => ({
-  staleQuestions: [],
-  staleQuestionSets: [],
-  staleTryoutCountries: [],
-  staleTryoutExams: [],
-  staleTryoutSections: [],
-  staleTryoutSets: [],
-  staleTryoutTracks: [],
-});
 
 type DeleteStaleArticleArgs = FunctionArgs<
   typeof internal.contentSync.mutations.articles.deleteStaleArticles
@@ -60,29 +40,7 @@ type DeleteStaleCurriculumTopicArgs = FunctionArgs<
 type DeleteStaleCurriculumLessonArgs = FunctionArgs<
   typeof internal.contentSync.mutations.curriculum.deleteStaleCurriculumLessons
 >;
-type DeleteStaleQuestionArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.tryouts.deleteStaleQuestions
->;
-type DeleteStaleQuestionSetArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.tryouts.deleteStaleQuestionSets
->;
-type DeleteStaleTryoutCountryArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutCountries
->;
-type DeleteStaleTryoutExamArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutExams
->;
-type DeleteStaleTryoutTrackArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutTracks
->;
-type DeleteStaleTryoutSetArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutSets
->;
-type DeleteStaleTryoutSectionArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutSections
->;
 
-/** Builds mutation args for deleting stale article rows. */
 const buildDeleteStaleArticleArgs = (
   items: readonly (StaleItem & {
     id: DeleteStaleArticleArgs["articleIds"][number];
@@ -91,7 +49,6 @@ const buildDeleteStaleArticleArgs = (
   articleIds: items.map((item) => item.id),
 });
 
-/** Builds mutation args for deleting stale curriculum topic rows. */
 const buildDeleteStaleCurriculumTopicArgs = (
   items: readonly (StaleItem & {
     id: DeleteStaleCurriculumTopicArgs["topicIds"][number];
@@ -100,7 +57,6 @@ const buildDeleteStaleCurriculumTopicArgs = (
   topicIds: items.map((item) => item.id),
 });
 
-/** Builds mutation args for deleting stale curriculum lesson rows. */
 const buildDeleteStaleCurriculumLessonArgs = (
   items: readonly (StaleItem & {
     id: DeleteStaleCurriculumLessonArgs["sectionIds"][number];
@@ -109,70 +65,6 @@ const buildDeleteStaleCurriculumLessonArgs = (
   sectionIds: items.map((item) => item.id),
 });
 
-/** Builds mutation args for deleting stale question rows. */
-const buildDeleteStaleQuestionArgs = (
-  items: readonly (StaleItem & {
-    id: DeleteStaleQuestionArgs["questionIds"][number];
-  })[]
-): DeleteStaleQuestionArgs => ({
-  questionIds: items.map((item) => item.id),
-});
-
-/** Builds mutation args for deleting stale question-set rows. */
-const buildDeleteStaleQuestionSetArgs = (
-  items: readonly (StaleItem & {
-    id: DeleteStaleQuestionSetArgs["questionSetIds"][number];
-  })[]
-): DeleteStaleQuestionSetArgs => ({
-  questionSetIds: items.map((item) => item.id),
-});
-
-/** Builds mutation args for deleting stale try-out country rows. */
-const buildDeleteStaleTryoutCountryArgs = (
-  items: readonly (StaleItem & {
-    id: DeleteStaleTryoutCountryArgs["countryIds"][number];
-  })[]
-): DeleteStaleTryoutCountryArgs => ({
-  countryIds: items.map((item) => item.id),
-});
-
-/** Builds mutation args for deleting stale try-out exam rows. */
-const buildDeleteStaleTryoutExamArgs = (
-  items: readonly (StaleItem & {
-    id: DeleteStaleTryoutExamArgs["examIds"][number];
-  })[]
-): DeleteStaleTryoutExamArgs => ({
-  examIds: items.map((item) => item.id),
-});
-
-/** Builds mutation args for deleting stale try-out track rows. */
-const buildDeleteStaleTryoutTrackArgs = (
-  items: readonly (StaleItem & {
-    id: DeleteStaleTryoutTrackArgs["trackIds"][number];
-  })[]
-): DeleteStaleTryoutTrackArgs => ({
-  trackIds: items.map((item) => item.id),
-});
-
-/** Builds mutation args for deleting stale try-out set rows. */
-const buildDeleteStaleTryoutSetArgs = (
-  items: readonly (StaleItem & {
-    id: DeleteStaleTryoutSetArgs["setIds"][number];
-  })[]
-): DeleteStaleTryoutSetArgs => ({
-  setIds: items.map((item) => item.id),
-});
-
-/** Builds mutation args for deleting stale try-out section rows. */
-const buildDeleteStaleTryoutSectionArgs = (
-  items: readonly (StaleItem & {
-    id: DeleteStaleTryoutSectionArgs["sectionIds"][number];
-  })[]
-): DeleteStaleTryoutSectionArgs => ({
-  sectionIds: items.map((item) => item.id),
-});
-
-/** Deletes stale rows through one generated bounded delete mutation. */
 const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* <
   Item extends StaleItem,
   TFunction extends DeleteStaleMutation,
@@ -182,7 +74,7 @@ const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* <
   buildArgs: (items: readonly Item[]) => FunctionArgs<TFunction>,
   items: readonly Item[],
   successLabel: string,
-  batchSize = items.length
+  batchSize: number
 ) {
   if (items.length === 0) {
     return 0;
@@ -204,7 +96,6 @@ const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* <
   return deleted;
 });
 
-/** Deletes authors that no longer have content links when clean is forced. */
 const cleanUnusedAuthors = Effect.fn("sync.cleanUnusedAuthors")(function* (
   config: ConvexConfig,
   options: SyncOptions
@@ -227,39 +118,33 @@ const cleanUnusedAuthors = Effect.fn("sync.cleanUnusedAuthors")(function* (
     log(`  ... and ${authorsResult.unusedAuthors.length - 10} more`);
   }
 
-  if (options.force) {
-    const authorIds = authorsResult.unusedAuthors.map((author) => author.id);
-    let deleted = 0;
-
-    for (
-      let index = 0;
-      index < authorIds.length;
-      index += BATCH_SIZES.unusedAuthors
-    ) {
-      const batch = authorIds.slice(index, index + BATCH_SIZES.unusedAuthors);
-      const result = yield* callConvexMutation(
-        config,
-        internal.contentSync.mutations.authors.deleteUnusedAuthors,
-        { authorIds: batch },
-        DeleteResultSchema
-      );
-
-      deleted += result.deleted;
-    }
-
-    logSuccess(`Deleted ${deleted} unused authors`);
+  if (!options.force) {
+    log("\nTo delete unused authors, rerun clean with --force --authors.");
     return;
   }
 
-  log("\nTo delete unused authors, run:");
-  if (options.prod) {
-    log("  pnpm --filter @repo/backend sync:prod:clean --force --authors");
-  } else {
-    log("  pnpm --filter @repo/backend sync:clean --force --authors");
+  const authorIds = authorsResult.unusedAuthors.map((author) => author.id);
+  let deleted = 0;
+
+  for (
+    let index = 0;
+    index < authorIds.length;
+    index += BATCH_SIZES.unusedAuthors
+  ) {
+    const batch = authorIds.slice(index, index + BATCH_SIZES.unusedAuthors);
+    const result = yield* callConvexMutation(
+      config,
+      internal.contentSync.mutations.authors.deleteUnusedAuthors,
+      { authorIds: batch },
+      DeleteResultSchema
+    );
+    deleted += result.deleted;
   }
+
+  logSuccess(`Deleted ${deleted} unused authors`);
 });
 
-/** Removes database rows whose source content no longer exists. */
+/** Removes Nakafa-owned database rows whose source content no longer exists. */
 export const clean = Effect.fn("sync.clean")(function* (
   config: ConvexConfig,
   options: SyncOptions
@@ -271,88 +156,30 @@ export const clean = Effect.fn("sync.clean")(function* (
     log("DRY RUN MODE (use --force to actually delete)\n");
   }
 
-  const ownership = yield* readContentSyncOwnership(config);
   log("Scanning filesystem...");
-  const articleCurriculumSlugs =
-    yield* collectFilesystemArticleCurriculumSlugs();
-  log(`  Articles on disk: ${articleCurriculumSlugs.articleSlugs.length}`);
-  log(
-    `  Curriculum topics on disk: ${articleCurriculumSlugs.curriculumTopicSlugs.length}`
-  );
-  log(
-    `  Curriculum lessons on disk: ${articleCurriculumSlugs.curriculumLessonSlugs.length}`
-  );
-
-  const tryoutSlugs = ownership.tryoutsManaged
-    ? Option.none<FilesystemTryoutSlugs>()
-    : Option.some(yield* collectFilesystemTryoutSlugs());
-
-  if (Option.isNone(tryoutSlugs)) {
-    log("  Tryouts: signed Aksara ownership active");
-  } else {
-    log(
-      `  Question sets on disk: ${tryoutSlugs.value.questionSetSourcePaths.length}`
-    );
-    log(`  Questions on disk: ${tryoutSlugs.value.questionSourcePaths.length}`);
-    log(
-      `  Try-out countries on disk: ${tryoutSlugs.value.tryoutCountryKeys.length}`
-    );
-    log(`  Try-out exams on disk: ${tryoutSlugs.value.tryoutExamKeys.length}`);
-    log(
-      `  Try-out tracks on disk: ${tryoutSlugs.value.tryoutTrackKeys.length}`
-    );
-    log(`  Try-out sets on disk: ${tryoutSlugs.value.tryoutSetKeys.length}`);
-    log(
-      `  Try-out sections on disk: ${tryoutSlugs.value.tryoutSectionKeys.length}`
-    );
-  }
+  const source = yield* collectFilesystemArticleCurriculumSlugs();
+  log(`  Articles on disk: ${source.articleSlugs.length}`);
+  log(`  Curriculum topics on disk: ${source.curriculumTopicSlugs.length}`);
+  log(`  Curriculum lessons on disk: ${source.curriculumLessonSlugs.length}`);
 
   log("\nQuerying database for stale content...");
-  const staleTryouts = Option.isSome(tryoutSlugs)
-    ? yield* getStaleTryoutContent(config, tryoutSlugs.value)
-    : emptyStaleTryoutContent();
-  const stale = {
-    ...(yield* getStaleArticleCurriculumContent(
-      config,
-      articleCurriculumSlugs
-    )),
-    ...staleTryouts,
-  };
-
+  const stale = yield* getStaleArticleCurriculumContent(config, source);
   const totalStale =
     stale.staleArticles.length +
     stale.staleCurriculumTopics.length +
-    stale.staleCurriculumLessons.length +
-    stale.staleQuestionSets.length +
-    stale.staleQuestions.length +
-    stale.staleTryoutCountries.length +
-    stale.staleTryoutExams.length +
-    stale.staleTryoutTracks.length +
-    stale.staleTryoutSets.length +
-    stale.staleTryoutSections.length;
-
-  let hasStale = false;
+    stale.staleCurriculumLessons.length;
   let deleted = 0;
 
   if (totalStale === 0) {
     logSuccess("No stale content found!");
   } else {
-    hasStale = true;
     log(`\nFound ${totalStale} stale items:\n`);
     logStaleItems("Stale articles", stale.staleArticles);
     logStaleItems("\nStale curriculum topics", stale.staleCurriculumTopics);
     logStaleItems("\nStale curriculum lessons", stale.staleCurriculumLessons);
-    logStaleItems("\nStale question sets", stale.staleQuestionSets);
-    logStaleItems("\nStale questions", stale.staleQuestions);
-    logStaleItems("\nStale try-out countries", stale.staleTryoutCountries);
-    logStaleItems("\nStale try-out exams", stale.staleTryoutExams);
-    logStaleItems("\nStale try-out tracks", stale.staleTryoutTracks);
-    logStaleItems("\nStale try-out sets", stale.staleTryoutSets);
-    logStaleItems("\nStale try-out sections", stale.staleTryoutSections);
 
     if (options.force) {
       log("\nDeleting stale content...");
-
       deleted += yield* deleteStaleItems(
         config,
         internal.contentSync.mutations.articles.deleteStaleArticles,
@@ -366,7 +193,7 @@ export const clean = Effect.fn("sync.clean")(function* (
         internal.contentSync.mutations.curriculum.deleteStaleCurriculumTopics,
         buildDeleteStaleCurriculumTopicArgs,
         stale.staleCurriculumTopics,
-        "stale curriculum topics (and their sections)",
+        "stale curriculum topics and lessons",
         BATCH_SIZES.staleCurriculumTopics
       );
       deleted += yield* deleteStaleItems(
@@ -377,68 +204,8 @@ export const clean = Effect.fn("sync.clean")(function* (
         "stale curriculum lessons",
         BATCH_SIZES.staleCurriculumLessons
       );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleQuestions,
-        buildDeleteStaleQuestionArgs,
-        stale.staleQuestions,
-        "stale questions",
-        BATCH_SIZES.staleQuestions
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleTryoutSections,
-        buildDeleteStaleTryoutSectionArgs,
-        stale.staleTryoutSections,
-        "stale try-out sections",
-        BATCH_SIZES.staleTryoutSections
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleQuestionSets,
-        buildDeleteStaleQuestionSetArgs,
-        stale.staleQuestionSets,
-        "stale question sets",
-        BATCH_SIZES.staleQuestionSets
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleTryoutSets,
-        buildDeleteStaleTryoutSetArgs,
-        stale.staleTryoutSets,
-        "stale try-out sets",
-        BATCH_SIZES.staleTryoutSets
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleTryoutTracks,
-        buildDeleteStaleTryoutTrackArgs,
-        stale.staleTryoutTracks,
-        "stale try-out tracks",
-        BATCH_SIZES.staleTryoutTracks
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleTryoutExams,
-        buildDeleteStaleTryoutExamArgs,
-        stale.staleTryoutExams,
-        "stale try-out exams",
-        BATCH_SIZES.staleTryoutExams
-      );
-      deleted += yield* deleteStaleItems(
-        config,
-        internal.contentSync.mutations.tryouts.deleteStaleTryoutCountries,
-        buildDeleteStaleTryoutCountryArgs,
-        stale.staleTryoutCountries,
-        "stale try-out countries",
-        BATCH_SIZES.staleTryoutCountries
-      );
-    } else if (options.prod) {
-      log("\nTo delete stale content, run:");
-      log("  pnpm --filter @repo/backend sync:prod:clean --force");
     } else {
-      log("\nTo delete stale content, run:");
-      log("  pnpm --filter @repo/backend sync:clean --force");
+      log("\nRerun clean with --force to delete these rows.");
     }
   }
 
@@ -447,5 +214,5 @@ export const clean = Effect.fn("sync.clean")(function* (
   }
 
   log("\n=== CLEAN COMPLETE ===");
-  return { hasStale, deleted };
+  return { deleted, hasStale: totalStale > 0 };
 });

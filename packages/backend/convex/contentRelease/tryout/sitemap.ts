@@ -28,7 +28,6 @@ export const readTryoutSitemapCount = Effect.fn(
 )(function* (ctx: QueryCtx, locale: ContentLocale) {
   const catalog = yield* loadTryoutCatalog(ctx, locale);
   return {
-    managed: catalog.managed,
     pageCount: Math.ceil(catalog.routeCount / CONTENT_SITEMAP_ROUTE_PAGE_SIZE),
     routeCount: catalog.routeCount,
   };
@@ -43,10 +42,6 @@ export const readTryoutSitemapPage = Effect.fn(
   }
 
   const catalog = yield* loadTryoutCatalog(ctx, locale);
-  if (!catalog.managed) {
-    return null;
-  }
-
   const paths = listTryoutSitemapPaths(catalog);
   const start = page * CONTENT_SITEMAP_ROUTE_PAGE_SIZE;
   if (start >= paths.length) {

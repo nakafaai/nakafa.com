@@ -5,36 +5,18 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
+import {
+  activateTryoutStartSource,
+  TRYOUT_START_COUNTRY,
+  TRYOUT_START_EXAM,
+  TRYOUT_START_SET,
+  TRYOUT_START_TRACK,
+} from "@repo/backend/test/tryout-source";
 import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 12, 12, 0, 0);
 const SET_PATH = "try-out/indonesia/tka/matematika/set-1";
-
-/** Inserts the active direct-entry set resolved by the history query. */
-async function insertHistorySet(ctx: MutationCtx) {
-  return await ctx.db.insert("tryoutSets", {
-    countryKey: "indonesia",
-    examKey: "tka",
-    internalEntrySectionKey: "matematika",
-    isActive: true,
-    isReady: true,
-    locale: "id",
-    order: 1,
-    publicPath: SET_PATH,
-    readyQuestionCount: 10,
-    readyVisibleSectionCount: 0,
-    scoringStrategy: "raw",
-    sectionCount: 1,
-    setKey: "set-1",
-    sourceRevision: "2026",
-    syncedAt: NOW,
-    title: "Set 1",
-    totalQuestionCount: 10,
-    trackKey: "matematika",
-    visibleSectionCount: 0,
-  });
-}
 
 /** Inserts one terminal raw attempt and its immutable score snapshot. */
 async function insertHistoryAttempt(
@@ -42,16 +24,12 @@ async function insertHistoryAttempt(
   args: {
     attemptNumber: number;
     publishedScore: number;
-    setIdentity?: string;
+    setIdentity: string;
     startedAt: number;
-    tryoutSetId?: Id<"tryoutSets">;
+    tryoutSnapshotId: string;
     userId: Id<"users">;
   }
 ) {
-  const owner = {
-    ...(args.setIdentity ? { setIdentity: args.setIdentity } : {}),
-    ...(args.tryoutSetId ? { tryoutSetId: args.tryoutSetId } : {}),
-  };
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: args.startedAt + 3_600_000,
     accessSourceKind: "free",
@@ -69,8 +47,16 @@ async function insertHistoryAttempt(
     status: "completed",
     totalCorrect: args.publishedScore / 10,
     totalQuestions: 10,
-    ...owner,
     userId: args.userId,
+    countryKey: TRYOUT_START_COUNTRY,
+    examKey: TRYOUT_START_EXAM,
+    locale: "id",
+    setIdentity: args.setIdentity,
+    setKey: TRYOUT_START_SET,
+    setPublicPath: SET_PATH,
+    snapshotReleaseId: TEST_RELEASE_ID,
+    trackKey: TRYOUT_START_TRACK,
+    tryoutSnapshotId: args.tryoutSnapshotId,
   });
 
   await ctx.db.insert("tryoutScores", {
@@ -82,7 +68,8 @@ async function insertHistoryAttempt(
     totalCorrect: args.publishedScore / 10,
     totalQuestions: 10,
     tryoutAttemptId: attemptId,
-    ...owner,
+    tryoutSnapshotId: args.tryoutSnapshotId,
+    setIdentity: args.setIdentity,
     userId: args.userId,
   });
 
@@ -99,19 +86,21 @@ describe("tryouts/queries/history", () => {
         now: NOW,
         suffix: "tryout-history",
       });
-      const tryoutSetId = await insertHistorySet(ctx);
+      const source = await activateTryoutStartSource(ctx, "visible");
       const firstAttemptId = await insertHistoryAttempt(ctx, {
         attemptNumber: 1,
         publishedScore: 70,
+        setIdentity: source.setIdentity,
         startedAt: NOW - 20_000,
-        tryoutSetId,
+        tryoutSnapshotId: source.snapshotId,
         userId: identity.userId,
       });
       const secondAttemptId = await insertHistoryAttempt(ctx, {
         attemptNumber: 2,
         publishedScore: 90,
+        setIdentity: source.setIdentity,
         startedAt: NOW - 10_000,
-        tryoutSetId,
+        tryoutSnapshotId: source.snapshotId,
         userId: identity.userId,
       });
 
@@ -147,12 +136,14 @@ describe("tryouts/queries/history", () => {
 
   it("returns an empty page when the active set does not exist", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, {
+    const identity = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "tryout-history-missing",
-      })
-    );
+      });
+      await activateTryoutStartSource(ctx, "visible");
+      return user;
+    });
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,
@@ -171,53 +162,6 @@ describe("tryouts/queries/history", () => {
     });
   });
 
-  it("ignores a stale filesystem set when the signed route reuses its path", async () => {
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "tryout-history-reused-path",
-      });
-      const fixture = await seedTryoutStartSet(ctx, {
-        userId: identity.userId,
-        visibility: "visible",
-      });
-      await ctx.db.patch(fixture.tryoutSetId, { setKey: "retired-set" });
-      await insertHistoryAttempt(ctx, {
-        attemptNumber: 1,
-        publishedScore: 70,
-        startedAt: NOW - 20_000,
-        tryoutSetId: fixture.tryoutSetId,
-        userId: identity.userId,
-      });
-      const signedAttemptId = await insertHistoryAttempt(ctx, {
-        attemptNumber: 1,
-        publishedScore: 90,
-        setIdentity: fixture.setIdentity,
-        startedAt: NOW - 10_000,
-        userId: identity.userId,
-      });
-
-      return { identity, signedAttemptId };
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-
-    const history = await authed.query(api.tryouts.queries.history.list, {
-      locale: "id",
-      paginationOpts: { cursor: null, numItems: 25 },
-      publicPath: SET_PATH,
-    });
-
-    expect(history.page.map(({ attemptId }) => attemptId)).toEqual([
-      seeded.signedAttemptId,
-    ]);
-  });
-
   it("caps each requested page at twenty-five attempts", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
@@ -225,14 +169,15 @@ describe("tryouts/queries/history", () => {
         now: NOW,
         suffix: "tryout-history-cap",
       });
-      const tryoutSetId = await insertHistorySet(ctx);
+      const source = await activateTryoutStartSource(ctx, "visible");
 
       for (let attemptNumber = 1; attemptNumber <= 26; attemptNumber += 1) {
         await insertHistoryAttempt(ctx, {
           attemptNumber,
           publishedScore: attemptNumber,
+          setIdentity: source.setIdentity,
           startedAt: NOW + attemptNumber,
-          tryoutSetId,
+          tryoutSnapshotId: source.snapshotId,
           userId: identity.userId,
         });
       }

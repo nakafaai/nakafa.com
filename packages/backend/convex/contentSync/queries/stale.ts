@@ -10,27 +10,13 @@ import { literals } from "convex-helpers/validators";
 const staleContentTableNameValidator = literals(
   "articleContents",
   "curriculumTopics",
-  "curriculumLessons",
-  "questionSets",
-  "questions",
-  "tryoutCountries",
-  "tryoutExams",
-  "tryoutTracks",
-  "tryoutSets",
-  "tryoutSections"
+  "curriculumLessons"
 );
 
 const staleContentIdValidator = v.union(
   v.id("articleContents"),
   v.id("curriculumTopics"),
-  v.id("curriculumLessons"),
-  v.id("questionSets"),
-  v.id("questions"),
-  v.id("tryoutCountries"),
-  v.id("tryoutExams"),
-  v.id("tryoutTracks"),
-  v.id("tryoutSets"),
-  v.id("tryoutSections")
+  v.id("curriculumLessons")
 );
 
 const staleContentItemValidator = v.object({
@@ -39,7 +25,7 @@ const staleContentItemValidator = v.object({
   sourcePath: v.string(),
 });
 
-/** Return one paginated page of existing content rows for stale-content detection. */
+/** Returns one bounded page of Nakafa-owned rows for stale-content detection. */
 export const listStaleContentPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -56,30 +42,8 @@ export const listStaleContentPage = internalQuery({
       page: page.page.map((item) => ({
         id: item._id,
         locale: item.locale,
-        sourcePath: getStaleSourcePath(item),
+        sourcePath: item.slug,
       })),
     };
   },
 });
-
-/** Returns the source identity used for stale content comparison. */
-function getStaleSourcePath(item: {
-  publicPath?: string;
-  questionSourcePath?: string;
-  slug?: string;
-  sourcePath?: string;
-}) {
-  if (item.sourcePath) {
-    return item.sourcePath;
-  }
-
-  if (item.publicPath) {
-    return item.publicPath;
-  }
-
-  if (item.questionSourcePath) {
-    return item.questionSourcePath;
-  }
-
-  return item.slug ?? "";
-}

@@ -13,29 +13,21 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout-source";
-import {
-  insertTryoutCountry,
-  insertTryoutExam,
-  insertTryoutQuestionSource,
-  insertTryoutSection,
-  insertTryoutSet,
-  insertTryoutTrack,
-  TRYOUT_EXAM_PATH,
-  TRYOUT_SECTION_PATH,
-  TRYOUT_SET_PATH,
-} from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
+
+const countryPath = `try-out/${TRYOUT_START_COUNTRY}`;
+const examPath = `${countryPath}/${TRYOUT_START_EXAM}`;
+const trackPath = `${examPath}/${TRYOUT_START_TRACK}`;
+const setPath = `${trackPath}/${TRYOUT_START_SET}`;
+const sectionPath = `${setPath}/${TRYOUT_START_SECTION}`;
+const locales: readonly ContentLocale[] = ["en", "id"];
 
 describe("tryouts/queries/catalog", () => {
   it("serves the complete signed hierarchy without filesystem catalog rows", async () => {
     const t = convexTest(schema, convexModules);
-    const countryPath = `try-out/${TRYOUT_START_COUNTRY}`;
-    const examPath = `${countryPath}/${TRYOUT_START_EXAM}`;
-    const trackPath = `${examPath}/${TRYOUT_START_TRACK}`;
-    const setPath = `${trackPath}/${TRYOUT_START_SET}`;
-    const sectionPath = `${setPath}/${TRYOUT_START_SECTION}`;
     await t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"));
+
     const hub = await t.query(api.tryouts.queries.catalog.getHubPage, {
       locale: "id",
     });
@@ -59,6 +51,7 @@ describe("tryouts/queries/catalog", () => {
       locale: "id",
       publicPath: sectionPath,
     });
+
     expect(hub).toMatchObject({
       countries: [
         expect.objectContaining({
@@ -66,12 +59,10 @@ describe("tryouts/queries/catalog", () => {
           examCount: 1,
         }),
       ],
-      managed: true,
       sourceRevision: "a".repeat(40),
     });
     expect(country).toMatchObject({
       exams: [expect.objectContaining({ examKey: TRYOUT_START_EXAM })],
-      managed: true,
       sourceRevision: "a".repeat(40),
     });
     expect(exam?.tracks).toEqual([
@@ -79,13 +70,11 @@ describe("tryouts/queries/catalog", () => {
     ]);
     expect(track?.track).toMatchObject({ trackKey: TRYOUT_START_TRACK });
     expect(set).toMatchObject({
-      entryQuestions: [],
       entrySection: { sectionKey: TRYOUT_START_SECTION },
       set: { setKey: TRYOUT_START_SET },
       sections: [{ sectionKey: TRYOUT_START_SECTION }],
     });
     expect(section).toMatchObject({
-      questions: [],
       section: { sectionKey: TRYOUT_START_SECTION },
       set: { setKey: TRYOUT_START_SET },
     });
@@ -93,7 +82,6 @@ describe("tryouts/queries/catalog", () => {
 
   it("fails closed when a signed set loses its internal entry section", async () => {
     const t = convexTest(schema, convexModules);
-    const locales: readonly ContentLocale[] = ["en", "id"];
     const catalog = locales.flatMap((locale) =>
       makeTryoutStartHierarchy(locale, "internal-entry").map((row) => {
         if (row.kind !== "set") {
@@ -109,184 +97,62 @@ describe("tryouts/queries/catalog", () => {
         placements: locales.map(makeTryoutStartPlacement),
       })
     );
+
     await expect(
       t.query(api.tryouts.queries.catalog.getSetPage, {
         locale: "id",
-        publicPath: `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`,
+        publicPath: setPath,
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
   });
 
-  it("hides exam page tracks until their materialized readiness is true", async () => {
+  it("returns null for paths absent from the active signed hierarchy", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertTryoutCountry(ctx);
-      await insertTryoutExam(ctx);
-      await insertTryoutTrack(ctx);
-      await insertTryoutTrack(ctx, {
-        isReady: false,
-        publicPath: `${TRYOUT_EXAM_PATH}/2028`,
-        trackKey: "2028",
-      });
+    await t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"));
+
+    const [track, set, section] = await Promise.all([
+      t.query(api.tryouts.queries.catalog.getTrackPage, {
+        locale: "id",
+        publicPath: `${examPath}/missing`,
+      }),
+      t.query(api.tryouts.queries.catalog.getSetPage, {
+        locale: "id",
+        publicPath: `${trackPath}/missing`,
+      }),
+      t.query(api.tryouts.queries.catalog.getSectionPage, {
+        locale: "id",
+        publicPath: `${setPath}/missing`,
+      }),
+    ]);
+
+    expect({ section, set, track }).toEqual({
+      section: null,
+      set: null,
+      track: null,
     });
-    const page = await t.query(api.tryouts.queries.catalog.getExamPage, {
-      locale: "id",
-      publicPath: TRYOUT_EXAM_PATH,
-    });
-    expect(page?.tracks.map((track) => track.trackKey)).toEqual(["2027"]);
   });
 
-  it("does not expose legacy exam-to-set paths as track pages", async () => {
+  it("serves an authored internal entry without a public section route", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertTryoutCountry(ctx);
-      await insertTryoutExam(ctx);
-      await insertTryoutTrack(ctx);
-    });
-    const page = await t.query(api.tryouts.queries.catalog.getTrackPage, {
-      locale: "id",
-      publicPath: `${TRYOUT_EXAM_PATH}/set-1`,
-    });
-    expect(page).toBeNull();
-  });
-
-  it("hides set pages until every section row is synced", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertTryoutCountry(ctx);
-      await insertTryoutExam(ctx);
-      await insertTryoutTrack(ctx);
-      const setId = await insertTryoutSet(ctx, {
-        sectionCount: 2,
-        totalQuestionCount: 2,
-      });
-      const questionSetId = await insertTryoutQuestionSource(ctx);
-
-      await insertTryoutSection(ctx, {
-        publicPath: TRYOUT_SECTION_PATH,
-        questionSetId,
-        tryoutSetId: setId,
-      });
-    });
+    await t.mutation((ctx) =>
+      activateTryoutSnapshot(ctx, {
+        catalog: locales.flatMap((locale) =>
+          makeTryoutStartHierarchy(locale, "internal-entry")
+        ),
+        placements: locales.map(makeTryoutStartPlacement),
+      })
+    );
 
     const page = await t.query(api.tryouts.queries.catalog.getSetPage, {
       locale: "id",
-      publicPath: TRYOUT_SET_PATH,
-    });
-
-    expect(page).toBeNull();
-  });
-
-  it("hides set pages until section revisions and question totals match", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await t.mutation(async (ctx) => {
-      await insertTryoutCountry(ctx);
-      await insertTryoutExam(ctx);
-      await insertTryoutTrack(ctx);
-      const setId = await insertTryoutSet(ctx, {
-        totalQuestionCount: 2,
-      });
-      const questionSetId = await insertTryoutQuestionSource(ctx, {
-        sourceRevision: "2025",
-      });
-
-      await insertTryoutSection(ctx, {
-        publicPath: TRYOUT_SECTION_PATH,
-        questionSetId,
-        sourceRevision: "2025",
-        tryoutSetId: setId,
-      });
-    });
-
-    const page = await t.query(api.tryouts.queries.catalog.getSetPage, {
-      locale: "id",
-      publicPath: TRYOUT_SET_PATH,
-    });
-
-    expect(page).toBeNull();
-  });
-
-  it("serves internal-entry set pages without a public section route", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await t.mutation(async (ctx) => {
-      await insertTryoutCountry(ctx);
-      await insertTryoutExam(ctx);
-      await insertTryoutTrack(ctx, {
-        publicPath: `${TRYOUT_EXAM_PATH}/matematika`,
-        trackKey: "mathematics",
-        trackKind: "subject",
-      });
-      const setId = await insertTryoutSet(ctx, {
-        internalEntrySectionKey: "mathematics",
-        publicPath: `${TRYOUT_EXAM_PATH}/matematika/set-1`,
-        trackKey: "mathematics",
-        visibleSectionCount: 0,
-      });
-      const sourcePath =
-        "question-bank/tryout/indonesia/snbt/mathematics/set-1/mathematics";
-      const questionSetId = await insertTryoutQuestionSource(ctx, {
-        sectionKey: "mathematics",
-        sourcePath,
-      });
-
-      await insertTryoutSection(ctx, {
-        publicPath: undefined,
-        questionSetId,
-        questionSourcePath: sourcePath,
-        sectionKey: "mathematics",
-        trackKey: "mathematics",
-        tryoutSetId: setId,
-        visibility: "internal-entry",
-      });
-    });
-
-    const page = await t.query(api.tryouts.queries.catalog.getSetPage, {
-      locale: "id",
-      publicPath: `${TRYOUT_EXAM_PATH}/matematika/set-1`,
+      publicPath: setPath,
     });
 
     expect(page?.sections).toEqual([]);
     expect(page?.entrySection).toMatchObject({
-      sectionKey: "mathematics",
+      sectionKey: TRYOUT_START_SECTION,
       visibility: "internal-entry",
     });
     expect(page?.entrySection?.publicPath).toBeUndefined();
-    expect(page?.entryQuestions).toHaveLength(1);
-  });
-
-  it("hides direct set and section pages when their country is inactive", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await t.mutation(async (ctx) => {
-      const countryId = await insertTryoutCountry(ctx);
-      await insertTryoutExam(ctx);
-      await insertTryoutTrack(ctx);
-      const setId = await insertTryoutSet(ctx);
-      const questionSetId = await insertTryoutQuestionSource(ctx);
-
-      await insertTryoutSection(ctx, {
-        publicPath: TRYOUT_SECTION_PATH,
-        questionSetId,
-        tryoutSetId: setId,
-      });
-      await ctx.db.patch(countryId, { isActive: false });
-    });
-
-    const setPage = await t.query(api.tryouts.queries.catalog.getSetPage, {
-      locale: "id",
-      publicPath: TRYOUT_SET_PATH,
-    });
-    const sectionPage = await t.query(
-      api.tryouts.queries.catalog.getSectionPage,
-      {
-        locale: "id",
-        publicPath: TRYOUT_SECTION_PATH,
-      }
-    );
-
-    expect(setPage).toBeNull();
-    expect(sectionPage).toBeNull();
   });
 });

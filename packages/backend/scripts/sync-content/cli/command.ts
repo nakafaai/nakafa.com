@@ -3,7 +3,6 @@ import { resetAnalytics } from "@repo/backend/scripts/sync-content/cleanup/analy
 import { resetAudio } from "@repo/backend/scripts/sync-content/cleanup/audio";
 import { clean } from "@repo/backend/scripts/sync-content/cleanup/clean";
 import { reset } from "@repo/backend/scripts/sync-content/cleanup/reset";
-import { resetTryouts } from "@repo/backend/scripts/sync-content/cleanup/tryouts";
 import { log, logError } from "@repo/backend/scripts/sync-content/cli/logging";
 import { syncArticles } from "@repo/backend/scripts/sync-content/content/articles";
 import { syncAuthors } from "@repo/backend/scripts/sync-content/content/authors";
@@ -13,11 +12,9 @@ import {
 } from "@repo/backend/scripts/sync-content/content/curriculum";
 import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/content/programs";
 import { syncQuran } from "@repo/backend/scripts/sync-content/content/quran";
-import { syncTryouts } from "@repo/backend/scripts/sync-content/content/tryouts";
 import { validate } from "@repo/backend/scripts/sync-content/content/validate";
 import type { SyncOptions } from "@repo/backend/scripts/sync-content/contract/types";
 import { getConvexConfig } from "@repo/backend/scripts/sync-content/convex/client";
-import { readContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import {
   createContentRouteArtifactTargets,
   syncContentRouteArtifactPages,
@@ -93,7 +90,6 @@ const printUsage = (): void => {
   log("  sync:validate         - Validate content without syncing (for CI)");
   log("  sync:verify           - Verify database matches filesystem");
   log("  quran                 - Sync Quran surahs, verses, and search rows");
-  log("  tryouts               - Sync source-driven try-out catalog and bank");
   log(
     "  learning-programs     - Sync program catalog and graph-backed coverage"
   );
@@ -108,9 +104,6 @@ const printUsage = (): void => {
   log(
     "  sync:reset:audio      - Delete audio source, generated audio, and audio queue rows"
   );
-  log(
-    "  sync:reset:tryouts    - Delete tryout content/read models, access rows, entitlements, and IRT scale data, then run a full sync"
-  );
   log("\nProduction commands:");
   log("  sync:prod             - Full sync to production");
   log("  sync:prod:incremental - Incremental sync to production");
@@ -123,9 +116,6 @@ const printUsage = (): void => {
     "  sync:prod:reset:analytics - Delete analytics queues, leases, and popularity projections in production"
   );
   log("  sync:prod:reset:audio - Delete audio read models in production");
-  log(
-    "  sync:prod:reset:tryouts - Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync"
-  );
   log("\nOptions:");
   log(
     `  --locale ${locales.join("|")}  - Sync specific locale only (not incremental)`
@@ -149,16 +139,15 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
   options: SyncOptions
 ) {
   const config = yield* getConvexConfig(options);
-  const ownership = yield* readContentSyncOwnership(config);
 
   if (type === "validate") {
-    yield* validate(ownership);
+    yield* validate();
     return;
   }
 
   switch (type) {
     case "articles":
-      yield* syncAuthors(config, options, ownership);
+      yield* syncAuthors(config, options);
       yield* syncArticles(config, options);
       yield* syncContentRouteArtifactPages(
         config,
@@ -175,56 +164,41 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       yield* invalidateContentRuntimeCache(options);
       return;
     case "subjects":
-      yield* syncAuthors(config, options, ownership);
+      yield* syncAuthors(config, options);
       yield* syncCurriculumTopics(config, options);
       yield* syncCurriculumLessons(config, options);
       yield* syncContentRouteArtifactPages(
         config,
         createContentRouteArtifactTargets(options.locale, ["material"])
       );
-      yield* syncPublicRoutes(config, options, ownership);
+      yield* syncPublicRoutes(config, options);
       yield* syncLearningPrograms(config, options);
       yield* invalidateContentRuntimeCache(options);
       return;
     case "curriculum-topics":
-      yield* syncAuthors(config, options, ownership);
+      yield* syncAuthors(config, options);
       yield* syncCurriculumTopics(config, options);
       yield* syncContentRouteArtifactPages(
         config,
         createContentRouteArtifactTargets(options.locale, ["material"])
       );
-      yield* syncPublicRoutes(config, options, ownership);
+      yield* syncPublicRoutes(config, options);
       yield* syncLearningPrograms(config, options);
       yield* invalidateContentRuntimeCache(options);
       return;
     case "curriculum-lessons":
-      yield* syncAuthors(config, options, ownership);
+      yield* syncAuthors(config, options);
       yield* syncCurriculumLessons(config, options);
       yield* syncContentRouteArtifactPages(
         config,
         createContentRouteArtifactTargets(options.locale, ["material"])
       );
-      yield* syncPublicRoutes(config, options, ownership);
-      yield* syncLearningPrograms(config, options);
-      yield* invalidateContentRuntimeCache(options);
-      return;
-    case "tryouts":
-      if (ownership.tryoutsManaged) {
-        log("Tryouts: signed Aksara ownership active");
-      } else {
-        yield* syncAuthors(config, options, ownership);
-        yield* syncTryouts(config, options);
-      }
-      yield* syncContentRouteArtifactPages(
-        config,
-        createContentRouteArtifactTargets(options.locale, ["tryout"])
-      );
-      yield* syncPublicRoutes(config, options, ownership);
+      yield* syncPublicRoutes(config, options);
       yield* syncLearningPrograms(config, options);
       yield* invalidateContentRuntimeCache(options);
       return;
     case "public-routes":
-      yield* syncPublicRoutes(config, options, ownership);
+      yield* syncPublicRoutes(config, options);
       yield* invalidateContentRuntimeCache(options);
       return;
     case "learning-programs":
@@ -253,7 +227,7 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
           config,
           createContentRouteArtifactTargets(routePageOptions.locale)
         );
-        yield* syncPublicRoutes(config, routePageOptions, ownership);
+        yield* syncPublicRoutes(config, routePageOptions);
         yield* syncLearningPrograms(config, routePageOptions);
         yield* invalidateContentRuntimeCache(routePageOptions);
       }
@@ -274,12 +248,6 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       return;
     case "reset-audio":
       yield* resetAudio(config, options);
-      return;
-    case "reset-tryouts":
-      yield* resetTryouts(config, options);
-      if (options.force) {
-        yield* invalidateContentRuntimeCache(options);
-      }
       return;
     default:
       logError(`Unknown command: ${type}`);

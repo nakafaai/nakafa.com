@@ -15,10 +15,10 @@ import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
-type InternalEntrySection = Pick<
-  Doc<"tryoutSections">,
-  "sectionKey" | "visibility"
->;
+interface InternalEntrySection {
+  readonly sectionKey: string;
+  readonly visibility: "internal-entry" | "visible";
+}
 
 const expireSectionReference = makeFunctionReference<
   "mutation",
@@ -47,31 +47,12 @@ export function loadPlacementSectionAttempt(
   ctx: MutationCtx,
   placement: Doc<"tryoutAttemptPlacements">
 ) {
-  const sectionKey = placement.sectionKey;
-  if (sectionKey) {
-    return ctx.db
-      .query("tryoutSectionAttempts")
-      .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
-        q
-          .eq("tryoutAttemptId", placement.tryoutAttemptId)
-          .eq("sectionKey", sectionKey)
-      )
-      .unique();
-  }
-
-  if (!placement.tryoutSectionId) {
-    throw new ConvexError({
-      code: "TRYOUT_SECTION_NOT_FOUND",
-      message: "Try-out placement has no section identity.",
-    });
-  }
-
   return ctx.db
     .query("tryoutSectionAttempts")
-    .withIndex("by_tryoutAttemptId_and_tryoutSectionId", (q) =>
+    .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
       q
         .eq("tryoutAttemptId", placement.tryoutAttemptId)
-        .eq("tryoutSectionId", placement.tryoutSectionId)
+        .eq("sectionKey", placement.sectionKey)
     )
     .unique();
 }
@@ -135,18 +116,13 @@ export const startSectionAttempt = Effect.fn(
       endReason: null,
       expiresAt,
       lastActivityAt: args.now,
-      ...(snapshot.sectionIdentity
-        ? { sectionIdentity: snapshot.sectionIdentity }
-        : {}),
+      sectionIdentity: snapshot.sectionIdentity,
       sectionKey: snapshot.sectionKey,
       sectionOrder: snapshot.sectionOrder,
       startedAt: args.now,
       status: "in-progress",
       totalQuestions: snapshot.questionCount,
       tryoutAttemptId: currentAttempt._id,
-      ...(snapshot.tryoutSectionId
-        ? { tryoutSectionId: snapshot.tryoutSectionId }
-        : {}),
     })
   );
   const sectionAttempt = yield* tryRuntimePromise(() =>

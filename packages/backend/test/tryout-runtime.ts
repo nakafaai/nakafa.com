@@ -92,7 +92,6 @@ export async function seedTryoutContentAccessState(
   args: {
     attemptStatus: TryoutStatus;
     sectionStatus: TryoutStatus;
-    signed?: boolean;
     suffix: string;
   }
 ) {
@@ -121,20 +120,18 @@ export async function seedTryoutContentAccessState(
     await readTryoutSet(ctx, tryoutSetId),
     [signedSection]
   );
-  const snapshotId = args.signed
-    ? await activateTryoutSnapshot(ctx, {
-        catalog: [
-          signedSource.snapshot.set.row,
-          { ...signedSource.snapshot.set.row, locale: "en" },
-          signedSection.signed.section.row,
-          { ...signedSection.signed.section.row, locale: "en" },
-        ],
-        placements: signedSection.signed.placements.flatMap(({ row }) => [
-          row,
-          { ...row, locale: "en" },
-        ]),
-      })
-    : null;
+  const snapshotId = await activateTryoutSnapshot(ctx, {
+    catalog: [
+      signedSource.snapshot.set.row,
+      { ...signedSource.snapshot.set.row, locale: "en" },
+      signedSection.signed.section.row,
+      { ...signedSection.signed.section.row, locale: "en" },
+    ],
+    placements: signedSection.signed.placements.flatMap(({ row }) => [
+      row,
+      { ...row, locale: "en" },
+    ]),
+  });
   const setIdentity = tryoutCatalogIdentity({
     countryKey: "indonesia",
     examKey: "snbt",
@@ -155,26 +152,29 @@ export async function seedTryoutContentAccessState(
     lastActivityAt: TRYOUT_TEST_NOW,
     scoreStatus: "official",
     scoringStrategy: "irt",
-    sectionSnapshots: [],
+    sectionSnapshots: [
+      tryoutSectionSnapshot({
+        order: 1,
+        publicPath: TRYOUT_SECTION_PATH,
+        sectionKey: TRYOUT_SECTION_KEY,
+        signed: signedSection.signed,
+        sourcePath: signedSection.filesystem.questionSourcePath,
+      }),
+    ],
     startedAt: TRYOUT_TEST_NOW,
     status: args.attemptStatus,
     totalCorrect: 0,
     totalQuestions: 1,
-    tryoutSetId,
     userId: identity.userId,
-    ...(snapshotId
-      ? {
-          countryKey: "indonesia",
-          examKey: "snbt",
-          locale: fixtureLocale,
-          setIdentity,
-          setKey: "set-1",
-          setPublicPath: signedSource.snapshot.set.row.publicPath,
-          snapshotReleaseId: TEST_RELEASE_ID,
-          trackKey: "2027",
-          tryoutSnapshotId: snapshotId,
-        }
-      : {}),
+    countryKey: "indonesia",
+    examKey: "snbt",
+    locale: fixtureLocale,
+    setIdentity,
+    setKey: "set-1",
+    setPublicPath: signedSource.snapshot.set.row.publicPath,
+    snapshotReleaseId: TEST_RELEASE_ID,
+    trackKey: "2027",
+    tryoutSnapshotId: snapshotId,
   });
 
   const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
@@ -185,24 +185,13 @@ export async function seedTryoutContentAccessState(
     expiresAt: TRYOUT_TEST_NOW + 1_800_000,
     lastActivityAt: TRYOUT_TEST_NOW,
     sectionKey: TRYOUT_SECTION_KEY,
+    sectionIdentity: tryoutCatalogIdentity(signedSection.signed.section.row),
     sectionOrder: 1,
     startedAt: TRYOUT_TEST_NOW,
     status: args.sectionStatus,
     totalQuestions: 1,
     tryoutAttemptId: attemptId,
-    tryoutSectionId,
   });
-
-  if (!snapshotId) {
-    return {
-      attemptId,
-      identity,
-      placementId: null,
-      sectionAttemptId,
-      signedContent: null,
-      tryoutSetId,
-    };
-  }
 
   const answerArtifactHash = testTextHash(`${args.suffix}:answer`);
   const questionArtifactHash = testTextHash(`${args.suffix}:question`);
@@ -227,7 +216,6 @@ export async function seedTryoutContentAccessState(
     sourceRevision: "2026",
     title: "Technical question",
     tryoutAttemptId: attemptId,
-    tryoutSectionId,
   });
 
   const answer: TryoutAnswerSelector = {
@@ -269,26 +257,20 @@ export async function seedTryoutContentAccessState(
 export function tryoutSectionSnapshot(args: {
   order: number;
   publicPath: string;
-  questionSetId: Id<"questionSets">;
   sectionKey: string;
   sourcePath: string;
-  signed?: AlignedTryoutSectionFixture["signed"];
-  tryoutSectionId?: Id<"tryoutSections">;
+  signed: AlignedTryoutSectionFixture["signed"];
 }) {
   return {
     publicPath: args.publicPath,
     questionCount: 1,
-    questionSetId: args.questionSetId,
     questionSourcePath: args.sourcePath,
-    sectionIdentity: args.signed
-      ? tryoutCatalogIdentity(args.signed.section.row)
-      : undefined,
+    sectionIdentity: tryoutCatalogIdentity(args.signed.section.row),
     sectionKey: args.sectionKey,
     sectionOrder: args.order,
-    sectionRowHash: args.signed?.section.rowHash,
+    sectionRowHash: args.signed.section.rowHash,
     sourceRevision: "2026",
     timeLimitSeconds: 1800,
-    ...(args.tryoutSectionId ? { tryoutSectionId: args.tryoutSectionId } : {}),
   };
 }
 
@@ -308,6 +290,15 @@ export async function insertTryoutAttempt(
 ) {
   const scoringStrategy = args.scoringStrategy ?? "irt";
   const accessEndsAt = args.expiresAt ?? TRYOUT_TEST_NOW + 86_400_000;
+  const set = await readTryoutSet(ctx, args.tryoutSetId);
+  const setIdentity = tryoutCatalogIdentity({
+    countryKey: set.countryKey,
+    examKey: set.examKey,
+    kind: "set",
+    locale: set.locale,
+    setKey: set.setKey,
+    trackKey: set.trackKey,
+  });
 
   return await ctx.db.insert("tryoutAttempts", {
     accessEndsAt,
@@ -323,7 +314,7 @@ export async function insertTryoutAttempt(
     scoreStatus: scoringStrategy === "irt" ? "provisional" : "official",
     scoringStrategy,
     sectionSnapshots: args.sectionSnapshots,
-    setPublicPath: args.setPublicPath,
+    setPublicPath: args.setPublicPath ?? set.publicPath,
     startedAt: TRYOUT_TEST_NOW - 20_000,
     status: args.status ?? "in-progress",
     totalCorrect: 0,
@@ -331,8 +322,15 @@ export async function insertTryoutAttempt(
       (total, section) => total + section.questionCount,
       0
     ),
-    tryoutSetId: args.tryoutSetId,
     userId: args.userId,
+    countryKey: set.countryKey,
+    examKey: set.examKey,
+    locale: set.locale,
+    setIdentity,
+    setKey: set.setKey,
+    snapshotReleaseId: TEST_RELEASE_ID,
+    trackKey: set.trackKey,
+    tryoutSnapshotId: testTextHash("tryout-runtime-snapshot"),
   });
 }
 
@@ -345,7 +343,6 @@ export async function insertTryoutSectionAttempt(
     sectionOrder?: number;
     totalQuestions?: number;
     tryoutAttemptId: Id<"tryoutAttempts">;
-    tryoutSectionId: Id<"tryoutSections">;
   }
 ) {
   return await ctx.db.insert("tryoutSectionAttempts", {
@@ -356,12 +353,20 @@ export async function insertTryoutSectionAttempt(
     expiresAt: args.expiresAt ?? TRYOUT_TEST_NOW + 1_800_000,
     lastActivityAt: TRYOUT_TEST_NOW - 10_000,
     sectionKey: args.sectionKey ?? TRYOUT_SECTION_KEY,
+    sectionIdentity: tryoutCatalogIdentity({
+      countryKey: "indonesia",
+      examKey: "snbt",
+      kind: "section",
+      locale: "id",
+      sectionKey: args.sectionKey ?? TRYOUT_SECTION_KEY,
+      setKey: "set-1",
+      trackKey: "2027",
+    }),
     sectionOrder: args.sectionOrder ?? 1,
     startedAt: TRYOUT_TEST_NOW - 20_000,
     status: "in-progress",
     totalQuestions: args.totalQuestions ?? 1,
     tryoutAttemptId: args.tryoutAttemptId,
-    tryoutSectionId: args.tryoutSectionId,
   });
 }
 
@@ -370,19 +375,9 @@ export async function insertIrtScaleItem(
   ctx: MutationCtx,
   args: {
     placement: AlignedTryoutSectionFixture["signed"]["placements"][number];
-    questionId: Id<"questions">;
     scaleVersionId: Id<"irtScaleVersions">;
-    sectionId: Id<"tryoutSections">;
   }
 ) {
-  const question = await ctx.db.get(args.questionId);
-  if (!question) {
-    throw new ConvexError({
-      code: "TRYOUT_QUESTION_NOT_FOUND",
-      message: "Expected the calibrated question fixture.",
-    });
-  }
-
   const calibrationRunId = await ctx.db.insert("irtCalibrationRuns", {
     attemptCount: 0,
     completedAt: TRYOUT_TEST_NOW,
@@ -391,25 +386,30 @@ export async function insertIrtScaleItem(
     model: "2pl",
     questionCount: 1,
     responseCount: 0,
+    scaleVersionId: args.scaleVersionId,
+    sectionIdentity: tryoutCatalogIdentity({
+      countryKey: args.placement.row.countryKey,
+      examKey: args.placement.row.examKey,
+      kind: "section",
+      locale: args.placement.row.locale,
+      sectionKey: args.placement.row.sectionKey,
+      setKey: args.placement.row.setKey,
+      trackKey: args.placement.row.trackKey,
+    }),
     startedAt: TRYOUT_TEST_NOW,
     status: "completed",
-    tryoutSectionId: args.sectionId,
     updatedAt: TRYOUT_TEST_NOW,
   });
 
   await ctx.db.insert("irtScaleItems", {
     calibrationRunId,
     calibrationStatus: "provisional",
-    contentHash: question.contentHash,
     correctRate: 0,
     difficulty: 0,
     discrimination: 1,
     placementIdentity: tryoutPlacementIdentity(args.placement.row),
     placementRowHash: args.placement.rowHash,
-    questionId: args.questionId,
-    questionSourceKey: question.sourceKey,
     responseCount: 0,
     scaleVersionId: args.scaleVersionId,
-    sourceRevision: "2026",
   });
 }

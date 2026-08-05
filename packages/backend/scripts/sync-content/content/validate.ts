@@ -1,9 +1,7 @@
-import path from "node:path";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
   readArticleReferences,
   readMdxFile,
-  readQuestionChoices,
 } from "@repo/backend/scripts/lib/mdx-parser/content";
 import {
   getArticleDir,
@@ -16,28 +14,17 @@ import {
   logError,
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import { parseLocale } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type { ValidationResult } from "@repo/backend/scripts/sync-content/contract/types";
-import type { ContentSyncOwnership } from "@repo/backend/scripts/sync-content/convex/ownership";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
-import { CONTENTS_DIR } from "@repo/backend/scripts/sync-content/runtime/paths";
 import { readMdxSlugManifest } from "@repo/contents/_lib/mdx-slugs/source";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
-import { defaultLocale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
-
-type TryoutSources =
-  typeof import("@repo/contents/_types/tryout/source").TRYOUT_SOURCES;
-
-const QUESTION_FILE_PREFIX = "question.";
-const ANSWER_FILE_PREFIX = "answer.";
-const MDX_FILE_SUFFIX = ".mdx";
 
 /** Create an empty mutable validation accumulator for one source family. */
 const createValidationResult = (): ValidationResult => ({
-  valid: 0,
-  invalid: 0,
   errors: [],
+  invalid: 0,
+  valid: 0,
 });
 
 const validateArticles = Effect.fn("sync.validateArticles")(function* () {
@@ -55,16 +42,18 @@ const validateArticles = Effect.fn("sync.validateArticles")(function* () {
     );
 
     if (validated._tag === "Right") {
-      result.valid++;
+      result.valid += 1;
       continue;
     }
 
-    const message =
-      validated.left instanceof Error
-        ? validated.left.message
-        : String(validated.left);
-    result.invalid++;
-    result.errors.push({ file, error: message });
+    result.invalid += 1;
+    result.errors.push({
+      error:
+        validated.left instanceof Error
+          ? validated.left.message
+          : String(validated.left),
+      file,
+    });
   }
 
   return result;
@@ -72,7 +61,6 @@ const validateArticles = Effect.fn("sync.validateArticles")(function* () {
 
 const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
   const files = yield* globFiles("material/lesson/**/*.mdx");
-  const materialTopics = listLessonRows();
   const result = createValidationResult();
 
   log(`Validating ${files.length} subject files...`);
@@ -85,199 +73,39 @@ const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
     );
 
     if (validated._tag === "Right") {
-      result.valid++;
+      result.valid += 1;
       continue;
     }
 
-    const message =
-      validated.left instanceof Error
-        ? validated.left.message
-        : String(validated.left);
-    result.invalid++;
-    result.errors.push({ file, error: message });
+    result.invalid += 1;
+    result.errors.push({
+      error:
+        validated.left instanceof Error
+          ? validated.left.message
+          : String(validated.left),
+      file,
+    });
   }
 
+  const materialTopics = listLessonRows();
   log(`Validating ${materialTopics.length} material lesson topics...`);
   result.valid += materialTopics.length;
 
   return result;
 });
 
-const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
-  function* () {
-    const [{ TRYOUT_SOURCES: tryoutSources }, questionFiles, answerFiles] =
-      yield* Effect.all([
-        Effect.promise(() => import("@repo/contents/_types/tryout/source")),
-        globFiles("question-bank/tryout/**/question.*.mdx"),
-        globFiles("question-bank/tryout/**/answer.*.mdx"),
-      ]);
-    const result = createValidationResult();
-    const expectedQuestionFiles = listExpectedTryoutQuestionFiles(
-      questionFiles,
-      tryoutSources
-    );
-    const expectedQuestionFileSet = new Set(expectedQuestionFiles);
-    const expectedAnswerFiles = new Set<string>();
-
-    log(`Validating ${expectedQuestionFiles.length} try-out question files...`);
-    for (const file of expectedQuestionFiles) {
-      const validated = yield* Effect.either(
-        Effect.gen(function* () {
-          const answerFile = yield* readAnswerFile(file);
-
-          expectedAnswerFiles.add(answerFile);
-          yield* Effect.all([readMdxFile(file), readMdxFile(answerFile)], {
-            concurrency: "unbounded",
-          });
-
-          const choices = yield* readQuestionChoices(path.dirname(file));
-
-          if (!choices) {
-            return yield* new ScriptFailureError({
-              message: `Missing or invalid try-out choices for ${file}. Add exactly one correct option for every supported locale in choices.ts.`,
-            });
-          }
-        })
-      );
-
-      if (validated._tag === "Right") {
-        result.valid++;
-        continue;
-      }
-
-      const message =
-        validated.left instanceof Error
-          ? validated.left.message
-          : String(validated.left);
-      result.invalid++;
-      result.errors.push({ file, error: message });
-    }
-
-    for (const file of questionFiles) {
-      if (expectedQuestionFileSet.has(file)) {
-        continue;
-      }
-
-      result.invalid++;
-      result.errors.push({
-        file,
-        error: "Try-out question file is not declared by the source registry.",
-      });
-    }
-
-    for (const file of answerFiles) {
-      if (expectedAnswerFiles.has(file)) {
-        continue;
-      }
-
-      result.invalid++;
-      result.errors.push({
-        file,
-        error: "Try-out answer file does not have a matching question file.",
-      });
-    }
-
-    return result;
-  }
-);
-
-function listExpectedTryoutQuestionFiles(
-  questionFiles: readonly string[],
-  tryoutSources: TryoutSources
-) {
-  const questionDirectories = new Set<string>();
-
-  for (const file of questionFiles) {
-    if (path.basename(file) !== `question.${defaultLocale}.mdx`) {
-      continue;
-    }
-
-    questionDirectories.add(path.dirname(file));
-  }
-
-  for (const exam of tryoutSources) {
-    for (const track of exam.tracks) {
-      for (const set of track.sets) {
-        for (const section of set.sections) {
-          for (let number = 1; number <= section.questionCount; number++) {
-            questionDirectories.add(
-              path.join(
-                CONTENTS_DIR,
-                section.questionSourcePath,
-                `question-${number}`
-              )
-            );
-          }
-        }
-      }
-    }
-  }
-
-  const files = new Set<string>();
-
-  for (const questionDir of questionDirectories) {
-    for (const locale of locales) {
-      files.add(path.join(questionDir, `question.${locale}.mdx`));
-    }
-  }
-
-  return [...files].sort();
-}
-
-/** Resolves the answer MDX file that must exist beside one question MDX file. */
-const readAnswerFile = Effect.fn("sync.readAnswerFile")(function* (
-  questionFile: string
-) {
-  const locale = yield* readLocalizedMdxLocale(
-    questionFile,
-    QUESTION_FILE_PREFIX
-  );
-
-  return path.join(
-    path.dirname(questionFile),
-    `${ANSWER_FILE_PREFIX}${locale}${MDX_FILE_SUFFIX}`
-  );
-});
-
-/** Reads and validates the locale segment from a localized MDX filename. */
-const readLocalizedMdxLocale = Effect.fn("sync.readLocalizedMdxLocale")(
-  function* (file: string, prefix: string) {
-    const basename = path.basename(file);
-    const start = prefix.length;
-    const end = basename.length - MDX_FILE_SUFFIX.length;
-
-    return yield* parseLocale(basename.slice(start, end), basename);
-  }
-);
-
-/** Validates content files without writing to Convex. */
-export const validate = Effect.fn("sync.validate")(function* (
-  ownership: ContentSyncOwnership
-) {
+/** Validates Nakafa-owned content files without writing to Convex. */
+export const validate = Effect.fn("sync.validate")(function* () {
   log("=== VALIDATE CONTENT ===\n");
-  log("Validating all content files without syncing...\n");
+  log("Validating all Nakafa-owned content files without syncing...\n");
 
   const startTime = performance.now();
   yield* readMdxSlugManifest();
   const articleResult = yield* validateArticles();
   const subjectResult = yield* validateSubjects();
-  let tryoutResult = createValidationResult();
-
-  if (ownership.tryoutsManaged) {
-    log("Try-out: signed Aksara ownership active");
-  } else {
-    tryoutResult = yield* validateTryoutQuestions();
-  }
-
-  const totalValid =
-    articleResult.valid + subjectResult.valid + tryoutResult.valid;
-  const totalInvalid =
-    articleResult.invalid + subjectResult.invalid + tryoutResult.invalid;
-  const allErrors = [
-    ...articleResult.errors,
-    ...subjectResult.errors,
-    ...tryoutResult.errors,
-  ];
+  const totalValid = articleResult.valid + subjectResult.valid;
+  const totalInvalid = articleResult.invalid + subjectResult.invalid;
+  const allErrors = [...articleResult.errors, ...subjectResult.errors];
 
   log("\n=== VALIDATION SUMMARY ===\n");
   log(
@@ -286,16 +114,13 @@ export const validate = Effect.fn("sync.validate")(function* (
   log(
     `Curriculum:  ${subjectResult.valid} valid, ${subjectResult.invalid} invalid`
   );
-  log(
-    `Try-out:   ${tryoutResult.valid} valid, ${tryoutResult.invalid} invalid`
-  );
   log("---");
   log(`Total: ${totalValid} valid, ${totalInvalid} invalid`);
   log(`Time: ${formatDuration(performance.now() - startTime)}`);
 
   if (allErrors.length === 0) {
     log("\n");
-    logSuccess("All content files are valid!");
+    logSuccess("All Nakafa-owned content files are valid!");
     return;
   }
 
@@ -307,6 +132,7 @@ export const validate = Effect.fn("sync.validate")(function* (
   if (allErrors.length > 20) {
     log(`... and ${allErrors.length - 20} more errors`);
   }
+
   return yield* new ScriptFailureError({
     message: "Content validation failed.",
   });

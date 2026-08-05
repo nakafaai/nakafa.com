@@ -3,17 +3,10 @@ import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/ca
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import {
-  listCatalogSets,
-  listSetsByStatus,
-  listUnattemptedSets,
-  readReadyTrackParent,
-} from "@repo/backend/convex/tryouts/sets/catalog";
-import {
   listPublishedSets,
   listPublishedSetsByStatus,
   listPublishedUnattemptedSets,
 } from "@repo/backend/convex/tryouts/sets/published";
-import { listScoreSortedSets } from "@repo/backend/convex/tryouts/sets/score";
 import {
   emptySetPage,
   listArgsValidator,
@@ -30,39 +23,16 @@ export const list = query({
   handler: async (ctx, args) => {
     const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
     const auth = await getOptionalAppUserForRead(ctx);
-    if (catalog.managed) {
-      if (args.sort.field === "publishedScore" && !auth) {
-        return await runConvexProgram(
-          listPublishedSets(
-            ctx,
-            catalog,
-            { ...args, sort: { direction: "asc", field: "order" } },
-            null
-          )
-        );
-      }
-      return await runConvexProgram(
-        listPublishedSets(ctx, catalog, args, auth?.appUser ?? null)
-      );
-    }
-
-    if (!(await readReadyTrackParent(ctx, args))) {
-      return emptySetPage;
-    }
-
-    if (args.sort.field === "publishedScore") {
-      if (auth) {
-        return await listScoreSortedSets(ctx, args, auth.appUser);
-      }
-
-      return await listCatalogSets(
-        ctx,
-        { ...args, sort: { direction: "asc", field: "order" } },
-        null
-      );
-    }
-
-    return await listCatalogSets(ctx, args, auth?.appUser ?? null);
+    const normalizedArgs =
+      args.sort.field === "publishedScore" && !auth
+        ? {
+            ...args,
+            sort: { direction: "asc" as const, field: "order" as const },
+          }
+        : args;
+    return await runConvexProgram(
+      listPublishedSets(ctx, catalog, normalizedArgs, auth?.appUser ?? null)
+    );
   },
 });
 
@@ -78,17 +48,9 @@ export const byStatus = query({
       return emptySetPage;
     }
 
-    if (catalog.managed) {
-      return await runConvexProgram(
-        listPublishedSetsByStatus(ctx, catalog, args, auth.appUser)
-      );
-    }
-
-    if (!(await readReadyTrackParent(ctx, args))) {
-      return emptySetPage;
-    }
-
-    return await listSetsByStatus(ctx, args, auth.appUser);
+    return await runConvexProgram(
+      listPublishedSetsByStatus(ctx, catalog, args, auth.appUser)
+    );
   },
 });
 
@@ -99,16 +61,8 @@ export const unattempted = query({
   handler: async (ctx, args) => {
     const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
     const auth = await getOptionalAppUserForRead(ctx);
-    if (catalog.managed) {
-      return await runConvexProgram(
-        listPublishedUnattemptedSets(ctx, catalog, args, auth?.appUser ?? null)
-      );
-    }
-
-    if (!(await readReadyTrackParent(ctx, args))) {
-      return emptySetPage;
-    }
-
-    return await listUnattemptedSets(ctx, args, auth?.appUser ?? null);
+    return await runConvexProgram(
+      listPublishedUnattemptedSets(ctx, catalog, args, auth?.appUser ?? null)
+    );
   },
 });

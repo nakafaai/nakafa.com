@@ -177,6 +177,8 @@ async function insertRuntime(
     locale: "id",
     setIdentity: source.snapshot.setIdentity,
     setKey: "set-1",
+    setPublicPath: SET_ROUTE,
+    snapshotReleaseId: source.bundle.releaseId,
     trackKey: TRACK,
     tryoutSnapshotId: source.snapshot.snapshotId,
     userId,

@@ -3,16 +3,10 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { readTryoutDestinationPaths } from "@repo/backend/convex/tryouts/catalog/destination";
 import {
-  readFilesystemDestinationPaths,
-  readFilesystemSection,
-} from "@repo/backend/convex/tryouts/catalog/filesystem/content";
-import {
   readRetainedSectionPage,
   readRetainedSetPage,
 } from "@repo/backend/convex/tryouts/queries/retained/snapshot";
-import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
-  matchesAttemptIdentity,
   readAttemptSetIdentity,
   readLatestAttemptByPath,
   readOwnedAttemptById,
@@ -44,8 +38,8 @@ export const readAttemptSetPage = Effect.fn(
   if (!args.attemptId && attempt.status !== "in-progress") {
     return null;
   }
-  const identity = yield* readAttemptSetIdentity(ctx, attempt);
-  if (identity?.locale !== args.locale) {
+  const identity = readAttemptSetIdentity(attempt);
+  if (identity.locale !== args.locale) {
     return null;
   }
   const page = yield* readRetainedSetPage(
@@ -59,18 +53,8 @@ export const readAttemptSetPage = Effect.fn(
   }
 
   const activePaths = yield* readTryoutDestinationPaths(ctx, identity);
-  if (activePaths.managed) {
-    return {
-      activeSetPublicPath: activePaths.activeSetPublicPath,
-      attemptId: attempt._id,
-      page,
-    };
-  }
-  const activeSet = yield* Effect.promise(() =>
-    getActiveTryoutSet(ctx, identity)
-  );
   return {
-    activeSetPublicPath: activeSet?.publicPath ?? null,
+    activeSetPublicPath: activePaths.activeSetPublicPath,
     attemptId: attempt._id,
     page,
   };
@@ -125,8 +109,8 @@ export const readAttemptSectionPage = Effect.fn(
   if (!attempt) {
     return null;
   }
-  const identity = yield* readAttemptSetIdentity(ctx, attempt);
-  if (identity?.locale !== args.locale) {
+  const identity = readAttemptSetIdentity(attempt);
+  if (identity.locale !== args.locale) {
     return null;
   }
   if (!args.attemptId && attempt.status !== "in-progress") {
@@ -138,13 +122,7 @@ export const readAttemptSectionPage = Effect.fn(
   if (!snapshot) {
     return null;
   }
-  const page = yield* readRetainedSectionPage(
-    ctx,
-    { ...args, setPublicPath },
-    attempt,
-    identity,
-    snapshot
-  );
+  const page = yield* readRetainedSectionPage(ctx, args, attempt);
   if (!page) {
     return null;
   }
@@ -154,45 +132,10 @@ export const readAttemptSectionPage = Effect.fn(
     requestedSectionPublicPath: args.publicPath,
     sectionKey: snapshot.sectionKey,
   });
-  if (!args.attemptId) {
-    if (activePaths.managed && activePaths.requestedSectionMatches === false) {
-      return null;
-    }
-    if (!activePaths.managed) {
-      const activePage = yield* readFilesystemSection(ctx, args);
-      if (activePage) {
-        const activeIdentity = {
-          countryKey: activePage.set.countryKey,
-          examKey: activePage.set.examKey,
-          locale: args.locale,
-          setKey: activePage.set.setKey,
-          trackKey: activePage.set.trackKey,
-        };
-        if (!matchesAttemptIdentity(identity, activeIdentity)) {
-          return null;
-        }
-        if (activePage.section.sectionKey !== snapshot.sectionKey) {
-          return null;
-        }
-      }
-    }
+  if (!args.attemptId && activePaths.requestedSectionMatches === false) {
+    return null;
   }
 
-  const activeIdentity = {
-    countryKey: page.set.countryKey,
-    examKey: page.set.examKey,
-    locale: args.locale,
-    sectionKey: page.section.sectionKey,
-    setKey: page.set.setKey,
-    trackKey: page.set.trackKey,
-  };
-  if (!activePaths.managed) {
-    const activePaths = yield* readFilesystemDestinationPaths(
-      ctx,
-      activeIdentity
-    );
-    return { ...activePaths, attemptId: attempt._id, page };
-  }
   return {
     activeSectionPublicPath: activePaths.activeSectionPublicPath,
     activeSetPublicPath: activePaths.activeSetPublicPath,

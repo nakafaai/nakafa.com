@@ -3,7 +3,7 @@ import type { ContentRouteArtifactTarget } from "@repo/backend/scripts/sync-cont
 import { locales } from "@repo/utilities/locales";
 
 /** Content row sync phases that must finish before route artifacts are rebuilt. */
-export type IncrementalSyncRowPhase = "articles" | "curriculum" | "tryouts";
+export type IncrementalSyncRowPhase = "articles" | "curriculum";
 
 /**
  * Ordered work plan for one incremental sync pass.
@@ -46,7 +46,6 @@ export function readIncrementalSyncPlan(
   const materialSourcePaths = sourcePaths.filter(
     (file) => isMaterialSourcePath(file) || isCurriculumSourcePath(file)
   );
-  const tryoutSourcePaths = sourcePaths.filter(isTryoutSourcePath);
   const quranSourcePaths = sourcePaths.filter(isQuranSourcePath);
   const articleRowsChanged =
     hasGraphProjectionChanges ||
@@ -61,12 +60,6 @@ export function readIncrementalSyncPlan(
     hasMaterialRegistryChanges ||
     hasProgramCatalogChanges ||
     materialSourcePaths.length > 0;
-  const tryoutRowsChanged =
-    hasContentProjectionChanges ||
-    hasSharedContentContractChanges ||
-    hasMaterialRegistryChanges ||
-    hasProgramCatalogChanges ||
-    tryoutSourcePaths.length > 0;
   const quranRowsChanged =
     hasGraphProjectionChanges ||
     hasSharedContentContractChanges ||
@@ -79,12 +72,7 @@ export function readIncrementalSyncPlan(
   if (curriculumRowsChanged) {
     rowPhases.push("curriculum");
   }
-  if (tryoutRowsChanged) {
-    rowPhases.push("tryouts");
-  }
-
-  const refreshPublicRoutes =
-    articleRowsChanged || curriculumRowsChanged || tryoutRowsChanged;
+  const refreshPublicRoutes = articleRowsChanged || curriculumRowsChanged;
   const routeArtifactTargets = [
     ...readRouteArtifactTargets(
       "articles",
@@ -100,14 +88,6 @@ export function readIncrementalSyncPlan(
       hasContentProjectionChanges ||
         hasSharedContentContractChanges ||
         hasSharedDateChanges ||
-        hasMaterialRegistryChanges ||
-        hasProgramCatalogChanges
-    ),
-    ...readRouteArtifactTargets(
-      "tryout",
-      tryoutSourcePaths,
-      hasContentProjectionChanges ||
-        hasSharedContentContractChanges ||
         hasMaterialRegistryChanges ||
         hasProgramCatalogChanges
     ),
@@ -214,15 +194,6 @@ function isSharedDatePath(file: string) {
 /** Return whether a changed path belongs to authored curriculum content. */
 function isCurriculumSourcePath(file: string) {
   return file.includes("/curriculum/");
-}
-
-/** Return whether a changed path can affect try-out projections. */
-function isTryoutSourcePath(file: string) {
-  return (
-    file.includes("/tryout/") ||
-    file.includes("/question-bank/tryout/") ||
-    file.startsWith("packages/contents/_types/question-bank/")
-  );
 }
 
 /** Return whether a changed path owns learning-graph projection logic. */

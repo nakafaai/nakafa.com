@@ -64,11 +64,6 @@ export type TryoutAnswerSelector = Infer<typeof tryoutAnswerSelectorValidator>;
 export const tryoutSectionContentAccessValidator = v.union(
   v.object({ kind: v.literal("none") }),
   v.object({
-    answers: v.boolean(),
-    kind: v.literal("filesystem"),
-    questions: v.boolean(),
-  }),
-  v.object({
     answers: v.array(tryoutAnswerSelectorValidator),
     kind: v.literal("signed"),
     questions: v.array(tryoutQuestionSelectorValidator),

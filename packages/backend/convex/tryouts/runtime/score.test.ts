@@ -31,6 +31,15 @@ const SET_IDENTITY = tryoutCatalogIdentity({
   setKey: "set-1",
   trackKey: TRACK_KEY,
 });
+const SECTION_IDENTITY = tryoutCatalogIdentity({
+  countryKey: "indonesia",
+  examKey: "snbt",
+  kind: "section",
+  locale: "id",
+  sectionKey: SECTION_KEY,
+  setKey: "set-1",
+  trackKey: TRACK_KEY,
+});
 const SNAPSHOT_ID = `sha256:${"a".repeat(64)}`;
 const FROZEN_RELEASE_ID = "release-score-frozen";
 const LATER_RELEASE = {
@@ -75,72 +84,6 @@ describe("tryouts/runtime/score", () => {
         name: "Score Snapshot",
         plan: "pro",
       });
-      const questionSetId = await ctx.db.insert("questionSets", {
-        contentHash: "question-set-hash",
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        questionCount: 1,
-        sectionKey: SECTION_KEY,
-        setKey: "set-1",
-        sourcePath: SECTION_SOURCE,
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Pengetahuan Kuantitatif",
-      });
-      const questionId = await ctx.db.insert("questions", {
-        answerBody: "Answer",
-        contentHash: "question-hash",
-        date: 0,
-        locale: "id",
-        number: 1,
-        questionBody: "Question",
-        questionSetId,
-        sourceKey: `${SECTION_SOURCE}:question-1`,
-        sourcePath: `${SECTION_SOURCE}/question-1`,
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Question",
-      });
-      const tryoutSetId = await ctx.db.insert("tryoutSets", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        isActive: true,
-        isReady: true,
-        locale: "id",
-        order: 1,
-        publicPath: SET_ROUTE,
-        readyQuestionCount: 1,
-        readyVisibleSectionCount: 1,
-        scoringStrategy: "raw",
-        sectionCount: 1,
-        setKey: "set-1",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        title: "Set 1",
-        trackKey: TRACK_KEY,
-        totalQuestionCount: 1,
-        visibleSectionCount: 1,
-      });
-      const sectionId = await ctx.db.insert("tryoutSections", {
-        countryKey: "indonesia",
-        examKey: "snbt",
-        locale: "id",
-        order: 1,
-        publicPath: SECTION_ROUTE,
-        questionCount: 1,
-        questionSetId,
-        questionSourcePath: SECTION_SOURCE,
-        sectionKey: SECTION_KEY,
-        setKey: "set-1",
-        sourceRevision: "2026",
-        syncedAt: NOW,
-        timeLimitSeconds: 1800,
-        title: "Pengetahuan Kuantitatif",
-        trackKey: TRACK_KEY,
-        tryoutSetId,
-        visibility: "visible",
-      });
       const attemptId = await ctx.db.insert("tryoutAttempts", {
         accessEndsAt: NOW + 86_400_000,
         accessSourceKind: "free",
@@ -160,24 +103,25 @@ describe("tryouts/runtime/score", () => {
           {
             publicPath: SECTION_ROUTE,
             questionCount: 1,
-            questionSetId,
             questionSourcePath: SECTION_SOURCE,
+            sectionIdentity: SECTION_IDENTITY,
             sectionKey: SECTION_KEY,
             sectionOrder: 1,
+            sectionRowHash: "section-row-hash",
             sourceRevision: "2026",
             timeLimitSeconds: 1800,
-            tryoutSectionId: sectionId,
           },
         ],
         setIdentity: SET_IDENTITY,
         setKey: "set-1",
+        setPublicPath: SET_ROUTE,
         snapshotReleaseId: FROZEN_RELEASE_ID,
         startedAt: NOW - 20_000,
         status: "in-progress",
         totalCorrect: 0,
         totalQuestions: 1,
         trackKey: TRACK_KEY,
-        tryoutSetId,
+        tryoutSnapshotId: SNAPSHOT_ID,
         userId,
       });
       const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
@@ -187,15 +131,17 @@ describe("tryouts/runtime/score", () => {
         endReason: null,
         expiresAt: NOW + 10_000,
         lastActivityAt: NOW - 1000,
+        sectionIdentity: SECTION_IDENTITY,
         sectionKey: SECTION_KEY,
         sectionOrder: 1,
         startedAt: NOW - 20_000,
         status: "completed",
         totalQuestions: 1,
         tryoutAttemptId: attemptId,
-        tryoutSectionId: sectionId,
       });
       const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
+        answerArtifactHash: "answer-artifact-hash",
+        answerContentKey: `${SECTION_SOURCE}/question-1/answer`,
         choiceSnapshots: [
           {
             isCorrect: true,
@@ -205,30 +151,30 @@ describe("tryouts/runtime/score", () => {
           },
         ],
         contentHash: "question-hash",
-        questionId,
+        placementIdentity: `${SECTION_IDENTITY}:question-1`,
+        placementRowHash: "placement-row-hash",
+        questionArtifactHash: "question-artifact-hash",
+        questionContentKey: `${SECTION_SOURCE}/question-1/question`,
         questionOrder: 1,
-        questionSourceKey: `${SECTION_SOURCE}:question-1`,
+        rendererDomain: "snbt-math",
+        sectionIdentity: SECTION_IDENTITY,
+        sectionKey: SECTION_KEY,
         sourcePath: `${SECTION_SOURCE}/question-1`,
         sourceRevision: "2026",
         title: "Question",
         tryoutAttemptId: attemptId,
-        tryoutSectionId: sectionId,
       });
 
       await ctx.db.insert("tryoutResponses", {
         answeredAt: NOW - 500,
         isCorrect: true,
         placementId,
-        questionId,
         selectedOptionId: "a",
         timeSpent: 1000,
         tryoutAttemptId: attemptId,
         tryoutSectionAttemptId: sectionAttemptId,
         updatedAt: NOW - 500,
       });
-      await ctx.db.patch(tryoutSetId, { scoringStrategy: "irt" });
-      await ctx.db.delete(tryoutSetId);
-
       const attempt = await ctx.db.get(attemptId);
 
       if (!attempt) {
