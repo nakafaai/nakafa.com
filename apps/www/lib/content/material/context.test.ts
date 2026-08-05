@@ -11,7 +11,7 @@ import {
   getPublishedMaterialContext,
   readPublishedMaterialContext,
 } from "@/lib/content/material/context";
-import { previewProjection, previewPublicRoute } from "@/test/content-preview";
+import { previewProjection } from "@/test/content-preview";
 import {
   testCurriculumRowJson,
   testProgramContexts,
@@ -66,30 +66,27 @@ describe("published material context", () => {
     await expect(
       getPublishedMaterialContext("en", previewProjection, context)
     ).resolves.toMatchObject({
-      managed: true,
-      value: {
-        context,
-        group: {
-          nodeKey: group.nodeKey,
-          publicPath: group.publicPath,
-        },
-        href: expect.stringContaining(
-          "/en/curriculum/merdeka/class-11/mathematics#"
-        ),
-        label: "Function Composition and Inverses",
-        mapping: {
-          canonicalPath: mapping.canonicalPath,
-        },
-        parent: {
-          nodeKey: testProgramSubject.nodeKey,
-          publicPath: testProgramSubject.publicPath,
-        },
+      context,
+      group: {
+        nodeKey: group.nodeKey,
+        publicPath: group.publicPath,
+      },
+      href: expect.stringContaining(
+        "/en/curriculum/merdeka/class-11/mathematics#"
+      ),
+      label: "Function Composition and Inverses",
+      mapping: {
+        canonicalPath: mapping.canonicalPath,
+      },
+      parent: {
+        nodeKey: testProgramSubject.nodeKey,
+        publicPath: testProgramSubject.publicPath,
       },
     });
     expect(cacheMock).toHaveBeenCalledOnce();
   });
 
-  it("distinguishes unmanaged and invalid optional hints", async () => {
+  it("rejects unmanaged context and preserves an invalid optional hint", async () => {
     fetchMock
       .mockResolvedValueOnce({
         groupJson: null,
@@ -108,21 +105,23 @@ describe("published material context", () => {
 
     await expect(
       Effect.runPromise(
-        readPublishedMaterialContext("en", previewProjection, context)
+        readPublishedMaterialContext("en", previewProjection, context).pipe(
+          Effect.flip
+        )
       )
-    ).resolves.toEqual({ managed: false, value: null });
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
     await expect(
       Effect.runPromise(
         readPublishedMaterialContext("en", previewProjection, context)
       )
-    ).resolves.toEqual({ managed: true, value: null });
+    ).resolves.toBeNull();
   });
 
   it("pins a context read to the expected active release", async () => {
     const activeReleaseId = ReleaseIdSchema.make("release-material");
     fetchMock.mockResolvedValueOnce({
       groupJson: null,
-      managed: false,
+      managed: true,
       mappingJson: null,
       parentJson: null,
       resolvedCanonicalPath: null,
@@ -137,34 +136,12 @@ describe("published material context", () => {
           activeReleaseId
         )
       )
-    ).resolves.toEqual({ managed: false, value: null });
+    ).resolves.toBeNull();
     expect(fetchMock).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         contentKey: previewProjection.contentKey,
         expectedActiveReleaseId: activeReleaseId,
-      })
-    );
-  });
-
-  it("uses a source route path as the stable content identity", async () => {
-    fetchMock.mockResolvedValueOnce({
-      groupJson: null,
-      managed: false,
-      mappingJson: null,
-      parentJson: null,
-      resolvedCanonicalPath: null,
-    });
-
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialContext("en", previewPublicRoute, context)
-      )
-    ).resolves.toEqual({ managed: false, value: null });
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        contentKey: previewPublicRoute.sourcePath,
       })
     );
   });
@@ -192,18 +169,12 @@ describe("published material context", () => {
       Effect.runPromise(
         readPublishedMaterialContext("en", previewProjection, context)
       )
-    ).resolves.toMatchObject({
-      managed: true,
-      value: { parent: { level: "course" } },
-    });
+    ).resolves.toMatchObject({ parent: { level: "course" } });
     await expect(
       Effect.runPromise(
         readPublishedMaterialContext("en", previewProjection, context)
       )
-    ).resolves.toMatchObject({
-      managed: true,
-      value: { label: group.title },
-    });
+    ).resolves.toMatchObject({ label: group.title });
   });
 
   it("accepts a backend-verified renamed material parent", async () => {
@@ -227,10 +198,7 @@ describe("published material context", () => {
         readPublishedMaterialContext("en", renamedMaterial, context)
       )
     ).resolves.toMatchObject({
-      managed: true,
-      value: {
-        mapping: { canonicalPath: mapping.canonicalPath },
-      },
+      mapping: { canonicalPath: mapping.canonicalPath },
     });
   });
 

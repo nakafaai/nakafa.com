@@ -19,18 +19,11 @@ import { readMaterialLlmsInventory } from "@/lib/llms/material-pages";
 type ContentSection = Exclude<LlmsSection, "site">;
 
 /** One bounded section inventory and the runtime that owns its rows. */
-export type LlmsSectionPages =
-  | {
-      readonly owner: "mixed";
-      readonly pageCount: number;
-      readonly publishedRouteCount: number;
-      readonly sourceRouteCount: number;
-    }
-  | {
-      readonly owner: "published" | "source";
-      readonly pageCount: number;
-      readonly routeCount: number;
-    };
+export interface LlmsSectionPages {
+  readonly owner: "published" | "source";
+  readonly pageCount: number;
+  readonly routeCount: number;
+}
 
 /** Reads bounded page counts from the active owner of one content section. */
 export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(
@@ -47,25 +40,10 @@ export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(
     }
     if (section === "material") {
       const inventory = yield* readMaterialLlmsInventory(locale);
-      if (inventory.owner === "mixed") {
-        return {
-          owner: "mixed",
-          pageCount: inventory.pageCount,
-          publishedRouteCount: inventory.publishedRouteCount,
-          sourceRouteCount: inventory.sourceRouteCount,
-        } satisfies LlmsSectionPages;
-      }
-      if (inventory.owner === "published") {
-        return {
-          owner: "published",
-          pageCount: inventory.pageCount,
-          routeCount: inventory.publishedRouteCount,
-        } satisfies LlmsSectionPages;
-      }
       return {
-        owner: "source",
+        owner: "published",
         pageCount: inventory.pageCount,
-        routeCount: inventory.sourceRouteCount,
+        routeCount: inventory.routeCount,
       } satisfies LlmsSectionPages;
     }
 
@@ -100,14 +78,6 @@ export function buildLlmsSectionPageMapText(
     owner === "published"
       ? "bounded published partitions"
       : `bounded catalog pages of at most ${CONTENT_ROUTE_ARTIFACT_PAGE_SIZE} routes`;
-  if (input.owner === "mixed") {
-    return renderLlmsIndexText({
-      lines,
-      summary: `For AI agents: ${input.sourceRouteCount} ${localeLabel} source-catalog ${sectionLabel.toLowerCase()} routes are reconciled with ${input.publishedRouteCount} exact published routes across ${pageCount} bounded source pages and published partitions. Follow the page pattern, then its page-level \`.md\` links.`,
-      title: `Nakafa ${localeLabel} ${sectionLabel} Pages`,
-    });
-  }
-
   return renderLlmsIndexText({
     lines,
     summary: `For AI agents: ${input.routeCount} ${localeLabel} ${sectionLabel.toLowerCase()} routes are split across ${pageCount} ${partitionLabel}. Follow the page pattern, then its page-level \`.md\` links.`,

@@ -20,7 +20,6 @@ const articleMocks = vi.hoisted(() => ({
   readPublishedArticleSitemap: vi.fn(),
 }));
 const materialMocks = vi.hoisted(() => ({
-  readPublishedMaterialBuckets: vi.fn(),
   readPublishedMaterialSitemap: vi.fn(),
 }));
 const programMocks = vi.hoisted(() => ({
@@ -31,11 +30,6 @@ const tryoutMocks = vi.hoisted(() => ({
   readPublishedTryoutSitemap: vi.fn(),
   readPublishedTryoutSitemapCount: vi.fn(),
 }));
-const ownershipMocks = vi.hoisted(() => ({
-  filterMaterialContentRows: vi.fn(),
-  filterMaterialPublicPaths: vi.fn(),
-}));
-const activeMaterialReleaseId = "release-material";
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleSitemap: articleMocks.readPublishedArticleSitemap,
@@ -43,7 +37,6 @@ vi.mock("@/lib/content/article/sitemap", () => ({
 vi.mock("@/lib/content/material/sitemap", () => materialMocks);
 vi.mock("@/lib/content/program/sitemap", () => programMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
-vi.mock("@/lib/sitemap/material", () => ownershipMocks);
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentSitemapPage: runtimeMocks.getRuntimeContentSitemapPage,
@@ -51,24 +44,9 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 }));
 
 beforeEach(() => {
-  ownershipMocks.filterMaterialContentRows
-    .mockReset()
-    .mockImplementation((_locale, rows) => Effect.succeed(rows));
-  ownershipMocks.filterMaterialPublicPaths
-    .mockReset()
-    .mockImplementation((_locale, paths) => Effect.succeed(paths));
   articleMocks.readPublishedArticleSitemap.mockReset();
   articleMocks.readPublishedArticleSitemap.mockReturnValue(
     Effect.succeed(null)
-  );
-  materialMocks.readPublishedMaterialBuckets.mockReset();
-  materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-    Effect.succeed({
-      activeReleaseId: null,
-      buckets: [],
-      managed: false,
-      materialCount: 0,
-    })
   );
   materialMocks.readPublishedMaterialSitemap.mockReset();
   materialMocks.readPublishedMaterialSitemap.mockReturnValue(
@@ -130,7 +108,7 @@ describe("sitemap route pages", () => {
     );
   });
 
-  it("serves base, content, and public route pages", async () => {
+  it("serves base, retained content, and public route pages", async () => {
     await expect(readPaths("base")).resolves.toEqual([
       "/",
       "/contributor",
@@ -141,14 +119,6 @@ describe("sitemap route pages", () => {
       "/security-policy",
       "/terms-of-service",
     ]);
-    await expect(readPaths("content_en_material_0")).resolves.toEqual([
-      "/subjects/chemistry/green-chemistry/definition",
-    ]);
-    expect(runtimeMocks.getRuntimeContentSitemapPage).toHaveBeenCalledWith({
-      locale: "en",
-      page: 0,
-      section: "material",
-    });
     await expect(readPaths("content_en_tryout_0")).resolves.toEqual([
       "/try-out/indonesia/snbt/2027/set-1",
       "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
@@ -231,14 +201,6 @@ describe("sitemap route pages", () => {
         syncedAt: 1_735_689_600_000,
       })
     );
-    materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: activeMaterialReleaseId,
-        buckets: ["abc"],
-        managed: true,
-        materialCount: 1,
-      })
-    );
     programMocks.readPublishedProgramBuckets.mockReturnValue(
       Effect.succeed({ buckets: ["abc"], managed: true })
     );
@@ -247,33 +209,14 @@ describe("sitemap route pages", () => {
     );
 
     await expect(readPaths("public_en_0")).resolves.toEqual([]);
-    expect(ownershipMocks.filterMaterialPublicPaths).toHaveBeenCalledWith(
-      "en",
-      [
-        "curriculum/merdeka/class-10/mathematics",
-        "subjects/mathematics/functions/concept",
-        "try-out/indonesia/snbt",
-      ],
-      activeMaterialReleaseId
-    );
   });
 
   it("rejects retained source material pages after family cutover", async () => {
-    materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: activeMaterialReleaseId,
-        buckets: ["abc"],
-        managed: true,
-        materialCount: 1,
-      })
-    );
-
     await expect(readFailure("content_en_material_0")).resolves.toMatchObject({
       _tag: "SitemapPageNotFoundError",
       pageId: "content_en_material_0",
     });
     expect(runtimeMocks.getRuntimeContentSitemapPage).not.toHaveBeenCalled();
-    expect(ownershipMocks.filterMaterialContentRows).not.toHaveBeenCalled();
   });
 
   it("fails when an id or its materialized page is missing", async () => {
@@ -284,9 +227,9 @@ describe("sitemap route pages", () => {
     runtimeMocks.getRuntimeContentSitemapPage.mockReturnValueOnce(
       Effect.succeed(null)
     );
-    await expect(readFailure("content_en_material_0")).resolves.toMatchObject({
+    await expect(readFailure("content_en_quran_0")).resolves.toMatchObject({
       _tag: "SitemapPageNotFoundError",
-      pageId: "content_en_material_0",
+      pageId: "content_en_quran_0",
     });
     runtimeMocks.getRuntimePublicSitemapPage.mockReturnValueOnce(
       Effect.succeed(null)
@@ -326,12 +269,6 @@ function readFailure(pageId: string) {
 }
 
 const routeRows = [
-  routeRow({
-    locale: "en",
-    route: "subjects/chemistry/green-chemistry/definition",
-    section: "material",
-    sourcePath: "material/lesson/chemistry/green-chemistry/definition",
-  }),
   routeRow({
     locale: "en",
     route: "try-out/indonesia/snbt/2027/set-1",

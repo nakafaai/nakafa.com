@@ -47,7 +47,6 @@ describe("published material sitemap", () => {
     ).resolves.toEqual({
       activeReleaseId,
       buckets: ["abc"],
-      managed: true,
       materialCount: 1,
     });
     await expect(
@@ -57,16 +56,31 @@ describe("published material sitemap", () => {
     });
   });
 
-  it("rejects an invalid release identity", async () => {
-    fetchMock.mockResolvedValueOnce({
-      activeReleaseId: "",
-      buckets: [],
-      managed: false,
-      materialCount: 0,
-    });
+  it("rejects invalid and unmanaged material inventories", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        activeReleaseId: "",
+        buckets: [],
+        managed: false,
+        materialCount: 0,
+      })
+      .mockResolvedValueOnce({
+        activeReleaseId,
+        buckets: [],
+        managed: false,
+        materialCount: 0,
+      })
+      .mockResolvedValueOnce({
+        activeReleaseId: null,
+        buckets: [],
+        managed: true,
+        materialCount: 0,
+      });
 
-    await expect(
-      Effect.runPromise(readPublishedMaterialBuckets("en").pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await expect(
+        Effect.runPromise(readPublishedMaterialBuckets("en").pipe(Effect.flip))
+      ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    }
   });
 });

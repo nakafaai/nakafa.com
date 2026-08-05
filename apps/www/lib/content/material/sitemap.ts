@@ -7,6 +7,7 @@ import {
   decodeMaterialReleasePin,
   type MaterialReleasePin,
 } from "@/lib/content/material/release";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
@@ -26,7 +27,17 @@ export const readPublishedMaterialBuckets = Effect.fn(
     expectedActiveReleaseId,
     { locale, publicPath: "materials" }
   );
-  return { ...result, activeReleaseId };
+  if (!result.managed || activeReleaseId === null) {
+    return yield* new PublishedProjectionError({
+      locale,
+      publicPath: "sitemap.xml",
+    });
+  }
+  return {
+    activeReleaseId,
+    buckets: result.buckets,
+    materialCount: result.materialCount,
+  };
 });
 
 /** Reads one complete verified material sitemap partition. */

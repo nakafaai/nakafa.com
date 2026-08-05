@@ -2,7 +2,6 @@ import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale } from "next-intl";
-import { readPublishedMaterialClaims } from "@/lib/content/material/ownership";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
@@ -38,21 +37,7 @@ const readProjectedMaterialRouteRejection = Effect.fn(
   if (ownership.kind === "missing") {
     return locale;
   }
-  const route = yield* getRuntimePublicRoute({ locale, publicPath });
-  if (route?.kind !== "subject-lesson" || !route.sourcePath) {
-    return locale;
-  }
-  const claims = yield* readPublishedMaterialClaims(
-    locale,
-    [{ contentKey: route.sourcePath, locale: route.locale }],
-    activeReleaseId
-  );
-  return claims.some(
-    (claim) =>
-      claim.contentKey === route.sourcePath && claim.locale === route.locale
-  )
-    ? locale
-    : null;
+  return locale;
 });
 
 /**

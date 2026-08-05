@@ -23,13 +23,6 @@ import {
   makeMaterialProjectionError,
 } from "@/lib/content/material/decode";
 import {
-  decodeMaterialClaims,
-  decodeMaterialSources,
-  type MaterialSourceCandidate,
-  type MaterialSourceClaim,
-  readPublishedMaterialShell,
-} from "@/lib/content/material/ownership";
-import {
   decodeMaterialReleasePin,
   type MaterialReleasePin,
 } from "@/lib/content/material/release";
@@ -39,50 +32,28 @@ import {
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
 
-/** Complete immutable shell data for one published material lesson. */
+interface PublishedMaterialIdentity {
+  readonly activeManifestHash: typeof Sha256HashSchema.Type;
+  readonly activeReleaseId: typeof ReleaseIdSchema.Type;
+  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
+}
+
+/** Complete immutable shell data for one signed material lesson or tombstone. */
 export type PublishedMaterialRoute =
-  | {
-      readonly activeManifestHash: null;
-      readonly activeReleaseId: MaterialReleasePin;
+  | (PublishedMaterialIdentity & {
       readonly alternates: readonly [];
-      readonly familyManaged: false;
-      readonly managed: false;
       readonly projection: null;
       readonly rendererDomain: null;
       readonly siblings: readonly [];
-      readonly sourceClaims: readonly MaterialSourceClaim[];
-      readonly sourceMaterials: readonly MaterialLessonProjection[];
       readonly sourcePath: null;
-      readonly sourceRevision: null;
-    }
-  | {
-      readonly activeManifestHash: typeof Sha256HashSchema.Type;
-      readonly activeReleaseId: typeof ReleaseIdSchema.Type;
-      readonly alternates: readonly [];
-      readonly familyManaged: boolean;
-      readonly managed: true;
-      readonly projection: null;
-      readonly rendererDomain: null;
-      readonly siblings: readonly [];
-      readonly sourceClaims: readonly MaterialSourceClaim[];
-      readonly sourceMaterials: readonly MaterialLessonProjection[];
-      readonly sourcePath: null;
-      readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-    }
-  | {
-      readonly activeManifestHash: typeof Sha256HashSchema.Type;
-      readonly activeReleaseId: typeof ReleaseIdSchema.Type;
+    })
+  | (PublishedMaterialIdentity & {
       readonly alternates: readonly MaterialLessonProjection[];
-      readonly familyManaged: boolean;
-      readonly managed: true;
       readonly projection: MaterialLessonProjection;
       readonly rendererDomain: RendererDomain;
       readonly siblings: readonly MaterialLessonProjection[];
-      readonly sourceClaims: readonly MaterialSourceClaim[];
-      readonly sourceMaterials: readonly MaterialLessonProjection[];
       readonly sourcePath: typeof CorpusSourcePathSchema.Type;
-      readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-    };
+    });
 
 /** Decodes the coherent active release identifiers carried by one route model. */
 const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
@@ -98,12 +69,6 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
       expectedActiveReleaseId,
       { locale, publicPath }
     );
-    if (activeManifestHash === null && releaseId === null) {
-      return {
-        activeManifestHash: null,
-        activeReleaseId: null,
-      };
-    }
     if (activeManifestHash === null || releaseId === null) {
       return yield* makeMaterialProjectionError({ locale, publicPath });
     }
@@ -119,32 +84,12 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
   }
 );
 
-/** Caches one exact material source overlay under content invalidation. */
-export async function getPublishedMaterialShell(
-  locale: Locale,
-  sourceCandidates: readonly MaterialSourceCandidate[],
-  expectedActiveReleaseId?: MaterialReleasePin
-) {
-  "use cache";
-
-  const result = await Effect.runPromise(
-    readPublishedMaterialShell(
-      locale,
-      sourceCandidates,
-      expectedActiveReleaseId
-    )
-  );
-  applyContentRuntimeCache();
-  return result;
-}
-
-/** Reads and validates one complete published material route model. */
+/** Reads and validates one complete signed material route model. */
 export const readPublishedMaterialRoute = Effect.fn(
   "NakafaMaterial.readPublishedRoute"
 )(function* (
   locale: Locale,
   publicPath: string,
-  sourceCandidates: readonly MaterialSourceCandidate[] = [],
   expectedActiveReleaseId?: MaterialReleasePin
 ) {
   const result = yield* readRuntimeQuery("contentRelease.material.route", () =>
@@ -154,60 +99,28 @@ export const readPublishedMaterialRoute = Effect.fn(
         : { expectedActiveReleaseId }),
       locale,
       publicPath,
-      sourceCandidates: Array.from(sourceCandidates),
     })
   );
-  const sourceClaims = yield* decodeMaterialClaims(
-    result.sourceClaims,
-    sourceCandidates,
-    { locale, publicPath }
-  );
-  const sourceMaterials = yield* decodeMaterialSources(
-    result.sourceProjectionJson,
-    sourceCandidates,
-    { locale, publicPath }
-  );
-  const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
-    locale,
-    publicPath,
-  });
-  const active = yield* decodeActiveIdentity(
-    result.activeManifestHash,
-    result.activeReleaseId,
-    expectedActiveReleaseId,
-    locale,
-    publicPath
-  );
-  if (!result.managed) {
-    return {
-      activeManifestHash: null,
-      activeReleaseId: active.activeReleaseId,
-      alternates: [],
-      familyManaged: false,
-      managed: false,
-      projection: null,
-      rendererDomain: null,
-      siblings: [],
-      sourceClaims,
-      sourceMaterials,
-      sourcePath: null,
-      sourceRevision: null,
-    } satisfies PublishedMaterialRoute;
-  }
-  if (active.activeManifestHash === null || active.activeReleaseId === null) {
+  if (!(result.managed && result.familyManaged)) {
     return yield* makeMaterialProjectionError({ locale, publicPath });
   }
+  const [active, sourceRevision] = yield* Effect.all([
+    decodeActiveIdentity(
+      result.activeManifestHash,
+      result.activeReleaseId,
+      expectedActiveReleaseId,
+      locale,
+      publicPath
+    ),
+    decodeSourceRevision(result.sourceRevision, { locale, publicPath }),
+  ]);
   if (result.projectionJson === null) {
     return {
       ...active,
       alternates: [],
-      familyManaged: result.familyManaged,
-      managed: true,
       projection: null,
       rendererDomain: null,
       siblings: [],
-      sourceClaims,
-      sourceMaterials,
       sourcePath: null,
       sourceRevision,
     } satisfies PublishedMaterialRoute;
@@ -225,10 +138,7 @@ export const readPublishedMaterialRoute = Effect.fn(
     ),
     Schema.decodeUnknown(RendererDomainSchema)(result.rendererDomain),
     Effect.forEach(result.siblingJson, (source) =>
-      decodeMaterialJson(source, {
-        locale,
-        publicPath,
-      })
+      decodeMaterialJson(source, { locale, publicPath })
     ),
     Schema.decodeUnknown(CorpusSourcePathSchema)(result.sourcePath),
   ]).pipe(
@@ -254,7 +164,7 @@ export const readPublishedMaterialRoute = Effect.fn(
         alternate.locale === projection.locale &&
         alternate.publicPath === projection.publicPath
     ) ||
-    (result.familyManaged && !completeLocaleSet) ||
+    !completeLocaleSet ||
     siblings.some((sibling) => !isMaterialSibling(projection, sibling)) ||
     !siblings.some((sibling) => sibling.publicPath === projection.publicPath)
   ) {
@@ -263,34 +173,24 @@ export const readPublishedMaterialRoute = Effect.fn(
   return {
     ...active,
     alternates,
-    familyManaged: result.familyManaged,
-    managed: true,
     projection,
     rendererDomain,
     siblings,
-    sourceClaims,
-    sourceMaterials,
     sourcePath,
     sourceRevision,
   } satisfies PublishedMaterialRoute;
 });
 
-/** Caches one exact material model under content release invalidation. */
+/** Caches one exact signed material model under release invalidation. */
 export async function getPublishedMaterialRoute(
   locale: Locale,
   publicPath: string,
-  sourceCandidates: readonly MaterialSourceCandidate[] = [],
   expectedActiveReleaseId?: MaterialReleasePin
 ) {
   "use cache";
 
   const result = await Effect.runPromise(
-    readPublishedMaterialRoute(
-      locale,
-      publicPath,
-      sourceCandidates,
-      expectedActiveReleaseId
-    )
+    readPublishedMaterialRoute(locale, publicPath, expectedActiveReleaseId)
   );
   applyContentRuntimeCache();
   return result;

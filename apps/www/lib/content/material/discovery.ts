@@ -2,7 +2,6 @@ import "server-only";
 
 import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
 import {
-  ContentKeySchema,
   CorpusSourcePathSchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
@@ -77,13 +76,19 @@ export const readPublishedMaterialBucket = Effect.fn(
     expectedActiveReleaseId,
     { locale, publicPath: "materials" }
   );
+  if (!result.managed || activeReleaseId === null) {
+    return yield* new PublishedProjectionError({
+      locale,
+      publicPath: "materials",
+    });
+  }
   if (result.materials === null) {
-    return { activeReleaseId, managed: result.managed, materials: null };
+    return { activeReleaseId, materials: null };
   }
   const materials = yield* Effect.forEach(result.materials, (summary) =>
     decodeMaterialSummary(summary, locale)
   );
-  return { activeReleaseId, managed: result.managed, materials };
+  return { activeReleaseId, materials };
 });
 
 /** Reads a bounded newest-first material set for feed discovery. */
@@ -98,24 +103,17 @@ export const readPublishedLatestMaterials = Effect.fn(
     undefined,
     { locale, publicPath: "materials" }
   );
+  if (!result.managed || activeReleaseId === null) {
+    return yield* new PublishedProjectionError({
+      locale,
+      publicPath: "materials",
+    });
+  }
   const materials = yield* Effect.forEach(result.materials, (summary) =>
     decodeMaterialSummary(summary, locale)
   );
-  const claimedContentKeys = yield* Schema.decodeUnknown(
-    Schema.Array(ContentKeySchema)
-  )(result.claimedContentKeys).pipe(
-    Effect.mapError(
-      () =>
-        new PublishedProjectionError({
-          locale,
-          publicPath: "materials",
-        })
-    )
-  );
   return {
     activeReleaseId,
-    claimedContentKeys,
-    managed: result.managed,
     materials,
   };
 });

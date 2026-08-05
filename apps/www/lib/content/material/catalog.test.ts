@@ -99,7 +99,6 @@ describe("published material catalog", () => {
       .mockResolvedValueOnce(materialPage());
 
     await expect(getPublishedMaterialRoutes("en")).resolves.toMatchObject({
-      managed: true,
       routes: [previewProjection, previewProjection],
       sourceRevision,
     });
@@ -112,16 +111,14 @@ describe("published material catalog", () => {
     expect(cacheMock).toHaveBeenCalledOnce();
   });
 
-  it("preserves unmanaged and stale ownership states", async () => {
+  it("rejects unmanaged and stale ownership states", async () => {
     fetchMock
       .mockResolvedValueOnce(materialPage({ managed: false, routes: [] }))
       .mockResolvedValueOnce(materialPage({ routes: [], stale: true }));
 
-    await expect(getPublishedMaterialRoutes("en")).resolves.toEqual({
-      managed: false,
-      routes: [],
-      sourceRevision: null,
-    });
+    await expect(
+      Effect.runPromise(readPublishedMaterialRoutes("en").pipe(Effect.flip))
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
     await expect(
       Effect.runPromise(readPublishedMaterialRoutes("en").pipe(Effect.flip))
     ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });

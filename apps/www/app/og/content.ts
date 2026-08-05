@@ -1,7 +1,7 @@
 import type { Locale } from "next-intl";
+import { readMaterialMetadata } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import { parseMaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata";
-import { readMaterialMetadata } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
 import { getCachedMetadataFromSlug } from "@/lib/utils/system";
 
 /** Reads OG copy through the same exclusive owner as a material page. */

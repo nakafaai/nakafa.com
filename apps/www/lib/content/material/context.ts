@@ -4,7 +4,6 @@ import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculu
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
-import type { PublicMaterialLessonRoute } from "@repo/contents/_types/route/schema";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -17,15 +16,10 @@ import {
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
 
-type PublishedMaterialIdentity =
-  | Pick<
-      MaterialLessonProjection,
-      "contentKey" | "materialKey" | "parentPath" | "publicPath"
-    >
-  | Pick<
-      PublicMaterialLessonRoute,
-      "materialKey" | "parentPath" | "publicPath" | "sourcePath"
-    >;
+type PublishedMaterialIdentity = Pick<
+  MaterialLessonProjection,
+  "contentKey" | "materialKey" | "parentPath" | "publicPath"
+>;
 
 /** Verified curriculum return link for one material lesson. */
 export interface PublishedMaterialContext {
@@ -46,14 +40,12 @@ export const readPublishedMaterialContext = Effect.fn(
   context: MaterialContextIdentity,
   expectedActiveReleaseId?: MaterialReleasePin
 ) {
-  const contentKey =
-    "contentKey" in material ? material.contentKey : material.sourcePath;
   const result = yield* readRuntimeQuery("contentRelease.program.context", () =>
     fetchRuntimeQuery(api.contentRelease.program.context, {
       ...(expectedActiveReleaseId === undefined
         ? {}
         : { expectedActiveReleaseId }),
-      contentKey,
+      contentKey: material.contentKey,
       locale,
       materialKey: material.materialKey,
       nodeKey: context.nodeKey,
@@ -63,7 +55,10 @@ export const readPublishedMaterialContext = Effect.fn(
     })
   );
   if (!result.managed) {
-    return { managed: false, value: null };
+    return yield* new PublishedProjectionError({
+      locale,
+      publicPath: material.publicPath,
+    });
   }
   if (
     result.groupJson === null &&
@@ -71,7 +66,7 @@ export const readPublishedMaterialContext = Effect.fn(
     result.parentJson === null &&
     result.resolvedCanonicalPath === null
   ) {
-    return { managed: true, value: null };
+    return null;
   }
   if (
     result.groupJson === null ||
@@ -115,16 +110,13 @@ export const readPublishedMaterialContext = Effect.fn(
   }
   const label = group.materialCardTitle ?? group.title;
   return {
-    managed: true,
-    value: {
-      context,
-      group,
-      href: `/${locale}/${parent.publicPath}#${slugify(label)}`,
-      label,
-      mapping,
-      parent,
-    } satisfies PublishedMaterialContext,
-  };
+    context,
+    group,
+    href: `/${locale}/${parent.publicPath}#${slugify(label)}`,
+    label,
+    mapping,
+    parent,
+  } satisfies PublishedMaterialContext;
 });
 
 /** Caches one validated material context under release invalidation. */

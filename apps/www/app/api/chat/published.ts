@@ -32,15 +32,6 @@ export const readPublishedNinaMaterial = Effect.fn(
     input.locale,
     input.publicPath
   );
-  if (!published.managed) {
-    return {
-      contentKey: null,
-      learning: null,
-      managed: false,
-      placement: undefined,
-      programManaged: false,
-    };
-  }
   if (!published.projection) {
     return yield* new PublishedProjectionError({
       locale: input.locale,
@@ -62,11 +53,8 @@ export const readPublishedNinaMaterial = Effect.fn(
   const context = readMaterialContextHint(input.contextHint);
   if (!context) {
     return {
-      contentKey: published.projection.contentKey,
       learning,
-      managed: true,
       placement: undefined,
-      programManaged: false,
     };
   }
   const resolved = yield* readPublishedMaterialContext(
@@ -75,26 +63,14 @@ export const readPublishedNinaMaterial = Effect.fn(
     context,
     published.activeReleaseId
   );
-  if (!resolved.managed) {
+  if (!resolved) {
     return {
-      contentKey: published.projection.contentKey,
       learning,
-      managed: true,
       placement: undefined,
-      programManaged: false,
-    };
-  }
-  if (!resolved.value) {
-    return {
-      contentKey: published.projection.contentKey,
-      learning,
-      managed: true,
-      placement: undefined,
-      programManaged: true,
     };
   }
   const programKey = yield* Schema.decodeUnknown(LearningProgramKeySchema)(
-    resolved.value.context.programKey
+    resolved.context.programKey
   ).pipe(
     Effect.mapError(
       () =>
@@ -105,16 +81,13 @@ export const readPublishedNinaMaterial = Effect.fn(
     )
   );
   return {
-    contentKey: published.projection.contentKey,
     learning,
-    managed: true,
     placement: {
       mode: "placement",
-      nodeKey: resolved.value.context.nodeKey,
-      parentHref: resolved.value.href,
-      parentTitle: resolved.value.label,
+      nodeKey: resolved.context.nodeKey,
+      parentHref: resolved.href,
+      parentTitle: resolved.label,
       programKey,
     } satisfies NinaLearningSessionInput["placement"],
-    programManaged: true,
   };
 });

@@ -19,7 +19,7 @@ vi.mock(
   () => ({ toMaterialMetadataCopy: mocks.toMaterialMetadataCopy })
 );
 vi.mock(
-  "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source",
+  "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content",
   () => ({ readMaterialMetadata: mocks.readMaterialMetadata })
 );
 vi.mock("@/lib/utils/system", () => ({

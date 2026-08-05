@@ -3,10 +3,7 @@ import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Data, Effect } from "effect";
 import { hasLocale } from "next-intl";
-import {
-  MissingLocalizedRouteProjectionError,
-  readProjectedRouteSuffix,
-} from "@/lib/routing/locale/project";
+import { MissingLocalizedRouteProjectionError } from "@/lib/routing/locale/error";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import { projectLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
@@ -155,15 +152,7 @@ export const resolveLocalizedNavigationHref = Effect.fn(
       )
     );
 
-    return toNavigationHref(
-      targetRoute.publicPath,
-      readProjectedRouteSuffix({
-        index,
-        route: projectedRoute,
-        search: parsed.search,
-        targetRoute,
-      })
-    );
+    return toNavigationHref(targetRoute.publicPath, "");
   }
 
   if (isProjectedNamespace(parsed.publicPath, parsed.currentLocale)) {

@@ -1,16 +1,13 @@
-import type { MaterialMetadataSource } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
+import type { MaterialMetadataContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 
-/** Derives one consistent title and description from any material owner. */
+/** Derives one consistent title and description from verified metadata. */
 export function toMaterialMetadataCopy(
-  source: Pick<MaterialMetadataSource, "metadata" | "route">
+  source: Pick<MaterialMetadataContent, "metadata">
 ) {
-  const { metadata, route } = source;
-  const routeTitle = "metadata" in route ? route.metadata.title : route.title;
-  const routeDescription =
-    "metadata" in route ? route.metadata.description : route.description;
+  const { metadata } = source;
 
   return {
-    description: metadata?.description ?? routeDescription ?? routeTitle,
-    title: metadata?.title ?? routeTitle,
+    description: metadata.description ?? metadata.subject ?? metadata.title,
+    title: metadata.title,
   };
 }

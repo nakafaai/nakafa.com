@@ -9,7 +9,6 @@ import {
   buildPublishedContentLlmsEntries,
   buildRuntimeContentLlmsEntries,
 } from "@/lib/llms/entries";
-import { reconcileMaterialLlmsRows } from "@/lib/llms/material";
 import { readMaterialLlmsInventory } from "@/lib/llms/material-pages";
 
 /**
@@ -48,42 +47,21 @@ export const getContentPageLlmsEntries = Effect.fn(
 
   if (section === "material") {
     const inventory = yield* readMaterialLlmsInventory(locale);
-    const publishedPage = page - inventory.sourcePageCount;
-    if (publishedPage >= 0 && inventory.owner !== "source") {
-      const bucket = inventory.buckets[publishedPage];
-      if (!bucket) {
-        return null;
-      }
-      const partition = yield* readPublishedMaterialBucket(
-        locale,
-        bucket,
-        inventory.activeReleaseId
-      );
-      if (!(partition.managed && partition.materials)) {
-        return null;
-      }
-      return buildPublishedContentLlmsEntries({
-        locale,
-        rows: partition.materials,
-        section,
-      });
-    }
-    const artifactPage = yield* getRuntimeContentRouteArtifactPage({
-      locale,
-      page,
-      section,
-    });
-    if (!artifactPage) {
+    const bucket = inventory.buckets[page];
+    if (!bucket) {
       return null;
     }
-    const rows = yield* reconcileMaterialLlmsRows(
+    const partition = yield* readPublishedMaterialBucket(
       locale,
-      artifactPage.routes,
+      bucket,
       inventory.activeReleaseId
     );
-    return buildRuntimeContentLlmsEntries({
+    if (!partition.materials) {
+      return null;
+    }
+    return buildPublishedContentLlmsEntries({
       locale,
-      rows,
+      rows: partition.materials,
       section,
     });
   }

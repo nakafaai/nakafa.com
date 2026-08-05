@@ -1,4 +1,5 @@
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ContentPagination } from "@repo/contents/_types/content";
@@ -10,22 +11,17 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import {
+  type MaterialPageContent,
+  readMaterialMetadata,
+  readMaterialPage,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import { listMaterialStaticParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata";
 import {
-  readMaterialAlternates,
-  readMaterialContentKey,
-  readMaterialIcon,
   readMaterialNavigation,
-  readMaterialParentTitle,
   toMaterialHref,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
-import {
-  type MaterialPageSource,
-  type MaterialViewRoute,
-  readMaterialMetadata,
-  readMaterialPage,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/source";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
@@ -45,7 +41,7 @@ import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 type MaterialPageProps =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">;
-type MaterialPageContent = Pick<MaterialPageSource, "body" | "metadata">;
+type MaterialBody = Pick<MaterialPageContent, "body" | "metadata">;
 type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
 type ArticleJsonLdAuthor = ArrayItem<
   Parameters<typeof ArticleJsonLd>[0]["author"]
@@ -78,13 +74,9 @@ export async function generateMetadata({
     title: { absolute: title },
     description,
     authors: metadata?.authors.map(({ name }) => ({ name })),
-    alternates: createResolvedRouteAlternates(
-      route,
-      readMaterialAlternates(source),
-      {
-        types: { "text/markdown": `${path}.md` },
-      }
-    ),
+    alternates: createResolvedRouteAlternates(route, source.alternates, {
+      types: { "text/markdown": `${path}.md` },
+    }),
     ...getSocialMetadata({
       title,
       description,
@@ -121,7 +113,7 @@ export default async function Page({
         programKey: navigation.context.programKey,
       }
     : undefined;
-  const contentKey = readMaterialContentKey(page);
+  const contentKey = page.route.contentKey;
   const contentId = getContentViewId({
     locale,
     route: contentKey,
@@ -139,10 +131,10 @@ export default async function Page({
         content={{ body: page.body, metadata: page.metadata }}
         footer={<DeferredComments slug={contentKey} />}
         headerLink={navigation.link}
-        icon={readMaterialIcon(page)}
+        icon={getMaterialIcon(page.rendererDomain)}
         locale={locale}
         pagination={navigation.pagination}
-        parentTitle={readMaterialParentTitle(page)}
+        parentTitle={page.route.topicTitle}
         route={route}
         sourceUrl={page.sourceUrl}
         toolbar={
@@ -182,17 +174,17 @@ async function MaterialLessonPage({
   toolbar,
 }: {
   children: ReactNode;
-  content: MaterialPageContent;
+  content: MaterialBody;
   footer: ReactNode;
   headerLink?: {
     href: string;
     label: string;
   };
-  icon: ReturnType<typeof readMaterialIcon>;
+  icon: ReturnType<typeof getMaterialIcon>;
   locale: Locale;
   pagination: ContentPagination;
   parentTitle: string;
-  route: MaterialViewRoute;
+  route: MaterialPageContent["route"];
   sourceUrl: null | string;
   toolbar: ReactNode;
 }) {
