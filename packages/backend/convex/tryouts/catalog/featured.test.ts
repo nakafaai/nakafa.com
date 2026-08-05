@@ -1,15 +1,123 @@
+import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
+import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
+import {
+  TryoutCatalogRowSchema,
+  TryoutPlacementSchema,
+} from "@nakafa/aksara-contracts/tryout/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { readFeaturedTryout } from "@repo/backend/convex/tryouts/catalog/featured";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
+import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
 import {
   activateTryoutStartSource,
+  makeTryoutStartCatalog,
+  makeTryoutStartHierarchy,
   makeTryoutStartPlacement,
+  TRYOUT_REUSED_SECTION,
+  TRYOUT_REUSED_SET,
   TRYOUT_START_CONTENT_HASH,
+  TRYOUT_START_COUNTRY,
+  TRYOUT_START_EXAM,
+  TRYOUT_START_SECTION,
+  TRYOUT_START_SET,
+  TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout-source";
 import { convexTest } from "convex-test";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
+
+const FIRST_SOURCE_SEGMENT = `/${TRYOUT_START_SECTION}/${TRYOUT_START_SET}`;
+const SECOND_SOURCE_SEGMENT = `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}`;
+const SECOND_SET_PATH = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_REUSED_SET}`;
+
+/** Gives copied fixture rows distinct graph identities. */
+function makeSecondSetGraph(graph: TryoutCatalogRow["graph"]) {
+  return {
+    alignmentId: `${graph.alignmentId}:second`,
+    assetId: `${graph.assetId}:second`,
+    conceptId: `${graph.conceptId}:second`,
+    learningObjectId: `${graph.learningObjectId}:second`,
+    lensId: `${graph.lensId}:second`,
+  };
+}
+
+/** Builds a hierarchy whose first set is private and second set is public. */
+function makeInternalThenVisibleCatalog(
+  locale: (typeof ContentLocaleSchema.literals)[number]
+) {
+  const privateFirstHierarchy = makeTryoutStartHierarchy(
+    locale,
+    "internal-entry"
+  ).map((row) =>
+    row.kind === "track"
+      ? {
+          ...row,
+          questionCount: 2,
+          sectionCount: 2,
+          setCount: 2,
+          visibleSectionCount: 1,
+        }
+      : row
+  );
+  const publicSecondSet = makeTryoutStartCatalog(locale, "visible").map(
+    (row) => {
+      const graph = makeSecondSetGraph(row.graph);
+      if (row.kind === "set") {
+        return {
+          ...row,
+          graph,
+          order: 2,
+          publicPath: SECOND_SET_PATH,
+          setKey: TRYOUT_REUSED_SET,
+          title: "Set 2",
+        };
+      }
+
+      if (row.kind === "section") {
+        return {
+          ...row,
+          graph,
+          publicPath: `${SECOND_SET_PATH}/${TRYOUT_REUSED_SECTION}`,
+          questionSourcePath: row.questionSourcePath.replace(
+            FIRST_SOURCE_SEGMENT,
+            SECOND_SOURCE_SEGMENT
+          ),
+          sectionKey: TRYOUT_REUSED_SECTION,
+          setKey: TRYOUT_REUSED_SET,
+          title: "Aljabar",
+        };
+      }
+
+      return row;
+    }
+  );
+
+  return Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))([
+    ...privateFirstHierarchy,
+    ...publicSecondSet,
+  ]);
+}
+
+/** Moves the technical placement into the public second set. */
+function makeSecondSetPlacement(
+  locale: (typeof ContentLocaleSchema.literals)[number]
+) {
+  const placement = makeTryoutStartPlacement(locale);
+  const moveToSecondSet = (value: string) =>
+    value.replace(FIRST_SOURCE_SEGMENT, SECOND_SOURCE_SEGMENT);
+
+  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+    ...placement,
+    answerContentKey: moveToSecondSet(placement.answerContentKey),
+    questionContentKey: moveToSecondSet(placement.questionContentKey),
+    questionSourcePath: moveToSecondSet(placement.questionSourcePath),
+    sectionKey: TRYOUT_REUSED_SECTION,
+    setKey: TRYOUT_REUSED_SET,
+    title: "Second set question",
+  });
+}
 
 describe("tryouts/catalog/featured", () => {
   it("returns the first visible signed question for the public landing demo", async () => {
@@ -55,6 +163,29 @@ describe("tryouts/catalog/featured", () => {
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
+  });
+
+  it("continues to the next set when the first set has no visible section", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      activateTryoutSnapshot(ctx, {
+        catalog: ContentLocaleSchema.literals.flatMap(
+          makeInternalThenVisibleCatalog
+        ),
+        placements: ContentLocaleSchema.literals.flatMap((locale) => [
+          makeTryoutStartPlacement(locale),
+          makeSecondSetPlacement(locale),
+        ]),
+      })
+    );
+
+    const featured = await t.query((ctx) =>
+      runConvexProgram(readFeaturedTryout(ctx, "id"))
+    );
+
+    expect(featured.question.contentKey).toContain(
+      `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}/`
+    );
   });
 
   it("requires one active signed hierarchy", async () => {
