@@ -28,7 +28,8 @@ const tryoutSectionSnapshotValidator = v.object({
   timeLimitSeconds: v.number(),
 });
 
-const tables = {
+/** Signed release bundles required by protected content-runtime reads. */
+export const tryoutBundleSchema = {
   /** One immutable signed renderer bundle shared by attempts from one release. */
   tryoutBundles: defineTable({
     createdAt: v.number(),
@@ -41,7 +42,10 @@ const tables = {
   })
     .index("by_releaseId", ["releaseId"])
     .index("by_snapshotId_and_index", ["snapshotId", "index"]),
+};
 
+const tables = {
+  ...tryoutBundleSchema,
   tryoutAttempts: defineTable({
     userId: v.id("users"),
     tryoutSnapshotId: v.string(),
