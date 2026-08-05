@@ -13,20 +13,19 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import {
   type ColumnFiltersState,
-  flexRender,
   functionalUpdate,
-  getCoreRowModel,
   type Header,
   type OnChangeFn,
+  type ReactTable,
   type SortingState,
-  type Table as TanStackTable,
-  useReactTable,
+  useTable,
 } from "@tanstack/react-table";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
 import { createTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
+import { tryoutTableFeatures } from "@/components/tryout/catalog/table/features";
 import { readTryoutSetStatusFilter } from "@/components/tryout/catalog/table/filter";
 import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
 import { readTryoutSetSort } from "@/components/tryout/catalog/table/sort";
@@ -125,11 +124,11 @@ export function TryoutSetTable({
 
   // TanStack's supported React adapter intentionally owns this narrow state boundary.
   // react-doctor-disable-next-line react-hooks-js/incompatible-library
-  const table = useReactTable({
+  const table = useTable({
     columns,
     data: visibleRows,
     enableMultiSort: false,
-    getCoreRowModel: getCoreRowModel(),
+    features: tryoutTableFeatures,
     getRowId: (row) => row.setKey,
     manualFiltering: true,
     manualSorting: true,
@@ -170,7 +169,7 @@ export function TryoutSetTable({
                       )}
                       key={header.id}
                     >
-                      <TryoutTableHeaderContent header={header} />
+                      <TryoutTableHeaderContent header={header} table={table} />
                     </TableHead>
                   ))}
                 </TableRow>
@@ -198,14 +197,16 @@ export function TryoutSetTable({
 /** Renders one concrete TanStack header or nothing for a placeholder. */
 function TryoutTableHeaderContent({
   header,
+  table,
 }: {
-  header: Header<TryoutSetRow, unknown>;
+  header: Header<typeof tryoutTableFeatures, TryoutSetRow, unknown>;
+  table: ReactTable<typeof tryoutTableFeatures, TryoutSetRow>;
 }) {
   if (header.isPlaceholder) {
     return null;
   }
 
-  return flexRender(header.column.columnDef.header, header.getContext());
+  return <table.FlexRender header={header} />;
 }
 
 /** Renders the infinite-query sentinel until Convex exhausts the result set. */
@@ -216,7 +217,7 @@ function TryoutTableLoader({
 }: {
   data: ReturnType<typeof useTryoutSetData>;
   scrollRoot: HTMLDivElement | null;
-  table: TanStackTable<TryoutSetRow>;
+  table: ReactTable<typeof tryoutTableFeatures, TryoutSetRow>;
 }) {
   if (data.exhausted) {
     return null;
@@ -224,7 +225,7 @@ function TryoutTableLoader({
 
   return (
     <TableRow aria-hidden="true" className="h-px hover:bg-transparent">
-      <TableCell className="p-0" colSpan={table.getVisibleLeafColumns().length}>
+      <TableCell className="p-0" colSpan={table.getAllLeafColumns().length}>
         <Intersection
           className="h-px"
           key={data.loadKey}
