@@ -31,6 +31,13 @@ import { describe, expect, it } from "vitest";
 const FIRST_SOURCE_SEGMENT = `/${TRYOUT_START_SECTION}/${TRYOUT_START_SET}`;
 const SECOND_SOURCE_SEGMENT = `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}`;
 const SECOND_SET_PATH = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_REUSED_SET}`;
+const SECOND_TRACK = "second-track";
+const SECOND_TRACK_PATH = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${SECOND_TRACK}`;
+const SECOND_TRACK_SET_PATH = `${SECOND_TRACK_PATH}/${TRYOUT_REUSED_SET}`;
+type NestedCatalogRow = Extract<
+  TryoutCatalogRow,
+  { readonly kind: "section" | "set" | "track" }
+>;
 
 /** Gives copied fixture rows distinct graph identities. */
 function makeSecondSetGraph(graph: TryoutCatalogRow["graph"]) {
@@ -119,6 +126,69 @@ function makeSecondSetPlacement(
   });
 }
 
+/** Builds a hierarchy whose first track is private and second track is public. */
+function makeInternalTrackThenVisibleCatalog(
+  locale: (typeof ContentLocaleSchema.literals)[number]
+) {
+  const privateFirstTrack = makeTryoutStartHierarchy(locale, "internal-entry");
+  const publicSecondTrack = makeTryoutStartHierarchy(locale, "visible")
+    .filter(
+      (row): row is NestedCatalogRow =>
+        row.kind === "track" || row.kind === "set" || row.kind === "section"
+    )
+    .map((row) => {
+      const graph = makeSecondSetGraph(row.graph);
+      if (row.kind === "track") {
+        return {
+          ...row,
+          graph,
+          order: 2,
+          publicPath: SECOND_TRACK_PATH,
+          title: "Second track",
+          trackKey: SECOND_TRACK,
+        };
+      }
+      if (row.kind === "set") {
+        return {
+          ...row,
+          graph,
+          publicPath: SECOND_TRACK_SET_PATH,
+          setKey: TRYOUT_REUSED_SET,
+          title: "Set 2",
+          trackKey: SECOND_TRACK,
+        };
+      }
+      return {
+        ...row,
+        graph,
+        publicPath: `${SECOND_TRACK_SET_PATH}/${TRYOUT_REUSED_SECTION}`,
+        questionSourcePath: row.questionSourcePath.replace(
+          FIRST_SOURCE_SEGMENT,
+          SECOND_SOURCE_SEGMENT
+        ),
+        sectionKey: TRYOUT_REUSED_SECTION,
+        setKey: TRYOUT_REUSED_SET,
+        title: "Aljabar",
+        trackKey: SECOND_TRACK,
+      };
+    });
+
+  return Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))([
+    ...privateFirstTrack,
+    ...publicSecondTrack,
+  ]);
+}
+
+/** Moves the public technical placement into the second authored track. */
+function makeSecondTrackPlacement(
+  locale: (typeof ContentLocaleSchema.literals)[number]
+) {
+  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+    ...makeSecondSetPlacement(locale),
+    trackKey: SECOND_TRACK,
+  });
+}
+
 describe("tryouts/catalog/featured", () => {
   it("returns the first visible signed question for the public landing demo", async () => {
     const t = convexTest(schema, convexModules);
@@ -175,6 +245,29 @@ describe("tryouts/catalog/featured", () => {
         placements: ContentLocaleSchema.literals.flatMap((locale) => [
           makeTryoutStartPlacement(locale),
           makeSecondSetPlacement(locale),
+        ]),
+      })
+    );
+
+    const featured = await t.query((ctx) =>
+      runConvexProgram(readFeaturedTryout(ctx, "id"))
+    );
+
+    expect(featured.question.contentKey).toContain(
+      `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}/`
+    );
+  });
+
+  it("continues to the next track when the first track is private", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      activateTryoutSnapshot(ctx, {
+        catalog: ContentLocaleSchema.literals.flatMap(
+          makeInternalTrackThenVisibleCatalog
+        ),
+        placements: ContentLocaleSchema.literals.flatMap((locale) => [
+          makeTryoutStartPlacement(locale),
+          makeSecondTrackPlacement(locale),
         ]),
       })
     );

@@ -1,6 +1,11 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
-import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import {
+  inheritContentSnapshots,
+  invertContentSnapshots,
+  replaceContentSnapshot,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -32,7 +37,13 @@ const activate = internal.contentRelease.activate.activate;
 const activateRecovery = internal.contentRelease.activate.activateRecovery;
 
 /** Seeds one verified genesis candidate and its exact verified inverse. */
-async function seedVerifiedPair(ctx: Parameters<typeof insertTestState>[0]) {
+async function seedVerifiedPair(
+  ctx: Parameters<typeof insertTestState>[0],
+  snapshots?: {
+    readonly candidate: ContentSnapshotSet;
+    readonly recovery: ContentSnapshotSet;
+  }
+) {
   await insertZeroRelease(ctx, {
     ...CANDIDATE,
     ownership: {
@@ -40,6 +51,7 @@ async function seedVerifiedPair(ctx: Parameters<typeof insertTestState>[0]) {
       result: ContentFamilySchema.literals,
     },
     role: "candidate",
+    snapshots: snapshots?.candidate,
     status: "verified",
   });
   await insertZeroRelease(ctx, {
@@ -51,6 +63,7 @@ async function seedVerifiedPair(ctx: Parameters<typeof insertTestState>[0]) {
       result: [],
     },
     role: "recovery",
+    snapshots: snapshots?.recovery,
     status: "verified",
   });
   await insertTestState(ctx, {
@@ -143,6 +156,62 @@ describe("contentRelease/activate", () => {
       searchReleaseId: CANDIDATE.releaseId,
     });
     expect(state?.candidateReleaseId).toBeUndefined();
+  });
+
+  it("retains and repairs the active release try-out bundle", async () => {
+    const t = convexTest(schema, convexModules);
+    const candidate = {
+      ...inheritContentSnapshots(null),
+      tryout: replaceContentSnapshot({
+        baseSnapshotId: null,
+        resultSnapshotId: TEST_DIGEST,
+        rowCount: 1,
+        rowDigest: TEST_DIGEST,
+      }),
+    };
+    await t.mutation((ctx) =>
+      seedVerifiedPair(ctx, {
+        candidate,
+        recovery: invertContentSnapshots(candidate),
+      })
+    );
+
+    await t.mutation(activate, {
+      manifestHash: CANDIDATE.manifestHash,
+      releaseId: CANDIDATE.releaseId,
+      rendererJson: testRendererJson(),
+    });
+    const retained = await t.run((ctx) =>
+      ctx.db.query("tryoutBundles").unique()
+    );
+    expect(retained).toMatchObject({
+      manifestHash: CANDIDATE.manifestHash,
+      releaseId: CANDIDATE.releaseId,
+      snapshotId: TEST_DIGEST,
+    });
+
+    await t.mutation(async (ctx) => {
+      const bundle = await ctx.db.query("tryoutBundles").unique();
+      if (!bundle) {
+        expect.fail("Expected one retained try-out bundle.");
+      }
+      await ctx.db.delete("tryoutBundles", bundle._id);
+    });
+    await t.mutation(activate, {
+      manifestHash: CANDIDATE.manifestHash,
+      releaseId: CANDIDATE.releaseId,
+      rendererJson: testRendererJson(),
+    });
+
+    await expect(
+      t.run((ctx) => ctx.db.query("tryoutBundles").collect())
+    ).resolves.toEqual([
+      expect.objectContaining({
+        manifestHash: CANDIDATE.manifestHash,
+        releaseId: CANDIDATE.releaseId,
+        snapshotId: TEST_DIGEST,
+      }),
+    ]);
   });
 
   it("atomically activates the retained inverse and clears its slot", async () => {
