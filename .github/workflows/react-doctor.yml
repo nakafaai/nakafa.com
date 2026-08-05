@@ -27,4 +27,4 @@ jobs:
         with:
           blocking: warning
           scope: changed
-          version: 0.9.3
+          version: 0.9.5
