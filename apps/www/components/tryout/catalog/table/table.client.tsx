@@ -54,6 +54,8 @@ export function TryoutSetTable({
   const [sorting, setSorting] = useState<SortingState>([]);
   const warmedPaths = useRef(new Set<string>());
   const statusFilter = readTryoutSetStatusFilter(columnFilters);
+  // TanStack Table invalidates column work when this reference changes.
+  // react-doctor-disable-next-line react-doctor/react-compiler-no-manual-memoization
   const columns = useMemo(
     () =>
       createTryoutSetColumns({

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "supplyChain": {
+    "severity": "warning"
+  },
+  "surfaces": {
+    "ciFailure": {
+      "excludeRules": ["socket/low-supply-chain-score"]
+    }
+  }
+}

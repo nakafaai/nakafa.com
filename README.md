@@ -81,6 +81,7 @@ pnpm start
 pnpm test
 pnpm test:coverage
 pnpm lint
+pnpm security:audit
 pnpm format
 pnpm boundaries
 pnpm effect:source:check

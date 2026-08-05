@@ -109,6 +109,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - `pnpm test:ui` - open Vitest UI where supported
 - `pnpm test:coverage` - run coverage across workspaces that support it
 - `pnpm lint` - run `ultracite check`
+- `pnpm security:audit` - fail on any known dependency advisory
 - `pnpm format` - run `ultracite fix`
 - `pnpm format:doctor` - run `ultracite doctor`
 - `pnpm analyze` - run analyze tasks
@@ -311,6 +312,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Before structural changes, read recent history so your approach matches the repo's direction.
 - Format changed files.
 - Run `pnpm lint` when the change is ready.
+- Run `pnpm security:audit` after changing dependencies or the lockfile.
 - Run targeted tests and the relevant workspace `typecheck`.
 - If the change touches build-critical paths, run `pnpm build` or the affected workspace build.
 - Mention any verification you could not run.

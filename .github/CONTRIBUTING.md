@@ -74,11 +74,17 @@ workspace gates before opening a pull request:
 
 ```sh
 pnpm lint
+pnpm security:audit
 pnpm test
 pnpm boundaries
 pnpm --filter www typecheck
 pnpm build
 ```
+
+The PostHog browser SDK is exact-pinned. Its scoped Socket heuristic exception
+in `packages/analytics/doctor.config.json` must be revalidated or removed
+whenever that pin changes. Registry advisories remain a hard failure through
+`pnpm security:audit`.
 
 Run typechecks and tests for every other changed workspace. For production-mode
 runtime verification, run `pnpm start` after a successful root build.
