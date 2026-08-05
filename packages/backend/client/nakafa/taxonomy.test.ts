@@ -5,10 +5,8 @@ import {
   encodeTestQuranRow,
   makeQuranSurah,
 } from "@repo/backend/test/quran-rows";
-import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
-import type { SourceRegistryRoot } from "@repo/contents/_types/graph/schema";
 import { type FunctionReference, getFunctionName } from "convex/server";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
@@ -19,13 +17,6 @@ vi.mock("@repo/backend/client/runtime", () => ({
   fetchConvexRuntimeQuery: runtimeMocks.fetchConvexRuntimeQuery,
 }));
 
-const CountArgsSchema = Schema.Struct({
-  locale: LocaleSchema,
-});
-const TryoutCountryArgsSchema = Schema.Struct({
-  locale: LocaleSchema,
-  publicPath: Schema.String,
-});
 const quranSnapshotId = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
 
 beforeEach(() => {
@@ -34,7 +25,7 @@ beforeEach(() => {
 });
 
 describe("readNakafaTaxonomy", () => {
-  it("assembles taxonomy from content constants and Convex runtime counts", async () => {
+  it("assembles taxonomy from constants and signed publication counts", async () => {
     const taxonomy = await Effect.runPromise(
       readNakafaTaxonomy("https://example.convex.cloud", "id")
     );
@@ -46,8 +37,8 @@ describe("readNakafaTaxonomy", () => {
     expect(defaultTaxonomy.locale).toBe("en");
     expect(taxonomy.quran.surah_count).toBe(114);
     expect(taxonomy.content_counts).toEqual([
-      { count: 8, locale: "en" },
-      { count: 8, locale: "id" },
+      { count: 121, locale: "en" },
+      { count: 121, locale: "id" },
     ]);
     expect(taxonomy.tools).toContain("nakafa_get_quran_reference");
     expect(taxonomy.subject.materials).toContain("mathematics");
@@ -56,17 +47,52 @@ describe("readNakafaTaxonomy", () => {
       exams: [{ id: "snbt", label: "SNBT" }],
     });
     expect(calledRuntimeQueries()).toContain(
+      getFunctionName(api.contentRelease.article.sitemapBuckets)
+    );
+    expect(calledRuntimeQueries()).toContain(
+      getFunctionName(api.contentRelease.material.sitemapBuckets)
+    );
+    expect(calledRuntimeQueries()).toContain(
+      getFunctionName(api.contentRelease.tryout.taxonomy)
+    );
+    expect(calledRuntimeQueries()).not.toContain(
       getFunctionName(api.contents.queries.runtime.listContentRouteCounts)
-    );
-    expect(calledRuntimeQueries()).toContain(
-      getFunctionName(api.tryouts.queries.catalog.getHubPage)
-    );
-    expect(calledRuntimeQueries()).toContain(
-      getFunctionName(api.tryouts.queries.catalog.getCountryPage)
     );
     expect(calledRuntimeQueries()).not.toContain(
       getFunctionName(api.contents.queries.runtime.listContentRoutesByPrefix)
     );
+  });
+
+  it("fails closed when an article or material family is unmanaged", async () => {
+    for (const family of ["article", "material"]) {
+      const target =
+        family === "article"
+          ? api.contentRelease.article.sitemapBuckets
+          : api.contentRelease.material.sitemapBuckets;
+      runtimeMocks.fetchConvexRuntimeQuery.mockImplementation(
+        (convexUrl, query, args) => {
+          if (getFunctionName(query) === getFunctionName(target)) {
+            return Promise.resolve({ managed: false });
+          }
+
+          return readRuntimeFixture(convexUrl, query, args);
+        }
+      );
+
+      await expect(
+        Effect.runPromise(
+          Effect.either(
+            readNakafaTaxonomy("https://example.convex.cloud", "id")
+          )
+        )
+      ).resolves.toMatchObject({
+        _tag: "Left",
+        left: {
+          _tag: "NakafaAgentDataReadError",
+          message: "Unable to read signed Nakafa content inventory.",
+        },
+      });
+    }
   });
 });
 
@@ -74,7 +100,7 @@ describe("readNakafaTaxonomy", () => {
 function readRuntimeFixture(
   _convexUrl: string,
   query: FunctionReference<"query">,
-  args: unknown
+  _args: unknown
 ) {
   if (
     getFunctionName(query) === getFunctionName(api.contentRelease.quran.surahs)
@@ -93,76 +119,40 @@ function readRuntimeFixture(
 
   if (
     getFunctionName(query) ===
-    getFunctionName(api.contents.queries.runtime.listContentRouteCounts)
-  ) {
-    return Promise.resolve(readContentRouteCounts(args));
-  }
-
-  if (
-    getFunctionName(query) ===
-    getFunctionName(api.tryouts.queries.catalog.getHubPage)
+    getFunctionName(api.contentRelease.article.sitemapBuckets)
   ) {
     return Promise.resolve({
-      countries: [
-        {
-          countryCode: "ID",
-          countryKey: "indonesia",
-          examCount: 1,
-          publicPath: "try-out/indonesia",
-          title: "Indonesia",
-        },
-      ],
-      sourceRevision: "test-revision",
+      articleCount: 1,
+      buckets: ["0"],
+      managed: true,
     });
   }
 
   if (
     getFunctionName(query) ===
-    getFunctionName(api.tryouts.queries.catalog.getCountryPage)
+    getFunctionName(api.contentRelease.material.sitemapBuckets)
   ) {
-    const input = Schema.decodeUnknownSync(TryoutCountryArgsSchema)(args);
     return Promise.resolve({
-      country: {
-        countryCode: "ID",
-        countryKey: "indonesia",
-        publicPath: input.publicPath,
-        title: "Indonesia",
-      },
-      exams: [
-        {
-          countryKey: "indonesia",
-          examKey: "snbt",
-          publicPath: `${input.publicPath}/snbt`,
-          title: "SNBT",
-        },
-      ],
-      sourceRevision: "test-revision",
+      activeReleaseId: "release-id",
+      buckets: ["0"],
+      managed: true,
+      materialCount: 2,
+      sourceClaimCount: 0,
+    });
+  }
+
+  if (
+    getFunctionName(query) ===
+    getFunctionName(api.contentRelease.tryout.taxonomy)
+  ) {
+    return Promise.resolve({
+      countries: [{ id: "indonesia", label: "Indonesia" }],
+      exams: [{ id: "snbt", label: "SNBT" }],
+      routeCount: 4,
     });
   }
 
   return Promise.reject(new Error("Unhandled taxonomy query fixture."));
-}
-
-/** Builds materialized route-count rows for one taxonomy locale. */
-function readContentRouteCounts(args: unknown) {
-  const input = Schema.decodeUnknownSync(CountArgsSchema)(args);
-
-  return [
-    countRow(input.locale, "articles", 1),
-    countRow(input.locale, "material", 2),
-    countRow(input.locale, "material", 3),
-    countRow(input.locale, "quran", 2),
-  ];
-}
-
-/** Builds one materialized route-count fixture row. */
-function countRow(locale: Locale, section: SourceRegistryRoot, count: number) {
-  return {
-    count,
-    locale,
-    section,
-    syncedAt: 1,
-  };
 }
 
 /** Returns generated Convex query names called by the taxonomy reader. */

@@ -13,6 +13,14 @@ interface QuranRowFacts {
   readonly surahNumber?: number;
 }
 
+/** Derives the canonical identity for one localized Quran search row. */
+export function quranSearchIdentity(
+  locale: QuranSearch["locale"],
+  surahNumber: QuranSearch["surahNumber"]
+) {
+  return `search:${locale}:${surahNumber}`;
+}
+
 /** Derives the immutable indexed facts stored beside one signed Quran row. */
 export function quranRowFacts(record: QuranSnapshotRow): QuranRowFacts {
   const { payload } = record;
@@ -38,7 +46,7 @@ export function quranRowFacts(record: QuranSnapshotRow): QuranRowFacts {
     };
   }
   return {
-    identity: `search:${payload.locale}:${payload.surahNumber}`,
+    identity: quranSearchIdentity(payload.locale, payload.surahNumber),
     kind: payload.kind,
     locale: payload.locale,
     surahNumber: payload.surahNumber,
@@ -48,7 +56,7 @@ export function quranRowFacts(record: QuranSnapshotRow): QuranRowFacts {
 /** Derives one searchable projection from an authenticated search payload. */
 export function quranSearchFacts(payload: QuranSearch) {
   return {
-    identity: `search:${payload.locale}:${payload.surahNumber}`,
+    identity: quranSearchIdentity(payload.locale, payload.surahNumber),
     locale: payload.locale,
     surahNumber: payload.surahNumber,
     text: payload.text,

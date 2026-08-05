@@ -186,6 +186,11 @@ const tables = {
     text: v.string(),
   })
     .index("by_snapshotId_and_index", ["snapshotId", "index"])
+    .index("by_snapshotId_and_locale_and_index", [
+      "snapshotId",
+      "locale",
+      "index",
+    ])
     .index("by_snapshotId_and_identity", ["snapshotId", "identity"])
     .searchIndex("search_text", {
       searchField: "text",

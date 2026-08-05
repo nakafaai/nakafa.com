@@ -18,44 +18,44 @@ import { validateSearchQuery } from "@repo/backend/convex/contentRelease/search/
 import { Effect } from "effect";
 
 /** Resolves one search hit back to its exact authenticated Quran row. */
-const resolveQuranSearchHit = Effect.fn("contentRelease.resolveQuranSearchHit")(
-  function* (ctx: QueryCtx, snapshotId: string, hit: Doc<"quranSearch">) {
-    yield* ensureDocumentSize(
-      `Quran search row ${hit.identity}`,
-      {
-        identity: hit.identity,
-        index: hit.index,
-        locale: hit.locale,
-        rowHash: hit.rowHash,
-        snapshotId: hit.snapshotId,
-        surahNumber: hit.surahNumber,
-        text: hit.text,
-      },
-      QURAN_SEARCH_DOCUMENT_LIMIT
+export const authenticateQuranSearchHit = Effect.fn(
+  "contentRelease.authenticateQuranSearchHit"
+)(function* (ctx: QueryCtx, snapshotId: string, hit: Doc<"quranSearch">) {
+  yield* ensureDocumentSize(
+    `Quran search row ${hit.identity}`,
+    {
+      identity: hit.identity,
+      index: hit.index,
+      locale: hit.locale,
+      rowHash: hit.rowHash,
+      snapshotId: hit.snapshotId,
+      surahNumber: hit.surahNumber,
+      text: hit.text,
+    },
+    QURAN_SEARCH_DOCUMENT_LIMIT
+  );
+  const signed = yield* readQuranRow(
+    ctx,
+    snapshotId,
+    hit.identity,
+    QuranSearchRowSchema
+  );
+  const facts = quranSearchFacts(signed.payload);
+  if (
+    facts.identity !== hit.identity ||
+    facts.locale !== hit.locale ||
+    facts.surahNumber !== hit.surahNumber ||
+    facts.text !== hit.text ||
+    signed.index !== hit.index ||
+    signed.rowHash !== hit.rowHash
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Quran search row ${hit.identity} changed its signed projection.`
     );
-    const signed = yield* readQuranRow(
-      ctx,
-      snapshotId,
-      hit.identity,
-      QuranSearchRowSchema
-    );
-    const facts = quranSearchFacts(signed.payload);
-    if (
-      facts.identity !== hit.identity ||
-      facts.locale !== hit.locale ||
-      facts.surahNumber !== hit.surahNumber ||
-      facts.text !== hit.text ||
-      signed.index !== hit.index ||
-      signed.rowHash !== hit.rowHash
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Quran search row ${hit.identity} changed its signed projection.`
-      );
-    }
-    return signed.rowJson;
   }
-);
+  return signed;
+});
 
 /** Searches only bounded localized rows from the active Quran snapshot. */
 export const searchQuran = Effect.fn("contentRelease.searchQuran")(function* (
@@ -85,7 +85,9 @@ export const searchQuran = Effect.fn("contentRelease.searchQuran")(function* (
       .take(QURAN_SEARCH_RESULT_LIMIT)
   );
   const rowJson = yield* Effect.forEach(stored, (hit) =>
-    resolveQuranSearchHit(ctx, owner.snapshotId, hit)
+    authenticateQuranSearchHit(ctx, owner.snapshotId, hit).pipe(
+      Effect.map((signed) => signed.rowJson)
+    )
   );
   return {
     ...owner,

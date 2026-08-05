@@ -2,7 +2,6 @@ export const CONTENT_SYNC_BATCH_LIMITS = {
   articles: 50,
   articleReferences: 100,
   authors: 50,
-  quranSearchDocuments: 50,
   quranSurahs: 50,
   quranVerses: 100,
   staleArticles: 50,
