@@ -1,8 +1,14 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
-import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import type {
+  ContentSnapshotSet,
+  PublicationScope,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
+import {
+  inheritContentSnapshots,
+  snapshotRowCount,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_PROOF_RENDERER,
@@ -26,6 +32,7 @@ interface TestReleaseEnvelope extends TestIdentity {
   readonly originReleaseId?: string;
   readonly role: "candidate" | "recovery";
   readonly scope?: PublicationScope;
+  readonly snapshots?: ContentSnapshotSet;
   readonly status: "aborted" | "completed" | "verified";
 }
 
@@ -62,6 +69,7 @@ export function zeroReleaseJson(options: TestReleaseEnvelope) {
     resultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     routeCount: 0,
     scope: options.scope,
+    snapshots: options.snapshots,
     upsertCount: 0,
   });
 }
@@ -73,6 +81,7 @@ export async function insertZeroRelease(
 ) {
   const now = Date.UTC(2026, 6, 23, 12);
   const releaseJson = zeroReleaseJson(options);
+  const snapshots = options.snapshots ?? inheritContentSnapshots(null);
   const terminal = options.status === "completed";
   const aborted = options.status === "aborted";
   const receipt = {
@@ -84,12 +93,12 @@ export async function insertZeroRelease(
     resultCount: 0,
     resultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     routeDigest: TEST_DIGEST,
-    snapshots: inheritContentSnapshots(null),
+    snapshots,
     stagedArtifacts: 0,
     stagedItems: 0,
     stagedProjections: 0,
     stagedRoutes: 0,
-    stagedSnapshotRows: 0,
+    stagedSnapshotRows: snapshotRowCount(snapshots),
   };
   await ctx.db.insert("contentReleases", {
     ...(aborted
@@ -121,7 +130,7 @@ export async function insertZeroRelease(
     stagedProjections: 0,
     stagedRoutes: 0,
     stagedSnapshotBatches: 0,
-    stagedSnapshotRows: 0,
+    stagedSnapshotRows: snapshotRowCount(snapshots),
     stagedUpserts: 0,
     status: options.status,
     updatedAt: now,

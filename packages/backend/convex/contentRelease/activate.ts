@@ -23,6 +23,7 @@ import {
 } from "@repo/backend/convex/contentRelease/receipt";
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import { publicationReceiptValidator } from "@repo/backend/convex/contentRelease/spec";
+import { retainActivatedTryoutBundle } from "@repo/backend/convex/contentRelease/tryout/bundle";
 import { encodeRendererJson } from "@repo/backend/convex/contentRelease/wire";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
@@ -78,7 +79,9 @@ const completedRetry = Effect.fn("contentRelease.completedActivationRetry")(
     }
     const signed = yield* decodeReleaseJson(release.releaseJson);
     yield* validateExactMaterialOwnerScope(ctx, release);
-    return yield* completedReceipt(release, signed);
+    const receipt = yield* completedReceipt(release, signed);
+    yield* retainActivatedTryoutBundle(ctx, release, signed, Date.now());
+    return receipt;
   }
 );
 
@@ -161,6 +164,7 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
     yield* stagedEvidence(recovery, recoverySigned);
     const receipt = yield* publicationReceipt(release, signed);
     const now = Date.now();
+    yield* retainActivatedTryoutBundle(ctx, release, signed, now);
     yield* Effect.promise(() =>
       ctx.db.patch("contentReleases", release._id, {
         completedAt: now,
@@ -232,6 +236,7 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
     yield* stagedEvidence(release, signed);
     const receipt = yield* publicationReceipt(release, signed);
     const now = Date.now();
+    yield* retainActivatedTryoutBundle(ctx, release, signed, now);
     yield* Effect.promise(() =>
       ctx.db.patch("contentReleases", release._id, {
         completedAt: now,
