@@ -1,11 +1,12 @@
 import type { IconSvgElement } from "@hugeicons/react";
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { FeaturesNina } from "@/components/marketing/about/features-practice";
 import { FeaturesProjectile } from "@/components/marketing/about/features-projectile";
 import { FeaturesSubjectsArt } from "@/components/marketing/about/features-subjects-art";
-import { FeaturesTryout } from "@/components/marketing/about/features-tryout";
+import {
+  FeaturesTryout,
+  type FeaturesTryoutModel,
+} from "@/components/marketing/about/features-tryout";
 import { SubjectItem } from "@/components/shared/subject-item";
 import { SubjectList } from "@/components/shared/subject-list";
 
@@ -16,16 +17,14 @@ interface SubjectPath {
 }
 
 interface FeaturesBentoProps {
+  featuredTryout: FeaturesTryoutModel;
   subjectPaths: readonly SubjectPath[];
-  tryoutCountries: FunctionReturnType<
-    typeof api.tryouts.queries.catalog.getHubPage
-  >["countries"];
 }
 
 /** Composes four independent Nakafa learning moments into one bordered grid. */
 export function FeaturesBento({
+  featuredTryout,
   subjectPaths,
-  tryoutCountries,
 }: FeaturesBentoProps) {
   const t = useTranslations("Features");
 
@@ -56,7 +55,7 @@ export function FeaturesBento({
         </div>
       </div>
 
-      <FeaturesTryout countries={tryoutCountries} />
+      <FeaturesTryout value={featuredTryout} />
       <FeaturesNina />
       <FeaturesProjectile />
     </div>

@@ -2,14 +2,14 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import { FeaturesBento } from "@/components/marketing/about/features-bento";
-import { readTryoutHubPage } from "@/components/tryout/catalog/server";
+import { readFeaturedTryout } from "@/components/tryout/catalog/server";
 import { getPublishedProgramRoutes } from "@/lib/content/program/catalog";
 
 export async function Features({ locale }: { locale: Locale }) {
-  const [t, catalog, tryoutPage] = await Promise.all([
+  const [t, catalog, featuredTryout] = await Promise.all([
     getTranslations({ locale, namespace: "Features" }),
     getPublishedProgramRoutes(locale),
-    readTryoutHubPage(locale),
+    readFeaturedTryout(locale),
   ]);
   const subjectPaths = catalog.routes
     .filter((route) => route.level === "subject" && route.sitemap)
@@ -34,8 +34,8 @@ export async function Features({ locale }: { locale: Locale }) {
           </h2>
         </div>
         <FeaturesBento
+          featuredTryout={featuredTryout}
           subjectPaths={subjectPaths}
-          tryoutCountries={tryoutPage.countries}
         />
       </div>
     </section>

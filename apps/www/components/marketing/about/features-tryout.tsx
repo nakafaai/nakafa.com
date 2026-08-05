@@ -1,23 +1,24 @@
 import type { api } from "@repo/backend/convex/_generated/api";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { FunctionReturnType } from "convex/server";
-import { useLocale, useTranslations } from "next-intl";
-import { ChoiceCardContent } from "@/components/shared/choice/card";
-import { choiceCardVariants } from "@/components/shared/choice/variants";
-import { ChoiceCardVisual } from "@/components/shared/choice/visual";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
+import { TryoutChoicePreview } from "@/components/tryout/runtime/preview.client";
 
-type TryoutCountry = FunctionReturnType<
-  typeof api.tryouts.queries.catalog.getHubPage
->["countries"][number];
+type FeaturedTryout = FunctionReturnType<
+  typeof api.tryouts.queries.catalog.getFeaturedQuestion
+>;
 
-/** Shows the signed production try-out catalog inside the marketing story. */
+export interface FeaturesTryoutModel {
+  readonly choices: FeaturedTryout["choices"];
+  readonly question: ReactNode;
+}
+
+/** Shows one signed production question with the established landing surface. */
 export function FeaturesTryout({
-  countries,
+  value,
 }: {
-  readonly countries: readonly TryoutCountry[];
+  readonly value: FeaturesTryoutModel;
 }) {
-  const locale = useLocale();
   const t = useTranslations("Features");
 
   return (
@@ -28,25 +29,10 @@ export function FeaturesTryout({
         })}
       </h3>
       <article className="mt-auto px-8 pt-10 pb-8 lg:px-10 lg:pt-12 lg:pb-10">
-        <div className="grid grid-cols-2 gap-3">
-          {countries.slice(0, 4).map((country) => (
-            <IntentLink
-              className={choiceCardVariants()}
-              href={`/${locale}/${country.publicPath}`}
-              key={country.countryKey}
-            >
-              <ChoiceCardVisual seed={country.publicPath}>
-                <CountryFlagIcon
-                  className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
-                  countryCode={country.countryCode}
-                />
-              </ChoiceCardVisual>
-              <ChoiceCardContent>
-                <h4>{country.title}</h4>
-              </ChoiceCardContent>
-            </IntentLink>
-          ))}
-        </div>
+        <section className="my-6">{value.question}</section>
+        <section className="my-8">
+          <TryoutChoicePreview choices={value.choices} />
+        </section>
       </article>
     </div>
   );

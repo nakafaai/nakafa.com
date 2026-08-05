@@ -5,6 +5,7 @@ import { fetchQuery } from "convex/nextjs";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
+import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 
@@ -17,6 +18,39 @@ class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>(
   "TryoutCatalogReadError",
   { cause: Schema.Unknown }
 ) {}
+
+/** Reads and renders the signed question selected for the marketing page. */
+export async function readFeaturedTryout(locale: Locale) {
+  "use cache";
+  applyContentRuntimeCache();
+
+  return await Effect.runPromise(
+    Effect.gen(function* () {
+      const featured = yield* Effect.tryPromise({
+        catch: (cause) => new TryoutCatalogReadError({ cause }),
+        try: () =>
+          fetchQuery(api.tryouts.queries.catalog.getFeaturedQuestion, {
+            locale,
+          }),
+      });
+      const rendered = yield* loadSignedTryoutContent({
+        answers: [],
+        questions: [featured.question],
+      });
+      const question = rendered.questions[0];
+      if (!question) {
+        return yield* new TryoutCatalogReadError({
+          cause: "The featured try-out question did not render.",
+        });
+      }
+
+      return {
+        choices: featured.choices,
+        question: question.content,
+      };
+    })
+  );
+}
 
 /** Reads exact signed route metadata from the tagged content cache. */
 export async function readTryoutMetadata(args: TryoutMetadataArgs) {
