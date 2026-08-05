@@ -1,6 +1,7 @@
 "use client";
 
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   Select,
   SelectContent,
@@ -19,7 +20,6 @@ import type {
   TryoutExamSelectorOption,
 } from "@/components/tryout/catalog/options";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
-import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation.client";
 
 /** Renders the try-out country selector used by country-level pages. */
@@ -102,7 +102,7 @@ export function TryoutCountrySelector({
           {options.map((option) => (
             <SelectItem
               key={option.value}
-              render={<TryoutIntentLink href={option.href} />}
+              render={<IntentLink href={option.href} />}
               value={option.value}
             >
               <CountryFlagIcon countryCode={option.countryCode} />
@@ -158,7 +158,7 @@ export function TryoutExamSelector({
           {options.map((option) => (
             <SelectItem
               key={option.value}
-              render={<TryoutIntentLink href={option.href} />}
+              render={<IntentLink href={option.href} />}
               value={option.value}
             >
               <HugeIcons

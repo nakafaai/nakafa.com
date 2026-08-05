@@ -20,12 +20,10 @@ const loadMessagesByLocale = {
  * subtree.
  *
  * References:
- * - Aurora Scharff, "Moving root params into i18n/request.ts":
- *   https://aurorascharff.no/posts/implementing-nextjs-16-use-cache-with-next-intl-internationalization/#moving-root-params-into-i18nrequestts
- * - Next.js 16.2 root params support inside cache scopes:
- *   https://github.com/vercel/next.js/pull/91191
- * - next-intl cacheComponents support thread:
- *   https://github.com/amannn/next-intl/issues/1493
+ * - next-intl Root Params adoption guide:
+ *   https://next-intl.dev/blog/nextjs-root-params
+ * - Next.js Root Params API:
+ *   https://nextjs.org/docs/app/api-reference/functions/next-root-params
  * - Installed runtime path used by `getTranslations`:
  *   `apps/www/node_modules/next-intl/dist/esm/production/server/react-server/getConfig.js`
  */
@@ -39,16 +37,16 @@ export default getRequestConfig(async ({ locale }) => {
     };
   }
 
-  const paramValue = await rootParams.locale();
+  const rootLocale = await rootParams.locale();
 
-  if (!hasLocale(routing.locales, paramValue)) {
+  if (!hasLocale(routing.locales, rootLocale)) {
     notFound();
   }
 
-  const messages = await loadMessagesByLocale[paramValue]();
+  const messages = await loadMessagesByLocale[rootLocale]();
 
   return {
-    locale: paramValue,
+    locale: rootLocale,
     messages: messages.default,
   };
 });

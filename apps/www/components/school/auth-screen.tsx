@@ -3,8 +3,22 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { usePathname } from "@repo/internationalization/src/navigation";
+import { Authenticated, Unauthenticated } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { AuthGoogle } from "@/components/auth/google";
+
+/** Keeps protected school UI aligned with the live Convex auth state. */
+export function SchoolAuthBoundary({ children }: { children: ReactNode }) {
+  return (
+    <>
+      <Authenticated>{children}</Authenticated>
+      <Unauthenticated>
+        <SchoolAuthScreen />
+      </Unauthenticated>
+    </>
+  );
+}
 
 /** Renders the shared Nakafa School sign-in screen for unauthenticated users. */
 export function SchoolAuthScreen() {

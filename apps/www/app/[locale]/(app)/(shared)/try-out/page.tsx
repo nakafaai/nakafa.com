@@ -1,7 +1,7 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
+import { locale as rootLocale } from "next/root-params";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { FooterContent } from "@/components/shared/footer-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
@@ -15,11 +15,6 @@ import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
-
-export const unstable_instant = {
-  prefetch: "runtime",
-  samples: [{ params: { locale: "id" } }],
-};
 
 /**
  * Builds metadata-only copy for the try-out hub while keeping helper prose out
@@ -59,21 +54,17 @@ export async function generateMetadata({
  * Composes the localized try-out hub and JSON-LD breadcrumb for the canonical
  * try-out entry page.
  */
-export default function Page(props: PageProps<"/[locale]/try-out">) {
-  return (
-    <Suspense fallback={null}>
-      <TryoutHubRoute params={props.params} />
-    </Suspense>
-  );
+export default async function Page() {
+  const locale = getLocaleOrThrow(await rootLocale());
+  return <TryoutHubRoute locale={locale} />;
 }
 
-/** Resolves the cached public hub inside its route-owned boundary. */
+/** Resolves the cached public hub for the localized App Shell. */
 async function TryoutHubRoute({
-  params,
+  locale,
 }: {
-  params: PageProps<"/[locale]/try-out">["params"];
+  locale: ReturnType<typeof getLocaleOrThrow>;
 }) {
-  const locale = getLocaleOrThrow((await params).locale);
   const [page, tCommon] = await Promise.all([
     readTryoutHubPage(locale),
     getTranslations({ locale, namespace: "Common" }),

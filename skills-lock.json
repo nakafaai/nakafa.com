@@ -229,6 +229,19 @@
       "skillPath": "skills/next-cache-components/SKILL.md",
       "computedHash": "58c9eca71b82f8e4e5b03db8ebb1b8f2e8150d9481a74719edea7b53191fe792"
     },
+    "next-dev-loop": {
+      "source": "vercel/next.js",
+      "ref": "canary",
+      "sourceType": "github",
+      "skillPath": "skills/next-dev-loop/SKILL.md",
+      "computedHash": "1fb1b47ed7186737df086aa198f86961f72691539f1c4507f60bbedf60a128be"
+    },
+    "next-partial-prefetching-adoption": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "skillPath": "skills/next-partial-prefetching-adoption/SKILL.md",
+      "computedHash": "cfed44cfce68b08b2a7edf3d6f07b230a49dfbf180825ca49a5bbf12b27a558a"
+    },
     "nextjs": {
       "source": "vercel-labs/vercel-plugin",
       "sourceType": "github",

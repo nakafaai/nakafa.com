@@ -254,7 +254,12 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Prefer Next.js primitives like `<Image>` when appropriate.
 - Keep server/client boundaries explicit and minimal.
 - New or touched app route UI must reuse existing Nakafa and design-system surfaces before adding markup. Route migrations may change data and URL shape, but the visual composition should follow the established page surface for that domain, such as subject/material lists and material body layouts. Do not introduce one-off card/list styling, bespoke hover treatments, or custom shells when an existing component already owns the pattern; use `className` only as layout glue around those components.
-- When a static route hits Next.js current-time prerender errors, do not blindly add `connection()`. Installed Next.js docs state `connection()` opts the subtree into runtime rendering; use it only when the route is intentionally dynamic, not to hide an Effect runtime timestamp in content that should stay SSG.
+- When a static route hits Next.js current-time prerender errors, do not hide the error with a dynamic boundary. Keep content that should stay static inside prerendering.
+- With Cache Components, use `io()` from `next/cache` before synchronous request-time work that should stream or participate in partial prefetching. Use `connection()` only when rendering must wait for a real user request because it blocks prefetches. An awaited fetch or asynchronous database query already provides the suspension point unless synchronous work such as starting an Effect runtime happens first.
+- Keep `experimental.instantInsights.validationLevel` pinned to `"warning"` so Next.js 16.3 validates every Page and Default segment in development. Do not add redundant `instant = true` exports while global validation is enabled. Use `instant = false` only when a route is deliberately allowed to block navigation.
+- Keep the shared App Shell as the default prefetch. Use `<Link prefetch={true}>` only when URL-dependent cached content justifies one server invocation per link. For grids and long lists, start runtime prefetch on user intent instead of prefetching every visible destination.
+- Keep truthful stable UI outside `Suspense`. When no truthful stable fallback exists, use `fallback={null}`. Do not invent skeletons, placeholder cards, or fake content solely to satisfy an instant-navigation boundary.
+- Keep the real root layout inside the root `[locale]` segment, resolve request configuration through `next/root-params`, and use next-intl server APIs such as `getLocale()` instead of manually threading locale through Server Components. `next/root-params` is server-only and does not belong in Client Components, Route Handlers, or Server Actions.
 
 ## Convex Rules
 

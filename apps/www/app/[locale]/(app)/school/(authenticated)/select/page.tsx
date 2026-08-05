@@ -2,15 +2,36 @@ import { api } from "@repo/backend/convex/_generated/api";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { SchoolSelectList } from "@/components/school/select-list";
-import { fetchAuthQuery } from "@/lib/auth/server";
+import { fetchAuthQuery, getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Render the school selection page for users who belong to many schools. */
-export default async function Page(
-  props: PageProps<"/[locale]/school/select">
-) {
-  const locale = getLocaleOrThrow((await props.params).locale);
+export default function Page(props: PageProps<"/[locale]/school/select">) {
+  return (
+    <Suspense fallback={null}>
+      <AuthenticatedSchoolSelection params={props.params} />
+    </Suspense>
+  );
+}
+
+/** Resolves the authenticated school catalog inside the route stream. */
+async function AuthenticatedSchoolSelection({
+  params,
+}: {
+  params: PageProps<"/[locale]/school/select">["params"];
+}) {
+  const [{ locale: rawLocale }, token] = await Promise.all([
+    params,
+    getToken(),
+  ]);
+
+  if (!token) {
+    return null;
+  }
+
+  const locale = getLocaleOrThrow(rawLocale);
 
   const [t, landingState] = await Promise.all([
     getTranslations({ locale, namespace: "School.Onboarding" }),

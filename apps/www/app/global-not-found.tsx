@@ -20,6 +20,9 @@ import { appViewport } from "@/lib/theme/viewport";
 /** Global 404 viewport contract shared with localized app documents. */
 export const viewport = appViewport;
 
+/** Validates the framework-synthesized 404 route as an instant shell. */
+export const instant = true;
+
 const dictionaries = { en, id };
 const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
 

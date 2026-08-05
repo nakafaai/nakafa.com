@@ -15,20 +15,6 @@ import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export const unstable_instant = {
-  prefetch: "runtime",
-  samples: [
-    {
-      params: {
-        country: "indonesia",
-        exam: "tka",
-        locale: "id",
-        track: "matematika",
-      },
-    },
-  ],
-};
-
 /** Builds route-owned metadata for one localized try-out track. */
 export async function generateMetadata({
   params,

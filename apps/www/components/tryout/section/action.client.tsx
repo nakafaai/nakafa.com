@@ -3,13 +3,13 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import type { api } from "@repo/backend/convex/_generated/api";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
-import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { StartSectionButton } from "@/components/tryout/section/start";
 import type { TryoutSummarySection } from "@/components/tryout/section/summary";
@@ -70,7 +70,7 @@ export function TryoutSummaryAction({
   const prewarmData = useTryoutDataIntent();
   const startDestination = value.startDestination;
   const returnAction = (
-    <TryoutIntentLink
+    <IntentLink
       className={cn(buttonVariants(), "w-full sm:w-auto")}
       href={value.returnHref}
       onIntent={() =>
@@ -84,7 +84,7 @@ export function TryoutSummaryAction({
     >
       <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
       {tTryouts("back-to-set-cta")}
-    </TryoutIntentLink>
+    </IntentLink>
   );
 
   if (value.sectionFinished && value.completedAction === "return") {
@@ -138,7 +138,7 @@ function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
 
   if (resumeHref) {
     return (
-      <TryoutIntentLink
+      <IntentLink
         className={cn(buttonVariants(), "w-full sm:w-auto")}
         href={resumeHref}
         onIntent={() =>
@@ -156,7 +156,7 @@ function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
         }
       >
         {tTryouts("continue-cta")}
-      </TryoutIntentLink>
+      </IntentLink>
     );
   }
 

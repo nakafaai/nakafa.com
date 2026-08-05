@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { School } from "@/components/school";
 import { SchoolAuthScreen } from "@/components/school/auth-screen";
-import { SchoolLoader } from "@/components/school/loader";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /**
@@ -14,7 +13,7 @@ export default async function Page(props: PageProps<"/[locale]/school">) {
   const locale = getLocaleOrThrow((await props.params).locale);
 
   return (
-    <Suspense fallback={<SchoolLoader />}>
+    <Suspense fallback={null}>
       <School locale={locale}>
         <SchoolAuthScreen />
       </School>

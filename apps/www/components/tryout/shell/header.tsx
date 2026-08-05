@@ -1,7 +1,7 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { ReactNode } from "react";
-import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 
 /** Cohesive content model for the compact try-out page header. */
 export interface TryoutPageHeaderValue {
@@ -25,12 +25,12 @@ export function TryoutPageHeader({ value }: { value: TryoutPageHeaderValue }) {
 
   return (
     <header className="flex flex-col gap-3">
-      <TryoutIntentLink
+      <IntentLink
         className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
         href={link.href}
       >
         {link.label}
-      </TryoutIntentLink>
+      </IntentLink>
 
       <div className="space-y-3">
         {meta}

@@ -1,7 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { use } from "react";
+import { Suspense, use } from "react";
 import { UserComments } from "@/components/user/comments";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -24,6 +24,17 @@ export async function generateMetadata({
 }
 
 export default function Page({ params }: PageProps<"/[locale]/user/[id]">) {
+  return (
+    <Suspense fallback={null}>
+      <UserCommentsRoute params={params} />
+    </Suspense>
+  );
+}
+
+/** Resolves the profile id inside the nearest streaming boundary. */
+function UserCommentsRoute({
+  params,
+}: Pick<PageProps<"/[locale]/user/[id]">, "params">) {
   const { id } = use(params);
   return <UserComments userId={id as Id<"users">} />;
 }

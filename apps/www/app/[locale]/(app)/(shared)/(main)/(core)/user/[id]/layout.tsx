@@ -1,11 +1,20 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { use } from "react";
+import { Suspense, use } from "react";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export default function Layout(props: LayoutProps<"/[locale]/user/[id]">) {
+  return (
+    <Suspense fallback={null}>
+      <UserLayoutContent {...props} />
+    </Suspense>
+  );
+}
+
+/** Resolves the URL-specific profile shell inside its streaming boundary. */
+function UserLayoutContent(props: LayoutProps<"/[locale]/user/[id]">) {
   const { children, params } = props;
   const { id, locale } = use(params);
   getLocaleOrThrow(locale);

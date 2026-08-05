@@ -20,10 +20,9 @@ import {
   CollapsibleContent,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { cn } from "@repo/design-system/lib/utils";
-import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
-import { Link } from "@repo/internationalization/src/navigation";
 import { useLayoutEffect, useState } from "react";
 
 interface Props {
@@ -117,10 +116,9 @@ export function CardMaterial({ material }: Props) {
             <ul className="divide-y">
               {material.items.map((item) => (
                 <li className="group/list" key={item.href}>
-                  <Link
+                  <IntentLink
                     className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground group-last/list:pb-6"
-                    href={normalizeLocalizedInternalHref(item.href)}
-                    prefetch
+                    href={item.href}
                     title={item.title}
                   >
                     <h3 className="flex-1">{item.title}</h3>
@@ -128,7 +126,7 @@ export function CardMaterial({ material }: Props) {
                       className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
                       icon={ArrowRight02Icon}
                     />
-                  </Link>
+                  </IntentLink>
                 </li>
               ))}
             </ul>

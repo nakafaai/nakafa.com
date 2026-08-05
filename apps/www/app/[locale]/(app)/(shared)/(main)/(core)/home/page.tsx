@@ -1,4 +1,5 @@
 import { redirect } from "@repo/internationalization/src/navigation";
+import { Suspense } from "react";
 import { HomeContinueLearning } from "@/components/home/continue-learning";
 import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
@@ -12,9 +13,22 @@ import {
 } from "@/lib/programs/server";
 
 /** Routes authenticated users into their active learning plan. */
-export default async function Page(props: PageProps<"/[locale]/home">) {
+export default function Page(props: PageProps<"/[locale]/home">) {
+  return (
+    <Suspense fallback={null}>
+      <AuthenticatedHome params={props.params} />
+    </Suspense>
+  );
+}
+
+/** Resolves request auth and learning state inside the route stream. */
+async function AuthenticatedHome({
+  params,
+}: {
+  params: PageProps<"/[locale]/home">["params"];
+}) {
   const [{ locale: rawLocale }, token] = await Promise.all([
-    props.params,
+    params,
     getToken(),
   ]);
   const locale = getLocaleOrThrow(rawLocale);

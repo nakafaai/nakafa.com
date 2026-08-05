@@ -1,6 +1,6 @@
 "use client";
 
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { createColumnHelper, type SortingState } from "@tanstack/react-table";
 import type { tryoutTableFeatures } from "@/components/tryout/catalog/table/features";
 import {
@@ -30,12 +30,12 @@ export function createTryoutSetColumns({
   return tryoutColumnHelper.columns([
     tryoutColumnHelper.accessor("title", {
       cell: ({ row }) => (
-        <NavigationLink
+        <IntentLink
           className="block truncate underline-offset-4 hover:underline"
           href={getTryoutPublicPathHref(row.original.publicPath)}
         >
           {row.original.title}
-        </NavigationLink>
+        </IntentLink>
       ),
       enableColumnFilter: false,
       header: ({ column }) => (

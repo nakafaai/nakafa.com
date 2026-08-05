@@ -25,7 +25,7 @@
     "dev": "turbo run dev --filter=www --filter=@repo/backend --filter=cas",
     "dev:all": "turbo run dev",
     "dev:web": "turbo run dev --filter=www --filter=@repo/backend --filter=cas",
-    "doctor": "pnpm dlx react-doctor@0.9.3",
+    "doctor": "pnpm --filter www run doctor",
     "effect:source:check": "node scripts/effect-source.ts check",
     "effect:source:update": "node scripts/effect-source.ts update",
     "format": "ultracite fix && turbo run format --filter=cas",

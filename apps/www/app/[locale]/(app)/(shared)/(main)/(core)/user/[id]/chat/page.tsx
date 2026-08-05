@@ -1,7 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { use } from "react";
+import { Suspense, use } from "react";
 import { UserChats } from "@/components/user/chats";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -26,6 +26,17 @@ export async function generateMetadata({
 export default function Page({
   params,
 }: PageProps<"/[locale]/user/[id]/chat">) {
+  return (
+    <Suspense fallback={null}>
+      <UserChatsRoute params={params} />
+    </Suspense>
+  );
+}
+
+/** Resolves the profile id inside the nearest streaming boundary. */
+function UserChatsRoute({
+  params,
+}: Pick<PageProps<"/[locale]/user/[id]/chat">, "params">) {
   const { id } = use(params);
   return <UserChats userId={id as Id<"users">} />;
 }

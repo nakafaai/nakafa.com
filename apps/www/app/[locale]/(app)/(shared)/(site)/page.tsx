@@ -1,9 +1,9 @@
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import type { Metadata } from "next";
+import { locale as rootLocale } from "next/root-params";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { use } from "react";
 import { Community } from "@/components/marketing/about/community";
 import { Curricula } from "@/components/marketing/about/curricula";
 import { Faq } from "@/components/marketing/about/faq";
@@ -69,9 +69,8 @@ export async function generateMetadata({
   };
 }
 
-export default function Page(props: PageProps<"/[locale]">) {
-  const { locale: rawLocale } = use(props.params);
-  const locale = getLocaleOrThrow(rawLocale);
+export default async function Page() {
+  const locale = getLocaleOrThrow(await rootLocale());
 
   return <MarketingHomePageContent locale={locale} />;
 }

@@ -1,6 +1,7 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { readMaterialCardChapters } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import {
@@ -79,7 +80,20 @@ export async function generateMetadata({
 }
 
 /** Renders one curriculum navigation node from its exclusive route owner. */
-export default async function Page({ params }: CurriculumPageProps) {
+export default function Page({ params }: CurriculumPageProps) {
+  return (
+    <LayoutMaterial>
+      <Suspense fallback={null}>
+        <CurriculumRouteContent params={params} />
+      </Suspense>
+    </LayoutMaterial>
+  );
+}
+
+/** Resolves and renders the URL-specific curriculum node inside its boundary. */
+async function CurriculumRouteContent({
+  params,
+}: Pick<CurriculumPageProps, "params">) {
   const model = await resolveRuntimeCurriculumRoute(params);
   const { locale, route } = model;
   const [catalog, tCommon] = await Promise.all([
@@ -100,43 +114,41 @@ export default async function Page({ params }: CurriculumPageProps) {
       <BreadcrumbJsonLd
         breadcrumbItems={createBreadcrumbItems(locale, breadcrumbs)}
       />
-      <LayoutMaterial>
-        <LayoutMaterialContent>
-          {route.level === "track" ? (
-            <CurriculumRootHeader
-              currentRoute={route}
-              homeLabel={tCommon("home")}
-              options={readRuntimeCurriculumOptions(catalog, locale)}
-              selectorLabel={selectorLabel}
-              subjectLabel={tCommon("subject")}
-            />
-          ) : (
-            <HeaderContent
-              icon={readCurriculumRouteIcon(route)}
-              link={readRuntimeCurriculumHeader(model)}
-              title={route.title}
-            />
-          )}
-          <LayoutContent>
-            <CurriculumRouteBody {...model} />
-          </LayoutContent>
-          {sourceUrl ? (
-            <FooterContent>
-              <RefContent githubUrl={sourceUrl} />
-            </FooterContent>
-          ) : null}
-        </LayoutMaterialContent>
-        {model.materialCards.length > 0 && (
-          <LayoutMaterialToc
-            chapters={{
-              label: route.title,
-              data: readMaterialCardChapters(model.materialCards),
-            }}
-            githubUrl={sourceUrl}
-            header={readRuntimeCurriculumToc(model)}
+      <LayoutMaterialContent>
+        {route.level === "track" ? (
+          <CurriculumRootHeader
+            currentRoute={route}
+            homeLabel={tCommon("home")}
+            options={readRuntimeCurriculumOptions(catalog, locale)}
+            selectorLabel={selectorLabel}
+            subjectLabel={tCommon("subject")}
+          />
+        ) : (
+          <HeaderContent
+            icon={readCurriculumRouteIcon(route)}
+            link={readRuntimeCurriculumHeader(model)}
+            title={route.title}
           />
         )}
-      </LayoutMaterial>
+        <LayoutContent>
+          <CurriculumRouteBody {...model} />
+        </LayoutContent>
+        {sourceUrl ? (
+          <FooterContent>
+            <RefContent githubUrl={sourceUrl} />
+          </FooterContent>
+        ) : null}
+      </LayoutMaterialContent>
+      {model.materialCards.length > 0 && (
+        <LayoutMaterialToc
+          chapters={{
+            label: route.title,
+            data: readMaterialCardChapters(model.materialCards),
+          }}
+          githubUrl={sourceUrl}
+          header={readRuntimeCurriculumToc(model)}
+        />
+      )}
     </>
   );
 }

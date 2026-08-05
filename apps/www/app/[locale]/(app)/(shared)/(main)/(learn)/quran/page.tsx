@@ -2,6 +2,7 @@ import { AllahIcon } from "@hugeicons/core-free-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
+import { locale as rootLocale } from "next/root-params";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { FooterContent } from "@/components/shared/footer-content";
@@ -53,9 +54,8 @@ export async function generateMetadata({
 }
 
 /** Loads the Quran surah catalog before rendering the localized index. */
-export default async function Page(props: PageProps<"/[locale]/quran">) {
-  const { locale: rawLocale } = await props.params;
-  const locale = getLocaleOrThrow(rawLocale);
+export default async function Page() {
+  const locale = getLocaleOrThrow(await rootLocale());
   const { surahs } = await getPublishedQuranCatalog();
 
   return <PageContent locale={locale} surahs={surahs} />;

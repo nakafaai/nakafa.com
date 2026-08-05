@@ -4,8 +4,8 @@ import type {
   ArticleReference,
 } from "@nakafa/aksara-contracts/projection/article";
 import { Effect, Option } from "effect";
+import { io } from "next/cache";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
@@ -75,7 +75,7 @@ async function readPreviewOwner(input: ArticleContentInput) {
     return Option.none<ArticlePreviewContent>();
   }
 
-  await connection();
+  await io();
   return Effect.runPromise(readArticlePreview(input));
 }
 

@@ -19,11 +19,6 @@ import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 
-export const unstable_instant = {
-  prefetch: "runtime",
-  samples: [{ params: { country: "indonesia", locale: "id" } }],
-};
-
 /** Builds route-owned metadata for one localized try-out country. */
 export async function generateMetadata({
   params,

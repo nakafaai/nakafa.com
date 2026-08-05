@@ -1,16 +1,9 @@
-import { SchoolIcon, UnfoldMoreIcon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
 } from "@repo/design-system/components/ui/sidebar-content";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuDescription,
-  SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar-menu";
+import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { cn } from "@repo/design-system/lib/utils";
 import { type ComponentProps, Suspense } from "react";
@@ -25,7 +18,7 @@ export function SchoolSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar className={cn("z-20", props.className)} side="left" {...props}>
       <SidebarHeader className="border-b">
-        <Suspense fallback={<SchoolSwitcherFallback />}>
+        <Suspense fallback={null}>
           <SchoolSwitcherSlot />
         </Suspense>
       </SidebarHeader>
@@ -47,29 +40,4 @@ async function SchoolSwitcherSlot() {
   const initialSchoolPage = await getSchoolSwitcherPage();
 
   return <SchoolSwitcher initialSchoolPage={initialSchoolPage} />;
-}
-
-/** Match the school switcher trigger shape while its server page is loading. */
-function SchoolSwitcherFallback() {
-  return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          aria-hidden="true"
-          className="disabled:opacity-100"
-          disabled
-          size="lg"
-        >
-          <div className="flex aspect-square size-8 items-center justify-center rounded-sm border bg-foreground text-background">
-            <HugeIcons className="size-4" icon={SchoolIcon} />
-          </div>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <p className="truncate font-medium">Nakafa</p>
-            <SidebarMenuDescription>School</SidebarMenuDescription>
-          </div>
-          <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  );
 }

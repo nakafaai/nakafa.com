@@ -10,6 +10,7 @@ import { Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import {
   readArticleMetadata,
   readArticlePage,
@@ -17,6 +18,7 @@ import {
 import { ArticleShell } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/shell";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
+import { LayoutMaterial } from "@/components/shared/material/layout";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import {
   getPublishedArticlePage,
@@ -146,9 +148,22 @@ export async function generateStaticParams({
 }
 
 /** Renders an article after Convex confirms the published route exists. */
-export default async function Page({
+export default function Page(
+  props: PageProps<"/[locale]/articles/[category]/[slug]">
+) {
+  return (
+    <LayoutMaterial>
+      <Suspense fallback={null}>
+        <ArticleRouteContent params={props.params} />
+      </Suspense>
+    </LayoutMaterial>
+  );
+}
+
+/** Resolves the URL-specific signed article inside its streaming boundary. */
+async function ArticleRouteContent({
   params,
-}: PageProps<"/[locale]/articles/[category]/[slug]">) {
+}: Pick<PageProps<"/[locale]/articles/[category]/[slug]">, "params">) {
   const { locale, category, publicPath } = await getResolvedParams(params);
   const article = await readArticlePage({
     locale,

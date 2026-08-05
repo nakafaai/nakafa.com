@@ -1,6 +1,7 @@
 "use client";
 
 import type { api } from "@repo/backend/convex/_generated/api";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { useConvexAuth } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
@@ -12,7 +13,6 @@ import { ChoiceCardVisual } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
-import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation.client";
 
@@ -63,7 +63,7 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
   return (
     <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
       {page.countries.map((country) => (
-        <TryoutIntentLink
+        <IntentLink
           className={choiceCardVariants()}
           href={getTryoutPublicPathHref(country.publicPath)}
           key={country.countryKey}
@@ -78,7 +78,7 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
           <ChoiceCardContent>
             <h2>{country.title}</h2>
           </ChoiceCardContent>
-        </TryoutIntentLink>
+        </IntentLink>
       ))}
     </div>
   );
