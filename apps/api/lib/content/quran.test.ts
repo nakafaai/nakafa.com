@@ -1,3 +1,4 @@
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   encodeTestQuranRow,
   makeQuranChunk,
@@ -17,10 +18,10 @@ vi.mock("@repo/backend/client/runtime", () => ({
 }));
 
 const source = {
-  activeManifestHash: `sha256:${"a".repeat(64)}`,
+  activeManifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
   activeReleaseId: "quran-release",
   managed: true,
-  snapshotId: `sha256:${"b".repeat(64)}`,
+  snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
   sourceRevision: "c".repeat(40),
 };
 
