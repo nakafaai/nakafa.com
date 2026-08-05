@@ -1,9 +1,9 @@
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
+import { defaultLocale } from "@repo/utilities/locales";
 import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
 import { readQuranApiPage } from "@/lib/content/quran";
-import { invalidApiLocaleMessage, parseApiLocale } from "@/lib/content/runtime";
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -13,18 +13,9 @@ export const revalidate = false;
  */
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ locale: string; surah: string }> }
+  { params }: { params: Promise<{ surah: string }> }
 ) {
-  const { locale, surah } = await params;
-  const validLocale = parseApiLocale(locale);
-
-  if (!validLocale) {
-    return NextResponse.json(
-      { error: invalidApiLocaleMessage },
-      { status: 400 }
-    );
-  }
-
+  const { surah } = await params;
   const surahNumber = parseQuranSurahNumber(surah);
 
   if (!surahNumber) {
@@ -35,7 +26,7 @@ export async function GET(
   }
 
   return Effect.runPromise(
-    readQuranApiPage({ locale: validLocale, surahNumber }).pipe(
+    readQuranApiPage({ locale: defaultLocale, surahNumber }).pipe(
       Effect.map((page) =>
         NextResponse.json({ ...page.surah, verses: page.verses })
       ),
@@ -43,7 +34,6 @@ export async function GET(
         Effect.gen(function* () {
           yield* logError(toError(error), {
             service: "api-quran",
-            locale: validLocale,
             surah: surahNumber,
             message: "Failed to fetch surah.",
           });
