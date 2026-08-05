@@ -1,10 +1,12 @@
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import { readTryoutSection } from "@repo/backend/convex/contentRelease/tryout/section";
 import {
   indexPublishedCatalog,
+  type PublishedCatalogIndex,
   readPublishedSetSections,
   sortCatalogRows,
 } from "@repo/backend/convex/tryouts/catalog/hierarchy";
@@ -52,20 +54,19 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       return yield* missingFeaturedTryout("track");
     }
 
-    const set = sortCatalogRows(
+    const sets = sortCatalogRows(
       index.sets.filter(
         (row) =>
           row.countryKey === country.countryKey &&
           row.examKey === exam.examKey &&
           row.trackKey === track.trackKey
       )
-    ).at(0);
-    if (!set) {
+    );
+    if (sets.length === 0) {
       return yield* missingFeaturedTryout("set");
     }
 
-    const sections = yield* readPublishedSetSections(index, set);
-    const section = sections.find(({ visibility }) => visibility === "visible");
+    const section = yield* readFirstVisibleSection(index, sets);
     if (!section) {
       return yield* missingFeaturedTryout("section");
     }
@@ -102,6 +103,21 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     };
   }
 );
+
+/** Finds the first public section while preserving authored set order. */
+const readFirstVisibleSection = Effect.fn(
+  "tryouts.catalog.readFirstVisibleSection"
+)(function* (index: PublishedCatalogIndex, sets: readonly TryoutSet[]) {
+  for (const set of sets) {
+    const sections = yield* readPublishedSetSections(index, set);
+    const section = sections.find(({ visibility }) => visibility === "visible");
+    if (section) {
+      return section;
+    }
+  }
+
+  return null;
+});
 
 /** Creates one fail-closed integrity error for an incomplete featured path. */
 function missingFeaturedTryout(
