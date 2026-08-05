@@ -2,10 +2,9 @@ import {
   type ArticleCategory,
   ArticleCategorySchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { Effect, Option, Schema } from "effect";
+import { Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -28,17 +27,14 @@ import {
   getArticleNextHref,
   readArticlePageCursor,
 } from "@/lib/content/article/query";
-import { getRuntimeArticleSummaries } from "@/lib/content/articles";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
-import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
-import { getStaticParams } from "@/lib/utils/system";
 
-/** Validates category params without constraining future source-owned slugs. */
+/** Validates one signed article-category route. */
 async function getResolvedParams(
   params: PageProps<"/[locale]/articles/[category]">["params"]
 ) {
@@ -48,14 +44,6 @@ async function getResolvedParams(
     notFound();
   }
   return { category: rawCategory, locale };
-}
-
-/** Reads cached native cards while their category remains unmanaged. */
-async function getSourceArticles(category: string, locale: Locale) {
-  "use cache";
-
-  applyContentRuntimeCache();
-  return Effect.runPromise(getRuntimeArticleSummaries(category, locale));
 }
 
 /** Builds metadata for one validated article category. */
@@ -77,19 +65,10 @@ export async function generateMetadata({
   ]);
   const categoryPath = `/articles/${category}`;
   const article = catalog.articles[0];
-  let title: string;
-  if (catalog.managed) {
-    if (!article) {
-      notFound();
-    }
-    title = article.categoryTitle;
-  } else {
-    const sourceCategory = parseArticleCategory(category);
-    if (Option.isNone(sourceCategory)) {
-      notFound();
-    }
-    title = t(sourceCategory.value);
+  if (!article) {
+    notFound();
   }
+  const title = article.categoryTitle;
   const description = t("description");
   const path = `/${locale}${categoryPath}`;
   const socialMetadata = getSocialMetadata({
@@ -108,7 +87,7 @@ export async function generateMetadata({
   };
 }
 
-/** Generates a bounded category set from the active article owner. */
+/** Generates a bounded category set from the signed article catalog. */
 export async function generateStaticParams({
   params,
 }: {
@@ -121,20 +100,13 @@ export async function generateStaticParams({
     expectedReleaseId: null,
     locale,
   });
-  if (catalog.managed) {
-    return selectLearningStaticParams(
-      catalog.categories.map(({ category }) => ({ category })),
-      { category: "build-placeholder" }
-    );
-  }
-  return getStaticParams({
-    basePath: "articles",
-    locale,
-    paramNames: ["category"],
-  });
+  return selectLearningStaticParams(
+    catalog.categories.map(({ category }) => ({ category })),
+    { category: "build-placeholder" }
+  );
 }
 
-/** Renders one category from its exclusive published or source owner. */
+/** Renders one category from the signed article catalog. */
 export default function Page({
   params,
   searchParams,
@@ -159,44 +131,14 @@ async function PageContent({
   if (Option.isNone(cursor)) {
     notFound();
   }
-  const [catalog, t] = await Promise.all([
-    getPublishedArticlePage({
-      category,
-      ...cursor.value,
-      locale,
-    }),
-    getTranslations({ locale, namespace: "Articles" }),
-  ]);
+  const catalog = await getPublishedArticlePage({
+    category,
+    ...cursor.value,
+    locale,
+  });
   const categoryPath = `/articles/${category}`;
   if (catalog.stale) {
     redirect(`/${locale}${categoryPath}`);
-  }
-
-  if (!catalog.managed) {
-    if (cursor.value.cursor !== null) {
-      notFound();
-    }
-    const sourceCategory = parseArticleCategory(category);
-    if (Option.isNone(sourceCategory)) {
-      notFound();
-    }
-    const articles = await getSourceArticles(sourceCategory.value, locale);
-    if (articles.length === 0) {
-      notFound();
-    }
-    return (
-      <CategoryPage
-        articles={articles}
-        category={category}
-        categoryPath={categoryPath}
-        label={t(sourceCategory.value)}
-        locale={locale}
-        nextHref={null}
-        sourceUrl={getGithubUrl({
-          path: `/packages/contents${categoryPath}`,
-        })}
-      />
-    );
   }
 
   const source = catalog.articles[0];

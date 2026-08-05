@@ -5,7 +5,6 @@ import { getLlmsMdxText } from "@/lib/llms/mdx";
 
 const runtimeMocks = vi.hoisted(() => ({
   applyContentRuntimeCache: vi.fn(),
-  getRuntimeArticlePage: vi.fn(),
   getRuntimeCurriculumPage: vi.fn(),
 }));
 
@@ -14,7 +13,6 @@ vi.mock("@/lib/content/cache", () => ({
 }));
 
 vi.mock("@/lib/content/runtime/pages", () => ({
-  getRuntimeArticlePage: runtimeMocks.getRuntimeArticlePage,
   getRuntimeCurriculumPage: runtimeMocks.getRuntimeCurriculumPage,
 }));
 
@@ -25,9 +23,7 @@ vi.mock("@/lib/utils/github", () => ({
 describe("getLlmsMdxText", () => {
   beforeEach(() => {
     runtimeMocks.applyContentRuntimeCache.mockReset();
-    runtimeMocks.getRuntimeArticlePage.mockReset();
     runtimeMocks.getRuntimeCurriculumPage.mockReset();
-    runtimeMocks.getRuntimeArticlePage.mockReturnValue(Effect.succeed(null));
     runtimeMocks.getRuntimeCurriculumPage.mockReturnValue(Effect.succeed(null));
   });
 
@@ -50,32 +46,6 @@ describe("getLlmsMdxText", () => {
 
     expect(runtimeMocks.applyContentRuntimeCache).toHaveBeenCalledTimes(1);
     expect(text).toContain("Lesson body");
-  });
-
-  it("loads article source slugs through the runtime article reader", async () => {
-    runtimeMocks.getRuntimeArticlePage.mockReturnValue(
-      Effect.succeed({
-        body: "Article body",
-        metadata: {
-          description: "Article description",
-          title: "Article title",
-        },
-      })
-    );
-
-    const text = await Effect.runPromise(
-      getLlmsMdxText({
-        cleanSlug: "articles/politics/example",
-        locale: "en",
-      })
-    );
-
-    expect(runtimeMocks.getRuntimeArticlePage).toHaveBeenCalledWith({
-      locale: "en",
-      slug: "articles/politics/example",
-    });
-    expect(text).toContain("Article description");
-    expect(text).toContain("Article body");
   });
 
   it("loads material lesson source slugs through the runtime material reader", async () => {

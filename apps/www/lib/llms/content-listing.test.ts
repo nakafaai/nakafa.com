@@ -4,54 +4,50 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getContentListingLlmsEntries } from "@/lib/llms/content-listing";
 
-const mockGetParentPage = vi.hoisted(() => vi.fn());
 const mockReadPublishedCategoryArticles = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/discovery", () => ({
   readPublishedCategoryArticles: mockReadPublishedCategoryArticles,
 }));
 
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentRouteParentPage: mockGetParentPage,
-}));
-
-const sourceArticles = [
-  {
-    description:
-      "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
-    markdown: true,
-    route: "articles/politics/dynastic-politics-asian-values",
-    section: "articles",
-    title: "Framing Dynastic Politics in Local Elections within Asian Values",
-  },
-  {
-    description:
-      "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
-    markdown: true,
-    route: "articles/politics/regional-elections-turmoil",
-    section: "articles",
-    title:
-      "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
-  },
-];
-
 beforeEach(() => {
-  mockGetParentPage.mockReset();
   mockReadPublishedCategoryArticles.mockReset();
   mockReadPublishedCategoryArticles.mockReturnValue(
-    Effect.succeed({ articles: [], managed: false })
-  );
-  mockGetParentPage.mockReturnValue(
     Effect.succeed({
-      continueCursor: null,
-      isDone: true,
-      page: sourceArticles,
+      articles: [
+        {
+          authors: [{ name: "Shifna Zihdatal Haq" }],
+          category: "politics",
+          categoryTitle: "Politics",
+          date: "2024-08-08",
+          description:
+            "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
+          official: true,
+          publicPath: "articles/politics/dynastic-politics-asian-values",
+          slug: "dynastic-politics-asian-values",
+          title:
+            "Framing Dynastic Politics in Local Elections within Asian Values",
+        },
+        {
+          authors: [{ name: "Shifna Zihdatal Haq" }],
+          category: "politics",
+          categoryTitle: "Politics",
+          date: "2024-10-27",
+          description:
+            "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
+          official: false,
+          publicPath: "articles/politics/regional-elections-turmoil",
+          slug: "regional-elections-turmoil",
+          title:
+            "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
+        },
+      ],
     })
   );
 });
 
 describe("llms content listing", () => {
-  it("builds one bounded source article listing", async () => {
+  it("builds one bounded signed article listing", async () => {
     const entries = await Effect.runPromise(
       getContentListingLlmsEntries({
         locale: "en",
@@ -63,15 +59,11 @@ describe("llms content listing", () => {
       "/articles/politics/dynastic-politics-asian-values",
       "/articles/politics/regional-elections-turmoil",
     ]);
-    expect(mockGetParentPage).toHaveBeenCalledWith({
-      cursor: null,
-      kind: "article",
-      limit: 100,
-      locale: "en",
-      order: "date-desc",
-      parentRoute: "articles/politics",
-      section: "articles",
-    });
+    expect(mockReadPublishedCategoryArticles).toHaveBeenCalledWith(
+      "en",
+      "politics",
+      100
+    );
   });
 
   it("uses the published owner for an active article category", async () => {
@@ -92,7 +84,6 @@ describe("llms content listing", () => {
               "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
           },
         ],
-        managed: true,
       })
     );
 
@@ -115,7 +106,6 @@ describe("llms content listing", () => {
       "politics",
       100
     );
-    expect(mockGetParentPage).not.toHaveBeenCalled();
   });
 
   it("rejects unsupported listing routes without catalog reads", async () => {
@@ -131,7 +121,6 @@ describe("llms content listing", () => {
         Effect.runPromise(getContentListingLlmsEntries({ locale: "en", route }))
       ).resolves.toBeNull();
     }
-
-    expect(mockGetParentPage).not.toHaveBeenCalled();
+    expect(mockReadPublishedCategoryArticles).not.toHaveBeenCalled();
   });
 });

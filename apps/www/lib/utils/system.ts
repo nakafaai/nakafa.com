@@ -1,22 +1,9 @@
-import type { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { routing } from "@repo/internationalization/src/routing";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
-import {
-  getRuntimeContentRoute,
-  getRuntimeLatestContentRoutePage,
-} from "@/lib/content/runtime/routes";
-
-type RuntimeContentSection = FunctionArgs<
-  typeof api.contents.queries.runtime.listContentRoutesByPrefix
->["section"];
-type LatestContentRoute = FunctionReturnType<
-  typeof api.contents.queries.runtime.listLatestContentRoutePage
->["page"][number];
+import { getRuntimeContentRoute } from "@/lib/content/runtime/routes";
 
 /** Expected failure raised when route metadata translations cannot be loaded. */
 class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
@@ -27,112 +14,11 @@ class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
   }
 ) {}
 
-interface ParamConfig {
-  basePath: RuntimeContentSection;
-  isDeep?: boolean;
-  locale?: Locale;
-  paramNames: string[];
-  slugParam?: string;
-}
-
 interface SystemMetadata {
   authors: { name: string }[];
   date: string;
   description?: string;
   title: string;
-}
-
-type StaticParam = Record<string, string | string[]>;
-
-const staticParamCandidateLimit = 100;
-
-/** Generates static params from the Convex-backed public route catalog. */
-export function getStaticParams(config: ParamConfig): Promise<StaticParam[]> {
-  return Effect.runPromise(buildStaticParams(config));
-}
-
-/** Builds static params from route catalog paths as a native Effect program. */
-const buildStaticParams = Effect.fn("www.system.getStaticParams")(function* (
-  config: ParamConfig
-) {
-  const routes = yield* getStaticParamRoutes(config);
-  const params = new Map<string, StaticParam>();
-
-  for (const route of routes) {
-    const param = routeToStaticParam(route, config);
-
-    if (!param) {
-      continue;
-    }
-
-    params.set(JSON.stringify(param), param);
-  }
-
-  return Array.from(params.values());
-});
-
-/** Reads deliberate latest-content candidates for one static params generator. */
-function getStaticParamRoutes(config: ParamConfig) {
-  return Effect.gen(function* () {
-    const locales = config.locale ? [config.locale] : routing.locales;
-    const routeGroups = yield* Effect.forEach(
-      locales,
-      (locale) =>
-        getRuntimeLatestContentRoutePage({
-          cursor: null,
-          limit: staticParamCandidateLimit,
-          locale,
-          section: config.basePath,
-        }),
-      { concurrency: locales.length }
-    );
-    const routes = routeGroups.flatMap(({ page }) =>
-      page.map(getStaticParamRoutePath)
-    );
-
-    return new Set(routes);
-  });
-}
-
-/** Selects the concrete URL path to prerender from one latest-content row. */
-function getStaticParamRoutePath(route: LatestContentRoute) {
-  return `/${route.route}`;
-}
-
-/** Converts one public route into a route-level static params object. */
-function routeToStaticParam(route: string, config: ParamConfig) {
-  const parts = route.split("/").filter(Boolean);
-  const [root] = parts;
-
-  if (root !== config.basePath) {
-    return null;
-  }
-
-  const segments = parts.slice(1);
-  const param: StaticParam = {};
-
-  for (const [index, paramName] of config.paramNames.entries()) {
-    if (paramName === config.slugParam && config.isDeep) {
-      const slug = segments.slice(index);
-
-      if (slug.length === 0) {
-        return null;
-      }
-
-      param[paramName] = slug;
-      return param;
-    }
-
-    const value = segments[index];
-
-    if (!value) {
-      return null;
-    }
-
-    param[paramName] = value;
-  }
-
-  return param;
 }
 
 /** Gets SEO metadata from the Convex route catalog with translation defaults. */

@@ -38,25 +38,8 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 const routeRows = [
   {
     markdown: false,
-    route: "articles/politics/flawed-legal-geopolitics",
-    section: "articles",
-  },
-  {
-    description:
-      "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
-    markdown: true,
-    route: "articles/politics/dynastic-politics-asian-values",
-    section: "articles",
-    title: "Framing Dynastic Politics in Local Elections within Asian Values",
-  },
-  {
-    description:
-      "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
-    markdown: true,
-    route: "articles/politics/regional-elections-turmoil",
-    section: "articles",
-    title:
-      "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
+    route: "quran/private-index",
+    section: "quran",
   },
   {
     description:
@@ -72,6 +55,41 @@ const routeRows = [
     route: "quran/1",
     section: "quran",
     title: "Al-Quran",
+  },
+  {
+    description: "Quran second surah",
+    markdown: true,
+    route: "quran/2",
+    section: "quran",
+    title: "Al-Baqarah",
+  },
+];
+
+const publishedArticles = [
+  {
+    authors: [{ name: "Shifna Zihdatal Haq" }],
+    category: "politics",
+    categoryTitle: "Politics",
+    date: "2024-08-08",
+    description:
+      "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
+    official: true,
+    publicPath: "articles/politics/dynastic-politics-asian-values",
+    slug: "dynastic-politics-asian-values",
+    title: "Framing Dynastic Politics in Local Elections within Asian Values",
+  },
+  {
+    authors: [{ name: "Shifna Zihdatal Haq" }],
+    category: "politics",
+    categoryTitle: "Politics",
+    date: "2024-10-27",
+    description:
+      "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
+    official: false,
+    publicPath: "articles/politics/regional-elections-turmoil",
+    slug: "regional-elections-turmoil",
+    title:
+      "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
   },
 ];
 
@@ -93,7 +111,10 @@ beforeEach(() => {
   mockReadPublishedMaterialBucket.mockReset();
   mockReadMaterialInventory.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
-    Effect.succeed({ articleCount: 0, buckets: [], managed: false })
+    Effect.succeed({ articleCount: 2, buckets: ["abc"] })
+  );
+  mockReadPublishedArticleBucket.mockReturnValue(
+    Effect.succeed({ articles: publishedArticles })
   );
   mockReadPublishedMaterialBucket.mockReturnValue(
     Effect.succeed({
@@ -159,54 +180,24 @@ describe("llms content entries", () => {
       "/articles/politics/regional-elections-turmoil",
       `/${previewProjection.publicPath}`,
       "/quran/1",
+      "/quran/2",
     ]);
     expect(mockGetArtifactPage).toHaveBeenCalledWith({
       locale: "en",
       page: 0,
-      section: "articles",
+      section: "quran",
     });
   });
 
-  it("uses published article partitions after ownership activates", async () => {
+  it("uses one exact signed article partition", async () => {
     mockReadPublishedArticleBuckets.mockReturnValue(
       Effect.succeed({
-        articleCount: 1,
+        articleCount: 2,
         buckets: ["abc"],
-        managed: true,
       })
     );
     mockReadPublishedArticleBucket.mockReturnValue(
-      Effect.succeed({
-        articles: [
-          {
-            authors: [{ name: "Shifna Zihdatal Haq" }],
-            category: "politics",
-            categoryTitle: "Politics",
-            date: "2024-08-08",
-            description:
-              "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
-            official: true,
-            publicPath: "articles/politics/dynastic-politics-asian-values",
-            slug: "dynastic-politics-asian-values",
-            title:
-              "Framing Dynastic Politics in Local Elections within Asian Values",
-          },
-          {
-            authors: [{ name: "Shifna Zihdatal Haq" }],
-            category: "politics",
-            categoryTitle: "Politics",
-            date: "2024-10-27",
-            description:
-              "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
-            official: false,
-            publicPath: "articles/politics/regional-elections-turmoil",
-            slug: "regional-elections-turmoil",
-            title:
-              "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
-          },
-        ],
-        managed: true,
-      })
+      Effect.succeed({ articles: publishedArticles })
     );
 
     await expect(
@@ -280,14 +271,14 @@ describe("llms content entries", () => {
     );
   });
 
-  it("distinguishes empty artifact pages from missing pages", async () => {
+  it("distinguishes empty runtime pages from missing pages", async () => {
     mockGetArtifactPage.mockReturnValueOnce(
       Effect.succeed({
         locale: "en",
         page: 99,
         routeCount: 0,
         routes: [],
-        section: "articles",
+        section: "quran",
         syncedAt: 1,
       })
     );
@@ -297,7 +288,7 @@ describe("llms content entries", () => {
         getContentPageLlmsEntries({
           locale: "en",
           page: 99,
-          section: "articles",
+          section: "quran",
         })
       )
     ).resolves.toEqual([]);
@@ -309,7 +300,7 @@ describe("llms content entries", () => {
         getContentPageLlmsEntries({
           locale: "en",
           page: 404,
-          section: "articles",
+          section: "quran",
         })
       )
     ).resolves.toBeNull();
@@ -332,7 +323,6 @@ describe("llms content entries", () => {
       Effect.succeed({
         articleCount: 1,
         buckets: ["abc"],
-        managed: true,
       })
     );
 
@@ -347,7 +337,7 @@ describe("llms content entries", () => {
     ).resolves.toBeNull();
 
     mockReadPublishedArticleBucket.mockReturnValue(
-      Effect.succeed({ articles: null, managed: true })
+      Effect.succeed({ articles: null })
     );
     await expect(
       Effect.runPromise(
@@ -360,7 +350,7 @@ describe("llms content entries", () => {
     ).resolves.toBeNull();
 
     mockReadPublishedArticleBucket.mockReturnValue(
-      Effect.succeed({ articles: [], managed: false })
+      Effect.succeed({ articles: [] })
     );
     await expect(
       Effect.runPromise(
@@ -370,16 +360,8 @@ describe("llms content entries", () => {
           section: "articles",
         })
       )
-    ).resolves.toBeNull();
+    ).resolves.toEqual([]);
     expect(mockGetArtifactPage).not.toHaveBeenCalled();
-
-    mockReadPublishedArticleBuckets.mockReturnValue(
-      Effect.succeed({
-        articleCount: 0,
-        buckets: [],
-        managed: false,
-      })
-    );
     mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
         activeReleaseId: activeMaterialReleaseId,

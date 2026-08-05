@@ -4,6 +4,7 @@ import type { ArticlePreviewDocument } from "@nakafa/aksara-contracts/preview/do
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
 import {
   type ArticleMetadata,
+  type ArticleProjection,
   ArticleProjectionSchema,
   type ArticleReference,
 } from "@nakafa/aksara-contracts/projection/article";
@@ -29,6 +30,7 @@ export interface ArticlePreviewContent {
   readonly body: string;
   readonly categoryTitle: string;
   readonly children: ReactNode;
+  readonly contentId: ArticleProjection["graph"]["assetId"];
   readonly metadata: ArticleMetadata;
   readonly references: readonly ArticleReference[];
 }
@@ -67,6 +69,7 @@ const readReadyArticle = Effect.fn("NakafaContent.readReadyArticle")(function* (
     body: rendered.artifact.payload.rawMdx,
     categoryTitle: projection.categoryTitle,
     children: <rendered.Content />,
+    contentId: projection.graph.assetId,
     metadata: projection.metadata,
     references: projection.references,
   } satisfies ArticlePreviewContent;

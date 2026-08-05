@@ -65,13 +65,19 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
       () =>
         fetchRuntimeQuery(api.contentRelease.article.bucket, { bucket, locale })
     );
+    if (!result.managed) {
+      return yield* new PublishedProjectionError({
+        locale,
+        publicPath: "articles",
+      });
+    }
     if (result.articles === null) {
-      return { articles: null, managed: result.managed };
+      return { articles: null };
     }
     const articles = yield* Effect.forEach(result.articles, (article) =>
       decodeDiscoveryItem(article, locale)
     );
-    return { articles, managed: result.managed };
+    return { articles };
   }
 );
 
@@ -83,10 +89,16 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
       () =>
         fetchRuntimeQuery(api.contentRelease.article.latest, { limit, locale })
     );
+    if (!result.managed) {
+      return yield* new PublishedProjectionError({
+        locale,
+        publicPath: "articles",
+      });
+    }
     const articles = yield* Effect.forEach(result.articles, (article) =>
       decodeDiscoveryItem(article, locale)
     );
-    return { articles, managed: result.managed };
+    return { articles };
   }
 );
 
@@ -101,8 +113,14 @@ export const readPublishedCategoryArticles = Effect.fn(
       locale,
     })
   );
+  if (!result.managed) {
+    return yield* new PublishedProjectionError({
+      locale,
+      publicPath: `articles/${category}`,
+    });
+  }
   const articles = yield* Effect.forEach(result.articles, (article) =>
     decodeDiscoveryItem(article, locale)
   );
-  return { articles, managed: result.managed };
+  return { articles };
 });

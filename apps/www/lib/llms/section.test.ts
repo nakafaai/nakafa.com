@@ -41,7 +41,10 @@ beforeEach(() => {
   mockReadPublishedArticleBuckets.mockReset();
   mockReadMaterialInventory.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
-    Effect.succeed({ articleCount: 0, buckets: [], managed: false })
+    Effect.succeed({
+      articleCount: 250,
+      buckets: ["000", "abc", "fff"],
+    })
   );
   mockReadMaterialInventory.mockReturnValue(
     Effect.succeed({
@@ -55,38 +58,23 @@ beforeEach(() => {
     Effect.succeed([
       { count: 250, locale: "en", section: "articles", syncedAt: 1 },
       { count: 100, locale: "en", section: "material", syncedAt: 1 },
+      { count: 114, locale: "en", section: "quran", syncedAt: 1 },
     ])
   );
 });
 
 describe("llms section indexes", () => {
-  it("selects published partitions only after ownership activates", async () => {
-    await expect(
-      Effect.runPromise(
-        getLlmsSectionPages({ locale: "en", section: "articles" })
-      )
-    ).resolves.toEqual({
-      owner: "source",
-      pageCount: 3,
-      routeCount: 250,
-    });
-
-    mockReadPublishedArticleBuckets.mockReturnValueOnce(
-      Effect.succeed({
-        articleCount: 42,
-        buckets: ["000", "abc"],
-        managed: true,
-      })
-    );
+  it("reads signed article partitions without source discovery", async () => {
     await expect(
       Effect.runPromise(
         getLlmsSectionPages({ locale: "en", section: "articles" })
       )
     ).resolves.toEqual({
       owner: "published",
-      pageCount: 2,
-      routeCount: 42,
+      pageCount: 3,
+      routeCount: 250,
     });
+    expect(mockGetRuntimeContentRouteCounts).not.toHaveBeenCalled();
   });
 
   it("reads signed material counts without source discovery", async () => {
@@ -122,6 +110,25 @@ describe("llms section indexes", () => {
       routeCount: 42,
     });
     expect(mockGetRuntimeContentRouteCounts).not.toHaveBeenCalled();
+  });
+
+  it("reads runtime section counts and handles an empty inventory", async () => {
+    await expect(
+      Effect.runPromise(getLlmsSectionPages({ locale: "en", section: "quran" }))
+    ).resolves.toEqual({
+      owner: "source",
+      pageCount: 2,
+      routeCount: 114,
+    });
+
+    mockGetRuntimeContentRouteCounts.mockReturnValueOnce(Effect.succeed([]));
+    await expect(
+      Effect.runPromise(getLlmsSectionPages({ locale: "id", section: "quran" }))
+    ).resolves.toEqual({
+      owner: "source",
+      pageCount: 0,
+      routeCount: 0,
+    });
   });
 
   it("renders empty, single, and multi-page navigation", () => {

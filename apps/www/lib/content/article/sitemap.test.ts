@@ -43,7 +43,6 @@ describe("published article sitemap", () => {
     ).resolves.toEqual({
       articleCount: 1,
       buckets: ["abc"],
-      managed: true,
     });
     await expect(
       Effect.runPromise(readPublishedArticleSitemap("en", "abc"))
@@ -57,6 +56,18 @@ describe("published article sitemap", () => {
       bucket: "abc",
       locale: "en",
     });
+  });
+
+  it("rejects an unmanaged article sitemap inventory", async () => {
+    fetchMock.mockResolvedValueOnce({
+      articleCount: 0,
+      buckets: [],
+      managed: false,
+    });
+
+    await expect(
+      Effect.runPromise(readPublishedArticleBuckets("en").pipe(Effect.flip))
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
   });
 
   it("preserves runtime query failures in the Effect error channel", async () => {

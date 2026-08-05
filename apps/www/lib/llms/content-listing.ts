@@ -2,11 +2,7 @@ import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/artic
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedCategoryArticles } from "@/lib/content/article/discovery";
-import { getRuntimeContentRouteParentPage } from "@/lib/content/runtime/routes";
-import {
-  buildPublishedContentLlmsEntries,
-  buildRuntimeContentLlmsEntries,
-} from "@/lib/llms/entries";
+import { buildPublishedContentLlmsEntries } from "@/lib/llms/entries";
 
 const LLMS_LISTING_ENTRY_LIMIT = 100;
 
@@ -30,26 +26,9 @@ export const getContentListingLlmsEntries = Effect.fn(
     category,
     LLMS_LISTING_ENTRY_LIMIT
   );
-  if (published.managed) {
-    return buildPublishedContentLlmsEntries({
-      locale,
-      rows: published.articles,
-      section: "articles",
-    });
-  }
-
-  const page = yield* getRuntimeContentRouteParentPage({
-    cursor: null,
-    kind: "article",
-    limit: LLMS_LISTING_ENTRY_LIMIT,
+  return buildPublishedContentLlmsEntries({
     locale,
-    order: "date-desc",
-    parentRoute: cleanRoute,
-    section: "articles",
-  });
-  return buildRuntimeContentLlmsEntries({
-    locale,
-    rows: page.page,
+    rows: published.articles,
     section: "articles",
   });
 });

@@ -86,7 +86,10 @@ beforeEach(() => {
   mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([articleEntry]));
   mockGetSiteLlmsEntries.mockReturnValue([siteEntry]);
   mockReadPublishedArticleBuckets.mockReturnValue(
-    Effect.succeed({ articleCount: 0, buckets: [], managed: false })
+    Effect.succeed({
+      articleCount: 250,
+      buckets: ["000", "abc", "fff"],
+    })
   );
   mockReadPublishedMaterialBuckets.mockReturnValue(
     Effect.succeed({
@@ -159,12 +162,11 @@ describe("llms indexes", () => {
     expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
   });
 
-  it("builds article page maps from published ownership", async () => {
+  it("builds article page maps from the signed catalog", async () => {
     mockReadPublishedArticleBuckets.mockReturnValue(
       Effect.succeed({
         articleCount: 42,
         buckets: ["000", "abc"],
-        managed: true,
       })
     );
 
@@ -187,7 +189,9 @@ describe("llms indexes", () => {
     );
     expect(singlePageIndex).not.toContain("last bounded route-catalog page");
 
-    mockGetRuntimeContentRouteCounts.mockReturnValueOnce(Effect.succeed([]));
+    mockReadPublishedArticleBuckets.mockReturnValueOnce(
+      Effect.succeed({ articleCount: 0, buckets: [] })
+    );
 
     const emptyIndex = await Effect.runPromise(
       getLlmsSectionIndexText("llms/en/articles")

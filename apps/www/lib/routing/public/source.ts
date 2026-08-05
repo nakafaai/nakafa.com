@@ -3,15 +3,13 @@ import {
   ArticleSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
-import { ARTICLE_CATEGORIES } from "@repo/contents/_types/taxonomy";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
 import { hasLocale } from "next-intl";
-import { readPublishedArticleCategory } from "@/lib/content/article/ownership";
+import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { getRuntimeContentRoute } from "@/lib/content/runtime/routes";
 
 const REJECTED_PUBLIC_ROOTS = new Set(["/learn"]);
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
@@ -20,7 +18,7 @@ const QURAN_SURAH_COUNT = 114;
 /**
  * Reads route rejections that must run before markdown negotiation.
  *
- * Wrong public namespaces and finite source-backed HTML routes should return a
+ * Wrong public namespaces and finite public HTML routes should return a
  * real 404, but markdown requests still need a chance to route through the
  * agent-readable source handler before projected route membership is checked.
  */
@@ -71,9 +69,9 @@ function readRejectedPublicRouteLocale(pathname: string) {
 }
 
 /**
- * Reads finite source-backed HTML routes that should 404 before app rendering.
+ * Reads finite public HTML routes that should 404 before app rendering.
  *
- * Quran and article detail pages have finite source inventories. Rejecting
+ * Quran and signed article pages have finite inventories. Rejecting
  * impossible shapes here prevents Next streamed not-found responses from
  * looking like successful soft 404s to agents and crawlers.
  */
@@ -112,7 +110,7 @@ function readMissingHtmlContentLocale({
   });
 }
 
-/** Checks whether one Quran route path can be rendered by the source corpus. */
+/** Checks whether one Quran route path can be rendered. */
 function isRenderableQuranPath(segments: readonly string[]) {
   if (segments.length === 0) {
     return true;
@@ -133,7 +131,7 @@ function isRenderableQuranPath(segments: readonly string[]) {
   );
 }
 
-/** Verifies article paths against their exclusive published or source owner. */
+/** Verifies article paths against preview or signed publication ownership. */
 function readMissingArticleHtmlLocale({
   locale,
   segments,
@@ -151,15 +149,8 @@ function readMissingArticleHtmlLocale({
   }
 
   if (segments.length === 1) {
-    return readPublishedArticleCategory(category, locale).pipe(
-      Effect.map((ownership) => {
-        if (ownership.managed) {
-          return ownership.exists ? null : locale;
-        }
-        return ARTICLE_CATEGORIES.some((item) => item === category)
-          ? null
-          : locale;
-      })
+    return hasPublishedArticleCategory(category, locale).pipe(
+      Effect.map((exists) => (exists ? null : locale))
     );
   }
 
@@ -184,13 +175,6 @@ function readMissingArticleHtmlLocale({
     if (ownership.kind === "found") {
       return null;
     }
-    if (ownership.kind === "missing") {
-      return locale;
-    }
-    const contentRoute = yield* getRuntimeContentRoute({
-      locale,
-      route: publicPath,
-    });
-    return contentRoute ? null : locale;
+    return locale;
   });
 }

@@ -32,6 +32,7 @@ export interface PublishedArticleData
 export interface PublishedArticleContent {
   readonly body: ReactNode;
   readonly categoryTitle: ArticleProjection["categoryTitle"];
+  readonly contentId: ArticleProjection["graph"]["assetId"];
   readonly metadata: ArticleMetadata;
   readonly official: boolean;
   readonly publicPath: string;
@@ -76,6 +77,7 @@ const renderArticleArtifact = Effect.fn("NakafaContent.renderArticleArtifact")(
     return {
       body: <rendered.Content />,
       categoryTitle: data.projection.categoryTitle,
+      contentId: data.projection.graph.assetId,
       metadata: data.projection.metadata,
       official: data.projection.official,
       publicPath: data.projection.publicPath,

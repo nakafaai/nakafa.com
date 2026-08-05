@@ -1,27 +1,27 @@
 // @vitest-environment node
+
 import { Data, Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
-const runtimeMocks = vi.hoisted(() => ({
-  getRuntimeContentRoute: vi.fn(),
-}));
 const publishedMocks = vi.hoisted(() => ({
+  hasArticleCategory: vi.fn(),
   readActiveContentIdentity: vi.fn(),
   readActiveContentRoute: vi.fn(),
-  readPublishedArticleCategory: vi.fn(),
 }));
 const previewMocks = vi.hoisted(() => ({
   matchesPreviewRoute: vi.fn(),
 }));
 
-/** Test-only typed runtime lookup failure. */
-class TestRuntimeRouteError extends Data.TaggedError("TestRuntimeRouteError")<{
+/** Test-only typed publication lookup failure. */
+class TestPublishedRouteError extends Data.TaggedError(
+  "TestPublishedRouteError"
+)<{
   readonly message: string;
 }> {}
 
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentRoute: runtimeMocks.getRuntimeContentRoute,
+vi.mock("@/lib/content/article/category", () => ({
+  hasPublishedArticleCategory: publishedMocks.hasArticleCategory,
 }));
 vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: publishedMocks.readActiveContentIdentity,
@@ -29,19 +29,14 @@ vi.mock("@/lib/content/published/active", () => ({
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: publishedMocks.readActiveContentRoute,
 }));
-vi.mock("@/lib/content/article/ownership", () => ({
-  readPublishedArticleCategory: publishedMocks.readPublishedArticleCategory,
-}));
 vi.mock("@/lib/content/preview/route", () => ({
   matchesPreviewRoute: previewMocks.matchesPreviewRoute,
 }));
 
-describe("source-backed public html route rejection", () => {
+describe("public HTML route rejection", () => {
   beforeEach(() => {
-    runtimeMocks.getRuntimeContentRoute.mockReset();
-    runtimeMocks.getRuntimeContentRoute.mockReturnValue(
-      Effect.succeed({ kind: "article", route: "fixture" })
-    );
+    publishedMocks.hasArticleCategory.mockReset();
+    publishedMocks.hasArticleCategory.mockReturnValue(Effect.succeed(true));
     publishedMocks.readActiveContentIdentity.mockReset();
     publishedMocks.readActiveContentIdentity.mockReturnValue(
       Effect.succeed({ releaseId: "release-active" })
@@ -50,12 +45,8 @@ describe("source-backed public html route rejection", () => {
     publishedMocks.readActiveContentRoute.mockReturnValue(
       Effect.succeed({
         activeReleaseId: "release-active",
-        kind: "unmanaged",
+        kind: "found",
       })
-    );
-    publishedMocks.readPublishedArticleCategory.mockReset();
-    publishedMocks.readPublishedArticleCategory.mockReturnValue(
-      Effect.succeed({ exists: false, managed: false })
     );
     previewMocks.matchesPreviewRoute.mockReset();
     previewMocks.matchesPreviewRoute.mockReturnValue(Effect.succeed(false));
@@ -73,16 +64,13 @@ describe("source-backed public html route rejection", () => {
     for (const [pathname, locale] of paths) {
       await expect(
         Effect.runPromise(
-          readSourceBackedHtmlRouteRejection({
-            method: "GET",
-            pathname,
-          })
+          readSourceBackedHtmlRouteRejection({ method: "GET", pathname })
         )
       ).resolves.toBe(locale);
     }
   });
 
-  it("rejects impossible Quran and article HTML paths before app rendering", async () => {
+  it("rejects impossible Quran and article HTML paths", async () => {
     const paths = [
       "/id/quran/999",
       "/id/quran/abc",
@@ -90,77 +78,24 @@ describe("source-backed public html route rejection", () => {
       "/id/quran/1/extra",
       "/en/articles/Invalid_Category",
       "/en/articles/politics/Invalid_Slug",
-      "/en/articles/politics/nepotism-in-political-governance/extra",
-      "/en/articles/politics-afdocs-nonexistent-8f3a",
+      "/en/articles/politics/article/extra",
     ];
 
     for (const pathname of paths) {
       await expect(
         Effect.runPromise(
-          readSourceBackedHtmlRouteRejection({
-            method: "GET",
-            pathname,
-          })
+          readSourceBackedHtmlRouteRejection({ method: "GET", pathname })
         )
       ).resolves.toBe(pathname.startsWith("/id/") ? "id" : "en");
     }
   });
 
-  it("uses the runtime route catalog for exact article detail HTML paths", async () => {
-    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
-      Effect.succeed(null)
-    );
-
-    await expect(
-      Effect.runPromise(
-        readSourceBackedHtmlRouteRejection({
-          method: "HEAD",
-          pathname:
-            "/en/articles/politics/nepotism-in-political-governance-afdocs-nonexistent-8f3a",
-        })
-      )
-    ).resolves.toBe("en");
-    expect(runtimeMocks.getRuntimeContentRoute).toHaveBeenCalledWith({
-      locale: "en",
-      route:
-        "articles/politics/nepotism-in-political-governance-afdocs-nonexistent-8f3a",
-    });
-
-    await expect(
-      Effect.runPromise(
-        readSourceBackedHtmlRouteRejection({
-          method: "HEAD",
-          pathname: "/en/articles/politics/nepotism-in-political-governance",
-        })
-      )
-    ).resolves.toBe(null);
-
-    publishedMocks.readActiveContentIdentity.mockReturnValueOnce(
-      Effect.succeed(null)
-    );
-    await expect(
-      Effect.runPromise(
-        readSourceBackedHtmlRouteRejection({
-          method: "GET",
-          pathname: "/en/articles/politics/source-owned-article",
-        })
-      )
-    ).resolves.toBeNull();
-    expect(publishedMocks.readActiveContentRoute).toHaveBeenLastCalledWith({
-      activeReleaseId: null,
-      family: "article",
-      locale: "en",
-      publicPath: "articles/politics/source-owned-article",
-    });
-  });
-
-  it("accepts published-only articles and rejects active tombstones", async () => {
+  it("accepts signed articles and rejects missing or unmanaged routes", async () => {
     publishedMocks.readActiveContentRoute
       .mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId: "release-active",
           kind: "found",
-          rendererDomain: "politics",
         })
       )
       .mockReturnValueOnce(
@@ -168,28 +103,37 @@ describe("source-backed public html route rejection", () => {
           activeReleaseId: "release-active",
           kind: "missing",
         })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-active",
+          kind: "unmanaged",
+        })
       );
 
-    await expect(
-      Effect.runPromise(
-        readSourceBackedHtmlRouteRejection({
-          method: "GET",
-          pathname: "/en/articles/public-affairs/new-article",
-        })
+    const paths = [
+      "/en/articles/public-affairs/new-article",
+      "/en/articles/public-affairs/deleted-article",
+      "/en/articles/public-affairs/unmanaged-article",
+    ];
+    const results = await Promise.all(
+      paths.map((pathname) =>
+        Effect.runPromise(
+          readSourceBackedHtmlRouteRejection({ method: "GET", pathname })
+        )
       )
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(
-        readSourceBackedHtmlRouteRejection({
-          method: "GET",
-          pathname: "/en/articles/public-affairs/deleted-article",
-        })
-      )
-    ).resolves.toBe("en");
-    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+    );
+
+    expect(results).toEqual([null, "en", "en"]);
+    expect(publishedMocks.readActiveContentRoute).toHaveBeenCalledWith({
+      activeReleaseId: "release-active",
+      family: "article",
+      locale: "en",
+      publicPath: "articles/public-affairs/new-article",
+    });
   });
 
-  it("accepts the exact selected local article before persistent lookup", async () => {
+  it("accepts the exact selected local preview before publication lookup", async () => {
     previewMocks.matchesPreviewRoute.mockReturnValueOnce(Effect.succeed(true));
 
     await expect(
@@ -206,13 +150,36 @@ describe("source-backed public html route rejection", () => {
     });
     expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
     expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
-    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
   });
 
-  it("uses exact ownership for published-only category pages", async () => {
-    publishedMocks.readPublishedArticleCategory
-      .mockReturnValueOnce(Effect.succeed({ exists: true, managed: true }))
-      .mockReturnValueOnce(Effect.succeed({ exists: false, managed: true }));
+  it("rejects article details when no active publication exists", async () => {
+    publishedMocks.readActiveContentIdentity.mockReturnValueOnce(
+      Effect.succeed(null)
+    );
+    publishedMocks.readActiveContentRoute.mockReturnValueOnce(
+      Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
+    );
+
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/en/articles/public-affairs/unmanaged-article",
+        })
+      )
+    ).resolves.toBe("en");
+    expect(publishedMocks.readActiveContentRoute).toHaveBeenCalledWith({
+      activeReleaseId: null,
+      family: "article",
+      locale: "en",
+      publicPath: "articles/public-affairs/unmanaged-article",
+    });
+  });
+
+  it("uses exact signed ownership for category pages", async () => {
+    publishedMocks.hasArticleCategory
+      .mockReturnValueOnce(Effect.succeed(true))
+      .mockReturnValueOnce(Effect.succeed(false));
 
     await expect(
       Effect.runPromise(
@@ -232,30 +199,31 @@ describe("source-backed public html route rejection", () => {
     ).resolves.toBe("en");
   });
 
-  it("propagates exact article lookup failures", async () => {
-    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
-      Effect.fail(new TestRuntimeRouteError({ message: "runtime unavailable" }))
+  it("propagates signed article lookup failures", async () => {
+    publishedMocks.readActiveContentRoute.mockReturnValueOnce(
+      Effect.fail(
+        new TestPublishedRouteError({ message: "publication unavailable" })
+      )
     );
 
     await expect(
       Effect.runPromise(
         readSourceBackedHtmlRouteRejection({
           method: "HEAD",
-          pathname: "/en/articles/politics/nepotism-in-political-governance",
+          pathname: "/en/articles/politics/published-article",
         })
       )
-    ).rejects.toThrow("runtime unavailable");
+    ).rejects.toThrow("publication unavailable");
   });
 
-  it("delegates source-backed index, category, and non-read paths", async () => {
+  it("delegates indexes, markdown, and non-read requests", async () => {
     const requests = [
       { method: "GET", pathname: "/id/quran" },
       { method: "GET", pathname: "/en/articles" },
-      { method: "GET", pathname: "/en/articles/politics" },
       { method: "GET", pathname: "/id/quran/1.md" },
       {
         method: "GET",
-        pathname: "/en/articles/politics/nepotism-in-political-governance.md",
+        pathname: "/en/articles/politics/published-article.md",
       },
       { method: "POST", pathname: "/en/articles/politics/not-a-read-check" },
     ];
@@ -263,13 +231,9 @@ describe("source-backed public html route rejection", () => {
     for (const request of requests) {
       await expect(
         Effect.runPromise(readSourceBackedHtmlRouteRejection(request))
-      ).resolves.toBe(null);
+      ).resolves.toBeNull();
     }
-    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+    expect(publishedMocks.hasArticleCategory).not.toHaveBeenCalled();
     expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
-    expect(publishedMocks.readPublishedArticleCategory).toHaveBeenCalledWith(
-      "politics",
-      "en"
-    );
   });
 });

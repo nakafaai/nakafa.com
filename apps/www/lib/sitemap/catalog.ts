@@ -62,7 +62,7 @@ export const readSitemapPageDescriptors = Effect.fn(
     }
 
     for (const count of counts) {
-      if (count.section === "articles" && articleBuckets.managed) {
+      if (count.section === "articles") {
         continue;
       }
       if (count.section === "material") {

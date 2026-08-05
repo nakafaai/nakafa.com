@@ -30,13 +30,11 @@ export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(
   function* ({ locale, section }: { locale: Locale; section: ContentSection }) {
     if (section === "articles") {
       const published = yield* readPublishedArticleBuckets(locale);
-      if (published.managed) {
-        return {
-          owner: "published",
-          pageCount: published.buckets.length,
-          routeCount: published.articleCount,
-        } satisfies LlmsSectionPages;
-      }
+      return {
+        owner: "published",
+        pageCount: published.buckets.length,
+        routeCount: published.articleCount,
+      } satisfies LlmsSectionPages;
     }
     if (section === "material") {
       const inventory = yield* readMaterialLlmsInventory(locale);

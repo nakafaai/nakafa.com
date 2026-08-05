@@ -1,6 +1,4 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
-import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
-import { ARTICLE_CATEGORIES } from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Option } from "effect";
 import type { Metadata } from "next";
@@ -26,7 +24,7 @@ import {
   readArticlePageCursor,
 } from "@/lib/content/article/query";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
@@ -92,7 +90,7 @@ async function PageContent({
   return <ArticleCatalog cursor={cursor.value} locale={locale} />;
 }
 
-/** Renders categories from their exclusive published or source owner. */
+/** Renders categories from the signed article catalog. */
 async function ArticleCatalog({
   cursor,
   locale,
@@ -111,27 +109,13 @@ async function ArticleCatalog({
   if (catalog.stale) {
     redirect(`/${locale}/articles`);
   }
-  const sourceCategories = ARTICLE_CATEGORIES.map((sourceCategory) => {
-    const category = ArticleCategorySchema.make(sourceCategory);
-    return {
-      category,
-      title: tArticles(sourceCategory),
-    };
-  });
-  const categories = catalog.managed ? catalog.categories : sourceCategories;
-  if (!catalog.managed && cursor.cursor !== null) {
-    notFound();
-  }
   const nextHref = getArticleNextHref("/articles", catalog);
-  let sourceUrl: null | string = null;
-  if (!catalog.managed) {
-    sourceUrl = getGithubUrl({ path: "/packages/contents/articles" });
-  } else if (catalog.sourceRevision) {
-    sourceUrl = getAksaraTreeUrl({
-      path: ARTICLE_SOURCE_ROOT,
-      revision: catalog.sourceRevision,
-    });
-  }
+  const sourceUrl = catalog.sourceRevision
+    ? getAksaraTreeUrl({
+        path: ARTICLE_SOURCE_ROOT,
+        revision: catalog.sourceRevision,
+      })
+    : null;
 
   return (
     <>
@@ -148,7 +132,7 @@ async function ArticleCatalog({
       />
       <LayoutContent>
         <SubjectList>
-          {categories.map(({ category, title }) => (
+          {catalog.categories.map(({ category, title }) => (
             <SubjectItem
               href={`/articles/${category}`}
               icon={getArticleCategoryIcon(category)}

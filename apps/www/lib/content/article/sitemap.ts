@@ -3,6 +3,7 @@ import "server-only";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
@@ -12,9 +13,21 @@ import {
 export const readPublishedArticleBuckets = Effect.fn(
   "www.articles.readSitemapBuckets"
 )(function* (locale: Locale) {
-  return yield* readRuntimeQuery("contentRelease.article.sitemapBuckets", () =>
-    fetchRuntimeQuery(api.contentRelease.article.sitemapBuckets, { locale })
+  const result = yield* readRuntimeQuery(
+    "contentRelease.article.sitemapBuckets",
+    () =>
+      fetchRuntimeQuery(api.contentRelease.article.sitemapBuckets, { locale })
   );
+  if (!result.managed) {
+    return yield* new PublishedProjectionError({
+      locale,
+      publicPath: "sitemap.xml",
+    });
+  }
+  return {
+    articleCount: result.articleCount,
+    buckets: result.buckets,
+  };
 });
 
 /** Reads one complete verified article sitemap partition. */
