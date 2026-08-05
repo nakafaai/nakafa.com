@@ -302,6 +302,7 @@ import type * as contentRelease_spec from "../contentRelease/spec.js";
 import type * as contentRelease_status from "../contentRelease/status.js";
 import type * as contentRelease_sync from "../contentRelease/sync.js";
 import type * as contentRelease_tryout from "../contentRelease/tryout.js";
+import type * as contentRelease_tryout_bundle from "../contentRelease/tryout/bundle.js";
 import type * as contentRelease_tryout_catalog from "../contentRelease/tryout/catalog.js";
 import type * as contentRelease_tryout_facts from "../contentRelease/tryout/facts.js";
 import type * as contentRelease_tryout_limits from "../contentRelease/tryout/limits.js";
@@ -881,6 +882,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/status": typeof contentRelease_status;
   "contentRelease/sync": typeof contentRelease_sync;
   "contentRelease/tryout": typeof contentRelease_tryout;
+  "contentRelease/tryout/bundle": typeof contentRelease_tryout_bundle;
   "contentRelease/tryout/catalog": typeof contentRelease_tryout_catalog;
   "contentRelease/tryout/facts": typeof contentRelease_tryout_facts;
   "contentRelease/tryout/limits": typeof contentRelease_tryout_limits;
