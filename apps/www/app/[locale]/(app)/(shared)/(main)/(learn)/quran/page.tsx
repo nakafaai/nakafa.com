@@ -8,7 +8,7 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
-import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
+import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getSocialMetadata } from "@/lib/utils/metadata";
 import { getQuranSurahName, type QuranSurah } from "@/lib/utils/pages/quran";
@@ -56,7 +56,7 @@ export async function generateMetadata({
 export default async function Page(props: PageProps<"/[locale]/quran">) {
   const { locale: rawLocale } = await props.params;
   const locale = getLocaleOrThrow(rawLocale);
-  const surahs = await fetchRuntimeQuranSurahs();
+  const { surahs } = await getPublishedQuranCatalog();
 
   return <PageContent locale={locale} surahs={surahs} />;
 }
@@ -88,7 +88,7 @@ function PageContent({
       <LayoutContent>
         <div className="overflow-hidden rounded-xl border shadow-sm">
           {surahs.map((surah) => {
-            const title = getQuranSurahName({ locale, name: surah.name });
+            const title = getQuranSurahName(surah.name);
             return (
               <NavigationLink
                 className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-4 transition-colors ease-out first:border-t-0 first:pt-5 last:pb-5 hover:bg-accent hover:text-accent-foreground"
@@ -107,7 +107,7 @@ function PageContent({
                   </div>
 
                   <p className="font-quran text-xl" dir="rtl">
-                    {surah.name.short}
+                    {surah.name.arabic}
                   </p>
                 </div>
               </NavigationLink>

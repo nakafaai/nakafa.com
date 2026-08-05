@@ -80,9 +80,6 @@ const loadCli = async (options: CliTestOptions = {}) => {
       return Effect.succeed(syncResult);
     },
   }));
-  vi.doMock("@repo/backend/scripts/sync-content/content/quran", () => ({
-    syncQuran: recordSync("syncQuran"),
-  }));
   vi.doMock("@repo/backend/scripts/sync-content/cli/logging", () => ({
     /** Suppresses normal CLI usage logs. */
     log: () => undefined,
@@ -263,7 +260,6 @@ describe("sync-content cli", () => {
       "articles",
       ["syncAuthors", "syncArticles", "syncContentRouteArtifactPages"],
     ],
-    ["quran", ["syncQuran", "syncContentRouteArtifactPages"]],
     [
       "subjects",
       [
@@ -313,7 +309,6 @@ describe("sync-content cli", () => {
 
   it.each([
     ["articles", "articles"],
-    ["quran", "quran"],
     ["subjects", "material"],
     ["curriculum-topics", "material"],
     ["curriculum-lessons", "material"],

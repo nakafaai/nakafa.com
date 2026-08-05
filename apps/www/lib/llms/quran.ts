@@ -1,9 +1,10 @@
+import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
-  getRuntimeQuranSurahPage,
-  getRuntimeQuranSurahs,
-} from "@/lib/content/runtime/pages";
+  readPublishedQuranCatalog,
+  readPublishedQuranPage,
+} from "@/lib/content/quran/publication";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
@@ -32,8 +33,8 @@ export const getQuranLlmsText = Effect.fn("www.llms.quran.text")(function* ({
     return null;
   }
 
-  const surahNumber = Number(parts[1]);
-  if (Number.isNaN(surahNumber)) {
+  const surahNumber = parseQuranSurahNumber(parts[1]);
+  if (surahNumber === null) {
     return null;
   }
 
@@ -43,7 +44,7 @@ export const getQuranLlmsText = Effect.fn("www.llms.quran.text")(function* ({
 /** Builds markdown for the Quran surah index page. */
 function getQuranIndexText(locale: Locale) {
   return Effect.gen(function* () {
-    const surahs = yield* getRuntimeQuranSurahs();
+    const { surahs } = yield* readPublishedQuranCatalog();
     const scanned = buildHeader({
       description: "Al-Quran - List of all 114 Surahs in the Holy Quran.",
       title: "Al-Quran",
@@ -51,13 +52,13 @@ function getQuranIndexText(locale: Locale) {
     });
 
     for (const surah of surahs) {
-      const title = getQuranSurahName({ locale, name: surah.name });
-      const translation = surah.name.translation[locale];
+      const title = getQuranSurahName(surah.name);
+      const translation = surah.name.translation;
       scanned.push(`## ${surah.number}. ${title}`);
       scanned.push("");
       scanned.push(`**Translation:** ${translation}`);
       scanned.push("");
-      scanned.push(`**Revelation:** ${surah.revelation[locale]}`);
+      scanned.push(`**Revelation:** ${surah.revelation.place}`);
       scanned.push("");
       scanned.push(`**Number of Verses:** ${surah.numberOfVerses}`);
       scanned.push("");
@@ -76,15 +77,10 @@ function getSurahLlmsText({
   surahNumber: number;
 }) {
   return Effect.gen(function* () {
-    const page = yield* getRuntimeQuranSurahPage({ surah: surahNumber });
-
-    if (!page) {
-      return null;
-    }
-
-    const surah = page.surahData;
-    const title = getQuranSurahName({ locale, name: surah.name });
-    const translation = surah.name.translation[locale];
+    const page = yield* readPublishedQuranPage(locale, surahNumber);
+    const surah = page.surah;
+    const title = getQuranSurahName(surah.name);
+    const translation = surah.name.translation;
     const scanned = buildHeader({
       description: `Al-Quran - Surah ${title} (${translation})`,
       title,
@@ -94,37 +90,28 @@ function getSurahLlmsText({
     scanned.push(`## ${title}`);
     scanned.push("");
     scanned.push(`**Translation:** ${translation}`);
-    scanned.push(`**Revelation:** ${surah.revelation[locale]}`);
+    scanned.push(`**Revelation:** ${surah.revelation.place}`);
     scanned.push(`**Number of Verses:** ${surah.numberOfVerses}`);
     scanned.push("");
-
-    if (surah.preBismillah) {
-      scanned.push("### Pre-Bismillah");
-      scanned.push("");
-      scanned.push(surah.preBismillah.text.arab);
-      scanned.push("");
-      scanned.push(`*${surah.preBismillah.translation[locale]}*`);
-      scanned.push("");
-    }
 
     scanned.push("### Verses");
     scanned.push("");
 
-    for (const verse of surah.verses.slice(
-      0,
-      QURAN_PAGE_MARKDOWN_VERSE_LIMIT
-    )) {
+    for (const verse of page.verses.slice(0, QURAN_PAGE_MARKDOWN_VERSE_LIMIT)) {
       scanned.push(`#### Verse ${verse.number.inSurah}`);
       scanned.push("");
-      scanned.push(verse.text.arab);
+      scanned.push(verse.text.arabic);
       scanned.push("");
-      scanned.push(`**Transliteration:** ${verse.text.transliteration.en}`);
-      scanned.push("");
-      scanned.push(`**Translation:** ${verse.translation[locale]}`);
+      scanned.push(`**Translation:** ${verse.translation[locale].text}`);
+      const footnotes = verse.translation[locale].footnotes;
+      if (footnotes) {
+        scanned.push("");
+        scanned.push(`**Translation notes:** ${footnotes}`);
+      }
       scanned.push("");
     }
 
-    if (surah.verses.length > QURAN_PAGE_MARKDOWN_VERSE_LIMIT) {
+    if (page.verses.length > QURAN_PAGE_MARKDOWN_VERSE_LIMIT) {
       scanned.push(
         `_This page-level markdown is bounded to verses 1-${QURAN_PAGE_MARKDOWN_VERSE_LIMIT} of ${surah.numberOfVerses}. Use the Nakafa Quran reference tool for exact verse ranges._`
       );

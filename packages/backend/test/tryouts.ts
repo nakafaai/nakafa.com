@@ -1,8 +1,13 @@
+import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import {
+  type LearningGraphSegments,
+  makeLearningGraphIdentity,
+} from "@nakafa/aksara-contracts/graph/identity";
 import {
   TryoutSectionSchema,
   TryoutSetSchema,
 } from "@nakafa/aksara-contracts/tryout/spec";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 export const TRYOUT_TEST_NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 export const TRYOUT_COUNTRY_PATH = "try-out/indonesia";
@@ -45,14 +50,106 @@ type TryoutSectionFixtureOptions = Partial<
   >
 >;
 
+interface TryoutExamGraphInput {
+  readonly countryKey: string;
+  readonly examKey: string;
+  readonly kind: "exam";
+  readonly locale?: ContentLocale;
+}
+
+interface TryoutSetGraphInput {
+  readonly countryKey: string;
+  readonly examKey: string;
+  readonly kind: "set";
+  readonly locale?: ContentLocale;
+  readonly setKey: string;
+  readonly trackKey: string;
+}
+
+interface TryoutSectionGraphInput {
+  readonly countryKey: string;
+  readonly examKey: string;
+  readonly kind: "section";
+  readonly locale?: ContentLocale;
+  readonly sectionKey: string;
+  readonly setKey: string;
+  readonly trackKey: string;
+}
+
+type TryoutGraphInput =
+  | TryoutExamGraphInput
+  | TryoutSetGraphInput
+  | TryoutSectionGraphInput;
+
+/** Derives the exact graph identity owned by one signed try-out row. */
+export function testTryoutGraph(input: TryoutGraphInput) {
+  const locale = input.locale ?? "id";
+  const examLens: LearningGraphSegments["lens"] = [
+    "tryout",
+    input.countryKey,
+    input.examKey,
+  ];
+  if (input.kind === "exam") {
+    return Effect.runSync(
+      makeLearningGraphIdentity({
+        concept: examLens,
+        learningObject: ["tryout-exam", input.countryKey, input.examKey],
+        lens: examLens,
+        locale,
+      })
+    );
+  }
+
+  if (input.kind === "set") {
+    return Effect.runSync(
+      makeLearningGraphIdentity({
+        concept: [...examLens, input.trackKey, input.setKey],
+        learningObject: [
+          "tryout-set",
+          input.countryKey,
+          input.examKey,
+          input.trackKey,
+          input.setKey,
+        ],
+        lens: examLens,
+        locale,
+      })
+    );
+  }
+
+  return Effect.runSync(
+    makeLearningGraphIdentity({
+      concept: [...examLens, input.trackKey, input.sectionKey],
+      learningObject: [
+        "tryout-section",
+        input.countryKey,
+        input.examKey,
+        input.trackKey,
+        input.setKey,
+        input.sectionKey,
+      ],
+      lens: examLens,
+      locale,
+    })
+  );
+}
+
 /** Builds one signed set contract for runtime tests. */
 export function makeTryoutSet(options: TryoutSetFixtureOptions = {}) {
+  const examKey = options.examKey ?? "snbt";
   const setKey = options.setKey ?? "set-1";
+  const trackKey = options.trackKey ?? "2027";
 
   return Schema.decodeUnknownSync(TryoutSetSchema)({
     countryKey: "indonesia",
-    examKey: options.examKey ?? "snbt",
-    graph: makeTryoutGraph("set", setKey),
+    examKey,
+    graph: testTryoutGraph({
+      countryKey: "indonesia",
+      examKey,
+      kind: "set",
+      setKey,
+      trackKey,
+    }),
     internalEntrySectionKey: options.internalEntrySectionKey,
     kind: "set",
     locale: "id",
@@ -64,21 +161,30 @@ export function makeTryoutSet(options: TryoutSetFixtureOptions = {}) {
     setKey,
     sourceRevision: "2026",
     title: options.title ?? (setKey === "set-1" ? "Set 1" : "Set 2"),
-    trackKey: options.trackKey ?? "2027",
+    trackKey,
     visibleSectionCount: options.visibleSectionCount ?? 1,
   });
 }
 
 /** Builds one signed section contract for runtime tests. */
 export function makeTryoutSection(options: TryoutSectionFixtureOptions = {}) {
+  const examKey = options.examKey ?? "snbt";
   const sectionKey = options.sectionKey ?? TRYOUT_SECTION_KEY;
   const setKey = options.setKey ?? "set-1";
+  const trackKey = options.trackKey ?? "2027";
   const sourcePath = `question-bank/tryout/indonesia/snbt/${sectionKey}/${setKey}`;
 
   return Schema.decodeUnknownSync(TryoutSectionSchema)({
     countryKey: "indonesia",
-    examKey: options.examKey ?? "snbt",
-    graph: makeTryoutGraph("section", sectionKey),
+    examKey,
+    graph: testTryoutGraph({
+      countryKey: "indonesia",
+      examKey,
+      kind: "section",
+      sectionKey,
+      setKey,
+      trackKey,
+    }),
     kind: "section",
     locale: "id",
     order: options.order ?? 1,
@@ -91,18 +197,7 @@ export function makeTryoutSection(options: TryoutSectionFixtureOptions = {}) {
     sourceRevision: options.sourceRevision ?? "2026",
     timeLimitSeconds: 1800,
     title: options.title ?? "Penalaran Matematika",
-    trackKey: options.trackKey ?? "2027",
+    trackKey,
     visibility: options.visibility ?? "visible",
   });
-}
-
-/** Builds a stable graph identity for one signed fixture row. */
-function makeTryoutGraph(kind: "section" | "set", key: string) {
-  return {
-    alignmentId: `alignment:tryout:runtime:${kind}:${key}`,
-    assetId: `asset:id:tryout:runtime:${kind}:${key}`,
-    conceptId: `concept:tryout:runtime:${kind}:${key}`,
-    learningObjectId: `lo:tryout-runtime-${kind}-${key}`,
-    lensId: "lens:tryout:runtime",
-  };
 }

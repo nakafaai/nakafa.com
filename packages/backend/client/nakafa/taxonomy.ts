@@ -1,5 +1,9 @@
-import { decodeNakafaTaxonomy } from "@repo/backend/client/nakafa/decode";
+import {
+  decodeNakafaTaxonomy,
+  toNakafaQuranDataReadError,
+} from "@repo/backend/client/nakafa/decode";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/decode";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   NAKAFA_AGENT_SECTIONS,
@@ -24,16 +28,19 @@ export function readNakafaTaxonomy(
   locale: Locale = defaultLocale
 ) {
   return Effect.gen(function* () {
-    const [contentCounts, surahs, tryout] = yield* Effect.all([
+    const [contentCounts, quranResult, tryout] = yield* Effect.all([
       getContentCounts(convexUrl),
       fetchNakafaRuntimeQuery(
         convexUrl,
-        "listQuranSurahs",
-        api.contents.queries.runtime.listQuranSurahs,
+        "contentRelease.quran.surahs",
+        api.contentRelease.quran.surahs,
         {}
       ),
       readTryoutTaxonomy(convexUrl, locale),
     ]);
+    const quran = yield* decodePublishedQuranCatalog(quranResult).pipe(
+      Effect.mapError(toNakafaQuranDataReadError)
+    );
 
     return yield* decodeNakafaTaxonomy({
       articles: {
@@ -50,7 +57,7 @@ export function readNakafaTaxonomy(
       locale,
       locales,
       quran: {
-        surah_count: surahs.length,
+        surah_count: quran.surahs.length,
       },
       sections: NAKAFA_AGENT_SECTIONS,
       subject: {

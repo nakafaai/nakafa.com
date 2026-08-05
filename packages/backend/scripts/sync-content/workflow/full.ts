@@ -52,7 +52,7 @@ export const syncFull = Effect.fn("sync.full")(function* (
       log("\n");
       yield* syncAll(config, syncOptions);
       log("\n");
-      yield* verify(config, syncOptions);
+      yield* verify(config);
       yield* invalidateContentRuntimeCache(syncOptions);
       yield* saveSyncState(
         { lastSyncCommit: currentCommit, lastSyncTimestamp: Date.now() },

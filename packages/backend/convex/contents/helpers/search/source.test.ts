@@ -2,10 +2,8 @@ import type { contentSearchInputValidator } from "@repo/backend/convex/contents/
 import { readSourceSearchDocuments } from "@repo/backend/convex/contents/helpers/search/source";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import {
-  insertContentSearch,
-  searchContentId,
-} from "@repo/backend/test/search";
+import { insertContentSearch } from "@repo/backend/test/search";
+import { testTryoutGraph } from "@repo/backend/test/tryouts";
 import type { Infer } from "convex/values";
 import { describe, expect, it } from "vitest";
 
@@ -16,6 +14,18 @@ const searchArgs: Infer<typeof contentSearchInputValidator> = {
   section: "tryout",
 };
 
+/** Derives one signed SNBT section identity from its stable source key. */
+function snbtSectionGraph(sectionKey: string) {
+  return testTryoutGraph({
+    countryKey: "indonesia",
+    examKey: "snbt",
+    kind: "section",
+    sectionKey,
+    setKey: "set-2",
+    trackKey: "2027",
+  });
+}
+
 describe("readSourceSearchDocuments", () => {
   it("reads discriminating try-out context before a generic title hit", async () => {
     const target = createConvexTestWithBetterAuth();
@@ -23,6 +33,7 @@ describe("readSourceSearchDocuments", () => {
       await insertContentSearch(ctx, {
         contentHash: "hash-english-section",
         description: "",
+        graph: snbtSectionGraph("english-language"),
         locale: "id",
         route: "try-out/indonesia/snbt/2027/set-2/bahasa-inggris",
         section: "tryout",
@@ -33,6 +44,7 @@ describe("readSourceSearchDocuments", () => {
       await insertContentSearch(ctx, {
         contentHash: "hash-quantitative-section",
         description: "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2",
+        graph: snbtSectionGraph("quantitative-knowledge"),
         locale: "id",
         route: "try-out/indonesia/snbt/2027/set-2/pengetahuan-kuantitatif",
         section: "tryout",
@@ -56,10 +68,7 @@ describe("readSourceSearchDocuments", () => {
     );
 
     expect(documents[0]?.content_id).toBe(
-      searchContentId(
-        "id",
-        "try-out/indonesia/snbt/2027/set-2/pengetahuan-kuantitatif"
-      )
+      snbtSectionGraph("quantitative-knowledge").assetId
     );
   });
 
@@ -69,6 +78,7 @@ describe("readSourceSearchDocuments", () => {
       await insertContentSearch(ctx, {
         contentHash: "hash-class-section",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 2 Nomor 11",
+        graph: snbtSectionGraph("general-reasoning"),
         locale: "id",
         route: "try-out/indonesia/snbt/2027/set-2/penalaran-umum",
         section: "tryout",

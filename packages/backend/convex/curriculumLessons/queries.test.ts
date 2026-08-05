@@ -9,6 +9,7 @@ import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.h
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
+import { testTryoutGraph } from "@repo/backend/test/tryouts";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -390,14 +391,14 @@ async function insertTryoutCounter(
   }
 ) {
   const sourcePath = "try-out/indonesia/snbt/2027/set-1";
-  const identity = createLearningGraphIdentityFromRoute({
+  const identity = testTryoutGraph({
+    countryKey: "indonesia",
+    examKey: "snbt",
+    kind: "set",
     locale: "en",
-    route: sourcePath,
+    setKey: "set-1",
+    trackKey: "2027",
   });
-
-  if (!identity) {
-    expect.fail(`Expected try-out graph identity for ${sourcePath}.`);
-  }
 
   await ctx.db.insert("contentRoutes", {
     ...identity,

@@ -27,14 +27,12 @@ vi.mock("@/lib/mcp/nakafa", async () => {
                 number: 1,
                 ...(input.include_tafsir ? { tafsir: "Tafsir" } : {}),
                 translation: "In the name of Allah.",
-                transliteration: "Bismillahirrahmanirrahim",
               },
               {
                 arabic: "الْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَ",
                 number: 2,
                 ...(input.include_tafsir ? { tafsir: "Tafsir" } : {}),
                 translation: "All praise is for Allah.",
-                transliteration: "Alhamdulillahi rabbil alamin",
               },
             ],
           })

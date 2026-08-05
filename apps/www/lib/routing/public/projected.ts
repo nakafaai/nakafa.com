@@ -6,10 +6,7 @@ import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import {
-  getRuntimePublicRoute,
-  getRuntimeTryoutRoute,
-} from "@/lib/content/runtime/routes";
+import { getRuntimeTryoutRoute } from "@/lib/content/runtime/routes";
 
 interface ProjectedHtmlRouteInput {
   readonly hasAttemptCapability: boolean;
@@ -34,9 +31,7 @@ const readProjectedMaterialRouteRejection = Effect.fn(
   if (ownership.kind === "found") {
     return null;
   }
-  if (ownership.kind === "missing") {
-    return locale;
-  }
+
   return locale;
 });
 
@@ -81,28 +76,18 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   }
   if (surface.key === "curriculum") {
     const ownership = yield* readPublishedProgramPath(locale, publicPath);
-    if (ownership.managed) {
-      return ownership.route?.sitemap ? null : locale;
+    if (!ownership.managed) {
+      return locale;
     }
-  }
-  if (surface.key === "tryout") {
-    if (
-      hasAttemptCapability &&
-      (pathSegments.length === 4 || pathSegments.length === 5)
-    ) {
-      return null;
-    }
-    const ownership = yield* getRuntimeTryoutRoute({ locale, publicPath });
-    return ownership.exists ? null : locale;
-  }
-  const route = yield* getRuntimePublicRoute({ locale, publicPath });
-  if (!route) {
-    return locale;
-  }
 
-  if (surface.key === "curriculum") {
-    return route.kind === "curriculum-context" && route.sitemap ? null : locale;
+    return ownership.route?.sitemap ? null : locale;
   }
-
-  return route.kind.startsWith("tryout-") ? null : locale;
+  if (
+    hasAttemptCapability &&
+    (pathSegments.length === 4 || pathSegments.length === 5)
+  ) {
+    return null;
+  }
+  const ownership = yield* getRuntimeTryoutRoute({ locale, publicPath });
+  return ownership.exists ? null : locale;
 });

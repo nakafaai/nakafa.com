@@ -18,7 +18,6 @@ import {
   syncCurriculumTopics,
 } from "@repo/backend/scripts/sync-content/content/curriculum";
 import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/content/programs";
-import { syncQuran } from "@repo/backend/scripts/sync-content/content/quran";
 import {
   AuthorSyncResultSchema,
   BATCH_SIZES,
@@ -90,7 +89,6 @@ export const syncAll = Effect.fn("sync.all")(function* (
   let articleResult: SyncResult;
   let curriculumTopicResult: SyncResult;
   let curriculumLessonResult: SyncResult;
-  let quranResult: SyncResult;
   let routePageResult: SyncResult;
   let publicRouteResult: SyncResult;
   let learningProgramResult: SyncResult;
@@ -119,13 +117,6 @@ export const syncAll = Effect.fn("sync.all")(function* (
       curriculumLessonResult.created +
         curriculumLessonResult.updated +
         curriculumLessonResult.unchanged
-    );
-
-    const quranPhase = startPhase(metrics, "Quran");
-    quranResult = yield* syncQuran(config, options);
-    endPhase(
-      quranPhase,
-      quranResult.created + quranResult.updated + quranResult.unchanged
     );
 
     const routePagePhase = startPhase(metrics, "Route Pages");
@@ -176,33 +167,26 @@ export const syncAll = Effect.fn("sync.all")(function* (
     log(`  Curriculum Lessons:   ${formatSyncResult(curriculumLessonResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase2Start)}`);
 
-    log("Phase 3: Syncing Quran runtime data...");
+    log("Phase 3: Materializing route artifact pages...");
     const phase3Start = performance.now();
-    quranResult = yield* syncQuran(config, quietOptions);
-    log(`  Quran:              ${formatSyncResult(quranResult)}`);
-    log(`  Duration: ${formatDuration(performance.now() - phase3Start)}`);
-
-    log("Phase 4: Materializing route artifact pages...");
-    const phase4Start = performance.now();
     routePageResult = yield* syncContentRouteArtifactPages(
       config,
       createContentRouteArtifactTargets(options.locale)
     );
     log(`  Route Pages:         ${formatSyncResult(routePageResult)}`);
-    log(`  Duration: ${formatDuration(performance.now() - phase4Start)}`);
+    log(`  Duration: ${formatDuration(performance.now() - phase3Start)}`);
 
-    log("Phase 5: Syncing learning programs and coverage...");
-    const phase5Start = performance.now();
+    log("Phase 4: Syncing learning programs and coverage...");
+    const phase4Start = performance.now();
     publicRouteResult = yield* syncPublicRoutes(config, options);
     log(`  Public Routes:    ${formatSyncResult(publicRouteResult)}`);
     learningProgramResult = yield* syncLearningPrograms(config, options);
     log(`  Learning Programs:   ${formatSyncResult(learningProgramResult)}`);
-    log(`  Duration: ${formatDuration(performance.now() - phase5Start)}`);
+    log(`  Duration: ${formatDuration(performance.now() - phase4Start)}`);
 
     addPhaseMetrics(metrics, "Articles", articleResult);
     addPhaseMetrics(metrics, "Curriculum Topics", curriculumTopicResult);
     addPhaseMetrics(metrics, "Curriculum Lessons", curriculumLessonResult);
-    addPhaseMetrics(metrics, "Quran", quranResult);
     addPhaseMetrics(metrics, "Route Pages", routePageResult);
     addPhaseMetrics(metrics, "Public Routes", publicRouteResult);
     addPhaseMetrics(metrics, "Learning Programs", learningProgramResult);
@@ -214,7 +198,6 @@ export const syncAll = Effect.fn("sync.all")(function* (
     articleResult,
     curriculumTopicResult,
     curriculumLessonResult,
-    quranResult,
     routePageResult,
     publicRouteResult,
     learningProgramResult
@@ -316,7 +299,6 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   let articleResult = createSyncResult();
   let curriculumTopicResult = createSyncResult();
   let curriculumLessonResult = createSyncResult();
-  let quranResult = createSyncResult();
   let routePageResult = createSyncResult();
   let publicRouteResult = createSyncResult();
   let learningProgramResult = createSyncResult();
@@ -370,16 +352,6 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   if (!plannedRowPhases.has("curriculum")) {
     log("Curriculum: no changes");
   }
-  if (syncPlan.refreshQuran) {
-    quranResult = yield* syncQuran(config, {
-      ...options,
-      quiet: true,
-    });
-    addPhaseMetrics(metrics, "Quran", quranResult);
-  } else {
-    log("Quran: no changes");
-  }
-
   if (routeArtifactTargets.length > 0) {
     routePageResult = yield* syncContentRouteArtifactPages(
       config,
@@ -407,7 +379,6 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     articleResult.created +
     curriculumTopicResult.created +
     curriculumLessonResult.created +
-    quranResult.created +
     routePageResult.created +
     publicRouteResult.created +
     learningProgramResult.created;
@@ -415,7 +386,6 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     articleResult.updated +
     curriculumTopicResult.updated +
     curriculumLessonResult.updated +
-    quranResult.updated +
     routePageResult.updated +
     publicRouteResult.updated +
     learningProgramResult.updated;

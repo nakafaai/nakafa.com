@@ -1,5 +1,6 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import type { RuntimeQuranSurah } from "@repo/backend/client/nakafa/types";
+import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/spec";
+import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -16,17 +17,14 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
-import { QuranPageControls } from "@/components/shared/quran-controls";
-import { QuranText } from "@/components/shared/quran-text";
+import { QuranInterpretationControls } from "@/components/shared/quran-interpretation-controls";
 import { QuranVerse } from "@/components/shared/quran-verse";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
-  fetchRuntimeQuranSurahMetadata,
-  fetchRuntimeQuranSurahPage,
-  fetchRuntimeQuranSurahs,
-} from "@/lib/content/runtime/pages";
+  getPublishedQuranCatalog,
+  getPublishedQuranPage,
+} from "@/lib/content/quran/publication";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getSocialMetadata } from "@/lib/utils/metadata";
@@ -40,19 +38,23 @@ const QURAN_INITIAL_VERSE_SSR_COUNT = 80;
 
 /** Returns complete localized tafsir controls only when every surah verse has data. */
 function getSurahInterpretations(
-  verses: RuntimeQuranSurah["verses"],
+  verses: readonly QuranRuntimeVerse[],
   locale: Locale
 ) {
+  if (locale !== "id") {
+    return;
+  }
+
   const interpretations: string[] = [];
 
   for (const verse of verses) {
-    const tafsir = verse.tafsir[locale];
+    const tafsir = verse.tafsir.id.text;
 
-    if (!tafsir?.short.trim()) {
+    if (!tafsir.trim()) {
       return;
     }
 
-    interpretations.push(tafsir.short);
+    interpretations.push(tafsir);
   }
 
   return interpretations;
@@ -76,20 +78,20 @@ export async function generateMetadata({
       "text/markdown": `${path}.md`,
     },
   });
-  const surahNumber = Number(surah);
+  const surahNumber = parseQuranSurahNumber(surah);
 
-  if (Number.isNaN(surahNumber)) {
+  if (surahNumber === null) {
     notFound();
   }
 
-  const surahData = await getSurahMetadataData({ surah: surahNumber });
+  const surahData = await getSurahMetadataData(surahNumber);
   if (!surahData) {
     notFound();
   }
 
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
   // Source: https://developers.google.com/search/docs/appearance/title-link
-  // Evidence: Arabic name is universal, locale-specific for transliteration/translation
+  // Evidence: Arabic name and source transliteration are universal.
   const seoContext: SEOContext = {
     type: "quran",
     surah: surahData,
@@ -118,9 +120,9 @@ export async function generateMetadata({
   };
 }
 
-/** Prebuilds Quran surah routes from the Convex Quran runtime catalog. */
+/** Prebuilds Quran surah routes from the active signed Quran catalog. */
 export async function generateStaticParams() {
-  const surahs = await fetchRuntimeQuranSurahs();
+  const { surahs } = await getPublishedQuranCatalog();
 
   return surahs.map((surah) => ({
     surah: surah.number.toString(),
@@ -140,24 +142,24 @@ async function ResolvedSurahPage({
 }) {
   const { locale: rawLocale, surah } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const surahNumber = Number(surah);
+  const surahNumber = parseQuranSurahNumber(surah);
 
-  if (Number.isNaN(surahNumber)) {
+  if (surahNumber === null) {
     notFound();
   }
 
   const [t, tCommon, surahData] = await Promise.all([
     getTranslations({ locale, namespace: "Holy" }),
     getTranslations({ locale, namespace: "Common" }),
-    getSurahMetadataData({ surah: surahNumber }),
+    getSurahMetadataData(surahNumber),
   ]);
 
   if (!surahData) {
     notFound();
   }
 
-  const translation = surahData.name.translation[locale];
-  const title = getQuranSurahName({ locale, name: surahData.name });
+  const translation = surahData.name.translation;
+  const title = getQuranSurahName(surahData.name);
 
   return (
     <>
@@ -182,19 +184,18 @@ async function ResolvedSurahPage({
         locale={locale}
         surah={surah}
         surahNumber={surahNumber}
-        toolbar={<DeferredAiSheetOpen key={`audio:${surah}`} />}
+        toolbar={<DeferredAiSheetOpen key={`assistant:${surah}`} />}
       />
     </>
   );
 }
 
 /** Reads lightweight cached surah metadata for route metadata and JSON-LD. */
-async function getSurahMetadataData({ surah }: { surah: number }) {
+async function getSurahMetadataData(surahNumber: number) {
   "use cache";
 
-  applyContentRuntimeCache();
-
-  return await fetchRuntimeQuranSurahMetadata({ surah });
+  const catalog = await getPublishedQuranCatalog();
+  return catalog.surahs.find(({ number }) => number === surahNumber) ?? null;
 }
 
 /** Renders the cached Quran surah body, controls, pagination, and table of contents. */
@@ -213,28 +214,16 @@ async function CachedSurahShell({
 }) {
   "use cache";
 
-  applyContentRuntimeCache();
-
   const [t, result] = await Promise.all([
     getTranslations({ locale, namespace: "Holy" }),
-    fetchRuntimeQuranSurahPage({ surah: surahNumber }),
+    getPublishedQuranPage(locale, surahNumber),
   ]);
 
-  const surahData = result?.surahData ?? null;
-  const prevSurah = result?.prevSurah ?? null;
-  const nextSurah = result?.nextSurah ?? null;
+  const surahData = result.surah;
+  const translation = surahData.name.translation;
+  const title = getQuranSurahName(surahData.name);
 
-  if (!surahData) {
-    notFound();
-  }
-
-  const translation = surahData.name.translation[locale];
-
-  const preBismillah = surahData.preBismillah;
-
-  const title = getQuranSurahName({ locale, name: surahData.name });
-
-  const headings = surahData.verses.map((verse, index) => {
+  const headings = result.verses.map((verse, index) => {
     const label = t("verse-count", { count: verse.number.inSurah });
 
     return {
@@ -246,23 +235,12 @@ async function CachedSurahShell({
   });
 
   const pagination = getQuranPagination({
-    locale,
-    prevSurah,
-    nextSurah,
+    nextSurah: result.nextSurah,
+    prevSurah: result.previousSurah,
   });
 
-  const controlLabels = {
-    interpretation: t("interpretation"),
-    playAudio: t("play-audio"),
-    stopAudio: t("stop-audio"),
-  };
-
-  const audioSources = surahData.verses.map((verse) => [
-    verse.audio.primary,
-    ...verse.audio.secondary,
-  ]);
-
-  const interpretations = getSurahInterpretations(surahData.verses, locale);
+  const interpretationLabel = t("interpretation");
+  const interpretations = getSurahInterpretations(result.verses, locale);
 
   return (
     <VirtualProvider>
@@ -278,22 +256,13 @@ async function CachedSurahShell({
             title={title}
           />
           <LayoutContent>
-            {!!preBismillah && (
-              <div className="mb-20 flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center shadow-sm">
-                <QuranText>{preBismillah.text.arab}</QuranText>
-                <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
-                  {preBismillah.translation[locale]}
-                </p>
-              </div>
-            )}
-
             <WindowVirtualized
               ssrCount={Math.min(
-                surahData.verses.length,
+                result.verses.length,
                 QURAN_INITIAL_VERSE_SSR_COUNT
               )}
             >
-              {surahData.verses.map((verse, index) => {
+              {result.verses.map((verse, index) => {
                 const verseLabel = t("verse-count", {
                   count: verse.number.inSurah,
                 });
@@ -303,9 +272,9 @@ async function CachedSurahShell({
                     hasInterpretation={interpretations !== undefined}
                     id={slugify(verseLabel)}
                     index={index}
-                    isLast={index === surahData.verses.length - 1}
+                    interpretationLabel={interpretationLabel}
+                    isLast={index === result.verses.length - 1}
                     key={verse.number.inQuran}
-                    labels={controlLabels}
                     locale={locale}
                     verse={verse}
                     verseLabel={verseLabel}
@@ -316,11 +285,12 @@ async function CachedSurahShell({
           </LayoutContent>
           <PaginationContent pagination={pagination} />
           <FooterContent>{footer}</FooterContent>
-          <QuranPageControls
-            audioSources={audioSources}
-            interpretations={interpretations}
-            labels={controlLabels}
-          />
+          {interpretations && (
+            <QuranInterpretationControls
+              interpretations={interpretations}
+              label={interpretationLabel}
+            />
+          )}
           {toolbar}
         </LayoutMaterialContent>
         <LayoutMaterialToc

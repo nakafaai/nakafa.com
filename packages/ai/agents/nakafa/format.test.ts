@@ -62,13 +62,11 @@ describe("Nakafa formatter", () => {
           arabic: "بِسْمِ اللَّهِ",
           number: 1,
           tafsir: "Tafsir ayat pertama.",
-          transliteration: "Bismillah",
           translation: "Dengan nama Allah",
         },
         {
           arabic: "الْحَمْدُ لِلَّهِ",
           number: 2,
-          transliteration: "Alhamdulillah",
           translation: "Segala puji bagi Allah",
         },
       ],

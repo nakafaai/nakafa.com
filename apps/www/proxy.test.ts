@@ -42,7 +42,6 @@ const runtimeMocks = vi.hoisted(() => ({
   hasArticleCategory: vi.fn(),
   readContent: vi.fn(),
   readProgramPath: vi.fn(),
-  readPublic: vi.fn(),
   readTryout: vi.fn(),
 }));
 const previewMocks = vi.hoisted(() => ({
@@ -73,7 +72,6 @@ vi.mock("@/lib/content/preview/route", () => ({
 
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: runtimeMocks.readContent,
-  getRuntimePublicRoute: runtimeMocks.readPublic,
   getRuntimeTryoutRoute: runtimeMocks.readTryout,
 }));
 vi.mock("@/lib/content/article/category", () => ({
@@ -94,11 +92,6 @@ describe("proxy", () => {
     runtimeMocks.readContent
       .mockReset()
       .mockReturnValue(Effect.succeed({ route: "fixture" }));
-    runtimeMocks.readPublic
-      .mockReset()
-      .mockReturnValue(
-        Effect.succeed({ kind: "subject-lesson", sitemap: true })
-      );
     runtimeMocks.readTryout
       .mockReset()
       .mockReturnValue(Effect.succeed({ exists: false }));
@@ -306,9 +299,6 @@ describe("proxy", () => {
   ])(
     "returns a hard 404 for missing HTML route %s",
     async (path, locale, projectedPath) => {
-      if (projectedPath) {
-        runtimeMocks.readPublic.mockReturnValueOnce(Effect.succeed(null));
-      }
       const response = await requestProxy(path);
 
       expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
@@ -320,10 +310,10 @@ describe("proxy", () => {
         response.headers.get("x-middleware-request-x-next-intl-locale")
       ).toBe(locale);
       if (projectedPath) {
-        expect(runtimeMocks.readPublic).toHaveBeenCalledWith({
-          locale: "en",
-          publicPath: projectedPath,
-        });
+        expect(runtimeMocks.readProgramPath).toHaveBeenCalledWith(
+          "en",
+          projectedPath
+        );
       }
     }
   );
@@ -360,32 +350,20 @@ describe("proxy", () => {
             kind: "found",
           })
         );
+      } else {
+        runtimeMocks.readProgramPath.mockReturnValueOnce(
+          Effect.succeed({ managed: true, route: { sitemap: true } })
+        );
       }
-      runtimeMocks.readPublic.mockReturnValueOnce(
-        Effect.succeed({
-          kind,
-          locale,
-          publicPath,
-          sitemap: true,
-          ...(kind === "subject-lesson"
-            ? {
-                sourcePath:
-                  "material/lesson/chemistry/green-chemistry/definition",
-              }
-            : {}),
-        })
-      );
       const response = await requestProxy(path);
 
       expectLocaleProxy(response);
       expect(runtimeMocks.readContent).not.toHaveBeenCalled();
-      if (kind === "subject-lesson") {
-        expect(runtimeMocks.readPublic).not.toHaveBeenCalled();
-      } else {
-        expect(runtimeMocks.readPublic).toHaveBeenCalledWith({
+      if (kind === "curriculum-context") {
+        expect(runtimeMocks.readProgramPath).toHaveBeenCalledWith(
           locale,
-          publicPath,
-        });
+          publicPath
+        );
       }
     }
   );
@@ -408,7 +386,6 @@ describe("proxy", () => {
 
     const found = await requestProxy(path);
     expectLocaleProxy(found);
-    expect(runtimeMocks.readPublic).not.toHaveBeenCalled();
 
     mockLocaleRouting.localeMiddleware.mockClear();
     const missing = await requestProxy(path);
@@ -420,7 +397,6 @@ describe("proxy", () => {
       "en"
     );
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(runtimeMocks.readPublic).not.toHaveBeenCalled();
   });
 
   it.each([

@@ -11,8 +11,6 @@ interface VerifySummaryCounts {
   contentSearch: number;
   curriculumLessons: number;
   curriculumTopics: number;
-  quranSurahs: number;
-  quranVerses: number;
 }
 
 /** Logs the successful verification summary after every integrity gate passes. */
@@ -23,8 +21,6 @@ export function logVerifySuccess(counts: VerifySummaryCounts) {
   log(`  - ${counts.curriculumLessons} curriculum lessons`);
   log(`  - ${counts.contentSearch} content search rows`);
   log(`  - ${counts.contentRoutes} content route rows`);
-  log(`  - ${counts.quranSurahs} Quran surahs`);
-  log(`  - ${counts.quranVerses} Quran verses`);
   log(`  - ${counts.articleReferences} references`);
   log(`  - ${counts.authors} authors`);
 }

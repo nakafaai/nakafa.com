@@ -11,7 +11,6 @@ import {
   syncCurriculumTopics,
 } from "@repo/backend/scripts/sync-content/content/curriculum";
 import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/content/programs";
-import { syncQuran } from "@repo/backend/scripts/sync-content/content/quran";
 import { validate } from "@repo/backend/scripts/sync-content/content/validate";
 import type { SyncOptions } from "@repo/backend/scripts/sync-content/contract/types";
 import { getConvexConfig } from "@repo/backend/scripts/sync-content/convex/client";
@@ -89,7 +88,6 @@ const printUsage = (): void => {
   );
   log("  sync:validate         - Validate content without syncing (for CI)");
   log("  sync:verify           - Verify database matches filesystem");
-  log("  quran                 - Sync Quran surahs, verses, and search rows");
   log(
     "  learning-programs     - Sync program catalog and graph-backed coverage"
   );
@@ -155,14 +153,6 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       );
       yield* invalidateContentRuntimeCache(options);
       return;
-    case "quran":
-      yield* syncQuran(config, options);
-      yield* syncContentRouteArtifactPages(
-        config,
-        createContentRouteArtifactTargets(options.locale, ["quran"])
-      );
-      yield* invalidateContentRuntimeCache(options);
-      return;
     case "subjects":
       yield* syncAuthors(config, options);
       yield* syncCurriculumTopics(config, options);
@@ -213,7 +203,7 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       yield* syncIncremental(config, options);
       return;
     case "verify":
-      yield* verify(config, options);
+      yield* verify(config);
       return;
     case "clean": {
       const cleanResult = yield* clean(config, options);

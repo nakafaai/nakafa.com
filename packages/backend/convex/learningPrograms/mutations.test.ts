@@ -16,6 +16,7 @@ import {
   activateMaterialCatalog,
   selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
+import { testTryoutGraph } from "@repo/backend/test/tryouts";
 import { describe, expect, it } from "vitest";
 
 const subjectGraph = getTestGraphIdentity(
@@ -25,7 +26,13 @@ const englishSubjectGraph = getTestGraphIdentity(
   "material/lesson/chemistry/atomic-structure",
   "en"
 );
-const snbtGraph = getTestGraphIdentity("try-out/indonesia/snbt/2027/set-1");
+const snbtGraph = testTryoutGraph({
+  countryKey: "indonesia",
+  examKey: "snbt",
+  kind: "set",
+  setKey: "set-1",
+  trackKey: "2027",
+});
 
 describe("learningPrograms/mutations", () => {
   it("creates an authenticated profile and graph-backed first plan", async () => {

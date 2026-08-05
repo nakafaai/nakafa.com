@@ -34,17 +34,6 @@ export function getSourceRouteProjection(source: SourceRouteInput) {
   return projection;
 }
 
-/** Returns the Quran surah number encoded by a valid localized source route. */
-export function getQuranSurahNumberForRoute(route: string) {
-  const projection = getSourceRouteProjectionForRoute(route);
-
-  if (!(projection?.kind === "quran-surah" && projection.quran)) {
-    return null;
-  }
-
-  return Number.parseInt(projection.quran.surahSegment, 10);
-}
-
 /** Delegates one normalized source root to its owned projection grammar. */
 function createProjectionDraft(
   route: string,

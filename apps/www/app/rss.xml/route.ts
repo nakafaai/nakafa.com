@@ -11,8 +11,6 @@ import {
 } from "@/lib/content/material/release";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
-import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
-import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const baseUrl = "https://nakafa.com";
 const RSS_CONTENT_ROUTE_LIMIT = 100;
@@ -20,11 +18,9 @@ const rssHeaders = {
   "Content-Type": "application/rss+xml; charset=utf-8",
 };
 
-/** Serves the RSS feed from Convex content routes and Quran runtime rows. */
+/** Serves the RSS feed from dated signed article and material publications. */
 export async function GET() {
-  const locales = routing.locales;
-
-  const [t, tCommon, routes, surahs] = await Promise.all([
+  const [t, tCommon, routes] = await Promise.all([
     getTranslations({
       namespace: "Metadata",
       locale: routing.defaultLocale,
@@ -34,7 +30,6 @@ export async function GET() {
       locale: routing.defaultLocale,
     }),
     getFeedContentRoutes(),
-    fetchRuntimeQuranSurahs(),
   ]);
 
   const feed = new Feed({
@@ -48,7 +43,6 @@ export async function GET() {
     copyright: tCommon("copyright", { year: new Date().getFullYear() }),
   });
 
-  // Collect all feed items
   const feedItems: Item[] = [];
 
   for (const route of routes) {
@@ -64,24 +58,6 @@ export async function GET() {
     });
   }
 
-  // Add Quran surahs to feed
-  for (const locale of locales) {
-    for (const surah of surahs) {
-      const title = getQuranSurahName({ locale, name: surah.name });
-      const translation = surah.name.translation[locale];
-
-      feedItems.push({
-        title: `${surah.number}. ${title}`,
-        description: translation,
-        link: `${baseUrl}/${locale}/quran/${surah.number}`,
-        date: new Date("2025-01-01"), // Static date for Quran content
-        id: `/${locale}/quran/${surah.number}`,
-        image: `${baseUrl}/og.png`, // Default OG image for Quran
-      });
-    }
-  }
-
-  // Sort by date (newest first) and add to feed
   const sortedItems = feedItems.sort(
     (left, right) => right.date.getTime() - left.date.getTime()
   );

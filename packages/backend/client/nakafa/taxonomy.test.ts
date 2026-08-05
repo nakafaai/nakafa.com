@@ -1,5 +1,10 @@
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { readNakafaTaxonomy } from "@repo/backend/client/nakafa/taxonomy";
 import { api } from "@repo/backend/convex/_generated/api";
+import {
+  encodeTestQuranRow,
+  makeQuranSurah,
+} from "@repo/backend/test/quran-rows";
 import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
 import type { SourceRegistryRoot } from "@repo/contents/_types/graph/schema";
 import { type FunctionReference, getFunctionName } from "convex/server";
@@ -21,6 +26,7 @@ const TryoutCountryArgsSchema = Schema.Struct({
   locale: LocaleSchema,
   publicPath: Schema.String,
 });
+const quranSnapshotId = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
 
 beforeEach(() => {
   runtimeMocks.fetchConvexRuntimeQuery.mockReset();
@@ -38,7 +44,7 @@ describe("readNakafaTaxonomy", () => {
 
     expect(taxonomy.locale).toBe("id");
     expect(defaultTaxonomy.locale).toBe("en");
-    expect(taxonomy.quran.surah_count).toBe(2);
+    expect(taxonomy.quran.surah_count).toBe(114);
     expect(taxonomy.content_counts).toEqual([
       { count: 8, locale: "en" },
       { count: 8, locale: "id" },
@@ -71,10 +77,18 @@ function readRuntimeFixture(
   args: unknown
 ) {
   if (
-    getFunctionName(query) ===
-    getFunctionName(api.contents.queries.runtime.listQuranSurahs)
+    getFunctionName(query) === getFunctionName(api.contentRelease.quran.surahs)
   ) {
-    return Promise.resolve([{ number: 1 }, { number: 2 }]);
+    return Promise.resolve({
+      activeManifestHash: `sha256:${"a".repeat(64)}`,
+      activeReleaseId: "quran-release",
+      managed: true,
+      rowJson: Array.from({ length: 114 }, (_, index) =>
+        encodeTestQuranRow(quranSnapshotId, makeQuranSurah(index + 1))
+      ),
+      snapshotId: quranSnapshotId,
+      sourceRevision: "c".repeat(40),
+    });
   }
 
   if (

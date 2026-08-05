@@ -1,12 +1,18 @@
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  QuranChunkRowSchema,
+  QuranSearchRowSchema,
+  QuranSurahRowSchema,
+} from "@nakafa/aksara-contracts/quran/spec";
 import {
   getSurahName,
   readNakafaQuranReference,
   readQuranMarkdown,
 } from "@repo/backend/client/nakafa/quran";
 import { api } from "@repo/backend/convex/_generated/api";
+import { encodeTestQuranRow } from "@repo/backend/test/quran-rows";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { LocaleSchema } from "@repo/contents/_types/content";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,19 +25,14 @@ vi.mock("@repo/backend/client/runtime", () => ({
   fetchConvexRuntimeQuery: runtimeMocks.fetchConvexRuntimeQuery,
 }));
 
-const QuranReferenceArgsSchema = Schema.Struct({
-  fromVerse: Schema.Number,
-  includeTafsir: Schema.Boolean,
-  locale: LocaleSchema,
-  surah: Schema.Number,
-  toVerse: Schema.optional(Schema.Number),
-});
-type QuranReferenceArgs = Schema.Schema.Type<typeof QuranReferenceArgsSchema>;
-const QuranSurahArgsSchema = Schema.Struct({
-  surah: Schema.Number,
-});
-
 const convexUrl = "https://example.convex.cloud";
+const source = {
+  activeManifestHash: `sha256:${"a".repeat(64)}`,
+  activeReleaseId: "quran-release",
+  managed: true,
+  snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+  sourceRevision: "c".repeat(40),
+};
 
 beforeEach(() => {
   runtimeMocks.fetchConvexRuntimeQuery.mockReset();
@@ -39,7 +40,7 @@ beforeEach(() => {
 });
 
 describe("Quran Nakafa reader", () => {
-  it("reads Quran references and includes tafsir when requested", async () => {
+  it("reads signed Quran references and includes published Indonesian tafsir", async () => {
     const reference = await Effect.runPromise(
       readNakafaQuranReference(convexUrl, {
         from_verse: 1,
@@ -51,47 +52,36 @@ describe("Quran Nakafa reader", () => {
     );
 
     expect(Option.getOrUndefined(reference)?.verses[0]?.tafsir).toBe(
-      "Tafsir pendek."
+      "Tafsir lengkap."
     );
     expect(Option.getOrUndefined(reference)?.name).toBe("Al-Fatihah");
   });
 
-  it("does not fall back to tafsir from another locale", async () => {
+  it("does not invent tafsir for a locale without published tafsir", async () => {
     const reference = await Effect.runPromise(
       readNakafaQuranReference(convexUrl, {
         from_verse: 1,
         include_tafsir: true,
         locale: "en",
         surah: 1,
-        to_verse: 1,
       })
     );
 
     expect(Option.getOrUndefined(reference)?.verses[0]?.tafsir).toBeUndefined();
   });
 
-  it("maps invalid references to input errors and missing rows to none", async () => {
+  it("maps malformed reference input to the agent input error", async () => {
     const invalid = await Effect.runPromise(
       Effect.either(readNakafaQuranReference(convexUrl, { surah: "one" }))
     );
-    const missing = await Effect.runPromise(
-      readNakafaQuranReference(convexUrl, {
-        from_verse: 999,
-        locale: "en",
-        surah: 1,
-      })
-    );
 
     expect(invalid._tag).toBe("Left");
-
     if (invalid._tag === "Left") {
       expect(invalid.left).toBeInstanceOf(NakafaAgentInputError);
     }
-
-    expect(Option.isNone(missing)).toBe(true);
   });
 
-  it("renders full surah markdown from Quran runtime rows", async () => {
+  it("renders full signed surah markdown without blocked legacy fields", async () => {
     const markdown = await Effect.runPromise(
       readQuranMarkdown(
         convexUrl,
@@ -105,137 +95,137 @@ describe("Quran Nakafa reader", () => {
     expect(Option.getOrUndefined(markdown)?.text).toContain(
       "Dengan nama Allah."
     );
+    expect(Option.getOrUndefined(markdown)?.text).not.toContain(
+      "Transliteration"
+    );
   });
 
-  it("returns none for missing surahs and localizes known names", async () => {
+  it("rejects non-Quran routes and reads source names directly", async () => {
     const missing = await Effect.runPromise(
       readQuranMarkdown(
         convexUrl,
-        readNakafaContentRefFixture("en", "quran/2", "quran")
+        readNakafaContentRefFixture(
+          "en",
+          "articles/politics/example",
+          "articles"
+        )
       )
     );
 
     expect(Option.isNone(missing)).toBe(true);
-    expect(
-      getSurahName({
-        locale: "en",
-        surah: { name: quranSurah().name },
-      })
-    ).toBe("Al-Faatiha");
+    expect(getSurahName(surahRow())).toBe("Al-Fatihah");
   });
 });
 
-/** Routes generated Convex query refs to Quran reader fixtures. */
+/** Routes generated Convex query refs to signed Quran fixtures. */
 function readRuntimeFixture(
   _convexUrl: string,
   query: FunctionReference<"query">,
-  args: unknown
+  args: Record<string, unknown>
 ) {
   if (
     getFunctionName(query) ===
-    getFunctionName(api.contents.queries.runtime.getQuranReference)
+    getFunctionName(api.contentRelease.quran.reference)
   ) {
-    return Promise.resolve(readQuranReference(args));
+    return Promise.resolve(referenceResult(args));
   }
-
   if (
-    getFunctionName(query) ===
-    getFunctionName(api.contents.queries.runtime.getQuranSurahPage)
+    getFunctionName(query) === getFunctionName(api.contentRelease.quran.page)
   ) {
-    return Promise.resolve(readQuranSurahPage(args));
+    return Promise.resolve(pageResult(args));
   }
 
   return Promise.reject(new Error("Unhandled Quran query fixture."));
 }
 
-/** Builds one Quran reference fixture from generated query args. */
-function readQuranReference(args: unknown) {
-  const input = Schema.decodeUnknownSync(QuranReferenceArgsSchema)(args);
-
-  if (input.fromVerse === 999) {
-    return null;
-  }
-
+/** Builds one signed reference response around a bounded chunk. */
+function referenceResult(args: Record<string, unknown>) {
+  const locale = args.locale === "id" ? "id" : "en";
   return {
-    ...readNakafaContentRefFixture(
-      input.locale,
-      `quran/${input.surah}`,
-      "quran"
-    ),
-    name: input.locale === "id" ? "Al-Fatihah" : "Al-Faatiha",
-    revelation: input.locale === "id" ? "Makkah" : "Mecca",
-    translation: input.locale === "id" ? "Pembukaan" : "The Opening",
-    verses: [quranReferenceVerse(input)],
+    ...source,
+    chunkJson: [encodeTestQuranRow(source.snapshotId, chunkRow())],
+    fromVerse: 1,
+    searchJson: encodeTestQuranRow(source.snapshotId, searchRow(locale)),
+    surahJson: encodeTestQuranRow(source.snapshotId, surahRow()),
+    toVerse: 1,
   };
 }
 
-/** Builds one locale-aware Quran reference verse fixture. */
-function quranReferenceVerse(input: QuranReferenceArgs) {
-  const verse = {
-    arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-    number: input.fromVerse,
-    translation: "Dengan nama Allah.",
-    transliteration: "Bismillahirrahmanirrahim",
-  };
-
-  if (!input.includeTafsir || input.locale !== "id") {
-    return verse;
-  }
-
+/** Builds one complete signed page response around a bounded chunk. */
+function pageResult(args: Record<string, unknown>) {
+  const locale = args.locale === "id" ? "id" : "en";
   return {
-    ...verse,
-    tafsir: "Tafsir pendek.",
+    ...source,
+    chunkJson: [encodeTestQuranRow(source.snapshotId, chunkRow())],
+    nextSurahJson: encodeTestQuranRow(source.snapshotId, surahRow(2)),
+    prevSurahJson: null,
+    searchJson: encodeTestQuranRow(source.snapshotId, searchRow(locale)),
+    surahJson: encodeTestQuranRow(source.snapshotId, surahRow()),
   };
 }
 
-/** Builds one Quran surah page fixture from generated query args. */
-function readQuranSurahPage(args: unknown) {
-  const input = Schema.decodeUnknownSync(QuranSurahArgsSchema)(args);
-
-  if (input.surah !== 1) {
-    return null;
-  }
-
-  return {
-    nextSurah: null,
-    prevSurah: null,
-    surahData: quranSurah(),
-  };
-}
-
-/** Builds one Quran surah with one verse for markdown tests. */
-function quranSurah() {
-  return {
+/** Builds one exact signed Quran surah row. */
+function surahRow(number = 1) {
+  return Schema.decodeUnknownSync(QuranSurahRowSchema)({
+    kind: "quran-surah",
     name: {
-      long: "سورة الفاتحة",
-      short: "الفاتحة",
-      transliteration: { en: "Al-Faatiha", id: "Al-Fatihah" },
-      translation: { en: "The Opening", id: "Pembukaan" },
+      arabic: "الفاتحة",
+      translation: "Pembukaan",
+      transliteration: "Al-Fatihah",
     },
-    number: 1,
+    number,
     numberOfVerses: 1,
-    preBismillah: null,
-    revelation: { arab: "مكة", en: "Mecca", id: "Makkah" },
-    sequence: 1,
+    revelation: { order: 5, place: "Meccan" },
+  });
+}
+
+/** Builds one exact signed Quran chunk row. */
+function chunkRow() {
+  return Schema.decodeUnknownSync(QuranChunkRowSchema)({
+    firstQuranNumber: 1,
+    firstVerse: 1,
+    kind: "quran-chunk",
+    lastVerse: 1,
+    surahNumber: 1,
     verses: [
       {
-        audio: { primary: "https://audio.example/1.mp3", secondary: [] },
         meta: {
           hizbQuarter: 1,
           juz: 1,
           manzil: 1,
           page: 1,
           ruku: 1,
-          sajda: { obligatory: false, recommended: false },
+          sajda: null,
         },
         number: { inQuran: 1, inSurah: 1 },
-        tafsir: { id: { short: "Tafsir pendek." } },
-        text: {
-          arab: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-          transliteration: { en: "Bismillahirrahmanirrahim" },
+        tafsir: {
+          id: { footnotes: null, text: "Tafsir lengkap." },
         },
-        translation: { en: "In the name of Allah.", id: "Dengan nama Allah." },
+        text: { arabic: "بِسْمِ اللّٰهِ" },
+        translation: {
+          en: { footnotes: "", text: "In the name of Allah." },
+          id: { footnotes: "", text: "Dengan nama Allah." },
+        },
       },
     ],
-  };
+  });
+}
+
+/** Builds one locale-specific signed Quran search row. */
+function searchRow(locale: "en" | "id") {
+  return Schema.decodeUnknownSync(QuranSearchRowSchema)({
+    graph: {
+      alignmentId: `alignment:quran:surah:1:${locale}`,
+      assetId: `asset:quran:surah:1:${locale}`,
+      conceptId: "concept:quran:surah:1",
+      learningObjectId: "lo:quran-surah:1",
+      lensId: "lens:quran",
+    },
+    kind: "quran-search",
+    locale,
+    route: "quran/1",
+    surahNumber: 1,
+    text: "Al-Fatihah",
+    title: "1. Al-Fatihah",
+  });
 }

@@ -5,6 +5,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { testTryoutGraph } from "@repo/backend/test/tryouts";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
 
@@ -340,14 +341,14 @@ async function insertMaterialRoute(ctx: MutationCtx, suffix: string) {
 /** Inserts the route catalog graph projection for one try-out set. */
 async function insertTryoutRoute(ctx: MutationCtx, suffix: string) {
   const route = "try-out/indonesia/snbt/2027/set-1";
-  const identity = createLearningGraphIdentityFromRoute({
+  const identity = testTryoutGraph({
+    countryKey: "indonesia",
+    examKey: "snbt",
+    kind: "set",
     locale: "en",
-    route,
+    setKey: "set-1",
+    trackKey: "2027",
   });
-
-  if (!identity) {
-    expect.fail(`Expected try-out graph identity for ${route}.`);
-  }
 
   await ctx.db.insert("contentRoutes", {
     ...identity,

@@ -1,20 +1,19 @@
-import { BookOpen02Icon, PlayIcon, StopIcon } from "@hugeicons/core-free-icons";
-import type { RuntimeQuranSurah } from "@repo/backend/client/nakafa/types";
+import { BookOpen02Icon } from "@hugeicons/core-free-icons";
+import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/spec";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import type { Locale } from "next-intl";
-import type { QuranControlLabels } from "@/components/shared/quran-controls";
 import { QuranText } from "@/components/shared/quran-text";
 
 interface Props {
   hasInterpretation: boolean;
   id: string;
   index: number;
+  interpretationLabel: string;
   isLast: boolean;
-  labels: QuranControlLabels;
   locale: Locale;
-  verse: RuntimeQuranSurah["verses"][number];
+  verse: QuranRuntimeVerse;
   verseLabel: string;
 }
 
@@ -22,45 +21,6 @@ const verseButtonClassName = buttonVariants({
   size: "icon",
   variant: "outline",
 });
-
-const audioButtonClassName = cn(
-  verseButtonClassName,
-  "group data-[state=playing]:border-primary data-[state=playing]:bg-primary data-[state=playing]:text-primary-foreground data-[state=playing]:hover:bg-[color-mix(in_oklch,var(--primary)_99%,var(--background))] data-[state=playing]:hover:text-primary-foreground data-[state=playing]:hover:shadow-md"
-);
-
-/**
- * Renders one delegated audio button without per-verse client hydration.
- */
-function QuranAudioButton({
-  index,
-  labels,
-}: {
-  index: number;
-  labels: QuranControlLabels;
-}) {
-  return (
-    <button
-      aria-label={labels.playAudio}
-      aria-pressed="false"
-      className={audioButtonClassName}
-      data-quran-audio-index={index}
-      data-state="idle"
-      type="button"
-    >
-      <HugeIcons
-        className="group-data-[state=playing]:hidden"
-        icon={PlayIcon}
-      />
-      <HugeIcons
-        className="hidden group-data-[state=playing]:block"
-        icon={StopIcon}
-      />
-      <span className="sr-only" data-quran-audio-label>
-        {labels.playAudio}
-      </span>
-    </button>
-  );
-}
 
 /**
  * Renders one delegated tafsir button without mounting a drawer per verse.
@@ -92,14 +52,13 @@ export function QuranVerse({
   hasInterpretation,
   id,
   index,
+  interpretationLabel,
   isLast,
-  labels,
   locale,
   verse,
   verseLabel,
 }: Props) {
-  const transliteration = verse.text.transliteration.en;
-  const translation = verse.translation[locale];
+  const translation = verse.translation[locale].text;
 
   return (
     <div
@@ -123,22 +82,16 @@ export function QuranVerse({
         </a>
 
         <div className="flex items-center gap-2">
-          <QuranAudioButton index={index} labels={labels} />
           {hasInterpretation && (
             <QuranInterpretationButton
               index={index}
-              label={labels.interpretation}
+              label={interpretationLabel}
             />
           )}
         </div>
       </div>
-      <QuranText>{verse.text.arab}</QuranText>
-      <div className="flex flex-col gap-2">
-        <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
-          {transliteration}
-        </p>
-        <p className="text-pretty leading-relaxed">{translation}</p>
-      </div>
+      <QuranText>{verse.text.arabic}</QuranText>
+      <p className="text-pretty leading-relaxed">{translation}</p>
     </div>
   );
 }

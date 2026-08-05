@@ -1,0 +1,158 @@
+import {
+  combineSearchResults,
+  formatSearchGroup,
+  getSearchTokens,
+  rankSearchResult,
+} from "@repo/ai/agents/nakafa/tools/search-result";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import {
+  type NakafaAgentSearchResult,
+  NakafaAgentSearchResultSchema,
+} from "@repo/contents/_lib/agent/schema/search";
+import { Schema } from "effect";
+import { describe, expect, it } from "vitest";
+
+/** Builds one schema-decoded search result for ranking tests. */
+function searchResult(
+  items: NakafaAgentSearchResult["items"],
+  options: {
+    readonly hasMore?: boolean;
+    readonly limit?: number;
+    readonly offset?: number;
+  } = {}
+) {
+  const limit = options.limit ?? 10;
+  const offset = options.offset ?? 0;
+
+  return Schema.decodeUnknownSync(NakafaAgentSearchResultSchema)({
+    count: items.length,
+    has_more: options.hasMore ?? false,
+    items,
+    limit,
+    ...(options.hasMore ? { next_offset: offset + items.length } : {}),
+    offset,
+  });
+}
+
+/** Builds one graph-backed article result with searchable metadata. */
+function searchItem(
+  slug: string,
+  title: string,
+  description = `${title} description`
+) {
+  return {
+    ...readNakafaContentRefFixture(
+      "en",
+      `articles/politics/${slug}`,
+      "articles"
+    ),
+    description,
+    excerpt: description,
+    title,
+  };
+}
+
+describe("Nakafa search results", () => {
+  it("normalizes and deduplicates model-provided query tokens", () => {
+    expect(getSearchTokens(["Alpha, BETA", "alpha_2027"])).toEqual([
+      "alpha",
+      "beta",
+      "2027",
+    ]);
+    expect(getSearchTokens(["!!!"])).toEqual([]);
+  });
+
+  it("ranks visible metadata while preserving equal-score order", () => {
+    const first = searchItem("general", "General", "Shared token");
+    const exact = searchItem(
+      "quantitative-knowledge",
+      "Quantitative Knowledge",
+      "Shared token"
+    );
+    const tie = searchItem("quantitative-practice", "Quantitative Practice");
+    const result = searchResult([first, exact, tie]);
+
+    expect(
+      rankSearchResult(result, ["quantitative"]).items.map((item) => item.title)
+    ).toEqual(["Quantitative Knowledge", "Quantitative Practice", "General"]);
+    expect(rankSearchResult(result, []).items).toBe(result.items);
+  });
+
+  it("returns one query result without rebuilding its page", () => {
+    const result = searchResult([searchItem("single", "Single")]);
+
+    expect(
+      combineSearchResults(
+        { limit: 10, offset: 0, queries: ["single"] },
+        [result],
+        ["single"]
+      )
+    ).toBe(result);
+  });
+
+  it("interleaves, deduplicates, and paginates multiple query pages", () => {
+    const first = searchItem("first", "First");
+    const second = searchItem("second", "Second");
+    const combined = combineSearchResults(
+      { limit: 2, offset: 5, queries: ["first", "second", "empty"] },
+      [
+        searchResult([first, second]),
+        searchResult([first], { hasMore: true }),
+        searchResult([]),
+      ],
+      []
+    );
+
+    expect(combined).toMatchObject({
+      count: 2,
+      has_more: true,
+      items: [first, second],
+      next_offset: 7,
+      offset: 5,
+    });
+  });
+
+  it("marks a truncated local aggregate as paginated", () => {
+    const combined = combineSearchResults(
+      { limit: 1, offset: 0, queries: ["alpha", "beta"] },
+      [
+        searchResult([searchItem("alpha", "Alpha")]),
+        searchResult([searchItem("beta", "Beta")]),
+      ],
+      []
+    );
+
+    expect(combined).toMatchObject({
+      count: 1,
+      has_more: true,
+      next_offset: 1,
+    });
+  });
+
+  it("returns a complete ranked aggregate without a next offset", () => {
+    const combined = combineSearchResults(
+      { limit: 2, offset: 0, queries: ["quantitative", "general"] },
+      [
+        searchResult([searchItem("general", "General")]),
+        searchResult([searchItem("quantitative", "Quantitative Knowledge")]),
+      ],
+      ["quantitative"]
+    );
+
+    expect(combined.items.map((item) => item.title)).toEqual([
+      "Quantitative Knowledge",
+      "General",
+    ]);
+    expect(combined).toMatchObject({ count: 2, has_more: false });
+    expect(combined).not.toHaveProperty("next_offset");
+  });
+
+  it("formats scoped and unscoped search evidence", () => {
+    const result = searchResult([]);
+
+    expect(formatSearchGroup({}, result)).toContain("# Nakafa Search");
+    expect(formatSearchGroup({ queries: ["alpha", "beta"] }, result)).toContain(
+      '- Query: "beta"'
+    );
+  });
+});

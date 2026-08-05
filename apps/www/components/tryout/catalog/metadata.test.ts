@@ -87,6 +87,24 @@ describe("try-out route metadata", () => {
     });
   });
 
+  it("uses localized fallback copy when the signed route has no description", async () => {
+    runtimeMocks.readTryoutMetadata.mockResolvedValue({
+      route: {
+        alternates: [],
+        publicPath: "try-out/indonesia",
+        title: "Indonesia",
+      },
+    });
+
+    const metadata = await generateTryoutRouteMetadata({
+      kind: "country",
+      locale: "en",
+      publicPath: "try-out/indonesia",
+    });
+
+    expect(metadata.description).toBe("translated:metadata-description");
+  });
+
   it("returns the route-level 404 for an unknown hierarchy path", async () => {
     runtimeMocks.readTryoutMetadata.mockResolvedValue({
       route: null,

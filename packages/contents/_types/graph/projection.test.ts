@@ -1,5 +1,4 @@
 import {
-  getQuranSurahNumberForRoute,
   getSourceRouteProjection,
   getSourceRouteProjectionForRoute,
 } from "@repo/contents/_types/graph/projection";
@@ -103,11 +102,6 @@ describe("source route projection", () => {
     );
     expect(getCurriculumLensScopeForKind("tryout-set")).toBe("exam");
     expect(getCurriculumLensScopeForKind("tryout-track")).toBe("exam");
-  });
-
-  it("owns Quran route selectors used by agent readers", () => {
-    expect(getQuranSurahNumberForRoute("quran/1")).toBe(1);
-    expect(getQuranSurahNumberForRoute("articles/politics/example")).toBeNull();
   });
 
   it("normalizes noisy projections before matching", () => {

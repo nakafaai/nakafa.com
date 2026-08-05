@@ -5,7 +5,6 @@ import {
   getApiContentRouteByContentId,
   getArticleApiContentPage,
   getMaterialApiContentPage,
-  getQuranApiSurahPage,
   listApiStaticParams,
   parseApiContentId,
   parseApiLocale,
@@ -71,14 +70,12 @@ describe("API content runtime", () => {
       isDone: true,
       page: [],
     };
-    const quranSurahPage = { surah: { number: 1 }, verses: [] };
     const routeRow = { content_id: "asset:en:article:politics:article:a" };
 
     runtimeClientMocks.fetchConvexRuntimeQuery
       .mockResolvedValueOnce(articlePage)
       .mockResolvedValueOnce(subjectPage)
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(quranSurahPage)
       .mockResolvedValueOnce({
         activeReleaseId: null,
         managed: false,
@@ -131,21 +128,6 @@ describe("API content runtime", () => {
         limit: 5,
         locale: "id",
         prefix: "curriculum/high-school/10/mathematics",
-      }
-    );
-
-    await expect(
-      Effect.runPromise(
-        getQuranApiSurahPage({
-          surah: 1,
-        })
-      )
-    ).resolves.toEqual(quranSurahPage);
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
-      "https://test.convex.cloud",
-      expect.anything(),
-      {
-        surah: 1,
       }
     );
 

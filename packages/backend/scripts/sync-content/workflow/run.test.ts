@@ -118,7 +118,6 @@ describe("sync-content workflows", () => {
         "syncArticles",
         "syncCurriculumTopics",
         "syncCurriculumLessons",
-        "syncQuran",
         "syncRoutePages",
         "syncPublicRoutes",
         "syncLearningPrograms",
@@ -180,7 +179,6 @@ describe("sync-content workflows", () => {
     expect(events.indexOf("clean")).toBeLessThan(
       events.indexOf("syncRoutePages")
     );
-    expect(events).not.toContain("syncQuran");
     expect(events).toContain("syncLearningPrograms");
   });
 
@@ -332,7 +330,6 @@ describe("sync-content workflows", () => {
         "syncArticles",
         "syncCurriculumTopics",
         "syncCurriculumLessons",
-        "syncQuran",
         "syncRoutePages",
         "syncPublicRoutes",
         "syncLearningPrograms",
@@ -347,49 +344,10 @@ describe("sync-content workflows", () => {
     expect(events.indexOf("syncCurriculumLessons")).toBeLessThan(
       events.indexOf("syncRoutePages")
     );
-    expect(routeArtifactTargets[0]).toHaveLength(6);
+    expect(routeArtifactTargets[0]).toHaveLength(4);
     expect(events.indexOf("syncRoutePages")).toBeLessThan(
       events.indexOf("syncPublicRoutes")
     );
-  });
-
-  it("syncs Quran without rebuilding unrelated public routes or programs", async () => {
-    const { events, routeArtifactTargets, workflow } = await loadWorkflow(
-      {
-        deleted: 0,
-        hasStale: false,
-      },
-      {
-        changedFiles: ["packages/contents/quran/source.ts"],
-        syncState: {
-          lastSyncCommit: "previous-commit",
-          lastSyncTimestamp: 1,
-        },
-      }
-    );
-
-    await Effect.runPromise(workflow.syncIncremental(config, {}));
-
-    expect(events).toEqual(
-      expect.arrayContaining([
-        "syncQuran",
-        "syncRoutePages",
-        "invalidateContentRuntimeCache",
-        "saveSyncState",
-      ])
-    );
-    expect(events).not.toContain("clean");
-    expect(events).not.toContain("syncArticles");
-    expect(events).not.toContain("syncCurriculumTopics");
-    expect(events).not.toContain("syncCurriculumLessons");
-    expect(events).not.toContain("syncPublicRoutes");
-    expect(events).not.toContain("syncLearningPrograms");
-    expect(routeArtifactTargets).toEqual([
-      [
-        { locale: "en", section: "quran" },
-        { locale: "id", section: "quran" },
-      ],
-    ]);
   });
 
   it("skips Convex work before saving a no-op incremental sync", async () => {

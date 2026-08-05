@@ -30,9 +30,6 @@ type MaterialApiPageArgs = FunctionArgs<
 type MaterialApiRouteArgs = FunctionArgs<
   typeof api.contentRelease.material.apiRoute
 >;
-type QuranSurahPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.getQuranSurahPage
->;
 type ContentRouteByContentIdArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getContentRouteByContentId
 >;
@@ -229,15 +226,6 @@ export function getApiContentRouteByContentId(
         syncedAt: material.syncedAt,
       }).pipe(Effect.mapError(mapPublishedMaterialError));
     })
-  );
-}
-
-/** Reads one Quran surah page from Convex for API responses. */
-export function getQuranApiSurahPage(args: QuranSurahPageArgs) {
-  return fetchApiRuntimeQuery(
-    "getQuranSurahPage",
-    api.contents.queries.runtime.getQuranSurahPage,
-    args
   );
 }
 

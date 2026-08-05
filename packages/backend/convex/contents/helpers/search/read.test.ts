@@ -133,59 +133,6 @@ describe("readContentSearchDocuments", () => {
     );
   });
 
-  it("reads source-only sections while release search is synchronizing", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const fixtures: readonly {
-      readonly query: string;
-      readonly route: string;
-      readonly section: "quran" | "tryout";
-    }[] = [
-      { query: "Al-Fatihah", route: "quran/1", section: "quran" },
-      {
-        query: "Penalaran Umum",
-        route: "try-out/indonesia/snbt/2027/set-2/penalaran-umum",
-        section: "tryout",
-      },
-    ];
-    await t.mutation(async (ctx) => {
-      await insertRuntimeArticles(ctx, 1);
-      for (const fixture of fixtures) {
-        await insertContentSearch(ctx, {
-          contentHash: `hash-${fixture.section}-source-only`,
-          description: "",
-          locale: "id",
-          route: fixture.route,
-          section: fixture.section,
-          syncedAt: 1,
-          text: `${fixture.query} source-only search`,
-          title: fixture.query,
-        });
-      }
-    });
-
-    for (const fixture of fixtures) {
-      const documents = await t.query((ctx) =>
-        runConvexProgram(
-          readContentSearchDocuments(
-            ctx,
-            {
-              limit: 10,
-              locale: "id",
-              offset: 0,
-              queries: [fixture.query],
-              section: fixture.section,
-            },
-            [fixture.query],
-            10
-          )
-        )
-      );
-      expect(documents).toMatchObject([
-        { section: fixture.section, title: fixture.query },
-      ]);
-    }
-  });
-
   it("keeps source material searchable until its release model is ready", async () => {
     const t = createConvexTestWithBetterAuth();
     const projection = makeMaterialProjection("en", 1);

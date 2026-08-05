@@ -14,7 +14,6 @@ export function logSyncSummary(
   articleResult: SyncResult,
   curriculumTopicResult: SyncResult,
   curriculumLessonResult: SyncResult,
-  quranResult: SyncResult,
   routePageResult: SyncResult,
   publicRouteResult: SyncResult,
   learningProgramResult: SyncResult
@@ -23,7 +22,6 @@ export function logSyncSummary(
     articleResult.created +
     curriculumTopicResult.created +
     curriculumLessonResult.created +
-    quranResult.created +
     routePageResult.created +
     publicRouteResult.created +
     learningProgramResult.created;
@@ -31,7 +29,6 @@ export function logSyncSummary(
     articleResult.updated +
     curriculumTopicResult.updated +
     curriculumLessonResult.updated +
-    quranResult.updated +
     routePageResult.updated +
     publicRouteResult.updated +
     learningProgramResult.updated;
@@ -41,7 +38,6 @@ export function logSyncSummary(
     articleResult.unchanged +
     curriculumTopicResult.unchanged +
     curriculumLessonResult.unchanged +
-    quranResult.unchanged +
     routePageResult.unchanged +
     publicRouteResult.unchanged +
     learningProgramResult.unchanged;
@@ -59,9 +55,6 @@ export function logSyncSummary(
   );
   log(
     `  Curriculum Lessons:   ${curriculumLessonResult.created + curriculumLessonResult.updated + curriculumLessonResult.unchanged} (${curriculumLessonResult.created} new, ${curriculumLessonResult.updated} updated)`
-  );
-  log(
-    `  Quran:              ${quranResult.created + quranResult.updated + quranResult.unchanged} (${quranResult.created} new, ${quranResult.updated} updated)`
   );
   log(
     `  Route Pages:         ${routePageResult.created + routePageResult.updated + routePageResult.unchanged} (${routePageResult.created} new, ${routePageResult.updated} updated)`

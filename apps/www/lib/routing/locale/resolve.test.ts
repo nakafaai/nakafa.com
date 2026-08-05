@@ -40,14 +40,6 @@ vi.mock("@/lib/content/program/route", () => ({
 vi.mock("@/lib/content/tryout/path", () => ({
   readPublishedTryoutLocalizedPath: publishedMocks.tryoutPath,
 }));
-vi.mock("@repo/contents/_types/route/learning/static", () => ({
-  loadStaticPublicLearningIndex: () =>
-    Effect.succeed({
-      projectRouteToLocale: () => undefined,
-      resolveRouteByPath: () => undefined,
-    }),
-}));
-
 /** Resolves a localized href through the Effect boundary used by callers. */
 function resolveHref(href: string, locale: "en" | "id") {
   return Effect.runSync(resolveLocalizedNavigationHref({ href, locale }));

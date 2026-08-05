@@ -7,17 +7,12 @@ import {
   logError,
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import type {
-  ConvexConfig,
-  SyncOptions,
-} from "@repo/backend/scripts/sync-content/contract/types";
+import type { ConvexConfig } from "@repo/backend/scripts/sync-content/contract/types";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/convex/counts";
 import { getDataIntegrity } from "@repo/backend/scripts/sync-content/convex/inspection";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
 import { verifyGraphIdentity } from "@repo/backend/scripts/sync-content/verify/graph";
-import { verifyQuranRuntime } from "@repo/backend/scripts/sync-content/verify/quran";
 import { logVerifySuccess } from "@repo/backend/scripts/sync-content/verify/summary";
-import { readQuranMetadata } from "@repo/contents/_lib/quran";
 import {
   listLessonMaterialSources,
   listLessonRows,
@@ -63,15 +58,6 @@ function logCountMatch({
   return false;
 }
 
-function getExpectedQuranCounts() {
-  return readQuranMetadata().pipe(
-    Effect.map((surahs) => ({
-      surahs: surahs.length,
-      verses: surahs.reduce((total, surah) => total + surah.numberOfVerses, 0),
-    }))
-  );
-}
-
 function getExpectedCurriculumCounts() {
   const materialTopics = listLessonRows();
 
@@ -86,8 +72,7 @@ function getExpectedCurriculumCounts() {
 
 /** Verifies Nakafa-owned filesystem content against its Convex read models. */
 export const verify = Effect.fn("sync.verify")(function* (
-  config: ConvexConfig,
-  options: SyncOptions = {}
+  config: ConvexConfig
 ) {
   log("=== VERIFY CONTENT ===\n");
 
@@ -128,7 +113,6 @@ export const verify = Effect.fn("sync.verify")(function* (
   }
 
   const counts = countsResult.right;
-  const expectedQuranCounts = yield* getExpectedQuranCounts();
   log("\n=== DATABASE ===\n");
   log(`  articleContents:     ${counts.articles}`);
   log(`  curriculumTopics:    ${counts.curriculumTopics}`);
@@ -136,8 +120,6 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`  contentSearch:       ${counts.contentSearch}`);
   log(`  contentRoutes:       ${counts.contentRoutes}`);
   log(`  publicRoutes:        ${counts.publicRoutes}`);
-  log(`  quranSurahs:         ${counts.quranSurahs}`);
-  log(`  quranVerses:         ${counts.quranVerses}`);
 
   log("\n=== VERIFICATION ===\n");
   let allMatch = logCountMatch({
@@ -157,19 +139,6 @@ export const verify = Effect.fn("sync.verify")(function* (
       expected: expectedCurriculumCounts.curriculumLessons,
       label: "Curriculum Lessons",
     }) && allMatch;
-  allMatch =
-    logCountMatch({
-      actual: counts.quranSurahs,
-      expected: expectedQuranCounts.surahs,
-      label: "Quran Surahs",
-    }) && allMatch;
-  allMatch =
-    logCountMatch({
-      actual: counts.quranVerses,
-      expected: expectedQuranCounts.verses,
-      label: "Quran Verses",
-    }) && allMatch;
-
   log(
     `References: ${counts.articleReferences} in DB from ${refFiles.length} ref.ts files across ${locales.length} locales`
   );
@@ -204,17 +173,6 @@ export const verify = Effect.fn("sync.verify")(function* (
     });
   }
   allMatch = graphIdentityResult.right && allMatch;
-
-  log("\n=== QURAN RUNTIME ===\n");
-  const quranRuntimeResult = yield* Effect.either(
-    verifyQuranRuntime(config, options)
-  );
-  if (quranRuntimeResult._tag === "Left") {
-    return yield* new ScriptFailureError({
-      message: `Failed to verify Quran runtime: ${getUnknownMessage(quranRuntimeResult.left)}`,
-    });
-  }
-  allMatch = quranRuntimeResult.right && allMatch;
 
   log("\n=== SUMMARY ===\n");
   if (allMatch) {

@@ -14,12 +14,7 @@ const BASE_CONTENT_SECURITY_POLICY = {
     "https://www.youtube-nocookie.com",
     "https://www.youtube.com",
   ],
-  mediaSrc: [
-    "'self'",
-    "https://*.convex.cloud",
-    "https://cdn.alquran.cloud",
-    "https://cdn.islamic.network",
-  ],
+  mediaSrc: ["'self'", "https://*.convex.cloud", "https://cdn.islamic.network"],
   scriptSrc: [
     "'self'",
     "'unsafe-eval'",

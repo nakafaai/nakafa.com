@@ -1,3 +1,4 @@
+import type { QuranPublicationError } from "@repo/backend/client/quran/decode";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
@@ -10,6 +11,14 @@ import {
 import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { Effect, Schema } from "effect";
+
+/** Maps signed Quran contract failures into the public agent read boundary. */
+export function toNakafaQuranDataReadError(error: QuranPublicationError) {
+  return new NakafaAgentDataReadError({
+    cause: error.reason,
+    message: `Unable to read signed Nakafa Quran ${error.operation}.`,
+  });
+}
 
 /** Decodes agent markdown output into the public schema shape. */
 export function decodeNakafaMarkdown(markdown: unknown) {
