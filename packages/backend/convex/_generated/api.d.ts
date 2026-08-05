@@ -337,7 +337,6 @@ import type * as contentSync_queries_stale from "../contentSync/queries/stale.js
 import type * as contentSync_reset_impl from "../contentSync/reset/impl.js";
 import type * as contentSync_reset_internal from "../contentSync/reset/internal.js";
 import type * as contentSync_reset_spec from "../contentSync/reset/spec.js";
-import type * as contentSync_reset_tryouts from "../contentSync/reset/tryouts.js";
 import type * as contentSync_tables from "../contentSync/tables.js";
 import type * as contents_actions_queue from "../contents/actions/queue.js";
 import type * as contents_analytics_impl from "../contents/analytics/impl.js";
@@ -525,7 +524,6 @@ import type * as tryouts_queries_attemptSections from "../tryouts/queries/attemp
 import type * as tryouts_queries_catalog from "../tryouts/queries/catalog.js";
 import type * as tryouts_queries_catalogModel from "../tryouts/queries/catalogModel.js";
 import type * as tryouts_queries_history from "../tryouts/queries/history.js";
-import type * as tryouts_queries_parents from "../tryouts/queries/parents.js";
 import type * as tryouts_queries_retained from "../tryouts/queries/retained.js";
 import type * as tryouts_queries_retained_page from "../tryouts/queries/retained/page.js";
 import type * as tryouts_queries_retained_snapshot from "../tryouts/queries/retained/snapshot.js";
@@ -533,7 +531,6 @@ import type * as tryouts_queries_runtime from "../tryouts/queries/runtime.js";
 import type * as tryouts_queries_score from "../tryouts/queries/score.js";
 import type * as tryouts_queries_sets from "../tryouts/queries/sets.js";
 import type * as tryouts_questions from "../tryouts/questions.js";
-import type * as tryouts_read from "../tryouts/read.js";
 import type * as tryouts_route from "../tryouts/route.js";
 import type * as tryouts_runtime_access from "../tryouts/runtime/access.js";
 import type * as tryouts_runtime_bundle from "../tryouts/runtime/bundle.js";
@@ -913,7 +910,6 @@ declare const fullApi: ApiFromModules<{
   "contentSync/reset/impl": typeof contentSync_reset_impl;
   "contentSync/reset/internal": typeof contentSync_reset_internal;
   "contentSync/reset/spec": typeof contentSync_reset_spec;
-  "contentSync/reset/tryouts": typeof contentSync_reset_tryouts;
   "contentSync/tables": typeof contentSync_tables;
   "contents/actions/queue": typeof contents_actions_queue;
   "contents/analytics/impl": typeof contents_analytics_impl;
@@ -1101,7 +1097,6 @@ declare const fullApi: ApiFromModules<{
   "tryouts/queries/catalog": typeof tryouts_queries_catalog;
   "tryouts/queries/catalogModel": typeof tryouts_queries_catalogModel;
   "tryouts/queries/history": typeof tryouts_queries_history;
-  "tryouts/queries/parents": typeof tryouts_queries_parents;
   "tryouts/queries/retained": typeof tryouts_queries_retained;
   "tryouts/queries/retained/page": typeof tryouts_queries_retained_page;
   "tryouts/queries/retained/snapshot": typeof tryouts_queries_retained_snapshot;
@@ -1109,7 +1104,6 @@ declare const fullApi: ApiFromModules<{
   "tryouts/queries/score": typeof tryouts_queries_score;
   "tryouts/queries/sets": typeof tryouts_queries_sets;
   "tryouts/questions": typeof tryouts_questions;
-  "tryouts/read": typeof tryouts_read;
   "tryouts/route": typeof tryouts_route;
   "tryouts/runtime/access": typeof tryouts_runtime_access;
   "tryouts/runtime/bundle": typeof tryouts_runtime_bundle;

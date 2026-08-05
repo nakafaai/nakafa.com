@@ -3,8 +3,6 @@ import { v } from "convex/values";
 
 export const resetBatchSize = 500;
 export const contentSearchResetBatchSize = 100;
-export const questionResetBatchSize = 100;
-export const eventTryoutEntitlementBatchSize = 500;
 
 export const batchDeleteResultValidator = v.object({
   deleted: v.number(),
@@ -28,12 +26,6 @@ export const resettableTableNames = [
   "publicRouteSyncState",
   "contentSearch",
   "learningEngagementQueue",
-  "questionChoices",
-  "questions",
-  "questionSets",
-  "irtCalibrationRuns",
-  "irtScaleItems",
-  "irtScaleVersions",
   "learningPopularityCounters",
   "learningPopularitySignals",
   "learningPopularityViewerSignals",
@@ -43,21 +35,6 @@ export const resettableTableNames = [
   "quranVerses",
   "curriculumLessons",
   "curriculumTopics",
-  "tryoutAccessTargets",
-  "tryoutAccessCampaigns",
-  "tryoutAccessGrants",
-  "tryoutAccessLinks",
-  "tryoutCountries",
-  "tryoutExams",
-  "tryoutTracks",
-  "tryoutSets",
-  "tryoutSections",
-  "tryoutAttempts",
-  "tryoutSetProgress",
-  "tryoutSectionAttempts",
-  "tryoutAttemptPlacements",
-  "tryoutResponses",
-  "tryoutScores",
 ] as const satisfies readonly TableNames[];
 
 export type ResettableTableName = (typeof resettableTableNames)[number];

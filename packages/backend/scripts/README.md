@@ -6,19 +6,13 @@ source of truth.
 
 ## Content ownership
 
-Aksara owns the activated article, material, and learning-program scopes.
-The current full and incremental orchestrators still traverse their local
-copies while final repository cleanup is pending. Those writes do not own the
-active Aksara runtime and must not be used to publish or repair an activated
-scope.
+Aksara is the authored source and signed publisher for the activated article,
+material, learning-program, Quran, and try-out families. Nakafa accepts verified
+signed releases and owns their runtime read models plus durable learner state.
 
-Until their coordinated cutovers complete, Nakafa still owns:
-
-- try-out catalogs, question prompts, answers, choices, and IRT projections;
-- Quran source, search, Tafsir, and related read models.
-
-After each remaining scope moves to Aksara, delete its sync implementation,
-reset commands, tests, and documentation in the same migration.
+The filesystem sync surface exists only for local projections that have not yet
+been deleted after cutover. It cannot create, repair, or replace an Aksara
+release. Never edit a local cutover copy as authored source.
 
 ## Development setup
 
@@ -41,15 +35,7 @@ Do not copy Convex deployment identity from another task.
 
 ## Validation and sync
 
-Use the scope command for content that Nakafa still owns:
-
-```sh
-pnpm --filter @repo/backend exec tsx scripts/sync-content.ts quran
-pnpm --filter @repo/backend exec tsx scripts/sync-content.ts tryouts
-```
-
-The broad commands below still include cutover copies and exist only until the
-remaining scope cutovers and final sync deletion finish:
+Use the package scripts below for the remaining filesystem projection surface:
 
 ```sh
 pnpm --filter @repo/backend sync:validate
@@ -58,12 +44,14 @@ pnpm --filter @repo/backend sync
 pnpm --filter @repo/backend sync:incremental
 ```
 
-- `sync:validate` reads selected deployment ownership, then checks only the
-  filesystem-owned authored sources without writing Convex.
+- `sync:validate` checks local projection input without writing Convex.
 - `sync:verify` compares filesystem projections with the selected deployment.
 - `sync` performs a full clean, sync, verification, and cache invalidation pass.
 - `sync:incremental` uses the last successful Git revision and does not accept
   `--locale` because its state is shared across locales.
+
+These commands are not part of signed Aksara publication. Use the Aksara
+preview, release, rollback, and local runtime workflow for activated content.
 
 Use `--locale en` or `--locale id` only with full, validate, verify, or clean
 operations. Use `--sequential` only for debugging one full sync.
@@ -93,17 +81,17 @@ pnpm --filter @repo/backend sync:clean
 pnpm --filter @repo/backend sync:reset
 pnpm --filter @repo/backend sync:reset:analytics
 pnpm --filter @repo/backend sync:reset:audio
-pnpm --filter @repo/backend sync:reset:tryouts
 ```
 
 Production variants use the `sync:prod:*` scripts. Do not run them without an
 approved window, exact row-count proof, a recovery plan, and post-write
-verification. `--authors` extends a full reset to authors. Try-out and audio
-resets deliberately clear incremental state and must be followed by a full
-sync, never an incremental sync.
+verification. `--authors` extends a full reset to authors.
 
-`tryoutFreeAttemptClaims` is durable account state and is not reset with
-try-out content.
+The full reset deletes only rebuildable local content projections. It preserves
+signed publication state, learning-program identity, views, recents, try-out
+access, entitlements, attempts, progress, placements, responses, scores,
+calibration runs, IRT scales, and free-attempt claims. Audio and analytics have
+separate explicit reset commands.
 
 ## Customer verification
 
@@ -122,7 +110,3 @@ changing content ownership.
   verification until final filesystem sync deletion.
 - `customers/verify.ts` verifies customer state.
 - `.sync-state.json` and `.sync-state.prod.json` are ignored incremental state.
-
-Authored source paths remain under `packages/contents/question-bank`,
-`packages/contents/tryout`, and the Quran source modules until their Aksara
-cutovers complete.

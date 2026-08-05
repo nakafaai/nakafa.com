@@ -18,12 +18,10 @@ import irtSchema from "@repo/backend/convex/irt/schema";
 import learningPreferencesSchema from "@repo/backend/convex/learningPreferences/schema";
 import learningProgramsSchema from "@repo/backend/convex/learningPrograms/schema";
 import notificationsSchema from "@repo/backend/convex/notifications/schema";
-import questionBankSchema from "@repo/backend/convex/questionBank/schema";
 import quranSchema from "@repo/backend/convex/quran/schema";
 import schoolsSchema from "@repo/backend/convex/schools/schema";
 import subscriptionsSchema from "@repo/backend/convex/subscriptions/schema";
 import tryoutAccessSchema from "@repo/backend/convex/tryoutAccess/schema";
-import tryoutCatalogSchema from "@repo/backend/convex/tryouts/catalog/schema";
 import tryoutRuntimeSchema from "@repo/backend/convex/tryouts/runtime/schema";
 import usersSchema from "@repo/backend/convex/users/schema";
 import { defineSchema } from "convex/server";
@@ -49,14 +47,12 @@ export default defineSchema(
     ...articleContentsSchema,
     ...curriculumTopicsSchema,
     ...curriculumLessonsSchema,
-    ...questionBankSchema,
     ...audioStudiesSchema,
     ...creditsSchema,
     ...irtSchema,
     ...learningPreferencesSchema,
     ...learningProgramsSchema,
     ...tryoutAccessSchema,
-    ...tryoutCatalogSchema,
     ...tryoutRuntimeSchema,
   },
   {

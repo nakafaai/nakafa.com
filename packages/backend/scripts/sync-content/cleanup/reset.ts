@@ -62,12 +62,14 @@ export const reset = Effect.fn("sync.reset")(function* (
 ) {
   log("=== RESET CONTENT ===\n");
   log(
-    "This will DELETE synced content and rebuildable runtime data. Durable learner history is preserved.\n"
+    "This will DELETE reset-managed filesystem projections. Signed publication and durable learner state are preserved.\n"
   );
 
   if (options.prod) {
     logWarning("PRODUCTION DATABASE SELECTED!");
-    logWarning("This will permanently delete all content from production.\n");
+    logWarning(
+      "This will permanently delete reset-managed projections from production.\n"
+    );
   }
   if (!options.force) {
     log("DRY RUN MODE (use --force to actually delete)\n");
@@ -84,8 +86,10 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Viewer Signals:        ${counts.learningPopularityViewerSignals}`);
   log(`  Popularity Signals:    ${counts.learningPopularitySignals}`);
   log(`  Popularity Counters:   ${counts.learningPopularityCounters}`);
-  log(`  Learning Programs:     ${counts.learningPrograms}`);
-  log(`  Learning Program Srcs: ${counts.learningProgramSources}`);
+  log(`  Learning Programs (preserved): ${counts.learningPrograms}`);
+  log(
+    `  Learning Program Sources (preserved): ${counts.learningProgramSources}`
+  );
   log(`  Learning Plan Items:   ${counts.learningPlanItems}`);
   log(`  Learning Program Cov:  ${counts.learningProgramCoverage}`);
   log(`  Content Routes:        ${counts.contentRoutes}`);
@@ -99,63 +103,31 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Quran Verses:          ${counts.quranVerses}`);
   log(`  Content Authors:       ${counts.contentAuthors}`);
   log(`  Article References:    ${counts.articleReferences}`);
-  log(`  Question Sets:         ${counts.questionSets}`);
-  log(`  Questions:             ${counts.questions}`);
-  log(`  Question Choices:      ${counts.questionChoices}`);
   log(`  Audio Content Sources: ${counts.audioContentSources}`);
   log(`  Content Audios:        ${counts.contentAudios}`);
   log(`  Audio Queue:           ${counts.audioGenerationQueue}`);
-  log(`  Tryout Access Campaigns: ${counts.tryoutAccessCampaigns}`);
-  log(`  Tryout Access Targets:   ${counts.tryoutAccessTargets}`);
-  log(`  Tryout Access Links:     ${counts.tryoutAccessLinks}`);
-  log(`  Tryout Access Grants:    ${counts.tryoutAccessGrants}`);
-  log(`  Tryout Countries:      ${counts.tryoutCountries}`);
-  log(`  Tryout Exams:          ${counts.tryoutExams}`);
-  log(`  Tryout Tracks:         ${counts.tryoutTracks}`);
-  log(`  Tryout Sets:           ${counts.tryoutSets}`);
-  log(`  Tryout Sections:       ${counts.tryoutSections}`);
-  log(`  Tryout Entitlements:   ${counts.tryoutEntitlements}`);
-  log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
-  log(`  Tryout Section Attempts:${counts.tryoutSectionAttempts}`);
-  log(`  Tryout Placements:     ${counts.tryoutAttemptPlacements}`);
-  log(`  Tryout Responses:      ${counts.tryoutResponses}`);
-  log(`  Tryout Scores:         ${counts.tryoutScores}`);
-  log(`  IRT Calibration Runs:  ${counts.irtCalibrationRuns}`);
-  log(`  IRT Scale Versions:    ${counts.irtScaleVersions}`);
-  log(`  IRT Scale Items:       ${counts.irtScaleItems}`);
+  log(`  Tryout Access Campaigns (preserved): ${counts.tryoutAccessCampaigns}`);
+  log(`  Tryout Access Targets (preserved): ${counts.tryoutAccessTargets}`);
+  log(`  Tryout Access Links (preserved): ${counts.tryoutAccessLinks}`);
+  log(`  Tryout Access Grants (preserved): ${counts.tryoutAccessGrants}`);
+  log(`  Tryout Entitlements (preserved): ${counts.tryoutEntitlements}`);
+  log(`  Tryout Attempts (preserved): ${counts.tryoutAttempts}`);
+  log(`  Tryout Set Progress (preserved): ${counts.tryoutSetProgress}`);
+  log(`  Tryout Section Attempts (preserved): ${counts.tryoutSectionAttempts}`);
+  log(`  Tryout Placements (preserved): ${counts.tryoutAttemptPlacements}`);
+  log(`  Tryout Responses (preserved): ${counts.tryoutResponses}`);
+  log(`  Tryout Scores (preserved): ${counts.tryoutScores}`);
+  log(`  IRT Calibration Runs (preserved): ${counts.irtCalibrationRuns}`);
+  log(`  IRT Scale Versions (preserved): ${counts.irtScaleVersions}`);
+  log(`  IRT Scale Items (preserved): ${counts.irtScaleItems}`);
   log(`  Curriculum Lessons:    ${counts.curriculumLessons}`);
   log(`  Curriculum Topics:     ${counts.curriculumTopics}`);
   log(`  Articles:              ${counts.articles}`);
   log(`  Authors:               ${counts.authors}`);
 
   const totalContent =
-    counts.articles +
-    counts.curriculumTopics +
-    counts.curriculumLessons +
-    counts.questionSets +
-    counts.questions +
-    counts.tryoutCountries +
-    counts.tryoutExams +
-    counts.tryoutTracks +
-    counts.tryoutSets +
-    counts.tryoutSections;
-  const totalRelated =
-    counts.contentAuthors + counts.articleReferences + counts.questionChoices;
-  const totalRuntime =
-    counts.audioGenerationQueue +
-    counts.tryoutAccessCampaigns +
-    counts.tryoutAccessTargets +
-    counts.tryoutAccessLinks +
-    counts.tryoutAccessGrants +
-    counts.tryoutEntitlements +
-    counts.tryoutAttempts +
-    counts.tryoutSectionAttempts +
-    counts.tryoutAttemptPlacements +
-    counts.tryoutResponses +
-    counts.tryoutScores +
-    counts.irtCalibrationRuns +
-    counts.irtScaleVersions +
-    counts.irtScaleItems;
+    counts.articles + counts.curriculumTopics + counts.curriculumLessons;
+  const totalRelated = counts.contentAuthors + counts.articleReferences;
   const totalDerived =
     counts.contentSearch +
     counts.learningEngagementQueue +
@@ -174,25 +146,34 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.contentRoutePages +
     counts.quranSurahs +
     counts.quranVerses +
+    counts.audioGenerationQueue +
     counts.audioContentSources +
     counts.contentAudios;
   const totalPreserved =
     counts.learningProgramSources +
     counts.learningPrograms +
     counts.learningViews +
-    counts.userLearningRecents;
+    counts.userLearningRecents +
+    counts.tryoutAccessCampaigns +
+    counts.tryoutAccessTargets +
+    counts.tryoutAccessLinks +
+    counts.tryoutAccessGrants +
+    counts.tryoutEntitlements +
+    counts.tryoutAttempts +
+    counts.tryoutSetProgress +
+    counts.tryoutSectionAttempts +
+    counts.tryoutAttemptPlacements +
+    counts.tryoutResponses +
+    counts.tryoutScores +
+    counts.irtCalibrationRuns +
+    counts.irtScaleVersions +
+    counts.irtScaleItems;
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);
-  log(`  Total runtime items:  ${totalRuntime}`);
   log(`  Total derived items:  ${totalDerived}`);
   log(`  Total preserved items: ${totalPreserved}`);
 
-  if (
-    totalContent === 0 &&
-    totalRelated === 0 &&
-    totalRuntime === 0 &&
-    totalDerived === 0
-  ) {
+  if (totalContent === 0 && totalRelated === 0 && totalDerived === 0) {
     logSuccess("\nReset-managed content is already empty. Nothing to delete.");
     return;
   }

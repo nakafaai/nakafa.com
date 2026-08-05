@@ -2,8 +2,9 @@
 
 ## Status
 
-Accepted. Amended on 2026-07-08 to insert the canonical try-out track layer and
-on 2026-07-22 to define freemium attempt access.
+Accepted. Amended on 2026-07-08 to insert the canonical try-out track layer,
+on 2026-07-22 to define freemium attempt access, and on 2026-08-04 to make
+Aksara signed publication the only authored try-out source.
 
 ## Context
 
@@ -26,21 +27,29 @@ Use one try-out route grammar:
 
 Use stable exam-family keys without yearly suffixes. For example, use `snbt` and `tka`, not `snbt-2026` or `tka-2026`. Model year, subject, or future exam-offer groupings as try-out tracks between exam and set.
 
-Move authored try-out source to country and exam folders:
+Keep authored try-out source only in Aksara country and exam folders:
 
 ```text
-packages/contents/tryout/[country]/[exam]
-packages/contents/question-bank/tryout/[country]/[exam]
+aksara/packages/corpus/tryout/[country]/[exam]
+aksara/packages/corpus/question-bank/tryout/[country]/[exam]
 ```
+
+Aksara canonicalizes catalog rows, placements, protected question and answer
+artifacts, renderer metadata, and release metadata into one signed publication.
+Nakafa verifies the signature, canonical hashes, complete snapshot digests, and
+release transition before any publication write.
 
 Use these Convex table families:
 
-- `questionSets`, `questions`, `questionChoices` for immutable source-backed question bank rows.
-- `tryoutCountries`, `tryoutExams`, `tryoutTracks`, `tryoutSets`, `tryoutSections` for public catalog routes.
+- `contentReleases`, `contentSnapshots`, `tryoutCatalog`, and
+  `tryoutPlacements` for verified signed publication state.
 - `tryoutAttempts`, `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`, `tryoutScores` for realtime runtime state.
 - `tryoutAccessCampaigns`, `tryoutAccessTargets`, `tryoutAccessLinks`, `tryoutAccessGrants`, `tryoutEntitlements` for premium access.
 - `tryoutFreeAttemptClaims` for the one lifetime free attempt claimed by each account.
 - `irtCalibration*` and `irtScale*` for scoring calibration and immutable scale versions.
+
+Do not reconstruct authored catalog or question data from Nakafa filesystem
+copies. Do not add a second authored table family beside the signed snapshot.
 
 ### Freemium Access
 
@@ -67,17 +76,19 @@ Delete public standalone practice/exercise routes and tool surfaces. Do not keep
 
 ```mermaid
 flowchart TD
-  Source["Source files"]
-  Bank["Question bank rows"]
-  Catalog["Try-out catalog rows"]
+  Source["Aksara corpus"]
+  Release["Signed release"]
+  Verify["Nakafa verification"]
+  Catalog["Signed catalog and placements"]
   Route["Country exam track set section routes"]
-  Attempt["Realtime attempt state"]
+  Attempt["Frozen attempt snapshot"]
   Score["Scoring strategy"]
   IRT["IRT scale version"]
   Raw["Raw or weighted score"]
 
-  Source --> Bank
-  Source --> Catalog
+  Source --> Release
+  Release --> Verify
+  Verify --> Catalog
   Catalog --> Route
   Route --> Attempt
   Attempt --> Score
@@ -87,26 +98,25 @@ flowchart TD
 
 ## Convex Reset Rule
 
-Convex schemas validate only tables listed in the schema. Removing a table from the code schema does not delete old deployed tables automatically. Legacy deployed tables such as `exerciseAnswers`, `exerciseAttempts`, `exerciseChoices`, `exerciseItemParameters`, `exerciseQuestions`, `exerciseSets`, and old event try-out tables must be deleted only after backup.
+Content reset may delete only rebuildable Nakafa read models. It preserves
+signed snapshot state, attempts, progress, placements, responses, scores,
+access state, entitlements, free claims, calibration runs, and IRT scales.
+Attempts and scales retain the exact signed snapshot needed for historical
+review and scoring.
 
-Chat tables are outside the try-out reset boundary. A chat table rename requires
-its own backed-up, validated data migration before the old table is removed.
-
-Backup commands:
-
-```sh
-CI=true pnpm --dir packages/backend exec convex export --include-file-storage --path /tmp/nakafa-convex-dev-before-tryout-reset.zip
-CI=true pnpm --dir packages/backend exec convex export --prod --include-file-storage --path /tmp/nakafa-convex-prod-before-tryout-reset.zip
-```
-
-After the PR code is deployed and the new sync has populated the new tables, delete legacy deployment tables from the Convex dashboard data page. Do not add permanent cleanup functions for old table names.
+Removing a retired deployment table requires three separate proofs: its row
+count is zero, no schema or code reference remains, and the replacement runtime
+passes acceptance. Remove the schema first, deploy it, then permanently delete
+the empty table through the Convex dashboard. Do not add permanent cleanup
+functions for retired table names.
 
 ## Consequences
 
 - The public practice/exercise pages are intentionally removed.
 - The app has one try-out vocabulary from source to Convex to UI.
-- Attempt routes can scale by indexed catalog and attempt tables instead of route parsing or unbounded scans.
+- Attempt routes use verified signed catalog indexes instead of route parsing or unbounded scans.
 - Exam pages list tracks, and track pages paginate ready sets through indexed Convex read models.
 - Old direct exam-to-set URLs are intentionally not supported.
 - IRT is a strategy under try-out scoring, not an SNBT-only subsystem.
 - Backward compatibility is intentionally not supported for removed practice/exercise URLs.
+- Content reset cannot erase durable try-out history or access state.

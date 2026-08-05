@@ -1,5 +1,8 @@
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  TryoutSectionSchema,
+  TryoutSetSchema,
+} from "@nakafa/aksara-contracts/tryout/spec";
+import { Schema } from "effect";
 
 export const TRYOUT_TEST_NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 export const TRYOUT_COUNTRY_PATH = "try-out/indonesia";
@@ -8,207 +11,98 @@ export const TRYOUT_TRACK_PATH = `${TRYOUT_EXAM_PATH}/2027`;
 export const TRYOUT_SET_PATH = `${TRYOUT_TRACK_PATH}/set-1`;
 export const TRYOUT_SECTION_KEY = "penalaran-matematika";
 export const TRYOUT_SECTION_PATH = `${TRYOUT_SET_PATH}/${TRYOUT_SECTION_KEY}`;
-export const TRYOUT_SOURCE =
-  "question-bank/tryout/indonesia/snbt/2027/set-1/penalaran-matematika";
 
-/** Inserts the active Indonesia country row used by try-out tests. */
-export async function insertTryoutCountry(ctx: MutationCtx) {
-  return await ctx.db.insert("tryoutCountries", {
-    countryKey: "indonesia",
-    isActive: true,
-    locale: "id",
-    order: 1,
-    publicPath: TRYOUT_COUNTRY_PATH,
-    sourceRevision: "2026",
-    syncedAt: TRYOUT_TEST_NOW,
-    title: "Indonesia",
-  });
-}
+type TryoutSetFixtureOptions = Partial<
+  Pick<
+    Schema.Schema.Encoded<typeof TryoutSetSchema>,
+    | "examKey"
+    | "internalEntrySectionKey"
+    | "order"
+    | "publicPath"
+    | "questionCount"
+    | "sectionCount"
+    | "setKey"
+    | "title"
+    | "trackKey"
+    | "visibleSectionCount"
+  >
+>;
 
-/** Inserts one active exam row for a try-out test tree. */
-export async function insertTryoutExam(ctx: MutationCtx, examKey = "snbt") {
-  return await ctx.db.insert("tryoutExams", {
+type TryoutSectionFixtureOptions = Partial<
+  Pick<
+    Schema.Schema.Encoded<typeof TryoutSectionSchema>,
+    | "examKey"
+    | "order"
+    | "publicPath"
+    | "questionCount"
+    | "questionSourcePath"
+    | "sectionKey"
+    | "setKey"
+    | "sourceRevision"
+    | "title"
+    | "trackKey"
+    | "visibility"
+  >
+>;
+
+/** Builds one signed set contract for runtime tests. */
+export function makeTryoutSet(options: TryoutSetFixtureOptions = {}) {
+  const setKey = options.setKey ?? "set-1";
+
+  return Schema.decodeUnknownSync(TryoutSetSchema)({
     countryKey: "indonesia",
-    examKey,
-    isActive: true,
+    examKey: options.examKey ?? "snbt",
+    graph: makeTryoutGraph("set", setKey),
+    internalEntrySectionKey: options.internalEntrySectionKey,
+    kind: "set",
     locale: "id",
-    order: 1,
-    publicPath: `${TRYOUT_COUNTRY_PATH}/${examKey}`,
+    order: options.order ?? (setKey === "set-1" ? 1 : 2),
+    publicPath: options.publicPath ?? `${TRYOUT_TRACK_PATH}/${setKey}`,
+    questionCount: options.questionCount ?? 1,
     scoringStrategy: "irt",
-    sourceRevision: "2026",
-    syncedAt: TRYOUT_TEST_NOW,
-    title: examKey.toUpperCase(),
-  });
-}
-
-/** Inserts one track row with the supplied materialized readiness state. */
-export async function insertTryoutTrack(
-  ctx: MutationCtx,
-  args: {
-    examKey?: string;
-    isReady?: boolean;
-    publicPath?: string;
-    trackKey?: string;
-    trackKind?: "subject" | "year";
-  } = {}
-) {
-  const examKey = args.examKey ?? "snbt";
-  const trackKey = args.trackKey ?? "2027";
-
-  return await ctx.db.insert("tryoutTracks", {
-    authoredSetCount: 1,
-    countryKey: "indonesia",
-    examKey,
-    isActive: true,
-    isReady: args.isReady ?? true,
-    locale: "id",
-    order: 1,
-    publicPath:
-      args.publicPath ?? `${TRYOUT_COUNTRY_PATH}/${examKey}/${trackKey}`,
-    readyQuestionCount: args.isReady === false ? 0 : 1,
-    readySetCount: args.isReady === false ? 0 : 1,
-    readyVisibleSectionCount: args.isReady === false ? 0 : 1,
-    sourceRevision: "2026",
-    syncedAt: TRYOUT_TEST_NOW,
-    title: trackKey === "2027" ? "Tahun 2027" : "Matematika",
-    trackKey,
-    trackKind: args.trackKind ?? "year",
-  });
-}
-
-/** Inserts one set row under a track using the public catalog contract. */
-export async function insertTryoutSet(
-  ctx: MutationCtx,
-  args: {
-    examKey?: string;
-    internalEntrySectionKey?: string;
-    isReady?: boolean;
-    order?: number;
-    publicPath?: string;
-    sectionCount?: number;
-    setKey?: string;
-    title?: string;
-    totalQuestionCount?: number;
-    trackKey?: string;
-    visibleSectionCount?: number;
-  } = {}
-) {
-  const examKey = args.examKey ?? "snbt";
-  const trackKey = args.trackKey ?? "2027";
-  const setKey = args.setKey ?? "set-1";
-  const totalQuestionCount = args.totalQuestionCount ?? 1;
-  const visibleSectionCount = args.visibleSectionCount ?? 1;
-
-  return await ctx.db.insert("tryoutSets", {
-    countryKey: "indonesia",
-    examKey,
-    internalEntrySectionKey: args.internalEntrySectionKey,
-    isActive: true,
-    isReady: args.isReady ?? true,
-    locale: "id",
-    order: args.order ?? (setKey === "set-1" ? 1 : 2),
-    publicPath: args.publicPath ?? `${TRYOUT_TRACK_PATH}/${setKey}`,
-    readyQuestionCount: args.isReady === false ? 0 : totalQuestionCount,
-    readyVisibleSectionCount: args.isReady === false ? 0 : visibleSectionCount,
-    scoringStrategy: "irt",
-    sectionCount: args.sectionCount ?? 1,
+    sectionCount: options.sectionCount ?? 1,
     setKey,
     sourceRevision: "2026",
-    syncedAt: TRYOUT_TEST_NOW,
-    title: args.title ?? (setKey === "set-1" ? "Set 1" : "Set 2"),
-    totalQuestionCount,
-    trackKey,
-    visibleSectionCount,
+    title: options.title ?? (setKey === "set-1" ? "Set 1" : "Set 2"),
+    trackKey: options.trackKey ?? "2027",
+    visibleSectionCount: options.visibleSectionCount ?? 1,
   });
 }
 
-/** Inserts one question-set row and, optionally, a ready question row. */
-export async function insertTryoutQuestionSource(
-  ctx: MutationCtx,
-  args: {
-    contentHash?: Doc<"questions">["contentHash"];
-    examKey?: string;
-    questionCount?: number;
-    sectionKey?: string;
-    setKey?: string;
-    sourcePath?: string;
-    sourceRevision?: string;
-    withQuestion?: boolean;
-  } = {}
-) {
-  const sectionKey = args.sectionKey ?? TRYOUT_SECTION_KEY;
-  const sourcePath = args.sourcePath ?? TRYOUT_SOURCE;
-  const sourceRevision = args.sourceRevision ?? "2026";
-  const questionCount = args.questionCount ?? 1;
-  const questionSetId = await ctx.db.insert("questionSets", {
-    contentHash: `${sourcePath}:hash`,
+/** Builds one signed section contract for runtime tests. */
+export function makeTryoutSection(options: TryoutSectionFixtureOptions = {}) {
+  const sectionKey = options.sectionKey ?? TRYOUT_SECTION_KEY;
+  const setKey = options.setKey ?? "set-1";
+  const sourcePath = `question-bank/tryout/indonesia/snbt/${sectionKey}/${setKey}`;
+
+  return Schema.decodeUnknownSync(TryoutSectionSchema)({
     countryKey: "indonesia",
-    examKey: args.examKey ?? "snbt",
+    examKey: options.examKey ?? "snbt",
+    graph: makeTryoutGraph("section", sectionKey),
+    kind: "section",
     locale: "id",
-    questionCount,
+    order: options.order ?? 1,
+    publicPath: options.publicPath ?? `${TRYOUT_SET_PATH}/${sectionKey}`,
+    questionCount: options.questionCount ?? 1,
+    questionSourcePath:
+      options.questionSourcePath ?? `packages/corpus/${sourcePath}`,
     sectionKey,
-    setKey: args.setKey ?? "set-1",
-    sourcePath,
-    sourceRevision,
-    syncedAt: TRYOUT_TEST_NOW,
-    title: "Penalaran Matematika",
+    setKey,
+    sourceRevision: options.sourceRevision ?? "2026",
+    timeLimitSeconds: 1800,
+    title: options.title ?? "Penalaran Matematika",
+    trackKey: options.trackKey ?? "2027",
+    visibility: options.visibility ?? "visible",
   });
-
-  if (args.withQuestion ?? true) {
-    await ctx.db.insert("questions", {
-      answerBody: "Answer",
-      contentHash: args.contentHash ?? `${sourcePath}:question-hash`,
-      date: 0,
-      locale: "id",
-      number: 1,
-      questionBody: "Question",
-      questionSetId,
-      sourceKey: `${sourcePath}:question-1`,
-      sourcePath: `${sourcePath}/question-1`,
-      sourceRevision,
-      syncedAt: TRYOUT_TEST_NOW,
-      title: "Question",
-    });
-  }
-
-  return questionSetId;
 }
 
-/** Inserts one try-out section row backed by a question-set source. */
-export async function insertTryoutSection(
-  ctx: MutationCtx,
-  args: {
-    examKey?: string;
-    order?: number;
-    publicPath?: string;
-    questionCount?: number;
-    questionSetId: Id<"questionSets">;
-    questionSourcePath?: string;
-    sectionKey?: string;
-    setKey?: string;
-    sourceRevision?: string;
-    trackKey?: string;
-    tryoutSetId: Id<"tryoutSets">;
-    visibility?: "internal-entry" | "visible";
-  }
-) {
-  return await ctx.db.insert("tryoutSections", {
-    countryKey: "indonesia",
-    examKey: args.examKey ?? "snbt",
-    locale: "id",
-    order: args.order ?? 1,
-    publicPath: args.publicPath,
-    questionCount: args.questionCount ?? 1,
-    questionSetId: args.questionSetId,
-    questionSourcePath: args.questionSourcePath ?? TRYOUT_SOURCE,
-    sectionKey: args.sectionKey ?? TRYOUT_SECTION_KEY,
-    setKey: args.setKey ?? "set-1",
-    sourceRevision: args.sourceRevision ?? "2026",
-    syncedAt: TRYOUT_TEST_NOW,
-    timeLimitSeconds: 1800,
-    title: "Penalaran Matematika",
-    trackKey: args.trackKey ?? "2027",
-    tryoutSetId: args.tryoutSetId,
-    visibility: args.visibility ?? "visible",
-  });
+/** Builds a stable graph identity for one signed fixture row. */
+function makeTryoutGraph(kind: "section" | "set", key: string) {
+  return {
+    alignmentId: `alignment:tryout:runtime:${kind}:${key}`,
+    assetId: `asset:id:tryout:runtime:${kind}:${key}`,
+    conceptId: `concept:tryout:runtime:${kind}:${key}`,
+    learningObjectId: `lo:tryout-runtime-${kind}-${key}`,
+    lensId: "lens:tryout:runtime",
+  };
 }

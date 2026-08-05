@@ -22,7 +22,7 @@ type UnattemptedArgs = FunctionArgs<
 >;
 
 describe("tryouts/sets/published", () => {
-  it("joins signed sets without reading retired progress", async () => {
+  it("joins signed sets without exposing unpublished progress", async () => {
     vi.setSystemTime(new Date(TRYOUT_START_NOW));
 
     const t = createConvexTestWithBetterAuth();
@@ -98,10 +98,6 @@ describe("tryouts/sets/published", () => {
       api.tryouts.queries.sets.unattempted,
       args
     );
-    const filesystemRows = await t.query(async (ctx) => ({
-      sections: await ctx.db.query("tryoutSections").collect(),
-      sets: await ctx.db.query("tryoutSets").collect(),
-    }));
 
     expect(before.page).toMatchObject([
       { attemptStatus: null, setKey: TRYOUT_START_SET },
@@ -115,7 +111,6 @@ describe("tryouts/sets/published", () => {
     ]);
     expect(inProgress.page).toEqual(list.page);
     expect(after.page).toEqual([]);
-    expect(filesystemRows).toEqual({ sections: [], sets: [] });
     expect(attempt.attemptId).toBeDefined();
   });
 });

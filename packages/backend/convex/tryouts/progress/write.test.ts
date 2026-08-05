@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/convex/test.helpers";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
-import { insertTryoutSet, TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import { makeTryoutSet, TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -35,12 +35,12 @@ async function expectProgressScoreMismatch(scenario: ProgressScoreMismatch) {
         now: TRYOUT_TEST_NOW,
         suffix: `tryout-progress-score-${scenario.status}`,
       });
-      const tryoutSetId = await insertTryoutSet(ctx);
+      const set = makeTryoutSet();
       const attemptId = await insertTryoutAttempt(ctx, {
         scoringStrategy: "raw",
         sectionSnapshots: [],
+        set,
         status: scenario.status,
-        tryoutSetId,
         userId: user.userId,
       });
       const attempt = await ctx.db.get(attemptId);
@@ -70,12 +70,12 @@ describe("tryouts/progress", () => {
         now: TRYOUT_TEST_NOW,
         suffix: "tryout-progress",
       });
-      const tryoutSetId = await insertTryoutSet(ctx);
+      const set = makeTryoutSet();
 
       const firstAttemptId = await insertTryoutAttempt(ctx, {
         scoringStrategy: "raw",
         sectionSnapshots: [],
-        tryoutSetId,
+        set,
         userId: user.userId,
       });
       const firstAttempt = await ctx.db.get(firstAttemptId);
@@ -104,8 +104,8 @@ describe("tryouts/progress", () => {
       const latestAttemptId = await insertTryoutAttempt(ctx, {
         scoringStrategy: "raw",
         sectionSnapshots: [],
+        set,
         status: "expired",
-        tryoutSetId,
         userId: user.userId,
       });
       await ctx.db.patch(latestAttemptId, { attemptNumber: 2 });

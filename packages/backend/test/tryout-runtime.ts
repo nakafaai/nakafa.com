@@ -3,6 +3,7 @@ import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
+import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
@@ -16,47 +17,18 @@ import {
   testTextHash,
 } from "@repo/backend/test/content-release";
 import {
-  type AlignedTryoutSectionFixture,
-  insertTryoutSectionSource,
-  makeAlignedTryoutSection,
+  makeSignedTryoutSection,
   makeSignedTryoutSource,
+  type SignedTryoutSectionFixture,
 } from "@repo/backend/test/tryout-section";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
 import {
-  insertTryoutSection,
-  insertTryoutSet,
+  makeTryoutSection,
+  makeTryoutSet,
   TRYOUT_SECTION_KEY,
   TRYOUT_SECTION_PATH,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
-import { ConvexError } from "convex/values";
-
-/** Reads the filesystem section used to derive a matching signed fixture. */
-async function readTryoutSection(
-  ctx: MutationCtx,
-  tryoutSectionId: Id<"tryoutSections">
-) {
-  const section = await ctx.db.get(tryoutSectionId);
-  if (!section) {
-    throw new ConvexError({
-      code: "TRYOUT_SECTION_NOT_FOUND",
-      message: "Expected the try-out section fixture.",
-    });
-  }
-  return section;
-}
-
-/** Reads the filesystem set used to derive a matching signed fixture. */
-async function readTryoutSet(ctx: MutationCtx, tryoutSetId: Id<"tryoutSets">) {
-  const set = await ctx.db.get(tryoutSetId);
-  if (!set) {
-    throw new ConvexError({
-      code: "TRYOUT_SET_NOT_FOUND",
-      message: "Expected the try-out set fixture.",
-    });
-  }
-  return set;
-}
 
 /** Returns the coherent terminal reason for one fixture status. */
 function getEndReason(
@@ -99,27 +71,19 @@ export async function seedTryoutContentAccessState(
     now: TRYOUT_TEST_NOW,
     suffix: args.suffix,
   });
-  const tryoutSetId = await insertTryoutSet(ctx);
-  const questionSource = await insertTryoutSectionSource(
-    ctx,
-    TRYOUT_SECTION_KEY
-  );
-  const tryoutSectionId = await insertTryoutSection(ctx, {
+  const set = makeTryoutSet();
+  const section = makeTryoutSection({
     publicPath: TRYOUT_SECTION_PATH,
-    questionSetId: questionSource.questionSetId,
-    questionSourcePath: questionSource.sourcePath,
-    tryoutSetId,
   });
   const attemptTerminal = args.attemptStatus !== "in-progress";
   const sectionTerminal = args.sectionStatus !== "in-progress";
   const fixtureLocale: ContentLocale = "id";
-  const signedSection = makeAlignedTryoutSection(
-    await readTryoutSection(ctx, tryoutSectionId)
-  );
-  const signedSource = makeSignedTryoutSource(
-    await readTryoutSet(ctx, tryoutSetId),
-    [signedSection]
-  );
+  const signedSection = makeSignedTryoutSection(section);
+  const signedSource = makeSignedTryoutSource(set, [signedSection]);
+  const signedPlacement = signedSection.signed.placements[0];
+  if (!signedPlacement) {
+    throw new Error("Expected one signed try-out placement fixture.");
+  }
   const snapshotId = await activateTryoutSnapshot(ctx, {
     catalog: [
       signedSource.snapshot.set.row,
@@ -154,11 +118,7 @@ export async function seedTryoutContentAccessState(
     scoringStrategy: "irt",
     sectionSnapshots: [
       tryoutSectionSnapshot({
-        order: 1,
-        publicPath: TRYOUT_SECTION_PATH,
-        sectionKey: TRYOUT_SECTION_KEY,
         signed: signedSection.signed,
-        sourcePath: signedSection.filesystem.questionSourcePath,
       }),
     ],
     startedAt: TRYOUT_TEST_NOW,
@@ -193,54 +153,49 @@ export async function seedTryoutContentAccessState(
     tryoutAttemptId: attemptId,
   });
 
-  const answerArtifactHash = testTextHash(`${args.suffix}:answer`);
-  const questionArtifactHash = testTextHash(`${args.suffix}:question`);
-  const sourcePath = `${questionSource.sourcePath}/question-1`;
-  const answerContentKey = `${sourcePath}/answer`;
-  const questionContentKey = `${sourcePath}/question`;
-  const contentHash = questionSource.contentHash;
+  const { row: placementRow, rowHash: placementRowHash } = signedPlacement;
   const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
-    answerArtifactHash,
-    answerContentKey,
-    choiceSnapshots: [],
-    contentHash,
-    placementIdentity: `${args.suffix}:placement`,
-    placementRowHash: testTextHash(`${args.suffix}:placement-row`),
-    questionArtifactHash,
-    questionContentKey,
-    questionOrder: 1,
-    rendererDomain: "snbt-math",
-    sectionIdentity: `${args.suffix}:section`,
-    sectionKey: TRYOUT_SECTION_KEY,
-    sourcePath,
-    sourceRevision: "2026",
-    title: "Technical question",
+    answerArtifactHash: placementRow.answerArtifactHash,
+    answerContentKey: placementRow.answerContentKey,
+    choiceSnapshots: [...placementRow.choices],
+    contentHash: placementRow.contentHash,
+    placementIdentity: tryoutPlacementIdentity(placementRow),
+    placementRowHash,
+    questionArtifactHash: placementRow.questionArtifactHash,
+    questionContentKey: placementRow.questionContentKey,
+    questionOrder: placementRow.questionOrder,
+    rendererDomain: placementRow.rendererDomain,
+    sectionIdentity: tryoutCatalogIdentity(signedSection.signed.section.row),
+    sectionKey: placementRow.sectionKey,
+    sourcePath: placementRow.questionSourcePath,
+    sourceRevision: placementRow.sourceRevision,
+    title: placementRow.title,
     tryoutAttemptId: attemptId,
   });
 
   const answer: TryoutAnswerSelector = {
-    artifactHash: answerArtifactHash,
-    contentHash,
-    contentKey: answerContentKey,
+    artifactHash: placementRow.answerArtifactHash,
+    contentHash: placementRow.contentHash,
+    contentKey: placementRow.answerContentKey,
     delivery: "entitled",
     locale: fixtureLocale,
-    questionOrder: 1,
+    questionOrder: placementRow.questionOrder,
     snapshotId,
     snapshotReleaseId: TEST_RELEASE_ID,
-    sourcePath,
-    sourceRevision: "2026",
+    sourcePath: placementRow.questionSourcePath,
+    sourceRevision: placementRow.sourceRevision,
   };
   const question: TryoutQuestionSelector = {
-    artifactHash: questionArtifactHash,
-    contentHash,
-    contentKey: questionContentKey,
+    artifactHash: placementRow.questionArtifactHash,
+    contentHash: placementRow.contentHash,
+    contentKey: placementRow.questionContentKey,
     delivery: "authenticated",
     locale: fixtureLocale,
-    questionOrder: 1,
+    questionOrder: placementRow.questionOrder,
     snapshotId,
     snapshotReleaseId: TEST_RELEASE_ID,
-    sourcePath,
-    sourceRevision: "2026",
+    sourcePath: placementRow.questionSourcePath,
+    sourceRevision: placementRow.sourceRevision,
   };
 
   return {
@@ -249,28 +204,25 @@ export async function seedTryoutContentAccessState(
     placementId,
     sectionAttemptId,
     signedContent: { answer, question },
-    tryoutSetId,
   };
 }
 
 /** Builds the immutable section shape stored on an attempt. */
 export function tryoutSectionSnapshot(args: {
-  order: number;
-  publicPath: string;
-  sectionKey: string;
-  sourcePath: string;
-  signed: AlignedTryoutSectionFixture["signed"];
+  signed: SignedTryoutSectionFixture["signed"];
 }) {
+  const { row, rowHash } = args.signed.section;
+
   return {
-    publicPath: args.publicPath,
-    questionCount: 1,
-    questionSourcePath: args.sourcePath,
-    sectionIdentity: tryoutCatalogIdentity(args.signed.section.row),
-    sectionKey: args.sectionKey,
-    sectionOrder: args.order,
-    sectionRowHash: args.signed.section.rowHash,
-    sourceRevision: "2026",
-    timeLimitSeconds: 1800,
+    publicPath: row.publicPath,
+    questionCount: row.questionCount,
+    questionSourcePath: row.questionSourcePath,
+    sectionIdentity: tryoutCatalogIdentity(row),
+    sectionKey: row.sectionKey,
+    sectionOrder: row.order,
+    sectionRowHash: rowHash,
+    sourceRevision: row.sourceRevision,
+    timeLimitSeconds: row.timeLimitSeconds,
   };
 }
 
@@ -282,23 +234,16 @@ export async function insertTryoutAttempt(
     scaleVersionId?: Id<"irtScaleVersions">;
     scoringStrategy?: Doc<"tryoutAttempts">["scoringStrategy"];
     sectionSnapshots: Doc<"tryoutAttempts">["sectionSnapshots"];
-    setPublicPath?: string;
+    set: TryoutSet;
+    snapshotId?: Doc<"tryoutAttempts">["tryoutSnapshotId"];
+    snapshotReleaseId?: Doc<"tryoutAttempts">["snapshotReleaseId"];
     status?: Doc<"tryoutAttempts">["status"];
-    tryoutSetId: Id<"tryoutSets">;
     userId: Id<"users">;
   }
 ) {
   const scoringStrategy = args.scoringStrategy ?? "irt";
   const accessEndsAt = args.expiresAt ?? TRYOUT_TEST_NOW + 86_400_000;
-  const set = await readTryoutSet(ctx, args.tryoutSetId);
-  const setIdentity = tryoutCatalogIdentity({
-    countryKey: set.countryKey,
-    examKey: set.examKey,
-    kind: "set",
-    locale: set.locale,
-    setKey: set.setKey,
-    trackKey: set.trackKey,
-  });
+  const setIdentity = tryoutCatalogIdentity(args.set);
 
   return await ctx.db.insert("tryoutAttempts", {
     accessEndsAt,
@@ -314,7 +259,7 @@ export async function insertTryoutAttempt(
     scoreStatus: scoringStrategy === "irt" ? "provisional" : "official",
     scoringStrategy,
     sectionSnapshots: args.sectionSnapshots,
-    setPublicPath: args.setPublicPath ?? set.publicPath,
+    setPublicPath: args.set.publicPath,
     startedAt: TRYOUT_TEST_NOW - 20_000,
     status: args.status ?? "in-progress",
     totalCorrect: 0,
@@ -323,14 +268,15 @@ export async function insertTryoutAttempt(
       0
     ),
     userId: args.userId,
-    countryKey: set.countryKey,
-    examKey: set.examKey,
-    locale: set.locale,
+    countryKey: args.set.countryKey,
+    examKey: args.set.examKey,
+    locale: args.set.locale,
     setIdentity,
-    setKey: set.setKey,
-    snapshotReleaseId: TEST_RELEASE_ID,
-    trackKey: set.trackKey,
-    tryoutSnapshotId: testTextHash("tryout-runtime-snapshot"),
+    setKey: args.set.setKey,
+    snapshotReleaseId: args.snapshotReleaseId ?? TEST_RELEASE_ID,
+    trackKey: args.set.trackKey,
+    tryoutSnapshotId:
+      args.snapshotId ?? testTextHash("tryout-runtime-snapshot"),
   });
 }
 
@@ -374,7 +320,7 @@ export async function insertTryoutSectionAttempt(
 export async function insertIrtScaleItem(
   ctx: MutationCtx,
   args: {
-    placement: AlignedTryoutSectionFixture["signed"]["placements"][number];
+    placement: SignedTryoutSectionFixture["signed"]["placements"][number];
     scaleVersionId: Id<"irtScaleVersions">;
   }
 ) {

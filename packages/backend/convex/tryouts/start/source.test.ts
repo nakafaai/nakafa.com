@@ -53,12 +53,10 @@ describe("tryouts/start/source", () => {
         now: NOW,
         suffix: "tryout-renamed-set",
       });
-      const fixture = await seedTryoutStartSet(ctx, {
+      await seedTryoutStartSet(ctx, {
         userId: user.userId,
         visibility: "visible",
       });
-      await ctx.db.delete(fixture.tryoutSectionId);
-      await ctx.db.delete(fixture.tryoutSetId);
       return user;
     });
     const authed = t.withIdentity({
