@@ -3,13 +3,10 @@ import type { Locale } from "next-intl";
 import { readPublishedArticleBucket } from "@/lib/content/article/discovery";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import { readPublishedMaterialBucket } from "@/lib/content/material/discovery";
-import { getRuntimeContentRouteArtifactPage } from "@/lib/content/runtime/routes";
 import type { LlmsSection } from "@/lib/llms/constants";
-import {
-  buildPublishedContentLlmsEntries,
-  buildRuntimeContentLlmsEntries,
-} from "@/lib/llms/entries";
+import { buildPublishedContentLlmsEntries } from "@/lib/llms/entries";
 import { readMaterialLlmsInventory } from "@/lib/llms/material-pages";
+import { readQuranLlmsPageEntries } from "@/lib/llms/quran";
 
 /**
  * Builds entries for one materialized route-catalog page without global reads.
@@ -64,17 +61,5 @@ export const getContentPageLlmsEntries = Effect.fn(
     });
   }
 
-  const artifactPage = yield* getRuntimeContentRouteArtifactPage({
-    locale,
-    page,
-    section,
-  });
-  if (!artifactPage) {
-    return null;
-  }
-  return buildRuntimeContentLlmsEntries({
-    locale,
-    rows: artifactPage.routes,
-    section,
-  });
+  return yield* readQuranLlmsPageEntries(locale, page);
 });

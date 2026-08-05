@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getQuranLlmsText } from "@/lib/llms/quran";
+import { BASE_URL } from "@/lib/llms/constants";
+import {
+  getQuranLlmsText,
+  readQuranLlmsInventory,
+  readQuranLlmsPageEntries,
+} from "@/lib/llms/quran";
 
 const publicationMocks = vi.hoisted(() => ({
   readPublishedQuranCatalog: vi.fn(),
@@ -69,6 +74,54 @@ describe("quran llms text", () => {
     expect(secondSurahText).toContain(
       "page-level markdown is bounded to verses 1-80"
     );
+  });
+
+  it("builds the bounded Quran index inventory from signed metadata", async () => {
+    await expect(Effect.runPromise(readQuranLlmsInventory())).resolves.toEqual({
+      pageCount: 1,
+      routeCount: 2,
+    });
+    await expect(
+      Effect.runPromise(readQuranLlmsPageEntries("id", 0))
+    ).resolves.toEqual([
+      {
+        description: "The Opening",
+        href: `${BASE_URL}/id/quran/1.md`,
+        route: "/quran/1",
+        section: "quran",
+        segments: ["quran", "1"],
+        title: "Al-Fatihah",
+      },
+      {
+        description: "The Cow",
+        href: `${BASE_URL}/id/quran/2.md`,
+        route: "/quran/2",
+        section: "quran",
+        segments: ["quran", "2"],
+        title: "Al-Baqarah",
+      },
+    ]);
+  });
+
+  it("rejects nonexistent signed Quran partitions", async () => {
+    await expect(
+      Effect.runPromise(readQuranLlmsPageEntries("en", 1))
+    ).resolves.toBeNull();
+
+    publicationMocks.readPublishedQuranCatalog.mockReturnValueOnce(
+      Effect.succeed({ surahs: [] })
+    );
+    await expect(Effect.runPromise(readQuranLlmsInventory())).resolves.toEqual({
+      pageCount: 0,
+      routeCount: 0,
+    });
+
+    publicationMocks.readPublishedQuranCatalog.mockReturnValueOnce(
+      Effect.succeed({ surahs: [] })
+    );
+    await expect(
+      Effect.runPromise(readQuranLlmsPageEntries("en", 0))
+    ).resolves.toBeNull();
   });
 });
 

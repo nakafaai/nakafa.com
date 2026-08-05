@@ -1,8 +1,6 @@
-import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
-import { getRuntimeContentRouteCounts } from "@/lib/content/runtime/routes";
 import {
   BASE_URL,
   type LlmsSection,
@@ -15,12 +13,12 @@ import {
   renderLlmsIndexText,
 } from "@/lib/llms/index-text";
 import { readMaterialLlmsInventory } from "@/lib/llms/material-pages";
+import { readQuranLlmsInventory } from "@/lib/llms/quran";
 
 type ContentSection = Exclude<LlmsSection, "site">;
 
-/** One bounded section inventory and the runtime that owns its rows. */
+/** One bounded signed section inventory. */
 export interface LlmsSectionPages {
-  readonly owner: "published" | "source";
   readonly pageCount: number;
   readonly routeCount: number;
 }
@@ -31,7 +29,6 @@ export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(
     if (section === "articles") {
       const published = yield* readPublishedArticleBuckets(locale);
       return {
-        owner: "published",
         pageCount: published.buckets.length,
         routeCount: published.articleCount,
       } satisfies LlmsSectionPages;
@@ -39,20 +36,12 @@ export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(
     if (section === "material") {
       const inventory = yield* readMaterialLlmsInventory(locale);
       return {
-        owner: "published",
         pageCount: inventory.pageCount,
         routeCount: inventory.routeCount,
       } satisfies LlmsSectionPages;
     }
 
-    const counts = yield* getRuntimeContentRouteCounts({ locale });
-    const routeCount =
-      counts.find((count) => count.section === section)?.count ?? 0;
-    return {
-      owner: "source",
-      pageCount: Math.ceil(routeCount / CONTENT_ROUTE_ARTIFACT_PAGE_SIZE),
-      routeCount,
-    } satisfies LlmsSectionPages;
+    return yield* readQuranLlmsInventory();
   }
 );
 
@@ -63,7 +52,7 @@ export function buildLlmsSectionPageMapText(
     readonly section: ContentSection;
   }
 ) {
-  const { locale, owner, pageCount, section } = input;
+  const { locale, pageCount, section } = input;
   const localeLabel = getLocaleLabel(locale);
   const sectionLabel = SECTION_LABELS[section];
   const lines = buildSectionPageMapLines({
@@ -72,13 +61,9 @@ export function buildLlmsSectionPageMapText(
     section,
     sectionLabel,
   });
-  const partitionLabel =
-    owner === "published"
-      ? "bounded published partitions"
-      : `bounded catalog pages of at most ${CONTENT_ROUTE_ARTIFACT_PAGE_SIZE} routes`;
   return renderLlmsIndexText({
     lines,
-    summary: `For AI agents: ${input.routeCount} ${localeLabel} ${sectionLabel.toLowerCase()} routes are split across ${pageCount} ${partitionLabel}. Follow the page pattern, then its page-level \`.md\` links.`,
+    summary: `For AI agents: ${input.routeCount} ${localeLabel} ${sectionLabel.toLowerCase()} routes are split across ${pageCount} bounded published partitions. Follow the page pattern, then its page-level \`.md\` links.`,
     title: `Nakafa ${localeLabel} ${sectionLabel} Pages`,
   });
 }

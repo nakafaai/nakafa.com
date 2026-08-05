@@ -1,32 +1,34 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Either, Schema } from "effect";
-import type { MaterialProjectionIdentity } from "@/lib/content/material/decode";
-import { makeMaterialProjectionError } from "@/lib/content/material/decode";
 import {
   type ActiveContentReleaseId,
   fetchActiveContentIdentity,
   readActiveContentIdentity,
 } from "@/lib/content/published/active";
-import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
+import {
+  PublishedProjectionError,
+  type PublishedProjectionIdentity,
+  PublishedReleaseMismatchError,
+} from "@/lib/content/published/errors";
 
-/** Active material release identity shared across one multi-read request. */
-export type MaterialReleasePin = ActiveContentReleaseId | null;
+/** Active signed publication identity shared across one multi-read request. */
+export type ContentReleasePin = ActiveContentReleaseId | null;
 
-type MaterialReleasePinError =
-  | ReturnType<typeof makeMaterialProjectionError>
+type ContentReleasePinError =
+  | PublishedProjectionError
   | PublishedReleaseMismatchError;
 
 /** Decodes one release pin without starting an Effect runtime. */
 function decodeReleasePin(
   actual: unknown,
-  expected: MaterialReleasePin | undefined,
-  identity: MaterialProjectionIdentity
-): Either.Either<MaterialReleasePin, MaterialReleasePinError> {
+  expected: ContentReleasePin | undefined,
+  identity: PublishedProjectionIdentity
+): Either.Either<ContentReleasePin, ContentReleasePinError> {
   const decoded = Schema.decodeUnknownEither(Schema.NullOr(ReleaseIdSchema))(
     actual
   );
   if (Either.isLeft(decoded)) {
-    return Either.left(makeMaterialProjectionError(identity));
+    return Either.left(new PublishedProjectionError(identity));
   }
   if (expected !== undefined && decoded.right !== expected) {
     return Either.left(
@@ -39,13 +41,13 @@ function decodeReleasePin(
   return Either.right(decoded.right);
 }
 
-/** Decodes and verifies the active release returned by one material read. */
-export const decodeMaterialReleasePin = Effect.fn(
-  "NakafaMaterial.decodeReleasePin"
+/** Decodes and verifies the active release returned by one signed read. */
+export const decodeContentReleasePin = Effect.fn(
+  "NakafaContent.decodeReleasePin"
 )(function* (
   actual: unknown,
-  expected: MaterialReleasePin | undefined,
-  identity: MaterialProjectionIdentity
+  expected: ContentReleasePin | undefined,
+  identity: PublishedProjectionIdentity
 ) {
   const decoded = decodeReleasePin(actual, expected, identity);
   if (Either.isLeft(decoded)) {
@@ -54,15 +56,15 @@ export const decodeMaterialReleasePin = Effect.fn(
   return decoded.right;
 });
 
-/** Rechecks one material read against the latest active publication identity. */
-export const verifyMaterialReleasePin = Effect.fn(
-  "NakafaMaterial.verifyReleasePin"
+/** Rechecks one multi-read operation against the active publication identity. */
+export const verifyContentReleasePin = Effect.fn(
+  "NakafaContent.verifyReleasePin"
 )(function* (
-  expected: MaterialReleasePin,
-  identity: MaterialProjectionIdentity
+  expected: ContentReleasePin,
+  identity: PublishedProjectionIdentity
 ) {
   const active = yield* readActiveContentIdentity();
-  return yield* decodeMaterialReleasePin(
+  return yield* decodeContentReleasePin(
     active?.releaseId ?? null,
     expected,
     identity
@@ -70,16 +72,16 @@ export const verifyMaterialReleasePin = Effect.fn(
 });
 
 /**
- * Rechecks one static material read without starting an Effect fiber.
+ * Rechecks one static signed read without starting an Effect fiber.
  *
  * The direct Promise is the framework boundary for static RSC prerender. Domain
  * validation still uses the same pure decoder as the Effect-native operation.
  *
  * @see https://nextjs.org/docs/messages/next-prerender-current-time
  */
-export function verifyStaticMaterialReleasePin(
-  expected: MaterialReleasePin,
-  identity: MaterialProjectionIdentity
+export function verifyStaticContentReleasePin(
+  expected: ContentReleasePin,
+  identity: PublishedProjectionIdentity
 ) {
   return fetchActiveContentIdentity().then((active) => {
     const decoded = decodeReleasePin(

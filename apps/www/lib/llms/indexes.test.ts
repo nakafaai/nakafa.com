@@ -12,9 +12,9 @@ const mockCacheLife = vi.hoisted(() => vi.fn());
 const mockCacheTag = vi.hoisted(() => vi.fn());
 const mockGetContentListingLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetContentPageLlmsEntries = vi.hoisted(() => vi.fn());
-const mockGetRuntimeContentRouteCounts = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialBuckets = vi.hoisted(() => vi.fn());
+const mockReadQuranInventory = vi.hoisted(() => vi.fn());
 const mockGetSiteLlmsEntries = vi.hoisted(() => vi.fn());
 
 const articleEntry: LlmsEntry = {
@@ -62,15 +62,14 @@ vi.mock("@/lib/llms/content-listing", () => ({
   getContentListingLlmsEntries: mockGetContentListingLlmsEntries,
 }));
 
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentRouteCounts: mockGetRuntimeContentRouteCounts,
-}));
-
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: mockReadPublishedArticleBuckets,
 }));
 vi.mock("@/lib/content/material/sitemap", () => ({
   readPublishedMaterialBuckets: mockReadPublishedMaterialBuckets,
+}));
+vi.mock("@/lib/llms/quran", () => ({
+  readQuranLlmsInventory: mockReadQuranInventory,
 }));
 
 beforeEach(() => {
@@ -78,9 +77,9 @@ beforeEach(() => {
   mockCacheTag.mockClear();
   mockGetContentListingLlmsEntries.mockReset();
   mockGetContentPageLlmsEntries.mockReset();
-  mockGetRuntimeContentRouteCounts.mockReset();
   mockReadPublishedArticleBuckets.mockReset();
   mockReadPublishedMaterialBuckets.mockReset();
+  mockReadQuranInventory.mockReset();
   mockGetSiteLlmsEntries.mockReset();
   mockGetContentListingLlmsEntries.mockReturnValue(Effect.succeed(null));
   mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([articleEntry]));
@@ -98,12 +97,8 @@ beforeEach(() => {
       materialCount: 100,
     })
   );
-  mockGetRuntimeContentRouteCounts.mockReturnValue(
-    Effect.succeed([
-      { count: 250, locale: "en", section: "articles", syncedAt: 1 },
-      { count: 100, locale: "en", section: "material", syncedAt: 1 },
-      { count: 114, locale: "en", section: "quran", syncedAt: 1 },
-    ])
+  mockReadQuranInventory.mockReturnValue(
+    Effect.succeed({ pageCount: 1, routeCount: 114 })
   );
 });
 

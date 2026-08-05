@@ -22,7 +22,7 @@ export class ContentRuntimeConfigurationError extends Schema.TaggedError<Content
   }
 ) {}
 
-/** A verified projection cannot satisfy Nakafa's current material route shell. */
+/** A verified projection cannot satisfy its requested public surface. */
 export class PublishedProjectionError extends Schema.TaggedError<PublishedProjectionError>()(
   "PublishedProjectionError",
   {
@@ -30,6 +30,12 @@ export class PublishedProjectionError extends Schema.TaggedError<PublishedProjec
     publicPath: Schema.String,
   }
 ) {}
+
+/** Public route identity attached to a malformed signed projection. */
+export type PublishedProjectionIdentity = Pick<
+  PublishedProjectionError,
+  "locale" | "publicPath"
+>;
 
 /** Two release-bound reads observed different active publication identities. */
 export class PublishedReleaseMismatchError extends Schema.TaggedError<PublishedReleaseMismatchError>()(

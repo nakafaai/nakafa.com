@@ -10,11 +10,11 @@ import {
   previewProjection,
 } from "@/test/content-preview";
 
-const mockGetArtifactPage = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBucket = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialBucket = vi.hoisted(() => vi.fn());
 const mockReadMaterialInventory = vi.hoisted(() => vi.fn());
+const mockReadQuranPageEntries = vi.hoisted(() => vi.fn());
 const activeMaterialReleaseId = "release-material";
 
 vi.mock("@/lib/content/article/discovery", () => ({
@@ -30,40 +30,9 @@ vi.mock("@/lib/content/material/discovery", () => ({
 vi.mock("@/lib/llms/material-pages", () => ({
   readMaterialLlmsInventory: mockReadMaterialInventory,
 }));
-
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentRouteArtifactPage: mockGetArtifactPage,
+vi.mock("@/lib/llms/quran", () => ({
+  readQuranLlmsPageEntries: mockReadQuranPageEntries,
 }));
-
-const routeRows = [
-  {
-    markdown: false,
-    route: "quran/private-index",
-    section: "quran",
-  },
-  {
-    description:
-      "Understand green chemistry as the design of chemical products and processes that reduce hazards, waste, and energy use from the start.",
-    markdown: true,
-    route: "subjects/chemistry/green-chemistry/definition",
-    section: "material",
-    title: "Definition of Green Chemistry",
-  },
-  {
-    description: "Quran index",
-    markdown: true,
-    route: "quran/1",
-    section: "quran",
-    title: "Al-Quran",
-  },
-  {
-    description: "Quran second surah",
-    markdown: true,
-    route: "quran/2",
-    section: "quran",
-    title: "Al-Baqarah",
-  },
-];
 
 const publishedArticles = [
   {
@@ -105,11 +74,11 @@ function makeMaterialSummary(projection: MaterialLessonProjection) {
 }
 
 beforeEach(() => {
-  mockGetArtifactPage.mockReset();
   mockReadPublishedArticleBucket.mockReset();
   mockReadPublishedArticleBuckets.mockReset();
   mockReadPublishedMaterialBucket.mockReset();
   mockReadMaterialInventory.mockReset();
+  mockReadQuranPageEntries.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({ articleCount: 2, buckets: ["abc"] })
   );
@@ -130,20 +99,30 @@ beforeEach(() => {
       routeCount: 1,
     })
   );
-  mockGetArtifactPage.mockImplementation(({ locale, page, section }) =>
-    Effect.succeed({
-      locale,
-      page,
-      routeCount: routeRows.length,
-      routes: routeRows.filter((route) => route.section === section),
-      section,
-      syncedAt: 1,
-    })
+  mockReadQuranPageEntries.mockReturnValue(
+    Effect.succeed([
+      {
+        description: "The Opening",
+        href: `${BASE_URL}/en/quran/1.md`,
+        route: "/quran/1",
+        section: "quran",
+        segments: ["quran", "1"],
+        title: "Al-Fatihah",
+      },
+      {
+        description: "The Cow",
+        href: `${BASE_URL}/en/quran/2.md`,
+        route: "/quran/2",
+        section: "quran",
+        segments: ["quran", "2"],
+        title: "Al-Baqarah",
+      },
+    ])
   );
 });
 
 describe("llms content entries", () => {
-  it("builds sorted page entries from markdown route rows", async () => {
+  it("builds sorted page entries from signed inventories", async () => {
     const entryGroups = await Effect.runPromise(
       Effect.all([
         getContentPageLlmsEntries({
@@ -182,11 +161,7 @@ describe("llms content entries", () => {
       "/quran/1",
       "/quran/2",
     ]);
-    expect(mockGetArtifactPage).toHaveBeenCalledWith({
-      locale: "en",
-      page: 0,
-      section: "quran",
-    });
+    expect(mockReadQuranPageEntries).toHaveBeenCalledWith("en", 0);
   });
 
   it("uses one exact signed article partition", async () => {
@@ -230,7 +205,7 @@ describe("llms content entries", () => {
           "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
       },
     ]);
-    expect(mockGetArtifactPage).not.toHaveBeenCalled();
+    expect(mockReadQuranPageEntries).not.toHaveBeenCalled();
   });
 
   it("uses published material partitions after ownership activates", async () => {
@@ -263,7 +238,7 @@ describe("llms content entries", () => {
       "/subjects/mathematics/function-composition-inverse-function/function-concept",
       "/subjects/mathematics/function-composition-inverse-function/injective-surjective-bijective-function",
     ]);
-    expect(mockGetArtifactPage).not.toHaveBeenCalled();
+    expect(mockReadQuranPageEntries).not.toHaveBeenCalled();
     expect(mockReadPublishedMaterialBucket).toHaveBeenCalledWith(
       "en",
       "abc",
@@ -271,17 +246,8 @@ describe("llms content entries", () => {
     );
   });
 
-  it("distinguishes empty runtime pages from missing pages", async () => {
-    mockGetArtifactPage.mockReturnValueOnce(
-      Effect.succeed({
-        locale: "en",
-        page: 99,
-        routeCount: 0,
-        routes: [],
-        section: "quran",
-        syncedAt: 1,
-      })
-    );
+  it("distinguishes an empty signed page from a missing page", async () => {
+    mockReadQuranPageEntries.mockReturnValueOnce(Effect.succeed([]));
 
     await expect(
       Effect.runPromise(
@@ -293,7 +259,7 @@ describe("llms content entries", () => {
       )
     ).resolves.toEqual([]);
 
-    mockGetArtifactPage.mockReturnValueOnce(Effect.succeed(null));
+    mockReadQuranPageEntries.mockReturnValueOnce(Effect.succeed(null));
 
     await expect(
       Effect.runPromise(
@@ -304,8 +270,6 @@ describe("llms content entries", () => {
         })
       )
     ).resolves.toBeNull();
-
-    mockGetArtifactPage.mockReturnValueOnce(Effect.succeed(null));
 
     await expect(
       Effect.runPromise(
@@ -361,7 +325,7 @@ describe("llms content entries", () => {
         })
       )
     ).resolves.toEqual([]);
-    expect(mockGetArtifactPage).not.toHaveBeenCalled();
+    expect(mockReadQuranPageEntries).not.toHaveBeenCalled();
     mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
         activeReleaseId: activeMaterialReleaseId,

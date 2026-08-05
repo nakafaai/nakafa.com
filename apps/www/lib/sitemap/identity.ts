@@ -1,13 +1,6 @@
-import type { api } from "@repo/backend/convex/_generated/api";
 import { isProjectionBucket } from "@repo/backend/convex/contentRelease/bucket";
 import { routing } from "@repo/internationalization/src/routing";
-import type { FunctionArgs } from "convex/server";
 import { hasLocale, type Locale } from "next-intl";
-
-/** Runtime content sections materialized by the source-backed route projection. */
-export type RuntimeContentSection = FunctionArgs<
-  typeof api.contents.queries.runtime.listContentRoutesByPrefix
->["section"];
 
 /** One canonical sitemap XML page identity. */
 export type SitemapPage =
@@ -17,13 +10,6 @@ export type SitemapPage =
       id: string;
       kind: "article";
       locale: Locale;
-    }
-  | {
-      id: string;
-      kind: "content";
-      locale: Locale;
-      page: number;
-      section: RuntimeContentSection;
     }
   | {
       bucket: string;
@@ -37,12 +23,7 @@ export type SitemapPage =
       kind: "program";
       locale: Locale;
     }
-  | {
-      id: string;
-      kind: "public";
-      locale: Locale;
-      page: number;
-    }
+  | { id: string; kind: "quran"; locale: Locale }
   | {
       id: string;
       kind: "tryout";
@@ -50,28 +31,12 @@ export type SitemapPage =
       page: number;
     };
 
-const contentSections: readonly RuntimeContentSection[] = [
-  "articles",
-  "material",
-  "tryout",
-  "quran",
-];
-
 /** Stable identity for the sitemap containing application-level routes. */
 export const SITEMAP_BASE_ID = "base";
 
 /** Formats one deterministic published-article sitemap page id. */
 export function formatArticlePage(bucket: string, locale: Locale) {
   return `article_${locale}_${bucket}`;
-}
-
-/** Formats one materialized content route sitemap page id. */
-export function formatContentPage(
-  locale: Locale,
-  section: RuntimeContentSection,
-  page: number
-) {
-  return `content_${locale}_${section}_${page}`;
 }
 
 /** Formats one deterministic published-material sitemap page id. */
@@ -84,9 +49,9 @@ export function formatProgramPage(bucket: string, locale: Locale) {
   return `program_${locale}_${bucket}`;
 }
 
-/** Formats one bounded public-context sitemap page id. */
-export function formatPublicPage(locale: Locale, page: number) {
-  return `public_${locale}_${page}`;
+/** Formats the bounded signed Quran sitemap page id. */
+export function formatQuranPage(locale: Locale) {
+  return `quran_${locale}`;
 }
 
 /** Formats one bounded signed try-out sitemap page id. */
@@ -107,7 +72,11 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
     return null;
   }
 
-  if (prefix === "public" || prefix === "tryout") {
+  if (prefix === "quran") {
+    return segments.length === 2 ? { id, kind: "quran", locale } : null;
+  }
+
+  if (prefix === "tryout") {
     if (segments.length !== 3) {
       return null;
     }
@@ -140,23 +109,7 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
     return { bucket, id, kind: "program", locale };
   }
 
-  const section = segments[2];
-  if (
-    prefix !== "content" ||
-    segments.length !== 4 ||
-    !isRuntimeContentSection(section)
-  ) {
-    return null;
-  }
-  const page = parsePageNumber(segments[3]);
-  return page === null ? null : { id, kind: "content", locale, page, section };
-}
-
-/** Checks whether one page targets graph-backed content rows. */
-export function isContentSitemapPage(
-  page: SitemapPage
-): page is Extract<SitemapPage, { kind: "content" }> {
-  return "kind" in page && page.kind === "content";
+  return null;
 }
 
 /** Checks whether one page targets published article rows. */
@@ -180,11 +133,11 @@ export function isProgramSitemapPage(
   return "kind" in page && page.kind === "program";
 }
 
-/** Checks whether one page targets public route rows. */
-export function isPublicSitemapPage(
+/** Checks whether one page targets the signed Quran catalog. */
+export function isQuranSitemapPage(
   page: SitemapPage
-): page is Extract<SitemapPage, { kind: "public" }> {
-  return "kind" in page && page.kind === "public";
+): page is Extract<SitemapPage, { kind: "quran" }> {
+  return "kind" in page && page.kind === "quran";
 }
 
 /** Checks whether one page targets signed try-out routes. */
@@ -204,11 +157,4 @@ function parsePageNumber(segment: string | undefined) {
     return null;
   }
   return page;
-}
-
-/** Checks whether one raw route segment names a content section. */
-function isRuntimeContentSection(
-  section: string | undefined
-): section is RuntimeContentSection {
-  return contentSections.some((candidate) => candidate === section);
 }

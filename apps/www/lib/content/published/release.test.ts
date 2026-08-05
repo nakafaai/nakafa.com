@@ -3,22 +3,22 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { MaterialProjectionIdentity } from "@/lib/content/material/decode";
+import type { PublishedProjectionIdentity } from "@/lib/content/published/errors";
 import {
-  decodeMaterialReleasePin,
-  verifyMaterialReleasePin,
-  verifyStaticMaterialReleasePin,
-} from "@/lib/content/material/release";
+  decodeContentReleasePin,
+  verifyContentReleasePin,
+  verifyStaticContentReleasePin,
+} from "@/lib/content/published/release";
 
 const fetchActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const readActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-active");
 const nextReleaseId = ReleaseIdSchema.make("release-next");
-const identity: MaterialProjectionIdentity = {
+const identity = {
   locale: "en",
   publicPath:
     "subjects/mathematics/function-composition-inverse-function/function-concept",
-};
+} satisfies PublishedProjectionIdentity;
 
 vi.mock("@/lib/content/published/active", () => ({
   fetchActiveContentIdentity: fetchActiveContentIdentityMock,
@@ -30,20 +30,20 @@ beforeEach(() => {
   readActiveContentIdentityMock.mockReset();
 });
 
-describe("material release pin", () => {
+describe("content release pin", () => {
   it.each([
     ["active release", activeReleaseId],
     ["no active release", null],
   ])("decodes %s", async (_label, actual) => {
     await expect(
-      Effect.runPromise(decodeMaterialReleasePin(actual, undefined, identity))
+      Effect.runPromise(decodeContentReleasePin(actual, undefined, identity))
     ).resolves.toBe(actual);
   });
 
   it("maps malformed release data to the material projection failure", async () => {
     await expect(
       Effect.runPromise(
-        decodeMaterialReleasePin("invalid release", undefined, identity).pipe(
+        decodeContentReleasePin("invalid release", undefined, identity).pipe(
           Effect.flip
         )
       )
@@ -56,7 +56,7 @@ describe("material release pin", () => {
   it("rejects a changed active release", async () => {
     await expect(
       Effect.runPromise(
-        decodeMaterialReleasePin(nextReleaseId, activeReleaseId, identity).pipe(
+        decodeContentReleasePin(nextReleaseId, activeReleaseId, identity).pipe(
           Effect.flip
         )
       )
@@ -77,7 +77,7 @@ describe("material release pin", () => {
     );
 
     await expect(
-      Effect.runPromise(verifyMaterialReleasePin(activeReleaseId, identity))
+      Effect.runPromise(verifyContentReleasePin(activeReleaseId, identity))
     ).resolves.toBe(activeReleaseId);
     expect(readActiveContentIdentityMock).toHaveBeenCalledOnce();
   });
@@ -86,7 +86,7 @@ describe("material release pin", () => {
     readActiveContentIdentityMock.mockReturnValueOnce(Effect.succeed(null));
 
     await expect(
-      Effect.runPromise(verifyMaterialReleasePin(null, identity))
+      Effect.runPromise(verifyContentReleasePin(null, identity))
     ).resolves.toBeNull();
   });
 
@@ -98,7 +98,7 @@ describe("material release pin", () => {
     });
 
     await expect(
-      verifyStaticMaterialReleasePin(activeReleaseId, identity)
+      verifyStaticContentReleasePin(activeReleaseId, identity)
     ).resolves.toBe(activeReleaseId);
     expect(fetchActiveContentIdentityMock).toHaveBeenCalledOnce();
   });
@@ -107,7 +107,7 @@ describe("material release pin", () => {
     fetchActiveContentIdentityMock.mockResolvedValueOnce(null);
 
     await expect(
-      verifyStaticMaterialReleasePin(null, identity)
+      verifyStaticContentReleasePin(null, identity)
     ).resolves.toBeNull();
   });
 
@@ -119,7 +119,7 @@ describe("material release pin", () => {
     });
 
     await expect(
-      verifyStaticMaterialReleasePin(activeReleaseId, identity)
+      verifyStaticContentReleasePin(activeReleaseId, identity)
     ).rejects.toMatchObject({
       _tag: "PublishedReleaseMismatchError",
       actualReleaseId: nextReleaseId,

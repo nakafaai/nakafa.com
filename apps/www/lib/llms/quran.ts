@@ -6,10 +6,42 @@ import {
   readPublishedQuranPage,
 } from "@/lib/content/quran/publication";
 import { BASE_URL } from "@/lib/llms/constants";
+import { buildPublishedContentLlmsEntries } from "@/lib/llms/entries";
 import { buildHeader } from "@/lib/llms/format";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const QURAN_PAGE_MARKDOWN_VERSE_LIMIT = 80;
+
+/** Reads the complete bounded signed inventory used by Quran indexes. */
+export const readQuranLlmsInventory = Effect.fn("www.llms.quran.inventory")(
+  function* () {
+    const { surahs } = yield* readPublishedQuranCatalog();
+    return {
+      pageCount: surahs.length === 0 ? 0 : 1,
+      routeCount: surahs.length,
+    };
+  }
+);
+
+/** Builds the one bounded page of signed Quran links for a locale. */
+export const readQuranLlmsPageEntries = Effect.fn("www.llms.quran.pageEntries")(
+  function* (locale: Locale, page: number) {
+    const { surahs } = yield* readPublishedQuranCatalog();
+    if (page !== 0 || surahs.length === 0) {
+      return null;
+    }
+
+    return buildPublishedContentLlmsEntries({
+      locale,
+      rows: surahs.map((surah) => ({
+        description: surah.name.translation,
+        publicPath: `quran/${surah.number}`,
+        title: getQuranSurahName(surah.name),
+      })),
+      section: "quran",
+    });
+  }
+);
 
 /** Builds markdown for the Quran list or one surah page. */
 export const getQuranLlmsText = Effect.fn("www.llms.quran.text")(function* ({

@@ -1,21 +1,9 @@
 // @vitest-environment node
 
-import type { api } from "@repo/backend/convex/_generated/api";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
-import type { SourceRegistryRoot } from "@repo/contents/_types/graph/schema";
-import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
 
-type RuntimeContentRoute = NonNullable<
-  FunctionReturnType<typeof api.contents.queries.runtime.getContentSitemapPage>
->["routes"][number];
-
-const runtimeMocks = vi.hoisted(() => ({
-  getRuntimeContentSitemapPage: vi.fn(),
-  getRuntimePublicSitemapPage: vi.fn(),
-}));
 const articleMocks = vi.hoisted(() => ({
   readPublishedArticleSitemap: vi.fn(),
 }));
@@ -23,8 +11,10 @@ const materialMocks = vi.hoisted(() => ({
   readPublishedMaterialSitemap: vi.fn(),
 }));
 const programMocks = vi.hoisted(() => ({
-  readPublishedProgramBuckets: vi.fn(),
   readPublishedProgramSitemap: vi.fn(),
+}));
+const quranMocks = vi.hoisted(() => ({
+  readPublishedQuranCatalog: vi.fn(),
 }));
 const tryoutMocks = vi.hoisted(() => ({
   readPublishedTryoutSitemap: vi.fn(),
@@ -35,12 +25,8 @@ vi.mock("@/lib/content/article/sitemap", () => ({
 }));
 vi.mock("@/lib/content/material/sitemap", () => materialMocks);
 vi.mock("@/lib/content/program/sitemap", () => programMocks);
+vi.mock("@/lib/content/quran/publication", () => quranMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
-
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentSitemapPage: runtimeMocks.getRuntimeContentSitemapPage,
-  getRuntimePublicSitemapPage: runtimeMocks.getRuntimePublicSitemapPage,
-}));
 
 beforeEach(() => {
   articleMocks.readPublishedArticleSitemap.mockReset();
@@ -51,31 +37,15 @@ beforeEach(() => {
   materialMocks.readPublishedMaterialSitemap.mockReturnValue(
     Effect.succeed(null)
   );
-  programMocks.readPublishedProgramBuckets.mockReset();
-  programMocks.readPublishedProgramBuckets.mockReturnValue(
-    Effect.succeed({ buckets: [], managed: false })
-  );
   programMocks.readPublishedProgramSitemap.mockReset();
   programMocks.readPublishedProgramSitemap.mockReturnValue(
     Effect.succeed(null)
   );
   tryoutMocks.readPublishedTryoutSitemap.mockReset();
   tryoutMocks.readPublishedTryoutSitemap.mockReturnValue(Effect.succeed(null));
-  runtimeMocks.getRuntimeContentSitemapPage.mockReset();
-  runtimeMocks.getRuntimePublicSitemapPage.mockReset();
-  runtimeMocks.getRuntimeContentSitemapPage.mockImplementation(({ section }) =>
-    Effect.succeed({
-      routes: routeRows.filter((route) => route.section === section),
-    })
-  );
-  runtimeMocks.getRuntimePublicSitemapPage.mockImplementation(({ locale }) =>
-    Effect.succeed({
-      paths:
-        locale === "en"
-          ? ["curriculum/merdeka/class-10/mathematics"]
-          : ["kurikulum/merdeka/kelas-10/matematika"],
-      syncedAt: 1_735_689_600_000,
-    })
+  quranMocks.readPublishedQuranCatalog.mockReset();
+  quranMocks.readPublishedQuranCatalog.mockReturnValue(
+    Effect.succeed({ surahs: [{ number: 1 }, { number: 2 }] })
   );
 });
 
@@ -103,7 +73,7 @@ describe("sitemap route pages", () => {
     );
   });
 
-  it("serves base, retained content, and public route pages", async () => {
+  it("serves base and signed Quran route pages", async () => {
     await expect(readPaths("base")).resolves.toEqual([
       "/",
       "/contributor",
@@ -114,19 +84,10 @@ describe("sitemap route pages", () => {
       "/security-policy",
       "/terms-of-service",
     ]);
-    await expect(readPaths("content_en_quran_0")).resolves.toEqual([
+    await expect(readPaths("quran_en")).resolves.toEqual([
       "/quran/1",
+      "/quran/2",
     ]);
-    await expect(
-      Effect.runPromise(readSitemapRoutePage("public_en_0"))
-    ).resolves.toEqual({
-      routes: [
-        {
-          lastModified: 1_735_689_600_000,
-          path: "/curriculum/merdeka/class-10/mathematics",
-        },
-      ],
-    });
   });
 
   it("serves release-owned material and curriculum sitemap pages", async () => {
@@ -163,7 +124,7 @@ describe("sitemap route pages", () => {
     ]);
   });
 
-  it("serves signed try-out routes and rejects their legacy page", async () => {
+  it("serves signed try-out routes", async () => {
     tryoutMocks.readPublishedTryoutSitemap.mockReturnValue(
       Effect.succeed({
         paths: ["try-out/indonesia/snbt/2027/set-1", "try-out/indonesia"],
@@ -173,60 +134,27 @@ describe("sitemap route pages", () => {
       "/try-out/indonesia",
       "/try-out/indonesia/snbt/2027/set-1",
     ]);
-    await expect(readFailure("content_en_tryout_0")).resolves.toMatchObject({
-      _tag: "SitemapPageNotFoundError",
-      pageId: "content_en_tryout_0",
-    });
-    expect(runtimeMocks.getRuntimeContentSitemapPage).not.toHaveBeenCalled();
   });
 
-  it("removes source-owned public rows after their family owner activates", async () => {
-    runtimeMocks.getRuntimePublicSitemapPage.mockReturnValueOnce(
-      Effect.succeed({
-        paths: [
-          "curriculum/merdeka/class-10/mathematics",
-          "subjects/mathematics/functions/concept",
-          "try-out/indonesia/snbt",
-        ],
-        syncedAt: 1_735_689_600_000,
-      })
-    );
-    programMocks.readPublishedProgramBuckets.mockReturnValue(
-      Effect.succeed({ buckets: ["abc"], managed: true })
-    );
-    await expect(readPaths("public_en_0")).resolves.toEqual([]);
-  });
-
-  it("rejects retained source article and material pages after cutover", async () => {
-    await expect(readFailure("content_en_articles_0")).resolves.toMatchObject({
-      _tag: "SitemapPageNotFoundError",
-      pageId: "content_en_articles_0",
-    });
-    await expect(readFailure("content_en_material_0")).resolves.toMatchObject({
-      _tag: "SitemapPageNotFoundError",
-      pageId: "content_en_material_0",
-    });
-    expect(runtimeMocks.getRuntimeContentSitemapPage).not.toHaveBeenCalled();
+  it("rejects obsolete source-owned sitemap identities", async () => {
+    for (const pageId of [
+      "content_en_articles_0",
+      "content_en_material_0",
+      "content_en_quran_0",
+      "content_en_tryout_0",
+      "public_en_0",
+    ]) {
+      await expect(readFailure(pageId)).resolves.toMatchObject({
+        _tag: "SitemapPageNotFoundError",
+        pageId,
+      });
+    }
   });
 
   it("fails when an id or its materialized page is missing", async () => {
     await expect(readFailure("malformed")).resolves.toMatchObject({
       _tag: "SitemapPageNotFoundError",
       pageId: "malformed",
-    });
-    runtimeMocks.getRuntimeContentSitemapPage.mockReturnValueOnce(
-      Effect.succeed(null)
-    );
-    await expect(readFailure("content_en_quran_0")).resolves.toMatchObject({
-      _tag: "SitemapPageNotFoundError",
-      pageId: "content_en_quran_0",
-    });
-    runtimeMocks.getRuntimePublicSitemapPage.mockReturnValueOnce(
-      Effect.succeed(null)
-    );
-    await expect(readFailure("public_en_0")).resolves.toMatchObject({
-      _tag: "SitemapPageNotFoundError",
-      pageId: "public_en_0",
     });
     await expect(readFailure("article_en_abc")).resolves.toMatchObject({
       _tag: "SitemapPageNotFoundError",
@@ -256,35 +184,4 @@ async function readPaths(pageId: string) {
 /** Reads one typed sitemap route failure. */
 function readFailure(pageId: string) {
   return Effect.runPromise(Effect.flip(readSitemapRoutePage(pageId)));
-}
-
-const routeRows = [
-  routeRow({
-    route: "quran/1",
-    section: "quran",
-  }),
-];
-
-/** Builds one route-catalog fixture row for sitemap tests. */
-function routeRow({
-  route,
-  section,
-  sourcePath = route,
-}: {
-  route: string;
-  section: SourceRegistryRoot;
-  sourcePath?: string;
-}): RuntimeContentRoute {
-  const kind = getSourceRouteProjectionForRoute(sourcePath)?.kind;
-  if (!kind) {
-    throw new Error(`Expected graph route kind for ${sourcePath}.`);
-  }
-  return {
-    date: 1_735_689_600_000,
-    kind,
-    route,
-    section,
-    sourcePath,
-    syncedAt: 1,
-  };
 }

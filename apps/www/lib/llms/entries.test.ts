@@ -1,9 +1,8 @@
 // @vitest-environment node
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
-  buildRuntimeContentLlmsEntries,
+  buildPublishedContentLlmsEntries,
   getLlmsSections,
   getSiteLlmsEntries,
   isLlmsSection,
@@ -57,33 +56,15 @@ describe("llms entries", () => {
     );
   });
 
-  it("preserves source content metadata in markdown entries", () => {
-    const route = "articles/politics/dynastic-politics-asian-values";
-    const graph = createLearningGraphIdentityFromRoute({
-      locale: "en",
-      route,
-    });
-    if (!graph) {
-      expect.fail("Expected the real article route to have a graph identity.");
-    }
-
+  it("preserves signed content metadata in markdown entries", () => {
     expect(
-      buildRuntimeContentLlmsEntries({
+      buildPublishedContentLlmsEntries({
         locale: "en",
         rows: [
           {
-            ...graph,
-            authors: [{ name: "Shifna Zihdatal Haq" }],
-            content_id: graph.assetId,
             description:
               "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
-            kind: "article",
-            locale: "en",
-            markdown: true,
-            route,
-            section: "articles",
-            sourcePath: route,
-            syncedAt: 1,
+            publicPath: "articles/politics/dynastic-politics-asian-values",
             title:
               "Framing Dynastic Politics in Local Elections within Asian Values",
           },

@@ -1,5 +1,4 @@
 import type { Locale } from "next-intl";
-import type { RuntimeContentRoute } from "@/lib/content/runtime/routes";
 import {
   BASE_URL,
   type LlmsSection,
@@ -77,54 +76,6 @@ export function buildPublishedContentLlmsEntries({
       };
     })
     .sort((left, right) => left.route.localeCompare(right.route));
-}
-
-/** Builds sorted locale-specific agent entries from verified route rows. */
-export function buildRuntimeContentLlmsEntries({
-  locale,
-  rows,
-  section,
-}: {
-  locale: Locale;
-  rows: readonly RuntimeContentRoute[];
-  section: Exclude<LlmsSection, "site">;
-}) {
-  const entries: LlmsEntry[] = [];
-
-  for (const row of rows) {
-    if (!row.markdown) {
-      continue;
-    }
-
-    entries.push(buildRuntimeContentLlmsEntry({ locale, row, section }));
-  }
-
-  return entries.sort((left, right) => left.route.localeCompare(right.route));
-}
-
-/** Formats one verified route row without re-reading content metadata. */
-function buildRuntimeContentLlmsEntry({
-  locale,
-  row,
-  section,
-}: {
-  locale: Locale;
-  row: RuntimeContentRoute;
-  section: Exclude<LlmsSection, "site">;
-}): LlmsEntry {
-  const route = `/${row.route}`;
-  const publicRoute =
-    getLocalizedMappedRoutePathname({ locale, route }) ?? route;
-  const hrefBase = `${BASE_URL}/${locale}${publicRoute}`;
-
-  return {
-    description: row.description,
-    href: `${hrefBase}.md`,
-    route: publicRoute,
-    section,
-    segments: publicRoute.slice(1).split("/").filter(Boolean),
-    title: row.title,
-  };
 }
 
 /** Builds one locale-specific llms entry from a sitemap route. */

@@ -4,18 +4,10 @@ import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 describe("sitemap page identity", () => {
   it("parses every canonical page kind", () => {
     expect(getSitemapPageDescriptor("base")).toEqual({ id: "base" });
-    expect(getSitemapPageDescriptor("content_en_articles_1")).toEqual({
-      id: "content_en_articles_1",
-      kind: "content",
+    expect(getSitemapPageDescriptor("quran_en")).toEqual({
+      id: "quran_en",
+      kind: "quran",
       locale: "en",
-      page: 1,
-      section: "articles",
-    });
-    expect(getSitemapPageDescriptor("public_en_1")).toEqual({
-      id: "public_en_1",
-      kind: "public",
-      locale: "en",
-      page: 1,
     });
     expect(getSitemapPageDescriptor("article_en_abc")).toEqual({
       bucket: "abc",
@@ -44,6 +36,8 @@ describe("sitemap page identity", () => {
   });
 
   it.each([
+    "quran_en_extra",
+    "quran_unknown",
     "content_en_articles_01",
     "content_en_articles_-1",
     "content_en_articles_1.5",
@@ -52,6 +46,8 @@ describe("sitemap page identity", () => {
     "public_en",
     "public_en_invalid",
     "public_en_",
+    "tryout_en",
+    "tryout_en_",
     "tryout_en_01",
     "tryout_en_invalid",
     "pages_en_articles_1",

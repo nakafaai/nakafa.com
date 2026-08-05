@@ -4,9 +4,9 @@ import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
-import type { MaterialReleasePin } from "@/lib/content/material/release";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { readPublishedProgramRoute } from "@/lib/content/program/route";
+import type { ContentReleasePin } from "@/lib/content/published/release";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 import { MissingLocalizedRouteProjectionError } from "@/lib/routing/locale/error";
 import {
@@ -37,7 +37,7 @@ const readLocalizedMaterialSuffix = Effect.fn(
   search,
   target,
 }: {
-  expectedActiveReleaseId: Exclude<MaterialReleasePin, null>;
+  expectedActiveReleaseId: Exclude<ContentReleasePin, null>;
   locale: Locale;
   search: string;
   target: MaterialLessonProjection;

@@ -385,6 +385,7 @@ import type * as contents_runtime_quran from "../contents/runtime/quran.js";
 import type * as contents_runtime_routes from "../contents/runtime/routes.js";
 import type * as contents_runtime_shared from "../contents/runtime/shared.js";
 import type * as contents_runtime_spec from "../contents/runtime/spec.js";
+import type * as contents_schema_routes from "../contents/schema/routes.js";
 import type * as contents_sitemap_impl from "../contents/sitemap/impl.js";
 import type * as contents_sitemap_spec from "../contents/sitemap/spec.js";
 import type * as contents_validators from "../contents/validators.js";
@@ -958,6 +959,7 @@ declare const fullApi: ApiFromModules<{
   "contents/runtime/routes": typeof contents_runtime_routes;
   "contents/runtime/shared": typeof contents_runtime_shared;
   "contents/runtime/spec": typeof contents_runtime_spec;
+  "contents/schema/routes": typeof contents_schema_routes;
   "contents/sitemap/impl": typeof contents_sitemap_impl;
   "contents/sitemap/spec": typeof contents_sitemap_spec;
   "contents/validators": typeof contents_validators;
