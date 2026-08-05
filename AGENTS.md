@@ -231,13 +231,17 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 ## React And Next.js
 
-<!-- BEGIN:nextjs-agent-rules -->
- 
-### Next.js: ALWAYS read docs before coding
- 
-Before any Next.js work, find and read the relevant installed Next.js doc. With pnpm, resolve it with `find . -path '*/node_modules/next/dist/docs' -type d -print`; do not assume it exists at direct `node_modules/next/dist/docs/`. Your training data is outdated; the docs are the source of truth.
- 
-<!-- END:nextjs-agent-rules -->
+### Version-Matched Next.js Guidance
+
+- Before any Next.js work, find and read the relevant installed documentation
+  with `find . -path '*/node_modules/next/dist/docs' -type d -print`.
+- Do not assume the docs exist at direct `node_modules/next/dist/docs/` in this
+  monorepo. Use the copy that matches the installed Next.js version.
+- Next.js APIs, conventions, and file structure may differ from training data.
+  Installed docs and source are authoritative, including deprecation notices.
+- `packages/next-config` disables app-local agent-file generation because this
+  root file is the one canonical instruction surface. Do not add duplicate
+  `AGENTS.md` or `CLAUDE.md` files under individual Next.js apps.
 
 - Follow existing Next.js and React 19 conventions already present in the repo.
 - Use function components.
