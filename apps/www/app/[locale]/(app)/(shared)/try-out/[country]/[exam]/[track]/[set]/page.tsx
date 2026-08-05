@@ -43,22 +43,6 @@ interface TryoutSetPageProps {
   searchParams: Promise<TryoutRouteSearchParams>;
 }
 
-export const unstable_instant = {
-  prefetch: "runtime",
-  samples: [
-    {
-      params: {
-        country: "indonesia",
-        exam: "tka",
-        locale: "id",
-        set: "set-1",
-        track: "matematika",
-      },
-      searchParams: { attemptId: null },
-    },
-  ],
-};
-
 /** Builds route-owned metadata for one localized try-out set. */
 export async function generateMetadata({
   params,

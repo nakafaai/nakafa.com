@@ -27,7 +27,7 @@ export function SharedTabs({ tabs, value }: Props) {
               key={tab.href}
               nativeButton={false}
               render={
-                <Link href={tab.href} prefetch>
+                <Link href={tab.href}>
                   <HugeIcons className="size-4 shrink-0" icon={tab.icon} />
                   {tab.label}
                 </Link>

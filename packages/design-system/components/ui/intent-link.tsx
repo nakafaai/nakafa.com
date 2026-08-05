@@ -1,20 +1,23 @@
 "use client";
 
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
+import { Link } from "@repo/internationalization/src/navigation";
 import type { ComponentProps, FocusEvent, MouseEvent, TouchEvent } from "react";
-import { useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 
-type NavigationLinkProps = ComponentProps<typeof NavigationLink>;
-type TryoutIntentLinkProps = Omit<NavigationLinkProps, "href" | "prefetch"> & {
+type LinkProps = ComponentProps<typeof Link>;
+type IntentLinkProps = Omit<LinkProps, "href" | "prefetch"> & {
   href: string;
   onIntent?: () => boolean;
 };
 
 /**
- * Preserves Next's default route prefetch while warming authenticated
- * destination data once after pointer, keyboard, or touch intent.
+ * Preserve the reusable route shell and resolve URL-specific data only after
+ * pointer, keyboard, or touch intent.
+ *
+ * https://nextjs.org/docs/app/guides/runtime-prefetching
  */
-export function TryoutIntentLink({
+export function IntentLink({
   href,
   onClick,
   onFocus,
@@ -22,11 +25,17 @@ export function TryoutIntentLink({
   onMouseEnter,
   onTouchStart,
   ...props
-}: TryoutIntentLinkProps) {
+}: IntentLinkProps) {
+  const [prefetchHref, setPrefetchHref] = useState<string | null>(null);
   const warmedHref = useRef<string | null>(null);
+  const normalizedHref = useMemo(
+    () => normalizeLocalizedInternalHref(href),
+    [href]
+  );
 
-  /** Retry destination data warming until it succeeds for the current href. */
   function markIntent() {
+    setPrefetchHref(href);
+
     if (warmedHref.current === href) {
       return;
     }
@@ -38,38 +47,35 @@ export function TryoutIntentLink({
     }
   }
 
-  /** Retry unresolved data warming before the route navigation commits. */
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     markIntent();
     onClick?.(event);
   }
 
-  /** Record keyboard focus as navigation intent. */
   function handleFocus(event: FocusEvent<HTMLAnchorElement>) {
     markIntent();
     onFocus?.(event);
   }
 
-  /** Record pointer hover as navigation intent. */
   function handleMouseEnter(event: MouseEvent<HTMLAnchorElement>) {
     markIntent();
     onMouseEnter?.(event);
   }
 
-  /** Record touch contact as navigation intent. */
   function handleTouchStart(event: TouchEvent<HTMLAnchorElement>) {
     markIntent();
     onTouchStart?.(event);
   }
 
   return (
-    <NavigationLink
+    <Link
       {...props}
-      href={href}
+      href={normalizedHref}
       onClick={handleClick}
       onFocus={handleFocus}
       onMouseEnter={handleMouseEnter}
       onTouchStart={handleTouchStart}
+      prefetch={prefetchHref === href ? true : null}
     />
   );
 }

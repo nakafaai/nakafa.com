@@ -7,9 +7,10 @@ type CookieHeader = string | string[] | null | undefined;
 type ServerExceptionProperties = Record<string | number, unknown>;
 
 const COOKIE_SPLIT_PATTERN = /;\s*/;
+const analyticsKeys = keys();
 
-export const analytics = new PostHog(keys().NEXT_PUBLIC_POSTHOG_KEY, {
-  host: keys().POSTHOG_PROXY_HOST,
+export const analytics = new PostHog(analyticsKeys.NEXT_PUBLIC_POSTHOG_KEY, {
+  host: analyticsKeys.POSTHOG_PROXY_HOST,
 
   // Don't batch events and flush immediately - we're running in a serverless environment
   flushAt: 1,
@@ -55,7 +56,7 @@ function normalizePostHogTokenForCookieName(token: string) {
  * https://posthog.com/docs/error-tracking/installation/nextjs
  */
 function getPostHogCookieName() {
-  return `ph_${normalizePostHogTokenForCookieName(keys().NEXT_PUBLIC_POSTHOG_KEY)}_posthog`;
+  return `ph_${normalizePostHogTokenForCookieName(analyticsKeys.NEXT_PUBLIC_POSTHOG_KEY)}_posthog`;
 }
 
 /**

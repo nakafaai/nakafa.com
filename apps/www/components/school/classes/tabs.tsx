@@ -63,7 +63,7 @@ export function SchoolClassesTabs() {
                   key={tab.href}
                   nativeButton={false}
                   render={
-                    <Link href={tab.href} prefetch>
+                    <Link href={tab.href}>
                       <HugeIcons className="size-4" icon={tab.icon} />
                       {tab.label}
                     </Link>

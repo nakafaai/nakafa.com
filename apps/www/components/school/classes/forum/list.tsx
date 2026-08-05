@@ -106,7 +106,6 @@ function SchoolClassesForumListContent() {
                 aria-current={isActive ? "page" : undefined}
                 className="absolute inset-0 z-0 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 href={href}
-                prefetch
               >
                 <span className="sr-only">{forum.title}</span>
               </Link>

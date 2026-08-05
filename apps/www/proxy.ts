@@ -1,8 +1,10 @@
 import { isPostHogProxyPathname } from "@repo/analytics/posthog/config";
 import { routing } from "@repo/internationalization/src/routing";
+import { getSessionCookie } from "better-auth/cookies";
 import { Effect } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import {
@@ -25,7 +27,6 @@ import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source"
 
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
-const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
 const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
 const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
 
@@ -67,6 +68,12 @@ export async function proxy(request: NextRequest) {
         "X-Robots-Tag": "noindex",
       },
     });
+  }
+
+  const schoolAuthRedirect = readSchoolAuthRedirect(request);
+
+  if (schoolAuthRedirect) {
+    return NextResponse.redirect(schoolAuthRedirect);
   }
 
   if (
@@ -128,9 +135,38 @@ export async function proxy(request: NextRequest) {
     return rewriteToContentNotFound(request, projectedRouteRejection);
   }
 
-  request.cookies.set(AUTH_REDIRECT_PATH_COOKIE, pathname);
-
   return routeLocalizedRequest(request);
+}
+
+/**
+ * Performs the official optimistic cookie check before protected School routes.
+ * Convex functions and server data seams still own authoritative authorization.
+ */
+function readSchoolAuthRedirect(request: NextRequest) {
+  const routeSegments = request.nextUrl.pathname.split("/").filter(Boolean);
+  const firstSegment = routeSegments[0];
+  const hasLocalePrefix =
+    firstSegment !== undefined && hasLocale(routing.locales, firstSegment);
+  const schoolSegments = hasLocalePrefix
+    ? routeSegments.slice(1)
+    : routeSegments;
+
+  if (schoolSegments[0] !== "school" || schoolSegments.length === 1) {
+    return null;
+  }
+
+  if (getSessionCookie(request)) {
+    return null;
+  }
+
+  const locale = hasLocalePrefix ? firstSegment : routing.defaultLocale;
+  const redirectPath = hasLocalePrefix
+    ? request.nextUrl.pathname
+    : `/${locale}${request.nextUrl.pathname}`;
+  const redirectUrl = new URL(`/${locale}/auth`, request.url);
+  redirectUrl.searchParams.set("redirect", redirectPath);
+
+  return redirectUrl;
 }
 
 /** Applies next-intl routing and Nakafa discovery headers once per pass. */

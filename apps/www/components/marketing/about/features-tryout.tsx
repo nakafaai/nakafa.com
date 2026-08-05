@@ -1,11 +1,11 @@
 import type { api } from "@repo/backend/convex/_generated/api";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
 import { ChoiceCardContent } from "@/components/shared/choice/card";
 import { choiceCardVariants } from "@/components/shared/choice/variants";
 import { ChoiceCardVisual } from "@/components/shared/choice/visual";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
-import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 
 type TryoutCountry = FunctionReturnType<
   typeof api.tryouts.queries.catalog.getHubPage
@@ -30,7 +30,7 @@ export function FeaturesTryout({
       <article className="mt-auto px-8 pt-10 pb-8 lg:px-10 lg:pt-12 lg:pb-10">
         <div className="grid grid-cols-2 gap-3">
           {countries.slice(0, 4).map((country) => (
-            <TryoutIntentLink
+            <IntentLink
               className={choiceCardVariants()}
               href={`/${locale}/${country.publicPath}`}
               key={country.countryKey}
@@ -44,7 +44,7 @@ export function FeaturesTryout({
               <ChoiceCardContent>
                 <h4>{country.title}</h4>
               </ChoiceCardContent>
-            </TryoutIntentLink>
+            </IntentLink>
           ))}
         </div>
       </article>

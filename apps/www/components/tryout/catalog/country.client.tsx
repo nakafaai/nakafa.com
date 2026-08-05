@@ -1,6 +1,7 @@
 "use client";
 
 import type { api } from "@repo/backend/convex/_generated/api";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { FunctionReturnType } from "convex/server";
 import { ChoiceCardContent } from "@/components/shared/choice/card";
 import { choiceCardVariants } from "@/components/shared/choice/variants";
@@ -10,7 +11,6 @@ import {
 } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
-import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type CountryPageQuery = typeof api.tryouts.queries.catalog.getCountryPage;
@@ -33,7 +33,7 @@ export function TryoutCountryPageClient({
         const icon = getTryoutExamIcon(exam.examKey);
 
         return (
-          <TryoutIntentLink
+          <IntentLink
             className={choiceCardVariants()}
             href={getTryoutPublicPathHref(exam.publicPath)}
             key={exam.examKey}
@@ -44,7 +44,7 @@ export function TryoutCountryPageClient({
             <ChoiceCardContent>
               <h2>{exam.title}</h2>
             </ChoiceCardContent>
-          </TryoutIntentLink>
+          </IntentLink>
         );
       })}
     </div>

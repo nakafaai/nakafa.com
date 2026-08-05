@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
@@ -131,7 +131,13 @@ export async function generateStaticParams() {
 
 /** Keeps the public page export synchronous while the resolved shell owns async route validation. */
 export default function Page(props: PageProps<"/[locale]/quran/[surah]">) {
-  return <ResolvedSurahPage params={props.params} />;
+  return (
+    <LayoutMaterial>
+      <Suspense fallback={null}>
+        <ResolvedSurahPage params={props.params} />
+      </Suspense>
+    </LayoutMaterial>
+  );
 }
 
 /** Resolves a localized surah route before rendering Quran SEO and page chrome. */
@@ -244,67 +250,65 @@ async function CachedSurahShell({
 
   return (
     <VirtualProvider>
-      <LayoutMaterial>
-        <LayoutMaterialContent>
-          <HeaderContent
-            description={translation}
-            icon={AllahIcon}
-            link={{
-              href: "/quran",
-              label: t("quran"),
-            }}
-            title={title}
-          />
-          <LayoutContent>
-            <WindowVirtualized
-              ssrCount={Math.min(
-                result.verses.length,
-                QURAN_INITIAL_VERSE_SSR_COUNT
-              )}
-            >
-              {result.verses.map((verse, index) => {
-                const verseLabel = t("verse-count", {
-                  count: verse.number.inSurah,
-                });
-
-                return (
-                  <QuranVerse
-                    hasInterpretation={interpretations !== undefined}
-                    id={slugify(verseLabel)}
-                    index={index}
-                    interpretationLabel={interpretationLabel}
-                    isLast={index === result.verses.length - 1}
-                    key={verse.number.inQuran}
-                    locale={locale}
-                    verse={verse}
-                    verseLabel={verseLabel}
-                  />
-                );
-              })}
-            </WindowVirtualized>
-          </LayoutContent>
-          <PaginationContent pagination={pagination} />
-          <FooterContent>{footer}</FooterContent>
-          {interpretations && (
-            <QuranInterpretationControls
-              interpretations={interpretations}
-              label={interpretationLabel}
-            />
-          )}
-          {toolbar}
-        </LayoutMaterialContent>
-        <LayoutMaterialToc
-          chapters={{
-            label: t("verse"),
-            data: headings,
+      <LayoutMaterialContent>
+        <HeaderContent
+          description={translation}
+          icon={AllahIcon}
+          link={{
+            href: "/quran",
+            label: t("quran"),
           }}
-          header={{
-            title,
-            href: `/quran/${surah}`,
-            description: translation,
-          }}
+          title={title}
         />
-      </LayoutMaterial>
+        <LayoutContent>
+          <WindowVirtualized
+            ssrCount={Math.min(
+              result.verses.length,
+              QURAN_INITIAL_VERSE_SSR_COUNT
+            )}
+          >
+            {result.verses.map((verse, index) => {
+              const verseLabel = t("verse-count", {
+                count: verse.number.inSurah,
+              });
+
+              return (
+                <QuranVerse
+                  hasInterpretation={interpretations !== undefined}
+                  id={slugify(verseLabel)}
+                  index={index}
+                  interpretationLabel={interpretationLabel}
+                  isLast={index === result.verses.length - 1}
+                  key={verse.number.inQuran}
+                  locale={locale}
+                  verse={verse}
+                  verseLabel={verseLabel}
+                />
+              );
+            })}
+          </WindowVirtualized>
+        </LayoutContent>
+        <PaginationContent pagination={pagination} />
+        <FooterContent>{footer}</FooterContent>
+        {interpretations && (
+          <QuranInterpretationControls
+            interpretations={interpretations}
+            label={interpretationLabel}
+          />
+        )}
+        {toolbar}
+      </LayoutMaterialContent>
+      <LayoutMaterialToc
+        chapters={{
+          label: t("verse"),
+          data: headings,
+        }}
+        header={{
+          title,
+          href: `/quran/${surah}`,
+          description: translation,
+        }}
+      />
     </VirtualProvider>
   );
 }

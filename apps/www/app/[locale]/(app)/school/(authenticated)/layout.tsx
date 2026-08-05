@@ -1,44 +1,12 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { Suspense } from "react";
-import { getToken } from "@/lib/auth/server";
-
-const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
+import { SchoolAuthBoundary } from "@/components/school/auth-screen";
 
 /**
- * Guards the authenticated Nakafa School subtree on the server so hydration
- * does not replace an already-rendered page with a client auth loader.
+ * Presents the protected school subtree only while Convex auth is active.
+ *
+ * Authorization remains at the owning Convex functions and server data seams.
+ * The reactive boundary keeps sign-in and sign-out transitions current without
+ * relying on a layout redirect that Next.js can preserve across navigation.
  */
-export default function Layout({
-  children,
-  params,
-}: LayoutProps<"/[locale]/school">) {
-  return (
-    <Suspense fallback={null}>
-      <AuthenticatedSchoolLayout params={params}>
-        {children}
-      </AuthenticatedSchoolLayout>
-    </Suspense>
-  );
-}
-
-/** Resolve the school auth boundary after the request-scoped params are ready. */
-async function AuthenticatedSchoolLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: LayoutProps<"/[locale]/school">["params"];
-}) {
-  const [{ locale }, token] = await Promise.all([params, getToken()]);
-
-  if (!token) {
-    const pathname =
-      (await cookies()).get(AUTH_REDIRECT_PATH_COOKIE)?.value ??
-      `/${locale}/school`;
-
-    redirect(`/${locale}/auth?redirect=${encodeURIComponent(pathname)}`);
-  }
-
-  return children;
+export default function Layout({ children }: LayoutProps<"/[locale]/school">) {
+  return <SchoolAuthBoundary>{children}</SchoolAuthBoundary>;
 }

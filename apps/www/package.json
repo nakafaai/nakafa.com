@@ -7,6 +7,7 @@
     "build": "next build",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "next dev -p 3000 --turbopack",
+    "doctor": "pnpm dlx react-doctor@0.9.3",
     "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts",
     "index-now": "node --env-file=.env.local --import tsx scripts/index-now.ts",
     "start": "next start -p 3000",

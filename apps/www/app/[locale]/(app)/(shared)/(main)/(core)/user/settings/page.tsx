@@ -3,6 +3,7 @@ import { redirect } from "@repo/internationalization/src/navigation";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile-page";
 import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/server";
@@ -23,9 +24,20 @@ export async function generateMetadata({
   };
 }
 
-export default async function Page({
+export default function Page({ params }: PageProps<"/[locale]/user/settings">) {
+  return (
+    <Suspense fallback={null}>
+      <AuthenticatedSettings params={params} />
+    </Suspense>
+  );
+}
+
+/** Resolves account data inside the settings route stream. */
+async function AuthenticatedSettings({
   params,
-}: PageProps<"/[locale]/user/settings">) {
+}: {
+  params: PageProps<"/[locale]/user/settings">["params"];
+}) {
   const [{ locale: rawLocale }, token] = await Promise.all([
     params,
     getToken(),

@@ -187,6 +187,39 @@ describe("proxy", () => {
   });
 
   it.each([
+    [
+      "/en/school/select",
+      "http://localhost:3000/en/auth?redirect=%2Fen%2Fschool%2Fselect",
+    ],
+    [
+      "/school/onboarding",
+      "http://localhost:3000/en/auth?redirect=%2Fen%2Fschool%2Fonboarding",
+    ],
+  ])(
+    "optimistically redirects the protected School route %s",
+    async (path, expected) => {
+      const response = await requestProxy(path);
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(expected);
+      expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(["/en/school", "/en/school/select"])(
+    "delegates the available School route %s",
+    async (path) => {
+      const response = await requestProxy(path, {
+        headers: {
+          cookie: "better-auth.session_token=fixture-session",
+        },
+      });
+
+      expectLocaleProxy(response);
+    }
+  );
+
+  it.each([
     ["missing", undefined],
     ["matching", { headers: { "x-next-intl-locale": "en" } }],
     ["mismatched", { headers: { "x-next-intl-locale": "id" } }],

@@ -10,7 +10,7 @@ import { Option } from "effect";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 import {
   type MaterialPageContent,
   readMaterialMetadata,
@@ -95,7 +95,18 @@ export async function generateMetadata({
  * do not render public pages, so the learner opens concrete material content
  * directly from a collapsible card.
  */
-export default async function Page({
+export default function Page(props: MaterialPageProps) {
+  return (
+    <LayoutMaterial>
+      <Suspense fallback={null}>
+        <MaterialRouteContent {...props} />
+      </Suspense>
+    </LayoutMaterial>
+  );
+}
+
+/** Resolves the URL-specific signed material inside its streaming boundary. */
+async function MaterialRouteContent({
   params,
   searchParams,
 }: MaterialPageProps) {
@@ -227,38 +238,36 @@ async function MaterialLessonPage({
         educationalLevel={parentTitle}
         name={metadata.title}
       />
-      <LayoutMaterial>
-        <LayoutMaterialContent>
-          <HeaderContent
-            content={raw}
-            icon={icon}
-            link={headerLink ?? { href: "/home", label: tCommon("home") }}
-            slug={toMaterialHref(route)}
-            sourceUrl={sourceUrl}
-            title={metadata.title}
-          />
-          <LayoutContent>
-            {headings.length === 0 && <ComingSoon />}
-            {headings.length > 0 ? children : null}
-          </LayoutContent>
-          <PaginationContent pagination={pagination} />
-          <FooterContent>{footer}</FooterContent>
-          {toolbar}
-        </LayoutMaterialContent>
-        <LayoutMaterialToc
-          chapters={{
-            label: tCommon("on-this-page"),
-            data: headings,
-          }}
-          githubUrl={sourceUrl ?? undefined}
-          header={{
-            title: metadata.title,
-            href: toMaterialHref(route),
-            description: metadata.description ?? metadata.subject,
-          }}
-          showComments
+      <LayoutMaterialContent>
+        <HeaderContent
+          content={raw}
+          icon={icon}
+          link={headerLink ?? { href: "/home", label: tCommon("home") }}
+          slug={toMaterialHref(route)}
+          sourceUrl={sourceUrl}
+          title={metadata.title}
         />
-      </LayoutMaterial>
+        <LayoutContent>
+          {headings.length === 0 && <ComingSoon />}
+          {headings.length > 0 ? children : null}
+        </LayoutContent>
+        <PaginationContent pagination={pagination} />
+        <FooterContent>{footer}</FooterContent>
+        {toolbar}
+      </LayoutMaterialContent>
+      <LayoutMaterialToc
+        chapters={{
+          label: tCommon("on-this-page"),
+          data: headings,
+        }}
+        githubUrl={sourceUrl ?? undefined}
+        header={{
+          title: metadata.title,
+          href: toMaterialHref(route),
+          description: metadata.description ?? metadata.subject,
+        }}
+        showComments
+      />
     </>
   );
 }

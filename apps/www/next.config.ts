@@ -182,6 +182,9 @@ const nextConfig = {
   experimental: {
     ...config.experimental,
     globalNotFound: true,
+    instantInsights: {
+      validationLevel: "warning",
+    },
   },
 } satisfies NextConfig;
 

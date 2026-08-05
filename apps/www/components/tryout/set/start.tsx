@@ -4,6 +4,7 @@ import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
@@ -15,7 +16,6 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
-import { TryoutIntentLink } from "@/components/tryout/navigation/link.client";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutStartDialog } from "@/components/tryout/set/start-dialog";
@@ -227,7 +227,7 @@ export function StartTryoutButton({
 
   if (activeAttempt && !directEntry) {
     return (
-      <TryoutIntentLink
+      <IntentLink
         className={buttonVariants()}
         href={request.destinationHref}
         onIntent={() =>
@@ -245,7 +245,7 @@ export function StartTryoutButton({
       >
         <Spinner icon={Rocket01Icon} isLoading={false} />
         {buttonLabel}
-      </TryoutIntentLink>
+      </IntentLink>
     );
   }
 

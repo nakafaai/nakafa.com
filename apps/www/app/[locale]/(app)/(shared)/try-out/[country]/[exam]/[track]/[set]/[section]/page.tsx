@@ -44,23 +44,6 @@ interface TryoutSectionPageProps {
   searchParams: Promise<TryoutRouteSearchParams>;
 }
 
-export const unstable_instant = {
-  prefetch: "runtime",
-  samples: [
-    {
-      params: {
-        country: "indonesia",
-        exam: "snbt",
-        locale: "id",
-        section: "pengetahuan-kuantitatif",
-        set: "set-1",
-        track: "2027",
-      },
-      searchParams: { attemptId: null },
-    },
-  ],
-};
-
 /** Builds route-owned metadata for one localized try-out section. */
 export async function generateMetadata({
   params,

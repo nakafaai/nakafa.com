@@ -9,7 +9,6 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 
 /** Renders a signed article body and its route-owned navigation. */
@@ -38,7 +37,7 @@ export async function ArticleShell({
   const headings = getHeadings(raw);
 
   return (
-    <LayoutMaterial>
+    <>
       <LayoutMaterialContent>
         <HeaderContent
           content={raw}
@@ -75,6 +74,6 @@ export async function ArticleShell({
         }}
         showComments
       />
-    </LayoutMaterial>
+    </>
   );
 }

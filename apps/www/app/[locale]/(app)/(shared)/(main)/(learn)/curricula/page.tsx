@@ -2,6 +2,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
+import { locale as rootLocale } from "next/root-params";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import {
@@ -57,9 +58,8 @@ export async function generateMetadata({
 }
 
 /** Renders the public curriculum chooser with direct curriculum cards. */
-export default async function Page({ params }: CurriculumIndexPageProps) {
-  const { locale: rawLocale } = await params;
-  const locale = getLocaleOrThrow(rawLocale);
+export default async function Page() {
+  const locale = getLocaleOrThrow(await rootLocale());
   const [tCommon, tLearningPrograms] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "LearningPrograms" }),

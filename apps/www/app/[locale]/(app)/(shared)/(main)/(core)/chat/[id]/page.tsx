@@ -58,11 +58,7 @@ export async function generateMetadata({
 /** Renders the chat route with a local Suspense boundary for runtime params. */
 export default function Page(props: PageProps<"/[locale]/chat/[id]">) {
   return (
-    <Suspense
-      fallback={
-        <div className="relative flex size-full flex-col overflow-hidden" />
-      }
-    >
+    <Suspense fallback={null}>
       <ChatRouteContent params={props.params} />
     </Suspense>
   );
