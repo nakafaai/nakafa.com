@@ -15,7 +15,6 @@ const mockReadPublishedArticleBucket = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialBucket = vi.hoisted(() => vi.fn());
 const mockReadMaterialInventory = vi.hoisted(() => vi.fn());
-const mockReconcileMaterialRows = vi.hoisted(() => vi.fn());
 const activeMaterialReleaseId = "release-material";
 
 vi.mock("@/lib/content/article/discovery", () => ({
@@ -27,9 +26,6 @@ vi.mock("@/lib/content/article/sitemap", () => ({
 }));
 vi.mock("@/lib/content/material/discovery", () => ({
   readPublishedMaterialBucket: mockReadPublishedMaterialBucket,
-}));
-vi.mock("@/lib/llms/material", () => ({
-  reconcileMaterialLlmsRows: mockReconcileMaterialRows,
 }));
 vi.mock("@/lib/llms/material-pages", () => ({
   readMaterialLlmsInventory: mockReadMaterialInventory,
@@ -96,30 +92,22 @@ beforeEach(() => {
   mockReadPublishedArticleBuckets.mockReset();
   mockReadPublishedMaterialBucket.mockReset();
   mockReadMaterialInventory.mockReset();
-  mockReconcileMaterialRows.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
   );
   mockReadPublishedMaterialBucket.mockReturnValue(
     Effect.succeed({
-      activeReleaseId: null,
-      managed: false,
-      materials: null,
+      activeReleaseId: activeMaterialReleaseId,
+      materials: [makeMaterialSummary(previewProjection)],
     })
   );
   mockReadMaterialInventory.mockReturnValue(
     Effect.succeed({
-      activeReleaseId: null,
-      buckets: [],
-      owner: "source",
+      activeReleaseId: activeMaterialReleaseId,
+      buckets: ["abc"],
       pageCount: 1,
-      publishedRouteCount: 0,
-      sourcePageCount: 1,
-      sourceRouteCount: 1,
+      routeCount: 1,
     })
-  );
-  mockReconcileMaterialRows.mockImplementation((_locale, rows) =>
-    Effect.succeed(rows)
   );
   mockGetArtifactPage.mockImplementation(({ locale, page, section }) =>
     Effect.succeed({
@@ -169,7 +157,7 @@ describe("llms content entries", () => {
     expect(entries.map((entry) => entry.route)).toEqual([
       "/articles/politics/dynastic-politics-asian-values",
       "/articles/politics/regional-elections-turmoil",
-      "/subjects/chemistry/green-chemistry/definition",
+      `/${previewProjection.publicPath}`,
       "/quran/1",
     ]);
     expect(mockGetArtifactPage).toHaveBeenCalledWith({
@@ -177,11 +165,6 @@ describe("llms content entries", () => {
       page: 0,
       section: "articles",
     });
-    expect(mockReconcileMaterialRows).toHaveBeenCalledWith(
-      "en",
-      [routeRows[3]],
-      null
-    );
   });
 
   it("uses published article partitions after ownership activates", async () => {
@@ -264,17 +247,13 @@ describe("llms content entries", () => {
       Effect.succeed({
         activeReleaseId: activeMaterialReleaseId,
         buckets: ["abc"],
-        owner: "published",
         pageCount: 1,
-        publishedRouteCount: 2,
-        sourcePageCount: 0,
-        sourceRouteCount: 0,
+        routeCount: 2,
       })
     );
     mockReadPublishedMaterialBucket.mockReturnValue(
       Effect.succeed({
         activeReleaseId: activeMaterialReleaseId,
-        managed: true,
         materials: [previewProjection, previewNextProjection].map(
           makeMaterialSummary
         ),
@@ -294,47 +273,6 @@ describe("llms content entries", () => {
       "/subjects/mathematics/function-composition-inverse-function/injective-surjective-bijective-function",
     ]);
     expect(mockGetArtifactPage).not.toHaveBeenCalled();
-    expect(mockReadPublishedMaterialBucket).toHaveBeenCalledWith(
-      "en",
-      "abc",
-      activeMaterialReleaseId
-    );
-  });
-
-  it("adds exact-only material partitions after source catalog pages", async () => {
-    mockReadMaterialInventory.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: activeMaterialReleaseId,
-        buckets: ["abc"],
-        owner: "mixed",
-        pageCount: 2,
-        publishedRouteCount: 1,
-        sourcePageCount: 1,
-        sourceRouteCount: 1,
-      })
-    );
-    mockReadPublishedMaterialBucket.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: activeMaterialReleaseId,
-        managed: true,
-        materials: [makeMaterialSummary(previewProjection)],
-      })
-    );
-
-    await expect(
-      Effect.runPromise(
-        getContentPageLlmsEntries({
-          locale: "en",
-          page: 1,
-          section: "material",
-        })
-      )
-    ).resolves.toEqual([
-      expect.objectContaining({
-        route: `/${previewProjection.publicPath}`,
-        title: previewProjection.metadata.title,
-      }),
-    ]);
     expect(mockReadPublishedMaterialBucket).toHaveBeenCalledWith(
       "en",
       "abc",
@@ -446,11 +384,8 @@ describe("llms content entries", () => {
       Effect.succeed({
         activeReleaseId: activeMaterialReleaseId,
         buckets: ["abc"],
-        owner: "published",
         pageCount: 1,
-        publishedRouteCount: 1,
-        sourcePageCount: 0,
-        sourceRouteCount: 0,
+        routeCount: 1,
       })
     );
     await expect(
@@ -467,14 +402,12 @@ describe("llms content entries", () => {
       .mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId: activeMaterialReleaseId,
-          managed: true,
           materials: null,
         })
       )
       .mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId: activeMaterialReleaseId,
-          managed: false,
           materials: [],
         })
       );
@@ -495,6 +428,6 @@ describe("llms content entries", () => {
           section: "material",
         })
       )
-    ).resolves.toBeNull();
+    ).resolves.toEqual([]);
   });
 });

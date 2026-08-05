@@ -1,31 +1,23 @@
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
-import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
-import * as publicLearningStatic from "@repo/contents/_types/route/learning/static";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
+import { previewIdProjection, previewProjection } from "@/test/content-preview";
 import {
-  makePreviewPublicRoute,
-  previewIdProjection,
-  previewProjection,
-  previewPublicRoute,
-} from "@/test/content-preview";
+  readTestPublishedRoute,
+  testProgramSubject,
+} from "@/test/content-program";
 
 const publishedMocks = vi.hoisted(() => ({
   materialContext: vi.fn(),
   materialRoute: vi.fn(),
-  materialSource: vi.fn(),
   programRoute: vi.fn(),
-  verifyReleasePin: vi.fn(),
 }));
-const emptyLearningIndex: PublicLearningIndex = {
-  projectMaterialContextToLocale: () => undefined,
-  projectRouteToLocale: () => undefined,
-  resolveMaterialHeaderLink: () => undefined,
-  resolveMaterialRouteBySource: () => undefined,
-  resolveRouteByPath: () => undefined,
-  toContextualMaterialHref: ({ href }) => href,
-};
+const activeReleaseId = ReleaseIdSchema.make("material-release");
+const idProgramSubject = readTestPublishedRoute(
+  "kurikulum/merdeka/kelas-11/matematika",
+  "id"
+);
 
 vi.mock("@/lib/content/material/context", () => ({
   readPublishedMaterialContext: publishedMocks.materialContext,
@@ -33,44 +25,29 @@ vi.mock("@/lib/content/material/context", () => ({
 vi.mock("@/lib/content/material/route", () => ({
   readPublishedMaterialRoute: publishedMocks.materialRoute,
 }));
-vi.mock("@/lib/content/material/release", () => ({
-  verifyMaterialReleasePin: publishedMocks.verifyReleasePin,
-}));
-vi.mock("@/lib/content/material/shell", () => ({
-  readMaterialSource: publishedMocks.materialSource,
-}));
 vi.mock("@/lib/content/program/route", () => ({
   readPublishedProgramRoute: publishedMocks.programRoute,
 }));
 
 beforeEach(() => {
   publishedMocks.materialContext.mockReset();
-  publishedMocks.materialRoute.mockReset();
-  publishedMocks.materialSource.mockReset().mockReturnValue({
-    candidates: [
-      {
-        contentKey: previewProjection.contentKey,
-        locale: previewProjection.locale,
-      },
-      {
-        contentKey: previewIdProjection.contentKey,
-        locale: previewIdProjection.locale,
-      },
-    ],
-    route: previewPublicRoute,
-  });
-  publishedMocks.programRoute.mockReset();
-  publishedMocks.verifyReleasePin
-    .mockReset()
-    .mockImplementation((releaseId) => Effect.succeed(releaseId));
+  publishedMocks.materialRoute.mockReset().mockReturnValue(
+    Effect.succeed({
+      activeReleaseId,
+      alternates: [previewProjection, previewIdProjection],
+      projection: previewProjection,
+    })
+  );
+  publishedMocks.programRoute.mockReset().mockReturnValue(
+    Effect.succeed({
+      alternates: [testProgramSubject, idProgramSubject],
+      route: testProgramSubject,
+    })
+  );
 });
 
-afterEach(() => {
-  vi.restoreAllMocks();
-});
-
-/** Reads one English material route through its Indonesian published target. */
-function readHref(search = "") {
+/** Reads one English material route through its Indonesian signed target. */
+function readMaterialHref(search = "") {
   return Effect.runSync(
     readPublishedLocalizedHref({
       currentLocale: "en",
@@ -82,153 +59,91 @@ function readHref(search = "") {
 }
 
 describe("published localized route ownership", () => {
-  it("reconciles unmanaged exact claims and missing source routes", () => {
-    const renamed = {
-      ...previewIdProjection,
-      publicPath: PublicPathSchema.make(
-        `${previewIdProjection.parentPath}/fungsi-berganti`
-      ),
-    };
-    publishedMocks.materialRoute.mockReturnValue(
-      Effect.succeed({
-        managed: false,
-        projection: null,
-        sourceClaims: [
-          {
-            contentKey: previewProjection.contentKey,
-            kind: "found",
-            locale: "id",
-            projection: renamed,
-          },
-        ],
-      })
-    );
-    expect(readHref()).toBe(`/${renamed.publicPath}`);
+  it("projects a material route through signed locale counterparts", () => {
+    expect(readMaterialHref()).toBe(`/${previewIdProjection.publicPath}`);
     expect(publishedMocks.materialRoute).toHaveBeenCalledWith(
-      previewProjection.locale,
-      previewProjection.publicPath,
-      expect.arrayContaining([
-        {
-          contentKey: previewProjection.contentKey,
-          locale: previewIdProjection.locale,
-        },
-      ])
+      "en",
+      previewProjection.publicPath
     );
-
-    const context =
-      "?ctx=merdeka~class-11-mathematics-function-composition-inverse-function";
-    const targetRoute = makePreviewPublicRoute(renamed);
-    publishedMocks.materialContext.mockReturnValueOnce(
-      Effect.succeed({ managed: false, value: null })
-    );
-    vi.spyOn(
-      publicLearningStatic,
-      "loadStaticPublicLearningIndex"
-    ).mockReturnValueOnce(
-      Effect.succeed({
-        ...emptyLearningIndex,
-        projectMaterialContextToLocale: ({ context: projected }) => projected,
-        resolveMaterialRouteBySource: (_sourcePath, locale) =>
-          locale === "en" ? previewPublicRoute : targetRoute,
-      })
-    );
-    expect(readHref(context)).toBe(`/${renamed.publicPath}${context}`);
-
-    publishedMocks.materialRoute.mockReturnValue(
-      Effect.succeed({
-        managed: false,
-        projection: null,
-        sourceClaims: [
-          {
-            contentKey: previewProjection.contentKey,
-            kind: "missing",
-            locale: "id",
-          },
-        ],
-      })
-    );
-    expect(() => readHref()).toThrow();
-
-    publishedMocks.materialSource.mockReturnValueOnce({
-      candidates: [],
-      route: undefined,
-    });
-    expect(readHref()).toBeNull();
   });
 
-  it("reconciles every partial exact material target state", () => {
-    const partial = {
-      activeReleaseId: "material-partial",
-      alternates: [previewProjection],
-      familyManaged: false,
-      managed: true,
-      projection: previewProjection,
-      sourceClaims: [],
-    };
-    const found = {
-      ...previewIdProjection,
-      publicPath: `${previewIdProjection.parentPath}/renamed-function`,
-    };
-    /** Runs one authoritative refresh after the initial partial model. */
-    const read = (refresh: object) => {
-      publishedMocks.materialRoute
-        .mockReturnValueOnce(Effect.succeed(partial))
-        .mockReturnValueOnce(Effect.succeed(refresh));
-      return readHref();
-    };
-
-    expect(read(partial)).toBe(`/${previewIdProjection.publicPath}`);
-    const context =
+  it("keeps only backend-verified material context", () => {
+    const search =
       "?ctx=merdeka~class-11-mathematics-function-composition-inverse-function";
-    publishedMocks.materialRoute
-      .mockReturnValueOnce(Effect.succeed(partial))
-      .mockReturnValueOnce(Effect.succeed(partial));
-    publishedMocks.materialContext.mockReturnValueOnce(
-      Effect.succeed({ managed: false, value: null })
-    );
-    expect(readHref(context)).toBe(
-      `/${previewIdProjection.publicPath}${context}`
-    );
-    expect(
-      read({ ...partial, alternates: [previewProjection, previewIdProjection] })
-    ).toBe(`/${previewIdProjection.publicPath}`);
-    expect(
-      read({
-        ...partial,
-        sourceClaims: [
-          {
-            contentKey: previewProjection.contentKey,
-            kind: "found",
-            locale: previewIdProjection.locale,
-            projection: found,
-          },
-        ],
-      })
-    ).toBe(`/${found.publicPath}`);
-    expect(() =>
-      read({
-        ...partial,
-        sourceClaims: [
-          {
-            contentKey: previewProjection.contentKey,
-            kind: "missing",
-            locale: previewIdProjection.locale,
-          },
-        ],
-      })
-    ).toThrow();
-    expect(() =>
-      read({ managed: false, projection: null, sourceClaims: [] })
-    ).toThrow();
-    expect(() =>
-      read({ ...partial, activeReleaseId: "material-replaced" })
-    ).toThrow();
+    publishedMocks.materialContext
+      .mockReturnValueOnce(Effect.succeed({ context: {} }))
+      .mockReturnValueOnce(Effect.succeed(null));
 
-    publishedMocks.materialRoute.mockReturnValue(Effect.succeed(partial));
-    vi.spyOn(
-      publicLearningStatic,
-      "loadStaticPublicLearningIndex"
-    ).mockReturnValueOnce(Effect.succeed(emptyLearningIndex));
-    expect(() => readHref()).toThrow();
+    expect(readMaterialHref(search)).toBe(
+      `/${previewIdProjection.publicPath}${search}`
+    );
+    expect(readMaterialHref(search)).toBe(`/${previewIdProjection.publicPath}`);
+  });
+
+  it("fails closed for material tombstones and missing counterparts", () => {
+    publishedMocks.materialRoute
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId,
+          alternates: [],
+          projection: null,
+        })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId,
+          alternates: [previewProjection],
+          projection: previewProjection,
+        })
+      );
+
+    expect(() => readMaterialHref()).toThrow();
+    expect(() => readMaterialHref()).toThrow();
+  });
+
+  it("projects signed curriculum counterparts and ignores other surfaces", () => {
+    expect(
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          locale: "id",
+          publicPath: testProgramSubject.publicPath,
+          search: "",
+        })
+      )
+    ).toBe(`/${idProgramSubject.publicPath}`);
+    expect(
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          locale: "id",
+          publicPath: "articles/example",
+          search: "",
+        })
+      )
+    ).toBeNull();
+  });
+
+  it("fails closed for curriculum tombstones and missing counterparts", () => {
+    publishedMocks.programRoute
+      .mockReturnValueOnce(Effect.succeed({ alternates: [], route: null }))
+      .mockReturnValueOnce(
+        Effect.succeed({
+          alternates: [testProgramSubject],
+          route: testProgramSubject,
+        })
+      );
+    const read = () =>
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          locale: "id",
+          publicPath: testProgramSubject.publicPath,
+          search: "",
+        })
+      );
+
+    expect(read).toThrow();
+    expect(read).toThrow();
   });
 });

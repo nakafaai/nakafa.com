@@ -15,7 +15,6 @@ const mockGetContentPageLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetRuntimeContentRouteCounts = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialBuckets = vi.hoisted(() => vi.fn());
-const mockVerifyMaterialReleasePin = vi.hoisted(() => vi.fn());
 const mockGetSiteLlmsEntries = vi.hoisted(() => vi.fn());
 
 const articleEntry: LlmsEntry = {
@@ -73,9 +72,6 @@ vi.mock("@/lib/content/article/sitemap", () => ({
 vi.mock("@/lib/content/material/sitemap", () => ({
   readPublishedMaterialBuckets: mockReadPublishedMaterialBuckets,
 }));
-vi.mock("@/lib/content/material/release", () => ({
-  verifyMaterialReleasePin: mockVerifyMaterialReleasePin,
-}));
 
 beforeEach(() => {
   mockCacheLife.mockClear();
@@ -85,7 +81,6 @@ beforeEach(() => {
   mockGetRuntimeContentRouteCounts.mockReset();
   mockReadPublishedArticleBuckets.mockReset();
   mockReadPublishedMaterialBuckets.mockReset();
-  mockVerifyMaterialReleasePin.mockReset();
   mockGetSiteLlmsEntries.mockReset();
   mockGetContentListingLlmsEntries.mockReturnValue(Effect.succeed(null));
   mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([articleEntry]));
@@ -95,14 +90,10 @@ beforeEach(() => {
   );
   mockReadPublishedMaterialBuckets.mockReturnValue(
     Effect.succeed({
-      activeReleaseId: null,
-      buckets: [],
-      managed: false,
-      materialCount: 0,
+      activeReleaseId: "release-material",
+      buckets: ["abc"],
+      materialCount: 100,
     })
-  );
-  mockVerifyMaterialReleasePin.mockImplementation((expected) =>
-    Effect.succeed(expected)
   );
   mockGetRuntimeContentRouteCounts.mockReturnValue(
     Effect.succeed([

@@ -1,0 +1,184 @@
+import type {
+  MaterialLessonProjection,
+  MaterialMetadata,
+} from "@nakafa/aksara-contracts/projection/material";
+import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
+import { Effect, Option } from "effect";
+import { notFound } from "next/navigation";
+import { connection } from "next/server";
+import type { ReactNode } from "react";
+import {
+  type MaterialParams,
+  readMaterialRequest,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
+import type { MaterialReleasePin } from "@/lib/content/material/release";
+import {
+  getPublishedMaterialRoute,
+  type PublishedMaterialRoute,
+} from "@/lib/content/material/route";
+import { hasPreviewConfig } from "@/lib/content/preview/config";
+import {
+  type MaterialPreviewContent,
+  readMaterialPreview,
+} from "@/lib/content/preview/material";
+import { renderPublishedMaterial } from "@/lib/content/published/material";
+import { getAksaraUrl } from "@/lib/utils/github";
+
+interface PreviewOwner {
+  readonly kind: "preview";
+  readonly preview: MaterialPreviewContent;
+}
+
+interface PublishedOwner {
+  readonly kind: "published";
+  readonly model: Extract<
+    PublishedMaterialRoute,
+    { readonly projection: MaterialLessonProjection }
+  >;
+}
+
+type MaterialOwner = PreviewOwner | PublishedOwner;
+
+interface MaterialFields {
+  readonly alternates: readonly MaterialLessonProjection[];
+  readonly locale: MaterialLessonProjection["locale"];
+  readonly metadata: MaterialMetadata;
+  readonly rendererDomain: RendererDomain;
+  readonly route: MaterialLessonProjection;
+}
+
+interface PreviewContent extends MaterialFields {
+  readonly body: string;
+  readonly children: ReactNode;
+  readonly kind: "preview";
+  readonly siblings: readonly MaterialLessonProjection[];
+  readonly sourceUrl: null;
+}
+
+interface PublishedContent extends MaterialFields {
+  readonly activeReleaseId: Exclude<MaterialReleasePin, null>;
+  readonly body: string;
+  readonly children: ReactNode;
+  readonly kind: "published";
+  readonly siblings: readonly MaterialLessonProjection[];
+  readonly sourceUrl: null | string;
+}
+
+/** Complete verified body and shell model consumed by the material page. */
+export type MaterialPageContent = PreviewContent | PublishedContent;
+
+/** Metadata selected from the same exclusive owner as the page body. */
+export interface MaterialMetadataContent extends MaterialFields {
+  readonly kind: MaterialOwner["kind"];
+}
+
+/** Reads a local overlay only in the explicitly configured preview child. */
+async function readPreviewOwner(
+  params: Awaited<MaterialParams>
+): Promise<Option.Option<PreviewOwner>> {
+  if (!hasPreviewConfig()) {
+    return Option.none();
+  }
+  await connection();
+  return Option.map(
+    await Effect.runPromise(readMaterialPreview({ params })),
+    (preview) => ({ kind: "preview", preview })
+  );
+}
+
+/** Selects an authenticated preview or the signed Aksara publication. */
+async function resolveMaterialOwner(
+  params: MaterialParams
+): Promise<MaterialOwner> {
+  const routeParams = await params;
+  const preview = await readPreviewOwner(routeParams);
+  if (Option.isSome(preview)) {
+    return preview.value;
+  }
+
+  const request = await readMaterialRequest(Promise.resolve(routeParams));
+  if (!request.publicPath) {
+    notFound();
+  }
+  const model = await getPublishedMaterialRoute(
+    request.locale,
+    request.publicPath
+  );
+  if (!model.projection) {
+    notFound();
+  }
+  return { kind: "published", model };
+}
+
+/** Reads metadata through the same exclusive owner used by page rendering. */
+export async function readMaterialMetadata(
+  params: MaterialParams
+): Promise<MaterialMetadataContent> {
+  const owner = await resolveMaterialOwner(params);
+  if (owner.kind === "preview") {
+    return {
+      alternates: [owner.preview.projection],
+      kind: owner.kind,
+      locale: owner.preview.locale,
+      metadata: owner.preview.metadata,
+      rendererDomain: owner.preview.rendererDomain,
+      route: owner.preview.projection,
+    };
+  }
+
+  return {
+    alternates: owner.model.alternates,
+    kind: owner.kind,
+    locale: owner.model.projection.locale,
+    metadata: owner.model.projection.metadata,
+    rendererDomain: owner.model.rendererDomain,
+    route: owner.model.projection,
+  };
+}
+
+/** Loads the verified body, metadata, navigation model, and source link. */
+export async function readMaterialPage(
+  params: MaterialParams
+): Promise<MaterialPageContent> {
+  const owner = await resolveMaterialOwner(params);
+  if (owner.kind === "preview") {
+    const Content = owner.preview.Content;
+    return {
+      alternates: [owner.preview.projection],
+      body: owner.preview.rawMdx,
+      children: <Content />,
+      kind: owner.kind,
+      locale: owner.preview.locale,
+      metadata: owner.preview.metadata,
+      rendererDomain: owner.preview.rendererDomain,
+      route: owner.preview.projection,
+      siblings: [owner.preview.projection],
+      sourceUrl: null,
+    };
+  }
+
+  const { model } = owner;
+  const published = await renderPublishedMaterial({
+    activeReleaseId: model.activeReleaseId,
+    locale: model.projection.locale,
+    publicPath: model.projection.publicPath,
+  });
+  return {
+    activeReleaseId: model.activeReleaseId,
+    alternates: model.alternates,
+    body: published.rawMdx,
+    children: published.body,
+    kind: owner.kind,
+    locale: model.projection.locale,
+    metadata: published.metadata,
+    rendererDomain: model.rendererDomain,
+    route: model.projection,
+    siblings: model.siblings,
+    sourceUrl: published.sourceRevision
+      ? getAksaraUrl({
+          path: published.sourcePath,
+          revision: published.sourceRevision,
+        })
+      : null,
+  };
+}

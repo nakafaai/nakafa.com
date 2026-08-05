@@ -9,8 +9,6 @@ import {
 } from "@/lib/content/material/discovery";
 
 const fetchMock = vi.hoisted(() => vi.fn());
-const contentKey =
-  "material/lesson/mathematics/function-composition-inverse-function/function-concept";
 const publicPath =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
 const sourcePath =
@@ -40,11 +38,21 @@ describe("published material discovery", () => {
     fetchMock.mockReset();
   });
 
-  it("reads missing and complete material buckets", async () => {
+  it("rejects unmanaged buckets and reads complete signed buckets", async () => {
     fetchMock
       .mockResolvedValueOnce({
-        activeReleaseId: null,
+        activeReleaseId,
         managed: false,
+        materials: null,
+      })
+      .mockResolvedValueOnce({
+        activeReleaseId: null,
+        managed: true,
+        materials: null,
+      })
+      .mockResolvedValueOnce({
+        activeReleaseId,
+        managed: true,
         materials: null,
       })
       .mockResolvedValueOnce({
@@ -54,19 +62,24 @@ describe("published material discovery", () => {
       });
 
     await expect(
-      Effect.runPromise(readPublishedMaterialBucket("en", "abc"))
-    ).resolves.toEqual({
-      activeReleaseId: null,
-      managed: false,
-      materials: null,
-    });
+      Effect.runPromise(
+        readPublishedMaterialBucket("en", "abc").pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
     await expect(
       Effect.runPromise(
-        readPublishedMaterialBucket("en", "def", activeReleaseId)
+        readPublishedMaterialBucket("en", "def").pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    await expect(
+      Effect.runPromise(readPublishedMaterialBucket("en", "ghi"))
+    ).resolves.toEqual({ activeReleaseId, materials: null });
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialBucket("en", "jkl", activeReleaseId)
       )
     ).resolves.toMatchObject({
       activeReleaseId,
-      managed: true,
       materials: [
         {
           publicPath,
@@ -76,11 +89,10 @@ describe("published material discovery", () => {
     });
   });
 
-  it("decodes newest materials and exact claimed source identities", async () => {
+  it("decodes newest signed materials", async () => {
     fetchMock.mockResolvedValueOnce({
       activeReleaseId,
-      claimedContentKeys: [contentKey],
-      managed: false,
+      managed: true,
       materials: [summary],
     });
 
@@ -88,13 +100,11 @@ describe("published material discovery", () => {
       Effect.runPromise(readPublishedLatestMaterials("en", 10))
     ).resolves.toMatchObject({
       activeReleaseId,
-      claimedContentKeys: [contentKey],
-      managed: false,
       materials: [{ sourcePath }],
     });
   });
 
-  it("rejects malformed summaries and claimed identities", async () => {
+  it("rejects malformed summaries, unmanaged results, and runtime failures", async () => {
     fetchMock
       .mockResolvedValueOnce({
         activeReleaseId,
@@ -103,7 +113,6 @@ describe("published material discovery", () => {
       })
       .mockResolvedValueOnce({
         activeReleaseId,
-        claimedContentKeys: [""],
         managed: false,
         materials: [],
       })

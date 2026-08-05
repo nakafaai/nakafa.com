@@ -65,7 +65,7 @@ export const readSitemapPageDescriptors = Effect.fn(
       if (count.section === "articles" && articleBuckets.managed) {
         continue;
       }
-      if (count.section === "material" && materialBuckets.managed) {
+      if (count.section === "material") {
         continue;
       }
       if (count.section === "tryout" && tryoutCount.managed) {

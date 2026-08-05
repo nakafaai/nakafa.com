@@ -6,10 +6,7 @@ import {
 import { Data, Effect } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedArticleSitemap } from "@/lib/content/article/sitemap";
-import {
-  readPublishedMaterialBuckets,
-  readPublishedMaterialSitemap,
-} from "@/lib/content/material/sitemap";
+import { readPublishedMaterialSitemap } from "@/lib/content/material/sitemap";
 import {
   readPublishedProgramBuckets,
   readPublishedProgramSitemap,
@@ -32,15 +29,8 @@ import {
   isPublicSitemapPage,
   isTryoutSitemapPage,
 } from "@/lib/sitemap/identity";
-import {
-  filterMaterialContentRows,
-  filterMaterialPublicPaths,
-} from "@/lib/sitemap/material";
 
 const quranRootRoute = "/quran";
-type MaterialSitemapOwner = Effect.Effect.Success<
-  ReturnType<typeof readPublishedMaterialBuckets>
->;
 
 /** A canonical sitemap page id whose route page does not exist. */
 export class SitemapPageNotFoundError extends Data.TaggedError(
@@ -70,32 +60,25 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     }
 
     if (isPublicSitemapPage(page)) {
-      const [artifact, materialOwner, programOwner, tryoutOwner] =
-        yield* Effect.all(
-          [
-            getRuntimePublicSitemapPage({
-              locale: page.locale,
-              page: page.page,
-            }),
-            readPublishedMaterialBuckets(page.locale),
-            readPublishedProgramBuckets(page.locale),
-            readPublishedTryoutSitemapCount(page.locale),
-          ],
-          { concurrency: "unbounded" }
-        );
+      const [artifact, programOwner, tryoutOwner] = yield* Effect.all(
+        [
+          getRuntimePublicSitemapPage({
+            locale: page.locale,
+            page: page.page,
+          }),
+          readPublishedProgramBuckets(page.locale),
+          readPublishedTryoutSitemapCount(page.locale),
+        ],
+        { concurrency: "unbounded" }
+      );
       if (!artifact) {
         return yield* new SitemapPageNotFoundError({ pageId });
       }
-      const visiblePaths = yield* filterMaterialPublicPaths(
-        page.locale,
-        artifact.paths,
-        materialOwner.activeReleaseId
-      );
       const routes: { lastModified: number; path: string }[] = [];
-      for (const path of visiblePaths) {
+      for (const path of artifact.paths) {
         if (
           !isSourceOwnedPublicPath(path, page.locale, {
-            material: materialOwner.managed,
+            material: true,
             program: programOwner.managed,
             tryout: tryoutOwner.managed,
           })
@@ -195,12 +178,8 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
         return yield* new SitemapPageNotFoundError({ pageId });
       }
     }
-    let materialOwner: MaterialSitemapOwner | null = null;
     if (page.section === "material") {
-      materialOwner = yield* readPublishedMaterialBuckets(page.locale);
-      if (materialOwner.managed) {
-        return yield* new SitemapPageNotFoundError({ pageId });
-      }
+      return yield* new SitemapPageNotFoundError({ pageId });
     }
     const artifact = yield* getRuntimeContentSitemapPage({
       locale: page.locale,
@@ -210,15 +189,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     if (!artifact) {
       return yield* new SitemapPageNotFoundError({ pageId });
     }
-    let visibleRoutes = artifact.routes;
-    if (materialOwner) {
-      visibleRoutes = yield* filterMaterialContentRows(
-        page.locale,
-        artifact.routes,
-        materialOwner.activeReleaseId
-      );
-    }
-    return { routes: yield* buildSitemapContentPageRoutes(visibleRoutes) };
+    return { routes: yield* buildSitemapContentPageRoutes(artifact.routes) };
   }
 );
 

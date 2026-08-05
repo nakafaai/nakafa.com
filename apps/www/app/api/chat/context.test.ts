@@ -1,4 +1,6 @@
 // @vitest-environment node
+
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import type { NinaContextSnapshot } from "@repo/ai/nina/memory/pack";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { Effect } from "effect";
@@ -10,6 +12,20 @@ const mocks = vi.hoisted(() => ({
   materialContext: vi.fn(),
   materialRoute: vi.fn(),
 }));
+const activeReleaseId = ReleaseIdSchema.make("material-release");
+const chemistryProjection = {
+  contentKey:
+    "material/lesson/chemistry/basic-chemistry-laws/chemistry-law-applications",
+  graph: {
+    assetId:
+      "asset:en:material:lesson:chemistry:material-section:chemistry:basic-chemistry-laws:chemistry-law-applications",
+  },
+  kind: "subject-lesson",
+  materialKey: "lesson.chemistry.basic-chemistry-laws",
+  metadata: { title: "Law Applications" },
+};
+const chemistrySourcePath =
+  "material/lesson/chemistry/basic-chemistry-laws/chemistry-law-applications";
 
 vi.mock("@/lib/content/material/context", () => ({
   readPublishedMaterialContext: mocks.materialContext,
@@ -57,10 +73,12 @@ describe("app/api/chat/context", () => {
     mocks.materialRoute.mockReset();
     mocks.materialRoute.mockReturnValue(
       Effect.succeed({
-        managed: false,
-        projection: null,
+        activeReleaseId,
+        projection: chemistryProjection,
+        sourcePath: chemistrySourcePath,
       })
     );
+    mocks.materialContext.mockReturnValue(Effect.succeed(null));
   });
 
   it("opens an unverified off-page turn as canonical when no pinned context exists", async () => {
@@ -92,6 +110,30 @@ describe("app/api/chat/context", () => {
       reason: "page-context",
       toContextKey: "canonical:chat",
     });
+  });
+
+  it("builds canonical learning identity for a retained source try-out", async () => {
+    const slug = "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge";
+    const session = await Effect.runPromise(
+      resolveNinaLearningSession({
+        capturedAt: "2026-06-22T00:00:00.000Z",
+        locale: "en",
+        rawContext: {},
+        slug: `/${slug}`,
+        url: `https://nakafa.com/en/${slug}`,
+        verified: true,
+      })
+    );
+
+    expect(session.context.snapshot).toMatchObject({
+      learning: {
+        slug,
+        verified: true,
+      },
+      source: "current-page",
+    });
+    expect(session.context.snapshot.learning.sourcePath).toBeUndefined();
+    expect(session.context.snapshot.placement).toBeUndefined();
   });
 
   it("reuses stored Nina context when an existing chat continues off a verified learning page", async () => {
@@ -150,6 +192,16 @@ describe("app/api/chat/context", () => {
   });
 
   it("keeps verified material placement when the browser context hint validates", async () => {
+    mocks.materialContext.mockReturnValueOnce(
+      Effect.succeed({
+        context: {
+          nodeKey: "class-10-chemistry-basic-chemistry-laws",
+          programKey: "merdeka",
+        },
+        href: "/en/curriculum/merdeka/class-10/chemistry#basic-laws-of-chemistry",
+        label: "Basic Laws of Chemistry",
+      })
+    );
     const session = await Effect.runPromise(
       resolveNinaLearningSession({
         capturedAt: "2026-06-22T00:00:00.000Z",
@@ -219,7 +271,7 @@ describe("app/api/chat/context", () => {
   it("uses active material and program projections instead of stale static rows", async () => {
     mocks.materialRoute.mockReturnValueOnce(
       Effect.succeed({
-        managed: true,
+        activeReleaseId,
         projection: {
           contentKey:
             "material/lesson/mathematics/function-composition-inverse-function/function-concept",
@@ -237,15 +289,12 @@ describe("app/api/chat/context", () => {
     );
     mocks.materialContext.mockReturnValueOnce(
       Effect.succeed({
-        managed: true,
-        value: {
-          context: {
-            nodeKey: "cambridge-function-concept",
-            programKey: "cambridge-international",
-          },
-          href: "/en/curriculum/cambridge-international/mathematics#functions",
-          label: "Functions",
+        context: {
+          nodeKey: "cambridge-function-concept",
+          programKey: "cambridge-international",
         },
+        href: "/en/curriculum/cambridge-international/mathematics#functions",
+        label: "Functions",
       })
     );
 
@@ -280,12 +329,12 @@ describe("app/api/chat/context", () => {
     });
   });
 
-  it("uses stable material identity for source placement after a route rename", async () => {
+  it("uses signed material identity for placement after a route rename", async () => {
     const renamedPath =
       "subjects/mathematics/function-composition-inverse-function/renamed-function-concept";
     mocks.materialRoute.mockReturnValueOnce(
       Effect.succeed({
-        managed: true,
+        activeReleaseId,
         projection: {
           ...previewProjection,
           publicPath: renamedPath,
@@ -294,7 +343,14 @@ describe("app/api/chat/context", () => {
       })
     );
     mocks.materialContext.mockReturnValueOnce(
-      Effect.succeed({ managed: false, value: null })
+      Effect.succeed({
+        context: {
+          nodeKey: "class-11-mathematics-function-composition-inverse-function",
+          programKey: "merdeka",
+        },
+        href: "/en/curriculum/merdeka/class-11/mathematics#functions",
+        label: "Functions",
+      })
     );
 
     const session = await Effect.runPromise(
@@ -326,7 +382,7 @@ describe("app/api/chat/context", () => {
   it("keeps active material canonical when no placement hint exists", async () => {
     mocks.materialRoute.mockReturnValueOnce(
       Effect.succeed({
-        managed: true,
+        activeReleaseId,
         projection: previewProjection,
         sourcePath: previewSourcePath,
       })

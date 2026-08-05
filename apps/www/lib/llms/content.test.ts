@@ -6,21 +6,15 @@ import { getLlmsMarkdownText } from "@/lib/llms/content";
 
 const PUBLISHED_PATH =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
-const PUBLISHED_KEY =
-  "material/lesson/mathematics/function-composition-inverse-function/function-concept";
-const PUBLISHED_PARENT =
-  "subjects/mathematics/function-composition-inverse-function";
 const PUBLISHED_ARTICLE_PATH = "articles/politics/regional-elections-turmoil";
 const NEW_PATH = "subjects/mathematics/new-topic/new-lesson";
 const SOURCE_PATH = "material/lesson/chemistry/green-chemistry/definition";
 const SOURCE_PUBLIC_PATH = "subjects/chemistry/green-chemistry/definition";
-const SOURCE_PARENT = "subjects/chemistry/green-chemistry";
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetCachedLlmsMdxText = vi.hoisted(() => vi.fn());
 const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
 const mockGetLlmsLegalPageText = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
-const mockReadPublishedMaterialClaims = vi.hoisted(() => vi.fn());
 const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
@@ -29,10 +23,6 @@ const activeReleaseId = "release-active";
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimePublicRoute: mockGetRuntimePublicRoute,
 }));
-vi.mock("@/lib/content/material/ownership", () => ({
-  readPublishedMaterialClaims: mockReadPublishedMaterialClaims,
-}));
-
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: mockReadActiveContentRoute,
 }));
@@ -83,7 +73,6 @@ function readMarkdown(cleanSlug: string, locale: Locale = "en") {
 async function expectNoSourceMarkdown(cleanSlug: string) {
   await expect(readMarkdown(cleanSlug)).resolves.toBeNull();
   expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
-  expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
 }
 
 describe("llms markdown content resolver", () => {
@@ -93,9 +82,6 @@ describe("llms markdown content resolver", () => {
     mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
     mockGetLlmsLegalPageText.mockReset().mockReturnValue(Effect.succeed(null));
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
-    mockReadPublishedMaterialClaims
-      .mockReset()
-      .mockReturnValue(Effect.succeed([]));
     mockGetRuntimePublicRoute.mockReset();
     mockReadActiveContentRoute.mockReset();
     mockReadActiveContentIdentity
@@ -110,23 +96,6 @@ describe("llms markdown content resolver", () => {
       )
     );
     mockGetRuntimePublicRoute.mockImplementation(({ publicPath }) => {
-      if (publicPath === SOURCE_PUBLIC_PATH) {
-        return Effect.succeed({
-          kind: "subject-lesson",
-          parentPath: SOURCE_PARENT,
-          sourcePath: SOURCE_PATH,
-        });
-      }
-
-      if (publicPath === PUBLISHED_PATH) {
-        return Effect.succeed({
-          kind: "subject-lesson",
-          locale: "en",
-          parentPath: PUBLISHED_PARENT,
-          sourcePath: PUBLISHED_KEY,
-        });
-      }
-
       if (publicPath.startsWith("curriculum/")) {
         return Effect.succeed({ kind: "curriculum-context" });
       }
@@ -184,7 +153,6 @@ describe("llms markdown content resolver", () => {
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
     expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-    expect(mockReadPublishedMaterialClaims).not.toHaveBeenCalled();
   });
 
   it("reads an owned article body from the generic Aksara markdown seam", async () => {
@@ -219,67 +187,15 @@ describe("llms markdown content resolver", () => {
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
   });
 
-  it("keys unmanaged source ownership to no active release", async () => {
-    mockReadActiveContentIdentity
-      .mockReturnValueOnce(Effect.succeed(null))
-      .mockReturnValueOnce(Effect.succeed(null));
-    mockReadActiveContentRoute.mockReturnValueOnce(
-      Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
-    );
-    mockGetCachedLlmsMdxText.mockResolvedValue("Source markdown");
-
-    await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBe(
-      "Source markdown"
-    );
-    expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
-      activeReleaseId: null,
-      family: "material",
-      locale: "en",
-      publicPath: SOURCE_PUBLIC_PATH,
-    });
-    expect(mockReadPublishedMaterialClaims).toHaveBeenCalledWith(
-      "en",
-      [
-        {
-          contentKey: SOURCE_PATH,
-          locale: "en",
-          parentPath: SOURCE_PARENT,
-        },
-      ],
-      null
-    );
-  });
-
-  it("rejects source markdown when a release activates during the read", async () => {
-    mockReadActiveContentIdentity
-      .mockReturnValueOnce(Effect.succeed(null))
-      .mockReturnValueOnce(Effect.succeed({ releaseId: activeReleaseId }));
-    mockReadActiveContentRoute.mockReturnValueOnce(
-      Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
-    );
-    mockGetCachedLlmsMdxText.mockResolvedValue("Stale source markdown");
-
-    await expect(readMarkdown(SOURCE_PUBLIC_PATH)).rejects.toThrow(
-      `"actualReleaseId": "${activeReleaseId}", "expectedReleaseId": null`
-    );
-  });
-
-  it("fails closed on a claim without an active release", async () => {
+  it("fails closed when signed material ownership is unavailable", async () => {
     mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
     mockReadActiveContentRoute.mockReturnValueOnce(
       Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
     );
-    mockReadPublishedMaterialClaims.mockReturnValueOnce(
-      Effect.succeed([
-        {
-          contentKey: SOURCE_PATH,
-          kind: "missing",
-          locale: "en",
-        },
-      ])
-    );
 
     await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBeNull();
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
+    expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
   });
 
   it("returns Quran markdown before checking other content sources", async () => {
@@ -297,91 +213,6 @@ describe("llms markdown content resolver", () => {
     await expect(readMarkdown(SOURCE_PATH, "id")).resolves.toBe("MDX markdown");
 
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
-  });
-
-  it("resolves public material routes to source markdown without changing the public URL", async () => {
-    mockGetCachedLlmsMdxText.mockResolvedValue("MDX markdown");
-
-    await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBe(
-      "MDX markdown"
-    );
-
-    expect(mockGetCachedLlmsMdxText).toHaveBeenCalledWith({
-      cleanSlug: SOURCE_PATH,
-      locale: "en",
-      publicSlug: SOURCE_PUBLIC_PATH,
-    });
-    expect(mockGetRuntimePublicRoute).toHaveBeenCalledWith({
-      locale: "en",
-      publicPath: SOURCE_PUBLIC_PATH,
-    });
-  });
-
-  it.each([
-    {
-      contentKey: SOURCE_PATH,
-      kind: "missing",
-      locale: "en",
-    },
-    {
-      contentKey: SOURCE_PATH,
-      kind: "found",
-      locale: "en",
-      projection: {
-        publicPath: "subjects/chemistry/green-chemistry/renamed-definition",
-      },
-    },
-  ])(
-    "does not expose source markdown after exact $kind ownership",
-    async (claim) => {
-      mockReadPublishedMaterialClaims.mockReturnValueOnce(
-        Effect.succeed([claim])
-      );
-
-      await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBeNull();
-
-      expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
-      expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-    }
-  );
-
-  it("reads a same-path exact source claim from Aksara", async () => {
-    mockReadActiveContentRoute.mockReturnValueOnce(
-      Effect.succeed({ activeReleaseId, kind: "unmanaged" })
-    );
-    mockReadPublishedMaterialClaims.mockReturnValueOnce(
-      Effect.succeed([
-        {
-          contentKey: PUBLISHED_KEY,
-          kind: "found",
-          locale: "en",
-          projection: { publicPath: PUBLISHED_PATH },
-        },
-      ])
-    );
-    mockGetCachedPublishedText.mockResolvedValueOnce("Exact Aksara markdown");
-
-    await expect(readMarkdown(PUBLISHED_PATH)).resolves.toBe(
-      "Exact Aksara markdown"
-    );
-    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
-      activeReleaseId,
-      family: "material",
-      locale: "en",
-      publicPath: PUBLISHED_PATH,
-    });
-    expect(mockReadPublishedMaterialClaims).toHaveBeenCalledWith(
-      "en",
-      [
-        {
-          contentKey: PUBLISHED_KEY,
-          locale: "en",
-          parentPath: PUBLISHED_PARENT,
-        },
-      ],
-      activeReleaseId
-    );
-    expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
   });
 
   it("does not invent markdown for curriculum context routes", async () => {
@@ -410,11 +241,11 @@ describe("llms markdown content resolver", () => {
 
   it("does not invent markdown when an indexed public route has no source path", async () => {
     mockGetRuntimePublicRoute.mockReturnValueOnce(
-      Effect.succeed({ kind: "subject-lesson" })
+      Effect.succeed({ kind: "tryout-set" })
     );
 
     await expect(
-      readMarkdown("subjects/mathematics/integral/area")
+      readMarkdown("try-out/indonesia/snbt/2027/no-source")
     ).resolves.toBeNull();
 
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
@@ -452,10 +283,13 @@ describe("llms markdown content resolver", () => {
     ).resolves.toBeNull();
 
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
-    expect(mockGetRuntimePublicRoute).toHaveBeenCalledWith({
+    expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
+      activeReleaseId,
+      family: "material",
       locale: "en",
       publicPath: "subjects/mathematics/integral/invalid.segment",
     });
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 
   it("treats the empty markdown slug as an unsupported route index", async () => {
@@ -467,24 +301,34 @@ describe("llms markdown content resolver", () => {
   });
 
   it.each([
-    ["MDX markdown", mockGetCachedLlmsMdxText, "mdx failed", "source"],
+    [
+      "MDX markdown",
+      SOURCE_PATH,
+      mockGetCachedLlmsMdxText,
+      "mdx failed",
+      "source",
+    ],
     [
       "section index",
+      "articles/missing",
       mockGetCachedLlmsSectionIndexText,
       "index failed",
       "index",
     ],
-  ])("types cached %s failures", async (_kind, cache, message, owner) => {
-    const error = new Error(message);
-    cache.mockRejectedValue(error);
-    await expectCacheFailure("articles/missing", error, owner);
-  });
+  ])(
+    "types cached %s failures",
+    async (_kind, cleanSlug, cache, message, owner) => {
+      const error = new Error(message);
+      cache.mockRejectedValue(error);
+      await expectCacheFailure(cleanSlug, error, owner);
+    }
+  );
 
   it("surfaces indexed public-route lookup failures", async () => {
     const error = new Error("route lookup failed");
     mockGetRuntimePublicRoute.mockReturnValueOnce(Effect.fail(error));
 
-    await expect(readMarkdown("subjects/mathematics/integral")).rejects.toThrow(
+    await expect(readMarkdown("try-out/indonesia/custom")).rejects.toThrow(
       error.message
     );
   });

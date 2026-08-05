@@ -6,12 +6,7 @@ import {
   NinaContextSnapshotSchema,
   openNinaLearningSession,
 } from "@repo/ai/nina/memory/pack";
-import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
-import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
-import { readMaterialContextHint } from "@repo/contents/_types/route/material/context";
-import type { PublicRoute } from "@repo/contents/_types/route/schema";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option, Schema } from "effect";
 import {
@@ -54,89 +49,6 @@ function readClientNinaContextInput(value: unknown): ClientNinaContextInput {
   return decoded.value;
 }
 
-/** Returns whether a public route row owns canonical source content. */
-function hasSourceContent(
-  route: PublicRoute | undefined
-): route is Extract<PublicRoute, { sourcePath: string }> {
-  return Boolean(route && "sourcePath" in route);
-}
-
-/** Builds Nina's verified learning context from a public route projection. */
-function createNinaLearningContext({
-  locale,
-  route,
-  slug,
-  url,
-  verified,
-}: {
-  locale: Locale;
-  route: PublicRoute | undefined;
-  slug: string;
-  url: string;
-  verified: boolean;
-}): NinaLearningSessionInput["learning"] {
-  if (!hasSourceContent(route)) {
-    return {
-      locale,
-      slug,
-      url,
-      verified,
-    };
-  }
-
-  const graph = createLearningGraphIdentityFromRoute({
-    locale,
-    route: route.sourcePath,
-  });
-
-  return {
-    assetId: graph?.assetId,
-    contentId: graph?.assetId,
-    locale,
-    materialKey: route.materialKey,
-    section: route.kind,
-    slug,
-    sourcePath: route.sourcePath,
-    title: route.title,
-    url,
-    verified,
-  };
-}
-
-/** Builds Nina's placement context only when the material ctx hint validates. */
-function createNinaPlacementContext({
-  clientContext,
-  route,
-}: {
-  clientContext: ClientNinaContextInput;
-  route: PublicRoute | undefined;
-}): NinaLearningSessionInput["placement"] {
-  if (!hasSourceContent(route)) {
-    return;
-  }
-
-  const context = readMaterialContextHint(clientContext.materialContextHint);
-  const header = readStaticPublicLearningIndex().resolveMaterialHeaderLink({
-    context,
-    route,
-  });
-  const programKey = Schema.decodeUnknownOption(LearningProgramKeySchema)(
-    context?.programKey
-  );
-
-  if (!(context && header) || Option.isNone(programKey)) {
-    return;
-  }
-
-  return {
-    mode: "placement",
-    nodeKey: context.nodeKey,
-    parentHref: header.href,
-    parentTitle: header.label,
-    programKey: programKey.value,
-  };
-}
-
 /** Builds NinaHarness input from the current verified publication owner. */
 const createNinaLearningSessionInput = Effect.fn(
   "chat.createNinaLearningSessionInput"
@@ -165,44 +77,23 @@ const createNinaLearningSessionInput = Effect.fn(
       publicPath: cleanPath,
       url,
     });
-    if (published.managed && published.learning) {
-      const route =
-        readStaticPublicLearningIndex().resolveMaterialRouteBySource(
-          published.contentKey,
-          locale
-        );
-      const placement = published.programManaged
-        ? published.placement
-        : createNinaPlacementContext({ clientContext, route });
-      return {
-        capturedAt,
-        learning: published.learning,
-        source: "current-page",
-        ...(placement ? { placement } : {}),
-      } satisfies NinaLearningSessionInput;
-    }
+    return {
+      capturedAt,
+      learning: published.learning,
+      source: "current-page",
+      ...(published.placement ? { placement: published.placement } : {}),
+    } satisfies NinaLearningSessionInput;
   }
 
-  const route = readStaticPublicLearningIndex().resolveRouteByPath(
-    cleanPath,
-    locale
-  );
-  const learning = createNinaLearningContext({
-    locale,
-    route,
-    slug: cleanPath,
-    url,
-    verified,
-  });
-  const placement = createNinaPlacementContext({
-    clientContext,
-    route,
-  });
   return {
     capturedAt,
-    learning,
+    learning: {
+      locale,
+      slug: cleanPath,
+      url,
+      verified,
+    },
     source: "current-page",
-    ...(placement ? { placement } : {}),
   } satisfies NinaLearningSessionInput;
 });
 

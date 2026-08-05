@@ -7,16 +7,12 @@ const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
 const mockGetRuntimeTryoutRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
-const mockReadPublishedMaterialClaims = vi.hoisted(() => vi.fn());
 const mockReadPublishedProgramPath = vi.hoisted(() => vi.fn());
 const mockMatchesPreviewRoute = vi.hoisted(() => vi.fn());
 const activeReleaseId = "release-active";
 
 vi.mock("@/lib/content/preview/route", () => ({
   matchesPreviewRoute: mockMatchesPreviewRoute,
-}));
-vi.mock("@/lib/content/material/ownership", () => ({
-  readPublishedMaterialClaims: mockReadPublishedMaterialClaims,
 }));
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimePublicRoute: mockGetRuntimePublicRoute,
@@ -59,9 +55,6 @@ describe("projected public html route rejection", () => {
       .mockReturnValue(Effect.succeed({ managed: false, route: null }));
     mockMatchesPreviewRoute.mockReset();
     mockMatchesPreviewRoute.mockReturnValue(Effect.succeed(false));
-    mockReadPublishedMaterialClaims
-      .mockReset()
-      .mockReturnValue(Effect.succeed([]));
   });
 
   it("rejects missing projected routes through one indexed lookup", async () => {
@@ -83,20 +76,20 @@ describe("projected public html route rejection", () => {
     ] as const;
 
     for (const [pathname, kind] of paths) {
-      mockGetRuntimePublicRoute.mockReturnValueOnce(
-        Effect.succeed({
-          kind,
-          locale: pathname.startsWith("/id/") ? "id" : "en",
-          publicPath: pathname.split("/").slice(2).join("/"),
-          sitemap: true,
-          ...(kind === "subject-lesson"
-            ? {
-                sourcePath:
-                  "material/lesson/chemistry/green-chemistry/definition",
-              }
-            : {}),
-        })
-      );
+      if (kind === "subject-lesson") {
+        mockReadActiveContentRoute.mockReturnValueOnce(
+          Effect.succeed({ activeReleaseId, kind: "found" })
+        );
+      } else {
+        mockGetRuntimePublicRoute.mockReturnValueOnce(
+          Effect.succeed({
+            kind,
+            locale: pathname.startsWith("/id/") ? "id" : "en",
+            publicPath: pathname.split("/").slice(2).join("/"),
+            sitemap: true,
+          })
+        );
+      }
 
       await expect(readRejection(pathname)).resolves.toBe(null);
     }
@@ -200,65 +193,22 @@ describe("projected public html route rejection", () => {
     expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 
-  it("hard-rejects a source path claimed by one exact material owner", async () => {
-    const publicPath = "subjects/mathematics/functions/old-concept";
-    mockGetRuntimePublicRoute.mockReturnValueOnce(
-      Effect.succeed({
-        kind: "subject-lesson",
-        locale: "en",
-        publicPath,
-        sitemap: true,
-        sourcePath: "material/lesson/mathematics/functions/concept",
-      })
-    );
-    mockReadPublishedMaterialClaims.mockReturnValueOnce(
-      Effect.succeed([
-        {
-          contentKey: "material/lesson/mathematics/functions/concept",
-          kind: "missing",
-          locale: "en",
-        },
-      ])
-    );
-
-    await expect(readRejection(`/en/${publicPath}`)).resolves.toBe("en");
-    expect(mockGetRuntimePublicRoute).toHaveBeenCalledTimes(1);
-    expect(mockReadPublishedMaterialClaims).toHaveBeenCalledWith(
-      "en",
-      [
-        {
-          contentKey: "material/lesson/mathematics/functions/concept",
-          locale: "en",
-        },
-      ],
-      activeReleaseId
-    );
-  });
-
-  it("keys unmanaged ownership to the absence of an active release", async () => {
+  it("fails closed when signed material ownership is unavailable", async () => {
     mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
     mockReadActiveContentRoute.mockReturnValueOnce(
       Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
     );
-    mockGetRuntimePublicRoute.mockReturnValueOnce(
-      Effect.succeed({
-        kind: "subject-lesson",
-        locale: "en",
-        publicPath: "subjects/chemistry/green-chemistry/definition",
-        sitemap: true,
-        sourcePath: "material/lesson/chemistry/green-chemistry/definition",
-      })
-    );
 
     await expect(
       readRejection("/en/subjects/chemistry/green-chemistry/definition")
-    ).resolves.toBeNull();
+    ).resolves.toBe("en");
     expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId: null,
       family: "material",
       locale: "en",
       publicPath: "subjects/chemistry/green-chemistry/definition",
     });
+    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 
   it("uses active curriculum ownership for new routes and tombstones", async () => {
@@ -295,7 +245,9 @@ describe("projected public html route rejection", () => {
     ] as const;
 
     for (const [pathname, route] of paths) {
-      mockGetRuntimePublicRoute.mockReturnValueOnce(Effect.succeed(route));
+      if (!pathname.includes("/subjects/")) {
+        mockGetRuntimePublicRoute.mockReturnValueOnce(Effect.succeed(route));
+      }
 
       await expect(readRejection(pathname)).resolves.toBe("en");
     }

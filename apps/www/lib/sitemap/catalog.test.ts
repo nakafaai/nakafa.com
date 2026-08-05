@@ -53,7 +53,9 @@ vi.mock("@repo/internationalization/src/routing", async () => {
 
 beforeEach(() => {
   activeMocks.readActiveContentIdentity.mockReset();
-  activeMocks.readActiveContentIdentity.mockReturnValue(Effect.succeed(null));
+  activeMocks.readActiveContentIdentity.mockReturnValue(
+    Effect.succeed({ releaseId: "release-material" })
+  );
   articleMocks.readPublishedArticleBuckets.mockReset();
   articleMocks.readPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({ articleCount: 0, buckets: [], managed: false })
@@ -61,9 +63,8 @@ beforeEach(() => {
   materialMocks.readPublishedMaterialBuckets.mockReset();
   materialMocks.readPublishedMaterialBuckets.mockReturnValue(
     Effect.succeed({
-      activeReleaseId: null,
+      activeReleaseId: "release-material",
       buckets: [],
-      managed: false,
       materialCount: 0,
     })
   );
@@ -106,13 +107,6 @@ describe("sitemap page catalog", () => {
         locale: "en",
         page: 0,
         section: "articles",
-      },
-      {
-        id: "content_en_material_0",
-        kind: "content",
-        locale: "en",
-        page: 0,
-        section: "material",
       },
       {
         id: "content_en_tryout_0",
@@ -169,7 +163,6 @@ describe("sitemap page catalog", () => {
         return Effect.succeed({
           activeReleaseId,
           buckets: locale === "en" ? ["def"] : [],
-          managed: locale === "en",
           materialCount: locale === "en" ? 2 : 0,
         });
       }
@@ -231,6 +224,17 @@ describe("sitemap page catalog", () => {
     );
   });
 
+  it("propagates a missing active material publication", async () => {
+    activeMocks.readActiveContentIdentity.mockReturnValue(Effect.succeed(null));
+    materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+      Effect.fail(new Error("Signed material inventory is unavailable."))
+    );
+
+    await expect(
+      Effect.runPromise(readSitemapPageDescriptors())
+    ).rejects.toThrow("Signed material inventory is unavailable.");
+  });
+
   it("rejects descriptors assembled across material releases", async () => {
     activeMocks.readActiveContentIdentity
       .mockReturnValueOnce(Effect.succeed({ releaseId: "release-material" }))
@@ -239,7 +243,6 @@ describe("sitemap page catalog", () => {
       Effect.succeed({
         activeReleaseId: "release-material",
         buckets: [],
-        managed: false,
         materialCount: 0,
       })
     );
@@ -255,7 +258,7 @@ describe("sitemap page catalog", () => {
 
   it("splits counts into bounded XML descriptors", async () => {
     runtimeMocks.getRuntimeContentRouteCounts.mockImplementation(({ locale }) =>
-      Effect.succeed(locale === "en" ? [countRow("en", "material", 1001)] : [])
+      Effect.succeed(locale === "en" ? [countRow("en", "quran", 1001)] : [])
     );
     runtimeMocks.getRuntimePublicSitemapCount.mockReturnValue(
       Effect.succeed(null)
@@ -266,18 +269,18 @@ describe("sitemap page catalog", () => {
     ).resolves.toEqual([
       { id: "base" },
       {
-        id: "content_en_material_0",
+        id: "content_en_quran_0",
         kind: "content",
         locale: "en",
         page: 0,
-        section: "material",
+        section: "quran",
       },
       {
-        id: "content_en_material_1",
+        id: "content_en_quran_1",
         kind: "content",
         locale: "en",
         page: 1,
-        section: "material",
+        section: "quran",
       },
     ]);
   });

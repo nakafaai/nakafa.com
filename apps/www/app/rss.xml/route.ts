@@ -1,4 +1,3 @@
-import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { Feed, type Item } from "feed";
@@ -11,6 +10,7 @@ import {
   type MaterialReleasePin,
 } from "@/lib/content/material/release";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
 import {
   getRuntimeLatestContentRoutePage,
@@ -107,7 +107,13 @@ function getFeedContentRoutes() {
   return Effect.runPromise(
     Effect.gen(function* () {
       const active = yield* readActiveContentIdentity();
-      const activeReleaseId = active?.releaseId ?? null;
+      if (!active) {
+        return yield* new PublishedProjectionError({
+          locale: routing.defaultLocale,
+          publicPath: "rss.xml",
+        });
+      }
+      const activeReleaseId = active.releaseId;
       const routes = yield* Effect.forEach(
         routing.locales,
         (locale) =>
@@ -141,7 +147,7 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
     RSS_CONTENT_ROUTE_LIMIT
   );
   if (!published.managed) {
-    return yield* readFeedSourceRoutes(locale, "articles", new Set(), 100);
+    return yield* readFeedSourceRoutes(locale, "articles", 100);
   }
 
   return published.articles.map((article) => ({
@@ -177,42 +183,20 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
     sourcePath: material.sourcePath,
     title: material.title,
   }));
-  if (published.managed) {
-    return publishedRoutes;
-  }
-  const claimedContentKeys = new Set<string>(published.claimedContentKeys);
-  const sourceRoutes = yield* readFeedSourceRoutes(
-    locale,
-    "material",
-    claimedContentKeys,
-    RSS_CONTENT_ROUTE_LIMIT
-  );
-  return [...publishedRoutes, ...sourceRoutes]
-    .sort((left, right) => (right.date ?? 0) - (left.date ?? 0))
-    .slice(0, RSS_CONTENT_ROUTE_LIMIT);
+  return publishedRoutes;
 });
 
-/** Refills one source-owned feed after exact owners remove legacy rows. */
+/** Reads one bounded source-owned article feed before article cutover. */
 const readFeedSourceRoutes = Effect.fn("www.rss.readSourceRoutes")(function* (
   locale: (typeof routing.locales)[number],
-  section: "articles" | "material",
-  excludedContentKeys: ReadonlySet<string>,
+  section: "articles",
   limit: number
 ) {
-  const sourceRowLimit =
-    limit + Math.min(excludedContentKeys.size, EXACT_SCOPE_LIMIT);
   const routes: RuntimeLatestContentRoute[] = [];
   let cursor: string | null = null;
   let examinedRows = 0;
-  for (
-    let request = 0;
-    request < sourceRowLimit && examinedRows < sourceRowLimit;
-    request += 1
-  ) {
-    const pageLimit = Math.min(
-      RSS_SOURCE_PAGE_SIZE,
-      sourceRowLimit - examinedRows
-    );
+  for (let request = 0; request < limit && examinedRows < limit; request += 1) {
+    const pageLimit = Math.min(RSS_SOURCE_PAGE_SIZE, limit - examinedRows);
     const result: RuntimeLatestContentRoutePage =
       yield* getRuntimeLatestContentRoutePage({
         cursor,
@@ -222,9 +206,6 @@ const readFeedSourceRoutes = Effect.fn("www.rss.readSourceRoutes")(function* (
       });
     examinedRows += result.page.length;
     for (const route of result.page) {
-      if (excludedContentKeys.has(route.sourcePath)) {
-        continue;
-      }
       routes.push(route);
       if (routes.length === limit) {
         return routes;

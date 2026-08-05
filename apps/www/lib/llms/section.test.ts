@@ -45,13 +45,10 @@ beforeEach(() => {
   );
   mockReadMaterialInventory.mockReturnValue(
     Effect.succeed({
-      activeReleaseId: null,
-      buckets: [],
-      owner: "source",
+      activeReleaseId: "release-material",
+      buckets: ["abc"],
       pageCount: 1,
-      publishedRouteCount: 0,
-      sourcePageCount: 1,
-      sourceRouteCount: 100,
+      routeCount: 100,
     })
   );
   mockGetRuntimeContentRouteCounts.mockReturnValue(
@@ -92,29 +89,26 @@ describe("llms section indexes", () => {
     });
   });
 
-  it("reads non-article counts without article discovery", async () => {
+  it("reads signed material counts without source discovery", async () => {
     await expect(
       Effect.runPromise(
         getLlmsSectionPages({ locale: "en", section: "material" })
       )
     ).resolves.toEqual({
-      owner: "source",
+      owner: "published",
       pageCount: 1,
       routeCount: 100,
     });
     expect(mockReadPublishedArticleBuckets).not.toHaveBeenCalled();
   });
 
-  it("uses material partitions after their owner activates", async () => {
+  it("uses signed material partitions", async () => {
     mockReadMaterialInventory.mockReturnValue(
       Effect.succeed({
         activeReleaseId: "release-material",
         buckets: ["000", "abc"],
-        owner: "published",
         pageCount: 2,
-        publishedRouteCount: 42,
-        sourcePageCount: 0,
-        sourceRouteCount: 0,
+        routeCount: 42,
       })
     );
 
@@ -128,40 +122,6 @@ describe("llms section indexes", () => {
       routeCount: 42,
     });
     expect(mockGetRuntimeContentRouteCounts).not.toHaveBeenCalled();
-  });
-
-  it("combines partial exact partitions with source catalog pages", async () => {
-    mockReadMaterialInventory.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: "release-material",
-        buckets: ["abc"],
-        owner: "mixed",
-        pageCount: 2,
-        publishedRouteCount: 1,
-        sourcePageCount: 1,
-        sourceRouteCount: 100,
-      })
-    );
-
-    const pages = await Effect.runPromise(
-      getLlmsSectionPages({ locale: "en", section: "material" })
-    );
-
-    expect(pages).toEqual({
-      owner: "mixed",
-      pageCount: 2,
-      publishedRouteCount: 1,
-      sourceRouteCount: 100,
-    });
-    expect(
-      buildLlmsSectionPageMapText({
-        ...pages,
-        locale: "en",
-        section: "material",
-      })
-    ).toContain(
-      "100 English source-catalog material routes are reconciled with 1 exact published routes"
-    );
   });
 
   it("renders empty, single, and multi-page navigation", () => {

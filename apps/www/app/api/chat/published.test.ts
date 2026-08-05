@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -26,16 +27,18 @@ const input = {
   publicPath: previewProjection.publicPath,
   url: `https://nakafa.com/en/${previewProjection.publicPath}`,
 } as const;
+const activeReleaseId = ReleaseIdSchema.make("material-release");
 const publishedMaterial = {
-  managed: true,
+  activeReleaseId,
   projection: previewProjection,
   sourcePath: previewSourcePath,
 };
 
 beforeEach(() => {
   mocks.materialContext.mockReset();
-  mocks.materialRoute.mockReset();
-  mocks.materialRoute.mockReturnValue(Effect.succeed(publishedMaterial));
+  mocks.materialRoute
+    .mockReset()
+    .mockReturnValue(Effect.succeed(publishedMaterial));
 });
 
 describe("published Nina material", () => {
@@ -52,25 +55,9 @@ describe("published Nina material", () => {
     expect(isPublishedMaterialPath("en", "articles/mathematics")).toBe(false);
   });
 
-  it("leaves unmanaged material to the source-backed owner", async () => {
+  it("fails closed when the signed route is a tombstone", async () => {
     mocks.materialRoute.mockReturnValue(
-      Effect.succeed({ managed: false, projection: null })
-    );
-
-    await expect(
-      Effect.runPromise(readPublishedNinaMaterial(input))
-    ).resolves.toEqual({
-      contentKey: null,
-      learning: null,
-      managed: false,
-      placement: undefined,
-      programManaged: false,
-    });
-  });
-
-  it("fails closed when a managed route has no active projection", async () => {
-    mocks.materialRoute.mockReturnValue(
-      Effect.succeed({ managed: true, projection: null })
+      Effect.succeed({ projection: null, sourcePath: null })
     );
 
     await expect(
@@ -92,53 +79,25 @@ describe("published Nina material", () => {
         title: previewProjection.metadata.title,
         verified: true,
       },
-      managed: true,
       placement: undefined,
-      programManaged: false,
     });
     expect(mocks.materialContext).not.toHaveBeenCalled();
   });
 
-  it("leaves placement to source data while the program is unmanaged", async () => {
-    mocks.materialContext.mockReturnValue(
-      Effect.succeed({ managed: false, value: null })
-    );
+  it("drops a stale signed program context", async () => {
+    mocks.materialContext.mockReturnValue(Effect.succeed(null));
 
     await expect(
       Effect.runPromise(readPublishedNinaMaterial(input))
-    ).resolves.toMatchObject({
-      managed: true,
-      placement: undefined,
-      programManaged: false,
-    });
+    ).resolves.toMatchObject({ placement: undefined });
   });
 
-  it("drops stale placement after the program owner activates", async () => {
-    mocks.materialContext.mockReturnValue(
-      Effect.succeed({ managed: true, value: null })
-    );
-
-    await expect(
-      Effect.runPromise(readPublishedNinaMaterial(input))
-    ).resolves.toMatchObject({
-      managed: true,
-      placement: undefined,
-      programManaged: true,
-    });
-  });
-
-  it("rejects an invalid published program identity", async () => {
+  it("rejects an invalid signed program identity", async () => {
     mocks.materialContext.mockReturnValue(
       Effect.succeed({
-        managed: true,
-        value: {
-          context: {
-            nodeKey: "class-11-mathematics",
-            programKey: 42,
-          },
-          href: "/en/curriculum/invalid",
-          label: "Mathematics",
-        },
+        context: { nodeKey: "class-11-mathematics", programKey: 42 },
+        href: "/en/curriculum/invalid",
+        label: "Mathematics",
       })
     );
 
@@ -147,18 +106,15 @@ describe("published Nina material", () => {
     ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
   });
 
-  it("uses the active program placement without static reconstruction", async () => {
+  it("uses the signed program placement without static reconstruction", async () => {
     mocks.materialContext.mockReturnValue(
       Effect.succeed({
-        managed: true,
-        value: {
-          context: {
-            nodeKey: "class-11-mathematics",
-            programKey: "merdeka",
-          },
-          href: "/en/curriculum/merdeka/class-11/mathematics",
-          label: "Mathematics",
+        context: {
+          nodeKey: "class-11-mathematics",
+          programKey: "merdeka",
         },
+        href: "/en/curriculum/merdeka/class-11/mathematics",
+        label: "Mathematics",
       })
     );
 
@@ -172,7 +128,12 @@ describe("published Nina material", () => {
         parentTitle: "Mathematics",
         programKey: "merdeka",
       },
-      programManaged: true,
     });
+    expect(mocks.materialContext).toHaveBeenCalledWith(
+      "en",
+      previewProjection,
+      expect.anything(),
+      activeReleaseId
+    );
   });
 });

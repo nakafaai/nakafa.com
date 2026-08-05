@@ -139,12 +139,15 @@ export const readPublishedMaterialRoutes = Effect.fn(
       });
     }
     if (!page.managed) {
-      return { managed: false, routes: [], sourceRevision: null };
+      return yield* new PublishedProjectionError({
+        locale,
+        publicPath: "materials",
+      });
     }
     routes.push(...page.routes);
     sourceRevision = page.sourceRevision;
     if (page.done) {
-      return { managed: true, routes, sourceRevision };
+      return { routes, sourceRevision };
     }
     cursor = {
       cursor: page.nextCursor,
