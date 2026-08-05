@@ -3,10 +3,10 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 
 /**
  * Exact source-audited hash transitions caused by Aksara's import-free renderer
- * bindings. All 58 pairs have identical paths, revisions, titles, and choices.
- * The question 19 and 30 keys preserve the frozen production hashes from before
- * Nakafa moved their local renderer imports into the design system. This
- * migration-only evidence must be deleted after the cutover.
+ * bindings. Every pair has identical paths, revisions, titles, and choices.
+ * Some signed rows retain both a frozen attempt-placement hash and an older
+ * production question hash because both source states still own dependent
+ * records. This migration-only evidence must be deleted after the cutover.
  */
 const ATTESTED_CONTENT_TRANSITIONS = new Map([
   [
@@ -14,7 +14,15 @@ const ATTESTED_CONTENT_TRANSITIONS = new Map([
     "66bd9dafd86b0bedde1323d91bc421a85f58afb118580205491fb1715502726d",
   ],
   [
+    "0344f7c24a33f8d58ce9d5d50493dfeed2aca8d3d1681120518916912c105b68",
+    "66bd9dafd86b0bedde1323d91bc421a85f58afb118580205491fb1715502726d",
+  ],
+  [
     "220da11971d668829846ed0d0d375c025bd4eebd02a25c462806aae7ac596a1f",
+    "674ba9ede65b75d7ca52dce926ca44cbdc6cfd110d24dda305f9cd8b4b5f44fc",
+  ],
+  [
+    "9586425f8f8f8a6fb65cc53233832a0e05afb532c84f8e6e4d8ee3359aa0d795",
     "674ba9ede65b75d7ca52dce926ca44cbdc6cfd110d24dda305f9cd8b4b5f44fc",
   ],
   [
@@ -22,7 +30,15 @@ const ATTESTED_CONTENT_TRANSITIONS = new Map([
     "0334a005978e452ac88394610d7047c3428c31c700fa595b765e2a8b3a90e43e",
   ],
   [
+    "8c4af0d556c909fafb2b3761accc7b579e2fa177b66f90f77635891fa5c97f07",
+    "0334a005978e452ac88394610d7047c3428c31c700fa595b765e2a8b3a90e43e",
+  ],
+  [
     "c0cca2976bd015695b9e5b215d4c06e13de470fcd589baf09d62003bf06acce5",
+    "dc23862792cd99b78283ca91f963882513f8f3a8fa3b90fb022ba6cfe6546f51",
+  ],
+  [
+    "99a205fd39a00d30e6a2a19ca3b8021a85b5e5afeba7796a777d36d94ba31c73",
     "dc23862792cd99b78283ca91f963882513f8f3a8fa3b90fb022ba6cfe6546f51",
   ],
   [
@@ -30,7 +46,15 @@ const ATTESTED_CONTENT_TRANSITIONS = new Map([
     "119eb26396ff60ba3b45903c7cf983029879e592b6475d8724cce059c637a443",
   ],
   [
+    "ff4d45324bf4e1f929f7d3ee3f5ff1d33a858d9120dd5d77227027f9d0d7a1a5",
+    "119eb26396ff60ba3b45903c7cf983029879e592b6475d8724cce059c637a443",
+  ],
+  [
     "7a168be3289a39e05ed625bef0f529b84d8a9018b2eabf51b75e2f0788f24f2d",
+    "c1702975997982e17e1c1f46e5fe0f6a915db62582295c7df147beece782d2a4",
+  ],
+  [
+    "1feb4f072b6ccb2ec5273f54af785430e821d5074f9e661b2fbbff8cc94ac468",
     "c1702975997982e17e1c1f46e5fe0f6a915db62582295c7df147beece782d2a4",
   ],
   [
@@ -46,7 +70,15 @@ const ATTESTED_CONTENT_TRANSITIONS = new Map([
     "7dfa8d886426ced5c5bd69cbbf854f807a7d95b87ad35f89ff191bb76792b917",
   ],
   [
+    "41dd96e8e16e2c389362456dd7cb593807c3daac6b5ec6e6fcd1c83957d2087d",
+    "7dfa8d886426ced5c5bd69cbbf854f807a7d95b87ad35f89ff191bb76792b917",
+  ],
+  [
     "2f2c1e249a599fec204c4a003d1839464d2bcd5868c64acb12472519c4990646",
+    "264bee3aeeb695bbc1b9446294c561f3ce72c7234697bdb890a143f8e4eea85d",
+  ],
+  [
+    "7702204d61055b35d34e4e7c4677174d840a68da917318cd4fa88ea8a4a4e255",
     "264bee3aeeb695bbc1b9446294c561f3ce72c7234697bdb890a143f8e4eea85d",
   ],
   [
@@ -54,7 +86,15 @@ const ATTESTED_CONTENT_TRANSITIONS = new Map([
     "ce7adcd9d6e7328f4eef97860faa78b66fa3387025c9a15897db83412f3699c9",
   ],
   [
+    "332d20242ce4ec374d8f3a33a1a44c8c682881d10f837928db54746645a951d1",
+    "ce7adcd9d6e7328f4eef97860faa78b66fa3387025c9a15897db83412f3699c9",
+  ],
+  [
     "eaab9792c3174370971a3b0e2d619ba7aefb4648a259beab78190fb969f49941",
+    "c26bc55188c287e05c5e6f4efd0c25c92c63795cd24c21f265d7ac33409f0605",
+  ],
+  [
+    "0d1f9d9d993610be71957d00194cd77ff53d927dbcd14b4824a4c9d74083e4ac",
     "c26bc55188c287e05c5e6f4efd0c25c92c63795cd24c21f265d7ac33409f0605",
   ],
   [
