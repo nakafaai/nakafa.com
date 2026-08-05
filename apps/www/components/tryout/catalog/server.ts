@@ -24,15 +24,13 @@ export async function readFeaturedTryout(locale: Locale) {
   "use cache";
   applyContentRuntimeCache();
 
+  const featured = await fetchQuery(
+    api.tryouts.queries.catalog.getFeaturedQuestion,
+    { locale }
+  );
+
   return await Effect.runPromise(
     Effect.gen(function* () {
-      const featured = yield* Effect.tryPromise({
-        catch: (cause) => new TryoutCatalogReadError({ cause }),
-        try: () =>
-          fetchQuery(api.tryouts.queries.catalog.getFeaturedQuestion, {
-            locale,
-          }),
-      });
       const rendered = yield* loadSignedTryoutContent({
         answers: [],
         questions: [featured.question],
