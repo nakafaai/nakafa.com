@@ -1,17 +1,13 @@
-import type { Locale } from "next-intl";
 import { createSEODescription } from "@/lib/utils/seo/descriptions";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import type { SEOContext, SEOMetadata } from "@/lib/utils/seo/types";
 
 /** Builds fallback metadata when localized SEO dictionaries are unavailable. */
-export function generateFallbackMetadata(
-  context: SEOContext,
-  locale: Locale
-): SEOMetadata {
+export function generateFallbackMetadata(context: SEOContext): SEOMetadata {
   const displayName = getDisplayNameFromContext(context);
 
   if (context.type === "quran") {
-    const translation = context.surah.name.translation[locale];
+    const translation = context.surah.name.translation;
 
     return {
       title: createSEOTitle([translation, displayName]),

@@ -1,4 +1,8 @@
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  PublicPathSchema,
+  type Sha256Hash,
+} from "@nakafa/aksara-contracts/ids";
+import { bindQuranRow } from "@nakafa/aksara-contracts/quran/row-hash";
 import {
   QURAN_SOURCE_IDS,
   QuranAttributionRowSchema,
@@ -6,6 +10,7 @@ import {
 import {
   type QuranChunkRow,
   QuranChunkRowSchema,
+  type QuranRowPayload,
   type QuranRuntimeVerse,
   QuranRuntimeVerseSchema,
   type QuranSearchRow,
@@ -13,7 +18,8 @@ import {
   type QuranSurahRow,
   QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
-import { Schema } from "effect";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { Effect, Schema } from "effect";
 
 const testDigest = `sha256:${"1".repeat(64)}`;
 
@@ -121,4 +127,13 @@ export function makeQuranSearch(
     text,
     title: `Technical Surah ${surahNumber}`,
   });
+}
+
+/** Encodes one authentic snapshot envelope for signed Quran consumer tests. */
+export function encodeTestQuranRow(
+  snapshotId: Sha256Hash,
+  payload: QuranRowPayload
+) {
+  const record = Effect.runSync(bindQuranRow(snapshotId, payload));
+  return canonicalizeContentSnapshotRow({ family: "quran", record });
 }

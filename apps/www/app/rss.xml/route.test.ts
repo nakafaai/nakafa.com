@@ -4,7 +4,6 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/rss.xml/route";
 
-const mockFetchRuntimeQuranSurahs = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestArticles = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestMaterials = vi.hoisted(() => vi.fn());
@@ -18,12 +17,6 @@ vi.mock("@/lib/content/material/discovery", () => ({
 vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: mockReadActiveContentIdentity,
 }));
-vi.mock("@/lib/content/runtime/pages", () => ({
-  fetchRuntimeQuranSurahs: mockFetchRuntimeQuranSurahs,
-}));
-vi.mock("@/lib/utils/pages/quran", () => ({
-  getQuranSurahName: () => "Al-Fatihah",
-}));
 vi.mock("next-intl/server", () => ({
   getTranslations: ({ namespace }: { namespace: string }) =>
     Promise.resolve((key: string) => `${namespace}.${key}`),
@@ -32,14 +25,6 @@ vi.mock("next-intl/server", () => ({
 const activeReleaseId = "release-material";
 
 beforeEach(() => {
-  mockFetchRuntimeQuranSurahs.mockReset().mockResolvedValue([
-    {
-      name: {
-        translation: { en: "The Opening", id: "Pembukaan" },
-      },
-      number: 1,
-    },
-  ]);
   mockReadActiveContentIdentity
     .mockReset()
     .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
@@ -69,7 +54,7 @@ beforeEach(() => {
 });
 
 describe("rss route", () => {
-  it("serves signed articles, signed materials, and Quran as RSS XML", async () => {
+  it("serves dated signed articles and materials as RSS XML", async () => {
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({
         activeReleaseId,
@@ -111,9 +96,6 @@ describe("rss route", () => {
     expect(text).toContain(
       "<description><![CDATA[Identity Function]]></description>"
     );
-    expect(text).toContain("<![CDATA[The Opening]]>");
-    expect(text).toContain("<![CDATA[Pembukaan]]>");
-    expect(text).toContain("<![CDATA[1. Al-Fatihah]]>");
     expect(mockReadPublishedLatestArticles).toHaveBeenCalledWith("en", 100);
     expect(mockReadPublishedLatestArticles).toHaveBeenCalledWith("id", 100);
   });

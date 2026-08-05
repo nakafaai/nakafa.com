@@ -1,3 +1,4 @@
+import type { LearningGraphIdentity } from "@nakafa/aksara-contracts/graph/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { NAKAFA_CONTENT_BASE_URL } from "@repo/backend/convex/contents/constants";
 import type { Locale } from "@repo/contents/_types/content";
@@ -10,6 +11,7 @@ import { expect } from "vitest";
 interface ContentSearchFixture {
   contentHash: string;
   description: string;
+  graph?: LearningGraphIdentity;
   locale: Locale;
   markdown_url?: string;
   route: string;
@@ -26,19 +28,22 @@ export async function insertContentSearch(
   ctx: MutationCtx,
   fixture: ContentSearchFixture
 ) {
+  const { graph, ...document } = fixture;
   const sourcePath = fixture.sourcePath ?? fixture.route;
   const publicPath = getPublicSearchPath(fixture.locale, sourcePath);
-  const identity = createLearningGraphIdentityFromRoute({
-    locale: fixture.locale,
-    route: sourcePath,
-  });
+  const identity =
+    graph ??
+    createLearningGraphIdentityFromRoute({
+      locale: fixture.locale,
+      route: sourcePath,
+    });
 
   if (!identity) {
     expect.fail(`Expected graph identity for ${sourcePath}.`);
   }
 
   await ctx.db.insert("contentSearch", {
-    ...fixture,
+    ...document,
     ...identity,
     content_id: identity.assetId,
     markdown_url:

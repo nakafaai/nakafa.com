@@ -13,7 +13,7 @@ export const NakafaAgentQuranReferenceOptionsSchema = Schema.Struct({
     default: () => false,
   }).annotations({
     description:
-      "Whether to include concise tafsir text for the requested locale when available.",
+      "Whether to include the published tafsir text for the requested locale when available.",
   }),
   locale: Schema.optionalWith(LocaleSchema, {
     default: () => routing.defaultLocale,
@@ -39,13 +39,12 @@ const NakafaAgentQuranVerseSchema = Schema.Struct({
     description: "Verse number inside the surah.",
   }),
   tafsir: Schema.optional(
-    Schema.String.annotations({ description: "Optional concise tafsir text." })
+    Schema.String.annotations({
+      description: "Optional published tafsir text.",
+    })
   ),
   translation: Schema.String.annotations({
     description: "Selected translation text.",
-  }),
-  transliteration: Schema.String.annotations({
-    description: "Latin transliteration text.",
   }),
 })
   .pipe(Schema.mutable)
@@ -56,13 +55,13 @@ export const NakafaAgentQuranReferenceSchema = NakafaAgentContentRefSchema.pipe(
   Schema.extend(
     Schema.Struct({
       name: Schema.String.annotations({
-        description: "Localized surah display name.",
+        description: "Source-authenticated transliterated surah name.",
       }),
       revelation: Schema.String.annotations({
-        description: "Localized revelation place.",
+        description: "Source-authenticated revelation place.",
       }),
       translation: Schema.String.annotations({
-        description: "Localized surah name translation.",
+        description: "Source-authenticated surah name translation.",
       }),
       verses: Schema.Array(NakafaAgentQuranVerseSchema)
         .pipe(Schema.minItems(1), Schema.mutable)

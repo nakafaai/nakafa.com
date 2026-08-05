@@ -15,14 +15,10 @@ const mockGetCachedLlmsMdxText = vi.hoisted(() => vi.fn());
 const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
 const mockGetLlmsLegalPageText = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
-const mockGetRuntimePublicRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const activeReleaseId = "release-active";
 
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimePublicRoute: mockGetRuntimePublicRoute,
-}));
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: mockReadActiveContentRoute,
 }));
@@ -82,7 +78,6 @@ describe("llms markdown content resolver", () => {
     mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
     mockGetLlmsLegalPageText.mockReset().mockReturnValue(Effect.succeed(null));
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
-    mockGetRuntimePublicRoute.mockReset();
     mockReadActiveContentRoute.mockReset();
     mockReadActiveContentIdentity
       .mockReset()
@@ -95,13 +90,6 @@ describe("llms markdown content resolver", () => {
           : { activeReleaseId, kind: "unmanaged" }
       )
     );
-    mockGetRuntimePublicRoute.mockImplementation(({ publicPath }) => {
-      if (publicPath.startsWith("curriculum/")) {
-        return Effect.succeed({ kind: "curriculum-context" });
-      }
-
-      return Effect.succeed(null);
-    });
   });
 
   it("reads migrated public material markdown only from Aksara", async () => {
@@ -115,7 +103,6 @@ describe("llms markdown content resolver", () => {
       locale: "en",
       publicPath: PUBLISHED_PATH,
     });
-    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
   });
 
@@ -140,7 +127,6 @@ describe("llms markdown content resolver", () => {
       locale: "en",
       publicPath: NEW_PATH,
     });
-    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 
   it("does not fall back after an owned material route is deleted", async () => {
@@ -150,7 +136,6 @@ describe("llms markdown content resolver", () => {
 
     await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBeNull();
 
-    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
     expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
   });
@@ -194,7 +179,6 @@ describe("llms markdown content resolver", () => {
     );
 
     await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBeNull();
-    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
   });
 
@@ -226,7 +210,6 @@ describe("llms markdown content resolver", () => {
     await expect(
       readMarkdown("try-out/indonesia/snbt/2027/set-1")
     ).resolves.toBeNull();
-    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
   });
 
@@ -268,7 +251,6 @@ describe("llms markdown content resolver", () => {
       locale: "en",
       publicPath: "subjects/mathematics/integral/invalid.segment",
     });
-    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 
   it("treats the empty markdown slug as an unsupported route index", async () => {
@@ -303,21 +285,10 @@ describe("llms markdown content resolver", () => {
     }
   );
 
-  it("surfaces indexed public-route lookup failures", async () => {
-    const error = new Error("route lookup failed");
-    mockGetRuntimePublicRoute.mockReturnValueOnce(Effect.fail(error));
-
-    await expect(readMarkdown("curriculum/custom")).rejects.toThrow(
-      error.message
-    );
-  });
-
   it("surfaces active material-route lookup failures", async () => {
     const error = new Error("active route lookup failed");
     mockReadActiveContentRoute.mockReturnValueOnce(Effect.fail(error));
 
     await expect(readMarkdown(PUBLISHED_PATH)).rejects.toThrow(error.message);
-
-    expect(mockGetRuntimePublicRoute).not.toHaveBeenCalled();
   });
 });

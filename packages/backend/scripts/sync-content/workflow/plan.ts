@@ -14,7 +14,6 @@ export type IncrementalSyncRowPhase = "articles" | "curriculum";
  */
 export interface IncrementalSyncPlan {
   readonly refreshPublicRoutes: boolean;
-  readonly refreshQuran: boolean;
   readonly routeArtifactTargets: readonly ContentRouteArtifactTarget[];
   readonly rowPhases: readonly IncrementalSyncRowPhase[];
 }
@@ -46,7 +45,6 @@ export function readIncrementalSyncPlan(
   const materialSourcePaths = sourcePaths.filter(
     (file) => isMaterialSourcePath(file) || isCurriculumSourcePath(file)
   );
-  const quranSourcePaths = sourcePaths.filter(isQuranSourcePath);
   const articleRowsChanged =
     hasGraphProjectionChanges ||
     hasSharedContentContractChanges ||
@@ -60,10 +58,6 @@ export function readIncrementalSyncPlan(
     hasMaterialRegistryChanges ||
     hasProgramCatalogChanges ||
     materialSourcePaths.length > 0;
-  const quranRowsChanged =
-    hasGraphProjectionChanges ||
-    hasSharedContentContractChanges ||
-    quranSourcePaths.length > 0;
   const rowPhases: IncrementalSyncRowPhase[] = [];
 
   if (articleRowsChanged) {
@@ -91,16 +85,10 @@ export function readIncrementalSyncPlan(
         hasMaterialRegistryChanges ||
         hasProgramCatalogChanges
     ),
-    ...readRouteArtifactTargets(
-      "quran",
-      quranSourcePaths,
-      hasGraphProjectionChanges || hasSharedContentContractChanges
-    ),
   ];
 
   return {
     refreshPublicRoutes,
-    refreshQuran: quranRowsChanged,
     routeArtifactTargets,
     rowPhases,
   };
@@ -215,15 +203,6 @@ function isMaterialRegistryPath(file: string) {
 /** Return whether a changed path belongs to authored material content. */
 function isMaterialSourcePath(file: string) {
   return file.includes("/material/");
-}
-
-/** Return whether a changed path belongs to authored Quran content. */
-function isQuranSourcePath(file: string) {
-  return (
-    file.includes("/quran/") ||
-    file === "packages/contents/_lib/quran.ts" ||
-    file === "packages/contents/_types/quran.ts"
-  );
 }
 
 /** Return whether a changed path owns learning-program catalog data. */

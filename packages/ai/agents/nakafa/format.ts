@@ -57,7 +57,6 @@ export function formatQuran(result: NakafaAgentQuranReference) {
         (verse) => `
     ## Verse ${verse.number}
     - Arabic: ${verse.arabic}
-    - Transliteration: ${verse.transliteration}
     - Translation: ${verse.translation}
     ${verse.tafsir ? `- Tafsir: ${verse.tafsir}` : ""}`
       )

@@ -1,19 +1,18 @@
-import { formatSearch } from "@repo/ai/agents/nakafa/format";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
+import {
+  combineSearchResults,
+  formatSearchGroup,
+  getSearchTokens,
+  rankSearchResult,
+} from "@repo/ai/agents/nakafa/tools/search-result";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type {
-  NakafaAgentSearchInput,
-  NakafaAgentSearchResult,
-} from "@repo/contents/_lib/agent/schema/search";
+import type { NakafaAgentSearchInput } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 type SearchInput = ReturnType<typeof getSearchInput>;
-
-const searchTokenPattern = /[\p{L}\p{N}]+/gu;
-const routeSeparatorPattern = /[/_-]+/gu;
 
 /** Searches Nakafa content and writes a bounded `data-nakafa` UI part. */
 export const search = Effect.fn("nakafa.search")(function* ({
@@ -157,146 +156,4 @@ function getSearchInputs(input: SearchInput) {
 /** Derives the stable UI data-part id for one Nakafa search run. */
 function getNakafaSearchPartId(toolCallId: string, index: number) {
   return `${toolCallId}-${index + 1}`;
-}
-
-/** Builds the combined search result consumed by Nakafa follow-up routing. */
-function combineSearchResults(
-  input: SearchInput,
-  results: NakafaAgentSearchResult[],
-  queryTokens: string[]
-) {
-  if (results.length === 1) {
-    return results[0];
-  }
-
-  const ranked = rankSearchItems(
-    interleaveSearchItems(results.map((result) => result.items)),
-    queryTokens
-  );
-  const items = ranked.slice(0, input.limit);
-  const nextOffset = input.offset + items.length;
-  const hasMore =
-    ranked.length > items.length || results.some((result) => result.has_more);
-
-  const result = {
-    count: items.length,
-    has_more: hasMore,
-    items,
-    limit: input.limit,
-    offset: input.offset,
-  };
-
-  if (!hasMore) {
-    return result;
-  }
-
-  return {
-    ...result,
-    next_offset: nextOffset,
-  };
-}
-
-/** Merges query-specific search pages without letting one query dominate. */
-function interleaveSearchItems(groups: NakafaAgentSearchResult["items"][]) {
-  const ranked: NakafaAgentSearchResult["items"] = [];
-  const seen = new Set<string>();
-  const maxLength = Math.max(0, ...groups.map((items) => items.length));
-
-  for (let index = 0; index < maxLength; index++) {
-    for (const items of groups) {
-      const item = items[index];
-
-      if (!item || seen.has(item.content_id)) {
-        continue;
-      }
-
-      ranked.push(item);
-      seen.add(item.content_id);
-    }
-  }
-
-  return ranked;
-}
-
-/** Applies query relevance before the UI and agent consume search evidence. */
-function rankSearchResult(result: NakafaAgentSearchResult, tokens: string[]) {
-  return {
-    ...result,
-    items: rankSearchItems(result.items, tokens),
-  };
-}
-
-/** Applies query relevance after search and multi-query merging. */
-function rankSearchItems(
-  items: NakafaAgentSearchResult["items"],
-  tokens: string[]
-) {
-  if (tokens.length === 0) {
-    return items;
-  }
-
-  return [...items].sort((left, right) => {
-    const scoreDelta =
-      getSearchScore(right, tokens) - getSearchScore(left, tokens);
-
-    if (scoreDelta !== 0) {
-      return scoreDelta;
-    }
-
-    return 0;
-  });
-}
-
-/** Tokenizes model-provided search text without language-specific rules. */
-function getSearchTokens(queries: string[]) {
-  return [
-    ...new Set(
-      queries.flatMap((query) =>
-        Array.from(query.toLocaleLowerCase().matchAll(searchTokenPattern)).map(
-          ([token]) => token
-        )
-      )
-    ),
-  ];
-}
-
-/** Scores search evidence by metadata text that the UI and agent can inspect. */
-function getSearchScore(
-  item: NakafaAgentSearchResult["items"][number],
-  tokens: string[]
-) {
-  const searchableTokens = new Set(
-    getSearchTokens([
-      item.title,
-      item.description,
-      item.route.replaceAll(routeSeparatorPattern, " "),
-    ])
-  );
-
-  return tokens.reduce((score, token) => {
-    if (searchableTokens.has(token)) {
-      return score + 1;
-    }
-
-    return score;
-  }, 0);
-}
-
-/** Adds query context to the markdown returned to the Nakafa sub-agent. */
-function formatSearchGroup(
-  input: SearchInput,
-  result: NakafaAgentSearchResult
-) {
-  const queries = input.queries ?? [];
-
-  if (queries.length === 0) {
-    return formatSearch(result);
-  }
-
-  return [
-    "# Nakafa Search Query",
-    ...queries.map((query) => `- Query: "${query}"`),
-    "",
-    formatSearch(result),
-  ].join("\n");
 }

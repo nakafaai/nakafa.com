@@ -1,9 +1,6 @@
-import { loadStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Data, Effect } from "effect";
 import { hasLocale } from "next-intl";
-import { MissingLocalizedRouteProjectionError } from "@/lib/routing/locale/error";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import { projectLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
@@ -75,18 +72,6 @@ function toStaticNavigationHref(parsed: ParsedLocalizedHref) {
 }
 
 /**
- * Detects paths in a projected namespace so missing rows fail closed instead of
- * falling back to mixed-locale static navigation.
- */
-function isProjectedNamespace(publicPath: string, locale: Locale) {
-  const namespace = publicPath.split("/").filter(Boolean)[0];
-
-  return PUBLIC_ROUTE_SURFACES.some(
-    (surface) => surface.routeSlugs[locale] === namespace
-  );
-}
-
-/**
  * Resolves a browser href to the target locale's route-owned navigation href.
  *
  * Projected content routes are matched by stable source identity. Static app
@@ -131,35 +116,6 @@ export const resolveLocalizedNavigationHref = Effect.fn(
   });
   if (publishedHref) {
     return publishedHref;
-  }
-
-  const index = yield* loadStaticPublicLearningIndex();
-  const projectedRoute = index.resolveRouteByPath(
-    parsed.publicPath,
-    parsed.currentLocale
-  );
-
-  if (projectedRoute) {
-    const targetRoute = yield* Effect.fromNullable(
-      index.projectRouteToLocale(projectedRoute, input.locale)
-    ).pipe(
-      Effect.mapError(
-        () =>
-          new MissingLocalizedRouteProjectionError({
-            locale: input.locale,
-            publicPath: parsed.publicPath,
-          })
-      )
-    );
-
-    return toNavigationHref(targetRoute.publicPath, "");
-  }
-
-  if (isProjectedNamespace(parsed.publicPath, parsed.currentLocale)) {
-    return yield* new MissingLocalizedRouteProjectionError({
-      locale: input.locale,
-      publicPath: parsed.publicPath,
-    });
   }
 
   return toStaticNavigationHref(parsed);

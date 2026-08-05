@@ -1,4 +1,4 @@
-import type { RuntimeQuranSurahMetadata } from "@repo/backend/client/nakafa/types";
+import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import type { ProgramNavigationLevel } from "@repo/contents/_types/program/schema";
 import type {
   Grade,
@@ -48,7 +48,7 @@ export type SEOContext =
     }
   | {
       type: "quran";
-      surah: RuntimeQuranSurahMetadata;
+      surah: QuranSurahRow;
     };
 
 /**

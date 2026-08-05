@@ -1,3 +1,5 @@
+import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
+import type { LearningGraphIdentity } from "@nakafa/aksara-contracts/graph/spec";
 import { Nakafa, type NakafaRuntime } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import {
@@ -5,8 +7,12 @@ import {
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { normalizeNakafaContentInput } from "@repo/contents/_lib/agent/refs";
+import {
+  createNakafaContentRefFromGraphProjection,
+  normalizeNakafaContentInput,
+} from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
+import type { Locale } from "@repo/contents/_types/content";
 import { defaultLocale, locales } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Option, Schema } from "effect";
@@ -67,7 +73,6 @@ const nakafaTestRuntime = {
         ? { tafsir: "Tafsir from the injected test adapter." }
         : {}),
       translation: "In the name of Allah.",
-      transliteration: "Bismillahirrahmanirrahim",
     };
 
     return Effect.succeed(
@@ -140,12 +145,65 @@ const nakafaTestRefs = [
     "articles"
   ),
   readNakafaContentRefFixture("en", "articles/politics/missing", "articles"),
-  readNakafaContentRefFixture(
-    "en",
-    "try-out/indonesia/snbt/2027/set-2",
-    "tryout"
-  ),
+  makeSnbtSetRef("en", "try-out/indonesia/snbt/2027/set-2", "set-2"),
 ] as const;
+
+/** Builds one signed SNBT set reference for AI tests. */
+export function makeSnbtSetRef(locale: Locale, route: string, setKey: string) {
+  const graph = Effect.runSync(
+    makeLearningGraphIdentity({
+      concept: ["tryout", "indonesia", "snbt", "2027", setKey],
+      learningObject: ["tryout-set", "indonesia", "snbt", "2027", setKey],
+      lens: ["tryout", "indonesia", "snbt"],
+      locale,
+    })
+  );
+
+  return makeTryoutRef(graph, locale, route);
+}
+
+/** Builds one signed SNBT section reference for AI tests. */
+export function makeSnbtSectionRef(
+  locale: Locale,
+  route: string,
+  setKey: string,
+  sectionKey: string
+) {
+  const graph = Effect.runSync(
+    makeLearningGraphIdentity({
+      concept: ["tryout", "indonesia", "snbt", "2027", sectionKey],
+      learningObject: [
+        "tryout-section",
+        "indonesia",
+        "snbt",
+        "2027",
+        setKey,
+        sectionKey,
+      ],
+      lens: ["tryout", "indonesia", "snbt"],
+      locale,
+    })
+  );
+
+  return makeTryoutRef(graph, locale, route);
+}
+
+/** Converts one exact signed try-out identity into the shared agent ref. */
+function makeTryoutRef(
+  graph: LearningGraphIdentity,
+  locale: Locale,
+  route: string
+) {
+  return Option.getOrThrow(
+    createNakafaContentRefFromGraphProjection({
+      ...graph,
+      content_id: graph.assetId,
+      locale,
+      route,
+      section: "tryout",
+    })
+  );
+}
 
 /** Resolves graph content IDs and public URL projections for injected tests. */
 function resolveNakafaTestContentRef(input: string) {

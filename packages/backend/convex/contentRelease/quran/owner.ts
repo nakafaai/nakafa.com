@@ -13,19 +13,22 @@ export const loadQuranOwner = Effect.fn("contentRelease.loadQuranOwner")(
       owner.snapshotId === null
     ) {
       return {
-        activeManifestHash: owner.active?.manifestHash ?? null,
-        activeReleaseId: owner.active?.releaseId ?? null,
+        activeManifestHash: owner.active
+          ? String(owner.active.manifestHash)
+          : null,
+        activeReleaseId: owner.active ? String(owner.active.releaseId) : null,
         managed: false,
         snapshotId: null,
         sourceRevision: null,
       };
     }
+    const sourceRevision = readSourceRevision(owner.active);
     return {
-      activeManifestHash: owner.active.manifestHash,
-      activeReleaseId: owner.active.releaseId,
+      activeManifestHash: String(owner.active.manifestHash),
+      activeReleaseId: String(owner.active.releaseId),
       managed: true,
-      snapshotId: owner.snapshotId,
-      sourceRevision: readSourceRevision(owner.active),
+      snapshotId: String(owner.snapshotId),
+      sourceRevision: sourceRevision ? String(sourceRevision) : null,
     };
   }
 );

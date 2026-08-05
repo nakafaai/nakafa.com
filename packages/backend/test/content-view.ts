@@ -1,3 +1,4 @@
+import type { LearningGraphIdentity } from "@nakafa/aksara-contracts/graph/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { LearningContextStorage } from "@repo/backend/convex/contents/context";
@@ -8,10 +9,8 @@ import {
   type createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import {
-  createLearningGraphIdentityFromRoute,
-  type LearningGraphIdentity,
-} from "@repo/contents/_types/learning-graph";
+import { testTryoutGraph } from "@repo/backend/test/tryouts";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { expect } from "vitest";
 
 export const CONTENT_VIEW_NOW = Date.UTC(2026, 4, 29, 10, 0, 0);
@@ -20,7 +19,14 @@ export const ARTICLE_VIEW_ID = "asset:id:catalog:article:views";
 export const SUBJECT_VIEW_ROUTE = "material/lesson/mathematics/vector/addition";
 export const SUBJECT_VIEW_ID = "asset:id:catalog:subject:views";
 export const TRYOUT_VIEW_ROUTE = "try-out/indonesia/snbt/2027/set-1";
-export const TRYOUT_VIEW_ID = "asset:id:catalog:tryout-set:views";
+const TRYOUT_VIEW_GRAPH = testTryoutGraph({
+  countryKey: "indonesia",
+  examKey: "snbt",
+  kind: "set",
+  setKey: "set-1",
+  trackKey: "2027",
+});
+export const TRYOUT_VIEW_ID = TRYOUT_VIEW_GRAPH.assetId;
 export const canonicalViewContext = {
   contextKey: "canonical",
   contextMode: "canonical",
@@ -177,10 +183,11 @@ async function insertContentViewSubject(ctx: MutationCtx) {
   return { contentId: SUBJECT_VIEW_ID, id };
 }
 
-/** Inserts one source-owned try-out set route projection. */
+/** Inserts one route projection backed by a signed try-out set identity. */
 async function insertContentViewTryout(ctx: MutationCtx) {
   await insertContentViewRoute(ctx, {
     contentId: TRYOUT_VIEW_ID,
+    graph: TRYOUT_VIEW_GRAPH,
     kind: "tryout-set",
     route: TRYOUT_VIEW_ROUTE,
     section: "tryout",
@@ -190,11 +197,17 @@ async function insertContentViewTryout(ctx: MutationCtx) {
   return { contentId: TRYOUT_VIEW_ID };
 }
 
-/** Inserts the source-owned target kinds supported by content views. */
-export async function insertContentViewSourceTargets(ctx: MutationCtx) {
+/** Inserts the route target kinds supported by content views. */
+export async function insertContentViewRouteTargets(ctx: MutationCtx) {
   const examRoute = "try-out/indonesia/snbt";
+  const examGraph = testTryoutGraph({
+    countryKey: "indonesia",
+    examKey: "snbt",
+    kind: "exam",
+  });
   const examContentId = await insertContentViewRoute(ctx, {
-    contentId: "asset:id:catalog:tryout-exam:views",
+    contentId: examGraph.assetId,
+    graph: examGraph,
     kind: "tryout-exam",
     route: examRoute,
     section: "tryout",

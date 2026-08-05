@@ -104,7 +104,6 @@ function quranReference() {
         arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
         number: 1,
         translation: "In the name of Allah.",
-        transliteration: "Bismillahirrahmanirrahim",
       },
     ],
   };

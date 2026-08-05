@@ -1,20 +1,22 @@
+import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
+import { defaultLocale } from "@repo/utilities/locales";
 import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
-import { getQuranApiSurahPage } from "@/lib/content/runtime";
+import { readQuranApiPage } from "@/lib/content/quran";
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
 
 /**
- * Returns one Quran surah from the durable Convex Quran runtime model.
+ * Returns one Quran surah from the active signed Aksara publication.
  */
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ surah: string }> }
 ) {
   const { surah } = await params;
-  const surahNumber = parseSurahNumber(surah);
+  const surahNumber = parseQuranSurahNumber(surah);
 
   if (!surahNumber) {
     return NextResponse.json(
@@ -24,17 +26,10 @@ export async function GET(
   }
 
   return Effect.runPromise(
-    getQuranApiSurahPage({ surah: surahNumber }).pipe(
-      Effect.map((page) => {
-        if (!page) {
-          return NextResponse.json(
-            { error: "Failed to fetch surah." },
-            { status: 404 }
-          );
-        }
-
-        return NextResponse.json(page.surahData);
-      }),
+    readQuranApiPage({ locale: defaultLocale, surahNumber }).pipe(
+      Effect.map((page) =>
+        NextResponse.json({ ...page.surah, verses: page.verses })
+      ),
       Effect.catchAll((error) =>
         Effect.gen(function* () {
           yield* logError(toError(error), {
@@ -51,21 +46,6 @@ export async function GET(
       )
     )
   );
-}
-
-/** Parses a route segment into a positive Quran surah number. */
-function parseSurahNumber(value: string) {
-  const surahNumber = Number.parseInt(value, 10);
-
-  if (Number.isNaN(surahNumber) || surahNumber.toString() !== value) {
-    return null;
-  }
-
-  if (surahNumber < 1) {
-    return null;
-  }
-
-  return surahNumber;
 }
 
 /** Converts unknown Effect failures into real Error values for structured logging. */

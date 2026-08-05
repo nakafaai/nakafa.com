@@ -130,10 +130,6 @@ export async function loadWorkflow(
       startTime: 0,
     }),
   }));
-  vi.doMock("@repo/backend/scripts/sync-content/content/quran", () => ({
-    /** Records Quran sync calls. */
-    syncQuran: () => syncStep("syncQuran"),
-  }));
   vi.doMock("@repo/backend/scripts/sync-content/routes/artifacts", () => ({
     /** Builds deterministic artifact targets for workflow orchestration tests. */
     createContentRouteArtifactTargets: (

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import type { Surah } from "@repo/contents/_types/quran";
+import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 
@@ -112,29 +112,16 @@ function getTranslator(namespace: string) {
 }
 
 const surah = {
+  kind: "quran-surah",
   name: {
-    long: "الفاتحة",
-    short: "Al-Fatihah",
-    translation: {
-      en: "The Opening",
-      id: "Pembukaan",
-    },
-    transliteration: {
-      en: "Al-Fatihah",
-      id: "Al-Fatihah",
-    },
+    arabic: "Al-Fatihah",
+    translation: "The Opening",
+    transliteration: "Al-Fatihah",
   },
   number: 1,
   numberOfVerses: 7,
-  preBismillah: null,
-  revelation: {
-    arab: "مكة",
-    en: "Meccan",
-    id: "Makkiyah",
-  },
-  sequence: 5,
-  verses: [],
-} satisfies Surah;
+  revelation: { order: 5, place: "Meccan" },
+} satisfies QuranSurahRow;
 
 beforeEach(() => {
   mockCacheLife.mockClear();

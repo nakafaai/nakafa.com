@@ -39,7 +39,7 @@ export const nakafaQuran = createPrompt({
   taskContext: `
     # quran Tool
 
-    Read a bounded Quran verse range from Nakafa with Arabic text, transliteration, translation, and optional tafsir.
+    Read a bounded signed Quran verse range from Nakafa with Arabic text, translation, and optional tafsir.
   `,
 
   toolUsageGuidelines: `

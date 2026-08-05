@@ -78,7 +78,7 @@ const NAKAFA_MCP_TOOLS: readonly NakafaMcpTool[] = [
   {
     annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
     description:
-      "Return bounded Surah and verse data with Arabic text, transliteration, selected translation, optional tafsir, and canonical Nakafa URL.",
+      "Return bounded signed Surah and verse data with Arabic text, selected translation, optional tafsir, and canonical Nakafa URL.",
     inputSchema: NakafaGetQuranReferenceToolInputSchema,
     name: "nakafa_get_quran_reference",
     outputSchema: NakafaGetQuranReferenceToolOutputSchema,

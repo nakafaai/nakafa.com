@@ -3,12 +3,10 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { readQuranMetadata } from "@repo/contents/_lib/quran";
 import type { Locale } from "@repo/contents/_types/content";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { locales } from "@repo/utilities/locales";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 type CatalogQuranProjection = Pick<
@@ -28,24 +26,11 @@ type CatalogQuranProjection = Pick<
 describe("contentSync/mutations/quran", () => {
   it("removes rows beyond the complete localized Quran corpus", async () => {
     const t = convexTest(schema, convexModules);
-    const surahs = await Effect.runPromise(readQuranMetadata());
     const surahNumbers = Array.from({ length: 114 }, (_, index) => index + 1);
 
     await t.mutation(async (ctx) => {
-      for (const surah of surahs) {
-        await ctx.db.insert("quranSurahs", {
-          ...surah,
-          contentHash: `surah:${surah.number}`,
-          syncedAt: 1,
-        });
-      }
-
-      await ctx.db.insert("quranSurahs", {
-        ...surahs[0],
-        contentHash: "surah:stale",
-        number: 999,
-        syncedAt: 1,
-      });
+      await ctx.db.insert("quranSurahs", quranSurah(1));
+      await ctx.db.insert("quranSurahs", quranSurah(999));
 
       for (const locale of locales) {
         for (const surahNumber of surahNumbers) {
@@ -172,6 +157,25 @@ describe("contentSync/mutations/quran", () => {
     ).toEqual(["1:1", "2:1"]);
   });
 });
+
+/** Builds one legacy Quran metadata row for transitional cleanup coverage. */
+function quranSurah(number: number) {
+  return {
+    contentHash: `surah:${number}`,
+    name: {
+      long: "Fixture",
+      short: "Fixture",
+      transliteration: { en: "Fixture", id: "Fixture" },
+      translation: { en: "Fixture", id: "Fixture" },
+    },
+    number,
+    numberOfVerses: 1,
+    preBismillah: null,
+    revelation: { arab: "Fixture", en: "Fixture", id: "Fixture" },
+    sequence: number,
+    syncedAt: 1,
+  };
+}
 
 /** Inserts one Quran route using its supplied or route-derived graph identity. */
 async function insertQuranRoute(

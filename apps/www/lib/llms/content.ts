@@ -6,7 +6,6 @@ import {
   readActiveContentIdentity,
 } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { getRuntimePublicRoute } from "@/lib/content/runtime/routes";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
 import { getLlmsLegalPageText } from "@/lib/llms/legal";
 import { getCachedLlmsMdxText } from "@/lib/llms/mdx";
@@ -147,28 +146,11 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
       return null;
     }
 
-    if (!PROJECTED_PUBLIC_ROUTE_SEGMENTS.has(routeSegment)) {
-      const source: MarkdownSource = { cleanSlug, kind: "source" };
-      return source;
-    }
-
-    const publicRoute = yield* getRuntimePublicRoute({
-      locale,
-      publicPath: cleanSlug,
-    });
-
-    if (!publicRoute || publicRoute.kind === "curriculum-context") {
+    if (PROJECTED_PUBLIC_ROUTE_SEGMENTS.has(routeSegment)) {
       return null;
     }
 
-    if (!publicRoute.sourcePath) {
-      return null;
-    }
-    const source: MarkdownSource = {
-      cleanSlug: publicRoute.sourcePath,
-      kind: "source",
-      publicSlug: cleanSlug,
-    };
+    const source: MarkdownSource = { cleanSlug, kind: "source" };
     return source;
   }
 );

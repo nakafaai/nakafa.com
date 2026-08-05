@@ -22,8 +22,6 @@ vi.mock("@repo/backend/scripts/sync-content/convex/counts", () => ({
     Effect.succeed({
       ...counts,
       articles: 1,
-      quranSurahs: 1,
-      quranVerses: 1,
     }),
 }));
 
@@ -45,16 +43,8 @@ vi.mock("@repo/backend/scripts/sync-content/verify/graph", () => ({
   verifyGraphIdentity: () => Effect.succeed(true),
 }));
 
-vi.mock("@repo/backend/scripts/sync-content/verify/quran", () => ({
-  verifyQuranRuntime: () => Effect.succeed(true),
-}));
-
 vi.mock("@repo/backend/scripts/sync-content/verify/summary", () => ({
   logVerifySuccess: () => undefined,
-}));
-
-vi.mock("@repo/contents/_lib/quran", () => ({
-  readQuranMetadata: () => Effect.succeed([{ numberOfVerses: 1 }]),
 }));
 
 vi.mock("@repo/contents/_types/material/registry", () => ({

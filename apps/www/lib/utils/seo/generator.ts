@@ -245,7 +245,7 @@ export async function generateSEOMetadata(
   return await Effect.runPromise(
     effect.pipe(
       Effect.catchTag("SEOTranslationLoadError", () =>
-        Effect.sync(() => generateFallbackMetadata(context, locale))
+        Effect.sync(() => generateFallbackMetadata(context))
       )
     )
   );

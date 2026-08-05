@@ -28,7 +28,7 @@ import {
   ARTICLE_VIEW_ROUTE,
   insertContentViewArticle,
   insertContentViewRoute,
-  insertContentViewSourceTargets,
+  insertContentViewRouteTargets,
 } from "@repo/backend/test/content-view";
 import {
   activateMaterialCatalog,
@@ -471,9 +471,9 @@ describe("contents/views/target", () => {
     ).resolves.toBeNull();
   });
 
-  it("resolves subject and try-out graph identities from source routes", async () => {
+  it("resolves subject and try-out identities from route projections", async () => {
     const target = convexTest(schema, convexModules);
-    const cases = await target.mutation(insertContentViewSourceTargets);
+    const cases = await target.mutation(insertContentViewRouteTargets);
     const results = await Promise.all(
       cases.map(({ input }) =>
         target.query((ctx) => runConvexProgram(loadContentTarget(ctx, input)))

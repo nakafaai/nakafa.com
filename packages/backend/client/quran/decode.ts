@@ -1,0 +1,398 @@
+import {
+  GitCommitShaSchema,
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  QURAN_SURAH_COUNT,
+  type QuranChunkRow,
+  QuranChunkRowSchema,
+  type QuranRuntimeVerse,
+  type QuranSearchRow,
+  QuranSearchRowSchema,
+  type QuranSurahRow,
+  QuranSurahRowSchema,
+} from "@nakafa/aksara-contracts/quran/spec";
+import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
+import { Effect, Schema } from "effect";
+
+type QuranCatalogResult = FunctionReturnType<
+  typeof api.contentRelease.quran.surahs
+>;
+type QuranPageResult = FunctionReturnType<typeof api.contentRelease.quran.page>;
+type QuranReferenceResult = FunctionReturnType<
+  typeof api.contentRelease.quran.reference
+>;
+
+const QuranPublicationOperationSchema = Schema.Literal(
+  "catalog",
+  "page",
+  "reference"
+);
+type QuranPublicationOperation = typeof QuranPublicationOperationSchema.Type;
+
+const PublishedQuranSourceSchema = Schema.Struct({
+  activeManifestHash: Sha256HashSchema,
+  activeReleaseId: ReleaseIdSchema,
+  snapshotId: Sha256HashSchema,
+  sourceRevision: GitCommitShaSchema,
+});
+export type PublishedQuranSource = typeof PublishedQuranSourceSchema.Type;
+
+/** One signed Quran response failed its exact publication contract. */
+export class QuranPublicationError extends Schema.TaggedError<QuranPublicationError>()(
+  "QuranPublicationError",
+  {
+    operation: QuranPublicationOperationSchema,
+    reason: Schema.String,
+  }
+) {}
+
+/** Complete signed Quran metadata catalog and its immutable source identity. */
+export interface PublishedQuranCatalog extends PublishedQuranSource {
+  readonly surahs: readonly QuranSurahRow[];
+}
+
+/** One complete signed Quran page assembled from bounded immutable chunks. */
+export interface PublishedQuranPage extends PublishedQuranSource {
+  readonly nextSurah: null | QuranSurahRow;
+  readonly previousSurah: null | QuranSurahRow;
+  readonly search: QuranSearchRow;
+  readonly surah: QuranSurahRow;
+  readonly verses: readonly QuranRuntimeVerse[];
+}
+
+/** One bounded signed Quran reference and its locale-specific graph identity. */
+export interface PublishedQuranReference extends PublishedQuranSource {
+  readonly fromVerse: number;
+  readonly search: QuranSearchRow;
+  readonly surah: QuranSurahRow;
+  readonly toVerse: number;
+  readonly verses: readonly QuranRuntimeVerse[];
+}
+
+/** Creates one domain failure for malformed or inactive signed Quran data. */
+function publicationError(
+  operation: QuranPublicationOperation,
+  reason: string
+) {
+  return new QuranPublicationError({ operation, reason });
+}
+
+/** Requires a complete active source identity for every public Quran read. */
+const decodeSource = Effect.fn("NakafaQuran.decodeSource")(function* (
+  input: {
+    readonly activeManifestHash: null | string;
+    readonly activeReleaseId: null | string;
+    readonly managed: boolean;
+    readonly snapshotId: null | string;
+    readonly sourceRevision: null | string;
+  },
+  operation: QuranPublicationOperation
+) {
+  if (!input.managed) {
+    return yield* publicationError(
+      operation,
+      "Signed Quran publication is not active."
+    );
+  }
+
+  return yield* Schema.decodeUnknown(PublishedQuranSourceSchema)(input, {
+    onExcessProperty: "ignore",
+  }).pipe(
+    Effect.mapError(() =>
+      publicationError(operation, "Signed Quran source identity is invalid.")
+    )
+  );
+});
+
+/** Parses and strictly decodes one signed Quran JSON row. */
+const decodeRow = Effect.fn("NakafaQuran.decodeRow")(function* <A, I>(
+  source: string,
+  snapshotId: PublishedQuranSource["snapshotId"],
+  schema: Schema.Schema<A, I, never>,
+  operation: QuranPublicationOperation
+) {
+  const input = yield* Effect.try({
+    catch: () => publicationError(operation, "Quran row is not valid JSON."),
+    try: (): unknown => JSON.parse(source),
+  });
+
+  const row = yield* Schema.decodeUnknown(ContentSnapshotRowSchema)(input, {
+    onExcessProperty: "error",
+  }).pipe(
+    Effect.mapError(() =>
+      publicationError(operation, "Quran row failed its signed contract.")
+    )
+  );
+  if (row.family !== "quran" || row.record.snapshotId !== snapshotId) {
+    return yield* publicationError(
+      operation,
+      "Quran row belongs to another signed snapshot."
+    );
+  }
+  return yield* Schema.decodeUnknown(schema)(row.record.payload, {
+    onExcessProperty: "error",
+  }).pipe(
+    Effect.mapError(() =>
+      publicationError(operation, "Quran row failed its signed contract.")
+    )
+  );
+});
+
+/** Decodes an optional neighboring surah row. */
+function decodeOptionalSurah(
+  source: null | string,
+  snapshotId: PublishedQuranSource["snapshotId"],
+  operation: QuranPublicationOperation
+) {
+  if (source === null) {
+    return Effect.succeed(null);
+  }
+
+  return decodeRow(source, snapshotId, QuranSurahRowSchema, operation);
+}
+
+/** Decodes bounded chunks and returns their exact ordered verses. */
+const decodeChunks = Effect.fn("NakafaQuran.decodeChunks")(function* (
+  sources: readonly string[],
+  snapshotId: PublishedQuranSource["snapshotId"],
+  operation: QuranPublicationOperation,
+  surahNumber: number
+) {
+  const chunks = yield* Effect.forEach(sources, (source) =>
+    decodeRow(source, snapshotId, QuranChunkRowSchema, operation)
+  );
+  if (!hasContiguousChunks(chunks, surahNumber)) {
+    return yield* publicationError(
+      operation,
+      "Quran chunks are missing, out of order, or belong to another surah."
+    );
+  }
+
+  return chunks.flatMap((chunk: QuranChunkRow) => chunk.verses);
+});
+
+/** Checks cross-chunk Quran ordering that individual row schemas cannot see. */
+function hasContiguousChunks(
+  chunks: readonly QuranChunkRow[],
+  surahNumber: number
+) {
+  if (chunks.length === 0) {
+    return false;
+  }
+
+  return chunks.every((chunk, index) => {
+    if (chunk.surahNumber !== surahNumber) {
+      return false;
+    }
+    if (index === 0) {
+      return true;
+    }
+
+    const previous = chunks[index - 1];
+    const previousVerse = previous?.verses.at(-1);
+    if (!(previous && previousVerse)) {
+      return false;
+    }
+
+    return (
+      chunk.firstVerse === previous.lastVerse + 1 &&
+      chunk.firstQuranNumber === previousVerse.number.inQuran + 1
+    );
+  });
+}
+
+/** Checks that one decoded verse list exactly covers the requested local range. */
+function hasExactVerseRange(
+  verses: readonly QuranRuntimeVerse[],
+  fromVerse: number,
+  toVerse: number
+) {
+  if (
+    !(Number.isSafeInteger(fromVerse) && Number.isSafeInteger(toVerse)) ||
+    toVerse < fromVerse ||
+    verses.length !== toVerse - fromVerse + 1
+  ) {
+    return false;
+  }
+
+  return verses.every(
+    (verse, index) => verse.number.inSurah === fromVerse + index
+  );
+}
+
+/** Checks the exact previous and next metadata identities for one page. */
+function hasExpectedNeighbors(
+  previousSurah: null | QuranSurahRow,
+  nextSurah: null | QuranSurahRow,
+  surahNumber: number
+) {
+  const expectedPrevious = surahNumber === 1 ? null : surahNumber - 1;
+  const expectedNext =
+    surahNumber === QURAN_SURAH_COUNT ? null : surahNumber + 1;
+
+  return (
+    (previousSurah?.number ?? null) === expectedPrevious &&
+    (nextSurah?.number ?? null) === expectedNext
+  );
+}
+
+/** Checks the locale-specific search identity returned beside one surah. */
+function hasExpectedSearchIdentity(
+  search: QuranSearchRow,
+  locale: QuranSearchRow["locale"],
+  surahNumber: number
+) {
+  return (
+    search.locale === locale &&
+    search.surahNumber === surahNumber &&
+    search.route === `quran/${surahNumber}`
+  );
+}
+
+/** Decodes the complete active signed Quran metadata catalog. */
+export const decodePublishedQuranCatalog = Effect.fn(
+  "NakafaQuran.decodeCatalog"
+)(function* (result: QuranCatalogResult) {
+  const source = yield* decodeSource(result, "catalog");
+  const surahs = yield* Effect.forEach(result.rowJson, (row) =>
+    decodeRow(row, source.snapshotId, QuranSurahRowSchema, "catalog")
+  );
+  const ordered = surahs.every((surah, index) => surah.number === index + 1);
+  if (surahs.length !== QURAN_SURAH_COUNT || !ordered) {
+    return yield* publicationError(
+      "catalog",
+      "Signed Quran catalog is incomplete or out of order."
+    );
+  }
+
+  return { ...source, surahs } satisfies PublishedQuranCatalog;
+});
+
+/** Decodes one complete active signed Quran page without legacy fields. */
+export const decodePublishedQuranPage = Effect.fn("NakafaQuran.decodePage")(
+  function* (
+    result: QuranPageResult,
+    expected: {
+      readonly locale: QuranSearchRow["locale"];
+      readonly surahNumber: number;
+    }
+  ) {
+    const source = yield* decodeSource(result, "page");
+    if (result.surahJson === null || result.searchJson === null) {
+      return yield* publicationError("page", "Signed Quran page is missing.");
+    }
+    const [surah, search, previousSurah, nextSurah, verses] = yield* Effect.all(
+      [
+        decodeRow(
+          result.surahJson,
+          source.snapshotId,
+          QuranSurahRowSchema,
+          "page"
+        ),
+        decodeRow(
+          result.searchJson,
+          source.snapshotId,
+          QuranSearchRowSchema,
+          "page"
+        ),
+        decodeOptionalSurah(result.prevSurahJson, source.snapshotId, "page"),
+        decodeOptionalSurah(result.nextSurahJson, source.snapshotId, "page"),
+        decodeChunks(
+          result.chunkJson,
+          source.snapshotId,
+          "page",
+          expected.surahNumber
+        ),
+      ]
+    );
+    if (
+      surah.number !== expected.surahNumber ||
+      !hasExactVerseRange(verses, 1, surah.numberOfVerses) ||
+      !hasExpectedNeighbors(previousSurah, nextSurah, expected.surahNumber) ||
+      !hasExpectedSearchIdentity(search, expected.locale, expected.surahNumber)
+    ) {
+      return yield* publicationError(
+        "page",
+        "Signed Quran page identity is inconsistent."
+      );
+    }
+
+    return {
+      ...source,
+      nextSurah,
+      previousSurah,
+      search,
+      surah,
+      verses,
+    } satisfies PublishedQuranPage;
+  }
+);
+
+/** Decodes one bounded active signed Quran verse reference. */
+export const decodePublishedQuranReference = Effect.fn(
+  "NakafaQuran.decodeReference"
+)(function* (
+  result: QuranReferenceResult,
+  expected: {
+    readonly locale: QuranSearchRow["locale"];
+    readonly surahNumber: number;
+  }
+) {
+  const source = yield* decodeSource(result, "reference");
+  if (result.surahJson === null || result.searchJson === null) {
+    return yield* publicationError(
+      "reference",
+      "Signed Quran reference is missing."
+    );
+  }
+  const [surah, search, chunkVerses] = yield* Effect.all([
+    decodeRow(
+      result.surahJson,
+      source.snapshotId,
+      QuranSurahRowSchema,
+      "reference"
+    ),
+    decodeRow(
+      result.searchJson,
+      source.snapshotId,
+      QuranSearchRowSchema,
+      "reference"
+    ),
+    decodeChunks(
+      result.chunkJson,
+      source.snapshotId,
+      "reference",
+      expected.surahNumber
+    ),
+  ]);
+  const verses = chunkVerses.filter(
+    (verse) =>
+      verse.number.inSurah >= result.fromVerse &&
+      verse.number.inSurah <= result.toVerse
+  );
+  if (
+    surah.number !== expected.surahNumber ||
+    result.fromVerse < 1 ||
+    result.toVerse > surah.numberOfVerses ||
+    !hasExactVerseRange(verses, result.fromVerse, result.toVerse) ||
+    !hasExpectedSearchIdentity(search, expected.locale, expected.surahNumber)
+  ) {
+    return yield* publicationError(
+      "reference",
+      "Signed Quran reference identity is inconsistent."
+    );
+  }
+
+  return {
+    ...source,
+    fromVerse: result.fromVerse,
+    search,
+    surah,
+    toVerse: result.toVerse,
+    verses,
+  } satisfies PublishedQuranReference;
+});

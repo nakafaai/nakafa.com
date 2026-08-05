@@ -2,70 +2,102 @@ import {
   decodeNakafaMarkdown,
   decodeNakafaQuranReference,
   parseQuranReferenceOptions,
+  toNakafaQuranDataReadError,
 } from "@repo/backend/client/nakafa/decode";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
-import type { RuntimeQuranSurah } from "@repo/backend/client/nakafa/types";
+import {
+  decodePublishedQuranPage,
+  decodePublishedQuranReference,
+} from "@repo/backend/client/quran/decode";
+import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { api } from "@repo/backend/convex/_generated/api";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
-import { getQuranSurahNumberForRoute } from "@repo/contents/_types/graph/projection";
-import type { Locale } from "@repo/utilities/locales";
 import { Effect, Option } from "effect";
 
-/** Reads a bounded Quran reference from Convex runtime rows. */
+/** Reads a bounded Quran reference from the active signed publication. */
 export function readNakafaQuranReference(convexUrl: string, input: unknown) {
   return Effect.gen(function* () {
     const parsed = yield* parseQuranReferenceOptions(input);
-    const reference = yield* fetchNakafaRuntimeQuery(
+    const result = yield* fetchNakafaRuntimeQuery(
       convexUrl,
-      "getQuranReference",
-      api.contents.queries.runtime.getQuranReference,
+      "contentRelease.quran.reference",
+      api.contentRelease.quran.reference,
       {
         fromVerse: parsed.from_verse,
-        includeTafsir: parsed.include_tafsir,
         locale: parsed.locale,
-        surah: parsed.surah,
+        surahNumber: parsed.surah,
         toVerse: parsed.to_verse,
       }
     );
-
-    if (!reference) {
-      return Option.none();
+    const reference = yield* decodePublishedQuranReference(result, {
+      locale: parsed.locale,
+      surahNumber: parsed.surah,
+    }).pipe(Effect.mapError(toNakafaQuranDataReadError));
+    const ref = createNakafaContentRefFromGraphProjection({
+      ...reference.search.graph,
+      content_id: reference.search.graph.assetId,
+      locale: reference.search.locale,
+      route: reference.search.route,
+      section: "quran",
+    });
+    if (Option.isNone(ref)) {
+      return Option.none<
+        Effect.Effect.Success<ReturnType<typeof decodeNakafaQuranReference>>
+      >();
     }
 
-    const decoded = yield* decodeNakafaQuranReference(reference);
+    const decoded = yield* decodeNakafaQuranReference({
+      ...ref.value,
+      name: reference.surah.name.transliteration,
+      revelation: reference.surah.revelation.place,
+      translation: reference.surah.name.translation,
+      verses: reference.verses.map((verse) => {
+        const row = {
+          arabic: verse.text.arabic,
+          number: verse.number.inSurah,
+          translation: verse.translation[parsed.locale].text,
+        };
+        if (!parsed.include_tafsir || parsed.locale !== "id") {
+          return row;
+        }
+        return { ...row, tafsir: verse.tafsir.id.text };
+      }),
+    });
     return Option.some(decoded);
   });
 }
 
-/** Renders one synced Quran surah as full agent markdown. */
+/** Renders one signed Quran surah as full agent markdown. */
 export function readQuranMarkdown(
   convexUrl: string,
   ref: NakafaAgentContentRef
 ) {
   return Effect.gen(function* () {
-    const surahNumber = getQuranSurahNumberForRoute(ref.route);
+    const [section, value, extra] = ref.route.split("/");
+    const surahNumber = parseQuranSurahNumber(value);
 
-    if (surahNumber === null) {
+    if (section !== "quran" || extra !== undefined || surahNumber === null) {
       return Option.none<NakafaAgentMarkdown>();
     }
 
-    const page = yield* fetchNakafaRuntimeQuery(
+    const result = yield* fetchNakafaRuntimeQuery(
       convexUrl,
-      "getQuranSurahPage",
-      api.contents.queries.runtime.getQuranSurahPage,
+      "contentRelease.quran.page",
+      api.contentRelease.quran.page,
       {
-        surah: surahNumber,
+        locale: ref.locale,
+        surahNumber,
       }
     );
-
-    if (!page) {
-      return Option.none<NakafaAgentMarkdown>();
-    }
-
-    const surah = page.surahData;
-    const title = getSurahName({ locale: ref.locale, surah });
-    const translation = surah.name.translation[ref.locale];
+    const page = yield* decodePublishedQuranPage(result, {
+      locale: ref.locale,
+      surahNumber,
+    }).pipe(Effect.mapError(toNakafaQuranDataReadError));
+    const surah = page.surah;
+    const title = getSurahName(surah);
+    const translation = surah.name.translation;
     const markdown = yield* decodeNakafaMarkdown({
       ...ref,
       description: translation,
@@ -73,18 +105,16 @@ export function readQuranMarkdown(
         `# ${title}`,
         "",
         `Translation: ${translation}`,
-        `Revelation: ${surah.revelation[ref.locale]}`,
+        `Revelation: ${surah.revelation.place}`,
         "",
         "## Verses",
         "",
-        ...surah.verses.flatMap((verse) => [
+        ...page.verses.flatMap((verse) => [
           `### Verse ${verse.number.inSurah}`,
           "",
-          verse.text.arab,
+          verse.text.arabic,
           "",
-          `Transliteration: ${verse.text.transliteration.en}`,
-          "",
-          `Translation: ${verse.translation[ref.locale]}`,
+          `Translation: ${verse.translation[ref.locale].text}`,
           "",
         ]),
       ].join("\n"),
@@ -95,13 +125,9 @@ export function readQuranMarkdown(
   });
 }
 
-/** Returns the locale-aware display name for one synced Quran surah. */
-export function getSurahName({
-  locale,
-  surah,
-}: {
-  locale: Locale;
-  surah: Pick<RuntimeQuranSurah, "name">;
+/** Returns the source-authenticated transliterated surah name. */
+export function getSurahName(surah: {
+  readonly name: { readonly transliteration: string };
 }) {
-  return surah.name.transliteration[locale];
+  return surah.name.transliteration;
 }

@@ -3,6 +3,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { testTryoutGraph } from "@repo/backend/test/tryouts";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -10,7 +11,14 @@ const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 const ARTICLE_ROUTE = "articles/politics/analytics";
 const ARTICLE_CONTENT_ID = "asset:id:catalog:article:analytics";
 const TRYOUT_ROUTE = "try-out/indonesia/snbt/2027/set-1";
-const TRYOUT_CONTENT_ID = "asset:id:catalog:tryout-set:analytics";
+const TRYOUT_GRAPH = testTryoutGraph({
+  countryKey: "indonesia",
+  examKey: "snbt",
+  kind: "set",
+  setKey: "set-1",
+  trackKey: "2027",
+});
+const TRYOUT_CONTENT_ID = TRYOUT_GRAPH.assetId;
 
 /** Builds the article graph fixture used by the content-view trigger test. */
 function getArticleGraphFixture() {
@@ -22,22 +30,6 @@ function getArticleGraphFixture() {
   if (!graph) {
     throw new Error(
       `Unable to build graph fixture for route "${ARTICLE_ROUTE}".`
-    );
-  }
-
-  return graph;
-}
-
-/** Builds the try-out graph fixture used by the analytics taxonomy test. */
-function getTryoutGraphFixture() {
-  const graph = createLearningGraphIdentityFromRoute({
-    locale: "id",
-    route: TRYOUT_ROUTE,
-  });
-
-  if (!graph) {
-    throw new Error(
-      `Unable to build graph fixture for route "${TRYOUT_ROUTE}".`
     );
   }
 
@@ -134,7 +126,7 @@ describe("triggers/contents/views", () => {
 
   it("classifies try-out views as question analytics", async () => {
     const t = createConvexTestWithBetterAuth();
-    const graph = getTryoutGraphFixture();
+    const graph = TRYOUT_GRAPH;
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, { now: NOW });
 

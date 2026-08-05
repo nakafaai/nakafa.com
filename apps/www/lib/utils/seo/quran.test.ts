@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import type { RuntimeQuranSurahMetadata } from "@repo/backend/client/nakafa/types";
+import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateQuranMetadata } from "@/lib/utils/seo/quran";
@@ -14,18 +14,16 @@ vi.mock("next-intl/server", () => ({
 }));
 
 const surah = {
+  kind: "quran-surah",
   name: {
-    long: "الفاتحة",
-    short: "Al-Fatihah",
-    translation: { en: "The Opening", id: "Pembukaan" },
-    transliteration: { en: "Al-Fatihah", id: "Al-Fatihah" },
+    arabic: "Al-Fatihah",
+    translation: "The Opening",
+    transliteration: "Al-Fatihah",
   },
   number: 1,
   numberOfVerses: 7,
-  preBismillah: null,
-  revelation: { arab: "مكة", en: "Meccan", id: "Makkiyah" },
-  sequence: 5,
-} satisfies RuntimeQuranSurahMetadata;
+  revelation: { order: 5, place: "Meccan" },
+} satisfies QuranSurahRow;
 
 /** Reads a mocked translation value as display text. */
 function getValue(
@@ -61,10 +59,10 @@ describe("generateQuranMetadata", () => {
     expect(result.description).toBe("Read Surah Al-Fatihah with 7 verses.");
   });
 
-  it("uses Quran labels from the requested locale", async () => {
+  it("uses the same authenticated Quran names in every shell locale", async () => {
     const result = await Effect.runPromise(generateQuranMetadata(surah, "id"));
 
-    expect(result.title).toBe("Surah 1. Al-Fatihah - Pembukaan | Nakafa");
-    expect(result.keywords).toEqual(["Al-Fatihah", "Pembukaan", "Makkiyah"]);
+    expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening | Nakafa");
+    expect(result.keywords).toEqual(["Al-Fatihah", "The Opening", "Meccan"]);
   });
 });
