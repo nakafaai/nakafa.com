@@ -211,7 +211,11 @@ describe("sitemap route pages", () => {
     await expect(readPaths("public_en_0")).resolves.toEqual([]);
   });
 
-  it("rejects retained source material pages after family cutover", async () => {
+  it("rejects retained source article and material pages after cutover", async () => {
+    await expect(readFailure("content_en_articles_0")).resolves.toMatchObject({
+      _tag: "SitemapPageNotFoundError",
+      pageId: "content_en_articles_0",
+    });
     await expect(readFailure("content_en_material_0")).resolves.toMatchObject({
       _tag: "SitemapPageNotFoundError",
       pageId: "content_en_material_0",

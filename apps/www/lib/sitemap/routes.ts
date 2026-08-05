@@ -178,7 +178,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
         return yield* new SitemapPageNotFoundError({ pageId });
       }
     }
-    if (page.section === "material") {
+    if (page.section === "articles" || page.section === "material") {
       return yield* new SitemapPageNotFoundError({ pageId });
     }
     const artifact = yield* getRuntimeContentSitemapPage({

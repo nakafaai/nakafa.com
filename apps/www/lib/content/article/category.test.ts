@@ -2,7 +2,7 @@
 
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { readPublishedArticleCategory } from "@/lib/content/article/ownership";
+import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 
 const fetchMock = vi.hoisted(() => vi.fn());
 
@@ -14,7 +14,7 @@ vi.mock("@/lib/content/runtime/query", async () => {
   };
 });
 
-describe("published article category ownership", () => {
+describe("published article category", () => {
   beforeEach(() => {
     fetchMock.mockReset();
   });
@@ -23,11 +23,25 @@ describe("published article category ownership", () => {
     fetchMock.mockResolvedValueOnce({ exists: true, managed: true });
 
     await expect(
-      Effect.runPromise(readPublishedArticleCategory("politics", "en"))
-    ).resolves.toEqual({ exists: true, managed: true });
+      Effect.runPromise(hasPublishedArticleCategory("politics", "en"))
+    ).resolves.toBe(true);
     expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {
       category: "politics",
       locale: "en",
+    });
+  });
+
+  it("rejects an unmanaged article catalog", async () => {
+    fetchMock.mockResolvedValueOnce({ exists: false, managed: false });
+
+    await expect(
+      Effect.runPromise(
+        hasPublishedArticleCategory("politics", "en").pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedProjectionError",
+      locale: "en",
+      publicPath: "articles/politics",
     });
   });
 
@@ -35,7 +49,7 @@ describe("published article category ownership", () => {
     fetchMock.mockRejectedValueOnce(new Error("category unavailable"));
 
     await expect(
-      Effect.runPromise(readPublishedArticleCategory("politics", "id"))
+      Effect.runPromise(hasPublishedArticleCategory("politics", "id"))
     ).rejects.toThrow("category unavailable");
   });
 });

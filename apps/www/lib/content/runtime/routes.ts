@@ -6,15 +6,6 @@ import {
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
 
-type ContentRoutesPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.listContentRoutesByPrefix
->;
-type ContentRoutesByKindPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.listContentRoutesByKindPrefix
->;
-type ContentRoutesByParentPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.listContentRoutesByParent
->;
 type ContentRouteArtifactPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getContentRouteArtifactPage
 >;
@@ -36,9 +27,6 @@ type PublicSitemapCountArgs = FunctionArgs<
 type PublicSitemapPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getPublicSitemapPage
 >;
-type LatestContentRoutePageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.listLatestContentRoutePage
->;
 type ContentRouteArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getContentRoute
 >;
@@ -48,42 +36,6 @@ type PublicRouteArgs = FunctionArgs<
 type TryoutRouteArgs = FunctionArgs<
   typeof api.tryouts.queries.catalog.getRoute
 >;
-/** One bounded newest-first page from the content route catalog. */
-export type RuntimeLatestContentRoutePage = FunctionReturnType<
-  typeof api.contents.queries.runtime.listLatestContentRoutePage
->;
-/** One dated route returned by the newest-first content catalog. */
-export type RuntimeLatestContentRoute =
-  RuntimeLatestContentRoutePage["page"][number];
-
-/** Reads one route-catalog page from the Convex content runtime model. */
-export function fetchRuntimeContentRoutesPage(args: ContentRoutesPageArgs) {
-  return fetchRuntimeQuery(
-    api.contents.queries.runtime.listContentRoutesByPrefix,
-    args
-  );
-}
-
-/** Reads one kind-scoped route-catalog page from the Convex content runtime model. */
-export function fetchRuntimeContentRoutesByKindPage(
-  args: ContentRoutesByKindPageArgs
-) {
-  return fetchRuntimeQuery(
-    api.contents.queries.runtime.listContentRoutesByKindPrefix,
-    args
-  );
-}
-
-/** Reads one parent-scoped route-catalog page from the Convex content runtime model. */
-export function fetchRuntimeContentRoutesByParentPage(
-  args: ContentRoutesByParentPageArgs
-) {
-  return fetchRuntimeQuery(
-    api.contents.queries.runtime.listContentRoutesByParent,
-    args
-  );
-}
-
 /** Reads one materialized route artifact page from the Convex content runtime model. */
 export function fetchRuntimeContentRouteArtifactPage(
   args: ContentRouteArtifactPageArgs
@@ -126,16 +78,6 @@ function fetchRuntimePublicSitemapPage(args: PublicSitemapPageArgs) {
   );
 }
 
-/** Reads one newest-first route-catalog page from the Convex runtime model. */
-export function fetchRuntimeLatestContentRoutePage(
-  args: LatestContentRoutePageArgs
-) {
-  return fetchRuntimeQuery(
-    api.contents.queries.runtime.listLatestContentRoutePage,
-    args
-  );
-}
-
 /** Reads one exact route-catalog row from the Convex content runtime model. */
 export function fetchRuntimeContentRoute(args: ContentRouteArgs) {
   return fetchRuntimeQuery(api.contents.queries.runtime.getContentRoute, args);
@@ -148,33 +90,6 @@ function fetchRuntimePublicRoute(args: PublicRouteArgs) {
     args
   );
 }
-
-/** Reads one bounded route-catalog page matching a locale, section, and prefix. */
-export const getRuntimeContentRoutePage = Effect.fn(
-  "www.contentRuntime.contentRoutePage"
-)(function* (args: ContentRoutesPageArgs) {
-  return yield* readRuntimeQuery("listContentRoutesByPrefix", () =>
-    fetchRuntimeContentRoutesPage(args)
-  );
-});
-
-/** Reads one bounded kind-scoped route-catalog page matching a route prefix. */
-export const getRuntimeContentRouteKindPage = Effect.fn(
-  "www.contentRuntime.contentRouteKindPage"
-)(function* (args: ContentRoutesByKindPageArgs) {
-  return yield* readRuntimeQuery("listContentRoutesByKindPrefix", () =>
-    fetchRuntimeContentRoutesByKindPage(args)
-  );
-});
-
-/** Reads one bounded parent-scoped route-catalog page. */
-export const getRuntimeContentRouteParentPage = Effect.fn(
-  "www.contentRuntime.contentRouteParentPage"
-)(function* (args: ContentRoutesByParentPageArgs) {
-  return yield* readRuntimeQuery("listContentRoutesByParent", () =>
-    fetchRuntimeContentRoutesByParentPage(args)
-  );
-});
 
 /** Reads one materialized route artifact page for sitemap and LLMS. */
 export const getRuntimeContentRouteArtifactPage = Effect.fn(
@@ -219,18 +134,6 @@ export const getRuntimePublicSitemapPage = Effect.fn(
   return yield* readRuntimeQuery("getPublicSitemapPage", () =>
     fetchRuntimePublicSitemapPage(args)
   );
-});
-
-/** Reads one newest-first dated route page for capped feed surfaces. */
-export const getRuntimeLatestContentRoutePage = Effect.fn(
-  "www.contentRuntime.latestContentRoutePage"
-)(function* (args: LatestContentRoutePageArgs) {
-  const page: RuntimeLatestContentRoutePage = yield* readRuntimeQuery(
-    "listLatestContentRoutePage",
-    () => fetchRuntimeLatestContentRoutePage(args)
-  );
-
-  return page;
 });
 
 /** Reads one exact route-catalog row from the Convex content runtime model. */

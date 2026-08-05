@@ -65,11 +65,10 @@ export interface PublishedArticleSummary {
 
 /** One bounded active article page with immutable provenance. */
 export interface PublishedArticlePage {
-  readonly activeManifestHash: null | string;
-  readonly activeReleaseId: null | string;
+  readonly activeManifestHash: string;
+  readonly activeReleaseId: string;
   readonly articles: readonly PublishedArticleSummary[];
   readonly done: boolean;
-  readonly managed: boolean;
   readonly nextCursor: null | string;
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
   readonly stale: boolean;
@@ -77,11 +76,10 @@ export interface PublishedArticlePage {
 
 /** One bounded active category page with immutable provenance. */
 export interface PublishedCategoryPage {
-  readonly activeManifestHash: null | string;
-  readonly activeReleaseId: null | string;
+  readonly activeManifestHash: string;
+  readonly activeReleaseId: string;
   readonly categories: readonly PublishedArticleCategory[];
   readonly done: boolean;
-  readonly managed: boolean;
   readonly nextCursor: null | string;
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
   readonly stale: boolean;
@@ -165,31 +163,34 @@ export const readPublishedArticlePage = Effect.fn(
   const result = yield* readRuntimeQuery("contentRelease.article.page", () =>
     fetchRuntimeQuery(api.contentRelease.article.page, args)
   );
-  const articles = yield* Effect.forEach(result.result.page, (item) =>
+  const {
+    activeManifestHash,
+    activeReleaseId,
+    managed,
+    result: page,
+    sourceRevision: rawSourceRevision,
+    stale,
+  } = result;
+  const articles = yield* Effect.forEach(page.page, (item) =>
     decodeArticleItem(item, input.locale)
   );
-  const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
+  const sourceRevision = yield* decodeSourceRevision(rawSourceRevision, {
     locale: input.locale,
     publicPath: "articles",
   });
-  const activeManifestHash = result.activeManifestHash;
-  const activeReleaseId = result.activeReleaseId;
-  const nextCursor = result.result.isDone ? null : result.result.continueCursor;
-  if (
-    nextCursor !== null &&
-    (activeManifestHash === null || activeReleaseId === null)
-  ) {
+  const done = page.isDone;
+  const nextCursor = done ? null : page.continueCursor;
+  if (!managed || activeManifestHash === null || activeReleaseId === null) {
     return yield* projectionError(input.locale);
   }
   return {
     activeManifestHash,
     activeReleaseId,
     articles,
-    done: result.result.isDone,
-    managed: result.managed,
+    done,
     nextCursor,
     sourceRevision,
-    stale: result.stale,
+    stale,
   } satisfies PublishedArticlePage;
 });
 
@@ -214,31 +215,34 @@ export const readPublishedCategories = Effect.fn(
     "contentRelease.article.categories",
     () => fetchRuntimeQuery(api.contentRelease.article.categories, args)
   );
-  const categories = yield* Effect.forEach(result.result.page, (item) =>
+  const {
+    activeManifestHash,
+    activeReleaseId,
+    managed,
+    result: page,
+    sourceRevision: rawSourceRevision,
+    stale,
+  } = result;
+  const categories = yield* Effect.forEach(page.page, (item) =>
     decodeCategoryItem(item, input.locale)
   );
-  const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
+  const sourceRevision = yield* decodeSourceRevision(rawSourceRevision, {
     locale: input.locale,
     publicPath: "articles",
   });
-  const activeManifestHash = result.activeManifestHash;
-  const activeReleaseId = result.activeReleaseId;
-  const nextCursor = result.result.isDone ? null : result.result.continueCursor;
-  if (
-    nextCursor !== null &&
-    (activeManifestHash === null || activeReleaseId === null)
-  ) {
+  const done = page.isDone;
+  const nextCursor = done ? null : page.continueCursor;
+  if (!managed || activeManifestHash === null || activeReleaseId === null) {
     return yield* projectionError(input.locale);
   }
   return {
     activeManifestHash,
     activeReleaseId,
     categories,
-    done: result.result.isDone,
-    managed: result.managed,
+    done,
     nextCursor,
     sourceRevision,
-    stale: result.stale,
+    stale,
   } satisfies PublishedCategoryPage;
 });
 

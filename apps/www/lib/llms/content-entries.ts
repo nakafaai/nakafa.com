@@ -28,21 +28,19 @@ export const getContentPageLlmsEntries = Effect.fn(
 }) {
   if (section === "articles") {
     const published = yield* readPublishedArticleBuckets(locale);
-    if (published.managed) {
-      const bucket = published.buckets[page];
-      if (!bucket) {
-        return null;
-      }
-      const partition = yield* readPublishedArticleBucket(locale, bucket);
-      if (!(partition.managed && partition.articles)) {
-        return null;
-      }
-      return buildPublishedContentLlmsEntries({
-        locale,
-        rows: partition.articles,
-        section,
-      });
+    const bucket = published.buckets[page];
+    if (!bucket) {
+      return null;
     }
+    const partition = yield* readPublishedArticleBucket(locale, bucket);
+    if (!partition.articles) {
+      return null;
+    }
+    return buildPublishedContentLlmsEntries({
+      locale,
+      rows: partition.articles,
+      section,
+    });
   }
 
   if (section === "material") {

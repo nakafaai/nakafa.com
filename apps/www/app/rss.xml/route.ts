@@ -12,16 +12,10 @@ import {
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
-import {
-  getRuntimeLatestContentRoutePage,
-  type RuntimeLatestContentRoute,
-  type RuntimeLatestContentRoutePage,
-} from "@/lib/content/runtime/routes";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const baseUrl = "https://nakafa.com";
 const RSS_CONTENT_ROUTE_LIMIT = 100;
-const RSS_SOURCE_PAGE_SIZE = 100;
 const rssHeaders = {
   "Content-Type": "application/rss+xml; charset=utf-8",
 };
@@ -58,10 +52,6 @@ export async function GET() {
   const feedItems: Item[] = [];
 
   for (const route of routes) {
-    if (!route.date) {
-      continue;
-    }
-
     const link = `${baseUrl}/${route.locale}/${route.route}`;
     feedItems.push({
       title: route.title,
@@ -93,7 +83,7 @@ export async function GET() {
 
   // Sort by date (newest first) and add to feed
   const sortedItems = feedItems.sort(
-    (a, b) => b.date.getTime() - a.date.getTime()
+    (left, right) => right.date.getTime() - left.date.getTime()
   );
   for (const item of sortedItems) {
     feed.addItem(item);
@@ -132,13 +122,13 @@ function getFeedContentRoutes() {
 
       return routes
         .flat(2)
-        .sort((left, right) => (right.date ?? 0) - (left.date ?? 0))
+        .sort((left, right) => right.date - left.date)
         .slice(0, RSS_CONTENT_ROUTE_LIMIT);
     })
   );
 }
 
-/** Selects published articles after cutover and source-backed rows before it. */
+/** Selects signed published articles. */
 const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
   locale: (typeof routing.locales)[number]
 ) {
@@ -146,10 +136,6 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
     locale,
     RSS_CONTENT_ROUTE_LIMIT
   );
-  if (!published.managed) {
-    return yield* readFeedSourceRoutes(locale, "articles", 100);
-  }
-
   return published.articles.map((article) => ({
     authors: article.authors,
     date: Date.parse(`${article.date}T00:00:00.000Z`),
@@ -160,7 +146,7 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
   }));
 });
 
-/** Selects published materials after cutover and source rows before it. */
+/** Selects signed published materials. */
 const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
   locale: (typeof routing.locales)[number],
   expectedActiveReleaseId: MaterialReleasePin
@@ -184,40 +170,4 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
     title: material.title,
   }));
   return publishedRoutes;
-});
-
-/** Reads one bounded source-owned article feed before article cutover. */
-const readFeedSourceRoutes = Effect.fn("www.rss.readSourceRoutes")(function* (
-  locale: (typeof routing.locales)[number],
-  section: "articles",
-  limit: number
-) {
-  const routes: RuntimeLatestContentRoute[] = [];
-  let cursor: string | null = null;
-  let examinedRows = 0;
-  for (let request = 0; request < limit && examinedRows < limit; request += 1) {
-    const pageLimit = Math.min(RSS_SOURCE_PAGE_SIZE, limit - examinedRows);
-    const result: RuntimeLatestContentRoutePage =
-      yield* getRuntimeLatestContentRoutePage({
-        cursor,
-        limit: pageLimit,
-        locale,
-        section,
-      });
-    examinedRows += result.page.length;
-    for (const route of result.page) {
-      routes.push(route);
-      if (routes.length === limit) {
-        return routes;
-      }
-    }
-    if (result.isDone) {
-      return routes;
-    }
-    if (result.continueCursor === cursor) {
-      return routes;
-    }
-    cursor = result.continueCursor;
-  }
-  return routes;
 });

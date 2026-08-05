@@ -1,17 +1,14 @@
 // @vitest-environment node
 
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import type { Locale } from "@repo/contents/_types/content";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getCachedMetadataFromSlug,
   getMetadataFromSlug,
-  getStaticParams,
 } from "@/lib/utils/system";
 
 const routeMocks = vi.hoisted(() => ({
-  listLatest: vi.fn(),
   read: vi.fn(),
 }));
 const cacheMocks = vi.hoisted(() => ({
@@ -20,14 +17,8 @@ const cacheMocks = vi.hoisted(() => ({
 }));
 const mockGetTranslations = vi.hoisted(() => vi.fn());
 
-vi.mock("@repo/internationalization/src/routing", async () => {
-  const { defaultLocale, locales } = await import("@repo/utilities/locales");
-  return { routing: { defaultLocale, locales } };
-});
-
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: routeMocks.read,
-  getRuntimeLatestContentRoutePage: routeMocks.listLatest,
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -39,24 +30,6 @@ vi.mock("next/cache", () => ({
   cacheTag: cacheMocks.tag,
 }));
 
-const routeRows = [
-  {
-    locale: "en",
-    route: "articles/politics/dynastic-politics-asian-values",
-    section: "articles",
-  },
-  {
-    locale: "id",
-    route: "articles/politics/dynastic-politics-asian-values",
-    section: "articles",
-  },
-  {
-    locale: "en",
-    route: "material/lesson/chemistry/green-chemistry/definition",
-    section: "material",
-  },
-];
-
 const translatedDefaults = {
   authors: [{ name: "Nakafa" }],
   date: "",
@@ -65,22 +38,11 @@ const translatedDefaults = {
 };
 
 beforeEach(() => {
-  routeMocks.listLatest.mockReset();
   routeMocks.read.mockReset();
   cacheMocks.life.mockClear();
   cacheMocks.tag.mockClear();
   mockGetTranslations.mockReset();
 
-  routeMocks.listLatest.mockImplementation(
-    ({ locale, section }: { locale: Locale; section: string }) =>
-      Effect.succeed({
-        continueCursor: "",
-        isDone: true,
-        page: routeRows.filter(
-          (route) => route.locale === locale && route.section === section
-        ),
-      })
-  );
   routeMocks.read.mockReturnValue(
     Effect.succeed({
       authors: [{ name: "Nakafa" }],
@@ -102,93 +64,10 @@ beforeEach(() => {
   });
 });
 
-describe("route catalog static params", () => {
-  it("builds shallow and deep params from bounded route reads", async () => {
-    await expect(
-      getStaticParams({ basePath: "articles", paramNames: ["category"] })
-    ).resolves.toEqual([{ category: "politics" }]);
-    await expect(
-      getStaticParams({
-        basePath: "material",
-        isDeep: true,
-        paramNames: ["category", "grade", "material", "slug"],
-        slugParam: "slug",
-      })
-    ).resolves.toEqual([
-      {
-        category: "lesson",
-        grade: "chemistry",
-        material: "green-chemistry",
-        slug: ["definition"],
-      },
-    ]);
-
-    expect(routeMocks.listLatest).toHaveBeenCalledWith({
-      locale: "id",
-      cursor: null,
-      limit: 100,
-      section: "articles",
-    });
-  });
-
-  it("reads only the requested parent locale", async () => {
-    await expect(
-      getStaticParams({
-        basePath: "articles",
-        locale: "id",
-        paramNames: ["category", "slug"],
-      })
-    ).resolves.toEqual([
-      {
-        category: "politics",
-        slug: "dynastic-politics-asian-values",
-      },
-    ]);
-
-    expect(routeMocks.listLatest).toHaveBeenCalledTimes(1);
-    expect(routeMocks.listLatest).toHaveBeenCalledWith({
-      cursor: null,
-      limit: 100,
-      locale: "id",
-      section: "articles",
-    });
-  });
-
-  it("ignores routes that cannot fill the requested params", async () => {
-    routeMocks.listLatest
-      .mockReturnValueOnce(
-        Effect.succeed({
-          continueCursor: "",
-          isDone: true,
-          page: [
-            { route: "articles" },
-            { route: "curriculum/merdeka/class-10/chemistry" },
-            { route: "articles/politics" },
-            { route: "articles/politics/example" },
-          ],
-        })
-      )
-      .mockReturnValueOnce(
-        Effect.succeed({ continueCursor: "", isDone: true, page: [] })
-      );
-
-    await expect(
-      getStaticParams({
-        basePath: "articles",
-        isDeep: true,
-        paramNames: ["category", "slug"],
-        slugParam: "slug",
-      })
-    ).resolves.toEqual([{ category: "politics", slug: ["example"] }]);
-  });
-});
-
 describe("route catalog metadata", () => {
   it("reads complete metadata from the runtime catalog", async () => {
     await expect(
-      Effect.runPromise(
-        getMetadataFromSlug("en", ["articles", "politics", "example"])
-      )
+      Effect.runPromise(getMetadataFromSlug("en", ["quran", "1"]))
     ).resolves.toEqual({
       authors: [{ name: "Nakafa" }],
       date: "2025-01-02T00:00:00.000Z",
@@ -200,7 +79,7 @@ describe("route catalog metadata", () => {
   it("uses translated defaults when the catalog has no row", async () => {
     routeMocks.read.mockReturnValueOnce(Effect.succeed(null));
     await expect(
-      Effect.runPromise(getMetadataFromSlug("id", ["articles", "missing"]))
+      Effect.runPromise(getMetadataFromSlug("id", ["quran", "missing"]))
     ).resolves.toEqual(translatedDefaults);
   });
 
@@ -215,7 +94,7 @@ describe("route catalog metadata", () => {
     );
 
     const error = await Effect.runPromise(
-      Effect.flip(getMetadataFromSlug("id", ["articles", "failed"]))
+      Effect.flip(getMetadataFromSlug("id", ["quran", "failed"]))
     );
 
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
@@ -232,14 +111,14 @@ describe("route catalog metadata", () => {
     );
 
     await expect(
-      Effect.runPromise(getMetadataFromSlug("en", ["articles", "sparse"]))
+      Effect.runPromise(getMetadataFromSlug("en", ["quran", "sparse"]))
     ).resolves.toEqual(translatedDefaults);
   });
 
   it("reports which translation namespace failed", async () => {
     mockGetTranslations.mockRejectedValueOnce(new Error("Missing Common."));
     await expect(
-      Effect.runPromise(getMetadataFromSlug("en", ["articles", "example"]))
+      Effect.runPromise(getMetadataFromSlug("en", ["quran", "1"]))
     ).rejects.toThrow('"namespace": "Common"');
 
     mockGetTranslations.mockImplementation(({ namespace }) => {
@@ -249,13 +128,13 @@ describe("route catalog metadata", () => {
       return Promise.reject(new Error("Missing Metadata."));
     });
     await expect(
-      Effect.runPromise(getMetadataFromSlug("en", ["articles", "example"]))
+      Effect.runPromise(getMetadataFromSlug("en", ["quran", "1"]))
     ).rejects.toThrow('"namespace": "Metadata"');
   });
 
   it("applies the content cache at the route-handler boundary", async () => {
     await expect(
-      getCachedMetadataFromSlug("en", ["articles", "politics", "example"])
+      getCachedMetadataFromSlug("en", ["quran", "1"])
     ).resolves.toMatchObject({ title: "Runtime title" });
     expect(cacheMocks.tag).toHaveBeenCalledWith("content-runtime");
     expect(cacheMocks.life).toHaveBeenCalledWith("contentRuntime");

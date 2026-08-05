@@ -3,7 +3,7 @@ import { getHeadings } from "@repo/contents/_lib/toc";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
-import type { ArticlePageSource } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/source";
+import type { ArticlePageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/content";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
@@ -12,7 +12,7 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 
-/** Renders an article body and its route-owned navigation around either source implementation. */
+/** Renders a signed article body and its route-owned navigation. */
 export async function ArticleShell({
   locale,
   category,
@@ -27,7 +27,7 @@ export async function ArticleShell({
   category: ArticleCategory;
   categoryLabel: string;
   filePath: string;
-  content: ArticlePageSource;
+  content: ArticlePageContent;
   children: ReactNode;
   footer: ReactNode;
   toolbar: ReactNode;

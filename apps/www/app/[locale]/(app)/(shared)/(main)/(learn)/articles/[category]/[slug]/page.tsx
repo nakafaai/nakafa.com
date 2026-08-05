@@ -10,13 +10,14 @@ import { Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { ArticleShell } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/shell";
 import {
   readArticleMetadata,
   readArticlePage,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/source";
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/content";
+import { ArticleShell } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/shell";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
+import { ContentViewTracker } from "@/components/tracking/tracker";
 import {
   getPublishedArticlePage,
   getPublishedCategories,
@@ -28,7 +29,6 @@ import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
-import { getStaticParams } from "@/lib/utils/system";
 
 type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
 type ArticleJsonLdAuthor = ArrayItem<
@@ -50,7 +50,7 @@ async function getResolvedParams(
     notFound();
   }
   const publicPath = PublicPathSchema.make(`articles/${rawCategory}/${slug}`);
-  return { category: rawCategory, locale, publicPath, slug };
+  return { category: rawCategory, locale, publicPath };
 }
 
 /** Builds article metadata from the projected article route and runtime content row. */
@@ -59,13 +59,10 @@ export async function generateMetadata({
 }: {
   params: PageProps<"/[locale]/articles/[category]/[slug]">["params"];
 }): Promise<Metadata> {
-  const { locale, category, publicPath, slug } =
-    await getResolvedParams(params);
+  const { locale, publicPath } = await getResolvedParams(params);
   const article = await readArticleMetadata({
     locale,
-    category,
     publicPath,
-    slug,
   });
   const metadata = article.metadata;
   const filePath = `/${publicPath}`;
@@ -112,7 +109,7 @@ export async function generateMetadata({
   };
 }
 
-/** Prebuilds a bounded article page set from its active owner. */
+/** Prebuilds a bounded article page set from the signed catalog. */
 export async function generateStaticParams({
   params,
 }: {
@@ -125,33 +122,26 @@ export async function generateStaticParams({
     expectedReleaseId: null,
     locale,
   });
-  if (categories.managed) {
-    const pages = await Promise.all(
-      categories.categories.map(({ category }) =>
-        getPublishedArticlePage({
-          category,
-          cursor: null,
-          expectedManifestHash: null,
-          expectedReleaseId: null,
-          locale,
-        })
-      )
-    );
-    const articles = pages.flatMap((page) =>
-      page.articles.map((article) => ({
-        category: article.category,
-        slug: article.slug,
-      }))
-    );
-    return selectLearningStaticParams(articles, {
-      category: "build-placeholder",
-      slug: "build-placeholder",
-    });
-  }
-  return getStaticParams({
-    basePath: "articles",
-    locale,
-    paramNames: ["category", "slug"],
+  const pages = await Promise.all(
+    categories.categories.map(({ category }) =>
+      getPublishedArticlePage({
+        category,
+        cursor: null,
+        expectedManifestHash: null,
+        expectedReleaseId: null,
+        locale,
+      })
+    )
+  );
+  const articles = pages.flatMap((page) =>
+    page.articles.map((article) => ({
+      category: article.category,
+      slug: article.slug,
+    }))
+  );
+  return selectLearningStaticParams(articles, {
+    category: "build-placeholder",
+    slug: "build-placeholder",
   });
 }
 
@@ -159,13 +149,10 @@ export async function generateStaticParams({
 export default async function Page({
   params,
 }: PageProps<"/[locale]/articles/[category]/[slug]">) {
-  const { locale, category, publicPath, slug } =
-    await getResolvedParams(params);
+  const { locale, category, publicPath } = await getResolvedParams(params);
   const article = await readArticlePage({
-    category,
     locale,
     publicPath,
-    slug,
   });
   const filePath = `/${publicPath}`;
   const contentMetadata = article.metadata;
@@ -184,7 +171,12 @@ export default async function Page({
   );
 
   return (
-    <>
+    <ContentViewTracker
+      contentId={article.contentId}
+      locale={locale}
+      publicPath={publicPath}
+      section="articles"
+    >
       <BreadcrumbJsonLd
         breadcrumbItems={createBreadcrumbItems(locale, [
           { name: tCommon("home"), path: "" },
@@ -231,6 +223,6 @@ export default async function Page({
       >
         {article.children}
       </ArticleShell>
-    </>
+    </ContentViewTracker>
   );
 }

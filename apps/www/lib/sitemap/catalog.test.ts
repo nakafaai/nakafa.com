@@ -58,7 +58,7 @@ beforeEach(() => {
   );
   articleMocks.readPublishedArticleBuckets.mockReset();
   articleMocks.readPublishedArticleBuckets.mockReturnValue(
-    Effect.succeed({ articleCount: 0, buckets: [], managed: false })
+    Effect.succeed({ articleCount: 0, buckets: [] })
   );
   materialMocks.readPublishedMaterialBuckets.mockReset();
   materialMocks.readPublishedMaterialBuckets.mockReturnValue(
@@ -102,13 +102,6 @@ describe("sitemap page catalog", () => {
       { id: "base" },
       { id: "public_en_0", kind: "public", locale: "en", page: 0 },
       {
-        id: "content_en_articles_0",
-        kind: "content",
-        locale: "en",
-        page: 0,
-        section: "articles",
-      },
-      {
         id: "content_en_tryout_0",
         kind: "content",
         locale: "en",
@@ -126,12 +119,11 @@ describe("sitemap page catalog", () => {
     ]);
   });
 
-  it("replaces source-backed article pages with published partitions", async () => {
+  it("adds signed article partitions", async () => {
     articleMocks.readPublishedArticleBuckets.mockImplementation((locale) =>
       Effect.succeed({
         articleCount: locale === "en" ? 1 : 0,
         buckets: locale === "en" ? ["abc"] : [],
-        managed: locale === "en",
       })
     );
 

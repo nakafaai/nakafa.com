@@ -149,7 +149,6 @@ describe("published article catalog", () => {
         { slug: older.articleSlug },
       ],
       done: false,
-      managed: true,
       nextCursor: "next",
       sourceRevision: null,
     });
@@ -304,6 +303,44 @@ describe("published article catalog", () => {
       .mockResolvedValueOnce({
         ...categoryPage({ isDone: false }),
         activeReleaseId: null,
+      });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedArticlePage({
+          category: testArticleProjection.category,
+          cursor: null,
+          expectedManifestHash: null,
+          expectedReleaseId: null,
+          locale: "en",
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    await expect(
+      Effect.runPromise(
+        readPublishedCategories({
+          cursor: null,
+          expectedManifestHash: null,
+          expectedReleaseId: null,
+          locale: "en",
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+  });
+
+  it("rejects unmanaged article and category catalogs", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ...articlePage({ page: [] }),
+        activeManifestHash: null,
+        activeReleaseId: null,
+        managed: false,
+      })
+      .mockResolvedValueOnce({
+        ...categoryPage(),
+        activeManifestHash: null,
+        activeReleaseId: null,
+        managed: false,
       });
 
     await expect(
