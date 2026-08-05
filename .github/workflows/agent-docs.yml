@@ -107,7 +107,6 @@ jobs:
             echo "NEXT_PUBLIC_CONVEX_SITE_URL=$convex_site_url"
             echo "NEXT_PUBLIC_CONVEX_URL=$convex_url"
           } >> "$GITHUB_ENV"
-          rm "$HOME/.convex/config.json"
 
       - name: Configure isolated backend
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
@@ -141,9 +140,56 @@ jobs:
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm --dir packages/backend exec convex dev --once --typecheck enable --tail-logs disable
 
-      - name: Sync real content
+      - name: Bootstrap signed content runtime
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        run: pnpm --filter @repo/backend sync
+        env:
+          CONTENT_RUNTIME_EXPORT_LIMIT: 10000
+        run: |
+          config_path="$HOME/.convex/config.json"
+          snapshot_root="$RUNNER_TEMP/$AGENT_DOCS_RUN_IDENTITY-content"
+          trap 'rm -f "$config_path"' EXIT
+
+          install -d -m 700 "$snapshot_root"
+          mapfile -t tables < <(
+            pnpm --silent --dir packages/backend runtime:tables
+          )
+          if [[ "${#tables[@]}" -eq 0 ]]; then
+            echo "The signed content runtime owns no bootstrap tables." >&2
+            exit 1
+          fi
+
+          for table in "${tables[@]}"; do
+            source_json="$snapshot_root/$table.json"
+            portable_jsonl="$snapshot_root/$table.jsonl"
+
+            CONVEX_DEPLOY_KEY= pnpm --dir packages/backend exec convex data \
+              "$table" \
+              --prod \
+              --limit "$CONTENT_RUNTIME_EXPORT_LIMIT" \
+              --format jsonArray > "$source_json"
+
+            if [[ ! -s "$source_json" ]]; then
+              printf '[]\n' > "$source_json"
+            fi
+
+            row_count="$(jq 'length' "$source_json")"
+            if (( row_count >= CONTENT_RUNTIME_EXPORT_LIMIT )); then
+              echo "Content runtime table $table reached the export limit." >&2
+              exit 1
+            fi
+
+            jq -c \
+              '.[] | del(._id, ._creationTime, .proofWorkflowId, .syncJobId)' \
+              "$source_json" > "$portable_jsonl"
+            pnpm --dir packages/backend exec convex import \
+              --format jsonLines \
+              --table "$table" \
+              --replace \
+              --yes \
+              "$portable_jsonl"
+            printf 'Bootstrapped %s signed runtime rows into %s.\n' \
+              "$row_count" "$table"
+          done
 
       - name: Build production app
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
