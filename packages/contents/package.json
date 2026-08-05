@@ -4,14 +4,14 @@
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage"
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@effect/platform": "0.97.0",
-    "@effect/platform-node": "0.108.0",
+    "@effect/platform": "0.97.1",
+    "@effect/platform-node": "0.108.1",
     "@hugeicons/core-free-icons": "^4.2.3",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
@@ -26,7 +26,7 @@
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/mdast": "4.0.4",
-    "@types/react": "^19.2.17",
+    "@types/react": "^19.2.18",
     "@vitest/coverage-istanbul": "^4.1.10",
     "mdast-util-mdx-jsx": "3.2.0",
     "vitest": "^4.1.10"

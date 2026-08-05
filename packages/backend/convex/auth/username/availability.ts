@@ -67,9 +67,9 @@ export const resolveUniqueGeneratedUsername = Effect.fn(
  *
  * Sources:
  * - DBAdapter contract:
- *   @better-auth/core@1.6.16/src/db/adapter/index.ts
+ *   @better-auth/core/src/db/adapter/index.ts
  * - Convex adapter implementation:
- *   @convex-dev/better-auth@0.12.3/src/client/adapter.ts
+ *   @convex-dev/better-auth/src/client/adapter.ts
  */
 export function createUsernameExists(adapter: DBAdapter) {
   return (username: string) =>

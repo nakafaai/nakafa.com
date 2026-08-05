@@ -17,6 +17,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { Column } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
+import type { tryoutTableFeatures } from "@/components/tryout/catalog/table/features";
 import {
   isTryoutSetStatusFilter,
   readTryoutSetAttemptStatus,
@@ -69,12 +70,12 @@ function getSortIcon(direction: false | "asc" | "desc") {
 }
 
 /** Renders one contextual server-sort menu for a catalog-owned column. */
-export function TryoutSetSortHeader({
+export function TryoutSetSortHeader<TValue>({
   column,
   direction,
   labelKey,
 }: {
-  column: Column<TryoutSetRow>;
+  column: Column<typeof tryoutTableFeatures, TryoutSetRow, TValue>;
   direction: false | "asc" | "desc";
   labelKey: TryoutSetSortColumnLabel;
 }) {
@@ -130,7 +131,11 @@ export function TryoutSetStatusHeader({
   column,
   statusFilter,
 }: {
-  column: Column<TryoutSetRow>;
+  column: Column<
+    typeof tryoutTableFeatures,
+    TryoutSetRow,
+    TryoutSetRow["attemptStatus"]
+  >;
   statusFilter: TryoutSetStatusFilter;
 }) {
   const tTryouts = useTranslations("Tryouts");

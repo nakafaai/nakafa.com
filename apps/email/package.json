@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "build": "email export --outDir dist --dir ../../packages/email/templates",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "email dev --port 3004 --dir ../../packages/email/templates",
     "export": "email export --dir ../../packages/email/templates",
-    "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
@@ -17,6 +17,6 @@
   "devDependencies": {
     "@react-email/ui": "6.9.1",
     "@repo/typescript-config": "workspace:*",
-    "@types/react": "19.2.17"
+    "@types/react": "19.2.18"
   }
 }

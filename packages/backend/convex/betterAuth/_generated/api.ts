@@ -11,7 +11,6 @@
 import type * as adapter from "../adapter.js";
 import type * as auth from "../auth.js";
 import type * as deletion from "../deletion.js";
-import type * as generatedSchema from "../generatedSchema.js";
 import type * as mutations from "../mutations.js";
 import type * as queries from "../queries.js";
 
@@ -26,7 +25,6 @@ const fullApi: ApiFromModules<{
   adapter: typeof adapter;
   auth: typeof auth;
   deletion: typeof deletion;
-  generatedSchema: typeof generatedSchema;
   mutations: typeof mutations;
   queries: typeof queries;
 }> = anyApi as any;

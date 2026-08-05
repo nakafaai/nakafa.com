@@ -101,6 +101,9 @@ export function createSecurityHeaders() {
 export const securityHeaders = createSecurityHeaders();
 
 export const config = {
+  // The monorepo root owns the canonical agent guidance. Prevent each Next.js
+  // app from generating a redundant nested AGENTS.md and CLAUDE.md pair.
+  agentRules: false,
   reactStrictMode: true,
   typedRoutes: true,
   logging: {
@@ -113,6 +116,7 @@ export const config = {
   serverExternalPackages: ["shiki"],
   experimental: {
     optimizePackageImports: ["three"],
+    useTypeScriptCli: true,
   },
   images: {
     contentDispositionType: "inline",

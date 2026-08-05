@@ -6,17 +6,23 @@ catalog:
   effect: 3.22.1
 
 overrides:
-  "@ai-sdk/devtools@1.0.7>@hono/node-server": "2.0.11"
+  "@effect/cluster": "0.60.2"
+  "@effect/experimental": "0.61.1"
+  "@effect/rpc": "0.76.2"
+  "@effect/sql": "0.52.1"
+  "@effect/workflow": "0.19.1"
+  "@ai-sdk/devtools@1.0.10>@hono/node-server": "2.0.11"
   "@changesets/parse@0.4.3>js-yaml": "4.3.0"
-  "@modelcontextprotocol/sdk@1.29.0>@hono/node-server": "2.0.11"
+  "@modelcontextprotocol/sdk@1.30.0>@hono/node-server": "2.0.11"
   "@vitest/coverage-istanbul@4.1.10>@babel/core": "7.29.7"
-  "auth@1.6.23>@babel/core": "7.29.7"
+  "auth@1.6.26>@babel/core": "7.29.7"
+  "convex-helpers": "0.1.122"
   "depcheck@1.4.7>js-yaml": "3.15.0"
   "minimatch@3.1.5>brace-expansion": "1.1.16"
   "minimatch@10.2.5>brace-expansion": "5.0.8"
   "minimatch@7.4.9>brace-expansion": "2.1.2"
-  "next@16.2.11>postcss": "8.5.23"
-  "next@16.2.11>sharp": "0.35.3"
+  "next@16.3.0>postcss": "8.5.25"
+  "next@16.3.0>sharp": "0.35.3"
   "read-yaml-file@1.1.0>js-yaml": "3.15.0"
 
 allowBuilds:
@@ -29,42 +35,3 @@ allowBuilds:
   msw: true
   protobufjs: true
   sharp: true
-
-minimumReleaseAgeExclude:
-  - '@ai-sdk/gateway@3.0.118'
-  - '@ai-sdk/google@3.0.78'
-  - '@ai-sdk/react@3.0.190'
-  - '@effect/language-service@0.87.1'
-  - '@posthog/convex'
-  - '@posthog/core'
-  - '@posthog/types'
-  - '@rolldown/binding-android-arm64@1.0.2'
-  - '@rolldown/binding-darwin-arm64@1.0.2'
-  - '@rolldown/binding-darwin-x64@1.0.2'
-  - '@rolldown/binding-freebsd-x64@1.0.2'
-  - '@rolldown/binding-linux-arm-gnueabihf@1.0.2'
-  - '@rolldown/binding-linux-arm64-gnu@1.0.2'
-  - '@rolldown/binding-linux-arm64-musl@1.0.2'
-  - '@rolldown/binding-linux-ppc64-gnu@1.0.2'
-  - '@rolldown/binding-linux-s390x-gnu@1.0.2'
-  - '@rolldown/binding-linux-x64-gnu@1.0.2'
-  - '@rolldown/binding-linux-x64-musl@1.0.2'
-  - '@rolldown/binding-openharmony-arm64@1.0.2'
-  - '@rolldown/binding-wasm32-wasi@1.0.2'
-  - '@rolldown/binding-win32-arm64-msvc@1.0.2'
-  - '@rolldown/binding-win32-x64-msvc@1.0.2'
-  - '@tanstack/react-virtual'
-  - '@tanstack/virtual-core'
-  - ai@6.0.188
-  - geist@1.7.1
-  - posthog-js
-  - posthog-node
-  - rolldown@1.0.2
-  - vite@8.0.14
-  - '@react-email/ui@6.3.3'
-  - react-email@6.3.3
-  - resend@6.12.4
-  - ultracite@7.8.0
-  - '@convex-dev/workpool@0.4.7'
-  - libphonenumber-js@1.13.4
-  - react-phone-number-input@3.4.17

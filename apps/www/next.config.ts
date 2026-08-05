@@ -150,6 +150,7 @@ function createAppHeaders() {
 const nextConfig = {
   ...config,
   cacheComponents: true,
+  partialPrefetching: true,
   cacheLife: {
     contentRuntime: {
       stale: 300,
@@ -181,7 +182,6 @@ const nextConfig = {
   experimental: {
     ...config.experimental,
     globalNotFound: true,
-    rootParams: true,
   },
 } satisfies NextConfig;
 

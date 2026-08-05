@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "@repo/utilities": "workspace:*",
-    "next": "16.2.11",
-    "next-intl": "^4.13.2"
+    "next": "16.3.0",
+    "next-intl": "^4.13.5"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"

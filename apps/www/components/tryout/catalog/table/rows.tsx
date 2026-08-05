@@ -1,9 +1,6 @@
 import { TableCell, TableRow } from "@repo/design-system/components/ui/table";
-import {
-  flexRender,
-  type Row,
-  type Table as TanStackTable,
-} from "@tanstack/react-table";
+import type { ReactTable, Row } from "@tanstack/react-table";
+import type { tryoutTableFeatures } from "@/components/tryout/catalog/table/features";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 
 interface TryoutTableNavigation {
@@ -19,7 +16,7 @@ export function TryoutTableRows({
 }: {
   emptyLabel: string;
   navigation: TryoutTableNavigation;
-  table: TanStackTable<TryoutSetRow>;
+  table: ReactTable<typeof tryoutTableFeatures, TryoutSetRow>;
 }) {
   const rows = table.getRowModel().rows;
 
@@ -28,7 +25,7 @@ export function TryoutTableRows({
       <TableRow className="hover:bg-transparent hover:text-inherit">
         <TableCell
           className="h-24 text-center text-muted-foreground"
-          colSpan={table.getVisibleLeafColumns().length}
+          colSpan={table.getAllLeafColumns().length}
         >
           {emptyLabel}
         </TableCell>
@@ -37,7 +34,12 @@ export function TryoutTableRows({
   }
 
   return rows.map((row) => (
-    <TryoutSetTableRow key={row.id} navigation={navigation} row={row} />
+    <TryoutSetTableRow
+      key={row.id}
+      navigation={navigation}
+      row={row}
+      table={table}
+    />
   ));
 }
 
@@ -45,9 +47,11 @@ export function TryoutTableRows({
 function TryoutSetTableRow({
   navigation,
   row,
+  table,
 }: {
   navigation: TryoutTableNavigation;
-  row: Row<TryoutSetRow>;
+  row: Row<typeof tryoutTableFeatures, TryoutSetRow>;
+  table: ReactTable<typeof tryoutTableFeatures, TryoutSetRow>;
 }) {
   return (
     <TableRow
@@ -63,9 +67,9 @@ function TryoutSetTableRow({
       onMouseEnter={() => navigation.intent(row.original)}
       onTouchStart={() => navigation.intent(row.original)}
     >
-      {row.getVisibleCells().map((cell) => (
+      {row.getAllCells().map((cell) => (
         <TableCell className="px-2 sm:px-4" key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          <table.FlexRender cell={cell} />
         </TableCell>
       ))}
     </TableRow>

@@ -3,59 +3,64 @@
   "version": "1.0.2",
   "private": true,
   "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "build": "pnpm check:tests && turbo run build",
-    "dev": "turbo run dev --filter=www --filter=@repo/backend --filter=cas",
-    "dev:web": "turbo run dev --filter=www --filter=@repo/backend --filter=cas",
-    "dev:all": "turbo run dev",
-    "start": "turbo run start",
-    "check:tests": "node scripts/check-tests.mjs",
-    "effect:source:check": "node scripts/effect-source.ts check",
-    "effect:source:update": "node scripts/effect-source.ts update",
-    "lint": "pnpm effect:source:check && pnpm check:tests && ultracite check && turbo run lint --filter=cas",
-    "format": "ultracite fix && turbo run format --filter=cas",
-    "format:doctor": "ultracite doctor",
-    "test": "pnpm check:tests && turbo run test",
-    "test:watch": "turbo run test:watch",
-    "test:ui": "turbo run test:ui",
-    "test:coverage": "pnpm check:tests && turbo run test:coverage",
+    "agent-docs": "pnpm --filter www exec vitest run --config vitest.agent-docs.config.mts --coverage.enabled=false",
     "analyze": "turbo run analyze",
-    "agent-docs": "pnpm --filter www exec vitest run --config vitest.agent-docs.config.ts --coverage.enabled=false",
-    "translate": "turbo run translate",
     "boundaries": "turbo boundaries",
-    "changeset": "changeset",
-    "version-packages": "changeset version",
-    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x pnpm,better-auth,@types/node,@biomejs/biome,typescript && turbo run bump-deps --filter=cas",
+    "build": "pnpm check:tests && turbo run build",
+    "bump-deps": "pnpm dlx npm-check-updates --workspaces --root -u -x pnpm,better-auth,@types/node,@biomejs/biome,typescript && turbo run bump-deps --filter=cas",
     "bump-ui": "pnpm dlx shadcn@latest add --all --overwrite -c packages/design-system",
+    "changeset": "changeset",
+    "check:tests": "node scripts/check-tests.mjs",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules .cache apps/*/.cache packages/*/.cache .pnpm-store apps/*/.turbo packages/*/.turbo apps/*/.ruff_cache apps/*/.pytest_cache apps/*/.venv apps/*/.coverage .turbo .next apps/*/.next apps/*/.react-email packages/*/.react-email .vercel/output apps/*/.vercel/output coverage apps/*/coverage packages/*/coverage && find apps packages -name __pycache__ -type d -prune -exec rm -rf {} +",
     "clean:ts": "find . -name '*.tsbuildinfo' -type f -delete && find . -name 'tsconfig.tsbuildinfo' -type f -delete",
-    "deps-check-www": "cd apps/www && depcheck --ignore-dirs=node_modules || true",
     "deps-check-api": "cd apps/api && depcheck --ignore-dirs=node_modules || true",
     "deps-check-mcp": "cd apps/mcp && depcheck --ignore-dirs=node_modules || true",
-    "doctor": "pnpm dlx react-doctor@0.9.3"
+    "deps-check-www": "cd apps/www && depcheck --ignore-dirs=node_modules || true",
+    "dev": "turbo run dev --filter=www --filter=@repo/backend --filter=cas",
+    "dev:all": "turbo run dev",
+    "dev:web": "turbo run dev --filter=www --filter=@repo/backend --filter=cas",
+    "doctor": "pnpm dlx react-doctor@0.9.3",
+    "effect:source:check": "node scripts/effect-source.ts check",
+    "effect:source:update": "node scripts/effect-source.ts update",
+    "format": "ultracite fix && turbo run format --filter=cas",
+    "format:doctor": "ultracite doctor",
+    "lint": "pnpm effect:source:check && pnpm check:tests && ultracite check && turbo run lint --filter=cas",
+    "start": "turbo run start",
+    "test": "pnpm check:tests && turbo run test",
+    "test:coverage": "pnpm check:tests && turbo run test:coverage",
+    "test:ui": "turbo run test:ui",
+    "test:watch": "turbo run test:watch",
+    "translate": "turbo run translate",
+    "version-packages": "changeset version"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.5",
+    "@biomejs/biome": "2.5.7",
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.1",
     "@effect/language-service": "^0.87.1",
-    "@effect/platform": "0.97.0",
-    "@effect/platform-node": "0.108.0",
+    "@effect/platform": "0.97.1",
+    "@effect/platform-node": "0.108.1",
     "@repo/typescript-config": "workspace:*",
-    "@turbo/gen": "^2.10.6",
+    "@turbo/gen": "^2.10.8",
     "@types/node": "^24.13.3",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "@vercel/config": "^0.5.5",
+    "@vercel/config": "^0.5.6",
     "afdocs": "0.18.7",
     "depcheck": "^1.4.7",
     "effect": "catalog:",
-    "turbo": "^2.10.6",
+    "turbo": "^2.10.8",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "ultracite": "^7.9.4"
+    "ultracite": "^7.10.0"
+  },
+  "packageManager": "pnpm@10.34.1",
+  "engines": {
+    "node": "^24.0.0"
   },
   "devEngines": {
     "runtime": {
@@ -63,10 +68,5 @@
       "version": "^24.0.0",
       "onFail": "download"
     }
-  },
-  "engines": {
-    "node": "^24.0.0"
-  },
-  "packageManager": "pnpm@10.34.1",
-  "type": "module"
+  }
 }

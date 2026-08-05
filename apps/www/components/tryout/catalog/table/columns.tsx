@@ -1,7 +1,8 @@
 "use client";
 
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import { createColumnHelper, type SortingState } from "@tanstack/react-table";
+import type { tryoutTableFeatures } from "@/components/tryout/catalog/table/features";
 import {
   TryoutSetSortHeader,
   TryoutSetStatusHeader,
@@ -13,6 +14,11 @@ import type {
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { TryoutStatus } from "@/components/tryout/status";
 
+const tryoutColumnHelper = createColumnHelper<
+  typeof tryoutTableFeatures,
+  TryoutSetRow
+>();
+
 /** Builds stable TanStack columns from the table's controlled UI state. */
 export function createTryoutSetColumns({
   sorting,
@@ -20,10 +26,9 @@ export function createTryoutSetColumns({
 }: {
   sorting: SortingState;
   statusFilter: TryoutSetStatusFilter;
-}): ColumnDef<TryoutSetRow>[] {
-  return [
-    {
-      accessorKey: "title",
+}) {
+  return tryoutColumnHelper.columns([
+    tryoutColumnHelper.accessor("title", {
       cell: ({ row }) => (
         <NavigationLink
           className="block truncate underline-offset-4 hover:underline"
@@ -33,7 +38,6 @@ export function createTryoutSetColumns({
         </NavigationLink>
       ),
       enableColumnFilter: false,
-      enableHiding: false,
       header: ({ column }) => (
         <TryoutSetSortHeader
           column={column}
@@ -41,9 +45,8 @@ export function createTryoutSetColumns({
           labelKey="set-column-name"
         />
       ),
-    },
-    {
-      accessorKey: "readyQuestionCount",
+    }),
+    tryoutColumnHelper.accessor("readyQuestionCount", {
       cell: ({ row }) => (
         <span className="tabular-nums">{row.original.readyQuestionCount}</span>
       ),
@@ -55,9 +58,8 @@ export function createTryoutSetColumns({
           labelKey="set-column-questions"
         />
       ),
-    },
-    {
-      accessorKey: "publishedScore",
+    }),
+    tryoutColumnHelper.accessor("publishedScore", {
       cell: ({ row }) => (
         <TryoutSetScoreCell score={row.original.publishedScore} />
       ),
@@ -69,16 +71,15 @@ export function createTryoutSetColumns({
           labelKey="set-column-score"
         />
       ),
-    },
-    {
-      accessorKey: "attemptStatus",
+    }),
+    tryoutColumnHelper.accessor("attemptStatus", {
       cell: ({ row }) => <TryoutStatus status={row.original.attemptStatus} />,
       enableSorting: false,
       header: ({ column }) => (
         <TryoutSetStatusHeader column={column} statusFilter={statusFilter} />
       ),
-    },
-  ];
+    }),
+  ]);
 }
 
 /** Renders a persisted score or an intentionally empty unscored cell. */

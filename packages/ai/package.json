@@ -10,30 +10,30 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@effect/platform": "0.97.0",
-    "@ai-sdk/devtools": "^1.0.7",
-    "@ai-sdk/elevenlabs": "^3.0.13",
-    "@ai-sdk/gateway": "^4.0.28",
-    "@ai-sdk/google": "^4.0.24",
-    "@ai-sdk/react": "^4.0.40",
-    "@mendable/firecrawl-js": "^4.30.1",
+    "@ai-sdk/devtools": "^1.0.10",
+    "@ai-sdk/elevenlabs": "^3.0.22",
+    "@ai-sdk/gateway": "^4.0.41",
+    "@ai-sdk/google": "^4.0.34",
+    "@ai-sdk/react": "^4.0.54",
+    "@effect/platform": "0.97.1",
+    "@mendable/firecrawl-js": "^4.32.0",
     "@repo/contents": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^7.0.37",
+    "ai": "^7.0.51",
     "convex": "^1.43.0",
     "dedent": "^1.7.2",
     "effect": "catalog:",
     "gpt-tokenizer": "^3.4.0",
-    "ipaddr.js": "^2.4.0",
-    "parse-domain": "^8.3.1"
+    "ipaddr.js": "^2.5.0",
+    "parse-domain": "^8.3.2"
   },
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/react": "19.2.17",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "^19.2.4",
     "@vitest/coverage-istanbul": "^4.1.10",
     "vitest": "^4.1.10"
   }
