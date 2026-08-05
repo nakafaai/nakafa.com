@@ -1,4 +1,7 @@
-import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/_types/agent/search";
+import {
+  NAKAFA_AGENT_DEFAULT_LIMIT,
+  NAKAFA_AGENT_MAX_LIMIT,
+} from "@repo/contents/_types/agent/search";
 import { fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -59,7 +62,9 @@ describe("nakafa_search_content", () => {
     ).toStrictEqual({
       message: "Invalid Nakafa content search options.",
       suggestions: [
-        expect.stringContaining("Expected a number between 1 and 32"),
+        expect.stringContaining(
+          `Expected a number between 1 and ${NAKAFA_AGENT_MAX_LIMIT}`
+        ),
       ],
     });
   });

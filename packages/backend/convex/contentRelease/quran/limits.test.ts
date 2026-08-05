@@ -4,7 +4,7 @@ import {
   QURAN_CHUNK_DOCUMENT_LIMIT,
   QURAN_PAGE_CHUNK_LIMIT,
   QURAN_SEARCH_DOCUMENT_LIMIT,
-  QURAN_SEARCH_RESULT_LIMIT,
+  QURAN_SEARCH_DOCUMENT_READ_LIMIT,
   QURAN_SURAH_DOCUMENT_LIMIT,
   quranRowDocumentLimit,
 } from "@repo/backend/convex/contentRelease/quran/limits";
@@ -24,7 +24,7 @@ describe("contentRelease/quran/limits", () => {
       3 * QURAN_SURAH_DOCUMENT_LIMIT +
       QURAN_SEARCH_DOCUMENT_LIMIT;
     const searchBytes =
-      QURAN_SEARCH_RESULT_LIMIT * 2 * QURAN_SEARCH_DOCUMENT_LIMIT;
+      QURAN_SEARCH_DOCUMENT_READ_LIMIT * QURAN_SEARCH_DOCUMENT_LIMIT;
 
     expect(catalogBytes).toBeLessThanOrEqual(readBudget);
     expect(pageBytes).toBeLessThanOrEqual(readBudget);

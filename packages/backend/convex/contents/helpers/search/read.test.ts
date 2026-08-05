@@ -18,6 +18,7 @@ import {
   getPublicSearchPath,
   insertContentSearch,
 } from "@repo/backend/test/search";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
 
@@ -116,18 +117,18 @@ describe("readContentSearchDocuments", () => {
         readContentSearchDocuments(
           ctx,
           {
-            limit: 20,
+            limit: NAKAFA_AGENT_SEARCH_WINDOW,
             locale: "en",
             offset: 0,
             queries: ["saturated published material"],
           },
           ["saturated published material"],
-          21
+          NAKAFA_AGENT_SEARCH_WINDOW
         )
       )
     );
 
-    expect(documents).toHaveLength(21);
+    expect(documents).toHaveLength(NAKAFA_AGENT_SEARCH_WINDOW);
     expect(documents.every((document) => document.section === "material")).toBe(
       true
     );
