@@ -30,7 +30,7 @@ import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem } from "@/components/shared/subject-item";
 import { SubjectList } from "@/components/shared/subject-list";
-import { getAksaraTreeUrl, getGithubUrl } from "@/lib/utils/github";
+import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
@@ -201,12 +201,8 @@ function CurriculumRouteBody({
   );
 }
 
-/** Resolves one immutable source directory without hardcoded program cases. */
+/** Resolves one immutable Aksara source directory from the signed projection. */
 function readCurriculumSourceUrl(model: CurriculumRouteModel) {
-  if (!model.managed) {
-    return getGithubUrl({ path: `/${model.sourcePath}` });
-  }
-
   return model.sourceRevision
     ? getAksaraTreeUrl({
         path: model.sourcePath,

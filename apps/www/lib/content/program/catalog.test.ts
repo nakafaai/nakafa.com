@@ -93,13 +93,12 @@ describe("published program catalog", () => {
           route: { publicPath: "curriculum/merdeka" },
         },
       ],
-      managed: true,
       sourceRevision: revision,
     });
     expect(cacheMock).toHaveBeenCalledOnce();
   });
 
-  it("preserves an unmanaged catalog without decoding source rows", async () => {
+  it("rejects an unmanaged catalog", async () => {
     fetchMock.mockResolvedValueOnce(
       catalogResponse({
         managed: false,
@@ -110,12 +109,8 @@ describe("published program catalog", () => {
     );
 
     await expect(
-      Effect.runPromise(readPublishedProgramCatalog("id"))
-    ).resolves.toEqual({
-      entries: [],
-      managed: false,
-      sourceRevision: null,
-    });
+      Effect.runPromise(readPublishedProgramCatalog("id").pipe(Effect.flip))
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
   });
 
   it.each([
@@ -152,7 +147,6 @@ describe("published program catalog", () => {
     const catalog = await getPublishedProgramRoutes("en");
 
     expect(catalog).toMatchObject({
-      managed: true,
       routes: [
         { publicPath: "curriculum/merdeka" },
         { publicPath: "curriculum/merdeka/class-11" },
@@ -186,14 +180,12 @@ describe("published program catalog", () => {
     });
   });
 
-  it("returns no routes before Aksara owns the program family", async () => {
+  it("rejects routes before Aksara owns the program family", async () => {
     fetchMock.mockResolvedValueOnce(pageResponse({ managed: false, page: [] }));
 
-    await expect(getPublishedProgramRoutes("id")).resolves.toEqual({
-      managed: false,
-      routes: [],
-      sourceRevision: null,
-    });
+    await expect(
+      Effect.runPromise(readPublishedProgramRoutes("id").pipe(Effect.flip))
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
   });
 
   it.each([

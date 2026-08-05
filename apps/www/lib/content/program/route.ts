@@ -31,7 +31,6 @@ export interface PublishedProgramRoute {
   readonly children: readonly PublishedCurriculumRoute[];
   readonly contexts: readonly PublishedCurriculumRoute[];
   readonly groups: readonly PublishedCurriculumRoute[];
-  readonly managed: boolean;
   readonly materials: readonly MaterialLessonProjection[];
   readonly program: null | PublishedLearningProgram;
   readonly route: null | PublishedCurriculumRoute;
@@ -69,19 +68,7 @@ export const readPublishedProgramRoute = Effect.fn(
     Effect.mapError(() => new PublishedProjectionError({ locale, publicPath }))
   );
   if (!result.managed) {
-    return {
-      activeReleaseId,
-      alternates: [],
-      ancestors: [],
-      children: [],
-      contexts: [],
-      groups: [],
-      managed: false,
-      materials: [],
-      program: null,
-      route: null,
-      sourceRevision: null,
-    } satisfies PublishedProgramRoute;
+    return yield* new PublishedProjectionError({ locale, publicPath });
   }
   if (activeReleaseId === null) {
     return yield* new PublishedProjectionError({ locale, publicPath });
@@ -94,7 +81,6 @@ export const readPublishedProgramRoute = Effect.fn(
       children: [],
       contexts: [],
       groups: [],
-      managed: true,
       materials: [],
       program: null,
       route: null,
@@ -140,7 +126,6 @@ export const readPublishedProgramRoute = Effect.fn(
     children,
     contexts,
     groups,
-    managed: true,
     materials,
     program,
     route,

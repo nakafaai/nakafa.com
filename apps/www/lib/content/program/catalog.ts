@@ -35,7 +35,6 @@ export interface PublishedProgramCatalog {
     readonly program: PublishedLearningProgram;
     readonly route: PublishedCurriculumRoute;
   }[];
-  readonly managed: boolean;
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
 }
 
@@ -64,11 +63,10 @@ export const readPublishedProgramCatalog = Effect.fn(
     publicPath: "curricula",
   });
   if (!result.managed) {
-    return {
-      entries: [],
-      managed: false,
-      sourceRevision: null,
-    } satisfies PublishedProgramCatalog;
+    return yield* new PublishedProjectionError({
+      locale,
+      publicPath: "curricula",
+    });
   }
   const [programs, routes] = yield* Effect.all([
     Effect.forEach(result.programJson, (source) =>
@@ -92,7 +90,6 @@ export const readPublishedProgramCatalog = Effect.fn(
   });
   return {
     entries,
-    managed: true,
     sourceRevision,
   } satisfies PublishedProgramCatalog;
 });
@@ -157,12 +154,15 @@ export const readPublishedProgramRoutes = Effect.fn(
       });
     }
     if (!page.managed) {
-      return { managed: false, routes: [], sourceRevision: null };
+      return yield* new PublishedProjectionError({
+        locale,
+        publicPath: "curricula",
+      });
     }
     routes.push(...page.routes);
     sourceRevision = page.sourceRevision;
     if (page.done) {
-      return { managed: true, routes, sourceRevision };
+      return { routes, sourceRevision };
     }
     if (
       page.nextCursor === null ||

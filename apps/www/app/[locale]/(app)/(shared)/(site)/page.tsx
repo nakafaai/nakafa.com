@@ -138,7 +138,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
       <div className="relative grid">
         <Hero />
         <Logos />
-        <Features />
+        <Features locale={locale} />
         <Curricula locale={locale} />
         <Trust locale={locale} />
         <Pricing />

@@ -1,37 +1,22 @@
-import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
-import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import { FeaturesBento } from "@/components/marketing/about/features-bento";
+import { getPublishedProgramRoutes } from "@/lib/content/program/catalog";
 
-const FEATURE_SUBJECT_NODE_KEYS = new Set([
-  "class-10-biology",
-  "class-10-chemistry",
-  "class-10-mathematics",
-  "class-10-physics",
-]);
-
-export function Features() {
-  const t = useTranslations("Features");
-  const locale = useLocale();
-  const subjectPaths = readStaticPublicCurriculumRoutes().flatMap((route) => {
-    const isFeaturedSubject =
-      route.locale === locale &&
-      route.level === "subject" &&
-      FEATURE_SUBJECT_NODE_KEYS.has(route.nodeKey) &&
-      route.sitemap;
-
-    if (!isFeaturedSubject) {
-      return [];
-    }
-
-    return [
-      {
-        href: `/${route.locale}/${route.publicPath}`,
-        icon: readCurriculumRouteIcon(route),
-        title: route.title,
-      },
-    ];
-  });
+export async function Features({ locale }: { locale: Locale }) {
+  const [t, catalog] = await Promise.all([
+    getTranslations({ locale, namespace: "Features" }),
+    getPublishedProgramRoutes(locale),
+  ]);
+  const subjectPaths = catalog.routes
+    .filter((route) => route.level === "subject" && route.sitemap)
+    .slice(0, 4)
+    .map((route) => ({
+      href: `/${locale}/${route.publicPath}`,
+      icon: readCurriculumRouteIcon(route),
+      title: route.title,
+    }));
 
   return (
     <section
