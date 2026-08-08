@@ -8,25 +8,25 @@ import type {
   MaterialLessonProjection,
   MaterialMetadata,
 } from "@nakafa/aksara-contracts/projection/material";
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect } from "effect";
 import type { ReactNode } from "react";
 import { applyPublishedContentCache } from "@/lib/content/cache";
 import { decodeMaterialProjection } from "@/lib/content/material/decode";
-import { executeSignedArtifact } from "@/lib/content/published/artifact";
+import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 import {
   type PublishedContentData,
-  type PublishedContentInput,
-  readPublishedContent,
+  type PublishedContentRouteInput,
+  readCurrentPublishedContent,
 } from "@/lib/content/published/exchange";
 import { getRendererComponents } from "@/lib/content/renderer/components";
 
 /** Exact public material identity sent to the shared runtime seam. */
-export type PublishedMaterialInput = PublishedContentInput;
+export type PublishedMaterialInput = PublishedContentRouteInput;
 
 /** Verified material body and source evidence consumed by the page shell. */
 export interface PublishedMaterialContent {
+  readonly activeReleaseId: PublishedMaterialData["activeReleaseId"];
+  readonly artifactHash: PublishedMaterialData["artifact"]["artifactHash"];
   readonly body: ReactNode;
   readonly metadata: MaterialMetadata;
   readonly projection: MaterialLessonProjection;
@@ -46,7 +46,7 @@ export interface PublishedMaterialData
 export const readPublishedMaterial = Effect.fn(
   "NakafaContent.readPublishedMaterial"
 )(function* (input: PublishedMaterialInput) {
-  const data = yield* readPublishedContent(input);
+  const data = yield* readCurrentPublishedContent(input);
   const projection = yield* decodeMaterialProjection(data.projection, input);
 
   return {
@@ -60,23 +60,21 @@ export const readPublishedMaterial = Effect.fn(
   } satisfies PublishedMaterialData;
 });
 
-/** Authenticates and renders one artifact through its physical registry. */
+/** Renders one artifact already authenticated by the runtime exchange. */
 const renderMaterialArtifact = Effect.fn(
   "NakafaContent.renderMaterialArtifact"
 )(function* (data: PublishedMaterialData) {
   const components = getRendererComponents(
     data.artifact.payload.rendererDomain
   );
-  const rendered = yield* executeSignedArtifact({
+  const rendered = yield* evaluateVerifiedArtifact({
     artifact: data.artifact,
     components,
-    rendererContractVersion: data.rendererManifest.rendererContractVersion,
-    rendererManifest: data.rendererManifest,
-  }).pipe(
-    Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver)
-  );
+  });
 
   return {
+    activeReleaseId: data.activeReleaseId,
+    artifactHash: data.artifact.artifactHash,
     body: <rendered.Content />,
     metadata: data.metadata,
     projection: data.projection,
@@ -86,19 +84,12 @@ const renderMaterialArtifact = Effect.fn(
   } satisfies PublishedMaterialContent;
 });
 
-/** Caches verified material metadata and provenance under exact signed tags. */
-export async function getPublishedMaterial(input: PublishedMaterialInput) {
-  "use cache";
-
-  const data = await Effect.runPromise(readPublishedMaterial(input));
-  applyPublishedContentCache("material", data.artifact.artifactHash);
-  return data;
-}
-
 /** Caches JSX rendered from one reviewed, signed Aksara material artifact. */
 export async function renderPublishedMaterial(input: PublishedMaterialInput) {
   "use cache";
 
-  const data = await getPublishedMaterial(input);
-  return Effect.runPromise(renderMaterialArtifact(data));
+  const data = await Effect.runPromise(readPublishedMaterial(input));
+  const rendered = await Effect.runPromise(renderMaterialArtifact(data));
+  applyPublishedContentCache("material", data.artifact.artifactHash);
+  return rendered;
 }

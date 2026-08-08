@@ -21,14 +21,51 @@ interface ExecuteArtifactInput {
   readonly rendererManifest: RendererManifestEnvelope;
 }
 
+interface EvaluateArtifactInput {
+  readonly artifact: SignedContentArtifact;
+  readonly components: MDXComponents;
+}
+
 /** Authenticated module and projections consumed by a Nakafa route shell. */
 export interface RenderableContent {
   readonly artifact: SignedContentArtifact;
   readonly Content: ComponentType;
 }
 
+/** Evaluates an artifact already authenticated by its owning runtime boundary. */
+export const evaluateVerifiedArtifact = Effect.fn(
+  "NakafaContent.evaluateVerifiedArtifact"
+)(function* (input: EvaluateArtifactInput) {
+  const module = yield* Effect.tryPromise({
+    catch: () =>
+      new ContentExecutionError({
+        contentKey: input.artifact.payload.contentKey,
+        stage: "evaluate",
+      }),
+    try: () =>
+      run(input.artifact.payload.compiledCode, {
+        Fragment,
+        jsx,
+        jsxs,
+        useMDXComponents: () => input.components,
+      }),
+  });
+
+  if (typeof module.default !== "function") {
+    return yield* new ContentExecutionError({
+      contentKey: input.artifact.payload.contentKey,
+      stage: "module",
+    });
+  }
+
+  return {
+    Content: module.default,
+    artifact: input.artifact,
+  } satisfies RenderableContent;
+});
+
 /**
- * Authenticates reviewed precompiled MDX before evaluating it server-side.
+ * Authenticates standalone reviewed MDX before server-only evaluation.
  *
  * Callers must provide a `ContentVerificationKeyResolver` layer. The compiler
  * forbids imports, so runtime evaluation intentionally omits `baseUrl`.
@@ -41,27 +78,8 @@ export const executeSignedArtifact = Effect.fn(
     rendererContractVersion: input.rendererContractVersion,
     rendererManifest: input.rendererManifest,
   });
-  const module = yield* Effect.tryPromise({
-    catch: () =>
-      new ContentExecutionError({
-        contentKey: artifact.payload.contentKey,
-        stage: "evaluate",
-      }),
-    try: () =>
-      run(artifact.payload.compiledCode, {
-        Fragment,
-        jsx,
-        jsxs,
-        useMDXComponents: () => input.components,
-      }),
+  return yield* evaluateVerifiedArtifact({
+    artifact,
+    components: input.components,
   });
-
-  if (typeof module.default !== "function") {
-    return yield* new ContentExecutionError({
-      contentKey: artifact.payload.contentKey,
-      stage: "module",
-    });
-  }
-
-  return { Content: module.default, artifact } satisfies RenderableContent;
 });

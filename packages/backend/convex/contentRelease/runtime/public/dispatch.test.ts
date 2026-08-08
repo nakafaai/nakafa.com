@@ -1,13 +1,13 @@
 // @vitest-environment node
 
 import {
-  decodeContentRuntimeRequest,
-  MAX_RUNTIME_REQUEST_BYTES,
+  decodePublicContentRuntimeRequest,
+  MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
 } from "@nakafa/aksara-contracts/runtime/spec";
+import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { verifyContentEnvelope } from "@repo/backend/content/verify";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/dispatch";
+import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
@@ -21,14 +21,13 @@ import { testTextHash } from "@repo/backend/test/content-release";
 import {
   articleRuntimeRequest,
   insertSignedRelease,
+  publicRuntimeRequest,
   runtimeContentKey,
-  runtimeRequest,
   TEST_ARTICLE_KEY,
   TEST_ARTICLE_PATH,
   TEST_ARTICLE_PROJECTION_JSON,
   TEST_ARTICLE_SOURCE,
 } from "@repo/backend/test/content-runtime";
-import { insertProtectedRuntime } from "@repo/backend/test/protected-runtime";
 import { insertSignedHead } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime-values";
 import { Effect } from "effect";
@@ -37,15 +36,11 @@ import { describe, expect, it } from "vitest";
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
 
-/** Executes the deep runtime program with the isolated signing authority. */
+/** Executes the public runtime transport program. */
 function runDispatch(t: RuntimeAction, source: string) {
   const byteLength = new TextEncoder().encode(source).byteLength;
   return t.action((ctx) =>
-    runConvexProgram(
-      dispatchProgram(ctx, source, byteLength).pipe(
-        Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
-      )
-    )
+    runConvexProgram(dispatchProgram(ctx, source, byteLength))
   );
 }
 
@@ -60,22 +55,26 @@ function seedSigned(
   });
 }
 
-describe("contentRelease/runtime/dispatch", () => {
+describe("contentRelease/runtime/public/dispatch", () => {
   it("returns one fully authenticated public artifact and exact absence", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedSigned(t, "public");
-    const row = await t.query(internal.contentRelease.runtime.readPublic, {
-      locale: "en",
-      publicPath: TEST_RUNTIME_PATH,
-    });
+    const row = await t.query(
+      internal.contentRelease.runtime.public.internal.read,
+      {
+        locale: "en",
+        publicPath: TEST_RUNTIME_PATH,
+      }
+    );
     if (!row) {
       throw new Error("Expected one signed runtime row.");
     }
     const request = await Effect.runPromise(
-      decodeContentRuntimeRequest(JSON.parse(runtimeRequest("public")))
+      decodePublicContentRuntimeRequest(JSON.parse(publicRuntimeRequest()))
     );
     const verified = await Effect.runPromise(
-      verifyContentEnvelope({
+      verifyContentRuntimeExchange({
+        rendererManifest: JSON.parse(row.rendererJson),
         request,
         response: {
           activeManifestHash: row.activeManifestHash,
@@ -99,7 +98,7 @@ describe("contentRelease/runtime/dispatch", () => {
     );
     expect(verified).toMatchObject({ _tag: "Right" });
 
-    const found = await runDispatch(t, runtimeRequest("public"));
+    const found = await runDispatch(t, publicRuntimeRequest());
     const missing = await runDispatch(
       t,
       JSON.stringify({
@@ -194,55 +193,17 @@ describe("contentRelease/runtime/dispatch", () => {
     );
   });
 
-  it("authenticates protected question and answer artifacts", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const fixture = await t.mutation(insertProtectedRuntime);
-
-    const [question, answer] = await Promise.all([
-      runDispatch(t, JSON.stringify(fixture.question)),
-      runDispatch(t, JSON.stringify(fixture.answer)),
-    ]);
-
-    expect(question.status).toBe(200);
-    expect(JSON.parse(question.body)).toMatchObject({
-      artifact: {
-        artifactHash: fixture.question.artifactHash,
-        payload: { contentKey: fixture.question.contentKey },
-      },
-      delivery: "authenticated",
-      kind: "found",
-      snapshotId: fixture.snapshotId,
-    });
-    expect(answer.status).toBe(200);
-    expect(JSON.parse(answer.body)).toMatchObject({
-      artifact: {
-        artifactHash: fixture.answer.artifactHash,
-        payload: { contentKey: fixture.answer.contentKey },
-      },
-      delivery: "entitled",
-      kind: "found",
-      snapshotId: fixture.snapshotId,
-    });
-  });
-
   it("rejects malformed, mismatched, and oversized request bytes", async () => {
     const t = createConvexTestWithBetterAuth();
-    const source = runtimeRequest("public");
+    const source = publicRuntimeRequest();
     const mismatch = await t.action((ctx) =>
-      runConvexProgram(
-        dispatchProgram(ctx, source, 1).pipe(
-          Effect.provideService(
-            ContentVerificationKeyResolver,
-            TEST_KEY_RESOLVER
-          )
-        )
-      )
+      runConvexProgram(dispatchProgram(ctx, source, 1))
     );
 
     await expect(runDispatch(t, "{")).resolves.toMatchObject({ status: 400 });
     expect(mismatch.status).toBe(400);
     await expect(
-      runDispatch(t, "x".repeat(MAX_RUNTIME_REQUEST_BYTES + 1))
+      runDispatch(t, "x".repeat(MAX_PUBLIC_RUNTIME_REQUEST_BYTES + 1))
     ).resolves.toMatchObject({ status: 400 });
   });
 
@@ -259,7 +220,7 @@ describe("contentRelease/runtime/dispatch", () => {
       });
     });
 
-    await expect(runDispatch(t, runtimeRequest("public"))).resolves.toEqual({
+    await expect(runDispatch(t, publicRuntimeRequest())).resolves.toEqual({
       body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
       status: 500,
     });

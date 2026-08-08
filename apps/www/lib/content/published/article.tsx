@@ -5,15 +5,15 @@ import type {
   ArticleProjection,
   ArticleReference,
 } from "@nakafa/aksara-contracts/projection/article";
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { contentKeyResolver } from "@repo/backend/content/trust";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { ReactNode } from "react";
 import { applyPublishedContentCache } from "@/lib/content/cache";
-import { executeSignedArtifact } from "@/lib/content/published/artifact";
+import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 import {
   type PublishedContentData,
   type PublishedContentInput,
+  type PublishedContentRouteInput,
+  readCurrentPublishedContent,
   readPublishedContent,
 } from "@/lib/content/published/exchange";
 import { decodePublishedArticle } from "@/lib/content/published/projection";
@@ -21,6 +21,9 @@ import { getRendererComponents } from "@/lib/content/renderer/components";
 
 /** Exact public article identity sent to the shared runtime seam. */
 export type PublishedArticleInput = PublishedContentInput;
+
+/** Exact public article identity resolved by the signed current runtime. */
+export type CurrentPublishedArticleInput = PublishedContentRouteInput;
 
 /** Verified article projection and signed artifact selected from active state. */
 export interface PublishedArticleData
@@ -42,37 +45,48 @@ export interface PublishedArticleContent {
   readonly sourceRevision: PublishedArticleData["sourceRevision"];
 }
 
-/** Reads and strictly narrows one verified runtime exchange to article data. */
+/** Strictly narrows one verified runtime exchange to article data. */
+const decodeArticleData = Effect.fn("NakafaContent.decodeArticleData")(
+  function* (data: PublishedContentData, input: CurrentPublishedArticleInput) {
+    const projection = yield* decodePublishedArticle(data.projection, input);
+
+    return {
+      activeReleaseId: data.activeReleaseId,
+      artifact: data.artifact,
+      projection,
+      rendererManifest: data.rendererManifest,
+      sourcePath: data.sourcePath,
+      sourceRevision: data.sourceRevision,
+    } satisfies PublishedArticleData;
+  }
+);
+
+/** Reads an article pinned to a release selected by another trusted read. */
 export const readPublishedArticle = Effect.fn(
   "NakafaContent.readPublishedArticle"
 )(function* (input: PublishedArticleInput) {
   const data = yield* readPublishedContent(input);
-  const projection = yield* decodePublishedArticle(data.projection, input);
-
-  return {
-    activeReleaseId: data.activeReleaseId,
-    artifact: data.artifact,
-    projection,
-    rendererManifest: data.rendererManifest,
-    sourcePath: data.sourcePath,
-    sourceRevision: data.sourceRevision,
-  } satisfies PublishedArticleData;
+  return yield* decodeArticleData(data, input);
 });
 
-/** Authenticates and renders one article through its physical registry. */
+/** Reads an article directly from the signed current runtime. */
+export const readCurrentPublishedArticle = Effect.fn(
+  "NakafaContent.readCurrentPublishedArticle"
+)(function* (input: CurrentPublishedArticleInput) {
+  const data = yield* readCurrentPublishedContent(input);
+  return yield* decodeArticleData(data, input);
+});
+
+/** Renders one article already authenticated by the runtime exchange. */
 const renderArticleArtifact = Effect.fn("NakafaContent.renderArticleArtifact")(
   function* (data: PublishedArticleData) {
     const components = getRendererComponents(
       data.artifact.payload.rendererDomain
     );
-    const rendered = yield* executeSignedArtifact({
+    const rendered = yield* evaluateVerifiedArtifact({
       artifact: data.artifact,
       components,
-      rendererContractVersion: data.rendererManifest.rendererContractVersion,
-      rendererManifest: data.rendererManifest,
-    }).pipe(
-      Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver)
-    );
+    });
 
     return {
       body: <rendered.Content />,
@@ -89,19 +103,38 @@ const renderArticleArtifact = Effect.fn("NakafaContent.renderArticleArtifact")(
   }
 );
 
-/** Caches verified article metadata and provenance under exact signed tags. */
-export async function getPublishedArticle(input: PublishedArticleInput) {
+/** Caches one current article while preserving a truthful missing result. */
+export async function getCurrentPublishedArticle(
+  input: CurrentPublishedArticleInput
+) {
   "use cache";
 
-  const data = await Effect.runPromise(readPublishedArticle(input));
-  applyPublishedContentCache("article", data.artifact.artifactHash);
-  return data;
+  const result = await Effect.runPromise(
+    readCurrentPublishedArticle(input).pipe(
+      Effect.map(Option.some),
+      Effect.catchTag("ContentRuntimeMissingError", () =>
+        Effect.succeed(Option.none<PublishedArticleData>())
+      )
+    )
+  );
+  if (Option.isNone(result)) {
+    return null;
+  }
+  applyPublishedContentCache("article", result.value.artifact.artifactHash);
+  return result.value;
 }
 
-/** Caches JSX rendered from one reviewed, signed Aksara article artifact. */
-export async function renderPublishedArticle(input: PublishedArticleInput) {
+/** Caches current article JSX resolved without a redundant ownership query. */
+export async function renderCurrentPublishedArticle(
+  input: CurrentPublishedArticleInput
+) {
   "use cache";
 
-  const data = await getPublishedArticle(input);
-  return Effect.runPromise(renderArticleArtifact(data));
+  const data = await getCurrentPublishedArticle(input);
+  if (!data) {
+    return null;
+  }
+  const rendered = await Effect.runPromise(renderArticleArtifact(data));
+  applyPublishedContentCache("article", data.artifact.artifactHash);
+  return rendered;
 }

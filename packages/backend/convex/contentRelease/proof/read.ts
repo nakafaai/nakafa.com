@@ -1,3 +1,5 @@
+import { MAX_ARTIFACT_BATCH_COUNT } from "@nakafa/aksara-contracts/transport/limits";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -8,6 +10,7 @@ import {
 } from "@repo/backend/convex/contentRelease/parse";
 import { hasProofTransactionHeadroom } from "@repo/backend/convex/contentRelease/proof/budget";
 import {
+  ARTIFACT_PROOF_PAGE_BYTES,
   PROOF_PAGE_BYTES,
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
@@ -17,7 +20,6 @@ import { literals } from "convex-helpers/validators";
 import { Effect } from "effect";
 
 const proofRowValidator = v.object({
-  artifactJson: v.optional(v.string()),
   index: v.number(),
   itemJson: v.string(),
   projectionJson: v.optional(v.string()),
@@ -46,6 +48,21 @@ const proofStateValidator = v.object({
 
 export type ProofPage = Infer<typeof proofPageValidator>;
 export type ProofState = Infer<typeof proofStateValidator>;
+
+const artifactProofRowValidator = v.object({
+  artifactJson: v.string(),
+  index: v.number(),
+  itemJson: v.string(),
+});
+const artifactProofPageValidator = v.object({
+  batchIndex: v.number(),
+  rows: v.array(artifactProofRowValidator),
+});
+const artifactProofPlanValidator = v.object({
+  batchCount: v.number(),
+  stagedArtifacts: v.number(),
+});
+export type ArtifactProofPage = Infer<typeof artifactProofPageValidator>;
 
 const routePageValidator = v.object({
   done: v.boolean(),
@@ -139,10 +156,17 @@ const routePageProgram = Effect.fn("contentRelease.routeProofPage")(function* (
 
 /** Loads the signed artifact referenced by one exact staged upsert. */
 const loadArtifactJson = Effect.fn("contentRelease.loadProofArtifact")(
-  function* (ctx: QueryCtx, itemJson: string) {
-    const item = yield* decodeItemJson(itemJson);
-    if (item.change.operation === "delete") {
-      return;
+  function* (ctx: QueryCtx, row: Doc<"contentItems">) {
+    const item = yield* decodeItemJson(row.itemJson);
+    if (
+      item.change.operation !== "upsert" ||
+      !row.artifactReady ||
+      row.artifactHash !== item.change.artifactHash
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Artifact proof row ${row.releaseId}/${row.index} lost its staged identity.`
+      );
     }
     const artifactHash = item.change.artifactHash;
     const artifact = yield* Effect.promise(() =>
@@ -160,6 +184,101 @@ const loadArtifactJson = Effect.fn("contentRelease.loadProofArtifact")(
       );
     }
     return artifact.artifactJson;
+  }
+);
+
+/** Plans immutable artifact batches without replaying their signed bodies. */
+const artifactPlanProgram = Effect.fn("contentRelease.artifactProofPlan")(
+  function* (ctx: QueryCtx, manifestHash: string, releaseId: string) {
+    const state = yield* stateProgram(ctx, manifestHash, releaseId);
+    const last = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentItems")
+        .withIndex("by_releaseId_and_artifactBatchIndex", (query) =>
+          query.eq("releaseId", releaseId).gte("artifactBatchIndex", 0)
+        )
+        .order("desc")
+        .first()
+    );
+    if (state.stagedArtifacts === 0) {
+      if (last !== null) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          `Content release ${releaseId} retained an unexpected artifact batch.`
+        );
+      }
+      return { batchCount: 0, stagedArtifacts: 0 };
+    }
+    const lastBatchIndex = last?.artifactBatchIndex;
+    if (
+      lastBatchIndex === undefined ||
+      !Number.isSafeInteger(lastBatchIndex) ||
+      lastBatchIndex < 0 ||
+      lastBatchIndex >= state.stagedArtifacts
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${releaseId} lost its artifact batch directory.`
+      );
+    }
+    return {
+      batchCount: lastBatchIndex + 1,
+      stagedArtifacts: state.stagedArtifacts,
+    };
+  }
+);
+
+/** Reads one immutable publisher-owned artifact batch for isolated checking. */
+const artifactBatchProgram = Effect.fn("contentRelease.artifactProofBatch")(
+  function* (ctx: QueryCtx, releaseId: string, batchIndex: number) {
+    if (!Number.isSafeInteger(batchIndex) || batchIndex < 0) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${releaseId} received invalid artifact batch ${batchIndex}.`
+      );
+    }
+    const release = yield* loadRelease(ctx, releaseId);
+    if (
+      release.abortingAt !== undefined ||
+      (release.status !== "verifying" && release.status !== "verified")
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_STATE",
+        `Content release ${releaseId} cannot expose artifact proof batches.`
+      );
+    }
+    const stored = yield* Effect.promise(() =>
+      ctx.db
+        .query("contentItems")
+        .withIndex("by_releaseId_and_artifactBatchIndex", (query) =>
+          query.eq("releaseId", releaseId).eq("artifactBatchIndex", batchIndex)
+        )
+        .take(MAX_ARTIFACT_BATCH_COUNT + 1)
+    );
+    if (stored.length === 0 || stored.length > MAX_ARTIFACT_BATCH_COUNT) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${releaseId} has an invalid artifact batch ${batchIndex}.`
+      );
+    }
+    const rows = yield* Effect.forEach(stored, (row) =>
+      loadArtifactJson(ctx, row).pipe(
+        Effect.map((artifactJson) => ({
+          artifactJson,
+          index: row.index,
+          itemJson: row.itemJson,
+        }))
+      )
+    );
+    rows.sort((left, right) => left.index - right.index);
+    const result = { batchIndex, rows } satisfies ArtifactProofPage;
+    if (getConvexSize(result) > ARTIFACT_PROOF_PAGE_BYTES) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_LIMIT",
+        `Artifact proof batch ${releaseId}/${batchIndex} exceeds its response ceiling.`
+      );
+    }
+    return result;
   }
 );
 
@@ -200,9 +319,7 @@ const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
   );
   const rows: ProofPage["rows"] = [];
   for (const row of stored.page) {
-    const artifactJson = yield* loadArtifactJson(ctx, row.itemJson);
     const next = {
-      artifactJson,
       index: row.index,
       itemJson: row.itemJson,
       projectionJson: row.projectionJson,
@@ -245,6 +362,26 @@ export const state = internalQuery({
   returns: proofStateValidator,
   handler: (ctx, args) =>
     runConvexProgram(stateProgram(ctx, args.manifestHash, args.releaseId)),
+});
+
+/** Returns the immutable artifact-batch plan for one frozen release. */
+export const artifactPlan = internalQuery({
+  args: { manifestHash: v.string(), releaseId: v.string() },
+  returns: artifactProofPlanValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      artifactPlanProgram(ctx, args.manifestHash, args.releaseId)
+    ),
+});
+
+/** Returns one exact artifact batch below the Node action response limit. */
+export const artifactBatch = internalQuery({
+  args: { batchIndex: v.number(), releaseId: v.string() },
+  returns: artifactProofPageValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      artifactBatchProgram(ctx, args.releaseId, args.batchIndex)
+    ),
 });
 
 /** Returns one byte-bounded ordered page with measured transaction headroom. */

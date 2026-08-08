@@ -41,7 +41,9 @@ import {
 import type { FunctionReturnType } from "convex/server";
 
 type RuntimeRow = Exclude<
-  FunctionReturnType<typeof internal.contentRelease.runtime.readPublic>,
+  FunctionReturnType<
+    typeof internal.contentRelease.runtime.public.internal.read
+  >,
   null
 >;
 
@@ -109,12 +111,10 @@ export function runtimeContentKey(
   return `material/lesson/test/${delivery}`;
 }
 
-/** Creates one exact runtime request body for an access class. */
-export function runtimeRequest(
-  delivery: "authenticated" | "entitled" | "public"
-) {
+/** Creates one exact public runtime request body. */
+export function publicRuntimeRequest() {
   return JSON.stringify({
-    delivery,
+    delivery: "public",
     locale: "en",
     publicPath: TEST_RUNTIME_PATH,
   });
@@ -129,7 +129,7 @@ export function articleRuntimeRequest() {
   });
 }
 
-/** Creates delivery, locale, and path mismatches for exchange verification. */
+/** Creates locale and path mismatches for public exchange verification. */
 export function runtimeCases(row: RuntimeRow) {
   const response = {
     activeManifestHash: row.activeManifestHash,
@@ -149,7 +149,6 @@ export function runtimeCases(row: RuntimeRow) {
     locale: "id",
   });
   return [
-    ["delivery", { ...response, delivery: "authenticated" }],
     [
       "locale",
       {

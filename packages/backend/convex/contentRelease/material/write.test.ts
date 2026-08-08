@@ -1,4 +1,7 @@
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  PublicPathSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import {
   canonicalizeMaterialProjection,
@@ -25,7 +28,7 @@ type PublicProjection = NonNullable<
 function testResolved(
   options?: {
     readonly family?: PublicProjection["family"];
-    readonly projectionHash?: string;
+    readonly projectionHash?: PublicProjection["projectionHash"];
     readonly projectionJson?: string;
     readonly publicPath?: PublicProjection["publicPath"];
     readonly sequence?: number;
@@ -107,8 +110,9 @@ describe("contentRelease/material/write", () => {
     const t = convexTest(schema, convexModules);
     for (const head of [
       testResolved({ family: "article" }),
-      testResolved({ projectionHash: "" }),
-      testResolved({ projectionHash: `sha256:${"0".repeat(64)}` }),
+      testResolved({
+        projectionHash: Sha256HashSchema.make(`sha256:${"0".repeat(64)}`),
+      }),
       testResolved({ projectionJson: "" }),
       testResolved({ publicPath: PublicPathSchema.make("test/other") }),
       testResolved({ sourcePath: "" }),

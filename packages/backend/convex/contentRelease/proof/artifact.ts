@@ -11,35 +11,26 @@ import {
   decodeItemJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
-import type { ProofPage } from "@repo/backend/convex/contentRelease/proof/read";
+import type { ArtifactProofPage } from "@repo/backend/convex/contentRelease/proof/read";
 import { Effect, Stream } from "effect";
 
-/** Reauthenticates every stored artifact against its item and renderer. */
-export const verifyArtifactStream = Effect.fn(
-  "contentRelease.verifyArtifactStream"
-)(function* <StreamError, Requirements>(
-  rows: Stream.Stream<ProofPage["rows"][number], StreamError, Requirements>,
+/** Reauthenticates one publisher-owned artifact batch against its item. */
+export const verifyArtifactBatch = Effect.fn(
+  "contentRelease.verifyArtifactBatch"
+)(function* (
+  rows: ArtifactProofPage["rows"],
   releaseId: string,
   renderer: RendererManifestEnvelope,
   rendererContractVersion: RendererContractVersion
 ) {
-  return yield* rows.pipe(
+  return yield* Stream.fromIterable(rows).pipe(
     Stream.runFoldEffect(0, (count, row) =>
       Effect.gen(function* () {
         const item = yield* decodeItemJson(row.itemJson);
         if (item.change.operation === "delete") {
-          if (row.artifactJson !== undefined) {
-            return yield* releaseFail(
-              "CONTENT_RELEASE_INTEGRITY",
-              `Delete item ${releaseId}/${row.index} has an artifact.`
-            );
-          }
-          return count;
-        }
-        if (!row.artifactJson) {
           return yield* releaseFail(
-            "CONTENT_RELEASE_MISSING",
-            `Upsert item ${releaseId}/${row.index} has no artifact.`
+            "CONTENT_RELEASE_INTEGRITY",
+            `Delete item ${releaseId}/${row.index} entered an artifact batch.`
           );
         }
         const artifact = yield* decodeArtifactJson(row.artifactJson);

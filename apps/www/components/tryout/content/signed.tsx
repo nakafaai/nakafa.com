@@ -1,10 +1,9 @@
 import "server-only";
 
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { MAX_PROTECTED_RUNTIME_SELECTORS } from "@nakafa/aksara-contracts/runtime/protected/limits";
+import type { ProtectedContentRuntimeItem } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
-import { readContent } from "@repo/backend/client/content/read";
-import { contentKeyResolver } from "@repo/backend/content/trust";
-import { verifyContentRenderer } from "@repo/backend/content/verify";
+import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Effect } from "effect";
 import type {
@@ -14,8 +13,8 @@ import type {
   TryoutQuestionSelector,
 } from "@/components/tryout/content/model";
 import { env } from "@/env";
-import { applyPublishedContentCache } from "@/lib/content/cache";
-import { executeSignedArtifact } from "@/lib/content/published/artifact";
+import { applyPublishedContentBatchCache } from "@/lib/content/cache";
+import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { getRendererComponents } from "@/lib/content/renderer/components";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
@@ -23,17 +22,30 @@ import { rendererManifest } from "@/lib/content/renderer/manifest";
 type ProtectedSelector = TryoutAnswerSelector | TryoutQuestionSelector;
 const SIGNED_RENDER_CONCURRENCY = 4;
 
-/** Renders protected questions and answers under one shared transport budget. */
+/** Renders protected questions and answers through bounded signed batches. */
 export const loadSignedTryoutContent = Effect.fn(
   "NakafaContent.loadSignedTryout"
 )(function* (input: {
   readonly answers: readonly TryoutAnswerSelector[];
   readonly questions: readonly TryoutQuestionSelector[];
 }) {
-  const entries = yield* renderSignedSelectors([
-    ...input.questions,
-    ...input.answers,
-  ]);
+  const selectors = [...input.questions, ...input.answers];
+  if (selectors.length === 0) {
+    return yield* new ContentRuntimeVerificationError({
+      cause: "Protected content batch is empty.",
+    });
+  }
+  const chunks = chunkSelectors(selectors);
+  const batches = yield* Effect.forEach(
+    chunks,
+    (chunk) =>
+      Effect.tryPromise({
+        catch: (cause) => new ContentRuntimeVerificationError({ cause }),
+        try: () => renderSignedBatch(chunk),
+      }),
+    { concurrency: SIGNED_RENDER_CONCURRENCY }
+  );
+  const entries = batches.flat();
   const questionEntries = entries.slice(0, input.questions.length);
   const answerEntries = entries.slice(input.questions.length);
   const questions = questionEntries.map(
@@ -57,32 +69,37 @@ export const loadSignedTryoutContent = Effect.fn(
   return { answers, questions };
 });
 
-/** Renders protected selectors with a bounded shared transport budget. */
-const renderSignedSelectors = Effect.fn("NakafaContent.renderSignedTryout")(
-  (selectors: readonly ProtectedSelector[]) =>
-    Effect.forEach(
-      selectors,
-      (selector) =>
-        Effect.tryPromise({
-          catch: (cause) => new ContentRuntimeVerificationError({ cause }),
-          try: () => renderSignedContent(selector),
-        }),
-      { concurrency: SIGNED_RENDER_CONCURRENCY }
-    )
-);
+/** Splits a section only when its signed selector count exceeds the contract. */
+function chunkSelectors(selectors: readonly ProtectedSelector[]) {
+  const chunks: ProtectedSelector[][] = [];
+  for (
+    let start = 0;
+    start < selectors.length;
+    start += MAX_PROTECTED_RUNTIME_SELECTORS
+  ) {
+    chunks.push(
+      selectors.slice(start, start + MAX_PROTECTED_RUNTIME_SELECTORS)
+    );
+  }
+  return chunks;
+}
 
-/** Caches one verified JSX body under its exact signed artifact identity. */
-async function renderSignedContent(selector: ProtectedSelector) {
+/** Caches one verified batch under every immutable artifact identity it owns. */
+async function renderSignedBatch(selectors: readonly ProtectedSelector[]) {
   "use cache";
 
-  const content = await Effect.runPromise(readSignedContent(selector));
-  applyPublishedContentCache("question", content.artifactHash);
+  const content = await Effect.runPromise(readSignedBatch(selectors));
+  applyPublishedContentBatchCache(
+    "question",
+    content.map(({ artifactHash }) => artifactHash)
+  );
   return content;
 }
 
-/** Reads, verifies, and executes one protected signed artifact. */
-export const readSignedContent = Effect.fn("NakafaContent.readSignedTryout")(
-  function* (selector: ProtectedSelector) {
+/** Reads, verifies, and executes one retained-snapshot protected batch. */
+const readSignedBatch = Effect.fn("NakafaContent.readSignedTryoutBatch")(
+  function* (selectors: readonly ProtectedSelector[]) {
+    const request = yield* makeProtectedRequest(selectors);
     const runtimeKeys = yield* Effect.try({
       catch: () =>
         new ContentRuntimeConfigurationError({
@@ -90,43 +107,77 @@ export const readSignedContent = Effect.fn("NakafaContent.readSignedTryout")(
         }),
       try: contentRuntimeKeys,
     });
-    const found = yield* readContent(
+    const liveRenderer = yield* rendererManifest;
+    const found = yield* readProtectedContent(
       {
         siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
         token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
       },
-      {
-        artifactHash: selector.artifactHash,
-        contentKey: selector.contentKey,
-        delivery: selector.delivery,
-        locale: selector.locale,
-        snapshotId: selector.snapshotId,
-        snapshotReleaseId: selector.snapshotReleaseId,
-      }
+      request,
+      liveRenderer
     );
-    if (found.delivery === "public") {
+    return yield* Effect.forEach(
+      selectors.map((selector, index) => ({
+        item: found.items[index],
+        selector,
+      })),
+      ({ item, selector }) => renderSignedItem(item, selector),
+      { concurrency: SIGNED_RENDER_CONCURRENCY }
+    );
+  }
+);
+
+/** Builds one contract request while preserving shared snapshot identity. */
+const makeProtectedRequest = Effect.fn("NakafaContent.makeProtectedRequest")(
+  function* (selectors: readonly ProtectedSelector[]) {
+    const first = selectors[0];
+    if (!first) {
       return yield* new ContentRuntimeVerificationError({
-        cause: "Protected content request returned public delivery.",
+        cause: "Protected content batch is empty.",
       });
     }
+    const coherent = selectors.every(
+      (selector) =>
+        selector.locale === first.locale &&
+        selector.snapshotId === first.snapshotId &&
+        selector.snapshotReleaseId === first.snapshotReleaseId
+    );
+    if (!coherent) {
+      return yield* new ContentRuntimeVerificationError({
+        cause: "Protected content batch spans multiple snapshots.",
+      });
+    }
+    return {
+      locale: first.locale,
+      selectors: selectors.map(({ artifactHash, contentKey, delivery }) => ({
+        artifactHash,
+        contentKey,
+        delivery,
+      })),
+      snapshotId: first.snapshotId,
+      snapshotReleaseId: first.snapshotReleaseId,
+    };
+  }
+);
 
-    const liveRenderer = yield* rendererManifest;
-    yield* verifyContentRenderer({
-      found,
-      rendererManifest: liveRenderer,
-    });
+/** Executes one signed item already verified by the protected exchange. */
+const renderSignedItem = Effect.fn("NakafaContent.renderSignedTryoutItem")(
+  function* (
+    item: ProtectedContentRuntimeItem | undefined,
+    selector: ProtectedSelector
+  ) {
+    if (!item) {
+      return yield* new ContentRuntimeVerificationError({
+        cause: "Protected content batch lost an ordered item.",
+      });
+    }
     const components = getRendererComponents(
-      found.artifact.payload.rendererDomain
+      item.artifact.payload.rendererDomain
     );
-    const rendered = yield* executeSignedArtifact({
-      artifact: found.artifact,
+    const rendered = yield* evaluateVerifiedArtifact({
+      artifact: item.artifact,
       components,
-      rendererContractVersion: found.rendererManifest.rendererContractVersion,
-      rendererManifest: found.rendererManifest,
-    }).pipe(
-      Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver)
-    );
-
+    });
     return {
       artifactHash: rendered.artifact.artifactHash,
       body: <rendered.Content />,

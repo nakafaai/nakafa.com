@@ -11,17 +11,14 @@ import {
   type MaterialParams,
   readMaterialRequest,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
-import {
-  getPublishedMaterialRoute,
-  type PublishedMaterialRoute,
-} from "@/lib/content/material/route";
+import { getMaterialPublication } from "@/lib/content/material/publication";
+import { getPublishedMaterialRoute } from "@/lib/content/material/route";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   type MaterialPreviewContent,
   readMaterialPreview,
 } from "@/lib/content/preview/material";
-import { renderPublishedMaterial } from "@/lib/content/published/material";
-import type { ContentReleasePin } from "@/lib/content/published/release";
+import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { getAksaraUrl } from "@/lib/utils/github";
 
 interface PreviewOwner {
@@ -31,10 +28,8 @@ interface PreviewOwner {
 
 interface PublishedOwner {
   readonly kind: "published";
-  readonly model: Extract<
-    PublishedMaterialRoute,
-    { readonly projection: MaterialLessonProjection }
-  >;
+  readonly locale: MaterialLessonProjection["locale"];
+  readonly publicPath: string;
 }
 
 type MaterialOwner = PreviewOwner | PublishedOwner;
@@ -56,7 +51,7 @@ interface PreviewContent extends MaterialFields {
 }
 
 interface PublishedContent extends MaterialFields {
-  readonly activeReleaseId: Exclude<ContentReleasePin, null>;
+  readonly activeReleaseId: ActiveContentReleaseId;
   readonly body: string;
   readonly children: ReactNode;
   readonly kind: "published";
@@ -100,14 +95,11 @@ async function resolveMaterialOwner(
   if (!request.publicPath) {
     notFound();
   }
-  const model = await getPublishedMaterialRoute(
-    request.locale,
-    request.publicPath
-  );
-  if (!model.projection) {
-    notFound();
-  }
-  return { kind: "published", model };
+  return {
+    kind: "published",
+    locale: request.locale,
+    publicPath: request.publicPath,
+  };
 }
 
 /** Reads metadata through the same exclusive owner used by page rendering. */
@@ -126,13 +118,18 @@ export async function readMaterialMetadata(
     };
   }
 
+  const model = await getPublishedMaterialRoute(owner.locale, owner.publicPath);
+  if (!model.projection) {
+    notFound();
+  }
+
   return {
-    alternates: owner.model.alternates,
+    alternates: model.alternates,
     kind: owner.kind,
-    locale: owner.model.projection.locale,
-    metadata: owner.model.projection.metadata,
-    rendererDomain: owner.model.rendererDomain,
-    route: owner.model.projection,
+    locale: model.projection.locale,
+    metadata: model.projection.metadata,
+    rendererDomain: model.rendererDomain,
+    route: model.projection,
   };
 }
 
@@ -157,14 +154,16 @@ export async function readMaterialPage(
     };
   }
 
-  const { model } = owner;
-  const published = await renderPublishedMaterial({
-    activeReleaseId: model.activeReleaseId,
-    locale: model.projection.locale,
-    publicPath: model.projection.publicPath,
-  });
+  const publication = await getMaterialPublication(
+    owner.locale,
+    owner.publicPath
+  );
+  if (!publication) {
+    notFound();
+  }
+  const { model, published } = publication;
   return {
-    activeReleaseId: model.activeReleaseId,
+    activeReleaseId: published.activeReleaseId,
     alternates: model.alternates,
     body: published.rawMdx,
     children: published.body,

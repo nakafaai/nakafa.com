@@ -5,7 +5,8 @@ import {
   isForumAttachmentUploadPath,
   registerForumAttachmentUploadRoute,
 } from "@repo/backend/convex/classes/forums/attachments/route";
-import { registerContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime";
+import { registerProtectedContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/protected";
+import { registerPublicContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/public";
 import { registerContentReleaseRoutes } from "@repo/backend/convex/contentRelease/ingress/route";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
@@ -59,6 +60,7 @@ registerForumAttachmentUploadRoute(app);
 registerContentReleaseRoutes(app);
 
 // Register server-authenticated executable content reads.
-registerContentRuntimeRoute(app);
+registerPublicContentRuntimeRoute(app);
+registerProtectedContentRuntimeRoute(app);
 
 export default new HttpRouterWithHono(app);

@@ -14,11 +14,8 @@ import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { verifyContentStreams } from "@repo/backend/convex/contentRelease/proof/content";
 import {
-  TEST_KEY_RESOLVER,
-  TEST_PROOF_RENDERER,
   testEmptyManifest,
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
@@ -84,7 +81,6 @@ describe("content proof streams", () => {
     const result = await Effect.runPromise(
       verifyContentStreams(
         release,
-        TEST_PROOF_RENDERER,
         Stream.fromIterable(rows).pipe(
           Stream.tap(() =>
             Effect.sync(() => {
@@ -92,13 +88,10 @@ describe("content proof streams", () => {
             })
           )
         )
-      ).pipe(
-        Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
       )
     );
 
     expect(result).toMatchObject({
-      artifacts: 0,
       items: { deleteCount: items.length, upsertCount: 0 },
       projections: { count: 0 },
       rollback: { count: rollbacks.length },

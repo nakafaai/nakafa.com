@@ -45,7 +45,6 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
   ) {
     if (
       head.family !== "material" ||
-      !head.projectionHash ||
       !head.projectionJson ||
       !head.rendererDomain ||
       !head.sourcePath ||

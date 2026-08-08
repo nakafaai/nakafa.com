@@ -2,7 +2,9 @@ import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import {
   type ProtectedContentRuntimeRequest,
   ProtectedContentRuntimeRequestSchema,
-} from "@nakafa/aksara-contracts/runtime/spec";
+  type ProtectedContentRuntimeSelector,
+  ProtectedContentRuntimeSelectorSchema,
+} from "@nakafa/aksara-contracts/runtime/protected/spec";
 import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -18,21 +20,20 @@ import {
 import { Schema } from "effect";
 
 interface ProtectedRuntimeFixture {
-  readonly answer: ProtectedContentRuntimeRequest;
+  readonly answer: ProtectedContentRuntimeSelector;
   readonly placement: TryoutPlacement;
-  readonly question: ProtectedContentRuntimeRequest;
-  readonly snapshotId: string;
+  readonly question: ProtectedContentRuntimeSelector;
+  readonly request: ProtectedContentRuntimeRequest;
+  readonly snapshotId: ProtectedContentRuntimeRequest["snapshotId"];
 }
 
 /** Builds one exact protected selector from a signed placement body. */
-function protectedRequest(
+function protectedSelector(
   placement: TryoutPlacement,
-  snapshotId: string,
-  snapshotReleaseId: string,
   delivery: "authenticated" | "entitled"
 ) {
   const question = delivery === "authenticated";
-  return Schema.decodeUnknownSync(ProtectedContentRuntimeRequestSchema)({
+  return Schema.decodeUnknownSync(ProtectedContentRuntimeSelectorSchema)({
     artifactHash: question
       ? placement.questionArtifactHash
       : placement.answerArtifactHash,
@@ -40,9 +41,6 @@ function protectedRequest(
       ? placement.questionContentKey
       : placement.answerContentKey,
     delivery,
-    locale: placement.locale,
-    snapshotReleaseId,
-    snapshotId,
   });
 }
 
@@ -127,20 +125,21 @@ export async function insertProtectedRuntime(
       insertArtifact(ctx, artifact)
     )
   );
+  const question = protectedSelector(enPlacement, "authenticated");
+  const answer = protectedSelector(enPlacement, "entitled");
+  const request = Schema.decodeUnknownSync(
+    ProtectedContentRuntimeRequestSchema
+  )({
+    locale: enPlacement.locale,
+    selectors: [question, answer],
+    snapshotReleaseId: signedRelease.manifest.releaseId,
+    snapshotId,
+  });
   return {
-    answer: protectedRequest(
-      enPlacement,
-      snapshotId,
-      signedRelease.manifest.releaseId,
-      "entitled"
-    ),
+    answer,
     placement: enPlacement,
-    question: protectedRequest(
-      enPlacement,
-      snapshotId,
-      signedRelease.manifest.releaseId,
-      "authenticated"
-    ),
+    question,
+    request,
     snapshotId,
   };
 }

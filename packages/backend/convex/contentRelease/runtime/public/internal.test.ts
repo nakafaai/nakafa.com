@@ -33,9 +33,9 @@ const routeArgs = {
   locale: "en",
   publicPath: TEST_RUNTIME_PATH,
 } satisfies { readonly locale: "en" | "id"; readonly publicPath: string };
-const readPublic = internal.contentRelease.runtime.readPublic;
+const readPublic = internal.contentRelease.runtime.public.internal.read;
 
-describe("contentRelease/runtime", () => {
+describe("contentRelease/runtime/public/internal", () => {
   it("returns public heads without exposing restricted delivery classes", async () => {
     for (const delivery of ["public", "authenticated", "entitled"] as const) {
       const t = convexTest(schema, convexModules);

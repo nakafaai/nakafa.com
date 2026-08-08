@@ -7,7 +7,7 @@ import {
   readPublishedMaterialGraphRoute,
 } from "@/lib/content/material";
 
-const readContentMock = vi.hoisted(() => vi.fn());
+const readPublicContentMock = vi.hoisted(() => vi.fn());
 const baseProjection = makeMaterialProjection("en", 1);
 const projection = {
   ...baseProjection,
@@ -23,17 +23,17 @@ const input = {
   publicPath: projection.publicPath,
 };
 
-vi.mock("@repo/backend/client/content/read", () => ({
-  readContent: readContentMock,
+vi.mock("@repo/backend/client/content/public", () => ({
+  readPublicContentEvidence: readPublicContentMock,
 }));
 
 describe("published material API content", () => {
   beforeEach(() => {
-    readContentMock.mockReset();
+    readPublicContentMock.mockReset();
   });
 
   it("maps a signed material into partner item and graph contracts", async () => {
-    readContentMock.mockReturnValue(
+    readPublicContentMock.mockReturnValue(
       Effect.succeed({
         activeReleaseId: input.activeReleaseId,
         artifact: { payload: { rawMdx: "## Signed body" } },
@@ -79,13 +79,12 @@ describe("published material API content", () => {
       syncedAt: 42,
       title: projection.metadata.title,
     });
-    expect(readContentMock).toHaveBeenCalledWith(
+    expect(readPublicContentMock).toHaveBeenCalledWith(
       {
         siteUrl: "https://test.convex.site",
         token: "test-runtime-token",
       },
       {
-        delivery: "public",
         locale: "en",
         publicPath: projection.publicPath,
       }
@@ -93,7 +92,7 @@ describe("published material API content", () => {
   });
 
   it("omits absent optional metadata from partner items", async () => {
-    readContentMock.mockReturnValue(
+    readPublicContentMock.mockReturnValue(
       Effect.succeed({
         activeReleaseId: input.activeReleaseId,
         artifact: { payload: { rawMdx: "## Signed body" } },
@@ -115,7 +114,7 @@ describe("published material API content", () => {
 
   it("maps signed-read and active-identity failures to one typed error", async () => {
     const failure = new Error("signature mismatch");
-    readContentMock.mockReturnValueOnce(Effect.fail(failure));
+    readPublicContentMock.mockReturnValueOnce(Effect.fail(failure));
 
     await expect(
       Effect.runPromise(readPublishedMaterialApiItem(input).pipe(Effect.flip))
@@ -126,7 +125,7 @@ describe("published material API content", () => {
       })
     );
 
-    readContentMock
+    readPublicContentMock
       .mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId: "release-next",

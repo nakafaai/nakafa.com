@@ -4,9 +4,7 @@ import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
-import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
-import { readContent } from "@repo/backend/client/content/read";
-import { verifyContentRenderer } from "@repo/backend/content/verify";
+import { readPublicContent } from "@repo/backend/client/content/public";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Effect } from "effect";
 import { env } from "@/env";
@@ -18,10 +16,14 @@ import {
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 /** Exact public identity sent to the server-only content runtime seam. */
-export interface PublishedContentInput {
-  readonly activeReleaseId: ActiveContentReleaseId;
+export interface PublishedContentRouteInput {
   readonly locale: ContentLocale;
   readonly publicPath: string;
+}
+
+/** Public identity pinned to one release selected by another trusted read. */
+export interface PublishedContentInput extends PublishedContentRouteInput {
+  readonly activeReleaseId: ActiveContentReleaseId;
 }
 
 /** Verified family-neutral data safe to return from a Next Cache Component. */
@@ -41,9 +43,9 @@ function readSourceRevision(found: PublicContentRuntimeFound) {
 }
 
 /** Verifies active membership and every signed runtime value for one route. */
-export const readPublishedContent = Effect.fn(
-  "NakafaContent.readPublishedContent"
-)(function* (input: PublishedContentInput) {
+export const readCurrentPublishedContent = Effect.fn(
+  "NakafaContent.readCurrentPublishedContent"
+)(function* (input: PublishedContentRouteInput) {
   const runtimeKeys = yield* Effect.try({
     try: contentRuntimeKeys,
     catch: () =>
@@ -51,34 +53,19 @@ export const readPublishedContent = Effect.fn(
         key: "CONTENT_RUNTIME_TOKEN",
       }),
   });
-  const found = yield* readContent(
+  const request = {
+    locale: input.locale,
+    publicPath: input.publicPath,
+  };
+  const liveRenderer = yield* rendererManifest;
+  const found = yield* readPublicContent(
     {
       siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
       token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
     },
-    {
-      delivery: "public",
-      locale: input.locale,
-      publicPath: input.publicPath,
-    }
+    request,
+    liveRenderer
   );
-  if (found.delivery !== "public") {
-    return yield* new ContentRuntimeVerificationError({
-      cause: "Public content request returned protected delivery.",
-    });
-  }
-  if (found.activeReleaseId !== input.activeReleaseId) {
-    return yield* new PublishedReleaseMismatchError({
-      actualReleaseId: found.activeReleaseId,
-      expectedReleaseId: input.activeReleaseId,
-    });
-  }
-  const liveRenderer = yield* rendererManifest;
-  yield* verifyContentRenderer({
-    found,
-    rendererManifest: liveRenderer,
-  });
-
   const data: PublishedContentData = {
     activeReleaseId: found.activeReleaseId,
     artifact: found.artifact,
@@ -88,4 +75,18 @@ export const readPublishedContent = Effect.fn(
     sourceRevision: readSourceRevision(found),
   };
   return data;
+});
+
+/** Verifies one public runtime exchange against an already-selected release. */
+export const readPublishedContent = Effect.fn(
+  "NakafaContent.readPublishedContent"
+)(function* (input: PublishedContentInput) {
+  const found = yield* readCurrentPublishedContent(input);
+  if (found.activeReleaseId !== input.activeReleaseId) {
+    return yield* new PublishedReleaseMismatchError({
+      actualReleaseId: found.activeReleaseId,
+      expectedReleaseId: input.activeReleaseId,
+    });
+  }
+  return found;
 });

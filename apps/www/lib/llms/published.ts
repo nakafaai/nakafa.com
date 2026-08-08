@@ -22,7 +22,7 @@ type PublishedMarkdownFamily = Extract<ContentFamily, "article" | "material">;
 /** Exact public content identity required for agent-facing markdown. */
 export interface PublishedMarkdownInput {
   readonly activeReleaseId: Parameters<
-    typeof readPublishedMaterial
+    typeof readPublishedArticle
   >[0]["activeReleaseId"];
   readonly family: PublishedMarkdownFamily;
   readonly locale: ContentLocale;

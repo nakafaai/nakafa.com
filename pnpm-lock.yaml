@@ -102,8 +102,8 @@ importers:
         specifier: ^0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.26(@opentelemetry/api@1.9.1)(next@16.3.0(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10))(convex@1.43.0(react@19.2.8))(hono@4.13.1)(react@19.2.8)(typescript@7.0.2)
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz(effect@3.22.1)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz(effect@3.22.1)
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -291,8 +291,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz(effect@3.22.1)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz(effect@3.22.1)
       '@paper-design/shaders-react':
         specifier: ^0.0.79
         version: 0.0.79(@types/react@19.2.18)(react@19.2.8)
@@ -530,8 +530,8 @@ importers:
         version: 8.3.2
     devDependencies:
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz(effect@3.22.1)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz(effect@3.22.1)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -615,8 +615,8 @@ importers:
         specifier: ^0.4.9
         version: 0.4.9(convex-helpers@0.1.122(@standard-schema/spec@1.1.0)(convex@1.43.0(react@19.2.8))(hono@4.13.1)(react@19.2.8)(typescript@6.0.3)(zod@4.4.3))(convex@1.43.0(react@19.2.8))(react@19.2.8)
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz(effect@3.22.1)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz(effect@3.22.1)
       '@polar-sh/sdk':
         specifier: ^0.49.0
         version: 0.49.0
@@ -2602,9 +2602,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz':
-    resolution: {integrity: sha512-e6lFLT6dPI7v13GWK3KbhBH3WBCY4XEkYusYGtqUga4m2zTKsYVKie1UMYXsNeI4q5kTTKejh2lmUzwndHtpAA==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz}
-    version: 0.10.0
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz':
+    resolution: {integrity: sha512-Pl3HWCk5EQ8n1HkzYIz/o1wOwt8qYw0NyLe31FxgC1EiYwQ6SAKwWlWaag3cl71p1Ic+Gwu76GmLUnhLg4XjJg==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz}
+    version: 0.11.0
     engines: {node: '>=24.0.0 <25.0.0'}
     peerDependencies:
       effect: 3.22.1
@@ -9257,7 +9257,7 @@ snapshots:
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4':
     optional: true
 
-  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz(effect@3.22.1)':
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz(effect@3.22.1)':
     dependencies:
       effect: 3.22.1
 

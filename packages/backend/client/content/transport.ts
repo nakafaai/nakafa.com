@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { ProtectedContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/protected/spec";
+import type { PublicContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/spec";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
@@ -8,11 +10,54 @@ import { Effect } from "effect";
 const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
 
+type ContentRuntimeResponse =
+  | ProtectedContentRuntimeResponse
+  | PublicContentRuntimeResponse;
+type ContentRuntimeStatus =
+  | Pick<
+      Extract<ContentRuntimeResponse, { readonly kind: "failure" }>,
+      "code" | "kind"
+    >
+  | Pick<Extract<ContentRuntimeResponse, { readonly kind: "found" }>, "kind">
+  | Pick<Extract<ContentRuntimeResponse, { readonly kind: "missing" }>, "kind">;
+
 /** Server-owned connection values for private Convex content endpoints. */
 export interface ContentHttpTarget {
   readonly siteUrl: string;
   readonly token: string;
 }
+
+/** Enforces the runtime endpoints' shared response and HTTP status pairs. */
+export const validateContentRuntimeStatus = Effect.fn(
+  "NakafaContent.validateContentRuntimeStatus"
+)(function* (response: ContentRuntimeStatus, status: number) {
+  if (response.kind === "found" && status === 200) {
+    return;
+  }
+  if (response.kind === "missing" && status === 404) {
+    return;
+  }
+  if (response.kind !== "failure") {
+    return yield* new ContentTransportError({ reason: "status" });
+  }
+  if (response.code === "CONTENT_RUNTIME_UNAUTHORIZED" && status === 401) {
+    return;
+  }
+  if (
+    response.code === "CONTENT_RUNTIME_INVALID" &&
+    (status === 400 || status === 413 || status === 415)
+  ) {
+    return;
+  }
+  if (
+    (response.code === "CONTENT_RUNTIME_INTERNAL" ||
+      response.code === "CONTENT_RUNTIME_RESPONSE_TOO_LARGE") &&
+    status === 500
+  ) {
+    return;
+  }
+  return yield* new ContentTransportError({ reason: "status" });
+});
 
 /** Builds one fixed private endpoint without inheriting paths or credentials. */
 export const createContentEndpoint = Effect.fn(
@@ -52,13 +97,12 @@ export const encodeContentRequest = Effect.fn(
   return source;
 });
 
-/** Posts one no-store request with server and optional user authentication. */
+/** Posts one no-store request with the server-owned runtime capability. */
 export const postContentRequest = Effect.fn("NakafaContent.postContentRequest")(
   function* (input: {
     readonly endpoint: string;
     readonly source: string;
     readonly target: ContentHttpTarget;
-    readonly userToken?: string;
   }) {
     return yield* Effect.tryPromise({
       catch: () => new ContentTransportError({ reason: "fetch" }),
@@ -68,9 +112,6 @@ export const postContentRequest = Effect.fn("NakafaContent.postContentRequest")(
           cache: "no-store",
           headers: {
             Accept: "application/json",
-            ...(input.userToken
-              ? { Authorization: `Bearer ${input.userToken}` }
-              : {}),
             "Content-Type": "application/json",
             "x-nakafa-content-token": input.target.token,
           },

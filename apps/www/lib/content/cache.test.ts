@@ -9,6 +9,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const artifactHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const artifactTag = makeArtifactCacheTag(artifactHash);
+const otherArtifactHash = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
+const otherArtifactTag = makeArtifactCacheTag(otherArtifactHash);
 const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
 const revalidateTagMock = vi.hoisted(() => vi.fn());
@@ -54,6 +56,23 @@ describe("content runtime cache", () => {
       "content-runtime",
       "content-family:material",
       artifactTag
+    );
+    expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
+  });
+
+  it("applies every immutable artifact tag in a bounded batch", async () => {
+    const cache = await import("@/lib/content/cache");
+
+    cache.applyPublishedContentBatchCache("question", [
+      artifactHash,
+      otherArtifactHash,
+    ]);
+
+    expect(cacheTagMock).toHaveBeenCalledWith(
+      "content-runtime",
+      "content-family:question",
+      artifactTag,
+      otherArtifactTag
     );
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });

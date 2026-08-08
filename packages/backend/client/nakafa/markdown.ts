@@ -1,4 +1,4 @@
-import type { ContentRuntimeTarget } from "@repo/backend/client/content/request";
+import type { ContentRuntimeTarget } from "@repo/backend/client/content/public";
 import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
 import { readPublishedMaterialMarkdown } from "@repo/backend/client/nakafa/material";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";

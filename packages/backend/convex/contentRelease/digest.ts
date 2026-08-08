@@ -1,5 +1,6 @@
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 /** Converts deterministic digest bytes into lower-case hexadecimal. */
 function toHex(buffer: ArrayBuffer) {
@@ -22,5 +23,15 @@ export const hashText = Effect.fn("contentRelease.hashText")(function* (
       }),
     try: () => crypto.subtle.digest("SHA-256", encoded),
   });
-  return `sha256:${toHex(digest)}`;
+  return yield* Schema.decodeUnknown(Sha256HashSchema)(
+    `sha256:${toHex(digest)}`
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Unable to identify ${label}.`,
+        })
+    )
+  );
 });

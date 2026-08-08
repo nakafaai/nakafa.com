@@ -1,13 +1,10 @@
 import {
-  ContentRuntimeResponseSchema,
-  MAX_RUNTIME_RESPONSE_BYTES,
-} from "@nakafa/aksara-contracts/runtime/spec";
+  type ContentRuntimeFailureCodeSchema,
+  ContentRuntimeFailureSchema,
+} from "@nakafa/aksara-contracts/runtime/result";
 import { Either, Schema } from "effect";
 
-const INTERNAL_BODY = JSON.stringify({
-  code: "CONTENT_RUNTIME_INTERNAL",
-  kind: "failure",
-});
+type ContentRuntimeFailureCode = typeof ContentRuntimeFailureCodeSchema.Type;
 
 /** Encoded runtime response returned across the Node action boundary. */
 export interface RuntimeHttpResult {
@@ -15,36 +12,31 @@ export interface RuntimeHttpResult {
   readonly status: number;
 }
 
-/** Returns the contract-safe internal failure used for encoding defects. */
-export function internalResult(): RuntimeHttpResult {
-  return { body: INTERNAL_BODY, status: 500 };
+/** Encodes one sanitized runtime failure through the shared contract. */
+export function failureResult(
+  code: ContentRuntimeFailureCode,
+  status: number
+): RuntimeHttpResult {
+  const failure = ContentRuntimeFailureSchema.make({ code, kind: "failure" });
+  return { body: JSON.stringify(failure), status };
 }
 
-/** Strictly encodes one response and enforces the shared UTF-8 ceiling. */
-export function encodeRuntimeResult(input: unknown, status: number) {
-  const decoded = Schema.decodeUnknownEither(ContentRuntimeResponseSchema)(
-    input,
-    { onExcessProperty: "error" }
-  );
+/** Strictly encodes one response and enforces its endpoint wire ceiling. */
+export function encodeRuntimeResult<A, I>(
+  schema: Schema.Schema<A, I, never>,
+  maxBytes: number,
+  input: unknown,
+  status: number
+): RuntimeHttpResult {
+  const decoded = Schema.decodeUnknownEither(schema)(input, {
+    onExcessProperty: "error",
+  });
   if (Either.isLeft(decoded)) {
-    return internalResult();
+    return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
   }
   const body = JSON.stringify(decoded.right);
-  const byteLength = new TextEncoder().encode(body).byteLength;
-  if (byteLength > MAX_RUNTIME_RESPONSE_BYTES) {
-    return internalResult();
+  if (new TextEncoder().encode(body).byteLength > maxBytes) {
+    return failureResult("CONTENT_RUNTIME_RESPONSE_TOO_LARGE", 500);
   }
-  return { body, status } satisfies RuntimeHttpResult;
-}
-
-/** Encodes one sanitized runtime failure with its exact HTTP status. */
-export function failureResult(
-  code:
-    | "CONTENT_RUNTIME_FORBIDDEN"
-    | "CONTENT_RUNTIME_INTERNAL"
-    | "CONTENT_RUNTIME_INVALID"
-    | "CONTENT_RUNTIME_UNAUTHORIZED",
-  status: number
-) {
-  return encodeRuntimeResult({ code, kind: "failure" }, status);
+  return { body, status };
 }
