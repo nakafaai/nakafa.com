@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ComponentType } from "react";
@@ -37,6 +38,9 @@ export default function Page(props: PageProps<"/[locale]/privacy-policy">) {
 }
 
 async function PageContent({ locale }: { locale: Locale }) {
+  "use cache";
+  cacheLife("hours");
+
   const Content = contentByLocale[locale];
 
   return (
