@@ -32,7 +32,6 @@ import {
 } from "@repo/backend/test/content-proof";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
 import {
-  prepareContentProof,
   recomputeContentProof,
   stageUpsertFixture,
 } from "@repo/backend/test/content-verify";
@@ -51,19 +50,12 @@ function createProofTest() {
 }
 
 /** Runs the production proof inline across convex-test's component limitation. */
-async function runProof(
+function runProof(
   t: TestConvex<typeof schema>,
   hash = manifestHash,
   resolver = TEST_KEY_RESOLVER
 ) {
-  await prepareContentProof(t, releaseId);
-  return t.action((ctx) =>
-    Effect.runPromise(
-      recomputeProgram(ctx, hash, releaseId).pipe(
-        Effect.provideService(ContentVerificationKeyResolver, resolver)
-      )
-    )
-  );
+  return recomputeContentProof(t, hash, releaseId, resolver);
 }
 
 /** Inserts one empty but fully authenticated staged release. */
@@ -246,7 +238,7 @@ describe("contentRelease/proof/verify", () => {
 
     const result = await t.action((ctx) =>
       Effect.runPromise(
-        recomputeProgram(ctx, manifestHash, releaseId).pipe(
+        recomputeProgram(ctx, manifestHash, releaseId, 0).pipe(
           Effect.match({
             onFailure: (error) => ({ code: error.code, tag: error._tag }),
             onSuccess: () => ({ code: null, tag: null }),

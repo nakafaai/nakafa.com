@@ -1,12 +1,20 @@
 import {
+  canonicalizeMaterialProjection,
   type MaterialLessonProjection,
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Schema } from "effect";
+import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import {
   PublishedProjectionError,
   type PublishedProjectionIdentity,
+  PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
+
+interface MaterialPublicationRead {
+  readonly activeReleaseId: ActiveContentReleaseId;
+  readonly projection: MaterialLessonProjection;
+}
 
 /** Creates the public failure returned for malformed material projection data. */
 export function makeMaterialProjectionError(
@@ -45,6 +53,31 @@ export const decodeMaterialJson = Effect.fn("NakafaMaterial.decodeJson")(
     }).pipe(Effect.mapError(() => makeMaterialProjectionError(identity)));
   }
 );
+
+/** Proves two concurrent material reads selected one identical publication. */
+export const verifyMaterialPublication = Effect.fn(
+  "NakafaMaterial.verifyPublication"
+)(function* (
+  catalog: MaterialPublicationRead,
+  runtime: MaterialPublicationRead
+) {
+  const identity = {
+    locale: catalog.projection.locale,
+    publicPath: catalog.projection.publicPath,
+  };
+  if (runtime.activeReleaseId !== catalog.activeReleaseId) {
+    return yield* new PublishedReleaseMismatchError({
+      actualReleaseId: runtime.activeReleaseId,
+      expectedReleaseId: catalog.activeReleaseId,
+    });
+  }
+  if (
+    canonicalizeMaterialProjection(runtime.projection) !==
+    canonicalizeMaterialProjection(catalog.projection)
+  ) {
+    return yield* makeMaterialProjectionError(identity);
+  }
+});
 
 /** Checks whether two material projections share one stable content identity. */
 export function isMaterialCounterpart(

@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -8,6 +9,7 @@ import {
   decodeMaterialProjection,
   isMaterialCounterpart,
   isMaterialSibling,
+  verifyMaterialPublication,
 } from "@/lib/content/material/decode";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 
@@ -68,5 +70,45 @@ describe("published material decoding", () => {
     expect(isMaterialSibling(previewProjection, previewIdProjection)).toBe(
       false
     );
+  });
+
+  it("accepts only identical projections from one active release", async () => {
+    const activeReleaseId = ReleaseIdSchema.make("release-active");
+    const catalog = { activeReleaseId, projection: previewProjection };
+
+    await expect(
+      Effect.runPromise(verifyMaterialPublication(catalog, catalog))
+    ).resolves.toBeUndefined();
+
+    await expect(
+      Effect.runPromise(
+        verifyMaterialPublication(catalog, {
+          activeReleaseId: ReleaseIdSchema.make("release-next"),
+          projection: previewProjection,
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+      actualReleaseId: "release-next",
+      expectedReleaseId: activeReleaseId,
+    });
+
+    await expect(
+      Effect.runPromise(
+        verifyMaterialPublication(catalog, {
+          activeReleaseId,
+          projection: {
+            ...previewProjection,
+            metadata: {
+              ...previewProjection.metadata,
+              title: "Different title",
+            },
+          },
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedProjectionError",
+      ...identity,
+    });
   });
 });

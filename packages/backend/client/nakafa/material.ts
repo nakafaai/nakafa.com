@@ -1,7 +1,9 @@
 import "server-only";
 
-import { readContent } from "@repo/backend/client/content/read";
-import type { ContentRuntimeTarget } from "@repo/backend/client/content/request";
+import {
+  type ContentRuntimeTarget,
+  readPublicContentEvidence,
+} from "@repo/backend/client/content/public";
 import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { getMaterialLookupInput } from "@repo/backend/client/nakafa/ref";
@@ -59,14 +61,10 @@ export const readPublishedMaterialMarkdown = Effect.fn(
     try: readContentTarget,
     catch: materialReadError,
   });
-  const found = yield* readContent(target, {
-    delivery: "public",
-    ...lookup.route,
-  }).pipe(Effect.mapError(materialReadError));
-  if (
-    found.delivery !== "public" ||
-    found.projection.kind !== "subject-lesson"
-  ) {
+  const found = yield* readPublicContentEvidence(target, lookup.route).pipe(
+    Effect.mapError(materialReadError)
+  );
+  if (found.projection.kind !== "subject-lesson") {
     return yield* materialReadError(
       "The signed material route resolved another content family."
     );

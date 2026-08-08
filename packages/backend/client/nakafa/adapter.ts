@@ -1,5 +1,5 @@
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
-import type { ContentRuntimeTarget } from "@repo/backend/client/content/request";
+import type { ContentRuntimeTarget } from "@repo/backend/client/content/public";
 import { readNakafaMarkdown } from "@repo/backend/client/nakafa/markdown";
 import { readNakafaQuranReference } from "@repo/backend/client/nakafa/quran";
 import { readNakafaTaxonomy } from "@repo/backend/client/nakafa/taxonomy";

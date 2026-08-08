@@ -30,7 +30,7 @@
     "parse-domain": "^8.3.2"
   },
   "devDependencies": {
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.10.0/nakafa-aksara-contracts-0.10.0.tgz",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "19.2.18",

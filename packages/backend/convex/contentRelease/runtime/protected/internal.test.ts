@@ -1,3 +1,4 @@
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -5,28 +6,45 @@ import { insertProtectedRuntime } from "@repo/backend/test/protected-runtime";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-const readProtected = internal.contentRelease.runtime.protected.readProtected;
+const readProtected = internal.contentRelease.runtime.protected.internal.read;
 
-describe("contentRelease/runtime/protected", () => {
+/** Builds one protected batch from the shared fixture snapshot identity. */
+function batch(
+  fixture: Awaited<ReturnType<typeof insertProtectedRuntime>>,
+  selectors = [fixture.question, fixture.answer]
+) {
+  return {
+    locale: fixture.request.locale,
+    selectors: selectors.map(({ artifactHash, contentKey, delivery }) => ({
+      artifactHash,
+      contentKey,
+      delivery,
+    })),
+    snapshotReleaseId: fixture.request.snapshotReleaseId,
+    snapshotId: fixture.snapshotId,
+  };
+}
+
+describe("contentRelease/runtime/protected/internal", () => {
   it("returns exact signed question and answer bodies", async () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertProtectedRuntime);
 
-    const [question, answer] = await Promise.all([
-      t.query(readProtected, fixture.question),
-      t.query(readProtected, fixture.answer),
-    ]);
+    const result = await t.query(readProtected, batch(fixture));
+    if (!result) {
+      throw new Error("Expected one protected runtime batch.");
+    }
+    const [question, answer] = result.items;
 
     expect(question).toMatchObject({
       delivery: "authenticated",
-      snapshotId: fixture.snapshotId,
       sourcePath: `${fixture.placement.questionSourcePath}/question.en.mdx`,
     });
     expect(answer).toMatchObject({
       delivery: "entitled",
-      snapshotId: fixture.snapshotId,
       sourcePath: `${fixture.placement.questionSourcePath}/answer.en.mdx`,
     });
+    expect(result.snapshotId).toBe(fixture.snapshotId);
   });
 
   it("keeps the attempt renderer after active release compaction", async () => {
@@ -43,9 +61,9 @@ describe("contentRelease/runtime/protected", () => {
     });
 
     await expect(
-      t.query(readProtected, fixture.question)
+      t.query(readProtected, batch(fixture, [fixture.question]))
     ).resolves.toMatchObject({
-      snapshotReleaseId: fixture.question.snapshotReleaseId,
+      snapshotReleaseId: fixture.request.snapshotReleaseId,
       snapshotId: fixture.snapshotId,
     });
   });
@@ -70,9 +88,9 @@ describe("contentRelease/runtime/protected", () => {
     });
 
     await expect(
-      t.query(readProtected, fixture.question)
+      t.query(readProtected, batch(fixture, [fixture.question]))
     ).resolves.toMatchObject({
-      delivery: "authenticated",
+      items: [{ delivery: "authenticated" }],
       snapshotId: fixture.snapshotId,
     });
   });
@@ -82,15 +100,20 @@ describe("contentRelease/runtime/protected", () => {
     const fixture = await t.mutation(insertProtectedRuntime);
 
     await expect(
-      t.query(readProtected, {
-        ...fixture.question,
-        artifactHash: `sha256:${"f".repeat(64)}`,
-      })
+      t.query(
+        readProtected,
+        batch(fixture, [
+          {
+            ...fixture.question,
+            artifactHash: Sha256HashSchema.make(`sha256:${"f".repeat(64)}`),
+          },
+        ])
+      )
     ).resolves.toBeNull();
     await expect(
       t.query(readProtected, {
-        ...fixture.question,
-        snapshotId: `sha256:${"e".repeat(64)}`,
+        ...batch(fixture, [fixture.question]),
+        snapshotId: Sha256HashSchema.make(`sha256:${"e".repeat(64)}`),
       })
     ).resolves.toBeNull();
   });
@@ -115,7 +138,10 @@ describe("contentRelease/runtime/protected", () => {
       await ctx.db.patch("tryoutPlacements", placement._id, { rowJson: "{}" });
     });
     await expect(
-      placementDamage.query(readProtected, placementFixture.question)
+      placementDamage.query(
+        readProtected,
+        batch(placementFixture, [placementFixture.question])
+      )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
@@ -137,7 +163,10 @@ describe("contentRelease/runtime/protected", () => {
       await ctx.db.delete("contentArtifacts", artifact._id);
     });
     await expect(
-      artifactDamage.query(readProtected, artifactFixture.answer)
+      artifactDamage.query(
+        readProtected,
+        batch(artifactFixture, [artifactFixture.answer])
+      )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
   });
 });

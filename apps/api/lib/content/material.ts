@@ -1,6 +1,6 @@
 import "server-only";
 
-import { readContent } from "@repo/backend/client/content/read";
+import { readPublicContentEvidence } from "@repo/backend/client/content/public";
 import type { RuntimeContentRoute } from "@repo/backend/convex/contents/runtime/spec";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
@@ -36,19 +36,17 @@ function materialReadError(cause: unknown) {
 /** Reads and verifies one exact material from the active signed runtime. */
 const readPublishedMaterial = Effect.fn("ApiContent.readPublishedMaterial")(
   function* (input: PublishedMaterialInput) {
-    const found = yield* readContent(
+    const found = yield* readPublicContentEvidence(
       {
         siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
         token: env.CONTENT_RUNTIME_TOKEN,
       },
       {
-        delivery: "public",
         locale: input.locale,
         publicPath: input.publicPath,
       }
     ).pipe(Effect.mapError(materialReadError));
     if (
-      found.delivery !== "public" ||
       found.activeReleaseId !== input.activeReleaseId ||
       found.projection.kind !== "subject-lesson"
     ) {

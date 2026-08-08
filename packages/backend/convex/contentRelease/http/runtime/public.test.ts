@@ -1,28 +1,28 @@
 // @vitest-environment node
 
 import {
-  decodeContentRuntimeRequest,
-  MAX_RUNTIME_REQUEST_BYTES,
-  MAX_RUNTIME_RESPONSE_BYTES,
+  decodePublicContentRuntimeRequest,
+  MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
+  MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
 } from "@nakafa/aksara-contracts/runtime/spec";
+import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { PUBLIC_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
-import { verifyContentEnvelope } from "@repo/backend/content/verify";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   insertRuntimeRelease,
+  publicRuntimeRequest,
   runtimeCases,
   runtimeContentKey,
-  runtimeRequest,
 } from "@repo/backend/test/content-runtime";
 import { insertRuntimeHead } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime-values";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-const RUNTIME_PATH = "/internal/content/runtime";
 const RUNTIME_TOKEN = "technical-runtime-token";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
@@ -32,7 +32,7 @@ type RuntimeFetcher = Pick<RuntimeTest, "fetch">;
 
 /** Sends one request through the actual registered Convex HTTP route. */
 function post(t: RuntimeFetcher, body: BodyInit | null, headers?: HeadersInit) {
-  return t.fetch(RUNTIME_PATH, {
+  return t.fetch(PUBLIC_CONTENT_RUNTIME_PATH, {
     body,
     headers: {
       "content-type": "application/json",
@@ -71,7 +71,7 @@ afterEach(() => {
   delete process.env[polarName];
 });
 
-describe("content runtime HTTP route", () => {
+describe("public content runtime HTTP route", () => {
   it("authenticates the server secret before consuming a request body", async () => {
     const t = createConvexTestWithBetterAuth();
     let pulls = 0;
@@ -95,7 +95,7 @@ describe("content runtime HTTP route", () => {
       method: "POST",
     } satisfies RequestInit & { readonly duplex: "half" };
 
-    const response = await t.fetch(RUNTIME_PATH, request);
+    const response = await t.fetch(PUBLIC_CONTENT_RUNTIME_PATH, request);
 
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({
@@ -109,9 +109,9 @@ describe("content runtime HTTP route", () => {
   it.each([
     ["{", { "content-type": "application/json" }, 400],
     ["{}", { "content-length": "3" }, 400],
-    [runtimeRequest("public"), { "content-type": "text/plain" }, 415],
+    [publicRuntimeRequest(), { "content-type": "text/plain" }, 415],
     [
-      "x".repeat(MAX_RUNTIME_REQUEST_BYTES + 1),
+      "x".repeat(MAX_PUBLIC_RUNTIME_REQUEST_BYTES + 1),
       { "content-type": "application/json" },
       413,
     ],
@@ -142,11 +142,11 @@ describe("content runtime HTTP route", () => {
     }
   );
 
-  it("fails closed for an unreviewed signing key and returns exact absence", async () => {
+  it("transports evidence for application verification and exact absence", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedRuntime(t, "public");
 
-    const found = await post(t, runtimeRequest("public"));
+    const found = await post(t, publicRuntimeRequest());
     const missing = await post(
       t,
       JSON.stringify({
@@ -156,11 +156,26 @@ describe("content runtime HTTP route", () => {
       })
     );
 
-    expect(found.status).toBe(500);
-    await expect(found.json()).resolves.toEqual({
-      code: "CONTENT_RUNTIME_INTERNAL",
-      kind: "failure",
-    });
+    expect(found.status).toBe(200);
+    const foundBody = await found.json();
+    expect(foundBody).toMatchObject({ kind: "found" });
+    const request = await Effect.runPromise(
+      decodePublicContentRuntimeRequest(JSON.parse(publicRuntimeRequest()))
+    );
+    const rejected = await Effect.runPromise(
+      verifyContentRuntimeExchange({
+        rendererManifest: foundBody.rendererManifest,
+        request,
+        response: foundBody,
+      }).pipe(
+        Effect.provideService(
+          ContentVerificationKeyResolver,
+          contentKeyResolver
+        ),
+        Effect.flip
+      )
+    );
+    expect(rejected._tag).toBe("ReleaseManifestHashMismatchError");
     expect(missing.status).toBe(404);
     await expect(missing.json()).resolves.toEqual({ kind: "missing" });
     expectPrivate(found);
@@ -169,19 +184,20 @@ describe("content runtime HTTP route", () => {
   it("rejects found rows that do not belong to the exact request", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedRuntime(t, "public");
-    const row = await t.query(internal.contentRelease.runtime.readPublic, {
-      locale: "en",
-      publicPath: TEST_RUNTIME_PATH,
-    });
+    const row = await t.query(
+      internal.contentRelease.runtime.public.internal.read,
+      { locale: "en", publicPath: TEST_RUNTIME_PATH }
+    );
     if (!row) {
       throw new Error("Expected one public runtime row.");
     }
     const request = await Effect.runPromise(
-      decodeContentRuntimeRequest(JSON.parse(runtimeRequest("public")))
+      decodePublicContentRuntimeRequest(JSON.parse(publicRuntimeRequest()))
     );
     for (const [reason, candidate] of runtimeCases(row)) {
       const result = await Effect.runPromise(
-        verifyContentEnvelope({
+        verifyContentRuntimeExchange({
+          rendererManifest: JSON.parse(row.rendererJson),
           request,
           response: candidate,
         }).pipe(
@@ -194,7 +210,7 @@ describe("content runtime HTTP route", () => {
       );
       expect(result, reason).toMatchObject({
         _tag: "Left",
-        left: { _tag: "ContentEnvelopeMismatchError", reason },
+        left: { _tag: "ContentRuntimeMismatchError", reason },
       });
     }
   });
@@ -203,7 +219,14 @@ describe("content runtime HTTP route", () => {
     const t = createConvexTestWithBetterAuth();
     await seedRuntime(t, "authenticated");
 
-    const response = await post(t, runtimeRequest("authenticated"));
+    const response = await post(
+      t,
+      JSON.stringify({
+        delivery: "authenticated",
+        locale: "en",
+        publicPath: TEST_RUNTIME_PATH,
+      })
+    );
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({
@@ -229,22 +252,22 @@ describe("content runtime HTTP route", () => {
     await oversized.mutation(async (ctx) => {
       await insertRuntimeRelease(ctx);
       await insertRuntimeHead(ctx, "public", runtimeContentKey("public"), {
-        compiledCode: "x".repeat(MAX_RUNTIME_RESPONSE_BYTES / 2 + 1),
+        compiledCode: "x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES / 2 + 1),
         projectionJson: testProjectionJson({
           contentKey: runtimeContentKey("public"),
           publicPath: TEST_RUNTIME_PATH,
-          title: "x".repeat(MAX_RUNTIME_RESPONSE_BYTES / 2 + 1),
+          title: "x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES / 2 + 1),
         }),
       });
     });
 
-    const corruptResponse = await post(corrupt, runtimeRequest("public"));
-    const oversizedResponse = await post(oversized, runtimeRequest("public"));
+    const corruptResponse = await post(corrupt, publicRuntimeRequest());
+    const oversizedResponse = await post(oversized, publicRuntimeRequest());
 
     expect(corruptResponse.status).toBe(500);
     expect(oversizedResponse.status).toBe(500);
     await expect(oversizedResponse.json()).resolves.toEqual({
-      code: "CONTENT_RUNTIME_INTERNAL",
+      code: "CONTENT_RUNTIME_RESPONSE_TOO_LARGE",
       kind: "failure",
     });
   });

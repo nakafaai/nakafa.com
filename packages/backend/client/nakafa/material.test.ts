@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { readContent } from "@repo/backend/client/content/read";
+import { readPublicContentEvidence } from "@repo/backend/client/content/public";
 import { readPublishedMaterialMarkdown } from "@repo/backend/client/nakafa/material";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
@@ -20,8 +20,8 @@ vi.mock("server-only", () => ({}));
 vi.mock("@repo/backend/client/nakafa/query", () => ({
   fetchNakafaRuntimeQuery: queryMock,
 }));
-vi.mock("@repo/backend/client/content/read", () => ({
-  readContent: readMock,
+vi.mock("@repo/backend/client/content/public", () => ({
+  readPublicContentEvidence: readMock,
 }));
 
 beforeEach(() => {
@@ -85,7 +85,7 @@ describe("Nakafa material reader", () => {
       markdown: Option.none(),
     });
     expect(fetchNakafaRuntimeQuery).toHaveBeenCalledTimes(2);
-    expect(readContent).not.toHaveBeenCalled();
+    expect(readPublicContentEvidence).not.toHaveBeenCalled();
   });
 
   it("reads verified raw MDX through the signed runtime", async () => {
@@ -132,8 +132,7 @@ describe("Nakafa material reader", () => {
         },
       }
     );
-    expect(readContent).toHaveBeenCalledWith(target, {
-      delivery: "public",
+    expect(readPublicContentEvidence).toHaveBeenCalledWith(target, {
       locale: projection.locale,
       publicPath: projection.publicPath,
     });

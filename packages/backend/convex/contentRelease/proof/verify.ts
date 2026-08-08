@@ -15,9 +15,13 @@ import {
   decodeReleaseJson,
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
+import { verifyArtifactBatch } from "@repo/backend/convex/contentRelease/proof/artifact";
 import { verifyContentStreams } from "@repo/backend/convex/contentRelease/proof/content";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
-import type { ProofState } from "@repo/backend/convex/contentRelease/proof/read";
+import type {
+  ArtifactProofPage,
+  ProofState,
+} from "@repo/backend/convex/contentRelease/proof/read";
 import type { RouteCatalogPage } from "@repo/backend/convex/contentRelease/proof/routes";
 import { verifyReleaseSnapshots } from "@repo/backend/convex/contentRelease/proof/snapshot";
 import {
@@ -38,6 +42,11 @@ import { Effect } from "effect";
 type Progress = Infer<typeof progressValidator>;
 type Status = Infer<typeof statusValidator>;
 
+const artifactProofReceiptValidator = v.object({
+  batchIndex: v.number(),
+  verifiedArtifacts: v.number(),
+});
+
 const verifyItemsReference = makeFunctionReference<
   "mutation",
   { afterIndex: number; releaseId: string },
@@ -53,11 +62,40 @@ const proofStateReference = makeFunctionReference<
   { manifestHash: string; releaseId: string },
   ProofState
 >("contentRelease/proof/read:state");
+const artifactBatchReference = makeFunctionReference<
+  "query",
+  { batchIndex: number; releaseId: string },
+  ArtifactProofPage
+>("contentRelease/proof/read:artifactBatch");
 const commitProofReference = makeFunctionReference<
   "mutation",
   { proofJson: string },
   Status
 >("contentRelease/proof/commit:commitProof");
+
+/** Authenticates the frozen release and renderer identity shared by proof steps. */
+const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
+  function* (ctx: ActionCtx, manifestHash: string, releaseId: string) {
+    const state = yield* callInternal(() =>
+      ctx.runQuery(proofStateReference, { manifestHash, releaseId })
+    );
+    const storedRelease = yield* decodeReleaseJson(state.releaseJson);
+    const release = yield* verifySignedContentRelease(storedRelease).pipe(
+      Effect.mapError(contractFailure)
+    );
+    const storedRenderer = yield* decodeRendererJson(state.rendererJson);
+    const renderer = yield* validateRendererManifestHash(storedRenderer).pipe(
+      Effect.mapError(contractFailure)
+    );
+    if (!hasRendererIdentity(release.manifest, renderer)) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_UNSUPPORTED",
+        `Content release ${releaseId} no longer matches its frozen renderer.`
+      );
+    }
+    return { release, renderer, state };
+  }
+);
 
 /** Advances exact item verification from the durable server cursor. */
 const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
@@ -103,38 +141,50 @@ const verifyRouteCatalog = Effect.fn("contentRelease.verifyRouteCatalog")(
   }
 );
 
+/** Reauthenticates one bounded artifact batch on an isolated Node worker. */
+export const verifyArtifactBatchProgram = Effect.fn(
+  "contentRelease.verifyArtifactProofBatch"
+)(function* (
+  ctx: ActionCtx,
+  manifestHash: string,
+  releaseId: string,
+  batchIndex: number
+) {
+  const { release, renderer } = yield* loadProofIdentity(
+    ctx,
+    manifestHash,
+    releaseId
+  );
+  const page = yield* callInternal(() =>
+    ctx.runQuery(artifactBatchReference, { batchIndex, releaseId })
+  );
+  const verifiedArtifacts = yield* verifyArtifactBatch(
+    page.rows,
+    releaseId,
+    renderer,
+    release.manifest.rendererContractVersion
+  );
+  return { batchIndex: page.batchIndex, verifiedArtifacts };
+});
+
 /** Recomputes the complete authenticated proof before activation. */
 export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
-  function* (ctx: ActionCtx, manifestHash: string, releaseId: string) {
-    const state = yield* callInternal(() =>
-      ctx.runQuery(proofStateReference, {
-        manifestHash,
-        releaseId,
-      })
+  function* (
+    ctx: ActionCtx,
+    manifestHash: string,
+    releaseId: string,
+    verifiedArtifacts: number
+  ) {
+    const { release, state } = yield* loadProofIdentity(
+      ctx,
+      manifestHash,
+      releaseId
     );
-    const storedRelease = yield* decodeReleaseJson(state.releaseJson);
-    const release = yield* verifySignedContentRelease(storedRelease).pipe(
-      Effect.mapError(contractFailure)
-    );
-    const storedRenderer = yield* decodeRendererJson(state.rendererJson);
-    const renderer = yield* validateRendererManifestHash(storedRenderer).pipe(
-      Effect.mapError(contractFailure)
-    );
-    if (!hasRendererIdentity(release.manifest, renderer)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_UNSUPPORTED",
-        `Content release ${releaseId} no longer matches its frozen renderer.`
-      );
-    }
     yield* verifyStoredItems(ctx, releaseId, state.checkedIndex);
     const evidence = yield* Effect.all(
       {
         routeCatalog: verifyRouteCatalog(ctx, releaseId),
-        content: verifyContentStreams(
-          release,
-          renderer,
-          readProofStream(ctx, releaseId)
-        ),
+        content: verifyContentStreams(release, readProofStream(ctx, releaseId)),
         result: verifyResultCatalog({
           expectedCount: release.manifest.resultCount,
           expectedDigest: release.manifest.resultDigest,
@@ -155,7 +205,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       },
       { concurrency: "unbounded" }
     );
-    const { artifacts, items, projections, rollback } = evidence.content;
+    const { items, projections, rollback } = evidence.content;
     const { result, routes, snapshots } = evidence;
     const countersMatch =
       state.stagedItems === release.manifest.itemCount &&
@@ -164,7 +214,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       release.manifest.upsertCount === items.upsertCount &&
       state.stagedDeletes === items.deleteCount &&
       state.stagedUpserts === items.upsertCount &&
-      state.stagedArtifacts === artifacts &&
+      state.stagedArtifacts === verifiedArtifacts &&
       state.stagedArtifacts === items.upsertCount &&
       state.stagedProjections === projections.count &&
       state.stagedProjections === items.upsertCount &&
@@ -200,7 +250,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       routeCount: routes.count,
       routeDigest: release.manifest.routeDigest,
       snapshots: snapshots.snapshots,
-      stagedArtifacts: artifacts,
+      stagedArtifacts: verifiedArtifacts,
       stagedRoutes: routes.count,
       stagedSnapshotRows: snapshots.stagedRows,
       upsertHeads: items.upsertCount,
@@ -214,16 +264,46 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
   }
 );
 
+/** Reauthenticates one publisher-owned artifact batch with bounded runtime. */
+export const verifyArtifacts = internalAction({
+  args: {
+    batchIndex: v.number(),
+    manifestHash: v.string(),
+    releaseId: v.string(),
+  },
+  returns: artifactProofReceiptValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      verifyArtifactBatchProgram(
+        ctx,
+        args.manifestHash,
+        args.releaseId,
+        args.batchIndex
+      ).pipe(
+        Effect.provideService(
+          ContentVerificationKeyResolver,
+          contentKeyResolver
+        )
+      )
+    ),
+});
+
 /** Recomputes and commits one complete proof outside the request lifecycle. */
 export const verifyRelease = internalAction({
   args: {
     manifestHash: v.string(),
     releaseId: v.string(),
+    verifiedArtifacts: v.number(),
   },
   returns: v.null(),
   handler: (ctx, args) =>
     runConvexProgram(
-      recomputeProgram(ctx, args.manifestHash, args.releaseId).pipe(
+      recomputeProgram(
+        ctx,
+        args.manifestHash,
+        args.releaseId,
+        args.verifiedArtifacts
+      ).pipe(
         Effect.provideService(
           ContentVerificationKeyResolver,
           contentKeyResolver

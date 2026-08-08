@@ -53,6 +53,9 @@ export const PROOF_PAGE_LIMIT = 128;
 /** Maximum complete proof-page response below Convex action limits. */
 export const PROOF_PAGE_BYTES = 4 * 1024 * 1024;
 
+/** Maximum artifact-proof response including its corresponding item envelopes. */
+export const ARTIFACT_PROOF_PAGE_BYTES = 8 * 1024 * 1024;
+
 /** Maximum route identities validated before yielding one proof query. */
 export const ROUTE_CATALOG_PAGE_LIMIT = 8;
 

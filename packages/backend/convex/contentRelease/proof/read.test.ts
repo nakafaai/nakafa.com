@@ -11,12 +11,18 @@ import {
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
 import { insertTestRelease } from "@repo/backend/test/content-stage";
+import {
+  beginFixture,
+  stageUpsertFixture,
+} from "@repo/backend/test/content-verify";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const proofState = internal.contentRelease.proof.read.state;
 const proofPage = internal.contentRelease.proof.read.page;
 const routePage = internal.contentRelease.proof.read.routePage;
+const artifactPlan = internal.contentRelease.proof.read.artifactPlan;
+const artifactBatch = internal.contentRelease.proof.read.artifactBatch;
 
 describe("contentRelease/proof/read", () => {
   it("returns immutable staging state bound to one manifest", async () => {
@@ -69,6 +75,30 @@ describe("contentRelease/proof/read", () => {
         releaseId: TEST_RELEASE_ID,
       })
     ).resolves.toMatchObject({ status: "verified" });
+  });
+
+  it("plans and reads exact publisher-owned artifact batches", async () => {
+    const t = convexTest(schema, convexModules);
+    await stageUpsertFixture(t);
+    await beginFixture(t);
+
+    await expect(
+      t.query(artifactPlan, {
+        manifestHash: TEST_MANIFEST_HASH,
+        releaseId: TEST_RELEASE_ID,
+      })
+    ).resolves.toEqual({ batchCount: 1, stagedArtifacts: 1 });
+    await expect(
+      t.query(artifactBatch, { batchIndex: 0, releaseId: TEST_RELEASE_ID })
+    ).resolves.toMatchObject({
+      batchIndex: 0,
+      rows: [{ index: 0 }],
+    });
+    await expect(
+      t.query(artifactBatch, { batchIndex: 1, releaseId: TEST_RELEASE_ID })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
   });
 
   it("rejects non-verifiable state and invalid cursors", async () => {

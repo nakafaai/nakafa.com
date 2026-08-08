@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ArticleProjectionSchema,
   canonicalizeArticleProjection,
@@ -37,7 +38,7 @@ function articleRow(selected = testArticleProjection): ArticleRow {
     contentKey: selected.contentKey,
     family: "article",
     locale: selected.locale,
-    projectionHash: `sha256:${"b".repeat(64)}`,
+    projectionHash: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
     projectionJson: canonicalizeArticleProjection(selected),
     publicPath: selected.publicPath,
     releaseId: "release-article",

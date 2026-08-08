@@ -46,6 +46,19 @@ export function applyPublishedContentCache(
   cacheLife(CONTENT_RUNTIME_CACHE_PROFILE);
 }
 
+/** Applies exact immutable artifact tags to one bounded published batch. */
+export function applyPublishedContentBatchCache(
+  family: ContentFamily,
+  artifactHashes: readonly Sha256Hash[]
+) {
+  cacheTag(
+    CONTENT_CACHE_GLOBAL_TAG,
+    makeContentFamilyCacheTag(family),
+    ...artifactHashes.map(makeArtifactCacheTag)
+  );
+  cacheLife(CONTENT_RUNTIME_CACHE_PROFILE);
+}
+
 /** Immediately invalidates Next runtime data and the sitemap CDN response. */
 export const invalidateContentCache = Effect.fn("www.content.cache.invalidate")(
   function* (tags: ContentCacheTags) {

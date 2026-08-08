@@ -7,7 +7,10 @@ import {
   type ProofPollCoordinatorService,
   pollProgram,
 } from "@repo/backend/convex/contentRelease/proof/poll";
-import { recomputeProgram } from "@repo/backend/convex/contentRelease/proof/verify";
+import {
+  recomputeProgram,
+  verifyArtifactBatchProgram,
+} from "@repo/backend/convex/contentRelease/proof/verify";
 import { beginVerification } from "@repo/backend/convex/contentRelease/verify";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
@@ -196,13 +199,32 @@ export async function prepareContentProof(
 export async function recomputeContentProof(
   target: TestConvex<typeof schema>,
   manifestHash: string,
-  releaseId: string
+  releaseId: string,
+  resolver = TEST_KEY_RESOLVER
 ) {
   await prepareContentProof(target, releaseId);
+  const plan = await target.query(
+    internal.contentRelease.proof.read.artifactPlan,
+    { manifestHash, releaseId }
+  );
+  let verifiedArtifacts = 0;
+  for (let batchIndex = 0; batchIndex < plan.batchCount; batchIndex += 1) {
+    const receipt = await target.action((ctx) =>
+      Effect.runPromise(
+        verifyArtifactBatchProgram(
+          ctx,
+          manifestHash,
+          releaseId,
+          batchIndex
+        ).pipe(Effect.provideService(ContentVerificationKeyResolver, resolver))
+      )
+    );
+    verifiedArtifacts += receipt.verifiedArtifacts;
+  }
   return target.action((ctx) =>
     Effect.runPromise(
-      recomputeProgram(ctx, manifestHash, releaseId).pipe(
-        Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
+      recomputeProgram(ctx, manifestHash, releaseId, verifiedArtifacts).pipe(
+        Effect.provideService(ContentVerificationKeyResolver, resolver)
       )
     )
   );
