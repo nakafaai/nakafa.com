@@ -7,7 +7,10 @@ import type {
 } from "@nakafa/aksara-contracts/projection/article";
 import { Effect, Option } from "effect";
 import type { ReactNode } from "react";
-import { applyPublishedContentCache } from "@/lib/content/cache";
+import {
+  applyPublishedCatalogCache,
+  applyPublishedContentCache,
+} from "@/lib/content/cache";
 import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 import {
   type PublishedContentData,
@@ -118,6 +121,7 @@ export async function getCurrentPublishedArticle(
     )
   );
   if (Option.isNone(result)) {
+    applyPublishedCatalogCache("article");
     return null;
   }
   applyPublishedContentCache("article", result.value.artifact.artifactHash);
@@ -132,6 +136,7 @@ export async function renderCurrentPublishedArticle(
 
   const data = await getCurrentPublishedArticle(input);
   if (!data) {
+    applyPublishedCatalogCache("article");
     return null;
   }
   const rendered = await Effect.runPromise(renderArticleArtifact(data));

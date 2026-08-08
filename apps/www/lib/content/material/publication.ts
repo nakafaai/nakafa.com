@@ -1,9 +1,13 @@
 import "server-only";
 
+import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyPublishedContentCache } from "@/lib/content/cache";
-import { verifyMaterialPublication } from "@/lib/content/material/decode";
+import {
+  makeMaterialProjectionError,
+  verifyMaterialPublication,
+} from "@/lib/content/material/decode";
 import { getPublishedMaterialRoute } from "@/lib/content/material/route";
 import { renderPublishedMaterial } from "@/lib/content/published/material";
 
@@ -14,12 +18,25 @@ export async function getMaterialPublication(
 ) {
   "use cache";
 
+  const readPublished = Effect.tryPromise(() =>
+    renderPublishedMaterial({ locale, publicPath })
+  ).pipe(
+    Effect.catchIf(
+      (failure) => failure.error instanceof ContentRuntimeMissingError,
+      () => Effect.succeed(null)
+    )
+  );
   const [model, published] = await Promise.all([
     getPublishedMaterialRoute(locale, publicPath),
-    renderPublishedMaterial({ locale, publicPath }),
+    Effect.runPromise(readPublished),
   ]);
   if (!model.projection) {
     return null;
+  }
+  if (!published) {
+    return await Effect.runPromise(
+      Effect.fail(makeMaterialProjectionError({ locale, publicPath }))
+    );
   }
 
   await Effect.runPromise(

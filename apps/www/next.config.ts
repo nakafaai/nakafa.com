@@ -154,8 +154,8 @@ const nextConfig = {
   cacheLife: {
     contentRuntime: {
       stale: 300,
-      revalidate: 86_400,
-      expire: 604_800,
+      revalidate: 3_600,
+      expire: 86_400,
     },
   },
   // PostHog's same-origin proxy endpoints include trailing slashes such as
