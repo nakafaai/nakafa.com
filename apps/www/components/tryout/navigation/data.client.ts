@@ -7,26 +7,15 @@ import type { Locale } from "next-intl";
 
 export type TryoutDataIntent =
   | {
-      directEntry: {
-        countryKey: string;
-        examKey: string;
-        sectionKey: string;
-        setKey: string;
-        trackKey: string;
-      } | null;
       kind: "set";
       locale: Locale;
       publicPath: string;
     }
   | {
       attemptId?: Id<"tryoutAttempts">;
-      countryKey: string;
-      examKey: string;
       kind: "section";
       locale: Locale;
-      sectionKey: string;
-      setKey: string;
-      trackKey: string;
+      publicPath: string;
     };
 
 /**
@@ -51,38 +40,20 @@ export function useTryoutDataIntent() {
           locale: intent.locale,
           publicPath: intent.publicPath,
         },
-        query: api.tryouts.queries.attempt.getCurrentByPublicPath,
+        query: api.tryouts.queries.runtime.getSetState,
       });
-
-      if (intent.directEntry) {
-        convex.prewarmQuery({
-          args: {
-            ...intent.directEntry,
-            locale: intent.locale,
-          },
-          query: api.tryouts.queries.runtime.getSection,
-        });
-      }
       return true;
     }
 
     const args = {
       ...(intent.attemptId ? { attemptId: intent.attemptId } : {}),
-      countryKey: intent.countryKey,
-      examKey: intent.examKey,
       locale: intent.locale,
-      sectionKey: intent.sectionKey,
-      setKey: intent.setKey,
-      trackKey: intent.trackKey,
+      publicPath: intent.publicPath,
     };
 
     convex.prewarmQuery({
       args,
-      query: api.tryouts.queries.attempt.getCurrent,
-    });
-    convex.prewarmQuery({
-      args,
-      query: api.tryouts.queries.runtime.getSection,
+      query: api.tryouts.queries.runtime.getSectionState,
     });
     return true;
   };

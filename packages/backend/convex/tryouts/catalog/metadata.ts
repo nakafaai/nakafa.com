@@ -2,8 +2,11 @@ import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity"
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
-import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import {
+  readTryoutCatalogRowByIdentity,
+  readTryoutCatalogRowByPath,
+} from "@repo/backend/convex/tryouts/catalog/row";
 import type { locales } from "@repo/utilities/locales";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -129,21 +132,7 @@ const readCurrentRoute = Effect.fn("tryouts.catalog.readCurrentRoute")(
       readonly snapshotId: string;
     }
   ) {
-    const stored = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
-          index
-            .eq("snapshotId", input.snapshotId)
-            .eq("locale", input.locale)
-            .eq("publicPath", input.publicPath)
-        )
-        .unique()
-    );
-    if (!stored) {
-      return null;
-    }
-    return yield* verifyTryoutCatalog(stored, input.snapshotId);
+    return yield* readTryoutCatalogRowByPath(ctx, input.snapshotId, input);
   }
 );
 
@@ -161,19 +150,12 @@ const readAlternate = Effect.fn("tryouts.catalog.readMetadataAlternate")(
       ...input.current,
       locale: input.locale,
     });
-    const stored = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_identity", (index) =>
-          index.eq("snapshotId", input.snapshotId).eq("identity", identity)
-        )
-        .unique()
+    const alternate = yield* readTryoutCatalogRowByIdentity(
+      ctx,
+      input.snapshotId,
+      identity
     );
-    if (!stored) {
-      return null;
-    }
-    const alternate = yield* verifyTryoutCatalog(stored, input.snapshotId);
-    if (!alternate.publicPath) {
+    if (!alternate?.publicPath) {
       return null;
     }
     return {

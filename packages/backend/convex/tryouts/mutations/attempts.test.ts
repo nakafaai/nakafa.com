@@ -37,6 +37,8 @@ const entryStartArgs: FunctionArgs<
   ...startArgs,
   entrySectionKey: SECTION,
 };
+const setPublicPath = `try-out/${COUNTRY}/${EXAM}/${TRACK}/${SET}`;
+
 describe("tryouts/mutations/attempts", () => {
   it("resumes from the frozen attempt when the current entry key changed", async () => {
     vi.setSystemTime(new Date(NOW));
@@ -192,41 +194,25 @@ describe("tryouts/mutations/attempts", () => {
       status: "in-progress",
       statusRank: 1,
     });
-    const current = await authed.query(api.tryouts.queries.attempt.getCurrent, {
-      countryKey: COUNTRY,
-      examKey: EXAM,
+    const state = await authed.query(api.tryouts.queries.runtime.getSetState, {
       locale: "id",
-      sectionKey: SECTION,
-      setKey: SET,
-      trackKey: TRACK,
+      publicPath: setPublicPath,
     });
-    expect(current).toMatchObject({
-      activeSectionKey: SECTION,
-      score: null,
+    expect(state).toMatchObject({
+      attempt: {
+        activeSectionKey: SECTION,
+        score: null,
+      },
+      runtime: {
+        questions: expect.any(Array),
+        section: {
+          score: null,
+          sectionKey: SECTION,
+          status: "in-progress",
+        },
+      },
     });
-    expect(current?.section).toMatchObject({
-      score: null,
-      sectionKey: SECTION,
-      status: "in-progress",
-    });
-
-    const sectionRuntime = await authed.query(
-      api.tryouts.queries.runtime.getSection,
-      {
-        countryKey: COUNTRY,
-        examKey: EXAM,
-        locale: "id",
-        sectionKey: SECTION,
-        setKey: SET,
-        trackKey: TRACK,
-      }
-    );
-
-    expect(sectionRuntime).toMatchObject({
-      questions: expect.any(Array),
-      section: { score: null },
-    });
-    expect(sectionRuntime?.questions).toHaveLength(1);
+    expect(state?.runtime?.questions).toHaveLength(1);
     const resumed = await authed.mutation(
       api.tryouts.mutations.attempts.startAttempt,
       entryStartArgs

@@ -1,10 +1,10 @@
+import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import type {
   TryoutAnswerSelector,
   TryoutQuestionSelector,
   TryoutSectionContentAccess,
-  TryoutSectionContentArgs,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import { Effect, Schema } from "effect";
 
@@ -28,7 +28,7 @@ export const loadTryoutSignedContent = Effect.fn(
   readonly access: { readonly answers: boolean; readonly questions: boolean };
   readonly attempt: TryoutAttempt;
   readonly ctx: QueryCtx;
-  readonly locale: TryoutSectionContentArgs["locale"];
+  readonly locale: ContentLocale;
   readonly sectionKey: string;
   readonly snapshotReleaseId: string;
   readonly snapshotId: string;
@@ -85,7 +85,7 @@ export const loadTryoutSignedContent = Effect.fn(
 /** Builds one authenticated question selector from a frozen placement. */
 function makeQuestionSelector(
   placement: TryoutPlacement,
-  locale: TryoutSectionContentArgs["locale"],
+  locale: ContentLocale,
   snapshotId: string,
   snapshotReleaseId: string
 ) {
@@ -117,7 +117,7 @@ function makeQuestionSelector(
 /** Builds one entitled answer selector from a frozen placement. */
 function makeAnswerSelector(
   placement: TryoutPlacement,
-  locale: TryoutSectionContentArgs["locale"],
+  locale: ContentLocale,
   snapshotId: string,
   snapshotReleaseId: string
 ) {

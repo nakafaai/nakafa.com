@@ -31,7 +31,6 @@ export const publicTryoutSetValidator = v.object({
   countryKey: tryoutRouteKeyValidator,
   description: v.optional(v.string()),
   examKey: tryoutRouteKeyValidator,
-  internalEntrySectionKey: v.optional(tryoutRouteKeyValidator),
   publicPath: v.string(),
   readyQuestionCount: v.number(),
   readyVisibleSectionCount: v.number(),

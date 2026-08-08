@@ -1,11 +1,12 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadTryoutSnapshotCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { loadVerifiedSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
 import {
-  readPublishedSectionPage,
-  readPublishedSetPage,
+  readPublishedSectionPageFromIndex,
+  readPublishedSetPageFromIndex,
 } from "@repo/backend/convex/tryouts/catalog/published";
+import { readTryoutSetSelection } from "@repo/backend/convex/tryouts/catalog/selection";
 import { matchesAttemptIdentity } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { Effect } from "effect";
 
@@ -41,12 +42,16 @@ export const readRetainedSetPage = Effect.fn(
 export const readRetainedSectionPage = Effect.fn(
   "tryouts.retained.readSectionSnapshot"
 )(function* (ctx: QueryCtx, args: RetainedPath, attempt: TryoutAttempt) {
-  const catalog = yield* loadTryoutSnapshotCatalog(
-    ctx,
-    args.locale,
-    attempt.tryoutSnapshotId
-  );
-  return yield* readPublishedSectionPage(catalog, args.publicPath);
+  yield* loadVerifiedSnapshot(ctx, "tryout", attempt.tryoutSnapshotId);
+  const index = yield* readTryoutSetSelection(ctx, {
+    locale: args.locale,
+    publicPath: args.publicPath,
+    snapshotId: attempt.tryoutSnapshotId,
+  });
+  if (!index) {
+    return null;
+  }
+  return yield* readPublishedSectionPageFromIndex(index, args.publicPath);
 });
 
 /** Reads one set from the immutable signed catalog retained by an attempt. */
@@ -57,8 +62,16 @@ const readSignedSetPage = Effect.fn("tryouts.retained.readSignedSet")(
     publicPath: string,
     snapshotId: string
   ) {
-    const catalog = yield* loadTryoutSnapshotCatalog(ctx, locale, snapshotId);
-    return yield* readPublishedSetPage(catalog, publicPath);
+    yield* loadVerifiedSnapshot(ctx, "tryout", snapshotId);
+    const index = yield* readTryoutSetSelection(ctx, {
+      locale,
+      publicPath,
+      snapshotId,
+    });
+    if (!index) {
+      return null;
+    }
+    return yield* readPublishedSetPageFromIndex(index, publicPath);
   }
 );
 

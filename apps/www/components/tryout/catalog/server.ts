@@ -1,7 +1,7 @@
 import "server-only";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import { fetchQuery } from "convex/nextjs";
+import { fetchQuery, preloadQuery } from "convex/nextjs";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -145,8 +145,8 @@ export async function readTryoutSetPage(locale: Locale, publicPath: string) {
 }
 
 /** Reads one set route from the current user's exact immutable attempt. */
-export const readTryoutAttemptSetPage = Effect.fn(
-  "www.tryout.catalog.readAttemptSetPage"
+export const readTryoutAttemptSetRoute = Effect.fn(
+  "www.tryout.catalog.readAttemptSetRoute"
 )(function* (
   token: string,
   locale: Locale,
@@ -157,8 +157,12 @@ export const readTryoutAttemptSetPage = Effect.fn(
     catch: (cause) => new TryoutCatalogReadError({ cause }),
     try: () =>
       fetchQuery(
-        api.tryouts.queries.retained.getAttemptSetPage,
-        { attemptId, locale, publicPath },
+        api.tryouts.queries.retained.getAttemptSetRoute,
+        {
+          attemptId,
+          locale,
+          publicPath,
+        },
         { token }
       ),
   });
@@ -179,8 +183,8 @@ export async function readTryoutSectionPage(
 }
 
 /** Reads one route from the current user's immutable attempt snapshot. */
-export const readTryoutAttemptSectionPage = Effect.fn(
-  "www.tryout.catalog.readAttemptSectionPage"
+export const readTryoutAttemptSectionRoute = Effect.fn(
+  "www.tryout.catalog.readAttemptSectionRoute"
 )(function* (
   token: string,
   locale: Locale,
@@ -191,9 +195,45 @@ export const readTryoutAttemptSectionPage = Effect.fn(
     catch: (cause) => new TryoutCatalogReadError({ cause }),
     try: () =>
       fetchQuery(
-        api.tryouts.queries.retained.getAttemptSectionPage,
-        { attemptId, locale, publicPath },
+        api.tryouts.queries.retained.getAttemptSectionRoute,
+        {
+          attemptId,
+          locale,
+          publicPath,
+        },
         { token }
       ),
+  });
+});
+
+/** Preloads one reactive attempt and section runtime with the current JWT. */
+export const preloadTryoutSectionState = Effect.fn(
+  "www.tryout.catalog.preloadSectionState"
+)(function* (
+  token: string,
+  args: FunctionArgs<typeof api.tryouts.queries.runtime.getSectionState>
+) {
+  return yield* Effect.tryPromise({
+    catch: (cause) => new TryoutCatalogReadError({ cause }),
+    try: () =>
+      preloadQuery(api.tryouts.queries.runtime.getSectionState, args, {
+        token,
+      }),
+  });
+});
+
+/** Preloads one reactive set attempt and direct-entry runtime with the current JWT. */
+export const preloadTryoutSetState = Effect.fn(
+  "www.tryout.catalog.preloadSetState"
+)(function* (
+  token: string,
+  args: FunctionArgs<typeof api.tryouts.queries.runtime.getSetState>
+) {
+  return yield* Effect.tryPromise({
+    catch: (cause) => new TryoutCatalogReadError({ cause }),
+    try: () =>
+      preloadQuery(api.tryouts.queries.runtime.getSetState, args, {
+        token,
+      }),
   });
 });

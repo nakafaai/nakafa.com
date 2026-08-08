@@ -1,45 +1,18 @@
-import { api } from "@repo/backend/convex/_generated/api";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
-import type { TryoutSectionContentAccess } from "@repo/backend/convex/tryouts/runtime/content";
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { readOwnedTryoutSectionContent } from "@repo/backend/convex/tryouts/runtime/access";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime";
 import {
   TRYOUT_SECTION_KEY,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
-import type { FunctionArgs } from "convex/server";
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const contentArgs: FunctionArgs<
-  typeof api.tryouts.queries.access.getSectionContent
-> = {
-  countryKey: "indonesia",
-  examKey: "snbt",
-  locale: "id",
-  sectionKey: TRYOUT_SECTION_KEY,
-  setKey: "set-1",
-  trackKey: "2027",
-};
-
-const noContent: Extract<TryoutSectionContentAccess, { kind: "none" }> = {
-  kind: "none",
-};
 
 beforeEach(() => {
   vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
 });
 
 describe("tryouts/runtime/access", () => {
-  it("rejects anonymous content access", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await expect(
-      t.query(api.tryouts.queries.access.getSectionContent, contentArgs)
-    ).resolves.toEqual(noContent);
-  });
-
   it("returns signed questions for the active section", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation((ctx) =>
@@ -49,21 +22,29 @@ describe("tryouts/runtime/access", () => {
         suffix: "content-active",
       })
     );
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
+
+    const content = await t.query(async (ctx) => {
+      const attempt = await ctx.db.get(seeded.attemptId);
+      if (!attempt) {
+        throw new Error("Expected an attempt fixture.");
+      }
+      return Effect.runPromise(
+        readOwnedTryoutSectionContent(ctx, {
+          attempt,
+          locale: "id",
+          sectionKey: TRYOUT_SECTION_KEY,
+        })
+      );
     });
 
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
-    ).resolves.toEqual({
+    expect(content).toEqual({
       answers: [],
       kind: "signed",
       questions: [seeded.signedContent.question],
     });
   });
 
-  it("requires an exact capability to review terminal content", async () => {
+  it("returns signed answers for a resolved terminal attempt", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation((ctx) =>
       seedTryoutContentAccessState(ctx, {
@@ -72,76 +53,26 @@ describe("tryouts/runtime/access", () => {
         suffix: "content-terminal",
       })
     );
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
+
+    const content = await t.query(async (ctx) => {
+      const attempt = await ctx.db.get(seeded.attemptId);
+      if (!attempt) {
+        throw new Error("Expected an attempt fixture.");
+      }
+      return Effect.runPromise(
+        readOwnedTryoutSectionContent(ctx, {
+          attempt,
+          locale: "id",
+          sectionKey: TRYOUT_SECTION_KEY,
+        })
+      );
     });
 
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
-    ).resolves.toEqual(noContent);
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, {
-        ...contentArgs,
-        attemptId: seeded.attemptId,
-      })
-    ).resolves.toEqual({
+    expect(content).toEqual({
       answers: [seeded.signedContent.answer],
       kind: "signed",
       questions: [seeded.signedContent.question],
     });
-  });
-
-  it("hides an exact attempt owned by another user", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const owner = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        suffix: "content-owner",
-      });
-      const reader = await seedAuthenticatedUser(ctx, {
-        now: TRYOUT_TEST_NOW,
-        suffix: "content-reader",
-      });
-      return { owner, reader };
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.reader.sessionId,
-      subject: seeded.reader.authUserId,
-    });
-
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, {
-        ...contentArgs,
-        attemptId: seeded.owner.attemptId,
-      })
-    ).resolves.toEqual(noContent);
-  });
-
-  it("fails closed when an exact attempt uses another route identity", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation((ctx) =>
-      seedTryoutContentAccessState(ctx, {
-        attemptStatus: "in-progress",
-        sectionStatus: "in-progress",
-        suffix: "content-route-mismatch",
-      })
-    );
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, {
-        ...contentArgs,
-        attemptId: seeded.attemptId,
-        setKey: "another-set",
-      })
-    ).rejects.toThrow(
-      "Try-out content request differs from its frozen attempt identity."
-    );
   });
 
   it("maps duplicate section state into a typed read failure", async () => {
@@ -174,13 +105,21 @@ describe("tryouts/runtime/access", () => {
       });
       return fixture;
     });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
 
     await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
+      t.query(async (ctx) => {
+        const attempt = await ctx.db.get(seeded.attemptId);
+        if (!attempt) {
+          throw new Error("Expected an attempt fixture.");
+        }
+        return Effect.runPromise(
+          readOwnedTryoutSectionContent(ctx, {
+            attempt,
+            locale: "id",
+            sectionKey: TRYOUT_SECTION_KEY,
+          })
+        );
+      })
     ).rejects.toThrow("Unable to read try-out content access.");
   });
 });

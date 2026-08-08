@@ -1,19 +1,16 @@
 import { Effect } from "effect";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
+import { cache, Suspense } from "react";
 import {
   createRetainedTryoutMetadata,
   generateTryoutRouteMetadata,
 } from "@/components/tryout/catalog/metadata";
 import {
-  readTryoutAttemptSetPage,
+  preloadTryoutSetState,
+  readTryoutAttemptSetRoute,
   readTryoutSetPage,
 } from "@/components/tryout/catalog/server";
-import {
-  readTryoutContentAccess,
-  type TryoutContentAccess,
-} from "@/components/tryout/content/access";
 import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
@@ -21,7 +18,6 @@ import type {
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import {
   getTryoutAttemptAuthHref,
-  getTryoutAttemptHref,
   getTryoutHref,
   readTryoutAttemptId,
   type TryoutRouteSearchParams,
@@ -104,45 +100,20 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
     notFound();
   }
 
-  const { attemptPage, token } = resolved;
-  if (!attemptId && attemptPage) {
-    redirect(
-      getTryoutAttemptHref(
-        attemptPage.page.set.publicPath,
-        attemptPage.attemptId
-      )
-    );
-  }
+  const { attemptPage } = resolved;
   const page = attemptPage?.page ?? resolved.publicPage;
   if (!page) {
     notFound();
   }
 
-  const entrySection = page.entrySection;
-  let contentAccess: TryoutContentAccess = { kind: "none" };
-
-  if (token && entrySection?.visibility === "internal-entry") {
-    contentAccess = await Effect.runPromise(
-      readTryoutContentAccess(token, {
-        ...(attemptPage ? { attemptId: attemptPage.attemptId } : {}),
-        countryKey: page.set.countryKey,
-        examKey: page.set.examKey,
-        locale,
-        sectionKey: entrySection.sectionKey,
-        setKey: page.set.setKey,
-        trackKey: page.set.trackKey,
-      })
-    );
-  }
-
   let questions: readonly TryoutQuestionContent[] = [];
   let answers: readonly TryoutAnswerContent[] = [];
 
-  if (contentAccess.kind === "signed") {
+  if (attemptPage?.content.kind === "signed") {
     const content = await Effect.runPromise(
       loadSignedTryoutContent({
-        answers: contentAccess.answers,
-        questions: contentAccess.questions,
+        answers: attemptPage.content.answers,
+        questions: attemptPage.content.questions,
       })
     );
     questions = content.questions;
@@ -154,43 +125,73 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
       attemptId={attemptPage?.attemptId}
       content={{ entryAnswers: answers, entryQuestions: questions }}
       page={page}
+      preloadedState={resolved.preloadedState}
       route={{ country, exam, locale, set, track }}
     />
   );
 }
 
 /** Resolves active public content or one explicitly owned frozen attempt. */
-async function readRoutePage(
-  locale: ReturnType<typeof getLocaleOrThrow>,
-  publicPath: string,
-  attemptId?: string
-) {
-  const [publicPage, token] = await Promise.all([
-    readTryoutSetPage(locale, publicPath),
-    getToken(),
-  ]);
-  if (!token) {
+const readRoutePage = cache(
+  async (
+    locale: ReturnType<typeof getLocaleOrThrow>,
+    publicPath: string,
+    attemptId?: string
+  ) => {
+    const stateArgs = { attemptId, locale, publicPath };
     if (attemptId) {
+      const token = await getToken();
+      if (!token) {
+        return {
+          attemptPage: null,
+          authRequired: true,
+          preloadedState: undefined,
+          publicPage: null,
+        };
+      }
+      const result = await Effect.runPromise(
+        Effect.all(
+          {
+            attemptPage: readTryoutAttemptSetRoute(
+              token,
+              locale,
+              publicPath,
+              attemptId
+            ),
+            preloadedState: preloadTryoutSetState(token, stateArgs),
+          },
+          { concurrency: "unbounded" }
+        )
+      );
       return {
-        attemptPage: null,
-        authRequired: true,
+        ...result,
+        authRequired: false,
         publicPage: null,
-        token,
       };
     }
-    return { attemptPage: null, authRequired: false, publicPage, token };
-  }
 
-  const attemptPage = await Effect.runPromise(
-    readTryoutAttemptSetPage(token, locale, publicPath, attemptId)
-  );
-  if (attemptId && !attemptPage) {
-    return {
-      attemptPage: null,
-      authRequired: false,
-      publicPage: null,
-      token,
-    };
+    const [publicPage, token] = await Promise.all([
+      readTryoutSetPage(locale, publicPath),
+      getToken(),
+    ]);
+    if (!token) {
+      return {
+        attemptPage: null,
+        authRequired: false,
+        preloadedState: undefined,
+        publicPage,
+      };
+    }
+
+    const result = await Effect.runPromise(
+      Effect.all(
+        {
+          attemptPage: readTryoutAttemptSetRoute(token, locale, publicPath),
+          preloadedState: preloadTryoutSetState(token, stateArgs),
+        },
+        { concurrency: "unbounded" }
+      )
+    );
+    return { ...result, authRequired: false, publicPage };
   }
-  return { attemptPage, authRequired: false, publicPage, token };
-}
+);

@@ -14,8 +14,8 @@ import {
 import { Effect } from "effect";
 
 /** Resolves an exact frozen set or the current route's in-progress attempt. */
-export const readAttemptSetPage = Effect.fn(
-  "tryouts.retained.readAttemptSetPage"
+export const resolveAttemptSetRoute = Effect.fn(
+  "tryouts.retained.resolveAttemptSetRoute"
 )(function* (
   ctx: QueryCtx,
   args: {
@@ -54,9 +54,12 @@ export const readAttemptSetPage = Effect.fn(
 
   const activePaths = yield* readTryoutDestinationPaths(ctx, identity);
   return {
-    activeSetPublicPath: activePaths.activeSetPublicPath,
-    attemptId: attempt._id,
-    page,
+    attempt,
+    route: {
+      activeSetPublicPath: activePaths.activeSetPublicPath,
+      attemptId: attempt._id,
+      page,
+    },
   };
 });
 
@@ -81,8 +84,8 @@ const readSetAttempt = Effect.fn("tryouts.retained.readSetAttempt")(function* (
 });
 
 /** Resolves one frozen section without replacing it from the active catalog. */
-export const readAttemptSectionPage = Effect.fn(
-  "tryouts.retained.readAttemptSectionPage"
+export const resolveAttemptSectionRoute = Effect.fn(
+  "tryouts.retained.resolveAttemptSectionRoute"
 )(function* (
   ctx: QueryCtx,
   args: {
@@ -137,10 +140,13 @@ export const readAttemptSectionPage = Effect.fn(
   }
 
   return {
-    activeSectionPublicPath: activePaths.activeSectionPublicPath,
-    activeSetPublicPath: activePaths.activeSetPublicPath,
-    attemptId: attempt._id,
-    page,
+    attempt,
+    route: {
+      activeSectionPublicPath: activePaths.activeSectionPublicPath,
+      activeSetPublicPath: activePaths.activeSetPublicPath,
+      attemptId: attempt._id,
+      page,
+    },
   };
 });
 

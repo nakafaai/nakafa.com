@@ -1,12 +1,13 @@
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { TryoutCountry } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { indexPublishedCatalog } from "@repo/backend/convex/tryouts/catalog/hierarchy";
+import { readTryoutCatalogRowByIdentity } from "@repo/backend/convex/tryouts/catalog/row";
 import { Effect } from "effect";
 
 type PreferenceCtx = MutationCtx | QueryCtx;
@@ -39,12 +40,18 @@ export const readActiveTryoutCountry = Effect.fn(
   ctx: QueryCtx,
   args: { readonly countryKey: string; readonly locale: Locale }
 ) {
-  const catalog = yield* loadTryoutCatalog(ctx, args.locale);
-  const index = yield* indexPublishedCatalog(catalog);
-  return (
-    index.countries.find((country) => country.countryKey === args.countryKey) ??
-    null
+  const owner = yield* loadTryoutOwner(ctx);
+  const identity = tryoutCatalogIdentity({
+    countryKey: args.countryKey,
+    kind: "country",
+    locale: args.locale,
+  });
+  const country = yield* readTryoutCatalogRowByIdentity(
+    ctx,
+    owner.snapshotId,
+    identity
   );
+  return country?.kind === "country" ? country : null;
 });
 
 /** Reads the current explicit try-out country preference. */

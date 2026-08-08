@@ -3,6 +3,7 @@ import {
   getTryoutAttemptAuthHref,
   getTryoutAttemptHref,
   getTryoutHref,
+  getTryoutPublicPath,
   getTryoutPublicPathHref,
   hasTryoutAttemptCapability,
   readTryoutAttemptId,
@@ -26,6 +27,11 @@ describe("tryout route paths", () => {
     expect(getTryoutAttemptHref("try-out/id/set-1/section", "attempt/id")).toBe(
       "/try-out/id/set-1/section?attemptId=attempt%2Fid"
     );
+    expect(
+      getTryoutPublicPath("/try-out/id/set-1/section?attemptId=attempt%2Fid")
+    ).toBe("try-out/id/set-1/section");
+    expect(getTryoutPublicPath("/try-out/indonesia")).toBe("try-out/indonesia");
+    expect(getTryoutPublicPath("try-out/indonesia")).toBe("try-out/indonesia");
     expect(
       getTryoutAttemptAuthHref("id", "try-out/id/set-1/section", "attempt/id")
     ).toBe(

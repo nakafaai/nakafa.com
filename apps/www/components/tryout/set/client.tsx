@@ -2,7 +2,8 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { type Preloaded, usePreloadedQuery, useQuery } from "convex/react";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import {
   getTryoutAttemptHref,
@@ -29,77 +30,90 @@ interface TryoutSetPageClientProps {
   attemptId?: Id<"tryoutAttempts">;
   content: TryoutSetContent;
   page: SetPage;
+  preloadedState?: Preloaded<SetStateQuery>;
   route: TryoutSetRoute;
 }
+
+type SetStateQuery = typeof api.tryouts.queries.runtime.getSetState;
+type SetState = FunctionReturnType<SetStateQuery>;
 
 /** Renders one realtime try-out set page from Convex. */
 export function TryoutSetPageClient({
   attemptId,
   content,
   page,
+  preloadedState,
   route,
 }: TryoutSetPageClientProps) {
-  const publicAttempt = useQuery(
-    api.tryouts.queries.attempt.getCurrentByPublicPath,
-    attemptId
-      ? "skip"
-      : {
-          locale: route.locale,
-          publicPath: page.set.publicPath,
-        }
+  const stateArgs: FunctionArgs<SetStateQuery> = {
+    ...(attemptId ? { attemptId } : {}),
+    locale: route.locale,
+    publicPath: page.set.publicPath,
+  };
+
+  if (preloadedState) {
+    return (
+      <PreloadedTryoutSetPage
+        attemptId={attemptId}
+        content={content}
+        page={page}
+        preloadedState={preloadedState}
+        route={route}
+      />
+    );
+  }
+
+  return (
+    <LiveTryoutSetPage
+      attemptId={attemptId}
+      content={content}
+      page={page}
+      route={route}
+      stateArgs={stateArgs}
+    />
   );
-  const retainedAttempt = useQuery(
-    api.tryouts.queries.attempt.getCurrent,
-    attemptId
-      ? {
-          attemptId,
-          countryKey: page.set.countryKey,
-          examKey: page.set.examKey,
-          locale: route.locale,
-          setKey: page.set.setKey,
-          trackKey: page.set.trackKey,
-        }
-      : "skip"
-  );
-  const currentAttempt = attemptId ? retainedAttempt : publicAttempt;
+}
+
+/** Hydrates server-fetched set state before its live subscription resolves. */
+function PreloadedTryoutSetPage({
+  preloadedState,
+  ...props
+}: TryoutSetPageClientProps & {
+  preloadedState: Preloaded<SetStateQuery>;
+}) {
+  const state = usePreloadedQuery(preloadedState);
+  return <ResolvedTryoutSetPage {...props} state={state} />;
+}
+
+/** Loads one live set state when the public route had no authenticated preload. */
+function LiveTryoutSetPage({
+  stateArgs,
+  ...props
+}: Omit<TryoutSetPageClientProps, "preloadedState"> & {
+  stateArgs: FunctionArgs<SetStateQuery>;
+}) {
+  const state = useQuery(api.tryouts.queries.runtime.getSetState, stateArgs);
+  if (state === undefined) {
+    return null;
+  }
+  return <ResolvedTryoutSetPage {...props} state={state} />;
+}
+
+/** Renders one stable set view from its cohesive reactive state. */
+function ResolvedTryoutSetPage({
+  content,
+  page,
+  route,
+  state,
+}: Omit<TryoutSetPageClientProps, "preloadedState"> & {
+  state: SetState;
+}) {
+  const currentAttempt = state?.attempt ?? null;
+  const runtime = state?.runtime ?? null;
   const entrySection = page.entrySection;
   const isInternalEntry = entrySection?.visibility === "internal-entry";
-  let runtimeSectionKey = entrySection?.sectionKey;
-  if (
-    currentAttempt?.status === "in-progress" &&
-    currentAttempt.resumeSectionKey
-  ) {
-    runtimeSectionKey = currentAttempt.resumeSectionKey;
-  }
-  const shouldLoadRuntime =
-    isInternalEntry &&
-    currentAttempt !== undefined &&
-    currentAttempt !== null &&
-    runtimeSectionKey !== undefined;
-  const runtime = useQuery(
-    api.tryouts.queries.runtime.getSection,
-    shouldLoadRuntime && runtimeSectionKey
-      ? {
-          countryKey: page.set.countryKey,
-          examKey: page.set.examKey,
-          ...(attemptId ? { attemptId } : {}),
-          locale: route.locale,
-          sectionKey: runtimeSectionKey,
-          setKey: page.set.setKey,
-          trackKey: page.set.trackKey,
-        }
-      : "skip"
-  );
   const now = useTryoutClock(currentAttempt?.status === "in-progress");
   const activeAttempt = getActiveTryoutAttempt(currentAttempt ?? null, now);
-
-  if (currentAttempt === undefined) {
-    return null;
-  }
-
-  if (shouldLoadRuntime && runtime === undefined) {
-    return null;
-  }
 
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
@@ -148,7 +162,7 @@ export function TryoutSetPageClient({
           content,
           entrySection,
           now,
-          runtime: runtime ?? null,
+          runtime,
           view,
         }}
       />

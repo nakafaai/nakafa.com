@@ -1,17 +1,32 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
+import { query } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { getSectionScoreResult } from "@repo/backend/convex/tryouts/queries/score";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
+import { tryoutAttemptSectionRouteValidator } from "@repo/backend/convex/tryouts/runtime/attempt/sections";
 import { tryoutRuntimeChoiceValidator } from "@repo/backend/convex/tryouts/runtime/choice";
-import {
-  getTryoutSectionContentAccess,
-  tryoutCurrentSectionValidator,
-} from "@repo/backend/convex/tryouts/runtime/content";
-import { readRouteAttempt } from "@repo/backend/convex/tryouts/runtime/lookup";
-import { ConvexError, v } from "convex/values";
+import { tryoutCurrentSectionValidator } from "@repo/backend/convex/tryouts/runtime/content";
+import { readSectionState } from "@repo/backend/convex/tryouts/runtime/section/state";
+import { readSetState } from "@repo/backend/convex/tryouts/runtime/set/state";
+import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
+import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
+import { v } from "convex/values";
+
+const currentAttemptValidator = v.object({
+  activeSectionKey: v.union(tryoutRouteKeyValidator, v.null()),
+  attemptId: v.id("tryoutAttempts"),
+  attemptNumber: v.number(),
+  completedSectionKeys: v.array(tryoutRouteKeyValidator),
+  expiresAt: v.number(),
+  lastActivityAt: v.number(),
+  resumeSectionPublicPath: v.union(v.string(), v.null()),
+  resumeSectionKey: v.union(tryoutRouteKeyValidator, v.null()),
+  score: v.union(tryoutScoreResultValidator, v.null()),
+  section: v.union(tryoutCurrentSectionValidator, v.null()),
+  sectionRoutes: v.array(tryoutAttemptSectionRouteValidator),
+  startedAt: v.number(),
+  status: tryoutStatusValidator,
+  totalQuestions: v.number(),
+});
 
 const runtimeResponseValidator = v.object({
   answeredAt: v.number(),
@@ -37,145 +52,45 @@ const sectionRuntimeValidator = v.object({
   section: tryoutCurrentSectionValidator,
 });
 
-/** Loads bounded runtime responses for one section attempt. */
-async function loadRuntimeResponses(
-  ctx: QueryCtx,
-  section: Doc<"tryoutSectionAttempts">
-) {
-  const responses = await ctx.db
-    .query("tryoutResponses")
-    .withIndex("by_tryoutSectionAttemptId_and_answeredAt", (q) =>
-      q.eq("tryoutSectionAttemptId", section._id)
-    )
-    .take(section.totalQuestions + 1);
+const sectionAttemptStateValidator = v.object({
+  attemptId: v.id("tryoutAttempts"),
+  expiresAt: v.number(),
+  resumeSectionPublicPath: v.union(v.string(), v.null()),
+  resumeSectionKey: v.union(tryoutRouteKeyValidator, v.null()),
+  section: v.union(tryoutCurrentSectionValidator, v.null()),
+  status: tryoutStatusValidator,
+});
 
-  if (responses.length > section.totalQuestions) {
-    throw new ConvexError({
-      code: "TRYOUT_RESPONSE_COUNT_EXCEEDED",
-      message: "Try-out response count exceeds the section question count.",
-    });
-  }
-
-  return new Map(responses.map((response) => [response.placementId, response]));
-}
-
-/** Loads placements through the immutable signed section key. */
-async function loadRuntimePlacements(
-  ctx: QueryCtx,
-  attempt: Doc<"tryoutAttempts">,
-  section: Doc<"tryoutSectionAttempts">
-) {
-  return await ctx.db
-    .query("tryoutAttemptPlacements")
-    .withIndex("by_tryoutAttemptId_and_sectionKey_and_questionOrder", (index) =>
-      index
-        .eq("tryoutAttemptId", attempt._id)
-        .eq("sectionKey", section.sectionKey)
-    )
-    .take(section.totalQuestions + 1);
-}
-
-/** Reads the current user's section runtime with placements and answers. */
-export const getSection = query({
+/** Loads one reactive set attempt and optional direct-entry runtime. */
+export const getSetState = query({
   args: {
-    attemptId: v.optional(v.id("tryoutAttempts")),
-    countryKey: tryoutRouteKeyValidator,
-    examKey: tryoutRouteKeyValidator,
+    attemptId: v.optional(v.string()),
     locale: localeValidator,
-    sectionKey: tryoutRouteKeyValidator,
-    setKey: tryoutRouteKeyValidator,
-    trackKey: tryoutRouteKeyValidator,
+    publicPath: v.string(),
   },
-  returns: v.union(v.null(), sectionRuntimeValidator),
-  handler: async (ctx, args) => {
-    const auth = await getOptionalAppUserForRead(ctx);
+  returns: v.union(
+    v.null(),
+    v.object({
+      attempt: currentAttemptValidator,
+      runtime: v.union(v.null(), sectionRuntimeValidator),
+    })
+  ),
+  handler: (ctx, args) => runConvexProgram(readSetState(ctx, args)),
+});
 
-    if (!auth) {
-      return null;
-    }
-
-    const attempt = await runConvexProgram(
-      readRouteAttempt(ctx, args, auth.appUser._id)
-    );
-
-    if (!attempt) {
-      return null;
-    }
-
-    const section = await ctx.db
-      .query("tryoutSectionAttempts")
-      .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
-        q.eq("tryoutAttemptId", attempt._id).eq("sectionKey", args.sectionKey)
-      )
-      .unique();
-
-    if (!section) {
-      return null;
-    }
-
-    const contentAccess = getTryoutSectionContentAccess(
-      attempt.status,
-      section.status
-    );
-
-    if (!contentAccess.questions) {
-      return null;
-    }
-
-    const placements = await loadRuntimePlacements(ctx, attempt, section);
-
-    if (placements.length !== section.totalQuestions) {
-      throw new ConvexError({
-        code: "TRYOUT_PLACEMENT_COUNT_EXCEEDED",
-        message: "Try-out section has more placements than its snapshot count.",
-      });
-    }
-
-    const responses = await loadRuntimeResponses(ctx, section);
-    const questions = placements.map((placement) => {
-      const response = responses.get(placement._id) ?? null;
-      const choices = [...placement.choiceSnapshots].sort(
-        (left, right) => left.order - right.order
-      );
-
-      return {
-        choices: choices.map((choice) => ({
-          ...(contentAccess.answers ? { isCorrect: choice.isCorrect } : {}),
-          label: choice.label,
-          optionKey: choice.optionKey,
-          order: choice.order,
-        })),
-        contentHash: placement.contentHash,
-        placementId: placement._id,
-        questionOrder: placement.questionOrder,
-        response: response
-          ? {
-              answeredAt: response.answeredAt,
-              selectedOptionId: response.selectedOptionId,
-              updatedAt: response.updatedAt,
-            }
-          : null,
-        sourcePath: placement.sourcePath,
-        sourceRevision: placement.sourceRevision,
-        title: placement.title,
-      };
-    });
-
-    return {
-      attemptId: attempt._id,
-      expiresAt: section.expiresAt,
-      questions,
-      section: {
-        answeredCount: section.answeredCount,
-        completedAt: section.completedAt,
-        endReason: section.endReason,
-        expiresAt: section.expiresAt,
-        score: getSectionScoreResult(section),
-        sectionKey: section.sectionKey,
-        startedAt: section.startedAt,
-        status: section.status,
-        totalQuestions: section.totalQuestions,
-      },
-    };
+/** Loads the reactive attempt and section runtime through one authenticated read. */
+export const getSectionState = query({
+  args: {
+    attemptId: v.optional(v.string()),
+    locale: localeValidator,
+    publicPath: v.string(),
   },
+  returns: v.union(
+    v.null(),
+    v.object({
+      attempt: sectionAttemptStateValidator,
+      runtime: v.union(v.null(), sectionRuntimeValidator),
+    })
+  ),
+  handler: (ctx, args) => runConvexProgram(readSectionState(ctx, args)),
 });

@@ -3,7 +3,7 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
-import { getTryoutHref } from "@/components/tryout/route/path";
+import type { TryoutSectionAttempt } from "@/components/tryout/runtime/types";
 import {
   type TryoutStartDestination,
   TryoutSummaryAction,
@@ -13,17 +13,7 @@ import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
 type SectionPage = NonNullable<FunctionReturnType<SectionPageQuery>>;
-type CurrentAttempt = FunctionReturnType<
-  typeof api.tryouts.queries.attempt.getCurrent
->;
-
-interface TryoutSectionRoute {
-  country: string;
-  exam: string;
-  section: string;
-  set: string;
-  track: string;
-}
+type CurrentAttempt = TryoutSectionAttempt | null;
 
 /** Public visible-section summary contract. */
 export interface TryoutVisibleSummaryValue {
@@ -32,7 +22,6 @@ export interface TryoutVisibleSummaryValue {
   locale: Locale;
   page: SectionPage;
   returnHref: string;
-  route: TryoutSectionRoute;
   sectionStatus: TryoutFinishedSectionStatus | null;
   startDestination: TryoutStartDestination | null;
 }
@@ -43,9 +32,6 @@ export function TryoutVisibleSummary({
 }: {
   value: TryoutVisibleSummaryValue;
 }) {
-  const { route } = value;
-  const sectionHref = getTryoutHref(route);
-
   return (
     <TryoutSectionSummary
       value={{
@@ -63,7 +49,6 @@ export function TryoutVisibleSummary({
           returnHref: value.returnHref,
           section: value.page.section,
           sectionFinished: value.sectionStatus !== null,
-          sectionHref,
           set: value.page.set,
           startDestination: value.startDestination,
         }}

@@ -71,7 +71,6 @@ function TryoutSetSections({ value }: { value: TryoutSetView }) {
         locale: value.route.locale,
         questionUnitLabel: tTryouts("question-unit"),
         sections: value.page.sections,
-        set: value.page.set,
       }}
     />
   );

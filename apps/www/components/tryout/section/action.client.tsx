@@ -1,16 +1,18 @@
 "use client";
 
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
-import type { api } from "@repo/backend/convex/_generated/api";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
-import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
-import { getTryoutAttemptHref } from "@/components/tryout/route/path";
+import {
+  getTryoutAttemptHref,
+  getTryoutPublicPath,
+} from "@/components/tryout/route/path";
+import type { TryoutSectionAttempt } from "@/components/tryout/runtime/types";
 import { StartSectionButton } from "@/components/tryout/section/start";
 import type { TryoutSummarySection } from "@/components/tryout/section/summary";
 import {
@@ -18,9 +20,7 @@ import {
   type StartTryoutRequest,
 } from "@/components/tryout/set/start";
 
-type CurrentAttempt = FunctionReturnType<
-  typeof api.tryouts.queries.attempt.getCurrent
->;
+type CurrentAttempt = TryoutSectionAttempt | null;
 type CompletedAction = "restart" | "return";
 
 interface TryoutSummarySet {
@@ -45,7 +45,6 @@ export interface TryoutSummaryActionValue {
   returnHref: string;
   section: TryoutSummarySection;
   sectionFinished: boolean;
-  sectionHref: string;
   set: TryoutSummarySet;
   startAttemptSectionKey?: string;
   startDestination: TryoutStartDestination | null;
@@ -56,8 +55,6 @@ interface ResumeSectionValue {
   locale: Locale;
   returnHref: string;
   section: TryoutSummarySection;
-  sectionHref: string;
-  set: TryoutSummarySet;
 }
 
 /** Renders the only valid action for the current section summary state. */
@@ -75,7 +72,6 @@ export function TryoutSummaryAction({
       href={value.returnHref}
       onIntent={() =>
         prewarmData({
-          directEntry: null,
           kind: "set",
           locale: value.locale,
           publicPath: value.returnHref.slice(1),
@@ -99,8 +95,6 @@ export function TryoutSummaryAction({
           locale: value.locale,
           returnHref: value.returnHref,
           section: value.section,
-          sectionHref: value.sectionHref,
-          set: value.set,
         }}
       />
     );
@@ -144,14 +138,9 @@ function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
         onIntent={() =>
           prewarmData({
             attemptId: value.activeAttempt.attemptId,
-            countryKey: value.set.countryKey,
-            examKey: value.set.examKey,
             kind: "section",
             locale: value.locale,
-            sectionKey:
-              value.activeAttempt.resumeSectionKey ?? value.section.sectionKey,
-            setKey: value.set.setKey,
-            trackKey: value.set.trackKey,
+            publicPath: getTryoutPublicPath(resumeHref),
           })
         }
       >

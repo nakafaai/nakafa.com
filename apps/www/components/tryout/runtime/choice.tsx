@@ -37,22 +37,46 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
   const saveResponse = useMutation(
     api.tryouts.mutations.attempts.saveResponse
   ).withOptimisticUpdate((localStore, args) => {
-    const runtimeQueries = localStore.getAllQueries(
-      api.tryouts.queries.runtime.getSection
+    const sectionQueries = localStore.getAllQueries(
+      api.tryouts.queries.runtime.getSectionState
     );
 
-    for (const runtimeQuery of runtimeQueries) {
-      if (!runtimeQuery.value) {
+    for (const sectionQuery of sectionQueries) {
+      const state = sectionQuery.value;
+      const runtime = state?.runtime;
+      if (!runtime) {
         continue;
       }
 
-      const nextRuntime = applyOptimisticResponse(runtimeQuery.value, args);
+      const nextRuntime = applyOptimisticResponse(runtime, args);
 
       if (nextRuntime) {
         localStore.setQuery(
-          api.tryouts.queries.runtime.getSection,
-          runtimeQuery.args,
-          nextRuntime
+          api.tryouts.queries.runtime.getSectionState,
+          sectionQuery.args,
+          { ...state, runtime: nextRuntime }
+        );
+      }
+    }
+
+    const setQueries = localStore.getAllQueries(
+      api.tryouts.queries.runtime.getSetState
+    );
+
+    for (const setQuery of setQueries) {
+      const state = setQuery.value;
+      const runtime = state?.runtime;
+      if (!runtime) {
+        continue;
+      }
+
+      const nextRuntime = applyOptimisticResponse(runtime, args);
+
+      if (nextRuntime) {
+        localStore.setQuery(
+          api.tryouts.queries.runtime.getSetState,
+          setQuery.args,
+          { ...state, runtime: nextRuntime }
         );
       }
     }

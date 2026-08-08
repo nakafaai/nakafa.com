@@ -1,10 +1,16 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-/** Runtime data returned by the active try-out section query. */
-export type TryoutSectionRuntime = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.runtime.getSection>
+/** Cohesive reactive state returned for one try-out section route. */
+export type TryoutSectionState = NonNullable<
+  FunctionReturnType<typeof api.tryouts.queries.runtime.getSectionState>
 >;
+
+/** Attempt state returned with one reactive try-out section. */
+export type TryoutSectionAttempt = TryoutSectionState["attempt"];
+
+/** Runtime data returned by one reactive try-out section state. */
+export type TryoutSectionRuntime = NonNullable<TryoutSectionState["runtime"]>;
 
 /** One ordered question in an active try-out section runtime. */
 export type TryoutRuntimeQuestion = TryoutSectionRuntime["questions"][number];

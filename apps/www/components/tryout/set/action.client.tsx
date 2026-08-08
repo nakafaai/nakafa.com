@@ -1,25 +1,21 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
-import type { TryoutSetDestination } from "@/components/tryout/set/model";
+import type {
+  CurrentAttempt,
+  SetEntrySection,
+  SetPage,
+  TryoutSetDestination,
+} from "@/components/tryout/set/model";
 import {
   StartTryoutButton,
   type StartTryoutRequest,
 } from "@/components/tryout/set/start";
 
-type SetPageQuery = typeof api.tryouts.queries.catalog.getSetPage;
-type SetPage = NonNullable<FunctionReturnType<SetPageQuery>>;
-type SetEntrySection = NonNullable<SetPage["entrySection"]>;
-type CurrentAttempt = FunctionReturnType<
-  typeof api.tryouts.queries.attempt.getCurrent
->;
-
 export interface TryoutSetActionValue {
-  activeAttempt: NonNullable<CurrentAttempt> | null;
-  currentAttempt?: CurrentAttempt;
+  activeAttempt: CurrentAttempt | null;
+  currentAttempt?: CurrentAttempt | null;
   currentHref: string;
   destination: TryoutSetDestination | null;
   entrySection: SetEntrySection | null;
