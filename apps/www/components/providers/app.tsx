@@ -1,5 +1,5 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { ConvexProvider } from "@/components/providers/convex";
 import { ReactQueryProviders } from "@/components/providers/react-query";
 import { UserContextProvider } from "@/lib/context/use-user";
@@ -15,17 +15,11 @@ import { UserContextProvider } from "@/lib/context/use-user";
  * @see https://docs.convex.dev/client/nextjs/app-router/server-rendering
  * @see https://labs.convex.dev/better-auth
  */
-export function AppProviders({
-  children,
-  initialToken,
-}: {
-  children: ReactNode;
-  initialToken?: ComponentProps<typeof ConvexProvider>["initialToken"];
-}) {
+export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <NuqsAdapter>
       <ReactQueryProviders>
-        <ConvexProvider initialToken={initialToken}>
+        <ConvexProvider>
           <UserContextProvider>{children}</UserContextProvider>
         </ConvexProvider>
       </ReactQueryProviders>
