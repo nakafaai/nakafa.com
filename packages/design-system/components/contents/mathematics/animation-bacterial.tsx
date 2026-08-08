@@ -38,17 +38,9 @@ const SPEED_VALUES = Array.from(
   (_, i) => SPEED_VALUES_DIFFERENCE * (i + 1)
 );
 
-type FormulaType = "geometric" | "exponential" | "custom";
+type FormulaType = "geometric" | "exponential";
 
 interface BacterialGrowthProps {
-  /**
-   * The custom formula to use.
-   */
-  customFormula?: (
-    initialCount: number,
-    ratio: number,
-    generation: number
-  ) => number;
   /**
    * The type of formula to use.
    * @default "geometric"
@@ -104,7 +96,6 @@ export function BacterialGrowth({
   initialCount = 1,
   maxGenerations = 6,
   formulaType = "geometric",
-  customFormula,
   timeInterval = 1, // Default: 1 hour
   timeUnit = "h", // Default: hours
   labels = {
@@ -131,24 +122,16 @@ export function BacterialGrowth({
 
   // Calculate current bacteria count based on the selected formula type
   const bacteriaCount = useMemo(() => {
-    if (customFormula) {
-      return customFormula(initialCount, ratio, deferredGeneration);
+    if (formulaType === "geometric") {
+      // U_n = a·r^(n-1) (standard geometric sequence formula)
+      // For bacterial growth: bacteria after n generations = initial × ratio^(generation)
+      // We always start index from 0, so we don't need to subtract 1 from the generation
+      return initialCount * ratio ** deferredGeneration;
     }
 
-    switch (formulaType) {
-      case "geometric":
-        // U_n = a·r^(n-1) (standard geometric sequence formula)
-        // For bacterial growth: bacteria after n generations = initial × ratio^(generation)
-        // We always start index from 0, so we don't need to subtract 1 from the generation
-        return initialCount * ratio ** deferredGeneration;
-      case "exponential":
-        // B(t) = B₀ × e^(kt) where k = ln(ratio)
-        return initialCount * Math.exp(Math.log(ratio) * deferredGeneration);
-      default:
-        // Default to geometric for backward compatibility
-        return initialCount * ratio ** deferredGeneration;
-    }
-  }, [initialCount, deferredGeneration, ratio, formulaType, customFormula]);
+    // B(t) = B₀ × e^(kt) where k = ln(ratio)
+    return initialCount * Math.exp(Math.log(ratio) * deferredGeneration);
+  }, [initialCount, deferredGeneration, ratio, formulaType]);
 
   // Create an array of bacteria to display
   const bacteria = useMemo(

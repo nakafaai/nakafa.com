@@ -33,21 +33,13 @@ interface Props {
 /**
  * Recursive component to render nested headings
  */
-function SidebarTreeItem({
-  heading,
-  depth = 0,
-}: {
-  heading: ParsedHeading;
-  depth?: number;
-}) {
+function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
   const activeHeadings = useToc((context) => context.activeHeadings);
   const scrollToIndex = useVirtual((context) => context.scrollToIndex);
 
   const id = slugify(heading.label);
-
-  const hasIndex = heading.index !== undefined;
-  // TODO: disable isActive when hasIndex until fix is coming
-  const isActive = activeHeadings.includes(id) && !hasIndex;
+  const virtualIndex = heading.index;
+  const isActive = virtualIndex === undefined && activeHeadings.includes(id);
 
   return (
     <SidebarMenuItem key={heading.href}>
@@ -57,18 +49,16 @@ function SidebarTreeItem({
             <SidebarMenuButton
               isActive={isActive}
               render={
-                hasIndex ? (
+                virtualIndex === undefined ? (
+                  <NavigationLink href={heading.href} title={heading.label} />
+                ) : (
                   <button
                     aria-label={heading.label}
                     onClick={() => {
-                      if (heading.index !== undefined) {
-                        scrollToIndex(heading.index);
-                      }
+                      scrollToIndex(virtualIndex);
                     }}
                     type="button"
                   />
-                ) : (
-                  <NavigationLink href={heading.href} title={heading.label} />
                 )
               }
             >
@@ -90,11 +80,7 @@ function SidebarTreeItem({
       {!!heading.children && heading.children.length > 0 && (
         <SidebarMenuSub>
           {heading.children.map((child) => (
-            <SidebarTreeItem
-              depth={depth + 1}
-              heading={child}
-              key={child.href}
-            />
+            <SidebarTreeItem heading={child} key={child.href} />
           ))}
         </SidebarMenuSub>
       )}
