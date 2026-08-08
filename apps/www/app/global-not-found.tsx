@@ -84,7 +84,12 @@ function NotFoundDocument({
   messages: (typeof dictionaries)[keyof typeof dictionaries]["NotFound"];
 }) {
   return (
-    <html className={fonts} lang={locale} suppressHydrationWarning>
+    <html
+      className={fonts}
+      data-scroll-behavior="smooth"
+      lang={locale}
+      suppressHydrationWarning
+    >
       <head>
         <ThemeBootstrap defaultTheme="system" />
       </head>

@@ -28,7 +28,12 @@ export default function GlobalError({
 
   return (
     // global-error must include html and body tags
-    <html className={fonts} lang="en" suppressHydrationWarning>
+    <html
+      className={fonts}
+      data-scroll-behavior="smooth"
+      lang="en"
+      suppressHydrationWarning
+    >
       <head>
         <ThemeBootstrap />
       </head>

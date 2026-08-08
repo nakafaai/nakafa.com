@@ -149,7 +149,12 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
   const messages = await getMessages();
 
   return (
-    <html className={fonts} lang={locale} suppressHydrationWarning>
+    <html
+      className={fonts}
+      data-scroll-behavior="smooth"
+      lang={locale}
+      suppressHydrationWarning
+    >
       <head>
         <ThemeBootstrap />
       </head>
