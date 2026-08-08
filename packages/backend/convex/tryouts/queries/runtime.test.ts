@@ -72,6 +72,19 @@ describe("tryouts/queries/runtime", () => {
       },
     });
     expect(state?.runtime?.questions).toHaveLength(1);
+
+    await t.mutation((ctx) =>
+      ctx.db.patch(started.attemptId, {
+        completedAt: TRYOUT_START_NOW + 1,
+        status: "completed",
+      })
+    );
+    await expect(
+      authed.query(api.tryouts.queries.runtime.getSetState, {
+        locale: "id",
+        publicPath: setPublicPath,
+      })
+    ).resolves.toBeNull();
   });
 
   it("keeps explicit state bound to its exact frozen attempt", async () => {

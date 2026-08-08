@@ -236,15 +236,23 @@ const readRoutePage = cache(
       };
     }
 
-    const result = await Effect.runPromise(
-      Effect.all(
-        {
-          attemptPage: readTryoutAttemptSectionRoute(token, locale, publicPath),
-          preloadedState: preloadTryoutSectionState(token, stateArgs),
-        },
-        { concurrency: "unbounded" }
-      )
+    const attemptPage = await Effect.runPromise(
+      readTryoutAttemptSectionRoute(token, locale, publicPath)
     );
-    return { ...result, authRequired: false, publicPage };
+    if (!attemptPage) {
+      return {
+        attemptPage: null,
+        authRequired: false,
+        preloadedState: undefined,
+        publicPage,
+      };
+    }
+    const preloadedState = await Effect.runPromise(
+      preloadTryoutSectionState(token, {
+        ...stateArgs,
+        attemptId: attemptPage.attemptId,
+      })
+    );
+    return { attemptPage, authRequired: false, preloadedState, publicPage };
   }
 );
