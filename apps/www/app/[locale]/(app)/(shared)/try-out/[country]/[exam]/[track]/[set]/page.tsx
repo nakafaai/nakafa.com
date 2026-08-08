@@ -183,15 +183,23 @@ const readRoutePage = cache(
       };
     }
 
-    const result = await Effect.runPromise(
-      Effect.all(
-        {
-          attemptPage: readTryoutAttemptSetRoute(token, locale, publicPath),
-          preloadedState: preloadTryoutSetState(token, stateArgs),
-        },
-        { concurrency: "unbounded" }
-      )
+    const attemptPage = await Effect.runPromise(
+      readTryoutAttemptSetRoute(token, locale, publicPath)
     );
-    return { ...result, authRequired: false, publicPage };
+    if (!attemptPage) {
+      return {
+        attemptPage: null,
+        authRequired: false,
+        preloadedState: undefined,
+        publicPage,
+      };
+    }
+    const preloadedState = await Effect.runPromise(
+      preloadTryoutSetState(token, {
+        ...stateArgs,
+        attemptId: attemptPage.attemptId,
+      })
+    );
+    return { attemptPage, authRequired: false, preloadedState, publicPage };
   }
 );

@@ -39,6 +39,9 @@ const readCurrentUserSetAttempt = Effect.fn(
   if (!attempt || attempt.locale !== args.locale) {
     return null;
   }
+  if (!args.attemptId && attempt.status !== "in-progress") {
+    return null;
+  }
   if (args.attemptId && attempt.setPublicPath !== args.publicPath) {
     return null;
   }
