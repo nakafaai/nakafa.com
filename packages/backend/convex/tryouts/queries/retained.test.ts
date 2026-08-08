@@ -51,13 +51,13 @@ describe("tryouts/queries/retained", () => {
 
     await t.mutation(activateRenamedTryoutStartSource);
     await expect(
-      authed.query(api.tryouts.queries.retained.getAttemptSetPage, {
+      authed.query(api.tryouts.queries.retained.getAttemptSetRoute, {
         locale: "id",
         publicPath: TRYOUT_RENAMED_SET_PATH,
       })
     ).resolves.toMatchObject({ attemptId: started.attemptId });
     await expect(
-      authed.query(api.tryouts.queries.retained.getAttemptSetPage, {
+      authed.query(api.tryouts.queries.retained.getAttemptSetRoute, {
         attemptId: started.attemptId,
         locale: "id",
         publicPath: setPath,
@@ -77,13 +77,13 @@ describe("tryouts/queries/retained", () => {
 
     await t.mutation(activateReusedTryoutStartPath);
     await expect(
-      authed.query(api.tryouts.queries.retained.getAttemptSetPage, {
+      authed.query(api.tryouts.queries.retained.getAttemptSetRoute, {
         locale: "id",
         publicPath: setPath,
       })
     ).resolves.toBeNull();
     await expect(
-      authed.query(api.tryouts.queries.retained.getAttemptSetPage, {
+      authed.query(api.tryouts.queries.retained.getAttemptSetRoute, {
         attemptId: started.attemptId,
         locale: "id",
         publicPath: setPath,
@@ -97,7 +97,7 @@ describe("tryouts/queries/retained", () => {
       ctx.db.patch(started.attemptId, { completedAt: 1, status: "completed" })
     );
     await expect(
-      authed.query(api.tryouts.queries.retained.getAttemptSetPage, {
+      authed.query(api.tryouts.queries.retained.getAttemptSetRoute, {
         locale: "id",
         publicPath: setPath,
       })
@@ -152,7 +152,7 @@ describe("tryouts/queries/retained", () => {
       });
     });
     await expect(
-      authed.query(api.tryouts.queries.retained.getAttemptSectionPage, {
+      authed.query(api.tryouts.queries.retained.getAttemptSectionRoute, {
         locale: "id",
         publicPath: sectionPath,
       })
@@ -169,7 +169,7 @@ describe("tryouts/queries/retained", () => {
       publicPath: sectionPath,
     });
     const retained = await authed.query(
-      api.tryouts.queries.retained.getAttemptSectionPage,
+      api.tryouts.queries.retained.getAttemptSectionRoute,
       { locale: "id", publicPath: sectionPath }
     );
     expect(active).toMatchObject({
@@ -181,7 +181,7 @@ describe("tryouts/queries/retained", () => {
       ctx.db.patch(started.attemptId, { completedAt: 1, status: "completed" })
     );
     await expect(
-      authed.query(api.tryouts.queries.retained.getAttemptSectionPage, {
+      authed.query(api.tryouts.queries.retained.getAttemptSectionRoute, {
         attemptId: started.attemptId,
         locale: "id",
         publicPath: sectionPath,

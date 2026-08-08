@@ -5,7 +5,10 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import type { TryoutSectionIdentity } from "@repo/backend/convex/contentRelease/tryout/section";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
-import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
+import {
+  readTryoutCatalogRowByIdentity,
+  readTryoutCatalogRowByPath,
+} from "@repo/backend/convex/tryouts/catalog/row";
 import { Effect } from "effect";
 
 interface TryoutDestinationIdentity extends TryoutSetIdentity {
@@ -27,7 +30,11 @@ export const readTryoutDestinationPaths = Effect.fn(
     setKey: identity.setKey,
     trackKey: identity.trackKey,
   });
-  const set = yield* readCatalogRowByIdentity(ctx, snapshotId, setIdentity);
+  const set = yield* readTryoutCatalogRowByIdentity(
+    ctx,
+    snapshotId,
+    setIdentity
+  );
   if (set && set.kind !== "set") {
     return yield* destinationIntegrity(
       "Active try-out set changed its row kind."
@@ -46,7 +53,11 @@ export const readTryoutDestinationPaths = Effect.fn(
       setKey: identity.setKey,
       trackKey: identity.trackKey,
     });
-    section = yield* readCatalogRowByIdentity(ctx, snapshotId, sectionIdentity);
+    section = yield* readTryoutCatalogRowByIdentity(
+      ctx,
+      snapshotId,
+      sectionIdentity
+    );
     if (section && section.kind !== "section") {
       return yield* destinationIntegrity(
         "Active try-out section changed its row kind."
@@ -56,7 +67,7 @@ export const readTryoutDestinationPaths = Effect.fn(
 
   let requestedSectionMatches: boolean | null = null;
   if (identity.requestedSectionPublicPath && sectionIdentity) {
-    const requested = yield* readCatalogRowByPath(ctx, snapshotId, {
+    const requested = yield* readTryoutCatalogRowByPath(ctx, snapshotId, {
       locale: identity.locale,
       publicPath: identity.requestedSectionPublicPath,
     });
@@ -76,52 +87,6 @@ export const readTryoutDestinationPaths = Effect.fn(
     requestedSectionMatches,
   };
 });
-
-/** Reads and verifies one exact active catalog identity. */
-const readCatalogRowByIdentity = Effect.fn(
-  "tryouts.catalog.readDestinationIdentity"
-)(function* (ctx: QueryCtx, snapshotId: string, identity: string) {
-  const stored = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutCatalog")
-      .withIndex("by_snapshotId_and_identity", (index) =>
-        index.eq("snapshotId", snapshotId).eq("identity", identity)
-      )
-      .unique()
-  );
-  if (!stored) {
-    return null;
-  }
-  return yield* verifyTryoutCatalog(stored, snapshotId);
-});
-
-/** Reads and verifies one exact active public route. */
-const readCatalogRowByPath = Effect.fn("tryouts.catalog.readDestinationPath")(
-  function* (
-    ctx: QueryCtx,
-    snapshotId: string,
-    input: {
-      readonly locale: TryoutSetIdentity["locale"];
-      readonly publicPath: string;
-    }
-  ) {
-    const stored = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
-          index
-            .eq("snapshotId", snapshotId)
-            .eq("locale", input.locale)
-            .eq("publicPath", input.publicPath)
-        )
-        .unique()
-    );
-    if (!stored) {
-      return null;
-    }
-    return yield* verifyTryoutCatalog(stored, snapshotId);
-  }
-);
 
 /** Rejects a malformed active destination instead of guessing a route. */
 function destinationIntegrity(message: string) {

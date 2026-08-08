@@ -1,17 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import {
   getTryoutSectionContentAccess,
   type TryoutSectionContentAccess,
-  type TryoutSectionContentArgs,
 } from "@repo/backend/convex/tryouts/runtime/content";
-import {
-  matchesAttemptIdentity,
-  readAttemptSetIdentity,
-  readOwnedAttemptById,
-  readRouteAttempt,
-} from "@repo/backend/convex/tryouts/runtime/lookup";
 import { loadTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
 import { Effect, Schema } from "effect";
 
@@ -29,27 +21,24 @@ class TryoutContentReadError extends Schema.TaggedError<TryoutContentReadError>(
   }
 ) {}
 
-/** Resolves content access from the current user's latest owned attempt. */
-export const readTryoutSectionContent = Effect.fn(
-  "tryouts.access.readSectionContent"
-)(function* (ctx: QueryCtx, args: TryoutSectionContentArgs) {
-  const auth = yield* tryContentPromise(() => getOptionalAppUserForRead(ctx));
-  if (!auth) {
-    return noContentAccess;
+/** Resolves content from an attempt already authenticated by its route query. */
+export const readOwnedTryoutSectionContent = Effect.fn(
+  "tryouts.access.readOwnedSectionContent"
+)(function* (
+  ctx: QueryCtx,
+  input: {
+    readonly attempt: Doc<"tryoutAttempts">;
+    readonly locale: Doc<"tryoutAttempts">["locale"];
+    readonly sectionKey: Doc<"tryoutSectionAttempts">["sectionKey"];
   }
-
-  const attempt = yield* readContentAttempt(ctx, args, auth.appUser._id);
-  if (!attempt) {
-    return noContentAccess;
-  }
-
+) {
   const requestedSection = yield* tryContentPromise(() =>
     ctx.db
       .query("tryoutSectionAttempts")
       .withIndex("by_tryoutAttemptId_and_sectionKey", (index) =>
         index
-          .eq("tryoutAttemptId", attempt._id)
-          .eq("sectionKey", args.sectionKey)
+          .eq("tryoutAttemptId", input.attempt._id)
+          .eq("sectionKey", input.sectionKey)
       )
       .unique()
   );
@@ -58,7 +47,7 @@ export const readTryoutSectionContent = Effect.fn(
   }
 
   const access = getTryoutSectionContentAccess(
-    attempt.status,
+    input.attempt.status,
     requestedSection.status
   );
   if (!access.questions) {
@@ -67,49 +56,15 @@ export const readTryoutSectionContent = Effect.fn(
 
   return yield* loadTryoutSignedContent({
     access,
-    attempt,
+    attempt: input.attempt,
     ctx,
-    locale: args.locale,
+    locale: input.locale,
     sectionKey: requestedSection.sectionKey,
-    snapshotReleaseId: attempt.snapshotReleaseId,
-    snapshotId: attempt.tryoutSnapshotId,
+    snapshotReleaseId: input.attempt.snapshotReleaseId,
+    snapshotId: input.attempt.tryoutSnapshotId,
     totalQuestions: requestedSection.totalQuestions,
   });
 });
-
-/** Resolves either one route-bound attempt or the latest logical set attempt. */
-const readContentAttempt = Effect.fn("tryouts.access.readContentAttempt")(
-  function* (
-    ctx: QueryCtx,
-    args: TryoutSectionContentArgs,
-    userId: Doc<"users">["_id"]
-  ) {
-    const attemptId = args.attemptId;
-    if (!attemptId) {
-      return yield* readRouteAttempt(ctx, args, userId);
-    }
-
-    const attempt = yield* readOwnedAttemptById(ctx, attemptId, userId);
-    if (!attempt) {
-      return null;
-    }
-    const attemptIdentity = readAttemptSetIdentity(attempt);
-    if (!matchesAttemptIdentity(attemptIdentity, args)) {
-      return yield* contentIntegrity(
-        "Try-out content request differs from its frozen attempt identity."
-      );
-    }
-    return attempt;
-  }
-);
-
-/** Creates one typed fail-closed content integrity error. */
-function contentIntegrity(message: string) {
-  return new TryoutContentReadError({
-    code: "TRYOUT_CONTENT_INTEGRITY",
-    message,
-  });
-}
 
 /** Lifts one Convex read into the typed content error channel. */
 function tryContentPromise<A>(operation: () => Promise<A>) {

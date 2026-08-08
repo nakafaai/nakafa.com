@@ -3,8 +3,8 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import { useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
+import { type Preloaded, usePreloadedQuery, useQuery } from "convex/react";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type {
@@ -20,7 +20,10 @@ import {
   getTryoutRuntimeState,
   type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
-import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import type {
+  TryoutSectionAttempt,
+  TryoutSectionRuntime,
+} from "@/components/tryout/runtime/types";
 import type { TryoutStartDestination } from "@/components/tryout/section/action.client";
 import {
   getTryoutFinishedSectionDescription,
@@ -31,11 +34,14 @@ import { TryoutPageHeader } from "@/components/tryout/shell/header";
 import { TryoutMeta } from "@/components/tryout/shell/meta";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
+type SectionStateQuery = typeof api.tryouts.queries.runtime.getSectionState;
+type SectionState = FunctionReturnType<SectionStateQuery>;
 
 interface TryoutSectionPageClientProps {
   binding: TryoutSectionRouteBinding;
   content: TryoutSectionAssets;
   page: NonNullable<FunctionReturnType<SectionPageQuery>>;
+  preloadedState?: Preloaded<SectionStateQuery>;
   route: TryoutSectionRoute;
   setHref: string;
 }
@@ -67,30 +73,88 @@ export function TryoutSectionPageClient({
   binding,
   content,
   page,
+  preloadedState,
   route,
   setHref,
 }: TryoutSectionPageClientProps) {
-  const runtimeArgs = {
+  const runtimeArgs: FunctionArgs<SectionStateQuery> = {
     ...(binding.kind === "retained" ? { attemptId: binding.attemptId } : {}),
-    countryKey: page.set.countryKey,
-    examKey: page.set.examKey,
     locale: route.locale,
-    sectionKey: page.section.sectionKey,
-    setKey: page.set.setKey,
-    trackKey: page.set.trackKey,
+    publicPath: getTryoutHref(route).slice(1),
   };
-  const attempt = useQuery(api.tryouts.queries.attempt.getCurrent, runtimeArgs);
-  const runtime = useQuery(api.tryouts.queries.runtime.getSection, runtimeArgs);
+
+  if (preloadedState) {
+    return (
+      <PreloadedTryoutSectionPage
+        binding={binding}
+        content={content}
+        page={page}
+        preloadedState={preloadedState}
+        route={route}
+        setHref={setHref}
+      />
+    );
+  }
+
+  return (
+    <LiveTryoutSectionPage
+      binding={binding}
+      content={content}
+      page={page}
+      route={route}
+      runtimeArgs={runtimeArgs}
+      setHref={setHref}
+    />
+  );
+}
+
+/** Hydrates the server-fetched state before its live subscription resolves. */
+function PreloadedTryoutSectionPage({
+  preloadedState,
+  ...props
+}: TryoutSectionPageClientProps & {
+  preloadedState: Preloaded<SectionStateQuery>;
+}) {
+  const state = usePreloadedQuery(preloadedState);
+  return <ResolvedTryoutSectionPage {...props} state={state} />;
+}
+
+/** Loads one live state when the public route had no authenticated preload. */
+function LiveTryoutSectionPage({
+  runtimeArgs,
+  ...props
+}: Omit<TryoutSectionPageClientProps, "preloadedState"> & {
+  runtimeArgs: FunctionArgs<SectionStateQuery>;
+}) {
+  const state = useQuery(
+    api.tryouts.queries.runtime.getSectionState,
+    runtimeArgs
+  );
+  if (state === undefined) {
+    return null;
+  }
+  return <ResolvedTryoutSectionPage {...props} state={state} />;
+}
+
+/** Renders the stable section UI from one cohesive reactive state. */
+function ResolvedTryoutSectionPage({
+  binding,
+  content,
+  page,
+  route,
+  setHref,
+  state,
+}: Omit<TryoutSectionPageClientProps, "preloadedState"> & {
+  state: SectionState;
+}) {
+  const attempt = state?.attempt ?? null;
+  const runtime = state?.runtime ?? null;
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
   const now = useTryoutClock(
     attempt?.status === "in-progress" ||
       runtime?.section.status === "in-progress"
   );
-
-  if (attempt === undefined || runtime === undefined) {
-    return null;
-  }
 
   const currentAttempt = attempt;
   const activeAttempt = getActiveTryoutAttempt(currentAttempt ?? null, now);
@@ -180,12 +244,8 @@ function TryoutSectionBody({
   value,
 }: {
   value: {
-    actionAttempt: FunctionReturnType<
-      typeof api.tryouts.queries.attempt.getCurrent
-    >;
-    activeAttempt: NonNullable<
-      FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>
-    > | null;
+    actionAttempt: TryoutSectionAttempt | null;
+    activeAttempt: TryoutSectionAttempt | null;
     content: TryoutSectionAssets;
     page: NonNullable<FunctionReturnType<SectionPageQuery>>;
     route: TryoutSectionRoute;
@@ -237,7 +297,6 @@ function TryoutSectionBody({
             locale: value.route.locale,
             page: value.page,
             returnHref: value.setHref,
-            route: value.route,
             sectionStatus: value.sectionStatus,
             startDestination: value.startDestination,
           }}
@@ -263,7 +322,6 @@ function TryoutSectionBody({
         locale: value.route.locale,
         page: value.page,
         returnHref: value.setHref,
-        route: value.route,
         sectionStatus: value.sectionStatus,
         startDestination: value.startDestination,
       }}

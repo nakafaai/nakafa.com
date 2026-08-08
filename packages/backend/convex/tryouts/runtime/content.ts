@@ -1,5 +1,4 @@
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
 import {
@@ -31,21 +30,6 @@ const protectedSelectorFields = {
   sourcePath: v.string(),
   sourceRevision: v.string(),
 };
-
-export const tryoutSectionContentArgs = {
-  attemptId: v.optional(v.id("tryoutAttempts")),
-  countryKey: tryoutRouteKeyValidator,
-  examKey: tryoutRouteKeyValidator,
-  locale: localeValidator,
-  sectionKey: tryoutRouteKeyValidator,
-  setKey: tryoutRouteKeyValidator,
-  trackKey: tryoutRouteKeyValidator,
-};
-
-const tryoutSectionContentArgsValidator = v.object(tryoutSectionContentArgs);
-export type TryoutSectionContentArgs = Infer<
-  typeof tryoutSectionContentArgsValidator
->;
 
 export const tryoutQuestionSelectorValidator = v.object({
   ...protectedSelectorFields,

@@ -29,8 +29,8 @@ export function TryoutShell({ children }: { children: ReactNode }) {
     locale !== null &&
     hasLocale(routing.locales, locale) &&
     setPath !== null;
-  const attempt = useQuery(
-    api.tryouts.queries.attempt.getCurrentByPublicPath,
+  const locked = useQuery(
+    api.tryouts.queries.attempt.isLockedByPublicPath,
     shouldLoadAttempt
       ? {
           locale,
@@ -38,13 +38,11 @@ export function TryoutShell({ children }: { children: ReactNode }) {
         }
       : "skip"
   );
-  const locked = attempt?.status === "in-progress";
-
-  if (shouldLoadAttempt && attempt === undefined) {
+  if (shouldLoadAttempt && locked === undefined) {
     return null;
   }
 
-  return <AppShell locked={locked}>{children}</AppShell>;
+  return <AppShell locked={locked ?? false}>{children}</AppShell>;
 }
 
 /** Normalizes a Next.js route param into one stable segment value. */

@@ -9,15 +9,18 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
-import { getTryoutAttemptHref } from "@/components/tryout/route/path";
+import {
+  getTryoutAttemptHref,
+  getTryoutPublicPath,
+} from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import type { CurrentAttempt } from "@/components/tryout/set/model";
 import { TryoutStartDialog } from "@/components/tryout/set/start-dialog";
 import {
   checkoutProgram,
@@ -27,9 +30,10 @@ import {
 } from "@/components/tryout/set/start-program";
 import { getTryoutStartDialogKind } from "@/lib/tryout/access";
 
-type CurrentAttempt = FunctionReturnType<
-  typeof api.tryouts.queries.attempt.getCurrent
->;
+type StartAttempt = Pick<
+  CurrentAttempt,
+  "attemptId" | "resumeSectionKey" | "status"
+> | null;
 
 export interface StartTryoutRequest {
   authRedirectHref: string;
@@ -45,7 +49,7 @@ export interface StartTryoutRequest {
 }
 
 interface StartTryoutButtonProps {
-  attempt?: CurrentAttempt;
+  attempt?: StartAttempt;
   request: StartTryoutRequest;
 }
 
@@ -233,13 +237,9 @@ export function StartTryoutButton({
         onIntent={() =>
           prewarmData({
             ...(attempt ? { attemptId: attempt.attemptId } : {}),
-            countryKey: request.countryKey,
-            examKey: request.examKey,
             kind: "section",
             locale: request.locale,
-            sectionKey: request.destinationSectionKey,
-            setKey: request.setKey,
-            trackKey: request.trackKey,
+            publicPath: getTryoutPublicPath(request.destinationHref),
           })
         }
       >

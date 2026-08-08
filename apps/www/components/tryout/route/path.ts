@@ -39,6 +39,16 @@ export function getTryoutAttemptHref(publicPath: string, attemptId: string) {
   return `${getTryoutPublicPathHref(publicPath)}?${searchParams.toString()}`;
 }
 
+/** Reads the public path from one route href produced by this module. */
+export function getTryoutPublicPath(href: string) {
+  const searchStart = href.indexOf("?");
+  const pathname = searchStart === -1 ? href : href.slice(0, searchStart);
+  if (pathname.startsWith("/")) {
+    return pathname.slice(1);
+  }
+  return pathname;
+}
+
 /** Preserves an exact attempt capability through localized authentication. */
 export function getTryoutAttemptAuthHref(
   locale: string,

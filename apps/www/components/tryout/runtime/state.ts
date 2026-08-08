@@ -1,10 +1,6 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
-type CurrentAttempt = FunctionReturnType<
-  typeof api.tryouts.queries.attempt.getCurrent
->;
-type TryoutStatus = NonNullable<CurrentAttempt>["status"];
+type TryoutStatus = TryoutSectionRuntime["section"]["status"];
 
 interface TryoutAttemptClock {
   expiresAt: number;

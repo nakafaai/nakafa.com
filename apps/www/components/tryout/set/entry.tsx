@@ -155,7 +155,6 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
         returnHref: parentHref,
         section: value.entrySection,
         sectionFinished,
-        sectionHref: entryHref,
         set: value.page.set,
         startAttemptSectionKey: value.entrySection.sectionKey,
         startDestination: {

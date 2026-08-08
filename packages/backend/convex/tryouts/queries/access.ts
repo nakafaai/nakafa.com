@@ -2,11 +2,6 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { getTryoutStartAccess } from "@repo/backend/convex/tryouts/access/impl";
-import { readTryoutSectionContent } from "@repo/backend/convex/tryouts/runtime/access";
-import {
-  tryoutSectionContentAccessValidator,
-  tryoutSectionContentArgs,
-} from "@repo/backend/convex/tryouts/runtime/content";
 import {
   startAccessArgsValidator,
   toTryoutStartError,
@@ -41,11 +36,4 @@ export const getStartAccess = query({
         });
       })
     ),
-});
-
-/** Authorizes server-rendered content for the current user's owned runtime. */
-export const getSectionContent = query({
-  args: tryoutSectionContentArgs,
-  returns: tryoutSectionContentAccessValidator,
-  handler: (ctx, args) => runConvexProgram(readTryoutSectionContent(ctx, args)),
 });

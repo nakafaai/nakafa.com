@@ -62,14 +62,10 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
     const owner = resolveAttemptOwner(input, source);
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
-      yield* tryStartPromise(() =>
-        Promise.resolve(
-          requireInternalEntrySection(
-            source.snapshot.sections.map(({ section }) => section.row),
-            entrySectionKey
-          )
-        )
-      );
+      yield* requireInternalEntrySection(
+        source.snapshot.sections.map(({ section }) => section.row),
+        entrySectionKey
+      ).pipe(Effect.mapError(toTryoutStartError));
     }
 
     const [attemptNumber, scaleVersion, access] = yield* Effect.all(

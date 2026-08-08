@@ -81,27 +81,29 @@ export const getCurrentTryout = query({
     locale: localeValidator,
   },
   returns: currentTryoutPreferenceValidator,
-  handler: async (ctx, args) => {
-    const user = await getOptionalAppUserForRead(ctx);
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const user = yield* Effect.tryPromise({
+          catch: toLearningPreferenceIoError,
+          try: () => getOptionalAppUserForRead(ctx),
+        });
+        if (!user) {
+          return null;
+        }
 
-    if (!user) {
-      return null;
-    }
+        const preference = yield* readCurrentTryoutCountry(ctx, {
+          locale: args.locale,
+          userId: user.appUser._id,
+        });
+        if (!preference) {
+          return null;
+        }
 
-    const preference = await runConvexProgram(
-      readCurrentTryoutCountry(ctx, {
-        locale: args.locale,
-        userId: user.appUser._id,
+        return {
+          country: toTryoutCountryOption(preference.country),
+          preferredTryoutCountryKey: preference.preferredTryoutCountryKey,
+        };
       })
-    );
-
-    if (!preference) {
-      return null;
-    }
-
-    return {
-      country: toTryoutCountryOption(preference.country),
-      preferredTryoutCountryKey: preference.preferredTryoutCountryKey,
-    };
-  },
+    ),
 });

@@ -10,6 +10,7 @@ import {
   findPublishedSet,
   indexPublishedCatalog,
   type PublishedCatalog,
+  type PublishedCatalogIndex,
   readPublishedSetParents,
   readPublishedSetSections,
   readPublishedTrackParents,
@@ -59,7 +60,6 @@ export function toPublicPublishedSet(set: TryoutSet) {
     countryKey: set.countryKey,
     description: set.description,
     examKey: set.examKey,
-    internalEntrySectionKey: set.internalEntrySectionKey,
     publicPath: set.publicPath,
     readyQuestionCount: set.questionCount,
     readyVisibleSectionCount: set.visibleSectionCount,
@@ -171,6 +171,13 @@ export const readPublishedSetPage = Effect.fn(
   "tryouts.catalog.readPublishedSetPage"
 )(function* (catalog: PublishedCatalog, publicPath: string) {
   const index = yield* indexPublishedCatalog(catalog);
+  return yield* readPublishedSetPageFromIndex(index, publicPath);
+});
+
+/** Reads one set page from a verified set-local catalog index. */
+export const readPublishedSetPageFromIndex = Effect.fn(
+  "tryouts.catalog.readPublishedSetPageFromIndex"
+)(function* (index: PublishedCatalogIndex, publicPath: string) {
   const set = index.sets.find((row) => row.publicPath === publicPath);
   if (!set) {
     return null;
@@ -195,6 +202,13 @@ export const readPublishedSectionPage = Effect.fn(
   "tryouts.catalog.readPublishedSectionPage"
 )(function* (catalog: PublishedCatalog, publicPath: string) {
   const index = yield* indexPublishedCatalog(catalog);
+  return yield* readPublishedSectionPageFromIndex(index, publicPath);
+});
+
+/** Reads one section page from a verified set-local catalog index. */
+export const readPublishedSectionPageFromIndex = Effect.fn(
+  "tryouts.catalog.readPublishedSectionPageFromIndex"
+)(function* (index: PublishedCatalogIndex, publicPath: string) {
   const section = index.sections.find(
     (row) => row.publicPath === publicPath && row.visibility === "visible"
   );

@@ -1,4 +1,3 @@
-import { api } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { loadTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime";
@@ -6,20 +5,8 @@ import {
   TRYOUT_SECTION_KEY,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
-import type { FunctionArgs } from "convex/server";
 import { Cause, Effect, Exit, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const contentArgs: FunctionArgs<
-  typeof api.tryouts.queries.access.getSectionContent
-> = {
-  countryKey: "indonesia",
-  examKey: "snbt",
-  locale: "id",
-  sectionKey: TRYOUT_SECTION_KEY,
-  setKey: "set-1",
-  trackKey: "2027",
-};
 
 beforeEach(() => {
   vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
@@ -35,17 +22,30 @@ describe("tryouts/runtime/selectors", () => {
         suffix: "content-signed-active",
       })
     );
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
+
+    const content = await t.query(async (ctx) => {
+      const attempt = await ctx.db.get(seeded.attemptId);
+      if (!(attempt?.snapshotReleaseId && attempt.tryoutSnapshotId)) {
+        throw new Error("Expected a signed attempt fixture.");
+      }
+      return Effect.runPromise(
+        loadTryoutSignedContent({
+          access: { answers: false, questions: true },
+          attempt,
+          ctx,
+          locale: "id",
+          sectionKey: TRYOUT_SECTION_KEY,
+          snapshotId: attempt.tryoutSnapshotId,
+          snapshotReleaseId: attempt.snapshotReleaseId,
+          totalQuestions: 1,
+        })
+      );
     });
 
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
-    ).resolves.toEqual({
+    expect(content).toEqual({
       answers: [],
       kind: "signed",
-      questions: [seeded.signedContent?.question],
+      questions: [seeded.signedContent.question],
     });
   });
 
@@ -58,20 +58,30 @@ describe("tryouts/runtime/selectors", () => {
         suffix: "content-signed-review",
       })
     );
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
+
+    const content = await t.query(async (ctx) => {
+      const attempt = await ctx.db.get(seeded.attemptId);
+      if (!(attempt?.snapshotReleaseId && attempt.tryoutSnapshotId)) {
+        throw new Error("Expected a signed attempt fixture.");
+      }
+      return Effect.runPromise(
+        loadTryoutSignedContent({
+          access: { answers: true, questions: true },
+          attempt,
+          ctx,
+          locale: "id",
+          sectionKey: TRYOUT_SECTION_KEY,
+          snapshotId: attempt.tryoutSnapshotId,
+          snapshotReleaseId: attempt.snapshotReleaseId,
+          totalQuestions: 1,
+        })
+      );
     });
 
-    await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, {
-        ...contentArgs,
-        attemptId: seeded.attemptId,
-      })
-    ).resolves.toEqual({
-      answers: [seeded.signedContent?.answer],
+    expect(content).toEqual({
+      answers: [seeded.signedContent.answer],
       kind: "signed",
-      questions: [seeded.signedContent?.question],
+      questions: [seeded.signedContent.question],
     });
   });
 
@@ -86,13 +96,26 @@ describe("tryouts/runtime/selectors", () => {
       await ctx.db.patch(fixture.attemptId, { locale: "en" });
       return fixture;
     });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
 
     await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
+      t.query(async (ctx) => {
+        const attempt = await ctx.db.get(seeded.attemptId);
+        if (!(attempt?.snapshotReleaseId && attempt.tryoutSnapshotId)) {
+          throw new Error("Expected a signed attempt fixture.");
+        }
+        return Effect.runPromise(
+          loadTryoutSignedContent({
+            access: { answers: false, questions: true },
+            attempt,
+            ctx,
+            locale: "id",
+            sectionKey: TRYOUT_SECTION_KEY,
+            snapshotId: attempt.tryoutSnapshotId,
+            snapshotReleaseId: attempt.snapshotReleaseId,
+            totalQuestions: 1,
+          })
+        );
+      })
     ).rejects.toThrow(
       "Signed try-out attempt lost its locale or snapshot identity."
     );
@@ -112,13 +135,26 @@ describe("tryouts/runtime/selectors", () => {
       await ctx.db.delete(fixture.placementId);
       return fixture;
     });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
 
     await expect(
-      authed.query(api.tryouts.queries.access.getSectionContent, contentArgs)
+      t.query(async (ctx) => {
+        const attempt = await ctx.db.get(seeded.attemptId);
+        if (!(attempt?.snapshotReleaseId && attempt.tryoutSnapshotId)) {
+          throw new Error("Expected a signed attempt fixture.");
+        }
+        return Effect.runPromise(
+          loadTryoutSignedContent({
+            access: { answers: false, questions: true },
+            attempt,
+            ctx,
+            locale: "id",
+            sectionKey: TRYOUT_SECTION_KEY,
+            snapshotId: attempt.tryoutSnapshotId,
+            snapshotReleaseId: attempt.snapshotReleaseId,
+            totalQuestions: 1,
+          })
+        );
+      })
     ).rejects.toThrow(
       "Signed try-out section lost one or more frozen placements."
     );

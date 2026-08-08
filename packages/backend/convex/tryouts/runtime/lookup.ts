@@ -1,9 +1,9 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
-import { readPublishedSetByPath } from "@repo/backend/convex/tryouts/catalog/hierarchy";
+import { readTryoutCatalogRowByPath } from "@repo/backend/convex/tryouts/catalog/row";
 import type { PaginationOptions } from "convex/server";
 import { Effect } from "effect";
 
@@ -19,11 +19,6 @@ export interface AttemptOwnerIdentity {
 interface PublicSetPath {
   readonly locale: TryoutSetIdentity["locale"];
   readonly publicPath: string;
-}
-
-interface AttemptRouteSelector extends TryoutSetIdentity {
-  readonly attemptId?: Id<"tryoutAttempts">;
-  readonly sectionKey?: string;
 }
 
 /** Reads one bounded attempt set through its immutable signed identity. */
@@ -104,36 +99,17 @@ export function matchesAttemptIdentity(
   );
 }
 
-/** Reads an exact route-bound attempt or the latest logical set attempt. */
-export const readRouteAttempt = Effect.fn("tryouts.runtime.readRouteAttempt")(
-  function* (ctx: QueryCtx, selector: AttemptRouteSelector, userId: UserId) {
-    const attemptId = selector.attemptId;
-    if (!attemptId) {
-      const attempt = yield* readLatestAttempt(ctx, selector, userId);
-      if (selector.sectionKey && attempt?.status !== "in-progress") {
-        return null;
-      }
-      return attempt;
-    }
-
-    const attempt = yield* readOwnedAttemptById(ctx, attemptId, userId);
-    if (!attempt) {
-      return null;
-    }
-    if (!matchesAttemptIdentity(readAttemptSetIdentity(attempt), selector)) {
-      return null;
-    }
-    return attempt;
-  }
-);
-
 /** Reads the latest attempt for one current or frozen public set route. */
 export const readLatestAttemptByPath = Effect.fn(
   "tryouts.runtime.readLatestAttemptByPath"
 )(function* (ctx: QueryCtx, path: PublicSetPath, userId: UserId) {
-  const catalog = yield* loadTryoutCatalog(ctx, path.locale);
-  const activeSet = yield* readPublishedSetByPath(catalog, path.publicPath);
-  if (activeSet) {
+  const owner = yield* loadTryoutOwner(ctx);
+  const activeSet = yield* readTryoutCatalogRowByPath(
+    ctx,
+    owner.snapshotId,
+    path
+  );
+  if (activeSet?.kind === "set") {
     return yield* readLatestOwnedAttempt(ctx, {
       setIdentity: tryoutCatalogIdentity(activeSet),
       userId,
@@ -165,9 +141,9 @@ export const readAttemptHistoryPage = Effect.fn(
   userId: UserId,
   pagination: PaginationOptions
 ) {
-  const catalog = yield* loadTryoutCatalog(ctx, path.locale);
-  const set = yield* readPublishedSetByPath(catalog, path.publicPath);
-  if (!set) {
+  const owner = yield* loadTryoutOwner(ctx);
+  const set = yield* readTryoutCatalogRowByPath(ctx, owner.snapshotId, path);
+  if (set?.kind !== "set") {
     return { continueCursor: "", isDone: true, page: [] };
   }
   return yield* Effect.promise(() =>

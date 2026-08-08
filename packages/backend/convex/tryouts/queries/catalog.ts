@@ -1,5 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
@@ -17,11 +18,12 @@ import {
   readPublishedCountryPage,
   readPublishedExamPage,
   readPublishedHubPage,
-  readPublishedSectionPage,
-  readPublishedSetPage,
+  readPublishedSectionPageFromIndex,
+  readPublishedSetPageFromIndex,
   readPublishedTrackPage,
 } from "@repo/backend/convex/tryouts/catalog/published";
 import { readTryoutRoute } from "@repo/backend/convex/tryouts/catalog/route";
+import { readTryoutSetSelection } from "@repo/backend/convex/tryouts/catalog/selection";
 import {
   publicTryoutCountryValidator,
   publicTryoutCountryWithExamCountValidator,
@@ -31,6 +33,7 @@ import {
   publicTryoutTrackValidator,
 } from "@repo/backend/convex/tryouts/queries/catalogModel";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const sectionPageFields = {
   exam: publicTryoutExamValidator,
@@ -175,12 +178,20 @@ export const getSetPage = query({
       track: publicTryoutTrackValidator,
     })
   ),
-  handler: async (ctx, args) => {
-    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
-    return await runConvexProgram(
-      readPublishedSetPage(catalog, args.publicPath)
-    );
-  },
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const owner = yield* loadTryoutOwner(ctx);
+        const index = yield* readTryoutSetSelection(ctx, {
+          ...args,
+          snapshotId: owner.snapshotId,
+        });
+        if (!index) {
+          return null;
+        }
+        return yield* readPublishedSetPageFromIndex(index, args.publicPath);
+      })
+    ),
 });
 
 /** Reads public metadata for one try-out section. */
@@ -190,10 +201,18 @@ export const getSectionPage = query({
     publicPath: v.string(),
   },
   returns: sectionPageValidator,
-  handler: async (ctx, args) => {
-    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
-    return await runConvexProgram(
-      readPublishedSectionPage(catalog, args.publicPath)
-    );
-  },
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const owner = yield* loadTryoutOwner(ctx);
+        const index = yield* readTryoutSetSelection(ctx, {
+          ...args,
+          snapshotId: owner.snapshotId,
+        });
+        if (!index) {
+          return null;
+        }
+        return yield* readPublishedSectionPageFromIndex(index, args.publicPath);
+      })
+    ),
 });

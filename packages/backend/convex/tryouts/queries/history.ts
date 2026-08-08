@@ -2,15 +2,17 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { loadAttemptScoreResult } from "@repo/backend/convex/tryouts/queries/score";
+import { tryRuntimePromise } from "@repo/backend/convex/tryouts/runtime/error";
 import { readAttemptHistoryPage } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
+import { loadAttemptScoreResult } from "@repo/backend/convex/tryouts/score/result";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
 import {
   paginationOptsValidator,
   paginationResultValidator,
 } from "convex/server";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const MAX_HISTORY_PAGE_SIZE = 25;
 
@@ -31,27 +33,34 @@ export const list = query({
     publicPath: v.string(),
   },
   returns: paginationResultValidator(historyRowValidator),
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-    const history = await runConvexProgram(
-      readAttemptHistoryPage(ctx, args, appUser._id, {
-        ...args.paginationOpts,
-        numItems: Math.min(args.paginationOpts.numItems, MAX_HISTORY_PAGE_SIZE),
-      })
-    );
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const { appUser } = yield* tryRuntimePromise(() => requireAuth(ctx));
+        const history = yield* readAttemptHistoryPage(ctx, args, appUser._id, {
+          ...args.paginationOpts,
+          numItems: Math.min(
+            args.paginationOpts.numItems,
+            MAX_HISTORY_PAGE_SIZE
+          ),
+        });
+        const page = yield* Effect.forEach(
+          history.page,
+          (attempt) =>
+            loadAttemptScoreResult(ctx, attempt).pipe(
+              Effect.map((score) => ({
+                attemptId: attempt._id,
+                attemptNumber: attempt.attemptNumber,
+                completedAt: attempt.completedAt,
+                score,
+                startedAt: attempt.startedAt,
+                status: attempt.status,
+              }))
+            ),
+          { concurrency: "unbounded" }
+        );
 
-    return {
-      ...history,
-      page: await Promise.all(
-        history.page.map(async (attempt) => ({
-          attemptId: attempt._id,
-          attemptNumber: attempt.attemptNumber,
-          completedAt: attempt.completedAt,
-          score: await loadAttemptScoreResult(ctx, attempt),
-          startedAt: attempt.startedAt,
-          status: attempt.status,
-        }))
-      ),
-    };
-  },
+        return { ...history, page };
+      })
+    ),
 });

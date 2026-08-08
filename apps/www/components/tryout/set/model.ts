@@ -17,13 +17,15 @@ export type SetPage = NonNullable<FunctionReturnType<SetPageQuery>>;
 export type SetEntrySection = NonNullable<SetPage["entrySection"]>;
 
 /** Current attempt payload returned by Convex. */
-export type CurrentAttempt = FunctionReturnType<
-  typeof api.tryouts.queries.attempt.getCurrent
->;
+export type CurrentAttempt = NonNullable<
+  FunctionReturnType<typeof api.tryouts.queries.runtime.getSetState>
+>["attempt"];
 
 /** Loaded section runtime payload after null checks. */
 export type LoadedRuntime = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.runtime.getSection>
+  NonNullable<
+    FunctionReturnType<typeof api.tryouts.queries.runtime.getSetState>
+  >["runtime"]
 >;
 
 /** Static MDX content needed by a direct-entry runtime. */
@@ -49,8 +51,8 @@ export interface TryoutSetDestination {
 
 /** Cohesive render model shared by set overview surfaces. */
 export interface TryoutSetView {
-  actionAttempt?: CurrentAttempt;
-  activeAttempt: NonNullable<CurrentAttempt> | null;
+  actionAttempt?: CurrentAttempt | null;
+  activeAttempt: CurrentAttempt | null;
   destination: TryoutSetDestination | null;
   entrySection: SetEntrySection | null;
   page: SetPage;

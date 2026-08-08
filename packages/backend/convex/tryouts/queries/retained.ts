@@ -8,10 +8,16 @@ import {
   publicTryoutTrackValidator,
 } from "@repo/backend/convex/tryouts/queries/catalogModel";
 import {
-  readAttemptSectionPage,
-  readAttemptSetPage,
+  resolveAttemptSectionRoute,
+  resolveAttemptSetRoute,
 } from "@repo/backend/convex/tryouts/queries/retained/page";
+import { readOwnedTryoutSectionContent } from "@repo/backend/convex/tryouts/runtime/access";
+import {
+  type TryoutSectionContentAccess,
+  tryoutSectionContentAccessValidator,
+} from "@repo/backend/convex/tryouts/runtime/content";
 import { v } from "convex/values";
+import { Effect } from "effect";
 
 const setPageFields = {
   exam: publicTryoutExamValidator,
@@ -27,8 +33,12 @@ const sectionPageFields = {
   track: publicTryoutTrackValidator,
 };
 
-/** Reads one owned set from the user's exact frozen attempt snapshot. */
-export const getAttemptSetPage = query({
+const noContentAccess: Extract<TryoutSectionContentAccess, { kind: "none" }> = {
+  kind: "none",
+};
+
+/** Reads one owned set and entry content from the exact frozen attempt. */
+export const getAttemptSetRoute = query({
   args: {
     attemptId: v.optional(v.string()),
     locale: localeValidator,
@@ -39,14 +49,33 @@ export const getAttemptSetPage = query({
     v.object({
       activeSetPublicPath: v.union(v.string(), v.null()),
       attemptId: v.id("tryoutAttempts"),
+      content: tryoutSectionContentAccessValidator,
       page: v.object(setPageFields),
     })
   ),
-  handler: (ctx, args) => runConvexProgram(readAttemptSetPage(ctx, args)),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const resolved = yield* resolveAttemptSetRoute(ctx, args);
+        if (!resolved) {
+          return null;
+        }
+        const entrySection = resolved.route.page.entrySection;
+        if (entrySection?.visibility !== "internal-entry") {
+          return { ...resolved.route, content: noContentAccess };
+        }
+        const content = yield* readOwnedTryoutSectionContent(ctx, {
+          attempt: resolved.attempt,
+          locale: args.locale,
+          sectionKey: entrySection.sectionKey,
+        });
+        return { ...resolved.route, content };
+      })
+    ),
 });
 
-/** Reads one owned section from the user's frozen attempt snapshot. */
-export const getAttemptSectionPage = query({
+/** Reads one owned section and content from the exact frozen attempt. */
+export const getAttemptSectionRoute = query({
   args: {
     attemptId: v.optional(v.string()),
     locale: localeValidator,
@@ -58,8 +87,23 @@ export const getAttemptSectionPage = query({
       activeSectionPublicPath: v.union(v.string(), v.null()),
       activeSetPublicPath: v.union(v.string(), v.null()),
       attemptId: v.id("tryoutAttempts"),
+      content: tryoutSectionContentAccessValidator,
       page: v.object(sectionPageFields),
     })
   ),
-  handler: (ctx, args) => runConvexProgram(readAttemptSectionPage(ctx, args)),
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const resolved = yield* resolveAttemptSectionRoute(ctx, args);
+        if (!resolved) {
+          return null;
+        }
+        const content = yield* readOwnedTryoutSectionContent(ctx, {
+          attempt: resolved.attempt,
+          locale: args.locale,
+          sectionKey: resolved.route.page.section.sectionKey,
+        });
+        return { ...resolved.route, content };
+      })
+    ),
 });

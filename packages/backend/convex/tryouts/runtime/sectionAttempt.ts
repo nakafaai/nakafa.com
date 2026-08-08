@@ -1,5 +1,6 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { loadAttemptSections } from "@repo/backend/convex/tryouts/runtime/attempt/sections";
 import {
   TryoutRuntimeError,
   tryRuntimePromise,
@@ -11,7 +12,6 @@ import {
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireSectionSnapshot } from "@repo/backend/convex/tryouts/runtime/placement";
 import { makeFunctionReference } from "convex/server";
-import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
@@ -28,19 +28,18 @@ const expireSectionReference = makeFunctionReference<
 const startSectionResult = Object.freeze({ kind: "started" });
 
 /** Ensures atomic section start is only used for a set-owned internal entry. */
-export function requireInternalEntrySection(
-  sections: readonly InternalEntrySection[],
-  sectionKey: string
-) {
+export const requireInternalEntrySection = Effect.fn(
+  "tryouts.runtime.requireInternalEntrySection"
+)(function* (sections: readonly InternalEntrySection[], sectionKey: string) {
   const section = sections.find((row) => row.sectionKey === sectionKey);
 
   if (section?.visibility !== "internal-entry") {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_ENTRY_SECTION_NOT_FOUND",
       message: "Try-out entry section is not available for this set.",
     });
   }
-}
+});
 
 /** Resolves the timer row that authorizes answers for one placement. */
 export function loadPlacementSectionAttempt(
@@ -167,25 +166,6 @@ function loadSectionAttempt(
     .unique();
 }
 
-/** Loads all section attempts for one attempt snapshot. */
-async function loadSectionAttempts(ctx: MutationCtx, attempt: TryoutAttempt) {
-  const sections = await ctx.db
-    .query("tryoutSectionAttempts")
-    .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
-      q.eq("tryoutAttemptId", attempt._id)
-    )
-    .take(attempt.sectionSnapshots.length + 1);
-
-  if (sections.length > attempt.sectionSnapshots.length) {
-    throw new ConvexError({
-      code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
-      message: "Try-out section attempt count exceeds the attempt snapshot.",
-    });
-  }
-
-  return sections;
-}
-
 /** Rejects or expires any other in-progress section timer. */
 const requireNoParallelSectionTimer = Effect.fn(
   "tryouts.runtime.requireNoParallelSectionTimer"
@@ -193,9 +173,7 @@ const requireNoParallelSectionTimer = Effect.fn(
   ctx: MutationCtx,
   args: { attempt: TryoutAttempt; now: number; sectionKey: string }
 ) {
-  const sections = yield* tryRuntimePromise(() =>
-    loadSectionAttempts(ctx, args.attempt)
-  );
+  const sections = yield* loadAttemptSections(ctx, args.attempt);
 
   for (const section of sections) {
     if (section.sectionKey === args.sectionKey) {

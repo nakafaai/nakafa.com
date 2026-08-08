@@ -71,10 +71,12 @@ describe("tryouts/start/source", () => {
     await t.mutation(activateRenamedTryoutStartSource);
 
     await expect(
-      authed.query(api.tryouts.queries.attempt.getCurrentByPublicPath, {
+      authed.query(api.tryouts.queries.runtime.getSetState, {
         locale: "id",
         publicPath: TRYOUT_RENAMED_SET_PATH,
       })
-    ).resolves.toMatchObject({ attemptId: started.attemptId });
+    ).resolves.toMatchObject({
+      attempt: { attemptId: started.attemptId },
+    });
   });
 });

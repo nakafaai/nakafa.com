@@ -1,8 +1,6 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { TryoutList } from "@/components/tryout/catalog/list";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
@@ -10,24 +8,17 @@ import {
   getTryoutAttemptHref,
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
+import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
 
-type SetPageQuery = typeof api.tryouts.queries.catalog.getSetPage;
-type SetPage = NonNullable<FunctionReturnType<SetPageQuery>>;
 type SetSection = SetPage["sections"][number];
-type CurrentAttempt = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>
->;
-type SectionStatus = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>
->["status"];
+type SectionStatus = CurrentAttempt["status"];
 
 export interface TryoutSectionRowsValue {
-  attempt?: FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>;
+  attempt?: CurrentAttempt | null;
   emptyLabel: string;
   locale: Locale;
   questionUnitLabel: string;
   sections: readonly SetSection[];
-  set: Pick<SetPage["set"], "countryKey" | "examKey" | "setKey" | "trackKey">;
 }
 
 /** Renders the production-style divided visible section list for one set page. */
@@ -66,13 +57,9 @@ export function TryoutSectionRows({
             onIntent: () =>
               prewarmData({
                 ...(boundAttempt ? { attemptId: boundAttempt.attemptId } : {}),
-                countryKey: value.set.countryKey,
-                examKey: value.set.examKey,
                 kind: "section",
                 locale: value.locale,
-                sectionKey: section.sectionKey,
-                setKey: value.set.setKey,
-                trackKey: value.set.trackKey,
+                publicPath,
               }),
             status: getSectionStatus({
               activeSectionKey,
