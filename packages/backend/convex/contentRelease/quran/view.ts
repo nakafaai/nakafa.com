@@ -1,14 +1,20 @@
-import type {
-  QuranRuntimeVerse,
-  QuranSearchRow,
-  QuranSurahRow,
+import {
+  QURAN_SURAH_COUNT,
+  type QuranRuntimeVerse,
+  type QuranSearchRow,
+  type QuranSurahRow,
+  QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadQuranPageView } from "@repo/backend/convex/contentRelease/quran/page";
+import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
 import {
   quranLocaleValidator,
   quranSourceFields,
 } from "@repo/backend/convex/contentRelease/quran/spec";
+import {
+  loadQuranSurah,
+  readQuranSurahVerses,
+} from "@repo/backend/convex/contentRelease/quran/surah";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
@@ -46,6 +52,23 @@ type QuranView = Infer<typeof quranViewValidator>;
 type QuranViewSurah = NonNullable<QuranView["surah"]>;
 type QuranViewVerse = QuranView["verses"][number];
 
+/** Reads one neighboring surah metadata row when that neighbor exists. */
+const readNeighbor = Effect.fn("contentRelease.readQuranNeighbor")(function* (
+  ctx: QueryCtx,
+  snapshotId: string,
+  surahNumber: number
+) {
+  if (surahNumber < 1 || surahNumber > QURAN_SURAH_COUNT) {
+    return null;
+  }
+  return yield* readQuranRow(
+    ctx,
+    snapshotId,
+    `surah:${surahNumber}`,
+    QuranSurahRowSchema
+  );
+});
+
 /** Projects only the signed surah metadata needed by the Quran page. */
 function projectSurah(surah: QuranSurahRow): QuranViewSurah {
   return {
@@ -77,8 +100,8 @@ export const readQuranView = Effect.fn("contentRelease.readQuranView")(
     locale: QuranSearchRow["locale"],
     sourceSurah: number
   ) {
-    const loaded = yield* loadQuranPageView(ctx, sourceSurah);
-    if (loaded.page === null) {
+    const loaded = yield* loadQuranSurah(ctx, sourceSurah);
+    if (loaded.surah === null || loaded.owner.snapshotId === null) {
       return {
         ...loaded.owner,
         locale,
@@ -89,14 +112,32 @@ export const readQuranView = Effect.fn("contentRelease.readQuranView")(
       };
     }
 
-    const nextSurah = loaded.page.nextSurah
-      ? projectSurah(loaded.page.nextSurah.payload)
+    const { nextRow, previousRow, verses } = yield* Effect.all(
+      {
+        nextRow: readNeighbor(
+          ctx,
+          loaded.owner.snapshotId,
+          loaded.surah.surahNumber + 1
+        ),
+        previousRow: readNeighbor(
+          ctx,
+          loaded.owner.snapshotId,
+          loaded.surah.surahNumber - 1
+        ),
+        verses: readQuranSurahVerses(
+          ctx,
+          loaded.owner.snapshotId,
+          loaded.surah.surahNumber,
+          loaded.surah.row.payload.numberOfVerses
+        ),
+      },
+      { concurrency: "unbounded" }
+    );
+    const nextSurah = nextRow ? projectSurah(nextRow.payload) : null;
+    const previousSurah = previousRow
+      ? projectSurah(previousRow.payload)
       : null;
-    const previousSurah = loaded.page.previousSurah
-      ? projectSurah(loaded.page.previousSurah.payload)
-      : null;
-    const surah = projectSurah(loaded.page.surah.payload);
-    const verses = loaded.page.chunks.rows.flatMap((chunk) => chunk.verses);
+    const surah = projectSurah(loaded.surah.row.payload);
 
     return {
       ...loaded.owner,

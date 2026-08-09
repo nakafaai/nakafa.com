@@ -1,0 +1,62 @@
+import { readQuranMarkdown } from "@repo/backend/convex/contentRelease/quran/markdown";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import schema from "@repo/backend/convex/schema";
+import { convexModules } from "@repo/backend/convex/test.setup";
+import { makeQuranChunk, makeQuranSurah } from "@repo/backend/test/quran-rows";
+import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+import { convexTest } from "convex-test";
+import { describe, expect, it } from "vitest";
+
+describe("contentRelease/quran/markdown", () => {
+  it("returns a normalized unmanaged markdown projection", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.query((ctx) => runConvexProgram(readQuranMarkdown(ctx, "id", 1)))
+    ).resolves.toMatchObject({
+      locale: "id",
+      managed: false,
+      surah: null,
+      verses: [],
+    });
+  });
+
+  it("projects only locale-specific fields rendered in markdown", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranSurah(1),
+        makeQuranChunk({
+          firstQuranNumber: 1,
+          firstVerse: 1,
+          surahNumber: 1,
+          verseCount: 1,
+        }),
+      ])
+    );
+
+    const markdown = await t.query((ctx) =>
+      runConvexProgram(readQuranMarkdown(ctx, "en", 1))
+    );
+
+    expect(markdown.surah).toEqual({
+      name: {
+        translation: "Technical meaning 1",
+        transliteration: "Technical Surah 1",
+      },
+      number: 1,
+      numberOfVerses: 1,
+      revelation: { place: "Meccan" },
+    });
+    expect(markdown.verses).toEqual([
+      {
+        arabic: "آية 1",
+        number: { inSurah: 1 },
+        translation: { footnotes: "", text: "Technical translation 1" },
+      },
+    ]);
+    expect(JSON.stringify(markdown)).not.toContain("Terjemahan teknis");
+    expect(JSON.stringify(markdown)).not.toContain("Tafsir teknis");
+    expect(JSON.stringify(markdown)).not.toContain("inQuran");
+  });
+});
