@@ -10,7 +10,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 describe("contentRelease/quran", () => {
-  it("registers every bounded public read with normalized unmanaged output", async () => {
+  it("registers public reads and rejects a stale interpretation", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
@@ -49,7 +49,9 @@ describe("contentRelease/quran", () => {
         surahNumber: 1,
         verseNumber: 1,
       })
-    ).resolves.toMatchObject({ interpretation: null, managed: false });
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_CONFLICT" },
+    });
     await expect(
       t.query(api.contentRelease.quran.reference, {
         fromVerse: 1,
@@ -90,12 +92,6 @@ describe("contentRelease/quran", () => {
         locale: "id",
         surahNumber: 1,
       }),
-      t.query(api.contentRelease.quran.interpretation, {
-        expectedSnapshotId: `sha256:${"0".repeat(64)}`,
-        locale: "id",
-        surahNumber: 1,
-        verseNumber: 1,
-      }),
       t.query(api.contentRelease.quran.reference, {
         fromVerse: 1,
         locale: "id",
@@ -117,5 +113,15 @@ describe("contentRelease/quran", () => {
         sourceRevision: null,
       });
     }
+    await expect(
+      t.query(api.contentRelease.quran.interpretation, {
+        expectedSnapshotId: `sha256:${"0".repeat(64)}`,
+        locale: "id",
+        surahNumber: 1,
+        verseNumber: 1,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_CONFLICT" },
+    });
   });
 });

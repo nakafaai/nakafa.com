@@ -7,7 +7,10 @@ import {
   makeQuranSearch,
   makeQuranSurah,
 } from "@repo/backend/test/quran-rows";
-import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+import {
+  activateQuranSnapshot,
+  restoreAbsentQuranSnapshot,
+} from "@repo/backend/test/quran-snapshot";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -28,7 +31,7 @@ function interpretationRows() {
 const expectedSnapshotId = `sha256:${"0".repeat(64)}`;
 
 describe("contentRelease/quran/interpretation", () => {
-  it("returns a normalized unmanaged exact verse", async () => {
+  it("rejects a stale click when Quran has no active snapshot", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
@@ -37,16 +40,8 @@ describe("contentRelease/quran/interpretation", () => {
           readQuranInterpretation(ctx, "id", expectedSnapshotId, 1, 7)
         )
       )
-    ).resolves.toEqual({
-      activeManifestHash: null,
-      activeReleaseId: null,
-      interpretation: null,
-      locale: "id",
-      managed: false,
-      snapshotId: null,
-      sourceRevision: null,
-      surahNumber: 1,
-      verseNumber: 7,
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_CONFLICT" },
     });
   });
 
@@ -94,6 +89,22 @@ describe("contentRelease/quran/interpretation", () => {
         runConvexProgram(
           readQuranInterpretation(ctx, "id", expectedSnapshotId, 1, 7)
         )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_CONFLICT" },
+    });
+  });
+
+  it("rejects a click after recovery restores the absent snapshot", async () => {
+    const t = convexTest(schema, convexModules);
+    const snapshotId = await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, interpretationRows())
+    );
+    await t.mutation((ctx) => restoreAbsentQuranSnapshot(ctx, snapshotId));
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(readQuranInterpretation(ctx, "id", snapshotId, 1, 7))
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_CONFLICT" },

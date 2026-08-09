@@ -33,9 +33,6 @@ const loadQuranReferenceSource = Effect.fn(
 )(function* (ctx: QueryCtx, request: QuranReferenceSourceRequest) {
   const input = yield* validateQuranReference(request);
   const owner = yield* loadQuranOwner(ctx);
-  if (owner.snapshotId === null) {
-    return { input, owner, source: null };
-  }
   if (
     request.expectedSnapshotId !== null &&
     owner.snapshotId !== request.expectedSnapshotId
@@ -44,6 +41,9 @@ const loadQuranReferenceSource = Effect.fn(
       "CONTENT_RELEASE_CONFLICT",
       "The active Quran snapshot changed after this page was rendered."
     );
+  }
+  if (owner.snapshotId === null) {
+    return { input, owner, source: null };
   }
   const surah = yield* readQuranRow(
     ctx,
