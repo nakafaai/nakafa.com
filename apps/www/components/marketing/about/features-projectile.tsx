@@ -1,6 +1,7 @@
 "use client";
 
 import { useIntersection } from "@mantine/hooks";
+import { captureException } from "@repo/analytics/posthog";
 import {
   DEFAULT_PROJECTILE_SCENARIO_ID,
   formatMeterMath,
@@ -20,22 +21,18 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { Effect, Fiber } from "effect";
 import { useReducedMotion } from "motion/react";
-import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import {
+  type ComponentType,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from "react";
 import type { FeaturesProjectileSceneProps } from "@/components/marketing/about/features-projectile-scene";
-
-const FeaturesProjectileScene = dynamic<FeaturesProjectileSceneProps>(
-  () =>
-    import("@/components/marketing/about/features-projectile-scene").then(
-      (module) => module.FeaturesProjectileScene
-    ),
-  {
-    loading: () => null,
-    ssr: false,
-  }
-);
+import { loadFeaturesProjectileScene } from "@/components/marketing/about/features-projectile-scene-module";
 
 /** Keeps the lesson content available while deferring only its WebGL scene. */
 export function FeaturesProjectile() {
@@ -47,6 +44,9 @@ export function FeaturesProjectile() {
   const t = useTranslations("Features");
   const locale = useLocale();
   const shouldReduceMotion = useReducedMotion() ?? false;
+  const sceneLoadFiber = useRef<ReturnType<typeof Effect.runFork> | null>(null);
+  const [Scene, setScene] =
+    useState<ComponentType<FeaturesProjectileSceneProps> | null>(null);
   const [scenarioId, setScenarioId] = useState<ProjectileScenarioId>(
     DEFAULT_PROJECTILE_SCENARIO_ID
   );
@@ -129,6 +129,49 @@ export function FeaturesProjectile() {
     setScenarioId(value);
   }
 
+  /** Starts the WebGL import only when the lesson approaches the viewport. */
+  const handleSceneIntent = useEffectEvent(() => {
+    if (sceneLoadFiber.current) {
+      return;
+    }
+
+    sceneLoadFiber.current = Effect.runFork(
+      loadFeaturesProjectileScene().pipe(
+        Effect.matchEffect({
+          onFailure: (error) =>
+            Effect.sync(() => {
+              sceneLoadFiber.current = null;
+              captureException(error.cause, {
+                operation: "load-projectile-scene",
+                source: "home-features",
+              });
+            }),
+          onSuccess: (SceneComponent) =>
+            Effect.sync(() => setScene(() => SceneComponent)),
+        })
+      )
+    );
+  });
+
+  useEffect(() => {
+    if (!entry?.isIntersecting) {
+      return;
+    }
+
+    handleSceneIntent();
+  }, [entry]);
+
+  useEffect(
+    () => () => {
+      if (!sceneLoadFiber.current) {
+        return;
+      }
+
+      Effect.runFork(Fiber.interrupt(sceneLoadFiber.current));
+    },
+    []
+  );
+
   return (
     <div
       className="relative flex min-h-[42rem] flex-col overflow-hidden bg-background lg:col-span-7 lg:min-h-[44rem]"
@@ -161,11 +204,8 @@ export function FeaturesProjectile() {
             aria-label={t("projectile-view-label")}
             className={threeSceneFrameVariants()}
           >
-            {entry?.isIntersecting ? (
-              <FeaturesProjectileScene
-                motion={motion}
-                shouldReduceMotion={shouldReduceMotion}
-              />
+            {entry?.isIntersecting && Scene ? (
+              <Scene motion={motion} shouldReduceMotion={shouldReduceMotion} />
             ) : null}
           </section>
         </div>
