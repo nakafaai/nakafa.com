@@ -62,11 +62,15 @@ export interface TryoutSetDestination {
 export interface TryoutSetView {
   actionAttempt?: CurrentAttempt | null;
   activeAttempt: CurrentAttempt | null;
-  destination: TryoutSetDestination | null;
   entrySection: SetEntrySection | null;
   page: SetPage;
   route: TryoutSetRoute;
   sectionRoutes: readonly SetPage["sections"][number][];
+  start: {
+    destination: TryoutSetDestination | null;
+    entrySection: SetEntrySection | null;
+    set: SetPage["set"];
+  };
 }
 
 /** Render model for sets whose only section is the set entry itself. */

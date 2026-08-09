@@ -42,6 +42,7 @@ interface TryoutSetPageClientProps {
   content: TryoutSetContent;
   page: SetPage;
   route: TryoutSetRoute;
+  startPage: SetPage;
 }
 
 /** Renders one stable page with an active-only mutable subscription. */
@@ -50,6 +51,7 @@ export function TryoutSetPageClient({
   content,
   page,
   route,
+  startPage,
 }: TryoutSetPageClientProps) {
   if (!binding) {
     return (
@@ -58,6 +60,7 @@ export function TryoutSetPageClient({
         content={content}
         page={page}
         route={route}
+        startPage={startPage}
         state={null}
       />
     );
@@ -70,6 +73,7 @@ export function TryoutSetPageClient({
         content={content}
         page={page}
         route={route}
+        startPage={startPage}
         state={binding.initialState}
       />
     );
@@ -82,6 +86,7 @@ export function TryoutSetPageClient({
       key={binding.attemptId}
       page={page}
       route={route}
+      startPage={startPage}
     />
   );
 }
@@ -122,6 +127,7 @@ function ResolvedTryoutSetPage({
   page,
   route,
   state,
+  startPage,
 }: TryoutSetPageClientProps & { state: SetState }) {
   const currentAttempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
@@ -140,13 +146,15 @@ function ResolvedTryoutSetPage({
     page.sections.find(
       (sectionItem) => sectionItem.sectionKey === resumeSectionKey
     ) ?? entrySection;
-  let destination = resumeSection
+  const startEntrySection = startPage.entrySection;
+  const destinationSection = activeAttempt ? resumeSection : startEntrySection;
+  let destination = destinationSection
     ? {
         href: getEntrySectionHref({
-          entrySection: resumeSection,
+          entrySection: destinationSection,
           route,
         }),
-        sectionKey: resumeSection.sectionKey,
+        sectionKey: destinationSection.sectionKey,
       }
     : null;
   if (
@@ -164,11 +172,15 @@ function ResolvedTryoutSetPage({
   const view: TryoutSetView = {
     actionAttempt,
     activeAttempt,
-    destination,
     entrySection,
     page,
     route,
     sectionRoutes: binding?.sectionRoutes ?? page.sections,
+    start: {
+      destination,
+      entrySection: startEntrySection,
+      set: startPage.set,
+    },
   };
 
   if (isInternalEntry && entrySection) {

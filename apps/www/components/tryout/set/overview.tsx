@@ -87,10 +87,10 @@ function TryoutSetResult({
     activeAttempt: value.activeAttempt,
     currentHref: setHref,
     currentAttempt: value.actionAttempt,
-    destination: value.destination,
-    entrySection: value.entrySection,
+    destination: value.start.destination,
+    entrySection: value.start.entrySection,
     locale: value.route.locale,
-    set: value.page.set,
+    set: value.start.set,
   };
   const attempt = value.actionAttempt;
 

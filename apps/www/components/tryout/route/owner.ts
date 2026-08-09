@@ -1,34 +1,42 @@
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 
-interface CurrentAttemptPage {
-  readonly kind: "current";
-}
-
-interface RetainedAttemptPage<RetainedPage> {
-  readonly kind: "retained";
-  readonly page: RetainedPage;
+interface FrozenAttemptPage<FrozenPage> {
+  readonly kind: "current" | "retained";
+  readonly page: FrozenPage;
 }
 
 interface RedirectAttemptPage {
   readonly kind: "redirect";
 }
 
-/** Keeps canonical routes public while exact capabilities own frozen pages. */
-export function selectTryoutBasePage<PublicPage, RetainedPage>({
+/** Selects the verified snapshot page carried by a current or retained attempt. */
+export function selectTryoutFrozenPage<FrozenPage>(
+  attemptPage: FrozenAttemptPage<FrozenPage> | RedirectAttemptPage | null
+) {
+  if (!attemptPage || attemptPage.kind === "redirect") {
+    return null;
+  }
+
+  return attemptPage.page;
+}
+
+/** Separates frozen attempt display from the active page used for a new start. */
+export function selectTryoutSetPages<PublicPage, FrozenPage>({
   attemptPage,
   publicPage,
 }: {
-  attemptPage:
-    | CurrentAttemptPage
-    | RedirectAttemptPage
-    | RetainedAttemptPage<RetainedPage>
-    | null;
+  attemptPage: FrozenAttemptPage<FrozenPage> | RedirectAttemptPage | null;
   publicPage: PublicPage | null;
 }) {
-  if (attemptPage?.kind === "retained") {
-    return attemptPage.page;
+  const page = selectTryoutFrozenPage(attemptPage) ?? publicPage;
+  if (page === null) {
+    return null;
   }
-  return publicPage;
+
+  return {
+    page,
+    startPage: publicPage ?? page,
+  };
 }
 
 /** Keeps an exact retained section's return link on its frozen set route. */

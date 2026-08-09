@@ -1,35 +1,49 @@
 import { describe, expect, it } from "vitest";
 import {
-  selectTryoutBasePage,
+  selectTryoutFrozenPage,
+  selectTryoutSetPages,
   selectTryoutSetReturnHref,
 } from "@/components/tryout/route/owner";
 
 describe("try-out route ownership", () => {
-  it("keeps current and redirecting attempts on the canonical public page", () => {
+  it("keeps a current terminal attempt on its verified frozen page", () => {
+    const frozenPage = { entrySection: "snapshot-section" };
+    const activePage = { entrySection: "active-section" };
+
     expect(
-      selectTryoutBasePage({
-        attemptPage: { kind: "current" },
-        publicPage: "public",
+      selectTryoutSetPages({
+        attemptPage: { kind: "current", page: frozenPage },
+        publicPage: activePage,
       })
-    ).toBe("public");
+    ).toEqual({ page: frozenPage, startPage: activePage });
+    expect(selectTryoutFrozenPage({ kind: "current", page: frozenPage })).toBe(
+      frozenPage
+    );
+  });
+
+  it("keeps redirecting attempts on the canonical public page", () => {
     expect(
-      selectTryoutBasePage({
+      selectTryoutSetPages({
         attemptPage: { kind: "redirect" },
         publicPage: "public",
       })
-    ).toBe("public");
+    ).toEqual({ page: "public", startPage: "public" });
+    expect(selectTryoutFrozenPage({ kind: "redirect" })).toBeNull();
   });
 
-  it("gives an exact retained capability its frozen page", () => {
+  it("keeps an exact retained capability entirely on its frozen page", () => {
     expect(
-      selectTryoutBasePage({
+      selectTryoutSetPages({
         attemptPage: { kind: "retained", page: "frozen" },
-        publicPage: "public",
+        publicPage: null,
       })
-    ).toBe("frozen");
+    ).toEqual({ page: "frozen", startPage: "frozen" });
     expect(
-      selectTryoutBasePage({ attemptPage: null, publicPage: "public" })
-    ).toBe("public");
+      selectTryoutSetPages({ attemptPage: null, publicPage: "public" })
+    ).toEqual({ page: "public", startPage: "public" });
+    expect(
+      selectTryoutSetPages({ attemptPage: null, publicPage: null })
+    ).toBeNull();
   });
 
   it("keeps renamed retained navigation on the frozen set path", () => {

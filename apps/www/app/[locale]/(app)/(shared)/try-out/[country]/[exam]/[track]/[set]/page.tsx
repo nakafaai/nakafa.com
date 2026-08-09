@@ -15,7 +15,10 @@ import type {
   TryoutQuestionContent,
 } from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
-import { selectTryoutBasePage } from "@/components/tryout/route/owner";
+import {
+  selectTryoutFrozenPage,
+  selectTryoutSetPages,
+} from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptAuthHref,
   getTryoutAttemptHref,
@@ -64,13 +67,13 @@ export async function generateMetadata({
       title: tTryouts("title"),
     });
   }
-  if (resolved.attemptPage?.kind === "retained") {
+  const frozenPage = selectTryoutFrozenPage(resolved.attemptPage);
+  if (frozenPage) {
     const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
     return createRetainedTryoutMetadata({
       description:
-        resolved.attemptPage.page.set.description ??
-        tTryouts("metadata-description"),
-      title: resolved.attemptPage.page.set.title,
+        frozenPage.set.description ?? tTryouts("metadata-description"),
+      title: frozenPage.set.title,
     });
   }
   if (resolved.publicPage) {
@@ -121,13 +124,14 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   if (attemptId && !attemptPage) {
     notFound();
   }
-  const page = selectTryoutBasePage({
+  const pages = selectTryoutSetPages({
     attemptPage,
     publicPage: resolved.publicPage,
   });
-  if (!page) {
+  if (!pages) {
     notFound();
   }
+  const { page, startPage } = pages;
 
   let questions: readonly TryoutQuestionContent[] = [];
   let answers: readonly TryoutAnswerContent[] = [];
@@ -159,6 +163,7 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
       content={{ entryAnswers: answers, entryQuestions: questions }}
       page={page}
       route={{ country, exam, locale, set, track }}
+      startPage={startPage}
     />
   );
 }

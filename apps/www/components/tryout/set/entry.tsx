@@ -133,7 +133,6 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
     return null;
   }
 
-  const entryHref = getTryoutHref(value.route);
   const parentHref = getTryoutHref({
     country: value.route.country,
     exam: value.route.exam,
@@ -145,6 +144,8 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
       : value.runtimeState.runtime.section;
   const sectionFinished =
     getTryoutFinishedSectionStatus(sectionAttempt) !== null;
+  const startEntrySection = value.start.entrySection;
+  const startDestination = value.start.destination;
 
   return (
     <TryoutEntrySummaryAction
@@ -153,14 +154,21 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
         attempt: value.actionAttempt,
         locale: value.route.locale,
         returnHref: parentHref,
-        section: value.entrySection,
+        section: startEntrySection ?? value.entrySection,
         sectionFinished,
-        set: value.page.set,
-        startAttemptSectionKey: value.entrySection.sectionKey,
-        startDestination: {
-          href: entryHref,
-          successNavigation: "stay",
-        },
+        set: value.start.set,
+        ...(startEntrySection?.visibility === "internal-entry"
+          ? { startAttemptSectionKey: startEntrySection.sectionKey }
+          : {}),
+        startDestination: startDestination
+          ? {
+              href: startDestination.href,
+              successNavigation:
+                startEntrySection?.visibility === "internal-entry"
+                  ? "stay"
+                  : "destination",
+            }
+          : null,
       }}
     />
   );
