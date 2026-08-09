@@ -614,6 +614,12 @@ importers:
       '@convex-dev/workpool':
         specifier: ^0.4.9
         version: 0.4.9(convex-helpers@0.1.122(@standard-schema/spec@1.1.0)(convex@1.43.0(react@19.2.8))(hono@4.13.1)(react@19.2.8)(typescript@6.0.3)(zod@4.4.3))(convex@1.43.0(react@19.2.8))(react@19.2.8)
+      '@effect/platform':
+        specifier: 0.97.1
+        version: 0.97.1(effect@3.22.1)
+      '@effect/platform-node':
+        specifier: 0.108.1
+        version: 0.108.1(@effect/cluster@0.60.2(@effect/platform@0.97.1(effect@3.22.1))(@effect/rpc@0.76.2(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/sql@0.52.1(@effect/experimental@0.61.1(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/workflow@0.19.1(@effect/experimental@0.61.1(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/platform@0.97.1(effect@3.22.1))(@effect/rpc@0.76.2(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(effect@3.22.1))(effect@3.22.1))(@effect/platform@0.97.1(effect@3.22.1))(@effect/rpc@0.76.2(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/sql@0.52.1(@effect/experimental@0.61.1(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(effect@3.22.1)
       '@nakafa/aksara-contracts':
         specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz
         version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz(effect@3.22.1)

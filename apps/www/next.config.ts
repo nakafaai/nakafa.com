@@ -9,13 +9,21 @@ import {
 } from "@repo/next-config";
 import { analyzeKeys } from "@repo/next-config/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
+import { Schema } from "effect";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 
 const configEnv = createEnv({
   extends: [analyzeKeys(), postHogProxyKeys()],
-  runtimeEnv: {},
+  server: {
+    CONVEX_AGENT_MODE: Schema.standardSchemaV1(
+      Schema.UndefinedOr(Schema.Literal("anonymous"))
+    ),
+  },
+  runtimeEnv: {
+    CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
+  },
 });
 
 const withNextIntl = createNextIntlPlugin(
@@ -190,6 +198,11 @@ const nextConfig = {
     instantInsights: {
       validationLevel: "warning",
     },
+    // Anonymous Convex shares this runner, so cap each Next worker at one page.
+    // Production keeps Next.js' default static-generation concurrency.
+    ...(configEnv.CONVEX_AGENT_MODE === "anonymous"
+      ? { staticGenerationMaxConcurrency: 1 }
+      : {}),
   },
 } satisfies NextConfig;
 
