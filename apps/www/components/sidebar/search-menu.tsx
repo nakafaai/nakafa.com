@@ -10,7 +10,7 @@ import {
 import { IconLetterK } from "@tabler/icons-react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { preloadSearchCommand } from "@/components/shared/deferred-search-command";
+import { preloadSearchCommand } from "@/components/shared/search-command-module";
 import { useSearch } from "@/lib/context/use-search";
 
 export function SearchMenu() {

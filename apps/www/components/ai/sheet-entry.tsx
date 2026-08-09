@@ -8,7 +8,7 @@ import { domAnimation, LazyMotion, m } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context/use-ai";
 import { usePageTitle } from "@/components/ai/context/use-page-title";
-import { preloadAiSheet } from "@/components/ai/deferred-sheet";
+import { preloadAiSheet } from "@/components/ai/sheet-module";
 
 const SLIDE_DISTANCE = 200;
 

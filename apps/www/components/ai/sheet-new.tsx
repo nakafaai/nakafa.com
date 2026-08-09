@@ -16,10 +16,12 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useAi } from "@/components/ai/context/use-ai";
 import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
+import { loadChatRuntime } from "@/components/ai/helpers/runtime-loader";
 import { SheetInput } from "@/components/ai/sheet-input";
 import { useUser } from "@/lib/context/use-user";
 
@@ -68,7 +70,7 @@ export const SheetNew = () => {
           title: DEFAULT_TITLE,
           type: "study",
         }),
-        import("@/components/ai/helpers/runtime"),
+        Effect.runPromise(loadChatRuntime()),
       ]);
 
       const chatRuntime = createChatRuntime({

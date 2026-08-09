@@ -24,7 +24,7 @@ import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context/use-ai";
 import { usePageTitle } from "@/components/ai/context/use-page-title";
-import { preloadAiSheet } from "@/components/ai/deferred-sheet";
+import { preloadAiSheet } from "@/components/ai/sheet-module";
 
 type AudioStudy = NonNullable<
   FunctionReturnType<typeof api.audioStudies.queries.public.getAudioBySlug>
