@@ -1,7 +1,7 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 import { readMaterialCardChapters } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import {
@@ -96,17 +96,38 @@ async function CurriculumRouteContent({
 }: Pick<CurriculumPageProps, "params">) {
   const model = await resolveRuntimeCurriculumRoute(params);
   const { locale, route } = model;
-  const [catalog, tCommon] = await Promise.all([
-    readRuntimeCurriculumCatalog(locale),
-    getTranslations({ locale, namespace: "Common" }),
-  ]);
-  const breadcrumbs = readRuntimeCurriculumBreadcrumbs(tCommon("home"), model);
-  const selectorLabel =
-    route.level === "track"
-      ? (await getTranslations({ locale, namespace: "LearningPrograms" }))(
-          "kind.school-curriculum"
-        )
-      : "";
+  const commonTranslations = getTranslations({ locale, namespace: "Common" });
+  let header: ReactNode;
+  let homeLabel: string;
+
+  if (route.level === "track") {
+    const [catalog, tCommon, tLearningPrograms] = await Promise.all([
+      readRuntimeCurriculumCatalog(locale),
+      commonTranslations,
+      getTranslations({ locale, namespace: "LearningPrograms" }),
+    ]);
+    homeLabel = tCommon("home");
+    header = (
+      <CurriculumRootHeader
+        currentRoute={route}
+        homeLabel={homeLabel}
+        options={readRuntimeCurriculumOptions(catalog, locale)}
+        selectorLabel={tLearningPrograms("kind.school-curriculum")}
+        subjectLabel={tCommon("subject")}
+      />
+    );
+  } else {
+    homeLabel = (await commonTranslations)("home");
+    header = (
+      <HeaderContent
+        icon={readCurriculumRouteIcon(route)}
+        link={readRuntimeCurriculumHeader(model)}
+        title={route.title}
+      />
+    );
+  }
+
+  const breadcrumbs = readRuntimeCurriculumBreadcrumbs(homeLabel, model);
   const sourceUrl = readCurriculumSourceUrl(model);
 
   return (
@@ -115,21 +136,7 @@ async function CurriculumRouteContent({
         breadcrumbItems={createBreadcrumbItems(locale, breadcrumbs)}
       />
       <LayoutMaterialContent>
-        {route.level === "track" ? (
-          <CurriculumRootHeader
-            currentRoute={route}
-            homeLabel={tCommon("home")}
-            options={readRuntimeCurriculumOptions(catalog, locale)}
-            selectorLabel={selectorLabel}
-            subjectLabel={tCommon("subject")}
-          />
-        ) : (
-          <HeaderContent
-            icon={readCurriculumRouteIcon(route)}
-            link={readRuntimeCurriculumHeader(model)}
-            title={route.title}
-          />
-        )}
+        {header}
         <LayoutContent>
           <CurriculumRouteBody {...model} />
         </LayoutContent>

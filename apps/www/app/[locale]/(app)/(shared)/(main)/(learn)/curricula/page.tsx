@@ -60,15 +60,15 @@ export async function generateMetadata({
 /** Renders the public curriculum chooser with direct curriculum cards. */
 export default async function Page() {
   const locale = getLocaleOrThrow(await rootLocale());
-  const [tCommon, tLearningPrograms] = await Promise.all([
+  const [tCommon, tLearningPrograms, catalog] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "LearningPrograms" }),
+    readRuntimeCurriculumCatalog(locale),
   ]);
   const title = tLearningPrograms("curriculum-index-title");
   const description = tLearningPrograms(
     "curriculum-index-metadata-description"
   );
-  const catalog = await readRuntimeCurriculumCatalog(locale);
   const sourceUrl = readCurriculumCatalogSource(catalog);
   const path = getLocalizedCurriculumIndexPath(locale);
 
