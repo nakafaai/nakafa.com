@@ -11,7 +11,7 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getPublishedQuranCatalog,
-  getPublishedQuranPage,
+  getPublishedQuranView,
   readPublishedQuranCatalog,
   readPublishedQuranPage,
 } from "@/lib/content/quran/publication";
@@ -57,7 +57,7 @@ describe("published Quran content", () => {
     expect(cacheMock).toHaveBeenCalledOnce();
   });
 
-  it("reads one signed page through Effect and cached Promise boundaries", async () => {
+  it("reads the complete signed page through the Effect boundary", async () => {
     const result = pageResult();
     fetchMock.mockResolvedValue(result);
 
@@ -67,9 +67,37 @@ describe("published Quran content", () => {
       surah: { number: 1 },
       verses: [{ number: {} }],
     });
-    await expect(getPublishedQuranPage("id", 1)).resolves.toMatchObject({
+    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {
+      locale: "id",
+      surahNumber: 1,
+    });
+  });
+
+  it("keeps a failed Quran query in the Effect error channel", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("Quran unavailable"));
+
+    await expect(
+      Effect.runPromise(Effect.either(readPublishedQuranCatalog()))
+    ).resolves.toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "TestRuntimeQueryError",
+        message: "Error: Quran unavailable",
+      },
+    });
+  });
+
+  it("caches the locale-specific Quran web projection", async () => {
+    fetchMock.mockResolvedValue(viewResult());
+
+    await expect(getPublishedQuranView("id", 1)).resolves.toMatchObject({
+      locale: "id",
       surah: { number: 1 },
-      verses: [{ number: {} }],
+      verses: [
+        {
+          translation: "Terjemahan teknis 1",
+        },
+      ],
     });
     expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {
       locale: "id",
@@ -86,6 +114,38 @@ function catalogResult() {
     rowJson: Array.from({ length: 114 }, (_, index) =>
       encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
     ),
+  };
+}
+
+/** Builds one narrow locale-specific Quran web response. */
+function viewResult() {
+  return {
+    ...source,
+    locale: "id",
+    nextSurah: {
+      name: {
+        translation: "Technical meaning 2",
+        transliteration: "Technical Surah 2",
+      },
+      number: 2,
+      numberOfVerses: 1,
+    },
+    previousSurah: null,
+    surah: {
+      name: {
+        translation: "Technical meaning 1",
+        transliteration: "Technical Surah 1",
+      },
+      number: 1,
+      numberOfVerses: 1,
+    },
+    verses: [
+      {
+        arabic: "آية 1",
+        number: { inQuran: 1, inSurah: 1 },
+        translation: "Terjemahan teknis 1",
+      },
+    ],
   };
 }
 

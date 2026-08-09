@@ -280,6 +280,7 @@
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir",
+    "interpretation-error": "Tafsir ayat ini belum dapat dimuat. Coba lagi.",
     "surah-title": "Surat {number}: {name} ({translation}) - {quran}",
     "verses": "ayat",
     "read-quran-description": "Baca Al-Quran online dengan terjemahan dan tafsir per ayat di Nakafa"

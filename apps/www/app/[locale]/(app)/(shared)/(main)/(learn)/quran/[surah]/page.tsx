@@ -1,5 +1,4 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/spec";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
@@ -23,7 +22,7 @@ import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
 import {
   getPublishedQuranCatalog,
-  getPublishedQuranPage,
+  getPublishedQuranView,
 } from "@/lib/content/quran/publication";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -35,30 +34,6 @@ import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 
 const QURAN_INITIAL_VERSE_SSR_COUNT = 80;
-
-/** Returns complete localized tafsir controls only when every surah verse has data. */
-function getSurahInterpretations(
-  verses: readonly QuranRuntimeVerse[],
-  locale: Locale
-) {
-  if (locale !== "id") {
-    return;
-  }
-
-  const interpretations: string[] = [];
-
-  for (const verse of verses) {
-    const tafsir = verse.tafsir.id.text;
-
-    if (!tafsir.trim()) {
-      return;
-    }
-
-    interpretations.push(tafsir);
-  }
-
-  return interpretations;
-}
 
 /** Builds localized Quran surah metadata only after the runtime catalog confirms the surah exists. */
 export async function generateMetadata({
@@ -222,7 +197,7 @@ async function CachedSurahShell({
 
   const [t, result] = await Promise.all([
     getTranslations({ locale, namespace: "Holy" }),
-    getPublishedQuranPage(locale, surahNumber),
+    getPublishedQuranView(locale, surahNumber),
   ]);
 
   const surahData = result.surah;
@@ -246,7 +221,7 @@ async function CachedSurahShell({
   });
 
   const interpretationLabel = t("interpretation");
-  const interpretations = getSurahInterpretations(result.verses, locale);
+  const hasInterpretation = result.locale === "id";
 
   return (
     <VirtualProvider>
@@ -274,13 +249,11 @@ async function CachedSurahShell({
 
               return (
                 <QuranVerse
-                  hasInterpretation={interpretations !== undefined}
+                  hasInterpretation={hasInterpretation}
                   id={slugify(verseLabel)}
-                  index={index}
                   interpretationLabel={interpretationLabel}
                   isLast={index === result.verses.length - 1}
                   key={verse.number.inQuran}
-                  locale={locale}
                   verse={verse}
                   verseLabel={verseLabel}
                 />
@@ -290,10 +263,12 @@ async function CachedSurahShell({
         </LayoutContent>
         <PaginationContent pagination={pagination} />
         <FooterContent>{footer}</FooterContent>
-        {interpretations && (
+        {hasInterpretation && (
           <QuranInterpretationControls
-            interpretations={interpretations}
+            errorMessage={t("interpretation-error")}
             label={interpretationLabel}
+            snapshotId={result.snapshotId}
+            surahNumber={surahData.number}
           />
         )}
         {toolbar}
