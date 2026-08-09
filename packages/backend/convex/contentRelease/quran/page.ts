@@ -29,27 +29,16 @@ const readNeighbor = Effect.fn("contentRelease.readQuranNeighbor")(function* (
     `surah:${surahNumber}`,
     QuranSurahRowSchema
   );
-  return row.rowJson;
+  return row;
 });
 
-/** Loads one complete verified Quran surah page from the active snapshot. */
-export const readQuranPage = Effect.fn("contentRelease.readQuranPage")(
-  function* (
-    ctx: QueryCtx,
-    locale: QuranSearchRow["locale"],
-    sourceSurah: number
-  ) {
+/** Loads the active signed surah shared by complete and projected pages. */
+const loadQuranPageSource = Effect.fn("contentRelease.loadQuranPageSource")(
+  function* (ctx: QueryCtx, sourceSurah: number) {
     const surahNumber = yield* validateQuranSurah(sourceSurah);
     const owner = yield* loadQuranOwner(ctx);
     if (owner.snapshotId === null) {
-      return {
-        ...owner,
-        chunkJson: [],
-        nextSurahJson: null,
-        prevSurahJson: null,
-        searchJson: null,
-        surahJson: null,
-      };
+      return { owner, source: null };
     }
     const surah = yield* readQuranRow(
       ctx,
@@ -63,30 +52,98 @@ export const readQuranPage = Effect.fn("contentRelease.readQuranPage")(
         `Quran surah ${surahNumber} exceeds ${QURAN_PAGE_VERSE_LIMIT} verses.`
       );
     }
-    const chunks = yield* readQuranChunks(ctx, {
-      fromVerse: 1,
-      numberOfVerses: surah.payload.numberOfVerses,
-      snapshotId: owner.snapshotId,
-      surahNumber,
-      toVerse: surah.payload.numberOfVerses,
-    });
-    const search = yield* readQuranRow(
-      ctx,
-      owner.snapshotId,
-      quranSearchIdentity(locale, surahNumber),
-      QuranSearchRowSchema
+    return { owner, source: { surah, surahNumber } };
+  }
+);
+
+/** Reads only the signed rows required by both complete and projected pages. */
+const readQuranPageRows = Effect.fn("contentRelease.readQuranPageRows")(
+  function* (
+    ctx: QueryCtx,
+    snapshotId: string,
+    surahNumber: number,
+    numberOfVerses: number
+  ) {
+    return yield* Effect.all(
+      {
+        chunks: readQuranChunks(ctx, {
+          fromVerse: 1,
+          numberOfVerses,
+          snapshotId,
+          surahNumber,
+          toVerse: numberOfVerses,
+        }),
+        nextSurah: readNeighbor(ctx, snapshotId, surahNumber + 1),
+        previousSurah: readNeighbor(ctx, snapshotId, surahNumber - 1),
+      },
+      { concurrency: "unbounded" }
     );
-    const [prevSurahJson, nextSurahJson] = yield* Effect.all([
-      readNeighbor(ctx, owner.snapshotId, surahNumber - 1),
-      readNeighbor(ctx, owner.snapshotId, surahNumber + 1),
-    ]);
+  }
+);
+
+/** Loads the narrow signed page source without an unrelated search document. */
+export const loadQuranPageView = Effect.fn("contentRelease.loadQuranPageView")(
+  function* (ctx: QueryCtx, sourceSurah: number) {
+    const loaded = yield* loadQuranPageSource(ctx, sourceSurah);
+    if (loaded.source === null || loaded.owner.snapshotId === null) {
+      return { owner: loaded.owner, page: null };
+    }
+    const rows = yield* readQuranPageRows(
+      ctx,
+      loaded.owner.snapshotId,
+      loaded.source.surahNumber,
+      loaded.source.surah.payload.numberOfVerses
+    );
     return {
-      ...owner,
-      chunkJson: chunks.rowJson,
-      nextSurahJson,
-      prevSurahJson,
+      owner: loaded.owner,
+      page: { ...rows, surah: loaded.source.surah },
+    };
+  }
+);
+
+/** Returns one complete multilingual page through the existing wire contract. */
+export const readQuranPage = Effect.fn("contentRelease.readQuranPage")(
+  function* (
+    ctx: QueryCtx,
+    locale: QuranSearchRow["locale"],
+    sourceSurah: number
+  ) {
+    const loaded = yield* loadQuranPageSource(ctx, sourceSurah);
+    if (loaded.source === null || loaded.owner.snapshotId === null) {
+      return {
+        ...loaded.owner,
+        chunkJson: [],
+        nextSurahJson: null,
+        prevSurahJson: null,
+        searchJson: null,
+        surahJson: null,
+      };
+    }
+    const { rows, search } = yield* Effect.all(
+      {
+        rows: readQuranPageRows(
+          ctx,
+          loaded.owner.snapshotId,
+          loaded.source.surahNumber,
+          loaded.source.surah.payload.numberOfVerses
+        ),
+        search: readQuranRow(
+          ctx,
+          loaded.owner.snapshotId,
+          quranSearchIdentity(locale, loaded.source.surahNumber),
+          QuranSearchRowSchema
+        ),
+      },
+      { concurrency: "unbounded" }
+    );
+
+    return {
+      ...loaded.owner,
+      chunkJson: rows.chunks.rowJson,
+      nextSurahJson: rows.nextSurah?.rowJson ?? null,
+      prevSurahJson: rows.previousSurah?.rowJson ?? null,
       searchJson: search.rowJson,
-      surahJson: surah.rowJson,
+      surahJson: loaded.source.surah.rowJson,
     };
   }
 );

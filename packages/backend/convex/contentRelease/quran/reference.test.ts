@@ -119,4 +119,28 @@ describe("contentRelease/quran/reference", () => {
       data: { code: "CONTENT_RELEASE_LIMIT" },
     });
   });
+
+  it("preserves the complete legacy reference search contract", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(
+        ctx,
+        referenceRows().filter((row) => row.kind !== "quran-search")
+      )
+    );
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readQuranReference(ctx, {
+            fromVerse: 1,
+            locale: "en",
+            surahNumber: 1,
+          })
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
 });

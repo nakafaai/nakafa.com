@@ -1,3 +1,4 @@
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import {
   type Sha256Hash,
   Sha256HashSchema,
@@ -24,6 +25,7 @@ import {
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,
+  restoreContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -37,6 +39,10 @@ import {
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
 import { insertTestRelease } from "@repo/backend/test/content-stage";
+import {
+  insertZeroRelease,
+  type TestIdentity,
+} from "@repo/backend/test/content-state";
 import { makeQuranSearch } from "@repo/backend/test/quran-rows";
 import { Effect } from "effect";
 
@@ -201,4 +207,47 @@ export async function activateQuranSnapshot(
   }
   await completeTestRelease(ctx);
   return snapshotId;
+}
+
+/** Restores the active technical Quran snapshot to its prior absent state. */
+export async function restoreAbsentQuranSnapshot(
+  ctx: MutationCtx,
+  snapshotId: Sha256Hash
+) {
+  const active = {
+    manifestHash: TEST_MANIFEST_HASH,
+    releaseId: TEST_RELEASE_ID,
+    sequence: 1,
+  } satisfies TestIdentity;
+  const recovery = {
+    manifestHash: `sha256:${"9".repeat(64)}`,
+    releaseId: "release-quran-recovery",
+    sequence: 2,
+  } satisfies TestIdentity;
+  const snapshots = {
+    ...inheritContentSnapshots(null),
+    quran: restoreContentSnapshot(snapshotId, null),
+  };
+  await insertZeroRelease(ctx, {
+    ...recovery,
+    base: active,
+    originReleaseId: active.releaseId,
+    ownership: {
+      base: ContentFamilySchema.literals,
+      result: [],
+    },
+    role: "recovery",
+    snapshots,
+    status: "completed",
+  });
+  const state = await ctx.db.query("contentState").unique();
+  if (!state) {
+    throw new Error("Expected active technical Quran state.");
+  }
+  await ctx.db.patch("contentState", state._id, {
+    activeManifestHash: recovery.manifestHash,
+    activeReleaseId: recovery.releaseId,
+    activeSequence: recovery.sequence,
+    nextSequence: recovery.sequence + 1,
+  });
 }
