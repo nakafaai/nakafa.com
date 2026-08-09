@@ -1,0 +1,117 @@
+import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
+import { FileSystem } from "@effect/platform";
+import { NodeContext } from "@effect/platform-node";
+import {
+  runRuntimeCommand,
+  sanitizeRuntimeCommandError,
+} from "@repo/backend/scripts/content-runtime/ci/command";
+import { Effect } from "effect";
+import { describe, expect, it } from "vitest";
+
+describe("content runtime command diagnostics", () => {
+  it("keeps a bounded single-line diagnostic and redacts secrets", () => {
+    const deployKey = "sensitive-deploy-key";
+    const result = sanitizeRuntimeCommandError(
+      `\u001B[31mPermission denied\u001B[0m\n${deployKey}\n${"x".repeat(600)}`,
+      [deployKey]
+    );
+
+    expect(result).toContain("Permission denied [redacted]");
+    expect(result).not.toContain(deployKey);
+    expect(result).not.toContain("\n");
+    expect(result.length).toBe(500);
+  });
+
+  it("preserves the Convex role action required by the CLI", () => {
+    expect(
+      sanitizeRuntimeCommandError(
+        "You do not have permission (deployment:data:view).",
+        []
+      )
+    ).toBe("You do not have permission (deployment:data:view).");
+  });
+
+  it("turns failed child stderr into a redacted typed error", async () => {
+    const sensitiveValue = "sensitive-deploy-key";
+    const result = await Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fileSystem = yield* FileSystem.FileSystem;
+          const root = yield* fileSystem.makeTempDirectoryScoped({
+            directory: tmpdir(),
+            prefix: "content-runtime-command-test-",
+          });
+          const stderrPath = `${root}/stderr.log`;
+          const stdoutPath = `${root}/stdout.log`;
+          const failure = yield* runRuntimeCommand({
+            args: [
+              "-e",
+              `process.stderr.write(${JSON.stringify(`Permission denied for ${sensitiveValue}\n`)}); process.exit(7);`,
+            ],
+            command: process.execPath,
+            operation: "Production probe",
+            reportStderr: true,
+            sensitiveValues: [sensitiveValue],
+            stderrPath,
+            stdoutPath,
+          }).pipe(Effect.flip);
+
+          return {
+            failure,
+            stderr: yield* fileSystem.readFileString(stderrPath),
+            stdout: yield* fileSystem.readFileString(stdoutPath),
+          };
+        })
+      ).pipe(Effect.provide(NodeContext.layer))
+    );
+
+    expect(result.failure).toMatchObject({
+      _tag: "ContentRuntimeCiError",
+      message: "Production probe failed: Permission denied for [redacted]",
+    });
+    expect(result.failure.message).not.toContain(sensitiveValue);
+    expect(result.stderr).toContain(sensitiveValue);
+    expect(result.stdout).toBe("");
+  });
+
+  it("keeps entrypoint failures off stdout", async () => {
+    const tsxCli = fileURLToPath(import.meta.resolve("tsx/cli"));
+    const entrypoint = fileURLToPath(new URL("./main.ts", import.meta.url));
+    const result = await Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fileSystem = yield* FileSystem.FileSystem;
+          const root = yield* fileSystem.makeTempDirectoryScoped({
+            directory: tmpdir(),
+            prefix: "content-runtime-entrypoint-test-",
+          });
+          const stderrPath = `${root}/stderr.log`;
+          const stdoutPath = `${root}/stdout.log`;
+          const failure = yield* runRuntimeCommand({
+            args: [tsxCli, "--conditions=import", entrypoint, "unsupported"],
+            command: process.execPath,
+            operation: "Entrypoint smoke",
+            reportStderr: true,
+            stderrPath,
+            stdoutPath,
+          }).pipe(Effect.flip);
+
+          return {
+            failure,
+            stderr: yield* fileSystem.readFileString(stderrPath),
+            stdout: yield* fileSystem.readFileString(stdoutPath),
+          };
+        })
+      ).pipe(Effect.provide(NodeContext.layer))
+    );
+
+    expect(result.failure.message).toContain(
+      "Usage: runtime:ci <fingerprint|generations|verify-generations|export|import>"
+    );
+    expect(result.stderr).toBe(
+      "ERROR: Usage: runtime:ci <fingerprint|generations|verify-generations|export|import>\n"
+    );
+    expect(result.stdout).toBe("");
+  }, 15_000);
+});

@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      AGENT_DOCS_RUN_IDENTITY: agent-docs-${{ github.run_id }}-${{ github.run_attempt }}
       CONTENT_RUNTIME_TOKEN: ci-agent-docs
       INTERNAL_CONTENT_API_KEY: ci-agent-docs
       NEXT_PUBLIC_APP_URL: http://localhost:3000
@@ -27,7 +26,7 @@ jobs:
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
       POSTHOG_PROXY_HOST: https://t.nakafa.com
       SITE_URL: http://localhost:3000
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih') }}
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -62,53 +61,105 @@ jobs:
       - name: Run tests
         run: pnpm test
 
-      - name: Authenticate Convex CLI
+      - name: Fingerprint signed runtime contract
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        run: |
+          output="$RUNNER_TEMP/agent-docs-fingerprint.env"
+          rm -f -- "$output"
+          pnpm --silent --dir packages/backend runtime:ci fingerprint
+
+          if [ ! -f "$output" ] || [ -L "$output" ] || \
+            [ "$(stat -c '%a' "$output")" != "600" ] || \
+            [ "$(wc -l < "$output")" -ne 2 ] || \
+            ! grep -Exq 'AGENT_DOCS_CONTENT_CACHE_VERSION=v[0-9]+' "$output" || \
+            ! grep -Exq 'AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT=[a-f0-9]{64}' "$output"; then
+            echo "Invalid signed runtime fingerprint output." >&2
+            exit 1
+          fi
+
+          cat "$output" >> "$GITHUB_ENV"
+          rm -f -- "$output"
+
+      - name: Fingerprint production runtime generations
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         env:
-          CONVEX_ACCESS_TOKEN: ${{ secrets.AGENT_DOCS_CONVEX_ACCESS_TOKEN }}
+          CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
         run: |
-          install -d -m 700 "$HOME/.convex"
-          jq -n --arg accessToken "$CONVEX_ACCESS_TOKEN" \
-            '{accessToken: $accessToken}' > "$HOME/.convex/config.json"
-          chmod 600 "$HOME/.convex/config.json"
+          output="$RUNNER_TEMP/agent-docs-generations.env"
+          rm -f -- "$output"
+          pnpm --silent --dir packages/backend runtime:ci generations
 
-      - name: Create isolated backend
+          if [ ! -f "$output" ] || [ -L "$output" ] || \
+            [ "$(stat -c '%a' "$output")" != "600" ] || \
+            [ "$(wc -l < "$output")" -ne 3 ] || \
+            ! grep -Exq 'AGENT_DOCS_CONTENT_STATE_HASH=[a-f0-9]{64}' "$output" || \
+            ! grep -Exq 'AGENT_DOCS_ROUTE_GENERATION_HASH=[a-f0-9]{64}' "$output" || \
+            ! grep -Exq 'AGENT_DOCS_SITEMAP_GENERATION_HASH=[a-f0-9]{64}' "$output"; then
+            echo "Invalid production runtime generation output." >&2
+            exit 1
+          fi
+
+          cat "$output" >> "$GITHUB_ENV"
+          rm -f -- "$output"
+
+      # Protected signed runtime, including tryout content, is never cached raw.
+      - name: Restore encrypted signed content snapshot
+        id: signed-content-cache
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/agent-docs-content-cache
+          key: agent-docs-content-${{ env.AGENT_DOCS_CONTENT_CACHE_VERSION }}-${{ env.AGENT_DOCS_CONTENT_STATE_HASH }}-${{ env.AGENT_DOCS_ROUTE_GENERATION_HASH }}-${{ env.AGENT_DOCS_SITEMAP_GENERATION_HASH }}-${{ env.AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT }}
+
+      - name: Export encrypted signed content snapshot
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && steps.signed-content-cache.outputs.cache-hit != 'true'
+        env:
+          AGENT_DOCS_CONTENT_CACHE_KEY: ${{ secrets.AGENT_DOCS_CONTENT_CACHE_KEY_V1 }}
+          CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
+        run: pnpm --silent --dir packages/backend runtime:ci export
+
+      - name: Verify production runtime generations
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
+        run: pnpm --silent --dir packages/backend runtime:ci verify-generations
+
+      - name: Initialize anonymous local backend
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
-          deployment_reference="nakafa:nakafa:dev/$AGENT_DOCS_RUN_IDENTITY"
-          pnpm --dir packages/backend exec convex deployment create \
-            "$deployment_reference" \
-            --type dev \
-            --select \
-            --expiration "in 1 day"
-          echo "AGENT_DOCS_DEPLOY_KEY_CLEANUP_ARMED=true" >> "$GITHUB_ENV"
+          umask 077
+          CONVEX_AGENT_MODE=anonymous pnpm --dir packages/backend exec convex init
 
-      - name: Export isolated backend credentials
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        run: |
-          deploy_key_file="$RUNNER_TEMP/$AGENT_DOCS_RUN_IDENTITY.env"
-          pnpm --dir packages/backend exec convex deployment token create \
-            "$AGENT_DOCS_RUN_IDENTITY" \
-            --save-env "$deploy_key_file"
+          convex_url="$(
+            sed -n 's/^VITE_CONVEX_URL=//p' packages/backend/.env.local
+          )"
+          convex_site_url="$(
+            sed -n 's/^VITE_CONVEX_SITE_URL=//p' packages/backend/.env.local
+          )"
+          case "$convex_url" in
+            http://127.0.0.1:*) ;;
+            *)
+              echo "Anonymous Convex client URL is not local." >&2
+              exit 1
+              ;;
+          esac
+          case "$convex_site_url" in
+            http://127.0.0.1:*) ;;
+            *)
+              echo "Anonymous Convex site URL is not local." >&2
+              exit 1
+              ;;
+          esac
 
-          deploy_key="$(sed -n 's/^CONVEX_DEPLOY_KEY=//p' "$deploy_key_file")"
-          convex_url="$(sed -n 's/^VITE_CONVEX_URL=//p' packages/backend/.env.local)"
-          convex_site_url="$(sed -n 's/^VITE_CONVEX_SITE_URL=//p' packages/backend/.env.local)"
-
-          test -n "$deploy_key"
-          test -n "$convex_url"
-          test -n "$convex_site_url"
-
-          echo "::add-mask::$deploy_key"
           {
-            echo "CONVEX_DEPLOY_KEY=$deploy_key"
+            echo "CONVEX_AGENT_MODE=anonymous"
             echo "CONVEX_SITE_URL=$convex_site_url"
             echo "CONVEX_URL=$convex_url"
             echo "NEXT_PUBLIC_CONVEX_SITE_URL=$convex_site_url"
             echo "NEXT_PUBLIC_CONVEX_URL=$convex_url"
           } >> "$GITHUB_ENV"
 
-      - name: Configure isolated backend
+      - name: Configure anonymous local backend
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
           # Agent docs exercises content reads only. External integrations stay inert.
@@ -136,60 +187,40 @@ jobs:
           SITE_URL=$SITE_URL
           EOF
 
-      - name: Deploy isolated backend
+      - name: Start anonymous local backend
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        run: pnpm --dir packages/backend exec convex dev --once --typecheck enable --tail-logs disable
-
-      - name: Bootstrap signed content runtime
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        env:
-          CONTENT_RUNTIME_EXPORT_LIMIT: 10000
         run: |
-          config_path="$HOME/.convex/config.json"
-          snapshot_root="$RUNNER_TEMP/$AGENT_DOCS_RUN_IDENTITY-content"
-          trap 'rm -f "$config_path"' EXIT
+          umask 077
+          convex_log="$RUNNER_TEMP/agent-docs-convex.log"
+          convex_pid="$RUNNER_TEMP/agent-docs-convex.pid"
 
-          install -d -m 700 "$snapshot_root"
-          mapfile -t tables < <(
-            pnpm --silent --dir packages/backend runtime:tables
-          )
-          if [[ "${#tables[@]}" -eq 0 ]]; then
-            echo "The signed content runtime owns no bootstrap tables." >&2
-            exit 1
-          fi
+          : > "$convex_log"
+          chmod 600 "$convex_log"
+          setsid pnpm --dir packages/backend exec convex dev \
+            --typecheck enable \
+            --tail-logs disable > "$convex_log" 2>&1 &
+          echo "$!" > "$convex_pid"
 
-          for table in "${tables[@]}"; do
-            source_json="$snapshot_root/$table.json"
-            portable_jsonl="$snapshot_root/$table.jsonl"
-
-            CONVEX_DEPLOY_KEY= pnpm --dir packages/backend exec convex data \
-              "$table" \
-              --prod \
-              --limit "$CONTENT_RUNTIME_EXPORT_LIMIT" \
-              --format jsonArray > "$source_json"
-
-            if [[ ! -s "$source_json" ]]; then
-              printf '[]\n' > "$source_json"
-            fi
-
-            row_count="$(jq 'length' "$source_json")"
-            if (( row_count >= CONTENT_RUNTIME_EXPORT_LIMIT )); then
-              echo "Content runtime table $table reached the export limit." >&2
+          for _attempt in {1..120}; do
+            if ! kill -0 "$(cat "$convex_pid")" 2> /dev/null; then
+              echo "The anonymous local backend exited before becoming ready." >&2
               exit 1
             fi
-
-            jq -c \
-              '.[] | del(._id, ._creationTime, .proofWorkflowId, .syncJobId)' \
-              "$source_json" > "$portable_jsonl"
-            pnpm --dir packages/backend exec convex import \
-              --format jsonLines \
-              --table "$table" \
-              --replace \
-              --yes \
-              "$portable_jsonl"
-            printf 'Bootstrapped %s signed runtime rows into %s.\n' \
-              "$row_count" "$table"
+            if grep -Fq 'Convex functions ready!' "$convex_log" && \
+              curl -fsS "$CONVEX_URL/instance_name" > /dev/null; then
+              exit 0
+            fi
+            sleep 2
           done
+
+          echo "The anonymous local backend did not become ready." >&2
+          exit 1
+
+      - name: Import signed content snapshot
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        env:
+          AGENT_DOCS_CONTENT_CACHE_KEY: ${{ secrets.AGENT_DOCS_CONTENT_CACHE_KEY_V1 }}
+        run: pnpm --silent --dir packages/backend runtime:ci import
 
       - name: Build production app
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
@@ -200,74 +231,84 @@ jobs:
       - name: Start web app
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
-          pnpm --filter www start > /tmp/nakafa-www.log 2>&1 &
-          echo "$!" > /tmp/nakafa-www.pid
+          umask 077
+          web_log="$RUNNER_TEMP/agent-docs-www.log"
+          web_pid="$RUNNER_TEMP/agent-docs-www.pid"
+          : > "$web_log"
+          chmod 600 "$web_log"
+          setsid pnpm --filter www start > "$web_log" 2>&1 &
+          echo "$!" > "$web_pid"
 
       - name: Wait for web app
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
-          for attempt in {1..60}; do
+          for _attempt in {1..60}; do
             if curl -fsS http://localhost:3000/llms.txt > /dev/null && \
               curl -fsS http://localhost:3000/sitemap.xml > /dev/null; then
               exit 0
             fi
             sleep 2
           done
-          cat /tmp/nakafa-www.log
+          echo "The local production app did not become ready." >&2
           exit 1
 
       - name: Run AFDocs checks
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm agent-docs
 
-      - name: Print web app log after failure
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && failure()
-        run: |
-          if [ -f /tmp/nakafa-www.log ]; then
-            cat /tmp/nakafa-www.log
-          fi
+      - name: Save verified encrypted signed content snapshot
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.signed-content-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/agent-docs-content-cache
+          key: ${{ steps.signed-content-cache.outputs.cache-primary-key }}
 
-      - name: Stop web app
+      - name: Stop local services and erase temporary state
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && always()
         run: |
-          if [ -f /tmp/nakafa-www.pid ]; then
-            kill "$(cat /tmp/nakafa-www.pid)" || true
-          fi
+          stop_process_group() {
+            local pid_file="$1"
+            if [ ! -f "$pid_file" ]; then
+              return
+            fi
 
-      - name: Revoke isolated backend credential
-        if: always() && env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        env:
-          CONVEX_ACCESS_TOKEN: ${{ secrets.AGENT_DOCS_CONVEX_ACCESS_TOKEN }}
-          CONVEX_DEPLOY_KEY: <ignore_deploy_key>
-        run: |
-          config_path="$HOME/.convex/config.json"
-          trap 'rm -f "$config_path"' EXIT
+            local pid
+            pid="$(cat "$pid_file")"
+            case "$pid" in
+              *[!0-9]* | "")
+                echo "Invalid local service process ID." >&2
+                return 1
+                ;;
+            esac
 
-          install -d -m 700 "$HOME/.convex"
-          jq -n --arg accessToken "$CONVEX_ACCESS_TOKEN" \
-            '{accessToken: $accessToken}' > "$config_path"
-          chmod 600 "$config_path"
+            kill -- "-$pid" 2> /dev/null || true
+            for _attempt in {1..20}; do
+              if ! kill -0 -- "-$pid" 2> /dev/null; then
+                return
+              fi
+              sleep 0.25
+            done
+            kill -KILL -- "-$pid" 2> /dev/null || true
+          }
 
-          if [ "${AGENT_DOCS_DEPLOY_KEY_CLEANUP_ARMED:-false}" != "true" ]; then
-            exit 0
-          fi
+          test -n "${RUNNER_TEMP:-}"
+          stop_process_group "$RUNNER_TEMP/agent-docs-www.pid"
+          stop_process_group "$RUNNER_TEMP/agent-docs-convex.pid"
 
-          deployment_reference="nakafa:nakafa:dev/$AGENT_DOCS_RUN_IDENTITY"
-          if delete_output="$(
-            pnpm --dir packages/backend exec convex deployment token delete \
-              "$AGENT_DOCS_RUN_IDENTITY" \
-              --deployment "$deployment_reference" 2>&1
-          )"; then
-            printf '%s\n' "$delete_output"
-            exit 0
-          fi
+          rm -rf -- \
+            packages/backend/.convex \
+            "$RUNNER_TEMP/agent-docs-content-cache"
+          rm -f -- \
+            packages/backend/.env.local \
+            "$RUNNER_TEMP/agent-docs-fingerprint.env" \
+            "$RUNNER_TEMP/agent-docs-generations.env" \
+            "$RUNNER_TEMP/agent-docs-convex.log" \
+            "$RUNNER_TEMP/agent-docs-convex.pid" \
+            "$RUNNER_TEMP/agent-docs-www.log" \
+            "$RUNNER_TEMP/agent-docs-www.pid"
 
-          case "$delete_output" in
-            *"DeployKeyNotFound: Deploy key not found"*)
-              printf 'No deploy key was created for %s.\n' "$AGENT_DOCS_RUN_IDENTITY"
-              ;;
-            *)
-              printf '%s\n' "$delete_output" >&2
-              exit 1
-              ;;
-          esac
+          find "$RUNNER_TEMP" -mindepth 1 -maxdepth 1 -type d \
+            \( -name 'agent-docs-export-*' \
+            -o -name 'agent-docs-generations-*' \
+            -o -name 'agent-docs-import-*' \) \
+            -exec rm -rf -- {} +
