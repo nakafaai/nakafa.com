@@ -532,6 +532,7 @@ import type * as tryouts_catalog_spec from "../tryouts/catalog/spec.js";
 import type * as tryouts_mutations_access from "../tryouts/mutations/access.js";
 import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
 import type * as tryouts_mutations_expiry from "../tryouts/mutations/expiry.js";
+import type * as tryouts_mutations_responses from "../tryouts/mutations/responses.js";
 import type * as tryouts_mutations_sections from "../tryouts/mutations/sections.js";
 import type * as tryouts_progress_size from "../tryouts/progress/size.js";
 import type * as tryouts_progress_write from "../tryouts/progress/write.js";
@@ -546,6 +547,9 @@ import type * as tryouts_queries_retained_snapshot from "../tryouts/queries/reta
 import type * as tryouts_queries_runtime from "../tryouts/queries/runtime.js";
 import type * as tryouts_queries_sets from "../tryouts/queries/sets.js";
 import type * as tryouts_questions from "../tryouts/questions.js";
+import type * as tryouts_response_impl from "../tryouts/response/impl.js";
+import type * as tryouts_response_integrity from "../tryouts/response/integrity.js";
+import type * as tryouts_response_spec from "../tryouts/response/spec.js";
 import type * as tryouts_route from "../tryouts/route.js";
 import type * as tryouts_runtime_access from "../tryouts/runtime/access.js";
 import type * as tryouts_runtime_attempt_sections from "../tryouts/runtime/attempt/sections.js";
@@ -561,6 +565,7 @@ import type * as tryouts_runtime_irt_items from "../tryouts/runtime/irt/items.js
 import type * as tryouts_runtime_irt_score from "../tryouts/runtime/irt/score.js";
 import type * as tryouts_runtime_lookup from "../tryouts/runtime/lookup.js";
 import type * as tryouts_runtime_placement from "../tryouts/runtime/placement.js";
+import type * as tryouts_runtime_response from "../tryouts/runtime/response.js";
 import type * as tryouts_runtime_result from "../tryouts/runtime/result.js";
 import type * as tryouts_runtime_score from "../tryouts/runtime/score.js";
 import type * as tryouts_runtime_section_questions from "../tryouts/runtime/section/questions.js";
@@ -1127,6 +1132,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/mutations/access": typeof tryouts_mutations_access;
   "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;
   "tryouts/mutations/expiry": typeof tryouts_mutations_expiry;
+  "tryouts/mutations/responses": typeof tryouts_mutations_responses;
   "tryouts/mutations/sections": typeof tryouts_mutations_sections;
   "tryouts/progress/size": typeof tryouts_progress_size;
   "tryouts/progress/write": typeof tryouts_progress_write;
@@ -1141,6 +1147,9 @@ declare const fullApi: ApiFromModules<{
   "tryouts/queries/runtime": typeof tryouts_queries_runtime;
   "tryouts/queries/sets": typeof tryouts_queries_sets;
   "tryouts/questions": typeof tryouts_questions;
+  "tryouts/response/impl": typeof tryouts_response_impl;
+  "tryouts/response/integrity": typeof tryouts_response_integrity;
+  "tryouts/response/spec": typeof tryouts_response_spec;
   "tryouts/route": typeof tryouts_route;
   "tryouts/runtime/access": typeof tryouts_runtime_access;
   "tryouts/runtime/attempt/sections": typeof tryouts_runtime_attempt_sections;
@@ -1156,6 +1165,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/runtime/irt/score": typeof tryouts_runtime_irt_score;
   "tryouts/runtime/lookup": typeof tryouts_runtime_lookup;
   "tryouts/runtime/placement": typeof tryouts_runtime_placement;
+  "tryouts/runtime/response": typeof tryouts_runtime_response;
   "tryouts/runtime/result": typeof tryouts_runtime_result;
   "tryouts/runtime/score": typeof tryouts_runtime_score;
   "tryouts/runtime/section/questions": typeof tryouts_runtime_section_questions;

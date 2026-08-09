@@ -1,6 +1,7 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { retainTryoutBundle } from "@repo/backend/convex/tryouts/runtime/bundle";
 import { finalizeAttemptScore } from "@repo/backend/convex/tryouts/runtime/score";
@@ -13,6 +14,7 @@ import {
   insertTestState,
   insertZeroRelease,
 } from "@repo/backend/test/content-state";
+import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -215,6 +217,76 @@ describe("tryouts/runtime/score", () => {
       totalCorrect: 1,
       totalQuestions: 1,
       tryoutSnapshotId: SNAPSHOT_ID,
+    });
+  });
+
+  it("rejects stale response correctness before terminal writes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const fixture = await seedTryoutContentAccessState(ctx, {
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        suffix: "score-response-integrity",
+      });
+      const placement = await ctx.db.get(fixture.placementId);
+      if (!placement) {
+        throw new Error("Expected one frozen try-out placement.");
+      }
+      const choice = placement.choiceSnapshots.at(0);
+      if (!choice) {
+        throw new Error("Expected one frozen try-out choice.");
+      }
+      await ctx.db.patch(fixture.attemptId, {
+        scoreStatus: "official",
+        scoringStrategy: "raw",
+      });
+      await ctx.db.insert("tryoutResponses", {
+        answeredAt: NOW,
+        isCorrect: !choice.isCorrect,
+        placementId: placement._id,
+        selectedOptionId: choice.optionKey,
+        timeSpent: 0,
+        tryoutAttemptId: fixture.attemptId,
+        tryoutSectionAttemptId: fixture.sectionAttemptId,
+        updatedAt: NOW,
+      });
+      return fixture;
+    });
+
+    await expect(
+      t.mutation(async (ctx) => {
+        const attempt = await ctx.db.get(seeded.attemptId);
+        if (!attempt) {
+          throw new Error("Expected one active try-out attempt.");
+        }
+        return await runConvexProgram(
+          finalizeAttemptScore(ctx, {
+            attempt,
+            endReason: "submitted",
+            now: NOW + 1000,
+          })
+        );
+      })
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_RESPONSE_CHOICE_MISMATCH" },
+    });
+
+    const stored = await t.query(async (ctx) => ({
+      attempt: await ctx.db.get(seeded.attemptId),
+      scores: await ctx.db.query("tryoutScores").collect(),
+      section: await ctx.db.get(seeded.sectionAttemptId),
+    }));
+    expect(stored.scores).toEqual([]);
+    expect(stored.attempt).toMatchObject({
+      completedAt: null,
+      endReason: null,
+      status: "in-progress",
+      totalCorrect: 0,
+    });
+    expect(stored.section).toMatchObject({
+      answeredCount: 0,
+      correctAnswers: 0,
+      status: "in-progress",
     });
   });
 });

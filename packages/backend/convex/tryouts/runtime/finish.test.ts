@@ -203,7 +203,9 @@ describe("tryouts/runtime/finish", () => {
         publicPath: `${SET_PATH}/penalaran-matematika`,
         questionSourcePath: `packages/corpus/${sourcePath}`,
       });
-      const signedSection = makeSignedTryoutSection(section).signed;
+      const signedSectionFixture = makeSignedTryoutSection(section);
+      const signedSection = signedSectionFixture.signed;
+      const source = makeSignedTryoutSource(set, [signedSectionFixture]);
       const attemptId = await insertTryoutAttempt(ctx, {
         scoringStrategy: "raw",
         sectionSnapshots: [tryoutSectionSnapshot({ signed: signedSection })],
@@ -223,6 +225,13 @@ describe("tryouts/runtime/finish", () => {
           message: "Expected try-out attempt and section fixtures.",
         });
       }
+
+      await runConvexProgram(
+        createAttemptPlacements(ctx, {
+          attempt,
+          source,
+        })
+      );
 
       await runConvexProgram(
         finalizeSectionAttempt(ctx, {

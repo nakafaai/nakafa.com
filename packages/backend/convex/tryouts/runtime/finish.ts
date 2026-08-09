@@ -4,6 +4,7 @@ import {
   TryoutRuntimeError,
   tryRuntimePromise,
 } from "@repo/backend/convex/tryouts/runtime/error";
+import { loadSectionResponseIndex } from "@repo/backend/convex/tryouts/runtime/response";
 import { getSectionScoreSnapshot } from "@repo/backend/convex/tryouts/runtime/result";
 import {
   finalizeAttemptScore,
@@ -255,27 +256,6 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
   }
 );
 
-/** Loads bounded responses for one section attempt before finalizing it. */
-const loadSectionResponses = Effect.fn("tryouts.runtime.loadSectionResponses")(
-  function* (ctx: MutationCtx, section: TryoutSectionAttempt) {
-    const responses = yield* tryRuntimePromise(() =>
-      ctx.db
-        .query("tryoutResponses")
-        .withIndex("by_tryoutSectionAttemptId_and_answeredAt", (query) =>
-          query.eq("tryoutSectionAttemptId", section._id)
-        )
-        .take(section.totalQuestions + 1)
-    );
-    if (responses.length > section.totalQuestions) {
-      return yield* new TryoutRuntimeError({
-        code: "TRYOUT_RESPONSE_COUNT_EXCEEDED",
-        message: "Try-out response count exceeds the section question count.",
-      });
-    }
-    return responses;
-  }
-);
-
 /** Calculates the immutable counters and score stored by one terminal section. */
 const readSectionFinalization = Effect.fn(
   "tryouts.runtime.readSectionFinalization"
@@ -286,7 +266,12 @@ const readSectionFinalization = Effect.fn(
     section: TryoutSectionAttempt;
   }
 ) {
-  const responses = yield* loadSectionResponses(ctx, args.section);
+  const loaded = yield* loadSectionResponseIndex(
+    ctx,
+    args.attempt,
+    args.section
+  );
+  const responses = [...loaded.responses.values()];
   const summary = summarizeResponses(responses);
   const score = yield* scoreTryoutSection(ctx, {
     attempt: args.attempt,

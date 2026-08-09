@@ -13,6 +13,7 @@ import {
   scoreIrtAttempt,
   scoreIrtSection,
 } from "@repo/backend/convex/tryouts/runtime/irt";
+import { loadAttemptResponses } from "@repo/backend/convex/tryouts/runtime/response";
 import {
   type AttemptScore,
   scoreRawAnswers,
@@ -118,9 +119,7 @@ export const finalizeAttemptScore = Effect.fn(
     });
   }
 
-  const responses = yield* tryRuntimePromise(() =>
-    loadAttemptResponses(ctx, args.attempt)
-  );
+  const responses = yield* loadAttemptResponses(ctx, args.attempt);
   const score = yield* tryRuntimePromise(() =>
     Promise.resolve(
       scoreAttempt(ctx, {
@@ -176,25 +175,6 @@ function readAttemptScoreOwner(attempt: TryoutAttempt): AttemptScoreOwner {
     setIdentity: attempt.setIdentity,
     tryoutSnapshotId: attempt.tryoutSnapshotId,
   };
-}
-
-/** Loads bounded responses for one complete try-out attempt. */
-async function loadAttemptResponses(ctx: MutationCtx, attempt: TryoutAttempt) {
-  const responses = await ctx.db
-    .query("tryoutResponses")
-    .withIndex("by_tryoutAttemptId_and_answeredAt", (q) =>
-      q.eq("tryoutAttemptId", attempt._id)
-    )
-    .take(attempt.totalQuestions + 1);
-
-  if (responses.length > attempt.totalQuestions) {
-    throw new ConvexError({
-      code: "TRYOUT_RESPONSE_COUNT_EXCEEDED",
-      message: "Try-out response count exceeds the attempt question count.",
-    });
-  }
-
-  return responses;
 }
 
 /** Scores one attempt with the scoring strategy declared by its set. */
