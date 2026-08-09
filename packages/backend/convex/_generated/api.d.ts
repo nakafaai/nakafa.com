@@ -264,7 +264,6 @@ import type * as contentRelease_quran_interpretation from "../contentRelease/qur
 import type * as contentRelease_quran_limits from "../contentRelease/quran/limits.js";
 import type * as contentRelease_quran_markdown from "../contentRelease/quran/markdown.js";
 import type * as contentRelease_quran_owner from "../contentRelease/quran/owner.js";
-import type * as contentRelease_quran_page from "../contentRelease/quran/page.js";
 import type * as contentRelease_quran_reference from "../contentRelease/quran/reference.js";
 import type * as contentRelease_quran_row from "../contentRelease/quran/row.js";
 import type * as contentRelease_quran_search from "../contentRelease/quran/search.js";
@@ -860,7 +859,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/quran/limits": typeof contentRelease_quran_limits;
   "contentRelease/quran/markdown": typeof contentRelease_quran_markdown;
   "contentRelease/quran/owner": typeof contentRelease_quran_owner;
-  "contentRelease/quran/page": typeof contentRelease_quran_page;
   "contentRelease/quran/reference": typeof contentRelease_quran_reference;
   "contentRelease/quran/row": typeof contentRelease_quran_row;
   "contentRelease/quran/search": typeof contentRelease_quran_search;

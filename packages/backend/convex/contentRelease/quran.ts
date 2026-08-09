@@ -16,7 +16,6 @@ import {
   quranMarkdownValidator,
   readQuranMarkdown,
 } from "@repo/backend/convex/contentRelease/quran/markdown";
-import { readQuranPage } from "@repo/backend/convex/contentRelease/quran/page";
 import { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
 import { searchQuran } from "@repo/backend/convex/contentRelease/quran/search";
 import {
@@ -39,15 +38,6 @@ const attributionValidator = v.object({
 const surahCatalogValidator = v.object({
   ...quranSourceFields,
   rowJson: v.array(v.string()),
-});
-
-const pageValidator = v.object({
-  ...quranSourceFields,
-  chunkJson: v.array(v.string()),
-  nextSurahJson: v.union(v.string(), v.null()),
-  prevSurahJson: v.union(v.string(), v.null()),
-  searchJson: v.union(v.string(), v.null()),
-  surahJson: v.union(v.string(), v.null()),
 });
 
 const referenceValidator = v.object({
@@ -82,14 +72,6 @@ export const surahs = query({
   args: {},
   returns: surahCatalogValidator,
   handler: (ctx) => runConvexProgram(readQuranSurahs(ctx)),
-});
-
-/** Returns one complete localized Quran page from bounded immutable chunks. */
-export const page = query({
-  args: { locale: quranLocaleValidator, surahNumber: v.number() },
-  returns: pageValidator,
-  handler: (ctx, { locale, surahNumber }) =>
-    runConvexProgram(readQuranPage(ctx, locale, surahNumber)),
 });
 
 /** Returns the narrow locale-specific Quran document used by the public API. */

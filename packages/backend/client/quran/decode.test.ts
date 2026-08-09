@@ -5,7 +5,6 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import {
   decodePublishedQuranCatalog,
-  decodePublishedQuranPage,
   decodePublishedQuranReference,
   QuranPublicationError,
 } from "@repo/backend/client/quran/decode";
@@ -39,19 +38,13 @@ describe("signed Quran decoder", () => {
     expect(catalog.activeReleaseId).toBe("quran-release");
   });
 
-  it("decodes pages and selects the exact bounded reference verses", async () => {
+  it("selects the exact bounded signed reference verses", async () => {
     const chunk = makeQuranChunk({
       firstQuranNumber: 1,
       firstVerse: 1,
       surahNumber: 1,
       verseCount: 6,
     });
-    const page = await Effect.runPromise(
-      decodePublishedQuranPage(pageResult(chunk), {
-        locale: "en",
-        surahNumber: 1,
-      })
-    );
     const reference = await Effect.runPromise(
       decodePublishedQuranReference(
         {
@@ -72,7 +65,6 @@ describe("signed Quran decoder", () => {
       )
     );
 
-    expect(page.verses).toHaveLength(6);
     expect(reference.verses.map((verse) => verse.number.inSurah)).toEqual([
       2, 3,
     ]);
@@ -99,24 +91,6 @@ describe("signed Quran decoder", () => {
         })
       )
     );
-    const inconsistent = await Effect.runPromise(
-      Effect.either(
-        decodePublishedQuranPage(
-          {
-            ...source,
-            chunkJson: [],
-            nextSurahJson: null,
-            prevSurahJson: null,
-            searchJson: encodeTestQuranRow(
-              source.snapshotId,
-              makeQuranSearch("id", 1)
-            ),
-            surahJson: encodeTestQuranRow(source.snapshotId, makeQuranSurah(1)),
-          },
-          { locale: "en", surahNumber: 1 }
-        )
-      )
-    );
     const wrongSnapshot = await Effect.runPromise(
       Effect.either(
         decodePublishedQuranCatalog({
@@ -128,7 +102,7 @@ describe("signed Quran decoder", () => {
       )
     );
 
-    for (const result of [inactive, malformed, inconsistent, wrongSnapshot]) {
+    for (const result of [inactive, malformed, wrongSnapshot]) {
       expect(result._tag).toBe("Left");
       if (result._tag === "Left") {
         expect(result.left).toBeInstanceOf(QuranPublicationError);
@@ -143,21 +117,6 @@ function catalogResult() {
     ...source,
     rowJson: Array.from({ length: 114 }, (_, index) =>
       encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
-    ),
-  };
-}
-
-/** Builds one complete signed page response around the supplied chunk. */
-function pageResult(chunk: ReturnType<typeof makeQuranChunk>) {
-  return {
-    ...source,
-    chunkJson: [encodeTestQuranRow(source.snapshotId, chunk)],
-    nextSurahJson: encodeTestQuranRow(source.snapshotId, makeQuranSurah(2)),
-    prevSurahJson: null,
-    searchJson: encodeTestQuranRow(source.snapshotId, makeQuranSearch("en", 1)),
-    surahJson: encodeTestQuranRow(
-      source.snapshotId,
-      makeQuranSurah(1, chunk.verses.length)
     ),
   };
 }
