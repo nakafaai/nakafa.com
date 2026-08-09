@@ -14,6 +14,7 @@ export interface AiState {
   contextTitle: string | null;
   model: ModelId;
   open: boolean;
+  sheetActivated: boolean;
   text: string;
 }
 

@@ -3,7 +3,7 @@ import {
   HttpClient,
   HttpClientResponse,
 } from "@effect/platform";
-import { WeatherDataSchema } from "@repo/ai/clients/weather/schema";
+import { CurrentWeatherSummarySchema } from "@repo/ai/clients/weather/schema";
 import { useQuery } from "@tanstack/react-query";
 import { Effect } from "effect";
 
@@ -13,7 +13,9 @@ const WEATHER_REQUEST_TIMEOUT = "10 seconds";
 const fetchWeather = Effect.fn("www.weather.fetch")(function* () {
   return yield* HttpClient.post("/api/weather").pipe(
     Effect.flatMap(HttpClientResponse.filterStatusOk),
-    Effect.flatMap(HttpClientResponse.schemaBodyJson(WeatherDataSchema)),
+    Effect.flatMap(
+      HttpClientResponse.schemaBodyJson(CurrentWeatherSummarySchema)
+    ),
     Effect.timeout(WEATHER_REQUEST_TIMEOUT)
   );
 });

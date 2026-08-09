@@ -8,7 +8,9 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { IconLetterK } from "@tabler/icons-react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
+import { preloadSearchCommand } from "@/components/shared/search-command-module";
 import { useSearch } from "@/lib/context/use-search";
 
 export function SearchMenu() {
@@ -25,6 +27,9 @@ export function SearchMenu() {
           className="justify-between text-muted-foreground"
           isActive={open}
           onClick={() => setOpen(true)}
+          onFocus={() => Effect.runFork(preloadSearchCommand())}
+          onMouseEnter={() => Effect.runFork(preloadSearchCommand())}
+          onTouchStart={() => Effect.runFork(preloadSearchCommand())}
           variant="outline"
         >
           <div className="flex items-center gap-2">

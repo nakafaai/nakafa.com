@@ -7,7 +7,7 @@ import { ConversationDateSeparator } from "@/components/school/classes/forum/con
 import { ConversationUnreadSeparator } from "@/components/school/classes/forum/conversation/separator/unread";
 
 /** Render one transcript row while keeping author grouping logic in one place. */
-export function TranscriptRow({
+function TranscriptRow({
   highlightedPostId,
   row,
   previousRow,

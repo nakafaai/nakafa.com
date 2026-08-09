@@ -20,13 +20,20 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import type { FunctionReturnType } from "convex/server";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context/use-ai";
 import { usePageTitle } from "@/components/ai/context/use-page-title";
+import { preloadAiSheet } from "@/components/ai/sheet-module";
 
 type AudioStudy = NonNullable<
   FunctionReturnType<typeof api.audioStudies.queries.public.getAudioBySlug>
 >;
+
+/** Starts loading Nina before the learner activates an entry control. */
+function preloadAiSheetOnIntent() {
+  Effect.runFork(preloadAiSheet());
+}
 
 /** Renders the audio player toolbar with a Nina entry action. */
 export function SheetAudioToolbar({ data }: { data: AudioStudy }) {
@@ -90,6 +97,7 @@ function AskNinaButton() {
 
   /** Opens Nina with the current page title ready for default suggestions. */
   function handleOpen() {
+    Effect.runFork(preloadAiSheet());
     setContextTitle(contextTitle || null);
     setOpen(!open);
   }
@@ -98,7 +106,14 @@ function AskNinaButton() {
     <Tooltip>
       <TooltipTrigger
         render={
-          <Button onClick={handleOpen} size="icon" variant="ghost">
+          <Button
+            onClick={handleOpen}
+            onFocus={preloadAiSheetOnIntent}
+            onMouseEnter={preloadAiSheetOnIntent}
+            onTouchStart={preloadAiSheetOnIntent}
+            size="icon"
+            variant="ghost"
+          >
             <span className="sr-only">{t("ask-nina")}</span>
             <HugeIcons className="size-4" icon={StarsIcon} />
           </Button>

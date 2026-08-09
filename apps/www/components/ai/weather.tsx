@@ -85,18 +85,16 @@ export function Weather() {
     );
   }
 
-  if (!data?.list || data.list.length === 0) {
+  if (!data) {
     return null;
   }
 
-  const currentWeather = data.list[0];
-  const city = data.geocoding?.city || t("unknown-location");
-  const country =
-    getCountryName(data.geocoding?.country) || t("unknown-country");
-  const currentTemp = kelvinToCelsius(currentWeather.main.temp);
-  const condition = currentWeather.weather[0]?.description || "Clear";
+  const city = data.city || t("unknown-location");
+  const country = getCountryName(data.country) || t("unknown-country");
+  const currentTemp = kelvinToCelsius(data.temperatureKelvin);
+  const condition = data.condition || "Clear";
   const conditionTitle = condition.charAt(0).toUpperCase() + condition.slice(1);
-  const iconCode = currentWeather.weather[0]?.icon || "01d";
+  const iconCode = data.icon || "01d";
 
   return (
     <WeatherCard>

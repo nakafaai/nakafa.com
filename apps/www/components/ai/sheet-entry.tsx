@@ -3,12 +3,19 @@
 import { ArrowUpRight01Icon, StarsIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Effect } from "effect";
 import { domAnimation, LazyMotion, m } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context/use-ai";
 import { usePageTitle } from "@/components/ai/context/use-page-title";
+import { preloadAiSheet } from "@/components/ai/sheet-module";
 
 const SLIDE_DISTANCE = 200;
+
+/** Starts loading Nina before the learner activates the entry button. */
+function preloadAiSheetOnIntent() {
+  Effect.runFork(preloadAiSheet());
+}
 
 /** Renders the sticky Nina entry button when no audio toolbar is available. */
 export function SheetEntry() {
@@ -20,6 +27,7 @@ export function SheetEntry() {
 
   /** Opens Nina with the current page title ready for default suggestions. */
   function handleOpen() {
+    Effect.runFork(preloadAiSheet());
     setContextTitle(contextTitle || null);
     setOpen(!open);
   }
@@ -41,8 +49,11 @@ export function SheetEntry() {
       >
         <div className="mx-auto sm:max-w-xs">
           <Button
-            className="w-full justify-between duration-200 hover:scale-105"
+            className="w-full justify-between transition-transform duration-200 hover:scale-105"
             onClick={handleOpen}
+            onFocus={preloadAiSheetOnIntent}
+            onMouseEnter={preloadAiSheetOnIntent}
+            onTouchStart={preloadAiSheetOnIntent}
             size="lg"
             variant="default-outline"
           >

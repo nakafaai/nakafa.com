@@ -23,7 +23,7 @@ import {
 import { useReducedMotion } from "motion/react";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { FeaturesProjectileSceneProps } from "@/components/marketing/about/features-projectile-scene";
 
 const FeaturesProjectileScene = dynamic<FeaturesProjectileSceneProps>(
@@ -50,10 +50,7 @@ export function FeaturesProjectile() {
   const [scenarioId, setScenarioId] = useState<ProjectileScenarioId>(
     DEFAULT_PROJECTILE_SCENARIO_ID
   );
-  const motion = useMemo(
-    () => getProjectileMotionState(scenarioId),
-    [scenarioId]
-  );
+  const motion = getProjectileMotionState(scenarioId);
   const decimalSeparator = locale === "id" ? "comma" : "dot";
   const instantVelocity = getVelocityAtTime(motion, PROJECTILE_INSTANT_TIME);
   const facts = [

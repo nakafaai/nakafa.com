@@ -1,4 +1,5 @@
 import { redirect } from "@repo/internationalization/src/navigation";
+import type { Locale } from "next-intl";
 import { Suspense } from "react";
 import { HomeContinueLearning } from "@/components/home/continue-learning";
 import { HomeExplore } from "@/components/home/explore";
@@ -50,13 +51,13 @@ async function AuthenticatedHome({
 
   return (
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
-      <Main />
+      <Main locale={locale} />
     </div>
   );
 }
 
 /** Renders the authenticated home feed in the existing Nakafa home order. */
-function Main() {
+function Main({ locale }: { locale: Locale }) {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-24">
       <div className="relative flex flex-col gap-12">
@@ -66,7 +67,9 @@ function Main() {
 
         <HomeContinueLearning />
 
-        <HomeTrending />
+        <Suspense fallback={null}>
+          <HomeTrending locale={locale} />
+        </Suspense>
       </div>
     </div>
   );

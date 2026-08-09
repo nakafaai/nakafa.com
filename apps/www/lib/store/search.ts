@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 interface State {
+  activated: boolean;
   open: boolean;
   query: string;
 }
@@ -15,6 +16,7 @@ interface Actions {
 export type SearchStore = State & Actions;
 
 const initialState: State = {
+  activated: false,
   query: "",
   open: false,
 };
@@ -32,6 +34,7 @@ export const createSearchStore = () =>
         },
         setOpen: (open: boolean) => {
           set((state) => {
+            state.activated = state.activated || open;
             state.open = open;
           });
         },

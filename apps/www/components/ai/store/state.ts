@@ -9,5 +9,6 @@ export const initialState = {
   contextTitle: null,
   model: defaultModel,
   open: false,
+  sheetActivated: false,
   text: "",
 } satisfies AiState;

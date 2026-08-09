@@ -46,7 +46,7 @@ const readConvexToken = Effect.fn("NakafaAuth.readConvexToken")(function* () {
  */
 function useBetterAuth() {
   const { data: session, isPending } = authClient.useSession();
-  const sessionId = session?.session.id;
+  const sessionId = session?.session?.id;
   const cachedTokenRef = useRef<{
     readonly sessionId: string;
     readonly token: string;

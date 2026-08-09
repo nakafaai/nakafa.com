@@ -3,8 +3,8 @@
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
 import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
 import type { ReactNode } from "react";
-import { AiSheet } from "@/components/ai/sheet";
-import { SearchCommand } from "@/components/shared/search-command";
+import { DeferredAiSheet } from "@/components/ai/deferred-sheet";
+import { DeferredSearchCommand } from "@/components/shared/deferred-search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
 
@@ -22,8 +22,8 @@ export function AppShell({
     <SidebarProvider locked={locked}>
       <SidebarInset>
         <Header />
-        <SearchCommand />
-        <AiSheet />
+        <DeferredSearchCommand />
+        <DeferredAiSheet />
         <div className="relative">{children}</div>
       </SidebarInset>
       <AppSidebar containerClassName="order-first" />

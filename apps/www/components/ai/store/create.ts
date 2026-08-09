@@ -17,7 +17,11 @@ export function createAiStore() {
         setChatSession: (chatSession) => set({ chatSession }),
         setContextTitle: (contextTitle) => set({ contextTitle }),
         setModel: (model) => set({ model }),
-        setOpen: (open) => set({ open }),
+        setOpen: (open) =>
+          set((state) => ({
+            open,
+            sheetActivated: state.sheetActivated || open,
+          })),
         setText: (text) => set({ text }),
       })),
       {

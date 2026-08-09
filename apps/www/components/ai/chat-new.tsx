@@ -15,12 +15,13 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { AiChatModel } from "@/components/ai/chat-model";
 import { useAi } from "@/components/ai/context/use-ai";
-import { createChatRuntime } from "@/components/ai/helpers/runtime";
 import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
+import { loadChatRuntime } from "@/components/ai/helpers/runtime-loader";
 import { useUser } from "@/lib/context/use-user";
 
 /** Renders the standalone new-chat input and starts the first message. */
@@ -61,10 +62,13 @@ export function ChatNew() {
         return;
       }
 
-      const chatId = await createChat({
-        title: DEFAULT_TITLE,
-        type: "study",
-      });
+      const [chatId, { createChatRuntime }] = await Promise.all([
+        createChat({
+          title: DEFAULT_TITLE,
+          type: "study",
+        }),
+        Effect.runPromise(loadChatRuntime()),
+      ]);
 
       const chatRuntime = createChatRuntime({
         chatId,
