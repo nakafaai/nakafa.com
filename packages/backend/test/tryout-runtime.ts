@@ -324,30 +324,48 @@ export async function insertIrtScaleItem(
     scaleVersionId: Id<"irtScaleVersions">;
   }
 ) {
-  const calibrationRunId = await ctx.db.insert("irtCalibrationRuns", {
-    attemptCount: 0,
-    completedAt: TRYOUT_TEST_NOW,
-    iterationCount: 0,
-    maxParameterDelta: 0,
-    model: "2pl",
-    questionCount: 1,
-    responseCount: 0,
-    scaleVersionId: args.scaleVersionId,
-    sectionIdentity: tryoutCatalogIdentity({
-      countryKey: args.placement.row.countryKey,
-      examKey: args.placement.row.examKey,
-      kind: "section",
-      locale: args.placement.row.locale,
-      sectionKey: args.placement.row.sectionKey,
-      setKey: args.placement.row.setKey,
-      trackKey: args.placement.row.trackKey,
-    }),
-    startedAt: TRYOUT_TEST_NOW,
-    status: "completed",
-    updatedAt: TRYOUT_TEST_NOW,
+  const sectionIdentity = tryoutCatalogIdentity({
+    countryKey: args.placement.row.countryKey,
+    examKey: args.placement.row.examKey,
+    kind: "section",
+    locale: args.placement.row.locale,
+    sectionKey: args.placement.row.sectionKey,
+    setKey: args.placement.row.setKey,
+    trackKey: args.placement.row.trackKey,
   });
+  const existingRuns = await ctx.db
+    .query("irtCalibrationRuns")
+    .withIndex("by_scaleVersionId_and_sectionIdentity_and_startedAt", (query) =>
+      query
+        .eq("scaleVersionId", args.scaleVersionId)
+        .eq("sectionIdentity", sectionIdentity)
+    )
+    .take(2);
+  if (existingRuns.length > 1) {
+    throw new Error("Expected at most one IRT calibration run fixture.");
+  }
 
-  await ctx.db.insert("irtScaleItems", {
+  const existingRun = existingRuns[0];
+  const calibrationRunId = existingRun
+    ? existingRun._id
+    : await ctx.db.insert("irtCalibrationRuns", {
+        attemptCount: 0,
+        completedAt: TRYOUT_TEST_NOW,
+        iterationCount: 0,
+        maxParameterDelta: 0,
+        model: "2pl",
+        questionCount: 0,
+        responseCount: 0,
+        scaleVersionId: args.scaleVersionId,
+        sectionIdentity,
+        startedAt: TRYOUT_TEST_NOW,
+        status: "completed",
+        updatedAt: TRYOUT_TEST_NOW,
+      });
+  const questionCount = (existingRun?.questionCount ?? 0) + 1;
+  await ctx.db.patch(calibrationRunId, { questionCount });
+
+  return await ctx.db.insert("irtScaleItems", {
     calibrationRunId,
     calibrationStatus: "provisional",
     correctRate: 0,

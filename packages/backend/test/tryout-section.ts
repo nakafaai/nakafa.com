@@ -39,34 +39,41 @@ export function makeSignedTryoutSection(
 ): SignedTryoutSectionFixture {
   const sourceRevision = options.sourceRevision ?? section.sourceRevision;
   const sourcePath = requireCorpusRelativePath(section.questionSourcePath);
-  const questionRoot = `${sourcePath}/question-1`;
-  const placement = Schema.decodeUnknownSync(TryoutPlacementSchema)({
-    answerArtifactHash: testTextHash(`${questionRoot}:answer`),
-    answerContentKey: `${questionRoot}/answer`,
-    choices: [
-      {
-        isCorrect: true,
-        label: "A",
-        optionKey: "option-1",
-        order: 1,
-      },
-    ],
-    contentHash: options.contentHash ?? TRYOUT_TEST_CONTENT_HASH,
-    countryKey: section.countryKey,
-    examKey: section.examKey,
-    locale: section.locale,
-    questionArtifactHash: testTextHash(`${questionRoot}:question`),
-    questionContentKey: `${questionRoot}/question`,
-    questionOrder: 1,
-    questionSourcePath: `packages/corpus/${questionRoot}`,
-    rendererDomain: "snbt-math",
-    scope: "server",
-    sectionKey: section.sectionKey,
-    setKey: section.setKey,
-    sourceRevision,
-    title: "Question",
-    trackKey: section.trackKey,
-  });
+  const placements = Array.from(
+    { length: section.questionCount },
+    (_, index) => {
+      const questionOrder = index + 1;
+      const questionRoot = `${sourcePath}/question-${questionOrder}`;
+
+      return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+        answerArtifactHash: testTextHash(`${questionRoot}:answer`),
+        answerContentKey: `${questionRoot}/answer`,
+        choices: [
+          {
+            isCorrect: true,
+            label: "A",
+            optionKey: "option-1",
+            order: 1,
+          },
+        ],
+        contentHash: options.contentHash ?? TRYOUT_TEST_CONTENT_HASH,
+        countryKey: section.countryKey,
+        examKey: section.examKey,
+        locale: section.locale,
+        questionArtifactHash: testTextHash(`${questionRoot}:question`),
+        questionContentKey: `${questionRoot}/question`,
+        questionOrder,
+        questionSourcePath: `packages/corpus/${questionRoot}`,
+        rendererDomain: "snbt-math",
+        scope: "server",
+        sectionKey: section.sectionKey,
+        setKey: section.setKey,
+        sourceRevision,
+        title: questionOrder === 1 ? "Question" : `Question ${questionOrder}`,
+        trackKey: section.trackKey,
+      });
+    }
+  );
   const record = makeTryoutCatalogRecord(section);
   if (record.row.kind !== "section") {
     throw new Error("Expected one signed section record.");
@@ -74,7 +81,7 @@ export function makeSignedTryoutSection(
 
   return {
     signed: {
-      placements: [makeTryoutPlacementRecord(placement)],
+      placements: placements.map(makeTryoutPlacementRecord),
       section: { row: record.row, rowHash: record.rowHash },
       snapshotId: testTextHash("tryout-runtime-snapshot"),
     },

@@ -20,6 +20,7 @@ export class TryoutResponseIntegrityError
     {
       code: Schema.Literal(
         "TRYOUT_PLACEMENT_COUNT_MISMATCH",
+        "TRYOUT_PLACEMENT_DUPLICATE",
         "TRYOUT_RESPONSE_CHOICE_MISMATCH",
         "TRYOUT_RESPONSE_COUNT_EXCEEDED",
         "TRYOUT_RESPONSE_LINK_MISMATCH",
@@ -33,6 +34,7 @@ export class TryoutResponseIntegrityError
 {
   declare readonly code:
     | "TRYOUT_PLACEMENT_COUNT_MISMATCH"
+    | "TRYOUT_PLACEMENT_DUPLICATE"
     | "TRYOUT_RESPONSE_CHOICE_MISMATCH"
     | "TRYOUT_RESPONSE_COUNT_EXCEEDED"
     | "TRYOUT_RESPONSE_LINK_MISMATCH"
@@ -85,6 +87,101 @@ export const validateTryoutResponsePlacements = Effect.fn(
       "Try-out placement differs from its frozen section snapshot."
     );
   }
+});
+
+/** Validates one complete placement inventory against frozen section slots. */
+export const validateTryoutResponsePlacementInventory = Effect.fn(
+  "tryouts.response.validatePlacementInventory"
+)(function* (input: {
+  readonly attemptId: Id<"tryoutAttempts">;
+  readonly expectedQuestionCount: number;
+  readonly placements: TryoutPlacement[];
+  readonly snapshots: readonly TryoutSectionSnapshot[];
+}) {
+  const snapshotQuestionCount = input.snapshots.reduce(
+    (total, snapshot) => total + snapshot.questionCount,
+    0
+  );
+  if (
+    snapshotQuestionCount !== input.expectedQuestionCount ||
+    input.placements.length !== input.expectedQuestionCount
+  ) {
+    return yield* responseIntegrity(
+      "TRYOUT_PLACEMENT_COUNT_MISMATCH",
+      "Try-out placement count does not match its frozen snapshot."
+    );
+  }
+
+  const snapshotsByIdentity = new Map<string, TryoutSectionSnapshot>();
+  const questionOrdersBySection = new Map<string, Set<number>>();
+  for (const snapshot of input.snapshots) {
+    if (snapshotsByIdentity.has(snapshot.sectionIdentity)) {
+      return yield* responseIntegrity(
+        "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
+        "Try-out section snapshots contain a duplicate identity."
+      );
+    }
+    snapshotsByIdentity.set(snapshot.sectionIdentity, snapshot);
+    questionOrdersBySection.set(snapshot.sectionIdentity, new Set());
+  }
+
+  const placementIdentities = new Set<string>();
+  for (const placement of input.placements) {
+    const snapshot = snapshotsByIdentity.get(placement.sectionIdentity);
+    if (
+      !snapshot ||
+      placement.tryoutAttemptId !== input.attemptId ||
+      placement.sectionKey !== snapshot.sectionKey
+    ) {
+      return yield* responseIntegrity(
+        "TRYOUT_RESPONSE_LINK_MISMATCH",
+        "Try-out placement differs from its frozen section snapshot."
+      );
+    }
+
+    const questionOrder = placement.questionOrder;
+    if (
+      !Number.isSafeInteger(questionOrder) ||
+      questionOrder < 1 ||
+      questionOrder > snapshot.questionCount
+    ) {
+      return yield* responseIntegrity(
+        "TRYOUT_PLACEMENT_COUNT_MISMATCH",
+        "Try-out placement slots do not match its frozen section snapshot."
+      );
+    }
+
+    const questionOrders = questionOrdersBySection.get(
+      placement.sectionIdentity
+    );
+    if (
+      !questionOrders ||
+      questionOrders.has(questionOrder) ||
+      placementIdentities.has(placement.placementIdentity)
+    ) {
+      return yield* responseIntegrity(
+        "TRYOUT_PLACEMENT_DUPLICATE",
+        "Try-out placement inventory contains a duplicate identity or slot."
+      );
+    }
+
+    questionOrders.add(questionOrder);
+    placementIdentities.add(placement.placementIdentity);
+  }
+
+  for (const snapshot of input.snapshots) {
+    const questionOrders = questionOrdersBySection.get(
+      snapshot.sectionIdentity
+    );
+    if (questionOrders?.size !== snapshot.questionCount) {
+      return yield* responseIntegrity(
+        "TRYOUT_PLACEMENT_COUNT_MISMATCH",
+        "Try-out placement slots do not match its frozen section snapshot."
+      );
+    }
+  }
+
+  return input.placements;
 });
 
 /** Validates and indexes response rows against immutable placements. */

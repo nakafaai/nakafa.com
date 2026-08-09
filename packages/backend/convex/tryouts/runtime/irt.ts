@@ -1,68 +1,56 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  loadAttemptPlacements,
-  loadAttemptScale,
-  loadAttemptScaleItems,
-  loadSectionPlacements,
-  loadSectionScaleItems,
-} from "@repo/backend/convex/tryouts/runtime/irt/items";
+import type { TryoutIrtSource } from "@repo/backend/convex/tryouts/runtime/irt/items";
 import { buildIrtScore } from "@repo/backend/convex/tryouts/runtime/irt/score";
-import type { AttemptScore } from "@repo/backend/convex/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/convex/tryouts/score";
+import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
 type TryoutResponse = Doc<"tryoutResponses">;
 
-/** Scores an entire IRT attempt from its immutable scale and placement snapshots. */
-export async function scoreIrtAttempt(
-  ctx: MutationCtx,
-  args: {
+/** Scores an IRT attempt from one validated placement inventory. */
+export const scoreIrtAttempt = Effect.fn("tryouts.runtime.scoreIrtAttempt")(
+  function* (args: {
     attempt: TryoutAttempt;
+    placements: TryoutPlacement[];
     responses: TryoutResponse[];
     scoringStrategy: TryoutScoringStrategy;
+    source: TryoutIrtSource;
+  }) {
+    return yield* buildIrtScore({
+      items: args.source.items,
+      placements: args.placements,
+      responses: args.responses,
+      scale: args.source.scale,
+      scoringStrategy: args.scoringStrategy,
+      totalQuestions: args.attempt.totalQuestions,
+    });
   }
-): Promise<AttemptScore> {
-  const scale = await loadAttemptScale(ctx, args.attempt);
-  const [items, placements] = await Promise.all([
-    loadAttemptScaleItems(ctx, scale, args.attempt.totalQuestions),
-    loadAttemptPlacements(ctx, args.attempt),
-  ]);
+);
 
-  return buildIrtScore({
-    items,
-    placements,
-    responses: args.responses,
-    scale,
-    scoringStrategy: args.scoringStrategy,
-    totalQuestions: args.attempt.totalQuestions,
-  });
-}
-
-/** Scores one IRT section from the same immutable scale as its parent attempt. */
-export async function scoreIrtSection(
-  ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
+/** Scores one IRT section from one validated placement inventory. */
+export const scoreIrtSection = Effect.fn("tryouts.runtime.scoreIrtSection")(
+  function* (args: {
+    placements: TryoutPlacement[];
     responses: TryoutResponse[];
     scoringStrategy: TryoutScoringStrategy;
-    sectionKey: string;
+    source: TryoutIrtSource;
     totalQuestions: number;
-  }
-): Promise<AttemptScore> {
-  const scale = await loadAttemptScale(ctx, args.attempt);
-  const placements = await loadSectionPlacements(ctx, args);
-  const items = await loadSectionScaleItems(ctx, {
-    placements,
-    scale,
-  });
+  }) {
+    const placementIdentities = new Set(
+      args.placements.map((placement) => placement.placementIdentity)
+    );
+    const items = args.source.items.filter((item) =>
+      placementIdentities.has(item.placementIdentity)
+    );
 
-  return buildIrtScore({
-    items,
-    placements,
-    responses: args.responses,
-    scale,
-    scoringStrategy: args.scoringStrategy,
-    totalQuestions: args.totalQuestions,
-  });
-}
+    return yield* buildIrtScore({
+      items,
+      placements: args.placements,
+      responses: args.responses,
+      scale: args.source.scale,
+      scoringStrategy: args.scoringStrategy,
+      totalQuestions: args.totalQuestions,
+    });
+  }
+);

@@ -13,7 +13,12 @@ import {
   scoreIrtAttempt,
   scoreIrtSection,
 } from "@repo/backend/convex/tryouts/runtime/irt";
-import { loadAttemptResponses } from "@repo/backend/convex/tryouts/runtime/response";
+import {
+  loadAttemptIrtSource,
+  loadSectionIrtSource,
+  type TryoutIrtSource,
+} from "@repo/backend/convex/tryouts/runtime/irt/items";
+import type { TryoutResponseIndex } from "@repo/backend/convex/tryouts/runtime/response";
 import {
   type AttemptScore,
   scoreRawAnswers,
@@ -23,12 +28,64 @@ import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
 type TryoutResponse = Doc<"tryoutResponses">;
+type AnswerCountScoringStrategy = Exclude<TryoutScoringStrategy, "irt">;
+
+interface AnswerCountScoreSource {
+  readonly attemptId: Id<"tryoutAttempts">;
+  readonly kind: "answer-count";
+  readonly scoringStrategy: AnswerCountScoringStrategy;
+}
+
+interface IrtScoreSource {
+  readonly attemptId: Id<"tryoutAttempts">;
+  readonly irt: TryoutIrtSource;
+  readonly kind: "irt";
+  readonly scoringStrategy: "irt";
+}
+
+export type TryoutScoreSource = AnswerCountScoreSource | IrtScoreSource;
 
 interface AttemptScoreOwner {
   readonly setIdentity: string;
   readonly tryoutSnapshotId: string;
 }
+
+/** Loads one complete source reused by terminal section and attempt scoring. */
+export const loadAttemptScoreSource = Effect.fn(
+  "tryouts.runtime.loadAttemptScoreSource"
+)(function* (
+  ctx: MutationCtx,
+  attempt: TryoutAttempt,
+  placements: TryoutPlacement[]
+) {
+  if (attempt.scoringStrategy !== "irt") {
+    return answerCountScoreSource(attempt, attempt.scoringStrategy);
+  }
+
+  const irt = yield* loadAttemptIrtSource(ctx, attempt, placements);
+  return irtScoreSource(attempt, irt);
+});
+
+/** Loads one bounded section source for a non-terminal section score. */
+export const loadSectionScoreSource = Effect.fn(
+  "tryouts.runtime.loadSectionScoreSource"
+)(function* (
+  ctx: MutationCtx,
+  args: {
+    readonly attempt: TryoutAttempt;
+    readonly placements: TryoutPlacement[];
+    readonly sectionIdentity: string;
+  }
+) {
+  if (args.attempt.scoringStrategy !== "irt") {
+    return answerCountScoreSource(args.attempt, args.attempt.scoringStrategy);
+  }
+
+  const irt = yield* loadSectionIrtSource(ctx, args);
+  return irtScoreSource(args.attempt, irt);
+});
 
 /** Loads one owned attempt or rejects it before mutating runtime rows. */
 export async function requireOwnedAttempt(
@@ -60,29 +117,29 @@ export function summarizeResponses(responses: TryoutResponse[]) {
 
 /** Scores one terminal section with its parent attempt's frozen strategy. */
 export const scoreTryoutSection = Effect.fn("tryouts.runtime.scoreSection")(
-  function* (
-    ctx: MutationCtx,
-    args: {
-      attempt: TryoutAttempt;
-      responses: TryoutResponse[];
-      sectionKey: string;
-      totalQuestions: number;
-    }
-  ) {
-    if (args.attempt.scoringStrategy === "irt") {
-      return yield* tryRuntimePromise(() =>
-        scoreIrtSection(ctx, {
-          ...args,
-          scoringStrategy: args.attempt.scoringStrategy,
-        })
-      );
+  function* (args: {
+    attempt: TryoutAttempt;
+    placements: TryoutPlacement[];
+    responses: TryoutResponse[];
+    source: TryoutScoreSource;
+    totalQuestions: number;
+  }) {
+    yield* validateScoreSource(args.attempt, args.source);
+    if (args.source.kind === "irt") {
+      return yield* scoreIrtSection({
+        placements: args.placements,
+        responses: args.responses,
+        scoringStrategy: args.source.scoringStrategy,
+        source: args.source.irt,
+        totalQuestions: args.totalQuestions,
+      });
     }
 
     const { correctAnswers } = summarizeResponses(args.responses);
 
     return scoreRawAnswers({
       correctAnswers,
-      scoringStrategy: args.attempt.scoringStrategy,
+      scoringStrategy: args.source.scoringStrategy,
       totalQuestions: args.totalQuestions,
     });
   }
@@ -97,6 +154,8 @@ export const finalizeAttemptScore = Effect.fn(
     attempt: TryoutAttempt;
     endReason: AttemptEndReason;
     now: number;
+    responseIndex: TryoutResponseIndex;
+    source: TryoutScoreSource;
   }
 ) {
   const existingScore = yield* tryRuntimePromise(() =>
@@ -119,16 +178,13 @@ export const finalizeAttemptScore = Effect.fn(
     });
   }
 
-  const responses = yield* loadAttemptResponses(ctx, args.attempt);
-  const score = yield* tryRuntimePromise(() =>
-    Promise.resolve(
-      scoreAttempt(ctx, {
-        attempt: args.attempt,
-        responses,
-        scoringStrategy: args.attempt.scoringStrategy,
-      })
-    )
-  );
+  const responses = [...args.responseIndex.responses.values()];
+  const score = yield* scoreAttempt({
+    attempt: args.attempt,
+    placements: args.responseIndex.placements,
+    responses,
+    source: args.source,
+  });
   const owner = readAttemptScoreOwner(args.attempt);
   const scoreId = yield* tryRuntimePromise(() =>
     insertAttemptScore(ctx, {
@@ -178,20 +234,29 @@ function readAttemptScoreOwner(attempt: TryoutAttempt): AttemptScoreOwner {
 }
 
 /** Scores one attempt with the scoring strategy declared by its set. */
-function scoreAttempt(
-  ctx: MutationCtx,
-  args: {
+const scoreAttempt = Effect.fn("tryouts.runtime.scoreAttempt")(
+  function* (args: {
     attempt: TryoutAttempt;
+    placements: TryoutPlacement[];
     responses: TryoutResponse[];
-    scoringStrategy: TryoutScoringStrategy;
-  }
-) {
-  if (args.scoringStrategy === "irt") {
-    return scoreIrtAttempt(ctx, args);
-  }
+    source: TryoutScoreSource;
+  }) {
+    yield* validateScoreSource(args.attempt, args.source);
+    if (args.source.kind === "irt") {
+      return yield* scoreIrtAttempt({
+        ...args,
+        scoringStrategy: args.source.scoringStrategy,
+        source: args.source.irt,
+      });
+    }
 
-  return scoreRawAttempt(args);
-}
+    return scoreRawAttempt({
+      attempt: args.attempt,
+      responses: args.responses,
+      scoringStrategy: args.source.scoringStrategy,
+    });
+  }
+);
 
 /** Scores raw and weighted sets from correctness snapshots. */
 function scoreRawAttempt(args: {
@@ -250,3 +315,39 @@ function insertAttemptScore(
 
   return ctx.db.insert("tryoutScores", score);
 }
+
+/** Creates one count-based score source without any database reads. */
+function answerCountScoreSource(
+  attempt: TryoutAttempt,
+  scoringStrategy: AnswerCountScoringStrategy
+): AnswerCountScoreSource {
+  return { attemptId: attempt._id, kind: "answer-count", scoringStrategy };
+}
+
+/** Creates one IRT score source already bound to its immutable attempt. */
+function irtScoreSource(
+  attempt: TryoutAttempt,
+  irt: TryoutIrtSource
+): IrtScoreSource {
+  return {
+    attemptId: attempt._id,
+    irt,
+    kind: "irt",
+    scoringStrategy: "irt",
+  };
+}
+
+/** Rejects a scoring source that was loaded for another attempt or strategy. */
+const validateScoreSource = Effect.fn("tryouts.runtime.validateScoreSource")(
+  function* (attempt: TryoutAttempt, source: TryoutScoreSource) {
+    if (
+      source.attemptId !== attempt._id ||
+      source.scoringStrategy !== attempt.scoringStrategy
+    ) {
+      return yield* new TryoutRuntimeError({
+        code: "TRYOUT_SCORE_SOURCE_MISMATCH",
+        message: "Try-out score source does not match the frozen attempt.",
+      });
+    }
+  }
+);

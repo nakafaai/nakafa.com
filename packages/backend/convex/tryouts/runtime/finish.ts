@@ -3,13 +3,26 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TryoutRuntimeError,
   tryRuntimePromise,
+  tryRuntimeSync,
 } from "@repo/backend/convex/tryouts/runtime/error";
-import { loadSectionResponseIndex } from "@repo/backend/convex/tryouts/runtime/response";
+import {
+  loadAttemptPlacements,
+  loadSectionPlacements,
+  requireSectionSnapshot,
+} from "@repo/backend/convex/tryouts/runtime/placement";
+import {
+  loadAttemptResponses,
+  loadSectionResponseIndex,
+  type TryoutResponseIndex,
+} from "@repo/backend/convex/tryouts/runtime/response";
 import { getSectionScoreSnapshot } from "@repo/backend/convex/tryouts/runtime/result";
 import {
   finalizeAttemptScore,
+  loadAttemptScoreSource,
+  loadSectionScoreSource,
   scoreTryoutSection,
   summarizeResponses,
+  type TryoutScoreSource,
 } from "@repo/backend/convex/tryouts/runtime/score";
 import { Effect } from "effect";
 
@@ -62,13 +75,16 @@ const createExpiredSectionAttempt = Effect.fn(
   args: {
     attempt: TryoutAttempt;
     now: number;
+    responseIndex: TryoutResponseIndex;
+    scoreSource: TryoutScoreSource;
     snapshot: TryoutSectionSnapshot;
   }
 ) {
-  const score = yield* scoreTryoutSection(ctx, {
+  const score = yield* scoreTryoutSection({
     attempt: args.attempt,
-    responses: [],
-    sectionKey: args.snapshot.sectionKey,
+    placements: args.responseIndex.placements,
+    responses: [...args.responseIndex.responses.values()],
+    source: args.scoreSource,
     totalQuestions: args.snapshot.questionCount,
   });
 
@@ -100,6 +116,8 @@ const createMissingExpiredSectionAttempts = Effect.fn(
   args: {
     attempt: TryoutAttempt;
     now: number;
+    responseIndex: TryoutResponseIndex;
+    scoreSource: TryoutScoreSource;
     sections: TryoutSectionAttempt[];
   }
 ) {
@@ -115,6 +133,11 @@ const createMissingExpiredSectionAttempts = Effect.fn(
     yield* createExpiredSectionAttempt(ctx, {
       attempt: args.attempt,
       now: args.now,
+      responseIndex: selectSectionResponseIndex(
+        args.responseIndex,
+        snapshot.sectionIdentity
+      ),
+      scoreSource: args.scoreSource,
       snapshot,
     });
   }
@@ -132,8 +155,59 @@ export const finalizeSectionAttempt = Effect.fn(
     section: TryoutSectionAttempt;
   }
 ) {
-  const finalization = yield* readSectionFinalization(ctx, {
+  const completedSectionKeys = Array.from(
+    new Set([...args.attempt.completedSectionKeys, args.section.sectionKey])
+  );
+  const completesAttempt =
+    completedSectionKeys.length >= args.attempt.sectionSnapshots.length;
+
+  let attemptResponseIndex: TryoutResponseIndex | null = null;
+  let scoreSource: TryoutScoreSource;
+  let sectionResponseIndex: TryoutResponseIndex;
+
+  if (completesAttempt) {
+    const placements = yield* loadAttemptPlacements(ctx, args.attempt);
+    attemptResponseIndex = yield* loadAttemptResponses(
+      ctx,
+      args.attempt,
+      placements,
+      "complete"
+    );
+    scoreSource = yield* loadAttemptScoreSource(
+      ctx,
+      args.attempt,
+      attemptResponseIndex.placements
+    );
+    sectionResponseIndex = selectSectionResponseIndex(
+      attemptResponseIndex,
+      args.section.sectionIdentity
+    );
+  } else {
+    const snapshot = yield* tryRuntimeSync(() =>
+      requireSectionSnapshot(args.attempt, args.section.sectionKey)
+    );
+    const placements = yield* loadSectionPlacements(
+      ctx,
+      args.attempt,
+      snapshot
+    );
+    sectionResponseIndex = yield* loadSectionResponseIndex(
+      ctx,
+      args.attempt,
+      args.section,
+      placements
+    );
+    scoreSource = yield* loadSectionScoreSource(ctx, {
+      attempt: args.attempt,
+      placements: sectionResponseIndex.placements,
+      sectionIdentity: args.section.sectionIdentity,
+    });
+  }
+
+  const finalization = yield* readSectionFinalization({
     attempt: args.attempt,
+    responseIndex: sectionResponseIndex,
+    scoreSource,
     section: args.section,
   });
   yield* tryRuntimePromise(() =>
@@ -148,9 +222,6 @@ export const finalizeSectionAttempt = Effect.fn(
     })
   );
 
-  const completedSectionKeys = Array.from(
-    new Set([...args.attempt.completedSectionKeys, args.section.sectionKey])
-  );
   yield* tryRuntimePromise(() =>
     ctx.db.patch(args.attempt._id, {
       completedSectionKeys,
@@ -158,7 +229,7 @@ export const finalizeSectionAttempt = Effect.fn(
     })
   );
 
-  if (completedSectionKeys.length < args.attempt.sectionSnapshots.length) {
+  if (!attemptResponseIndex) {
     return { kind: "completed" };
   }
 
@@ -176,6 +247,8 @@ export const finalizeSectionAttempt = Effect.fn(
     attempt: currentAttempt,
     endReason: "submitted",
     now: args.now,
+    responseIndex: attemptResponseIndex,
+    source: scoreSource,
   });
 
   return { kind: "completed" };
@@ -184,29 +257,32 @@ export const finalizeSectionAttempt = Effect.fn(
 /** Expires one whole attempt and any in-progress section attempts it owns. */
 export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
   function* (ctx: MutationCtx, args: { attempt: TryoutAttempt; now: number }) {
-    const sections = yield* tryRuntimePromise(() =>
-      ctx.db
-        .query("tryoutSectionAttempts")
-        .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
-          q.eq("tryoutAttemptId", args.attempt._id)
-        )
-        .take(args.attempt.sectionSnapshots.length + 1)
+    const placements = yield* loadAttemptPlacements(ctx, args.attempt);
+    const responseIndex = yield* loadAttemptResponses(
+      ctx,
+      args.attempt,
+      placements,
+      "partial"
     );
-
-    if (sections.length > args.attempt.sectionSnapshots.length) {
-      return yield* new TryoutRuntimeError({
-        code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
-        message: "Try-out section attempt count exceeds the attempt snapshot.",
-      });
-    }
+    const scoreSource = yield* loadAttemptScoreSource(
+      ctx,
+      args.attempt,
+      responseIndex.placements
+    );
+    const sections = responseIndex.sections;
 
     for (const section of sections) {
       if (section.status !== "in-progress") {
         continue;
       }
 
-      const finalization = yield* readSectionFinalization(ctx, {
+      const finalization = yield* readSectionFinalization({
         attempt: args.attempt,
+        responseIndex: selectSectionResponseIndex(
+          responseIndex,
+          section.sectionIdentity
+        ),
+        scoreSource,
         section,
       });
 
@@ -226,6 +302,8 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
     yield* createMissingExpiredSectionAttempts(ctx, {
       attempt: args.attempt,
       now: args.now,
+      responseIndex,
+      scoreSource,
       sections,
     });
 
@@ -252,6 +330,8 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
       attempt: currentAttempt,
       endReason: "time-expired",
       now: args.now,
+      responseIndex,
+      source: scoreSource,
     });
   }
 );
@@ -259,24 +339,19 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
 /** Calculates the immutable counters and score stored by one terminal section. */
 const readSectionFinalization = Effect.fn(
   "tryouts.runtime.readSectionFinalization"
-)(function* (
-  ctx: MutationCtx,
-  args: {
-    attempt: TryoutAttempt;
-    section: TryoutSectionAttempt;
-  }
-) {
-  const loaded = yield* loadSectionResponseIndex(
-    ctx,
-    args.attempt,
-    args.section
-  );
-  const responses = [...loaded.responses.values()];
+)(function* (args: {
+  attempt: TryoutAttempt;
+  responseIndex: TryoutResponseIndex;
+  scoreSource: TryoutScoreSource;
+  section: TryoutSectionAttempt;
+}) {
+  const responses = [...args.responseIndex.responses.values()];
   const summary = summarizeResponses(responses);
-  const score = yield* scoreTryoutSection(ctx, {
+  const score = yield* scoreTryoutSection({
     attempt: args.attempt,
+    placements: args.responseIndex.placements,
     responses,
-    sectionKey: args.section.sectionKey,
+    source: args.scoreSource,
     totalQuestions: args.section.totalQuestions,
   });
 
@@ -285,3 +360,21 @@ const readSectionFinalization = Effect.fn(
     score: getSectionScoreSnapshot(score),
   };
 });
+
+/** Selects one section from an already-validated attempt response graph. */
+function selectSectionResponseIndex(
+  responseIndex: TryoutResponseIndex,
+  sectionIdentity: string
+): TryoutResponseIndex {
+  const placements = responseIndex.placements.filter(
+    (placement) => placement.sectionIdentity === sectionIdentity
+  );
+  const placementIds = new Set(placements.map((placement) => placement._id));
+  const responses = new Map(
+    [...responseIndex.responses].filter(([placementId]) =>
+      placementIds.has(placementId)
+    )
+  );
+
+  return { placements, responses };
+}
