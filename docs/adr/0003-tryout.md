@@ -75,6 +75,15 @@ validated placement inventory and score source, then reuses both for section
 and attempt results so maximum-size placements are not read twice in one
 transaction.
 
+Current attempt pages resolve the latest attempt through the one compact,
+indexed progress row, then fail closed unless its duplicated identity, attempt
+number, status, status rank, and latest attempt row agree. Historical review
+pages continue to render the exact signed snapshot frozen at attempt start.
+Restart actions and retained-route destinations resolve separately from the
+active signed catalog in the same Convex query transaction, so a catalog rename
+or entry revision cannot silently change the frozen review or send a new attempt
+to an obsolete route.
+
 ### Freemium Access
 
 Every account can start one complete try-out for free. The claim is global to the

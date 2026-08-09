@@ -74,7 +74,7 @@ export function toPublicPublishedSet(set: TryoutSet) {
 }
 
 /** Projects one signed section into the existing public catalog contract. */
-function toPublicSection(section: TryoutSection) {
+export function toPublicPublishedSection(section: TryoutSection) {
   return {
     description: section.description,
     publicPath: section.publicPath,
@@ -187,12 +187,16 @@ export const readPublishedSetPageFromIndex = Effect.fn(
   const visibleSections = sections.filter(
     (section) => section.visibility === "visible"
   );
-  const entrySection = yield* readEntrySection(set, sections, visibleSections);
+  const entrySection = yield* readPublishedEntrySection(
+    set,
+    sections,
+    visibleSections
+  );
   return {
     exam: toPublicExam(parents.exam),
-    entrySection: entrySection ? toPublicSection(entrySection) : null,
+    entrySection: entrySection ? toPublicPublishedSection(entrySection) : null,
     set: toPublicPublishedSet(set),
-    sections: visibleSections.map(toPublicSection),
+    sections: visibleSections.map(toPublicPublishedSection),
     track: toPublicTrack(parents.track),
   };
 });
@@ -226,32 +230,32 @@ export const readPublishedSectionPageFromIndex = Effect.fn(
   yield* readPublishedSetSections(index, set);
   return {
     exam: toPublicExam(parents.exam),
-    section: toPublicSection(section),
+    section: toPublicPublishedSection(section),
     set: toPublicPublishedSet(set),
     track: toPublicTrack(parents.track),
   };
 });
 
 /** Selects and validates the authored internal entry or first visible section. */
-const readEntrySection = Effect.fn("tryouts.catalog.readPublishedEntry")(
-  function* (
-    set: TryoutSet,
-    sections: readonly TryoutSection[],
-    visibleSections: readonly TryoutSection[]
-  ) {
-    if (!set.internalEntrySectionKey) {
-      return visibleSections.at(0) ?? null;
-    }
-
-    const entrySection = sections.find(
-      (section) => section.sectionKey === set.internalEntrySectionKey
-    );
-    if (entrySection?.visibility !== "internal-entry") {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Signed try-out set lost its internal entry section."
-      );
-    }
-    return entrySection;
+export const readPublishedEntrySection = Effect.fn(
+  "tryouts.catalog.readPublishedEntry"
+)(function* (
+  set: TryoutSet,
+  sections: readonly TryoutSection[],
+  visibleSections: readonly TryoutSection[]
+) {
+  if (!set.internalEntrySectionKey) {
+    return visibleSections.at(0) ?? null;
   }
-);
+
+  const entrySection = sections.find(
+    (section) => section.sectionKey === set.internalEntrySectionKey
+  );
+  if (entrySection?.visibility !== "internal-entry") {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Signed try-out set lost its internal entry section."
+    );
+  }
+  return entrySection;
+});

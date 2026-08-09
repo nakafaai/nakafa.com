@@ -6,9 +6,9 @@ import {
   readConvexErrorData,
 } from "@repo/backend/convex/lib/effect";
 import { ensureTryoutProgressWithinReadBudget } from "@repo/backend/convex/tryouts/progress/size";
-import type {
-  TryoutStatus,
-  TryoutStatusRank,
+import {
+  getTryoutStatusRank,
+  type TryoutStatus,
 } from "@repo/backend/convex/tryouts/status";
 import { Effect, Schema } from "effect";
 
@@ -28,19 +28,6 @@ export class TryoutProgressError
 {
   declare readonly code: string;
   declare readonly message: string;
-}
-
-/** Returns the stable workflow rank used by the progress sorting index. */
-export function getTryoutStatusRank(status: TryoutStatus): TryoutStatusRank {
-  if (status === "in-progress") {
-    return 1;
-  }
-
-  if (status === "completed") {
-    return 2;
-  }
-
-  return 3;
 }
 
 /** Stores the latest compact attempt state used by set discovery queries. */

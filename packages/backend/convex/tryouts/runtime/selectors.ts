@@ -34,12 +34,14 @@ export const loadTryoutSignedContent = Effect.fn(
   readonly snapshotId: string;
   readonly totalQuestions: number;
 }) {
-  if (input.attempt.locale !== input.locale) {
+  if (
+    input.attempt.snapshotReleaseId !== input.snapshotReleaseId ||
+    input.attempt.tryoutSnapshotId !== input.snapshotId
+  ) {
     return yield* selectorIntegrity(
       "Signed try-out attempt lost its locale or snapshot identity."
     );
   }
-
   const placements = yield* trySelectorPromise(() =>
     input.ctx.db
       .query("tryoutAttemptPlacements")
@@ -52,7 +54,31 @@ export const loadTryoutSignedContent = Effect.fn(
       )
       .take(input.totalQuestions + 1)
   );
-  if (placements.length !== input.totalQuestions) {
+  return yield* projectTryoutSignedContent({
+    access: input.access,
+    attempt: input.attempt,
+    locale: input.locale,
+    placements,
+    totalQuestions: input.totalQuestions,
+  });
+});
+
+/** Projects protected selectors from already-loaded frozen placements. */
+export const projectTryoutSignedContent = Effect.fn(
+  "tryouts.selectors.projectSignedContent"
+)(function* (input: {
+  readonly access: { readonly answers: boolean; readonly questions: boolean };
+  readonly attempt: TryoutAttempt;
+  readonly locale: ContentLocale;
+  readonly placements: readonly TryoutPlacement[];
+  readonly totalQuestions: number;
+}) {
+  if (input.attempt.locale !== input.locale) {
+    return yield* selectorIntegrity(
+      "Signed try-out attempt lost its locale or snapshot identity."
+    );
+  }
+  if (input.placements.length !== input.totalQuestions) {
     return yield* selectorIntegrity(
       "Signed try-out section lost one or more frozen placements."
     );
@@ -60,22 +86,22 @@ export const loadTryoutSignedContent = Effect.fn(
 
   const content: Extract<TryoutSectionContentAccess, { kind: "signed" }> = {
     answers: input.access.answers
-      ? yield* Effect.forEach(placements, (placement) =>
+      ? yield* Effect.forEach(input.placements, (placement) =>
           makeAnswerSelector(
             placement,
             input.locale,
-            input.snapshotId,
-            input.snapshotReleaseId
+            input.attempt.tryoutSnapshotId,
+            input.attempt.snapshotReleaseId
           )
         )
       : [],
     kind: "signed",
-    questions: yield* Effect.forEach(placements, (placement) =>
+    questions: yield* Effect.forEach(input.placements, (placement) =>
       makeQuestionSelector(
         placement,
         input.locale,
-        input.snapshotId,
-        input.snapshotReleaseId
+        input.attempt.tryoutSnapshotId,
+        input.attempt.snapshotReleaseId
       )
     ),
   };

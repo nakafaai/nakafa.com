@@ -520,6 +520,8 @@ import type * as triggers_tryouts_scores from "../triggers/tryouts/scores.js";
 import type * as tryouts_access_impl from "../tryouts/access/impl.js";
 import type * as tryouts_access_source from "../tryouts/access/source.js";
 import type * as tryouts_access_subscription from "../tryouts/access/subscription.js";
+import type * as tryouts_attemptPage_impl from "../tryouts/attemptPage/impl.js";
+import type * as tryouts_attemptPage_spec from "../tryouts/attemptPage/spec.js";
 import type * as tryouts_catalog_destination from "../tryouts/catalog/destination.js";
 import type * as tryouts_catalog_featured from "../tryouts/catalog/featured.js";
 import type * as tryouts_catalog_hierarchy from "../tryouts/catalog/hierarchy.js";
@@ -538,6 +540,7 @@ import type * as tryouts_progress_size from "../tryouts/progress/size.js";
 import type * as tryouts_progress_write from "../tryouts/progress/write.js";
 import type * as tryouts_queries_access from "../tryouts/queries/access.js";
 import type * as tryouts_queries_attempt from "../tryouts/queries/attempt.js";
+import type * as tryouts_queries_attemptPage from "../tryouts/queries/attemptPage.js";
 import type * as tryouts_queries_catalog from "../tryouts/queries/catalog.js";
 import type * as tryouts_queries_catalogModel from "../tryouts/queries/catalogModel.js";
 import type * as tryouts_queries_history from "../tryouts/queries/history.js";
@@ -552,6 +555,7 @@ import type * as tryouts_response_integrity from "../tryouts/response/integrity.
 import type * as tryouts_response_spec from "../tryouts/response/spec.js";
 import type * as tryouts_route from "../tryouts/route.js";
 import type * as tryouts_runtime_access from "../tryouts/runtime/access.js";
+import type * as tryouts_runtime_attempt_page from "../tryouts/runtime/attempt/page.js";
 import type * as tryouts_runtime_attempt_sections from "../tryouts/runtime/attempt/sections.js";
 import type * as tryouts_runtime_attempt_state from "../tryouts/runtime/attempt/state.js";
 import type * as tryouts_runtime_bundle from "../tryouts/runtime/bundle.js";
@@ -574,6 +578,7 @@ import type * as tryouts_runtime_section_state from "../tryouts/runtime/section/
 import type * as tryouts_runtime_sectionAttempt from "../tryouts/runtime/sectionAttempt.js";
 import type * as tryouts_runtime_selectors from "../tryouts/runtime/selectors.js";
 import type * as tryouts_runtime_set_state from "../tryouts/runtime/set/state.js";
+import type * as tryouts_runtime_spec from "../tryouts/runtime/spec.js";
 import type * as tryouts_score from "../tryouts/score.js";
 import type * as tryouts_score_result from "../tryouts/score/result.js";
 import type * as tryouts_sets_page from "../tryouts/sets/page.js";
@@ -1121,6 +1126,8 @@ declare const fullApi: ApiFromModules<{
   "tryouts/access/impl": typeof tryouts_access_impl;
   "tryouts/access/source": typeof tryouts_access_source;
   "tryouts/access/subscription": typeof tryouts_access_subscription;
+  "tryouts/attemptPage/impl": typeof tryouts_attemptPage_impl;
+  "tryouts/attemptPage/spec": typeof tryouts_attemptPage_spec;
   "tryouts/catalog/destination": typeof tryouts_catalog_destination;
   "tryouts/catalog/featured": typeof tryouts_catalog_featured;
   "tryouts/catalog/hierarchy": typeof tryouts_catalog_hierarchy;
@@ -1139,6 +1146,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/progress/write": typeof tryouts_progress_write;
   "tryouts/queries/access": typeof tryouts_queries_access;
   "tryouts/queries/attempt": typeof tryouts_queries_attempt;
+  "tryouts/queries/attemptPage": typeof tryouts_queries_attemptPage;
   "tryouts/queries/catalog": typeof tryouts_queries_catalog;
   "tryouts/queries/catalogModel": typeof tryouts_queries_catalogModel;
   "tryouts/queries/history": typeof tryouts_queries_history;
@@ -1153,6 +1161,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/response/spec": typeof tryouts_response_spec;
   "tryouts/route": typeof tryouts_route;
   "tryouts/runtime/access": typeof tryouts_runtime_access;
+  "tryouts/runtime/attempt/page": typeof tryouts_runtime_attempt_page;
   "tryouts/runtime/attempt/sections": typeof tryouts_runtime_attempt_sections;
   "tryouts/runtime/attempt/state": typeof tryouts_runtime_attempt_state;
   "tryouts/runtime/bundle": typeof tryouts_runtime_bundle;
@@ -1175,6 +1184,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/runtime/sectionAttempt": typeof tryouts_runtime_sectionAttempt;
   "tryouts/runtime/selectors": typeof tryouts_runtime_selectors;
   "tryouts/runtime/set/state": typeof tryouts_runtime_set_state;
+  "tryouts/runtime/spec": typeof tryouts_runtime_spec;
   "tryouts/score": typeof tryouts_score;
   "tryouts/score/result": typeof tryouts_score_result;
   "tryouts/sets/page": typeof tryouts_sets_page;

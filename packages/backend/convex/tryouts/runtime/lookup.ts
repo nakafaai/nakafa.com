@@ -4,6 +4,11 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
 import { readTryoutCatalogRowByPath } from "@repo/backend/convex/tryouts/catalog/row";
+import {
+  TryoutRuntimeError,
+  tryRuntimePromise,
+} from "@repo/backend/convex/tryouts/runtime/error";
+import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/status";
 import type { PaginationOptions } from "convex/server";
 import { Effect } from "effect";
 
@@ -24,7 +29,7 @@ interface PublicSetPath {
 /** Reads one bounded attempt set through its immutable signed identity. */
 export const readOwnedAttempts = Effect.fn("tryouts.runtime.readOwnedAttempts")(
   function* (ctx: QueryCtx, owner: AttemptOwnerIdentity, limit: number) {
-    return yield* Effect.promise(() =>
+    return yield* tryRuntimePromise(() =>
       ctx.db
         .query("tryoutAttempts")
         .withIndex("by_userId_and_setIdentity_and_startedAt", (index) =>
@@ -61,11 +66,53 @@ export const readLatestAttempt = Effect.fn("tryouts.runtime.readLatestAttempt")(
   }
 );
 
+/**
+ * Reads the latest attempt through the compact current-set progress row.
+ * @see https://docs.convex.dev/database/reading-data/indexes/
+ */
+export const readLatestProgressAttempt = Effect.fn(
+  "tryouts.runtime.readLatestProgressAttempt"
+)(function* (ctx: QueryCtx, identity: TryoutSetIdentity, userId: UserId) {
+  const setIdentity = tryoutCatalogIdentity({
+    countryKey: identity.countryKey,
+    examKey: identity.examKey,
+    kind: "set",
+    locale: identity.locale,
+    setKey: identity.setKey,
+    trackKey: identity.trackKey,
+  });
+  const progress = yield* tryRuntimePromise(() =>
+    ctx.db
+      .query("tryoutSetProgress")
+      .withIndex("by_userId_and_setIdentity", (index) =>
+        index.eq("userId", userId).eq("setIdentity", setIdentity)
+      )
+      .unique()
+  );
+  if (!progress) {
+    return null;
+  }
+
+  const attempt = yield* tryRuntimePromise(() =>
+    ctx.db.get(progress.latestAttemptId)
+  );
+  if (
+    !(attempt && matchesProgressAttempt(attempt, progress, identity, userId))
+  ) {
+    return yield* new TryoutRuntimeError({
+      code: "TRYOUT_PROGRESS_ATTEMPT_MISMATCH",
+      message: "Try-out progress no longer identifies its latest attempt.",
+    });
+  }
+
+  return attempt;
+});
+
 /** Reads one exact attempt only when it belongs to the current app user. */
 export const readOwnedAttemptById = Effect.fn(
   "tryouts.runtime.readOwnedAttemptById"
 )(function* (ctx: QueryCtx, attemptId: Id<"tryoutAttempts">, userId: UserId) {
-  const attempt = yield* Effect.promise(() => ctx.db.get(attemptId));
+  const attempt = yield* tryRuntimePromise(() => ctx.db.get(attemptId));
   if (attempt?.userId !== userId) {
     return null;
   }
@@ -99,6 +146,34 @@ export function matchesAttemptIdentity(
   );
 }
 
+/** Checks that compact progress and its latest attempt describe one state. */
+function matchesProgressAttempt(
+  attempt: TryoutAttempt,
+  progress: Doc<"tryoutSetProgress">,
+  identity: TryoutSetIdentity,
+  userId: UserId
+) {
+  if (!matchesAttemptIdentity(progress, identity)) {
+    return false;
+  }
+  if (!matchesAttemptIdentity(readAttemptSetIdentity(attempt), identity)) {
+    return false;
+  }
+  if (
+    attempt.userId !== userId ||
+    attempt.setIdentity !== progress.setIdentity
+  ) {
+    return false;
+  }
+  if (attempt.attemptNumber !== progress.attemptNumber) {
+    return false;
+  }
+  if (attempt.status !== progress.status) {
+    return false;
+  }
+  return progress.statusRank === getTryoutStatusRank(progress.status);
+}
+
 /** Reads the latest attempt for one current or frozen public set route. */
 export const readLatestAttemptByPath = Effect.fn(
   "tryouts.runtime.readLatestAttemptByPath"
@@ -116,7 +191,7 @@ export const readLatestAttemptByPath = Effect.fn(
     });
   }
 
-  return yield* Effect.promise(() =>
+  return yield* tryRuntimePromise(() =>
     ctx.db
       .query("tryoutAttempts")
       .withIndex(
@@ -146,7 +221,7 @@ export const readAttemptHistoryPage = Effect.fn(
   if (set?.kind !== "set") {
     return { continueCursor: "", isDone: true, page: [] };
   }
-  return yield* Effect.promise(() =>
+  return yield* tryRuntimePromise(() =>
     ctx.db
       .query("tryoutAttempts")
       .withIndex("by_userId_and_setIdentity_and_startedAt", (index) =>

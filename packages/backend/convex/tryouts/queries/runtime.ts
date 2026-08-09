@@ -5,8 +5,15 @@ import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutAttemptSectionRouteValidator } from "@repo/backend/convex/tryouts/runtime/attempt/sections";
 import { tryoutRuntimeChoiceValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import { tryoutCurrentSectionValidator } from "@repo/backend/convex/tryouts/runtime/content";
-import { readSectionState } from "@repo/backend/convex/tryouts/runtime/section/state";
-import { readSetState } from "@repo/backend/convex/tryouts/runtime/set/state";
+import {
+  readSectionAttemptState,
+  readSectionState,
+} from "@repo/backend/convex/tryouts/runtime/section/state";
+import {
+  readSetAttemptState,
+  readSetState,
+} from "@repo/backend/convex/tryouts/runtime/set/state";
+import { tryoutRuntimeStateValidator } from "@repo/backend/convex/tryouts/runtime/spec";
 import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
 import { v } from "convex/values";
@@ -93,4 +100,22 @@ export const getSectionState = query({
     })
   ),
   handler: (ctx, args) => runConvexProgram(readSectionState(ctx, args)),
+});
+
+/** Loads compact mutable set state through one exact owned attempt ID. */
+export const getSetAttemptState = query({
+  args: { attemptId: v.id("tryoutAttempts") },
+  returns: v.union(v.null(), tryoutRuntimeStateValidator),
+  handler: (ctx, args) =>
+    runConvexProgram(readSetAttemptState(ctx, args.attemptId)),
+});
+
+/** Loads compact mutable section state through one exact owned attempt ID. */
+export const getSectionAttemptState = query({
+  args: {
+    attemptId: v.id("tryoutAttempts"),
+    sectionKey: tryoutRouteKeyValidator,
+  },
+  returns: v.union(v.null(), tryoutRuntimeStateValidator),
+  handler: (ctx, args) => runConvexProgram(readSectionAttemptState(ctx, args)),
 });

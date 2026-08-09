@@ -12,24 +12,30 @@ import {
 } from "@repo/backend/convex/tryouts/score/result";
 import { Effect } from "effect";
 
-interface CurrentAttemptInput {
+interface AttemptStateInput {
   readonly attempt: Doc<"tryoutAttempts">;
   readonly sectionKey?: string;
   readonly sections?: readonly Doc<"tryoutSectionAttempts">[];
+}
+
+interface CurrentAttemptInput extends AttemptStateInput {
   readonly signedSections?: readonly TryoutSection[];
 }
 
-/** Projects one owned attempt into the shared reactive state contract. */
-export const loadCurrentAttempt = Effect.fn("tryouts.attempt.loadCurrent")(
-  function* (ctx: QueryCtx, input: CurrentAttemptInput) {
+/** Loads the mutable attempt graph without immutable catalog fields. */
+const loadAttemptProjection = Effect.fn("tryouts.attempt.loadProjection")(
+  function* (ctx: QueryCtx, input: AttemptStateInput) {
     const attempt = input.attempt;
-    const [sections, score, sectionRoutes] = yield* Effect.all(
+    const scoreEffect =
+      attempt.status === "in-progress"
+        ? Effect.succeed(null)
+        : loadAttemptScoreResult(ctx, attempt);
+    const [sections, score] = yield* Effect.all(
       [
         input.sections
           ? Effect.succeed(input.sections)
           : loadAttemptSections(ctx, attempt),
-        loadAttemptScoreResult(ctx, attempt),
-        loadAttemptSectionRoutes(ctx, attempt, input.signedSections),
+        scoreEffect,
       ],
       { concurrency: "unbounded" }
     );
@@ -38,36 +44,79 @@ export const loadCurrentAttempt = Effect.fn("tryouts.attempt.loadCurrent")(
           (candidate) => candidate.sectionKey === input.sectionKey
         ) ?? null)
       : null;
-    const resume = readAttemptResume(attempt, sections);
-    const sectionScore = section ? yield* getSectionScoreResult(section) : null;
+    const sectionState = section
+      ? {
+          answeredCount: section.answeredCount,
+          completedAt: section.completedAt,
+          endReason: section.endReason,
+          expiresAt: section.expiresAt,
+          score: yield* getSectionScoreResult(section),
+          sectionKey: section.sectionKey,
+          startedAt: section.startedAt,
+          status: section.status,
+          totalQuestions: section.totalQuestions,
+        }
+      : null;
 
     return {
-      activeSectionKey: resume.activeSectionKey,
-      attemptId: attempt._id,
-      attemptNumber: attempt.attemptNumber,
-      completedSectionKeys: attempt.completedSectionKeys,
-      expiresAt: attempt.expiresAt,
-      lastActivityAt: attempt.lastActivityAt,
-      resumeSectionKey: resume.resumeSectionKey,
-      resumeSectionPublicPath: resume.resumeSectionPublicPath,
+      attempt,
+      resume: readAttemptResume(attempt, sections),
       score,
-      section: section
-        ? {
-            answeredCount: section.answeredCount,
-            completedAt: section.completedAt,
-            endReason: section.endReason,
-            expiresAt: section.expiresAt,
-            score: sectionScore,
-            sectionKey: section.sectionKey,
-            startedAt: section.startedAt,
-            status: section.status,
-            totalQuestions: section.totalQuestions,
-          }
-        : null,
+      sectionState,
+    };
+  }
+);
+
+/** Projects one exact attempt into the compact reactive state contract. */
+export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
+  function* (ctx: QueryCtx, input: AttemptStateInput) {
+    const projection = yield* loadAttemptProjection(ctx, input);
+    return {
+      activeSectionKey: projection.resume.activeSectionKey,
+      attemptId: projection.attempt._id,
+      attemptNumber: projection.attempt.attemptNumber,
+      completedSectionKeys: projection.attempt.completedSectionKeys,
+      expiresAt: projection.attempt.expiresAt,
+      resumeSectionKey: projection.resume.resumeSectionKey,
+      resumeSectionPublicPath: projection.resume.resumeSectionPublicPath,
+      score: projection.score,
+      section: projection.sectionState,
+      startedAt: projection.attempt.startedAt,
+      status: projection.attempt.status,
+    };
+  }
+);
+
+/** Projects the deployed state shape until the current web switches contracts. */
+export const loadCurrentAttempt = Effect.fn("tryouts.attempt.loadCurrent")(
+  function* (ctx: QueryCtx, input: CurrentAttemptInput) {
+    const { projection, sectionRoutes } = yield* Effect.all(
+      {
+        projection: loadAttemptProjection(ctx, input),
+        sectionRoutes: loadAttemptSectionRoutes(
+          ctx,
+          input.attempt,
+          input.signedSections
+        ),
+      },
+      { concurrency: "unbounded" }
+    );
+
+    return {
+      activeSectionKey: projection.resume.activeSectionKey,
+      attemptId: projection.attempt._id,
+      attemptNumber: projection.attempt.attemptNumber,
+      completedSectionKeys: projection.attempt.completedSectionKeys,
+      expiresAt: projection.attempt.expiresAt,
+      lastActivityAt: projection.attempt.lastActivityAt,
+      resumeSectionKey: projection.resume.resumeSectionKey,
+      resumeSectionPublicPath: projection.resume.resumeSectionPublicPath,
+      score: projection.score,
+      section: projection.sectionState,
       sectionRoutes,
-      startedAt: attempt.startedAt,
-      status: attempt.status,
-      totalQuestions: attempt.totalQuestions,
+      startedAt: projection.attempt.startedAt,
+      status: projection.attempt.status,
+      totalQuestions: projection.attempt.totalQuestions,
     };
   }
 );
