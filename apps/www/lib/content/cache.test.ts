@@ -47,6 +47,15 @@ describe("content runtime cache", () => {
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
 
+  it("applies global and exact immutable snapshot tags", async () => {
+    const cache = await import("@/lib/content/cache");
+
+    cache.applyPublishedSnapshotCache(artifactHash);
+
+    expect(cacheTagMock).toHaveBeenCalledWith("content-runtime", artifactTag);
+    expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
+  });
+
   it("applies global, family, and exact artifact tags", async () => {
     const cache = await import("@/lib/content/cache");
 

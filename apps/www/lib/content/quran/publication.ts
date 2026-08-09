@@ -3,15 +3,22 @@ import "server-only";
 import {
   decodePublishedQuranCatalog,
   decodePublishedQuranPage,
+  decodePublishedQuranSource,
 } from "@repo/backend/client/quran/decode";
+import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { applyPublishedSnapshotCache } from "@/lib/content/cache";
 import {
   fetchRuntimeQuery,
   readRuntimeQuery,
 } from "@/lib/content/runtime/query";
+
+/** Reads the raw active Quran attribution through the public Convex query. */
+function fetchAttributionResult() {
+  return fetchRuntimeQuery(api.contentRelease.quran.attribution, {});
+}
 
 /** Reads the raw signed Quran catalog through the public Convex query. */
 function fetchCatalogResult() {
@@ -25,6 +32,25 @@ function fetchPageResult(locale: Locale, surahNumber: number) {
     surahNumber,
   });
 }
+
+/** Reads one locale-specific Quran web projection through the public query. */
+function fetchViewResult(locale: Locale, surahNumber: number) {
+  return fetchRuntimeQuery(api.contentRelease.quran.view, {
+    locale,
+    surahNumber,
+  });
+}
+
+/** Reads and validates the active signed Quran identity without a catalog payload. */
+export const readPublishedQuranIdentity = Effect.fn(
+  "NakafaQuran.readPublishedIdentity"
+)(function* () {
+  const result = yield* readRuntimeQuery(
+    "contentRelease.quran.attribution",
+    fetchAttributionResult
+  );
+  return yield* decodePublishedQuranSource(result, "attribution");
+});
 
 /** Reads and validates the active signed Quran metadata catalog. */
 export const readPublishedQuranCatalog = Effect.fn(
@@ -53,21 +79,21 @@ export async function getPublishedQuranCatalog() {
 
   const result = await fetchCatalogResult();
   const catalog = await Effect.runPromise(decodePublishedQuranCatalog(result));
-  applyContentRuntimeCache();
+  applyPublishedSnapshotCache(catalog.snapshotId);
   return catalog;
 }
 
-/** Caches one complete signed Quran page by locale and active release. */
-export async function getPublishedQuranPage(
+/** Caches one narrow signed Quran web projection by locale and active release. */
+export async function getPublishedQuranView(
   locale: Locale,
   surahNumber: number
 ) {
   "use cache";
 
-  const result = await fetchPageResult(locale, surahNumber);
-  const page = await Effect.runPromise(
-    decodePublishedQuranPage(result, { locale, surahNumber })
+  const result = await fetchViewResult(locale, surahNumber);
+  const view = await Effect.runPromise(
+    decodePublishedQuranView(result, { locale, surahNumber })
   );
-  applyContentRuntimeCache();
-  return page;
+  applyPublishedSnapshotCache(view.snapshotId);
+  return view;
 }

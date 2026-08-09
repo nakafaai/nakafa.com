@@ -1,9 +1,9 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/spec";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -23,8 +23,9 @@ import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
 import {
   getPublishedQuranCatalog,
-  getPublishedQuranPage,
+  getPublishedQuranView,
 } from "@/lib/content/quran/publication";
+import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getSocialMetadata } from "@/lib/utils/metadata";
@@ -35,30 +36,6 @@ import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 
 const QURAN_INITIAL_VERSE_SSR_COUNT = 80;
-
-/** Returns complete localized tafsir controls only when every surah verse has data. */
-function getSurahInterpretations(
-  verses: readonly QuranRuntimeVerse[],
-  locale: Locale
-) {
-  if (locale !== "id") {
-    return;
-  }
-
-  const interpretations: string[] = [];
-
-  for (const verse of verses) {
-    const tafsir = verse.tafsir.id.text;
-
-    if (!tafsir.trim()) {
-      return;
-    }
-
-    interpretations.push(tafsir);
-  }
-
-  return interpretations;
-}
 
 /** Builds localized Quran surah metadata only after the runtime catalog confirms the surah exists. */
 export async function generateMetadata({
@@ -140,7 +117,7 @@ export default function Page(props: PageProps<"/[locale]/quran/[surah]">) {
   );
 }
 
-/** Resolves a localized surah route before rendering Quran SEO and page chrome. */
+/** Resolves a localized surah route before entering the cached Quran shell. */
 async function ResolvedSurahPage({
   params,
 }: {
@@ -154,49 +131,18 @@ async function ResolvedSurahPage({
     notFound();
   }
 
-  const [t, tCommon, surahData] = await Promise.all([
-    getTranslations({ locale, namespace: "Holy" }),
-    getTranslations({ locale, namespace: "Common" }),
-    getSurahMetadataData(surahNumber),
-  ]);
-
-  if (!surahData) {
-    notFound();
-  }
-
-  const translation = surahData.name.translation;
-  const title = getQuranSurahName(surahData.name);
-
   return (
-    <>
-      <BreadcrumbJsonLd
-        breadcrumbItems={createBreadcrumbItems(locale, [
-          { name: tCommon("home"), path: "" },
-          { name: t("quran"), path: "/quran" },
-          { name: title, path: `/quran/${surah}` },
-        ])}
-      />
-      <BookJsonLd
-        author={{ "@type": "Person", name: "Allah" }}
-        description={translation}
-        inLanguage={locale}
-        name={title}
-        position={surahNumber}
-        totalPages={surahData.numberOfVerses}
-        url={`https://nakafa.com/${locale}/quran/${surah}`}
-      />
-      <CachedSurahShell
-        footer={<RefContent key={`refs:${surah}`} />}
-        locale={locale}
-        surah={surah}
-        surahNumber={surahNumber}
-        toolbar={<DeferredAiSheetOpen key={`assistant:${surah}`} />}
-      />
-    </>
+    <CachedSurahShell
+      footer={<RefContent key={`refs:${surah}`} />}
+      locale={locale}
+      surah={surah}
+      surahNumber={surahNumber}
+      toolbar={<DeferredAiSheetOpen key={`assistant:${surah}`} />}
+    />
   );
 }
 
-/** Reads lightweight cached surah metadata for route metadata and JSON-LD. */
+/** Reads lightweight cached surah metadata for route metadata. */
 async function getSurahMetadataData(surahNumber: number) {
   "use cache";
 
@@ -220,12 +166,21 @@ async function CachedSurahShell({
 }) {
   "use cache";
 
-  const [t, result] = await Promise.all([
+  const [t, tCommon, result] = await Promise.all([
     getTranslations({ locale, namespace: "Holy" }),
-    getPublishedQuranPage(locale, surahNumber),
+    getTranslations({ locale, namespace: "Common" }),
+    getPublishedQuranView(locale, surahNumber),
   ]);
 
   const surahData = result.surah;
+  const servedSnapshotId = result.snapshotId;
+  async function recoverSnapshot() {
+    "use server";
+
+    await Effect.runPromise(
+      recoverStalePublishedQuranSnapshot(servedSnapshotId)
+    );
+  }
   const translation = surahData.name.translation;
   const title = getQuranSurahName(surahData.name);
 
@@ -246,69 +201,90 @@ async function CachedSurahShell({
   });
 
   const interpretationLabel = t("interpretation");
-  const interpretations = getSurahInterpretations(result.verses, locale);
+  const hasInterpretation = result.locale === "id";
 
   return (
-    <VirtualProvider>
-      <LayoutMaterialContent>
-        <HeaderContent
-          description={translation}
-          icon={AllahIcon}
-          link={{
-            href: "/quran",
-            label: t("quran"),
-          }}
-          title={title}
-        />
-        <LayoutContent>
-          <WindowVirtualized
-            ssrCount={Math.min(
-              result.verses.length,
-              QURAN_INITIAL_VERSE_SSR_COUNT
-            )}
-          >
-            {result.verses.map((verse, index) => {
-              const verseLabel = t("verse-count", {
-                count: verse.number.inSurah,
-              });
-
-              return (
-                <QuranVerse
-                  hasInterpretation={interpretations !== undefined}
-                  id={slugify(verseLabel)}
-                  index={index}
-                  interpretationLabel={interpretationLabel}
-                  isLast={index === result.verses.length - 1}
-                  key={verse.number.inQuran}
-                  locale={locale}
-                  verse={verse}
-                  verseLabel={verseLabel}
-                />
-              );
-            })}
-          </WindowVirtualized>
-        </LayoutContent>
-        <PaginationContent pagination={pagination} />
-        <FooterContent>{footer}</FooterContent>
-        {interpretations && (
-          <QuranInterpretationControls
-            interpretations={interpretations}
-            label={interpretationLabel}
-          />
-        )}
-        {toolbar}
-      </LayoutMaterialContent>
-      <LayoutMaterialToc
-        chapters={{
-          label: t("verse"),
-          data: headings,
-        }}
-        header={{
-          title,
-          href: `/quran/${surah}`,
-          description: translation,
-        }}
+    <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: t("quran"), path: "/quran" },
+          { name: title, path: `/quran/${surah}` },
+        ])}
       />
-    </VirtualProvider>
+      <BookJsonLd
+        author={{ "@type": "Person", name: "Allah" }}
+        description={translation}
+        inLanguage={locale}
+        name={title}
+        position={surahNumber}
+        totalPages={surahData.numberOfVerses}
+        url={`https://nakafa.com/${locale}/quran/${surah}`}
+      />
+      <VirtualProvider>
+        <LayoutMaterialContent>
+          <HeaderContent
+            description={translation}
+            icon={AllahIcon}
+            link={{
+              href: "/quran",
+              label: t("quran"),
+            }}
+            title={title}
+          />
+          <LayoutContent>
+            <WindowVirtualized
+              ssrCount={Math.min(
+                result.verses.length,
+                QURAN_INITIAL_VERSE_SSR_COUNT
+              )}
+            >
+              {result.verses.map((verse, index) => {
+                const verseLabel = t("verse-count", {
+                  count: verse.number.inSurah,
+                });
+
+                return (
+                  <QuranVerse
+                    hasInterpretation={hasInterpretation}
+                    id={slugify(verseLabel)}
+                    interpretationLabel={interpretationLabel}
+                    isLast={index === result.verses.length - 1}
+                    key={verse.number.inQuran}
+                    verse={verse}
+                    verseLabel={verseLabel}
+                  />
+                );
+              })}
+            </WindowVirtualized>
+          </LayoutContent>
+          <PaginationContent pagination={pagination} />
+          <FooterContent>{footer}</FooterContent>
+          {hasInterpretation && (
+            <QuranInterpretationControls
+              errorMessage={t("interpretation-error")}
+              label={interpretationLabel}
+              loadingMessage={t("interpretation-loading")}
+              recoverSnapshot={recoverSnapshot}
+              refreshingMessage={t("interpretation-refreshing")}
+              snapshotId={result.snapshotId}
+              surahNumber={surahData.number}
+            />
+          )}
+          {toolbar}
+        </LayoutMaterialContent>
+        <LayoutMaterialToc
+          chapters={{
+            label: t("verse"),
+            data: headings,
+          }}
+          header={{
+            title,
+            href: `/quran/${surah}`,
+            description: translation,
+          }}
+        />
+      </VirtualProvider>
+    </>
   );
 }

@@ -27,6 +27,12 @@ export function applyContentRuntimeCache() {
   cacheLife(CONTENT_RUNTIME_CACHE_PROFILE);
 }
 
+/** Applies global and exact immutable snapshot tags to one published cache. */
+export function applyPublishedSnapshotCache(snapshotId: Sha256Hash) {
+  cacheTag(CONTENT_CACHE_GLOBAL_TAG, makeArtifactCacheTag(snapshotId));
+  cacheLife(CONTENT_RUNTIME_CACHE_PROFILE);
+}
+
 /** Applies global and family tags to one published catalog cache. */
 export function applyPublishedCatalogCache(family: ContentFamily) {
   cacheTag(CONTENT_CACHE_GLOBAL_TAG, makeContentFamilyCacheTag(family));
