@@ -6,13 +6,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { previewArtifactHash, previewProjection } from "@/test/content-preview";
 
-const cacheMock = vi.hoisted(() => vi.fn());
+const catalogCacheMock = vi.hoisted(() => vi.fn());
+const contentCacheMock = vi.hoisted(() => vi.fn());
 const renderMock = vi.hoisted(() => vi.fn());
 const routeMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-material");
 
 vi.mock("@/lib/content/cache", () => ({
-  applyPublishedContentCache: cacheMock,
+  applyPublishedCatalogCache: catalogCacheMock,
+  applyPublishedContentCache: contentCacheMock,
 }));
 vi.mock("@/lib/content/material/route", () => ({
   getPublishedMaterialRoute: routeMock,
@@ -22,7 +24,8 @@ vi.mock("@/lib/content/published/material", () => ({
 }));
 
 beforeEach(() => {
-  cacheMock.mockReset();
+  catalogCacheMock.mockReset();
+  contentCacheMock.mockReset();
   renderMock.mockReset();
   routeMock.mockReset();
 });
@@ -43,7 +46,8 @@ describe("material publication", () => {
     await expect(
       getMaterialPublication("en", previewProjection.publicPath)
     ).resolves.toBeNull();
-    expect(cacheMock).not.toHaveBeenCalled();
+    expect(catalogCacheMock).toHaveBeenCalledWith("material");
+    expect(contentCacheMock).not.toHaveBeenCalled();
   });
 
   it("rejects a missing body when the signed route still exists", async () => {
@@ -82,6 +86,10 @@ describe("material publication", () => {
     await expect(
       getMaterialPublication("en", previewProjection.publicPath)
     ).resolves.toEqual({ model, published });
-    expect(cacheMock).toHaveBeenCalledWith("material", previewArtifactHash);
+    expect(catalogCacheMock).not.toHaveBeenCalled();
+    expect(contentCacheMock).toHaveBeenCalledWith(
+      "material",
+      previewArtifactHash
+    );
   });
 });
