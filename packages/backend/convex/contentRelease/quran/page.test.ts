@@ -59,6 +59,18 @@ describe("contentRelease/quran/page", () => {
       decodeSnapshotRowJson(result.searchJson ?? "")
     );
 
+    expect(Object.keys(result).sort()).toEqual([
+      "activeManifestHash",
+      "activeReleaseId",
+      "chunkJson",
+      "managed",
+      "nextSurahJson",
+      "prevSurahJson",
+      "searchJson",
+      "snapshotId",
+      "sourceRevision",
+      "surahJson",
+    ]);
     expect(result).toMatchObject({
       chunkJson: [expect.any(String), expect.any(String)],
       managed: true,
