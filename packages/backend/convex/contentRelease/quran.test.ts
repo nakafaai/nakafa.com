@@ -37,6 +37,18 @@ describe("contentRelease/quran", () => {
       surahJson: null,
     });
     await expect(
+      t.query(api.contentRelease.quran.document, {
+        locale: "en",
+        surahNumber: 1,
+      })
+    ).resolves.toMatchObject({ managed: false, surah: null, verses: [] });
+    await expect(
+      t.query(api.contentRelease.quran.markdown, {
+        locale: "id",
+        surahNumber: 1,
+      })
+    ).resolves.toMatchObject({ managed: false, surah: null, verses: [] });
+    await expect(
       t.query(api.contentRelease.quran.view, {
         locale: "id",
         surahNumber: 1,
@@ -86,6 +98,14 @@ describe("contentRelease/quran", () => {
       t.query(api.contentRelease.quran.surahs, {}),
       t.query(api.contentRelease.quran.page, {
         locale: "en",
+        surahNumber: 1,
+      }),
+      t.query(api.contentRelease.quran.document, {
+        locale: "en",
+        surahNumber: 1,
+      }),
+      t.query(api.contentRelease.quran.markdown, {
+        locale: "id",
         surahNumber: 1,
       }),
       t.query(api.contentRelease.quran.view, {

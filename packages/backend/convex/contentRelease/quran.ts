@@ -5,9 +5,17 @@ import {
   readQuranSurahs,
 } from "@repo/backend/convex/contentRelease/quran/catalog";
 import {
+  quranDocumentValidator,
+  readQuranDocument,
+} from "@repo/backend/convex/contentRelease/quran/document";
+import {
   quranInterpretationValidator,
   readQuranInterpretation,
 } from "@repo/backend/convex/contentRelease/quran/interpretation";
+import {
+  quranMarkdownValidator,
+  readQuranMarkdown,
+} from "@repo/backend/convex/contentRelease/quran/markdown";
 import { readQuranPage } from "@repo/backend/convex/contentRelease/quran/page";
 import { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
 import { searchQuran } from "@repo/backend/convex/contentRelease/quran/search";
@@ -82,6 +90,26 @@ export const page = query({
   returns: pageValidator,
   handler: (ctx, { locale, surahNumber }) =>
     runConvexProgram(readQuranPage(ctx, locale, surahNumber)),
+});
+
+/** Returns the narrow locale-specific Quran document used by the public API. */
+export const document = query({
+  args: { locale: quranLocaleValidator, surahNumber: v.number() },
+  returns: quranDocumentValidator,
+  handler: (ctx, { locale, surahNumber }) =>
+    runConvexProgram(readQuranDocument(ctx, locale, surahNumber)),
+});
+
+/** Returns the exact signed fields rendered by Quran markdown consumers. */
+export const markdown = query({
+  args: {
+    locale: quranLocaleValidator,
+    surahNumber: v.number(),
+    verseLimit: v.optional(v.number()),
+  },
+  returns: quranMarkdownValidator,
+  handler: (ctx, { locale, surahNumber, verseLimit }) =>
+    runConvexProgram(readQuranMarkdown(ctx, locale, surahNumber, verseLimit)),
 });
 
 /** Returns the narrow locale-specific Quran projection used by the web UI. */
