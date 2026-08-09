@@ -4,11 +4,41 @@ import {
 } from "@repo/backend/client/quran/decode";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
-import { Effect } from "effect";
+import { ConvexError } from "convex/values";
+import { Data, Effect, Schema } from "effect";
 
 type QuranInterpretationResult = FunctionReturnType<
   typeof api.contentRelease.quran.interpretation
 >;
+
+const QuranSnapshotConflictDataSchema = Schema.Struct({
+  code: Schema.Literal("CONTENT_RELEASE_CONFLICT"),
+});
+
+/** Typed client failure for one exact tafsir request. */
+export class QuranInterpretationRequestError extends Data.TaggedError(
+  "QuranInterpretationRequestError"
+)<{
+  readonly cause: unknown;
+}> {}
+
+/** Maps an unknown Convex rejection into the Quran client error channel. */
+export function toQuranInterpretationRequestError(cause: unknown) {
+  return new QuranInterpretationRequestError({ cause });
+}
+
+/** Returns whether the active signed Quran snapshot superseded this request. */
+export function isQuranSnapshotConflict(error: unknown) {
+  if (!(error instanceof QuranInterpretationRequestError)) {
+    return false;
+  }
+
+  if (!(error.cause instanceof ConvexError)) {
+    return false;
+  }
+
+  return Schema.is(QuranSnapshotConflictDataSchema)(error.cause.data);
+}
 
 /** Decodes one active exact-verse tafsir response. */
 export const decodePublishedQuranInterpretation = Effect.fn(

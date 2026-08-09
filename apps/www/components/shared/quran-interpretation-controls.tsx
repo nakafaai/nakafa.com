@@ -1,7 +1,11 @@
 "use client";
 
 import { useDisclosure, useWindowEvent } from "@mantine/hooks";
-import { decodePublishedQuranInterpretation } from "@repo/backend/client/quran/interpretation";
+import {
+  decodePublishedQuranInterpretation,
+  isQuranSnapshotConflict,
+  toQuranInterpretationRequestError,
+} from "@repo/backend/client/quran/interpretation";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   Drawer,
@@ -12,13 +16,16 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useLayoutEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 
 interface Props {
   errorMessage: string;
   label: string;
+  loadingMessage: string;
+  refreshingMessage: string;
   snapshotId: string;
   surahNumber: number;
 }
@@ -55,19 +62,25 @@ function getVerseNumber(button: HTMLButtonElement) {
 export function QuranInterpretationControls({
   errorMessage,
   label,
+  loadingMessage,
+  refreshingMessage,
   snapshotId,
   surahNumber,
 }: Props) {
   const convex = useConvex();
+  const router = useRouter();
   const [isOpen, { close, open, set }] = useDisclosure(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
+  const [isPending, startTransition] = useTransition();
   const requestSequence = useRef(0);
+  const pendingRequestId = useRef<number | null>(null);
   const toastId = `quran-interpretation-${snapshotId}-${surahNumber}`;
 
   // Cached routes use React Activity, which runs layout cleanup while hidden.
   useLayoutEffect(
     () => () => {
       requestSequence.current += 1;
+      pendingRequestId.current = null;
       close();
       setSelectedInterpretation("");
       toast.dismiss(toastId);
@@ -86,16 +99,30 @@ export function QuranInterpretationControls({
       return;
     }
 
+    if (isPending || pendingRequestId.current !== null) {
+      return;
+    }
+
     requestSequence.current += 1;
     const requestId = requestSequence.current;
-    const program = Effect.tryPromise(() =>
-      convex.query(api.contentRelease.quran.interpretation, {
-        expectedSnapshotId: snapshotId,
-        locale: "id",
-        surahNumber,
-        verseNumber,
-      })
-    ).pipe(
+    pendingRequestId.current = requestId;
+    close();
+    setSelectedInterpretation("");
+    toast.loading(loadingMessage, {
+      id: toastId,
+      position: "bottom-center",
+    });
+
+    const program = Effect.tryPromise({
+      catch: toQuranInterpretationRequestError,
+      try: () =>
+        convex.query(api.contentRelease.quran.interpretation, {
+          expectedSnapshotId: snapshotId,
+          locale: "id",
+          surahNumber,
+          verseNumber,
+        }),
+    }).pipe(
       Effect.flatMap((result) =>
         decodePublishedQuranInterpretation(result, {
           locale: "id",
@@ -110,31 +137,52 @@ export function QuranInterpretationControls({
             return;
           }
 
+          toast.dismiss(toastId);
           setSelectedInterpretation(interpretation);
           open();
         })
       ),
-      Effect.catchAll((error) =>
-        Effect.sync(() => {
-          if (requestSequence.current === requestId) {
-            toast.error(errorMessage, {
+      Effect.catchAll((error) => {
+        if (requestSequence.current !== requestId) {
+          return Effect.void;
+        }
+
+        if (isQuranSnapshotConflict(error)) {
+          return Effect.sync(() => {
+            toast.info(refreshingMessage, {
               id: toastId,
               position: "bottom-center",
             });
-          }
+            router.refresh();
+          });
+        }
+
+        return Effect.sync(() => {
+          toast.error(errorMessage, {
+            id: toastId,
+            position: "bottom-center",
+          });
         }).pipe(
-          Effect.andThen(
+          Effect.zipRight(
             reportClientException(error, {
               source: "quran-interpretation",
               surahNumber,
               verseNumber,
             })
           )
-        )
-      )
+        );
+      }),
+      Effect.ensuring(
+        Effect.sync(() => {
+          if (pendingRequestId.current === requestId) {
+            pendingRequestId.current = null;
+          }
+        })
+      ),
+      Effect.asVoid
     );
 
-    Effect.runFork(program);
+    startTransition(() => Effect.runPromise(program));
   });
 
   return (

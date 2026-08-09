@@ -2,10 +2,14 @@ import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { QuranPublicationError } from "@repo/backend/client/quran/decode";
 import {
   decodePublishedQuranInterpretation,
+  isQuranSnapshotConflict,
   type PublishedQuranInterpretation,
+  QuranInterpretationRequestError,
+  toQuranInterpretationRequestError,
 } from "@repo/backend/client/quran/interpretation";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
+import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -89,6 +93,32 @@ describe("signed Quran interpretation decoder", () => {
       if (decoded._tag === "Left") {
         expect(decoded.left).toBeInstanceOf(QuranPublicationError);
       }
+    }
+  });
+
+  it("recognizes only a typed snapshot conflict request failure", () => {
+    const conflict = toQuranInterpretationRequestError(
+      new ConvexError({
+        code: "CONTENT_RELEASE_CONFLICT",
+        message: "The active Quran snapshot changed.",
+      })
+    );
+
+    expect(conflict).toBeInstanceOf(QuranInterpretationRequestError);
+    expect(isQuranSnapshotConflict(conflict)).toBe(true);
+
+    for (const error of [
+      new Error("Network error"),
+      new ConvexError({ code: "CONTENT_RELEASE_CONFLICT" }),
+      toQuranInterpretationRequestError(new Error("Network error")),
+      toQuranInterpretationRequestError(new ConvexError("plain")),
+      toQuranInterpretationRequestError(new ConvexError(null)),
+      toQuranInterpretationRequestError(new ConvexError({})),
+      toQuranInterpretationRequestError(
+        new ConvexError({ code: "CONTENT_RELEASE_INVALID_REQUEST" })
+      ),
+    ]) {
+      expect(isQuranSnapshotConflict(error)).toBe(false);
     }
   });
 });
