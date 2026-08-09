@@ -59,6 +59,7 @@ function useBetterAuth() {
 
   // Convex reloads auth when this callback identity changes.
   // https://docs.convex.dev/api/modules/react#convexproviderwithauth
+  // https://github.com/get-convex/convex-js/blob/d28852aa028dede94796a012a2a802ae6ad04188/src/react/ConvexAuthState.tsx#L75-L80
   // react-doctor-disable-next-line react-doctor/react-compiler-no-manual-memoization
   const fetchAccessToken = useCallback(
     ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
@@ -122,6 +123,9 @@ export function ConvexProvider({ children }: { children: ReactNode }) {
   return (
     // Convex's public API explicitly requires an authentication Hook prop.
     // https://docs.convex.dev/api/modules/react#convexproviderwithauth
+    // https://github.com/get-convex/convex-js/blob/d28852aa028dede94796a012a2a802ae6ad04188/src/react/ConvexAuthState.tsx#L75-L99
+    // This conflicts with React's generic rule against passing Hooks as values.
+    // https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
     // react-doctor-disable-next-line react-hooks-js/hooks
     <ConvexProviderWithAuth client={convex} useAuth={useBetterAuth}>
       {children}
