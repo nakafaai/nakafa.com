@@ -1,5 +1,14 @@
 import "server-only";
 
+// Only Aksara artifacts that pass exact schema, hash, source, Ed25519 signature,
+// and renderer compatibility verification reach `run()` below.
+// https://github.com/nakafaai/aksara/blob/contracts-v0.11.0/packages/contracts/src/artifact/verify.ts#L13-L37
+// https://github.com/nakafaai/aksara/blob/contracts-v0.11.0/packages/contracts/src/artifact/integrity.ts#L49-L92
+// The pinned compiler rejects imports and re-exports before publication.
+// https://github.com/nakafaai/aksara/blob/16a7436af5fb3e96d72a946dadc377541f8eecbe/packages/compiler/src/module-policy.ts#L1-L57
+// MDX documents `run()` as the execution API for already-compiled code.
+// https://mdxjs.com/packages/mdx/#run
+// react-doctor-disable-next-line react-doctor/mdx-ssr-execution-risk
 import { run } from "@mdx-js/mdx";
 import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
