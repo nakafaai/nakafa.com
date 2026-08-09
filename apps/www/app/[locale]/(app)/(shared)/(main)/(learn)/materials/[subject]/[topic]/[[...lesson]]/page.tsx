@@ -140,6 +140,8 @@ async function MaterialRouteContent({
     >
       <MaterialLessonPage
         content={{ body: page.body, metadata: page.metadata }}
+        copyContent={page.copySourceUrl ? undefined : page.body}
+        copySourceUrl={page.copySourceUrl}
         footer={<DeferredComments slug={contentKey} />}
         headerLink={navigation.link}
         icon={getMaterialIcon(page.rendererDomain)}
@@ -174,6 +176,8 @@ async function MaterialRouteContent({
 async function MaterialLessonPage({
   children,
   content,
+  copyContent,
+  copySourceUrl,
   footer,
   headerLink,
   icon,
@@ -186,6 +190,8 @@ async function MaterialLessonPage({
 }: {
   children: ReactNode;
   content: MaterialBody;
+  copyContent?: string;
+  copySourceUrl: null | string;
   footer: ReactNode;
   headerLink?: {
     href: string;
@@ -240,7 +246,8 @@ async function MaterialLessonPage({
       />
       <LayoutMaterialContent>
         <HeaderContent
-          content={raw}
+          content={copyContent}
+          copySourceUrl={copySourceUrl}
           icon={icon}
           link={headerLink ?? { href: "/home", label: tCommon("home") }}
           slug={toMaterialHref(route)}

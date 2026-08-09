@@ -6,7 +6,7 @@ import {
   LinkSquare02Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { useClipboard, useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useTimeout } from "@mantine/hooks";
 import {
   BrandLogo,
   type BrandLogoName,
@@ -26,16 +26,17 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { getGithubUrl } from "@/lib/utils/github";
+import { copyOpenContent } from "@/components/shared/open-content-copy";
 
 /**
  * Renders open/share actions for one content page.
  *
- * The dropdown is transient UI, so it resets closed when Next hides the page
- * through Cache Components state preservation.
+ * Copy feedback and the dropdown are transient UI, so they reset when Next
+ * hides the page through Cache Components state preservation.
  *
  * References:
  * - Next.js preserving UI state with Cache Components:
@@ -46,47 +47,88 @@ import { getGithubUrl } from "@/lib/utils/github";
 export function OpenContent({
   slug,
   content,
+  copySourceUrl,
   sourceUrl,
 }: {
   slug: string;
   content?: string;
+  copySourceUrl?: null | string;
   sourceUrl?: null | string;
 }) {
   const t = useTranslations("Common");
-  const clipboard = useClipboard({ timeout: 500 });
+  const [copied, setCopied] = useState(false);
+  const { clear: clearCopiedTimeout, start: startCopiedTimeout } = useTimeout(
+    () => setCopied(false),
+    500
+  );
   const [open, { close, set }] = useDisclosure(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const copyAbortController = useRef<AbortController | null>(null);
 
-  useLayoutEffect(() => close, [close]);
+  useLayoutEffect(
+    () => () => {
+      copyAbortController.current?.abort();
+      copyAbortController.current = null;
+      clearCopiedTimeout();
+      setCopied(false);
+      setIsCopying(false);
+      close();
+    },
+    [clearCopiedTimeout, close]
+  );
 
-  /** Copies the available raw content and reports the localized result. */
+  /** Copies preview source directly or loads immutable published source. */
   const handleCopy = () => {
-    if (!content) {
-      toast.error(t("copy-error"), { position: "bottom-center" });
-      return;
-    }
-    clipboard.copy(content);
-    toast.success(t("copy-success"), { position: "bottom-center" });
+    copyAbortController.current?.abort();
+    const abortController = new AbortController();
+    copyAbortController.current = abortController;
+    setIsCopying(true);
+
+    const copyProgram = copyOpenContent({
+      content,
+      copySourceUrl,
+      writeClipboard: (source) => navigator.clipboard.writeText(source),
+    }).pipe(
+      Effect.matchEffect({
+        onFailure: () =>
+          Effect.sync(() =>
+            toast.error(t("copy-error"), { position: "bottom-center" })
+          ),
+        onSuccess: () =>
+          Effect.sync(() => {
+            clearCopiedTimeout();
+            setCopied(true);
+            startCopiedTimeout();
+            toast.success(t("copy-success"), { position: "bottom-center" });
+          }),
+      }),
+      Effect.ensuring(
+        Effect.sync(() => {
+          if (copyAbortController.current !== abortController) {
+            return;
+          }
+          copyAbortController.current = null;
+          setIsCopying(false);
+        })
+      )
+    );
+
+    Effect.runPromiseExit(copyProgram, {
+      signal: abortController.signal,
+    });
   };
 
-  const locale = slug.split("/")[1];
-  const path = `/${slug.split("/").slice(2).join("/")}`;
   const markdownUrl = new URL(`${slug}.mdx`, "https://nakafa.com");
   const q = `I'm looking at this ${markdownUrl}, help me understand.`;
 
-  const githubUrl =
-    sourceUrl === undefined
-      ? getGithubUrl({
-          path: `/packages/contents${path}/${locale}.mdx`,
-        })
-      : sourceUrl;
   const links: {
     href: string;
     logo: BrandLogoName;
     title: string;
   }[] = [];
-  if (githubUrl) {
+  if (sourceUrl) {
     links.push({
-      href: githubUrl,
+      href: sourceUrl,
       logo: "github",
       title: t("open-in-github"),
     });
@@ -111,8 +153,12 @@ export function OpenContent({
 
   return (
     <ButtonGroup>
-      <Button disabled={!content} onClick={handleCopy} variant="secondary">
-        <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
+      <Button
+        disabled={isCopying || !(content || copySourceUrl)}
+        onClick={handleCopy}
+        variant="secondary"
+      >
+        <HugeIcons icon={copied ? Tick01Icon : Copy01Icon} />
         {t("copy-content")}
       </Button>
 

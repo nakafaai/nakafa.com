@@ -37,7 +37,11 @@ const BASE_CONTENT_SECURITY_POLICY = {
  * https://posthog.com/docs/advanced/content-security-policy
  * https://posthog.com/docs/advanced/proxy/nextjs
  */
-export function createSecurityHeaders() {
+export function createSecurityHeaders({
+  additionalConnectSources = [],
+}: {
+  readonly additionalConnectSources?: readonly string[];
+} = {}) {
   return [
     {
       key: "Content-Security-Policy",
@@ -47,7 +51,10 @@ export function createSecurityHeaders() {
         "style-src 'self' 'unsafe-inline' https://accounts.google.com https://cdn.jsdelivr.net",
         "img-src 'self' blob: data: https: https://*.googleusercontent.com",
         "font-src 'self'",
-        `connect-src ${BASE_CONTENT_SECURITY_POLICY.connectSrc.join(" ")}`,
+        `connect-src ${[
+          ...BASE_CONTENT_SECURITY_POLICY.connectSrc,
+          ...additionalConnectSources,
+        ].join(" ")}`,
         "frame-src 'self' https://accounts.google.com https://www.youtube-nocookie.com https://www.youtube.com",
         `media-src ${BASE_CONTENT_SECURITY_POLICY.mediaSrc.join(" ")}`,
         "frame-ancestors 'none'",

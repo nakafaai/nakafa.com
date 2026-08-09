@@ -29,8 +29,20 @@ describe("createSecurityHeaders", () => {
 
     expect(csp?.value).toContain("script-src 'self'");
     expect(csp?.value).toContain("connect-src 'self'");
+    expect(csp?.value).not.toContain("https://raw.githubusercontent.com");
     expect(csp?.value).toContain("media-src 'self'");
     expect(csp?.value).not.toContain("posthog.com");
+  });
+
+  it("adds app-owned connect sources without widening shared apps", () => {
+    const csp = createSecurityHeaders({
+      additionalConnectSources: ["https://raw.githubusercontent.com"],
+    }).find((header) => header.key === "Content-Security-Policy");
+
+    expect(csp?.value).toContain(
+      "connect-src 'self' wss://*.convex.cloud https://*.convex.cloud"
+    );
+    expect(csp?.value).toContain("https://raw.githubusercontent.com");
   });
 
   it("exposes shared headers through the Next config", () => {

@@ -17,7 +17,7 @@ import {
   getCurrentPublishedArticle,
   renderCurrentPublishedArticle,
 } from "@/lib/content/published/article";
-import { getAksaraUrl } from "@/lib/utils/github";
+import { getAksaraUrl, getRawAksaraUrl } from "@/lib/utils/github";
 
 /** Exact route identity shared by metadata and body ownership reads. */
 export interface ArticleContentInput {
@@ -40,6 +40,7 @@ export interface ArticlePageContent {
   readonly categoryTitle: string;
   readonly children: ReactNode;
   readonly contentId: ArticleProjection["graph"]["assetId"];
+  readonly copySourceUrl: null | string;
   readonly metadata: ArticleMetadata;
   readonly references: readonly ArticleReference[];
   readonly sourceUrl: null | string;
@@ -97,6 +98,7 @@ export async function readArticlePage(
   if (owner.kind === "preview") {
     return {
       ...owner.content,
+      copySourceUrl: null,
       sourceUrl: null,
     };
   }
@@ -113,6 +115,12 @@ export async function readArticlePage(
     categoryTitle: published.categoryTitle,
     children: published.body,
     contentId: published.contentId,
+    copySourceUrl: published.sourceRevision
+      ? getRawAksaraUrl({
+          path: published.sourcePath,
+          revision: published.sourceRevision,
+        })
+      : null,
     metadata: published.metadata,
     references: published.references,
     sourceUrl: published.sourceRevision
