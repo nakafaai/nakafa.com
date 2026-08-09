@@ -3,7 +3,10 @@ import "server-only";
 import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { applyPublishedContentCache } from "@/lib/content/cache";
+import {
+  applyPublishedCatalogCache,
+  applyPublishedContentCache,
+} from "@/lib/content/cache";
 import {
   makeMaterialProjectionError,
   verifyMaterialPublication,
@@ -31,6 +34,7 @@ export async function getMaterialPublication(
     Effect.runPromise(readPublished),
   ]);
   if (!model.projection) {
+    applyPublishedCatalogCache("material");
     return null;
   }
   if (!published) {
