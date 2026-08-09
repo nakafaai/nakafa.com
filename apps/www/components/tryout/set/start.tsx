@@ -15,10 +15,7 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
-import {
-  getTryoutAttemptHref,
-  getTryoutPublicPath,
-} from "@/components/tryout/route/path";
+import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
 import { TryoutStartDialog } from "@/components/tryout/set/start-dialog";
@@ -234,14 +231,16 @@ export function StartTryoutButton({
       <IntentLink
         className={buttonVariants()}
         href={request.destinationHref}
-        onIntent={() =>
+        onIntent={() => {
+          if (!(attempt && request.destinationSectionKey)) {
+            return;
+          }
           prewarmData({
-            ...(attempt ? { attemptId: attempt.attemptId } : {}),
+            attemptId: attempt.attemptId,
             kind: "section",
-            locale: request.locale,
-            publicPath: getTryoutPublicPath(request.destinationHref),
-          })
-        }
+            sectionKey: request.destinationSectionKey,
+          });
+        }}
       >
         <Spinner icon={Rocket01Icon} isLoading={false} />
         {buttonLabel}

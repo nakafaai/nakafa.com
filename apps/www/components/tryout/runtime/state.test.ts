@@ -2,9 +2,22 @@ import { describe, expect, it } from "vitest";
 import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
+  isTryoutStateLive,
 } from "@/components/tryout/runtime/state";
 
 const NOW = 1000;
+
+describe("isTryoutStateLive", () => {
+  it("subscribes only to an in-progress attempt", () => {
+    expect(
+      isTryoutStateLive({ attempt: createAttempt("in-progress", NOW + 1) })
+    ).toBe(true);
+    expect(
+      isTryoutStateLive({ attempt: createAttempt("completed", NOW + 1) })
+    ).toBe(false);
+    expect(isTryoutStateLive(null)).toBe(false);
+  });
+});
 
 describe("getActiveTryoutAttempt", () => {
   it("returns an in-progress attempt before its deadline", () => {

@@ -20,7 +20,6 @@ interface TryoutRuntimeQuestionValue {
   locked: boolean;
   question: RuntimeQuestion;
   reviewMode: boolean;
-  sectionStartedAt: number;
 }
 
 /** Renders one question with the original production exercise answer styling. */
@@ -30,8 +29,7 @@ export function TryoutRuntimeQuestion({
   value: TryoutRuntimeQuestionValue;
 }) {
   const tExercises = useTranslations("Exercises");
-  const { answer, content, locked, question, reviewMode, sectionStartedAt } =
-    value;
+  const { answer, content, locked, question, reviewMode } = value;
   const id = `question-${question.questionOrder}`;
   const explanationId = `${id}-explanation`;
 
@@ -76,7 +74,6 @@ export function TryoutRuntimeQuestion({
               locked,
               question,
               reviewMode,
-              sectionStartedAt,
             }}
           />
         </section>

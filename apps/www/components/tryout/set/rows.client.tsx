@@ -1,7 +1,6 @@
 "use client";
 
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import type { Locale } from "next-intl";
 import { TryoutList } from "@/components/tryout/catalog/list";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import {
@@ -16,7 +15,6 @@ type SectionStatus = CurrentAttempt["status"];
 export interface TryoutSectionRowsValue {
   attempt?: CurrentAttempt | null;
   emptyLabel: string;
-  locale: Locale;
   questionUnitLabel: string;
   sections: readonly SetSection[];
 }
@@ -34,8 +32,7 @@ export function TryoutSectionRows({
   const activeSectionKey = activeAttempt?.activeSectionKey ?? null;
   const completedSections = new Set(value.attempt?.completedSectionKeys ?? []);
   const currentSectionKey = activeAttempt?.resumeSectionKey ?? null;
-  const sections: readonly SectionRow[] =
-    boundAttempt?.sectionRoutes ?? value.sections;
+  const sections: readonly SectionRow[] = value.sections;
 
   return (
     <TryoutList
@@ -54,13 +51,16 @@ export function TryoutSectionRows({
               ? getTryoutAttemptHref(publicPath, boundAttempt.attemptId)
               : getTryoutPublicPathHref(publicPath),
             key: section.sectionKey,
-            onIntent: () =>
+            onIntent: () => {
+              if (!activeAttempt) {
+                return;
+              }
               prewarmData({
-                ...(boundAttempt ? { attemptId: boundAttempt.attemptId } : {}),
+                attemptId: activeAttempt.attemptId,
                 kind: "section",
-                locale: value.locale,
-                publicPath,
-              }),
+                sectionKey: section.sectionKey,
+              });
+            },
             status: getSectionStatus({
               activeSectionKey,
               completedSections,
@@ -80,7 +80,7 @@ export function TryoutSectionRows({
 }
 
 type SectionRow = Pick<
-  SetSection | CurrentAttempt["sectionRoutes"][number],
+  SetSection,
   "publicPath" | "questionCount" | "sectionKey" | "title"
 >;
 

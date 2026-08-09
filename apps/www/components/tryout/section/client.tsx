@@ -3,10 +3,11 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import { type Preloaded, usePreloadedQuery, useQuery } from "convex/react";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
@@ -18,6 +19,7 @@ import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
+  isTryoutStateLive,
   type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
 import type {
@@ -29,30 +31,28 @@ import {
   getTryoutFinishedSectionDescription,
   getTryoutFinishedSectionStatus,
 } from "@/components/tryout/section/finished";
+import type { TryoutSectionPage } from "@/components/tryout/section/model";
 import { TryoutVisibleSummary } from "@/components/tryout/section/summary.client";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
 import { TryoutMeta } from "@/components/tryout/shell/meta";
 
-type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
-type SectionStateQuery = typeof api.tryouts.queries.runtime.getSectionState;
+type SectionStateQuery =
+  typeof api.tryouts.queries.runtime.getSectionAttemptState;
 type SectionState = FunctionReturnType<SectionStateQuery>;
 
 interface TryoutSectionPageClientProps {
   binding: TryoutSectionRouteBinding;
   content: TryoutSectionAssets;
-  page: NonNullable<FunctionReturnType<SectionPageQuery>>;
-  preloadedState?: Preloaded<SectionStateQuery>;
+  page: TryoutSectionPage;
   route: TryoutSectionRoute;
   setHref: string;
 }
 
-type TryoutSectionRouteBinding =
-  | { kind: "active" }
-  | {
-      attemptId: Id<"tryoutAttempts">;
-      kind: "retained";
-      startHref: string | null;
-    };
+type TryoutSectionRouteBinding = {
+  attemptId: Id<"tryoutAttempts">;
+  initialState: NonNullable<SectionState>;
+  startHref: string | null;
+} | null;
 
 interface TryoutSectionAssets {
   answers: readonly TryoutAnswerContent[];
@@ -68,30 +68,36 @@ interface TryoutSectionRoute {
   track: string;
 }
 
-/** Renders one realtime try-out section page from Convex. */
+/** Renders one stable page with an active-only mutable subscription. */
 export function TryoutSectionPageClient({
   binding,
   content,
   page,
-  preloadedState,
   route,
   setHref,
 }: TryoutSectionPageClientProps) {
-  const runtimeArgs: FunctionArgs<SectionStateQuery> = {
-    ...(binding.kind === "retained" ? { attemptId: binding.attemptId } : {}),
-    locale: route.locale,
-    publicPath: getTryoutHref(route).slice(1),
-  };
-
-  if (preloadedState) {
+  if (!binding) {
     return (
-      <PreloadedTryoutSectionPage
+      <ResolvedTryoutSectionPage
+        binding={null}
+        content={content}
+        page={page}
+        route={route}
+        setHref={setHref}
+        state={null}
+      />
+    );
+  }
+
+  if (!isTryoutStateLive(binding.initialState)) {
+    return (
+      <ResolvedTryoutSectionPage
         binding={binding}
         content={content}
         page={page}
-        preloadedState={preloadedState}
         route={route}
         setHref={setHref}
+        state={binding.initialState}
       />
     );
   }
@@ -100,40 +106,58 @@ export function TryoutSectionPageClient({
     <LiveTryoutSectionPage
       binding={binding}
       content={content}
+      key={`${binding.attemptId}:${page.section.sectionKey}`}
       page={page}
       route={route}
-      runtimeArgs={runtimeArgs}
       setHref={setHref}
     />
   );
 }
 
-/** Hydrates the server-fetched state before its live subscription resolves. */
-function PreloadedTryoutSectionPage({
-  preloadedState,
+/** Owns one active subscription and skips it after a terminal update. */
+function LiveTryoutSectionPage({
+  binding,
+  page,
   ...props
 }: TryoutSectionPageClientProps & {
-  preloadedState: Preloaded<SectionStateQuery>;
+  binding: NonNullable<TryoutSectionRouteBinding>;
 }) {
-  const state = usePreloadedQuery(preloadedState);
-  return <ResolvedTryoutSectionPage {...props} state={state} />;
-}
-
-/** Loads one live state when the public route had no authenticated preload. */
-function LiveTryoutSectionPage({
-  runtimeArgs,
-  ...props
-}: Omit<TryoutSectionPageClientProps, "preloadedState"> & {
-  runtimeArgs: FunctionArgs<SectionStateQuery>;
-}) {
-  const state = useQuery(
-    api.tryouts.queries.runtime.getSectionState,
-    runtimeArgs
+  const [terminalState, setTerminalState] = useState<
+    SectionState | undefined
+  >();
+  const liveState = useQuery(
+    api.tryouts.queries.runtime.getSectionAttemptState,
+    terminalState === undefined
+      ? {
+          attemptId: binding.attemptId,
+          sectionKey: page.section.sectionKey,
+        }
+      : "skip"
   );
-  if (state === undefined) {
-    return null;
+
+  if (
+    terminalState === undefined &&
+    liveState !== undefined &&
+    !isTryoutStateLive(liveState)
+  ) {
+    setTerminalState(liveState);
   }
-  return <ResolvedTryoutSectionPage {...props} state={state} />;
+
+  let state: SectionState = binding.initialState;
+  if (liveState !== undefined) {
+    state = liveState;
+  }
+  if (terminalState !== undefined) {
+    state = terminalState;
+  }
+  return (
+    <ResolvedTryoutSectionPage
+      {...props}
+      binding={binding}
+      page={page}
+      state={state}
+    />
+  );
 }
 
 /** Renders the stable section UI from one cohesive reactive state. */
@@ -144,7 +168,7 @@ function ResolvedTryoutSectionPage({
   route,
   setHref,
   state,
-}: Omit<TryoutSectionPageClientProps, "preloadedState"> & {
+}: TryoutSectionPageClientProps & {
   state: SectionState;
 }) {
   const attempt = state?.attempt ?? null;
@@ -157,7 +181,7 @@ function ResolvedTryoutSectionPage({
   );
 
   const currentAttempt = attempt;
-  const activeAttempt = getActiveTryoutAttempt(currentAttempt ?? null, now);
+  const activeAttempt = getActiveTryoutAttempt(currentAttempt, now);
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
       ? null
@@ -247,7 +271,7 @@ function TryoutSectionBody({
     actionAttempt: TryoutSectionAttempt | null;
     activeAttempt: TryoutSectionAttempt | null;
     content: TryoutSectionAssets;
-    page: NonNullable<FunctionReturnType<SectionPageQuery>>;
+    page: TryoutSectionPage;
     route: TryoutSectionRoute;
     runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
     sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
@@ -329,12 +353,12 @@ function TryoutSectionBody({
   );
 }
 
-/** Selects how a start action leaves an active or retained section route. */
+/** Selects how a start action leaves a public or retained section route. */
 function getStartDestination(
   binding: TryoutSectionRouteBinding,
   route: TryoutSectionRoute
 ): TryoutStartDestination | null {
-  if (binding.kind === "active") {
+  if (!binding) {
     return {
       href: getTryoutHref(route),
       successNavigation: "stay",

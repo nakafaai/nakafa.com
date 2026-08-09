@@ -8,10 +8,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
-import {
-  getTryoutAttemptHref,
-  getTryoutPublicPath,
-} from "@/components/tryout/route/path";
+import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import type { TryoutSectionAttempt } from "@/components/tryout/runtime/types";
 import { StartSectionButton } from "@/components/tryout/section/start";
 import type { TryoutSummarySection } from "@/components/tryout/section/summary";
@@ -70,13 +67,15 @@ export function TryoutSummaryAction({
     <IntentLink
       className={cn(buttonVariants(), "w-full sm:w-auto")}
       href={value.returnHref}
-      onIntent={() =>
+      onIntent={() => {
+        if (!value.activeAttempt) {
+          return;
+        }
         prewarmData({
+          attemptId: value.activeAttempt.attemptId,
           kind: "set",
-          locale: value.locale,
-          publicPath: value.returnHref.slice(1),
-        })
-      }
+        });
+      }}
     >
       <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
       {tTryouts("back-to-set-cta")}
@@ -129,8 +128,9 @@ function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
   const tTryouts = useTranslations("Tryouts");
   const prewarmData = useTryoutDataIntent();
   const resumeHref = getResumeHref(value);
+  const resumeSectionKey = value.activeAttempt.resumeSectionKey;
 
-  if (resumeHref) {
+  if (resumeHref && resumeSectionKey) {
     return (
       <IntentLink
         className={cn(buttonVariants(), "w-full sm:w-auto")}
@@ -139,8 +139,7 @@ function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
           prewarmData({
             attemptId: value.activeAttempt.attemptId,
             kind: "section",
-            locale: value.locale,
-            publicPath: getTryoutPublicPath(resumeHref),
+            sectionKey: resumeSectionKey,
           })
         }
       >

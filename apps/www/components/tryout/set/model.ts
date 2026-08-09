@@ -10,21 +10,30 @@ import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 /** Convex query contract for the set discovery page. */
 export type SetPageQuery = typeof api.tryouts.queries.catalog.getSetPage;
 
+type SetAttemptPageResult = Extract<
+  NonNullable<
+    FunctionReturnType<typeof api.tryouts.queries.attemptPage.getSet>
+  >,
+  { kind: "current" | "retained" }
+>;
+
 /** Loaded try-out set discovery payload. */
-export type SetPage = NonNullable<FunctionReturnType<SetPageQuery>>;
+export type SetPage =
+  | NonNullable<FunctionReturnType<SetPageQuery>>
+  | SetAttemptPageResult["page"];
 
 /** Internal section used by direct-entry sets. */
 export type SetEntrySection = NonNullable<SetPage["entrySection"]>;
 
 /** Current attempt payload returned by Convex. */
 export type CurrentAttempt = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.runtime.getSetState>
+  FunctionReturnType<typeof api.tryouts.queries.runtime.getSetAttemptState>
 >["attempt"];
 
 /** Loaded section runtime payload after null checks. */
 export type LoadedRuntime = NonNullable<
   NonNullable<
-    FunctionReturnType<typeof api.tryouts.queries.runtime.getSetState>
+    FunctionReturnType<typeof api.tryouts.queries.runtime.getSetAttemptState>
   >["runtime"]
 >;
 
@@ -57,6 +66,7 @@ export interface TryoutSetView {
   entrySection: SetEntrySection | null;
   page: SetPage;
   route: TryoutSetRoute;
+  sectionRoutes: readonly SetPage["sections"][number][];
 }
 
 /** Render model for sets whose only section is the set entry itself. */

@@ -3,12 +3,12 @@
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { Link } from "@repo/internationalization/src/navigation";
 import type { ComponentProps, FocusEvent, MouseEvent, TouchEvent } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 type LinkProps = ComponentProps<typeof Link>;
 type IntentLinkProps = Omit<LinkProps, "href" | "prefetch"> & {
   href: string;
-  onIntent?: () => boolean;
+  onIntent?: () => void;
 };
 
 /**
@@ -27,7 +27,6 @@ export function IntentLink({
   ...props
 }: IntentLinkProps) {
   const [prefetchHref, setPrefetchHref] = useState<string | null>(null);
-  const warmedHref = useRef<string | null>(null);
   const normalizedHref = useMemo(
     () => normalizeLocalizedInternalHref(href),
     [href]
@@ -35,16 +34,7 @@ export function IntentLink({
 
   function markIntent() {
     setPrefetchHref(href);
-
-    if (warmedHref.current === href) {
-      return;
-    }
-
-    const warmed = onIntent?.() ?? true;
-
-    if (warmed) {
-      warmedHref.current = href;
-    }
+    onIntent?.();
   }
 
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {

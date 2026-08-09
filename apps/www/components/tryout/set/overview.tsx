@@ -58,7 +58,7 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
 function TryoutSetSections({ value }: { value: TryoutSetView }) {
   const tTryouts = useTranslations("Tryouts");
 
-  const sections = value.actionAttempt?.sectionRoutes ?? value.page.sections;
+  const sections = value.sectionRoutes;
   if (sections.length === 0) {
     return null;
   }
@@ -68,9 +68,8 @@ function TryoutSetSections({ value }: { value: TryoutSetView }) {
       value={{
         attempt: value.actionAttempt,
         emptyLabel: tTryouts("list-empty"),
-        locale: value.route.locale,
         questionUnitLabel: tTryouts("question-unit"),
-        sections: value.page.sections,
+        sections,
       }}
     />
   );

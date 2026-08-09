@@ -27,7 +27,7 @@ export type TryoutListRow = Readonly<{
   href: string;
   key: string;
   meta?: ReactNode;
-  onIntent?: () => boolean;
+  onIntent?: () => void;
   status?: TryoutStatusValue;
   title: string;
   visual: TryoutListRowVisual;

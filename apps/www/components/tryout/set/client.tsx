@@ -2,8 +2,9 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { type Preloaded, usePreloadedQuery, useQuery } from "convex/react";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { useState } from "react";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import {
   getTryoutAttemptHref,
@@ -14,6 +15,7 @@ import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
+  isTryoutStateLive,
 } from "@/components/tryout/runtime/state";
 import { TryoutSetEntry } from "@/components/tryout/set/entry";
 import type {
@@ -26,94 +28,107 @@ import type {
 } from "@/components/tryout/set/model";
 import { TryoutSetOverview } from "@/components/tryout/set/overview";
 
+type SetStateQuery = typeof api.tryouts.queries.runtime.getSetAttemptState;
+type SetState = FunctionReturnType<SetStateQuery>;
+
+interface TryoutSetPageBinding {
+  attemptId: Id<"tryoutAttempts">;
+  initialState: NonNullable<SetState>;
+  sectionRoutes: readonly SetPage["sections"][number][];
+}
+
 interface TryoutSetPageClientProps {
-  attemptId?: Id<"tryoutAttempts">;
+  binding: TryoutSetPageBinding | null;
   content: TryoutSetContent;
   page: SetPage;
-  preloadedState?: Preloaded<SetStateQuery>;
   route: TryoutSetRoute;
 }
 
-type SetStateQuery = typeof api.tryouts.queries.runtime.getSetState;
-type SetState = FunctionReturnType<SetStateQuery>;
-
-/** Renders one realtime try-out set page from Convex. */
+/** Renders one stable page with an active-only mutable subscription. */
 export function TryoutSetPageClient({
-  attemptId,
+  binding,
   content,
   page,
-  preloadedState,
   route,
 }: TryoutSetPageClientProps) {
-  const stateArgs: FunctionArgs<SetStateQuery> = {
-    ...(attemptId ? { attemptId } : {}),
-    locale: route.locale,
-    publicPath: page.set.publicPath,
-  };
-
-  if (preloadedState) {
+  if (!binding) {
     return (
-      <PreloadedTryoutSetPage
-        attemptId={attemptId}
+      <ResolvedTryoutSetPage
+        binding={null}
         content={content}
         page={page}
-        preloadedState={preloadedState}
         route={route}
+        state={null}
+      />
+    );
+  }
+
+  if (!isTryoutStateLive(binding.initialState)) {
+    return (
+      <ResolvedTryoutSetPage
+        binding={binding}
+        content={content}
+        page={page}
+        route={route}
+        state={binding.initialState}
       />
     );
   }
 
   return (
     <LiveTryoutSetPage
-      attemptId={attemptId}
+      binding={binding}
       content={content}
+      key={binding.attemptId}
       page={page}
       route={route}
-      stateArgs={stateArgs}
     />
   );
 }
 
-/** Hydrates server-fetched set state before its live subscription resolves. */
-function PreloadedTryoutSetPage({
-  preloadedState,
-  ...props
-}: TryoutSetPageClientProps & {
-  preloadedState: Preloaded<SetStateQuery>;
-}) {
-  const state = usePreloadedQuery(preloadedState);
-  return <ResolvedTryoutSetPage {...props} state={state} />;
-}
-
-/** Loads one live set state when the public route had no authenticated preload. */
+/** Owns one active subscription and skips it after a terminal update. */
 function LiveTryoutSetPage({
-  stateArgs,
+  binding,
   ...props
-}: Omit<TryoutSetPageClientProps, "preloadedState"> & {
-  stateArgs: FunctionArgs<SetStateQuery>;
-}) {
-  const state = useQuery(api.tryouts.queries.runtime.getSetState, stateArgs);
-  if (state === undefined) {
-    return null;
+}: TryoutSetPageClientProps & { binding: TryoutSetPageBinding }) {
+  const [terminalState, setTerminalState] = useState<SetState | undefined>();
+  const liveState = useQuery(
+    api.tryouts.queries.runtime.getSetAttemptState,
+    terminalState === undefined ? { attemptId: binding.attemptId } : "skip"
+  );
+
+  if (
+    terminalState === undefined &&
+    liveState !== undefined &&
+    !isTryoutStateLive(liveState)
+  ) {
+    setTerminalState(liveState);
   }
-  return <ResolvedTryoutSetPage {...props} state={state} />;
+
+  let state: SetState = binding.initialState;
+  if (liveState !== undefined) {
+    state = liveState;
+  }
+  if (terminalState !== undefined) {
+    state = terminalState;
+  }
+  return <ResolvedTryoutSetPage {...props} binding={binding} state={state} />;
 }
 
-/** Renders one stable set view from its cohesive reactive state. */
+/** Renders one stable set view from its exact mutable state. */
 function ResolvedTryoutSetPage({
+  binding,
   content,
   page,
   route,
   state,
-}: Omit<TryoutSetPageClientProps, "preloadedState"> & {
-  state: SetState;
-}) {
+}: TryoutSetPageClientProps & { state: SetState }) {
   const currentAttempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
   const entrySection = page.entrySection;
   const isInternalEntry = entrySection?.visibility === "internal-entry";
   const now = useTryoutClock(currentAttempt?.status === "in-progress");
-  const activeAttempt = getActiveTryoutAttempt(currentAttempt ?? null, now);
+  const activeAttempt = getActiveTryoutAttempt(currentAttempt, now);
 
   const actionAttempt =
     currentAttempt?.status === "in-progress" && !activeAttempt
@@ -153,6 +168,7 @@ function ResolvedTryoutSetPage({
     entrySection,
     page,
     route,
+    sectionRoutes: binding?.sectionRoutes ?? page.sections,
   };
 
   if (isInternalEntry && entrySection) {
@@ -172,7 +188,7 @@ function ResolvedTryoutSetPage({
   return <TryoutSetOverview value={view} />;
 }
 
-/** Renders one direct-entry runtime from its reactive authenticated query. */
+/** Renders one direct-entry runtime from its exact authenticated query. */
 function TryoutInternalSet({
   value,
 }: {

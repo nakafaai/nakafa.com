@@ -21,24 +21,23 @@ import { reportClientException } from "@/lib/analytics/client";
 import { getTryoutChoiceVariant } from "@/lib/tryout/choice-variant";
 
 type SaveResponseArgs = FunctionArgs<
-  typeof api.tryouts.mutations.attempts.saveResponse
+  typeof api.tryouts.mutations.responses.save
 >;
 
 interface TryoutChoicesValue {
   locked: boolean;
   question: TryoutRuntimeQuestion;
   reviewMode: boolean;
-  sectionStartedAt: number;
 }
 
 /** Renders and saves selectable answers for one runtime question. */
 export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
-  const { locked, question, sectionStartedAt } = value;
+  const { locked, question } = value;
   const saveResponse = useMutation(
-    api.tryouts.mutations.attempts.saveResponse
+    api.tryouts.mutations.responses.save
   ).withOptimisticUpdate((localStore, args) => {
     const sectionQueries = localStore.getAllQueries(
-      api.tryouts.queries.runtime.getSectionState
+      api.tryouts.queries.runtime.getSectionAttemptState
     );
 
     for (const sectionQuery of sectionQueries) {
@@ -52,7 +51,7 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
 
       if (nextRuntime) {
         localStore.setQuery(
-          api.tryouts.queries.runtime.getSectionState,
+          api.tryouts.queries.runtime.getSectionAttemptState,
           sectionQuery.args,
           { ...state, runtime: nextRuntime }
         );
@@ -60,7 +59,7 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
     }
 
     const setQueries = localStore.getAllQueries(
-      api.tryouts.queries.runtime.getSetState
+      api.tryouts.queries.runtime.getSetAttemptState
     );
 
     for (const setQuery of setQueries) {
@@ -74,7 +73,7 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
 
       if (nextRuntime) {
         localStore.setQuery(
-          api.tryouts.queries.runtime.getSetState,
+          api.tryouts.queries.runtime.getSetAttemptState,
           setQuery.args,
           { ...state, runtime: nextRuntime }
         );
@@ -83,7 +82,7 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
   });
   const tExercises = useTranslations("Exercises");
 
-  /** Saves one selected choice through Convex with elapsed section time. */
+  /** Saves one selected choice while Convex owns elapsed-time accounting. */
   function saveChoice(choice: TryoutRuntimeChoice) {
     if (locked) {
       return;
@@ -92,7 +91,6 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
     const saveRequest = saveResponse({
       placementId: question.placementId,
       selectedOptionId: choice.optionKey,
-      timeSpent: getElapsedSeconds(sectionStartedAt),
     });
 
     Effect.runPromise(
@@ -207,11 +205,7 @@ function applyOptimisticResponse(
   runtime: TryoutSectionRuntime,
   args: SaveResponseArgs
 ) {
-  if (!args.selectedOptionId) {
-    return null;
-  }
-
-  const selectedAt = runtime.section.startedAt + args.timeSpent * 1000;
+  const selectedAt = Date.now();
   let foundQuestion = false;
   let answeredFirstTime = false;
   const questions = runtime.questions.map((runtimeQuestion) => {
@@ -254,11 +248,6 @@ function applyOptimisticResponse(
       ),
     },
   };
-}
-
-/** Calculates elapsed whole seconds since a Convex section start timestamp. */
-function getElapsedSeconds(startedAt: number) {
-  return Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
 }
 
 /** Handles Convex answer-save failures with the existing exercise toasts. */

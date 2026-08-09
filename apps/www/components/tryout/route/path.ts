@@ -13,6 +13,11 @@ export type TryoutRouteSearchParams = Record<
   string | string[] | undefined
 >;
 
+export type TryoutAttemptCapability =
+  | { kind: "absent" }
+  | { kind: "invalid" }
+  | { attemptId: string; kind: "valid" };
+
 /** Builds a public try-out href from already-localized route segments. */
 export function getTryoutHref({
   country,
@@ -39,16 +44,6 @@ export function getTryoutAttemptHref(publicPath: string, attemptId: string) {
   return `${getTryoutPublicPathHref(publicPath)}?${searchParams.toString()}`;
 }
 
-/** Reads the public path from one route href produced by this module. */
-export function getTryoutPublicPath(href: string) {
-  const searchStart = href.indexOf("?");
-  const pathname = searchStart === -1 ? href : href.slice(0, searchStart);
-  if (pathname.startsWith("/")) {
-    return pathname.slice(1);
-  }
-  return pathname;
-}
-
 /** Preserves an exact attempt capability through localized authentication. */
 export function getTryoutAttemptAuthHref(
   locale: string,
@@ -59,20 +54,39 @@ export function getTryoutAttemptAuthHref(
   return `/${locale}/auth?redirect=${encodeURIComponent(redirectHref)}`;
 }
 
-/** Reads one untrusted attempt capability for server-side verification. */
-export function readTryoutAttemptId(searchParams: TryoutRouteSearchParams) {
-  const attemptId = searchParams[ATTEMPT_ID_PARAM];
-  if (typeof attemptId !== "string" || attemptId.length === 0) {
-    return;
+/** Classifies the optional attempt capability carried by server search params. */
+export function readTryoutRouteAttemptCapability(
+  searchParams: TryoutRouteSearchParams
+): TryoutAttemptCapability {
+  const value = searchParams[ATTEMPT_ID_PARAM];
+  if (value === undefined) {
+    return { kind: "absent" };
   }
-  return attemptId;
+  if (typeof value !== "string" || value.length === 0) {
+    return { kind: "invalid" };
+  }
+  return { attemptId: value, kind: "valid" };
 }
 
-/** Accepts exactly one non-empty attempt capability from one request URL. */
-export function hasTryoutAttemptCapability(searchParams: URLSearchParams) {
+/** Classifies the attempt capability carried by a browser request URL. */
+export function readTryoutAttemptCapability(
+  searchParams: Pick<URLSearchParams, "getAll">
+): TryoutAttemptCapability {
   const attemptIds = searchParams.getAll(ATTEMPT_ID_PARAM);
-  if (attemptIds.length !== 1) {
-    return false;
+  if (attemptIds.length === 0) {
+    return { kind: "absent" };
   }
-  return Boolean(attemptIds[0]);
+  if (attemptIds.length !== 1) {
+    return { kind: "invalid" };
+  }
+  const attemptId = attemptIds[0];
+  if (!attemptId) {
+    return { kind: "invalid" };
+  }
+  return { attemptId, kind: "valid" };
+}
+
+/** Reports whether one request URL carries one exact attempt capability. */
+export function hasTryoutAttemptCapability(searchParams: URLSearchParams) {
+  return readTryoutAttemptCapability(searchParams).kind === "valid";
 }

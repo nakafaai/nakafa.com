@@ -7,8 +7,7 @@ import {
   generateTryoutRouteMetadata,
 } from "@/components/tryout/catalog/metadata";
 import {
-  preloadTryoutSetState,
-  readTryoutAttemptSetRoute,
+  readTryoutSetAttemptPage,
   readTryoutSetPage,
 } from "@/components/tryout/catalog/server";
 import type {
@@ -16,12 +15,15 @@ import type {
   TryoutQuestionContent,
 } from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
+import { selectTryoutBasePage } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptAuthHref,
+  getTryoutAttemptHref,
   getTryoutHref,
-  readTryoutAttemptId,
+  readTryoutRouteAttemptCapability,
   type TryoutRouteSearchParams,
 } from "@/components/tryout/route/path";
+import { normalizeTryoutAttemptState } from "@/components/tryout/runtime/bootstrap";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -45,7 +47,12 @@ export async function generateMetadata({
   searchParams,
 }: TryoutSetPageProps) {
   const { country, exam, locale: localeParam, set, track } = await params;
-  const attemptId = readTryoutAttemptId(await searchParams);
+  const capability = readTryoutRouteAttemptCapability(await searchParams);
+  if (capability.kind === "invalid") {
+    notFound();
+  }
+  const attemptId =
+    capability.kind === "valid" ? capability.attemptId : undefined;
   const locale = getLocaleOrThrow(localeParam);
   const publicPath = getTryoutHref({ country, exam, set, track }).slice(1);
   const resolved = await readRoutePage(locale, publicPath, attemptId);
@@ -57,7 +64,7 @@ export async function generateMetadata({
       title: tTryouts("title"),
     });
   }
-  if (resolved.attemptPage) {
+  if (resolved.attemptPage?.kind === "retained") {
     const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
     return createRetainedTryoutMetadata({
       description:
@@ -88,7 +95,12 @@ export default function Page(props: TryoutSetPageProps) {
 /** Resolves one public or explicitly retained set inside its route boundary. */
 async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   const { country, exam, locale: localeParam, set, track } = await params;
-  const attemptId = readTryoutAttemptId(await searchParams);
+  const capability = readTryoutRouteAttemptCapability(await searchParams);
+  if (capability.kind === "invalid") {
+    notFound();
+  }
+  const attemptId =
+    capability.kind === "valid" ? capability.attemptId : undefined;
   const locale = getLocaleOrThrow(localeParam);
   const setPath = getTryoutHref({ country, exam, set, track }).slice(1);
   const resolved = await readRoutePage(locale, setPath, attemptId);
@@ -101,7 +113,18 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   }
 
   const { attemptPage } = resolved;
-  const page = attemptPage?.page ?? resolved.publicPage;
+  if (attemptPage?.kind === "redirect") {
+    redirect(
+      getTryoutAttemptHref(attemptPage.publicPath, attemptPage.attemptId)
+    );
+  }
+  if (attemptId && !attemptPage) {
+    notFound();
+  }
+  const page = selectTryoutBasePage({
+    attemptPage,
+    publicPage: resolved.publicPage,
+  });
   if (!page) {
     notFound();
   }
@@ -122,10 +145,19 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
 
   return (
     <TryoutSetPageClient
-      attemptId={attemptPage?.attemptId}
+      binding={
+        attemptPage
+          ? {
+              attemptId: attemptPage.attemptId,
+              initialState: normalizeTryoutAttemptState(
+                attemptPage.initialState
+              ),
+              sectionRoutes: attemptPage.page.sections,
+            }
+          : null
+      }
       content={{ entryAnswers: answers, entryQuestions: questions }}
       page={page}
-      preloadedState={resolved.preloadedState}
       route={{ country, exam, locale, set, track }}
     />
   );
@@ -138,33 +170,25 @@ const readRoutePage = cache(
     publicPath: string,
     attemptId?: string
   ) => {
-    const stateArgs = { attemptId, locale, publicPath };
     if (attemptId) {
       const token = await getToken();
       if (!token) {
         return {
           attemptPage: null,
           authRequired: true,
-          preloadedState: undefined,
           publicPage: null,
         };
       }
-      const result = await Effect.runPromise(
-        Effect.all(
-          {
-            attemptPage: readTryoutAttemptSetRoute(
-              token,
-              locale,
-              publicPath,
-              attemptId
-            ),
-            preloadedState: preloadTryoutSetState(token, stateArgs),
-          },
-          { concurrency: "unbounded" }
-        )
+      const attemptPage = await Effect.runPromise(
+        readTryoutSetAttemptPage(token, {
+          attemptId,
+          kind: "retained",
+          locale,
+          publicPath,
+        })
       );
       return {
-        ...result,
+        attemptPage,
         authRequired: false,
         publicPage: null,
       };
@@ -178,28 +202,27 @@ const readRoutePage = cache(
       return {
         attemptPage: null,
         authRequired: false,
-        preloadedState: undefined,
         publicPage,
       };
     }
 
-    const attemptPage = await Effect.runPromise(
-      readTryoutAttemptSetRoute(token, locale, publicPath)
-    );
-    if (!attemptPage) {
+    if (!publicPage) {
       return {
         attemptPage: null,
         authRequired: false,
-        preloadedState: undefined,
         publicPage,
       };
     }
-    const preloadedState = await Effect.runPromise(
-      preloadTryoutSetState(token, {
-        ...stateArgs,
-        attemptId: attemptPage.attemptId,
+    const attemptPage = await Effect.runPromise(
+      readTryoutSetAttemptPage(token, {
+        countryKey: publicPage.set.countryKey,
+        examKey: publicPage.set.examKey,
+        kind: "current",
+        locale,
+        setKey: publicPage.set.setKey,
+        trackKey: publicPage.set.trackKey,
       })
     );
-    return { attemptPage, authRequired: false, preloadedState, publicPage };
+    return { attemptPage, authRequired: false, publicPage };
   }
 );

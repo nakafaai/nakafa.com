@@ -33,7 +33,6 @@ import type {
   TryoutSetRow,
   TryoutTrackPage,
 } from "@/components/tryout/catalog/table/types";
-import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 const EMPTY_ROWS: TryoutSetRow[] = [];
@@ -47,12 +46,11 @@ export function TryoutSetTable({
   page: TryoutTrackPage;
 }) {
   const router = useRouter();
-  const prewarmData = useTryoutDataIntent();
   const tTryouts = useTranslations("Tryouts");
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const warmedPaths = useRef(new Set<string>());
+  const prefetchedRoutes = useRef(new Set<string>());
   const statusFilter = readTryoutSetStatusFilter(columnFilters);
   const columns = createTryoutSetColumns({
     sorting,
@@ -65,26 +63,21 @@ export function TryoutSetTable({
     sort: readTryoutSetSort(sorting),
   });
 
-  /** Prewarm a set after the viewer signals navigation intent. */
+  /** Prefetches one URL-specific set route after navigation intent. */
   function markSetIntent(row: TryoutSetRow) {
-    const pathKey = `${locale}:${row.publicPath}`;
+    const href = getTryoutPublicPathHref(row.publicPath);
 
-    if (warmedPaths.current.has(pathKey)) {
+    if (prefetchedRoutes.current.has(href)) {
       return;
     }
 
-    const warmed = prewarmData({
-      kind: "set",
-      locale,
-      publicPath: row.publicPath,
+    prefetchedRoutes.current.add(href);
+    router.prefetch(href, {
+      onInvalidate: () => prefetchedRoutes.current.delete(href),
     });
-
-    if (warmed) {
-      warmedPaths.current.add(pathKey);
-    }
   }
 
-  /** Navigates one row after warming its route and authenticated data. */
+  /** Navigates one row after warming its URL-specific route. */
   function navigateToSet(row: TryoutSetRow) {
     markSetIntent(row);
     router.push(getTryoutPublicPathHref(row.publicPath));
