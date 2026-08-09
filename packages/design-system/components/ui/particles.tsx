@@ -1,13 +1,16 @@
 "use client";
 
-import { useMediaQuery } from "@mantine/hooks";
+import {
+  useDocumentVisibility,
+  useMediaQuery,
+  useReducedMotion,
+} from "@mantine/hooks";
 import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "@repo/design-system/lib/utils";
-import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react";
 
@@ -53,7 +56,7 @@ interface RemapValueProps {
 /**
  * Renders the responsive particle canvas used as a subtle interactive backdrop.
  */
-function ParticlesComponent({
+export function Particles({
   className = "",
   quantity = 50,
   staticity = 100,
@@ -71,7 +74,11 @@ function ParticlesComponent({
   const animationFrameRef = useRef<number | null>(null);
   const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio;
 
+  const documentVisibility = useDocumentVisibility();
   const isMobile = useMediaQuery(TAILWIND_MEDIA_QUERIES.belowMd);
+  const shouldReduceMotion = useReducedMotion(undefined, {
+    getInitialValueInEffect: false,
+  });
 
   const rng = useStableMutableValue(() =>
     createSeededRandom(quantity, staticity, ease)
@@ -154,19 +161,28 @@ function ParticlesComponent({
     }
   }, []);
 
-  const drawParticles = useCallback(() => {
-    clearContext();
-    const particleCount = quantity;
-    for (let i = 0; i < particleCount; i += 1) {
-      const circle = circleParams();
-      drawCircle(circle);
-    }
-  }, [circleParams, clearContext, drawCircle, quantity]);
+  const drawParticles = useCallback(
+    (showImmediately: boolean) => {
+      clearContext();
+      const particleCount = quantity;
+      for (let i = 0; i < particleCount; i += 1) {
+        const circle = circleParams();
+        if (showImmediately) {
+          circle.alpha = circle.targetAlpha;
+        }
+        drawCircle(circle);
+      }
+    },
+    [circleParams, clearContext, drawCircle, quantity]
+  );
 
-  const initCanvas = useCallback(() => {
-    resizeCanvas();
-    drawParticles();
-  }, [drawParticles, resizeCanvas]);
+  const initCanvas = useCallback(
+    (showImmediately: boolean) => {
+      resizeCanvas();
+      drawParticles(showImmediately);
+    },
+    [drawParticles, resizeCanvas]
+  );
 
   const onMouseMove = useCallback(() => {
     if (canvasRef.current) {
@@ -182,24 +198,6 @@ function ParticlesComponent({
     }
   }, [mousePositionRef]);
 
-  useEffect(() => {
-    // Set up a continuous update for mouse position
-    let animationId: number;
-
-    const updateMousePosition = () => {
-      onMouseMove();
-      animationId = requestAnimationFrame(updateMousePosition);
-    };
-
-    updateMousePosition();
-
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, [onMouseMove]);
-
   const remapValue = useCallback(
     ({ value, start1, end1, start2, end2 }: RemapValueProps): number => {
       const remapped =
@@ -210,6 +208,7 @@ function ParticlesComponent({
   );
 
   const animate = useCallback(() => {
+    onMouseMove();
     clearContext();
     circles.current.forEach((circle: Circle, i: number) => {
       // Handle the alpha value
@@ -292,7 +291,16 @@ function ParticlesComponent({
     remapValue,
     staticity,
     isMobile,
+    onMouseMove,
   ]);
+
+  const startAnimation = useCallback(() => {
+    if (animationFrameRef.current !== null) {
+      return;
+    }
+
+    animate();
+  }, [animate]);
 
   const stopAnimation = useCallback(() => {
     if (animationFrameRef.current === null) {
@@ -304,7 +312,7 @@ function ParticlesComponent({
   }, []);
 
   const handleResize = useEffectEvent(() => {
-    initCanvas();
+    initCanvas(shouldReduceMotion);
   });
 
   useEffect(() => {
@@ -314,23 +322,32 @@ function ParticlesComponent({
 
     const onResize = () => handleResize();
 
-    handleResize();
-    animate();
     window.addEventListener("resize", onResize);
 
     return () => {
       stopAnimation();
       window.removeEventListener("resize", onResize);
     };
-  }, [animate, stopAnimation]);
+  }, [stopAnimation]);
 
   useEffect(() => {
-    if (!resolvedTheme) {
+    initCanvas(shouldReduceMotion);
+  }, [initCanvas, shouldReduceMotion]);
+
+  useEffect(() => {
+    const isDocumentVisible =
+      documentVisibility === "visible" &&
+      document.visibilityState === "visible";
+
+    if (!isDocumentVisible || shouldReduceMotion) {
+      stopAnimation();
       return;
     }
 
-    initCanvas();
-  }, [initCanvas, resolvedTheme]);
+    startAnimation();
+
+    return stopAnimation;
+  }, [documentVisibility, shouldReduceMotion, startAnimation, stopAnimation]);
 
   return (
     <div aria-hidden="true" className={cn(className)} ref={canvasContainerRef}>
@@ -338,7 +355,3 @@ function ParticlesComponent({
     </div>
   );
 }
-
-export const Particles = dynamic(() => Promise.resolve(ParticlesComponent), {
-  ssr: false,
-});

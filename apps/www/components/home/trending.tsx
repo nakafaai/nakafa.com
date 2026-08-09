@@ -1,33 +1,47 @@
-"use client";
+import "server-only";
 
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { useLocale, useTranslations } from "next-intl";
+import { fetchQuery } from "convex/nextjs";
+import { cacheLife } from "next/cache";
+import type { Locale } from "next-intl";
+import { getTranslations } from "next-intl/server";
+
+/**
+ * Reads one point-in-time homepage popularity snapshot.
+ *
+ * Trending is a low-freshness aggregate, so keeping one live subscription per
+ * homepage visitor would amplify every popularity-counter update. The cached
+ * Convex Promise stays direct because starting an Effect runtime during static
+ * prerender reads current time, which Cache Components reject.
+ *
+ * @see https://nextjs.org/docs/messages/next-prerender-current-time
+ * @see https://docs.convex.dev/client/nextjs/app-router/server-rendering#using-convex-to-render-server-components
+ */
+async function getHomeTrendingSubjects(locale: Locale) {
+  "use cache";
+
+  cacheLife("minutes");
+
+  return await fetchQuery(api.curriculumLessons.queries.getTrendingSubjects, {
+    locale,
+    windowKey: "7d",
+  });
+}
 
 /** Renders the home-screen trending learning objects for the current locale. */
-export function HomeTrending() {
-  const t = useTranslations("Home");
-  const locale = useLocale();
+export async function HomeTrending({ locale }: { locale: Locale }) {
+  const [t, data] = await Promise.all([
+    getTranslations({ locale, namespace: "Home" }),
+    getHomeTrendingSubjects(locale),
+  ]);
 
-  const { data, isPending } = useQueryWithStatus(
-    api.curriculumLessons.queries.getTrendingSubjects,
-    {
-      locale,
-      windowKey: "7d",
-    }
-  );
-
-  if (isPending) {
-    return null;
-  }
-
-  if (!data || data.length === 0) {
+  if (data.length === 0) {
     return null;
   }
 
