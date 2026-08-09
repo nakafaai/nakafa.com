@@ -3,8 +3,11 @@ import {
   SOURCE_REGISTRY_ROOT_VALUES,
 } from "@repo/contents/_types/graph/schema";
 
-/** Number of queued analytics rows processed in one mutation. */
-export const CONTENT_ANALYTICS_BATCH_SIZE = 250;
+/**
+ * Maximum queued analytics rows processed in one mutation.
+ * @see https://docs.convex.dev/production/state/limits#transactions
+ */
+export const CONTENT_ANALYTICS_BATCH_SIZE = 64;
 
 /** Number of popularity counters recomputed from daily signals in one mutation. */
 export const LEARNING_POPULARITY_REFRESH_BATCH_SIZE = 10;
