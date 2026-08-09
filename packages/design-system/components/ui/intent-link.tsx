@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 type LinkProps = ComponentProps<typeof Link>;
 type IntentLinkProps = Omit<LinkProps, "href" | "prefetch"> & {
   href: string;
+  intentActive?: boolean;
   onIntent?: () => void;
 };
 
@@ -19,6 +20,7 @@ type IntentLinkProps = Omit<LinkProps, "href" | "prefetch"> & {
  */
 export function IntentLink({
   href,
+  intentActive = false,
   onClick,
   onFocus,
   onIntent,
@@ -65,7 +67,7 @@ export function IntentLink({
       onFocus={handleFocus}
       onMouseEnter={handleMouseEnter}
       onTouchStart={handleTouchStart}
-      prefetch={prefetchHref === href ? true : null}
+      prefetch={intentActive || prefetchHref === href ? true : null}
     />
   );
 }

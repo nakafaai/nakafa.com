@@ -22,7 +22,7 @@ import {
 } from "@tanstack/react-table";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { createTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
 import { tryoutTableFeatures } from "@/components/tryout/catalog/table/features";
@@ -50,9 +50,10 @@ export function TryoutSetTable({
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const prefetchedRoutes = useRef(new Set<string>());
+  const [intentHref, setIntentHref] = useState<string | null>(null);
   const statusFilter = readTryoutSetStatusFilter(columnFilters);
   const columns = createTryoutSetColumns({
+    intentHref,
     sorting,
     statusFilter,
   });
@@ -63,18 +64,11 @@ export function TryoutSetTable({
     sort: readTryoutSetSort(sorting),
   });
 
-  /** Prefetches one URL-specific set route after navigation intent. */
+  /** Upgrades the row's real link to a full URL-specific runtime prefetch. */
   function markSetIntent(row: TryoutSetRow) {
     const href = getTryoutPublicPathHref(row.publicPath);
 
-    if (prefetchedRoutes.current.has(href)) {
-      return;
-    }
-
-    prefetchedRoutes.current.add(href);
-    router.prefetch(href, {
-      onInvalidate: () => prefetchedRoutes.current.delete(href),
-    });
+    setIntentHref(href);
   }
 
   /** Navigates one row after warming its URL-specific route. */
