@@ -20,23 +20,6 @@ describe("contentRelease/quran", () => {
       t.query(api.contentRelease.quran.surahs, {})
     ).resolves.toMatchObject({ managed: false, rowJson: [] });
     await expect(
-      t.query(api.contentRelease.quran.page, {
-        locale: "en",
-        surahNumber: 1,
-      })
-    ).resolves.toEqual({
-      activeManifestHash: null,
-      activeReleaseId: null,
-      chunkJson: [],
-      managed: false,
-      nextSurahJson: null,
-      prevSurahJson: null,
-      searchJson: null,
-      snapshotId: null,
-      sourceRevision: null,
-      surahJson: null,
-    });
-    await expect(
       t.query(api.contentRelease.quran.document, {
         locale: "en",
         surahNumber: 1,
@@ -96,10 +79,6 @@ describe("contentRelease/quran", () => {
     const results = await Promise.all([
       t.query(api.contentRelease.quran.attribution, {}),
       t.query(api.contentRelease.quran.surahs, {}),
-      t.query(api.contentRelease.quran.page, {
-        locale: "en",
-        surahNumber: 1,
-      }),
       t.query(api.contentRelease.quran.document, {
         locale: "en",
         surahNumber: 1,

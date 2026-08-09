@@ -14,10 +14,7 @@ import {
   QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
 import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
-import {
-  hasExactQuranVerseRange,
-  hasExpectedQuranNeighbors,
-} from "@repo/backend/client/quran/integrity";
+import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -25,7 +22,6 @@ import { Effect, Schema } from "effect";
 type QuranCatalogResult = FunctionReturnType<
   typeof api.contentRelease.quran.surahs
 >;
-type QuranPageResult = FunctionReturnType<typeof api.contentRelease.quran.page>;
 type QuranReferenceResult = FunctionReturnType<
   typeof api.contentRelease.quran.reference
 >;
@@ -36,7 +32,6 @@ const QuranPublicationOperationSchema = Schema.Literal(
   "document",
   "interpretation",
   "markdown",
-  "page",
   "reference",
   "view"
 );
@@ -62,15 +57,6 @@ export class QuranPublicationError extends Schema.TaggedError<QuranPublicationEr
 /** Complete signed Quran metadata catalog and its immutable source identity. */
 export interface PublishedQuranCatalog extends PublishedQuranSource {
   readonly surahs: readonly QuranSurahRow[];
-}
-
-/** One complete signed Quran page assembled from bounded immutable chunks. */
-export interface PublishedQuranPage extends PublishedQuranSource {
-  readonly nextSurah: null | QuranSurahRow;
-  readonly previousSurah: null | QuranSurahRow;
-  readonly search: QuranSearchRow;
-  readonly surah: QuranSurahRow;
-  readonly verses: readonly QuranRuntimeVerse[];
 }
 
 /** One bounded signed Quran reference and its locale-specific graph identity. */
@@ -153,19 +139,6 @@ const decodeRow = Effect.fn("NakafaQuran.decodeRow")(function* <A, I>(
   );
 });
 
-/** Decodes an optional neighboring surah row. */
-function decodeOptionalSurah(
-  source: null | string,
-  snapshotId: PublishedQuranSource["snapshotId"],
-  operation: QuranPublicationOperation
-) {
-  if (source === null) {
-    return Effect.succeed(null);
-  }
-
-  return decodeRow(source, snapshotId, QuranSurahRowSchema, operation);
-}
-
 /** Decodes bounded chunks and returns their exact ordered verses. */
 const decodeChunks = Effect.fn("NakafaQuran.decodeChunks")(function* (
   sources: readonly string[],
@@ -247,71 +220,6 @@ export const decodePublishedQuranCatalog = Effect.fn(
 
   return { ...source, surahs } satisfies PublishedQuranCatalog;
 });
-
-/** Decodes one complete active signed Quran page without legacy fields. */
-export const decodePublishedQuranPage = Effect.fn("NakafaQuran.decodePage")(
-  function* (
-    result: QuranPageResult,
-    expected: {
-      readonly locale: QuranSearchRow["locale"];
-      readonly surahNumber: number;
-    }
-  ) {
-    const source = yield* decodePublishedQuranSource(result, "page");
-    if (result.surahJson === null || result.searchJson === null) {
-      return yield* publicationError("page", "Signed Quran page is missing.");
-    }
-    const [surah, search, previousSurah, nextSurah, verses] = yield* Effect.all(
-      [
-        decodeRow(
-          result.surahJson,
-          source.snapshotId,
-          QuranSurahRowSchema,
-          "page"
-        ),
-        decodeRow(
-          result.searchJson,
-          source.snapshotId,
-          QuranSearchRowSchema,
-          "page"
-        ),
-        decodeOptionalSurah(result.prevSurahJson, source.snapshotId, "page"),
-        decodeOptionalSurah(result.nextSurahJson, source.snapshotId, "page"),
-        decodeChunks(
-          result.chunkJson,
-          source.snapshotId,
-          "page",
-          expected.surahNumber
-        ),
-      ]
-    );
-    if (
-      surah.number !== expected.surahNumber ||
-      !hasExactQuranVerseRange(verses, 1, surah.numberOfVerses) ||
-      !hasExpectedQuranNeighbors(
-        previousSurah,
-        nextSurah,
-        expected.surahNumber,
-        QURAN_SURAH_COUNT
-      ) ||
-      !hasExpectedSearchIdentity(search, expected.locale, expected.surahNumber)
-    ) {
-      return yield* publicationError(
-        "page",
-        "Signed Quran page identity is inconsistent."
-      );
-    }
-
-    return {
-      ...source,
-      nextSurah,
-      previousSurah,
-      search,
-      surah,
-      verses,
-    } satisfies PublishedQuranPage;
-  }
-);
 
 /** Decodes one bounded active signed Quran verse reference. */
 export const decodePublishedQuranReference = Effect.fn(
