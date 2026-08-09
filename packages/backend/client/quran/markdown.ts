@@ -25,6 +25,7 @@ export const decodePublishedQuranMarkdown = Effect.fn(
   expected: {
     readonly locale: QuranMarkdownResult["locale"];
     readonly surahNumber: number;
+    readonly verseLimit?: number;
   }
 ) {
   const source = yield* decodePublishedQuranSource(result, "markdown");
@@ -34,10 +35,15 @@ export const decodePublishedQuranMarkdown = Effect.fn(
       reason: "Signed Quran markdown is missing.",
     });
   }
+  const expectedToVerse = Math.min(
+    expected.verseLimit ?? result.surah.numberOfVerses,
+    result.surah.numberOfVerses
+  );
   if (
     result.locale !== expected.locale ||
     result.surah.number !== expected.surahNumber ||
-    !hasExactQuranVerseRange(result.verses, 1, result.surah.numberOfVerses)
+    result.toVerse !== expectedToVerse ||
+    !hasExactQuranVerseRange(result.verses, 1, expectedToVerse)
   ) {
     return yield* new QuranPublicationError({
       operation: "markdown",
@@ -49,6 +55,7 @@ export const decodePublishedQuranMarkdown = Effect.fn(
     ...source,
     locale: result.locale,
     surah: result.surah,
+    toVerse: result.toVerse,
     verses: result.verses,
   };
 });

@@ -102,10 +102,14 @@ export const document = query({
 
 /** Returns the exact signed fields rendered by Quran markdown consumers. */
 export const markdown = query({
-  args: { locale: quranLocaleValidator, surahNumber: v.number() },
+  args: {
+    locale: quranLocaleValidator,
+    surahNumber: v.number(),
+    verseLimit: v.optional(v.number()),
+  },
   returns: quranMarkdownValidator,
-  handler: (ctx, { locale, surahNumber }) =>
-    runConvexProgram(readQuranMarkdown(ctx, locale, surahNumber)),
+  handler: (ctx, { locale, surahNumber, verseLimit }) =>
+    runConvexProgram(readQuranMarkdown(ctx, locale, surahNumber, verseLimit)),
 });
 
 /** Returns the narrow locale-specific Quran projection used by the web UI. */

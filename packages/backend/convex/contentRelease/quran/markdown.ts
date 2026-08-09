@@ -4,13 +4,14 @@ import type {
   QuranSurahRow,
 } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   quranLocaleValidator,
   quranSourceFields,
 } from "@repo/backend/convex/contentRelease/quran/spec";
 import {
   loadQuranSurah,
-  readQuranSurahVerses,
+  readQuranSurahVersePrefix,
 } from "@repo/backend/convex/contentRelease/quran/surah";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
@@ -36,6 +37,7 @@ export const quranMarkdownValidator = v.object({
   ...quranSourceFields,
   locale: quranLocaleValidator,
   surah: v.union(quranMarkdownSurahValidator, v.null()),
+  toVerse: v.number(),
   verses: v.array(quranMarkdownVerseValidator),
 });
 
@@ -68,33 +70,56 @@ function projectVerse(
   };
 }
 
+/** Validates one optional positive verse limit from a markdown consumer. */
+const validateVerseLimit = Effect.fn(
+  "contentRelease.validateQuranMarkdownVerseLimit"
+)(function* (verseLimit: number | undefined) {
+  if (verseLimit === undefined) {
+    return verseLimit;
+  }
+  if (!Number.isSafeInteger(verseLimit) || verseLimit < 1) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INVALID_REQUEST",
+      "Quran markdown verse limit must be a positive integer."
+    );
+  }
+  return verseLimit;
+});
+
 /** Returns the narrow signed Quran projection used by markdown consumers. */
 export const readQuranMarkdown = Effect.fn("contentRelease.readQuranMarkdown")(
   function* (
     ctx: QueryCtx,
     locale: QuranSearchRow["locale"],
-    sourceSurah: number
+    sourceSurah: number,
+    sourceVerseLimit?: number
   ) {
+    const verseLimit = yield* validateVerseLimit(sourceVerseLimit);
     const loaded = yield* loadQuranSurah(ctx, sourceSurah);
     if (loaded.surah === null || loaded.owner.snapshotId === null) {
       return {
         ...loaded.owner,
         locale,
         surah: null,
+        toVerse: 0,
         verses: [],
       };
     }
-    const verses = yield* readQuranSurahVerses(
+    const numberOfVerses = loaded.surah.row.payload.numberOfVerses;
+    const toVerse = Math.min(verseLimit ?? numberOfVerses, numberOfVerses);
+    const verses = yield* readQuranSurahVersePrefix(
       ctx,
       loaded.owner.snapshotId,
       loaded.surah.surahNumber,
-      loaded.surah.row.payload.numberOfVerses
+      numberOfVerses,
+      toVerse
     );
 
     return {
       ...loaded.owner,
       locale,
       surah: projectSurah(loaded.surah.row.payload),
+      toVerse,
       verses: verses.map((verse) => projectVerse(verse, locale)),
     };
   }

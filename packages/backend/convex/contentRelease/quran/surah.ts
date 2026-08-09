@@ -33,6 +33,28 @@ export const loadQuranSurah = Effect.fn("contentRelease.loadQuranSurah")(
   }
 );
 
+/** Reads one ordered verse prefix for an already validated signed surah. */
+export const readQuranSurahVersePrefix = Effect.fn(
+  "contentRelease.readQuranSurahVersePrefix"
+)(function* (
+  ctx: QueryCtx,
+  snapshotId: string,
+  surahNumber: number,
+  numberOfVerses: number,
+  toVerse: number
+) {
+  const chunks = yield* readQuranChunks(ctx, {
+    fromVerse: 1,
+    numberOfVerses,
+    snapshotId,
+    surahNumber,
+    toVerse,
+  });
+  return chunks.rows
+    .flatMap((chunk) => chunk.verses)
+    .filter((verse) => verse.number.inSurah <= toVerse);
+});
+
 /** Reads the complete ordered verses for one already validated signed surah. */
 export const readQuranSurahVerses = Effect.fn(
   "contentRelease.readQuranSurahVerses"
@@ -42,12 +64,11 @@ export const readQuranSurahVerses = Effect.fn(
   surahNumber: number,
   numberOfVerses: number
 ) {
-  const chunks = yield* readQuranChunks(ctx, {
-    fromVerse: 1,
-    numberOfVerses,
+  return yield* readQuranSurahVersePrefix(
+    ctx,
     snapshotId,
     surahNumber,
-    toVerse: numberOfVerses,
-  });
-  return chunks.rows.flatMap((chunk) => chunk.verses);
+    numberOfVerses,
+    numberOfVerses
+  );
 });

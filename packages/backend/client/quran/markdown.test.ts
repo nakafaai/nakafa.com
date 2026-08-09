@@ -61,25 +61,54 @@ describe("signed Quran markdown decoder", () => {
       left: { _tag: "QuranPublicationError", operation: "markdown" },
     });
   });
+
+  it("accepts only the requested exact markdown verse prefix", async () => {
+    const bounded = markdownResult(82, 80);
+
+    await expect(
+      Effect.runPromise(
+        decodePublishedQuranMarkdown(bounded, {
+          locale: "en",
+          surahNumber: 1,
+          verseLimit: 80,
+        })
+      )
+    ).resolves.toMatchObject({ toVerse: 80, verses: { length: 80 } });
+    await expect(
+      Effect.runPromise(
+        Effect.either(
+          decodePublishedQuranMarkdown(
+            { ...bounded, toVerse: 81 },
+            { locale: "en", surahNumber: 1, verseLimit: 80 }
+          )
+        )
+      )
+    ).resolves.toMatchObject({
+      _tag: "Left",
+      left: { _tag: "QuranPublicationError", operation: "markdown" },
+    });
+  });
 });
 
 /** Builds one complete locale-specific signed markdown response. */
-function markdownResult(): QuranMarkdownResult {
+function markdownResult(
+  numberOfVerses = 1,
+  toVerse = numberOfVerses
+): QuranMarkdownResult {
   return {
     ...source,
     locale: "en",
     surah: {
       name: { translation: "The Opening", transliteration: "Al-Fatihah" },
       number: 1,
-      numberOfVerses: 1,
+      numberOfVerses,
       revelation: { place: "Meccan" },
     },
-    verses: [
-      {
-        arabic: "بِسْمِ اللّٰهِ",
-        number: { inSurah: 1 },
-        translation: { footnotes: "Source note.", text: "In Allah's name." },
-      },
-    ],
+    toVerse,
+    verses: Array.from({ length: toVerse }, (_, index) => ({
+      arabic: "بِسْمِ اللّٰهِ",
+      number: { inSurah: index + 1 },
+      translation: { footnotes: "Source note.", text: "In Allah's name." },
+    })),
   };
 }

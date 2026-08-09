@@ -17,6 +17,7 @@ describe("contentRelease/quran/markdown", () => {
       locale: "id",
       managed: false,
       surah: null,
+      toVerse: 0,
       verses: [],
     });
   });
@@ -48,6 +49,7 @@ describe("contentRelease/quran/markdown", () => {
       numberOfVerses: 1,
       revelation: { place: "Meccan" },
     });
+    expect(markdown.toVerse).toBe(1);
     expect(markdown.verses).toEqual([
       {
         arabic: "آية 1",
@@ -58,5 +60,43 @@ describe("contentRelease/quran/markdown", () => {
     expect(JSON.stringify(markdown)).not.toContain("Terjemahan teknis");
     expect(JSON.stringify(markdown)).not.toContain("Tafsir teknis");
     expect(JSON.stringify(markdown)).not.toContain("inQuran");
+  });
+
+  it("reads only the requested signed verse prefix", async () => {
+    const t = convexTest(schema, convexModules);
+    const numberOfVerses = 82;
+    const chunks = Array.from(
+      { length: Math.ceil(numberOfVerses / 6) },
+      (_, index) => {
+        const firstVerse = index * 6 + 1;
+        return makeQuranChunk({
+          firstQuranNumber: firstVerse,
+          firstVerse,
+          surahNumber: 2,
+          verseCount: Math.min(6, numberOfVerses - firstVerse + 1),
+        });
+      }
+    );
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [makeQuranSurah(2, numberOfVerses), ...chunks])
+    );
+
+    const markdown = await t.query((ctx) =>
+      runConvexProgram(readQuranMarkdown(ctx, "id", 2, 80))
+    );
+
+    expect(markdown.toVerse).toBe(80);
+    expect(markdown.verses).toHaveLength(80);
+    expect(markdown.verses.at(-1)?.number.inSurah).toBe(80);
+  });
+
+  it("rejects an invalid verse limit before reading signed state", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.query((ctx) => runConvexProgram(readQuranMarkdown(ctx, "id", 1, 0)))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INVALID_REQUEST" },
+    });
   });
 });
