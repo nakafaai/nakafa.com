@@ -22,7 +22,7 @@ import {
 } from "@tanstack/react-table";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
 import { tryoutTableFeatures } from "@/components/tryout/catalog/table/features";
@@ -54,16 +54,10 @@ export function TryoutSetTable({
   const [sorting, setSorting] = useState<SortingState>([]);
   const warmedPaths = useRef(new Set<string>());
   const statusFilter = readTryoutSetStatusFilter(columnFilters);
-  // TanStack Table invalidates column work when this reference changes.
-  // react-doctor-disable-next-line react-doctor/react-compiler-no-manual-memoization
-  const columns = useMemo(
-    () =>
-      createTryoutSetColumns({
-        sorting,
-        statusFilter,
-      }),
-    [sorting, statusFilter]
-  );
+  const columns = createTryoutSetColumns({
+    sorting,
+    statusFilter,
+  });
   const data = useTryoutSetData({
     locale,
     page,
@@ -114,8 +108,6 @@ export function TryoutSetTable({
     setColumnFilters((current) => functionalUpdate(updater, current));
   };
 
-  // TanStack's supported React adapter intentionally owns this narrow state boundary.
-  // react-doctor-disable-next-line react-hooks-js/incompatible-library
   const table = useTable({
     columns,
     data: visibleRows,

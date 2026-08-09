@@ -37,7 +37,13 @@ const readConvexToken = Effect.fn("NakafaAuth.readConvexToken")(function* () {
   return response.data?.token ?? null;
 });
 
-/** Adapts Nakafa's typed Better Auth client to Convex's custom-auth contract. */
+/**
+ * Adapts Nakafa's Better Auth client to Convex's custom-auth contract.
+ *
+ * This follows the token lifecycle implemented by the installed integration.
+ * Guide: https://labs.convex.dev/better-auth/framework-guides/next
+ * Source: https://github.com/get-convex/better-auth/blob/v0.12.5/src/react/index.tsx#L53-L171
+ */
 function useBetterAuth() {
   const { data: session, isPending } = authClient.useSession();
   const sessionId = session?.session.id;
@@ -51,7 +57,9 @@ function useBetterAuth() {
     readonly sessionId: string;
   } | null>(null);
 
-  // react-doctor-disable-next-line react-doctor/react-compiler-no-manual-memoization -- Convex resets auth whenever this callback identity changes.
+  // Convex reloads auth when this callback identity changes.
+  // https://docs.convex.dev/api/modules/react#convexproviderwithauth
+  // react-doctor-disable-next-line react-doctor/react-compiler-no-manual-memoization
   const fetchAccessToken = useCallback(
     ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
       const cachedToken = cachedTokenRef.current;
@@ -66,7 +74,8 @@ function useBetterAuth() {
       if (
         sessionId &&
         existingRequest &&
-        existingRequest.sessionId === sessionId
+        existingRequest.sessionId === sessionId &&
+        !forceRefreshToken
       ) {
         return existingRequest.promise;
       }
@@ -78,6 +87,9 @@ function useBetterAuth() {
         Effect.catchTag("ConvexTokenReadError", () => Effect.succeed(null)),
         Effect.tap((token) =>
           Effect.sync(() => {
+            if (pendingTokenRef.current?.requestId !== requestId) {
+              return;
+            }
             cachedTokenRef.current = token ? { sessionId, token } : null;
           })
         ),
@@ -103,14 +115,14 @@ function useBetterAuth() {
   };
 }
 
-/** Provides one shared Convex client authenticated by Nakafa's Better Auth session. */
+/**
+ * Provides one shared Convex client authenticated by Nakafa's Better Auth session.
+ */
 export function ConvexProvider({ children }: { children: ReactNode }) {
-  "use no memo";
-  // Convex custom auth requires passing the adapter Hook to its provider.
-  // https://docs.convex.dev/auth/advanced/custom-auth#client-side-integration
-
   return (
-    // react-doctor-disable-next-line react-hooks-js/hooks -- Convex requires the auth Hook as a provider prop.
+    // Convex's public API explicitly requires an authentication Hook prop.
+    // https://docs.convex.dev/api/modules/react#convexproviderwithauth
+    // react-doctor-disable-next-line react-hooks-js/hooks
     <ConvexProviderWithAuth client={convex} useAuth={useBetterAuth}>
       {children}
     </ConvexProviderWithAuth>
