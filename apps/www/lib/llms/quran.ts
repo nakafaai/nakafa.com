@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
   readPublishedQuranCatalog,
-  readPublishedQuranPage,
+  readPublishedQuranMarkdown,
 } from "@/lib/content/quran/publication";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildPublishedContentLlmsEntries } from "@/lib/llms/entries";
@@ -109,8 +109,12 @@ function getSurahLlmsText({
   surahNumber: number;
 }) {
   return Effect.gen(function* () {
-    const page = yield* readPublishedQuranPage(locale, surahNumber);
-    const surah = page.surah;
+    const markdown = yield* readPublishedQuranMarkdown(
+      locale,
+      surahNumber,
+      QURAN_PAGE_MARKDOWN_VERSE_LIMIT
+    );
+    const surah = markdown.surah;
     const title = getQuranSurahName(surah.name);
     const translation = surah.name.translation;
     const scanned = buildHeader({
@@ -129,13 +133,13 @@ function getSurahLlmsText({
     scanned.push("### Verses");
     scanned.push("");
 
-    for (const verse of page.verses.slice(0, QURAN_PAGE_MARKDOWN_VERSE_LIMIT)) {
+    for (const verse of markdown.verses) {
       scanned.push(`#### Verse ${verse.number.inSurah}`);
       scanned.push("");
-      scanned.push(verse.text.arabic);
+      scanned.push(verse.arabic);
       scanned.push("");
-      scanned.push(`**Translation:** ${verse.translation[locale].text}`);
-      const footnotes = verse.translation[locale].footnotes;
+      scanned.push(`**Translation:** ${verse.translation.text}`);
+      const footnotes = verse.translation.footnotes;
       if (footnotes) {
         scanned.push("");
         scanned.push(`**Translation notes:** ${footnotes}`);
@@ -143,9 +147,9 @@ function getSurahLlmsText({
       scanned.push("");
     }
 
-    if (page.verses.length > QURAN_PAGE_MARKDOWN_VERSE_LIMIT) {
+    if (surah.numberOfVerses > markdown.toVerse) {
       scanned.push(
-        `_This page-level markdown is bounded to verses 1-${QURAN_PAGE_MARKDOWN_VERSE_LIMIT} of ${surah.numberOfVerses}. Use the Nakafa Quran reference tool for exact verse ranges._`
+        `_This page-level markdown is bounded to verses 1-${markdown.toVerse} of ${surah.numberOfVerses}. Use the Nakafa Quran reference tool for exact verse ranges._`
       );
       scanned.push("");
     }

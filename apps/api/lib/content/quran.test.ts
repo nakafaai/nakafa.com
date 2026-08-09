@@ -1,13 +1,7 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  encodeTestQuranRow,
-  makeQuranChunk,
-  makeQuranSearch,
-  makeQuranSurah,
-} from "@repo/backend/test/quran-rows";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { readQuranApiPage } from "@/lib/content/quran";
+import { readQuranApiDocument } from "@/lib/content/quran";
 
 const runtimeClientMocks = vi.hoisted(() => ({
   fetchConvexRuntimeQuery: vi.fn(),
@@ -30,37 +24,40 @@ afterEach(() => {
 });
 
 describe("Quran API content", () => {
-  it("reads and validates one signed Quran page", async () => {
-    const surah = makeQuranSurah(1);
-    const chunk = makeQuranChunk({
-      firstQuranNumber: 1,
-      firstVerse: 1,
-      surahNumber: 1,
-      verseCount: 1,
-    });
-    const search = makeQuranSearch("en", 1);
-    const nextSurah = makeQuranSurah(2);
+  it("reads and validates one locale-specific signed Quran document", async () => {
     runtimeClientMocks.fetchConvexRuntimeQuery.mockResolvedValueOnce({
       ...source,
-      chunkJson: [encodeTestQuranRow(source.snapshotId, chunk)],
-      nextSurahJson: encodeTestQuranRow(source.snapshotId, nextSurah),
-      prevSurahJson: null,
-      searchJson: encodeTestQuranRow(source.snapshotId, search),
-      surahJson: encodeTestQuranRow(source.snapshotId, surah),
+      locale: "en",
+      surah: {
+        kind: "quran-surah",
+        name: {
+          arabic: "الفاتحة",
+          translation: "The Opening",
+          transliteration: "Al-Fatihah",
+        },
+        number: 1,
+        numberOfVerses: 1,
+        revelation: { order: 5, place: "Meccan" },
+      },
+      verses: [
+        {
+          arabic: "بِسْمِ اللّٰهِ",
+          number: { inQuran: 1, inSurah: 1 },
+          translation: { footnotes: "Source note.", text: "In Allah's name." },
+        },
+      ],
     });
 
     await expect(
-      Effect.runPromise(readQuranApiPage({ locale: "en", surahNumber: 1 }))
-    ).resolves.toEqual({
-      activeManifestHash: source.activeManifestHash,
-      activeReleaseId: source.activeReleaseId,
-      nextSurah,
-      previousSurah: null,
-      search,
-      snapshotId: source.snapshotId,
-      sourceRevision: source.sourceRevision,
-      surah,
-      verses: chunk.verses,
+      Effect.runPromise(readQuranApiDocument({ locale: "en", surahNumber: 1 }))
+    ).resolves.toMatchObject({
+      locale: "en",
+      surah: { number: 1, revelation: { order: 5, place: "Meccan" } },
+      verses: [
+        {
+          translation: { footnotes: "Source note.", text: "In Allah's name." },
+        },
+      ],
     });
     expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
       "https://test.convex.cloud",
@@ -75,7 +72,7 @@ describe("Quran API content", () => {
     );
     await expect(
       Effect.runPromise(
-        Effect.either(readQuranApiPage({ locale: "en", surahNumber: 1 }))
+        Effect.either(readQuranApiDocument({ locale: "en", surahNumber: 1 }))
       )
     ).resolves.toMatchObject({
       _tag: "Left",
@@ -84,15 +81,13 @@ describe("Quran API content", () => {
 
     runtimeClientMocks.fetchConvexRuntimeQuery.mockResolvedValueOnce({
       ...source,
-      chunkJson: [],
-      nextSurahJson: null,
-      prevSurahJson: null,
-      searchJson: null,
-      surahJson: null,
+      locale: "en",
+      surah: null,
+      verses: [],
     });
     await expect(
       Effect.runPromise(
-        Effect.either(readQuranApiPage({ locale: "en", surahNumber: 1 }))
+        Effect.either(readQuranApiDocument({ locale: "en", surahNumber: 1 }))
       )
     ).resolves.toMatchObject({
       _tag: "Left",

@@ -5,10 +5,8 @@ import {
   toNakafaQuranDataReadError,
 } from "@repo/backend/client/nakafa/decode";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
-import {
-  decodePublishedQuranPage,
-  decodePublishedQuranReference,
-} from "@repo/backend/client/quran/decode";
+import { decodePublishedQuranReference } from "@repo/backend/client/quran/decode";
+import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
@@ -84,18 +82,18 @@ export function readQuranMarkdown(
 
     const result = yield* fetchNakafaRuntimeQuery(
       convexUrl,
-      "contentRelease.quran.page",
-      api.contentRelease.quran.page,
+      "contentRelease.quran.markdown",
+      api.contentRelease.quran.markdown,
       {
         locale: ref.locale,
         surahNumber,
       }
     );
-    const page = yield* decodePublishedQuranPage(result, {
+    const publication = yield* decodePublishedQuranMarkdown(result, {
       locale: ref.locale,
       surahNumber,
     }).pipe(Effect.mapError(toNakafaQuranDataReadError));
-    const surah = page.surah;
+    const surah = publication.surah;
     const title = getSurahName(surah);
     const translation = surah.name.translation;
     const markdown = yield* decodeNakafaMarkdown({
@@ -109,12 +107,12 @@ export function readQuranMarkdown(
         "",
         "## Verses",
         "",
-        ...page.verses.flatMap((verse) => [
+        ...publication.verses.flatMap((verse) => [
           `### Verse ${verse.number.inSurah}`,
           "",
-          verse.text.arabic,
+          verse.arabic,
           "",
-          `Translation: ${verse.translation[ref.locale].text}`,
+          `Translation: ${verse.translation.text}`,
           "",
         ]),
       ].join("\n"),

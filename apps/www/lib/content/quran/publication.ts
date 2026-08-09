@@ -2,9 +2,9 @@ import "server-only";
 
 import {
   decodePublishedQuranCatalog,
-  decodePublishedQuranPage,
   decodePublishedQuranSource,
 } from "@repo/backend/client/quran/decode";
+import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
 import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
@@ -25,11 +25,22 @@ function fetchCatalogResult() {
   return fetchRuntimeQuery(api.contentRelease.quran.surahs, {});
 }
 
-/** Reads one raw signed Quran page through the public Convex query. */
-function fetchPageResult(locale: Locale, surahNumber: number) {
-  return fetchRuntimeQuery(api.contentRelease.quran.page, {
+/** Reads one raw signed Quran markdown projection through the public query. */
+function fetchMarkdownResult(
+  locale: Locale,
+  surahNumber: number,
+  verseLimit?: number
+) {
+  if (verseLimit === undefined) {
+    return fetchRuntimeQuery(api.contentRelease.quran.markdown, {
+      locale,
+      surahNumber,
+    });
+  }
+  return fetchRuntimeQuery(api.contentRelease.quran.markdown, {
     locale,
     surahNumber,
+    verseLimit,
   });
 }
 
@@ -63,14 +74,18 @@ export const readPublishedQuranCatalog = Effect.fn(
   return yield* decodePublishedQuranCatalog(result);
 });
 
-/** Reads and validates one complete active signed Quran page. */
-export const readPublishedQuranPage = Effect.fn(
-  "NakafaQuran.readPublishedPage"
-)(function* (locale: Locale, surahNumber: number) {
-  const result = yield* readRuntimeQuery("contentRelease.quran.page", () =>
-    fetchPageResult(locale, surahNumber)
+/** Reads and validates one active signed Quran markdown projection. */
+export const readPublishedQuranMarkdown = Effect.fn(
+  "NakafaQuran.readPublishedMarkdown"
+)(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
+  const result = yield* readRuntimeQuery("contentRelease.quran.markdown", () =>
+    fetchMarkdownResult(locale, surahNumber, verseLimit)
   );
-  return yield* decodePublishedQuranPage(result, { locale, surahNumber });
+  return yield* decodePublishedQuranMarkdown(result, {
+    locale,
+    surahNumber,
+    verseLimit,
+  });
 });
 
 /** Caches the complete signed Quran metadata catalog by active release. */

@@ -10,20 +10,20 @@ import {
 
 const publicationMocks = vi.hoisted(() => ({
   readPublishedQuranCatalog: vi.fn(),
-  readPublishedQuranPage: vi.fn(),
+  readPublishedQuranMarkdown: vi.fn(),
 }));
 
 vi.mock("@/lib/content/quran/publication", () => publicationMocks);
 
 beforeEach(() => {
   publicationMocks.readPublishedQuranCatalog.mockReset();
-  publicationMocks.readPublishedQuranPage.mockReset();
+  publicationMocks.readPublishedQuranMarkdown.mockReset();
   publicationMocks.readPublishedQuranCatalog.mockReturnValue(
     Effect.succeed({ surahs: [surahMetadata(1), surahMetadata(2)] })
   );
-  publicationMocks.readPublishedQuranPage.mockImplementation(
-    (_locale: "en" | "id", surahNumber: number) =>
-      Effect.succeed(surahPage(surahNumber))
+  publicationMocks.readPublishedQuranMarkdown.mockImplementation(
+    (_locale: "en" | "id", surahNumber: number, verseLimit?: number) =>
+      Effect.succeed(surahMarkdown(surahNumber, verseLimit))
   );
 });
 
@@ -140,38 +140,28 @@ function surahMetadata(number: number) {
   };
 }
 
-/** Builds one signed Quran page for markdown rendering checks. */
-function surahPage(number: number) {
+/** Builds one signed Quran projection for markdown rendering checks. */
+function surahMarkdown(number: number, verseLimit?: number) {
+  const numberOfVerses = number === 1 ? 1 : 82;
+  const toVerse = Math.min(verseLimit ?? numberOfVerses, numberOfVerses);
   return {
+    locale: "en",
     surah: surahMetadata(number),
-    verses: Array.from({ length: number === 1 ? 1 : 82 }, (_, index) =>
+    toVerse,
+    verses: Array.from({ length: toVerse }, (_, index) =>
       verseFixture(index + 1)
     ),
   };
 }
 
-/** Builds one exact signed Quran runtime verse. */
+/** Builds one exact locale-specific Quran markdown verse. */
 function verseFixture(number: number) {
   return {
-    meta: {
-      hizbQuarter: 1,
-      juz: 1,
-      manzil: 1,
-      page: 1,
-      ruku: 1,
-      sajda: null,
-    },
-    number: { inQuran: number, inSurah: number },
-    tafsir: {
-      id: { footnotes: null, text: `Tafsir ${number}.` },
-    },
-    text: { arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ" },
+    arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+    number: { inSurah: number },
     translation: {
-      en: {
-        footnotes: number === 1 ? "Source note." : "",
-        text: `Translation ${number}.`,
-      },
-      id: { footnotes: "", text: `Terjemahan ${number}.` },
+      footnotes: number === 1 ? "Source note." : "",
+      text: `Translation ${number}.`,
     },
   };
 }
