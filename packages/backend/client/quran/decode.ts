@@ -31,6 +31,7 @@ type QuranReferenceResult = FunctionReturnType<
 >;
 
 const QuranPublicationOperationSchema = Schema.Literal(
+  "attribution",
   "catalog",
   "interpretation",
   "page",

@@ -16,7 +16,6 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
-import { useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
@@ -25,6 +24,7 @@ interface Props {
   errorMessage: string;
   label: string;
   loadingMessage: string;
+  recoverSnapshot: () => Promise<void>;
   refreshingMessage: string;
   snapshotId: string;
   surahNumber: number;
@@ -63,12 +63,12 @@ export function QuranInterpretationControls({
   errorMessage,
   label,
   loadingMessage,
+  recoverSnapshot,
   refreshingMessage,
   snapshotId,
   surahNumber,
 }: Props) {
   const convex = useConvex();
-  const router = useRouter();
   const [isOpen, { close, open, set }] = useDisclosure(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -148,13 +148,36 @@ export function QuranInterpretationControls({
         }
 
         if (isQuranSnapshotConflict(error)) {
-          return Effect.sync(() => {
+          return Effect.sync(() =>
             toast.info(refreshingMessage, {
               id: toastId,
               position: "bottom-center",
-            });
-            router.refresh();
-          });
+            })
+          ).pipe(
+            Effect.zipRight(
+              Effect.tryPromise({
+                catch: toQuranInterpretationRequestError,
+                try: recoverSnapshot,
+              }).pipe(
+                Effect.catchAll((recoveryError) =>
+                  Effect.sync(() => {
+                    toast.error(errorMessage, {
+                      id: toastId,
+                      position: "bottom-center",
+                    });
+                  }).pipe(
+                    Effect.zipRight(
+                      reportClientException(recoveryError, {
+                        source: "quran-interpretation-recovery",
+                        surahNumber,
+                        verseNumber,
+                      })
+                    )
+                  )
+                )
+              )
+            )
+          );
         }
 
         return Effect.sync(() => {

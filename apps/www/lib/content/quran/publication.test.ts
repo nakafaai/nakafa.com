@@ -13,6 +13,7 @@ import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
   readPublishedQuranCatalog,
+  readPublishedQuranIdentity,
   readPublishedQuranPage,
 } from "@/lib/content/quran/publication";
 
@@ -20,7 +21,7 @@ const fetchMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/cache", () => ({
-  applyContentRuntimeCache: cacheMock,
+  applyPublishedSnapshotCache: cacheMock,
 }));
 vi.mock("@/lib/content/runtime/query", async () => {
   const { readTestRuntimeQuery } = await import("@/test/runtime-query");
@@ -44,6 +45,15 @@ beforeEach(() => {
 });
 
 describe("published Quran content", () => {
+  it("reads the active identity through the one-row attribution query", async () => {
+    fetchMock.mockResolvedValue({ ...source, rowJson: "attribution-row" });
+
+    await expect(
+      Effect.runPromise(readPublishedQuranIdentity())
+    ).resolves.toMatchObject({ snapshotId: source.snapshotId });
+    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {});
+  });
+
   it("reads the signed catalog through Effect and cached Promise boundaries", async () => {
     fetchMock.mockResolvedValue(catalogResult());
 
@@ -54,7 +64,7 @@ describe("published Quran content", () => {
       surahs: expect.any(Array),
     });
     expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {});
-    expect(cacheMock).toHaveBeenCalledOnce();
+    expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
   });
 
   it("reads the complete signed page through the Effect boundary", async () => {
@@ -103,7 +113,7 @@ describe("published Quran content", () => {
       locale: "id",
       surahNumber: 1,
     });
-    expect(cacheMock).toHaveBeenCalledOnce();
+    expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
   });
 });
 

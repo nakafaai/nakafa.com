@@ -3,6 +3,7 @@ import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -24,6 +25,7 @@ import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
 } from "@/lib/content/quran/publication";
+import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getSocialMetadata } from "@/lib/utils/metadata";
@@ -171,6 +173,14 @@ async function CachedSurahShell({
   ]);
 
   const surahData = result.surah;
+  const servedSnapshotId = result.snapshotId;
+  async function recoverSnapshot() {
+    "use server";
+
+    await Effect.runPromise(
+      recoverStalePublishedQuranSnapshot(servedSnapshotId)
+    );
+  }
   const translation = surahData.name.translation;
   const title = getQuranSurahName(surahData.name);
 
@@ -255,6 +265,7 @@ async function CachedSurahShell({
               errorMessage={t("interpretation-error")}
               label={interpretationLabel}
               loadingMessage={t("interpretation-loading")}
+              recoverSnapshot={recoverSnapshot}
               refreshingMessage={t("interpretation-refreshing")}
               snapshotId={result.snapshotId}
               surahNumber={surahData.number}
