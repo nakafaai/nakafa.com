@@ -154,7 +154,7 @@ const nextConfig = {
   cacheLife: {
     contentRuntime: {
       stale: 300,
-      revalidate: 3_600,
+      revalidate: 3600,
       expire: 86_400,
     },
   },

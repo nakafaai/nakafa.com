@@ -19,7 +19,7 @@ const tryoutColumnHelper = createColumnHelper<
   TryoutSetRow
 >();
 
-/** Builds stable TanStack columns from the table's controlled UI state. */
+/** Builds TanStack columns from the table's controlled UI state. */
 export function createTryoutSetColumns({
   sorting,
   statusFilter,
