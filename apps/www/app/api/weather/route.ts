@@ -2,17 +2,14 @@ import { FetchHttpClient } from "@effect/platform";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
-  getWeather,
+  getCurrentWeather,
 } from "@repo/ai/clients/weather/client";
-import {
-  captureServerException,
-  extractDistinctIdFromPostHogCookie,
-} from "@repo/analytics/posthog/server";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { logError, logHttpRequest } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
 import { Cause, Effect } from "effect";
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { scheduleServerExceptionCapture } from "@/lib/analytics/server";
 
 const corsValidator = new CorsValidator();
 const logContext = {
@@ -56,7 +53,7 @@ export function POST(req: Request) {
         })
       );
 
-      const weather = yield* getWeather({ latitude, longitude });
+      const weather = yield* getCurrentWeather({ latitude, longitude });
       const duration = Math.round(performance.now() - startedAt);
 
       yield* logHttpRequest(
@@ -77,15 +74,11 @@ export function POST(req: Request) {
           const err = error instanceof Error ? error : new Error(String(error));
           const duration = Math.round(performance.now() - startedAt);
 
-          after(async () => {
-            await captureServerException(
-              err,
-              extractDistinctIdFromPostHogCookie(req.headers.get("cookie")),
-              {
-                source: "weather-api",
-              }
-            );
-          });
+          yield* scheduleServerExceptionCapture(
+            err,
+            req.headers.get("cookie") ?? "",
+            { source: "weather-api" }
+          );
 
           yield* logError(err, logContext);
           yield* logHttpRequest(

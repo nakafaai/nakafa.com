@@ -34,12 +34,12 @@ describe("requestWeatherJson", () => {
       vi.fn<(request: HttpClientRequest.HttpClientRequest) => void>();
     const result = await Effect.runPromise(
       requestWeatherJson({
-        endpoint: "forecast",
+        endpoint: "current-weather",
         searchParams: {
           appid: "weather-key",
           lat: "-6.2088",
         },
-        url: "https://weather.example.test/forecast",
+        url: "https://weather.example.test/weather",
       }).pipe(
         Effect.provide(
           makeTestClient({
@@ -54,7 +54,7 @@ describe("requestWeatherJson", () => {
     expect(observeRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         method: "GET",
-        url: "https://weather.example.test/forecast",
+        url: "https://weather.example.test/weather",
         urlParams: [
           ["appid", "weather-key"],
           ["lat", "-6.2088"],
@@ -69,11 +69,11 @@ describe("requestWeatherJson", () => {
   it("maps rejected HTTP status into the weather error contract", async () => {
     const result = await Effect.runPromise(
       requestWeatherJson({
-        endpoint: "forecast",
+        endpoint: "current-weather",
         searchParams: {
           appid: "weather-secret",
         },
-        url: "https://weather.example.test/forecast",
+        url: "https://weather.example.test/weather",
       }).pipe(
         Effect.provide(
           makeTestClient({
@@ -93,12 +93,12 @@ describe("requestWeatherJson", () => {
     }
     expect(result.left).toMatchObject({
       _tag: "WeatherClientRequestError",
-      endpoint: "forecast",
-      message: "OpenWeather request failed for forecast.",
+      endpoint: "current-weather",
+      message: "OpenWeather request failed for current-weather.",
     });
     expect(JSON.stringify(result.left)).not.toContain("weather-secret");
     expect(JSON.stringify(result.left)).not.toContain(
-      "https://weather.example.test/forecast"
+      "https://weather.example.test/weather"
     );
   });
 
@@ -110,9 +110,9 @@ describe("requestWeatherJson", () => {
 
     const result = await Effect.runPromise(
       requestWeatherJson({
-        endpoint: "forecast",
+        endpoint: "current-weather",
         searchParams: {},
-        url: "https://weather.example.test/forecast",
+        url: "https://weather.example.test/weather",
       }).pipe(Effect.provide(makeTestClient({ makeResponse })))
     );
 
