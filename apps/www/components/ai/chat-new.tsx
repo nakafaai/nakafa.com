@@ -19,7 +19,6 @@ import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { AiChatModel } from "@/components/ai/chat-model";
 import { useAi } from "@/components/ai/context/use-ai";
-import { createChatRuntime } from "@/components/ai/helpers/runtime";
 import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
 import { useUser } from "@/lib/context/use-user";
 
@@ -61,10 +60,13 @@ export function ChatNew() {
         return;
       }
 
-      const chatId = await createChat({
-        title: DEFAULT_TITLE,
-        type: "study",
-      });
+      const [chatId, { createChatRuntime }] = await Promise.all([
+        createChat({
+          title: DEFAULT_TITLE,
+          type: "study",
+        }),
+        import("@/components/ai/helpers/runtime"),
+      ]);
 
       const chatRuntime = createChatRuntime({
         chatId,

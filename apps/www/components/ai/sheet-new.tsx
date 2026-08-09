@@ -19,7 +19,6 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useAi } from "@/components/ai/context/use-ai";
-import { createChatRuntime } from "@/components/ai/helpers/runtime";
 import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
 import { SheetInput } from "@/components/ai/sheet-input";
 import { useUser } from "@/lib/context/use-user";
@@ -64,10 +63,13 @@ export const SheetNew = () => {
         return;
       }
 
-      const chatId = await createChat({
-        title: DEFAULT_TITLE,
-        type: "study",
-      });
+      const [chatId, { createChatRuntime }] = await Promise.all([
+        createChat({
+          title: DEFAULT_TITLE,
+          type: "study",
+        }),
+        import("@/components/ai/helpers/runtime"),
+      ]);
 
       const chatRuntime = createChatRuntime({
         chatId,

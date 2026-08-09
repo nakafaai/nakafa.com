@@ -5,7 +5,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { IconCommand, IconLetterK } from "@tabler/icons-react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
+import { preloadSearchCommand } from "@/components/shared/deferred-search-command";
 import { useSearch } from "@/lib/context/use-search";
 
 /** Renders the header search trigger that opens the command search dialog. */
@@ -28,6 +30,9 @@ export function HeaderSearch() {
         e.stopPropagation();
         setOpen(true);
       }}
+      onFocus={() => Effect.runFork(preloadSearchCommand())}
+      onMouseEnter={() => Effect.runFork(preloadSearchCommand())}
+      onTouchStart={() => Effect.runFork(preloadSearchCommand())}
       type="button"
       variant="outline"
     >

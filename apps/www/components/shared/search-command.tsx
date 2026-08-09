@@ -8,7 +8,7 @@ import {
   InformationCircleIcon,
   Sad02Icon,
 } from "@hugeicons/core-free-icons";
-import { useDebouncedValue, useHotkeys } from "@mantine/hooks";
+import { useDebouncedValue } from "@mantine/hooks";
 import {
   Command,
   CommandCollection,
@@ -88,11 +88,6 @@ export function SearchCommand() {
     },
     [setOpen]
   );
-
-  useHotkeys([
-    ["/", () => setOpen(true)],
-    ["mod+K", () => setOpen(true)],
-  ]);
 
   return (
     <CommandDialog onOpenChange={setOpen} open={open}>

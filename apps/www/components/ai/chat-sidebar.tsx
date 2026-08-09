@@ -6,6 +6,7 @@ import {
   Search02Icon,
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
+import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -39,6 +40,7 @@ import { type ComponentProps, useState } from "react";
 import { useUser } from "@/lib/context/use-user";
 
 type Props = ComponentProps<typeof Sidebar>;
+const CHAT_SEARCH_DEBOUNCE_MS = 500;
 
 export function AiChatSidebar({ ...props }: Props) {
   return (
@@ -64,6 +66,7 @@ export function AiChatSidebar({ ...props }: Props) {
 function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Ai");
   const [q, setQ] = useState("");
+  const [debouncedQ] = useDebouncedValue(q, CHAT_SEARCH_DEBOUNCE_MS);
 
   return (
     <Sidebar containerClassName="lg:hidden xl:block" side="right" {...props}>
@@ -102,7 +105,7 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <AiChatSidebarHistory q={q} />
+        <AiChatSidebarHistory q={debouncedQ} />
       </SidebarContent>
     </Sidebar>
   );
