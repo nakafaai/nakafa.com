@@ -1,19 +1,16 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
-import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/spec";
+import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
-import type { Locale } from "next-intl";
 import { QuranText } from "@/components/shared/quran-text";
 
 interface Props {
   hasInterpretation: boolean;
   id: string;
-  index: number;
   interpretationLabel: string;
   isLast: boolean;
-  locale: Locale;
-  verse: QuranRuntimeVerse;
+  verse: QuranViewVerse;
   verseLabel: string;
 }
 
@@ -26,17 +23,17 @@ const verseButtonClassName = buttonVariants({
  * Renders one delegated tafsir button without mounting a drawer per verse.
  */
 function QuranInterpretationButton({
-  index,
   label,
+  verseNumber,
 }: {
-  index: number;
   label: string;
+  verseNumber: number;
 }) {
   return (
     <button
       aria-label={label}
       className={verseButtonClassName}
-      data-quran-interpretation-index={index}
+      data-quran-interpretation-verse={verseNumber}
       type="button"
     >
       <HugeIcons icon={BookOpen02Icon} />
@@ -51,15 +48,11 @@ function QuranInterpretationButton({
 export function QuranVerse({
   hasInterpretation,
   id,
-  index,
   interpretationLabel,
   isLast,
-  locale,
   verse,
   verseLabel,
 }: Props) {
-  const translation = verse.translation[locale].text;
-
   return (
     <div
       className={cn(
@@ -84,14 +77,14 @@ export function QuranVerse({
         <div className="flex items-center gap-2">
           {hasInterpretation && (
             <QuranInterpretationButton
-              index={index}
               label={interpretationLabel}
+              verseNumber={verse.number.inSurah}
             />
           )}
         </div>
       </div>
-      <QuranText>{verse.text.arabic}</QuranText>
-      <p className="text-pretty leading-relaxed">{translation}</p>
+      <QuranText>{verse.arabic}</QuranText>
+      <p className="text-pretty leading-relaxed">{verse.translation}</p>
     </div>
   );
 }

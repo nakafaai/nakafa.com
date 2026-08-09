@@ -48,7 +48,6 @@ describe("signed Quran decoder", () => {
     });
     const page = await Effect.runPromise(
       decodePublishedQuranPage(pageResult(chunk), {
-        locale: "en",
         surahNumber: 1,
       })
     );
@@ -107,13 +106,9 @@ describe("signed Quran decoder", () => {
             chunkJson: [],
             nextSurahJson: null,
             prevSurahJson: null,
-            searchJson: encodeTestQuranRow(
-              source.snapshotId,
-              makeQuranSearch("id", 1)
-            ),
             surahJson: encodeTestQuranRow(source.snapshotId, makeQuranSurah(1)),
           },
-          { locale: "en", surahNumber: 1 }
+          { surahNumber: 1 }
         )
       )
     );
@@ -154,7 +149,6 @@ function pageResult(chunk: ReturnType<typeof makeQuranChunk>) {
     chunkJson: [encodeTestQuranRow(source.snapshotId, chunk)],
     nextSurahJson: encodeTestQuranRow(source.snapshotId, makeQuranSurah(2)),
     prevSurahJson: null,
-    searchJson: encodeTestQuranRow(source.snapshotId, makeQuranSearch("en", 1)),
     surahJson: encodeTestQuranRow(
       source.snapshotId,
       makeQuranSurah(1, chunk.verses.length)

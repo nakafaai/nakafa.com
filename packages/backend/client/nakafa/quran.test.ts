@@ -132,7 +132,7 @@ function readRuntimeFixture(
   if (
     getFunctionName(query) === getFunctionName(api.contentRelease.quran.page)
   ) {
-    return Promise.resolve(pageResult(args));
+    return Promise.resolve(pageResult());
   }
 
   return Promise.reject(new Error("Unhandled Quran query fixture."));
@@ -152,14 +152,12 @@ function referenceResult(args: Record<string, unknown>) {
 }
 
 /** Builds one complete signed page response around a bounded chunk. */
-function pageResult(args: Record<string, unknown>) {
-  const locale = args.locale === "id" ? "id" : "en";
+function pageResult() {
   return {
     ...source,
     chunkJson: [encodeTestQuranRow(source.snapshotId, chunkRow())],
     nextSurahJson: encodeTestQuranRow(source.snapshotId, surahRow(2)),
     prevSurahJson: null,
-    searchJson: encodeTestQuranRow(source.snapshotId, searchRow(locale)),
     surahJson: encodeTestQuranRow(source.snapshotId, surahRow()),
   };
 }

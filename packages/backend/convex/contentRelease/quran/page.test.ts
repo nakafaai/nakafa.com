@@ -1,4 +1,3 @@
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { readQuranPage } from "@repo/backend/convex/contentRelease/quran/page";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -10,7 +9,6 @@ import {
 } from "@repo/backend/test/quran-rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Builds the complete technical page rows for Quran surah one. */
@@ -55,9 +53,6 @@ describe("contentRelease/quran/page", () => {
     const result = await t.query((ctx) =>
       runConvexProgram(readQuranPage(ctx, "id", 1))
     );
-    const search = await Effect.runPromise(
-      decodeSnapshotRowJson(result.searchJson ?? "")
-    );
 
     expect(result).toMatchObject({
       chunkJson: [expect.any(String), expect.any(String)],
@@ -67,9 +62,7 @@ describe("contentRelease/quran/page", () => {
       snapshotId,
       surahJson: expect.any(String),
     });
-    expect(search).toMatchObject({
-      record: { payload: { kind: "quran-search", locale: "id" } },
-    });
+    expect(result).not.toHaveProperty("searchJson");
   });
 
   it("rejects invalid requests, oversized surahs, and missing page rows", async () => {
@@ -88,12 +81,17 @@ describe("contentRelease/quran/page", () => {
       oversized.query((ctx) => runConvexProgram(readQuranPage(ctx, "en", 1)))
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_LIMIT" } });
 
-    const missing = convexTest(schema, convexModules);
-    await missing.mutation((ctx) =>
-      activateQuranSnapshot(ctx, pageRows().slice(0, -1))
+    const missingSearch = convexTest(schema, convexModules);
+    await missingSearch.mutation((ctx) =>
+      activateQuranSnapshot(
+        ctx,
+        pageRows().filter((row) => row.kind !== "quran-search")
+      )
     );
     await expect(
-      missing.query((ctx) => runConvexProgram(readQuranPage(ctx, "id", 1)))
+      missingSearch.query((ctx) =>
+        runConvexProgram(readQuranPage(ctx, "id", 1))
+      )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });

@@ -2,7 +2,6 @@ import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   encodeTestQuranRow,
   makeQuranChunk,
-  makeQuranSearch,
   makeQuranSurah,
 } from "@repo/backend/test/quran-rows";
 import { Effect } from "effect";
@@ -38,14 +37,12 @@ describe("Quran API content", () => {
       surahNumber: 1,
       verseCount: 1,
     });
-    const search = makeQuranSearch("en", 1);
     const nextSurah = makeQuranSurah(2);
     runtimeClientMocks.fetchConvexRuntimeQuery.mockResolvedValueOnce({
       ...source,
       chunkJson: [encodeTestQuranRow(source.snapshotId, chunk)],
       nextSurahJson: encodeTestQuranRow(source.snapshotId, nextSurah),
       prevSurahJson: null,
-      searchJson: encodeTestQuranRow(source.snapshotId, search),
       surahJson: encodeTestQuranRow(source.snapshotId, surah),
     });
 
@@ -56,7 +53,6 @@ describe("Quran API content", () => {
       activeReleaseId: source.activeReleaseId,
       nextSurah,
       previousSurah: null,
-      search,
       snapshotId: source.snapshotId,
       sourceRevision: source.sourceRevision,
       surah,
@@ -87,7 +83,6 @@ describe("Quran API content", () => {
       chunkJson: [],
       nextSurahJson: null,
       prevSurahJson: null,
-      searchJson: null,
       surahJson: null,
     });
     await expect(

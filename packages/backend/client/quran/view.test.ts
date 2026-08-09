@@ -1,0 +1,130 @@
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
+import { Effect } from "effect";
+import { describe, expect, it } from "vitest";
+
+const source = {
+  activeManifestHash: `sha256:${"a".repeat(64)}`,
+  activeReleaseId: "quran-release",
+  managed: true,
+  snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+  sourceRevision: "c".repeat(40),
+};
+
+const surah = {
+  name: {
+    translation: "Pembukaan",
+    transliteration: "Al-Fatihah",
+  },
+  number: 1,
+  numberOfVerses: 1,
+};
+
+type QuranViewResult = FunctionReturnType<typeof api.contentRelease.quran.view>;
+describe("signed Quran view decoder", () => {
+  it("preserves each validator-derived locale projection", async () => {
+    const english = await Effect.runPromise(
+      decodePublishedQuranView(englishViewResult(), {
+        locale: "en",
+        surahNumber: 1,
+      })
+    );
+    const indonesian = await Effect.runPromise(
+      decodePublishedQuranView(indonesianViewResult(), {
+        locale: "id",
+        surahNumber: 1,
+      })
+    );
+
+    expect(english.verses[0]).toEqual({
+      arabic: "بِسْمِ اللّٰهِ",
+      number: { inQuran: 1, inSurah: 1 },
+      translation: "In the name of Allah.",
+    });
+    expect(indonesian.verses[0]).toEqual({
+      arabic: "بِسْمِ اللّٰهِ",
+      number: { inQuran: 1, inSurah: 1 },
+      translation: "Dengan nama Allah.",
+    });
+    expect(JSON.stringify(indonesian)).not.toContain("Tafsir lengkap");
+  });
+
+  it("fails closed for inactive and inconsistent views", async () => {
+    const inactive = await Effect.runPromise(
+      Effect.either(
+        decodePublishedQuranView(
+          {
+            activeManifestHash: null,
+            activeReleaseId: null,
+            locale: "en",
+            managed: false,
+            nextSurah: null,
+            previousSurah: null,
+            snapshotId: null,
+            sourceRevision: null,
+            surah: null,
+            verses: [],
+          },
+          { locale: "en", surahNumber: 1 }
+        )
+      )
+    );
+    const inconsistent = await Effect.runPromise(
+      Effect.either(
+        decodePublishedQuranView(englishViewResult(), {
+          locale: "en",
+          surahNumber: 2,
+        })
+      )
+    );
+
+    expect(inactive._tag).toBe("Left");
+    expect(inconsistent._tag).toBe("Left");
+  });
+});
+
+/** Builds the source and metadata shared by locale-specific view fixtures. */
+function viewBase() {
+  return {
+    ...source,
+    nextSurah: {
+      ...surah,
+      name: { ...surah.name, transliteration: "Al-Baqarah" },
+      number: 2,
+    },
+    previousSurah: null,
+    surah,
+  };
+}
+
+/** Builds one complete English view response. */
+function englishViewResult(): QuranViewResult {
+  return {
+    ...viewBase(),
+    locale: "en",
+    verses: [
+      {
+        arabic: "بِسْمِ اللّٰهِ",
+        number: { inQuran: 1, inSurah: 1 },
+        translation: "In the name of Allah.",
+      },
+    ],
+  };
+}
+
+/** Builds one complete Indonesian view response. */
+function indonesianViewResult(): QuranViewResult {
+  return {
+    ...viewBase(),
+    locale: "id",
+    verses: [
+      {
+        arabic: "بِسْمِ اللّٰهِ",
+        number: { inQuran: 1, inSurah: 1 },
+        translation: "Dengan nama Allah.",
+      },
+    ],
+  };
+}

@@ -1,48 +1,48 @@
-import { QURAN_LOCALES } from "@nakafa/aksara-contracts/quran/spec";
 import { query } from "@repo/backend/convex/_generated/server";
 import { readQuranAttribution } from "@repo/backend/convex/contentRelease/quran/attribution";
 import {
   readQuranSitemap,
   readQuranSurahs,
 } from "@repo/backend/convex/contentRelease/quran/catalog";
+import {
+  quranInterpretationValidator,
+  readQuranInterpretation,
+} from "@repo/backend/convex/contentRelease/quran/interpretation";
 import { readQuranPage } from "@repo/backend/convex/contentRelease/quran/page";
 import { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
 import { searchQuran } from "@repo/backend/convex/contentRelease/quran/search";
+import {
+  quranLocaleValidator,
+  quranSourceFields,
+  quranTafsirLocaleValidator,
+} from "@repo/backend/convex/contentRelease/quran/spec";
+import {
+  quranViewValidator,
+  readQuranView,
+} from "@repo/backend/convex/contentRelease/quran/view";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
-import { literals } from "convex-helpers/validators";
-
-const quranLocaleValidator = literals(...QURAN_LOCALES);
-
-const sourceFields = {
-  activeManifestHash: v.union(v.string(), v.null()),
-  activeReleaseId: v.union(v.string(), v.null()),
-  managed: v.boolean(),
-  snapshotId: v.union(v.string(), v.null()),
-  sourceRevision: v.union(v.string(), v.null()),
-};
 
 const attributionValidator = v.object({
-  ...sourceFields,
+  ...quranSourceFields,
   rowJson: v.union(v.string(), v.null()),
 });
 
 const surahCatalogValidator = v.object({
-  ...sourceFields,
+  ...quranSourceFields,
   rowJson: v.array(v.string()),
 });
 
 const pageValidator = v.object({
-  ...sourceFields,
+  ...quranSourceFields,
   chunkJson: v.array(v.string()),
   nextSurahJson: v.union(v.string(), v.null()),
   prevSurahJson: v.union(v.string(), v.null()),
-  searchJson: v.union(v.string(), v.null()),
   surahJson: v.union(v.string(), v.null()),
 });
 
 const referenceValidator = v.object({
-  ...sourceFields,
+  ...quranSourceFields,
   chunkJson: v.array(v.string()),
   fromVerse: v.number(),
   searchJson: v.union(v.string(), v.null()),
@@ -51,12 +51,12 @@ const referenceValidator = v.object({
 });
 
 const searchValidator = v.object({
-  ...sourceFields,
+  ...quranSourceFields,
   rowJson: v.array(v.string()),
 });
 
 const sitemapValidator = v.object({
-  ...sourceFields,
+  ...quranSourceFields,
   locale: quranLocaleValidator,
   routes: v.array(v.string()),
 });
@@ -81,6 +81,35 @@ export const page = query({
   returns: pageValidator,
   handler: (ctx, { locale, surahNumber }) =>
     runConvexProgram(readQuranPage(ctx, locale, surahNumber)),
+});
+
+/** Returns the narrow locale-specific Quran projection used by the web UI. */
+export const view = query({
+  args: { locale: quranLocaleValidator, surahNumber: v.number() },
+  returns: quranViewValidator,
+  handler: (ctx, { locale, surahNumber }) =>
+    runConvexProgram(readQuranView(ctx, locale, surahNumber)),
+});
+
+/** Returns one exact signed tafsir only after the verse is requested. */
+export const interpretation = query({
+  args: {
+    expectedSnapshotId: v.string(),
+    locale: quranTafsirLocaleValidator,
+    surahNumber: v.number(),
+    verseNumber: v.number(),
+  },
+  returns: quranInterpretationValidator,
+  handler: (ctx, { expectedSnapshotId, locale, surahNumber, verseNumber }) =>
+    runConvexProgram(
+      readQuranInterpretation(
+        ctx,
+        locale,
+        expectedSnapshotId,
+        surahNumber,
+        verseNumber
+      )
+    ),
 });
 
 /** Returns one bounded localized Quran verse reference. */

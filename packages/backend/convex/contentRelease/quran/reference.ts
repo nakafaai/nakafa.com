@@ -20,21 +20,27 @@ interface QuranReferenceRequest {
   readonly toVerse?: number;
 }
 
+interface QuranReferenceLoadRequest extends QuranReferenceRequest {
+  readonly expectedSnapshotId: null | string;
+}
+
 /** Loads one bounded verified Quran verse reference from the active snapshot. */
-export const readQuranReference = Effect.fn(
-  "contentRelease.readQuranReference"
-)(function* (ctx: QueryCtx, request: QuranReferenceRequest) {
+export const loadQuranReference = Effect.fn(
+  "contentRelease.loadQuranReference"
+)(function* (ctx: QueryCtx, request: QuranReferenceLoadRequest) {
   const input = yield* validateQuranReference(request);
   const owner = yield* loadQuranOwner(ctx);
   if (owner.snapshotId === null) {
-    return {
-      ...owner,
-      chunkJson: [],
-      fromVerse: input.fromVerse,
-      searchJson: null,
-      surahJson: null,
-      toVerse: input.toVerse,
-    };
+    return { input, owner, reference: null };
+  }
+  if (
+    request.expectedSnapshotId !== null &&
+    owner.snapshotId !== request.expectedSnapshotId
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_CONFLICT",
+      "The active Quran snapshot changed after this page was rendered."
+    );
   }
   const surah = yield* readQuranRow(
     ctx,
@@ -54,25 +60,52 @@ export const readQuranReference = Effect.fn(
       `Quran surah ${input.surahNumber} ends at verse ${surah.payload.numberOfVerses}.`
     );
   }
-  const chunks = yield* readQuranChunks(ctx, {
-    fromVerse: input.fromVerse,
-    numberOfVerses: surah.payload.numberOfVerses,
-    snapshotId: owner.snapshotId,
-    surahNumber: input.surahNumber,
-    toVerse: input.toVerse,
-  });
-  const search = yield* readQuranRow(
-    ctx,
-    owner.snapshotId,
-    quranSearchIdentity(request.locale, input.surahNumber),
-    QuranSearchRowSchema
+  const { chunks, search } = yield* Effect.all(
+    {
+      chunks: readQuranChunks(ctx, {
+        fromVerse: input.fromVerse,
+        numberOfVerses: surah.payload.numberOfVerses,
+        snapshotId: owner.snapshotId,
+        surahNumber: input.surahNumber,
+        toVerse: input.toVerse,
+      }),
+      search: readQuranRow(
+        ctx,
+        owner.snapshotId,
+        quranSearchIdentity(request.locale, input.surahNumber),
+        QuranSearchRowSchema
+      ),
+    },
+    { concurrency: "unbounded" }
   );
+  return { input, owner, reference: { chunks, search, surah } };
+});
+
+/** Returns one bounded verified Quran range through the public wire contract. */
+export const readQuranReference = Effect.fn(
+  "contentRelease.readQuranReference"
+)(function* (ctx: QueryCtx, request: QuranReferenceRequest) {
+  const loaded = yield* loadQuranReference(ctx, {
+    ...request,
+    expectedSnapshotId: null,
+  });
+  if (loaded.reference === null) {
+    return {
+      ...loaded.owner,
+      chunkJson: [],
+      fromVerse: loaded.input.fromVerse,
+      searchJson: null,
+      surahJson: null,
+      toVerse: loaded.input.toVerse,
+    };
+  }
+
   return {
-    ...owner,
-    chunkJson: chunks.rowJson,
-    fromVerse: input.fromVerse,
-    searchJson: search.rowJson,
-    surahJson: surah.rowJson,
-    toVerse: input.toVerse,
+    ...loaded.owner,
+    chunkJson: loaded.reference.chunks.rowJson,
+    fromVerse: loaded.input.fromVerse,
+    searchJson: loaded.reference.search.rowJson,
+    surahJson: loaded.reference.surah.rowJson,
+    toVerse: loaded.input.toVerse,
   };
 });

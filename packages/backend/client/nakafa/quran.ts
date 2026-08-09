@@ -92,7 +92,6 @@ export function readQuranMarkdown(
       }
     );
     const page = yield* decodePublishedQuranPage(result, {
-      locale: ref.locale,
       surahNumber,
     }).pipe(Effect.mapError(toNakafaQuranDataReadError));
     const surah = page.surah;

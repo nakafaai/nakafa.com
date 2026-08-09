@@ -4,6 +4,7 @@ import {
   decodePublishedQuranCatalog,
   decodePublishedQuranPage,
 } from "@repo/backend/client/quran/decode";
+import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -21,6 +22,14 @@ function fetchCatalogResult() {
 /** Reads one raw signed Quran page through the public Convex query. */
 function fetchPageResult(locale: Locale, surahNumber: number) {
   return fetchRuntimeQuery(api.contentRelease.quran.page, {
+    locale,
+    surahNumber,
+  });
+}
+
+/** Reads one locale-specific Quran web projection through the public query. */
+function fetchViewResult(locale: Locale, surahNumber: number) {
+  return fetchRuntimeQuery(api.contentRelease.quran.view, {
     locale,
     surahNumber,
   });
@@ -44,7 +53,7 @@ export const readPublishedQuranPage = Effect.fn(
   const result = yield* readRuntimeQuery("contentRelease.quran.page", () =>
     fetchPageResult(locale, surahNumber)
   );
-  return yield* decodePublishedQuranPage(result, { locale, surahNumber });
+  return yield* decodePublishedQuranPage(result, { surahNumber });
 });
 
 /** Caches the complete signed Quran metadata catalog by active release. */
@@ -57,17 +66,17 @@ export async function getPublishedQuranCatalog() {
   return catalog;
 }
 
-/** Caches one complete signed Quran page by locale and active release. */
-export async function getPublishedQuranPage(
+/** Caches one narrow signed Quran web projection by locale and active release. */
+export async function getPublishedQuranView(
   locale: Locale,
   surahNumber: number
 ) {
   "use cache";
 
-  const result = await fetchPageResult(locale, surahNumber);
-  const page = await Effect.runPromise(
-    decodePublishedQuranPage(result, { locale, surahNumber })
+  const result = await fetchViewResult(locale, surahNumber);
+  const view = await Effect.runPromise(
+    decodePublishedQuranView(result, { locale, surahNumber })
   );
   applyContentRuntimeCache();
-  return page;
+  return view;
 }
