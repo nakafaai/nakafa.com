@@ -16,6 +16,7 @@ import type {
 } from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import {
+  createTryoutSetRestartTarget,
   selectTryoutFrozenPage,
   selectTryoutSetPages,
 } from "@/components/tryout/route/owner";
@@ -127,11 +128,14 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   const pages = selectTryoutSetPages({
     attemptPage,
     publicPage: resolved.publicPage,
+    publicRestartTarget: resolved.publicPage
+      ? createTryoutSetRestartTarget(resolved.publicPage)
+      : null,
   });
   if (!pages) {
     notFound();
   }
-  const { page, startPage } = pages;
+  const { page, restartTarget } = pages;
 
   let questions: readonly TryoutQuestionContent[] = [];
   let answers: readonly TryoutAnswerContent[] = [];
@@ -162,8 +166,8 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
       }
       content={{ entryAnswers: answers, entryQuestions: questions }}
       page={page}
+      restartTarget={restartTarget}
       route={{ country, exam, locale, set, track }}
-      startPage={startPage}
     />
   );
 }

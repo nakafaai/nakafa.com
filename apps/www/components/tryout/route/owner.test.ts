@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  createTryoutSetRestartTarget,
   selectTryoutFrozenPage,
   selectTryoutSetPages,
   selectTryoutSetReturnHref,
@@ -14,8 +15,9 @@ describe("try-out route ownership", () => {
       selectTryoutSetPages({
         attemptPage: { kind: "current", page: frozenPage },
         publicPage: activePage,
+        publicRestartTarget: "active-target",
       })
-    ).toEqual({ page: frozenPage, startPage: activePage });
+    ).toEqual({ page: frozenPage, restartTarget: "active-target" });
     expect(selectTryoutFrozenPage({ kind: "current", page: frozenPage })).toBe(
       frozenPage
     );
@@ -26,23 +28,66 @@ describe("try-out route ownership", () => {
       selectTryoutSetPages({
         attemptPage: { kind: "redirect" },
         publicPage: "public",
+        publicRestartTarget: "public-target",
       })
-    ).toEqual({ page: "public", startPage: "public" });
+    ).toEqual({ page: "public", restartTarget: "public-target" });
     expect(selectTryoutFrozenPage({ kind: "redirect" })).toBeNull();
   });
 
-  it("keeps an exact retained capability entirely on its frozen page", () => {
+  it("keeps retained display frozen and uses only its verified restart target", () => {
     expect(
       selectTryoutSetPages({
-        attemptPage: { kind: "retained", page: "frozen" },
+        attemptPage: {
+          kind: "retained",
+          page: "frozen",
+          restartTarget: "current-target",
+        },
         publicPage: null,
+        publicRestartTarget: null,
       })
-    ).toEqual({ page: "frozen", startPage: "frozen" });
+    ).toEqual({ page: "frozen", restartTarget: "current-target" });
     expect(
-      selectTryoutSetPages({ attemptPage: null, publicPage: "public" })
-    ).toEqual({ page: "public", startPage: "public" });
+      selectTryoutSetPages({
+        attemptPage: {
+          kind: "retained",
+          page: "frozen",
+          restartTarget: null,
+        },
+        publicPage: null,
+        publicRestartTarget: "untrusted-fallback",
+      })
+    ).toEqual({ page: "frozen", restartTarget: null });
     expect(
-      selectTryoutSetPages({ attemptPage: null, publicPage: null })
+      selectTryoutSetPages({
+        attemptPage: null,
+        publicPage: "public",
+        publicRestartTarget: "public-target",
+      })
+    ).toEqual({ page: "public", restartTarget: "public-target" });
+    expect(
+      selectTryoutSetPages({
+        attemptPage: null,
+        publicPage: null,
+        publicRestartTarget: null,
+      })
+    ).toBeNull();
+  });
+
+  it("derives a restart target only when the current set has an entry", () => {
+    expect(
+      createTryoutSetRestartTarget({
+        entrySection: { sectionKey: "section-1" },
+        set: { publicPath: "try-out/indonesia/tka/2027/set-1" },
+      })
+    ).toEqual({
+      entrySection: { sectionKey: "section-1" },
+      setPublicPath: "try-out/indonesia/tka/2027/set-1",
+    });
+    expect(
+      createTryoutSetRestartTarget({
+        entrySection: null,
+        set: { publicPath: "try-out/indonesia/tka/2027/set-1" },
+      })
     ).toBeNull();
   });
 

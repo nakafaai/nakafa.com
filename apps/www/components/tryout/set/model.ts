@@ -17,6 +17,11 @@ type SetAttemptPageResult = Extract<
   { kind: "current" | "retained" }
 >;
 
+type RetainedSetAttemptPageResult = Extract<
+  SetAttemptPageResult,
+  { kind: "retained" }
+>;
+
 /** Loaded try-out set discovery payload. */
 export type SetPage =
   | NonNullable<FunctionReturnType<SetPageQuery>>
@@ -57,6 +62,11 @@ export interface TryoutSetDestination {
   href: string;
   sectionKey: string;
 }
+
+/** Verified entry and canonical set route for a new current-catalog attempt. */
+export type TryoutSetRestartTarget = NonNullable<
+  RetainedSetAttemptPageResult["restartTarget"]
+>;
 
 /** Cohesive render model shared by set overview surfaces. */
 export interface TryoutSetView {

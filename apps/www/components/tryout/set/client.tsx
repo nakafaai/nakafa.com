@@ -23,6 +23,7 @@ import type {
   SetEntrySection,
   SetPage,
   TryoutSetContent,
+  TryoutSetRestartTarget,
   TryoutSetRoute,
   TryoutSetView,
 } from "@/components/tryout/set/model";
@@ -41,8 +42,8 @@ interface TryoutSetPageClientProps {
   binding: TryoutSetPageBinding | null;
   content: TryoutSetContent;
   page: SetPage;
+  restartTarget: TryoutSetRestartTarget | null;
   route: TryoutSetRoute;
-  startPage: SetPage;
 }
 
 /** Renders one stable page with an active-only mutable subscription. */
@@ -50,8 +51,8 @@ export function TryoutSetPageClient({
   binding,
   content,
   page,
+  restartTarget,
   route,
-  startPage,
 }: TryoutSetPageClientProps) {
   if (!binding) {
     return (
@@ -59,8 +60,8 @@ export function TryoutSetPageClient({
         binding={null}
         content={content}
         page={page}
+        restartTarget={restartTarget}
         route={route}
-        startPage={startPage}
         state={null}
       />
     );
@@ -72,8 +73,8 @@ export function TryoutSetPageClient({
         binding={binding}
         content={content}
         page={page}
+        restartTarget={restartTarget}
         route={route}
-        startPage={startPage}
         state={binding.initialState}
       />
     );
@@ -85,8 +86,8 @@ export function TryoutSetPageClient({
       content={content}
       key={binding.attemptId}
       page={page}
+      restartTarget={restartTarget}
       route={route}
-      startPage={startPage}
     />
   );
 }
@@ -125,9 +126,9 @@ function ResolvedTryoutSetPage({
   binding,
   content,
   page,
+  restartTarget,
   route,
   state,
-  startPage,
 }: TryoutSetPageClientProps & { state: SetState }) {
   const currentAttempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
@@ -146,13 +147,19 @@ function ResolvedTryoutSetPage({
     page.sections.find(
       (sectionItem) => sectionItem.sectionKey === resumeSectionKey
     ) ?? entrySection;
-  const startEntrySection = startPage.entrySection;
+  const startEntrySection = activeAttempt
+    ? entrySection
+    : (restartTarget?.entrySection ?? null);
   const destinationSection = activeAttempt ? resumeSection : startEntrySection;
+  const destinationSetHref =
+    activeAttempt || !restartTarget
+      ? getTryoutHref(route)
+      : getTryoutPublicPathHref(restartTarget.setPublicPath);
   let destination = destinationSection
     ? {
         href: getEntrySectionHref({
           entrySection: destinationSection,
-          route,
+          setHref: destinationSetHref,
         }),
         sectionKey: destinationSection.sectionKey,
       }
@@ -179,7 +186,7 @@ function ResolvedTryoutSetPage({
     start: {
       destination,
       entrySection: startEntrySection,
-      set: startPage.set,
+      set: page.set,
     },
   };
 
@@ -247,14 +254,14 @@ function TryoutInternalSet({
 /** Builds the href for either a visible public section or an internal set entry. */
 function getEntrySectionHref({
   entrySection,
-  route,
+  setHref,
 }: {
   entrySection: SetEntrySection;
-  route: TryoutSetRoute;
+  setHref: string;
 }) {
   if (entrySection.publicPath) {
     return getTryoutPublicPathHref(entrySection.publicPath);
   }
 
-  return getTryoutHref(route);
+  return setHref;
 }
