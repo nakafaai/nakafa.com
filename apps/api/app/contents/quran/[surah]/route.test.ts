@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 
 const quranMocks = vi.hoisted(() => ({
-  readQuranApiPage: vi.fn(),
+  readQuranApiDocument: vi.fn(),
 }));
 const loggingMocks = vi.hoisted(() => ({
   logError: vi.fn(),
@@ -21,7 +21,7 @@ vi.mock("@repo/utilities/logging/effect", async () => {
 });
 
 vi.mock("@/lib/content/quran", () => ({
-  readQuranApiPage: quranMocks.readQuranApiPage,
+  readQuranApiDocument: quranMocks.readQuranApiDocument,
 }));
 
 afterEach(() => {
@@ -29,16 +29,22 @@ afterEach(() => {
 });
 
 describe("Quran content API route", () => {
-  it("returns the complete multilingual signed publication row", async () => {
-    quranMocks.readQuranApiPage.mockReturnValue(
+  it("returns one explicit locale-specific signed Quran document", async () => {
+    quranMocks.readQuranApiDocument.mockReturnValue(
       Effect.succeed({
-        surah: { name: { transliteration: "Al-Faatiha" }, number: 1 },
+        locale: "en",
+        surah: {
+          name: { transliteration: "Al-Faatiha" },
+          number: 1,
+          revelation: { order: 5, place: "Meccan" },
+        },
         verses: [
           {
+            arabic: "بِسْمِ اللّٰهِ",
             number: { inSurah: 1 },
             translation: {
-              en: { footnotes: "", text: "In the name of Allah." },
-              id: { footnotes: "", text: "Dengan nama Allah." },
+              footnotes: "Source note.",
+              text: "In Allah's name.",
             },
           },
         ],
@@ -53,18 +59,18 @@ describe("Quran content API route", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       name: { transliteration: "Al-Faatiha" },
+      locale: "en",
       number: 1,
+      revelation: { order: 5, place: "Meccan" },
       verses: [
         {
+          arabic: "بِسْمِ اللّٰهِ",
           number: { inSurah: 1 },
-          translation: {
-            en: { footnotes: "", text: "In the name of Allah." },
-            id: { footnotes: "", text: "Dengan nama Allah." },
-          },
+          translation: { footnotes: "Source note.", text: "In Allah's name." },
         },
       ],
     });
-    expect(quranMocks.readQuranApiPage).toHaveBeenCalledWith({
+    expect(quranMocks.readQuranApiDocument).toHaveBeenCalledWith({
       locale: "en",
       surahNumber: 1,
     });
@@ -78,12 +84,12 @@ describe("Quran content API route", () => {
 
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: "Failed to fetch surah." });
-    expect(quranMocks.readQuranApiPage).not.toHaveBeenCalled();
+    expect(quranMocks.readQuranApiDocument).not.toHaveBeenCalled();
   });
 
   it("logs signed publication failures with surah context", async () => {
     const readError = new Error("Publication unavailable");
-    quranMocks.readQuranApiPage.mockReturnValue(Effect.fail(readError));
+    quranMocks.readQuranApiDocument.mockReturnValue(Effect.fail(readError));
 
     const response = await GET(
       new Request("http://localhost/contents/quran/1"),
@@ -100,7 +106,7 @@ describe("Quran content API route", () => {
   });
 
   it("normalizes non-Error publication failures before logging", async () => {
-    quranMocks.readQuranApiPage.mockReturnValue(
+    quranMocks.readQuranApiDocument.mockReturnValue(
       Effect.fail("Publication unavailable")
     );
 

@@ -3,7 +3,7 @@ import { defaultLocale } from "@repo/utilities/locales";
 import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
-import { readQuranApiPage } from "@/lib/content/quran";
+import { readQuranApiDocument } from "@/lib/content/quran";
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -26,9 +26,13 @@ export async function GET(
   }
 
   return Effect.runPromise(
-    readQuranApiPage({ locale: defaultLocale, surahNumber }).pipe(
-      Effect.map((page) =>
-        NextResponse.json({ ...page.surah, verses: page.verses })
+    readQuranApiDocument({ locale: defaultLocale, surahNumber }).pipe(
+      Effect.map((document) =>
+        NextResponse.json({
+          ...document.surah,
+          locale: document.locale,
+          verses: document.verses,
+        })
       ),
       Effect.catchAll((error) =>
         Effect.gen(function* () {

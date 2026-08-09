@@ -130,9 +130,10 @@ function readRuntimeFixture(
     return Promise.resolve(referenceResult(args));
   }
   if (
-    getFunctionName(query) === getFunctionName(api.contentRelease.quran.page)
+    getFunctionName(query) ===
+    getFunctionName(api.contentRelease.quran.markdown)
   ) {
-    return Promise.resolve(pageResult(args));
+    return Promise.resolve(markdownResult(args));
   }
 
   return Promise.reject(new Error("Unhandled Quran query fixture."));
@@ -151,16 +152,33 @@ function referenceResult(args: Record<string, unknown>) {
   };
 }
 
-/** Builds one complete signed page response around a bounded chunk. */
-function pageResult(args: Record<string, unknown>) {
+/** Builds one locale-specific signed markdown response. */
+function markdownResult(args: Record<string, unknown>) {
   const locale = args.locale === "id" ? "id" : "en";
+  const verse = chunkRow().verses[0];
+  if (!verse) {
+    throw new Error("Expected one technical Quran verse.");
+  }
   return {
     ...source,
-    chunkJson: [encodeTestQuranRow(source.snapshotId, chunkRow())],
-    nextSurahJson: encodeTestQuranRow(source.snapshotId, surahRow(2)),
-    prevSurahJson: null,
-    searchJson: encodeTestQuranRow(source.snapshotId, searchRow(locale)),
-    surahJson: encodeTestQuranRow(source.snapshotId, surahRow()),
+    locale,
+    surah: {
+      name: {
+        translation: "Pembukaan",
+        transliteration: "Al-Fatihah",
+      },
+      number: 1,
+      numberOfVerses: 1,
+      revelation: { place: "Meccan" },
+    },
+    toVerse: 1,
+    verses: [
+      {
+        arabic: verse.text.arabic,
+        number: { inSurah: verse.number.inSurah },
+        translation: verse.translation[locale],
+      },
+    ],
   };
 }
 

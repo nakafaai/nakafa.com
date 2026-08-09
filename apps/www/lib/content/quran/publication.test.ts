@@ -3,8 +3,6 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   encodeTestQuranRow,
-  makeQuranChunk,
-  makeQuranSearch,
   makeQuranSurah,
 } from "@repo/backend/test/quran-rows";
 import { Effect } from "effect";
@@ -14,7 +12,7 @@ import {
   getPublishedQuranView,
   readPublishedQuranCatalog,
   readPublishedQuranIdentity,
-  readPublishedQuranPage,
+  readPublishedQuranMarkdown,
 } from "@/lib/content/quran/publication";
 
 const fetchMock = vi.hoisted(() => vi.fn());
@@ -67,12 +65,28 @@ describe("published Quran content", () => {
     expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
   });
 
-  it("reads the complete signed page through the Effect boundary", async () => {
-    const result = pageResult();
+  it("reads the locale-specific signed markdown through the Effect boundary", async () => {
+    const result = markdownResult();
     fetchMock.mockResolvedValue(result);
 
     await expect(
-      Effect.runPromise(readPublishedQuranPage("id", 1))
+      Effect.runPromise(readPublishedQuranMarkdown("id", 1, 80))
+    ).resolves.toMatchObject({
+      surah: { number: 1 },
+      verses: [{ number: {} }],
+    });
+    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {
+      locale: "id",
+      surahNumber: 1,
+      verseLimit: 80,
+    });
+  });
+
+  it("reads the complete signed markdown when no verse limit is requested", async () => {
+    fetchMock.mockResolvedValue(markdownResult());
+
+    await expect(
+      Effect.runPromise(readPublishedQuranMarkdown("id", 1))
     ).resolves.toMatchObject({
       surah: { number: 1 },
       verses: [{ number: {} }],
@@ -159,20 +173,27 @@ function viewResult() {
   };
 }
 
-/** Builds one complete signed Quran page response. */
-function pageResult() {
-  const chunk = makeQuranChunk({
-    firstQuranNumber: 1,
-    firstVerse: 1,
-    surahNumber: 1,
-    verseCount: 1,
-  });
+/** Builds one locale-specific signed Quran markdown response. */
+function markdownResult() {
   return {
     ...source,
-    chunkJson: [encodeTestQuranRow(source.snapshotId, chunk)],
-    nextSurahJson: encodeTestQuranRow(source.snapshotId, makeQuranSurah(2)),
-    prevSurahJson: null,
-    searchJson: encodeTestQuranRow(source.snapshotId, makeQuranSearch("id", 1)),
-    surahJson: encodeTestQuranRow(source.snapshotId, makeQuranSurah(1)),
+    locale: "id",
+    surah: {
+      name: {
+        translation: "Technical meaning 1",
+        transliteration: "Technical Surah 1",
+      },
+      number: 1,
+      numberOfVerses: 1,
+      revelation: { place: "Meccan" },
+    },
+    toVerse: 1,
+    verses: [
+      {
+        arabic: "آية 1",
+        number: { inSurah: 1 },
+        translation: { footnotes: "", text: "Terjemahan teknis 1" },
+      },
+    ],
   };
 }
