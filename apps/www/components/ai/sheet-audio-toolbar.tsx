@@ -30,6 +30,11 @@ type AudioStudy = NonNullable<
   FunctionReturnType<typeof api.audioStudies.queries.public.getAudioBySlug>
 >;
 
+/** Starts loading Nina before the learner activates an entry control. */
+function preloadAiSheetOnIntent() {
+  Effect.runFork(preloadAiSheet());
+}
+
 /** Renders the audio player toolbar with a Nina entry action. */
 export function SheetAudioToolbar({ data }: { data: AudioStudy }) {
   const t = useTranslations("Ai");
@@ -97,20 +102,15 @@ function AskNinaButton() {
     setOpen(!open);
   }
 
-  /** Starts loading Nina before the learner activates the toolbar button. */
-  function handleIntent() {
-    Effect.runFork(preloadAiSheet());
-  }
-
   return (
     <Tooltip>
       <TooltipTrigger
         render={
           <Button
             onClick={handleOpen}
-            onFocus={handleIntent}
-            onMouseEnter={handleIntent}
-            onTouchStart={handleIntent}
+            onFocus={preloadAiSheetOnIntent}
+            onMouseEnter={preloadAiSheetOnIntent}
+            onTouchStart={preloadAiSheetOnIntent}
             size="icon"
             variant="ghost"
           >

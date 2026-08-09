@@ -12,6 +12,11 @@ import { preloadAiSheet } from "@/components/ai/sheet-module";
 
 const SLIDE_DISTANCE = 200;
 
+/** Starts loading Nina before the learner activates the entry button. */
+function preloadAiSheetOnIntent() {
+  Effect.runFork(preloadAiSheet());
+}
+
 /** Renders the sticky Nina entry button when no audio toolbar is available. */
 export function SheetEntry() {
   const contextTitle = usePageTitle();
@@ -25,11 +30,6 @@ export function SheetEntry() {
     Effect.runFork(preloadAiSheet());
     setContextTitle(contextTitle || null);
     setOpen(!open);
-  }
-
-  /** Starts loading Nina before the learner activates the entry button. */
-  function handleIntent() {
-    Effect.runFork(preloadAiSheet());
   }
 
   return (
@@ -51,9 +51,9 @@ export function SheetEntry() {
           <Button
             className="w-full justify-between transition-transform duration-200 hover:scale-105"
             onClick={handleOpen}
-            onFocus={handleIntent}
-            onMouseEnter={handleIntent}
-            onTouchStart={handleIntent}
+            onFocus={preloadAiSheetOnIntent}
+            onMouseEnter={preloadAiSheetOnIntent}
+            onTouchStart={preloadAiSheetOnIntent}
             size="lg"
             variant="default-outline"
           >
