@@ -100,7 +100,7 @@ describe("contentRelease/quran/interpretation", () => {
     });
   });
 
-  it("still requires the signed Indonesian locale projection", async () => {
+  it("does not read the unrelated signed search projection", async () => {
     const t = convexTest(schema, convexModules);
     const snapshotId = await t.mutation((ctx) =>
       activateQuranSnapshot(
@@ -113,8 +113,10 @@ describe("contentRelease/quran/interpretation", () => {
       t.query((ctx) =>
         runConvexProgram(readQuranInterpretation(ctx, "id", snapshotId, 1, 7))
       )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    ).resolves.toMatchObject({
+      interpretation: "Tafsir teknis 7",
+      snapshotId,
+      verseNumber: 7,
     });
   });
 });

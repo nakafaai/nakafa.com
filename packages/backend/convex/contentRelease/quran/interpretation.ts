@@ -1,6 +1,6 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
+import { loadQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
 import {
   quranSourceFields,
   quranTafsirLocaleValidator,
@@ -29,14 +29,13 @@ export const readQuranInterpretation = Effect.fn(
   sourceSurah: number,
   sourceVerse: number
 ) {
-  const loaded = yield* loadQuranReference(ctx, {
+  const loaded = yield* loadQuranPassage(ctx, {
     expectedSnapshotId,
     fromVerse: sourceVerse,
-    locale,
     surahNumber: sourceSurah,
     toVerse: sourceVerse,
   });
-  if (loaded.reference === null) {
+  if (loaded.passage === null) {
     return {
       ...loaded.owner,
       interpretation: null,
@@ -46,7 +45,7 @@ export const readQuranInterpretation = Effect.fn(
     };
   }
 
-  const verse = loaded.reference.chunks.rows
+  const verse = loaded.passage.chunks.rows
     .flatMap((chunk) => chunk.verses)
     .find(({ number }) => number.inSurah === loaded.input.fromVerse);
   if (!verse) {

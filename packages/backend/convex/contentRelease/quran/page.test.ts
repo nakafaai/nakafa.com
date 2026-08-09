@@ -110,4 +110,20 @@ describe("contentRelease/quran/page", () => {
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });
+
+  it("preserves the complete legacy page search contract", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(
+        ctx,
+        pageRows().filter((row) => row.kind !== "quran-search")
+      )
+    );
+
+    await expect(
+      t.query((ctx) => runConvexProgram(readQuranPage(ctx, "id", 1)))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
 });

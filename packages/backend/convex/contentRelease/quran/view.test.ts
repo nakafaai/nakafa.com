@@ -96,21 +96,25 @@ describe("contentRelease/quran/view", () => {
     });
   });
 
-  it("still requires the signed locale search projection", async () => {
+  it("does not read the unrelated signed search projection", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
+    const snapshotId = await t.mutation((ctx) =>
       activateQuranSnapshot(
         ctx,
-        viewRows().filter(
-          (row) => row.kind !== "quran-search" || row.locale !== "id"
-        )
+        viewRows().filter((row) => row.kind !== "quran-search")
       )
     );
 
     await expect(
       t.query((ctx) => runConvexProgram(readQuranView(ctx, "id", 1)))
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    ).resolves.toMatchObject({
+      snapshotId,
+      verses: [
+        {
+          number: { inQuran: 1, inSurah: 1 },
+          translation: "Terjemahan teknis 1",
+        },
+      ],
     });
   });
 });

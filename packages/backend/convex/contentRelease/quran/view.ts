@@ -4,7 +4,7 @@ import type {
   QuranSurahRow,
 } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadQuranPage } from "@repo/backend/convex/contentRelease/quran/page";
+import { loadQuranPageView } from "@repo/backend/convex/contentRelease/quran/page";
 import {
   quranLocaleValidator,
   quranSourceFields,
@@ -77,7 +77,7 @@ export const readQuranView = Effect.fn("contentRelease.readQuranView")(
     locale: QuranSearchRow["locale"],
     sourceSurah: number
   ) {
-    const loaded = yield* loadQuranPage(ctx, locale, sourceSurah);
+    const loaded = yield* loadQuranPageView(ctx, sourceSurah);
     if (loaded.page === null) {
       return {
         ...loaded.owner,
