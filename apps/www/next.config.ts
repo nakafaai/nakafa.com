@@ -142,7 +142,12 @@ function createAppHeaders() {
   return [
     {
       source: "/:path*",
-      headers: [...createSecurityHeaders(), ...AGENT_DISCOVERY_HEADERS],
+      headers: [
+        ...createSecurityHeaders({
+          additionalConnectSources: ["https://raw.githubusercontent.com"],
+        }),
+        ...AGENT_DISCOVERY_HEADERS,
+      ],
     },
   ];
 }

@@ -21,12 +21,10 @@ import {
   PreviewReadySchema,
 } from "@nakafa/aksara-contracts/preview/spec";
 import {
-  type MaterialLessonProjection,
   MaterialLessonRouteSchema,
   MaterialMetadataSchema,
   makeMaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
-import { PublicMaterialLessonRouteSchema } from "@repo/contents/_types/route/schema";
 import { Effect, Redacted, Schema } from "effect";
 import { NextRequest } from "next/server";
 import type { PreviewConfig } from "@/lib/content/preview/config";
@@ -174,32 +172,6 @@ export const previewIdProjection = makeMaterialLessonProjection(
   previewIdRoute,
   previewIdMetadata
 );
-
-/** Adapts one published projection into a source-owned material test route. */
-export function makePreviewPublicRoute(
-  projection: MaterialLessonProjection,
-  overrides: Partial<
-    Schema.Schema.Encoded<typeof PublicMaterialLessonRouteSchema>
-  > = {}
-) {
-  return Schema.decodeUnknownSync(PublicMaterialLessonRouteSchema)({
-    description: projection.metadata.description,
-    kind: projection.kind,
-    locale: projection.locale,
-    materialKey: projection.materialKey,
-    order: projection.order,
-    parentPath: projection.parentPath,
-    publicPath: projection.publicPath,
-    sectionKey: projection.sectionKey,
-    sitemap: projection.sitemap,
-    sourcePath: projection.contentKey,
-    title: projection.metadata.title,
-    ...overrides,
-  });
-}
-
-/** Exact Nakafa public route adapted from the real preview projection. */
-export const previewPublicRoute = makePreviewPublicRoute(previewProjection);
 
 /** Exact filtered-history source path selected by the Aksara CLI. */
 export const previewSourcePath = CorpusSourcePathSchema.make(

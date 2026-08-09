@@ -17,6 +17,8 @@ interface Props {
   };
   /** The raw content, used for copying */
   content?: string;
+  /** Immutable raw content URL, fetched only when copying */
+  copySourceUrl?: null | string;
   /** The date of the content creation */
   date?: string;
   /** The description of the content */
@@ -48,6 +50,7 @@ export function HeaderContent({
   slug,
   sourceUrl,
   content,
+  copySourceUrl,
 }: Props) {
   const showFooter = authors || date;
   return (
@@ -125,7 +128,12 @@ export function HeaderContent({
         )}
 
         {!!slug && (
-          <OpenContent content={content} slug={slug} sourceUrl={sourceUrl} />
+          <OpenContent
+            content={content}
+            copySourceUrl={copySourceUrl}
+            slug={slug}
+            sourceUrl={sourceUrl}
+          />
         )}
       </div>
     </header>

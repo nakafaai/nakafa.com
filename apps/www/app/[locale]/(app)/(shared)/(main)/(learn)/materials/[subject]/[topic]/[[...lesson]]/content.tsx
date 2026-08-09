@@ -19,7 +19,7 @@ import {
   readMaterialPreview,
 } from "@/lib/content/preview/material";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
-import { getAksaraUrl } from "@/lib/utils/github";
+import { getAksaraUrl, getRawAksaraUrl } from "@/lib/utils/github";
 
 interface PreviewOwner {
   readonly kind: "preview";
@@ -45,6 +45,7 @@ interface MaterialFields {
 interface PreviewContent extends MaterialFields {
   readonly body: string;
   readonly children: ReactNode;
+  readonly copySourceUrl: null;
   readonly kind: "preview";
   readonly siblings: readonly MaterialLessonProjection[];
   readonly sourceUrl: null;
@@ -54,6 +55,7 @@ interface PublishedContent extends MaterialFields {
   readonly activeReleaseId: ActiveContentReleaseId;
   readonly body: string;
   readonly children: ReactNode;
+  readonly copySourceUrl: null | string;
   readonly kind: "published";
   readonly siblings: readonly MaterialLessonProjection[];
   readonly sourceUrl: null | string;
@@ -144,6 +146,7 @@ export async function readMaterialPage(
       alternates: [owner.preview.projection],
       body: owner.preview.rawMdx,
       children: <Content />,
+      copySourceUrl: null,
       kind: owner.kind,
       locale: owner.preview.locale,
       metadata: owner.preview.metadata,
@@ -167,6 +170,12 @@ export async function readMaterialPage(
     alternates: model.alternates,
     body: published.rawMdx,
     children: published.body,
+    copySourceUrl: published.sourceRevision
+      ? getRawAksaraUrl({
+          path: published.sourcePath,
+          revision: published.sourceRevision,
+        })
+      : null,
     kind: owner.kind,
     locale: model.projection.locale,
     metadata: published.metadata,

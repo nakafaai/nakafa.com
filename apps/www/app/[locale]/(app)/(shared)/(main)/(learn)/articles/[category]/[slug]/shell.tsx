@@ -40,7 +40,8 @@ export async function ArticleShell({
     <>
       <LayoutMaterialContent>
         <HeaderContent
-          content={raw}
+          content={content.copySourceUrl ? undefined : raw}
+          copySourceUrl={content.copySourceUrl}
           description={metadata.description}
           link={{
             href: `/articles/${category}`,
