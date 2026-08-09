@@ -68,11 +68,9 @@ async function AuthenticatedSettings({
     ).pipe(
       Effect.map(Option.some),
       Effect.catchTag("UnknownException", (error) =>
-        Effect.sync(() =>
-          scheduleCurrentServerExceptionCapture(error.error, {
-            source: "user-settings-curriculum-preload",
-          })
-        ).pipe(Effect.as(Option.none()))
+        scheduleCurrentServerExceptionCapture(error.error, {
+          source: "user-settings-curriculum-preload",
+        }).pipe(Effect.as(Option.none()))
       )
     )
   );

@@ -1,28 +1,10 @@
 import { DevToolsTelemetry } from "@ai-sdk/devtools";
+import { isAiSdkDevToolsTelemetryEnabled } from "@repo/ai/config/devtools-runtime";
 import { gateway } from "@repo/ai/config/provider";
-import { devtoolsKeys } from "@repo/ai/keys";
 import { registerTelemetry } from "ai";
 
 declare global {
   var NAKAFA_AI_SDK_DEVTOOLS_REGISTERED: true | undefined;
-}
-
-/** Enables AI SDK DevTools only for local development workflows. */
-function shouldUseDevToolsTelemetry() {
-  const env = devtoolsKeys();
-
-  if (env.AI_SDK_DEVTOOLS !== "true") {
-    return false;
-  }
-
-  // AI SDK DevTools throws in production mode and stores prompts, outputs,
-  // and tool data locally in `.devtools/generations.json`.
-  // Reference: https://ai-sdk.dev/v7/docs/ai-sdk-core/devtools
-  if (env.NODE_ENV === "production") {
-    return false;
-  }
-
-  return env.VERCEL_ENV === undefined || env.VERCEL_ENV === "development";
 }
 
 /**
@@ -33,7 +15,7 @@ function shouldUseDevToolsTelemetry() {
  * register this telemetry integration.
  */
 export function registerAiSdkDevToolsTelemetry() {
-  if (!shouldUseDevToolsTelemetry()) {
+  if (!isAiSdkDevToolsTelemetryEnabled()) {
     return;
   }
 

@@ -1,7 +1,6 @@
-import {
-  captureServerException,
-  extractDistinctIdFromPostHogCookie,
-} from "@repo/analytics/posthog/server";
+import { isAiSdkDevToolsTelemetryEnabled } from "@repo/ai/config/devtools-runtime";
+import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
+import type { Instrumentation } from "next";
 
 /**
  * Registers local-only AI SDK DevTools telemetry when the Next.js server starts.
@@ -13,7 +12,10 @@ import {
  * https://ai-sdk.dev/v7/docs/ai-sdk-core/devtools
  */
 export async function register() {
-  if (process.env.NEXT_RUNTIME !== "nodejs") {
+  if (
+    process.env.NEXT_RUNTIME !== "nodejs" ||
+    !isAiSdkDevToolsTelemetryEnabled()
+  ) {
     return;
   }
 
@@ -51,25 +53,37 @@ function getErrorDigest(error: unknown) {
  * https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/runtime
  * https://posthog.com/docs/error-tracking/installation/nextjs
  */
-export const onRequestError: import("next/dist/server/instrumentation/types").InstrumentationOnRequestError =
-  async (error, request, context) => {
-    if (process.env.NEXT_RUNTIME !== "nodejs") {
-      return;
-    }
+export const onRequestError: Instrumentation.onRequestError = async (
+  error,
+  request,
+  context
+) => {
+  if (
+    process.env.NEXT_RUNTIME !== "nodejs" ||
+    !isServerExceptionReportingEnabled()
+  ) {
+    return;
+  }
 
-    await captureServerException(
-      error,
-      extractDistinctIdFromPostHogCookie(request.headers.cookie),
-      {
-        error_digest: getErrorDigest(error),
-        method: request.method,
-        path: request.path,
-        render_source: context.renderSource,
-        revalidate_reason: context.revalidateReason,
-        route_path: context.routePath,
-        route_type: context.routeType,
-        router_kind: context.routerKind,
-        source: "next-on-request-error",
-      }
-    );
-  };
+  const [{ captureServerException }, { extractDistinctIdFromPostHogCookie }] =
+    await Promise.all([
+      import("@repo/analytics/posthog/server"),
+      import("@repo/analytics/posthog/attribution"),
+    ]);
+
+  await captureServerException(
+    error,
+    extractDistinctIdFromPostHogCookie(request.headers.cookie),
+    {
+      error_digest: getErrorDigest(error),
+      method: request.method,
+      path: request.path,
+      render_source: context.renderSource,
+      revalidate_reason: context.revalidateReason,
+      route_path: context.routePath,
+      route_type: context.routeType,
+      router_kind: context.routerKind,
+      source: "next-on-request-error",
+    }
+  ).catch(() => undefined);
+};
