@@ -198,7 +198,7 @@ jobs:
           chmod 600 "$convex_log"
           setsid pnpm --dir packages/backend exec convex dev \
             --typecheck enable \
-            --tail-logs disable > "$convex_log" 2>&1 &
+            --tail-logs always > "$convex_log" 2>&1 &
           echo "$!" > "$convex_pid"
 
           for _attempt in {1..120}; do
@@ -223,10 +223,61 @@ jobs:
         run: pnpm --silent --dir packages/backend runtime:ci import
 
       - name: Build production app
+        id: production_build
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm build
         env:
           NODE_ENV: production
+
+      - name: Classify local backend build failure
+        if: failure() && steps.production_build.outcome == 'failure'
+        env:
+          AGENT_DOCS_CONTENT_STATE_HASH: ""
+          AGENT_DOCS_ROUTE_GENERATION_HASH: ""
+          AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT: ""
+          AGENT_DOCS_SITEMAP_GENERATION_HASH: ""
+          CONTENT_RUNTIME_TOKEN: ""
+          CONVEX_SITE_URL: ""
+          CONVEX_URL: ""
+          INTERNAL_CONTENT_API_KEY: ""
+          NEXT_PUBLIC_APP_URL: ""
+          NEXT_PUBLIC_CONVEX_SITE_URL: ""
+          NEXT_PUBLIC_CONVEX_URL: ""
+          NEXT_PUBLIC_MCP_URL: ""
+          NEXT_PUBLIC_POSTHOG_KEY: ""
+          NEXT_PUBLIC_POSTHOG_UI_HOST: ""
+          POSTHOG_PROXY_HOST: ""
+          SITE_URL: ""
+        run: |
+          convex_log="$RUNNER_TEMP/agent-docs-convex.log"
+          log_class=unavailable
+          event_class=unavailable
+          request_id_present=false
+
+          if [ -f "$convex_log" ] && [ ! -L "$convex_log" ] && \
+            [ "$(stat -c '%a' "$convex_log")" = "600" ]; then
+            log_class=private
+            event_class=handled-or-unobserved
+            if grep -Fq '[CONVEX Q(' "$convex_log"; then
+              if grep -Fq '[CONVEX H(' "$convex_log"; then
+                event_class=multiple
+              else
+                event_class=query
+              fi
+            elif grep -Fq '[CONVEX H(' "$convex_log"; then
+              event_class=http-action
+            fi
+            if grep -Fq '[Request ID:' "$convex_log"; then
+              request_id_present=true
+            fi
+          elif [ -e "$convex_log" ] || [ -L "$convex_log" ]; then
+            log_class=unsafe
+          fi
+
+          printf '%s\n' \
+            "local_backend_log_class=$log_class" \
+            "local_backend_event_class=$event_class" \
+            "local_backend_request_id_present=$request_id_present"
 
       - name: Start web app
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
