@@ -2,13 +2,18 @@
 
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import {
+  createContentContractError,
   createContentEndpoint,
   encodeContentRequest,
   postContentRequest,
   readContentResponse,
   validateContentRuntimeStatus,
 } from "@repo/backend/client/content/transport";
-import { PUBLIC_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+  PUBLIC_CONTENT_RUNTIME_PATH,
+} from "@repo/backend/content/endpoint";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -27,6 +32,7 @@ function createResponse(
   status: number,
   headers: HeadersInit = {
     "content-type": "application/json; charset=utf-8",
+    [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
   },
   url = endpoint
 ) {
@@ -129,6 +135,14 @@ describe("content runtime transport", () => {
         )
       )
     ).resolves.toEqual({ kind: "missing" });
+    expect(createContentContractError(createResponse("{}", 200))).toEqual(
+      new ContentTransportError({ reason: "response-contract" })
+    );
+    expect(
+      createContentContractError(
+        createResponse("{}", 200, { "content-type": "application/json" })
+      )
+    ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
 
     const invalid: readonly [Response, string][] = [
       [
@@ -136,17 +150,25 @@ describe("content runtime transport", () => {
         "response-url",
       ],
       [
-        createResponse("{}", 200, { "content-type": "text/plain" }),
+        createResponse("{}", 200, {
+          "content-type": "text/plain",
+          [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
+        }),
         "content-type",
       ],
       [
         createResponse("{}", 200, {
           "content-length": "invalid",
           "content-type": "application/json",
+          [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
         }),
         "content-length",
       ],
-      [createResponse("{", 200), "json"],
+      [
+        createResponse("{", 200, { "content-type": "application/json" }),
+        "response-unmarked",
+      ],
+      [createResponse("{", 200), "json-syntax"],
       [createResponse("x".repeat(20), 200), "response-size"],
     ];
     for (const [response, reason] of invalid) {

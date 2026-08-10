@@ -3,6 +3,10 @@ import "server-only";
 import type { ProtectedContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import type { PublicContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/spec";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+} from "@repo/backend/content/endpoint";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
 import { Effect } from "effect";
@@ -25,6 +29,30 @@ type ContentRuntimeStatus =
 export interface ContentHttpTarget {
   readonly siteUrl: string;
   readonly token: string;
+}
+
+/** Returns whether the response carries the current diagnostic marker. */
+function hasContentRuntimeMarker(response: Response) {
+  return (
+    response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER) ===
+    CONTENT_RUNTIME_RESPONSE_MARKER
+  );
+}
+
+/** Classifies an out-of-contract JSON body without exposing its contents. */
+export function createContentContractError(response: Response) {
+  if (hasContentRuntimeMarker(response)) {
+    return new ContentTransportError({ reason: "response-contract" });
+  }
+  return new ContentTransportError({ reason: "response-unmarked" });
+}
+
+/** Classifies malformed JSON without exposing its response body. */
+function createContentSyntaxError(response: Response) {
+  if (hasContentRuntimeMarker(response)) {
+    return new ContentTransportError({ reason: "json-syntax" });
+  }
+  return new ContentTransportError({ reason: "response-unmarked" });
 }
 
 /** Enforces the runtime endpoints' shared response and HTTP status pairs. */
@@ -154,7 +182,7 @@ export const readContentResponse = Effect.fn(
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
   });
   return yield* Effect.try({
-    catch: () => new ContentTransportError({ reason: "json" }),
+    catch: () => createContentSyntaxError(response),
     try: (): unknown => JSON.parse(source),
   });
 });

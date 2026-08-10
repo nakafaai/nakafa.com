@@ -18,6 +18,7 @@ import {
 } from "@repo/backend/client/content/errors";
 import {
   type ContentHttpTarget,
+  createContentContractError,
   createContentEndpoint,
   encodeContentRequest,
   postContentRequest,
@@ -38,7 +39,7 @@ const readProtectedRuntimeResponse = Effect.fn(
     MAX_PROTECTED_RUNTIME_RESPONSE_BYTES
   );
   const decoded = yield* decodeProtectedContentRuntimeResponse(input).pipe(
-    Effect.mapError(() => new ContentTransportError({ reason: "json" }))
+    Effect.mapError(() => createContentContractError(response))
   );
   yield* validateContentRuntimeStatus(decoded, response.status);
   return decoded;

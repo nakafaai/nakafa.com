@@ -17,10 +17,12 @@ export class ContentTransportError extends Schema.TaggedError<ContentTransportEr
       "content-length",
       "content-type",
       "fetch",
-      "json",
+      "json-syntax",
       "request",
       "request-size",
+      "response-contract",
       "response-size",
+      "response-unmarked",
       "response-url",
       "status",
       "url"

@@ -12,8 +12,15 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { ProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/protected/verify";
-import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
+import {
+  ContentRuntimeMissingError,
+  ContentTransportError,
+} from "@repo/backend/client/content/errors";
 import { readProtectedContent } from "@repo/backend/client/content/protected";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+} from "@repo/backend/content/endpoint";
 import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
@@ -88,9 +95,16 @@ vi.mock("@nakafa/aksara-contracts/runtime/protected/verify", () => ({
 }));
 
 /** Creates one response with the immutable network URL populated. */
-function createResponse(body: unknown, status: number) {
+function createResponse(body: unknown, status: number, marked = true) {
+  const headers = new Headers({ "content-type": "application/json" });
+  if (marked) {
+    headers.set(
+      CONTENT_RUNTIME_RESPONSE_HEADER,
+      CONTENT_RUNTIME_RESPONSE_MARKER
+    );
+  }
   const response = new Response(JSON.stringify(body), {
-    headers: { "content-type": "application/json" },
+    headers,
     status,
   });
   Object.defineProperty(response, "url", { value: endpoint });
@@ -110,7 +124,7 @@ afterEach(() => {
 
 describe("protected content runtime client", () => {
   it("posts and verifies one retained-snapshot batch", async () => {
-    fetchMock.mockResolvedValue(createResponse(found, 200));
+    fetchMock.mockResolvedValue(createResponse(found, 200, false));
 
     await expect(
       Effect.runPromise(
@@ -137,5 +151,31 @@ describe("protected content runtime client", () => {
         )
       )
     ).resolves.toEqual(new ContentRuntimeMissingError({ request }));
+  });
+
+  it("classifies valid JSON outside the protected response contract", async () => {
+    fetchMock
+      .mockResolvedValueOnce(createResponse({ unexpected: true }, 200, false))
+      .mockResolvedValueOnce(createResponse({ unexpected: true }, 200));
+
+    await expect(
+      Effect.runPromise(
+        readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
+          Effect.flip
+        )
+      )
+    ).resolves.toEqual(
+      new ContentTransportError({ reason: "response-unmarked" })
+    );
+    await expect(
+      Effect.runPromise(
+        readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
+          Effect.flip
+        )
+      )
+    ).resolves.toEqual(
+      new ContentTransportError({ reason: "response-contract" })
+    );
+    expect(verifyProtectedContentRuntimeExchange).not.toHaveBeenCalled();
   });
 });
