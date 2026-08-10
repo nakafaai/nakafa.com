@@ -2,16 +2,13 @@
 
 Renders children into a `<canvas>` so you can post-process them with the Canvas 2D API or WebGL.
 
-Only works in Chrome 149+ with the `chrome://flags/#canvas-draw-element` flag enabled.  
+Only works in Chrome 149+ with the `chrome://flags/#canvas-draw-element` flag enabled.
 Give the user a notice.
 
 ## Nesting
 
-Do not nest `<HtmlInCanvas>` inside another `<HtmlInCanvas>`. Remotion throws:
-
-```
-<HtmlInCanvas> effects cannot be nested together. Chrome will only display the outer effect. Consider merging the effects into one if you can.
-```
+`<HtmlInCanvas>` components may be nested in Chrome 152.0.7944.0 and later.
+Older Chrome versions support a single `<HtmlInCanvas>`, but do not correctly paint nested HTML-in-canvas subtrees.
 
 ## Enabling WebGL during renders
 
@@ -41,7 +38,9 @@ import { HtmlInCanvas } from "remotion";
 export const MyComp = () => {
   return (
     <HtmlInCanvas width={1280} height={720}>
-      <div style={{ fontSize: 80 }}>Hello</div>
+      <div style={{ fontSize: 80 }}>
+        Hello
+      </div>
     </HtmlInCanvas>
   );
 };
@@ -82,8 +81,16 @@ export const Blur = () => {
 
   return (
     <HtmlInCanvas width={width} height={height} onPaint={onPaint}>
-      <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", fontSize: 120 }}>
-        <h1>Hello</h1>
+      <AbsoluteFill
+        style={{
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: 120,
+        }}
+      >
+        <h1>
+          Hello
+        </h1>
       </AbsoluteFill>
     </HtmlInCanvas>
   );

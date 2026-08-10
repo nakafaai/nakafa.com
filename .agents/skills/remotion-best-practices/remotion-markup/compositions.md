@@ -9,7 +9,7 @@ A `<Composition>` defines the component, width, height, fps and duration of a re
 
 ## Default Props and scaffold metadata
 
-Pass `defaultProps` to provide initial values for your component.  
+Pass `defaultProps` to provide initial values for your component.
 Values must be JSON-serializable (`Date`, `Map`, `Set`, and `staticFile()` are supported).
 Use `defaultProps` for composition-wide values that should be visible and editable before the video renders.
 
@@ -23,7 +23,11 @@ type Props = {
   readonly title: string;
 };
 
-export const MyComposition = ({ title }: Props) => <h1>{title}</h1>;
+export const MyComposition = ({ title }: Props) => (
+  <h1>
+    {title}
+  </h1>
+);
 
 const defaultProps = { title: "Hello World" };
 
@@ -52,7 +56,7 @@ const defaultProps = { title: "Hello World" };
 
 ## Folders
 
-Use `<Folder>` to organize compositions in the sidebar.  
+Use `<Folder>` to organize compositions in the sidebar.
 Folder names can only contain letters, numbers, and hyphens.
 
 ```tsx
@@ -86,7 +90,12 @@ import { Thumbnail } from "./Thumbnail";
 
 export const RemotionRoot = () => {
   return (
-    <Still id="Thumbnail" component={Thumbnail} width={1280} height={720} />
+    <Still
+      id="Thumbnail"
+      component={Thumbnail}
+      width={1280}
+      height={720}
+    />
   );
 };
 ```

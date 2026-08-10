@@ -1,16 +1,13 @@
 ---
 name: audit-website
-description: Audit a website with the squirrelscan CLI and fix the findings in code. Runs SEO, performance, security, technical, content, accessibility, and 15 other rule categories (249+ rules), returns an LLM-optimized report, then drives an iterative fix loop, mapping issues to source files, applying fixes, and re-auditing until the site scores well. Use to discover and assess website or webapp issues and drive them to fixed.
+description: Audit a website with the squirrelscan CLI and fix the findings in code. Runs SEO, performance, security, technical, content, accessibility, and 15 other rule categories (260+ rules), returns an LLM-optimized report, then drives an iterative fix loop, mapping issues to source files, applying fixes, and re-auditing until the site scores well. Use to discover and assess website or webapp issues and drive them to fixed.
 license: See LICENSE file in repository root
 metadata:
+  compatibility: Requires squirrel CLI installed and accessible in PATH
   author: squirrelscan
   version: "2.0"
 allowed-tools: Bash(squirrel:*) Read Edit Grep Glob
 ---
-
-## Compatibility
-
-Requires squirrel CLI installed and accessible in PATH.
 
 # Audit a Website and Fix It
 

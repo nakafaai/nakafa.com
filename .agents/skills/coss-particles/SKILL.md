@@ -4,11 +4,8 @@ description: Index of all COSS UI particle examples. Use when implementing UI fe
 license: MIT
 metadata:
   author: cosscom
+  compatibility: Requires coss UI components installed in the project.
 ---
-
-## Compatibility
-
-Requires coss UI components installed in the project.
 
 # COSS UI Particles Index
 

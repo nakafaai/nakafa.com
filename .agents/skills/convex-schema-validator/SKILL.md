@@ -3,9 +3,9 @@ name: convex-schema-validator
 description: Defining and validating database schemas with proper typing, index configuration, optional fields, unions, and migration strategies for schema changes
 metadata:
   displayName: Convex Schema Validator
-  version: 1.0.0
+  version: "1.0.0"
   author: Convex
-  tags: [convex, schema, validation, typescript, indexes, migrations]
+  tags: "convex, schema, validation, typescript, indexes, migrations"
 ---
 
 # Convex Schema Validator
@@ -37,7 +37,7 @@ export default defineSchema({
     avatarUrl: v.optional(v.string()),
     createdAt: v.number(),
   }),
-  
+
   tasks: defineTable({
     title: v.string(),
     description: v.optional(v.string()),
@@ -87,7 +87,7 @@ export default defineSchema({
     .index("by_channel_and_author", ["channelId", "authorId"])
     // Index for sorting
     .index("by_channel_and_time", ["channelId", "sentAt"]),
-    
+
   // Full-text search index
   articles: defineTable({
     title: v.string(),
@@ -175,10 +175,10 @@ export default defineSchema({
   items: defineTable({
     // Optional: field may not exist
     description: v.optional(v.string()),
-    
+
     // Nullable: field exists but can be null
     deletedAt: v.union(v.number(), v.null()),
-    
+
     // Optional and nullable
     notes: v.optional(v.union(v.string(), v.null())),
   }),
