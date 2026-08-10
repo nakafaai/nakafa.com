@@ -27,10 +27,7 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 interface PublishedMaterialIdentity {
   readonly activeManifestHash: typeof Sha256HashSchema.Type;
@@ -92,15 +89,13 @@ export const readPublishedMaterialRoute = Effect.fn(
   publicPath: string,
   expectedActiveReleaseId?: ContentReleasePin
 ) {
-  const result = yield* readRuntimeQuery("contentRelease.material.route", () =>
-    fetchRuntimeQuery(api.contentRelease.material.route, {
-      ...(expectedActiveReleaseId === undefined
-        ? {}
-        : { expectedActiveReleaseId }),
-      locale,
-      publicPath,
-    })
-  );
+  const result = yield* readRuntimeQuery(api.contentRelease.material.route, {
+    ...(expectedActiveReleaseId === undefined
+      ? {}
+      : { expectedActiveReleaseId }),
+    locale,
+    publicPath,
+  });
   if (!(result.managed && result.familyManaged)) {
     return yield* makeMaterialProjectionError({ locale, publicPath });
   }

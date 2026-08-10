@@ -2,14 +2,19 @@
 
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import {
+  createContentContractError,
   createContentEndpoint,
   encodeContentRequest,
   postContentRequest,
   readContentResponse,
   validateContentRuntimeStatus,
 } from "@repo/backend/client/content/transport";
-import { PUBLIC_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
-import { Effect } from "effect";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+  PUBLIC_CONTENT_RUNTIME_PATH,
+} from "@repo/backend/content/endpoint";
+import { Duration, Effect, Fiber, TestClock, TestContext } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const endpoint = "https://example.convex.site/internal/content/runtime";
@@ -19,6 +24,17 @@ const target = {
 };
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 
+const runWithTestClock = <Value, Error>(program: Effect.Effect<Value, Error>) =>
+  Effect.runPromise(program.pipe(Effect.provide(TestContext.TestContext)));
+
+/** Creates the nested rejection shape produced by Node fetch. */
+function createFetchFailure(code?: string) {
+  const cause = code
+    ? Object.assign(new Error("private network detail"), { code })
+    : new Error("private network detail");
+  return new TypeError("fetch failed", { cause });
+}
+
 vi.mock("server-only", () => ({}));
 
 /** Creates one response with the immutable network URL populated. */
@@ -27,6 +43,7 @@ function createResponse(
   status: number,
   headers: HeadersInit = {
     "content-type": "application/json; charset=utf-8",
+    [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
   },
   url = endpoint
 ) {
@@ -119,6 +136,58 @@ describe("content runtime transport", () => {
     );
   });
 
+  it("retries rejected read-only runtime fetches", async () => {
+    const response = createResponse("{}", 200);
+    fetchMock
+      .mockRejectedValueOnce(createFetchFailure("ECONNRESET"))
+      .mockRejectedValueOnce(createFetchFailure("UND_ERR_SOCKET"))
+      .mockResolvedValueOnce(response);
+    const program = Effect.gen(function* () {
+      const fiber = yield* Effect.fork(
+        postContentRequest({ endpoint, source: "{}", target })
+      );
+      yield* TestClock.adjust(Duration.seconds(2));
+
+      return yield* Fiber.join(fiber);
+    });
+
+    await expect(runWithTestClock(program)).resolves.toBe(response);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("preserves sanitized codes after bounded retries", async () => {
+    fetchMock.mockRejectedValue(createFetchFailure("EPIPE"));
+    const program = Effect.gen(function* () {
+      const fiber = yield* Effect.fork(
+        postContentRequest({ endpoint, source: "{}", target }).pipe(Effect.flip)
+      );
+      yield* TestClock.adjust(Duration.seconds(2));
+
+      return yield* Fiber.join(fiber);
+    });
+
+    await expect(runWithTestClock(program)).resolves.toEqual(
+      new ContentTransportError({
+        networkCodes: ["EPIPE"],
+        reason: "fetch",
+      })
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not retry unknown or timeout fetch failures", async () => {
+    fetchMock.mockRejectedValue(createFetchFailure("UND_ERR_CONNECT_TIMEOUT"));
+
+    await expect(
+      Effect.runPromise(
+        postContentRequest({ endpoint, source: "{}", target }).pipe(Effect.flip)
+      )
+    ).resolves.toEqual(
+      new ContentTransportError({ networkCodes: [], reason: "fetch" })
+    );
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
   it("reads exact bounded JSON and rejects untrusted responses", async () => {
     await expect(
       Effect.runPromise(
@@ -129,6 +198,14 @@ describe("content runtime transport", () => {
         )
       )
     ).resolves.toEqual({ kind: "missing" });
+    expect(createContentContractError(createResponse("{}", 200))).toEqual(
+      new ContentTransportError({ reason: "response-contract" })
+    );
+    expect(
+      createContentContractError(
+        createResponse("{}", 200, { "content-type": "application/json" })
+      )
+    ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
 
     const invalid: readonly [Response, string][] = [
       [
@@ -136,17 +213,25 @@ describe("content runtime transport", () => {
         "response-url",
       ],
       [
-        createResponse("{}", 200, { "content-type": "text/plain" }),
+        createResponse("{}", 200, {
+          "content-type": "text/plain",
+          [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
+        }),
         "content-type",
       ],
       [
         createResponse("{}", 200, {
           "content-length": "invalid",
           "content-type": "application/json",
+          [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
         }),
         "content-length",
       ],
-      [createResponse("{", 200), "json"],
+      [
+        createResponse("{", 200, { "content-type": "application/json" }),
+        "response-unmarked",
+      ],
+      [createResponse("{", 200), "json-syntax"],
       [createResponse("x".repeat(20), 200), "response-size"],
     ];
     for (const [response, reason] of invalid) {

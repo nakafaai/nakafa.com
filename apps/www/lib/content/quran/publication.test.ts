@@ -15,17 +15,16 @@ import {
   readPublishedQuranMarkdown,
 } from "@/lib/content/quran/publication";
 
-const fetchMock = vi.hoisted(() => vi.fn());
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/cache", () => ({
   applyPublishedSnapshotCache: cacheMock,
 }));
 vi.mock("@/lib/content/runtime/query", async () => {
-  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
   return {
-    fetchRuntimeQuery: fetchMock,
-    readRuntimeQuery: readTestRuntimeQuery,
+    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
 
@@ -39,21 +38,24 @@ const source = {
 
 beforeEach(() => {
   cacheMock.mockReset();
-  fetchMock.mockReset();
+  runtimeQueryMock.mockReset();
 });
 
 describe("published Quran content", () => {
   it("reads the active identity through the one-row attribution query", async () => {
-    fetchMock.mockResolvedValue({ ...source, rowJson: "attribution-row" });
+    runtimeQueryMock.mockResolvedValue({
+      ...source,
+      rowJson: "attribution-row",
+    });
 
     await expect(
       Effect.runPromise(readPublishedQuranIdentity())
     ).resolves.toMatchObject({ snapshotId: source.snapshotId });
-    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {});
+    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
   });
 
-  it("reads the signed catalog through Effect and cached Promise boundaries", async () => {
-    fetchMock.mockResolvedValue(catalogResult());
+  it("reads and caches the signed catalog through the Effect boundary", async () => {
+    runtimeQueryMock.mockResolvedValue(catalogResult());
 
     await expect(
       Effect.runPromise(readPublishedQuranCatalog())
@@ -61,13 +63,13 @@ describe("published Quran content", () => {
     await expect(getPublishedQuranCatalog()).resolves.toMatchObject({
       surahs: expect.any(Array),
     });
-    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {});
+    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
     expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
   });
 
   it("reads the locale-specific signed markdown through the Effect boundary", async () => {
     const result = markdownResult();
-    fetchMock.mockResolvedValue(result);
+    runtimeQueryMock.mockResolvedValue(result);
 
     await expect(
       Effect.runPromise(readPublishedQuranMarkdown("id", 1, 80))
@@ -75,7 +77,7 @@ describe("published Quran content", () => {
       surah: { number: 1 },
       verses: [{ number: {} }],
     });
-    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {
+    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
       locale: "id",
       surahNumber: 1,
       verseLimit: 80,
@@ -83,7 +85,7 @@ describe("published Quran content", () => {
   });
 
   it("reads the complete signed markdown when no verse limit is requested", async () => {
-    fetchMock.mockResolvedValue(markdownResult());
+    runtimeQueryMock.mockResolvedValue(markdownResult());
 
     await expect(
       Effect.runPromise(readPublishedQuranMarkdown("id", 1))
@@ -91,14 +93,14 @@ describe("published Quran content", () => {
       surah: { number: 1 },
       verses: [{ number: {} }],
     });
-    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {
+    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
       locale: "id",
       surahNumber: 1,
     });
   });
 
   it("keeps a failed Quran query in the Effect error channel", async () => {
-    fetchMock.mockRejectedValueOnce(new Error("Quran unavailable"));
+    runtimeQueryMock.mockRejectedValueOnce(new Error("Quran unavailable"));
 
     await expect(
       Effect.runPromise(Effect.either(readPublishedQuranCatalog()))
@@ -112,7 +114,7 @@ describe("published Quran content", () => {
   });
 
   it("caches the locale-specific Quran web projection", async () => {
-    fetchMock.mockResolvedValue(viewResult());
+    runtimeQueryMock.mockResolvedValue(viewResult());
 
     await expect(getPublishedQuranView("id", 1)).resolves.toMatchObject({
       locale: "id",
@@ -123,7 +125,7 @@ describe("published Quran content", () => {
         },
       ],
     });
-    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {
+    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
       locale: "id",
       surahNumber: 1,
     });

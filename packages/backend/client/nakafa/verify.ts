@@ -1,4 +1,4 @@
-import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import {
   getMaterialLookupInput,
   resolveNakafaContentRef,
@@ -19,9 +19,8 @@ export function verifyNakafaContent(convexUrl: string, input: string) {
     const materialInput = getMaterialLookupInput(input);
     let expectedActiveReleaseId: string | null | undefined;
     if (Option.isSome(materialInput)) {
-      const material = yield* fetchNakafaRuntimeQuery(
+      const material = yield* readNakafaRuntimeQuery(
         convexUrl,
-        "lookupMaterial",
         api.contentRelease.material.lookup,
         { input: materialInput.value }
       );
@@ -48,9 +47,8 @@ export function verifyNakafaContent(convexUrl: string, input: string) {
 
 /** Verifies one source-owned identity remains present in the active catalog. */
 function verifySourceContent(convexUrl: string, contentId: string) {
-  return fetchNakafaRuntimeQuery(
+  return readNakafaRuntimeQuery(
     convexUrl,
-    "getContentRouteByContentId",
     api.contents.queries.runtime.getContentRouteByContentId,
     { contentId }
   ).pipe(Effect.map((route) => route !== null));

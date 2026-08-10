@@ -11,10 +11,7 @@ import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import type { ContentReleasePin } from "@/lib/content/published/release";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type PublishedMaterialIdentity = Pick<
   MaterialLessonProjection,
@@ -40,20 +37,18 @@ export const readPublishedMaterialContext = Effect.fn(
   context: MaterialContextIdentity,
   expectedActiveReleaseId?: ContentReleasePin
 ) {
-  const result = yield* readRuntimeQuery("contentRelease.program.context", () =>
-    fetchRuntimeQuery(api.contentRelease.program.context, {
-      ...(expectedActiveReleaseId === undefined
-        ? {}
-        : { expectedActiveReleaseId }),
-      contentKey: material.contentKey,
-      locale,
-      materialKey: material.materialKey,
-      nodeKey: context.nodeKey,
-      parentPath: material.parentPath,
-      programKey: context.programKey,
-      publicPath: material.publicPath,
-    })
-  );
+  const result = yield* readRuntimeQuery(api.contentRelease.program.context, {
+    ...(expectedActiveReleaseId === undefined
+      ? {}
+      : { expectedActiveReleaseId }),
+    contentKey: material.contentKey,
+    locale,
+    materialKey: material.materialKey,
+    nodeKey: context.nodeKey,
+    parentPath: material.parentPath,
+    programKey: context.programKey,
+    publicPath: material.publicPath,
+  });
   if (!result.managed) {
     return yield* new PublishedProjectionError({
       locale,

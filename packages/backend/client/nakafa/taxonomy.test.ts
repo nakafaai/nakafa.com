@@ -10,18 +10,22 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
-  fetchConvexRuntimeQuery: vi.fn(),
+  runtimeQuery: vi.fn(),
 }));
 
 vi.mock("@repo/backend/client/runtime", () => ({
-  fetchConvexRuntimeQuery: runtimeMocks.fetchConvexRuntimeQuery,
+  readConvexRuntimeQuery: (url: string, query: unknown, args: unknown) =>
+    Effect.tryPromise({
+      catch: (cause) => cause,
+      try: () => runtimeMocks.runtimeQuery(url, query, args),
+    }),
 }));
 
 const quranSnapshotId = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
 
 beforeEach(() => {
-  runtimeMocks.fetchConvexRuntimeQuery.mockReset();
-  runtimeMocks.fetchConvexRuntimeQuery.mockImplementation(readRuntimeFixture);
+  runtimeMocks.runtimeQuery.mockReset();
+  runtimeMocks.runtimeQuery.mockImplementation(readRuntimeFixture);
 });
 
 describe("readNakafaTaxonomy", () => {
@@ -69,15 +73,13 @@ describe("readNakafaTaxonomy", () => {
         family === "article"
           ? api.contentRelease.article.sitemapBuckets
           : api.contentRelease.material.sitemapBuckets;
-      runtimeMocks.fetchConvexRuntimeQuery.mockImplementation(
-        (convexUrl, query, args) => {
-          if (getFunctionName(query) === getFunctionName(target)) {
-            return Promise.resolve({ managed: false });
-          }
-
-          return readRuntimeFixture(convexUrl, query, args);
+      runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
+        if (getFunctionName(query) === getFunctionName(target)) {
+          return Promise.resolve({ managed: false });
         }
-      );
+
+        return readRuntimeFixture(convexUrl, query, args);
+      });
 
       await expect(
         Effect.runPromise(
@@ -157,7 +159,7 @@ function readRuntimeFixture(
 
 /** Returns generated Convex query names called by the taxonomy reader. */
 function calledRuntimeQueries() {
-  return runtimeMocks.fetchConvexRuntimeQuery.mock.calls.map(([, query]) =>
+  return runtimeMocks.runtimeQuery.mock.calls.map(([, query]) =>
     getFunctionName(query)
   );
 }

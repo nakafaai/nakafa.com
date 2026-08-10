@@ -8,19 +8,15 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 /** Reads non-empty material sitemap partitions for one localized catalog. */
 export const readPublishedMaterialBuckets = Effect.fn(
   "www.materials.readSitemapBuckets"
 )(function* (locale: Locale, expectedActiveReleaseId?: ContentReleasePin) {
   const result = yield* readRuntimeQuery(
-    "contentRelease.material.sitemapBuckets",
-    () =>
-      fetchRuntimeQuery(api.contentRelease.material.sitemapBuckets, { locale })
+    api.contentRelease.material.sitemapBuckets,
+    { locale }
   );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
@@ -44,10 +40,8 @@ export const readPublishedMaterialBuckets = Effect.fn(
 export const readPublishedMaterialSitemap = Effect.fn(
   "www.materials.readSitemapPage"
 )(function* (locale: Locale, bucket: string) {
-  return yield* readRuntimeQuery("contentRelease.material.sitemapPage", () =>
-    fetchRuntimeQuery(api.contentRelease.material.sitemapPage, {
-      bucket,
-      locale,
-    })
-  );
+  return yield* readRuntimeQuery(api.contentRelease.material.sitemapPage, {
+    bucket,
+    locale,
+  });
 });

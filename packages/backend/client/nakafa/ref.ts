@@ -1,4 +1,4 @@
-import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createNakafaContentRefFromGraphProjection,
@@ -65,9 +65,8 @@ export function resolveNakafaContentRef(convexUrl: string, input: string) {
 /** Resolves one graph asset ID through the backend route catalog. */
 function resolveNakafaContentId(convexUrl: string, contentId: string) {
   return Effect.gen(function* () {
-    const route = yield* fetchNakafaRuntimeQuery(
+    const route = yield* readNakafaRuntimeQuery(
       convexUrl,
-      "getContentRouteByContentId",
       api.contents.queries.runtime.getContentRouteByContentId,
       { contentId }
     );
@@ -89,9 +88,8 @@ function resolveNakafaContentUrlProjection(convexUrl: string, input: string) {
       return Option.none<NakafaAgentContentRef>();
     }
 
-    const route = yield* fetchNakafaRuntimeQuery(
+    const route = yield* readNakafaRuntimeQuery(
       convexUrl,
-      "getContentRoute",
       api.contents.queries.runtime.getContentRoute,
       {
         locale: parsed.value.locale,

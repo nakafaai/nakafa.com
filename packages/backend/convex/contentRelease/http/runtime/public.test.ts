@@ -7,7 +7,11 @@ import {
 } from "@nakafa/aksara-contracts/runtime/spec";
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { PUBLIC_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+  PUBLIC_CONTENT_RUNTIME_PATH,
+} from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
@@ -47,6 +51,9 @@ function post(t: RuntimeFetcher, body: BodyInit | null, headers?: HeadersInit) {
 function expectPrivate(response: Response) {
   expect(response.headers.get("cache-control")).toBe("private, no-store");
   expect(response.headers.get("access-control-allow-origin")).toBeNull();
+  expect(response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER)).toBe(
+    CONTENT_RUNTIME_RESPONSE_MARKER
+  );
   expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 }
 
@@ -266,6 +273,8 @@ describe("public content runtime HTTP route", () => {
 
     expect(corruptResponse.status).toBe(500);
     expect(oversizedResponse.status).toBe(500);
+    expectPrivate(corruptResponse);
+    expectPrivate(oversizedResponse);
     await expect(oversizedResponse.json()).resolves.toEqual({
       code: "CONTENT_RUNTIME_RESPONSE_TOO_LARGE",
       kind: "failure",

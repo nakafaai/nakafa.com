@@ -1,4 +1,4 @@
-import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { api } from "@repo/backend/convex/_generated/api";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { Effect } from "effect";
@@ -7,9 +7,8 @@ import { Effect } from "effect";
 export const verifyNakafaReleasePin = Effect.fn(
   "NakafaContent.verifyReleasePin"
 )(function* (convexUrl: string, expectedActiveReleaseId: string | null) {
-  const active = yield* fetchNakafaRuntimeQuery(
+  const active = yield* readNakafaRuntimeQuery(
     convexUrl,
-    "readActiveContentIdentity",
     api.contentRelease.runtime.active.read,
     {}
   );

@@ -8,7 +8,7 @@ import {
   readPublishedMaterialBucket,
 } from "@/lib/content/material/discovery";
 
-const fetchMock = vi.hoisted(() => vi.fn());
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const publicPath =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
 const sourcePath =
@@ -16,10 +16,9 @@ const sourcePath =
 const activeReleaseId = ReleaseIdSchema.make("release-material");
 
 vi.mock("@/lib/content/runtime/query", async () => {
-  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
   return {
-    fetchRuntimeQuery: fetchMock,
-    readRuntimeQuery: readTestRuntimeQuery,
+    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
 
@@ -35,11 +34,11 @@ const summary = {
 
 describe("published material discovery", () => {
   beforeEach(() => {
-    fetchMock.mockReset();
+    runtimeQueryMock.mockReset();
   });
 
   it("rejects unmanaged buckets and reads complete signed buckets", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce({
         activeReleaseId,
         managed: false,
@@ -90,7 +89,7 @@ describe("published material discovery", () => {
   });
 
   it("decodes newest signed materials", async () => {
-    fetchMock.mockResolvedValueOnce({
+    runtimeQueryMock.mockResolvedValueOnce({
       activeReleaseId,
       managed: true,
       materials: [summary],
@@ -105,7 +104,7 @@ describe("published material discovery", () => {
   });
 
   it("rejects malformed summaries, unmanaged results, and runtime failures", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce({
         activeReleaseId,
         managed: true,
@@ -136,7 +135,7 @@ describe("published material discovery", () => {
   });
 
   it("rejects a material bucket from a different active release", async () => {
-    fetchMock.mockResolvedValueOnce({
+    runtimeQueryMock.mockResolvedValueOnce({
       activeReleaseId: ReleaseIdSchema.make("release-next"),
       managed: true,
       materials: [summary],

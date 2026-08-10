@@ -1,4 +1,4 @@
-import { fetchConvexRuntimeQuery } from "@repo/backend/client/runtime";
+import { readConvexRuntimeQuery } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import { NakafaAgentContentIdSchema } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/utilities/locales";
@@ -63,8 +63,7 @@ function mapPublishedMaterialError(cause: unknown) {
 /** Rejects a source fallback when ownership changed between runtime reads. */
 const verifyApiReleasePin = Effect.fn("api.content.verifyReleasePin")(
   function* (expectedActiveReleaseId: string | null) {
-    const active = yield* fetchApiRuntimeQuery(
-      "activeContentRelease",
+    const active = yield* readApiRuntimeQuery(
       api.contentRelease.runtime.active.read,
       {}
     );
@@ -134,8 +133,7 @@ export function parseApiContentId(contentId: string) {
 
 /** Reads one page of article content rows from Convex. */
 export function getArticleApiContentPage(args: ArticleApiPageArgs) {
-  return fetchApiRuntimeQuery(
-    "listArticleApiContentPage",
+  return readApiRuntimeQuery(
     api.contents.queries.runtime.listArticleApiContentPage,
     args
   );
@@ -143,11 +141,7 @@ export function getArticleApiContentPage(args: ArticleApiPageArgs) {
 
 /** Reads one page of material content rows from Convex. */
 export function getMaterialApiContentPage(args: MaterialApiPageArgs) {
-  return fetchApiRuntimeQuery(
-    "materialApiPage",
-    api.contentRelease.material.apiPage,
-    args
-  ).pipe(
+  return readApiRuntimeQuery(api.contentRelease.material.apiPage, args).pipe(
     Effect.flatMap((result) =>
       Effect.gen(function* () {
         const page = yield* Effect.forEach(
@@ -191,16 +185,14 @@ export function getApiContentRouteByContentId(
   const materialInput: MaterialApiRouteArgs = {
     input: { contentId: args.contentId, kind: "content" },
   };
-  return fetchApiRuntimeQuery(
-    "materialApiRoute",
+  return readApiRuntimeQuery(
     api.contentRelease.material.apiRoute,
     materialInput
   ).pipe(
     Effect.flatMap((material) => {
       if (!material.managed) {
         return Effect.gen(function* () {
-          const route = yield* fetchApiRuntimeQuery(
-            "getContentRouteByContentId",
+          const route = yield* readApiRuntimeQuery(
             api.contents.queries.runtime.getContentRouteByContentId,
             args
           );
@@ -271,8 +263,7 @@ function getContentRoutePage({
   prefix: string;
   section: RuntimeContentSection;
 }): Effect.Effect<RuntimeContentRoutePage, ApiContentRuntimeReadError> {
-  return fetchApiRuntimeQuery(
-    "listContentRoutesByPrefix",
+  return readApiRuntimeQuery(
     api.contents.queries.runtime.listContentRoutesByPrefix,
     {
       cursor: INITIAL_CURSOR,
@@ -284,18 +275,21 @@ function getContentRoutePage({
   );
 }
 
-/** Fetches one public Convex runtime query through the official client. */
-function fetchApiRuntimeQuery<Query extends FunctionReference<"query">>(
-  name: string,
-  query: Query,
-  args: FunctionArgs<Query>
-) {
-  return Effect.tryPromise({
-    try: () => fetchConvexRuntimeQuery(env.NEXT_PUBLIC_CONVEX_URL, query, args),
-    catch: (cause) =>
-      new ApiContentRuntimeReadError({
-        cause,
-        message: `Unable to read API content runtime query: ${name}.`,
-      }),
-  });
-}
+/** Reads one public Convex runtime query through the official client. */
+const readApiRuntimeQuery = Effect.fn("api.content.runtimeQuery")(function* <
+  Query extends FunctionReference<"query">,
+>(query: Query, args: FunctionArgs<Query>) {
+  return yield* readConvexRuntimeQuery(
+    env.NEXT_PUBLIC_CONVEX_URL,
+    query,
+    args
+  ).pipe(
+    Effect.mapError(
+      (cause) =>
+        new ApiContentRuntimeReadError({
+          cause,
+          message: `Unable to read API content runtime query: ${cause.query}.`,
+        })
+    )
+  );
+});

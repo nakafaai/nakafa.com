@@ -6,11 +6,16 @@ import {
   ContentRuntimeFailureError,
   ContentRuntimeMissingError,
   ContentRuntimeVerificationError,
+  ContentTransportError,
 } from "@repo/backend/client/content/errors";
 import {
   readPublicContent,
   readPublicContentEvidence,
 } from "@repo/backend/client/content/public";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+} from "@repo/backend/content/endpoint";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
@@ -41,9 +46,16 @@ vi.mock("@nakafa/aksara-contracts/runtime/verify", () => ({
 }));
 
 /** Creates one response with the immutable network URL populated. */
-function createResponse(body: unknown, status: number) {
+function createResponse(body: unknown, status: number, marked = true) {
+  const headers = new Headers({ "content-type": "application/json" });
+  if (marked) {
+    headers.set(
+      CONTENT_RUNTIME_RESPONSE_HEADER,
+      CONTENT_RUNTIME_RESPONSE_MARKER
+    );
+  }
   const response = new Response(JSON.stringify(body), {
-    headers: { "content-type": "application/json" },
+    headers,
     status,
   });
   Object.defineProperty(response, "url", { value: endpoint });
@@ -80,7 +92,7 @@ afterEach(() => {
 describe("public content runtime client", () => {
   it("posts, verifies, and returns one active public artifact", async () => {
     const found = foundResponse();
-    fetchMock.mockResolvedValue(createResponse(found, 200));
+    fetchMock.mockResolvedValue(createResponse(found, 200, false));
 
     await expect(
       Effect.runPromise(
@@ -125,6 +137,28 @@ describe("public content runtime client", () => {
         status: 500,
       })
     );
+  });
+
+  it("classifies valid JSON outside the public response contract", async () => {
+    fetchMock
+      .mockResolvedValueOnce(createResponse({ unexpected: true }, 200, false))
+      .mockResolvedValueOnce(createResponse({ unexpected: true }, 200));
+
+    await expect(
+      Effect.runPromise(
+        readPublicContentEvidence(target, input).pipe(Effect.flip)
+      )
+    ).resolves.toEqual(
+      new ContentTransportError({ reason: "response-unmarked" })
+    );
+    await expect(
+      Effect.runPromise(
+        readPublicContentEvidence(target, input).pipe(Effect.flip)
+      )
+    ).resolves.toEqual(
+      new ContentTransportError({ reason: "response-contract" })
+    );
+    expect(verifyContentRuntimeExchange).not.toHaveBeenCalled();
   });
 
   it("preserves signature failures in the typed verification boundary", async () => {

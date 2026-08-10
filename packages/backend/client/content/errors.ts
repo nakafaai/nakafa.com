@@ -1,6 +1,7 @@
 import { ProtectedContentRuntimeRequestSchema } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentRuntimeFailureCodeSchema } from "@nakafa/aksara-contracts/runtime/result";
 import { PublicContentRuntimeRequestSchema } from "@nakafa/aksara-contracts/runtime/spec";
+import { NetworkRetryCodeSchema } from "@repo/backend/client/network";
 import { Schema } from "effect";
 
 const ContentRuntimeRequestSchema = Schema.Union(
@@ -12,15 +13,18 @@ const ContentRuntimeRequestSchema = Schema.Union(
 export class ContentTransportError extends Schema.TaggedError<ContentTransportError>()(
   "ContentTransportError",
   {
+    networkCodes: Schema.optional(Schema.Array(NetworkRetryCodeSchema)),
     reason: Schema.Literal(
       "body",
       "content-length",
       "content-type",
       "fetch",
-      "json",
+      "json-syntax",
       "request",
       "request-size",
+      "response-contract",
       "response-size",
+      "response-unmarked",
       "response-url",
       "status",
       "url"

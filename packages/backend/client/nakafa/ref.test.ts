@@ -12,11 +12,15 @@ import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
-  fetchConvexRuntimeQuery: vi.fn(),
+  runtimeQuery: vi.fn(),
 }));
 
 vi.mock("@repo/backend/client/runtime", () => ({
-  fetchConvexRuntimeQuery: runtimeMocks.fetchConvexRuntimeQuery,
+  readConvexRuntimeQuery: (url: string, query: unknown, args: unknown) =>
+    Effect.tryPromise({
+      catch: (cause) => cause,
+      try: () => runtimeMocks.runtimeQuery(url, query, args),
+    }),
 }));
 
 const ContentIdArgsSchema = Schema.Struct({
@@ -34,8 +38,8 @@ const detachedArticleRef = createDetachedArticleRef();
 const materialProjection = makeMaterialProjection("en", 1);
 
 beforeEach(() => {
-  runtimeMocks.fetchConvexRuntimeQuery.mockReset();
-  runtimeMocks.fetchConvexRuntimeQuery.mockImplementation(readRuntimeFixture);
+  runtimeMocks.runtimeQuery.mockReset();
+  runtimeMocks.runtimeQuery.mockImplementation(readRuntimeFixture);
 });
 
 describe("resolveNakafaContentRef", () => {
@@ -76,7 +80,7 @@ describe("resolveNakafaContentRef", () => {
 
     expect(Option.getOrUndefined(graphRef)).toStrictEqual(articleRef);
     expect(Option.getOrUndefined(resourceRef)).toStrictEqual(articleRef);
-    expect(runtimeMocks.fetchConvexRuntimeQuery).toHaveBeenCalledTimes(2);
+    expect(runtimeMocks.runtimeQuery).toHaveBeenCalledTimes(2);
   });
 
   it("preserves graph fields returned by the route catalog", async () => {
@@ -96,7 +100,7 @@ describe("resolveNakafaContentRef", () => {
     );
 
     expect(Option.getOrUndefined(ref)).toStrictEqual(detachedArticleRef);
-    expect(runtimeMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
+    expect(runtimeMocks.runtimeQuery).toHaveBeenCalledWith(
       convexUrl,
       api.contents.queries.runtime.getContentRoute,
       {
@@ -116,7 +120,7 @@ describe("resolveNakafaContentRef", () => {
 
     expect(Option.isNone(localizedRoute)).toBe(true);
     expect(Option.isNone(localeFreeRoute)).toBe(true);
-    expect(runtimeMocks.fetchConvexRuntimeQuery).not.toHaveBeenCalled();
+    expect(runtimeMocks.runtimeQuery).not.toHaveBeenCalled();
   });
 });
 

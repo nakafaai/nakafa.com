@@ -1,7 +1,11 @@
 // @vitest-environment node
 
 import { MAX_PROTECTED_RUNTIME_REQUEST_BYTES } from "@nakafa/aksara-contracts/runtime/protected/limits";
-import { PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+  PROTECTED_CONTENT_RUNTIME_PATH,
+} from "@repo/backend/content/endpoint";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -53,6 +57,9 @@ describe("protected content runtime HTTP route", () => {
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({ kind: "missing" });
     expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER)).toBe(
+      CONTENT_RUNTIME_RESPONSE_MARKER
+    );
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
   });
 

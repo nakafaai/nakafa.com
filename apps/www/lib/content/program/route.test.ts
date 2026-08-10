@@ -19,7 +19,7 @@ import {
 } from "@/test/content-program";
 
 const cacheMock = vi.hoisted(() => vi.fn());
-const fetchMock = vi.hoisted(() => vi.fn());
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
 
 /** Builds one complete route-model response from real Merdeka rows. */
@@ -66,21 +66,20 @@ vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: cacheMock,
 }));
 vi.mock("@/lib/content/runtime/query", async () => {
-  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
   return {
-    fetchRuntimeQuery: fetchMock,
-    readRuntimeQuery: readTestRuntimeQuery,
+    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
 
 describe("published program route", () => {
   beforeEach(() => {
     cacheMock.mockReset();
-    fetchMock.mockReset();
+    runtimeQueryMock.mockReset();
   });
 
   it("decodes one complete real curriculum route model", async () => {
-    fetchMock.mockResolvedValueOnce(routeResponse());
+    runtimeQueryMock.mockResolvedValueOnce(routeResponse());
 
     const model = await getPublishedProgramRoute(
       "en",
@@ -102,7 +101,7 @@ describe("published program route", () => {
   });
 
   it("rejects an unmanaged family", async () => {
-    fetchMock.mockResolvedValueOnce(
+    runtimeQueryMock.mockResolvedValueOnce(
       routeResponse({
         managed: false,
         materialJson: [],
@@ -121,7 +120,7 @@ describe("published program route", () => {
   });
 
   it("distinguishes a managed missing route", async () => {
-    fetchMock.mockResolvedValueOnce(
+    runtimeQueryMock.mockResolvedValueOnce(
       routeResponse({
         materialJson: [],
         programJson: null,
@@ -173,7 +172,7 @@ describe("published program route", () => {
       }),
     ],
   ])("rejects a %s", async (_name, response) => {
-    fetchMock.mockResolvedValueOnce(response);
+    runtimeQueryMock.mockResolvedValueOnce(response);
 
     await expect(
       Effect.runPromise(

@@ -11,10 +11,7 @@ import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { decodeMaterialJson } from "@/lib/content/material/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type MaterialPageArgs = FunctionArgs<typeof api.contentRelease.material.page>;
 
@@ -63,8 +60,9 @@ export const readPublishedMaterialPage = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies MaterialPageArgs;
-  const result = yield* readRuntimeQuery("contentRelease.material.page", () =>
-    fetchRuntimeQuery(api.contentRelease.material.page, args)
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.material.page,
+    args
   );
   const routes = yield* Effect.forEach(result.result.page, (source) =>
     decodeMaterialJson(source, {

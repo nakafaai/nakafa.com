@@ -1,4 +1,4 @@
-import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { verifyNakafaReleasePin } from "@repo/backend/client/nakafa/release";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const queryMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@repo/backend/client/nakafa/query", () => ({
-  fetchNakafaRuntimeQuery: queryMock,
+  readNakafaRuntimeQuery: queryMock,
 }));
 
 describe("Nakafa release pin", () => {
@@ -27,9 +27,8 @@ describe("Nakafa release pin", () => {
         )
       )
     ).resolves.toBe("release-material");
-    expect(fetchNakafaRuntimeQuery).toHaveBeenCalledWith(
+    expect(readNakafaRuntimeQuery).toHaveBeenCalledWith(
       "https://example.convex.cloud",
-      "readActiveContentIdentity",
       expect.anything(),
       {}
     );

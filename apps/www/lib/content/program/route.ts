@@ -18,10 +18,7 @@ import {
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 /** Complete immutable data needed by one curriculum route page. */
 export interface PublishedProgramRoute {
@@ -52,12 +49,10 @@ const decodeRoutes = Effect.fn("NakafaProgram.decodeRoutes")(function* (
 export const readPublishedProgramRoute = Effect.fn(
   "NakafaProgram.readPublishedRoute"
 )(function* (locale: Locale, publicPath: string) {
-  const result = yield* readRuntimeQuery("contentRelease.program.route", () =>
-    fetchRuntimeQuery(api.contentRelease.program.route, {
-      locale,
-      publicPath,
-    })
-  );
+  const result = yield* readRuntimeQuery(api.contentRelease.program.route, {
+    locale,
+    publicPath,
+  });
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     locale,
     publicPath,

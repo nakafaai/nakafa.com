@@ -4,19 +4,15 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 /** Reads non-empty article sitemap partitions for one localized catalog. */
 export const readPublishedArticleBuckets = Effect.fn(
   "www.articles.readSitemapBuckets"
 )(function* (locale: Locale) {
   const result = yield* readRuntimeQuery(
-    "contentRelease.article.sitemapBuckets",
-    () =>
-      fetchRuntimeQuery(api.contentRelease.article.sitemapBuckets, { locale })
+    api.contentRelease.article.sitemapBuckets,
+    { locale }
   );
   if (!result.managed) {
     return yield* new PublishedProjectionError({
@@ -34,10 +30,8 @@ export const readPublishedArticleBuckets = Effect.fn(
 export const readPublishedArticleSitemap = Effect.fn(
   "www.articles.readSitemapPage"
 )(function* (locale: Locale, bucket: string) {
-  return yield* readRuntimeQuery("contentRelease.article.sitemapPage", () =>
-    fetchRuntimeQuery(api.contentRelease.article.sitemapPage, {
-      bucket,
-      locale,
-    })
-  );
+  return yield* readRuntimeQuery(api.contentRelease.article.sitemapPage, {
+    bucket,
+    locale,
+  });
 });

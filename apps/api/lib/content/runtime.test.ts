@@ -1,3 +1,4 @@
+import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -12,21 +13,26 @@ import {
 } from "@/lib/content/runtime";
 
 const runtimeClientMocks = vi.hoisted(() => ({
-  fetchConvexRuntimeQuery: vi.fn(),
+  runtimeQuery: vi.fn(),
 }));
 const publishedMaterialMocks = vi.hoisted(() => ({
   readPublishedMaterialApiItem: vi.fn(),
   readPublishedMaterialGraphRoute: vi.fn(),
 }));
 
-vi.mock("@repo/backend/client/runtime", () => ({
-  fetchConvexRuntimeQuery: runtimeClientMocks.fetchConvexRuntimeQuery,
+vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
+  ...(await importOriginal()),
+  readConvexRuntimeQuery: (url: string, query: unknown, args: unknown) =>
+    Effect.tryPromise({
+      catch: (cause) => cause,
+      try: () => runtimeClientMocks.runtimeQuery(url, query, args),
+    }),
 }));
 vi.mock("@/lib/content/material", () => publishedMaterialMocks);
 
 describe("API content runtime", () => {
   afterEach(() => {
-    runtimeClientMocks.fetchConvexRuntimeQuery.mockReset();
+    runtimeClientMocks.runtimeQuery.mockReset();
     publishedMaterialMocks.readPublishedMaterialApiItem.mockReset();
     publishedMaterialMocks.readPublishedMaterialGraphRoute.mockReset();
   });
@@ -72,7 +78,7 @@ describe("API content runtime", () => {
     };
     const routeRow = { content_id: "asset:en:article:politics:article:a" };
 
-    runtimeClientMocks.fetchConvexRuntimeQuery
+    runtimeClientMocks.runtimeQuery
       .mockResolvedValueOnce(articlePage)
       .mockResolvedValueOnce(subjectPage)
       .mockResolvedValueOnce(null)
@@ -95,7 +101,7 @@ describe("API content runtime", () => {
         })
       )
     ).resolves.toEqual(articlePage);
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
+    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
       {
@@ -120,7 +126,7 @@ describe("API content runtime", () => {
       isDone: true,
       page: [],
     });
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
+    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
       {
@@ -138,7 +144,7 @@ describe("API content runtime", () => {
         })
       )
     ).resolves.toEqual(routeRow);
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+    expect(runtimeClientMocks.runtimeQuery).toHaveBeenLastCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
       {}
@@ -146,7 +152,7 @@ describe("API content runtime", () => {
   });
 
   it("rejects a source graph fallback after ownership changes", async () => {
-    runtimeClientMocks.fetchConvexRuntimeQuery
+    runtimeClientMocks.runtimeQuery
       .mockResolvedValueOnce({
         activeReleaseId: "release-before",
         managed: false,
@@ -174,7 +180,7 @@ describe("API content runtime", () => {
   it("reconciles source and signed material page entries", async () => {
     const sourceItem = { slug: "material/lesson/test/source" };
     const publishedItem = { slug: "material/lesson/test/published" };
-    runtimeClientMocks.fetchConvexRuntimeQuery.mockResolvedValueOnce({
+    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
       activeReleaseId: "release-test",
       continueCursor: "",
       isDone: true,
@@ -187,7 +193,7 @@ describe("API content runtime", () => {
         },
       ],
     });
-    runtimeClientMocks.fetchConvexRuntimeQuery.mockResolvedValueOnce({
+    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
       releaseId: "release-test",
     });
     publishedMaterialMocks.readPublishedMaterialApiItem.mockReturnValue(
@@ -218,7 +224,7 @@ describe("API content runtime", () => {
   });
 
   it("rejects a source material page after ownership changes", async () => {
-    runtimeClientMocks.fetchConvexRuntimeQuery
+    runtimeClientMocks.runtimeQuery
       .mockResolvedValueOnce({
         activeReleaseId: "release-before",
         continueCursor: "",
@@ -242,7 +248,7 @@ describe("API content runtime", () => {
   });
 
   it("rejects incomplete or failed signed material page reads", async () => {
-    runtimeClientMocks.fetchConvexRuntimeQuery
+    runtimeClientMocks.runtimeQuery
       .mockResolvedValueOnce({
         activeReleaseId: null,
         continueCursor: "",
@@ -301,7 +307,7 @@ describe("API content runtime", () => {
       content_id: "asset:en:material:test:exact",
       route: "subjects/test/exact",
     };
-    runtimeClientMocks.fetchConvexRuntimeQuery
+    runtimeClientMocks.runtimeQuery
       .mockResolvedValueOnce({
         activeReleaseId: "release-test",
         managed: true,
@@ -340,11 +346,11 @@ describe("API content runtime", () => {
         })
       )
     ).resolves.toBeNull();
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledTimes(2);
+    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledTimes(2);
   });
 
   it("rejects incomplete or failed exact graph reads", async () => {
-    runtimeClientMocks.fetchConvexRuntimeQuery
+    runtimeClientMocks.runtimeQuery
       .mockResolvedValueOnce({
         activeReleaseId: null,
         managed: true,
@@ -388,8 +394,12 @@ describe("API content runtime", () => {
   });
 
   it("wraps runtime query failures with content runtime context", async () => {
-    runtimeClientMocks.fetchConvexRuntimeQuery.mockRejectedValueOnce(
-      new Error("offline")
+    runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(
+      new ConvexRuntimeQueryError({
+        networkCodes: [],
+        query: "contents/queries/runtime:listArticleApiContentPage",
+        reason: "transport",
+      })
     );
 
     const effect = getArticleApiContentPage({
@@ -400,12 +410,12 @@ describe("API content runtime", () => {
     });
 
     await expect(Effect.runPromise(effect)).rejects.toThrow(
-      "Unable to read API content runtime query: listArticleApiContentPage."
+      "Unable to read API content runtime query: contents/queries/runtime:listArticleApiContentPage."
     );
   });
 
   it("maps route catalog rows into API static params", async () => {
-    runtimeClientMocks.fetchConvexRuntimeQuery
+    runtimeClientMocks.runtimeQuery
       .mockResolvedValueOnce({
         continueCursor: "",
         isDone: true,
@@ -440,8 +450,8 @@ describe("API content runtime", () => {
         slug: ["politics", "political-accountability"],
       },
     ]);
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledTimes(2);
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
+    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledTimes(2);
+    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
       {
@@ -452,7 +462,7 @@ describe("API content runtime", () => {
         section: "articles",
       }
     );
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
+    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
       {

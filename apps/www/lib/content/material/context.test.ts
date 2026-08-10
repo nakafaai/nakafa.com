@@ -19,7 +19,7 @@ import {
   testProgramSubject,
 } from "@/test/content-program";
 
-const fetchMock = vi.hoisted(() => vi.fn());
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 const group = testProgramGroups[0];
 if (!group) {
@@ -47,21 +47,20 @@ vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: cacheMock,
 }));
 vi.mock("@/lib/content/runtime/query", async () => {
-  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
   return {
-    fetchRuntimeQuery: fetchMock,
-    readRuntimeQuery: readTestRuntimeQuery,
+    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
 
 beforeEach(() => {
-  fetchMock.mockReset();
+  runtimeQueryMock.mockReset();
   cacheMock.mockReset();
 });
 
 describe("published material context", () => {
   it("builds a return link from verified curriculum rows", async () => {
-    fetchMock.mockResolvedValueOnce(publishedContext);
+    runtimeQueryMock.mockResolvedValueOnce(publishedContext);
 
     await expect(
       getPublishedMaterialContext("en", previewProjection, context)
@@ -87,7 +86,7 @@ describe("published material context", () => {
   });
 
   it("rejects unmanaged context and preserves an invalid optional hint", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce({
         groupJson: null,
         managed: false,
@@ -119,7 +118,7 @@ describe("published material context", () => {
 
   it("pins a context read to the expected active release", async () => {
     const activeReleaseId = ReleaseIdSchema.make("release-material");
-    fetchMock.mockResolvedValueOnce({
+    runtimeQueryMock.mockResolvedValueOnce({
       groupJson: null,
       managed: true,
       mappingJson: null,
@@ -137,7 +136,7 @@ describe("published material context", () => {
         )
       )
     ).resolves.toBeNull();
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(runtimeQueryMock).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         contentKey: previewProjection.contentKey,
@@ -155,7 +154,7 @@ describe("published material context", () => {
       ...group,
       materialCardTitle: undefined,
     };
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce({
         ...publishedContext,
         parentJson: testCurriculumRowJson(courseParent),
@@ -188,7 +187,7 @@ describe("published material context", () => {
         `${renamedParent}/renamed-function-concept`
       ),
     };
-    fetchMock.mockResolvedValueOnce({
+    runtimeQueryMock.mockResolvedValueOnce({
       ...publishedContext,
       resolvedCanonicalPath: renamedParent,
     });
@@ -233,7 +232,7 @@ describe("published material context", () => {
       },
     ],
   ])("rejects %s", async (_label, result) => {
-    fetchMock.mockResolvedValueOnce(result);
+    runtimeQueryMock.mockResolvedValueOnce(result);
 
     await expect(
       Effect.runPromise(
@@ -245,7 +244,7 @@ describe("published material context", () => {
   });
 
   it("rejects a mapping for a different material route", async () => {
-    fetchMock.mockResolvedValueOnce({
+    runtimeQueryMock.mockResolvedValueOnce({
       ...publishedContext,
       mappingJson: testCurriculumRowJson({
         ...mapping,

@@ -1,7 +1,7 @@
 import type { ContentRuntimeTarget } from "@repo/backend/client/content/public";
 import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
 import { readPublishedMaterialMarkdown } from "@repo/backend/client/nakafa/material";
-import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { readQuranMarkdown } from "@repo/backend/client/nakafa/quran";
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import { verifyNakafaReleasePin } from "@repo/backend/client/nakafa/release";
@@ -74,9 +74,8 @@ export function getMdxRuntimePage(
   ref: NakafaAgentContentRef
 ) {
   if (ref.section === "articles") {
-    return fetchNakafaRuntimeQuery(
+    return readNakafaRuntimeQuery(
       convexUrl,
-      "getArticlePage",
       api.contents.queries.runtime.getArticlePage,
       {
         locale: ref.locale,
@@ -86,9 +85,8 @@ export function getMdxRuntimePage(
   }
 
   if (ref.section === "material") {
-    return fetchNakafaRuntimeQuery(
+    return readNakafaRuntimeQuery(
       convexUrl,
-      "getCurriculumPage",
       api.contents.queries.runtime.getCurriculumPage,
       {
         locale: ref.locale,

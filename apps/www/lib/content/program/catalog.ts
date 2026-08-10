@@ -15,10 +15,7 @@ import {
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type ProgramPageArgs = FunctionArgs<typeof api.contentRelease.program.page>;
 
@@ -55,9 +52,9 @@ export interface PublishedProgramPage {
 export const readPublishedProgramCatalog = Effect.fn(
   "NakafaProgram.readPublishedCatalog"
 )(function* (locale: Locale) {
-  const result = yield* readRuntimeQuery("contentRelease.program.catalog", () =>
-    fetchRuntimeQuery(api.contentRelease.program.catalog, { locale })
-  );
+  const result = yield* readRuntimeQuery(api.contentRelease.program.catalog, {
+    locale,
+  });
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     locale,
     publicPath: "curricula",
@@ -107,9 +104,7 @@ export const readPublishedProgramPage = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies ProgramPageArgs;
-  const result = yield* readRuntimeQuery("contentRelease.program.page", () =>
-    fetchRuntimeQuery(api.contentRelease.program.page, args)
-  );
+  const result = yield* readRuntimeQuery(api.contentRelease.program.page, args);
   const routes = yield* Effect.forEach(result.result.page, (source) =>
     decodeCurriculumJson(source, input.locale, "curricula")
   );

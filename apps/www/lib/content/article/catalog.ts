@@ -15,10 +15,7 @@ import type { Locale } from "next-intl";
 import { applyPublishedCatalogCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 /** Stable source root for immutable Aksara article links. */
 export const ARTICLE_SOURCE_ROOT = "packages/corpus/articles";
@@ -160,9 +157,7 @@ export const readPublishedArticlePage = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies ArticlePageArgs;
-  const result = yield* readRuntimeQuery("contentRelease.article.page", () =>
-    fetchRuntimeQuery(api.contentRelease.article.page, args)
-  );
+  const result = yield* readRuntimeQuery(api.contentRelease.article.page, args);
   const {
     activeManifestHash,
     activeReleaseId,
@@ -212,8 +207,8 @@ export const readPublishedCategories = Effect.fn(
     },
   } satisfies CategoryPageArgs;
   const result = yield* readRuntimeQuery(
-    "contentRelease.article.categories",
-    () => fetchRuntimeQuery(api.contentRelease.article.categories, args)
+    api.contentRelease.article.categories,
+    args
   );
   const {
     activeManifestHash,

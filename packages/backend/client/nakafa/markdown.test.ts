@@ -7,7 +7,7 @@ import { Effect, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
-  fetchNakafaRuntimeQuery: vi.fn(),
+  readNakafaRuntimeQuery: vi.fn(),
   readPublishedMaterialMarkdown: vi.fn(),
   resolveNakafaContentRef: vi.fn(),
   verifyNakafaReleasePin: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock("@repo/backend/client/nakafa/ref", () => ({
   resolveNakafaContentRef: runtimeMocks.resolveNakafaContentRef,
 }));
 vi.mock("@repo/backend/client/nakafa/query", () => ({
-  fetchNakafaRuntimeQuery: runtimeMocks.fetchNakafaRuntimeQuery,
+  readNakafaRuntimeQuery: runtimeMocks.readNakafaRuntimeQuery,
 }));
 vi.mock("@repo/backend/client/nakafa/release", () => ({
   verifyNakafaReleasePin: runtimeMocks.verifyNakafaReleasePin,
@@ -29,7 +29,7 @@ vi.mock("@repo/backend/client/nakafa/release", () => ({
 const materialRef = makeMaterialContentRef(makeMaterialProjection("en", 1));
 
 beforeEach(() => {
-  runtimeMocks.fetchNakafaRuntimeQuery.mockReset();
+  runtimeMocks.readNakafaRuntimeQuery.mockReset();
   runtimeMocks.readPublishedMaterialMarkdown.mockReset();
   runtimeMocks.resolveNakafaContentRef.mockReset();
   runtimeMocks.verifyNakafaReleasePin
@@ -76,7 +76,7 @@ describe("readNakafaMarkdown", () => {
         markdown: Option.none(),
       })
     );
-    runtimeMocks.fetchNakafaRuntimeQuery.mockReturnValue(
+    runtimeMocks.readNakafaRuntimeQuery.mockReturnValue(
       Effect.succeed({
         body: "## Source lesson",
         metadata: { title: "Source material" },

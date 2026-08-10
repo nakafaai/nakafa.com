@@ -1,4 +1,5 @@
 import { verifyNakafaContent } from "@repo/backend/client/nakafa/verify";
+import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   makeMaterialContentRef,
@@ -11,11 +12,16 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
-  fetchConvexRuntimeQuery: vi.fn(),
+  runtimeQuery: vi.fn(),
 }));
 
-vi.mock("@repo/backend/client/runtime", () => ({
-  fetchConvexRuntimeQuery: runtimeMocks.fetchConvexRuntimeQuery,
+vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
+  ...(await importOriginal()),
+  readConvexRuntimeQuery: (url: string, query: unknown, args: unknown) =>
+    Effect.tryPromise({
+      catch: (cause) => cause,
+      try: () => runtimeMocks.runtimeQuery(url, query, args),
+    }),
 }));
 
 const convexUrl = "https://example.convex.cloud";
@@ -24,7 +30,7 @@ const materialRef = makeMaterialContentRef(makeMaterialProjection("en", 1));
 
 describe("verifyNakafaContent", () => {
   beforeEach(() => {
-    runtimeMocks.fetchConvexRuntimeQuery.mockReset();
+    runtimeMocks.runtimeQuery.mockReset();
   });
 
   it("returns false without a query for unsupported references", async () => {
@@ -33,11 +39,11 @@ describe("verifyNakafaContent", () => {
     );
 
     expect(result).toBe(false);
-    expect(runtimeMocks.fetchConvexRuntimeQuery).not.toHaveBeenCalled();
+    expect(runtimeMocks.runtimeQuery).not.toHaveBeenCalled();
   });
 
   it("returns false when a canonical route is not present", async () => {
-    runtimeMocks.fetchConvexRuntimeQuery.mockResolvedValueOnce(null);
+    runtimeMocks.runtimeQuery.mockResolvedValueOnce(null);
 
     const result = await Effect.runPromise(
       verifyNakafaContent(convexUrl, "https://nakafa.com/en/quran/1")
@@ -47,7 +53,7 @@ describe("verifyNakafaContent", () => {
   });
 
   it("returns false when the resolved content route is no longer active", async () => {
-    runtimeMocks.fetchConvexRuntimeQuery
+    runtimeMocks.runtimeQuery
       .mockResolvedValueOnce({ ...quranRef, title: "Al-Fatihah" })
       .mockResolvedValueOnce(null);
 
@@ -59,7 +65,7 @@ describe("verifyNakafaContent", () => {
   });
 
   it("returns true when the canonical content route is active", async () => {
-    runtimeMocks.fetchConvexRuntimeQuery.mockImplementation(
+    runtimeMocks.runtimeQuery.mockImplementation(
       (_url: string, query: FunctionReference<"query">) => {
         const name = getFunctionName(query);
 
@@ -88,7 +94,7 @@ describe("verifyNakafaContent", () => {
   it.each([materialRef.content_id, materialRef.url])(
     "verifies exact material ownership for %s",
     async (input) => {
-      runtimeMocks.fetchConvexRuntimeQuery
+      runtimeMocks.runtimeQuery
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce({
           activeReleaseId: "release-material",
@@ -104,7 +110,7 @@ describe("verifyNakafaContent", () => {
       );
 
       expect(result).toBe(true);
-      expect(runtimeMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+      expect(runtimeMocks.runtimeQuery).toHaveBeenLastCalledWith(
         convexUrl,
         api.contentRelease.material.lookup,
         expect.anything()
@@ -113,7 +119,7 @@ describe("verifyNakafaContent", () => {
   );
 
   it("rejects source material verification after a release activates", async () => {
-    runtimeMocks.fetchConvexRuntimeQuery
+    runtimeMocks.runtimeQuery
       .mockResolvedValueOnce(materialRef)
       .mockResolvedValueOnce({
         activeReleaseId: null,
@@ -134,9 +140,12 @@ describe("verifyNakafaContent", () => {
   });
 
   it("preserves typed runtime read failures instead of returning false", async () => {
-    runtimeMocks.fetchConvexRuntimeQuery.mockRejectedValueOnce(
-      new Error("runtime unavailable")
-    );
+    const runtimeError = new ConvexRuntimeQueryError({
+      networkCodes: ["EPIPE"],
+      query: "contentRelease.quran.markdown",
+      reason: "transport",
+    });
+    runtimeMocks.runtimeQuery.mockRejectedValueOnce(runtimeError);
 
     const error = await Effect.runPromise(
       verifyNakafaContent(convexUrl, "https://nakafa.com/en/quran/1").pipe(
@@ -147,7 +156,7 @@ describe("verifyNakafaContent", () => {
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
     expect(error).toMatchObject({
       _tag: "NakafaAgentDataReadError",
-      cause: "runtime unavailable",
+      cause: runtimeError.message,
     });
   });
 });

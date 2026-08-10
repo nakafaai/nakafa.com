@@ -3,11 +3,24 @@ import "server-only";
 import type { ProtectedContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import type { PublicContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/spec";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
+import {
+  createNetworkRequestError,
+  isRetryableNetworkError,
+  NETWORK_RETRY_DELAYS_MILLISECONDS,
+} from "@repo/backend/client/network";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+} from "@repo/backend/content/endpoint";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Effect } from "effect";
+import { Effect, Schedule } from "effect";
 
 const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
+const CONTENT_RETRY_SCHEDULE = Schedule.fromDelays(
+  NETWORK_RETRY_DELAYS_MILLISECONDS[0],
+  NETWORK_RETRY_DELAYS_MILLISECONDS[1]
+);
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
 
 type ContentRuntimeResponse =
@@ -25,6 +38,30 @@ type ContentRuntimeStatus =
 export interface ContentHttpTarget {
   readonly siteUrl: string;
   readonly token: string;
+}
+
+/** Returns whether the response carries the current diagnostic marker. */
+function hasContentRuntimeMarker(response: Response) {
+  return (
+    response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER) ===
+    CONTENT_RUNTIME_RESPONSE_MARKER
+  );
+}
+
+/** Classifies an out-of-contract JSON body without exposing its contents. */
+export function createContentContractError(response: Response) {
+  if (hasContentRuntimeMarker(response)) {
+    return new ContentTransportError({ reason: "response-contract" });
+  }
+  return new ContentTransportError({ reason: "response-unmarked" });
+}
+
+/** Classifies malformed JSON without exposing its response body. */
+function createContentSyntaxError(response: Response) {
+  if (hasContentRuntimeMarker(response)) {
+    return new ContentTransportError({ reason: "json-syntax" });
+  }
+  return new ContentTransportError({ reason: "response-unmarked" });
 }
 
 /** Enforces the runtime endpoints' shared response and HTTP status pairs. */
@@ -97,15 +134,24 @@ export const encodeContentRequest = Effect.fn(
   return source;
 });
 
-/** Posts one no-store request with the server-owned runtime capability. */
+/**
+ * Posts one no-store request with the server-owned runtime capability.
+ *
+ * The runtime action is read-only, so only allowlisted network failures receive
+ * two bounded retries. Every HTTP response continues without retry into the
+ * exact status, response, and signature checks.
+ *
+ * @see https://docs.convex.dev/functions/http-actions
+ * @see https://effect.website/docs/error-management/retrying/
+ */
 export const postContentRequest = Effect.fn("NakafaContent.postContentRequest")(
   function* (input: {
     readonly endpoint: string;
     readonly source: string;
     readonly target: ContentHttpTarget;
   }) {
-    return yield* Effect.tryPromise({
-      catch: () => new ContentTransportError({ reason: "fetch" }),
+    const response = yield* Effect.tryPromise({
+      catch: createNetworkRequestError,
       try: () =>
         fetch(input.endpoint, {
           body: input.source,
@@ -119,7 +165,21 @@ export const postContentRequest = Effect.fn("NakafaContent.postContentRequest")(
           redirect: "error",
           signal: AbortSignal.timeout(CONTENT_TIMEOUT_MILLISECONDS),
         }),
-    });
+    }).pipe(
+      Effect.retry({
+        schedule: CONTENT_RETRY_SCHEDULE,
+        while: isRetryableNetworkError,
+      }),
+      Effect.mapError(
+        (error) =>
+          new ContentTransportError({
+            networkCodes: error.networkCodes,
+            reason: "fetch",
+          })
+      )
+    );
+
+    return response;
   }
 );
 
@@ -154,7 +214,7 @@ export const readContentResponse = Effect.fn(
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
   });
   return yield* Effect.try({
-    catch: () => new ContentTransportError({ reason: "json" }),
+    catch: () => createContentSyntaxError(response),
     try: (): unknown => JSON.parse(source),
   });
 });

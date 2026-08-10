@@ -14,10 +14,7 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type MaterialSummary = FunctionReturnType<
   typeof api.contentRelease.material.latest
@@ -68,9 +65,10 @@ export const readPublishedMaterialBucket = Effect.fn(
   bucket: string,
   expectedActiveReleaseId?: ContentReleasePin
 ) {
-  const result = yield* readRuntimeQuery("contentRelease.material.bucket", () =>
-    fetchRuntimeQuery(api.contentRelease.material.bucket, { bucket, locale })
-  );
+  const result = yield* readRuntimeQuery(api.contentRelease.material.bucket, {
+    bucket,
+    locale,
+  });
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,
@@ -95,9 +93,10 @@ export const readPublishedMaterialBucket = Effect.fn(
 export const readPublishedLatestMaterials = Effect.fn(
   "www.materials.readLatest"
 )(function* (locale: Locale, limit: number) {
-  const result = yield* readRuntimeQuery("contentRelease.material.latest", () =>
-    fetchRuntimeQuery(api.contentRelease.material.latest, { limit, locale })
-  );
+  const result = yield* readRuntimeQuery(api.contentRelease.material.latest, {
+    limit,
+    locale,
+  });
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     undefined,

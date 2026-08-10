@@ -10,55 +10,15 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyPublishedSnapshotCache } from "@/lib/content/cache";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
-
-/** Reads the raw active Quran attribution through the public Convex query. */
-function fetchAttributionResult() {
-  return fetchRuntimeQuery(api.contentRelease.quran.attribution, {});
-}
-
-/** Reads the raw signed Quran catalog through the public Convex query. */
-function fetchCatalogResult() {
-  return fetchRuntimeQuery(api.contentRelease.quran.surahs, {});
-}
-
-/** Reads one raw signed Quran markdown projection through the public query. */
-function fetchMarkdownResult(
-  locale: Locale,
-  surahNumber: number,
-  verseLimit?: number
-) {
-  if (verseLimit === undefined) {
-    return fetchRuntimeQuery(api.contentRelease.quran.markdown, {
-      locale,
-      surahNumber,
-    });
-  }
-  return fetchRuntimeQuery(api.contentRelease.quran.markdown, {
-    locale,
-    surahNumber,
-    verseLimit,
-  });
-}
-
-/** Reads one locale-specific Quran web projection through the public query. */
-function fetchViewResult(locale: Locale, surahNumber: number) {
-  return fetchRuntimeQuery(api.contentRelease.quran.view, {
-    locale,
-    surahNumber,
-  });
-}
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 /** Reads and validates the active signed Quran identity without a catalog payload. */
 export const readPublishedQuranIdentity = Effect.fn(
   "NakafaQuran.readPublishedIdentity"
 )(function* () {
   const result = yield* readRuntimeQuery(
-    "contentRelease.quran.attribution",
-    fetchAttributionResult
+    api.contentRelease.quran.attribution,
+    {}
   );
   return yield* decodePublishedQuranSource(result, "attribution");
 });
@@ -67,10 +27,7 @@ export const readPublishedQuranIdentity = Effect.fn(
 export const readPublishedQuranCatalog = Effect.fn(
   "NakafaQuran.readPublishedCatalog"
 )(function* () {
-  const result = yield* readRuntimeQuery(
-    "contentRelease.quran.surahs",
-    fetchCatalogResult
-  );
+  const result = yield* readRuntimeQuery(api.contentRelease.quran.surahs, {});
   return yield* decodePublishedQuranCatalog(result);
 });
 
@@ -78,8 +35,11 @@ export const readPublishedQuranCatalog = Effect.fn(
 export const readPublishedQuranMarkdown = Effect.fn(
   "NakafaQuran.readPublishedMarkdown"
 )(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
-  const result = yield* readRuntimeQuery("contentRelease.quran.markdown", () =>
-    fetchMarkdownResult(locale, surahNumber, verseLimit)
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.quran.markdown,
+    verseLimit === undefined
+      ? { locale, surahNumber }
+      : { locale, surahNumber, verseLimit }
   );
   return yield* decodePublishedQuranMarkdown(result, {
     locale,
@@ -88,12 +48,22 @@ export const readPublishedQuranMarkdown = Effect.fn(
   });
 });
 
+/** Reads and validates one locale-specific signed Quran web projection. */
+const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
+  function* (locale: Locale, surahNumber: number) {
+    const result = yield* readRuntimeQuery(api.contentRelease.quran.view, {
+      locale,
+      surahNumber,
+    });
+    return yield* decodePublishedQuranView(result, { locale, surahNumber });
+  }
+);
+
 /** Caches the complete signed Quran metadata catalog by active release. */
 export async function getPublishedQuranCatalog() {
   "use cache";
 
-  const result = await fetchCatalogResult();
-  const catalog = await Effect.runPromise(decodePublishedQuranCatalog(result));
+  const catalog = await Effect.runPromise(readPublishedQuranCatalog());
   applyPublishedSnapshotCache(catalog.snapshotId);
   return catalog;
 }
@@ -105,9 +75,8 @@ export async function getPublishedQuranView(
 ) {
   "use cache";
 
-  const result = await fetchViewResult(locale, surahNumber);
   const view = await Effect.runPromise(
-    decodePublishedQuranView(result, { locale, surahNumber })
+    readPublishedQuranView(locale, surahNumber)
   );
   applyPublishedSnapshotCache(view.snapshotId);
   return view;

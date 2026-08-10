@@ -5,7 +5,7 @@ import {
   readPublicContentEvidence,
 } from "@repo/backend/client/content/public";
 import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
-import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { getMaterialLookupInput } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -43,9 +43,8 @@ export const readPublishedMaterialMarkdown = Effect.fn(
     };
   }
 
-  const lookup = yield* fetchNakafaRuntimeQuery(
+  const lookup = yield* readNakafaRuntimeQuery(
     convexUrl,
-    "lookupMaterial",
     api.contentRelease.material.lookup,
     { input: lookupInput.value }
   );

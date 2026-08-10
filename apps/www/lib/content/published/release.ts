@@ -2,7 +2,6 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Either, Schema } from "effect";
 import {
   type ActiveContentReleaseId,
-  fetchActiveContentIdentity,
   readActiveContentIdentity,
 } from "@/lib/content/published/active";
 import {
@@ -70,28 +69,3 @@ export const verifyContentReleasePin = Effect.fn(
     identity
   );
 });
-
-/**
- * Rechecks one static signed read without starting an Effect fiber.
- *
- * The direct Promise is the framework boundary for static RSC prerender. Domain
- * validation still uses the same pure decoder as the Effect-native operation.
- *
- * @see https://nextjs.org/docs/messages/next-prerender-current-time
- */
-export function verifyStaticContentReleasePin(
-  expected: ContentReleasePin,
-  identity: PublishedProjectionIdentity
-) {
-  return fetchActiveContentIdentity().then((active) => {
-    const decoded = decodeReleasePin(
-      active?.releaseId ?? null,
-      expected,
-      identity
-    );
-    if (Either.isLeft(decoded)) {
-      return Promise.reject(decoded.left);
-    }
-    return decoded.right;
-  });
-}
