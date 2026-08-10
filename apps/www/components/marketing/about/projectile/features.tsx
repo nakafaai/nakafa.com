@@ -31,9 +31,19 @@ import {
   useRef,
   useState,
 } from "react";
-import type { FeaturesProjectileSceneProps } from "@/components/marketing/about/features-projectile-scene";
-import { loadFeaturesProjectileScene } from "@/components/marketing/about/features-projectile-scene-module";
+import { loadProjectileScene } from "@/components/marketing/about/projectile/loader";
+import type { ProjectileSceneProps } from "@/components/marketing/about/projectile/scene";
 import { reportClientException } from "@/lib/analytics/client";
+
+/**
+ * Imports the scene module after viewport intent.
+ *
+ * @see https://nextjs.org/docs/app/guides/lazy-loading
+ */
+const importProjectileScene = () =>
+  import("@/components/marketing/about/projectile/scene").then(
+    (module) => module.ProjectileScene
+  );
 
 /** Keeps the lesson content available while deferring only its WebGL scene. */
 export function FeaturesProjectile() {
@@ -47,7 +57,7 @@ export function FeaturesProjectile() {
   const shouldReduceMotion = useReducedMotion() ?? false;
   const sceneLoadFiber = useRef<ReturnType<typeof Effect.runFork> | null>(null);
   const [Scene, setScene] =
-    useState<ComponentType<FeaturesProjectileSceneProps> | null>(null);
+    useState<ComponentType<ProjectileSceneProps> | null>(null);
   const [scenarioId, setScenarioId] = useState<ProjectileScenarioId>(
     DEFAULT_PROJECTILE_SCENARIO_ID
   );
@@ -137,7 +147,7 @@ export function FeaturesProjectile() {
     }
 
     sceneLoadFiber.current = Effect.runFork(
-      loadFeaturesProjectileScene().pipe(
+      loadProjectileScene(importProjectileScene).pipe(
         Effect.matchEffect({
           onFailure: (error) =>
             Effect.sync(() => {
@@ -166,7 +176,7 @@ export function FeaturesProjectile() {
   }, [entry]);
 
   /**
-   * Releases an in-flight import before Next Activity hides the route.
+   * Interrupts the scene loader before Next Activity hides the route.
    *
    * @see https://nextjs.org/docs/app/guides/preserving-ui-state#effect-and-media-cleanup
    */
