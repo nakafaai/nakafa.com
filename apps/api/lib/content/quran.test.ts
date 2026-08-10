@@ -4,11 +4,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { readQuranApiDocument } from "@/lib/content/quran";
 
 const runtimeClientMocks = vi.hoisted(() => ({
-  fetchConvexRuntimeQuery: vi.fn(),
+  runtimeQuery: vi.fn(),
 }));
 
 vi.mock("@repo/backend/client/runtime", () => ({
-  fetchConvexRuntimeQuery: runtimeClientMocks.fetchConvexRuntimeQuery,
+  readConvexRuntimeQuery: (url: string, query: unknown, args: unknown) =>
+    Effect.tryPromise({
+      catch: (cause) => cause,
+      try: () => runtimeClientMocks.runtimeQuery(url, query, args),
+    }),
 }));
 
 const source = {
@@ -20,12 +24,12 @@ const source = {
 };
 
 afterEach(() => {
-  runtimeClientMocks.fetchConvexRuntimeQuery.mockReset();
+  runtimeClientMocks.runtimeQuery.mockReset();
 });
 
 describe("Quran API content", () => {
   it("reads and validates one locale-specific signed Quran document", async () => {
-    runtimeClientMocks.fetchConvexRuntimeQuery.mockResolvedValueOnce({
+    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
       ...source,
       locale: "en",
       surah: {
@@ -59,7 +63,7 @@ describe("Quran API content", () => {
         },
       ],
     });
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
+    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
       { locale: "en", surahNumber: 1 }
@@ -67,9 +71,7 @@ describe("Quran API content", () => {
   });
 
   it("maps transport and publication failures into its domain error", async () => {
-    runtimeClientMocks.fetchConvexRuntimeQuery.mockRejectedValueOnce(
-      new Error("offline")
-    );
+    runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(new Error("offline"));
     await expect(
       Effect.runPromise(
         Effect.either(readQuranApiDocument({ locale: "en", surahNumber: 1 }))
@@ -79,7 +81,7 @@ describe("Quran API content", () => {
       left: { _tag: "QuranApiReadError" },
     });
 
-    runtimeClientMocks.fetchConvexRuntimeQuery.mockResolvedValueOnce({
+    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
       ...source,
       locale: "en",
       surah: null,

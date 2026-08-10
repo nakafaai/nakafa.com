@@ -14,10 +14,7 @@ import {
   PublishedProjectionError,
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type ContentRouteArgs = FunctionArgs<
   typeof api.contentRelease.ownership.resolve
@@ -46,11 +43,6 @@ type ActiveContentRoute =
       readonly kind: "found";
       readonly projection: typeof RoutedContentProjectionSchema.Type;
     };
-
-/** Reads one exact active public-route projection from Convex. */
-function fetchActiveContentRoute(args: ContentRouteArgs) {
-  return fetchRuntimeQuery(api.contentRelease.ownership.resolve, args);
-}
 
 /** Verifies one found projection against its requested family and route. */
 const decodeActiveProjection = Effect.fn(
@@ -98,8 +90,8 @@ export const readActiveContentRoute = Effect.fn(
     publicPath: input.publicPath,
   };
   const result = yield* readRuntimeQuery(
-    "contentRelease.ownership.resolve",
-    () => fetchActiveContentRoute(args)
+    api.contentRelease.ownership.resolve,
+    args
   );
   if (result.kind === "unmanaged") {
     const activeReleaseId = yield* Schema.decodeUnknown(

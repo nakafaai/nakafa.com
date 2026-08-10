@@ -23,7 +23,7 @@ import {
 } from "@/test/content-article";
 
 const cacheMock = vi.hoisted(() => vi.fn());
-const fetchMock = vi.hoisted(() => vi.fn());
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
 type ArticleRow = FunctionReturnType<
   typeof api.contentRelease.article.page
@@ -109,22 +109,21 @@ vi.mock("@/lib/content/cache", () => ({
   applyPublishedCatalogCache: cacheMock,
 }));
 vi.mock("@/lib/content/runtime/query", async () => {
-  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
   return {
-    fetchRuntimeQuery: fetchMock,
-    readRuntimeQuery: readTestRuntimeQuery,
+    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
 
 describe("published article catalog", () => {
   beforeEach(() => {
     cacheMock.mockReset();
-    fetchMock.mockReset();
+    runtimeQueryMock.mockReset();
   });
 
   it("decodes newest articles and preserves release-bound pagination", async () => {
     const older = makeTestArticleProjection("older-politics", "2023-01-01");
-    fetchMock.mockResolvedValueOnce(
+    runtimeQueryMock.mockResolvedValueOnce(
       articlePage({
         isDone: false,
         page: [articleRow(testArticleProjection), articleRow(older)],
@@ -153,7 +152,7 @@ describe("published article catalog", () => {
       nextCursor: "next",
       sourceRevision: null,
     });
-    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {
+    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
       category: "politics",
       expectedManifestHash: null,
       expectedReleaseId: null,
@@ -164,7 +163,7 @@ describe("published article catalog", () => {
   });
 
   it("decodes source-owned category titles without UI fallbacks", async () => {
-    fetchMock.mockResolvedValueOnce(categoryPage());
+    runtimeQueryMock.mockResolvedValueOnce(categoryPage());
 
     const page = await getPublishedCategories({
       cursor: null,
@@ -197,7 +196,7 @@ describe("published article catalog", () => {
         title: testArticleProjection.metadata.title,
       },
     });
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce(articlePage({ page: [articleRow(projection)] }))
       .mockResolvedValueOnce(categoryPage({ isDone: false }));
 
@@ -227,7 +226,7 @@ describe("published article catalog", () => {
   });
 
   it("preserves a stale cursor response for the route redirect boundary", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce(articlePage({ page: [], stale: true }))
       .mockResolvedValueOnce(categoryPage({ stale: true }));
 
@@ -261,7 +260,7 @@ describe("published article catalog", () => {
     ["foreign key", { ...articleRow(), contentKey: "articles/other" }],
     ["foreign route", { ...articleRow(), publicPath: "articles/other" }],
   ])("rejects %s article rows", async (_name, row) => {
-    fetchMock.mockResolvedValueOnce(articlePage({ page: [row] }));
+    runtimeQueryMock.mockResolvedValueOnce(articlePage({ page: [row] }));
 
     await expect(
       Effect.runPromise(
@@ -281,7 +280,7 @@ describe("published article catalog", () => {
     ["empty title", categoryPage({ title: "" })],
     ["invalid source revision", { ...categoryPage(), sourceRevision: "main" }],
   ])("rejects %s rows", async (_name, response) => {
-    fetchMock.mockResolvedValueOnce(response);
+    runtimeQueryMock.mockResolvedValueOnce(response);
 
     await expect(
       Effect.runPromise(
@@ -296,7 +295,7 @@ describe("published article catalog", () => {
   });
 
   it("rejects continuation pages without a complete release identity", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce({
         ...articlePage({ isDone: false }),
         activeManifestHash: null,
@@ -330,7 +329,7 @@ describe("published article catalog", () => {
   });
 
   it("rejects unmanaged article and category catalogs", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce({
         ...articlePage({ page: [] }),
         activeManifestHash: null,
@@ -369,7 +368,7 @@ describe("published article catalog", () => {
 
   it("preserves runtime query failures in the Effect error channel", async () => {
     const failure = new Error("catalog unavailable");
-    fetchMock.mockRejectedValueOnce(failure);
+    runtimeQueryMock.mockRejectedValueOnce(failure);
 
     await expect(
       Effect.runPromise(

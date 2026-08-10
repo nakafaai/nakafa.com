@@ -3,10 +3,7 @@ import "server-only";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type TryoutLocalizedPathArgs = FunctionArgs<
   typeof api.tryouts.queries.catalog.getLocalizedPath
@@ -16,7 +13,8 @@ type TryoutLocalizedPathArgs = FunctionArgs<
 export const readPublishedTryoutLocalizedPath = Effect.fn(
   "www.tryouts.readLocalizedPath"
 )(function* (args: TryoutLocalizedPathArgs) {
-  return yield* readRuntimeQuery("tryouts.catalog.getLocalizedPath", () =>
-    fetchRuntimeQuery(api.tryouts.queries.catalog.getLocalizedPath, args)
+  return yield* readRuntimeQuery(
+    api.tryouts.queries.catalog.getLocalizedPath,
+    args
   );
 });

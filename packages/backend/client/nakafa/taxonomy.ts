@@ -2,7 +2,7 @@ import {
   decodeNakafaTaxonomy,
   toNakafaQuranDataReadError,
 } from "@repo/backend/client/nakafa/decode";
-import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/decode";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -31,12 +31,7 @@ export function readNakafaTaxonomy(
   return Effect.gen(function* () {
     const [signedInventory, quranResult] = yield* Effect.all([
       readSignedInventory(convexUrl, locale),
-      fetchNakafaRuntimeQuery(
-        convexUrl,
-        "contentRelease.quran.surahs",
-        api.contentRelease.quran.surahs,
-        {}
-      ),
+      readNakafaRuntimeQuery(convexUrl, api.contentRelease.quran.surahs, {}),
     ]);
     const quran = yield* decodePublishedQuranCatalog(quranResult).pipe(
       Effect.mapError(toNakafaQuranDataReadError)
@@ -112,24 +107,19 @@ const readLocaleSignedInventory = Effect.fn(
   "nakafa.taxonomy.readLocaleSignedInventory"
 )(function* (convexUrl: string, locale: Locale) {
   const [articles, materials, tryout] = yield* Effect.all([
-    fetchNakafaRuntimeQuery(
+    readNakafaRuntimeQuery(
       convexUrl,
-      "readArticleSitemapBuckets",
       api.contentRelease.article.sitemapBuckets,
       { locale }
     ),
-    fetchNakafaRuntimeQuery(
+    readNakafaRuntimeQuery(
       convexUrl,
-      "readMaterialSitemapBuckets",
       api.contentRelease.material.sitemapBuckets,
       { locale }
     ),
-    fetchNakafaRuntimeQuery(
-      convexUrl,
-      "readTryoutTaxonomy",
-      api.contentRelease.tryout.taxonomy,
-      { locale }
-    ),
+    readNakafaRuntimeQuery(convexUrl, api.contentRelease.tryout.taxonomy, {
+      locale,
+    }),
   ]);
   if (!articles.managed) {
     return yield* missingSignedInventory("article", locale);

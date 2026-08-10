@@ -7,23 +7,22 @@ import {
   readPublishedArticleSitemap,
 } from "@/lib/content/article/sitemap";
 
-const fetchMock = vi.hoisted(() => vi.fn());
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/runtime/query", async () => {
-  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
   return {
-    fetchRuntimeQuery: fetchMock,
-    readRuntimeQuery: readTestRuntimeQuery,
+    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
 
 describe("published article sitemap", () => {
   beforeEach(() => {
-    fetchMock.mockReset();
+    runtimeQueryMock.mockReset();
   });
 
   it("reads bucket discovery and one exact route partition", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce({
         articleCount: 1,
         buckets: ["abc"],
@@ -49,17 +48,17 @@ describe("published article sitemap", () => {
     ).resolves.toMatchObject({
       routes: [{ publicPath: "articles/politics/article" }],
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(1, expect.anything(), {
+    expect(runtimeQueryMock).toHaveBeenNthCalledWith(1, expect.anything(), {
       locale: "en",
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(2, expect.anything(), {
+    expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
       bucket: "abc",
       locale: "en",
     });
   });
 
   it("rejects an unmanaged article sitemap inventory", async () => {
-    fetchMock.mockResolvedValueOnce({
+    runtimeQueryMock.mockResolvedValueOnce({
       articleCount: 0,
       buckets: [],
       managed: false,
@@ -71,7 +70,7 @@ describe("published article sitemap", () => {
   });
 
   it("preserves runtime query failures in the Effect error channel", async () => {
-    fetchMock.mockRejectedValueOnce(new Error("sitemap unavailable"));
+    runtimeQueryMock.mockRejectedValueOnce(new Error("sitemap unavailable"));
 
     await expect(
       Effect.runPromise(readPublishedArticleBuckets("id"))

@@ -4,7 +4,7 @@ import {
   parseQuranReferenceOptions,
   toNakafaQuranDataReadError,
 } from "@repo/backend/client/nakafa/decode";
-import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { decodePublishedQuranReference } from "@repo/backend/client/quran/decode";
 import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
@@ -18,9 +18,8 @@ import { Effect, Option } from "effect";
 export function readNakafaQuranReference(convexUrl: string, input: unknown) {
   return Effect.gen(function* () {
     const parsed = yield* parseQuranReferenceOptions(input);
-    const result = yield* fetchNakafaRuntimeQuery(
+    const result = yield* readNakafaRuntimeQuery(
       convexUrl,
-      "contentRelease.quran.reference",
       api.contentRelease.quran.reference,
       {
         fromVerse: parsed.from_verse,
@@ -80,9 +79,8 @@ export function readQuranMarkdown(
       return Option.none<NakafaAgentMarkdown>();
     }
 
-    const result = yield* fetchNakafaRuntimeQuery(
+    const result = yield* readNakafaRuntimeQuery(
       convexUrl,
-      "contentRelease.quran.markdown",
       api.contentRelease.quran.markdown,
       {
         locale: ref.locale,

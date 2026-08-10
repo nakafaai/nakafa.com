@@ -8,24 +8,23 @@ import {
   readPublishedMaterialSitemap,
 } from "@/lib/content/material/sitemap";
 
-const fetchMock = vi.hoisted(() => vi.fn());
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-material");
 
 vi.mock("@/lib/content/runtime/query", async () => {
-  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
   return {
-    fetchRuntimeQuery: fetchMock,
-    readRuntimeQuery: readTestRuntimeQuery,
+    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
 
 beforeEach(() => {
-  fetchMock.mockReset();
+  runtimeQueryMock.mockReset();
 });
 
 describe("published material sitemap", () => {
   it("decodes the release identity and reads one sitemap page", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce({
         activeReleaseId,
         buckets: ["abc"],
@@ -57,7 +56,7 @@ describe("published material sitemap", () => {
   });
 
   it("rejects invalid and unmanaged material inventories", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce({
         activeReleaseId: "",
         buckets: [],

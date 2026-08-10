@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { testArticleProjection } from "@/test/content-article";
 import { previewProjection } from "@/test/content-preview";
-import { readTestRuntimeQuery } from "@/test/runtime-query";
+import { createTestRuntimeQuery } from "@/test/runtime-query";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const readQueryMock = vi.hoisted(() => vi.fn());
@@ -19,14 +19,13 @@ const input = {
 };
 
 vi.mock("@/lib/content/runtime/query", () => ({
-  fetchRuntimeQuery: fetchQueryMock,
   readRuntimeQuery: readQueryMock,
 }));
 
 beforeEach(() => {
   fetchQueryMock.mockReset();
   readQueryMock.mockReset();
-  readQueryMock.mockImplementation(readTestRuntimeQuery);
+  readQueryMock.mockImplementation(createTestRuntimeQuery(fetchQueryMock));
 });
 
 describe("published content route", () => {
@@ -120,10 +119,11 @@ describe("published content route", () => {
       locale: input.locale,
       publicPath: input.publicPath,
     });
-    expect(readQueryMock).toHaveBeenCalledWith(
-      "contentRelease.ownership.resolve",
-      expect.any(Function)
-    );
+    expect(readQueryMock).toHaveBeenCalledWith(expect.anything(), {
+      family: input.family,
+      locale: input.locale,
+      publicPath: input.publicPath,
+    });
   });
 
   it("surfaces malformed stored projections as typed integrity failures", async () => {

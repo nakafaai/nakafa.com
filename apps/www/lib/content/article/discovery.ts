@@ -13,10 +13,7 @@ import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
-import {
-  fetchRuntimeQuery,
-  readRuntimeQuery,
-} from "@/lib/content/runtime/query";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 type DiscoveryItem = FunctionReturnType<
   typeof api.contentRelease.article.latest
@@ -60,11 +57,10 @@ const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
 /** Reads one complete published article partition for agent discovery. */
 export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
   function* (locale: Locale, bucket: string) {
-    const result = yield* readRuntimeQuery(
-      "contentRelease.article.bucket",
-      () =>
-        fetchRuntimeQuery(api.contentRelease.article.bucket, { bucket, locale })
-    );
+    const result = yield* readRuntimeQuery(api.contentRelease.article.bucket, {
+      bucket,
+      locale,
+    });
     if (!result.managed) {
       return yield* new PublishedProjectionError({
         locale,
@@ -84,11 +80,10 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
 /** Reads a bounded newest-first article set for feed discovery. */
 export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
   function* (locale: Locale, limit: number) {
-    const result = yield* readRuntimeQuery(
-      "contentRelease.article.latest",
-      () =>
-        fetchRuntimeQuery(api.contentRelease.article.latest, { limit, locale })
-    );
+    const result = yield* readRuntimeQuery(api.contentRelease.article.latest, {
+      limit,
+      locale,
+    });
     if (!result.managed) {
       return yield* new PublishedProjectionError({
         locale,
@@ -106,13 +101,11 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
 export const readPublishedCategoryArticles = Effect.fn(
   "www.articles.readCategory"
 )(function* (locale: Locale, category: string, limit: number) {
-  const result = yield* readRuntimeQuery("contentRelease.article.listing", () =>
-    fetchRuntimeQuery(api.contentRelease.article.listing, {
-      category,
-      limit,
-      locale,
-    })
-  );
+  const result = yield* readRuntimeQuery(api.contentRelease.article.listing, {
+    category,
+    limit,
+    locale,
+  });
   if (!result.managed) {
     return yield* new PublishedProjectionError({
       locale,

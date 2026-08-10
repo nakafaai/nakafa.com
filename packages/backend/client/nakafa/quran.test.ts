@@ -18,11 +18,15 @@ import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
-  fetchConvexRuntimeQuery: vi.fn(),
+  runtimeQuery: vi.fn(),
 }));
 
 vi.mock("@repo/backend/client/runtime", () => ({
-  fetchConvexRuntimeQuery: runtimeMocks.fetchConvexRuntimeQuery,
+  readConvexRuntimeQuery: (url: string, query: unknown, args: unknown) =>
+    Effect.tryPromise({
+      catch: (cause) => cause,
+      try: () => runtimeMocks.runtimeQuery(url, query, args),
+    }),
 }));
 
 const convexUrl = "https://example.convex.cloud";
@@ -35,8 +39,8 @@ const source = {
 };
 
 beforeEach(() => {
-  runtimeMocks.fetchConvexRuntimeQuery.mockReset();
-  runtimeMocks.fetchConvexRuntimeQuery.mockImplementation(readRuntimeFixture);
+  runtimeMocks.runtimeQuery.mockReset();
+  runtimeMocks.runtimeQuery.mockImplementation(readRuntimeFixture);
 });
 
 describe("Quran Nakafa reader", () => {

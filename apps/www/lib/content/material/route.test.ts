@@ -15,7 +15,7 @@ import {
   previewSourcePath,
 } from "@/test/content-preview";
 
-const fetchMock = vi.hoisted(() => vi.fn());
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 const activeManifestHash = `sha256:${"a".repeat(64)}`;
 const activeReleaseId = ReleaseIdSchema.make("release-material");
@@ -25,10 +25,9 @@ vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: cacheMock,
 }));
 vi.mock("@/lib/content/runtime/query", async () => {
-  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
   return {
-    fetchRuntimeQuery: fetchMock,
-    readRuntimeQuery: readTestRuntimeQuery,
+    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
 
@@ -88,13 +87,13 @@ function foundModel(overrides?: {
 }
 
 beforeEach(() => {
-  fetchMock.mockReset();
+  runtimeQueryMock.mockReset();
   cacheMock.mockReset();
 });
 
 describe("published material route", () => {
   it("decodes one complete signed route, locale set, and sibling group", async () => {
-    fetchMock.mockResolvedValueOnce(foundModel());
+    runtimeQueryMock.mockResolvedValueOnce(foundModel());
 
     await expect(
       getPublishedMaterialRoute("en", previewProjection.publicPath)
@@ -110,7 +109,7 @@ describe("published material route", () => {
   });
 
   it("pins a route read to the expected active release", async () => {
-    fetchMock.mockResolvedValueOnce(foundModel());
+    runtimeQueryMock.mockResolvedValueOnce(foundModel());
 
     await expect(
       getPublishedMaterialRoute(
@@ -119,14 +118,14 @@ describe("published material route", () => {
         activeReleaseId
       )
     ).resolves.toMatchObject({ activeReleaseId });
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(runtimeQueryMock).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
     );
   });
 
   it("preserves a signed missing-route tombstone", async () => {
-    fetchMock.mockResolvedValueOnce(
+    runtimeQueryMock.mockResolvedValueOnce(
       foundModel({
         alternateJson: [],
         projectionJson: null,
@@ -203,7 +202,7 @@ describe("published material route", () => {
     ["alternate JSON", foundModel({ alternateJson: ["{}"] })],
     ["sibling JSON", foundModel({ siblingJson: ["{}"] })],
   ])("rejects an invalid %s", async (_label, result) => {
-    fetchMock.mockResolvedValueOnce(result);
+    runtimeQueryMock.mockResolvedValueOnce(result);
 
     await expect(
       Effect.runPromise(

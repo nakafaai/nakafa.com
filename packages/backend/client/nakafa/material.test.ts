@@ -2,7 +2,7 @@
 
 import { readPublicContentEvidence } from "@repo/backend/client/content/public";
 import { readPublishedMaterialMarkdown } from "@repo/backend/client/nakafa/material";
-import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { Effect, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,7 +18,7 @@ const target = {
 
 vi.mock("server-only", () => ({}));
 vi.mock("@repo/backend/client/nakafa/query", () => ({
-  fetchNakafaRuntimeQuery: queryMock,
+  readNakafaRuntimeQuery: queryMock,
 }));
 vi.mock("@repo/backend/client/content/public", () => ({
   readPublicContentEvidence: readMock,
@@ -84,7 +84,7 @@ describe("Nakafa material reader", () => {
       managed: true,
       markdown: Option.none(),
     });
-    expect(fetchNakafaRuntimeQuery).toHaveBeenCalledTimes(2);
+    expect(readNakafaRuntimeQuery).toHaveBeenCalledTimes(2);
     expect(readPublicContentEvidence).not.toHaveBeenCalled();
   });
 
@@ -121,9 +121,8 @@ describe("Nakafa material reader", () => {
       )
     );
 
-    expect(fetchNakafaRuntimeQuery).toHaveBeenCalledWith(
+    expect(readNakafaRuntimeQuery).toHaveBeenCalledWith(
       "https://example.convex.cloud",
-      "lookupMaterial",
       expect.anything(),
       {
         input: {

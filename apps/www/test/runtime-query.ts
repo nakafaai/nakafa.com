@@ -5,16 +5,19 @@ class TestRuntimeQueryError extends Data.TaggedError("TestRuntimeQueryError")<{
   readonly message: string;
 }> {}
 
-/** Preserves a mocked runtime query rejection message in the Effect error channel. */
-export function readTestRuntimeQuery(
-  _name: string,
-  read: () => Promise<unknown>
-) {
-  return Effect.tryPromise({
-    try: read,
-    catch: (cause) =>
-      new TestRuntimeQueryError({
-        message: String(cause),
-      }),
-  });
+type TestRuntimeQueryClient = (
+  query: unknown,
+  args: unknown
+) => Promise<unknown>;
+
+/** Adapts one mocked client to the Effect-native runtime query interface. */
+export function createTestRuntimeQuery(read: TestRuntimeQueryClient) {
+  return (query: unknown, args: unknown) =>
+    Effect.tryPromise({
+      try: () => read(query, args),
+      catch: (cause) =>
+        new TestRuntimeQueryError({
+          message: String(cause),
+        }),
+    });
 }

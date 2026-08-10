@@ -14,7 +14,7 @@ import {
 } from "@/lib/content/material/catalog";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 
-const fetchMock = vi.hoisted(() => vi.fn());
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
 const manifestHash = `sha256:${"a".repeat(64)}`;
 const releaseId = "release-material";
@@ -24,10 +24,9 @@ vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: cacheMock,
 }));
 vi.mock("@/lib/content/runtime/query", async () => {
-  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
   return {
-    fetchRuntimeQuery: fetchMock,
-    readRuntimeQuery: readTestRuntimeQuery,
+    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
 
@@ -58,13 +57,13 @@ function materialPage({
 }
 
 beforeEach(() => {
-  fetchMock.mockReset();
+  runtimeQueryMock.mockReset();
   cacheMock.mockReset();
 });
 
 describe("published material catalog", () => {
   it("decodes one bounded release page", async () => {
-    fetchMock.mockResolvedValueOnce(materialPage({ done: false }));
+    runtimeQueryMock.mockResolvedValueOnce(materialPage({ done: false }));
 
     await expect(
       Effect.runPromise(
@@ -85,7 +84,7 @@ describe("published material catalog", () => {
       sourceRevision,
       stale: false,
     });
-    expect(fetchMock).toHaveBeenCalledWith(expect.anything(), {
+    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
       expectedManifestHash: null,
       expectedReleaseId: null,
       locale: "en",
@@ -94,7 +93,7 @@ describe("published material catalog", () => {
   });
 
   it("reads all pages through one stable release cursor", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce(materialPage({ done: false }))
       .mockResolvedValueOnce(materialPage());
 
@@ -102,7 +101,7 @@ describe("published material catalog", () => {
       routes: [previewProjection, previewProjection],
       sourceRevision,
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(2, expect.anything(), {
+    expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
       expectedManifestHash: manifestHash,
       expectedReleaseId: releaseId,
       locale: "en",
@@ -112,7 +111,7 @@ describe("published material catalog", () => {
   });
 
   it("rejects unmanaged and stale ownership states", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce(materialPage({ managed: false, routes: [] }))
       .mockResolvedValueOnce(materialPage({ routes: [], stale: true }));
 
@@ -134,7 +133,7 @@ describe("published material catalog", () => {
       },
     ],
   ])("rejects %s", async (_label, result) => {
-    fetchMock.mockResolvedValueOnce(result);
+    runtimeQueryMock.mockResolvedValueOnce(result);
 
     await expect(
       Effect.runPromise(

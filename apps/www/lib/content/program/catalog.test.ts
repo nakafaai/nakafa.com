@@ -18,7 +18,7 @@ import {
 } from "@/test/content-program";
 
 const cacheMock = vi.hoisted(() => vi.fn());
-const fetchMock = vi.hoisted(() => vi.fn());
+const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
 
 /** Builds one successful bounded program catalog response. */
@@ -68,21 +68,20 @@ vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: cacheMock,
 }));
 vi.mock("@/lib/content/runtime/query", async () => {
-  const { readTestRuntimeQuery } = await import("@/test/runtime-query");
+  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
   return {
-    fetchRuntimeQuery: fetchMock,
-    readRuntimeQuery: readTestRuntimeQuery,
+    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
 
 describe("published program catalog", () => {
   beforeEach(() => {
     cacheMock.mockReset();
-    fetchMock.mockReset();
+    runtimeQueryMock.mockReset();
   });
 
   it("decodes real program roots and applies the runtime cache", async () => {
-    fetchMock.mockResolvedValueOnce(catalogResponse());
+    runtimeQueryMock.mockResolvedValueOnce(catalogResponse());
 
     const catalog = await getPublishedProgramCatalog("en");
 
@@ -99,7 +98,7 @@ describe("published program catalog", () => {
   });
 
   it("rejects an unmanaged catalog", async () => {
-    fetchMock.mockResolvedValueOnce(
+    runtimeQueryMock.mockResolvedValueOnce(
       catalogResponse({
         managed: false,
         programJson: [],
@@ -128,7 +127,7 @@ describe("published program catalog", () => {
     ],
     ["invalid source revision", catalogResponse({ sourceRevision: "main" })],
   ])("rejects a catalog with %s", async (_name, response) => {
-    fetchMock.mockResolvedValueOnce(response);
+    runtimeQueryMock.mockResolvedValueOnce(response);
 
     await expect(
       Effect.runPromise(readPublishedProgramCatalog("en").pipe(Effect.flip))
@@ -136,7 +135,7 @@ describe("published program catalog", () => {
   });
 
   it("reads every route page under one immutable release identity", async () => {
-    fetchMock
+    runtimeQueryMock
       .mockResolvedValueOnce(pageResponse({ isDone: false }))
       .mockResolvedValueOnce(
         pageResponse({
@@ -153,7 +152,7 @@ describe("published program catalog", () => {
       ],
       sourceRevision: revision,
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(2, expect.anything(), {
+    expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
       expectedManifestHash: `sha256:${"b".repeat(64)}`,
       expectedReleaseId: "program-release",
       locale: "en",
@@ -163,7 +162,7 @@ describe("published program catalog", () => {
   });
 
   it("preserves both terminal page cursor states", async () => {
-    fetchMock.mockResolvedValueOnce(pageResponse({ isDone: false }));
+    runtimeQueryMock.mockResolvedValueOnce(pageResponse({ isDone: false }));
 
     await expect(
       Effect.runPromise(
@@ -181,7 +180,9 @@ describe("published program catalog", () => {
   });
 
   it("rejects routes before Aksara owns the program family", async () => {
-    fetchMock.mockResolvedValueOnce(pageResponse({ managed: false, page: [] }));
+    runtimeQueryMock.mockResolvedValueOnce(
+      pageResponse({ managed: false, page: [] })
+    );
 
     await expect(
       Effect.runPromise(readPublishedProgramRoutes("id").pipe(Effect.flip))
@@ -195,7 +196,7 @@ describe("published program catalog", () => {
       { ...pageResponse({ isDone: false }), activeReleaseId: null },
     ],
   ])("rejects a %s", async (_name, response) => {
-    fetchMock.mockResolvedValueOnce(response);
+    runtimeQueryMock.mockResolvedValueOnce(response);
 
     await expect(
       Effect.runPromise(readPublishedProgramRoutes("en").pipe(Effect.flip))
@@ -203,7 +204,7 @@ describe("published program catalog", () => {
   });
 
   it("preserves runtime query failures in the Effect error channel", async () => {
-    fetchMock.mockRejectedValueOnce(new Error("program unavailable"));
+    runtimeQueryMock.mockRejectedValueOnce(new Error("program unavailable"));
 
     await expect(
       Effect.runPromise(readPublishedProgramCatalog("en"))
