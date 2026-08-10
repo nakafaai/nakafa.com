@@ -16,14 +16,21 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
-import { useLayoutEffect, useRef, useState, useTransition } from "react";
+import {
+  type ReactNode,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
+import { QuranInterpretationContext } from "@/components/shared/quran/interpretation/context";
 import { reportClientException } from "@/lib/analytics/client";
 
 interface Props {
+  children: ReactNode;
   errorMessage: string;
   label: string;
-  loadingMessage: string;
   recoverSnapshot: () => Promise<void>;
   refreshingMessage: string;
   snapshotId: string;
@@ -58,11 +65,11 @@ function getVerseNumber(button: HTMLButtonElement) {
   return verseNumber;
 }
 
-/** Handles all verse tafsir drawers through one hydrated client island. */
+/** Coordinates every verse tafsir request and drawer through one client controller. */
 export function QuranInterpretationControls({
+  children,
   errorMessage,
   label,
-  loadingMessage,
   recoverSnapshot,
   refreshingMessage,
   snapshotId,
@@ -71,6 +78,9 @@ export function QuranInterpretationControls({
   const convex = useConvex();
   const [isOpen, { close, open, set }] = useDisclosure(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
+  const [pendingVerseNumber, setPendingVerseNumber] = useState<number | null>(
+    null
+  );
   const [isPending, startTransition] = useTransition();
   const requestSequence = useRef(0);
   const pendingRequestId = useRef<number | null>(null);
@@ -81,6 +91,7 @@ export function QuranInterpretationControls({
     () => () => {
       requestSequence.current += 1;
       pendingRequestId.current = null;
+      setPendingVerseNumber(null);
       close();
       setSelectedInterpretation("");
       toast.dismiss(toastId);
@@ -106,12 +117,9 @@ export function QuranInterpretationControls({
     requestSequence.current += 1;
     const requestId = requestSequence.current;
     pendingRequestId.current = requestId;
+    setPendingVerseNumber(verseNumber);
     close();
     setSelectedInterpretation("");
-    toast.loading(loadingMessage, {
-      id: toastId,
-      position: "bottom-center",
-    });
 
     const program = Effect.tryPromise({
       catch: toQuranInterpretationRequestError,
@@ -137,7 +145,6 @@ export function QuranInterpretationControls({
             return;
           }
 
-          toast.dismiss(toastId);
           setSelectedInterpretation(interpretation);
           open();
         })
@@ -197,9 +204,12 @@ export function QuranInterpretationControls({
       }),
       Effect.ensuring(
         Effect.sync(() => {
-          if (pendingRequestId.current === requestId) {
-            pendingRequestId.current = null;
+          if (pendingRequestId.current !== requestId) {
+            return;
           }
+
+          pendingRequestId.current = null;
+          setPendingVerseNumber(null);
         })
       ),
       Effect.asVoid
@@ -209,20 +219,25 @@ export function QuranInterpretationControls({
   });
 
   return (
-    <Drawer onOpenChange={set} open={isOpen}>
-      <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
-        <DrawerHeader className="border-b">
-          <DrawerTitle className="text-center">{label}</DrawerTitle>
-        </DrawerHeader>
+    <QuranInterpretationContext.Provider
+      value={isPending ? pendingVerseNumber : null}
+    >
+      {children}
+      <Drawer onOpenChange={set} open={isOpen}>
+        <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
+          <DrawerHeader className="border-b">
+            <DrawerTitle className="text-center">{label}</DrawerTitle>
+          </DrawerHeader>
 
-        <DrawerPanel className="p-4">
-          <div className="rounded-md border bg-accent p-4">
-            <p className="text-pretty text-accent-foreground leading-relaxed">
-              {selectedInterpretation}
-            </p>
-          </div>
-        </DrawerPanel>
-      </DrawerPopup>
-    </Drawer>
+          <DrawerPanel className="p-4">
+            <div className="rounded-md border bg-accent p-4">
+              <p className="text-pretty text-accent-foreground leading-relaxed">
+                {selectedInterpretation}
+              </p>
+            </div>
+          </DrawerPanel>
+        </DrawerPopup>
+      </Drawer>
+    </QuranInterpretationContext.Provider>
   );
 }

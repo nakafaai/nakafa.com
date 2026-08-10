@@ -281,7 +281,6 @@
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
     "interpretation-error": "This verse's interpretation could not be loaded. Try again.",
-    "interpretation-loading": "Loading this verse's interpretation...",
     "interpretation-refreshing": "The Quran has been updated. Refreshing this page...",
     "surah-title": "Surah {number}: {name} ({translation}) - {quran}",
     "verses": "verses",

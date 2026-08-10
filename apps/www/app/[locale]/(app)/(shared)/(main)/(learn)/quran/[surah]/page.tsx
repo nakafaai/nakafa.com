@@ -17,10 +17,9 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
-import { QuranInterpretationControls } from "@/components/shared/quran-interpretation-controls";
-import { QuranVerse } from "@/components/shared/quran-verse";
+import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
+import { QuranVerseList } from "@/components/shared/quran/verse-list";
 import { RefContent } from "@/components/shared/ref-content";
-import { WindowVirtualized } from "@/components/shared/window-virtualized";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
@@ -34,8 +33,6 @@ import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
-
-const QURAN_INITIAL_VERSE_SSR_COUNT = 80;
 
 /** Builds localized Quran surah metadata only after the runtime catalog confirms the surah exists. */
 export async function generateMetadata({
@@ -184,16 +181,21 @@ async function CachedSurahShell({
   const translation = surahData.name.translation;
   const title = getQuranSurahName(surahData.name);
 
-  const headings = result.verses.map((verse, index) => {
+  const verseItems = result.verses.map((verse) => {
     const label = t("verse-count", { count: verse.number.inSurah });
 
     return {
+      id: slugify(label),
       label,
-      index,
-      href: `/quran/${surah}#${slugify(label)}`,
-      children: [],
+      verse,
     };
   });
+  const headings = verseItems.map(({ id, label }, index) => ({
+    label,
+    index,
+    href: `/quran/${surah}#${id}`,
+    children: [],
+  }));
 
   const pagination = getQuranPagination({
     nextSurah: result.nextSurah,
@@ -233,44 +235,31 @@ async function CachedSurahShell({
             title={title}
           />
           <LayoutContent>
-            <WindowVirtualized
-              ssrCount={Math.min(
-                result.verses.length,
-                QURAN_INITIAL_VERSE_SSR_COUNT
-              )}
-            >
-              {result.verses.map((verse, index) => {
-                const verseLabel = t("verse-count", {
-                  count: verse.number.inSurah,
-                });
-
-                return (
-                  <QuranVerse
-                    hasInterpretation={hasInterpretation}
-                    id={slugify(verseLabel)}
-                    interpretationLabel={interpretationLabel}
-                    isLast={index === result.verses.length - 1}
-                    key={verse.number.inQuran}
-                    verse={verse}
-                    verseLabel={verseLabel}
-                  />
-                );
-              })}
-            </WindowVirtualized>
+            {hasInterpretation ? (
+              <QuranInterpretationControls
+                errorMessage={t("interpretation-error")}
+                label={interpretationLabel}
+                recoverSnapshot={recoverSnapshot}
+                refreshingMessage={t("interpretation-refreshing")}
+                snapshotId={result.snapshotId}
+                surahNumber={surahData.number}
+              >
+                <QuranVerseList
+                  hasInterpretation
+                  interpretationLabel={interpretationLabel}
+                  items={verseItems}
+                />
+              </QuranInterpretationControls>
+            ) : (
+              <QuranVerseList
+                hasInterpretation={false}
+                interpretationLabel={interpretationLabel}
+                items={verseItems}
+              />
+            )}
           </LayoutContent>
           <PaginationContent pagination={pagination} />
           <FooterContent>{footer}</FooterContent>
-          {hasInterpretation && (
-            <QuranInterpretationControls
-              errorMessage={t("interpretation-error")}
-              label={interpretationLabel}
-              loadingMessage={t("interpretation-loading")}
-              recoverSnapshot={recoverSnapshot}
-              refreshingMessage={t("interpretation-refreshing")}
-              snapshotId={result.snapshotId}
-              surahNumber={surahData.number}
-            />
-          )}
           {toolbar}
         </LayoutMaterialContent>
         <LayoutMaterialToc
