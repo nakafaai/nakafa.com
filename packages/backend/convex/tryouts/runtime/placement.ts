@@ -3,37 +3,82 @@ import {
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
+import {
+  TryoutRuntimeError,
+  tryRuntimePromise,
+} from "@repo/backend/convex/tryouts/runtime/error";
 import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
 import {
   TryoutStartError,
   toTryoutStartError,
   tryoutStartErrorCode,
 } from "@repo/backend/convex/tryouts/start/spec";
-import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
+type TryoutReadContext = Pick<QueryCtx, "db">;
 
 /** Loads the immutable section snapshot for one attempt section key. */
-export function requireSectionSnapshot(
-  attempt: TryoutAttempt,
-  sectionKey: string
-): TryoutSectionSnapshot {
+export const requireSectionSnapshot = Effect.fn(
+  "tryouts.runtime.requireSectionSnapshot"
+)(function* (attempt: TryoutAttempt, sectionKey: string) {
   const snapshot = attempt.sectionSnapshots.find(
     (section) => section.sectionKey === sectionKey
   );
 
   if (!snapshot) {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_SECTION_NOT_FOUND",
       message: "Try-out section is not part of this attempt.",
     });
   }
 
   return snapshot;
-}
+});
+
+/**
+ * Loads one bounded attempt placement inventory for finalization.
+ * @see https://docs.convex.dev/production/state/limits#transactions
+ */
+export const loadAttemptPlacements = Effect.fn(
+  "tryouts.runtime.loadAttemptPlacements"
+)(function* (ctx: TryoutReadContext, attempt: TryoutAttempt) {
+  return yield* tryRuntimePromise(() =>
+    ctx.db
+      .query("tryoutAttemptPlacements")
+      .withIndex("by_tryoutAttemptId_and_questionOrder", (query) =>
+        query.eq("tryoutAttemptId", attempt._id)
+      )
+      .take(attempt.totalQuestions + 1)
+  );
+});
+
+/** Loads one bounded section placement inventory for finalization. */
+export const loadSectionPlacements = Effect.fn(
+  "tryouts.runtime.loadSectionPlacements"
+)(function* (
+  ctx: TryoutReadContext,
+  attempt: TryoutAttempt,
+  snapshot: TryoutSectionSnapshot
+) {
+  return yield* tryRuntimePromise(() =>
+    ctx.db
+      .query("tryoutAttemptPlacements")
+      .withIndex(
+        "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
+        (query) =>
+          query
+            .eq("tryoutAttemptId", attempt._id)
+            .eq("sectionKey", snapshot.sectionKey)
+      )
+      .take(snapshot.questionCount + 1)
+  );
+});
 
 /** Freezes the authenticated signed placement snapshot. */
 export const createAttemptPlacements = Effect.fn(
