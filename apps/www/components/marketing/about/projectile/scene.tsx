@@ -12,16 +12,16 @@ import { Suspense } from "react";
 
 const FLASH_COLOR = getColor("ORANGE", 500);
 
-export interface FeaturesProjectileSceneProps {
+export interface ProjectileSceneProps {
   motion: ProjectileMotionState;
   shouldReduceMotion: boolean;
 }
 
-/** Loads the lesson's WebGL scene only after its semantic frame nears view. */
-export function FeaturesProjectileScene({
+/** Renders the lesson's WebGL scene after its semantic frame nears view. */
+export function ProjectileScene({
   motion,
   shouldReduceMotion,
-}: FeaturesProjectileSceneProps) {
+}: ProjectileSceneProps) {
   return (
     <ThreeCanvas frameloop={shouldReduceMotion ? "demand" : "always"}>
       <Suspense>

@@ -14,8 +14,8 @@ function withAlpha(color: string, alpha: number) {
   return color.replace("rgb(", "rgba(").replace(")", `, ${alpha})`);
 }
 
-/** Adds one softly blended grain field behind the subject chooser. */
-export function FeaturesSubjectsArt() {
+/** Renders one softly blended grain field behind the subject chooser. */
+export function SubjectsArt() {
   const { ref, entry } = useIntersection({
     root: null,
     rootMargin: "240px",

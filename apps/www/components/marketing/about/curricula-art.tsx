@@ -4,7 +4,7 @@ import { useIntersection } from "@mantine/hooks";
 import { Warp } from "@paper-design/shaders-react";
 import { useReducedMotion } from "motion/react";
 
-/** Renders one shared curriculum field that pauses outside view. */
+/** Renders the curriculum field only while its section is near view. */
 export function CurriculaArt({ maxPixelCount }: { maxPixelCount: number }) {
   const shouldReduceMotion = useReducedMotion() ?? false;
   const { ref, entry } = useIntersection({
