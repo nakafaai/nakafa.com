@@ -14,13 +14,23 @@ import {
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
-import { Duration, Effect, Fiber, TestClock, TestContext } from "effect";
+import {
+  Duration,
+  Effect,
+  Fiber,
+  Logger,
+  TestClock,
+  TestContext,
+} from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const endpoint = "https://example.convex.site/internal/content/runtime";
 const target = {
   siteUrl: "https://example.convex.site",
   token: "runtime-test-token",
+};
+const unmarkedJsonHeaders = {
+  "content-type": "application/json; charset=utf-8",
 };
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 
@@ -51,6 +61,25 @@ function createResponse(
   Object.defineProperty(response, "url", { value: url });
   return response;
 }
+
+/** Observes cancellation of one concrete response body. */
+function observeResponseCancel(response: Response) {
+  const body = response.body;
+  if (body === null) {
+    return expect.fail("Expected the test response to have a body.");
+  }
+  return vi.spyOn(body, "cancel");
+}
+
+/** Runs a retrying request under Effect's deterministic clock. */
+const runRetryRequest = <Value, Error>(program: Effect.Effect<Value, Error>) =>
+  runWithTestClock(
+    Effect.gen(function* () {
+      const fiber = yield* Effect.fork(program);
+      yield* TestClock.adjust(Duration.seconds(2));
+      return yield* Fiber.join(fiber);
+    })
+  );
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -136,37 +165,155 @@ describe("content runtime transport", () => {
     );
   });
 
-  it("retries rejected read-only runtime fetches", async () => {
+  it("shares one retry budget across network and platform failures", async () => {
+    const platformFailure = createResponse(
+      '{"code":"Server Error"}',
+      500,
+      unmarkedJsonHeaders
+    );
+    const cancelPlatformFailure = observeResponseCancel(platformFailure);
     const response = createResponse("{}", 200);
     fetchMock
       .mockRejectedValueOnce(createFetchFailure("ECONNRESET"))
-      .mockRejectedValueOnce(createFetchFailure("UND_ERR_SOCKET"))
+      .mockResolvedValueOnce(platformFailure)
       .mockResolvedValueOnce(response);
-    const program = Effect.gen(function* () {
-      const fiber = yield* Effect.fork(
-        postContentRequest({ endpoint, source: "{}", target })
-      );
-      yield* TestClock.adjust(Duration.seconds(2));
 
-      return yield* Fiber.join(fiber);
-    });
-
-    await expect(runWithTestClock(program)).resolves.toBe(response);
+    await expect(
+      runRetryRequest(postContentRequest({ endpoint, source: "{}", target }))
+    ).resolves.toBe(response);
     expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(cancelPlatformFailure).toHaveBeenCalledOnce();
+  });
+
+  it("cancels only discarded unmarked platform responses", async () => {
+    const first = createResponse("first", 500, unmarkedJsonHeaders);
+    const second = createResponse("second", 500, unmarkedJsonHeaders);
+    const success = createResponse("success", 200);
+    const cancelFirst = observeResponseCancel(first);
+    const cancelSecond = observeResponseCancel(second);
+    const cancelSuccess = observeResponseCancel(success);
+    fetchMock
+      .mockResolvedValueOnce(first)
+      .mockResolvedValueOnce(second)
+      .mockResolvedValueOnce(success);
+
+    await expect(
+      runRetryRequest(postContentRequest({ endpoint, source: "{}", target }))
+    ).resolves.toBe(success);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(cancelFirst).toHaveBeenCalledOnce();
+    expect(cancelSecond).toHaveBeenCalledOnce();
+    expect(cancelSuccess).not.toHaveBeenCalled();
+  });
+
+  it("returns the final unmarked response untouched after exhaustion", async () => {
+    const first = createResponse("first", 500, unmarkedJsonHeaders);
+    const second = createResponse("second", 500, unmarkedJsonHeaders);
+    const final = createResponse(
+      '{"code":"[Request ID: private] Server Error"}',
+      500,
+      unmarkedJsonHeaders
+    );
+    const cancelFirst = observeResponseCancel(first);
+    const cancelSecond = observeResponseCancel(second);
+    const cancelFinal = observeResponseCancel(final);
+    fetchMock
+      .mockResolvedValueOnce(first)
+      .mockResolvedValueOnce(second)
+      .mockResolvedValueOnce(final);
+
+    const response = await runRetryRequest(
+      postContentRequest({ endpoint, source: "{}", target })
+    );
+
+    expect(response).toBe(final);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(cancelFirst).toHaveBeenCalledOnce();
+    expect(cancelSecond).toHaveBeenCalledOnce();
+    expect(cancelFinal).not.toHaveBeenCalled();
+    await expect(
+      Effect.runPromise(readContentResponse(response, endpoint, 1024))
+    ).resolves.toEqual({ code: "[Request ID: private] Server Error" });
+    expect(createContentContractError(response)).toEqual(
+      new ContentTransportError({ reason: "response-unmarked" })
+    );
+  });
+
+  it("keeps other received responses on one attempt", async () => {
+    const responses = [
+      createResponse("{}", 200, unmarkedJsonHeaders),
+      createResponse("{}", 401, unmarkedJsonHeaders),
+      createResponse("{}", 404, unmarkedJsonHeaders),
+      createResponse("{}", 502, unmarkedJsonHeaders),
+      createResponse("{}", 503, unmarkedJsonHeaders),
+      createResponse("{}", 500),
+      createResponse("{}", 500, {
+        "content-type": "application/json",
+        [CONTENT_RUNTIME_RESPONSE_HEADER]: "wrong-marker",
+      }),
+      createResponse("{}", 500, { "content-type": "text/plain" }),
+      createResponse(
+        "{}",
+        500,
+        unmarkedJsonHeaders,
+        "https://other.test/internal/content/runtime"
+      ),
+    ];
+
+    for (const response of responses) {
+      fetchMock.mockReset();
+      fetchMock.mockResolvedValue(response);
+
+      await expect(
+        Effect.runPromise(
+          postContentRequest({ endpoint, source: "{}", target })
+        )
+      ).resolves.toBe(response);
+      expect(fetchMock).toHaveBeenCalledOnce();
+    }
+  });
+
+  it("continues when a discarded response body cannot be canceled", async () => {
+    const messages: unknown[] = [];
+    const logger = Logger.make(({ message }) => messages.push(message));
+    const platformFailure = createResponse("failure", 500, unmarkedJsonHeaders);
+    const cancelPlatformFailure = observeResponseCancel(platformFailure);
+    cancelPlatformFailure.mockRejectedValueOnce(new Error("private detail"));
+    const success = createResponse("success", 200);
+    fetchMock
+      .mockResolvedValueOnce(platformFailure)
+      .mockResolvedValueOnce(success);
+    const request = postContentRequest({ endpoint, source: "{}", target }).pipe(
+      Effect.provide(Logger.replace(Logger.defaultLogger, logger))
+    );
+
+    await expect(runRetryRequest(request)).resolves.toBe(success);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(messages).toEqual([
+      ["Unable to cancel a discarded content runtime response body."],
+    ]);
+  });
+
+  it("retries an unmarked platform response without a body", async () => {
+    const success = createResponse("success", 200);
+    fetchMock
+      .mockResolvedValueOnce(createResponse(null, 500, unmarkedJsonHeaders))
+      .mockResolvedValueOnce(success);
+
+    await expect(
+      runRetryRequest(postContentRequest({ endpoint, source: "{}", target }))
+    ).resolves.toBe(success);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("preserves sanitized codes after bounded retries", async () => {
     fetchMock.mockRejectedValue(createFetchFailure("EPIPE"));
-    const program = Effect.gen(function* () {
-      const fiber = yield* Effect.fork(
+
+    await expect(
+      runRetryRequest(
         postContentRequest({ endpoint, source: "{}", target }).pipe(Effect.flip)
-      );
-      yield* TestClock.adjust(Duration.seconds(2));
-
-      return yield* Fiber.join(fiber);
-    });
-
-    await expect(runWithTestClock(program)).resolves.toEqual(
+      )
+    ).resolves.toEqual(
       new ContentTransportError({
         networkCodes: ["EPIPE"],
         reason: "fetch",
