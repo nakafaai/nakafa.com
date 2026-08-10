@@ -19,6 +19,12 @@
       "skillPath": "skills/analytics/SKILL.md",
       "computedHash": "f7f83a1c1c4ad904deba3164076b0407df00832463e93d998b36efe781f26867"
     },
+    "attribution": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "skillPath": "skills/attribution/SKILL.md",
+      "computedHash": "3bb5f7f896f7c69facd03ccef150c909116687476303d272cd5b7a10dd2a1048"
+    },
     "audit-website": {
       "source": "squirrelscan/skills",
       "sourceType": "github",
@@ -41,7 +47,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-add/SKILL.md",
-      "computedHash": "fbf1941d439886d1bf10fa18ac4602fa2a0dd93f1a752bd0b3227514adcc1a8a"
+      "computedHash": "6d3b3cecba7aa60ee138f2a7c9f96030e0ff08b32dcd634d11a053d77b00814c"
     },
     "convex-advisor": {
       "source": "get-convex/agent-skills",
@@ -65,7 +71,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-authz/SKILL.md",
-      "computedHash": "b57d87d4a3d842235822d85438c82282860b8d994673c2b22bf1415a7a346468"
+      "computedHash": "9fe09cf6b1c0d5d748f629b78ba9424e15dbbda3cef95d5eca1ab9f4cf305264"
     },
     "convex-backup": {
       "source": "get-convex/agent-skills",
@@ -209,7 +215,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-migrate-rehearse/SKILL.md",
-      "computedHash": "bc12e2cfb237e3d82a89a928790c214fbfa92ac16c98c6b8b194e47002e52a82"
+      "computedHash": "65fbbff7450d2a0a1765383faf077fefce6f68b518631ded7ac26e7798cd775b"
     },
     "convex-migrations": {
       "source": "waynesutton/convexskills",
@@ -239,7 +245,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-quickstart/SKILL.md",
-      "computedHash": "fe4cb5c8f8194196ef703a9d8df07a489fc76ed127576a1bbcbb12a2cb8d8f3a"
+      "computedHash": "a27a5820054b23dd2208167f709c1b1118c0461467b66601d7e2e04f1f1f40e0"
     },
     "convex-realtime": {
       "source": "waynesutton/convexskills",
@@ -529,7 +535,7 @@
       "source": "remotion-dev/skills",
       "sourceType": "github",
       "skillPath": "skills/remotion-best-practices/SKILL.md",
-      "computedHash": "862d40bb9be1cad6b97761ecfb60f9f1808b6a0267d06093a3bea2580a1d3419"
+      "computedHash": "d99f62e8c3689333ff174d0ce5ecaa49ff01259879e0b4801debdc6b4299662a"
     },
     "seo-audit": {
       "source": "coreyhaines31/marketingskills",
