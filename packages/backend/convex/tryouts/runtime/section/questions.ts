@@ -1,67 +1,18 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { getTryoutSectionContentAccess } from "@repo/backend/convex/tryouts/runtime/content";
+import { requireTryoutResponseSectionSnapshot } from "@repo/backend/convex/tryouts/response/integrity";
+import {
+  getTryoutSectionContentAccess,
+  noTryoutSectionContentAccess,
+} from "@repo/backend/convex/tryouts/runtime/content";
+import { loadSectionPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import { loadSectionResponseIndex } from "@repo/backend/convex/tryouts/runtime/response";
+import { projectTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
 import { getSectionScoreResult } from "@repo/backend/convex/tryouts/score/result";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 
-/** Stable integrity failure while reading one bounded section runtime. */
-class TryoutRuntimeReadError extends Schema.TaggedError<TryoutRuntimeReadError>()(
-  "TryoutRuntimeReadError",
-  {
-    code: Schema.Literal(
-      "TRYOUT_PLACEMENT_COUNT_EXCEEDED",
-      "TRYOUT_RESPONSE_COUNT_EXCEEDED"
-    ),
-    message: Schema.String,
-  }
-) {}
-
-/** Loads bounded runtime responses for one section attempt. */
-const loadRuntimeResponses = Effect.fn("tryouts.runtime.loadResponses")(
-  function* (ctx: QueryCtx, section: Doc<"tryoutSectionAttempts">) {
-    const responses = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutResponses")
-        .withIndex("by_tryoutSectionAttemptId_and_answeredAt", (query) =>
-          query.eq("tryoutSectionAttemptId", section._id)
-        )
-        .take(section.totalQuestions + 1)
-    );
-
-    if (responses.length > section.totalQuestions) {
-      return yield* new TryoutRuntimeReadError({
-        code: "TRYOUT_RESPONSE_COUNT_EXCEEDED",
-        message: "Try-out response count exceeds the section question count.",
-      });
-    }
-
-    return new Map(
-      responses.map((response) => [response.placementId, response])
-    );
-  }
-);
-
-/** Loads placements through the immutable signed section key. */
-const loadRuntimePlacements = Effect.fn("tryouts.runtime.loadPlacements")(
-  function* (
-    ctx: QueryCtx,
-    attempt: Doc<"tryoutAttempts">,
-    section: Doc<"tryoutSectionAttempts">
-  ) {
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutAttemptPlacements")
-        .withIndex(
-          "by_tryoutAttemptId_and_sectionKey_and_questionOrder",
-          (index) =>
-            index
-              .eq("tryoutAttemptId", attempt._id)
-              .eq("sectionKey", section.sectionKey)
-        )
-        .take(section.totalQuestions + 1)
-    );
-  }
-);
+type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
+type TryoutResponse = Doc<"tryoutResponses">;
 
 /** Projects the public state shared by attempt and runtime responses. */
 export const readCurrentSection = Effect.fn(
@@ -80,65 +31,125 @@ export const readCurrentSection = Effect.fn(
   };
 });
 
-/** Loads placements and responses for one already-owned section attempt. */
+/** Loads one bounded section graph shared by old and new runtime contracts. */
+const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
+  ctx: QueryCtx,
+  attempt: Doc<"tryoutAttempts">,
+  section: Doc<"tryoutSectionAttempts">
+) {
+  const access = getTryoutSectionContentAccess(attempt.status, section.status);
+  if (!access.questions) {
+    return null;
+  }
+
+  const snapshot = yield* requireTryoutResponseSectionSnapshot(
+    attempt,
+    section
+  );
+  const placements = yield* loadSectionPlacements(ctx, attempt, snapshot);
+  const loaded = yield* loadSectionResponseIndex(
+    ctx,
+    attempt,
+    section,
+    placements
+  );
+  const currentSection = yield* readCurrentSection(section);
+  return { access, currentSection, ...loaded };
+});
+
+/** Loads the deployed runtime shape until the current web switches contracts. */
 export const loadSectionRuntime = Effect.fn("tryouts.runtime.loadSection")(
   function* (
     ctx: QueryCtx,
     attempt: Doc<"tryoutAttempts">,
     section: Doc<"tryoutSectionAttempts">
   ) {
-    const contentAccess = getTryoutSectionContentAccess(
-      attempt.status,
-      section.status
-    );
-    if (!contentAccess.questions) {
+    const loaded = yield* loadSectionRows(ctx, attempt, section);
+    if (!loaded) {
       return null;
     }
-
-    const placements = yield* loadRuntimePlacements(ctx, attempt, section);
-    if (placements.length !== section.totalQuestions) {
-      return yield* new TryoutRuntimeReadError({
-        code: "TRYOUT_PLACEMENT_COUNT_EXCEEDED",
-        message: "Try-out section has more placements than its snapshot count.",
-      });
-    }
-
-    const responses = yield* loadRuntimeResponses(ctx, section);
-    const currentSection = yield* readCurrentSection(section);
-    const questions = placements.map((placement) => {
-      const response = responses.get(placement._id) ?? null;
-      const choices = [...placement.choiceSnapshots].sort(
-        (left, right) => left.order - right.order
-      );
-
-      return {
-        choices: choices.map((choice) => ({
-          ...(contentAccess.answers ? { isCorrect: choice.isCorrect } : {}),
-          label: choice.label,
-          optionKey: choice.optionKey,
-          order: choice.order,
-        })),
-        contentHash: placement.contentHash,
-        placementId: placement._id,
-        questionOrder: placement.questionOrder,
-        response: response
-          ? {
-              answeredAt: response.answeredAt,
-              selectedOptionId: response.selectedOptionId,
-              updatedAt: response.updatedAt,
-            }
-          : null,
-        sourcePath: placement.sourcePath,
-        sourceRevision: placement.sourceRevision,
-        title: placement.title,
-      };
-    });
+    const questions = projectRuntimeQuestions(
+      loaded.placements,
+      loaded.responses,
+      loaded.access
+    );
 
     return {
       attemptId: attempt._id,
       expiresAt: section.expiresAt,
       questions,
-      section: currentSection,
+      section: loaded.currentSection,
     };
   }
 );
+
+/** Loads the compact runtime plus immutable content selectors once. */
+export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
+  function* (
+    ctx: QueryCtx,
+    attempt: Doc<"tryoutAttempts">,
+    section: Doc<"tryoutSectionAttempts">
+  ) {
+    const loaded = yield* loadSectionRows(ctx, attempt, section);
+    if (!loaded) {
+      return { content: noTryoutSectionContentAccess, runtime: null };
+    }
+
+    const content = yield* projectTryoutSignedContent({
+      access: loaded.access,
+      attempt,
+      locale: attempt.locale,
+      placements: loaded.placements,
+      totalQuestions: section.totalQuestions,
+    });
+    return {
+      content,
+      runtime: {
+        attemptId: attempt._id,
+        expiresAt: section.expiresAt,
+        questions: projectRuntimeQuestions(
+          loaded.placements,
+          loaded.responses,
+          loaded.access
+        ).map(({ title: _title, ...question }) => question),
+        section: loaded.currentSection,
+      },
+    };
+  }
+);
+
+/** Projects mutable response state without repeating immutable page fields. */
+function projectRuntimeQuestions(
+  placements: readonly TryoutPlacement[],
+  responses: ReadonlyMap<TryoutPlacement["_id"], TryoutResponse>,
+  access: { readonly answers: boolean; readonly questions: boolean }
+) {
+  return placements.map((placement) => {
+    const response = responses.get(placement._id) ?? null;
+    const choices = [...placement.choiceSnapshots].sort(
+      (left, right) => left.order - right.order
+    );
+
+    return {
+      choices: choices.map((choice) => ({
+        ...(access.answers ? { isCorrect: choice.isCorrect } : {}),
+        label: choice.label,
+        optionKey: choice.optionKey,
+        order: choice.order,
+      })),
+      contentHash: placement.contentHash,
+      placementId: placement._id,
+      questionOrder: placement.questionOrder,
+      response: response
+        ? {
+            answeredAt: response.answeredAt,
+            selectedOptionId: response.selectedOptionId,
+            updatedAt: response.updatedAt,
+          }
+        : null,
+      sourcePath: placement.sourcePath,
+      sourceRevision: placement.sourceRevision,
+      title: placement.title,
+    };
+  });
+}

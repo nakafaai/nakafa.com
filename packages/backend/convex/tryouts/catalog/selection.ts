@@ -3,6 +3,7 @@ import type {
   TryoutSection,
   TryoutSet,
 } from "@nakafa/aksara-contracts/tryout/spec";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
@@ -13,6 +14,17 @@ import {
   readTryoutCatalogRowByPath,
 } from "@repo/backend/convex/tryouts/catalog/row";
 import { Effect } from "effect";
+
+/** One authenticated section row with its signed immutable digest. */
+export interface SelectedTryoutSection {
+  readonly row: TryoutSection;
+  readonly rowHash: Doc<"tryoutCatalog">["rowHash"];
+}
+
+/** Complete verified set-local catalog needed by public and attempt reads. */
+export interface TryoutSetSelection extends PublishedCatalogIndex {
+  readonly sectionRecords: readonly SelectedTryoutSection[];
+}
 
 /** Reads the verified parent and section rows needed for one set route. */
 export const readTryoutSetSelection = Effect.fn(
@@ -87,7 +99,7 @@ export const readTryoutSetSelection = Effect.fn(
         input.snapshotId,
         parentIdentities.exam
       ),
-      sections: readSetSections(ctx, input.snapshotId, set),
+      sectionRecords: readTryoutSetSections(ctx, input.snapshotId, set),
       track: readTryoutCatalogRowByIdentity(
         ctx,
         input.snapshotId,
@@ -106,22 +118,24 @@ export const readTryoutSetSelection = Effect.fn(
     return yield* selectionIntegrity("Signed try-out set lost its track.");
   }
 
-  const index: PublishedCatalogIndex = {
+  const index: TryoutSetSelection = {
     countries: [selectedRows.country],
     exams: [selectedRows.exam],
-    sections: selectedRows.sections,
+    sectionRecords: selectedRows.sectionRecords,
+    sections: selectedRows.sectionRecords.map(({ row }) => row),
     sets: [set],
     tracks: [selectedRows.track],
   };
   return index;
 });
 
-/** Reads and verifies the complete bounded section family for one signed set. */
-const readSetSections = Effect.fn("tryouts.catalog.readSetSections")(function* (
-  ctx: QueryCtx,
-  snapshotId: string,
-  set: TryoutSet
-) {
+/**
+ * Reads and verifies the complete bounded section family for one signed set.
+ * @see https://docs.convex.dev/database/reading-data/indexes/
+ */
+export const readTryoutSetSections = Effect.fn(
+  "tryouts.catalog.readSetSections"
+)(function* (ctx: QueryCtx, snapshotId: string, set: TryoutSet) {
   if (set.sectionCount > TRYOUT_CATALOG_LIMIT) {
     return yield* selectionIntegrity(
       `Try-out set exceeds ${TRYOUT_CATALOG_LIMIT} sections.`
@@ -144,17 +158,15 @@ const readSetSections = Effect.fn("tryouts.catalog.readSetSections")(function* (
       "Signed try-out set lost one or more sections."
     );
   }
-  const rows = yield* Effect.forEach(stored, (row) =>
-    verifyTryoutCatalog(row, snapshotId)
-  );
-  const sections: TryoutSection[] = [];
-  for (const row of rows) {
+  const sections: SelectedTryoutSection[] = [];
+  for (const storedSection of stored) {
+    const row = yield* verifyTryoutCatalog(storedSection, snapshotId);
     if (row.kind !== "section") {
       return yield* selectionIntegrity(
         "Signed try-out set contains another row kind."
       );
     }
-    sections.push(row);
+    sections.push({ row, rowHash: storedSection.rowHash });
   }
   return sections;
 });

@@ -23,6 +23,7 @@ export const TRYOUT_START_EXAM = "tka";
 export const TRYOUT_START_TRACK = "matematika";
 export const TRYOUT_START_SET = "set-1";
 export const TRYOUT_START_SECTION = "matematika";
+export const TRYOUT_REVISED_SECTION = "numerasi";
 export const TRYOUT_REUSED_SET = "set-2";
 export const TRYOUT_REUSED_SECTION = "aljabar";
 export const TRYOUT_RENAMED_SET_PATH = PublicPathSchema.make(
@@ -110,6 +111,40 @@ export async function activateRenamedTryoutStartSource(ctx: MutationCtx) {
   await activateTryoutSnapshot(ctx, {
     catalog,
     placements: tryoutStartLocales.map(makeTryoutStartPlacement),
+  });
+}
+
+/** Activates a new internal entry for the same logical set identity. */
+export async function activateRevisedTryoutStartEntry(ctx: MutationCtx) {
+  await clearActiveTryoutSnapshot(ctx);
+
+  const catalog = tryoutStartLocales.flatMap((locale) =>
+    Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))(
+      makeTryoutStartHierarchy(locale, "internal-entry").map((row) => {
+        if (row.kind === "set") {
+          return {
+            ...row,
+            internalEntrySectionKey: TRYOUT_REVISED_SECTION,
+            publicPath: TRYOUT_RENAMED_SET_PATH,
+            sourceRevision: "2027",
+          };
+        }
+        if (row.kind === "section") {
+          return {
+            ...row,
+            questionSourcePath: `packages/corpus/${revisedSourcePath}`,
+            sectionKey: TRYOUT_REVISED_SECTION,
+            sourceRevision: "2027",
+            title: "Numerasi",
+          };
+        }
+        return row;
+      })
+    )
+  );
+  await activateTryoutSnapshot(ctx, {
+    catalog,
+    placements: tryoutStartLocales.map(makeRevisedTryoutStartPlacement),
   });
 }
 
@@ -307,6 +342,21 @@ function makeGraph(
 }
 
 const reusedSourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}`;
+const revisedSourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_REVISED_SECTION}/${TRYOUT_START_SET}`;
+
+/** Builds one replacement placement for the revised internal entry. */
+function makeRevisedTryoutStartPlacement(locale: ContentLocale) {
+  const questionRoot = `${revisedSourcePath}/question-1`;
+  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+    ...makeTryoutStartPlacement(locale),
+    answerContentKey: `${questionRoot}/answer`,
+    questionContentKey: `${questionRoot}/question`,
+    questionSourcePath: `packages/corpus/${questionRoot}`,
+    sectionKey: TRYOUT_REVISED_SECTION,
+    sourceRevision: "2027",
+    title: "Revised question",
+  });
+}
 
 /** Builds one replacement placement whose public path belongs to another set. */
 function makeReusedTryoutStartPlacement(locale: ContentLocale) {

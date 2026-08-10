@@ -57,9 +57,25 @@ describe("tryouts/queries/attempt", () => {
     );
 
     await expect(
+      t.query(api.tryouts.queries.attempt.isLockedByAttemptId, {
+        attemptId: started.attemptId,
+      })
+    ).resolves.toBe(false);
+    await expect(
+      authed.query(api.tryouts.queries.attempt.isLockedByAttemptId, {
+        attemptId: "not-an-id",
+      })
+    ).resolves.toBe(false);
+
+    await expect(
       authed.query(api.tryouts.queries.attempt.isLockedByPublicPath, {
         locale: "id",
         publicPath: setPublicPath,
+      })
+    ).resolves.toBe(true);
+    await expect(
+      authed.query(api.tryouts.queries.attempt.isLockedByAttemptId, {
+        attemptId: started.attemptId,
       })
     ).resolves.toBe(true);
 
@@ -75,6 +91,11 @@ describe("tryouts/queries/attempt", () => {
       authed.query(api.tryouts.queries.attempt.isLockedByPublicPath, {
         locale: "id",
         publicPath: setPublicPath,
+      })
+    ).resolves.toBe(false);
+    await expect(
+      authed.query(api.tryouts.queries.attempt.isLockedByAttemptId, {
+        attemptId: started.attemptId,
       })
     ).resolves.toBe(false);
   });

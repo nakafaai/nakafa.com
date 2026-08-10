@@ -58,6 +58,10 @@ export type TryoutSectionContentAccess = Infer<
   typeof tryoutSectionContentAccessValidator
 >;
 
+export const noTryoutSectionContentAccess = {
+  kind: "none",
+} satisfies TryoutSectionContentAccess;
+
 /** Derives question and answer access from one coherent attempt lifecycle. */
 export function getTryoutSectionContentAccess(
   attemptStatus: TryoutStatus,

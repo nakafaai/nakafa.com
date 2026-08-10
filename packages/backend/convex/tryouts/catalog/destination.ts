@@ -6,9 +6,14 @@ import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owne
 import type { TryoutSectionIdentity } from "@repo/backend/convex/contentRelease/tryout/section";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
 import {
+  readPublishedEntrySection,
+  toPublicPublishedSection,
+} from "@repo/backend/convex/tryouts/catalog/published";
+import {
   readTryoutCatalogRowByIdentity,
   readTryoutCatalogRowByPath,
 } from "@repo/backend/convex/tryouts/catalog/row";
+import { readTryoutSetSections } from "@repo/backend/convex/tryouts/catalog/selection";
 import { Effect } from "effect";
 
 interface TryoutDestinationIdentity extends TryoutSetIdentity {
@@ -92,3 +97,47 @@ export const readTryoutDestinationPaths = Effect.fn(
 function destinationIntegrity(message: string) {
   return releaseFail("CONTENT_RELEASE_INTEGRITY", message);
 }
+
+/** Resolves one current signed restart target from a frozen set identity. */
+export const readActiveTryoutRestartTarget = Effect.fn(
+  "tryouts.catalog.readActiveRestartTarget"
+)(function* (ctx: QueryCtx, identity: TryoutSetIdentity) {
+  const owner = yield* loadTryoutOwner(ctx);
+  const setIdentity = tryoutCatalogIdentity({ ...identity, kind: "set" });
+  const set = yield* readTryoutCatalogRowByIdentity(
+    ctx,
+    owner.snapshotId,
+    setIdentity
+  );
+  if (!set) {
+    return null;
+  }
+  if (set.kind !== "set") {
+    return yield* destinationIntegrity(
+      "Active try-out set changed its row kind."
+    );
+  }
+
+  const sectionRecords = yield* readTryoutSetSections(
+    ctx,
+    owner.snapshotId,
+    set
+  );
+  const sections = sectionRecords.map(({ row }) => row);
+  const visibleSections = sections.filter(
+    (section) => section.visibility === "visible"
+  );
+  const entrySection = yield* readPublishedEntrySection(
+    set,
+    sections,
+    visibleSections
+  );
+  if (!entrySection) {
+    return null;
+  }
+
+  return {
+    entrySection: toPublicPublishedSection(entrySection),
+    setPublicPath: set.publicPath,
+  };
+});

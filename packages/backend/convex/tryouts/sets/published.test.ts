@@ -5,7 +5,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/progress/write";
+import { getTryoutStatusRank } from "@repo/backend/convex/tryouts/status";
 import {
   activateTryoutStartSource,
   TRYOUT_START_COUNTRY,
