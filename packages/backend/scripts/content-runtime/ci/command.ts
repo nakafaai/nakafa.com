@@ -1,10 +1,14 @@
 import { Command, FileSystem } from "@effect/platform";
-import { Effect, Stream } from "effect";
+import { Effect } from "effect";
 import stripAnsi from "strip-ansi";
 import { contentRuntimeCiError } from "./error";
 
 const MAX_COMMAND_ERROR_LENGTH = 500;
 const WHITESPACE = /\s+/u;
+const SHARED_OUTPUT_REDIRECT =
+  'output_path=$1; shift; exec "$@" >| "$output_path" 2>&1';
+const SPLIT_OUTPUT_REDIRECT =
+  'stdout_path=$1; stderr_path=$2; shift 2; exec "$@" >| "$stdout_path" 2>| "$stderr_path"';
 
 export const sanitizeRuntimeCommandError = (
   text: string,
@@ -37,19 +41,39 @@ interface RuntimeCommand {
   readonly stdoutPath: string;
 }
 
+/**
+ * Runs one runtime command with mode-600 output captured at process startup.
+ * Paths and arguments stay positional so the shell never reparses them.
+ * @see https://www.effect.website/docs/v3/platform/command
+ * @see https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html#tag_19_07
+ */
 export const runRuntimeCommand = Effect.fn("contentRuntime.runCommand")(
   function* (spec: RuntimeCommand) {
     const fileSystem = yield* FileSystem.FileSystem;
     const sharedOutput = spec.stdoutPath === spec.stderrPath;
 
-    if (sharedOutput) {
-      yield* fileSystem.writeFileString(spec.stdoutPath, "", {
-        mode: 0o600,
-      });
+    yield* fileSystem.writeFileString(spec.stdoutPath, "", { mode: 0o600 });
+    yield* fileSystem.chmod(spec.stdoutPath, 0o600);
+    if (!sharedOutput) {
+      yield* fileSystem.writeFileString(spec.stderrPath, "", { mode: 0o600 });
+      yield* fileSystem.chmod(spec.stderrPath, 0o600);
     }
 
-    const outputFlag = sharedOutput ? "a" : "w";
-    let command = Command.make(spec.command, ...spec.args);
+    const redirectScript = sharedOutput
+      ? SHARED_OUTPUT_REDIRECT
+      : SPLIT_OUTPUT_REDIRECT;
+    const outputPaths = sharedOutput
+      ? [spec.stdoutPath]
+      : [spec.stdoutPath, spec.stderrPath];
+    let command = Command.make(
+      "sh",
+      "-c",
+      redirectScript,
+      "content-runtime-command",
+      ...outputPaths,
+      spec.command,
+      ...spec.args
+    );
 
     command = Command.env(command, {
       AGENT_DOCS_CONTENT_CACHE_KEY: "",
@@ -60,32 +84,7 @@ export const runRuntimeCommand = Effect.fn("contentRuntime.runCommand")(
       command = Command.feed(command, spec.stdin);
     }
 
-    const [exitCode] = yield* Effect.scoped(
-      Effect.gen(function* () {
-        const process = yield* Command.start(command);
-
-        return yield* Effect.all(
-          [
-            process.exitCode,
-            Stream.run(
-              process.stdout,
-              fileSystem.sink(spec.stdoutPath, {
-                flag: outputFlag,
-                mode: 0o600,
-              })
-            ),
-            Stream.run(
-              process.stderr,
-              fileSystem.sink(spec.stderrPath, {
-                flag: outputFlag,
-                mode: 0o600,
-              })
-            ),
-          ] as const,
-          { concurrency: "unbounded" }
-        );
-      })
-    );
+    const exitCode = yield* Command.exitCode(command);
     if (exitCode !== 0) {
       if (spec.reportStderr) {
         const stderr = yield* fileSystem.readFileString(spec.stderrPath);

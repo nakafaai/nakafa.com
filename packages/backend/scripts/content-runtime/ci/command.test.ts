@@ -120,6 +120,55 @@ describe("content runtime command diagnostics", () => {
     expect(result.stdout).not.toContain(sensitiveValue);
   });
 
+  it("captures output from fast child processes", async () => {
+    const stdoutValue = 'stdout $HOME ; "literal"';
+    const stderrValue = 'stderr $HOME ; "literal"';
+    const results = await Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fileSystem = yield* FileSystem.FileSystem;
+          const root = yield* fileSystem.makeTempDirectoryScoped({
+            directory: tmpdir(),
+            prefix: "content-runtime-fast-command-test-",
+          });
+
+          return yield* Effect.forEach(Array.from({ length: 20 }), (index) =>
+            Effect.gen(function* () {
+              const stderrPath = `${root}/stderr ${index}.log`;
+              const stdoutPath = `${root}/stdout ${index}.log`;
+
+              yield* runRuntimeCommand({
+                args: [
+                  "-c",
+                  'printf "%s" "$1"; printf "%s" "$2" >&2',
+                  "fast-child",
+                  stdoutValue,
+                  stderrValue,
+                ],
+                command: "sh",
+                operation: "Fast child probe",
+                stderrPath,
+                stdoutPath,
+              });
+
+              return {
+                stderr: yield* fileSystem.readFileString(stderrPath),
+                stdout: yield* fileSystem.readFileString(stdoutPath),
+              };
+            })
+          );
+        })
+      ).pipe(Effect.provide(NodeContext.layer))
+    );
+
+    expect(results).toEqual(
+      Array.from({ length: 20 }, () => ({
+        stderr: stderrValue,
+        stdout: stdoutValue,
+      }))
+    );
+  });
+
   it("keeps entrypoint failures off stdout", async () => {
     const tsxCli = fileURLToPath(import.meta.resolve("tsx/cli"));
     const entrypoint = fileURLToPath(new URL("./main.ts", import.meta.url));
