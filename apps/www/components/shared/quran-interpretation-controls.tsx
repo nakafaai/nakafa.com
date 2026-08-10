@@ -220,7 +220,7 @@ export function QuranInterpretationControls({
 
   return (
     <QuranInterpretationContext.Provider
-      value={{ isPending, pendingVerseNumber }}
+      value={isPending ? pendingVerseNumber : null}
     >
       {children}
       <Drawer onOpenChange={set} open={isOpen}>
