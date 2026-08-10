@@ -28,7 +28,7 @@ export const sanitizeRuntimeCommandError = (
 interface RuntimeCommand {
   readonly args: readonly string[];
   readonly command: string;
-  readonly environment?: Readonly<Record<string, string | undefined>>;
+  readonly deployKey?: string;
   readonly operation: string;
   readonly reportStderr?: boolean;
   readonly sensitiveValues?: readonly string[];
@@ -51,9 +51,11 @@ export const runRuntimeCommand = Effect.fn("contentRuntime.runCommand")(
     const outputFlag = sharedOutput ? "a" : "w";
     let command = Command.make(spec.command, ...spec.args);
 
-    if (spec.environment) {
-      command = Command.env(command, spec.environment);
-    }
+    command = Command.env(command, {
+      AGENT_DOCS_CONTENT_CACHE_KEY: "",
+      CONVEX_DEPLOY_KEY: spec.deployKey ?? "",
+      CONVEX_DEPLOYMENT_TOKEN: "",
+    });
     if (spec.stdin !== undefined) {
       command = Command.feed(command, spec.stdin);
     }
@@ -124,10 +126,7 @@ export const runConvexData = Effect.fn("contentRuntime.readProductionTable")(
         "jsonArray",
       ],
       command: "pnpm",
-      environment: {
-        AGENT_DOCS_CONTENT_CACHE_KEY: undefined,
-        CONVEX_DEPLOY_KEY: options.deployKey,
-      },
+      deployKey: options.deployKey,
       operation: `Production read for ${options.table}`,
       reportStderr: true,
       sensitiveValues: [options.deployKey],
@@ -157,10 +156,6 @@ export const runConvexImport = Effect.fn("contentRuntime.importLocalTable")(
         options.inputPath,
       ],
       command: "pnpm",
-      environment: {
-        AGENT_DOCS_CONTENT_CACHE_KEY: undefined,
-        CONVEX_DEPLOY_KEY: undefined,
-      },
       operation: `Local import for ${options.table}`,
       stderrPath: options.logPath,
       stdoutPath: options.logPath,

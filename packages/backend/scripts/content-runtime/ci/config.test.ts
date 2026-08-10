@@ -1,11 +1,16 @@
 import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
+  clearContentRuntimeSecrets,
   validateProductionDeployKey,
 } from "@repo/backend/scripts/content-runtime/ci/config";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("content runtime CI config", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it.each([
     `prod:${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}|test-secret`,
     `prod:deployment:data:view:${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}|test-secret`,
@@ -42,5 +47,20 @@ describe("content runtime CI config", () => {
     if (deployKey.length > 0) {
       expect(failure.message).not.toContain(deployKey);
     }
+  });
+
+  it("clears every content runtime credential alias", () => {
+    const sensitiveValue = "inherited-sensitive-value";
+    vi.stubEnv("AGENT_DOCS_CONTENT_CACHE_KEY", sensitiveValue);
+    vi.stubEnv("CONVEX_DEPLOY_KEY", sensitiveValue);
+    vi.stubEnv("CONVEX_DEPLOYMENT_TOKEN", sensitiveValue);
+    vi.stubEnv("CONTENT_RUNTIME_UNRELATED", "preserved-value");
+
+    Effect.runSync(clearContentRuntimeSecrets);
+
+    expect(process.env.AGENT_DOCS_CONTENT_CACHE_KEY).toBeUndefined();
+    expect(process.env.CONVEX_DEPLOY_KEY).toBeUndefined();
+    expect(process.env.CONVEX_DEPLOYMENT_TOKEN).toBeUndefined();
+    expect(process.env.CONTENT_RUNTIME_UNRELATED).toBe("preserved-value");
   });
 });
