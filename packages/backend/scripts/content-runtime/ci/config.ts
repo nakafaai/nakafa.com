@@ -184,4 +184,5 @@ export const readImportConfig = Effect.gen(function* () {
 export const clearContentRuntimeSecrets = Effect.sync(() => {
   delete process.env.AGENT_DOCS_CONTENT_CACHE_KEY;
   delete process.env.CONVEX_DEPLOY_KEY;
+  delete process.env.CONVEX_DEPLOYMENT_TOKEN;
 });

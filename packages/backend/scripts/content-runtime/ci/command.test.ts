@@ -7,9 +7,13 @@ import {
   sanitizeRuntimeCommandError,
 } from "@repo/backend/scripts/content-runtime/ci/command";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("content runtime command diagnostics", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("keeps a bounded single-line diagnostic and redacts secrets", () => {
     const deployKey = "sensitive-deploy-key";
     const result = sanitizeRuntimeCommandError(
@@ -73,6 +77,47 @@ describe("content runtime command diagnostics", () => {
     expect(result.failure.message).not.toContain(sensitiveValue);
     expect(result.stderr).toContain(sensitiveValue);
     expect(result.stdout).toBe("");
+  });
+
+  it("scrubs inherited secrets before spawning a child process", async () => {
+    const sensitiveValue = "inherited-sensitive-value";
+    vi.stubEnv("AGENT_DOCS_CONTENT_CACHE_KEY", sensitiveValue);
+    vi.stubEnv("CONVEX_DEPLOY_KEY", sensitiveValue);
+    vi.stubEnv("CONVEX_DEPLOYMENT_TOKEN", sensitiveValue);
+
+    const result = await Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fileSystem = yield* FileSystem.FileSystem;
+          const root = yield* fileSystem.makeTempDirectoryScoped({
+            directory: tmpdir(),
+            prefix: "content-runtime-command-env-test-",
+          });
+          const stderrPath = `${root}/stderr.log`;
+          const stdoutPath = `${root}/stdout.log`;
+
+          yield* runRuntimeCommand({
+            args: [
+              "-e",
+              'process.stdout.write([process.env.AGENT_DOCS_CONTENT_CACHE_KEY, process.env.CONVEX_DEPLOY_KEY, process.env.CONVEX_DEPLOYMENT_TOKEN, Boolean(process.env.PATH)].join("|"));',
+            ],
+            command: process.execPath,
+            operation: "Secret scrub probe",
+            stderrPath,
+            stdoutPath,
+          });
+
+          return {
+            stderr: yield* fileSystem.readFileString(stderrPath),
+            stdout: yield* fileSystem.readFileString(stdoutPath),
+          };
+        })
+      ).pipe(Effect.provide(NodeContext.layer))
+    );
+
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toBe("|||true");
+    expect(result.stdout).not.toContain(sensitiveValue);
   });
 
   it("keeps entrypoint failures off stdout", async () => {

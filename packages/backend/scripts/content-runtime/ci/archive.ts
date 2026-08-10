@@ -4,11 +4,6 @@ import { runRuntimeCommand } from "./command";
 import { contentRuntimeCiError } from "./error";
 import { validateArchiveListing } from "./snapshot";
 
-const secretFreeEnvironment = {
-  AGENT_DOCS_CONTENT_CACHE_KEY: undefined,
-  CONVEX_DEPLOY_KEY: undefined,
-};
-
 const runGpg = (options: {
   readonly args: readonly string[];
   readonly input?: string;
@@ -18,7 +13,6 @@ const runGpg = (options: {
   runRuntimeCommand({
     args: options.args,
     command: "gpg",
-    environment: secretFreeEnvironment,
     operation: options.operation,
     stderrPath: options.logPath,
     stdin: options.input,
@@ -34,7 +28,6 @@ const runTar = (options: {
   runRuntimeCommand({
     args: options.args,
     command: "tar",
-    environment: secretFreeEnvironment,
     operation: options.operation,
     stderrPath: options.logPath,
     stdoutPath: options.outputPath ?? options.logPath,
@@ -51,18 +44,6 @@ export const createEncryptedArchive = Effect.fn(
   readonly snapshotRoot: string;
 }) {
   const fileSystem = yield* FileSystem.FileSystem;
-
-  yield* runGpg({
-    args: ["--dump-options"],
-    logPath: options.logPath,
-    operation: "GnuPG capability check",
-  });
-  const availableOptions = yield* fileSystem.readFileString(options.logPath);
-  if (!availableOptions.split("\n").includes("--force-ocb")) {
-    return yield* contentRuntimeCiError(
-      "The runner GnuPG does not support OCB authenticated encryption."
-    );
-  }
 
   yield* runTar({
     args: [
