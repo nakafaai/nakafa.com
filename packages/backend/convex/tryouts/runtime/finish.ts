@@ -1,9 +1,12 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  readSectionCompletion,
+  requireFinalSectionAttempts,
+} from "@repo/backend/convex/tryouts/runtime/completion";
+import {
   TryoutRuntimeError,
   tryRuntimePromise,
-  tryRuntimeSync,
 } from "@repo/backend/convex/tryouts/runtime/error";
 import {
   loadAttemptPlacements,
@@ -13,6 +16,7 @@ import {
 import {
   loadAttemptResponses,
   loadSectionResponseIndex,
+  type TryoutAttemptResponseIndex,
   type TryoutResponseIndex,
 } from "@repo/backend/convex/tryouts/runtime/response";
 import { getSectionScoreSnapshot } from "@repo/backend/convex/tryouts/runtime/result";
@@ -155,23 +159,24 @@ export const finalizeSectionAttempt = Effect.fn(
     section: TryoutSectionAttempt;
   }
 ) {
-  const completedSectionKeys = Array.from(
-    new Set([...args.attempt.completedSectionKeys, args.section.sectionKey])
-  );
-  const completesAttempt =
-    completedSectionKeys.length >= args.attempt.sectionSnapshots.length;
+  const completion = yield* readSectionCompletion(args.attempt, args.section);
 
-  let attemptResponseIndex: TryoutResponseIndex | null = null;
+  let attemptResponseIndex: TryoutAttemptResponseIndex | null = null;
   let scoreSource: TryoutScoreSource;
   let sectionResponseIndex: TryoutResponseIndex;
 
-  if (completesAttempt) {
+  if (completion.completesAttempt) {
     const placements = yield* loadAttemptPlacements(ctx, args.attempt);
     attemptResponseIndex = yield* loadAttemptResponses(
       ctx,
       args.attempt,
       placements,
       "complete"
+    );
+    yield* requireFinalSectionAttempts(
+      args.attempt,
+      args.section,
+      attemptResponseIndex.sections
     );
     scoreSource = yield* loadAttemptScoreSource(
       ctx,
@@ -183,8 +188,9 @@ export const finalizeSectionAttempt = Effect.fn(
       args.section.sectionIdentity
     );
   } else {
-    const snapshot = yield* tryRuntimeSync(() =>
-      requireSectionSnapshot(args.attempt, args.section.sectionKey)
+    const snapshot = yield* requireSectionSnapshot(
+      args.attempt,
+      args.section.sectionKey
     );
     const placements = yield* loadSectionPlacements(
       ctx,
@@ -224,7 +230,7 @@ export const finalizeSectionAttempt = Effect.fn(
 
   yield* tryRuntimePromise(() =>
     ctx.db.patch(args.attempt._id, {
-      completedSectionKeys,
+      completedSectionKeys: completion.completedSectionKeys,
       lastActivityAt: args.now,
     })
   );

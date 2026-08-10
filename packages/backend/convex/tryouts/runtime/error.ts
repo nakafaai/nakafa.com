@@ -1,21 +1,17 @@
 import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
-import {
-  getUnknownErrorMessage,
-  readConvexErrorData,
-} from "@repo/backend/convex/lib/effect";
+import { readConvexErrorData } from "@repo/backend/convex/lib/effect";
 import { Effect, Schema } from "effect";
+
+const runtimeFailureMessage = "Unable to complete try-out runtime operation.";
 
 /** Expected failure while executing one try-out runtime capability. */
 export class TryoutRuntimeError
   extends Schema.TaggedError<TryoutRuntimeError>()("TryoutRuntimeError", {
+    cause: Schema.optional(Schema.Unknown),
     code: Schema.String,
     message: Schema.String,
   })
-  implements ConvexTaggedError
-{
-  declare readonly code: string;
-  declare readonly message: string;
-}
+  implements ConvexTaggedError {}
 
 /** Maps an unknown runtime failure into the stable typed error channel. */
 export function toTryoutRuntimeError(error: unknown) {
@@ -25,21 +21,17 @@ export function toTryoutRuntimeError(error: unknown) {
 
   const data = readConvexErrorData(error);
   if (data) {
-    return new TryoutRuntimeError(data);
+    return new TryoutRuntimeError({ ...data, cause: error });
   }
 
   return new TryoutRuntimeError({
+    cause: error,
     code: "TRYOUT_RUNTIME_FAILED",
-    message: getUnknownErrorMessage(error),
+    message: runtimeFailureMessage,
   });
 }
 
 /** Lifts one Convex promise into the typed runtime error channel. */
 export function tryRuntimePromise<A>(operation: () => Promise<A>) {
   return Effect.tryPromise({ catch: toTryoutRuntimeError, try: operation });
-}
-
-/** Lifts one synchronous runtime operation into the typed error channel. */
-export function tryRuntimeSync<A>(operation: () => A) {
-  return Effect.try({ catch: toTryoutRuntimeError, try: operation });
 }

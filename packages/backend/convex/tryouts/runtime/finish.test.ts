@@ -437,4 +437,59 @@ describe("tryouts/runtime/finish", () => {
       },
     });
   });
+
+  it("rejects duplicate snapshot keys before expiry writes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const fixture = await t.mutation(async (ctx) => {
+      const seeded = await seedTryoutContentAccessState(ctx, {
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        suffix: "finish-duplicate-snapshot",
+      });
+      const attempt = await ctx.db.get(seeded.attemptId);
+      const firstSnapshot = attempt?.sectionSnapshots[0];
+      if (!(attempt && firstSnapshot)) {
+        throw new Error("Expected one frozen try-out section.");
+      }
+      await ctx.db.patch(attempt._id, {
+        scoreStatus: "official",
+        scoringStrategy: "raw",
+        sectionSnapshots: [
+          firstSnapshot,
+          {
+            ...firstSnapshot,
+            sectionIdentity: `${firstSnapshot.sectionIdentity}-duplicate`,
+            sectionOrder: 2,
+          },
+        ],
+        totalQuestions: 2,
+      });
+      return seeded;
+    });
+
+    await expect(
+      t.mutation(async (ctx) => {
+        const attempt = await ctx.db.get(fixture.attemptId);
+        if (!attempt) {
+          throw new Error("Expected one active try-out attempt.");
+        }
+        return await runConvexProgram(
+          expireAttempt(ctx, { attempt, now: NOW })
+        );
+      })
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH" },
+    });
+    const stored = await t.query(async (ctx) => ({
+      attempt: await ctx.db.get(fixture.attemptId),
+      scores: await ctx.db.query("tryoutScores").collect(),
+      section: await ctx.db.get(fixture.sectionAttemptId),
+    }));
+    expect(stored.scores).toEqual([]);
+    expect(stored.attempt).toMatchObject({
+      completedSectionKeys: [],
+      status: "in-progress",
+    });
+    expect(stored.section).toMatchObject({ status: "in-progress" });
+  });
 });

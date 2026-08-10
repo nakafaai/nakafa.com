@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   insertTryoutAttempt,
+  insertTryoutAttemptPlacement,
   insertTryoutSectionAttempt,
   insertTryoutUser,
   seedTryoutContentAccessState,
@@ -63,6 +64,14 @@ describe("tryouts/mutations/expiry", () => {
         snapshotId: expiredAttempt.tryoutSnapshotId,
         snapshotReleaseId: expiredAttempt.snapshotReleaseId,
         userId: activeUserId,
+      });
+      const expiredPlacement = await ctx.db.get(expired.placementId);
+      if (!expiredPlacement) {
+        throw new Error("Expected the expired placement fixture.");
+      }
+      await insertTryoutAttemptPlacement(ctx, {
+        placement: expiredPlacement,
+        tryoutAttemptId: activeAttemptId,
       });
       const expiredSectionId = await insertTryoutSectionAttempt(ctx, {
         expiresAt: EXPIRED_AT,

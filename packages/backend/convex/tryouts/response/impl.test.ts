@@ -1,8 +1,10 @@
 import { api } from "@repo/backend/convex/_generated/api";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { saveTryoutResponse } from "@repo/backend/convex/tryouts/response/impl";
 import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
@@ -36,6 +38,15 @@ async function seedResponseFixture(
   });
 }
 
+/** Requires the first immutable choice in one response fixture. */
+function requireFirstChoice<T>(choices: readonly T[]) {
+  const choice = choices.at(0);
+  if (!choice) {
+    throw new Error("Expected one frozen choice.");
+  }
+  return choice;
+}
+
 /** Returns an authenticated test client for one seeded app user. */
 function authenticate(
   t: ConvexTest,
@@ -48,16 +59,19 @@ function authenticate(
 }
 
 describe("tryouts/response/impl", () => {
-  it("keeps the deployed response mutation contract available", async () => {
+  it("routes the deployed mutation contract through server timing", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await seedResponseFixture(t, "legacy-response-contract");
-    const selectedChoice = seeded.choices.at(0);
-    if (!selectedChoice) {
-      throw new Error("Expected one frozen choice.");
-    }
+    const selectedChoice = requireFirstChoice(seeded.choices);
     const authed = authenticate(t, seeded.identity);
 
     vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000));
+    await expect(
+      authed.mutation(api.tryouts.mutations.attempts.saveResponse, {
+        placementId: seeded.placementId,
+        timeSpent: 7,
+      })
+    ).rejects.toMatchObject({ data: { code: "TRYOUT_CHOICE_REQUIRED" } });
     await authed.mutation(api.tryouts.mutations.attempts.saveResponse, {
       placementId: seeded.placementId,
       selectedOptionId: selectedChoice.optionKey,
@@ -73,18 +87,17 @@ describe("tryouts/response/impl", () => {
         .unique()
     );
     expect(response).toMatchObject({
+      answeredAt: TRYOUT_TEST_NOW + 5000,
       selectedOptionId: selectedChoice.optionKey,
-      timeSpent: 7,
+      timeSpent: 5,
+      updatedAt: TRYOUT_TEST_NOW + 5000,
     });
   });
 
   it("stores server-derived elapsed time and preserves first-answer time", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await seedResponseFixture(t, "response-time");
-    const selectedChoice = seeded.choices.at(0);
-    if (!selectedChoice) {
-      throw new Error("Expected one frozen choice.");
-    }
+    const selectedChoice = requireFirstChoice(seeded.choices);
     const authed = authenticate(t, seeded.identity);
 
     vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000));
@@ -157,10 +170,7 @@ describe("tryouts/response/impl", () => {
   it("accepts the pre-expiry boundary and rejects expiry without overwrite", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await seedResponseFixture(t, "response-expiry");
-    const selectedChoice = seeded.choices.at(0);
-    if (!selectedChoice) {
-      throw new Error("Expected one frozen choice.");
-    }
+    const selectedChoice = requireFirstChoice(seeded.choices);
     const authed = authenticate(t, seeded.identity);
 
     vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 1_799_999));
@@ -191,10 +201,7 @@ describe("tryouts/response/impl", () => {
   it("rejects a different user before writing a response", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await seedResponseFixture(t, "response-owner");
-    const selectedChoice = seeded.choices.at(0);
-    if (!selectedChoice) {
-      throw new Error("Expected one frozen choice.");
-    }
+    const selectedChoice = requireFirstChoice(seeded.choices);
     const outsider = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
         now: TRYOUT_TEST_NOW,
@@ -214,6 +221,42 @@ describe("tryouts/response/impl", () => {
     ).resolves.toEqual([]);
   });
 
+  it("masks an unexpected attempt lookup failure", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await seedResponseFixture(t, "response-storage-failure");
+    const selectedChoice = requireFirstChoice(seeded.choices);
+
+    await expect(
+      t.mutation(async (ctx) => {
+        const placement = await ctx.db.get(seeded.placementId);
+        if (!placement) {
+          throw new Error("Expected one frozen placement.");
+        }
+        const get = vi.spyOn(ctx.db, "get");
+        get.mockResolvedValueOnce(placement);
+        get.mockRejectedValueOnce(
+          new Error("internal tryoutAttempts storage details")
+        );
+
+        return await runConvexProgram(
+          saveTryoutResponse(ctx, {
+            args: {
+              placementId: seeded.placementId,
+              selectedOptionId: selectedChoice.optionKey,
+            },
+            now: TRYOUT_TEST_NOW + 5000,
+            userId: seeded.identity.userId,
+          })
+        );
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "TRYOUT_RESPONSE_FAILED",
+        message: "Unable to save try-out response.",
+      },
+    });
+  });
+
   it.each([
     {
       expectedCode: "TRYOUT_ATTEMPT_NOT_ACTIVE",
@@ -230,10 +273,7 @@ describe("tryouts/response/impl", () => {
     async ({ expectedCode, status, suffix }) => {
       const t = createConvexTestWithBetterAuth();
       const seeded = await seedResponseFixture(t, suffix, status);
-      const selectedChoice = seeded.choices.at(0);
-      if (!selectedChoice) {
-        throw new Error("Expected one frozen choice.");
-      }
+      const selectedChoice = requireFirstChoice(seeded.choices);
       const authed = authenticate(t, seeded.identity);
 
       await expect(
@@ -264,10 +304,7 @@ describe("tryouts/response/impl", () => {
     async ({ expectedCode, suffix, target }) => {
       const t = createConvexTestWithBetterAuth();
       const seeded = await seedResponseFixture(t, suffix);
-      const selectedChoice = seeded.choices.at(0);
-      if (!selectedChoice) {
-        throw new Error("Expected one frozen choice.");
-      }
+      const selectedChoice = requireFirstChoice(seeded.choices);
       await t.mutation((ctx) => {
         if (target === "placement") {
           return ctx.db.patch(seeded.placementId, {
@@ -303,10 +340,7 @@ describe("tryouts/response/impl", () => {
   it("rejects a cross-linked existing response without counter changes", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await seedResponseFixture(t, "response-link");
-    const selectedChoice = seeded.choices.at(0);
-    if (!selectedChoice) {
-      throw new Error("Expected one frozen choice.");
-    }
+    const selectedChoice = requireFirstChoice(seeded.choices);
     await t.mutation(async (ctx) => {
       const attempt = await ctx.db.get(seeded.attemptId);
       const section = await ctx.db.get(seeded.sectionAttemptId);
@@ -377,10 +411,7 @@ describe("tryouts/response/impl", () => {
   it("rejects duplicate placement responses before any overwrite", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await seedResponseFixture(t, "response-duplicate");
-    const selectedChoice = seeded.choices.at(0);
-    if (!selectedChoice) {
-      throw new Error("Expected one frozen choice.");
-    }
+    const selectedChoice = requireFirstChoice(seeded.choices);
     await t.mutation(async (ctx) => {
       for (const offset of [0, 1]) {
         await ctx.db.insert("tryoutResponses", {
@@ -422,10 +453,7 @@ describe("tryouts/response/impl", () => {
   it("rejects stale stored correctness before any overwrite", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await seedResponseFixture(t, "response-correctness");
-    const selectedChoice = seeded.choices.at(0);
-    if (!selectedChoice) {
-      throw new Error("Expected one frozen choice.");
-    }
+    const selectedChoice = requireFirstChoice(seeded.choices);
     await t.mutation((ctx) =>
       ctx.db.insert("tryoutResponses", {
         answeredAt: TRYOUT_TEST_NOW,

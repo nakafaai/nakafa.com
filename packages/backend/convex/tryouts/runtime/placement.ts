@@ -7,14 +7,16 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { tryRuntimePromise } from "@repo/backend/convex/tryouts/runtime/error";
+import {
+  TryoutRuntimeError,
+  tryRuntimePromise,
+} from "@repo/backend/convex/tryouts/runtime/error";
 import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
 import {
   TryoutStartError,
   toTryoutStartError,
   tryoutStartErrorCode,
 } from "@repo/backend/convex/tryouts/start/spec";
-import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
@@ -22,25 +24,27 @@ type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
 type TryoutReadContext = Pick<QueryCtx, "db">;
 
 /** Loads the immutable section snapshot for one attempt section key. */
-export function requireSectionSnapshot(
-  attempt: TryoutAttempt,
-  sectionKey: string
-): TryoutSectionSnapshot {
+export const requireSectionSnapshot = Effect.fn(
+  "tryouts.runtime.requireSectionSnapshot"
+)(function* (attempt: TryoutAttempt, sectionKey: string) {
   const snapshot = attempt.sectionSnapshots.find(
     (section) => section.sectionKey === sectionKey
   );
 
   if (!snapshot) {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_SECTION_NOT_FOUND",
       message: "Try-out section is not part of this attempt.",
     });
   }
 
   return snapshot;
-}
+});
 
-/** Loads one bounded attempt placement inventory for finalization. */
+/**
+ * Loads one bounded attempt placement inventory for finalization.
+ * @see https://docs.convex.dev/production/state/limits#transactions
+ */
 export const loadAttemptPlacements = Effect.fn(
   "tryouts.runtime.loadAttemptPlacements"
 )(function* (ctx: TryoutReadContext, attempt: TryoutAttempt) {

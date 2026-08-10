@@ -4,7 +4,6 @@ import { loadAttemptSections } from "@repo/backend/convex/tryouts/runtime/attemp
 import {
   TryoutRuntimeError,
   tryRuntimePromise,
-  tryRuntimeSync,
 } from "@repo/backend/convex/tryouts/runtime/error";
 import {
   finalizeSectionAttempt,
@@ -42,19 +41,35 @@ export const requireInternalEntrySection = Effect.fn(
 });
 
 /** Resolves the timer row that authorizes answers for one placement. */
-export function loadPlacementSectionAttempt(
+export const loadPlacementSectionAttempt = Effect.fn(
+  "tryouts.runtime.loadPlacementSectionAttempt"
+)(function* (ctx: MutationCtx, placement: Doc<"tryoutAttemptPlacements">) {
+  return yield* loadSectionAttempt(ctx, {
+    attemptId: placement.tryoutAttemptId,
+    sectionKey: placement.sectionKey,
+  });
+});
+
+/** Loads one active section attempt by its stable attempt-owned key. */
+export const requireActiveSectionAttempt = Effect.fn(
+  "tryouts.runtime.requireActiveSectionAttempt"
+)(function* (
   ctx: MutationCtx,
-  placement: Doc<"tryoutAttemptPlacements">
+  args: { attempt: TryoutAttempt; sectionKey: string }
 ) {
-  return ctx.db
-    .query("tryoutSectionAttempts")
-    .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
-      q
-        .eq("tryoutAttemptId", placement.tryoutAttemptId)
-        .eq("sectionKey", placement.sectionKey)
-    )
-    .unique();
-}
+  const section = yield* loadSectionAttempt(ctx, {
+    attemptId: args.attempt._id,
+    sectionKey: args.sectionKey,
+  });
+  if (section?.status !== "in-progress") {
+    return yield* new TryoutRuntimeError({
+      code: "TRYOUT_SECTION_NOT_ACTIVE",
+      message: "Try-out section is not active.",
+    });
+  }
+
+  return section;
+});
 
 /** Starts one section attempt and its timer inside an active try-out attempt. */
 export const startSectionAttempt = Effect.fn(
@@ -77,9 +92,10 @@ export const startSectionAttempt = Effect.fn(
     });
   }
 
-  const existing = yield* tryRuntimePromise(() =>
-    loadSectionAttempt(ctx, args)
-  );
+  const existing = yield* loadSectionAttempt(ctx, {
+    attemptId: args.attempt._id,
+    sectionKey: args.sectionKey,
+  });
 
   if (existing?.status === "in-progress" && args.now < existing.expiresAt) {
     return startSectionResult;
@@ -100,8 +116,9 @@ export const startSectionAttempt = Effect.fn(
   }
 
   const currentAttempt = yield* requireNoParallelSectionTimer(ctx, args);
-  const snapshot = yield* tryRuntimeSync(() =>
-    requireSectionSnapshot(currentAttempt, args.sectionKey)
+  const snapshot = yield* requireSectionSnapshot(
+    currentAttempt,
+    args.sectionKey
   );
   const expiresAt = Math.min(
     args.now + snapshot.timeLimitSeconds * 1000,
@@ -152,19 +169,23 @@ export const startSectionAttempt = Effect.fn(
 });
 
 /** Loads one existing section attempt by its stable section key. */
-function loadSectionAttempt(
-  ctx: MutationCtx,
-  args: { attempt: TryoutAttempt; sectionKey: string }
-) {
-  return ctx.db
-    .query("tryoutSectionAttempts")
-    .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
-      q
-        .eq("tryoutAttemptId", args.attempt._id)
-        .eq("sectionKey", args.sectionKey)
-    )
-    .unique();
-}
+const loadSectionAttempt = Effect.fn("tryouts.runtime.loadSectionAttempt")(
+  function* (
+    ctx: MutationCtx,
+    args: { attemptId: Id<"tryoutAttempts">; sectionKey: string }
+  ) {
+    return yield* tryRuntimePromise(() =>
+      ctx.db
+        .query("tryoutSectionAttempts")
+        .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
+          q
+            .eq("tryoutAttemptId", args.attemptId)
+            .eq("sectionKey", args.sectionKey)
+        )
+        .unique()
+    );
+  }
+);
 
 /** Rejects or expires any other in-progress section timer. */
 const requireNoParallelSectionTimer = Effect.fn(

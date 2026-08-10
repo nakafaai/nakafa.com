@@ -30,26 +30,44 @@ export class TryoutResponseIntegrityError
       message: Schema.String,
     }
   )
-  implements ConvexTaggedError
-{
-  declare readonly code:
-    | "TRYOUT_PLACEMENT_COUNT_MISMATCH"
-    | "TRYOUT_PLACEMENT_DUPLICATE"
-    | "TRYOUT_RESPONSE_CHOICE_MISMATCH"
-    | "TRYOUT_RESPONSE_COUNT_EXCEEDED"
-    | "TRYOUT_RESPONSE_LINK_MISMATCH"
-    | "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE"
-    | "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH";
-  declare readonly message: string;
-}
+  implements ConvexTaggedError {}
+
+/** Indexes one unique frozen section graph by immutable identity. */
+export const validateTryoutSectionSnapshots = Effect.fn(
+  "tryouts.response.validateSectionSnapshots"
+)(function* (snapshots: readonly TryoutSectionSnapshot[]) {
+  const snapshotsByIdentity = new Map<string, TryoutSectionSnapshot>();
+  const sectionKeys = new Set<string>();
+  const sectionOrders = new Set<number>();
+
+  for (const snapshot of snapshots) {
+    if (
+      snapshotsByIdentity.has(snapshot.sectionIdentity) ||
+      sectionKeys.has(snapshot.sectionKey) ||
+      sectionOrders.has(snapshot.sectionOrder)
+    ) {
+      return yield* responseIntegrity(
+        "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
+        "Try-out section snapshots contain a duplicate identity, key, or order."
+      );
+    }
+
+    snapshotsByIdentity.set(snapshot.sectionIdentity, snapshot);
+    sectionKeys.add(snapshot.sectionKey);
+    sectionOrders.add(snapshot.sectionOrder);
+  }
+
+  return snapshotsByIdentity;
+});
 
 /** Resolves and validates the frozen section owned by one response graph. */
 export const requireTryoutResponseSectionSnapshot = Effect.fn(
   "tryouts.response.requireSectionSnapshot"
 )(function* (attempt: TryoutAttempt, section: TryoutSectionAttempt) {
-  const snapshot = attempt.sectionSnapshots.find(
-    (candidate) => candidate.sectionIdentity === section.sectionIdentity
+  const snapshotsByIdentity = yield* validateTryoutSectionSnapshots(
+    attempt.sectionSnapshots
   );
+  const snapshot = snapshotsByIdentity.get(section.sectionIdentity);
   if (
     !snapshot ||
     section.tryoutAttemptId !== attempt._id ||
@@ -98,6 +116,9 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
   readonly placements: TryoutPlacement[];
   readonly snapshots: readonly TryoutSectionSnapshot[];
 }) {
+  const snapshotsByIdentity = yield* validateTryoutSectionSnapshots(
+    input.snapshots
+  );
   const snapshotQuestionCount = input.snapshots.reduce(
     (total, snapshot) => total + snapshot.questionCount,
     0
@@ -112,16 +133,8 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
     );
   }
 
-  const snapshotsByIdentity = new Map<string, TryoutSectionSnapshot>();
   const questionOrdersBySection = new Map<string, Set<number>>();
   for (const snapshot of input.snapshots) {
-    if (snapshotsByIdentity.has(snapshot.sectionIdentity)) {
-      return yield* responseIntegrity(
-        "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
-        "Try-out section snapshots contain a duplicate identity."
-      );
-    }
-    snapshotsByIdentity.set(snapshot.sectionIdentity, snapshot);
     questionOrdersBySection.set(snapshot.sectionIdentity, new Set());
   }
 

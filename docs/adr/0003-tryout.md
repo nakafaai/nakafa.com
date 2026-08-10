@@ -4,7 +4,8 @@
 
 Accepted. Amended on 2026-07-08 to insert the canonical try-out track layer,
 on 2026-07-22 to define freemium attempt access, and on 2026-08-04 to make
-Aksara signed publication the only authored try-out source.
+Aksara signed publication the only authored try-out source. Amended on
+2026-08-10 to define transactional response and scoring integrity.
 
 ## Context
 
@@ -50,6 +51,29 @@ Use these Convex table families:
 
 Do not reconstruct authored catalog or question data from Nakafa filesystem
 copies. Do not add a second authored table family beside the signed snapshot.
+
+### Runtime Integrity
+
+One domain response transaction receives one frozen placement ID and selected
+option. The server derives elapsed time from the active section timer and
+correctness from the signed choice snapshot. The transaction validates attempt,
+section, placement, and response ownership before it updates the response and
+parent activity counters.
+
+Two explicitly temporary migration boundaries remain in this intermediate
+slice. The live web caller still reaches `attempts.saveResponse`, which ignores
+client timing and delegates to the canonical response transaction. Historical
+`textAnswer` response rows remain readable by integrity validation until dev and
+production data prove that field empty. Remove the adapter after the web cutover,
+then remove the field and integrity branch after the data proof. Neither boundary
+is a supported long-term compatibility API.
+
+Section completion, attempt completion, and expiry load bounded indexed
+placement and response graphs. They reject missing, duplicate, or mismatched
+snapshot identities before persistence. Terminal IRT scoring loads one
+validated placement inventory and score source, then reuses both for section
+and attempt results so maximum-size placements are not read twice in one
+transaction.
 
 ### Freemium Access
 

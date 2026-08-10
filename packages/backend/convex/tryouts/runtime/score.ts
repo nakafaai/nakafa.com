@@ -24,7 +24,6 @@ import {
   scoreRawAnswers,
 } from "@repo/backend/convex/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/convex/tryouts/score";
-import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
@@ -88,21 +87,34 @@ export const loadSectionScoreSource = Effect.fn(
 });
 
 /** Loads one owned attempt or rejects it before mutating runtime rows. */
-export async function requireOwnedAttempt(
+export const requireOwnedAttempt = Effect.fn(
+  "tryouts.runtime.requireOwnedAttempt"
+)(function* (
   ctx: MutationCtx,
   args: { attemptId: Id<"tryoutAttempts">; userId: Id<"users"> }
 ) {
-  const attempt = await ctx.db.get(args.attemptId);
+  const attempt = yield* tryRuntimePromise(() =>
+    ctx.db.get(args.attemptId)
+  ).pipe(
+    Effect.mapError(
+      (cause) =>
+        new TryoutRuntimeError({
+          cause,
+          code: "TRYOUT_RUNTIME_FAILED",
+          message: "Unable to load try-out attempt.",
+        })
+    )
+  );
 
   if (!attempt || attempt.userId !== args.userId) {
-    throw new ConvexError({
+    return yield* new TryoutRuntimeError({
       code: "TRYOUT_ATTEMPT_NOT_FOUND",
       message: "Try-out attempt not found.",
     });
   }
 
   return attempt;
-}
+});
 
 /** Counts response answers and correctness for a section or attempt. */
 export function summarizeResponses(responses: TryoutResponse[]) {

@@ -556,6 +556,7 @@ import type * as tryouts_runtime_attempt_sections from "../tryouts/runtime/attem
 import type * as tryouts_runtime_attempt_state from "../tryouts/runtime/attempt/state.js";
 import type * as tryouts_runtime_bundle from "../tryouts/runtime/bundle.js";
 import type * as tryouts_runtime_choice from "../tryouts/runtime/choice.js";
+import type * as tryouts_runtime_completion from "../tryouts/runtime/completion.js";
 import type * as tryouts_runtime_content from "../tryouts/runtime/content.js";
 import type * as tryouts_runtime_error from "../tryouts/runtime/error.js";
 import type * as tryouts_runtime_estimate from "../tryouts/runtime/estimate.js";
@@ -1156,6 +1157,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/runtime/attempt/state": typeof tryouts_runtime_attempt_state;
   "tryouts/runtime/bundle": typeof tryouts_runtime_bundle;
   "tryouts/runtime/choice": typeof tryouts_runtime_choice;
+  "tryouts/runtime/completion": typeof tryouts_runtime_completion;
   "tryouts/runtime/content": typeof tryouts_runtime_content;
   "tryouts/runtime/error": typeof tryouts_runtime_error;
   "tryouts/runtime/estimate": typeof tryouts_runtime_estimate;

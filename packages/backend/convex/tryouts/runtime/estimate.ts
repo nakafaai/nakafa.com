@@ -36,16 +36,29 @@ export const estimateIrtScore = Effect.fn("tryouts.runtime.estimateIrtScore")(
     let theta = 0;
 
     for (let index = 0; index < THETA_ITERATIONS; index++) {
-      const step = getThetaStep(itemAnswers, theta);
+      const iteration = getThetaStep(itemAnswers, theta);
+      if (
+        !(
+          Number.isFinite(iteration.information) &&
+          Number.isFinite(iteration.score) &&
+          Number.isFinite(iteration.step)
+        )
+      ) {
+        return yield* invalidIrtItemEstimate();
+      }
 
-      if (Math.abs(step) < THETA_TOLERANCE) {
+      if (Math.abs(iteration.step) < THETA_TOLERANCE) {
         break;
       }
 
-      theta = clamp(theta + step, MIN_THETA, MAX_THETA);
+      theta = clamp(theta + iteration.step, MIN_THETA, MAX_THETA);
     }
 
     const information = getInformation(itemAnswers, theta);
+
+    if (!(Number.isFinite(theta) && Number.isFinite(information))) {
+      return yield* invalidIrtItemEstimate();
+    }
 
     if (information < MIN_INFORMATION) {
       return yield* irtEstimationError(
@@ -54,10 +67,19 @@ export const estimateIrtScore = Effect.fn("tryouts.runtime.estimateIrtScore")(
       );
     }
 
+    const publishedScore = getPublishedIrtScore(theta);
+    const thetaSE = 1 / Math.sqrt(information);
+    if (!(Number.isFinite(publishedScore) && Number.isFinite(thetaSE))) {
+      return yield* irtEstimationError(
+        "TRYOUT_IRT_ESTIMATE_INVALID",
+        "IRT scoring produced a non-finite estimate."
+      );
+    }
+
     return {
-      publishedScore: getPublishedIrtScore(theta),
+      publishedScore,
       theta,
-      thetaSE: 1 / Math.sqrt(information),
+      thetaSE,
     };
   }
 );
@@ -76,11 +98,12 @@ function getThetaStep(itemAnswers: IrtItemAnswer[], theta: number) {
     information += discrimination * discrimination * expected * (1 - expected);
   }
 
-  if (information < MIN_INFORMATION) {
-    return 0;
-  }
+  const step =
+    information < MIN_INFORMATION
+      ? 0
+      : clamp(score / information, -THETA_STEP_LIMIT, THETA_STEP_LIMIT);
 
-  return clamp(score / information, -THETA_STEP_LIMIT, THETA_STEP_LIMIT);
+  return { information, score, step };
 }
 
 /** Computes Fisher information for a complete item response vector. */
@@ -115,4 +138,12 @@ function clamp(value: number, min: number, max: number) {
 /** Creates one stable typed IRT estimation failure. */
 function irtEstimationError(code: string, message: string) {
   return new TryoutRuntimeError({ code, message });
+}
+
+/** Rejects finite item parameters that produce non-finite score math. */
+function invalidIrtItemEstimate() {
+  return irtEstimationError(
+    "TRYOUT_IRT_ITEM_INVALID",
+    "IRT item parameters must produce finite score calculations."
+  );
 }

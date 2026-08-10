@@ -316,6 +316,36 @@ export async function insertTryoutSectionAttempt(
   });
 }
 
+/** Copies one immutable placement fixture onto another attempt. */
+export function insertTryoutAttemptPlacement(
+  ctx: MutationCtx,
+  args: {
+    placement: Doc<"tryoutAttemptPlacements">;
+    tryoutAttemptId: Id<"tryoutAttempts">;
+  }
+) {
+  const { placement } = args;
+
+  return ctx.db.insert("tryoutAttemptPlacements", {
+    answerArtifactHash: placement.answerArtifactHash,
+    answerContentKey: placement.answerContentKey,
+    choiceSnapshots: placement.choiceSnapshots,
+    contentHash: placement.contentHash,
+    placementIdentity: placement.placementIdentity,
+    placementRowHash: placement.placementRowHash,
+    questionArtifactHash: placement.questionArtifactHash,
+    questionContentKey: placement.questionContentKey,
+    questionOrder: placement.questionOrder,
+    rendererDomain: placement.rendererDomain,
+    sectionIdentity: placement.sectionIdentity,
+    sectionKey: placement.sectionKey,
+    sourcePath: placement.sourcePath,
+    sourceRevision: placement.sourceRevision,
+    title: placement.title,
+    tryoutAttemptId: args.tryoutAttemptId,
+  });
+}
+
 /** Inserts the calibrated item required to score one IRT placement. */
 export async function insertIrtScaleItem(
   ctx: MutationCtx,

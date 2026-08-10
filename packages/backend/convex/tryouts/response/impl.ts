@@ -11,6 +11,7 @@ import {
   TryoutResponseError,
   toTryoutResponseError,
 } from "@repo/backend/convex/tryouts/response/spec";
+import type { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import { getAttemptExpiresAt } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireOwnedAttempt } from "@repo/backend/convex/tryouts/runtime/score";
 import { loadPlacementSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
@@ -19,9 +20,22 @@ import { Effect } from "effect";
 type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
 type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
 
-/** Lifts one Convex write into the typed response error channel. */
+/** Lifts one Convex database operation into the typed response error channel. */
 function tryResponsePromise<A>(operation: () => Promise<A>) {
   return Effect.tryPromise({ catch: toTryoutResponseError, try: operation });
+}
+
+/** Preserves an expected ownership denial while masking lookup failures. */
+function toOwnedAttemptResponseError(error: TryoutRuntimeError) {
+  if (error.code !== "TRYOUT_ATTEMPT_NOT_FOUND") {
+    return toTryoutResponseError(error);
+  }
+
+  return new TryoutResponseError({
+    cause: error,
+    code: error.code,
+    message: error.message,
+  });
 }
 
 /** Returns elapsed section seconds from authoritative server timestamps. */
@@ -54,8 +68,8 @@ const requirePlacement = Effect.fn("tryouts.response.requirePlacement")(
 /** Loads the active timer that authorizes one placement response. */
 const requireActiveSection = Effect.fn("tryouts.response.requireActiveSection")(
   function* (ctx: MutationCtx, placement: TryoutPlacement) {
-    const section = yield* tryResponsePromise(() =>
-      loadPlacementSectionAttempt(ctx, placement)
+    const section = yield* loadPlacementSectionAttempt(ctx, placement).pipe(
+      Effect.mapError(toTryoutResponseError)
     );
     if (section?.status !== "in-progress") {
       return yield* new TryoutResponseError({
@@ -67,7 +81,10 @@ const requireActiveSection = Effect.fn("tryouts.response.requireActiveSection")(
   }
 );
 
-/** Saves one selected choice against immutable placement snapshots. */
+/**
+ * Saves one selected choice and its parent counters in one atomic mutation.
+ * @see https://docs.convex.dev/functions/mutation-functions#transactions
+ */
 export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
   ctx: MutationCtx,
   input: {
@@ -77,12 +94,10 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
   }
 ) {
   const placement = yield* requirePlacement(ctx, input.args.placementId);
-  const attempt = yield* tryResponsePromise(() =>
-    requireOwnedAttempt(ctx, {
-      attemptId: placement.tryoutAttemptId,
-      userId: input.userId,
-    })
-  );
+  const attempt = yield* requireOwnedAttempt(ctx, {
+    attemptId: placement.tryoutAttemptId,
+    userId: input.userId,
+  }).pipe(Effect.mapError(toOwnedAttemptResponseError));
   if (attempt.status !== "in-progress") {
     return yield* new TryoutResponseError({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
@@ -140,11 +155,6 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
   const existing = existingResponses.at(0);
   const timeSpent = getResponseTimeSpent(section, input.now);
   if (existing) {
-    const answeredDelta =
-      existing.selectedOptionId === undefined &&
-      existing.textAnswer === undefined
-        ? 1
-        : 0;
     const correctDelta =
       (selectedChoice.isCorrect ? 1 : 0) - (existing.isCorrect ? 1 : 0);
 
@@ -158,7 +168,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
       })
     );
     yield* updateResponseActivity(ctx, {
-      answeredDelta,
+      answeredDelta: 0,
       attemptId: attempt._id,
       correctDelta,
       now: input.now,

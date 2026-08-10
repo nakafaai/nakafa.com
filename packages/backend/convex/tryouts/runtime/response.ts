@@ -79,7 +79,7 @@ export const loadSectionResponseIndex = Effect.fn(
   return { placements: validatedPlacements, responses: indexed };
 });
 
-/** Loads terminal responses from an already-read attempt placement inventory. */
+/** Loads one bounded attempt response graph with complete or partial coverage. */
 export const loadAttemptResponses = Effect.fn(
   "tryouts.response.loadAttemptIntegrity"
 )(function* (

@@ -6,11 +6,13 @@ import schema from "@repo/backend/convex/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { retainTryoutBundle } from "@repo/backend/convex/tryouts/runtime/bundle";
+import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import { loadAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { loadAttemptResponses } from "@repo/backend/convex/tryouts/runtime/response";
 import {
   finalizeAttemptScore,
   loadAttemptScoreSource,
+  requireOwnedAttempt,
 } from "@repo/backend/convex/tryouts/runtime/score";
 import {
   TEST_MANIFEST_HASH,
@@ -25,7 +27,7 @@ import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime"
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const TRACK_KEY = "2027";
@@ -89,6 +91,64 @@ const finalizeLoadedAttempt = Effect.fn(
 });
 
 describe("tryouts/runtime/score", () => {
+  it("masks unexpected owned attempt lookup failures", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation((ctx) =>
+      seedTryoutContentAccessState(ctx, {
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        suffix: "score-owned-attempt-failure",
+      })
+    );
+    const storageCause = new Error("internal tryoutAttempts storage details");
+
+    await t.mutation(async (ctx) => {
+      vi.spyOn(ctx.db, "get").mockRejectedValue(storageCause);
+
+      const internalFailure = await Effect.runPromise(
+        Effect.flip(
+          requireOwnedAttempt(ctx, {
+            attemptId: seeded.attemptId,
+            userId: seeded.identity.userId,
+          })
+        )
+      );
+
+      expect(internalFailure).toMatchObject({
+        cause: {
+          code: "TRYOUT_RUNTIME_FAILED",
+          message: "Unable to complete try-out runtime operation.",
+        },
+        code: "TRYOUT_RUNTIME_FAILED",
+        message: "Unable to load try-out attempt.",
+      });
+      const lookupFailure = internalFailure.cause;
+      expect(lookupFailure).toBeInstanceOf(TryoutRuntimeError);
+      if (!(lookupFailure instanceof TryoutRuntimeError)) {
+        throw new Error("Expected a typed lookup failure cause.");
+      }
+      expect(lookupFailure.cause).toBe(storageCause);
+
+      const publicFailure = await runConvexProgram(
+        requireOwnedAttempt(ctx, {
+          attemptId: seeded.attemptId,
+          userId: seeded.identity.userId,
+        })
+      ).then(
+        () => null,
+        (error: unknown) => error
+      );
+
+      expect(publicFailure).toMatchObject({
+        data: {
+          code: "TRYOUT_RUNTIME_FAILED",
+          message: "Unable to load try-out attempt.",
+        },
+      });
+      expect(JSON.stringify(publicFailure)).not.toContain(storageCause.message);
+    });
+  });
+
   it("scores from the frozen bundle after the active release advances", async () => {
     const t = convexTest(schema, convexModules);
 

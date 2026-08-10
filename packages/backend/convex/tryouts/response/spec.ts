@@ -21,11 +21,7 @@ export class TryoutResponseError
     code: Schema.String,
     message: Schema.String,
   })
-  implements ConvexTaggedError
-{
-  declare readonly code: string;
-  declare readonly message: string;
-}
+  implements ConvexTaggedError {}
 
 /** Maps a thrown Convex operation into the response error channel. */
 export function toTryoutResponseError(error: unknown) {

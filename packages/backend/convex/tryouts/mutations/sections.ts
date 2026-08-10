@@ -1,16 +1,23 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { mutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import {
+  TryoutRuntimeError,
+  tryRuntimePromise,
+} from "@repo/backend/convex/tryouts/runtime/error";
+import {
   finalizeSectionAttempt,
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireOwnedAttempt } from "@repo/backend/convex/tryouts/runtime/score";
-import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
-import { ConvexError, v } from "convex/values";
+import {
+  requireActiveSectionAttempt,
+  startSectionAttempt,
+} from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
+import { v } from "convex/values";
+import { Clock, Effect } from "effect";
 
 const SECTION_COMPLETED_RESULT = "completed";
 const SECTION_STARTED_RESULT = "started";
@@ -18,11 +25,9 @@ const SECTION_STARTED_RESULT = "started";
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
 type TryoutEndReason = NonNullable<TryoutAttempt["endReason"]>;
-
-/** Returns the stable mutation result for a completed section. */
-function sectionCompletedResult(): { kind: "completed" } {
-  return { kind: SECTION_COMPLETED_RESULT };
-}
+const sectionCompletedResult = Object.freeze({
+  kind: SECTION_COMPLETED_RESULT,
+});
 
 /** Returns the submitted or expired end reason for a section timer. */
 function getSectionEndReason(
@@ -36,30 +41,6 @@ function getSectionEndReason(
   return "submitted";
 }
 
-/** Loads one active section attempt by its stable section key. */
-async function requireActiveSectionAttempt(
-  ctx: MutationCtx,
-  args: { attempt: TryoutAttempt; sectionKey: string }
-) {
-  const section = await ctx.db
-    .query("tryoutSectionAttempts")
-    .withIndex("by_tryoutAttemptId_and_sectionKey", (q) =>
-      q
-        .eq("tryoutAttemptId", args.attempt._id)
-        .eq("sectionKey", args.sectionKey)
-    )
-    .unique();
-
-  if (section?.status !== "in-progress") {
-    throw new ConvexError({
-      code: "TRYOUT_SECTION_NOT_ACTIVE",
-      message: "Try-out section is not active.",
-    });
-  }
-
-  return section;
-}
-
 /** Starts one section attempt and its timer inside an active try-out attempt. */
 export const start = mutation({
   args: {
@@ -69,22 +50,23 @@ export const start = mutation({
   returns: v.object({
     kind: v.literal(SECTION_STARTED_RESULT),
   }),
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-    const attempt = await requireOwnedAttempt(ctx, {
-      attemptId: args.attemptId,
-      userId: appUser._id,
-    });
-    const now = Date.now();
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const { appUser } = yield* tryRuntimePromise(() => requireAuth(ctx));
+        const attempt = yield* requireOwnedAttempt(ctx, {
+          attemptId: args.attemptId,
+          userId: appUser._id,
+        });
+        const now = yield* Clock.currentTimeMillis;
 
-    return runConvexProgram(
-      startSectionAttempt(ctx, {
-        attempt,
-        now,
-        sectionKey: args.sectionKey,
+        return yield* startSectionAttempt(ctx, {
+          attempt,
+          now,
+          sectionKey: args.sectionKey,
+        });
       })
-    );
-  },
+    ),
 });
 
 /** Completes one section and finalizes the attempt when no sections remain. */
@@ -96,44 +78,41 @@ export const complete = mutation({
   returns: v.object({
     kind: v.literal(SECTION_COMPLETED_RESULT),
   }),
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-    const attempt = await requireOwnedAttempt(ctx, {
-      attemptId: args.attemptId,
-      userId: appUser._id,
-    });
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const { appUser } = yield* tryRuntimePromise(() => requireAuth(ctx));
+        const attempt = yield* requireOwnedAttempt(ctx, {
+          attemptId: args.attemptId,
+          userId: appUser._id,
+        });
+        if (attempt.status !== "in-progress") {
+          return yield* new TryoutRuntimeError({
+            code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+            message: "Try-out attempt is not active.",
+          });
+        }
 
-    if (attempt.status !== "in-progress") {
-      throw new ConvexError({
-        code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-        message: "Try-out attempt is not active.",
-      });
-    }
+        const now = yield* Clock.currentTimeMillis;
+        if (now >= getAttemptExpiresAt(attempt)) {
+          return yield* new TryoutRuntimeError({
+            code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+            message: "Try-out attempt time has expired.",
+          });
+        }
 
-    const now = Date.now();
+        const section = yield* requireActiveSectionAttempt(ctx, {
+          attempt,
+          sectionKey: args.sectionKey,
+        });
+        yield* finalizeSectionAttempt(ctx, {
+          attempt,
+          endReason: getSectionEndReason(section, now),
+          now,
+          section,
+        });
 
-    if (now >= getAttemptExpiresAt(attempt)) {
-      throw new ConvexError({
-        code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-        message: "Try-out attempt time has expired.",
-      });
-    }
-
-    const section = await requireActiveSectionAttempt(ctx, {
-      attempt,
-      sectionKey: args.sectionKey,
-    });
-    const endReason = getSectionEndReason(section, now);
-
-    await runConvexProgram(
-      finalizeSectionAttempt(ctx, {
-        attempt,
-        endReason,
-        now,
-        section,
+        return sectionCompletedResult;
       })
-    );
-
-    return sectionCompletedResult();
-  },
+    ),
 });
