@@ -3,9 +3,9 @@ name: convex-realtime
 description: Patterns for building reactive apps including subscription management, optimistic updates, cache behavior, and paginated queries with cursor-based loading
 metadata:
   displayName: Convex Realtime
-  version: 1.0.0
+  version: "1.0.0"
   author: Convex
-  tags: [convex, realtime, subscriptions, optimistic-updates, pagination]
+  tags: "convex, realtime, subscriptions, optimistic-updates, pagination"
 ---
 
 # Convex Realtime
@@ -129,7 +129,7 @@ function TaskItem({ task }: { task: Task }) {
     (localStore, args) => {
       const { taskId } = args;
       const currentValue = localStore.getQuery(api.tasks.get, { taskId });
-      
+
       if (currentValue !== undefined) {
         localStore.setQuery(api.tasks.get, { taskId }, {
           ...currentValue,
@@ -158,7 +158,7 @@ function useCreateTask(userId: Id<"users">) {
     (localStore, args) => {
       const { title, userId } = args;
       const currentTasks = localStore.getQuery(api.tasks.list, { userId });
-      
+
       if (currentTasks !== undefined) {
         // Add optimistic task to the list
         const optimisticTask = {
@@ -168,7 +168,7 @@ function useCreateTask(userId: Id<"users">) {
           userId,
           completed: false,
         };
-        
+
         localStore.setQuery(api.tasks.list, { userId }, [
           optimisticTask,
           ...currentTasks,
@@ -219,13 +219,13 @@ function MessageList({ channelId }: { channelId: Id<"channels"> }) {
       {results.map((message) => (
         <div key={message._id}>{message.content}</div>
       ))}
-      
+
       {status === "CanLoadMore" && (
         <button onClick={() => loadMore(20)}>Load More</button>
       )}
-      
+
       {status === "LoadingMore" && <div>Loading...</div>}
-      
+
       {status === "Exhausted" && <div>No more messages</div>}
     </div>
   );
@@ -245,7 +245,7 @@ function InfiniteMessageList({ channelId }: { channelId: Id<"channels"> }) {
     { channelId },
     { initialNumItems: 20 }
   );
-  
+
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -291,8 +291,8 @@ function Dashboard({ userId }: { userId: Id<"users"> }) {
   const tasks = useQuery(api.tasks.list, { userId });
   const notifications = useQuery(api.notifications.unread, { userId });
 
-  const isLoading = user === undefined || 
-                    tasks === undefined || 
+  const isLoading = user === undefined ||
+                    tasks === undefined ||
                     notifications === undefined;
 
   if (isLoading) {
@@ -403,7 +403,7 @@ function ChatRoom({ channelId, userId }: Props) {
         ))}
         <div ref={messagesEndRef} />
       </div>
-      
+
       <form onSubmit={handleSend}>
         <input
           value={input}

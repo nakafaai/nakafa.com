@@ -9,7 +9,7 @@ description: |
   monorepo, shares code between apps, runs changed/affected packages, debugs cache,
   or has apps/packages directories.
 metadata:
-  version: 2.10.5-canary.5
+  version: 2.10.9
 ---
 
 # Turborepo Skill
@@ -128,12 +128,12 @@ Cache problems?
 ```
 Run only what changed?
 ├─ Changed packages + dependents (RECOMMENDED) → turbo run build --affected
-├─ Custom base branch → --affected --affected-base=origin/develop
+├─ Custom base branch → TURBO_SCM_BASE=origin/develop turbo run build --affected
 ├─ Manual git comparison → --filter=...[origin/main]
 └─ See all filter options → references/filtering/RULE.md
 ```
 
-**`--affected` is the primary way to run only changed packages.** It automatically compares against the default branch and includes dependents.
+**`--affected` is the primary way to run only changed packages.** It compares against `main` (falling back to `master`) - not the repo's configured default branch - and includes dependents. Set `TURBO_SCM_BASE` for any other base branch.
 
 ### "I want to filter packages"
 
@@ -338,7 +338,7 @@ Scripts like `prebuild` that manually build other packages bypass Turborepo's de
 
 ### Overly Broad `globalDependencies`
 
-`globalDependencies` affects ALL tasks in ALL packages via the **global hash** — tasks cannot opt out of specific files, even with negation globs in `inputs`. Be specific.
+`globalDependencies` affects ALL tasks in ALL packages via the **global hash** - tasks cannot opt out of specific files, even with negation globs in `inputs`. Be specific.
 
 ```json
 // WRONG - heavy hammer, affects all hashes
@@ -427,7 +427,7 @@ A large `env` array (even 50+ variables) is **not** a problem. It usually means 
 
 ### Using `--parallel` Flag
 
-The `--parallel` flag bypasses Turborepo's dependency graph. If tasks need parallel execution, configure `dependsOn` correctly instead.
+The `--parallel` flag bypasses Turborepo's dependency graph. It is deprecated and will be removed in a future major version - use task configuration (`persistent`, `with`) instead.
 
 ```bash
 # WRONG - bypasses dependency graph
@@ -645,7 +645,7 @@ Turbo does NOT load `.env` files - your framework does. But Turbo needs to know 
 
 ### Root `.env` File in Monorepo
 
-A `.env` file at the repo root is an anti-pattern — even for small monorepos or starter templates. It creates implicit coupling between packages and makes it unclear which packages depend on which variables.
+A `.env` file at the repo root is an anti-pattern - even for small monorepos or starter templates. It creates implicit coupling between packages and makes it unclear which packages depend on which variables.
 
 ```
 // WRONG - root .env affects all packages implicitly
@@ -672,7 +672,7 @@ my-monorepo/
 - All packages get all variables (even ones they don't need)
 - Cache invalidation is coarse-grained (root .env change invalidates everything)
 - Security risk: packages may accidentally access sensitive vars meant for others
-- Bad habits start small — starter templates should model correct patterns
+- Bad habits start small - starter templates should model correct patterns
 
 **If you must share variables**, use `globalEnv` to be explicit about what's shared, and document why.
 
@@ -740,7 +740,7 @@ import { Button } from "@repo/ui/button";
 
 ```json
 {
-  "$schema": "https://v2-10-5-canary-5.turborepo.dev/schema.json",
+  "$schema": "https://v2-10-9.turborepo.dev/schema.json",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -785,7 +785,7 @@ A `dev` task with `dependsOn: ["^dev"]` and `persistent: false` in root turbo.js
 
 **Why this works:**
 
-- **Packages** (e.g., `@acme/db`, `@acme/validators`) have `"dev": "tsc"` — one-shot type generation that completes quickly
+- **Packages** (e.g., `@acme/db`, `@acme/validators`) have `"dev": "tsc"` - one-shot type generation that completes quickly
 - **Apps** override with `persistent: true` for actual dev servers (Next.js, etc.)
 - **`turbo watch`** re-runs the one-shot package `dev` scripts when source files change, keeping types in sync
 
@@ -853,7 +853,7 @@ The `transit` task creates dependency relationships without matching any actual 
 }
 ```
 
-With `futureFlags.globalConfiguration`, the same config moves global settings under `global` — and `.env` becomes a per-task input instead of a global hash input:
+With `futureFlags.globalConfiguration`, the same config moves global settings under `global` - and `.env` becomes a per-task input instead of a global hash input:
 
 ```json
 {

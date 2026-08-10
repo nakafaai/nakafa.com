@@ -14,7 +14,7 @@ npx shadcn@latest add @coss/calendar
 Manual deps from docs:
 
 ```bash
-npm install react-day-picker
+npm install @daypicker/react
 ```
 
 ## Canonical imports

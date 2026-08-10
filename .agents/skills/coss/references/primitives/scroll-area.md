@@ -75,7 +75,17 @@ Fill viewport for flex layouts (e.g. sidebar footers with `mt-auto`):
 </ScrollArea>
 ```
 
-`fill` defaults to `false`. Use it only when the content wrapper must stretch to the viewport height—not for lists, comboboxes, or other content-sized scroll areas.
+`fill` defaults to `false`. Use it only when the content wrapper must stretch to the viewport height - not for lists, comboboxes, or other content-sized scroll areas.
+
+Prevent scroll chaining into parent scrollers:
+
+```tsx
+<ScrollArea className="h-64" overscrollContain>
+  <div className="p-4">{/* Long content */}</div>
+</ScrollArea>
+```
+
+`overscrollContain` defaults to `false`. Opt in for nested surfaces (dialogs, sheets, drawers, popups, sidebars) where wheel/touch should not propagate past the scroll area.
 
 `ScrollArea` always renders both scrollbars internally -- horizontal scroll is driven by inner content width exceeding the container, not by a prop. Also supports `scrollbarGutter` for reserving scrollbar space.
 
@@ -90,8 +100,9 @@ See `p-scroll-area-1` through `p-scroll-area-5` for vertical, horizontal, both a
 - Forgetting explicit height/constraint, resulting in non-scrollable container.
 - Nesting multiple scroll areas that compete for wheel/touch events.
 - Using scroll area where native page scrolling is simpler and clearer.
-- Using `fill` on every scroll area—default is `false`; opt in only for flex layouts that need full viewport height (e.g. `mt-auto` footers). Pair with `flex-1 min-h-0` on the root and `h-full flex-col` on the inner wrapper.
-- Disabling `clampContentMinWidth` unless horizontal scroll actually regresses—default `true` fixes spurious horizontal bars in vertical-first layouts.
+- Using `fill` on every scroll area - default is `false`; opt in only for flex layouts that need full viewport height (e.g. `mt-auto` footers). Pair with `flex-1 min-h-0` on the root and `h-full flex-col` on the inner wrapper.
+- Forgetting `overscrollContain` on nested scroll surfaces (dialogs, popups, sidebars) when scroll should not chain to the page - default is `false`.
+- Disabling `clampContentMinWidth` unless horizontal scroll actually regresses - default `true` fixes spurious horizontal bars in vertical-first layouts.
 
 ## Useful particle references
 
