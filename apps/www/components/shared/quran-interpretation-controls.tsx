@@ -16,11 +16,19 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
-import { useLayoutEffect, useRef, useState, useTransition } from "react";
+import {
+  type ReactNode,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
+import { QuranInterpretationContext } from "@/components/shared/quran-interpretation-context";
 import { reportClientException } from "@/lib/analytics/client";
 
 interface Props {
+  children: ReactNode;
   errorMessage: string;
   label: string;
   recoverSnapshot: () => Promise<void>;
@@ -57,24 +65,9 @@ function getVerseNumber(button: HTMLButtonElement) {
   return verseNumber;
 }
 
-const setInterpretationButtonLoading = Effect.fn(
-  "www.quran.setInterpretationButtonLoading"
-)((button: HTMLButtonElement, isLoading: boolean) =>
-  Effect.sync(() => {
-    button.disabled = isLoading;
-    button.toggleAttribute("data-loading", isLoading);
-
-    if (isLoading) {
-      button.setAttribute("aria-busy", "true");
-      return;
-    }
-
-    button.removeAttribute("aria-busy");
-  })
-);
-
-/** Handles all verse tafsir drawers through one hydrated client island. */
+/** Coordinates every verse tafsir request and drawer through one client controller. */
 export function QuranInterpretationControls({
+  children,
   errorMessage,
   label,
   recoverSnapshot,
@@ -85,9 +78,11 @@ export function QuranInterpretationControls({
   const convex = useConvex();
   const [isOpen, { close, open, set }] = useDisclosure(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
+  const [pendingVerseNumber, setPendingVerseNumber] = useState<number | null>(
+    null
+  );
   const [isPending, startTransition] = useTransition();
   const requestSequence = useRef(0);
-  const pendingButton = useRef<HTMLButtonElement | null>(null);
   const pendingRequestId = useRef<number | null>(null);
   const toastId = `quran-interpretation-${snapshotId}-${surahNumber}`;
 
@@ -95,13 +90,8 @@ export function QuranInterpretationControls({
   useLayoutEffect(
     () => () => {
       requestSequence.current += 1;
-      if (pendingButton.current) {
-        Effect.runSync(
-          setInterpretationButtonLoading(pendingButton.current, false)
-        );
-      }
-      pendingButton.current = null;
       pendingRequestId.current = null;
+      setPendingVerseNumber(null);
       close();
       setSelectedInterpretation("");
       toast.dismiss(toastId);
@@ -126,24 +116,21 @@ export function QuranInterpretationControls({
 
     requestSequence.current += 1;
     const requestId = requestSequence.current;
-    pendingButton.current = button;
     pendingRequestId.current = requestId;
+    setPendingVerseNumber(verseNumber);
     close();
     setSelectedInterpretation("");
 
-    const program = setInterpretationButtonLoading(button, true).pipe(
-      Effect.zipRight(
-        Effect.tryPromise({
-          catch: toQuranInterpretationRequestError,
-          try: () =>
-            convex.query(api.contentRelease.quran.interpretation, {
-              expectedSnapshotId: snapshotId,
-              locale: "id",
-              surahNumber,
-              verseNumber,
-            }),
-        })
-      ),
+    const program = Effect.tryPromise({
+      catch: toQuranInterpretationRequestError,
+      try: () =>
+        convex.query(api.contentRelease.quran.interpretation, {
+          expectedSnapshotId: snapshotId,
+          locale: "id",
+          surahNumber,
+          verseNumber,
+        }),
+    }).pipe(
       Effect.flatMap((result) =>
         decodePublishedQuranInterpretation(result, {
           locale: "id",
@@ -216,18 +203,14 @@ export function QuranInterpretationControls({
         );
       }),
       Effect.ensuring(
-        setInterpretationButtonLoading(button, false).pipe(
-          Effect.tap(() =>
-            Effect.sync(() => {
-              if (pendingButton.current === button) {
-                pendingButton.current = null;
-              }
-              if (pendingRequestId.current === requestId) {
-                pendingRequestId.current = null;
-              }
-            })
-          )
-        )
+        Effect.sync(() => {
+          if (pendingRequestId.current !== requestId) {
+            return;
+          }
+
+          pendingRequestId.current = null;
+          setPendingVerseNumber(null);
+        })
       ),
       Effect.asVoid
     );
@@ -236,20 +219,25 @@ export function QuranInterpretationControls({
   });
 
   return (
-    <Drawer onOpenChange={set} open={isOpen}>
-      <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
-        <DrawerHeader className="border-b">
-          <DrawerTitle className="text-center">{label}</DrawerTitle>
-        </DrawerHeader>
+    <QuranInterpretationContext.Provider
+      value={{ isPending, pendingVerseNumber }}
+    >
+      {children}
+      <Drawer onOpenChange={set} open={isOpen}>
+        <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
+          <DrawerHeader className="border-b">
+            <DrawerTitle className="text-center">{label}</DrawerTitle>
+          </DrawerHeader>
 
-        <DrawerPanel className="p-4">
-          <div className="rounded-md border bg-accent p-4">
-            <p className="text-pretty text-accent-foreground leading-relaxed">
-              {selectedInterpretation}
-            </p>
-          </div>
-        </DrawerPanel>
-      </DrawerPopup>
-    </Drawer>
+          <DrawerPanel className="p-4">
+            <div className="rounded-md border bg-accent p-4">
+              <p className="text-pretty text-accent-foreground leading-relaxed">
+                {selectedInterpretation}
+              </p>
+            </div>
+          </DrawerPanel>
+        </DrawerPopup>
+      </Drawer>
+    </QuranInterpretationContext.Provider>
   );
 }

@@ -1,9 +1,6 @@
-import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import type { QuranViewVerse } from "@repo/backend/client/quran/view";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
+import { QuranInterpretationButton } from "@/components/shared/quran-interpretation-button";
 import { QuranText } from "@/components/shared/quran-text";
 
 interface Props {
@@ -13,39 +10,6 @@ interface Props {
   isLast: boolean;
   verse: QuranViewVerse;
   verseLabel: string;
-}
-
-const verseButtonClassName = buttonVariants({
-  size: "icon",
-  variant: "outline",
-});
-
-/**
- * Renders one delegated tafsir button without mounting a drawer per verse.
- */
-function QuranInterpretationButton({
-  label,
-  verseNumber,
-}: {
-  label: string;
-  verseNumber: number;
-}) {
-  return (
-    <button
-      aria-label={label}
-      className={cn(verseButtonClassName, "group")}
-      data-quran-interpretation-verse={verseNumber}
-      type="button"
-    >
-      <HugeIcons
-        aria-hidden="true"
-        className="group-data-loading:hidden"
-        icon={BookOpen02Icon}
-      />
-      <Spinner aria-hidden="true" className="hidden group-data-loading:block" />
-      <span className="sr-only">{label}</span>
-    </button>
-  );
 }
 
 /**

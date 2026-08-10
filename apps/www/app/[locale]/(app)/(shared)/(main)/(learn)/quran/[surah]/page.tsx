@@ -202,6 +202,29 @@ async function CachedSurahShell({
 
   const interpretationLabel = t("interpretation");
   const hasInterpretation = result.locale === "id";
+  const verseList = (
+    <WindowVirtualized
+      ssrCount={Math.min(result.verses.length, QURAN_INITIAL_VERSE_SSR_COUNT)}
+    >
+      {result.verses.map((verse, index) => {
+        const verseLabel = t("verse-count", {
+          count: verse.number.inSurah,
+        });
+
+        return (
+          <QuranVerse
+            hasInterpretation={hasInterpretation}
+            id={slugify(verseLabel)}
+            interpretationLabel={interpretationLabel}
+            isLast={index === result.verses.length - 1}
+            key={verse.number.inQuran}
+            verse={verse}
+            verseLabel={verseLabel}
+          />
+        );
+      })}
+    </WindowVirtualized>
+  );
 
   return (
     <>
@@ -233,43 +256,23 @@ async function CachedSurahShell({
             title={title}
           />
           <LayoutContent>
-            <WindowVirtualized
-              ssrCount={Math.min(
-                result.verses.length,
-                QURAN_INITIAL_VERSE_SSR_COUNT
-              )}
-            >
-              {result.verses.map((verse, index) => {
-                const verseLabel = t("verse-count", {
-                  count: verse.number.inSurah,
-                });
-
-                return (
-                  <QuranVerse
-                    hasInterpretation={hasInterpretation}
-                    id={slugify(verseLabel)}
-                    interpretationLabel={interpretationLabel}
-                    isLast={index === result.verses.length - 1}
-                    key={verse.number.inQuran}
-                    verse={verse}
-                    verseLabel={verseLabel}
-                  />
-                );
-              })}
-            </WindowVirtualized>
+            {hasInterpretation ? (
+              <QuranInterpretationControls
+                errorMessage={t("interpretation-error")}
+                label={interpretationLabel}
+                recoverSnapshot={recoverSnapshot}
+                refreshingMessage={t("interpretation-refreshing")}
+                snapshotId={result.snapshotId}
+                surahNumber={surahData.number}
+              >
+                {verseList}
+              </QuranInterpretationControls>
+            ) : (
+              verseList
+            )}
           </LayoutContent>
           <PaginationContent pagination={pagination} />
           <FooterContent>{footer}</FooterContent>
-          {hasInterpretation && (
-            <QuranInterpretationControls
-              errorMessage={t("interpretation-error")}
-              label={interpretationLabel}
-              recoverSnapshot={recoverSnapshot}
-              refreshingMessage={t("interpretation-refreshing")}
-              snapshotId={result.snapshotId}
-              surahNumber={surahData.number}
-            />
-          )}
           {toolbar}
         </LayoutMaterialContent>
         <LayoutMaterialToc
