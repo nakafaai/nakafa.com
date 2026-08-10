@@ -10,7 +10,7 @@ export const QuranInterpretationContext = createContext<
   number | null | typeof missingQuranInterpretationContext
 >(missingQuranInterpretationContext);
 
-/** Reads whether one verse owns the current tafsir request. */
+/** Reads whether one verse is loading tafsir. */
 export function useQuranInterpretationLoading(verseNumber: number) {
   const isLoading = useContextSelector(
     QuranInterpretationContext,

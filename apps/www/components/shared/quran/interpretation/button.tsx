@@ -3,7 +3,7 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useQuranInterpretationLoading } from "@/components/shared/quran-interpretation-context";
+import { useQuranInterpretationLoading } from "@/components/shared/quran/interpretation/context";
 
 /** Renders one tafsir trigger backed by the shared request controller. */
 export function QuranInterpretationButton({

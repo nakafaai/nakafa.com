@@ -24,7 +24,7 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
-import { QuranInterpretationContext } from "@/components/shared/quran-interpretation-context";
+import { QuranInterpretationContext } from "@/components/shared/quran/interpretation/context";
 import { reportClientException } from "@/lib/analytics/client";
 
 interface Props {

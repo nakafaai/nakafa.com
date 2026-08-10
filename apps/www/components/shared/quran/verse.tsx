@@ -1,6 +1,6 @@
 import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import { cn } from "@repo/design-system/lib/utils";
-import { QuranInterpretationButton } from "@/components/shared/quran-interpretation-button";
+import { QuranInterpretationButton } from "@/components/shared/quran/interpretation/button";
 import { QuranText } from "@/components/shared/quran-text";
 
 interface Props {
