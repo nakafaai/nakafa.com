@@ -10,7 +10,12 @@ class FeaturesProjectileSceneLoadError extends Data.TaggedError(
   message: string;
 }> {}
 
-/** Loads the WebGL lesson scene after its viewport observer signals intent. */
+/**
+ * Loads the WebGL lesson scene after its viewport observer signals intent.
+ *
+ * @see https://nextjs.org/docs/app/guides/lazy-loading
+ * @see https://effect-ts.github.io/effect/effect/Effect.ts.html#retry
+ */
 export const loadFeaturesProjectileScene = Effect.fn(
   "www.home.loadFeaturesProjectileScene"
 )(() =>
