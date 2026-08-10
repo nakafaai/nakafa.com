@@ -1,7 +1,6 @@
 "use client";
 
 import { useIntersection } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
 import {
   DEFAULT_PROJECTILE_SCENARIO_ID,
   formatMeterMath,
@@ -28,11 +27,13 @@ import {
   type ComponentType,
   useEffect,
   useEffectEvent,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
 import type { FeaturesProjectileSceneProps } from "@/components/marketing/about/features-projectile-scene";
 import { loadFeaturesProjectileScene } from "@/components/marketing/about/features-projectile-scene-module";
+import { reportClientException } from "@/lib/analytics/client";
 
 /** Keeps the lesson content available while deferring only its WebGL scene. */
 export function FeaturesProjectile() {
@@ -131,7 +132,7 @@ export function FeaturesProjectile() {
 
   /** Starts the WebGL import only when the lesson approaches the viewport. */
   const handleSceneIntent = useEffectEvent(() => {
-    if (sceneLoadFiber.current) {
+    if (Scene || sceneLoadFiber.current) {
       return;
     }
 
@@ -141,11 +142,14 @@ export function FeaturesProjectile() {
           onFailure: (error) =>
             Effect.sync(() => {
               sceneLoadFiber.current = null;
-              captureException(error.cause, {
-                operation: "load-projectile-scene",
-                source: "home-features",
-              });
-            }),
+            }).pipe(
+              Effect.andThen(
+                reportClientException(error, {
+                  operation: "load-projectile-scene",
+                  source: "home-features",
+                })
+              )
+            ),
           onSuccess: (SceneComponent) =>
             Effect.sync(() => setScene(() => SceneComponent)),
         })
@@ -161,13 +165,21 @@ export function FeaturesProjectile() {
     handleSceneIntent();
   }, [entry]);
 
-  useEffect(
+  /**
+   * Releases an in-flight import before Next Activity hides the route.
+   *
+   * @see https://nextjs.org/docs/app/guides/preserving-ui-state#effect-and-media-cleanup
+   */
+  useLayoutEffect(
     () => () => {
-      if (!sceneLoadFiber.current) {
+      const currentSceneLoad = sceneLoadFiber.current;
+      sceneLoadFiber.current = null;
+
+      if (!currentSceneLoad) {
         return;
       }
 
-      Effect.runFork(Fiber.interrupt(sceneLoadFiber.current));
+      Effect.runFork(Fiber.interrupt(currentSceneLoad));
     },
     []
   );
