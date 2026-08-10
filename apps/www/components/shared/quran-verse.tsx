@@ -1,6 +1,7 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { QuranText } from "@/components/shared/quran-text";
@@ -32,11 +33,16 @@ function QuranInterpretationButton({
   return (
     <button
       aria-label={label}
-      className={verseButtonClassName}
+      className={cn(verseButtonClassName, "group")}
       data-quran-interpretation-verse={verseNumber}
       type="button"
     >
-      <HugeIcons icon={BookOpen02Icon} />
+      <HugeIcons
+        aria-hidden="true"
+        className="group-data-loading:hidden"
+        icon={BookOpen02Icon}
+      />
+      <Spinner aria-hidden="true" className="hidden group-data-loading:block" />
       <span className="sr-only">{label}</span>
     </button>
   );

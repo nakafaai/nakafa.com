@@ -264,7 +264,6 @@ async function CachedSurahShell({
             <QuranInterpretationControls
               errorMessage={t("interpretation-error")}
               label={interpretationLabel}
-              loadingMessage={t("interpretation-loading")}
               recoverSnapshot={recoverSnapshot}
               refreshingMessage={t("interpretation-refreshing")}
               snapshotId={result.snapshotId}
