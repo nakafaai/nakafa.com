@@ -1,4 +1,6 @@
-import { Data, Effect } from "effect";
+import { Data, Effect, Schedule } from "effect";
+
+const sceneLoadRetrySchedule = Schedule.exponential("500 millis");
 
 /** Expected failure while loading the deferred WebGL lesson scene. */
 class FeaturesProjectileSceneLoadError extends Data.TaggedError(
@@ -22,5 +24,10 @@ export const loadFeaturesProjectileScene = Effect.fn(
       import("@/components/marketing/about/features-projectile-scene").then(
         (module) => module.FeaturesProjectileScene
       ),
-  })
+  }).pipe(
+    Effect.retry({
+      schedule: sceneLoadRetrySchedule,
+      times: 3,
+    })
+  )
 );
