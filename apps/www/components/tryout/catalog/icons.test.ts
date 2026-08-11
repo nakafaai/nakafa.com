@@ -23,10 +23,14 @@ describe("try-out icons", () => {
   });
 
   it("keeps subject track icons sourced from material icons", () => {
-    expect(getTryoutTrackIcon("mathematics")).toBeTruthy();
+    expect(getTryoutTrackIcon("subject", "mathematics")).toBeTruthy();
+  });
+
+  it("gives year tracks a visible calendar identity", () => {
+    expect(getTryoutTrackIcon("year", "2027")).toBeTruthy();
   });
 
   it("returns a default track icon for future unsupported track keys", () => {
-    expect(getTryoutTrackIcon("unknown-track")).toBeTruthy();
+    expect(getTryoutTrackIcon("subject", "unknown-track")).toBeTruthy();
   });
 });

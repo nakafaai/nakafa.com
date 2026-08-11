@@ -17,13 +17,16 @@ import {
   CurriculumSelector,
   type CurriculumSelectorOption,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/selector";
-import { CatalogImageCard } from "@/components/shared/catalog/image-card";
-import { ChoiceCardContent } from "@/components/shared/choice/card";
-import { choiceCardVariants } from "@/components/shared/choice/variants";
 import {
-  ChoiceCardIcon,
-  ChoiceCardVisual,
-} from "@/components/shared/choice/visual";
+  CatalogCard,
+  CatalogCardGradient,
+  CatalogCardImage,
+} from "@/components/shared/catalog/card";
+import { ChoiceCardIcon } from "@/components/shared/choice/visual";
+import {
+  getGradeCatalogArtwork,
+  getSubjectCatalogArtwork,
+} from "@/lib/catalog/artwork";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/social-images";
 
 /** Renders the curriculum index header with breadcrumb context. */
@@ -103,45 +106,55 @@ export function CurriculumCatalogCards({
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {entries.map(({ program, route }, index) => (
-        <CatalogImageCard
+        <CatalogCard
           action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
           actionLabel={actionLabel}
-          imageSrc={getCurriculumRouteSocialImage(locale, program.key, route)}
           key={route.publicPath}
-          preload={index === 0}
           title={route.title}
-        />
+        >
+          <CatalogCardImage
+            preload={index === 0}
+            src={getCurriculumRouteSocialImage(locale, program.key, route)}
+          />
+        </CatalogCard>
       ))}
     </div>
   );
 }
 
-/** Renders curriculum child routes with the established choice-card surface. */
+/** Renders curriculum child routes with reviewed art or an identity gradient. */
 export function CurriculumChildCards({
+  actionLabel,
   locale,
   routes,
 }: {
+  actionLabel: string;
   locale: Locale;
   routes: readonly CurriculumViewRoute[];
 }) {
   return (
-    <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
-      {routes.map((route) => {
+    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
+      {routes.map((route, index) => {
         const Icon = readCurriculumRouteIcon(route);
+        const imageSrc =
+          getGradeCatalogArtwork(locale, route.iconKey) ??
+          getSubjectCatalogArtwork(locale, route.materialDomain);
 
         return (
-          <NavigationLink
-            className={choiceCardVariants()}
-            href={`/${locale}/${route.publicPath}`}
+          <CatalogCard
+            action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
+            actionLabel={actionLabel}
             key={route.publicPath}
+            title={route.title}
           >
-            <ChoiceCardVisual seed={route.publicPath}>
-              <ChoiceCardIcon icon={Icon} />
-            </ChoiceCardVisual>
-            <ChoiceCardContent>
-              <h2>{route.title}</h2>
-            </ChoiceCardContent>
-          </NavigationLink>
+            {imageSrc ? (
+              <CatalogCardImage preload={index === 0} src={imageSrc} />
+            ) : (
+              <CatalogCardGradient seed={route.nodeKey}>
+                <ChoiceCardIcon icon={Icon} />
+              </CatalogCardGradient>
+            )}
+          </CatalogCard>
         );
       })}
     </div>

@@ -92,7 +92,7 @@ async function TryoutExamRoute({
             title: page.exam.title,
           }}
         />
-        <TryoutExamPageClient page={page} />
+        <TryoutExamPageClient locale={locale} page={page} />
       </LayoutMaterialContent>
     </LayoutMaterial>
   );

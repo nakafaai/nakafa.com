@@ -3,23 +3,27 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { FunctionReturnType } from "convex/server";
+import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { ChoiceCardContent } from "@/components/shared/choice/card";
-import { choiceCardVariants } from "@/components/shared/choice/variants";
 import {
-  ChoiceCardIcon,
-  ChoiceCardVisual,
-} from "@/components/shared/choice/visual";
+  CatalogCard,
+  CatalogCardGradient,
+  CatalogCardImage,
+} from "@/components/shared/catalog/card";
+import { ChoiceCardIcon } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { getSubjectCatalogArtwork } from "@/lib/catalog/artwork";
 
 type ExamPageQuery = typeof api.tryouts.queries.catalog.getExamPage;
 
 /** Renders one realtime try-out exam page from Convex. */
 export function TryoutExamPageClient({
+  locale,
   page,
 }: {
+  locale: Locale;
   page: NonNullable<FunctionReturnType<ExamPageQuery>>;
 }) {
   const tTryouts = useTranslations("Tryouts");
@@ -30,57 +34,36 @@ export function TryoutExamPageClient({
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-24">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-        {page.tracks.map((track) => {
-          const icon = getTrackCardIcon(track);
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {page.tracks.map((track, index) => {
+          const imageSrc =
+            track.trackKind === "subject"
+              ? getSubjectCatalogArtwork(locale, track.trackKey)
+              : undefined;
 
           return (
-            <IntentLink
-              className={choiceCardVariants()}
-              href={getTryoutPublicPathHref(track.publicPath)}
+            <CatalogCard
+              action={
+                <IntentLink href={getTryoutPublicPathHref(track.publicPath)} />
+              }
+              actionLabel={tTryouts("open-set-cta")}
+              badge={tTryouts("set-count", { count: track.readySetCount })}
               key={track.trackKey}
+              title={track.title}
             >
-              <ChoiceCardVisual seed={track.publicPath}>
-                <TryoutTrackCardIcon icon={icon} />
-              </ChoiceCardVisual>
-              <ChoiceCardContent>
-                <div className="grid gap-1">
-                  <h2>{track.title}</h2>
-                  <p className="text-muted-foreground text-sm">
-                    {track.description ??
-                      tTryouts("set-count", { count: track.readySetCount })}
-                  </p>
-                </div>
-              </ChoiceCardContent>
-            </IntentLink>
+              {imageSrc ? (
+                <CatalogCardImage preload={index === 0} src={imageSrc} />
+              ) : (
+                <CatalogCardGradient seed={track.publicPath}>
+                  <ChoiceCardIcon
+                    icon={getTryoutTrackIcon(track.trackKind, track.trackKey)}
+                  />
+                </CatalogCardGradient>
+              )}
+            </CatalogCard>
           );
         })}
       </div>
     </div>
   );
-}
-
-/** Renders subject-track artwork while year tracks remain intentionally empty. */
-function TryoutTrackCardIcon({
-  icon,
-}: {
-  icon: ReturnType<typeof getTrackCardIcon>;
-}) {
-  if (!icon) {
-    return null;
-  }
-
-  return <ChoiceCardIcon icon={icon} />;
-}
-
-/** Resolve subject tracks to icons while leaving year tracks text-free. */
-function getTrackCardIcon(track: {
-  trackKey: string;
-  trackKind: "subject" | "year";
-}) {
-  if (track.trackKind === "subject") {
-    return getTryoutTrackIcon(track.trackKey);
-  }
-
-  return null;
 }

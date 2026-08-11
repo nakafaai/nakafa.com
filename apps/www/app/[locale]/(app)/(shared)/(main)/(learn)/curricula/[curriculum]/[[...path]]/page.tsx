@@ -119,7 +119,11 @@ async function CurriculumTrackRoute({
   const homeLabel = tCommon("home");
 
   return (
-    <CurriculumRouteFrame homeLabel={homeLabel} model={model}>
+    <CurriculumRouteFrame
+      actionLabel={tLearningPrograms("curriculum-route-action")}
+      homeLabel={homeLabel}
+      model={model}
+    >
       <CurriculumRootHeader
         currentRoute={route}
         homeLabel={homeLabel}
@@ -138,10 +142,17 @@ async function CurriculumNestedRoute({
   model: CurriculumRouteModel;
 }) {
   const { locale, route } = model;
-  const tCommon = await getTranslations({ locale, namespace: "Common" });
+  const [tCommon, tLearningPrograms] = await Promise.all([
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "LearningPrograms" }),
+  ]);
 
   return (
-    <CurriculumRouteFrame homeLabel={tCommon("home")} model={model}>
+    <CurriculumRouteFrame
+      actionLabel={tLearningPrograms("curriculum-route-action")}
+      homeLabel={tCommon("home")}
+      model={model}
+    >
       <HeaderContent
         icon={readCurriculumRouteIcon(route)}
         link={readRuntimeCurriculumHeader(model)}
@@ -153,10 +164,12 @@ async function CurriculumNestedRoute({
 
 /** Composes the shared curriculum body around one explicit route header. */
 function CurriculumRouteFrame({
+  actionLabel,
   children,
   homeLabel,
   model,
 }: {
+  actionLabel: string;
   children: ReactNode;
   homeLabel: string;
   model: CurriculumRouteModel;
@@ -174,7 +187,7 @@ function CurriculumRouteFrame({
       <LayoutMaterialContent>
         {children}
         <LayoutContent>
-          <CurriculumRouteBody {...model} />
+          <CurriculumRouteBody actionLabel={actionLabel} model={model} />
         </LayoutContent>
         {sourceUrl ? (
           <FooterContent>
@@ -198,12 +211,13 @@ function CurriculumRouteFrame({
 
 /** Renders the established curriculum chooser or material-card composition. */
 function CurriculumRouteBody({
-  childGroups,
-  childRoutes,
-  locale,
-  materialCards,
-  route,
-}: CurriculumRouteModel) {
+  actionLabel,
+  model,
+}: {
+  actionLabel: string;
+  model: CurriculumRouteModel;
+}) {
+  const { childGroups, childRoutes, locale, materialCards, route } = model;
   if (materialCards.length > 0) {
     return (
       <ContainerList className="sm:grid-cols-1">
@@ -219,7 +233,13 @@ function CurriculumRouteBody({
   }
 
   if (route.level === "track") {
-    return <CurriculumChildCards locale={locale} routes={childRoutes} />;
+    return (
+      <CurriculumChildCards
+        actionLabel={actionLabel}
+        locale={locale}
+        routes={childRoutes}
+      />
+    );
   }
 
   return (

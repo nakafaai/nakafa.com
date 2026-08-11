@@ -4,7 +4,10 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
-import { CatalogImageCard } from "@/components/shared/catalog/image-card";
+import {
+  CatalogCard,
+  CatalogCardImage,
+} from "@/components/shared/catalog/card";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { getTryoutExamSocialImage } from "@/lib/tryout/social-images";
@@ -31,21 +34,24 @@ export function TryoutCountryPageClient({
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {page.exams.map((exam, index) => (
-        <CatalogImageCard
+        <CatalogCard
           action={
             <IntentLink href={getTryoutPublicPathHref(exam.publicPath)} />
           }
           actionLabel={actionLabel}
-          imageSrc={getTryoutExamSocialImage({
-            countryKey: page.country.countryKey,
-            examKey: exam.examKey,
-            locale,
-            publicPath: exam.publicPath,
-          })}
           key={exam.examKey}
-          preload={index === 0}
           title={exam.title}
-        />
+        >
+          <CatalogCardImage
+            preload={index === 0}
+            src={getTryoutExamSocialImage({
+              countryKey: page.country.countryKey,
+              examKey: exam.examKey,
+              locale,
+              publicPath: exam.publicPath,
+            })}
+          />
+        </CatalogCard>
       ))}
     </div>
   );
