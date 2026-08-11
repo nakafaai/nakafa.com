@@ -2,10 +2,13 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import type { ReactNode } from "react";
 
-type AttemptSectionRoute = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.retained.getAttemptSectionRoute>
+type AttemptPage = Extract<
+  NonNullable<
+    FunctionReturnType<typeof api.tryouts.queries.attemptPage.getSection>
+  >,
+  { kind: "retained" }
 >;
-type ContentAccess = AttemptSectionRoute["content"];
+type ContentAccess = AttemptPage["content"];
 type SignedContentAccess = Extract<ContentAccess, { kind: "signed" }>;
 
 /** Rendered question body paired with its immutable attempt identity. */

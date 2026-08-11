@@ -1,5 +1,3 @@
-"use client";
-
 import type { TryoutScoreResult } from "@repo/backend/convex/tryouts/score";
 import type { ReactNode } from "react";
 import {
@@ -21,8 +19,8 @@ export interface TryoutEntrySummaryValue {
 
 type TryoutEntrySummaryActionValue = Omit<
   TryoutSummaryActionValue,
-  "completedAction" | "startAttemptSectionKey"
-> & { startAttemptSectionKey: string };
+  "completedAction"
+>;
 
 /** Renders a direct-entry summary around a composed action. */
 export function TryoutEntrySummary({

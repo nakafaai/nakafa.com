@@ -14,12 +14,23 @@ interface TryoutRuntimeClock {
   };
 }
 
+interface TryoutReactiveState {
+  attempt: {
+    status: TryoutStatus;
+  };
+}
+
 /** Render state for a Convex section runtime around its local timer boundary. */
 export type TryoutRuntimeState<Runtime> =
   | { kind: "none" }
   | { kind: "active"; runtime: Runtime }
   | { kind: "pending"; runtime: Runtime }
   | { kind: "review"; runtime: Runtime };
+
+/** Subscribes only while one exact attempt can still mutate. */
+export function isTryoutStateLive(state: TryoutReactiveState | null) {
+  return state?.attempt.status === "in-progress";
+}
 
 /** Returns an in-progress attempt only before its overall deadline. */
 export function getActiveTryoutAttempt<Attempt extends TryoutAttemptClock>(

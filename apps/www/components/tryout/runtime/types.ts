@@ -3,7 +3,7 @@ import type { FunctionReturnType } from "convex/server";
 
 /** Cohesive reactive state returned for one try-out section route. */
 export type TryoutSectionState = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.runtime.getSectionState>
+  FunctionReturnType<typeof api.tryouts.queries.runtime.getSectionAttemptState>
 >;
 
 /** Attempt state returned with one reactive try-out section. */

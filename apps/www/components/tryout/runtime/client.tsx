@@ -60,7 +60,6 @@ export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
             locked: expired || !isActive,
             question,
             reviewMode: !isActive,
-            sectionStartedAt: runtime.section.startedAt,
           }}
         />
       ))}

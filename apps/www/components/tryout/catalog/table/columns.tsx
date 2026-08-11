@@ -21,22 +21,29 @@ const tryoutColumnHelper = createColumnHelper<
 
 /** Builds TanStack columns from the table's controlled UI state. */
 export function createTryoutSetColumns({
+  intentHref,
   sorting,
   statusFilter,
 }: {
+  intentHref: string | null;
   sorting: SortingState;
   statusFilter: TryoutSetStatusFilter;
 }) {
   return tryoutColumnHelper.columns([
     tryoutColumnHelper.accessor("title", {
-      cell: ({ row }) => (
-        <IntentLink
-          className="block truncate underline-offset-4 hover:underline"
-          href={getTryoutPublicPathHref(row.original.publicPath)}
-        >
-          {row.original.title}
-        </IntentLink>
-      ),
+      cell: ({ row }) => {
+        const href = getTryoutPublicPathHref(row.original.publicPath);
+
+        return (
+          <IntentLink
+            className="block truncate underline-offset-4 hover:underline"
+            href={href}
+            intentActive={intentHref === href}
+          >
+            {row.original.title}
+          </IntentLink>
+        );
+      },
       enableColumnFilter: false,
       header: ({ column }) => (
         <TryoutSetSortHeader

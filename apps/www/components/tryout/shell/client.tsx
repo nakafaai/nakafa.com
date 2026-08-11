@@ -1,82 +1,53 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import { routing } from "@repo/internationalization/src/routing";
 import { useConvexAuth, useQuery } from "convex/react";
-import { useParams } from "next/navigation";
-import { hasLocale } from "next-intl";
-import type { ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
+import { type ReactNode, useState } from "react";
 import { AppShell } from "@/components/sidebar/app-shell";
+import { readTryoutAttemptCapability } from "@/components/tryout/route/path";
 
-/** Locks the app shell while the current try-out attempt is running. */
+/** Locks the app shell only for the exact attempt in the current URL. */
 export function TryoutShell({ children }: { children: ReactNode }) {
-  const params = useParams();
+  const searchParams = useSearchParams();
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const locale = getRouteParam(params.locale);
-  const country = getRouteParam(params.country);
-  const exam = getRouteParam(params.exam);
-  const set = getRouteParam(params.set);
-  const track = getRouteParam(params.track);
-  const setPath = getSetPath({
-    country,
-    exam,
-    set,
-    track,
-  });
-  const shouldLoadAttempt =
-    !isLoading &&
-    isAuthenticated &&
-    locale !== null &&
-    hasLocale(routing.locales, locale) &&
-    setPath !== null;
-  const locked = useQuery(
-    api.tryouts.queries.attempt.isLockedByPublicPath,
-    shouldLoadAttempt
-      ? {
-          locale,
-          publicPath: setPath,
-        }
-      : "skip"
+  const capability = readTryoutAttemptCapability(searchParams);
+  const attemptId =
+    capability.kind === "valid" ? capability.attemptId : undefined;
+  const shouldLoadAttempt = !isLoading && isAuthenticated && Boolean(attemptId);
+
+  if (!(shouldLoadAttempt && attemptId)) {
+    return <AppShell>{children}</AppShell>;
+  }
+
+  return (
+    <AttemptBoundTryoutShell attemptId={attemptId} key={attemptId}>
+      {children}
+    </AttemptBoundTryoutShell>
   );
-  if (shouldLoadAttempt && locked === undefined) {
-    return null;
-  }
-
-  return <AppShell locked={locked ?? false}>{children}</AppShell>;
 }
 
-/** Normalizes a Next.js route param into one stable segment value. */
-function getRouteParam(param: string | string[] | undefined) {
-  return typeof param === "string" ? param : null;
-}
-
-/** Builds the current set public path only when every route segment exists. */
-function getSetPath({
-  country,
-  exam,
-  set,
-  track,
+/** Keeps only an active attempt lock subscribed and preserves the shell while loading. */
+function AttemptBoundTryoutShell({
+  attemptId,
+  children,
 }: {
-  country: string | null;
-  exam: string | null;
-  set: string | null;
-  track: string | null;
+  attemptId: string;
+  children: ReactNode;
 }) {
-  if (!country) {
-    return null;
+  const [isTerminal, setIsTerminal] = useState(false);
+  const locked = useQuery(
+    api.tryouts.queries.attempt.isLockedByAttemptId,
+    isTerminal ? "skip" : { attemptId }
+  );
+
+  if (!isTerminal && locked === false) {
+    setIsTerminal(true);
   }
 
-  if (!exam) {
-    return null;
-  }
-
-  if (!track) {
-    return null;
-  }
-
-  if (!set) {
-    return null;
-  }
-
-  return `try-out/${country}/${exam}/${track}/${set}`;
+  return (
+    <AppShell locked={isTerminal ? false : (locked ?? true)}>
+      {children}
+    </AppShell>
+  );
 }

@@ -18,7 +18,7 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { domAnimation, LazyMotion, m } from "motion/react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
@@ -40,7 +40,6 @@ export function TryoutRuntimeControls({
 }) {
   const { expired, remainingSeconds, returnHref, runtime } = value;
   const router = useRouter();
-  const locale = useLocale();
   const prewarmData = useTryoutDataIntent();
   const completeSection = useMutation(api.tryouts.mutations.sections.complete);
   const tExercises = useTranslations("Exercises");
@@ -56,9 +55,8 @@ export function TryoutRuntimeControls({
   function prepareReturnRoute() {
     router.prefetch(returnHref);
     prewarmData({
+      attemptId: runtime.attemptId,
       kind: "set",
-      locale,
-      publicPath: returnHref.slice(1),
     });
   }
 

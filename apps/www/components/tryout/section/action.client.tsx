@@ -8,10 +8,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
-import {
-  getTryoutAttemptHref,
-  getTryoutPublicPath,
-} from "@/components/tryout/route/path";
+import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import type { TryoutSectionAttempt } from "@/components/tryout/runtime/types";
 import { StartSectionButton } from "@/components/tryout/section/start";
 import type { TryoutSummarySection } from "@/components/tryout/section/summary";
@@ -52,7 +49,6 @@ export interface TryoutSummaryActionValue {
 
 interface ResumeSectionValue {
   activeAttempt: NonNullable<CurrentAttempt>;
-  locale: Locale;
   returnHref: string;
   section: TryoutSummarySection;
 }
@@ -63,28 +59,10 @@ export function TryoutSummaryAction({
 }: {
   value: TryoutSummaryActionValue;
 }) {
-  const tTryouts = useTranslations("Tryouts");
-  const prewarmData = useTryoutDataIntent();
   const startDestination = value.startDestination;
-  const returnAction = (
-    <IntentLink
-      className={cn(buttonVariants(), "w-full sm:w-auto")}
-      href={value.returnHref}
-      onIntent={() =>
-        prewarmData({
-          kind: "set",
-          locale: value.locale,
-          publicPath: value.returnHref.slice(1),
-        })
-      }
-    >
-      <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
-      {tTryouts("back-to-set-cta")}
-    </IntentLink>
-  );
 
   if (value.sectionFinished && value.completedAction === "return") {
-    return returnAction;
+    return <TryoutReturnAction value={value} />;
   }
 
   if (value.activeAttempt && !value.activeAttempt.section) {
@@ -92,7 +70,6 @@ export function TryoutSummaryAction({
       <StartOrResumeSectionCta
         value={{
           activeAttempt: value.activeAttempt,
-          locale: value.locale,
           returnHref: value.returnHref,
           section: value.section,
         }}
@@ -105,7 +82,7 @@ export function TryoutSummaryAction({
   }
 
   if (!startDestination) {
-    return returnAction;
+    return <TryoutReturnAction value={value} />;
   }
 
   const request: StartTryoutRequest = {
@@ -124,13 +101,43 @@ export function TryoutSummaryAction({
   return <StartTryoutButton attempt={value.attempt} request={request} />;
 }
 
+/** Returns to the verified set destination and warms its exact state. */
+function TryoutReturnAction({
+  value,
+}: {
+  value: Pick<TryoutSummaryActionValue, "activeAttempt" | "returnHref">;
+}) {
+  const tTryouts = useTranslations("Tryouts");
+  const prewarmData = useTryoutDataIntent();
+
+  return (
+    <IntentLink
+      className={cn(buttonVariants(), "w-full sm:w-auto")}
+      href={value.returnHref}
+      onIntent={() => {
+        if (!value.activeAttempt) {
+          return;
+        }
+        prewarmData({
+          attemptId: value.activeAttempt.attemptId,
+          kind: "set",
+        });
+      }}
+    >
+      <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
+      {tTryouts("back-to-set-cta")}
+    </IntentLink>
+  );
+}
+
 /** Starts a ready section or links to the active section already in progress. */
 function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
   const tTryouts = useTranslations("Tryouts");
   const prewarmData = useTryoutDataIntent();
   const resumeHref = getResumeHref(value);
+  const resumeSectionKey = value.activeAttempt.resumeSectionKey;
 
-  if (resumeHref) {
+  if (resumeHref && resumeSectionKey) {
     return (
       <IntentLink
         className={cn(buttonVariants(), "w-full sm:w-auto")}
@@ -139,8 +146,7 @@ function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
           prewarmData({
             attemptId: value.activeAttempt.attemptId,
             kind: "section",
-            locale: value.locale,
-            publicPath: getTryoutPublicPath(resumeHref),
+            sectionKey: resumeSectionKey,
           })
         }
       >

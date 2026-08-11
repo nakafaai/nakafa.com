@@ -1,7 +1,7 @@
 import "server-only";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import { fetchQuery, preloadQuery } from "convex/nextjs";
+import { fetchQuery } from "convex/nextjs";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -13,7 +13,7 @@ type TryoutMetadataArgs = FunctionArgs<
   typeof api.tryouts.queries.catalog.getMetadata
 >;
 
-/** Expected failure while reading one authenticated frozen section route. */
+/** Expected failure while reading one authenticated try-out page. */
 class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>()(
   "TryoutCatalogReadError",
   { cause: Schema.Unknown }
@@ -144,25 +144,21 @@ export async function readTryoutSetPage(locale: Locale, publicPath: string) {
   });
 }
 
-/** Reads one set route from the current user's exact immutable attempt. */
-export const readTryoutAttemptSetRoute = Effect.fn(
-  "www.tryout.catalog.readAttemptSetRoute"
+/** Fetches one authenticated set bootstrap without subscribing. */
+export const readTryoutSetAttemptPage = Effect.fn(
+  "www.tryout.catalog.readSetAttemptPage"
 )(function* (
   token: string,
-  locale: Locale,
-  publicPath: string,
-  attemptId?: string
+  request: FunctionArgs<
+    typeof api.tryouts.queries.attemptPage.getSet
+  >["request"]
 ) {
   return yield* Effect.tryPromise({
     catch: (cause) => new TryoutCatalogReadError({ cause }),
     try: () =>
       fetchQuery(
-        api.tryouts.queries.retained.getAttemptSetRoute,
-        {
-          attemptId,
-          locale,
-          publicPath,
-        },
+        api.tryouts.queries.attemptPage.getSet,
+        { request },
         { token }
       ),
   });
@@ -182,58 +178,22 @@ export async function readTryoutSectionPage(
   });
 }
 
-/** Reads one route from the current user's immutable attempt snapshot. */
-export const readTryoutAttemptSectionRoute = Effect.fn(
-  "www.tryout.catalog.readAttemptSectionRoute"
+/** Fetches one authenticated section bootstrap without subscribing. */
+export const readTryoutSectionAttemptPage = Effect.fn(
+  "www.tryout.catalog.readSectionAttemptPage"
 )(function* (
   token: string,
-  locale: Locale,
-  publicPath: string,
-  attemptId?: string
+  request: FunctionArgs<
+    typeof api.tryouts.queries.attemptPage.getSection
+  >["request"]
 ) {
   return yield* Effect.tryPromise({
     catch: (cause) => new TryoutCatalogReadError({ cause }),
     try: () =>
       fetchQuery(
-        api.tryouts.queries.retained.getAttemptSectionRoute,
-        {
-          attemptId,
-          locale,
-          publicPath,
-        },
+        api.tryouts.queries.attemptPage.getSection,
+        { request },
         { token }
       ),
-  });
-});
-
-/** Preloads one reactive attempt and section runtime with the current JWT. */
-export const preloadTryoutSectionState = Effect.fn(
-  "www.tryout.catalog.preloadSectionState"
-)(function* (
-  token: string,
-  args: FunctionArgs<typeof api.tryouts.queries.runtime.getSectionState>
-) {
-  return yield* Effect.tryPromise({
-    catch: (cause) => new TryoutCatalogReadError({ cause }),
-    try: () =>
-      preloadQuery(api.tryouts.queries.runtime.getSectionState, args, {
-        token,
-      }),
-  });
-});
-
-/** Preloads one reactive set attempt and direct-entry runtime with the current JWT. */
-export const preloadTryoutSetState = Effect.fn(
-  "www.tryout.catalog.preloadSetState"
-)(function* (
-  token: string,
-  args: FunctionArgs<typeof api.tryouts.queries.runtime.getSetState>
-) {
-  return yield* Effect.tryPromise({
-    catch: (cause) => new TryoutCatalogReadError({ cause }),
-    try: () =>
-      preloadQuery(api.tryouts.queries.runtime.getSetState, args, {
-        token,
-      }),
   });
 });

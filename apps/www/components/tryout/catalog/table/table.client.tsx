@@ -22,7 +22,7 @@ import {
 } from "@tanstack/react-table";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { createTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
 import { tryoutTableFeatures } from "@/components/tryout/catalog/table/features";
@@ -33,7 +33,6 @@ import type {
   TryoutSetRow,
   TryoutTrackPage,
 } from "@/components/tryout/catalog/table/types";
-import { useTryoutDataIntent } from "@/components/tryout/navigation/data.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 const EMPTY_ROWS: TryoutSetRow[] = [];
@@ -47,14 +46,14 @@ export function TryoutSetTable({
   page: TryoutTrackPage;
 }) {
   const router = useRouter();
-  const prewarmData = useTryoutDataIntent();
   const tTryouts = useTranslations("Tryouts");
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const warmedPaths = useRef(new Set<string>());
+  const [intentHref, setIntentHref] = useState<string | null>(null);
   const statusFilter = readTryoutSetStatusFilter(columnFilters);
   const columns = createTryoutSetColumns({
+    intentHref,
     sorting,
     statusFilter,
   });
@@ -65,26 +64,14 @@ export function TryoutSetTable({
     sort: readTryoutSetSort(sorting),
   });
 
-  /** Prewarm a set after the viewer signals navigation intent. */
+  /** Upgrades the row's real link to a full URL-specific runtime prefetch. */
   function markSetIntent(row: TryoutSetRow) {
-    const pathKey = `${locale}:${row.publicPath}`;
+    const href = getTryoutPublicPathHref(row.publicPath);
 
-    if (warmedPaths.current.has(pathKey)) {
-      return;
-    }
-
-    const warmed = prewarmData({
-      kind: "set",
-      locale,
-      publicPath: row.publicPath,
-    });
-
-    if (warmed) {
-      warmedPaths.current.add(pathKey);
-    }
+    setIntentHref(href);
   }
 
-  /** Navigates one row after warming its route and authenticated data. */
+  /** Navigates one row after warming its URL-specific route. */
   function navigateToSet(row: TryoutSetRow) {
     markSetIntent(row);
     router.push(getTryoutPublicPathHref(row.publicPath));

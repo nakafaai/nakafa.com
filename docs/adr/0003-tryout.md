@@ -61,10 +61,8 @@ section, placement, and response ownership before it updates the response and
 parent activity counters.
 
 Explicitly temporary migration boundaries remain during the web cutover. The
-live web caller still reaches `attempts.saveResponse` during the additive
-backend phase. The web cutover will save through `responses.save` directly,
-while `attempts.saveResponse` stays registered for already-open clients and
-rollback.
+canonical web caller now saves through `responses.save` directly, while
+`attempts.saveResponse` stays registered for already-open clients and rollback.
 The same temporary rule applies to `history.list`, `runtime.getSetState`,
 `runtime.getSectionState`, `retained.getAttemptSetRoute`,
 `retained.getAttemptSectionRoute`, and `attempt.isLockedByPublicPath`. The new
@@ -95,7 +93,7 @@ active signed catalog in the same Convex query transaction, so a catalog rename
 or entry revision cannot silently change the frozen review or send a new attempt
 to an obsolete route.
 
-After the cutover, the web bootstraps that exact attempt page, then subscribes only to
+The web bootstraps that exact attempt page, then subscribes only to
 `getSetAttemptState` or `getSectionAttemptState` while the attempt can still
 change. Frozen display stays separate from the active signed restart and
 navigation destinations. Terminal pages stop their mutable subscriptions.

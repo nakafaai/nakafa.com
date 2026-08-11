@@ -26,7 +26,7 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "@repo/design-system/lib/utils";
 import { usePaginatedQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { format } from "date-fns";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -34,7 +34,8 @@ import { type ReactNode, useState } from "react";
 import { TryoutScoreCard } from "@/components/tryout/score/card";
 import { getLocale } from "@/lib/utils/date";
 
-type HistoryQuery = typeof api.tryouts.queries.history.list;
+type HistoryQuery = typeof api.tryouts.queries.history.bySet;
+type HistoryIdentity = Omit<FunctionArgs<HistoryQuery>, "paginationOpts">;
 type HistoryRow = FunctionReturnType<HistoryQuery>["page"][number];
 type ScoredHistoryRow = HistoryRow & {
   score: NonNullable<HistoryRow["score"]>;
@@ -46,8 +47,7 @@ type ScoredAttempt = Pick<
 
 interface TryoutAttemptResultsValue {
   attempt: ScoredAttempt;
-  locale: Locale;
-  publicPath: string;
+  identity: HistoryIdentity;
 }
 
 interface AttemptOption {
@@ -222,11 +222,8 @@ export function TryoutAttemptResults({
     HistoryRow["attemptId"] | null
   >(null);
   const history = usePaginatedQuery(
-    api.tryouts.queries.history.list,
-    {
-      locale: value.locale,
-      publicPath: value.publicPath,
-    },
+    api.tryouts.queries.history.bySet,
+    value.identity,
     { initialNumItems: 25 }
   );
   const attempts = history.results.filter(hasScore);
@@ -244,7 +241,7 @@ export function TryoutAttemptResults({
         <TryoutAttemptHistory
           value={{
             attempts,
-            locale: value.locale,
+            locale: value.identity.locale,
             loadMore: history.loadMore,
             onChoose: setSelectedAttemptId,
             selectedAttemptId: visibleAttempt.attemptId,

@@ -3,10 +3,10 @@ import {
   getTryoutAttemptAuthHref,
   getTryoutAttemptHref,
   getTryoutHref,
-  getTryoutPublicPath,
   getTryoutPublicPathHref,
   hasTryoutAttemptCapability,
-  readTryoutAttemptId,
+  readTryoutAttemptCapability,
+  readTryoutRouteAttemptCapability,
 } from "@/components/tryout/route/path";
 
 describe("tryout route paths", () => {
@@ -28,29 +28,36 @@ describe("tryout route paths", () => {
       "/try-out/id/set-1/section?attemptId=attempt%2Fid"
     );
     expect(
-      getTryoutPublicPath("/try-out/id/set-1/section?attemptId=attempt%2Fid")
-    ).toBe("try-out/id/set-1/section");
-    expect(getTryoutPublicPath("/try-out/indonesia")).toBe("try-out/indonesia");
-    expect(getTryoutPublicPath("try-out/indonesia")).toBe("try-out/indonesia");
-    expect(
       getTryoutAttemptAuthHref("id", "try-out/id/set-1/section", "attempt/id")
     ).toBe(
       "/id/auth?redirect=%2Fid%2Ftry-out%2Fid%2Fset-1%2Fsection%3FattemptId%3Dattempt%252Fid"
     );
   });
 
-  it("accepts only one non-empty attempt capability", () => {
-    expect(readTryoutAttemptId({ attemptId: "attempt-id" })).toBe("attempt-id");
-    expect(readTryoutAttemptId({})).toBeUndefined();
-    expect(readTryoutAttemptId({ attemptId: "" })).toBeUndefined();
+  it("classifies server attempt capabilities without accepting ambiguity", () => {
     expect(
-      readTryoutAttemptId({ attemptId: ["first", "second"] })
-    ).toBeUndefined();
+      readTryoutRouteAttemptCapability({ attemptId: "attempt-id" })
+    ).toEqual({ attemptId: "attempt-id", kind: "valid" });
+    expect(readTryoutRouteAttemptCapability({})).toEqual({ kind: "absent" });
+    expect(readTryoutRouteAttemptCapability({ attemptId: "" })).toEqual({
+      kind: "invalid",
+    });
+    expect(
+      readTryoutRouteAttemptCapability({ attemptId: ["first", "second"] })
+    ).toEqual({ kind: "invalid" });
+  });
 
+  it("accepts only one non-empty browser attempt capability", () => {
     expect(
       hasTryoutAttemptCapability(new URLSearchParams("attemptId=attempt-id"))
     ).toBe(true);
+    expect(
+      readTryoutAttemptCapability(new URLSearchParams("attemptId=attempt-id"))
+    ).toEqual({ attemptId: "attempt-id", kind: "valid" });
     expect(hasTryoutAttemptCapability(new URLSearchParams())).toBe(false);
+    expect(readTryoutAttemptCapability(new URLSearchParams())).toEqual({
+      kind: "absent",
+    });
     expect(hasTryoutAttemptCapability(new URLSearchParams("attemptId="))).toBe(
       false
     );
@@ -59,5 +66,10 @@ describe("tryout route paths", () => {
         new URLSearchParams("attemptId=first&attemptId=second")
       )
     ).toBe(false);
+    expect(
+      readTryoutAttemptCapability(
+        new URLSearchParams("attemptId=first&attemptId=second")
+      )
+    ).toEqual({ kind: "invalid" });
   });
 });
