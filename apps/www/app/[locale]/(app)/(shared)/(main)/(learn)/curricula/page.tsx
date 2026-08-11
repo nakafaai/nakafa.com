@@ -6,8 +6,8 @@ import { locale as rootLocale } from "next/root-params";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import {
+  CurriculumCatalogCards,
   CurriculumIndexHeader,
-  CurriculumRootCards,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
 import {
   type CurriculumCatalogModel,
@@ -20,9 +20,10 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { RefContent } from "@/components/shared/ref-content";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
+import { getCurriculumIndexSocialImage } from "@/lib/curriculum/social-images";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
-import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
@@ -52,7 +53,7 @@ export async function generateMetadata({
       description,
       locale,
       path: href,
-      image: getOgUrl(locale, getCurriculumIndexHref(locale)),
+      image: getCurriculumIndexSocialImage(locale),
     }),
   };
 }
@@ -94,7 +95,11 @@ export default async function Page() {
           <CurriculumIndexHeader homeLabel={tCommon("home")} title={title} />
           <LayoutContent>
             {catalog.entries.length > 0 ? (
-              <CurriculumRootCards entries={catalog.entries} locale={locale} />
+              <CurriculumCatalogCards
+                actionLabel={tCommon("explore")}
+                entries={catalog.entries}
+                locale={locale}
+              />
             ) : (
               <ComingSoon />
             )}
