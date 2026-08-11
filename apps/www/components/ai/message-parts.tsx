@@ -7,7 +7,7 @@ import { AiMessagePart } from "@/components/ai/message-part";
 import { SuggestionsPart } from "@/components/ai/message-part/suggestions";
 import { useUser } from "@/lib/context/use-user";
 
-export const AiChatMessageContent = () => {
+export function AiChatMessageContent() {
   const parts = useMessage((state) =>
     state.message.parts.filter(
       (p) => p.type !== "step-start" && p.type !== "data-suggestions"
@@ -27,10 +27,10 @@ export const AiChatMessageContent = () => {
       <AiChatMessageLoading />
     </div>
   );
-};
+}
 AiChatMessageContent.displayName = "AiChatMessageContent";
 
-export const AiChatMessageSuggestions = () => {
+export function AiChatMessageSuggestions() {
   const chat = useCurrentChat((s) => s.chat);
 
   const currentUser = useUser((s) => s.user);
@@ -45,5 +45,5 @@ export const AiChatMessageSuggestions = () => {
   }
 
   return <SuggestionsPart message={suggestions} />;
-};
+}
 AiChatMessageSuggestions.displayName = "AiChatMessageSuggestions";

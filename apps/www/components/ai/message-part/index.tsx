@@ -21,7 +21,7 @@ interface Props {
 }
 
 /** Renders one typed Nina response part with its production presentation. */
-export const AiMessagePart = ({ part, partIndex }: Props) => {
+export function AiMessagePart({ part, partIndex }: Props) {
   const messageId = useMessage((state) => state.message.id);
 
   switch (part.type) {
@@ -63,5 +63,5 @@ export const AiMessagePart = ({ part, partIndex }: Props) => {
     default:
       return null;
   }
-};
+}
 AiMessagePart.displayName = "AiMessagePart";

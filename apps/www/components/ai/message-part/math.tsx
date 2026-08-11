@@ -20,7 +20,7 @@ interface Props {
 }
 
 /** Renders one deterministic math evidence part in the chat transcript. */
-export const MathPart = ({ message }: Props) => {
+export function MathPart({ message }: Props) {
   const t = useTranslations("Ai");
   const [expanded, { set }] = useDisclosure(false);
 
@@ -52,5 +52,5 @@ export const MathPart = ({ message }: Props) => {
       </CollapsibleContent>
     </Collapsible>
   );
-};
+}
 MathPart.displayName = "MathPart";

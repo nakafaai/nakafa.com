@@ -21,12 +21,12 @@ import { AiChatError } from "@/components/ai/chat-error";
 import { AiChatHeader } from "@/components/ai/chat-header";
 import { AiChatMessage } from "@/components/ai/chat-message";
 import { AiChatModel } from "@/components/ai/chat-model";
-import { AiChatPaginationTrigger } from "@/components/ai/chat-pagination-trigger";
 import { AiChatPending } from "@/components/ai/chat-pending";
 import { ChatSpacing } from "@/components/ai/chat-spacing";
 import { useAi } from "@/components/ai/context/use-ai";
 import { useChat } from "@/components/ai/context/use-chat";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
+import { AiChatPaginationTrigger } from "@/components/ai/pagination-trigger";
 import { useUser } from "@/lib/context/use-user";
 
 export function AiChat() {
@@ -41,7 +41,7 @@ export function AiChat() {
   );
 }
 
-const AiChatConversation = () => {
+function AiChatConversation() {
   const messages = useChat((state) => state.chat.messages);
 
   return (
@@ -66,10 +66,10 @@ const AiChatConversation = () => {
       <ConversationScrollButton />
     </Conversation>
   );
-};
+}
 AiChatConversation.displayName = "AiChatConversation";
 
-const AiChatToolbar = () => {
+function AiChatToolbar() {
   const t = useTranslations("Ai");
 
   const router = useRouter();
@@ -141,5 +141,5 @@ const AiChatToolbar = () => {
       </PromptInput>
     </div>
   );
-};
+}
 AiChatToolbar.displayName = "AIChatToolbar";

@@ -14,12 +14,12 @@ import {
 
 import { AiChatError } from "@/components/ai/chat-error";
 import { AiChatMessage } from "@/components/ai/chat-message";
-import { AiChatPaginationTrigger } from "@/components/ai/chat-pagination-trigger";
 import { AiChatPending } from "@/components/ai/chat-pending";
 import { ChatSpacing } from "@/components/ai/chat-spacing";
 import { useAi } from "@/components/ai/context/use-ai";
 import { ChatProvider, useChat } from "@/components/ai/context/use-chat";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
+import { AiChatPaginationTrigger } from "@/components/ai/pagination-trigger";
 import { SheetInput } from "@/components/ai/sheet-input";
 import { useUser } from "@/lib/context/use-user";
 
@@ -29,7 +29,7 @@ function ignorePlaceholderSubmit() {
 }
 
 /** Connects the selected chat document to the sheet chat UI. */
-export const SheetMain = () => {
+export function SheetMain() {
   const chat = useCurrentChat((state) => state.chat);
   const messages = useCurrentChat((state) => state.messages);
 
@@ -42,29 +42,31 @@ export const SheetMain = () => {
       <SheetConversation />
     </ChatProvider>
   );
-};
+}
 
 /** Keeps the sheet stable while the active chat loads. */
-const SheetMainPlaceholder = () => (
-  <div className="relative flex size-full flex-col overflow-hidden">
-    <Conversation>
-      <ConversationContent>
-        <div />
-      </ConversationContent>
-      <ConversationScrollButton />
-    </Conversation>
+function SheetMainPlaceholder() {
+  return (
+    <div className="relative flex size-full flex-col overflow-hidden">
+      <Conversation>
+        <ConversationContent>
+          <div />
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
 
-    <SheetInput
-      disabled={true}
-      isPending={true}
-      key="ai-sheet-input"
-      onSubmit={ignorePlaceholderSubmit}
-    />
-  </div>
-);
+      <SheetInput
+        disabled={true}
+        isPending={true}
+        key="ai-sheet-input"
+        onSubmit={ignorePlaceholderSubmit}
+      />
+    </div>
+  );
+}
 
 /** Renders messages and the active chat input inside Nina sheet. */
-const SheetConversation = () => {
+function SheetConversation() {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -135,4 +137,4 @@ const SheetConversation = () => {
       />
     </div>
   );
-};
+}

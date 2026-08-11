@@ -7,14 +7,9 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useUser } from "@/lib/context/use-user";
 
-/**
- * Routes authenticated users home and clears stale marketing fragments for
- * signed-out visitors.
- */
-export function LogoCta() {
-  const currentUser = useUser((state) => state.user);
-  const locale = useLocale();
-  const content = (
+/** Renders the shared Nakafa mark used by both logo destinations. */
+function LogoContent() {
+  return (
     <>
       <Image
         alt="Nakafa"
@@ -26,18 +21,27 @@ export function LogoCta() {
       <span className="font-medium">Nakafa</span>
     </>
   );
+}
+
+/**
+ * Routes authenticated users home and clears stale marketing fragments for
+ * signed-out visitors.
+ */
+export function LogoCta() {
+  const currentUser = useUser((state) => state.user);
+  const locale = useLocale();
 
   if (!currentUser) {
     return (
       <a className="flex items-center gap-2" href={`/${locale}`}>
-        {content}
+        <LogoContent />
       </a>
     );
   }
 
   return (
     <Link className="flex items-center gap-2" href="/home">
-      {content}
+      <LogoContent />
     </Link>
   );
 }

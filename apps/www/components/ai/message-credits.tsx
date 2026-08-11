@@ -20,7 +20,7 @@ import { useState } from "react";
 import { useMessage } from "@/components/ai/context/use-message";
 import { getAiModel } from "@/lib/data/models";
 
-export const AiChatMessageCredits = () => {
+export function AiChatMessageCredits() {
   const t = useTranslations("Ai");
 
   const credits = useMessage((state) => state.message.metadata?.credits);
@@ -130,5 +130,5 @@ export const AiChatMessageCredits = () => {
       </PopoverContent>
     </Popover>
   );
-};
+}
 AiChatMessageCredits.displayName = "AiChatMessageCredits";

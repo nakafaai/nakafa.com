@@ -16,7 +16,7 @@ interface Props {
 }
 
 /** Renders one inspected source URL used by the research agent. */
-export const ScrapeUrlPart = ({ message }: Props) => {
+export function ScrapeUrlPart({ message }: Props) {
   const t = useTranslations("Ai");
 
   if (message.status === "loading") {
@@ -53,19 +53,21 @@ export const ScrapeUrlPart = ({ message }: Props) => {
       <ScrapeUrlSource message={message} />
     </div>
   );
-};
+}
 ScrapeUrlPart.displayName = "ScrapeUrlPart";
 
-const ScrapeUrlSource = ({ message }: Props) => (
-  <Source href={message.url}>
-    <SourceTrigger faviconUrl={message.favicon} showFavicon />
-    <SourceContent
-      description={message.description}
-      faviconUrl={message.favicon}
-      title={getSourceTitle(message)}
-    />
-  </Source>
-);
+function ScrapeUrlSource({ message }: Props) {
+  return (
+    <Source href={message.url}>
+      <SourceTrigger faviconUrl={message.favicon} showFavicon />
+      <SourceContent
+        description={message.description}
+        faviconUrl={message.favicon}
+        title={getSourceTitle(message)}
+      />
+    </Source>
+  );
+}
 ScrapeUrlSource.displayName = "ScrapeUrlSource";
 
 /** Returns a compact source title for hover content. */

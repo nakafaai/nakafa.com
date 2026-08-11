@@ -5,7 +5,7 @@ import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 
 import { useChat } from "@/components/ai/context/use-chat";
 
-export const AiChatPending = () => {
+export function AiChatPending() {
   const status = useChat((state) => state.chat.status);
   const messages = useChat((state) => state.chat.messages);
 
@@ -28,5 +28,5 @@ export const AiChatPending = () => {
       </div>
     </Message>
   );
-};
+}
 AiChatPending.displayName = "AiChatPending";

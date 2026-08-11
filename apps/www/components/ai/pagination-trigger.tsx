@@ -5,7 +5,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 
-export const AiChatPaginationTrigger = () => {
+export function AiChatPaginationTrigger() {
   const status = useCurrentChat((state) => state.messageStatus);
   const loadMoreMessages = useCurrentChat((state) => state.loadMoreMessages);
 
@@ -18,6 +18,6 @@ export const AiChatPaginationTrigger = () => {
       onIntersect={() => loadMoreMessages(CHAT_MESSAGES_PAGE_SIZE)}
     />
   );
-};
+}
 
 AiChatPaginationTrigger.displayName = "AiChatPaginationTrigger";
