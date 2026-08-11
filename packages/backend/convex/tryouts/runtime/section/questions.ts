@@ -143,7 +143,9 @@ function projectRuntimeQuestions(
       response: response
         ? {
             answeredAt: response.answeredAt,
-            selectedOptionId: response.selectedOptionId,
+            ...(response.selectedOptionId === undefined
+              ? {}
+              : { selectedOptionId: response.selectedOptionId }),
             updatedAt: response.updatedAt,
           }
         : null,

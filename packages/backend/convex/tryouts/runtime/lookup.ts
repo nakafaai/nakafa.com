@@ -231,3 +231,24 @@ export const readAttemptHistoryPage = Effect.fn(
       .paginate(pagination)
   );
 });
+
+/** Reads one bounded attempt history page through immutable set keys. */
+export const readAttemptHistoryPageBySet = Effect.fn(
+  "tryouts.runtime.readAttemptHistoryPageBySet"
+)(function* (
+  ctx: QueryCtx,
+  identity: TryoutSetIdentity,
+  userId: UserId,
+  pagination: PaginationOptions
+) {
+  const setIdentity = tryoutCatalogIdentity({ ...identity, kind: "set" });
+  return yield* tryRuntimePromise(() =>
+    ctx.db
+      .query("tryoutAttempts")
+      .withIndex("by_userId_and_setIdentity_and_startedAt", (index) =>
+        index.eq("userId", userId).eq("setIdentity", setIdentity)
+      )
+      .order("desc")
+      .paginate(pagination)
+  );
+});

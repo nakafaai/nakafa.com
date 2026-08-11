@@ -60,13 +60,24 @@ correctness from the signed choice snapshot. The transaction validates attempt,
 section, placement, and response ownership before it updates the response and
 parent activity counters.
 
-Two explicitly temporary migration boundaries remain in this intermediate
-slice. The live web caller still reaches `attempts.saveResponse`, which ignores
-client timing and delegates to the canonical response transaction. Historical
-`textAnswer` response rows remain readable by integrity validation until dev and
-production data prove that field empty. Remove the adapter after the web cutover,
-then remove the field and integrity branch after the data proof. Neither boundary
-is a supported long-term compatibility API.
+Explicitly temporary migration boundaries remain during the web cutover. The
+live web caller still reaches `attempts.saveResponse` during the additive
+backend phase. The web cutover will save through `responses.save` directly,
+while `attempts.saveResponse` stays registered for already-open clients and
+rollback.
+The same temporary rule applies to `history.list`, `runtime.getSetState`,
+`runtime.getSectionState`, `retained.getAttemptSetRoute`,
+`retained.getAttemptSectionRoute`, and `attempt.isLockedByPublicPath`. The new
+web uses `history.bySet`, exact attempt-page reads, exact attempt-state reads,
+and exact attempt-ID locking instead.
+
+Deploy additive backend contracts first, then deploy the web cutover. Keep the
+old contracts through exact production acceptance, the rollback window, and
+the already-open client window. Remove them only after production traffic proves
+the new web no longer calls them. Historical `textAnswer` response rows remain
+readable by integrity validation until dev and production data prove that field
+empty. Remove that field and its integrity branch only after the data proof.
+None of these boundaries is a supported long-term compatibility API.
 
 Section completion, attempt completion, and expiry load bounded indexed
 placement and response graphs. They reject missing, duplicate, or mismatched
@@ -83,6 +94,11 @@ Restart actions and retained-route destinations resolve separately from the
 active signed catalog in the same Convex query transaction, so a catalog rename
 or entry revision cannot silently change the frozen review or send a new attempt
 to an obsolete route.
+
+After the cutover, the web bootstraps that exact attempt page, then subscribes only to
+`getSetAttemptState` or `getSectionAttemptState` while the attempt can still
+change. Frozen display stays separate from the active signed restart and
+navigation destinations. Terminal pages stop their mutable subscriptions.
 
 ### Freemium Access
 

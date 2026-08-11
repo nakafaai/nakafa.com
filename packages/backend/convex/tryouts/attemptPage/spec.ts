@@ -5,22 +5,17 @@ import {
   publicTryoutSetValidator,
   publicTryoutTrackValidator,
 } from "@repo/backend/convex/tryouts/queries/catalogModel";
-import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
+import {
+  tryoutRouteKeyValidator,
+  tryoutSetIdentityValidator,
+} from "@repo/backend/convex/tryouts/route";
 import { tryoutSectionContentAccessValidator } from "@repo/backend/convex/tryouts/runtime/content";
 import { tryoutRuntimeStateValidator } from "@repo/backend/convex/tryouts/runtime/spec";
 import { type Infer, v } from "convex/values";
 
-const setIdentityFields = {
-  countryKey: tryoutRouteKeyValidator,
-  examKey: tryoutRouteKeyValidator,
-  locale: localeValidator,
-  setKey: tryoutRouteKeyValidator,
-  trackKey: tryoutRouteKeyValidator,
-};
-
 const currentSetRequestValidator = v.object({
   kind: v.literal("current"),
-  ...setIdentityFields,
+  ...tryoutSetIdentityValidator.fields,
 });
 
 const retainedRequestFields = {
@@ -44,7 +39,7 @@ export type TryoutSetAttemptPageRequest = Infer<
 const currentSectionRequestValidator = v.object({
   kind: v.literal("current"),
   sectionKey: tryoutRouteKeyValidator,
-  ...setIdentityFields,
+  ...tryoutSetIdentityValidator.fields,
 });
 
 const retainedSectionRequestValidator = v.object(retainedRequestFields);
