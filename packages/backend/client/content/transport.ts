@@ -7,6 +7,7 @@ import {
   createNetworkRequestError,
   isRetryableNetworkError,
   NETWORK_RETRY_DELAYS_MILLISECONDS,
+  type NetworkRequestError,
 } from "@repo/backend/client/network";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -14,13 +15,9 @@ import {
 } from "@repo/backend/content/endpoint";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Effect, Schedule } from "effect";
+import { Data, Effect, Schedule, ScheduleDecision } from "effect";
 
 const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
-const CONTENT_RETRY_SCHEDULE = Schedule.fromDelays(
-  NETWORK_RETRY_DELAYS_MILLISECONDS[0],
-  NETWORK_RETRY_DELAYS_MILLISECONDS[1]
-);
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
 
 type ContentRuntimeResponse =
@@ -39,6 +36,76 @@ export interface ContentHttpTarget {
   readonly siteUrl: string;
   readonly token: string;
 }
+
+/** One exact unmarked response may share the safe read retry budget. */
+class RetryableContentResponse extends Data.TaggedError(
+  "RetryableContentResponse"
+)<{
+  readonly response: Response;
+}> {}
+
+type ContentRequestFailure = NetworkRequestError | RetryableContentResponse;
+
+/** Returns whether one failure is safe to retry as the same read request. */
+function isRetryableContentFailure(error: ContentRequestFailure) {
+  if (error._tag === "RetryableContentResponse") {
+    return true;
+  }
+  return isRetryableNetworkError(error);
+}
+
+/** Returns whether an exact unmarked JSON 500 is eligible for read retry. */
+function isRetryableContentResponse(response: Response, endpoint: string) {
+  return (
+    response.url === endpoint &&
+    response.status === 500 &&
+    isJsonContentType(response.headers.get("content-type")) &&
+    response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER) === null
+  );
+}
+
+/**
+ * Releases only a response that the retry schedule will discard.
+ *
+ * @see https://github.com/nodejs/undici/blob/v7.29.0/README.md#garbage-collection
+ */
+const cancelRetryResponse = Effect.fn("NakafaContent.cancelRetryResponse")(
+  function* (
+    failure: ContentRequestFailure,
+    decision: ScheduleDecision.ScheduleDecision
+  ) {
+    if (!ScheduleDecision.isContinue(decision)) {
+      return;
+    }
+    if (failure._tag !== "RetryableContentResponse") {
+      return;
+    }
+    const body = failure.response.body;
+    if (body === null) {
+      return;
+    }
+
+    yield* Effect.tryPromise({
+      catch: () => undefined,
+      try: () => body.cancel(),
+    }).pipe(
+      Effect.catchAll(() =>
+        Effect.logWarning(
+          "Unable to cancel a discarded content runtime response body."
+        )
+      )
+    );
+  }
+);
+
+const CONTENT_RETRY_SCHEDULE = Schedule.fromDelays(
+  NETWORK_RETRY_DELAYS_MILLISECONDS[0],
+  NETWORK_RETRY_DELAYS_MILLISECONDS[1]
+).pipe(
+  Schedule.whileInput<ContentRequestFailure>(isRetryableContentFailure),
+  Schedule.passthrough,
+  Schedule.onDecision(cancelRetryResponse)
+);
 
 /** Returns whether the response carries the current diagnostic marker. */
 function hasContentRuntimeMarker(response: Response) {
@@ -137,11 +204,14 @@ export const encodeContentRequest = Effect.fn(
 /**
  * Posts one no-store request with the server-owned runtime capability.
  *
- * The runtime action is read-only, so only allowlisted network failures receive
- * two bounded retries. Every HTTP response continues without retry into the
- * exact status, response, and signature checks.
+ * The runtime action is read-only. Allowlisted network failures and the exact
+ * unmarked JSON 500 that the pinned Convex backend creates when Nakafa does not
+ * complete the action share two bounded retries. Every other HTTP response
+ * continues without retry into the exact status, response, and signature
+ * checks.
  *
  * @see https://docs.convex.dev/functions/http-actions
+ * @see https://github.com/get-convex/convex-backend/blob/38abb46277140838cc5cdad59c6e85ad0432fc9a/crates/application/src/redaction.rs#L143-L160
  * @see https://effect.website/docs/error-management/retrying/
  */
 export const postContentRequest = Effect.fn("NakafaContent.postContentRequest")(
@@ -150,7 +220,7 @@ export const postContentRequest = Effect.fn("NakafaContent.postContentRequest")(
     readonly source: string;
     readonly target: ContentHttpTarget;
   }) {
-    const response = yield* Effect.tryPromise({
+    const request = Effect.tryPromise({
       catch: createNetworkRequestError,
       try: () =>
         fetch(input.endpoint, {
@@ -166,9 +236,19 @@ export const postContentRequest = Effect.fn("NakafaContent.postContentRequest")(
           signal: AbortSignal.timeout(CONTENT_TIMEOUT_MILLISECONDS),
         }),
     }).pipe(
-      Effect.retry({
-        schedule: CONTENT_RETRY_SCHEDULE,
-        while: isRetryableNetworkError,
+      Effect.flatMap((response) => {
+        if (!isRetryableContentResponse(response, input.endpoint)) {
+          return Effect.succeed(response);
+        }
+        return Effect.fail(new RetryableContentResponse({ response }));
+      })
+    );
+    const response = yield* request.pipe(
+      Effect.retryOrElse(CONTENT_RETRY_SCHEDULE, (failure) => {
+        if (failure._tag === "RetryableContentResponse") {
+          return Effect.succeed(failure.response);
+        }
+        return Effect.fail(failure);
       }),
       Effect.mapError(
         (error) =>
