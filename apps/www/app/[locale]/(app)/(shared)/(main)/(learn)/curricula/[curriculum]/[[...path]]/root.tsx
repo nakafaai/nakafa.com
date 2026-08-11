@@ -6,15 +6,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@repo/design-system/components/ui/breadcrumb";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import Image from "next/image";
 import type { Locale } from "next-intl";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import type {
@@ -25,12 +17,16 @@ import {
   CurriculumSelector,
   type CurriculumSelectorOption,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/selector";
-import { ChoiceCardContent } from "@/components/shared/choice/card";
-import { choiceCardVariants } from "@/components/shared/choice/variants";
 import {
-  ChoiceCardIcon,
-  ChoiceCardVisual,
-} from "@/components/shared/choice/visual";
+  CatalogCard,
+  CatalogCardGradient,
+  CatalogCardImage,
+} from "@/components/shared/catalog/card";
+import { ChoiceCardIcon } from "@/components/shared/choice/visual";
+import {
+  getCurriculumSubjectCatalogArtwork,
+  getGradeCatalogArtwork,
+} from "@/lib/catalog/artwork";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/social-images";
 
 /** Renders the curriculum index header with breadcrumb context. */
@@ -110,69 +106,54 @@ export function CurriculumCatalogCards({
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {entries.map(({ program, route }, index) => (
-        <Card
-          className="relative mx-auto h-full w-full max-w-sm pt-0 pb-0 [--card-spacing:--spacing(4)]"
+        <CatalogCard
+          action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
+          actionLabel={actionLabel}
           key={route.publicPath}
+          title={route.title}
         >
-          <Image
-            alt=""
-            className="h-auto w-full"
-            height={630}
+          <CatalogCardImage
             preload={index === 0}
-            sizes="(min-width: 640px) 384px, calc(100vw - 48px)"
             src={getCurriculumRouteSocialImage(locale, program.key, route)}
-            width={1200}
           />
-          <CardHeader className="flex-1">
-            <CardTitle>
-              <h2>{route.title}</h2>
-            </CardTitle>
-          </CardHeader>
-          <CardFooter className="border-t bg-muted/50 p-(--card-spacing)">
-            <Button
-              className="w-full"
-              render={
-                <NavigationLink
-                  aria-label={`${actionLabel} ${route.title}`}
-                  href={`/${locale}/${route.publicPath}`}
-                />
-              }
-            >
-              {actionLabel}
-            </Button>
-          </CardFooter>
-        </Card>
+        </CatalogCard>
       ))}
     </div>
   );
 }
 
-/** Renders curriculum child routes with the established choice-card surface. */
+/** Renders curriculum child routes with reviewed art or an identity gradient. */
 export function CurriculumChildCards({
+  actionLabel,
   locale,
   routes,
 }: {
+  actionLabel: string;
   locale: Locale;
   routes: readonly CurriculumViewRoute[];
 }) {
   return (
-    <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
-      {routes.map((route) => {
-        const Icon = readCurriculumRouteIcon(route);
+    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
+      {routes.map((route, index) => {
+        const imageSrc =
+          getGradeCatalogArtwork(locale, route.iconKey) ??
+          getCurriculumSubjectCatalogArtwork(locale, route.materialDomain);
 
         return (
-          <NavigationLink
-            className={choiceCardVariants()}
-            href={`/${locale}/${route.publicPath}`}
+          <CatalogCard
+            action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
+            actionLabel={actionLabel}
             key={route.publicPath}
+            title={route.title}
           >
-            <ChoiceCardVisual seed={route.publicPath}>
-              <ChoiceCardIcon icon={Icon} />
-            </ChoiceCardVisual>
-            <ChoiceCardContent>
-              <h2>{route.title}</h2>
-            </ChoiceCardContent>
-          </NavigationLink>
+            {imageSrc ? (
+              <CatalogCardImage preload={index === 0} src={imageSrc} />
+            ) : (
+              <CatalogCardGradient seed={route.nodeKey}>
+                <ChoiceCardIcon icon={readCurriculumRouteIcon(route)} />
+              </CatalogCardGradient>
+            )}
+          </CatalogCard>
         );
       })}
     </div>

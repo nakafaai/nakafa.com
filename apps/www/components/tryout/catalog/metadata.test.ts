@@ -83,9 +83,93 @@ describe("try-out route metadata", () => {
         },
       },
       description: "Signed section description",
+      openGraph: {
+        images: [
+          {
+            url: "/en/og/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge/image.png",
+          },
+        ],
+      },
       title: { absolute: "Quantitative Knowledge" },
+      twitter: {
+        images: [
+          {
+            url: "/en/og/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge/image.png",
+          },
+        ],
+      },
     });
   });
+
+  it("uses reviewed artwork for an Indonesian exam root", async () => {
+    runtimeMocks.readTryoutMetadata.mockResolvedValue({
+      route: {
+        alternates: [],
+        description: "Signed SNBT description",
+        publicPath: "try-out/indonesia/snbt",
+        title: "SNBT",
+      },
+    });
+
+    const metadata = await generateTryoutRouteMetadata({
+      countryKey: "indonesia",
+      examKey: "snbt",
+      kind: "exam",
+      locale: "id",
+      publicPath: "try-out/indonesia/snbt",
+    });
+
+    expect(metadata).toMatchObject({
+      openGraph: {
+        images: [{ url: "/open-graph/tryout/indonesia/id-snbt.png" }],
+      },
+      twitter: {
+        images: [{ url: "/open-graph/tryout/indonesia/id-snbt.png" }],
+      },
+    });
+    expect(runtimeMocks.readTryoutMetadata).toHaveBeenCalledWith({
+      kind: "exam",
+      locale: "id",
+      publicPath: "try-out/indonesia/snbt",
+    });
+  });
+
+  it.each(["country", "track", "set", "section"] as const)(
+    "keeps generated social images for a %s route",
+    async (kind) => {
+      const publicPath = "try-out/indonesia/snbt/2027/set-1";
+      runtimeMocks.readTryoutMetadata.mockResolvedValue({
+        route: {
+          alternates: [],
+          publicPath,
+          title: "Signed route",
+        },
+      });
+
+      const metadata = await generateTryoutRouteMetadata({
+        kind,
+        locale: "en",
+        publicPath,
+      });
+
+      expect(metadata).toMatchObject({
+        openGraph: {
+          images: [
+            {
+              url: "/en/og/try-out/indonesia/snbt/2027/set-1/image.png",
+            },
+          ],
+        },
+        twitter: {
+          images: [
+            {
+              url: "/en/og/try-out/indonesia/snbt/2027/set-1/image.png",
+            },
+          ],
+        },
+      });
+    }
+  );
 
   it("uses localized fallback copy when the signed route has no description", async () => {
     runtimeMocks.readTryoutMetadata.mockResolvedValue({

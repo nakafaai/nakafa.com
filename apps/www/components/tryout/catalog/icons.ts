@@ -1,4 +1,5 @@
 import {
+  Calendar03Icon,
   Certificate02Icon,
   RankingIcon,
   SchoolReportCardIcon,
@@ -6,7 +7,7 @@ import {
 import type { IconSvgElement } from "@hugeicons/react";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 
-/** Resolves one try-out exam identity to its stable card icon. */
+/** Resolves one try-out exam identity to its stable selector icon. */
 export function getTryoutExamIcon(examKey: string): IconSvgElement {
   switch (examKey) {
     case "snbt":
@@ -18,7 +19,14 @@ export function getTryoutExamIcon(examKey: string): IconSvgElement {
   }
 }
 
-/** Resolves one subject track identity to its stable material icon. */
-export function getTryoutTrackIcon(trackKey: string): IconSvgElement {
+/** Resolves one track identity to its year or subject icon. */
+export function getTryoutTrackIcon(
+  trackKind: "subject" | "year",
+  trackKey: string
+): IconSvgElement {
+  if (trackKind === "year") {
+    return Calendar03Icon;
+  }
+
   return getMaterialIcon(trackKey);
 }

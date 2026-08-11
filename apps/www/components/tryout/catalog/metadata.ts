@@ -1,19 +1,25 @@
 import "server-only";
 
-import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
+import { resolveTryoutExamSocialImage } from "@/lib/tryout/social-images";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 
-interface TryoutMetadataInput {
-  readonly kind: TryoutCatalogRow["kind"];
-  readonly locale: Locale;
-  readonly publicPath: string;
-}
+type TryoutMetadataQueryInput = Parameters<typeof readTryoutMetadata>[0];
+
+type TryoutMetadataInput =
+  | (TryoutMetadataQueryInput & {
+      readonly countryKey: string;
+      readonly examKey: string;
+      readonly kind: "exam";
+    })
+  | (TryoutMetadataQueryInput & {
+      readonly kind: Exclude<TryoutMetadataQueryInput["kind"], "exam">;
+    });
 
 interface RetainedTryoutMetadataSource {
   readonly description?: string;
@@ -35,8 +41,13 @@ export function createRetainedTryoutMetadata(
 export async function generateTryoutRouteMetadata(
   input: TryoutMetadataInput
 ): Promise<Metadata> {
+  const queryInput = {
+    kind: input.kind,
+    locale: input.locale,
+    publicPath: input.publicPath,
+  };
   const [published, tTryouts] = await Promise.all([
-    readTryoutMetadata(input),
+    readTryoutMetadata(queryInput),
     getTranslations({ locale: input.locale, namespace: "Tryouts" }),
   ]);
   const source = published.route;
@@ -47,6 +58,17 @@ export async function generateTryoutRouteMetadata(
 
   const path = `/${input.locale}/${source.publicPath}`;
   const description = source.description ?? tTryouts("metadata-description");
+  const image =
+    input.kind === "exam"
+      ? Effect.runSync(
+          resolveTryoutExamSocialImage({
+            countryKey: input.countryKey,
+            examKey: input.examKey,
+            locale: input.locale,
+            publicPath: source.publicPath,
+          })
+        )
+      : getOgUrl(input.locale, source.publicPath);
 
   return {
     title: { absolute: source.title },
@@ -60,7 +82,7 @@ export async function generateTryoutRouteMetadata(
       description,
       locale: input.locale,
       path,
-      image: getOgUrl(input.locale, source.publicPath),
+      image,
     }),
   };
 }

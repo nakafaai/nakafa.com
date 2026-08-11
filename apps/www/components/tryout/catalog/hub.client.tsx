@@ -7,9 +7,10 @@ import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { ChoiceCardContent } from "@/components/shared/choice/card";
-import { choiceCardVariants } from "@/components/shared/choice/variants";
-import { ChoiceCardVisual } from "@/components/shared/choice/visual";
+import {
+  CatalogCard,
+  CatalogCardGradient,
+} from "@/components/shared/catalog/card";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
@@ -61,24 +62,26 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {page.countries.map((country) => (
-        <IntentLink
-          className={choiceCardVariants()}
-          href={getTryoutPublicPathHref(country.publicPath)}
+        <CatalogCard
+          action={
+            <IntentLink
+              href={getTryoutPublicPathHref(country.publicPath)}
+              onClick={() => handleCountryClick(country)}
+            />
+          }
+          actionLabel={tTryouts("open-country-cta")}
           key={country.countryKey}
-          onClick={() => handleCountryClick(country)}
+          title={country.title}
         >
-          <ChoiceCardVisual seed={country.publicPath}>
+          <CatalogCardGradient seed={country.publicPath}>
             <CountryFlagIcon
               className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
               countryCode={country.countryCode}
             />
-          </ChoiceCardVisual>
-          <ChoiceCardContent>
-            <h2>{country.title}</h2>
-          </ChoiceCardContent>
-        </IntentLink>
+          </CatalogCardGradient>
+        </CatalogCard>
       ))}
     </div>
   );
