@@ -7,7 +7,6 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { createContext, use, useCallback, useMemo, useState } from "react";
 
-// Types
 interface StepperContextValue {
   activeStep: number;
   orientation: "horizontal" | "vertical";
@@ -23,7 +22,6 @@ interface StepItemContextValue {
 
 type StepState = "active" | "completed" | "inactive" | "loading";
 
-// Contexts
 const StepperContext = createContext<StepperContextValue | undefined>(
   undefined
 );
@@ -49,7 +47,6 @@ const useStepItem = () => {
   return context;
 };
 
-// Components
 interface StepperProps extends React.HTMLAttributes<HTMLDivElement> {
   defaultValue?: number;
   onValueChange?: (value: number) => void;
@@ -102,7 +99,6 @@ function Stepper({
   );
 }
 
-// StepperItem
 interface StepperItemProps extends React.HTMLAttributes<HTMLDivElement> {
   completed?: boolean;
   disabled?: boolean;
@@ -154,7 +150,6 @@ function StepperItem({
   );
 }
 
-// StepperTrigger
 function StepperTrigger({
   className,
   children,
@@ -190,15 +185,15 @@ function StepperTrigger({
   });
 }
 
-// StepperIndicator
-function StepperIndicator({
-  className,
-  children,
-  render,
-  ...props
-}: useRender.ComponentProps<"span">) {
-  const { state, step, isLoading } = useStepItem();
-  const defaultChildren = (
+/** Renders the numbered, completed, or loading indicator content. */
+function StepperDefaultIndicator({
+  isLoading,
+  step,
+}: {
+  isLoading: boolean;
+  step: number;
+}) {
+  return (
     <>
       <span className="transition-all group-data-[step-state=completed]/step:scale-0 group-data-loading/step:scale-0 group-data-[step-state=completed]/step:opacity-0 group-data-loading/step:opacity-0 group-data-loading/step:transition-none">
         {step}
@@ -208,19 +203,30 @@ function StepperIndicator({
         className="absolute size-4 scale-0 opacity-0 transition-all group-data-[step-state=completed]/step:scale-100 group-data-[step-state=completed]/step:opacity-100"
         icon={Tick01Icon}
       />
-      {!!isLoading && (
+      {isLoading ? (
         <span className="absolute transition-all">
           <Spinner aria-hidden="true" className="size-3.5" />
         </span>
-      )}
+      ) : null}
     </>
   );
+}
+
+function StepperIndicator({
+  className,
+  children,
+  render,
+  ...props
+}: useRender.ComponentProps<"span">) {
+  const { state, step, isLoading } = useStepItem();
 
   return useRender({
     defaultTagName: "span",
     render,
     props: {
-      children: children ?? defaultChildren,
+      children: children ?? (
+        <StepperDefaultIndicator isLoading={isLoading} step={step} />
+      ),
       className: cn(
         "relative flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs data-[step-state=active]:bg-primary data-[step-state=completed]:bg-primary data-[step-state=active]:text-primary-foreground data-[step-state=completed]:text-primary-foreground",
         className
@@ -232,7 +238,6 @@ function StepperIndicator({
   });
 }
 
-// StepperTitle
 function StepperTitle({
   children,
   className,
@@ -249,7 +254,6 @@ function StepperTitle({
   );
 }
 
-// StepperDescription
 function StepperDescription({
   className,
   ...props
@@ -263,7 +267,6 @@ function StepperDescription({
   );
 }
 
-// StepperSeparator
 function StepperSeparator({
   className,
   ...props

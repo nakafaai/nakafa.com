@@ -66,7 +66,7 @@ interface CodeHighlightRequest {
 }
 
 /** Highlights client-rendered code while retaining a safe text fallback. */
-export const CodeBlockContent = ({
+export function CodeBlockContent({
   children,
   themes,
   language,
@@ -74,7 +74,7 @@ export const CodeBlockContent = ({
   syntaxHighlighting = true,
   transparentBackground = false,
   ...props
-}: CodeBlockContentProps) => {
+}: CodeBlockContentProps) {
   const request = useMemo<CodeHighlightRequest>(
     () => ({
       children,
@@ -157,4 +157,4 @@ export const CodeBlockContent = ({
       {...props}
     />
   );
-};
+}

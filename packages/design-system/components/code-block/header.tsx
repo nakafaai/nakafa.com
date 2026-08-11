@@ -28,18 +28,17 @@ import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 export type CodeBlockHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 /** Renders the toolbar surface above a code block. */
-export const CodeBlockHeader = ({
-  className,
-  ...props
-}: CodeBlockHeaderProps) => (
-  <div
-    className={cn(
-      "flex flex-row items-center border-b bg-muted/80 p-1",
-      className
-    )}
-    {...props}
-  />
-);
+export function CodeBlockHeader({ className, ...props }: CodeBlockHeaderProps) {
+  return (
+    <div
+      className={cn(
+        "flex flex-row items-center border-b bg-muted/80 p-1",
+        className
+      )}
+      {...props}
+    />
+  );
+}
 
 /** Render-prop contract for projecting every source into the filename region. */
 export type CodeBlockFilesProps = Omit<
@@ -50,11 +49,11 @@ export type CodeBlockFilesProps = Omit<
 };
 
 /** Maps every source into the code block's filename region. */
-export const CodeBlockFiles = ({
+export function CodeBlockFiles({
   className,
   children,
   ...props
-}: CodeBlockFilesProps) => {
+}: CodeBlockFilesProps) {
   const data = useCodeBlock((state) => state.data);
 
   return (
@@ -65,7 +64,7 @@ export const CodeBlockFiles = ({
       {data.map(children)}
     </div>
   );
-};
+}
 
 /** Filename identity and optional icon override for one source. */
 export type CodeBlockFilenameProps = HTMLAttributes<HTMLDivElement> & {
@@ -74,13 +73,13 @@ export type CodeBlockFilenameProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 /** Shows the filename and programming icon for the active source. */
-export const CodeBlockFilename = ({
+export function CodeBlockFilename({
   className,
   icon,
   value,
   children,
   ...props
-}: CodeBlockFilenameProps) => {
+}: CodeBlockFilenameProps) {
   const activeValue = useCodeBlock((state) => state.value);
   const defaultIcon = Object.entries(filenameIconMap).find(([pattern]) => {
     const regex = new RegExp(
@@ -107,13 +106,13 @@ export const CodeBlockFilename = ({
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </div>
   );
-};
+}
 
 /** Select behavior bound to the active code source. */
 export type CodeBlockSelectProps = ComponentProps<typeof Select>;
 
 /** Binds a language selector to the code block's active source. */
-export const CodeBlockSelect = (props: CodeBlockSelectProps) => {
+export function CodeBlockSelect(props: CodeBlockSelectProps) {
   const { data, value, onValueChange } = useCodeBlock((state) => ({
     data: state.data,
     value: state.value,
@@ -136,33 +135,35 @@ export const CodeBlockSelect = (props: CodeBlockSelectProps) => {
       {...props}
     />
   );
-};
+}
 
 /** Trigger attributes for the compact language selector. */
 export type CodeBlockSelectTriggerProps = ComponentProps<typeof SelectTrigger>;
 
 /** Applies the compact code-block treatment to a select trigger. */
-export const CodeBlockSelectTrigger = ({
+export function CodeBlockSelectTrigger({
   className,
   ...props
-}: CodeBlockSelectTriggerProps) => (
-  <SelectTrigger
-    className={cn(
-      "w-fit border-none text-muted-foreground text-sm shadow-none",
-      className
-    )}
-    size="sm"
-    {...props}
-  />
-);
+}: CodeBlockSelectTriggerProps) {
+  return (
+    <SelectTrigger
+      className={cn(
+        "w-fit border-none text-muted-foreground text-sm shadow-none",
+        className
+      )}
+      size="sm"
+      {...props}
+    />
+  );
+}
 
 /** Value-slot attributes for the selected language label. */
 export type CodeBlockSelectValueProps = ComponentProps<typeof SelectValue>;
 
 /** Displays the selected code language inside its trigger. */
-export const CodeBlockSelectValue = (props: CodeBlockSelectValueProps) => (
-  <SelectValue {...props} />
-);
+export function CodeBlockSelectValue(props: CodeBlockSelectValueProps) {
+  return <SelectValue {...props} />;
+}
 
 /** Render-prop contract for projecting sources into language options. */
 export type CodeBlockSelectContentProps = Omit<
@@ -173,10 +174,10 @@ export type CodeBlockSelectContentProps = Omit<
 };
 
 /** Renders every available language inside the code-block select menu. */
-export const CodeBlockSelectContent = ({
+export function CodeBlockSelectContent({
   children,
   ...props
-}: CodeBlockSelectContentProps) => {
+}: CodeBlockSelectContentProps) {
   const t = useTranslations("Common");
   const data = useCodeBlock((state) => state.data);
 
@@ -188,15 +189,15 @@ export const CodeBlockSelectContent = ({
       </SelectGroup>
     </SelectContent>
   );
-};
+}
 
 /** Menu-item attributes for one selectable language. */
 export type CodeBlockSelectItemProps = ComponentProps<typeof SelectItem>;
 
 /** Applies the code-block typography to one language option. */
-export const CodeBlockSelectItem = ({
+export function CodeBlockSelectItem({
   className,
   ...props
-}: CodeBlockSelectItemProps) => (
-  <SelectItem className={cn("text-sm", className)} {...props} />
-);
+}: CodeBlockSelectItemProps) {
+  return <SelectItem className={cn("text-sm", className)} {...props} />;
+}

@@ -180,6 +180,37 @@ function FieldSeparator({
   );
 }
 
+/** Renders the shared field error container. */
+function FieldErrorRoot({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn("font-normal text-destructive text-sm", className)}
+      data-slot="field-error"
+      role="alert"
+      {...props}
+    />
+  );
+}
+
+/** Renders multiple field validation messages in their original order. */
+function FieldErrorList({
+  errors,
+}: {
+  errors: Array<{ message?: string } | undefined>;
+}) {
+  return (
+    <ul className="ml-4 flex list-disc flex-col gap-1">
+      {errors.map(
+        (error, index) =>
+          !!error?.message && (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Error message may repeat, need index for uniqueness
+            <li key={`${error.message}-${index}`}>{error.message}</li>
+          )
+      )}
+    </ul>
+  );
+}
+
 function FieldError({
   className,
   children,
@@ -190,14 +221,9 @@ function FieldError({
 }) {
   if (children) {
     return (
-      <div
-        className={cn("font-normal text-destructive text-sm", className)}
-        data-slot="field-error"
-        role="alert"
-        {...props}
-      >
+      <FieldErrorRoot className={className} {...props}>
         {children}
-      </div>
+      </FieldErrorRoot>
     );
   }
 
@@ -209,34 +235,23 @@ function FieldError({
     ...new Map(errors.map((error) => [error?.message, error])).values(),
   ];
 
-  const content =
-    uniqueErrors.length === 1 ? (
-      uniqueErrors[0]?.message
-    ) : (
-      <ul className="ml-4 flex list-disc flex-col gap-1">
-        {uniqueErrors.map(
-          (error, index) =>
-            !!error?.message && (
-              // biome-ignore lint/suspicious/noArrayIndexKey: Error message may repeat, need index for uniqueness
-              <li key={`${error.message}-${index}`}>{error.message}</li>
-            )
-        )}
-      </ul>
-    );
+  if (uniqueErrors.length === 1) {
+    const message = uniqueErrors[0]?.message;
+    if (!message) {
+      return null;
+    }
 
-  if (!content) {
-    return null;
+    return (
+      <FieldErrorRoot className={className} {...props}>
+        {message}
+      </FieldErrorRoot>
+    );
   }
 
   return (
-    <div
-      className={cn("font-normal text-destructive text-sm", className)}
-      data-slot="field-error"
-      role="alert"
-      {...props}
-    >
-      {content}
-    </div>
+    <FieldErrorRoot className={className} {...props}>
+      <FieldErrorList errors={uniqueErrors} />
+    </FieldErrorRoot>
   );
 }
 

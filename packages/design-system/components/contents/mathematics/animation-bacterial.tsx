@@ -1,17 +1,14 @@
 "use client";
 
-import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { useIntersection } from "@mantine/hooks";
-import { Button } from "@repo/design-system/components/ui/button";
+import { BacterialControls } from "@repo/design-system/components/contents/mathematics/bacterial-controls";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   AnimatePresence,
   domMax,
@@ -20,23 +17,12 @@ import {
   MotionConfig,
 } from "motion/react";
 import * as m from "motion/react-m";
-import {
-  useCallback,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 const MAX_BACTERIA_COUNT = 100;
 const SPEED_INTERVAL = 1000;
 const STAGGER_DELAY = 0.01;
 const SCALE_INCREASE = 1.1;
-const SPEED_VALUES_DIFFERENCE = 0.25;
-const SPEED_VALUES = Array.from(
-  { length: 5 },
-  (_, i) => SPEED_VALUES_DIFFERENCE * (i + 1)
-);
 
 type FormulaType = "geometric" | "exponential";
 
@@ -172,12 +158,12 @@ export function BacterialGrowth({
     return () => clearInterval(interval);
   }, [deferredAnimating, deferredGeneration, maxGenerations, speed]);
 
-  const resetAnimation = useCallback(() => {
+  function resetAnimation() {
     setGeneration(0);
     setIsPlaying(true);
-  }, []);
+  }
 
-  const togglePlayPause = useCallback(() => {
+  function togglePlayPause() {
     if (!isEffectivelyPlaying && generation >= maxGenerations) {
       // If at max generation and trying to play, restart from beginning
       setGeneration(0);
@@ -186,30 +172,12 @@ export function BacterialGrowth({
     }
 
     setIsPlaying((value) => !value);
-  }, [isEffectivelyPlaying, generation, maxGenerations]);
+  }
 
-  // Generate time buttons
-  const timeButtons = useMemo(
-    () =>
-      Array.from({ length: maxGenerations + 1 }).map((_, i) => {
-        const time = i * timeInterval;
-        return (
-          <Button
-            key={time.toString()}
-            onClick={() => {
-              setGeneration(i);
-              setIsPlaying(false);
-            }}
-            size="sm"
-            variant={generation === i ? "default" : "outline"}
-          >
-            {time}
-            {timeUnit}
-          </Button>
-        );
-      }),
-    [generation, maxGenerations, timeInterval, timeUnit]
-  );
+  function selectGeneration(nextGeneration: number) {
+    setGeneration(nextGeneration);
+    setIsPlaying(false);
+  }
 
   return (
     <Card className="content-auto-card" ref={ref}>
@@ -276,51 +244,18 @@ export function BacterialGrowth({
         </div>
       </CardContent>
 
-      <CardFooter className="flex flex-col gap-4 px-0">
-        <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <div className="flex justify-between gap-2">
-            <Button
-              aria-label="Reset"
-              onClick={resetAnimation}
-              size="icon"
-              variant="outline"
-            >
-              <HugeIcons icon={Clock04Icon} />
-              <span className="sr-only">Reset</span>
-            </Button>
-            <Button
-              aria-label={isEffectivelyPlaying ? "Pause" : "Play"}
-              onClick={togglePlayPause}
-              size="icon"
-              variant={isEffectivelyPlaying ? "outline" : "default"}
-            >
-              <HugeIcons icon={isEffectivelyPlaying ? PauseIcon : PlayIcon} />
-              <span className="sr-only">
-                {isEffectivelyPlaying ? "Pause" : "Play"}
-              </span>
-            </Button>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-2">
-            {SPEED_VALUES.map((speedValue) => (
-              <Button
-                key={speedValue}
-                onClick={() => setSpeed(speedValue)}
-                size="sm"
-                variant={speed === speedValue ? "default" : "outline"}
-              >
-                {speedValue}x
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-full border-t px-6 pt-4">
-          <div className="flex flex-wrap justify-center gap-2">
-            {timeButtons}
-          </div>
-        </div>
-      </CardFooter>
+      <BacterialControls
+        generation={generation}
+        isPlaying={isEffectivelyPlaying}
+        maxGenerations={maxGenerations}
+        onGenerationChange={selectGeneration}
+        onReset={resetAnimation}
+        onSpeedChange={setSpeed}
+        onTogglePlaying={togglePlayPause}
+        speed={speed}
+        timeInterval={timeInterval}
+        timeUnit={timeUnit}
+      />
     </Card>
   );
 }

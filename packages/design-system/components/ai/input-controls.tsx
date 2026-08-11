@@ -237,6 +237,37 @@ export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
   isPending?: boolean;
 };
 
+type PromptInputSubmitState = "pending" | "ready" | "streaming";
+
+/** Resolves the visible submit state with pending work taking precedence. */
+function getPromptInputSubmitState(
+  status: ChatStatus | undefined,
+  isPending: boolean | undefined
+): PromptInputSubmitState {
+  if (status === "submitted" || isPending) {
+    return "pending";
+  }
+
+  if (status === "streaming") {
+    return "streaming";
+  }
+
+  return "ready";
+}
+
+/** Renders the icon for one resolved prompt submit state. */
+function PromptInputSubmitIcon({ state }: { state: PromptInputSubmitState }) {
+  if (state === "pending") {
+    return <Spinner />;
+  }
+
+  if (state === "streaming") {
+    return <HugeIcons className="size-4" icon={StopIcon} />;
+  }
+
+  return <HugeIcons className="size-4" icon={ArrowUp02Icon} />;
+}
+
 /** Renders the send, pending, or stop state for a prompt submission. */
 export function PromptInputSubmit({
   className,
@@ -247,15 +278,8 @@ export function PromptInputSubmit({
   children,
   ...props
 }: PromptInputSubmitProps) {
-  let icon = <HugeIcons className="size-4" icon={ArrowUp02Icon} />;
-  let statusVariant = variant;
-
-  if (status === "submitted" || isPending) {
-    icon = <Spinner />;
-  } else if (status === "streaming") {
-    icon = <HugeIcons className="size-4" icon={StopIcon} />;
-    statusVariant = "destructive";
-  }
+  const submitState = getPromptInputSubmitState(status, isPending);
+  const statusVariant = submitState === "streaming" ? "destructive" : variant;
 
   return (
     <InputGroupButton
@@ -266,7 +290,7 @@ export function PromptInputSubmit({
       variant={statusVariant}
       {...props}
     >
-      {children ?? icon}
+      {children ?? <PromptInputSubmitIcon state={submitState} />}
     </InputGroupButton>
   );
 }

@@ -180,8 +180,8 @@ export function PromptInput({
     fiber.addObserver(() => submitFibersRef.current.delete(fiber));
   };
 
-  const inner = (
-    <>
+  return (
+    <PromptInputAttachmentsProvider attachments={attachments}>
       <input
         accept={accept}
         aria-label="Upload files"
@@ -195,12 +195,6 @@ export function PromptInput({
       <form className="w-full" onSubmit={handleSubmit} ref={formRef} {...props}>
         <InputGroup className={cn("bg-card", className)}>{children}</InputGroup>
       </form>
-    </>
-  );
-
-  return (
-    <PromptInputAttachmentsProvider attachments={attachments}>
-      {inner}
     </PromptInputAttachmentsProvider>
   );
 }

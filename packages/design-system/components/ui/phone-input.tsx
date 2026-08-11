@@ -83,7 +83,7 @@ function hasCountryValue(
   return option.value !== undefined;
 }
 
-const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
+function CountrySelect({ value, onChange, options }: CountrySelectProps) {
   const t = useTranslations("Common");
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -194,9 +194,9 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
       </PopoverContent>
     </Popover>
   );
-};
+}
 
-const FlagComponent = ({ country, countryName }: RpnInput.FlagProps) => {
+function FlagComponent({ country, countryName }: RpnInput.FlagProps) {
   const Flag = flags[country];
 
   return (
@@ -208,4 +208,4 @@ const FlagComponent = ({ country, countryName }: RpnInput.FlagProps) => {
       )}
     </span>
   );
-};
+}

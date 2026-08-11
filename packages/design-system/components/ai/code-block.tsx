@@ -51,14 +51,14 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
 });
 
 /** Renders highlighted code with paired light and dark Shiki themes. */
-export const CodeBlock = ({
+export function CodeBlock({
   code,
   language,
   className,
   children,
   preClassName,
   ...rest
-}: CodeBlockProps) => {
+}: CodeBlockProps) {
   const [lightTheme, darkTheme] = use(ShikiThemeContext);
   const codeContextValue = useMemo(() => ({ code }), [code]);
   const codeThemes = useMemo(
@@ -113,7 +113,7 @@ export const CodeBlock = ({
       </div>
     </CodeBlockContext.Provider>
   );
-};
+}
 
 /** Copy-button callbacks and duration for its transient success state. */
 export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
@@ -129,7 +129,7 @@ export type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
 };
 
 /** Downloads the current code sample with an extension derived from its language. */
-export const CodeBlockDownloadButton = ({
+export function CodeBlockDownloadButton({
   onDownload,
   onError,
   language,
@@ -140,7 +140,7 @@ export const CodeBlockDownloadButton = ({
 }: CodeBlockDownloadButtonProps & {
   code?: string;
   language?: string;
-}) => {
+}) {
   const contextCode = use(CodeBlockContext).code;
   const code = propCode ?? contextCode;
   const extension = getCodeFileExtension(language);
@@ -178,10 +178,10 @@ export const CodeBlockDownloadButton = ({
       )}
     </Button>
   );
-};
+}
 
 /** Copies the current code sample and exposes a temporary success state. */
-export const CodeBlockCopyButton = ({
+export function CodeBlockCopyButton({
   onCopy,
   onError,
   timeout = 2000,
@@ -189,7 +189,7 @@ export const CodeBlockCopyButton = ({
   className,
   code: propCode,
   ...props
-}: CodeBlockCopyButtonProps & { code?: string }) => {
+}: CodeBlockCopyButtonProps & { code?: string }) {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
   const contextCode = use(CodeBlockContext).code;
@@ -248,4 +248,4 @@ export const CodeBlockCopyButton = ({
       {children ?? <HugeIcons className="size-4 shrink-0" icon={icon} />}
     </Button>
   );
-};
+}
