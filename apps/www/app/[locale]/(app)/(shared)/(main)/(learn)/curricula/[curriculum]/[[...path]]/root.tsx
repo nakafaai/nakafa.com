@@ -6,7 +6,15 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@repo/design-system/components/ui/breadcrumb";
+import { Button } from "@repo/design-system/components/ui/button";
+import {
+  Card,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import Image from "next/image";
 import type { Locale } from "next-intl";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import type {
@@ -23,7 +31,7 @@ import {
   ChoiceCardIcon,
   ChoiceCardVisual,
 } from "@/components/shared/choice/visual";
-import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { getCurriculumRouteSocialImage } from "@/lib/curriculum/social-images";
 
 /** Renders the curriculum index header with breadcrumb context. */
 export function CurriculumIndexHeader({
@@ -89,20 +97,68 @@ export function CurriculumRootHeader({
   );
 }
 
-/** Renders root curriculum child routes as linked onboarding-style cards. */
-export function CurriculumRootCards({
+/** Renders the public Curriculum index as image cards with explicit actions. */
+export function CurriculumCatalogCards({
+  actionLabel,
   entries,
   locale,
 }: {
+  actionLabel: string;
   entries: readonly CurriculumCatalogEntry[];
   locale: Locale;
 }) {
   return (
+    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
+      {entries.map(({ program, route }, index) => (
+        <Card
+          className="relative mx-auto h-full w-full max-w-sm pt-0 pb-0 [--card-spacing:--spacing(4)]"
+          key={route.publicPath}
+        >
+          <Image
+            alt=""
+            className="h-auto w-full"
+            height={630}
+            preload={index === 0}
+            sizes="(min-width: 640px) 384px, calc(100vw - 48px)"
+            src={getCurriculumRouteSocialImage(locale, program.key, route)}
+            width={1200}
+          />
+          <CardHeader className="flex-1">
+            <CardTitle>
+              <h2>{route.title}</h2>
+            </CardTitle>
+          </CardHeader>
+          <CardFooter className="border-t bg-muted/50 p-(--card-spacing)">
+            <Button
+              className="w-full"
+              render={
+                <NavigationLink
+                  aria-label={`${actionLabel} ${route.title}`}
+                  href={`/${locale}/${route.publicPath}`}
+                />
+              }
+            >
+              {actionLabel}
+            </Button>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+/** Renders curriculum child routes with the established choice-card surface. */
+export function CurriculumChildCards({
+  locale,
+  routes,
+}: {
+  locale: Locale;
+  routes: readonly CurriculumViewRoute[];
+}) {
+  return (
     <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
-      {entries.map(({ program, route }) => {
+      {routes.map((route) => {
         const Icon = readCurriculumRouteIcon(route);
-        const countryCode =
-          route.level === "track" ? program.provider.homeCountry : undefined;
 
         return (
           <NavigationLink
@@ -111,14 +167,7 @@ export function CurriculumRootCards({
             key={route.publicPath}
           >
             <ChoiceCardVisual seed={route.publicPath}>
-              {countryCode ? (
-                <CountryFlagIcon
-                  className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
-                  countryCode={countryCode}
-                />
-              ) : (
-                <ChoiceCardIcon icon={Icon} />
-              )}
+              <ChoiceCardIcon icon={Icon} />
             </ChoiceCardVisual>
             <ChoiceCardContent>
               <h2>{route.title}</h2>

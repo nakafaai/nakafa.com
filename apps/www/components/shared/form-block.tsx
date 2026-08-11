@@ -28,7 +28,7 @@ export function FormBlock({
     <Card
       className={cn(
         "overflow-hidden",
-        variant === "destructive" && "border-destructive",
+        variant === "destructive" && "ring-destructive",
         !!footer && "pb-0"
       )}
     >

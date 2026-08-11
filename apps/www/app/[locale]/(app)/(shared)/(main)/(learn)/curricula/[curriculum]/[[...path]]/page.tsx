@@ -5,7 +5,7 @@ import { type ReactNode, Suspense } from "react";
 import { readMaterialCardChapters } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import {
-  CurriculumRootCards,
+  CurriculumChildCards,
   CurriculumRootHeader,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
 import {
@@ -31,8 +31,9 @@ import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem } from "@/components/shared/subject-item";
 import { SubjectList } from "@/components/shared/subject-list";
+import { getCurriculumRouteSocialImage } from "@/lib/curriculum/social-images";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
-import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
@@ -59,7 +60,7 @@ export async function generateMetadata({
   params,
 }: CurriculumPageProps): Promise<Metadata> {
   const model = await resolveRuntimeCurriculumRoute(params);
-  const { locale, route } = model;
+  const { locale, program, route } = model;
   const seo = await generateSEOMetadata(
     readCurriculumSeoContext(route, model.ancestors),
     locale
@@ -74,7 +75,7 @@ export async function generateMetadata({
       description: seo.description,
       locale,
       path: `/${locale}/${route.publicPath}`,
-      image: getOgUrl(locale, route.publicPath),
+      image: getCurriculumRouteSocialImage(locale, program.key, route),
     }),
   };
 }
@@ -201,7 +202,6 @@ function CurriculumRouteBody({
   childRoutes,
   locale,
   materialCards,
-  program,
   route,
 }: CurriculumRouteModel) {
   if (materialCards.length > 0) {
@@ -219,15 +219,7 @@ function CurriculumRouteBody({
   }
 
   if (route.level === "track") {
-    return (
-      <CurriculumRootCards
-        entries={childRoutes.map((child) => ({
-          program,
-          route: child,
-        }))}
-        locale={locale}
-      />
-    );
+    return <CurriculumChildCards locale={locale} routes={childRoutes} />;
   }
 
   return (
