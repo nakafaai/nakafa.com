@@ -24,8 +24,8 @@ import {
 } from "@/components/shared/catalog/card";
 import { ChoiceCardIcon } from "@/components/shared/choice/visual";
 import {
+  getCurriculumSubjectCatalogArtwork,
   getGradeCatalogArtwork,
-  getSubjectCatalogArtwork,
 } from "@/lib/catalog/artwork";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/social-images";
 
@@ -135,10 +135,9 @@ export function CurriculumChildCards({
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {routes.map((route, index) => {
-        const Icon = readCurriculumRouteIcon(route);
         const imageSrc =
           getGradeCatalogArtwork(locale, route.iconKey) ??
-          getSubjectCatalogArtwork(locale, route.materialDomain);
+          getCurriculumSubjectCatalogArtwork(locale, route.materialDomain);
 
         return (
           <CatalogCard
@@ -151,7 +150,7 @@ export function CurriculumChildCards({
               <CatalogCardImage preload={index === 0} src={imageSrc} />
             ) : (
               <CatalogCardGradient seed={route.nodeKey}>
-                <ChoiceCardIcon icon={Icon} />
+                <ChoiceCardIcon icon={readCurriculumRouteIcon(route)} />
               </CatalogCardGradient>
             )}
           </CatalogCard>

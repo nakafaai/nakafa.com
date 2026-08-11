@@ -3,29 +3,30 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { FunctionReturnType } from "convex/server";
-import type { Locale } from "next-intl";
 import {
   CatalogCard,
   CatalogCardImage,
 } from "@/components/shared/catalog/card";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
-import { getTryoutExamSocialImage } from "@/lib/tryout/social-images";
 
 type CountryPageQuery = typeof api.tryouts.queries.catalog.getCountryPage;
+type CountryPage = NonNullable<FunctionReturnType<CountryPageQuery>>;
+type CountryExamCard = CountryPage["exams"][number] & {
+  readonly imageSrc: string;
+};
+
+interface TryoutCountryPage {
+  readonly exams: readonly CountryExamCard[];
+}
 
 /** Renders one signed try-out country catalog with explicit exam actions. */
 export function TryoutCountryPageClient({
   actionLabel,
-  locale,
   page,
 }: {
   actionLabel: string;
-  locale: Locale;
-  page: Pick<
-    NonNullable<FunctionReturnType<CountryPageQuery>>,
-    "country" | "exams"
-  >;
+  page: TryoutCountryPage;
 }) {
   if (page.exams.length === 0) {
     return <ComingSoon />;
@@ -42,15 +43,7 @@ export function TryoutCountryPageClient({
           key={exam.examKey}
           title={exam.title}
         >
-          <CatalogCardImage
-            preload={index === 0}
-            src={getTryoutExamSocialImage({
-              countryKey: page.country.countryKey,
-              examKey: exam.examKey,
-              locale,
-              publicPath: exam.publicPath,
-            })}
-          />
+          <CatalogCardImage preload={index === 0} src={exam.imageSrc} />
         </CatalogCard>
       ))}
     </div>

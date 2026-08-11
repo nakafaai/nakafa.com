@@ -1,12 +1,13 @@
 import "server-only";
 
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
-import { getTryoutExamSocialImage } from "@/lib/tryout/social-images";
+import { resolveTryoutExamSocialImage } from "@/lib/tryout/social-images";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 
@@ -70,6 +71,17 @@ export async function generateTryoutRouteMetadata(
 
   const path = `/${input.locale}/${source.publicPath}`;
   const description = source.description ?? tTryouts("metadata-description");
+  const image =
+    input.kind === "exam"
+      ? Effect.runSync(
+          resolveTryoutExamSocialImage({
+            countryKey: input.countryKey,
+            examKey: input.examKey,
+            locale: input.locale,
+            publicPath: source.publicPath,
+          })
+        )
+      : getOgUrl(input.locale, source.publicPath);
 
   return {
     title: { absolute: source.title },
@@ -83,21 +95,7 @@ export async function generateTryoutRouteMetadata(
       description,
       locale: input.locale,
       path,
-      image: getTryoutSocialImage(input, source.publicPath),
+      image,
     }),
   };
-}
-
-/** Selects reviewed artwork only for an exam root with a matching static asset. */
-function getTryoutSocialImage(input: TryoutMetadataInput, publicPath: string) {
-  if (input.kind !== "exam") {
-    return getOgUrl(input.locale, publicPath);
-  }
-
-  return getTryoutExamSocialImage({
-    countryKey: input.countryKey,
-    examKey: input.examKey,
-    locale: input.locale,
-    publicPath,
-  });
 }

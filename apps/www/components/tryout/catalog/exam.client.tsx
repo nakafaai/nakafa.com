@@ -14,7 +14,7 @@ import { ChoiceCardIcon } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
-import { getSubjectCatalogArtwork } from "@/lib/catalog/artwork";
+import { getTryoutSubjectCatalogArtwork } from "@/lib/catalog/artwork";
 
 type ExamPageQuery = typeof api.tryouts.queries.catalog.getExamPage;
 
@@ -38,7 +38,7 @@ export function TryoutExamPageClient({
         {page.tracks.map((track, index) => {
           const imageSrc =
             track.trackKind === "subject"
-              ? getSubjectCatalogArtwork(locale, track.trackKey)
+              ? getTryoutSubjectCatalogArtwork(locale, track.trackKey)
               : undefined;
 
           return (

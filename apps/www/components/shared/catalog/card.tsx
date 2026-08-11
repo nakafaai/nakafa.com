@@ -67,7 +67,6 @@ export function CatalogCardImage({
       alt=""
       className="h-auto w-full"
       height={630}
-      loading="eager"
       preload={preload}
       sizes="(min-width: 640px) 384px, calc(100vw - 48px)"
       src={src}

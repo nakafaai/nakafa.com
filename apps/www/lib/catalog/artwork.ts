@@ -1,12 +1,12 @@
 import type { Locale } from "next-intl";
 
-const GRADE_ARTWORK_BY_ICON_KEY: Readonly<Record<string, string>> = {
-  "grade-9": "9",
-  "grade-10": "10",
-  "grade-11": "11",
-  "grade-12": "12",
-  bachelor: "bachelor",
-};
+const GRADE_ARTWORK_BY_ICON_KEY = new Map([
+  ["grade-9", "9"],
+  ["grade-10", "10"],
+  ["grade-11", "11"],
+  ["grade-12", "12"],
+  ["bachelor", "bachelor"],
+]);
 
 const SUBJECT_ARTWORK_KEYS = new Set([
   "ai-ds",
@@ -29,9 +29,17 @@ const SUBJECT_ARTWORK_KEYS = new Set([
   "technology-electro-medical",
 ]);
 
+const CURRICULUM_SUBJECT_ARTWORK_KEY_BY_MATERIAL_DOMAIN = new Map([
+  ["economy", "economics"],
+]);
+
+const TRYOUT_SUBJECT_ARTWORK_KEY_BY_TRACK_KEY = new Map([
+  ["matematika", "mathematics"],
+]);
+
 /** Resolves reviewed grade artwork from a stable curriculum icon identity. */
 export function getGradeCatalogArtwork(locale: Locale, iconKey: string) {
-  const gradeKey = GRADE_ARTWORK_BY_ICON_KEY[iconKey];
+  const gradeKey = GRADE_ARTWORK_BY_ICON_KEY.get(iconKey);
 
   if (!gradeKey) {
     return;
@@ -40,14 +48,37 @@ export function getGradeCatalogArtwork(locale: Locale, iconKey: string) {
   return `/open-graph/grade/${locale}-${gradeKey}.png`;
 }
 
-/** Resolves reviewed subject artwork from a stable material identity. */
-export function getSubjectCatalogArtwork(
+/** Resolves reviewed subject artwork from a curriculum material identity. */
+export function getCurriculumSubjectCatalogArtwork(
   locale: Locale,
-  subjectKey: string | undefined
+  materialDomain: string | undefined
 ) {
-  if (!(subjectKey && SUBJECT_ARTWORK_KEYS.has(subjectKey))) {
+  if (!materialDomain) {
     return;
   }
 
-  return `/open-graph/subject/${locale}-${subjectKey}.png`;
+  const artworkKey =
+    CURRICULUM_SUBJECT_ARTWORK_KEY_BY_MATERIAL_DOMAIN.get(materialDomain) ??
+    materialDomain;
+
+  return getReviewedSubjectArtwork(locale, artworkKey);
+}
+
+/** Resolves reviewed subject artwork from a try-out track identity. */
+export function getTryoutSubjectCatalogArtwork(
+  locale: Locale,
+  trackKey: string
+) {
+  const artworkKey =
+    TRYOUT_SUBJECT_ARTWORK_KEY_BY_TRACK_KEY.get(trackKey) ?? trackKey;
+
+  return getReviewedSubjectArtwork(locale, artworkKey);
+}
+
+function getReviewedSubjectArtwork(locale: Locale, artworkKey: string) {
+  if (!SUBJECT_ARTWORK_KEYS.has(artworkKey)) {
+    return;
+  }
+
+  return `/open-graph/subject/${locale}-${artworkKey}.png`;
 }

@@ -2,8 +2,9 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  getCurriculumSubjectCatalogArtwork,
   getGradeCatalogArtwork,
-  getSubjectCatalogArtwork,
+  getTryoutSubjectCatalogArtwork,
 } from "@/lib/catalog/artwork";
 
 describe("catalog artwork", () => {
@@ -21,17 +22,27 @@ describe("catalog artwork", () => {
     expect(getGradeCatalogArtwork("en", "upper-secondary")).toBeUndefined();
   });
 
-  it("resolves reviewed subject artwork in both locales", () => {
-    expect(getSubjectCatalogArtwork("en", "mathematics")).toBe(
-      "/open-graph/subject/en-mathematics.png"
+  it("maps curriculum material identities to reviewed artwork keys", () => {
+    expect(getCurriculumSubjectCatalogArtwork("en", "economy")).toBe(
+      "/open-graph/subject/en-economics.png"
     );
-    expect(getSubjectCatalogArtwork("id", "biology")).toBe(
+    expect(getCurriculumSubjectCatalogArtwork("id", "biology")).toBe(
       "/open-graph/subject/id-biology.png"
     );
   });
 
-  it("keeps subjects without reviewed artwork on gradients", () => {
-    expect(getSubjectCatalogArtwork("id", "science")).toBeUndefined();
-    expect(getSubjectCatalogArtwork("en", undefined)).toBeUndefined();
+  it("maps try-out track identities to reviewed artwork keys", () => {
+    expect(getTryoutSubjectCatalogArtwork("id", "matematika")).toBe(
+      "/open-graph/subject/id-mathematics.png"
+    );
+    expect(getTryoutSubjectCatalogArtwork("en", "mathematics")).toBe(
+      "/open-graph/subject/en-mathematics.png"
+    );
+  });
+
+  it("keeps identities without reviewed artwork on gradients", () => {
+    expect(getCurriculumSubjectCatalogArtwork("id", "science")).toBeUndefined();
+    expect(getCurriculumSubjectCatalogArtwork("en", undefined)).toBeUndefined();
+    expect(getTryoutSubjectCatalogArtwork("en", "literacy")).toBeUndefined();
   });
 });
