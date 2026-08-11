@@ -89,12 +89,12 @@ export function TryoutSetSortHeader<TValue>({
         render={
           <Button
             aria-label={tTryouts("set-sort-label", { column: label })}
-            className="-ml-2 max-w-full sm:-ml-3"
+            className="-ml-2 min-w-0 max-w-[calc(100%+1rem)] overflow-hidden sm:-ml-3 sm:max-w-[calc(100%+1.75rem)]"
             size="sm"
             type="button"
             variant="ghost"
           >
-            {label}
+            <span className="min-w-0 truncate">{label}</span>
             <HugeIcons data-icon="inline-end" icon={getSortIcon(direction)} />
           </Button>
         }
@@ -147,12 +147,12 @@ export function TryoutSetStatusHeader({
         render={
           <Button
             aria-label={tTryouts("set-filter-label", { column: label })}
-            className="-ml-2 max-w-full sm:-ml-3"
+            className="-ml-2 min-w-0 max-w-[calc(100%+1rem)] overflow-hidden sm:-ml-3 sm:max-w-[calc(100%+1.75rem)]"
             size="sm"
             type="button"
             variant={statusFilter === "all" ? "ghost" : "secondary"}
           >
-            {label}
+            <span className="min-w-0 truncate">{label}</span>
             <HugeIcons data-icon="inline-end" icon={FilterIcon} />
           </Button>
         }
