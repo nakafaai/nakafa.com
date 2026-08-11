@@ -111,7 +111,7 @@ export function CurriculumCatalogCards({
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {entries.map(({ program, route }, index) => (
         <Card
-          className="relative mx-auto h-full w-full max-w-sm gap-4 overflow-hidden py-0 shadow-none"
+          className="relative mx-auto h-full w-full max-w-sm pt-0"
           key={route.publicPath}
         >
           <Image
@@ -123,12 +123,12 @@ export function CurriculumCatalogCards({
             src={getCurriculumRouteSocialImage(locale, program.key, route)}
             width={1200}
           />
-          <CardHeader className="flex-1 px-4">
-            <CardTitle className="text-base leading-snug">
+          <CardHeader className="flex-1">
+            <CardTitle>
               <h2>{route.title}</h2>
             </CardTitle>
           </CardHeader>
-          <CardFooter className="border-t bg-muted/50 p-4">
+          <CardFooter>
             <Button
               className="w-full"
               render={
