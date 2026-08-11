@@ -1,38 +1,25 @@
 import "server-only";
 
-import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
 import { resolveTryoutExamSocialImage } from "@/lib/tryout/social-images";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 
-type TryoutRouteKind = TryoutCatalogRow["kind"];
-
-interface TryoutMetadataBaseInput {
-  readonly locale: Locale;
-  readonly publicPath: string;
-}
+type TryoutMetadataQueryInput = Parameters<typeof readTryoutMetadata>[0];
 
 type TryoutMetadataInput =
-  | (TryoutMetadataBaseInput & {
+  | (TryoutMetadataQueryInput & {
       readonly countryKey: string;
       readonly examKey: string;
       readonly kind: "exam";
     })
-  | (TryoutMetadataBaseInput & {
-      readonly kind: Exclude<TryoutRouteKind, "exam">;
+  | (TryoutMetadataQueryInput & {
+      readonly kind: Exclude<TryoutMetadataQueryInput["kind"], "exam">;
     });
-
-interface TryoutMetadataQueryInput {
-  readonly kind: TryoutCatalogRow["kind"];
-  readonly locale: Locale;
-  readonly publicPath: string;
-}
 
 interface RetainedTryoutMetadataSource {
   readonly description?: string;
@@ -54,7 +41,7 @@ export function createRetainedTryoutMetadata(
 export async function generateTryoutRouteMetadata(
   input: TryoutMetadataInput
 ): Promise<Metadata> {
-  const queryInput: TryoutMetadataQueryInput = {
+  const queryInput = {
     kind: input.kind,
     locale: input.locale,
     publicPath: input.publicPath,
