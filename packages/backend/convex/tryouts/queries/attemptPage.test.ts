@@ -91,6 +91,37 @@ describe("tryouts/queries/attemptPage", () => {
     });
     expect(active).not.toHaveProperty("setIdentity");
 
+    const historicalAnswerTime = TRYOUT_START_NOW + 1000;
+    await t.mutation(async (ctx) => {
+      const placement = await ctx.db
+        .query("tryoutAttemptPlacements")
+        .withIndex("by_tryoutAttemptId_and_questionOrder", (query) =>
+          query.eq("tryoutAttemptId", started.attemptId)
+        )
+        .unique();
+      const section = await ctx.db
+        .query("tryoutSectionAttempts")
+        .withIndex("by_tryoutAttemptId_and_sectionKey", (query) =>
+          query
+            .eq("tryoutAttemptId", started.attemptId)
+            .eq("sectionKey", TRYOUT_START_SECTION)
+        )
+        .unique();
+      if (!(placement && section)) {
+        throw new Error("Expected one historical response target.");
+      }
+      await ctx.db.insert("tryoutResponses", {
+        answeredAt: historicalAnswerTime,
+        isCorrect: false,
+        placementId: placement._id,
+        textAnswer: "historical answer",
+        timeSpent: 1000,
+        tryoutAttemptId: started.attemptId,
+        tryoutSectionAttemptId: section._id,
+        updatedAt: historicalAnswerTime,
+      });
+    });
+
     await authed.mutation(api.tryouts.mutations.sections.complete, {
       attemptId: started.attemptId,
       sectionKey: TRYOUT_START_SECTION,
@@ -129,6 +160,10 @@ describe("tryouts/queries/attemptPage", () => {
       throw new Error("Expected signed terminal set content.");
     }
     expect(terminal.content.answers).toHaveLength(1);
+    expect(terminal.initialState.runtime?.questions.at(0)?.response).toEqual({
+      answeredAt: historicalAnswerTime,
+      updatedAt: historicalAnswerTime,
+    });
   });
 
   it("rejects progress that disagrees with its latest attempt", async () => {
