@@ -101,7 +101,7 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
   const t = useTranslations("School.Classes");
 
   return (
-    <Card className="relative gap-0 overflow-hidden p-0 transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))]">
+    <Card className="relative gap-0 overflow-hidden p-0 transition-colors ease-out hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))] hover:ring-primary/50">
       <NavigationLink
         className="absolute inset-0 z-1"
         href={`${pathname}/${cls._id}`}
