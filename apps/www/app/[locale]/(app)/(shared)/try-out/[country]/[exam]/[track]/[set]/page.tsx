@@ -10,10 +10,6 @@ import {
   readTryoutSetAttemptPage,
   readTryoutSetPage,
 } from "@/components/tryout/catalog/server";
-import type {
-  TryoutAnswerContent,
-  TryoutQuestionContent,
-} from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import {
   createTryoutSetRestartTarget,
@@ -136,19 +132,15 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   }
   const { page, restartTarget } = pages;
 
-  let questions: readonly TryoutQuestionContent[] = [];
-  let answers: readonly TryoutAnswerContent[] = [];
-
-  if (attemptPage?.content.kind === "signed") {
-    const content = await Effect.runPromise(
-      loadSignedTryoutContent({
-        answers: attemptPage.content.answers,
-        questions: attemptPage.content.questions,
-      })
-    );
-    questions = content.questions;
-    answers = content.answers;
-  }
+  const content =
+    attemptPage?.content.kind === "signed"
+      ? Effect.runPromise(
+          loadSignedTryoutContent({
+            answers: attemptPage.content.answers,
+            questions: attemptPage.content.questions,
+          })
+        )
+      : null;
 
   return (
     <TryoutSetPageClient
@@ -161,7 +153,7 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
             }
           : null
       }
-      content={{ entryAnswers: answers, entryQuestions: questions }}
+      content={content}
       page={page}
       restartTarget={restartTarget}
       route={{ country, exam, locale, set, track }}

@@ -27,6 +27,12 @@ export interface TryoutAnswerContent {
   readonly sourceRevision: string;
 }
 
+/** Rendered signed content needed by one exact try-out runtime. */
+export interface TryoutRuntimeContent {
+  readonly answers: readonly TryoutAnswerContent[];
+  readonly questions: readonly TryoutQuestionContent[];
+}
+
 /** Exact signed question selector authorized by Convex. */
 export type TryoutQuestionSelector = SignedContentAccess["questions"][number];
 

@@ -4,7 +4,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useState } from "react";
-import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
+import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { selectTryoutTrackReturnHref } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptHref,
@@ -22,7 +22,6 @@ import type {
   LoadedRuntime,
   SetEntrySection,
   SetPage,
-  TryoutSetContent,
   TryoutSetInitialState,
   TryoutSetRestartTarget,
   TryoutSetRoute,
@@ -40,7 +39,7 @@ interface TryoutSetPageBinding {
 
 interface TryoutSetPageClientProps {
   binding: TryoutSetPageBinding | null;
-  content: TryoutSetContent;
+  content: Promise<TryoutRuntimeContent> | null;
   page: SetPage;
   restartTarget: TryoutSetRestartTarget | null;
   route: TryoutSetRoute;
@@ -216,7 +215,7 @@ function TryoutInternalSet({
   value,
 }: {
   value: {
-    content: TryoutSetContent;
+    content: Promise<TryoutRuntimeContent> | null;
     entrySection: SetEntrySection;
     now: number;
     runtime: LoadedRuntime | null;
@@ -229,25 +228,11 @@ function TryoutInternalSet({
     runtime: value.runtime,
   });
 
-  if (
-    runtimeState.kind !== "none" &&
-    value.content.entryQuestions.length === 0
-  ) {
-    return <TryoutContentRefresh />;
-  }
-
-  if (
-    runtimeState.kind === "review" &&
-    value.content.entryAnswers.length === 0
-  ) {
-    return <TryoutContentRefresh />;
-  }
-
   return (
     <TryoutSetEntry
+      content={value.content}
       value={{
         ...value.view,
-        content: value.content,
         entrySection: value.entrySection,
         runtimeState,
       }}

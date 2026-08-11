@@ -6,11 +6,8 @@ import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { useQuery } from "convex/react";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import type {
-  TryoutAnswerContent,
-  TryoutQuestionContent,
-} from "@/components/tryout/content/model";
+import { Suspense, use, useState } from "react";
+import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import {
   getTryoutAttemptHref,
@@ -45,7 +42,7 @@ type SectionState = TryoutSectionInitialState | null;
 
 interface TryoutSectionPageClientProps {
   binding: TryoutSectionRouteBinding;
-  content: TryoutSectionAssets;
+  content: Promise<TryoutRuntimeContent> | null;
   page: TryoutSectionPage;
   route: TryoutSectionRoute;
   setHref: string;
@@ -57,11 +54,6 @@ type TryoutSectionRouteBinding = {
   startHref: string | null;
 } | null;
 
-interface TryoutSectionAssets {
-  answers: readonly TryoutAnswerContent[];
-  questions: readonly TryoutQuestionContent[];
-}
-
 interface TryoutSectionRoute {
   country: string;
   exam: string;
@@ -69,6 +61,19 @@ interface TryoutSectionRoute {
   section: string;
   set: string;
   track: string;
+}
+
+interface TryoutSectionBodyValue {
+  actionAttempt: TryoutSectionAttempt | null;
+  activeAttempt: TryoutSectionAttempt | null;
+  content: Promise<TryoutRuntimeContent> | null;
+  page: TryoutSectionPage;
+  route: TryoutSectionRoute;
+  runtimeReturnHref: string;
+  runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
+  sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
+  setHref: string;
+  startDestination: TryoutStartDestination | null;
 }
 
 /** Renders one stable page with an active-only mutable subscription. */
@@ -196,10 +201,6 @@ function ResolvedTryoutSectionPage({
     return null;
   }
 
-  if (runtimeState.kind !== "none" && content.questions.length === 0) {
-    return <TryoutContentRefresh />;
-  }
-
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
   const sectionFinished = sectionStatus !== null;
   const sectionTimeExpired = sectionStatus === "expired";
@@ -271,55 +272,24 @@ function ResolvedTryoutSectionPage({
 }
 
 /** Composes active runtime, terminal summary, and review content explicitly. */
-function TryoutSectionBody({
-  value,
-}: {
-  value: {
-    actionAttempt: TryoutSectionAttempt | null;
-    activeAttempt: TryoutSectionAttempt | null;
-    content: TryoutSectionAssets;
-    page: TryoutSectionPage;
-    route: TryoutSectionRoute;
-    runtimeReturnHref: string;
-    runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
-    sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
-    setHref: string;
-    startDestination: TryoutStartDestination | null;
-  };
-}) {
+function TryoutSectionBody({ value }: { value: TryoutSectionBodyValue }) {
   if (value.runtimeState.kind === "active") {
     return (
-      <TryoutRuntime
-        value={{
-          answers: value.content.answers,
-          expired: false,
-          questions: value.content.questions,
-          returnHref: value.runtimeReturnHref,
-          runtime: value.runtimeState.runtime,
-        }}
-      />
+      <Suspense fallback={null}>
+        <TryoutSectionRuntimeContent value={value} />
+      </Suspense>
     );
   }
 
   if (value.runtimeState.kind === "pending") {
     return (
-      <TryoutRuntime
-        value={{
-          answers: value.content.answers,
-          expired: true,
-          questions: value.content.questions,
-          returnHref: value.runtimeReturnHref,
-          runtime: value.runtimeState.runtime,
-        }}
-      />
+      <Suspense fallback={null}>
+        <TryoutSectionRuntimeContent value={value} />
+      </Suspense>
     );
   }
 
   if (value.runtimeState.kind === "review") {
-    if (value.content.answers.length === 0) {
-      return <TryoutContentRefresh />;
-    }
-
     return (
       <>
         <TryoutVisibleSummary
@@ -333,15 +303,9 @@ function TryoutSectionBody({
             startDestination: value.startDestination,
           }}
         />
-        <TryoutRuntime
-          value={{
-            answers: value.content.answers,
-            expired: true,
-            questions: value.content.questions,
-            returnHref: value.runtimeReturnHref,
-            runtime: value.runtimeState.runtime,
-          }}
-        />
+        <Suspense fallback={null}>
+          <TryoutSectionRuntimeContent value={value} />
+        </Suspense>
       </>
     );
   }
@@ -356,6 +320,40 @@ function TryoutSectionBody({
         returnHref: value.setHref,
         sectionStatus: value.sectionStatus,
         startDestination: value.startDestination,
+      }}
+    />
+  );
+}
+
+/** Resolves signed content only inside the section runtime region. */
+function TryoutSectionRuntimeContent({
+  value,
+}: {
+  value: TryoutSectionBodyValue;
+}) {
+  if (!value.content) {
+    return <TryoutContentRefresh />;
+  }
+
+  const content = use(value.content);
+  if (content.questions.length === 0) {
+    return <TryoutContentRefresh />;
+  }
+  if (value.runtimeState.kind === "none") {
+    return null;
+  }
+  if (value.runtimeState.kind === "review" && content.answers.length === 0) {
+    return <TryoutContentRefresh />;
+  }
+
+  return (
+    <TryoutRuntime
+      value={{
+        answers: content.answers,
+        expired: value.runtimeState.kind !== "active",
+        questions: content.questions,
+        returnHref: value.runtimeReturnHref,
+        runtime: value.runtimeState.runtime,
       }}
     />
   );
