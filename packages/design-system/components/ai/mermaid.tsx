@@ -96,7 +96,7 @@ interface MermaidProps {
 /**
  * Renders Mermaid chart markup with a cached last-good SVG fallback.
  */
-export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
+export function Mermaid({ chart, className, config, label }: MermaidProps) {
   const componentId = useId();
   const { resolvedTheme } = useTheme();
   const renderId = getMermaidRenderId(componentId, chart);
@@ -199,4 +199,4 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
       role="img"
     />
   );
-};
+}

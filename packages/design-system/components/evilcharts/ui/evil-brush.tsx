@@ -1,12 +1,12 @@
 "use client";
 
-import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
-import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
-import { EvilBrushControls } from "@repo/design-system/components/evilcharts/ui/evil-brush-controls";
 import {
   type EvilBrushCurveType,
   EvilBrushPreview,
-} from "@repo/design-system/components/evilcharts/ui/evil-brush-preview";
+} from "@repo/design-system/components/evilcharts/ui/brush-preview";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
+import { EvilBrushControls } from "@repo/design-system/components/evilcharts/ui/evil-brush-controls";
 import { useBrushSelection } from "@repo/design-system/components/evilcharts/ui/evil-brush-selection";
 import { cn } from "@repo/design-system/lib/utils";
 import * as React from "react";
@@ -204,7 +204,7 @@ function useEvilBrush<TData extends Record<string, unknown>>({
     [range, data.length]
   );
 
-  // Defer the range used for data slicing — the brush handles move at the
+  // Defer the range used for data slicing because the brush handles move at the
   // immediate `range` cadence while the expensive chart re-render uses the
   // deferred value.  React can skip intermediate slices during fast drags.
   const deferredRange = React.useDeferredValue(clampedRange);

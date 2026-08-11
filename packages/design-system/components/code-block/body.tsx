@@ -42,11 +42,11 @@ export type CodeBlockBodyProps = Omit<
 };
 
 /** Maps every source into the code block's content region. */
-export const CodeBlockBody = ({ children, ...props }: CodeBlockBodyProps) => {
+export function CodeBlockBody({ children, ...props }: CodeBlockBodyProps) {
   const data = useCodeBlock((state) => state.data);
 
   return <div {...props}>{data.map(children)}</div>;
-};
+}
 
 /** Active-source identity and optional line-number presentation. */
 export type CodeBlockItemProps = HTMLAttributes<HTMLDivElement> & {
@@ -55,13 +55,13 @@ export type CodeBlockItemProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 /** Renders one source only while its value is active. */
-export const CodeBlockItem = ({
+export function CodeBlockItem({
   children,
   lineNumbers = true,
   className,
   value,
   ...props
-}: CodeBlockItemProps) => {
+}: CodeBlockItemProps) {
   const activeValue = useCodeBlock((state) => state.value);
 
   if (value !== activeValue) {
@@ -85,4 +85,4 @@ export const CodeBlockItem = ({
       {children}
     </div>
   );
-};
+}

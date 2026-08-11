@@ -23,14 +23,14 @@ export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
 };
 
 /** Copies the active source and exposes success and failure feedback. */
-export const CodeBlockCopyButton = ({
+export function CodeBlockCopyButton({
   onCopy,
   onError,
   timeout = 2000,
   children,
   className,
   ...props
-}: CodeBlockCopyButtonProps) => {
+}: CodeBlockCopyButtonProps) {
   const [isCopied, setIsCopied] = useState(false);
   const copyFiberRef = useRef<Fiber.RuntimeFiber<void, never> | null>(null);
   const { data, value } = useCodeBlock((state) => ({
@@ -107,4 +107,4 @@ export const CodeBlockCopyButton = ({
       </span>
     </Button>
   );
-};
+}

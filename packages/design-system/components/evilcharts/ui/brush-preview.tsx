@@ -1,6 +1,6 @@
+import { BrushDefinitions } from "@repo/design-system/components/evilcharts/ui/brush-paint";
 import {
   type ChartConfig,
-  getChartColorVariable,
   getChartSeriesId,
   getChartSeriesPaint,
   getColorsCount,
@@ -50,99 +50,10 @@ function renderEvilBrushPreview(
     ResponsiveContainer,
   }: RechartsModule
 ) {
-  const visibleKeys = new Set(keys);
-  const gradients = Object.entries(chartConfig).flatMap(([dataKey, config]) => {
-    if (!visibleKeys.has(dataKey)) {
-      return [];
-    }
-
-    return [{ colorsCount: getColorsCount(config), dataKey }];
-  });
-
   const dashArray =
     strokeVariant === "dashed" || strokeVariant === "animated-dashed"
       ? "4 4"
       : undefined;
-
-  const definitions = (
-    <>
-      {variant === "area" && (
-        <linearGradient
-          id={`${chartId}-zm-vertical-fade`}
-          x1="0"
-          x2="0"
-          y1="0"
-          y2="1"
-        >
-          <stop offset="0%" stopColor="white" stopOpacity={0.15} />
-          <stop offset="100%" stopColor="white" stopOpacity={0} />
-        </linearGradient>
-      )}
-      {gradients.map(({ dataKey, colorsCount }) => {
-        const colorStops =
-          colorsCount === 1 ? (
-            <>
-              <stop offset="0%" stopColor={getChartColorVariable(dataKey, 0)} />
-              <stop
-                offset="100%"
-                stopColor={getChartColorVariable(dataKey, 0)}
-              />
-            </>
-          ) : (
-            Array.from({ length: colorsCount }, (_, index) => {
-              const offset = `${(index / (colorsCount - 1)) * 100}%`;
-
-              return (
-                <stop
-                  key={`${dataKey}-${offset}`}
-                  offset={offset}
-                  stopColor={getChartColorVariable(dataKey, index, 0)}
-                />
-              );
-            })
-          );
-
-        return (
-          <React.Fragment key={dataKey}>
-            <linearGradient
-              id={getChartSeriesId(chartId, "zm", dataKey)}
-              x1="0"
-              x2="0"
-              y1="0"
-              y2="1"
-            >
-              {colorStops}
-            </linearGradient>
-
-            {variant === "area" && (
-              <>
-                <mask id={getChartSeriesId(chartId, "zm-fill-mask", dataKey)}>
-                  <rect
-                    fill={`url(#${chartId}-zm-vertical-fade)`}
-                    height="100%"
-                    width="100%"
-                  />
-                </mask>
-                <pattern
-                  height="100%"
-                  id={getChartSeriesId(chartId, "zm-fill", dataKey)}
-                  patternUnits="userSpaceOnUse"
-                  width="100%"
-                >
-                  <rect
-                    fill={`url(#${getChartSeriesId(chartId, "zm", dataKey)})`}
-                    height="100%"
-                    mask={`url(#${getChartSeriesId(chartId, "zm-fill-mask", dataKey)})`}
-                    width="100%"
-                  />
-                </pattern>
-              </>
-            )}
-          </React.Fragment>
-        );
-      })}
-    </>
-  );
 
   if (variant === "line") {
     return (
@@ -151,7 +62,14 @@ function renderEvilBrushPreview(
           data={data}
           margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
         >
-          <defs>{definitions}</defs>
+          <defs>
+            <BrushDefinitions
+              chartConfig={chartConfig}
+              chartId={chartId}
+              keys={keys}
+              variant={variant}
+            />
+          </defs>
           {keys.map((dataKey) => (
             <Line
               activeDot={false}
@@ -188,7 +106,14 @@ function renderEvilBrushPreview(
           data={data}
           margin={{ top: 2, right: 0, bottom: 0, left: 0 }}
         >
-          <defs>{definitions}</defs>
+          <defs>
+            <BrushDefinitions
+              chartConfig={chartConfig}
+              chartId={chartId}
+              keys={keys}
+              variant={variant}
+            />
+          </defs>
           {keys.map((dataKey) => (
             <Bar
               dataKey={dataKey}
@@ -208,7 +133,14 @@ function renderEvilBrushPreview(
   return (
     <ResponsiveContainer height="100%" width="100%">
       <AreaChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-        <defs>{definitions}</defs>
+        <defs>
+          <BrushDefinitions
+            chartConfig={chartConfig}
+            chartId={chartId}
+            keys={keys}
+            variant={variant}
+          />
+        </defs>
         {keys.map((dataKey) => (
           <Area
             activeDot={false}

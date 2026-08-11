@@ -7,7 +7,7 @@ import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
 import { cn } from "@repo/design-system/lib/utils";
 import hardenReactMarkdown from "harden-react-markdown";
 import type { ComponentProps } from "react";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -68,118 +68,119 @@ function hashString(value: string) {
   return hash.toString(36);
 }
 
-const Block = memo(
-  ({
-    children,
-    ...props
-  }: HardenedMarkdownProps & Pick<ResponseProps, "children">) => {
-    const parsedContent = useMemo(
-      () => preprocessLaTeX(children.trim()),
-      [children]
-    );
+/** Renders one normalized markdown block. */
+function Block({
+  children,
+  ...props
+}: HardenedMarkdownProps & Pick<ResponseProps, "children">) {
+  const parsedContent = useMemo(
+    () => preprocessLaTeX(children.trim()),
+    [children]
+  );
 
-    // Return null if content is empty after trimming whitespace
-    if (!parsedContent.trim()) {
-      return null;
-    }
+  if (!parsedContent.trim()) {
+    return null;
+  }
+
+  return (
+    <MemoizedHardenedMarkdown
+      components={reactMdxComponents}
+      remarkPlugins={REMARK_PLUGINS}
+      skipHtml
+      {...props}
+    >
+      {parsedContent}
+    </MemoizedHardenedMarkdown>
+  );
+}
+
+const MemoizedBlock = memo(
+  Block,
+  (prevProps, nextProps) => prevProps.children === nextProps.children
+);
+
+/** Splits a response into stable markdown blocks for streaming updates. */
+function Blocks({
+  id,
+  children,
+  ...props
+}: HardenedMarkdownProps & Pick<ResponseProps, "children" | "id">) {
+  const blocks = useMemo(() => parseMarkdownIntoBlocks(children), [children]);
+  const blockOccurrences = new Map<string, number>();
+
+  return blocks.map((block) => {
+    const duplicateIndex = blockOccurrences.get(block) ?? 0;
+    blockOccurrences.set(block, duplicateIndex + 1);
 
     return (
-      <MemoizedHardenedMarkdown
-        components={reactMdxComponents}
-        remarkPlugins={REMARK_PLUGINS}
-        skipHtml
+      <MemoizedBlock
+        key={getMarkdownBlockKey(id, block, duplicateIndex)}
         {...props}
       >
-        {parsedContent}
-      </MemoizedHardenedMarkdown>
+        {block}
+      </MemoizedBlock>
     );
-  },
+  });
+}
+
+const MemoizedBlocks = memo(
+  Blocks,
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );
-Block.displayName = "Block";
 
-const Blocks = memo(
-  ({
-    id,
-    children,
-    ...props
-  }: HardenedMarkdownProps & Pick<ResponseProps, "children" | "id">) => {
-    const blocks = useMemo(() => parseMarkdownIntoBlocks(children), [children]);
-    const blockOccurrences = new Map<string, number>();
-
-    return blocks.map((block) => {
-      const duplicateIndex = blockOccurrences.get(block) ?? 0;
-      blockOccurrences.set(block, duplicateIndex + 1);
-
-      return (
-        <Block key={getMarkdownBlockKey(id, block, duplicateIndex)} {...props}>
-          {block}
-        </Block>
-      );
-    });
-  },
-  (prevProps, nextProps) => prevProps.children === nextProps.children
-);
-Blocks.displayName = "Blocks";
-
-const ResponseContent = memo(
-  ({
-    className,
-    children,
-    allowedImagePrefixes = DEFAULT_ALLOWED_PREFIXES,
-    allowedLinkPrefixes = DEFAULT_ALLOWED_PREFIXES,
-    defaultOrigin = "https://nakafa.com",
-    ...props
-  }: ResponseProps) => (
+/** Renders the hardened block collection for one response. */
+function ResponseContent({
+  className,
+  children,
+  allowedImagePrefixes = DEFAULT_ALLOWED_PREFIXES,
+  allowedLinkPrefixes = DEFAULT_ALLOWED_PREFIXES,
+  defaultOrigin = "https://nakafa.com",
+  ...props
+}: ResponseProps) {
+  return (
     <div
       className={cn(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
         className
       )}
     >
-      <Blocks
+      <MemoizedBlocks
         allowedImagePrefixes={allowedImagePrefixes}
         allowedLinkPrefixes={allowedLinkPrefixes}
         defaultOrigin={defaultOrigin}
         {...props}
       >
         {children}
-      </Blocks>
+      </MemoizedBlocks>
     </div>
-  ),
+  );
+}
+
+const MemoizedResponseContent = memo(
+  ResponseContent,
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );
-ResponseContent.displayName = "ResponseContent";
 
-export const Response = memo(
-  ({
-    id,
-    children,
-    className,
-    allowedImagePrefixes,
-    allowedLinkPrefixes,
-    defaultOrigin,
-  }: ResponseProps) => {
-    const wrap = useCallback(
-      (v: string) => {
-        const normalizedChildren = normalizeText(v);
-        return (
-          <ResponseContent
-            allowedImagePrefixes={allowedImagePrefixes}
-            allowedLinkPrefixes={allowedLinkPrefixes}
-            className={className}
-            defaultOrigin={defaultOrigin}
-            id={id}
-          >
-            {normalizedChildren}
-          </ResponseContent>
-        );
-      },
-      [id, className, allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin]
-    );
+/** Normalizes and renders one streamed markdown response. */
+export function Response({
+  id,
+  children,
+  className,
+  allowedImagePrefixes,
+  allowedLinkPrefixes,
+  defaultOrigin,
+}: ResponseProps) {
+  const normalizedChildren = useMemo(() => normalizeText(children), [children]);
 
-    return wrap(children);
-  },
-  (prevProps, nextProps) => prevProps.children === nextProps.children
-);
-Response.displayName = "Response";
+  return (
+    <MemoizedResponseContent
+      allowedImagePrefixes={allowedImagePrefixes}
+      allowedLinkPrefixes={allowedLinkPrefixes}
+      className={className}
+      defaultOrigin={defaultOrigin}
+      id={id}
+    >
+      {normalizedChildren}
+    </MemoizedResponseContent>
+  );
+}

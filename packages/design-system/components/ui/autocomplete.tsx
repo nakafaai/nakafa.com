@@ -135,16 +135,11 @@ function AutocompletePopup({
   );
 }
 
-function AutocompleteList({
+function AutocompleteItems({
   className,
-  scrollArea = true,
-  scrollAreaClassName,
   ...props
-}: AutocompletePrimitive.List.Props & {
-  scrollArea?: boolean;
-  scrollAreaClassName?: string;
-}) {
-  const list = (
+}: AutocompletePrimitive.List.Props) {
+  return (
     <AutocompletePrimitive.List
       className={cn(
         "max-h-full scroll-py-1 overflow-y-auto overflow-x-hidden p-1 data-empty:p-0",
@@ -155,9 +150,18 @@ function AutocompleteList({
       {...props}
     />
   );
+}
 
+function AutocompleteList({
+  scrollArea = true,
+  scrollAreaClassName,
+  ...props
+}: AutocompletePrimitive.List.Props & {
+  scrollArea?: boolean;
+  scrollAreaClassName?: string;
+}) {
   if (!scrollArea) {
-    return list;
+    return <AutocompleteItems {...props} />;
   }
 
   return (
@@ -166,7 +170,7 @@ function AutocompleteList({
       scrollbarGutter
       scrollFade
     >
-      {list}
+      <AutocompleteItems {...props} />
     </ScrollArea>
   );
 }

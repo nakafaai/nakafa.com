@@ -18,14 +18,14 @@ export type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 /** Provides code-block tab state and source data to child controls. */
-export const CodeBlock = ({
+export function CodeBlock({
   value: controlledValue,
   onValueChange: controlledOnValueChange,
   defaultValue,
   className,
   data,
   ...props
-}: CodeBlockProps) => {
+}: CodeBlockProps) {
   const [value, onValueChange] = useControllableState({
     defaultProp: defaultValue ?? "",
     prop: controlledValue,
@@ -47,4 +47,4 @@ export const CodeBlock = ({
       />
     </CodeBlockContext.Provider>
   );
-};
+}

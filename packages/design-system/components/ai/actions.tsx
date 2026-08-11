@@ -8,59 +8,60 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
-import { type ComponentProps, memo } from "react";
+import type { ComponentProps } from "react";
 
 export type ActionsProps = ComponentProps<typeof ButtonGroup>;
 
-export const Actions = memo(
-  ({ className, children, ...props }: ActionsProps) => (
+/** Groups adjacent response actions. */
+export function Actions({ className, children, ...props }: ActionsProps) {
+  return (
     <ButtonGroup className={cn(className)} {...props}>
       {children}
     </ButtonGroup>
-  )
-);
-Actions.displayName = "Actions";
+  );
+}
 
 export type ActionProps = ComponentProps<typeof Button> & {
   tooltip?: string;
   label?: string;
 };
 
-export const Action = memo(
-  ({
-    tooltip,
-    children,
-    label,
-    className,
-    variant = "outline",
-    size = "icon",
-    ...props
-  }: ActionProps) => {
-    const button = (
-      <Button
-        className={cn(className)}
-        size={size}
-        type="button"
-        variant={variant}
-        {...props}
-      >
-        {children}
-        <span className="sr-only">{label || tooltip}</span>
-      </Button>
-    );
+/** Renders the button owned by one response action. */
+function ActionButton({
+  tooltip,
+  children,
+  label,
+  className,
+  variant = "outline",
+  size = "icon",
+  ...props
+}: ActionProps) {
+  return (
+    <Button
+      className={cn(className)}
+      size={size}
+      type="button"
+      variant={variant}
+      {...props}
+    >
+      {children}
+      <span className="sr-only">{label || tooltip}</span>
+    </Button>
+  );
+}
 
-    if (tooltip) {
-      return (
-        <Tooltip>
-          <TooltipTrigger render={button} />
-          <TooltipContent side="bottom">
-            <p>{tooltip}</p>
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
-    return button;
+/** Renders one response action with optional tooltip context. */
+export function Action(props: ActionProps) {
+  if (!props.tooltip) {
+    return <ActionButton {...props} />;
   }
-);
-Action.displayName = "Action";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<ActionButton {...props} />} />
+      <TooltipContent side="bottom">
+        <p>{props.tooltip}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}

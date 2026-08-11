@@ -67,7 +67,7 @@ const toasterStyle: ToasterStyle = {
 };
 
 /** Renders app toasts with the active appearance and semantic status colors. */
-const Toaster = ({ ...props }: ToasterProps) => {
+function Toaster({ ...props }: ToasterProps) {
   const { resolvedTheme } = useTheme();
   const appearance = getThemeAppearance(resolvedTheme);
 
@@ -102,6 +102,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
       {...props}
     />
   );
-};
+}
 
 export { Toaster };
