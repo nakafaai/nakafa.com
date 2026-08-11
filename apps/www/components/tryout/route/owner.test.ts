@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   createTryoutSetRestartTarget,
   selectTryoutFrozenPage,
+  selectTryoutSectionReturnHref,
   selectTryoutSetPages,
-  selectTryoutSetReturnHref,
+  selectTryoutTrackReturnHref,
 } from "@/components/tryout/route/owner";
 
 describe("try-out route ownership", () => {
@@ -13,14 +14,21 @@ describe("try-out route ownership", () => {
 
     expect(
       selectTryoutSetPages({
-        attemptPage: { kind: "current", page: frozenPage },
+        attemptPage: {
+          kind: "current",
+          page: frozenPage,
+          restartTarget: "verified-target",
+        },
         publicPage: activePage,
-        publicRestartTarget: "active-target",
+        publicRestartTarget: "contradictory-public-target",
       })
-    ).toEqual({ page: frozenPage, restartTarget: "active-target" });
-    expect(selectTryoutFrozenPage({ kind: "current", page: frozenPage })).toBe(
-      frozenPage
-    );
+    ).toEqual({ page: frozenPage, restartTarget: "verified-target" });
+    expect(
+      selectTryoutFrozenPage({
+        kind: "current",
+        page: frozenPage,
+      })
+    ).toBe(frozenPage);
   });
 
   it("keeps redirecting attempts on the canonical public page", () => {
@@ -91,21 +99,39 @@ describe("try-out route ownership", () => {
     ).toBeNull();
   });
 
-  it("keeps renamed retained navigation on the frozen set path", () => {
+  it("uses the active parent track or the try-out root", () => {
     expect(
-      selectTryoutSetReturnHref({
-        attemptPage: {
-          attemptId: "attempt-1",
-          kind: "retained",
-          page: {
-            set: { publicPath: "try-out/indonesia/tka/2027/set-1" },
-          },
-        },
-        publicHref: "/try-out/indonesia/tka/2027/renamed-set",
+      selectTryoutTrackReturnHref({
+        setPublicPath: "try-out/indonesia/tka/2027/renamed-set",
       })
-    ).toBe("/try-out/indonesia/tka/2027/set-1?attemptId=attempt-1");
+    ).toBe("/try-out/indonesia/tka/2027");
+    expect(selectTryoutTrackReturnHref(null)).toBe("/try-out");
+    expect(selectTryoutTrackReturnHref({ setPublicPath: "malformed" })).toBe(
+      "/try-out"
+    );
+  });
+
+  it("uses the active retained set destination or the try-out root", () => {
     expect(
-      selectTryoutSetReturnHref({
+      selectTryoutSectionReturnHref({
+        attemptPage: {
+          activeSetPublicPath: "try-out/indonesia/tka/2027/renamed-set",
+          kind: "retained",
+        },
+        publicHref: "/try-out/indonesia/tka/2027/set-1",
+      })
+    ).toBe("/try-out/indonesia/tka/2027/renamed-set");
+    expect(
+      selectTryoutSectionReturnHref({
+        attemptPage: {
+          activeSetPublicPath: null,
+          kind: "retained",
+        },
+        publicHref: "/try-out/indonesia/tka/2027/set-1",
+      })
+    ).toBe("/try-out");
+    expect(
+      selectTryoutSectionReturnHref({
         attemptPage: null,
         publicHref: "/try-out/indonesia/tka/2027/set-1",
       })

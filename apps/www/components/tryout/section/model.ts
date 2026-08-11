@@ -5,12 +5,18 @@ type PublicSectionPage = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.catalog.getSectionPage>
 >;
 
-type RetainedSectionPage = Extract<
+type RetainedSectionAttemptPage = Extract<
   NonNullable<
     FunctionReturnType<typeof api.tryouts.queries.attemptPage.getSection>
   >,
   { kind: "retained" }
->["page"];
+>;
+
+type RetainedSectionPage = RetainedSectionAttemptPage["page"];
+
+/** Initial mutable state carried by one exact retained section page. */
+export type TryoutSectionInitialState =
+  RetainedSectionAttemptPage["initialState"];
 
 /** Public or exact frozen page rendered by one section route. */
 export type TryoutSectionPage = PublicSectionPage | RetainedSectionPage;

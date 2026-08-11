@@ -49,7 +49,6 @@ export interface TryoutSummaryActionValue {
 
 interface ResumeSectionValue {
   activeAttempt: NonNullable<CurrentAttempt>;
-  locale: Locale;
   returnHref: string;
   section: TryoutSummarySection;
 }
@@ -60,10 +59,58 @@ export function TryoutSummaryAction({
 }: {
   value: TryoutSummaryActionValue;
 }) {
+  const startDestination = value.startDestination;
+
+  if (value.sectionFinished && value.completedAction === "return") {
+    return <TryoutReturnAction value={value} />;
+  }
+
+  if (value.activeAttempt && !value.activeAttempt.section) {
+    return (
+      <StartOrResumeSectionCta
+        value={{
+          activeAttempt: value.activeAttempt,
+          returnHref: value.returnHref,
+          section: value.section,
+        }}
+      />
+    );
+  }
+
+  if (value.activeAttempt) {
+    return null;
+  }
+
+  if (!startDestination) {
+    return <TryoutReturnAction value={value} />;
+  }
+
+  const request: StartTryoutRequest = {
+    authRedirectHref: startDestination.href,
+    countryKey: value.set.countryKey,
+    destinationHref: startDestination.href,
+    destinationSectionKey: value.section.sectionKey,
+    entrySectionKey: value.startAttemptSectionKey,
+    examKey: value.set.examKey,
+    locale: value.locale,
+    setKey: value.set.setKey,
+    successNavigation: startDestination.successNavigation,
+    trackKey: value.set.trackKey,
+  };
+
+  return <StartTryoutButton attempt={value.attempt} request={request} />;
+}
+
+/** Returns to the verified set destination and warms its exact state. */
+function TryoutReturnAction({
+  value,
+}: {
+  value: Pick<TryoutSummaryActionValue, "activeAttempt" | "returnHref">;
+}) {
   const tTryouts = useTranslations("Tryouts");
   const prewarmData = useTryoutDataIntent();
-  const startDestination = value.startDestination;
-  const returnAction = (
+
+  return (
     <IntentLink
       className={cn(buttonVariants(), "w-full sm:w-auto")}
       href={value.returnHref}
@@ -81,46 +128,6 @@ export function TryoutSummaryAction({
       {tTryouts("back-to-set-cta")}
     </IntentLink>
   );
-
-  if (value.sectionFinished && value.completedAction === "return") {
-    return returnAction;
-  }
-
-  if (value.activeAttempt && !value.activeAttempt.section) {
-    return (
-      <StartOrResumeSectionCta
-        value={{
-          activeAttempt: value.activeAttempt,
-          locale: value.locale,
-          returnHref: value.returnHref,
-          section: value.section,
-        }}
-      />
-    );
-  }
-
-  if (value.activeAttempt) {
-    return null;
-  }
-
-  if (!startDestination) {
-    return returnAction;
-  }
-
-  const request: StartTryoutRequest = {
-    authRedirectHref: startDestination.href,
-    countryKey: value.set.countryKey,
-    destinationHref: startDestination.href,
-    destinationSectionKey: value.section.sectionKey,
-    entrySectionKey: value.startAttemptSectionKey,
-    examKey: value.set.examKey,
-    locale: value.locale,
-    setKey: value.set.setKey,
-    successNavigation: startDestination.successNavigation,
-    trackKey: value.set.trackKey,
-  };
-
-  return <StartTryoutButton attempt={value.attempt} request={request} />;
 }
 
 /** Starts a ready section or links to the active section already in progress. */

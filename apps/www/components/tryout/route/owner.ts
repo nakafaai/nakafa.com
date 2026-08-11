@@ -1,17 +1,15 @@
-import { getTryoutAttemptHref } from "@/components/tryout/route/path";
+import {
+  getTryoutHref,
+  getTryoutPublicPathHref,
+} from "@/components/tryout/route/path";
 
 interface FrozenAttemptPage<FrozenPage> {
   readonly kind: "current" | "retained";
   readonly page: FrozenPage;
 }
 
-interface CurrentAttemptPage<FrozenPage> {
-  readonly kind: "current";
-  readonly page: FrozenPage;
-}
-
-interface RetainedAttemptPage<FrozenPage, RestartTarget> {
-  readonly kind: "retained";
+interface SetAttemptPage<FrozenPage, RestartTarget> {
+  readonly kind: "current" | "retained";
   readonly page: FrozenPage;
   readonly restartTarget: RestartTarget | null;
 }
@@ -53,8 +51,7 @@ export function selectTryoutSetPages<PublicPage, FrozenPage, RestartTarget>({
   publicRestartTarget,
 }: {
   attemptPage:
-    | CurrentAttemptPage<FrozenPage>
-    | RetainedAttemptPage<FrozenPage, RestartTarget>
+    | SetAttemptPage<FrozenPage, RestartTarget>
     | RedirectAttemptPage
     | null;
   publicPage: PublicPage | null;
@@ -66,7 +63,7 @@ export function selectTryoutSetPages<PublicPage, FrozenPage, RestartTarget>({
   }
 
   const restartTarget =
-    attemptPage?.kind === "retained"
+    attemptPage && attemptPage.kind !== "redirect"
       ? attemptPage.restartTarget
       : publicRestartTarget;
 
@@ -76,15 +73,34 @@ export function selectTryoutSetPages<PublicPage, FrozenPage, RestartTarget>({
   };
 }
 
-/** Keeps an exact retained section's return link on its frozen set route. */
-export function selectTryoutSetReturnHref({
+/** Selects the active parent track for one current or retained set. */
+export function selectTryoutTrackReturnHref(
+  restartTarget: {
+    readonly setPublicPath: string;
+  } | null
+) {
+  if (!restartTarget) {
+    return getTryoutHref();
+  }
+
+  const separator = restartTarget.setPublicPath.lastIndexOf("/");
+  if (separator <= 0) {
+    return getTryoutHref();
+  }
+
+  return getTryoutPublicPathHref(
+    restartTarget.setPublicPath.slice(0, separator)
+  );
+}
+
+/** Selects the active set destination for one retained section. */
+export function selectTryoutSectionReturnHref({
   attemptPage,
   publicHref,
 }: {
   attemptPage: {
-    readonly attemptId: string;
+    readonly activeSetPublicPath: string | null;
     readonly kind: "retained";
-    readonly page: { readonly set: { readonly publicPath: string } };
   } | null;
   publicHref: string;
 }) {
@@ -92,8 +108,9 @@ export function selectTryoutSetReturnHref({
     return publicHref;
   }
 
-  return getTryoutAttemptHref(
-    attemptPage.page.set.publicPath,
-    attemptPage.attemptId
-  );
+  if (!attemptPage.activeSetPublicPath) {
+    return getTryoutHref();
+  }
+
+  return getTryoutPublicPathHref(attemptPage.activeSetPublicPath);
 }

@@ -14,6 +14,7 @@ import {
  * Prewarms the exact authenticated Convex queries mounted by a set or section.
  * Convex owns the short subscription lifetime and reuses the result when the
  * destination hook subscribes. Try-out navigation owns the five-second lease.
+ * @see https://docs.convex.dev/api/classes/react.ConvexReactClient#prewarmquery
  */
 export function useTryoutDataIntent() {
   const convex = useConvex();

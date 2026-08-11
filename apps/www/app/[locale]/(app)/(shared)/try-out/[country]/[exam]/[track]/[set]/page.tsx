@@ -27,7 +27,6 @@ import {
   readTryoutRouteAttemptCapability,
   type TryoutRouteSearchParams,
 } from "@/components/tryout/route/path";
-import { normalizeTryoutAttemptState } from "@/components/tryout/runtime/bootstrap";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -157,9 +156,7 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
         attemptPage
           ? {
               attemptId: attemptPage.attemptId,
-              initialState: normalizeTryoutAttemptState(
-                attemptPage.initialState
-              ),
+              initialState: attemptPage.initialState,
               sectionRoutes: attemptPage.page.sections,
             }
           : null

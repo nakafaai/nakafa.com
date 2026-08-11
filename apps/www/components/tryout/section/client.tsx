@@ -4,7 +4,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -13,7 +12,10 @@ import type {
   TryoutQuestionContent,
 } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
-import { getTryoutHref } from "@/components/tryout/route/path";
+import {
+  getTryoutAttemptHref,
+  getTryoutHref,
+} from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
@@ -31,14 +33,15 @@ import {
   getTryoutFinishedSectionDescription,
   getTryoutFinishedSectionStatus,
 } from "@/components/tryout/section/finished";
-import type { TryoutSectionPage } from "@/components/tryout/section/model";
+import type {
+  TryoutSectionInitialState,
+  TryoutSectionPage,
+} from "@/components/tryout/section/model";
 import { TryoutVisibleSummary } from "@/components/tryout/section/summary.client";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
 import { TryoutMeta } from "@/components/tryout/shell/meta";
 
-type SectionStateQuery =
-  typeof api.tryouts.queries.runtime.getSectionAttemptState;
-type SectionState = FunctionReturnType<SectionStateQuery>;
+type SectionState = TryoutSectionInitialState | null;
 
 interface TryoutSectionPageClientProps {
   binding: TryoutSectionRouteBinding;
@@ -50,7 +53,7 @@ interface TryoutSectionPageClientProps {
 
 type TryoutSectionRouteBinding = {
   attemptId: Id<"tryoutAttempts">;
-  initialState: NonNullable<SectionState>;
+  initialState: TryoutSectionInitialState;
   startHref: string | null;
 } | null;
 
@@ -204,6 +207,9 @@ function ResolvedTryoutSectionPage({
     currentAttempt && currentAttempt.status !== "in-progress"
   );
   const startDestination = getStartDestination(binding, route);
+  const runtimeReturnHref = binding
+    ? getTryoutAttemptHref(page.set.publicPath, binding.attemptId)
+    : setHref;
 
   let status = tTryouts("part-head-needs-tryout");
 
@@ -251,6 +257,7 @@ function ResolvedTryoutSectionPage({
               content,
               page,
               route,
+              runtimeReturnHref,
               runtimeState,
               sectionStatus,
               setHref,
@@ -273,6 +280,7 @@ function TryoutSectionBody({
     content: TryoutSectionAssets;
     page: TryoutSectionPage;
     route: TryoutSectionRoute;
+    runtimeReturnHref: string;
     runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
     sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
     setHref: string;
@@ -286,7 +294,7 @@ function TryoutSectionBody({
           answers: value.content.answers,
           expired: false,
           questions: value.content.questions,
-          returnHref: value.setHref,
+          returnHref: value.runtimeReturnHref,
           runtime: value.runtimeState.runtime,
         }}
       />
@@ -300,7 +308,7 @@ function TryoutSectionBody({
           answers: value.content.answers,
           expired: true,
           questions: value.content.questions,
-          returnHref: value.setHref,
+          returnHref: value.runtimeReturnHref,
           runtime: value.runtimeState.runtime,
         }}
       />
@@ -330,7 +338,7 @@ function TryoutSectionBody({
             answers: value.content.answers,
             expired: true,
             questions: value.content.questions,
-            returnHref: value.setHref,
+            returnHref: value.runtimeReturnHref,
             runtime: value.runtimeState.runtime,
           }}
         />

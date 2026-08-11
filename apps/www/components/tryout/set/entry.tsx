@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { getTryoutHref } from "@/components/tryout/route/path";
+import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
 import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
 import {
@@ -20,11 +20,6 @@ import { TryoutMeta } from "@/components/tryout/shell/meta";
 export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
-  const parentHref = getTryoutHref({
-    country: value.route.country,
-    exam: value.route.exam,
-    track: value.route.track,
-  });
   const sectionAttempt =
     value.runtimeState.kind === "none"
       ? null
@@ -55,7 +50,7 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
         <TryoutPageHeader
           value={{
             link: {
-              href: parentHref,
+              href: value.returnHref,
               label: tCommon("back"),
             },
             meta: (
@@ -115,8 +110,13 @@ function TryoutEntryResult({ value }: { value: TryoutInternalSetView }) {
           startedAt: attempt.startedAt,
           status: attempt.status,
         },
-        locale: value.route.locale,
-        publicPath: value.page.set.publicPath,
+        identity: {
+          countryKey: value.page.set.countryKey,
+          examKey: value.page.set.examKey,
+          locale: value.route.locale,
+          setKey: value.page.set.setKey,
+          trackKey: value.page.set.trackKey,
+        },
       }}
     >
       <TryoutEntryAction value={value} />
@@ -133,11 +133,6 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
     return null;
   }
 
-  const parentHref = getTryoutHref({
-    country: value.route.country,
-    exam: value.route.exam,
-    track: value.route.track,
-  });
   const sectionAttempt =
     value.runtimeState.kind === "none"
       ? null
@@ -156,7 +151,7 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
         activeAttempt: value.activeAttempt,
         attempt: value.actionAttempt,
         locale: value.route.locale,
-        returnHref: parentHref,
+        returnHref: value.returnHref,
         section: startEntrySection,
         sectionFinished,
         set: value.start.set,
@@ -187,7 +182,10 @@ function TryoutEntryRuntime({ value }: { value: TryoutInternalSetView }) {
         answers: value.content.entryAnswers,
         expired: value.runtimeState.kind !== "active",
         questions: value.content.entryQuestions,
-        returnHref: getTryoutHref(value.route),
+        returnHref: getTryoutAttemptHref(
+          value.page.set.publicPath,
+          value.runtimeState.runtime.attemptId
+        ),
         runtime: value.runtimeState.runtime,
       }}
     />

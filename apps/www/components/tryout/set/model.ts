@@ -17,10 +17,8 @@ type SetAttemptPageResult = Extract<
   { kind: "current" | "retained" }
 >;
 
-type RetainedSetAttemptPageResult = Extract<
-  SetAttemptPageResult,
-  { kind: "retained" }
->;
+/** Initial mutable state carried by an exact current or retained set page. */
+export type TryoutSetInitialState = SetAttemptPageResult["initialState"];
 
 /** Loaded try-out set discovery payload. */
 export type SetPage =
@@ -65,15 +63,17 @@ export interface TryoutSetDestination {
 
 /** Verified entry and canonical set route for a new current-catalog attempt. */
 export type TryoutSetRestartTarget = NonNullable<
-  RetainedSetAttemptPageResult["restartTarget"]
+  SetAttemptPageResult["restartTarget"]
 >;
 
 /** Cohesive render model shared by set overview surfaces. */
 export interface TryoutSetView {
   actionAttempt?: CurrentAttempt | null;
   activeAttempt: CurrentAttempt | null;
+  currentHref: string;
   entrySection: SetEntrySection | null;
   page: SetPage;
+  returnHref: string;
   route: TryoutSetRoute;
   sectionRoutes: readonly SetPage["sections"][number][];
   start: {

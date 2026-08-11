@@ -3,9 +3,9 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
+import { selectTryoutTrackReturnHref } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptHref,
   getTryoutHref,
@@ -23,18 +23,18 @@ import type {
   SetEntrySection,
   SetPage,
   TryoutSetContent,
+  TryoutSetInitialState,
   TryoutSetRestartTarget,
   TryoutSetRoute,
   TryoutSetView,
 } from "@/components/tryout/set/model";
 import { TryoutSetOverview } from "@/components/tryout/set/overview";
 
-type SetStateQuery = typeof api.tryouts.queries.runtime.getSetAttemptState;
-type SetState = FunctionReturnType<SetStateQuery>;
+type SetState = TryoutSetInitialState | null;
 
 interface TryoutSetPageBinding {
   attemptId: Id<"tryoutAttempts">;
-  initialState: NonNullable<SetState>;
+  initialState: TryoutSetInitialState;
   sectionRoutes: readonly SetPage["sections"][number][];
 }
 
@@ -151,10 +151,12 @@ function ResolvedTryoutSetPage({
     ? entrySection
     : (restartTarget?.entrySection ?? null);
   const destinationSection = activeAttempt ? resumeSection : startEntrySection;
-  const destinationSetHref =
-    activeAttempt || !restartTarget
-      ? getTryoutHref(route)
-      : getTryoutPublicPathHref(restartTarget.setPublicPath);
+  const currentSetHref = restartTarget
+    ? getTryoutPublicPathHref(restartTarget.setPublicPath)
+    : getTryoutHref();
+  const destinationSetHref = activeAttempt
+    ? getTryoutHref(route)
+    : currentSetHref;
   let destination = destinationSection
     ? {
         href: getEntrySectionHref({
@@ -179,8 +181,10 @@ function ResolvedTryoutSetPage({
   const view: TryoutSetView = {
     actionAttempt,
     activeAttempt,
+    currentHref: currentSetHref,
     entrySection,
     page,
+    returnHref: selectTryoutTrackReturnHref(restartTarget),
     route,
     sectionRoutes: binding?.sectionRoutes ?? page.sections,
     start: {

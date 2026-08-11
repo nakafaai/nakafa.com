@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
 import { TryoutSetAction } from "@/components/tryout/set/action.client";
 import type { TryoutSetView } from "@/components/tryout/set/model";
@@ -13,13 +12,6 @@ import { TryoutMeta } from "@/components/tryout/shell/meta";
 export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
-  const trackHref = getTryoutHref({
-    country: value.route.country,
-    exam: value.route.exam,
-    track: value.route.track,
-  });
-  const setHref = getTryoutHref(value.route);
-
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
@@ -29,7 +21,7 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
               description:
                 value.page.set.description ?? tTryouts("slug-description"),
               link: {
-                href: trackHref,
+                href: value.returnHref,
                 label: tCommon("back"),
               },
               meta: (
@@ -45,7 +37,7 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
             }}
           />
 
-          <TryoutSetResult setHref={setHref} value={value} />
+          <TryoutSetResult value={value} />
         </div>
 
         <TryoutSetSections value={value} />
@@ -76,16 +68,10 @@ function TryoutSetSections({ value }: { value: TryoutSetView }) {
 }
 
 /** Composes the set action inside a score card only for terminal attempts. */
-function TryoutSetResult({
-  setHref,
-  value,
-}: {
-  setHref: string;
-  value: TryoutSetView;
-}) {
+function TryoutSetResult({ value }: { value: TryoutSetView }) {
   const actionValue = {
     activeAttempt: value.activeAttempt,
-    currentHref: setHref,
+    currentHref: value.currentHref,
     currentAttempt: value.actionAttempt,
     destination: value.start.destination,
     entrySection: value.start.entrySection,
@@ -108,8 +94,13 @@ function TryoutSetResult({
           startedAt: attempt.startedAt,
           status: attempt.status,
         },
-        locale: value.route.locale,
-        publicPath: value.page.set.publicPath,
+        identity: {
+          countryKey: value.page.set.countryKey,
+          examKey: value.page.set.examKey,
+          locale: value.route.locale,
+          setKey: value.page.set.setKey,
+          trackKey: value.page.set.trackKey,
+        },
       }}
     >
       <TryoutSetAction value={actionValue} />

@@ -15,7 +15,7 @@ import type {
   TryoutQuestionContent,
 } from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
-import { selectTryoutSetReturnHref } from "@/components/tryout/route/owner";
+import { selectTryoutSectionReturnHref } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptAuthHref,
   getTryoutAttemptHref,
@@ -24,7 +24,6 @@ import {
   readTryoutRouteAttemptCapability,
   type TryoutRouteSearchParams,
 } from "@/components/tryout/route/path";
-import { normalizeTryoutAttemptState } from "@/components/tryout/runtime/bootstrap";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -156,7 +155,7 @@ async function TryoutSectionRoute({
     notFound();
   }
 
-  const setHref = selectTryoutSetReturnHref({
+  const setHref = selectTryoutSectionReturnHref({
     attemptPage,
     publicHref: getTryoutHref({ country, exam, set, track }),
   });
@@ -181,9 +180,7 @@ async function TryoutSectionRoute({
         attemptPage
           ? {
               attemptId: attemptPage.attemptId,
-              initialState: normalizeTryoutAttemptState(
-                attemptPage.initialState
-              ),
+              initialState: attemptPage.initialState,
               startHref: attemptPage.activeSectionPublicPath
                 ? getTryoutPublicPathHref(attemptPage.activeSectionPublicPath)
                 : null,
