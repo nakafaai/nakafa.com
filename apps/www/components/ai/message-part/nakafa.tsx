@@ -15,7 +15,7 @@ interface Props {
 }
 
 /** Renders one persisted Nakafa data envelope through its kind-specific UI. */
-export const NakafaPart = ({ message }: Props) => {
+export function NakafaPart({ message }: Props) {
   const t = useTranslations("Ai");
 
   if (message.kind === "taxonomy") {
@@ -56,7 +56,7 @@ export const NakafaPart = ({ message }: Props) => {
     default:
       return null;
   }
-};
+}
 NakafaPart.displayName = "NakafaPart";
 
 /** Returns a localized label for one Nakafa data kind. */

@@ -28,28 +28,30 @@ interface AiChatErrorSurfaceProps {
   message: string;
 }
 
-const AiChatErrorSurface = ({ children, message }: AiChatErrorSurfaceProps) => (
-  <Empty className="rounded-xl border bg-card text-card-foreground">
-    <EmptyHeader>
-      <EmptyMedia className="bg-destructive/5" variant="icon">
-        <HugeIcons className="text-destructive" icon={Alert02Icon} />
-      </EmptyMedia>
-      <EmptyDescription>{message}</EmptyDescription>
-    </EmptyHeader>
-    {children}
-  </Empty>
-);
+function AiChatErrorSurface({ children, message }: AiChatErrorSurfaceProps) {
+  return (
+    <Empty className="rounded-xl border bg-card text-card-foreground">
+      <EmptyHeader>
+        <EmptyMedia className="bg-destructive/5" variant="icon">
+          <HugeIcons className="text-destructive" icon={Alert02Icon} />
+        </EmptyMedia>
+        <EmptyDescription>{message}</EmptyDescription>
+      </EmptyHeader>
+      {children}
+    </Empty>
+  );
+}
 AiChatErrorSurface.displayName = "AiChatErrorSurface";
 
 /** Shows a persisted assistant generation failure after chat refresh. */
-export const AiChatPersistedError = () => {
+export function AiChatPersistedError() {
   const t = useTranslations("Ai");
 
   return <AiChatErrorSurface message={t("error-message")} />;
-};
+}
 AiChatPersistedError.displayName = "AiChatPersistedError";
 
-export const AiChatError = () => {
+export function AiChatError() {
   const t = useTranslations("Ai");
 
   const error = useChat((state) => state.chat.error);
@@ -72,10 +74,10 @@ export const AiChatError = () => {
       {isInsufficientCredits ? <ButtonCheckout /> : <ButtonRegenerate />}
     </AiChatErrorSurface>
   );
-};
+}
 AiChatError.displayName = "AiChatError";
 
-const ButtonCheckout = () => {
+function ButtonCheckout() {
   const locale = useLocale();
   const t = useTranslations("Auth");
 
@@ -133,10 +135,10 @@ const ButtonCheckout = () => {
       </Activity>
     </div>
   );
-};
+}
 ButtonCheckout.displayName = "ButtonCheckout";
 
-const ButtonRegenerate = () => {
+function ButtonRegenerate() {
   const t = useTranslations("Ai");
 
   const regenerate = useChat((state) => state.chat.regenerate);
@@ -146,5 +148,5 @@ const ButtonRegenerate = () => {
       {t("retry")}
     </Button>
   );
-};
+}
 ButtonRegenerate.displayName = "ButtonRegenerate";

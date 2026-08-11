@@ -16,7 +16,7 @@ interface Props {
   message: DataPart["web-search"];
 }
 
-export const WebSearchPart = ({ message }: Props) => {
+export function WebSearchPart({ message }: Props) {
   const t = useTranslations("Ai");
 
   const isLoading = message.status === "loading";
@@ -69,10 +69,10 @@ export const WebSearchPart = ({ message }: Props) => {
       />
     </div>
   );
-};
+}
 WebSearchPart.displayName = "WebSearchPart";
 
-const WebSearchPartQueries = ({ queries }: { queries: string[] }) => {
+function WebSearchPartQueries({ queries }: { queries: string[] }) {
   if (queries.length === 0) {
     return null;
   }
@@ -84,20 +84,20 @@ const WebSearchPartQueries = ({ queries }: { queries: string[] }) => {
       ))}
     </div>
   );
-};
+}
 WebSearchPartQueries.displayName = "WebSearchPartQueries";
 
 function WebSearchQueryText({ query }: { query: string }) {
   return <p className="text-muted-foreground text-sm">{`"${query}"`}</p>;
 }
 
-const WebSearchPartPreview = ({
+function WebSearchPartPreview({
   emptyLabel,
   results,
 }: {
   emptyLabel: string;
   results: DataPart["web-search"]["sources"];
-}) => {
+}) {
   if (results.length === 0) {
     return <p className="text-muted-foreground text-sm">{emptyLabel}</p>;
   }
@@ -112,5 +112,5 @@ const WebSearchPartPreview = ({
       ))}
     </div>
   );
-};
+}
 WebSearchPartPreview.displayName = "WebSearchPartPreview";

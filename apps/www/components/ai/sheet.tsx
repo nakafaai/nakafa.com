@@ -99,4 +99,6 @@ export function AiSheet() {
 }
 
 /** Keeps private-chat errors visually empty while the sheet resets. */
-const SheetError = () => null;
+function SheetError() {
+  return null;
+}

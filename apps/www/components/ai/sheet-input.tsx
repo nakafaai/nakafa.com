@@ -30,12 +30,7 @@ interface Props {
 }
 
 /** Renders Nina prompt input and the empty-chat suggestion stack. */
-export const SheetInput = ({
-  disabled,
-  isPending,
-  onSubmit,
-  status,
-}: Props) => {
+export function SheetInput({ disabled, isPending, onSubmit, status }: Props) {
   const t = useTranslations("Ai");
 
   const activeChatId = useAi((state) => state.activeChatId);
@@ -116,4 +111,4 @@ export const SheetInput = ({
       </PromptInput>
     </div>
   );
-};
+}

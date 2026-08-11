@@ -16,7 +16,7 @@ import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { useMessage } from "@/components/ai/context/use-message";
 import { useUser } from "@/lib/context/use-user";
 
-export const AiChatMessageActions = () => {
+export function AiChatMessageActions() {
   const t = useTranslations("Ai");
 
   const messageId = useMessage((state) => state.message.id);
@@ -71,5 +71,5 @@ export const AiChatMessageActions = () => {
       ) : null}
     </Actions>
   );
-};
+}
 AiChatMessageActions.displayName = "AiChatMessageActions";

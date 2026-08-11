@@ -18,22 +18,24 @@ interface Props {
   message: MyUIMessage;
 }
 
-export const AiChatMessage = ({ message }: Props) => (
-  <MessageProvider message={message}>
-    <div className="flex size-full flex-col gap-3 group-[.is-user]:items-end group-[.is-user]:justify-end">
-      <AiChatMessageBody />
-      <div className="flex items-center justify-between gap-4">
-        <AiChatMessageActions />
-        <AiChatMessageCredits />
+export function AiChatMessage({ message }: Props) {
+  return (
+    <MessageProvider message={message}>
+      <div className="flex size-full flex-col gap-3 group-[.is-user]:items-end group-[.is-user]:justify-end">
+        <AiChatMessageBody />
+        <div className="flex items-center justify-between gap-4">
+          <AiChatMessageActions />
+          <AiChatMessageCredits />
+        </div>
+        <AiChatMessageSuggestions />
       </div>
-      <AiChatMessageSuggestions />
-    </div>
-  </MessageProvider>
-);
+    </MessageProvider>
+  );
+}
 
 AiChatMessage.displayName = "AiChatMessage";
 
-const AiChatMessageBody = () => {
+function AiChatMessageBody() {
   const isFailedAssistantResponse = useMessage(
     (state) =>
       state.message.role === "assistant" &&
@@ -45,5 +47,5 @@ const AiChatMessageBody = () => {
   }
 
   return <AiChatMessageContent />;
-};
+}
 AiChatMessageBody.displayName = "AiChatMessageBody";

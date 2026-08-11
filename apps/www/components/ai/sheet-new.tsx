@@ -26,7 +26,7 @@ import { SheetInput } from "@/components/ai/sheet-input";
 import { useUser } from "@/lib/context/use-user";
 
 /** Renders Nina's empty state and starts a new study chat. */
-export const SheetNew = () => {
+export function SheetNew() {
   const t = useTranslations("Ai");
 
   const router = useRouter();
@@ -113,4 +113,4 @@ export const SheetNew = () => {
       />
     </div>
   );
-};
+}

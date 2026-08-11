@@ -12,7 +12,7 @@ interface Props {
 }
 
 /** Renders a compact Quran reference preview. */
-export const QuranPart = ({ message }: Props) => {
+export function QuranPart({ message }: Props) {
   const t = useTranslations("Ai");
 
   return (
@@ -53,5 +53,5 @@ export const QuranPart = ({ message }: Props) => {
       />
     </div>
   );
-};
+}
 QuranPart.displayName = "QuranPart";

@@ -17,7 +17,7 @@ interface Props {
 }
 
 /** Renders a bounded preview for one retrieved Nakafa content page. */
-export const ContentPart = ({ message }: Props) => {
+export function ContentPart({ message }: Props) {
   const t = useTranslations("Ai");
   const [open, setOpen] = useState(true);
 
@@ -56,5 +56,5 @@ export const ContentPart = ({ message }: Props) => {
       </CollapsibleContent>
     </Collapsible>
   );
-};
+}
 ContentPart.displayName = "ContentPart";

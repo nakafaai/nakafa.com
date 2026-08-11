@@ -11,7 +11,7 @@ interface Props {
   message: DataPart["suggestions"];
 }
 
-export const SuggestionsPart = ({ message }: Props) => {
+export function SuggestionsPart({ message }: Props) {
   const t = useTranslations("Ai");
   const suggestions = message.data;
 
@@ -28,14 +28,14 @@ export const SuggestionsPart = ({ message }: Props) => {
       </div>
     </div>
   );
-};
+}
 SuggestionsPart.displayName = "SuggestionsPart";
 
-const SuggestionsPartButton = ({
+function SuggestionsPartButton({
   suggestion,
 }: {
   suggestion: DataPart["suggestions"]["data"][number];
-}) => {
+}) {
   const { sendMessage, status } = useChat((state) => state.chat);
 
   const disabled = status === "submitted" || status === "streaming";
@@ -51,8 +51,10 @@ const SuggestionsPartButton = ({
       <HugeIcons className="size-4 text-primary" icon={Add01Icon} />
     </button>
   );
-};
+}
 SuggestionsPartButton.displayName = "SuggestionsPartButton";
 
-const SuggestionsPartContent = ({ content }: { content: string }) => content;
+function SuggestionsPartContent({ content }: { content: string }) {
+  return content;
+}
 SuggestionsPartContent.displayName = "SuggestionsPartContent";

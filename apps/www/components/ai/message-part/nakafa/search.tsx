@@ -20,7 +20,7 @@ interface Props {
 }
 
 /** Renders Nakafa search results with a bounded default list. */
-export const SearchPart = ({ message }: Props) => {
+export function SearchPart({ message }: Props) {
   const t = useTranslations("Ai");
   const [expanded, { toggle }] = useDisclosure(false);
   const items = expanded
@@ -77,10 +77,10 @@ export const SearchPart = ({ message }: Props) => {
       )}
     </div>
   );
-};
+}
 SearchPart.displayName = "SearchPart";
 
-const SearchPartQueries = ({ message }: Props) => {
+function SearchPartQueries({ message }: Props) {
   const queries = Array.from(
     new Set(
       (message.input.queries ?? []).flatMap((query) => {
@@ -106,7 +106,7 @@ const SearchPartQueries = ({ message }: Props) => {
       ))}
     </div>
   );
-};
+}
 SearchPartQueries.displayName = "SearchPartQueries";
 
 function SearchQueryText({ query }: { query: string }) {

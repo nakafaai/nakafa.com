@@ -26,7 +26,7 @@ import { useAi } from "@/components/ai/context/use-ai";
 import { useUser } from "@/lib/context/use-user";
 
 /** Opens the recent Nina chat list when a user is signed in. */
-export const SheetHistory = () => {
+export function SheetHistory() {
   const { isPending, user } = useUser((state) => ({
     isPending: state.isPending,
     user: state.user,
@@ -51,10 +51,10 @@ export const SheetHistory = () => {
       </Authenticated>
     </DropdownMenu>
   );
-};
+}
 
 /** Renders recent Nina chats in the header menu. */
-const SheetHistoryContent = () => {
+function SheetHistoryContent() {
   const t = useTranslations("Ai");
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
@@ -99,4 +99,4 @@ const SheetHistoryContent = () => {
       </DropdownMenuGroup>
     </DropdownMenuContent>
   );
-};
+}
