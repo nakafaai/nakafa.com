@@ -111,12 +111,12 @@ export function CurriculumCatalogCards({
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {entries.map(({ program, route }, index) => (
         <Card
-          className="relative mx-auto h-full w-full max-w-sm pt-0"
+          className="relative mx-auto h-full w-full max-w-sm pt-0 pb-0 [--card-spacing:--spacing(4)]"
           key={route.publicPath}
         >
           <Image
             alt=""
-            className="aspect-video w-full object-cover"
+            className="h-auto w-full"
             height={630}
             preload={index === 0}
             sizes="(min-width: 640px) 384px, calc(100vw - 48px)"
@@ -128,7 +128,7 @@ export function CurriculumCatalogCards({
               <h2>{route.title}</h2>
             </CardTitle>
           </CardHeader>
-          <CardFooter>
+          <CardFooter className="border-t bg-muted/50 p-(--card-spacing)">
             <Button
               className="w-full"
               render={

@@ -96,7 +96,7 @@ export default async function Page() {
           <LayoutContent>
             {catalog.entries.length > 0 ? (
               <CurriculumCatalogCards
-                actionLabel={tCommon("explore")}
+                actionLabel={tLearningPrograms("curriculum-index-action")}
                 entries={catalog.entries}
                 locale={locale}
               />
