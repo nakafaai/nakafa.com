@@ -90,24 +90,35 @@ export default function Page({ params }: CurriculumPageProps) {
   );
 }
 
-/** Resolves and renders the URL-specific curriculum node inside its boundary. */
+/** Resolves the URL-specific route before choosing its named composition. */
 async function CurriculumRouteContent({
   params,
 }: Pick<CurriculumPageProps, "params">) {
   const model = await resolveRuntimeCurriculumRoute(params);
-  const { locale, route } = model;
-  const commonTranslations = getTranslations({ locale, namespace: "Common" });
-  let header: ReactNode;
-  let homeLabel: string;
 
-  if (route.level === "track") {
-    const [catalog, tCommon, tLearningPrograms] = await Promise.all([
-      readRuntimeCurriculumCatalog(locale),
-      commonTranslations,
-      getTranslations({ locale, namespace: "LearningPrograms" }),
-    ]);
-    homeLabel = tCommon("home");
-    header = (
+  if (model.route.level === "track") {
+    return <CurriculumTrackRoute model={model} />;
+  }
+
+  return <CurriculumNestedRoute model={model} />;
+}
+
+/** Renders the curriculum chooser with its catalog-owned selector. */
+async function CurriculumTrackRoute({
+  model,
+}: {
+  model: CurriculumRouteModel;
+}) {
+  const { locale, route } = model;
+  const [catalog, tCommon, tLearningPrograms] = await Promise.all([
+    readRuntimeCurriculumCatalog(locale),
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "LearningPrograms" }),
+  ]);
+  const homeLabel = tCommon("home");
+
+  return (
+    <CurriculumRouteFrame homeLabel={homeLabel} model={model}>
       <CurriculumRootHeader
         currentRoute={route}
         homeLabel={homeLabel}
@@ -115,17 +126,41 @@ async function CurriculumRouteContent({
         selectorLabel={tLearningPrograms("kind.school-curriculum")}
         subjectLabel={tCommon("subject")}
       />
-    );
-  } else {
-    homeLabel = (await commonTranslations)("home");
-    header = (
+    </CurriculumRouteFrame>
+  );
+}
+
+/** Renders one nested curriculum node with its established route header. */
+async function CurriculumNestedRoute({
+  model,
+}: {
+  model: CurriculumRouteModel;
+}) {
+  const { locale, route } = model;
+  const tCommon = await getTranslations({ locale, namespace: "Common" });
+
+  return (
+    <CurriculumRouteFrame homeLabel={tCommon("home")} model={model}>
       <HeaderContent
         icon={readCurriculumRouteIcon(route)}
         link={readRuntimeCurriculumHeader(model)}
         title={route.title}
       />
-    );
-  }
+    </CurriculumRouteFrame>
+  );
+}
+
+/** Composes the shared curriculum body around one explicit route header. */
+function CurriculumRouteFrame({
+  children,
+  homeLabel,
+  model,
+}: {
+  children: ReactNode;
+  homeLabel: string;
+  model: CurriculumRouteModel;
+}) {
+  const { locale, route } = model;
 
   const breadcrumbs = readRuntimeCurriculumBreadcrumbs(homeLabel, model);
   const sourceUrl = readCurriculumSourceUrl(model);
@@ -136,7 +171,7 @@ async function CurriculumRouteContent({
         breadcrumbItems={createBreadcrumbItems(locale, breadcrumbs)}
       />
       <LayoutMaterialContent>
-        {header}
+        {children}
         <LayoutContent>
           <CurriculumRouteBody {...model} />
         </LayoutContent>

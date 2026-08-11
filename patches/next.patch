@@ -1,0 +1,54 @@
+diff --git a/dist/client/components/segment-cache/cache.js b/dist/client/components/segment-cache/cache.js
+--- a/dist/client/components/segment-cache/cache.js
++++ b/dist/client/components/segment-cache/cache.js
+@@ -1805 +1805 @@ payloadFetchStrategy) {
+-        const payloadVaryPath = fetchStrategy === _types.FetchStrategy.StaticShell ? node.tree.shellVaryPath : process.env.__NEXT_VARY_PARAMS && varyParams !== null ? (0, _varypath.getFulfilledSegmentVaryPath)(node.tree.varyPath, varyParams) : (0, _varypath.getSegmentVaryPathForRequest)(_types.FetchStrategy.PPR, node.tree);
++        const payloadVaryPath = process.env.__NEXT_VARY_PARAMS && varyParams !== null ? (0, _varypath.getFulfilledSegmentVaryPath)(node.tree.varyPath, varyParams) : (0, _varypath.getSegmentVaryPathForRequest)(payloadFetchStrategy, node.tree);
+@@ -1810,17 +1810 @@ payloadFetchStrategy) {
+-            if (fetchStrategy === _types.FetchStrategy.StaticShell) {
+-                // Re-key at the shell vary path, mirroring the RuntimeShell re-key
+-                // in fulfillEntrySpawnedByRuntimePrefetch. Usually the entry already
+-                // lives there, but the scheduler can also upgrade a pre-existing
+-                // Empty entry at a more concrete path in place, so the re-key is
+-                // load-bearing. The shadow eviction keeps a stale settled entry at
+-                // a more specific path from hiding the shell entry (the just-written
+-                // full payload's entry is preferred and survives it). Routed through
+-                // the upsert rather than a bare set so the usual precedence rules
+-                // apply: a concurrent task's response (e.g. a RuntimeShell entry)
+-                // can land in the shell slot first, and this write must not
+-                // downgrade it. (In the common case the slot already holds this
+-                // very entry, which the upsert replaces in place.)
+-                if (process.env.__NEXT_VARY_PARAMS) {
+-                    upsertSegmentEntry(now, node.tree.shellVaryPath, fulfilledEntry, node.tree.varyPath);
+-                }
+-            } else {
++            {
+@@ -2713 +2697,0 @@ if ((typeof exports.default === 'function' || typeof exports.default === 'object
+-//# sourceMappingURL=cache.js.map
+diff --git a/dist/esm/client/components/segment-cache/cache.js b/dist/esm/client/components/segment-cache/cache.js
+--- a/dist/esm/client/components/segment-cache/cache.js
++++ b/dist/esm/client/components/segment-cache/cache.js
+@@ -1690 +1690 @@ payloadFetchStrategy) {
+-        const payloadVaryPath = fetchStrategy === FetchStrategy.StaticShell ? node.tree.shellVaryPath : process.env.__NEXT_VARY_PARAMS && varyParams !== null ? getFulfilledSegmentVaryPath(node.tree.varyPath, varyParams) : getSegmentVaryPathForRequest(FetchStrategy.PPR, node.tree);
++        const payloadVaryPath = process.env.__NEXT_VARY_PARAMS && varyParams !== null ? getFulfilledSegmentVaryPath(node.tree.varyPath, varyParams) : getSegmentVaryPathForRequest(payloadFetchStrategy, node.tree);
+@@ -1695,17 +1695 @@ payloadFetchStrategy) {
+-            if (fetchStrategy === FetchStrategy.StaticShell) {
+-                // Re-key at the shell vary path, mirroring the RuntimeShell re-key
+-                // in fulfillEntrySpawnedByRuntimePrefetch. Usually the entry already
+-                // lives there, but the scheduler can also upgrade a pre-existing
+-                // Empty entry at a more concrete path in place, so the re-key is
+-                // load-bearing. The shadow eviction keeps a stale settled entry at
+-                // a more specific path from hiding the shell entry (the just-written
+-                // full payload's entry is preferred and survives it). Routed through
+-                // the upsert rather than a bare set so the usual precedence rules
+-                // apply: a concurrent task's response (e.g. a RuntimeShell entry)
+-                // can land in the shell slot first, and this write must not
+-                // downgrade it. (In the common case the slot already holds this
+-                // very entry, which the upsert replaces in place.)
+-                if (process.env.__NEXT_VARY_PARAMS) {
+-                    upsertSegmentEntry(now, node.tree.shellVaryPath, fulfilledEntry, node.tree.varyPath);
+-                }
+-            } else {
++            {
+@@ -2657 +2641,0 @@ export default function createCacheKey(originalHref, nextUrl) {
+-//# sourceMappingURL=cache.js.map
