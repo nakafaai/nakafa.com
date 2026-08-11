@@ -1,6 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Suspense, use } from "react";
+import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
+import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
 import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
@@ -17,7 +20,13 @@ import { TryoutPageHeader } from "@/components/tryout/shell/header";
 import { TryoutMeta } from "@/components/tryout/shell/meta";
 
 /** Renders a no-nested-section set as the directly startable section surface. */
-export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
+export function TryoutSetEntry({
+  content,
+  value,
+}: {
+  content: Promise<TryoutRuntimeContent> | null;
+  value: TryoutInternalSetView;
+}) {
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
   const sectionAttempt =
@@ -70,7 +79,7 @@ export function TryoutSetEntry({ value }: { value: TryoutInternalSetView }) {
         <div className="space-y-12">
           <TryoutEntryResult value={value} />
 
-          <TryoutEntryRuntime value={value} />
+          <TryoutEntryRuntime content={content} value={value} />
         </div>
       </div>
     </div>
@@ -171,17 +180,56 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
 }
 
 /** Renders the direct-entry question runtime when Convex has one. */
-function TryoutEntryRuntime({ value }: { value: TryoutInternalSetView }) {
+function TryoutEntryRuntime({
+  content,
+  value,
+}: {
+  content: Promise<TryoutRuntimeContent> | null;
+  value: TryoutInternalSetView;
+}) {
   if (value.runtimeState.kind === "none") {
     return null;
   }
 
   return (
+    <Suspense fallback={null}>
+      <TryoutEntryRuntimeContent content={content} value={value} />
+    </Suspense>
+  );
+}
+
+/** Resolves signed content only inside the direct-entry runtime region. */
+function TryoutEntryRuntimeContent({
+  content,
+  value,
+}: {
+  content: Promise<TryoutRuntimeContent> | null;
+  value: TryoutInternalSetView;
+}) {
+  if (value.runtimeState.kind === "none") {
+    return null;
+  }
+  if (!content) {
+    return <TryoutContentRefresh />;
+  }
+
+  const resolvedContent = use(content);
+  if (resolvedContent.questions.length === 0) {
+    return <TryoutContentRefresh />;
+  }
+  if (
+    value.runtimeState.kind === "review" &&
+    resolvedContent.answers.length === 0
+  ) {
+    return <TryoutContentRefresh />;
+  }
+
+  return (
     <TryoutRuntime
       value={{
-        answers: value.content.entryAnswers,
+        answers: resolvedContent.answers,
         expired: value.runtimeState.kind !== "active",
-        questions: value.content.entryQuestions,
+        questions: resolvedContent.questions,
         returnHref: getTryoutAttemptHref(
           value.page.set.publicPath,
           value.runtimeState.runtime.attemptId

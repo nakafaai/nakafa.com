@@ -1,10 +1,6 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
-import type {
-  TryoutAnswerContent,
-  TryoutQuestionContent,
-} from "@/components/tryout/content/model";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 
 /** Convex query contract for the set discovery page. */
@@ -39,12 +35,6 @@ export type LoadedRuntime = NonNullable<
     FunctionReturnType<typeof api.tryouts.queries.runtime.getSetAttemptState>
   >["runtime"]
 >;
-
-/** Static MDX content needed by a direct-entry runtime. */
-export interface TryoutSetContent {
-  entryAnswers: readonly TryoutAnswerContent[];
-  entryQuestions: readonly TryoutQuestionContent[];
-}
 
 /** URL route coordinates for one try-out set page. */
 export interface TryoutSetRoute {
@@ -85,7 +75,6 @@ export interface TryoutSetView {
 
 /** Render model for sets whose only section is the set entry itself. */
 export interface TryoutInternalSetView extends TryoutSetView {
-  content: TryoutSetContent;
   entrySection: SetEntrySection;
   runtimeState: TryoutRuntimeState<LoadedRuntime>;
 }

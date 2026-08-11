@@ -10,10 +10,6 @@ import {
   readTryoutSectionAttemptPage,
   readTryoutSectionPage,
 } from "@/components/tryout/catalog/server";
-import type {
-  TryoutAnswerContent,
-  TryoutQuestionContent,
-} from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import { selectTryoutSectionReturnHref } from "@/components/tryout/route/owner";
 import {
@@ -160,19 +156,15 @@ async function TryoutSectionRoute({
     publicHref: getTryoutHref({ country, exam, set, track }),
   });
 
-  let questions: readonly TryoutQuestionContent[] = [];
-  let answers: readonly TryoutAnswerContent[] = [];
-
-  if (attemptPage?.content.kind === "signed") {
-    const content = await Effect.runPromise(
-      loadSignedTryoutContent({
-        answers: attemptPage.content.answers,
-        questions: attemptPage.content.questions,
-      })
-    );
-    questions = content.questions;
-    answers = content.answers;
-  }
+  const content =
+    attemptPage?.content.kind === "signed"
+      ? Effect.runPromise(
+          loadSignedTryoutContent({
+            answers: attemptPage.content.answers,
+            questions: attemptPage.content.questions,
+          })
+        )
+      : null;
 
   return (
     <TryoutSectionPageClient
@@ -187,7 +179,7 @@ async function TryoutSectionRoute({
             }
           : null
       }
-      content={{ answers, questions }}
+      content={content}
       page={page}
       route={{ country, exam, locale, section, set, track }}
       setHref={setHref}
