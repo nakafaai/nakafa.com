@@ -10,7 +10,7 @@ function serializeIcon(icon: unknown) {
 }
 
 describe("try-out icons", () => {
-  it("keeps visible exam cards unique by icon", () => {
+  it("keeps visible exam selector options unique by icon", () => {
     const icons = ["snbt", "tka"].map((key) =>
       serializeIcon(getTryoutExamIcon(key))
     );

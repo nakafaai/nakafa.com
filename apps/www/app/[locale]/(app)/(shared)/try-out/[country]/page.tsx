@@ -96,7 +96,11 @@ async function TryoutCountryRoute({
           }}
         />
         <LayoutContent>
-          <TryoutCountryPageClient page={page} />
+          <TryoutCountryPageClient
+            actionLabel={tTryouts("open-exam-cta")}
+            locale={locale}
+            page={page}
+          />
         </LayoutContent>
         <FooterContent>
           <RefContent githubUrl={sourceUrl} />

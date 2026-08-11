@@ -345,7 +345,7 @@
     "exam-count": "{count, plural, =0 {Belum ada ujian} =1 {# ujian} other {# ujian}}",
     "set-count": "{count, plural, =0 {Belum ada set} =1 {# set} other {# set}}",
     "open-country-cta": "Buka negara",
-    "open-exam-cta": "Buka ujian",
+    "open-exam-cta": "Lihat pilihan",
     "open-set-cta": "Buka set",
     "open-section-cta": "Buka bagian",
     "back-to-tryout": "Kembali ke try out",

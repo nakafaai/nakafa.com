@@ -6,7 +6,7 @@ import {
 import type { IconSvgElement } from "@hugeicons/react";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 
-/** Resolves one try-out exam identity to its stable card icon. */
+/** Resolves one try-out exam identity to its stable selector icon. */
 export function getTryoutExamIcon(examKey: string): IconSvgElement {
   switch (examKey) {
     case "snbt":

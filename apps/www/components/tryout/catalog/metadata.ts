@@ -6,10 +6,28 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
+import { getTryoutExamSocialImage } from "@/lib/tryout/social-images";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 
-interface TryoutMetadataInput {
+type TryoutRouteKind = TryoutCatalogRow["kind"];
+
+interface TryoutMetadataBaseInput {
+  readonly locale: Locale;
+  readonly publicPath: string;
+}
+
+type TryoutMetadataInput =
+  | (TryoutMetadataBaseInput & {
+      readonly countryKey: string;
+      readonly examKey: string;
+      readonly kind: "exam";
+    })
+  | (TryoutMetadataBaseInput & {
+      readonly kind: Exclude<TryoutRouteKind, "exam">;
+    });
+
+interface TryoutMetadataQueryInput {
   readonly kind: TryoutCatalogRow["kind"];
   readonly locale: Locale;
   readonly publicPath: string;
@@ -35,8 +53,13 @@ export function createRetainedTryoutMetadata(
 export async function generateTryoutRouteMetadata(
   input: TryoutMetadataInput
 ): Promise<Metadata> {
+  const queryInput: TryoutMetadataQueryInput = {
+    kind: input.kind,
+    locale: input.locale,
+    publicPath: input.publicPath,
+  };
   const [published, tTryouts] = await Promise.all([
-    readTryoutMetadata(input),
+    readTryoutMetadata(queryInput),
     getTranslations({ locale: input.locale, namespace: "Tryouts" }),
   ]);
   const source = published.route;
@@ -60,7 +83,21 @@ export async function generateTryoutRouteMetadata(
       description,
       locale: input.locale,
       path,
-      image: getOgUrl(input.locale, source.publicPath),
+      image: getTryoutSocialImage(input, source.publicPath),
     }),
   };
+}
+
+/** Selects reviewed artwork only for an exam root with a matching static asset. */
+function getTryoutSocialImage(input: TryoutMetadataInput, publicPath: string) {
+  if (input.kind !== "exam") {
+    return getOgUrl(input.locale, publicPath);
+  }
+
+  return getTryoutExamSocialImage({
+    countryKey: input.countryKey,
+    examKey: input.examKey,
+    locale: input.locale,
+    publicPath,
+  });
 }

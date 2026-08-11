@@ -6,15 +6,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@repo/design-system/components/ui/breadcrumb";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import Image from "next/image";
 import type { Locale } from "next-intl";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import type {
@@ -25,6 +17,7 @@ import {
   CurriculumSelector,
   type CurriculumSelectorOption,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/selector";
+import { CatalogImageCard } from "@/components/shared/catalog/image-card";
 import { ChoiceCardContent } from "@/components/shared/choice/card";
 import { choiceCardVariants } from "@/components/shared/choice/variants";
 import {
@@ -110,38 +103,14 @@ export function CurriculumCatalogCards({
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {entries.map(({ program, route }, index) => (
-        <Card
-          className="relative mx-auto h-full w-full max-w-sm pt-0 pb-0 [--card-spacing:--spacing(4)]"
+        <CatalogImageCard
+          action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
+          actionLabel={actionLabel}
+          imageSrc={getCurriculumRouteSocialImage(locale, program.key, route)}
           key={route.publicPath}
-        >
-          <Image
-            alt=""
-            className="h-auto w-full"
-            height={630}
-            preload={index === 0}
-            sizes="(min-width: 640px) 384px, calc(100vw - 48px)"
-            src={getCurriculumRouteSocialImage(locale, program.key, route)}
-            width={1200}
-          />
-          <CardHeader className="flex-1">
-            <CardTitle>
-              <h2>{route.title}</h2>
-            </CardTitle>
-          </CardHeader>
-          <CardFooter className="border-t bg-muted/50 p-(--card-spacing)">
-            <Button
-              className="w-full"
-              render={
-                <NavigationLink
-                  aria-label={`${actionLabel} ${route.title}`}
-                  href={`/${locale}/${route.publicPath}`}
-                />
-              }
-            >
-              {actionLabel}
-            </Button>
-          </CardFooter>
-        </Card>
+          preload={index === 0}
+          title={route.title}
+        />
       ))}
     </div>
   );
