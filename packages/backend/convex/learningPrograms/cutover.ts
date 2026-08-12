@@ -137,6 +137,7 @@ export const restoreCurriculumPreferences = internalMutation({
     rows: v.array(
       v.object({
         expectedCurrentProgramKey: v.string(),
+        expectedPreferenceUpdatedAt: v.number(),
         programKey: v.string(),
         userId: v.id("users"),
       })
@@ -154,6 +155,7 @@ const restoreCurriculumPreferenceRows = Effect.fn(
   ctx: MutationCtx,
   rows: readonly {
     expectedCurrentProgramKey: string;
+    expectedPreferenceUpdatedAt: number;
     programKey: string;
     userId: Doc<"learningPreferences">["userId"];
   }[]
@@ -182,6 +184,7 @@ const restoreCurriculumPreferenceRows = Effect.fn(
         !preference ||
         preference.preferredCurriculumProgramKey !==
           row.expectedCurrentProgramKey ||
+        preference.updatedAt !== row.expectedPreferenceUpdatedAt ||
         !curriculumKeys.has(row.programKey)
       ) {
         return yield* new LearningSelectionMigrationError({

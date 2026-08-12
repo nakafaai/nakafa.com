@@ -202,7 +202,10 @@ export const saveLearningSelection = Effect.fn(
     (!shouldSetCurriculumPreference ||
       current.preferredCurriculumProgramKey === programKey)
   ) {
-    if (current.selectionUpdatedAt !== undefined) {
+    if (
+      current.selectionUpdatedAt !== undefined &&
+      current.selectionUpdatedAt >= selectionUpdatedAt
+    ) {
       return current._id;
     }
 

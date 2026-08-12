@@ -20,6 +20,7 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const NOW = 1_799_020_800_000;
+const OLD_SELECTION_AT = 1_700_000_000_000;
 
 describe("learningPrograms/selection", () => {
   it("lists only selectable programs from the signed active snapshot", async () => {
@@ -106,6 +107,52 @@ describe("learningPrograms/selection", () => {
       primaryProgramKey: "merdeka",
       selectionUpdatedAt: expect.any(Number),
     });
+  });
+
+  it("refreshes the timestamp when a user explicitly reselects a program", async () => {
+    const target = createConvexTestWithBetterAuth();
+    const data = await Effect.runPromise(
+      makeProgramSnapshotData([
+        makeProgram(1, "merdeka", "school-curriculum", "partial"),
+      ])
+    );
+    await activateProgramSnapshot(target, data);
+    const identity = await target.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+    await target.mutation((ctx) =>
+      ctx.db.insert("learningPreferences", {
+        learningInterest: "school-curriculum",
+        preferredCurriculumProgramKey: "merdeka",
+        primaryProgramKey: "merdeka",
+        selectionUpdatedAt: OLD_SELECTION_AT,
+        updatedAt: OLD_SELECTION_AT,
+        userId: identity.userId,
+      })
+    );
+    const authed = target.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await authed.mutation(api.learningPrograms.mutations.selectProgram, {
+      interest: "school-curriculum",
+      locale: "id",
+      programKey: "merdeka",
+    });
+
+    await expect(
+      target.query((ctx) => ctx.db.query("learningPreferences").unique())
+    ).resolves.toMatchObject({
+      selectionUpdatedAt: expect.any(Number),
+      updatedAt: expect.any(Number),
+    });
+    const preference = await target.query((ctx) =>
+      ctx.db.query("learningPreferences").unique()
+    );
+
+    expect(preference?.selectionUpdatedAt).toBeGreaterThan(OLD_SELECTION_AT);
+    expect(preference?.updatedAt).toBeGreaterThan(OLD_SELECTION_AT);
   });
 
   it("rejects missing, planned, and interest-mismatched programs", async () => {

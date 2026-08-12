@@ -312,6 +312,19 @@ describe("learningPrograms/cutover", () => {
       return insertedUserId;
     });
 
+    await t.mutation(async (ctx) => {
+      const preference = await ctx.db
+        .query("learningPreferences")
+        .withIndex("by_userId", (index) => index.eq("userId", userId))
+        .unique();
+
+      if (!preference) {
+        throw new Error("Expected one curriculum preference.");
+      }
+
+      await ctx.db.patch(preference._id, { updatedAt: NOW + 1 });
+    });
+
     await expect(
       t.mutation(
         internal.learningPrograms.cutover.restoreCurriculumPreferences,
@@ -319,6 +332,23 @@ describe("learningPrograms/cutover", () => {
           rows: [
             {
               expectedCurrentProgramKey: "merdeka",
+              expectedPreferenceUpdatedAt: NOW,
+              programKey: "cambridge-international",
+              userId,
+            },
+          ],
+        }
+      )
+    ).rejects.toThrow("LEARNING_SELECTION_MIGRATION_UNRESOLVED");
+
+    await expect(
+      t.mutation(
+        internal.learningPrograms.cutover.restoreCurriculumPreferences,
+        {
+          rows: [
+            {
+              expectedCurrentProgramKey: "merdeka",
+              expectedPreferenceUpdatedAt: NOW + 1,
               programKey: "cambridge-international",
               userId,
             },
@@ -338,6 +368,7 @@ describe("learningPrograms/cutover", () => {
           rows: [
             {
               expectedCurrentProgramKey: "merdeka",
+              expectedPreferenceUpdatedAt: NOW + 1,
               programKey: "cambridge-international",
               userId,
             },
