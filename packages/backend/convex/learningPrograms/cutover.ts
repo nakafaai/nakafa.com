@@ -31,7 +31,6 @@ const cutover = new Migrations(components.migrations, {
 });
 
 const CUTOVER_AUDIT_LIMIT = 1000;
-const PREFERENCE_RECOVERY_LIMIT = 100;
 const learningSelectionAuditLimitCode = "LEARNING_SELECTION_AUDIT_LIMIT";
 const learningSelectionMigrationIoFailedCode =
   "LEARNING_SELECTION_MIGRATION_IO_FAILED";
@@ -129,88 +128,6 @@ export const auditLearningSelections = internalQuery({
     unresolvedProfiles: v.number(),
   }),
   handler: (ctx) => runConvexProgram(auditLearningSelectionRows(ctx)),
-});
-
-/** Restores bounded curriculum preferences overwritten by the first cutover. */
-export const restoreCurriculumPreferences = internalMutation({
-  args: {
-    rows: v.array(
-      v.object({
-        expectedCurrentProgramKey: v.string(),
-        expectedPreferenceUpdatedAt: v.number(),
-        programKey: v.string(),
-        userId: v.id("users"),
-      })
-    ),
-  },
-  returns: v.object({ processed: v.number(), restored: v.number() }),
-  handler: (ctx, args) =>
-    runConvexProgram(restoreCurriculumPreferenceRows(ctx, args.rows)),
-});
-
-/** Restores exact backup values only while their live precondition still holds. */
-const restoreCurriculumPreferenceRows = Effect.fn(
-  "learningPrograms.restoreCurriculumPreferenceRows"
-)(function* (
-  ctx: MutationCtx,
-  rows: readonly {
-    expectedCurrentProgramKey: string;
-    expectedPreferenceUpdatedAt: number;
-    programKey: string;
-    userId: Doc<"learningPreferences">["userId"];
-  }[]
-) {
-  const userIds = new Set(rows.map(({ userId }) => userId));
-
-  if (rows.length > PREFERENCE_RECOVERY_LIMIT || userIds.size !== rows.length) {
-    return yield* new LearningSelectionMigrationError({
-      code: learningSelectionAuditLimitCode,
-      message: "Curriculum preference recovery input is invalid or unbounded.",
-    });
-  }
-
-  const programs = yield* listSignedPrograms(ctx, "id");
-  const curriculumKeys = new Set<string>(
-    programs
-      .filter(({ kind }) => kind === "school-curriculum")
-      .map(({ key }) => key)
-  );
-  const now = yield* Clock.currentTimeMillis;
-  const restored = yield* Effect.reduce(rows, 0, (count, row) =>
-    Effect.gen(function* () {
-      const preference = yield* readLearningPreferenceByUserId(ctx, row.userId);
-
-      if (
-        !preference ||
-        preference.preferredCurriculumProgramKey !==
-          row.expectedCurrentProgramKey ||
-        preference.updatedAt !== row.expectedPreferenceUpdatedAt ||
-        !curriculumKeys.has(row.programKey)
-      ) {
-        return yield* new LearningSelectionMigrationError({
-          code: learningSelectionMigrationUnresolvedCode,
-          message: "A curriculum preference recovery precondition failed.",
-        });
-      }
-
-      if (preference.preferredCurriculumProgramKey === row.programKey) {
-        return count;
-      }
-
-      yield* Effect.tryPromise({
-        catch: toLearningSelectionMigrationIoError,
-        try: () =>
-          ctx.db.patch(preference._id, {
-            preferredCurriculumProgramKey: row.programKey,
-            updatedAt: now,
-          }),
-      });
-
-      return count + 1;
-    })
-  );
-
-  return { processed: rows.length, restored };
 });
 
 /** Audits the bounded legacy and canonical rows in one composed program. */
