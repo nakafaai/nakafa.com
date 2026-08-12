@@ -83,7 +83,8 @@ describe("learningPrograms/cutover", () => {
         canonicalSelection: {
           interest: "assessment-prep",
           programKey: "snbt",
-          updatedAt: NOW + 1,
+          selectionUpdatedAt: NOW + 1,
+          updatedAt: NOW + 2,
         },
         interest: "exam-prep",
         programId: currentExam,
@@ -93,13 +94,16 @@ describe("learningPrograms/cutover", () => {
         canonicalSelection: {
           interest: "exam-prep",
           programKey: "snbt",
-          updatedAt: NOW + 1,
+          selectionUpdatedAt: NOW + 1,
+          updatedAt: NOW + 3,
         },
         interest: "school-curriculum",
         profileUpdatedAt: NOW + 2,
         programId: currentSchool,
         suffix: "newer-legacy",
       });
+      await ctx.db.delete(orphanSchool);
+      await ctx.db.delete(orphanAssessment);
     });
 
     await expect(
@@ -113,6 +117,7 @@ describe("learningPrograms/cutover", () => {
     ).resolves.toEqual({
       invalidSelections: 0,
       legacyProfiles: 7,
+      missingSelectionTimestamps: 0,
       migratedProfiles: 2,
       selectionRows: 2,
       unresolvedProfiles: 5,
@@ -132,6 +137,7 @@ describe("learningPrograms/cutover", () => {
     ).resolves.toEqual({
       invalidSelections: 0,
       legacyProfiles: 7,
+      missingSelectionTimestamps: 0,
       migratedProfiles: 7,
       selectionRows: 7,
       unresolvedProfiles: 0,
@@ -194,6 +200,152 @@ describe("learningPrograms/cutover", () => {
       },
     ]);
   });
+
+  it("keeps an independent browsing preference out of profile migration", async () => {
+    const merdeka = makeSelectableProgram(1, "merdeka", "school-curriculum");
+    const cambridge = makeSelectableProgram(
+      2,
+      "cambridge-international",
+      "school-curriculum"
+    );
+    const data = await Effect.runPromise(
+      makeProgramSnapshotData([merdeka, cambridge])
+    );
+    const t = convexTest(schema, convexModules);
+    migrationsTest.register(t);
+    await activateProgramSnapshot(t, data);
+
+    await t.mutation(async (ctx) => {
+      const legacyProgramId = await insertLegacyProgram(
+        ctx,
+        "merdeka",
+        "school-curriculum"
+      );
+      await insertLegacyProfile(ctx, {
+        interest: "school-curriculum",
+        preferredCurriculumProgramKey: "cambridge-international",
+        programId: legacyProgramId,
+        suffix: "independent-preference",
+      });
+    });
+
+    await t.action((ctx) =>
+      runToCompletion(
+        ctx,
+        components.migrations,
+        internal.learningPrograms.cutover.migrateLearningSelections,
+        { cursor: null }
+      )
+    );
+
+    await expect(
+      t.query((ctx) => ctx.db.query("learningPreferences").unique())
+    ).resolves.toMatchObject({
+      learningInterest: "school-curriculum",
+      preferredCurriculumProgramKey: "cambridge-international",
+      primaryProgramKey: "merdeka",
+      selectionUpdatedAt: NOW,
+    });
+  });
+
+  it("fails when missing legacy evidence has multiple valid programs", async () => {
+    const first = makeSelectableProgram(1, "first", "school-curriculum");
+    const second = makeSelectableProgram(2, "second", "school-curriculum");
+    const data = await Effect.runPromise(
+      makeProgramSnapshotData([first, second])
+    );
+    const t = convexTest(schema, convexModules);
+    migrationsTest.register(t);
+    await activateProgramSnapshot(t, data);
+
+    await t.mutation(async (ctx) => {
+      const deletedProgramId = await insertLegacyProgram(
+        ctx,
+        "deleted",
+        "school-curriculum"
+      );
+      await insertLegacyProfile(ctx, {
+        interest: "school-curriculum",
+        programId: deletedProgramId,
+        suffix: "ambiguous",
+      });
+      await ctx.db.delete(deletedProgramId);
+    });
+
+    await expect(
+      t.action((ctx) =>
+        runToCompletion(
+          ctx,
+          components.migrations,
+          internal.learningPrograms.cutover.migrateLearningSelections,
+          { cursor: null }
+        )
+      )
+    ).rejects.toThrow("LEARNING_SELECTION_MIGRATION_UNRESOLVED");
+  });
+
+  it("restores one exact backed-up browsing preference with a live guard", async () => {
+    const data = await Effect.runPromise(
+      makeProgramSnapshotData([
+        makeSelectableProgram(1, "merdeka", "school-curriculum"),
+        makeSelectableProgram(
+          2,
+          "cambridge-international",
+          "school-curriculum"
+        ),
+      ])
+    );
+    const t = convexTest(schema, convexModules);
+    await activateProgramSnapshot(t, data);
+    const userId = await t.mutation(async (ctx) => {
+      const legacyProgramId = await insertLegacyProgram(
+        ctx,
+        "merdeka",
+        "school-curriculum"
+      );
+      const insertedUserId = await insertLegacyProfile(ctx, {
+        interest: "school-curriculum",
+        preferredCurriculumProgramKey: "merdeka",
+        programId: legacyProgramId,
+        suffix: "recovery",
+      });
+      return insertedUserId;
+    });
+
+    await expect(
+      t.mutation(
+        internal.learningPrograms.cutover.restoreCurriculumPreferences,
+        {
+          rows: [
+            {
+              expectedCurrentProgramKey: "merdeka",
+              programKey: "cambridge-international",
+              userId,
+            },
+          ],
+        }
+      )
+    ).resolves.toEqual({ processed: 1, restored: 1 });
+    await expect(
+      t.query((ctx) => ctx.db.query("learningPreferences").unique())
+    ).resolves.toMatchObject({
+      preferredCurriculumProgramKey: "cambridge-international",
+    });
+    await expect(
+      t.mutation(
+        internal.learningPrograms.cutover.restoreCurriculumPreferences,
+        {
+          rows: [
+            {
+              expectedCurrentProgramKey: "merdeka",
+              programKey: "cambridge-international",
+              userId,
+            },
+          ],
+        }
+      )
+    ).rejects.toThrow("LEARNING_SELECTION_MIGRATION_UNRESOLVED");
+  });
 });
 
 /** Builds one selectable signed program with a stable production-like key. */
@@ -251,6 +403,7 @@ async function insertLegacyProfile(
     canonicalSelection?: {
       interest: "assessment-prep" | "exam-prep" | "school-curriculum";
       programKey: string;
+      selectionUpdatedAt: number;
       updatedAt: number;
     };
     interest?: "assessment-prep" | "exam-prep" | "school-curriculum";
@@ -279,6 +432,7 @@ async function insertLegacyProfile(
       learningInterest: canonicalSelection?.interest,
       primaryProgramKey: canonicalSelection?.programKey,
       preferredCurriculumProgramKey,
+      selectionUpdatedAt: canonicalSelection?.selectionUpdatedAt,
       updatedAt: canonicalSelection?.updatedAt ?? NOW,
       userId,
     });
@@ -290,4 +444,6 @@ async function insertLegacyProfile(
     updatedAt: profileUpdatedAt,
     userId,
   });
+
+  return userId;
 }

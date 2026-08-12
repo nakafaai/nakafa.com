@@ -38,6 +38,7 @@ const tables = {
     primaryProgramKey: v.optional(v.string()),
     preferredCurriculumProgramKey: v.optional(v.string()),
     preferredTryoutCountryKey: v.optional(v.string()),
+    selectionUpdatedAt: v.optional(v.number()),
     updatedAt: v.number(),
     userId: v.id("users"),
   }).index("by_userId", ["userId"]),

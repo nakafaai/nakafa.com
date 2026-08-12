@@ -15,7 +15,6 @@ import {
 import {
   isLearningProgramSelectable,
   listSignedPrograms,
-  readSignedProgram,
 } from "@repo/backend/convex/learningPrograms/selection";
 import { programMatchesInterest } from "@repo/backend/convex/learningPrograms/spec";
 import {
@@ -32,8 +31,7 @@ const cutover = new Migrations(components.migrations, {
 });
 
 const CUTOVER_AUDIT_LIMIT = 1000;
-const DEFAULT_EXAM_PROGRAM_KEY = "snbt";
-const DEFAULT_SCHOOL_PROGRAM_KEY = "merdeka";
+const PREFERENCE_RECOVERY_LIMIT = 100;
 const learningSelectionAuditLimitCode = "LEARNING_SELECTION_AUDIT_LIMIT";
 const learningSelectionMigrationIoFailedCode =
   "LEARNING_SELECTION_MIGRATION_IO_FAILED";
@@ -82,13 +80,9 @@ const migrateLearningSelection = Effect.fn(
     catch: toLearningSelectionMigrationIoError,
     try: () => ctx.db.get(profile.programId),
   });
-  const canonicalSelection = yield* readCanonicalSelection(ctx, preference);
-  const legacySelection = yield* readLegacySelection(
-    ctx,
-    profile,
-    legacyProgram,
-    preference
-  );
+  const programs = yield* listSignedPrograms(ctx, "id");
+  const canonicalSelection = readCanonicalSelection(preference, programs);
+  const legacySelection = readLegacySelection(profile, legacyProgram, programs);
 
   if (
     canonicalSelection &&
@@ -117,6 +111,8 @@ const migrateLearningSelection = Effect.fn(
     now,
     programKey: legacySelection.program.key,
     programKind: legacySelection.program.kind,
+    replaceCurriculumPreference: false,
+    selectionUpdatedAt: profile.updatedAt,
     userId: profile.userId,
   });
 });
@@ -127,11 +123,91 @@ export const auditLearningSelections = internalQuery({
   returns: v.object({
     invalidSelections: v.number(),
     legacyProfiles: v.number(),
+    missingSelectionTimestamps: v.number(),
     migratedProfiles: v.number(),
     selectionRows: v.number(),
     unresolvedProfiles: v.number(),
   }),
   handler: (ctx) => runConvexProgram(auditLearningSelectionRows(ctx)),
+});
+
+/** Restores bounded curriculum preferences overwritten by the first cutover. */
+export const restoreCurriculumPreferences = internalMutation({
+  args: {
+    rows: v.array(
+      v.object({
+        expectedCurrentProgramKey: v.string(),
+        programKey: v.string(),
+        userId: v.id("users"),
+      })
+    ),
+  },
+  returns: v.object({ processed: v.number(), restored: v.number() }),
+  handler: (ctx, args) =>
+    runConvexProgram(restoreCurriculumPreferenceRows(ctx, args.rows)),
+});
+
+/** Restores exact backup values only while their live precondition still holds. */
+const restoreCurriculumPreferenceRows = Effect.fn(
+  "learningPrograms.restoreCurriculumPreferenceRows"
+)(function* (
+  ctx: MutationCtx,
+  rows: readonly {
+    expectedCurrentProgramKey: string;
+    programKey: string;
+    userId: Doc<"learningPreferences">["userId"];
+  }[]
+) {
+  const userIds = new Set(rows.map(({ userId }) => userId));
+
+  if (rows.length > PREFERENCE_RECOVERY_LIMIT || userIds.size !== rows.length) {
+    return yield* new LearningSelectionMigrationError({
+      code: learningSelectionAuditLimitCode,
+      message: "Curriculum preference recovery input is invalid or unbounded.",
+    });
+  }
+
+  const programs = yield* listSignedPrograms(ctx, "id");
+  const curriculumKeys = new Set<string>(
+    programs
+      .filter(({ kind }) => kind === "school-curriculum")
+      .map(({ key }) => key)
+  );
+  const now = yield* Clock.currentTimeMillis;
+  const restored = yield* Effect.reduce(rows, 0, (count, row) =>
+    Effect.gen(function* () {
+      const preference = yield* readLearningPreferenceByUserId(ctx, row.userId);
+
+      if (
+        !preference ||
+        preference.preferredCurriculumProgramKey !==
+          row.expectedCurrentProgramKey ||
+        !curriculumKeys.has(row.programKey)
+      ) {
+        return yield* new LearningSelectionMigrationError({
+          code: learningSelectionMigrationUnresolvedCode,
+          message: "A curriculum preference recovery precondition failed.",
+        });
+      }
+
+      if (preference.preferredCurriculumProgramKey === row.programKey) {
+        return count;
+      }
+
+      yield* Effect.tryPromise({
+        catch: toLearningSelectionMigrationIoError,
+        try: () =>
+          ctx.db.patch(preference._id, {
+            preferredCurriculumProgramKey: row.programKey,
+            updatedAt: now,
+          }),
+      });
+
+      return count + 1;
+    })
+  );
+
+  return { processed: rows.length, restored };
 });
 
 /** Audits the bounded legacy and canonical rows in one composed program. */
@@ -176,6 +252,9 @@ const auditLearningSelectionRows = Effect.fn(
       preference.learningInterest !== undefined &&
       preference.primaryProgramKey !== undefined
   );
+  const missingSelectionTimestamps = selectionRows.filter(
+    (preference) => preference.selectionUpdatedAt === undefined
+  ).length;
   const isValidSelection = (preference: Doc<"learningPreferences">) => {
     if (!(preference.learningInterest && preference.primaryProgramKey)) {
       return false;
@@ -191,7 +270,10 @@ const auditLearningSelectionRows = Effect.fn(
   };
   const unresolvedProfiles = profiles.filter((profile) => {
     const preference = preferencesByUserId.get(profile.userId);
-    return !(preference && isValidSelection(preference));
+    return !(
+      preference?.selectionUpdatedAt !== undefined &&
+      isValidSelection(preference)
+    );
   });
 
   return {
@@ -199,48 +281,38 @@ const auditLearningSelectionRows = Effect.fn(
       (preference) => !isValidSelection(preference)
     ).length,
     legacyProfiles: profiles.length,
+    missingSelectionTimestamps,
     migratedProfiles: profiles.length - unresolvedProfiles.length,
     selectionRows: selectionRows.length,
     unresolvedProfiles: unresolvedProfiles.length,
   };
 });
 
-/** Orders grounded legacy keys for one candidate interest. */
-function getCandidateProgramKeys({
-  interest,
-  legacyProgramKey,
-  preference,
-}: {
-  interest: LearningInterest;
-  legacyProgramKey?: string;
-  preference: Doc<"learningPreferences"> | null;
-}) {
-  const candidates =
-    interest === "school-curriculum"
-      ? [
-          preference?.preferredCurriculumProgramKey,
-          legacyProgramKey,
-          DEFAULT_SCHOOL_PROGRAM_KEY,
-        ]
-      : [legacyProgramKey, DEFAULT_EXAM_PROGRAM_KEY];
-
+/** Orders exact keys stored directly on the legacy selection boundary. */
+function getExactProgramKeys(
+  profile: Doc<"learningProfiles">,
+  legacyProgram: Doc<"learningPrograms"> | null
+) {
   return Array.from(
-    new Set(candidates.filter((candidate) => candidate !== undefined))
+    new Set(
+      [profile.programKey, legacyProgram?.key].filter(
+        (candidate) => candidate !== undefined
+      )
+    )
   );
 }
 
 /** Reads one already-valid canonical selection without rewriting it. */
-const readCanonicalSelection = Effect.fn(
-  "learningPrograms.readCanonicalSelection"
-)(function* (ctx: MutationCtx, preference: Doc<"learningPreferences"> | null) {
+function readCanonicalSelection(
+  preference: Doc<"learningPreferences"> | null,
+  programs: readonly LearningProgram[]
+) {
   if (!(preference?.learningInterest && preference.primaryProgramKey)) {
     return null;
   }
 
-  const program = yield* readSignedProgram(
-    ctx,
-    "id",
-    preference.primaryProgramKey
+  const program = programs.find(
+    (candidate) => candidate.key === preference.primaryProgramKey
   );
 
   if (
@@ -254,38 +326,48 @@ const readCanonicalSelection = Effect.fn(
   }
 
   return { interest: preference.learningInterest, program };
-});
+}
 
 /** Resolves every legacy interest shape against its selected program first. */
-const readLegacySelection = Effect.fn("learningPrograms.readLegacySelection")(
-  function* (
-    ctx: MutationCtx,
-    profile: Doc<"learningProfiles">,
-    legacyProgram: Doc<"learningPrograms"> | null,
-    preference: Doc<"learningPreferences"> | null
-  ) {
-    const interests = orderLegacyInterests(profile.interests, legacyProgram);
+function readLegacySelection(
+  profile: Doc<"learningProfiles">,
+  legacyProgram: Doc<"learningPrograms"> | null,
+  programs: readonly LearningProgram[]
+) {
+  const interests = orderLegacyInterests(profile.interests, legacyProgram);
+  const exactProgramKeys = getExactProgramKeys(profile, legacyProgram);
 
-    for (const interest of interests) {
-      const candidateKeys = getCandidateProgramKeys({
-        interest,
-        legacyProgramKey: legacyProgram?.key,
-        preference,
-      });
-      const program = yield* readFirstValidProgram(
-        ctx,
-        interest,
-        candidateKeys
-      );
+  for (const interest of interests) {
+    const exactProgram = programs.find(
+      (program) =>
+        exactProgramKeys.includes(program.key) &&
+        isLearningProgramSelectable(program) &&
+        programMatchesInterest(program.kind, interest)
+    );
 
-      if (program) {
-        return { interest, program };
-      }
+    if (exactProgram) {
+      return { interest, program: exactProgram };
     }
+  }
 
+  if (exactProgramKeys.length > 0) {
     return null;
   }
-);
+
+  for (const interest of interests) {
+    const candidates = programs.filter(
+      (program) =>
+        isLearningProgramSelectable(program) &&
+        programMatchesInterest(program.kind, interest)
+    );
+
+    if (candidates.length === 1) {
+      return { interest, program: candidates[0] };
+    }
+  }
+
+  return null;
+}
 
 /** Prioritizes interests compatible with the program the learner selected. */
 function orderLegacyInterests(
@@ -308,7 +390,7 @@ function orderLegacyInterests(
   ];
 }
 
-/** Keeps a matching selection or a canonical write newer than legacy state. */
+/** Keeps a matching timestamped selection or a newer canonical write. */
 function shouldPreserveCanonicalSelection({
   canonicalSelection,
   legacySelection,
@@ -326,33 +408,15 @@ function shouldPreserveCanonicalSelection({
 
   if (
     canonicalSelection.interest === legacySelection.interest &&
-    canonicalSelection.program.key === legacySelection.program.key
+    canonicalSelection.program.key === legacySelection.program.key &&
+    preference.selectionUpdatedAt !== undefined
   ) {
     return true;
   }
 
-  return preference.updatedAt > profile.updatedAt;
-}
-
-/** Returns the first candidate that exists and matches the signed catalog. */
-const readFirstValidProgram = Effect.fn(
-  "learningPrograms.readFirstValidProgram"
-)(function* (
-  ctx: MutationCtx,
-  interest: LearningInterest,
-  candidateKeys: readonly string[]
-) {
-  for (const candidateKey of candidateKeys) {
-    const program = yield* readSignedProgram(ctx, "id", candidateKey);
-
-    if (
-      program &&
-      isLearningProgramSelectable(program) &&
-      programMatchesInterest(program.kind, interest)
-    ) {
-      return program;
-    }
+  if (preference.selectionUpdatedAt === undefined) {
+    return false;
   }
 
-  return null;
-});
+  return preference.selectionUpdatedAt > profile.updatedAt;
+}

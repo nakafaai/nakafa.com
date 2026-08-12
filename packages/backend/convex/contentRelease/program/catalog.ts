@@ -1,5 +1,8 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { PROGRAM_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/program/limits";
 import { loadProgramOwner } from "@repo/backend/convex/contentRelease/program/owner";
@@ -10,18 +13,25 @@ import {
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect } from "effect";
 
-/** Reads the complete bounded program catalog and localized root routes. */
-export const readProgramCatalog = Effect.fn(
-  "contentRelease.readProgramCatalog"
-)(function* (ctx: QueryCtx, locale: Doc<"curriculumRoutes">["locale"]) {
+type ProgramCatalogCtx = MutationCtx | QueryCtx;
+
+/** Reads and authenticates the complete catalog with localized root closure. */
+export const readVerifiedProgramCatalog = Effect.fn(
+  "contentRelease.readVerifiedProgramCatalog"
+)(function* (
+  ctx: ProgramCatalogCtx,
+  locale: Doc<"curriculumRoutes">["locale"]
+) {
   const owner = yield* loadProgramOwner(ctx, locale);
   if (!(owner.managed && owner.selected)) {
     return {
       activeManifestHash: owner.selected?.active.manifestHash ?? null,
       activeReleaseId: owner.selected?.active.releaseId ?? null,
       managed: false,
-      programJson: [],
-      routeJson: [],
+      programs: [],
+      programRows: [],
+      routes: [],
+      routeRows: [],
       snapshotId: owner.selected?.snapshotId ?? null,
       sourceRevision: null,
     };
@@ -97,9 +107,28 @@ export const readProgramCatalog = Effect.fn(
     activeManifestHash: active.manifestHash,
     activeReleaseId: active.releaseId,
     managed: true,
-    programJson: programRows.map(({ rowJson }) => rowJson),
-    routeJson: routeRows.map(({ rowJson }) => rowJson),
+    programs,
+    programRows,
+    routes,
+    routeRows,
     snapshotId,
     sourceRevision: readSourceRevision(active),
+  };
+});
+
+/** Adapts the verified catalog to the public serialized query contract. */
+export const readProgramCatalog = Effect.fn(
+  "contentRelease.readProgramCatalog"
+)(function* (ctx: QueryCtx, locale: Doc<"curriculumRoutes">["locale"]) {
+  const catalog = yield* readVerifiedProgramCatalog(ctx, locale);
+
+  return {
+    activeManifestHash: catalog.activeManifestHash,
+    activeReleaseId: catalog.activeReleaseId,
+    managed: catalog.managed,
+    programJson: catalog.programRows.map(({ rowJson }) => rowJson),
+    routeJson: catalog.routeRows.map(({ rowJson }) => rowJson),
+    snapshotId: catalog.snapshotId,
+    sourceRevision: catalog.sourceRevision,
   };
 });

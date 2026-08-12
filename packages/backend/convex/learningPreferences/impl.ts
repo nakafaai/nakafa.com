@@ -159,6 +159,8 @@ export const saveLearningSelection = Effect.fn(
   now,
   programKey,
   programKind,
+  replaceCurriculumPreference,
+  selectionUpdatedAt = now,
   userId,
 }: {
   ctx: MutationCtx;
@@ -166,13 +168,18 @@ export const saveLearningSelection = Effect.fn(
   now: number;
   programKey: string;
   programKind: LearningProgramKind;
+  replaceCurriculumPreference: boolean;
+  selectionUpdatedAt?: number;
   userId: Id<"users">;
 }) {
   const current = yield* readLearningPreferenceByUserId(ctx, userId);
-  const curriculumPreference =
-    programKind === "school-curriculum"
-      ? { preferredCurriculumProgramKey: programKey }
-      : {};
+  const shouldSetCurriculumPreference =
+    programKind === "school-curriculum" &&
+    (replaceCurriculumPreference ||
+      current?.preferredCurriculumProgramKey === undefined);
+  const curriculumPreference = shouldSetCurriculumPreference
+    ? { preferredCurriculumProgramKey: programKey }
+    : {};
 
   if (!current) {
     return yield* Effect.tryPromise({
@@ -182,6 +189,7 @@ export const saveLearningSelection = Effect.fn(
           learningInterest: interest,
           primaryProgramKey: programKey,
           ...curriculumPreference,
+          selectionUpdatedAt,
           updatedAt: now,
           userId,
         }),
@@ -191,9 +199,22 @@ export const saveLearningSelection = Effect.fn(
   if (
     current.learningInterest === interest &&
     current.primaryProgramKey === programKey &&
-    (programKind !== "school-curriculum" ||
+    (!shouldSetCurriculumPreference ||
       current.preferredCurriculumProgramKey === programKey)
   ) {
+    if (current.selectionUpdatedAt !== undefined) {
+      return current._id;
+    }
+
+    yield* Effect.tryPromise({
+      catch: toLearningPreferencePersistenceError,
+      try: () =>
+        ctx.db.patch(current._id, {
+          selectionUpdatedAt,
+          updatedAt: now,
+        }),
+    });
+
     return current._id;
   }
 
@@ -204,6 +225,7 @@ export const saveLearningSelection = Effect.fn(
         learningInterest: interest,
         primaryProgramKey: programKey,
         ...curriculumPreference,
+        selectionUpdatedAt,
         updatedAt: now,
       }),
   });

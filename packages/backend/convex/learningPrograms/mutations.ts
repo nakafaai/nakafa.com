@@ -91,6 +91,7 @@ export const selectProgram = mutation({
           now,
           programKey: program.key,
           programKind: program.kind,
+          replaceCurriculumPreference: true,
           userId: user.appUser._id,
         });
 

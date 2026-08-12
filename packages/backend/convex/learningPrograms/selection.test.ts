@@ -104,6 +104,7 @@ describe("learningPrograms/selection", () => {
       learningInterest: "school-curriculum",
       preferredCurriculumProgramKey: "merdeka",
       primaryProgramKey: "merdeka",
+      selectionUpdatedAt: expect.any(Number),
     });
   });
 
@@ -190,6 +191,41 @@ describe("learningPrograms/selection", () => {
         locale: "id",
       })
     ).rejects.toThrow("CONTENT_RELEASE_MISSING");
+  });
+
+  it("rejects a signed program whose localized root is missing", async () => {
+    const target = convexTest(schema, convexModules);
+    const data = await Effect.runPromise(
+      makeProgramSnapshotData([
+        makeProgram(1, "merdeka", "school-curriculum", "partial"),
+      ])
+    );
+    await activateProgramSnapshot(target, data);
+    await target.mutation(async (ctx) => {
+      const root = await ctx.db
+        .query("curriculumRoutes")
+        .withIndex(
+          "by_snapshotId_and_locale_and_parentPath_and_order_and_path",
+          (index) =>
+            index
+              .eq("snapshotId", data.snapshotId)
+              .eq("locale", "id")
+              .eq("parentPath", undefined)
+        )
+        .unique();
+
+      if (!root) {
+        throw new Error("Expected one localized program root.");
+      }
+
+      await ctx.db.delete(root._id);
+    });
+
+    await expect(
+      target.query(api.learningPrograms.queries.listSelectablePrograms, {
+        locale: "id",
+      })
+    ).rejects.toThrow("CONTENT_RELEASE_INTEGRITY");
   });
 });
 
