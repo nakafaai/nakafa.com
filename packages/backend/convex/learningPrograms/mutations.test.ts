@@ -88,17 +88,16 @@ describe("learningPrograms/mutations", () => {
     );
 
     expect(persistedKeys).toEqual(Array.from({ length: 3 }, () => "merdeka"));
-    const preference = await t.query((ctx) =>
-      ctx.db
-        .query("learningPreferences")
-        .withIndex("by_userId", (query) => query.eq("userId", identity.userId))
-        .unique()
-    );
-    expect(preference).toMatchObject({
-      learningInterest: "school-curriculum",
-      primaryProgramKey: "merdeka",
-      preferredCurriculumProgramKey: "merdeka",
-    });
+    await expect(
+      t.query((ctx) =>
+        ctx.db
+          .query("learningPreferences")
+          .withIndex("by_userId", (query) =>
+            query.eq("userId", identity.userId)
+          )
+          .unique()
+      )
+    ).resolves.toBeNull();
   });
 
   it("keeps generated plan items on the active exact material route", async () => {

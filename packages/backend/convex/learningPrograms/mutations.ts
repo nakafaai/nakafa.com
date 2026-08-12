@@ -211,17 +211,6 @@ export const selectLearningProgram = mutation({
     );
     await ctx.db.patch(profileId, { activePlanId: planId, updatedAt: now });
 
-    await runConvexProgram(
-      saveLearningSelection({
-        ctx,
-        interest: primaryInterest,
-        now,
-        programKey: program.key,
-        programKind: program.kind,
-        userId: user.appUser._id,
-      })
-    );
-
     const planItems = await ctx.db
       .query("learningPlanItems")
       .withIndex("by_planId_and_position", (q) => q.eq("planId", planId))
