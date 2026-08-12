@@ -238,6 +238,7 @@ export function TryoutAttemptResults({
         value={{ score: visibleAttempt.score, status: visibleAttempt.status }}
       />
       <div className="flex min-h-9 w-full flex-wrap items-center gap-3">
+        {children}
         <TryoutAttemptHistory
           value={{
             attempts,
@@ -248,7 +249,6 @@ export function TryoutAttemptResults({
             status: history.status,
           }}
         />
-        {children}
       </div>
     </div>
   );
