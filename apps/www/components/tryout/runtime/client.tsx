@@ -1,17 +1,13 @@
 "use client";
 
-import type {
-  TryoutAnswerContent,
-  TryoutQuestionContent,
-} from "@/components/tryout/content/model";
+import type { TryoutQuestionContent } from "@/components/tryout/content/model";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
-import { TryoutRuntimeQuestion } from "@/components/tryout/runtime/question.client";
+import { TryoutActiveQuestion } from "@/components/tryout/runtime/question.client";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
 /** Cohesive render model for one loaded try-out runtime. */
 export interface TryoutRuntimeValue {
-  answers: readonly TryoutAnswerContent[];
   expired: boolean;
   questions: readonly TryoutQuestionContent[];
   returnHref: string;
@@ -20,20 +16,16 @@ export interface TryoutRuntimeValue {
 
 /** Renders the active Convex-backed try-out section runtime. */
 export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
-  const { answers, expired, questions, runtime } = value;
+  const { expired, questions, runtime } = value;
   const isActive = runtime.section.status === "in-progress";
   const questionBySnapshot = new Map(
     questions.map((question) => [getQuestionContentKey(question), question])
-  );
-  const answerBySnapshot = new Map(
-    answers.map((answer) => [getQuestionContentKey(answer), answer.answer])
   );
   const runtimeQuestions = runtime.questions.map((question) => {
     const key = getQuestionContentKey(question);
     const content = questionBySnapshot.get(key);
 
     return {
-      answer: answerBySnapshot.get(key) ?? null,
       content: content?.content ?? null,
       question,
     };
@@ -42,8 +34,7 @@ export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
   if (runtimeQuestions.some(({ content }) => content === null)) {
     return null;
   }
-
-  if (!isActive && runtimeQuestions.some(({ answer }) => answer === null)) {
+  if (!isActive) {
     return null;
   }
 
@@ -51,16 +42,12 @@ export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
     <section className="space-y-12">
       <TryoutRuntimeActions value={value} />
 
-      {runtimeQuestions.map(({ answer, content, question }) => (
-        <TryoutRuntimeQuestion
+      {runtimeQuestions.map(({ content, question }) => (
+        <TryoutActiveQuestion
+          content={content}
           key={question.placementId}
-          value={{
-            answer,
-            content,
-            locked: expired || !isActive,
-            question,
-            reviewMode: !isActive,
-          }}
+          locked={expired}
+          question={question}
         />
       ))}
     </section>

@@ -11,6 +11,7 @@ import {
   readTryoutSetPage,
 } from "@/components/tryout/catalog/server";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
+import { TryoutReview } from "@/components/tryout/review/server";
 import {
   createTryoutSetRestartTarget,
   selectTryoutFrozenPage,
@@ -132,7 +133,7 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   }
   const { page, restartTarget } = pages;
 
-  const content =
+  const signedContent =
     attemptPage?.content.kind === "signed"
       ? Effect.runPromise(
           loadSignedTryoutContent({
@@ -140,6 +141,11 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
             questions: attemptPage.content.questions,
           })
         )
+      : null;
+  const reviewRuntime =
+    attemptPage?.content.kind === "signed" &&
+    attemptPage.content.answers.length > 0
+      ? attemptPage.initialState.runtime
       : null;
 
   return (
@@ -153,11 +159,15 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
             }
           : null
       }
-      content={content}
+      content={reviewRuntime ? null : signedContent}
       page={page}
       restartTarget={restartTarget}
       route={{ country, exam, locale, set, track }}
-    />
+    >
+      {signedContent && reviewRuntime ? (
+        <TryoutReview content={signedContent} runtime={reviewRuntime} />
+      ) : null}
+    </TryoutSetPageClient>
   );
 }
 
