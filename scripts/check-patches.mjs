@@ -8,8 +8,9 @@ const BETTER_AUTH_COMPONENT_VERSION = "0.12.5";
 const BETTER_AUTH_COMPONENT_SPECIFIER = `^${BETTER_AUTH_COMPONENT_VERSION}`;
 const BETTER_AUTH_PATCH_PATH = "patches/@convex-dev__better-auth@0.12.5.patch";
 const BETTER_AUTH_PATCH_SHA256 =
-  "8c8d4c7c89624e285967f368f25b1ffd13185fbe2e5bdd5cb12ae12f71c80cb6";
-const BETTER_AUTH_UPSTREAM_FIX = "get-convex/better-auth#423";
+  "d04a5199bf6df27e192599c9ff0ffa22799129204a07f82104ad26f14fe36073";
+const BETTER_AUTH_UPSTREAM_FIX =
+  "get-convex/better-auth#423 plus the reported SSR getToken follow-up";
 const NEXT_VERSION = "16.3.0";
 const NEXT_PATCH_PATH = "patches/next.patch";
 const NEXT_PATCH_SHA256 =
