@@ -450,6 +450,7 @@ import type * as learningPreferences_program from "../learningPreferences/progra
 import type * as learningPreferences_queries from "../learningPreferences/queries.js";
 import type * as learningPrograms_catalog from "../learningPrograms/catalog.js";
 import type * as learningPrograms_cutover from "../learningPrograms/cutover.js";
+import type * as learningPrograms_cutover_authority from "../learningPrograms/cutover/authority.js";
 import type * as learningPrograms_cutover_guard from "../learningPrograms/cutover/guard.js";
 import type * as learningPrograms_impl from "../learningPrograms/impl.js";
 import type * as learningPrograms_mutations from "../learningPrograms/mutations.js";
@@ -1060,6 +1061,7 @@ declare const fullApi: ApiFromModules<{
   "learningPreferences/queries": typeof learningPreferences_queries;
   "learningPrograms/catalog": typeof learningPrograms_catalog;
   "learningPrograms/cutover": typeof learningPrograms_cutover;
+  "learningPrograms/cutover/authority": typeof learningPrograms_cutover_authority;
   "learningPrograms/cutover/guard": typeof learningPrograms_cutover_guard;
   "learningPrograms/impl": typeof learningPrograms_impl;
   "learningPrograms/mutations": typeof learningPrograms_mutations;

@@ -207,12 +207,11 @@ describe("learningPrograms/selection", () => {
     ).resolves.toBeNull();
   });
 
-  it("fails closed when a retained profile has a newer conflicting write", async () => {
+  it("fails closed when the first retained interest has a newer write", async () => {
     const target = createConvexTestWithBetterAuth();
     const data = await Effect.runPromise(
       makeProgramSnapshotData([
-        makeProgram(1, "merdeka", "school-curriculum", "partial"),
-        makeProgram(2, "snbt", "admission-exam", "partial"),
+        makeProgram(1, "snbt", "admission-exam", "partial"),
       ])
     );
     await activateProgramSnapshot(target, data);
@@ -238,15 +237,15 @@ describe("learningPrograms/selection", () => {
         versionLabel: "Legacy",
       });
       await ctx.db.insert("learningProfiles", {
-        interests: ["exam-prep"],
+        interests: ["exam-prep", "assessment-prep"],
         programId,
         programKey: "snbt",
         updatedAt: NOW + 1,
         userId: identity.userId,
       });
       await ctx.db.insert("learningPreferences", {
-        learningInterest: "school-curriculum",
-        primaryProgramKey: "merdeka",
+        learningInterest: "assessment-prep",
+        primaryProgramKey: "snbt",
         selectionUpdatedAt: NOW,
         updatedAt: NOW,
         userId: identity.userId,

@@ -48,21 +48,24 @@ export const getActiveSelection = query({
           ctx,
           user.appUser._id
         );
-        yield* requireLearningSelectionCutoverComplete(
+        const cutoverProgram = yield* requireLearningSelectionCutoverComplete(
           ctx,
           user.appUser._id,
-          preference
+          preference,
+          args.locale
         );
 
         if (!(preference?.learningInterest && preference.primaryProgramKey)) {
           return null;
         }
 
-        const program = yield* readSignedProgram(
-          ctx,
-          args.locale,
-          preference.primaryProgramKey
-        );
+        const program =
+          cutoverProgram ??
+          (yield* readSignedProgram(
+            ctx,
+            args.locale,
+            preference.primaryProgramKey
+          ));
 
         if (
           !(

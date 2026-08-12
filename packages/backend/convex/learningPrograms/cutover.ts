@@ -12,6 +12,7 @@ import {
   readLearningPreferenceByUserId,
   saveLearningSelection,
 } from "@repo/backend/convex/learningPreferences/impl";
+import { resolveLearningSelectionAuthority } from "@repo/backend/convex/learningPrograms/cutover/authority";
 import {
   isLearningProgramSelectable,
   listSignedPrograms,
@@ -21,7 +22,6 @@ import {
   getUnknownErrorMessage,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
-import type { LearningInterest } from "@repo/contents/_types/program/schema";
 import { v } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
 
@@ -38,23 +38,6 @@ const learningSelectionMigrationIoFailedCode =
   "LEARNING_SELECTION_MIGRATION_IO_FAILED";
 const learningSelectionMigrationUnresolvedCode =
   "LEARNING_SELECTION_MIGRATION_UNRESOLVED";
-
-interface ResolvedLearningSelection {
-  readonly interest: LearningInterest;
-  readonly program: LearningProgram;
-}
-
-type ExactProgramIdentity =
-  | { readonly _tag: "Conflict" }
-  | { readonly _tag: "Resolved"; readonly key: string | null };
-
-type LegacySelectionResolution =
-  | { readonly _tag: "Conflict" }
-  | { readonly _tag: "Missing" }
-  | {
-      readonly _tag: "Resolved";
-      readonly selection: ResolvedLearningSelection;
-    };
 
 /** Expected migration or audit failure at the legacy cutover boundary. */
 class LearningSelectionMigrationError extends Schema.TaggedError<LearningSelectionMigrationError>()(
@@ -95,57 +78,31 @@ const migrateLearningSelection = Effect.fn(
     try: () => ctx.db.get(profile.programId),
   });
   const programs = yield* listSignedPrograms(ctx, "id");
-  const canonicalSelection = readCanonicalSelection(preference, programs);
-  const legacyResolution = readLegacySelection(
-    profile,
+  const authority = resolveLearningSelectionAuthority({
     legacyProgram,
-    programs
-  );
-  const legacySelection =
-    legacyResolution._tag === "Resolved" ? legacyResolution.selection : null;
+    preference,
+    profile,
+    programs,
+  });
 
-  if (legacyResolution._tag === "Conflict") {
-    return yield* new LearningSelectionMigrationError({
-      code: learningSelectionMigrationUnresolvedCode,
-      message: "A legacy learning profile has conflicting program identities.",
-    });
-  }
-
-  const selectionAuthority =
-    canonicalSelection && preference
-      ? getSelectionAuthority({
-          canonicalSelection,
-          legacySelection,
-          preference,
-          profile,
-        })
-      : "legacy";
-
-  if (selectionAuthority === "canonical") {
+  if (authority._tag === "Canonical") {
     return;
   }
 
-  if (selectionAuthority === "unresolved") {
+  if (authority._tag === "Unresolved") {
     return yield* new LearningSelectionMigrationError({
       code: learningSelectionMigrationUnresolvedCode,
-      message: "Canonical and legacy selections have ambiguous write order.",
-    });
-  }
-
-  if (!legacySelection) {
-    return yield* new LearningSelectionMigrationError({
-      code: learningSelectionMigrationUnresolvedCode,
-      message: "A legacy learning profile has no valid signed program.",
+      message: `Learning selection authority is unresolved: ${authority.reason}.`,
     });
   }
 
   const now = yield* Clock.currentTimeMillis;
   yield* saveLearningSelection({
     ctx,
-    interest: legacySelection.interest,
+    interest: authority.selection.interest,
     now,
-    programKey: legacySelection.program.key,
-    programKind: legacySelection.program.kind,
+    programKey: authority.selection.program.key,
+    programKind: authority.selection.program.kind,
     replaceCurriculumPreference: false,
     selectionUpdatedAt: profile.updatedAt,
     userId: profile.userId,
@@ -268,123 +225,6 @@ const auditLearningSelectionRows = Effect.fn(
   };
 });
 
-/** Resolves one exact retained identity or rejects conflicting legacy keys. */
-function readExactProgramKey(
-  profile: Doc<"learningProfiles">,
-  legacyProgram: Doc<"learningPrograms"> | null
-): ExactProgramIdentity {
-  if (
-    profile.programKey !== undefined &&
-    legacyProgram !== null &&
-    profile.programKey !== legacyProgram.key
-  ) {
-    return { _tag: "Conflict" };
-  }
-
-  return {
-    _tag: "Resolved",
-    key: profile.programKey ?? legacyProgram?.key ?? null,
-  };
-}
-
-/** Reads one already-valid canonical selection without rewriting it. */
-function readCanonicalSelection(
-  preference: Doc<"learningPreferences"> | null,
-  programs: readonly LearningProgram[]
-) {
-  if (!(preference?.learningInterest && preference.primaryProgramKey)) {
-    return null;
-  }
-
-  const program = programs.find(
-    (candidate) => candidate.key === preference.primaryProgramKey
-  );
-
-  if (
-    !(
-      program &&
-      isLearningProgramSelectable(program) &&
-      programMatchesInterest(program.kind, preference.learningInterest)
-    )
-  ) {
-    return null;
-  }
-
-  return { interest: preference.learningInterest, program };
-}
-
-/** Resolves every legacy interest shape against its selected program first. */
-function readLegacySelection(
-  profile: Doc<"learningProfiles">,
-  legacyProgram: Doc<"learningPrograms"> | null,
-  programs: readonly LearningProgram[]
-): LegacySelectionResolution {
-  const interests = orderLegacyInterests(profile.interests, legacyProgram);
-  const exactIdentity = readExactProgramKey(profile, legacyProgram);
-
-  if (exactIdentity._tag === "Conflict") {
-    return exactIdentity;
-  }
-
-  if (exactIdentity.key !== null) {
-    for (const interest of interests) {
-      const exactProgram = programs.find(
-        (program) =>
-          program.key === exactIdentity.key &&
-          isLearningProgramSelectable(program) &&
-          programMatchesInterest(program.kind, interest)
-      );
-
-      if (exactProgram) {
-        return {
-          _tag: "Resolved",
-          selection: { interest, program: exactProgram },
-        };
-      }
-    }
-
-    return { _tag: "Missing" };
-  }
-
-  for (const interest of interests) {
-    const candidates = programs.filter(
-      (program) =>
-        isLearningProgramSelectable(program) &&
-        programMatchesInterest(program.kind, interest)
-    );
-
-    if (candidates.length === 1) {
-      return {
-        _tag: "Resolved",
-        selection: { interest, program: candidates[0] },
-      };
-    }
-  }
-
-  return { _tag: "Missing" };
-}
-
-/** Prioritizes interests compatible with the program the learner selected. */
-function orderLegacyInterests(
-  interests: readonly LearningInterest[],
-  legacyProgram: Doc<"learningPrograms"> | null
-) {
-  const uniqueInterests = Array.from(new Set(interests));
-
-  if (!legacyProgram) {
-    return uniqueInterests;
-  }
-
-  return [
-    ...uniqueInterests.filter((interest) =>
-      programMatchesInterest(legacyProgram.kind, interest)
-    ),
-    ...uniqueInterests.filter(
-      (interest) => !programMatchesInterest(legacyProgram.kind, interest)
-    ),
-  ];
-}
-
 /** Proves the canonical row is at least as current as its legacy source. */
 function isLearningSelectionMigrated({
   legacyProgram,
@@ -397,76 +237,12 @@ function isLearningSelectionMigrated({
   profile: Doc<"learningProfiles">;
   programs: readonly LearningProgram[];
 }) {
-  if (preference?.selectionUpdatedAt === undefined) {
-    return false;
-  }
-
-  const canonicalSelection = readCanonicalSelection(preference, programs);
-  if (!canonicalSelection) {
-    return false;
-  }
-
-  const legacyResolution: LegacySelectionResolution = readLegacySelection(
-    profile,
-    legacyProgram,
-    programs
-  );
-
-  if (legacyResolution._tag === "Conflict") {
-    return false;
-  }
-
-  const legacySelection =
-    legacyResolution._tag === "Resolved" ? legacyResolution.selection : null;
-
   return (
-    getSelectionAuthority({
-      canonicalSelection,
-      legacySelection,
+    resolveLearningSelectionAuthority({
+      legacyProgram,
       preference,
       profile,
-    }) === "canonical"
+      programs,
+    })._tag === "Canonical"
   );
-}
-
-/** Selects the provably newer write and rejects equal conflicting timestamps. */
-function getSelectionAuthority({
-  canonicalSelection,
-  legacySelection,
-  preference,
-  profile,
-}: {
-  canonicalSelection: ResolvedLearningSelection;
-  legacySelection: ResolvedLearningSelection | null;
-  preference: Doc<"learningPreferences">;
-  profile: Doc<"learningProfiles">;
-}) {
-  if (!legacySelection) {
-    const canonicalIsCurrent =
-      preference.selectionUpdatedAt !== undefined &&
-      preference.selectionUpdatedAt >= profile.updatedAt;
-    return canonicalIsCurrent ? "canonical" : "unresolved";
-  }
-
-  if (
-    canonicalSelection.interest === legacySelection.interest &&
-    canonicalSelection.program.key === legacySelection.program.key &&
-    preference.selectionUpdatedAt !== undefined
-  ) {
-    return "canonical";
-  }
-
-  if (preference.selectionUpdatedAt === undefined) {
-    return "legacy";
-  }
-
-  if (preference.selectionUpdatedAt > profile.updatedAt) {
-    return "canonical";
-  }
-
-  if (preference.selectionUpdatedAt < profile.updatedAt) {
-    return "legacy";
-  }
-
-  return "unresolved";
 }

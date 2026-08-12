@@ -1,6 +1,9 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { resolveLearningSelectionAuthority } from "@repo/backend/convex/learningPrograms/cutover/authority";
+import { listSignedPrograms } from "@repo/backend/convex/learningPrograms/selection";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { Effect, Schema } from "effect";
 
 const cutoverReadFailedCode = "LEARNING_SELECTION_CUTOVER_READ_FAILED";
@@ -29,7 +32,8 @@ export const requireLearningSelectionCutoverComplete = Effect.fn(
 )(function* (
   ctx: QueryCtx,
   userId: Id<"users">,
-  preference: Doc<"learningPreferences"> | null
+  preference: Doc<"learningPreferences"> | null,
+  locale: Locale
 ) {
   const profile = yield* Effect.tryPromise({
     catch: (error) =>
@@ -45,7 +49,7 @@ export const requireLearningSelectionCutoverComplete = Effect.fn(
   });
 
   if (!profile) {
-    return;
+    return null;
   }
 
   if (
@@ -68,40 +72,19 @@ export const requireLearningSelectionCutoverComplete = Effect.fn(
       }),
     try: () => ctx.db.get(profile.programId),
   });
-  const profileProgramKey = profile.programKey;
-  const storedProgramKey = legacyProgram?.key;
+  const programs = yield* listSignedPrograms(ctx, locale);
+  const authority = resolveLearningSelectionAuthority({
+    legacyProgram,
+    preference,
+    profile,
+    programs,
+  });
 
-  if (
-    profileProgramKey !== undefined &&
-    storedProgramKey !== undefined &&
-    profileProgramKey !== storedProgramKey
-  ) {
-    return yield* cutoverRequired(
-      "A retained learning profile has conflicting program identities."
-    );
-  }
-
-  const legacyProgramKey = profileProgramKey ?? storedProgramKey;
-  const sameSelection =
-    legacyProgramKey === preference.primaryProgramKey &&
-    profile.interests.includes(preference.learningInterest);
-
-  if (sameSelection) {
-    return;
-  }
-
-  if (
-    legacyProgramKey === undefined &&
-    preference.selectionUpdatedAt >= profile.updatedAt
-  ) {
-    return;
-  }
-
-  if (preference.selectionUpdatedAt > profile.updatedAt) {
-    return;
+  if (authority._tag === "Canonical") {
+    return authority.selection.program;
   }
 
   return yield* cutoverRequired(
-    "A retained learning profile is not older than the canonical selection."
+    "A retained learning profile is not proven older than the canonical selection."
   );
 });
