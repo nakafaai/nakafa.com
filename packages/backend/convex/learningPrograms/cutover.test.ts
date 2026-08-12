@@ -74,6 +74,32 @@ describe("learningPrograms/cutover", () => {
         programId: orphanAssessment,
         suffix: "orphan-assessment",
       });
+      await insertLegacyProfile(ctx, {
+        interests: ["exam-prep", "school-curriculum"],
+        programId: currentSchool,
+        suffix: "multi-interest-school",
+      });
+      await insertLegacyProfile(ctx, {
+        canonicalSelection: {
+          interest: "assessment-prep",
+          programKey: "snbt",
+          updatedAt: NOW + 1,
+        },
+        interest: "exam-prep",
+        programId: currentExam,
+        suffix: "newer-canonical",
+      });
+      await insertLegacyProfile(ctx, {
+        canonicalSelection: {
+          interest: "exam-prep",
+          programKey: "snbt",
+          updatedAt: NOW + 1,
+        },
+        interest: "school-curriculum",
+        profileUpdatedAt: NOW + 2,
+        programId: currentSchool,
+        suffix: "newer-legacy",
+      });
     });
 
     await expect(
@@ -81,15 +107,15 @@ describe("learningPrograms/cutover", () => {
         dryRun: true,
         reset: true,
       })
-    ).resolves.toMatchObject({ processed: 4 });
+    ).resolves.toMatchObject({ processed: 7 });
     await expect(
       t.query(internal.learningPrograms.cutover.auditLearningSelections, {})
     ).resolves.toEqual({
       invalidSelections: 0,
-      legacyProfiles: 4,
-      migratedProfiles: 0,
-      selectionRows: 0,
-      unresolvedProfiles: 4,
+      legacyProfiles: 7,
+      migratedProfiles: 2,
+      selectionRows: 2,
+      unresolvedProfiles: 5,
     });
 
     await t.action((ctx) =>
@@ -105,31 +131,67 @@ describe("learningPrograms/cutover", () => {
       t.query(internal.learningPrograms.cutover.auditLearningSelections, {})
     ).resolves.toEqual({
       invalidSelections: 0,
-      legacyProfiles: 4,
-      migratedProfiles: 4,
-      selectionRows: 4,
+      legacyProfiles: 7,
+      migratedProfiles: 7,
+      selectionRows: 7,
       unresolvedProfiles: 0,
     });
-    const selections = await t.query((ctx) =>
-      ctx.db.query("learningPreferences").collect()
-    );
+    const selections = await t.query(async (ctx) => {
+      const preferences = await ctx.db.query("learningPreferences").collect();
+
+      return await Promise.all(
+        preferences.map(async (preference) => {
+          const user = await ctx.db.get(preference.userId);
+
+          return {
+            learningInterest: preference.learningInterest,
+            primaryProgramKey: preference.primaryProgramKey,
+            user: user?.name,
+          };
+        })
+      );
+    });
 
     expect(
-      selections.map(({ learningInterest, primaryProgramKey }) => ({
-        learningInterest,
-        primaryProgramKey,
-      }))
+      selections.sort(
+        (left, right) => left.user?.localeCompare(right.user ?? "") ?? 0
+      )
     ).toEqual([
       {
-        learningInterest: "school-curriculum",
-        primaryProgramKey: "merdeka",
+        learningInterest: "exam-prep",
+        primaryProgramKey: "snbt",
+        user: "current-exam",
       },
       {
         learningInterest: "school-curriculum",
         primaryProgramKey: "merdeka",
+        user: "current-school",
       },
-      { learningInterest: "exam-prep", primaryProgramKey: "snbt" },
-      { learningInterest: "assessment-prep", primaryProgramKey: "snbt" },
+      {
+        learningInterest: "school-curriculum",
+        primaryProgramKey: "merdeka",
+        user: "multi-interest-school",
+      },
+      {
+        learningInterest: "assessment-prep",
+        primaryProgramKey: "snbt",
+        user: "newer-canonical",
+      },
+      {
+        learningInterest: "school-curriculum",
+        primaryProgramKey: "merdeka",
+        user: "newer-legacy",
+      },
+      {
+        learningInterest: "assessment-prep",
+        primaryProgramKey: "snbt",
+        user: "orphan-assessment",
+      },
+      {
+        learningInterest: "school-curriculum",
+        primaryProgramKey: "merdeka",
+        user: "orphan-school",
+      },
     ]);
   });
 });
@@ -178,13 +240,27 @@ async function insertLegacyProgram(
 async function insertLegacyProfile(
   ctx: MutationCtx,
   {
+    canonicalSelection,
     interest,
+    interests,
     preferredCurriculumProgramKey,
+    profileUpdatedAt = NOW,
     programId,
     suffix,
   }: {
-    interest: "assessment-prep" | "exam-prep" | "school-curriculum";
+    canonicalSelection?: {
+      interest: "assessment-prep" | "exam-prep" | "school-curriculum";
+      programKey: string;
+      updatedAt: number;
+    };
+    interest?: "assessment-prep" | "exam-prep" | "school-curriculum";
+    interests?: readonly (
+      | "assessment-prep"
+      | "exam-prep"
+      | "school-curriculum"
+    )[];
     preferredCurriculumProgramKey?: string;
+    profileUpdatedAt?: number;
     programId: Awaited<ReturnType<typeof insertLegacyProgram>>;
     suffix: string;
   }
@@ -198,18 +274,20 @@ async function insertLegacyProfile(
     plan: "free",
   });
 
-  if (preferredCurriculumProgramKey) {
+  if (preferredCurriculumProgramKey || canonicalSelection) {
     await ctx.db.insert("learningPreferences", {
+      learningInterest: canonicalSelection?.interest,
+      primaryProgramKey: canonicalSelection?.programKey,
       preferredCurriculumProgramKey,
-      updatedAt: NOW,
+      updatedAt: canonicalSelection?.updatedAt ?? NOW,
       userId,
     });
   }
 
   await ctx.db.insert("learningProfiles", {
-    interests: [interest],
+    interests: [...(interests ?? (interest ? [interest] : []))],
     programId,
-    updatedAt: NOW,
+    updatedAt: profileUpdatedAt,
     userId,
   });
 }

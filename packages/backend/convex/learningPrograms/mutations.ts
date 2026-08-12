@@ -1,8 +1,5 @@
 import { mutation } from "@repo/backend/convex/functions";
-import {
-  upsertLearningSelection,
-  upsertPreferredCurriculumProgram,
-} from "@repo/backend/convex/learningPreferences/impl";
+import { upsertLearningSelection } from "@repo/backend/convex/learningPreferences/impl";
 import {
   createInitialLearningPlanItems,
   getLearningProgramByKey,
@@ -144,7 +141,9 @@ export const selectLearningProgram = mutation({
       });
     }
 
-    if (!programMatchesInterests(program.kind, interests)) {
+    const primaryInterest = getPrimaryInterest(program.kind, interests);
+
+    if (!primaryInterest) {
       throw new ConvexError({
         code: "LEARNING_PROGRAM_INTEREST_MISMATCH",
         message: "Selected program does not match the selected interests.",
@@ -216,14 +215,14 @@ export const selectLearningProgram = mutation({
     );
     await ctx.db.patch(profileId, { activePlanId: planId, updatedAt: now });
 
-    if (program.kind === "school-curriculum") {
-      await upsertPreferredCurriculumProgram({
-        ctx,
-        now,
-        programKey: program.key,
-        userId: user.appUser._id,
-      });
-    }
+    await upsertLearningSelection({
+      ctx,
+      interest: primaryInterest,
+      now,
+      programKey: program.key,
+      programKind: program.kind,
+      userId: user.appUser._id,
+    });
 
     const planItems = await ctx.db
       .query("learningPlanItems")
@@ -252,12 +251,12 @@ function getUniqueInterests(interests: readonly LearningInterest[]) {
   return Array.from(new Set(interests));
 }
 
-/** Checks that the selected primary program belongs to at least one interest. */
-function programMatchesInterests(
+/** Resolves the first selected interest owned by the primary program. */
+function getPrimaryInterest(
   programKind: LearningProgramKind,
   interests: readonly LearningInterest[]
 ) {
-  return interests.some((interest) =>
+  return interests.find((interest) =>
     LEARNING_INTEREST_PROGRAM_KIND_MATCHES[interest].some(
       (kind) => kind === programKind
     )

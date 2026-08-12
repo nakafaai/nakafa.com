@@ -30,17 +30,27 @@ const DEFAULT_SCHOOL_PROGRAM_KEY = "merdeka";
 export const migrateLearningSelections = cutover.define({
   table: "learningProfiles",
   migrateOne: async (ctx, profile) => {
-    const interest = readSingleInterest(profile);
     const preference = await getLearningPreferenceByUserId(ctx, profile.userId);
     const legacyProgram = await ctx.db.get(profile.programId);
-    const candidateKeys = getCandidateProgramKeys({
-      interest,
-      legacyProgramKey: legacyProgram?.key,
-      preference,
-    });
-    const program = await readFirstValidProgram(ctx, interest, candidateKeys);
+    const [canonicalSelection, legacySelection] = await Promise.all([
+      readCanonicalSelection(ctx, preference),
+      readLegacySelection(ctx, profile, legacyProgram, preference),
+    ]);
 
-    if (!program) {
+    if (
+      canonicalSelection &&
+      preference &&
+      shouldPreserveCanonicalSelection({
+        canonicalSelection,
+        legacySelection,
+        preference,
+        profile,
+      })
+    ) {
+      return;
+    }
+
+    if (!legacySelection) {
       throw new ConvexError({
         code: "LEARNING_SELECTION_MIGRATION_UNRESOLVED",
         message: "A legacy learning profile has no valid signed program.",
@@ -49,10 +59,10 @@ export const migrateLearningSelections = cutover.define({
 
     await upsertLearningSelection({
       ctx,
-      interest,
+      interest: legacySelection.interest,
       now: Date.now(),
-      programKey: program.key,
-      programKind: program.kind,
+      programKey: legacySelection.program.key,
+      programKind: legacySelection.program.kind,
       userId: profile.userId,
     });
   },
@@ -126,21 +136,7 @@ export const auditLearningSelections = internalQuery({
   },
 });
 
-/** Requires a legacy profile to contain exactly one durable interest. */
-function readSingleInterest(profile: Doc<"learningProfiles">) {
-  const [interest] = profile.interests;
-
-  if (profile.interests.length !== 1 || !interest) {
-    throw new ConvexError({
-      code: "LEARNING_SELECTION_MIGRATION_INTERESTS",
-      message: "A legacy learning profile must have exactly one interest.",
-    });
-  }
-
-  return interest;
-}
-
-/** Orders grounded candidates so newer explicit preferences win. */
+/** Orders grounded legacy keys for one candidate interest. */
 function getCandidateProgramKeys({
   interest,
   legacyProgramKey,
@@ -150,21 +146,118 @@ function getCandidateProgramKeys({
   legacyProgramKey?: string;
   preference: Doc<"learningPreferences"> | null;
 }) {
-  const candidates = [preference?.primaryProgramKey];
-
-  if (interest === "school-curriculum") {
-    candidates.push(
-      preference?.preferredCurriculumProgramKey,
-      legacyProgramKey,
-      DEFAULT_SCHOOL_PROGRAM_KEY
-    );
-  } else {
-    candidates.push(legacyProgramKey, DEFAULT_EXAM_PROGRAM_KEY);
-  }
+  const candidates =
+    interest === "school-curriculum"
+      ? [
+          preference?.preferredCurriculumProgramKey,
+          legacyProgramKey,
+          DEFAULT_SCHOOL_PROGRAM_KEY,
+        ]
+      : [legacyProgramKey, DEFAULT_EXAM_PROGRAM_KEY];
 
   return Array.from(
     new Set(candidates.filter((candidate) => candidate !== undefined))
   );
+}
+
+/** Reads one already-valid canonical selection without rewriting it. */
+async function readCanonicalSelection(
+  ctx: Parameters<typeof getLearningPreferenceByUserId>[0],
+  preference: Doc<"learningPreferences"> | null
+) {
+  if (!(preference?.learningInterest && preference.primaryProgramKey)) {
+    return null;
+  }
+
+  const program = await runConvexProgram(
+    readSignedProgram(ctx, "id", preference.primaryProgramKey)
+  );
+
+  if (
+    !(
+      program &&
+      isLearningProgramSelectable(program) &&
+      programMatchesInterest(program.kind, preference.learningInterest)
+    )
+  ) {
+    return null;
+  }
+
+  return { interest: preference.learningInterest, program };
+}
+
+/** Resolves every legacy interest shape against its selected program first. */
+async function readLegacySelection(
+  ctx: Parameters<typeof getLearningPreferenceByUserId>[0],
+  profile: Doc<"learningProfiles">,
+  legacyProgram: Doc<"learningPrograms"> | null,
+  preference: Doc<"learningPreferences"> | null
+) {
+  const interests = orderLegacyInterests(profile.interests, legacyProgram);
+
+  for (const interest of interests) {
+    const candidateKeys = getCandidateProgramKeys({
+      interest,
+      legacyProgramKey: legacyProgram?.key,
+      preference,
+    });
+    const program = await readFirstValidProgram(ctx, interest, candidateKeys);
+
+    if (program) {
+      return { interest, program };
+    }
+  }
+
+  return null;
+}
+
+/** Prioritizes interests compatible with the program the learner selected. */
+function orderLegacyInterests(
+  interests: readonly LearningInterest[],
+  legacyProgram: Doc<"learningPrograms"> | null
+) {
+  const uniqueInterests = Array.from(new Set(interests));
+
+  if (!legacyProgram) {
+    return uniqueInterests;
+  }
+
+  return [
+    ...uniqueInterests.filter((interest) =>
+      programMatchesInterest(legacyProgram.kind, interest)
+    ),
+    ...uniqueInterests.filter(
+      (interest) => !programMatchesInterest(legacyProgram.kind, interest)
+    ),
+  ];
+}
+
+/** Keeps a matching selection or a canonical write newer than legacy state. */
+function shouldPreserveCanonicalSelection({
+  canonicalSelection,
+  legacySelection,
+  preference,
+  profile,
+}: {
+  canonicalSelection: NonNullable<
+    Awaited<ReturnType<typeof readCanonicalSelection>>
+  >;
+  legacySelection: Awaited<ReturnType<typeof readLegacySelection>>;
+  preference: Doc<"learningPreferences">;
+  profile: Doc<"learningProfiles">;
+}) {
+  if (!legacySelection) {
+    return true;
+  }
+
+  if (
+    canonicalSelection.interest === legacySelection.interest &&
+    canonicalSelection.program.key === legacySelection.program.key
+  ) {
+    return true;
+  }
+
+  return preference.updatedAt > profile.updatedAt;
 }
 
 /** Returns the first candidate that exists and matches the signed catalog. */

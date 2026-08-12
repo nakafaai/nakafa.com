@@ -95,6 +95,8 @@ describe("learningPrograms/mutations", () => {
         .unique()
     );
     expect(preference).toMatchObject({
+      learningInterest: "school-curriculum",
+      primaryProgramKey: "merdeka",
       preferredCurriculumProgramKey: "merdeka",
     });
   });
