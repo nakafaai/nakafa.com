@@ -1,0 +1,73 @@
+diff --git a/dist/nextjs/index.js b/dist/nextjs/index.js
+index e9d357fac1f073aa61c0cdeac36fd4ebb00fe583..d235e3bbf785e67827ca388255c6e5d416fa2760 100644
+--- a/dist/nextjs/index.js
++++ b/dist/nextjs/index.js
+@@ -31,9 +31,12 @@ const handler = async (request, siteUrl) => {
+     headers.delete("transfer-encoding");
+     headers.delete("content-length");
+     headers.delete("connection");
++    // Convex's edge resolves the deployment from `x-forwarded-host`, so an app
++    // domain here routes to nothing; the component restores it from
++    // `x-better-auth-forwarded-host` instead.
++    headers.delete("x-forwarded-host");
+     headers.set("accept-encoding", "application/json");
+     headers.set("host", new URL(siteUrl).host);
+-    headers.set("x-forwarded-host", requestUrl.host);
+     headers.set("x-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
+     headers.set("x-better-auth-forwarded-host", requestUrl.host);
+     headers.set("x-better-auth-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
+diff --git a/src/nextjs/index.test.ts b/src/nextjs/index.test.ts
+index 325617029d91d0646973114e413b3d1ce8559bfd..21e705027b8c4e3b04dfa814c0bd62350435ccde 100644
+--- a/src/nextjs/index.test.ts
++++ b/src/nextjs/index.test.ts
+@@ -69,12 +69,30 @@ describe("convexBetterAuthNextJs handler", () => {
+     await handler.POST(request);
+     const headers = headersOf(fetchSpy);
+     expect(headers.get("host")).toBe(new URL(SITE_URL).host);
+-    expect(headers.get("x-forwarded-host")).toBe("app.example.com");
++    expect(headers.get("x-forwarded-host")).toBeNull();
+     expect(headers.get("x-forwarded-proto")).toBe("https");
+     expect(headers.get("x-better-auth-forwarded-host")).toBe("app.example.com");
+     expect(headers.get("x-better-auth-forwarded-proto")).toBe("https");
+   });
+-
++
++  it("drops an inbound x-forwarded-host instead of forwarding it", async () => {
++    const { handler, fetchSpy } = setup();
++    const request = new Request(
++      "https://app.example.com/api/auth/sign-in/email",
++      {
++        method: "POST",
++        body: "{}",
++        // Deliberately different from the request URL host, so the
++        // assertions below show where each value comes from.
++        headers: { "x-forwarded-host": "proxy.internal.example.com" },
++      }
++    );
++    await handler.POST(request);
++    const headers = headersOf(fetchSpy);
++    expect(headers.get("x-forwarded-host")).toBeNull();
++    expect(headers.get("x-better-auth-forwarded-host")).toBe("app.example.com");
++  });
++
+   it("buffers POST body and forwards as ArrayBuffer", async () => {
+     const { handler, fetchSpy } = setup();
+     const body = JSON.stringify({ email: "test@example.com" });
+diff --git a/src/nextjs/index.ts b/src/nextjs/index.ts
+index 1eef064afd063e134be1dabc362979c88f297f45..3742097ec2f5e1ee2904a7c47bbfd249dbd4ee5c 100644
+--- a/src/nextjs/index.ts
++++ b/src/nextjs/index.ts
+@@ -49,9 +49,12 @@ const handler = async (request: Request, siteUrl: string) => {
+   headers.delete("transfer-encoding");
+   headers.delete("content-length");
+   headers.delete("connection");
++  // Convex's edge resolves the deployment from `x-forwarded-host`, so an app
++  // domain here routes to nothing; the component restores it from
++  // `x-better-auth-forwarded-host` instead.
++  headers.delete("x-forwarded-host");
+   headers.set("accept-encoding", "application/json");
+   headers.set("host", new URL(siteUrl).host);
+-  headers.set("x-forwarded-host", requestUrl.host);
+   headers.set("x-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
+   headers.set("x-better-auth-forwarded-host", requestUrl.host);
+   headers.set("x-better-auth-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));

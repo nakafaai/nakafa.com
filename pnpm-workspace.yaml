@@ -32,10 +32,13 @@ overrides:
   "posthog-js@1.414.0>dompurify": "^3.4.13"
   "read-yaml-file@1.1.0>js-yaml": "3.15.1"
 
-# Backports Next.js #96553 while npm latest remains stable 16.3.0.
-# Source maps are disabled for this patched module until that fix reaches stable.
-# Remove after a stable release contains commit 5f735c1ac56b93bc28cd3af86961c47c838fb077.
 patchedDependencies:
+  # Emergency backport of get-convex/better-auth#423 while npm latest is 0.12.5.
+  # Remove with the first stable release containing upstream PR #423.
+  '@convex-dev/better-auth@0.12.5': patches/@convex-dev__better-auth@0.12.5.patch
+  # Backports Next.js #96553 while npm latest remains stable 16.3.0.
+  # Source maps are disabled for this patched module until that fix reaches stable.
+  # Remove after a stable release contains commit 5f735c1ac56b93bc28cd3af86961c47c838fb077.
   next@16.3.0: patches/next.patch
 
 allowBuilds:
