@@ -109,6 +109,48 @@ describe("learningPrograms/selection", () => {
     });
   });
 
+  it("fails closed when a retained profile has no canonical selection", async () => {
+    const target = createConvexTestWithBetterAuth();
+    const identity = await target.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+    await target.mutation(async (ctx) => {
+      const programId = await ctx.db.insert("learningPrograms", {
+        defaultCoverageStatus: "partial",
+        displayOrder: 1,
+        iconKey: "school",
+        key: "merdeka",
+        kind: "school-curriculum",
+        navigation: { levels: ["track"], model: "curriculum-tree" },
+        providerKind: "nakafa",
+        providerName: "Retained cutover fixture",
+        syncedAt: NOW,
+        translations: {
+          en: { publicSlug: "merdeka", title: "Merdeka" },
+          id: { publicSlug: "merdeka", title: "Merdeka" },
+        },
+        updatedAt: NOW,
+        versionLabel: "Legacy",
+      });
+      await ctx.db.insert("learningProfiles", {
+        interests: ["school-curriculum"],
+        programId,
+        updatedAt: NOW,
+        userId: identity.userId,
+      });
+    });
+    const authed = target.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await expect(
+      authed.query(api.learningPrograms.queries.getActiveSelection, {
+        locale: "id",
+      })
+    ).rejects.toThrow("LEARNING_SELECTION_CUTOVER_REQUIRED");
+  });
+
   it("refreshes the timestamp when a user explicitly reselects a program", async () => {
     const target = createConvexTestWithBetterAuth();
     const data = await Effect.runPromise(

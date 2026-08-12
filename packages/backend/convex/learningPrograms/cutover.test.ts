@@ -14,22 +14,22 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program-snapshot";
+import type { LearningInterest } from "@repo/contents/_types/program/schema";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const NOW = 1_799_020_800_000;
+const selectionAudit =
+  internal.learningPrograms.cutover.auditLearningSelections;
+const selectionMigration =
+  internal.learningPrograms.cutover.migrateLearningSelections;
 
 describe("learningPrograms/cutover", () => {
   it("dry-runs and migrates every grounded legacy selection idempotently", async () => {
     const merdeka = makeSelectableProgram(1, "merdeka", "school-curriculum");
     const snbt = makeSelectableProgram(2, "snbt", "admission-exam");
-    const data = await Effect.runPromise(
-      makeProgramSnapshotData([merdeka, snbt])
-    );
-    const t = convexTest(schema, convexModules);
-    migrationsTest.register(t);
-    await activateProgramSnapshot(t, data);
+    const t = await makeCutoverTarget([merdeka, snbt]);
 
     await t.mutation(async (ctx) => {
       const currentSchool = await insertLegacyProgram(
@@ -107,14 +107,12 @@ describe("learningPrograms/cutover", () => {
     });
 
     await expect(
-      t.mutation(internal.learningPrograms.cutover.migrateLearningSelections, {
+      t.mutation(selectionMigration, {
         dryRun: true,
         reset: true,
       })
     ).resolves.toMatchObject({ processed: 7 });
-    await expect(
-      t.query(internal.learningPrograms.cutover.auditLearningSelections, {})
-    ).resolves.toEqual({
+    await expect(t.query(selectionAudit, {})).resolves.toEqual({
       invalidSelections: 0,
       legacyProfiles: 7,
       missingSelectionTimestamps: 0,
@@ -123,18 +121,9 @@ describe("learningPrograms/cutover", () => {
       unresolvedProfiles: 6,
     });
 
-    await t.action((ctx) =>
-      runToCompletion(
-        ctx,
-        components.migrations,
-        internal.learningPrograms.cutover.migrateLearningSelections,
-        { cursor: null }
-      )
-    );
+    await runCutover(t);
 
-    await expect(
-      t.query(internal.learningPrograms.cutover.auditLearningSelections, {})
-    ).resolves.toEqual({
+    await expect(t.query(selectionAudit, {})).resolves.toEqual({
       invalidSelections: 0,
       legacyProfiles: 7,
       missingSelectionTimestamps: 0,
@@ -184,12 +173,7 @@ describe("learningPrograms/cutover", () => {
       "cambridge-international",
       "school-curriculum"
     );
-    const data = await Effect.runPromise(
-      makeProgramSnapshotData([merdeka, cambridge])
-    );
-    const t = convexTest(schema, convexModules);
-    migrationsTest.register(t);
-    await activateProgramSnapshot(t, data);
+    const t = await makeCutoverTarget([merdeka, cambridge]);
 
     await t.mutation(async (ctx) => {
       const legacyProgramId = await insertLegacyProgram(
@@ -205,14 +189,7 @@ describe("learningPrograms/cutover", () => {
       });
     });
 
-    await t.action((ctx) =>
-      runToCompletion(
-        ctx,
-        components.migrations,
-        internal.learningPrograms.cutover.migrateLearningSelections,
-        { cursor: null }
-      )
-    );
+    await runCutover(t);
 
     await expect(
       t.query((ctx) => ctx.db.query("learningPreferences").unique())
@@ -225,15 +202,10 @@ describe("learningPrograms/cutover", () => {
   });
 
   it("detects and remigrates a newer legacy selection", async () => {
-    const data = await Effect.runPromise(
-      makeProgramSnapshotData([
-        makeSelectableProgram(1, "merdeka", "school-curriculum"),
-        makeSelectableProgram(2, "snbt", "admission-exam"),
-      ])
-    );
-    const t = convexTest(schema, convexModules);
-    migrationsTest.register(t);
-    await activateProgramSnapshot(t, data);
+    const t = await makeCutoverTarget([
+      makeSelectableProgram(1, "merdeka", "school-curriculum"),
+      makeSelectableProgram(2, "snbt", "admission-exam"),
+    ]);
     const { examProgramId, userId } = await t.mutation(async (ctx) => {
       const schoolProgramId = await insertLegacyProgram(
         ctx,
@@ -257,14 +229,7 @@ describe("learningPrograms/cutover", () => {
       };
     });
 
-    await t.action((ctx) =>
-      runToCompletion(
-        ctx,
-        components.migrations,
-        internal.learningPrograms.cutover.migrateLearningSelections,
-        { cursor: null }
-      )
-    );
+    await runCutover(t);
 
     await t.mutation(async (ctx) => {
       const profile = await ctx.db
@@ -284,25 +249,14 @@ describe("learningPrograms/cutover", () => {
       });
     });
 
-    await expect(
-      t.query(internal.learningPrograms.cutover.auditLearningSelections, {})
-    ).resolves.toMatchObject({
+    await expect(t.query(selectionAudit, {})).resolves.toMatchObject({
       migratedProfiles: 0,
       unresolvedProfiles: 1,
     });
 
-    await t.action((ctx) =>
-      runToCompletion(
-        ctx,
-        components.migrations,
-        internal.learningPrograms.cutover.migrateLearningSelections,
-        { cursor: null }
-      )
-    );
+    await runCutover(t);
 
-    await expect(
-      t.query(internal.learningPrograms.cutover.auditLearningSelections, {})
-    ).resolves.toMatchObject({
+    await expect(t.query(selectionAudit, {})).resolves.toMatchObject({
       migratedProfiles: 1,
       unresolvedProfiles: 0,
     });
@@ -315,15 +269,11 @@ describe("learningPrograms/cutover", () => {
     });
   });
 
-  it("rejects newer unresolved evidence and duplicate preference owners", async () => {
+  it("rejects ambiguous evidence and duplicate preference owners", async () => {
     const first = makeSelectableProgram(1, "first", "school-curriculum");
     const second = makeSelectableProgram(2, "second", "school-curriculum");
-    const data = await Effect.runPromise(
-      makeProgramSnapshotData([first, second])
-    );
-    const t = convexTest(schema, convexModules);
-    migrationsTest.register(t);
-    await activateProgramSnapshot(t, data);
+    const programs = [first, second];
+    const t = await makeCutoverTarget(programs);
 
     await t.mutation(async (ctx) => {
       const deletedProgramId = await insertLegacyProgram(
@@ -346,23 +296,57 @@ describe("learningPrograms/cutover", () => {
       await ctx.db.delete(deletedProgramId);
     });
 
-    await expect(
-      t.query(internal.learningPrograms.cutover.auditLearningSelections, {})
-    ).resolves.toMatchObject({ migratedProfiles: 0, unresolvedProfiles: 1 });
+    await expect(t.query(selectionAudit, {})).resolves.toMatchObject({
+      migratedProfiles: 0,
+      unresolvedProfiles: 1,
+    });
 
-    await expect(
-      t.action((ctx) =>
-        runToCompletion(
-          ctx,
-          components.migrations,
-          internal.learningPrograms.cutover.migrateLearningSelections,
-          { cursor: null }
-        )
-      )
-    ).rejects.toThrow("LEARNING_SELECTION_MIGRATION_UNRESOLVED");
+    await expect(runCutover(t)).rejects.toThrow(
+      "LEARNING_SELECTION_MIGRATION_UNRESOLVED"
+    );
 
-    const duplicate = convexTest(schema, convexModules);
-    await activateProgramSnapshot(duplicate, data);
+    const conflicting = await makeCutoverTarget(programs);
+    await conflicting.mutation(async (ctx) => {
+      const firstProgramId = await insertLegacyProgram(
+        ctx,
+        "first",
+        "school-curriculum"
+      );
+      await insertLegacyProfile(ctx, {
+        interest: "school-curriculum",
+        profileProgramKey: "second",
+        programId: firstProgramId,
+        suffix: "conflicting-identities",
+      });
+    });
+    await expect(runCutover(conflicting)).rejects.toThrow(
+      "LEARNING_SELECTION_MIGRATION_UNRESOLVED"
+    );
+
+    const equalTimestamp = await makeCutoverTarget(programs);
+    await equalTimestamp.mutation(async (ctx) => {
+      const firstProgramId = await insertLegacyProgram(
+        ctx,
+        "first",
+        "school-curriculum"
+      );
+      await insertLegacyProfile(ctx, {
+        canonicalSelection: {
+          interest: "school-curriculum",
+          programKey: "second",
+          selectionUpdatedAt: NOW,
+          updatedAt: NOW,
+        },
+        interest: "school-curriculum",
+        programId: firstProgramId,
+        suffix: "equal-timestamp",
+      });
+    });
+    await expect(runCutover(equalTimestamp)).rejects.toThrow(
+      "LEARNING_SELECTION_MIGRATION_UNRESOLVED"
+    );
+
+    const duplicate = await makeCutoverTarget(programs);
     await duplicate.mutation(async (ctx) => {
       const programId = await insertLegacyProgram(
         ctx,
@@ -389,16 +373,28 @@ describe("learningPrograms/cutover", () => {
       });
     });
 
-    await expect(
-      duplicate.query(
-        internal.learningPrograms.cutover.auditLearningSelections,
-        {}
-      )
-    ).rejects.toThrow("LEARNING_SELECTION_DUPLICATE_PREFERENCE");
+    await expect(duplicate.query(selectionAudit, {})).rejects.toThrow(
+      "LEARNING_SELECTION_DUPLICATE_PREFERENCE"
+    );
   });
 });
 
-/** Builds one selectable signed program with a stable production-like key. */
+async function makeCutoverTarget(programs: readonly LearningProgram[]) {
+  const target = convexTest(schema, convexModules);
+  migrationsTest.register(target);
+  const data = await Effect.runPromise(makeProgramSnapshotData(programs));
+  await activateProgramSnapshot(target, data);
+  return target;
+}
+
+function runCutover(target: Awaited<ReturnType<typeof makeCutoverTarget>>) {
+  return target.action((ctx) =>
+    runToCompletion(ctx, components.migrations, selectionMigration, {
+      cursor: null,
+    })
+  );
+}
+
 function makeSelectableProgram(
   index: number,
   key: string,
@@ -413,7 +409,6 @@ function makeSelectableProgram(
   });
 }
 
-/** Inserts one source-owned program row retained only for migration input. */
 async function insertLegacyProgram(
   ctx: MutationCtx,
   key: string,
@@ -438,7 +433,6 @@ async function insertLegacyProgram(
   });
 }
 
-/** Inserts one user and the legacy profile that owns its prior selection. */
 async function insertLegacyProfile(
   ctx: MutationCtx,
   {
@@ -446,23 +440,21 @@ async function insertLegacyProfile(
     interest,
     interests,
     preferredCurriculumProgramKey,
+    profileProgramKey,
     profileUpdatedAt = NOW,
     programId,
     suffix,
   }: {
     canonicalSelection?: {
-      interest: "assessment-prep" | "exam-prep" | "school-curriculum";
+      interest: LearningInterest;
       programKey: string;
       selectionUpdatedAt: number;
       updatedAt: number;
     };
-    interest?: "assessment-prep" | "exam-prep" | "school-curriculum";
-    interests?: readonly (
-      | "assessment-prep"
-      | "exam-prep"
-      | "school-curriculum"
-    )[];
+    interest?: LearningInterest;
+    interests?: readonly LearningInterest[];
     preferredCurriculumProgramKey?: string;
+    profileProgramKey?: string;
     profileUpdatedAt?: number;
     programId: Awaited<ReturnType<typeof insertLegacyProgram>>;
     suffix: string;
@@ -491,6 +483,7 @@ async function insertLegacyProfile(
   await ctx.db.insert("learningProfiles", {
     interests: [...(interests ?? (interest ? [interest] : []))],
     programId,
+    programKey: profileProgramKey,
     updatedAt: profileUpdatedAt,
     userId,
   });

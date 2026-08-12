@@ -2,6 +2,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
 import { readLearningPreferenceByUserId } from "@repo/backend/convex/learningPreferences/impl";
+import { requireLearningSelectionCutoverComplete } from "@repo/backend/convex/learningPrograms/cutover/guard";
 import { toLearningProgramSummary } from "@repo/backend/convex/learningPrograms/impl";
 import { loadLearningPlanTarget } from "@repo/backend/convex/learningPrograms/planTarget";
 import {
@@ -49,6 +50,7 @@ export const getActiveSelection = query({
         );
 
         if (!(preference?.learningInterest && preference.primaryProgramKey)) {
+          yield* requireLearningSelectionCutoverComplete(ctx, user.appUser._id);
           return null;
         }
 
@@ -65,6 +67,7 @@ export const getActiveSelection = query({
             programMatchesInterest(program.kind, preference.learningInterest)
           )
         ) {
+          yield* requireLearningSelectionCutoverComplete(ctx, user.appUser._id);
           return null;
         }
 

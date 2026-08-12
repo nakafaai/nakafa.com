@@ -44,6 +44,18 @@ interface ResolvedLearningSelection {
   readonly program: LearningProgram;
 }
 
+type ExactProgramIdentity =
+  | { readonly _tag: "Conflict" }
+  | { readonly _tag: "Resolved"; readonly key: string | null };
+
+type LegacySelectionResolution =
+  | { readonly _tag: "Conflict" }
+  | { readonly _tag: "Missing" }
+  | {
+      readonly _tag: "Resolved";
+      readonly selection: ResolvedLearningSelection;
+    };
+
 /** Expected migration or audit failure at the legacy cutover boundary. */
 class LearningSelectionMigrationError extends Schema.TaggedError<LearningSelectionMigrationError>()(
   "LearningSelectionMigrationError",
@@ -84,19 +96,40 @@ const migrateLearningSelection = Effect.fn(
   });
   const programs = yield* listSignedPrograms(ctx, "id");
   const canonicalSelection = readCanonicalSelection(preference, programs);
-  const legacySelection = readLegacySelection(profile, legacyProgram, programs);
+  const legacyResolution = readLegacySelection(
+    profile,
+    legacyProgram,
+    programs
+  );
+  const legacySelection =
+    legacyResolution._tag === "Resolved" ? legacyResolution.selection : null;
 
-  if (
-    canonicalSelection &&
-    preference &&
-    shouldPreserveCanonicalSelection({
-      canonicalSelection,
-      legacySelection,
-      preference,
-      profile,
-    })
-  ) {
+  if (legacyResolution._tag === "Conflict") {
+    return yield* new LearningSelectionMigrationError({
+      code: learningSelectionMigrationUnresolvedCode,
+      message: "A legacy learning profile has conflicting program identities.",
+    });
+  }
+
+  const selectionAuthority =
+    canonicalSelection && preference
+      ? getSelectionAuthority({
+          canonicalSelection,
+          legacySelection,
+          preference,
+          profile,
+        })
+      : "legacy";
+
+  if (selectionAuthority === "canonical") {
     return;
+  }
+
+  if (selectionAuthority === "unresolved") {
+    return yield* new LearningSelectionMigrationError({
+      code: learningSelectionMigrationUnresolvedCode,
+      message: "Canonical and legacy selections have ambiguous write order.",
+    });
   }
 
   if (!legacySelection) {
@@ -235,18 +268,23 @@ const auditLearningSelectionRows = Effect.fn(
   };
 });
 
-/** Orders exact keys stored directly on the legacy selection boundary. */
-function getExactProgramKeys(
+/** Resolves one exact retained identity or rejects conflicting legacy keys. */
+function readExactProgramKey(
   profile: Doc<"learningProfiles">,
   legacyProgram: Doc<"learningPrograms"> | null
-) {
-  return Array.from(
-    new Set(
-      [profile.programKey, legacyProgram?.key].filter(
-        (candidate) => candidate !== undefined
-      )
-    )
-  );
+): ExactProgramIdentity {
+  if (
+    profile.programKey !== undefined &&
+    legacyProgram !== null &&
+    profile.programKey !== legacyProgram.key
+  ) {
+    return { _tag: "Conflict" };
+  }
+
+  return {
+    _tag: "Resolved",
+    key: profile.programKey ?? legacyProgram?.key ?? null,
+  };
 }
 
 /** Reads one already-valid canonical selection without rewriting it. */
@@ -280,25 +318,32 @@ function readLegacySelection(
   profile: Doc<"learningProfiles">,
   legacyProgram: Doc<"learningPrograms"> | null,
   programs: readonly LearningProgram[]
-) {
+): LegacySelectionResolution {
   const interests = orderLegacyInterests(profile.interests, legacyProgram);
-  const exactProgramKeys = getExactProgramKeys(profile, legacyProgram);
+  const exactIdentity = readExactProgramKey(profile, legacyProgram);
 
-  for (const interest of interests) {
-    const exactProgram = programs.find(
-      (program) =>
-        exactProgramKeys.includes(program.key) &&
-        isLearningProgramSelectable(program) &&
-        programMatchesInterest(program.kind, interest)
-    );
-
-    if (exactProgram) {
-      return { interest, program: exactProgram };
-    }
+  if (exactIdentity._tag === "Conflict") {
+    return exactIdentity;
   }
 
-  if (exactProgramKeys.length > 0) {
-    return null;
+  if (exactIdentity.key !== null) {
+    for (const interest of interests) {
+      const exactProgram = programs.find(
+        (program) =>
+          program.key === exactIdentity.key &&
+          isLearningProgramSelectable(program) &&
+          programMatchesInterest(program.kind, interest)
+      );
+
+      if (exactProgram) {
+        return {
+          _tag: "Resolved",
+          selection: { interest, program: exactProgram },
+        };
+      }
+    }
+
+    return { _tag: "Missing" };
   }
 
   for (const interest of interests) {
@@ -309,11 +354,14 @@ function readLegacySelection(
     );
 
     if (candidates.length === 1) {
-      return { interest, program: candidates[0] };
+      return {
+        _tag: "Resolved",
+        selection: { interest, program: candidates[0] },
+      };
     }
   }
 
-  return null;
+  return { _tag: "Missing" };
 }
 
 /** Prioritizes interests compatible with the program the learner selected. */
@@ -358,18 +406,31 @@ function isLearningSelectionMigrated({
     return false;
   }
 
-  const legacySelection = readLegacySelection(profile, legacyProgram, programs);
-
-  return shouldPreserveCanonicalSelection({
-    canonicalSelection,
-    legacySelection,
-    preference,
+  const legacyResolution: LegacySelectionResolution = readLegacySelection(
     profile,
-  });
+    legacyProgram,
+    programs
+  );
+
+  if (legacyResolution._tag === "Conflict") {
+    return false;
+  }
+
+  const legacySelection =
+    legacyResolution._tag === "Resolved" ? legacyResolution.selection : null;
+
+  return (
+    getSelectionAuthority({
+      canonicalSelection,
+      legacySelection,
+      preference,
+      profile,
+    }) === "canonical"
+  );
 }
 
-/** Keeps a matching timestamped selection or a newer canonical write. */
-function shouldPreserveCanonicalSelection({
+/** Selects the provably newer write and rejects equal conflicting timestamps. */
+function getSelectionAuthority({
   canonicalSelection,
   legacySelection,
   preference,
@@ -381,10 +442,10 @@ function shouldPreserveCanonicalSelection({
   profile: Doc<"learningProfiles">;
 }) {
   if (!legacySelection) {
-    return (
+    const canonicalIsCurrent =
       preference.selectionUpdatedAt !== undefined &&
-      preference.selectionUpdatedAt >= profile.updatedAt
-    );
+      preference.selectionUpdatedAt >= profile.updatedAt;
+    return canonicalIsCurrent ? "canonical" : "unresolved";
   }
 
   if (
@@ -392,12 +453,20 @@ function shouldPreserveCanonicalSelection({
     canonicalSelection.program.key === legacySelection.program.key &&
     preference.selectionUpdatedAt !== undefined
   ) {
-    return true;
+    return "canonical";
   }
 
   if (preference.selectionUpdatedAt === undefined) {
-    return false;
+    return "legacy";
   }
 
-  return preference.selectionUpdatedAt > profile.updatedAt;
+  if (preference.selectionUpdatedAt > profile.updatedAt) {
+    return "canonical";
+  }
+
+  if (preference.selectionUpdatedAt < profile.updatedAt) {
+    return "legacy";
+  }
+
+  return "unresolved";
 }
