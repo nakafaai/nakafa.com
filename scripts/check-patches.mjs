@@ -4,13 +4,6 @@ import path from "node:path";
 import process from "node:process";
 
 const REPOSITORY_ROOT = process.cwd();
-const BETTER_AUTH_COMPONENT_VERSION = "0.12.5";
-const BETTER_AUTH_COMPONENT_SPECIFIER = `^${BETTER_AUTH_COMPONENT_VERSION}`;
-const BETTER_AUTH_PATCH_PATH = "patches/@convex-dev__better-auth@0.12.5.patch";
-const BETTER_AUTH_PATCH_SHA256 =
-  "d04a5199bf6df27e192599c9ff0ffa22799129204a07f82104ad26f14fe36073";
-const BETTER_AUTH_UPSTREAM_FIX =
-  "get-convex/better-auth#423 plus the reported SSR getToken follow-up";
 const NEXT_VERSION = "16.3.0";
 const NEXT_PATCH_PATH = "patches/next.patch";
 const NEXT_PATCH_SHA256 =
@@ -96,7 +89,7 @@ function readDependencyVersions(dependencyName) {
 
 const failures = [];
 const patchFiles = readApplicationPatchFiles(REPOSITORY_ROOT);
-const expectedPatchFiles = [BETTER_AUTH_PATCH_PATH, NEXT_PATCH_PATH].sort();
+const expectedPatchFiles = [NEXT_PATCH_PATH];
 
 if (JSON.stringify(patchFiles) !== JSON.stringify(expectedPatchFiles)) {
   failures.push(
@@ -117,10 +110,6 @@ const patchReferences = Array.from(
 );
 const expectedPatchReferences = [
   {
-    dependency: `@convex-dev/better-auth@${BETTER_AUTH_COMPONENT_VERSION}`,
-    patchPath: BETTER_AUTH_PATCH_PATH,
-  },
-  {
     dependency: `next@${NEXT_VERSION}`,
     patchPath: NEXT_PATCH_PATH,
   },
@@ -134,56 +123,9 @@ if (
   );
 }
 
-if (!workspaceSource.includes(BETTER_AUTH_UPSTREAM_FIX)) {
-  failures.push(
-    `pnpm-workspace.yaml must keep the stable-release deletion gate for ${BETTER_AUTH_UPSTREAM_FIX}.`
-  );
-}
-
 if (!workspaceSource.includes(NEXT_UPSTREAM_FIX)) {
   failures.push(
     `pnpm-workspace.yaml must keep the stable-release deletion gate for Next.js commit ${NEXT_UPSTREAM_FIX}.`
-  );
-}
-
-const betterAuthDependencyVersions = readDependencyVersions(
-  "@convex-dev/better-auth"
-);
-const mismatchedBetterAuthDependencies = betterAuthDependencyVersions.filter(
-  ({ version }) => version !== BETTER_AUTH_COMPONENT_SPECIFIER
-);
-
-if (betterAuthDependencyVersions.length === 0) {
-  failures.push(
-    "No first-party workspace declares the patched Better Auth component dependency."
-  );
-}
-
-if (mismatchedBetterAuthDependencies.length > 0) {
-  failures.push(
-    `Delete or revalidate ${BETTER_AUTH_PATCH_PATH} before changing @convex-dev/better-auth from ${BETTER_AUTH_COMPONENT_SPECIFIER}:\n${mismatchedBetterAuthDependencies
-      .map(({ manifestPath, version }) => `  - ${manifestPath}: ${version}`)
-      .join("\n")}`
-  );
-}
-
-const lockSource = readFileSync(
-  path.join(REPOSITORY_ROOT, "pnpm-lock.yaml"),
-  "utf8"
-);
-const lockedBetterAuthVersions = new Set(
-  Array.from(
-    lockSource.matchAll(/@convex-dev\/better-auth@(\d+\.\d+\.\d+)/g),
-    ([, version]) => version
-  )
-);
-
-if (
-  lockedBetterAuthVersions.size !== 1 ||
-  !lockedBetterAuthVersions.has(BETTER_AUTH_COMPONENT_VERSION)
-) {
-  failures.push(
-    `Delete or revalidate ${BETTER_AUTH_PATCH_PATH} before resolving @convex-dev/better-auth away from ${BETTER_AUTH_COMPONENT_VERSION}.`
   );
 }
 
@@ -206,20 +148,13 @@ if (mismatchedNextDependencies.length > 0) {
   );
 }
 
-for (const [patchPath, expectedHash] of [
-  [BETTER_AUTH_PATCH_PATH, BETTER_AUTH_PATCH_SHA256],
-  [NEXT_PATCH_PATH, NEXT_PATCH_SHA256],
-]) {
-  if (!patchFiles.includes(patchPath)) {
-    continue;
-  }
-
-  const patchSource = readFileSync(path.join(REPOSITORY_ROOT, patchPath));
+if (patchFiles.includes(NEXT_PATCH_PATH)) {
+  const patchSource = readFileSync(path.join(REPOSITORY_ROOT, NEXT_PATCH_PATH));
   const patchHash = createHash("sha256").update(patchSource).digest("hex");
 
-  if (patchHash !== expectedHash) {
+  if (patchHash !== NEXT_PATCH_SHA256) {
     failures.push(
-      `${patchPath} changed. Revalidate it against upstream and update the source policy in the same review.`
+      `${NEXT_PATCH_PATH} changed. Revalidate it against upstream and update the source policy in the same review.`
     );
   }
 }
