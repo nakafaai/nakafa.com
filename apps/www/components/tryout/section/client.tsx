@@ -6,7 +6,7 @@ import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { useQuery } from "convex/react";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { Suspense, use, useState } from "react";
+import { type ReactNode, Suspense, use, useState } from "react";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import {
@@ -42,6 +42,7 @@ type SectionState = TryoutSectionInitialState | null;
 
 interface TryoutSectionPageClientProps {
   binding: TryoutSectionRouteBinding;
+  children: ReactNode;
   content: Promise<TryoutRuntimeContent> | null;
   page: TryoutSectionPage;
   route: TryoutSectionRoute;
@@ -79,6 +80,7 @@ interface TryoutSectionBodyValue {
 /** Renders one stable page with an active-only mutable subscription. */
 export function TryoutSectionPageClient({
   binding,
+  children,
   content,
   page,
   route,
@@ -93,7 +95,9 @@ export function TryoutSectionPageClient({
         route={route}
         setHref={setHref}
         state={null}
-      />
+      >
+        {children}
+      </ResolvedTryoutSectionPage>
     );
   }
 
@@ -106,7 +110,9 @@ export function TryoutSectionPageClient({
         route={route}
         setHref={setHref}
         state={binding.initialState}
-      />
+      >
+        {children}
+      </ResolvedTryoutSectionPage>
     );
   }
 
@@ -118,15 +124,20 @@ export function TryoutSectionPageClient({
       page={page}
       route={route}
       setHref={setHref}
-    />
+    >
+      {children}
+    </LiveTryoutSectionPage>
   );
 }
 
 /** Owns one active subscription and skips it after a terminal update. */
 function LiveTryoutSectionPage({
   binding,
+  children,
+  content,
   page,
-  ...props
+  route,
+  setHref,
 }: TryoutSectionPageClientProps & {
   binding: NonNullable<TryoutSectionRouteBinding>;
 }) {
@@ -160,17 +171,22 @@ function LiveTryoutSectionPage({
   }
   return (
     <ResolvedTryoutSectionPage
-      {...props}
       binding={binding}
+      content={content}
       page={page}
+      route={route}
+      setHref={setHref}
       state={state}
-    />
+    >
+      {children}
+    </ResolvedTryoutSectionPage>
   );
 }
 
 /** Renders the stable section UI from one cohesive reactive state. */
 function ResolvedTryoutSectionPage({
   binding,
+  children,
   content,
   page,
   route,
@@ -264,7 +280,9 @@ function ResolvedTryoutSectionPage({
               setHref,
               startDestination,
             }}
-          />
+          >
+            {children}
+          </TryoutSectionBody>
         </div>
       </div>
     </div>
@@ -272,7 +290,13 @@ function ResolvedTryoutSectionPage({
 }
 
 /** Composes active runtime, terminal summary, and review content explicitly. */
-function TryoutSectionBody({ value }: { value: TryoutSectionBodyValue }) {
+function TryoutSectionBody({
+  children,
+  value,
+}: {
+  children: ReactNode;
+  value: TryoutSectionBodyValue;
+}) {
   if (value.runtimeState.kind === "active") {
     return (
       <Suspense fallback={null}>
@@ -304,7 +328,7 @@ function TryoutSectionBody({ value }: { value: TryoutSectionBodyValue }) {
           }}
         />
         <Suspense fallback={null}>
-          <TryoutSectionRuntimeContent value={value} />
+          {children ?? <TryoutContentRefresh />}
         </Suspense>
       </>
     );
@@ -342,14 +366,12 @@ function TryoutSectionRuntimeContent({
   if (value.runtimeState.kind === "none") {
     return null;
   }
-  if (value.runtimeState.kind === "review" && content.answers.length === 0) {
+  if (value.runtimeState.kind === "review") {
     return <TryoutContentRefresh />;
   }
-
   return (
     <TryoutRuntime
       value={{
-        answers: content.answers,
         expired: value.runtimeState.kind !== "active",
         questions: content.questions,
         returnHref: value.runtimeReturnHref,

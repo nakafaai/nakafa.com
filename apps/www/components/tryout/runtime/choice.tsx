@@ -1,24 +1,19 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import { Response } from "@repo/design-system/components/ai/response";
-import { Checkbox } from "@repo/design-system/components/ui/checkbox";
-import { Label } from "@repo/design-system/components/ui/label";
-import { buttonVariants } from "@repo/design-system/lib/button";
-import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { TryoutSelectableChoice } from "@/components/tryout/runtime/choice-surface.client";
 import type {
   TryoutRuntimeChoice,
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
 import { reportClientException } from "@/lib/analytics/client";
-import { getTryoutChoiceVariant } from "@/lib/tryout/choice-variant";
 
 type SaveResponseArgs = FunctionArgs<
   typeof api.tryouts.mutations.responses.save
@@ -27,7 +22,6 @@ type SaveResponseArgs = FunctionArgs<
 interface TryoutChoicesValue {
   locked: boolean;
   question: TryoutRuntimeQuestion;
-  reviewMode: boolean;
 }
 
 /** Renders and saves selectable answers for one runtime question. */
@@ -112,7 +106,6 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
             disabled: locked,
             onSelect: () => saveChoice(choice),
             question,
-            reviewMode: value.reviewMode,
           }}
         />
       ))}
@@ -122,73 +115,17 @@ export function TryoutChoices({ value }: { value: TryoutChoicesValue }) {
 
 /** Renders one selectable answer option in the production exercise style. */
 function TryoutChoice({ value }: { value: TryoutChoiceValue }) {
-  const { choice, disabled, onSelect, question, reviewMode } = value;
+  const { choice, disabled, onSelect, question } = value;
   const checked = question.response?.selectedOptionId === choice.optionKey;
 
   return (
-    <TryoutChoiceSurface
+    <TryoutSelectableChoice
       checked={checked}
       disabled={disabled}
       id={`${question.placementId}-${choice.optionKey}`}
-      isCorrect={choice.isCorrect}
       label={choice.label}
       onSelect={onSelect}
-      reviewMode={reviewMode}
     />
-  );
-}
-
-interface TryoutChoiceSurfaceProps {
-  checked: boolean;
-  disabled: boolean;
-  id: string;
-  isCorrect: boolean | undefined;
-  label: string;
-  onSelect: () => void;
-  reviewMode: boolean;
-}
-
-/** Renders the shared production choice surface without owning persistence. */
-export function TryoutChoiceSurface({
-  checked,
-  disabled,
-  id,
-  isCorrect,
-  label,
-  onSelect,
-  reviewMode,
-}: TryoutChoiceSurfaceProps) {
-  const labelId = `${id}-label`;
-  const variant = getTryoutChoiceVariant({
-    checked,
-    isCorrect,
-    reviewMode,
-  });
-
-  return (
-    <Label
-      className={cn(
-        buttonVariants({ variant }),
-        "h-auto min-w-0 whitespace-normal text-left font-normal text-base"
-      )}
-    >
-      <Checkbox
-        aria-labelledby={labelId}
-        checked={checked}
-        className="mt-1 shrink-0 cursor-pointer"
-        disabled={disabled}
-        onCheckedChange={(nextChecked) => {
-          if (nextChecked) {
-            onSelect();
-          }
-        }}
-      />
-      <div className="min-w-0 flex-1" id={labelId}>
-        <Response className="wrap-anywhere h-auto whitespace-normal" id={id}>
-          {label}
-        </Response>
-      </div>
-    </Label>
   );
 }
 
@@ -197,7 +134,6 @@ interface TryoutChoiceValue {
   disabled: boolean;
   onSelect: () => void;
   question: TryoutRuntimeQuestion;
-  reviewMode: boolean;
 }
 
 /** Applies a Convex optimistic answer snapshot to the matching runtime query. */

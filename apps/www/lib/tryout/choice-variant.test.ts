@@ -1,18 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { getTryoutChoiceVariant } from "@/lib/tryout/choice-variant";
+import {
+  getTryoutReviewedChoiceVariant,
+  getTryoutSelectableChoiceVariant,
+} from "@/lib/tryout/choice-variant";
 
-describe("getTryoutChoiceVariant", () => {
+describe("getTryoutSelectableChoiceVariant", () => {
   it.each([
-    [false, undefined, false, "outline"],
-    [true, undefined, false, "default-outline"],
-    [false, false, true, "outline"],
-    [true, false, true, "destructive-outline"],
-    [false, true, true, "success-outline"],
-    [true, true, true, "success-outline"],
+    [false, "outline"],
+    [true, "default-outline"],
+  ] as const)("maps checked=%s to %s", (checked, expected) => {
+    expect(getTryoutSelectableChoiceVariant({ checked })).toBe(expected);
+  });
+});
+
+describe("getTryoutReviewedChoiceVariant", () => {
+  it.each([
+    [false, false, "outline"],
+    [true, false, "destructive-outline"],
+    [false, true, "success-outline"],
+    [true, true, "success-outline"],
   ] as const)(
-    "maps checked=%s correct=%s review=%s to %s",
-    (checked, isCorrect, reviewMode, expected) => {
-      expect(getTryoutChoiceVariant({ checked, isCorrect, reviewMode })).toBe(
+    "maps checked=%s correct=%s to %s",
+    (checked, isCorrect, expected) => {
+      expect(getTryoutReviewedChoiceVariant({ checked, isCorrect })).toBe(
         expected
       );
     }

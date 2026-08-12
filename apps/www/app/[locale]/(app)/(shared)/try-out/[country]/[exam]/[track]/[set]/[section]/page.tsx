@@ -11,6 +11,7 @@ import {
   readTryoutSectionPage,
 } from "@/components/tryout/catalog/server";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
+import { TryoutReview } from "@/components/tryout/review/server";
 import { selectTryoutSectionReturnHref } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptAuthHref,
@@ -156,7 +157,7 @@ async function TryoutSectionRoute({
     publicHref: getTryoutHref({ country, exam, set, track }),
   });
 
-  const content =
+  const signedContent =
     attemptPage?.content.kind === "signed"
       ? Effect.runPromise(
           loadSignedTryoutContent({
@@ -164,6 +165,11 @@ async function TryoutSectionRoute({
             questions: attemptPage.content.questions,
           })
         )
+      : null;
+  const reviewRuntime =
+    attemptPage?.content.kind === "signed" &&
+    attemptPage.content.answers.length > 0
+      ? attemptPage.initialState.runtime
       : null;
 
   return (
@@ -179,11 +185,15 @@ async function TryoutSectionRoute({
             }
           : null
       }
-      content={content}
+      content={reviewRuntime ? null : signedContent}
       page={page}
       route={{ country, exam, locale, section, set, track }}
       setHref={setHref}
-    />
+    >
+      {signedContent && reviewRuntime ? (
+        <TryoutReview content={signedContent} runtime={reviewRuntime} />
+      ) : null}
+    </TryoutSectionPageClient>
   );
 }
 

@@ -3,22 +3,23 @@ import type { buttonVariants } from "@repo/design-system/lib/button";
 type ButtonVariantOptions = NonNullable<Parameters<typeof buttonVariants>[0]>;
 type ButtonVariant = NonNullable<ButtonVariantOptions["variant"]>;
 
-interface TryoutChoiceVariantInput {
+/** Selects the answer-option appearance while a choice remains selectable. */
+export function getTryoutSelectableChoiceVariant({
+  checked,
+}: {
   checked: boolean;
-  isCorrect: boolean | undefined;
-  reviewMode: boolean;
+}): ButtonVariant {
+  return checked ? "default-outline" : "outline";
 }
 
-/** Selects the answer-option appearance for active and completed tryouts. */
-export function getTryoutChoiceVariant({
+/** Selects the answer-option appearance after correctness is authorized. */
+export function getTryoutReviewedChoiceVariant({
   checked,
   isCorrect,
-  reviewMode,
-}: TryoutChoiceVariantInput): ButtonVariant {
-  if (!reviewMode) {
-    return checked ? "default-outline" : "outline";
-  }
-
+}: {
+  checked: boolean;
+  isCorrect: boolean | undefined;
+}): ButtonVariant {
   if (checked && !isCorrect) {
     return "destructive-outline";
   }

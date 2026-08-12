@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Suspense, use } from "react";
+import { type ReactNode, Suspense, use } from "react";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
@@ -21,9 +21,11 @@ import { TryoutMeta } from "@/components/tryout/shell/meta";
 
 /** Renders a no-nested-section set as the directly startable section surface. */
 export function TryoutSetEntry({
+  children,
   content,
   value,
 }: {
+  children: ReactNode;
   content: Promise<TryoutRuntimeContent> | null;
   value: TryoutInternalSetView;
 }) {
@@ -79,7 +81,9 @@ export function TryoutSetEntry({
         <div className="space-y-12">
           <TryoutEntryResult value={value} />
 
-          <TryoutEntryRuntime content={content} value={value} />
+          <TryoutEntryRuntime content={content} value={value}>
+            {children}
+          </TryoutEntryRuntime>
         </div>
       </div>
     </div>
@@ -181,14 +185,23 @@ function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
 
 /** Renders the direct-entry question runtime when Convex has one. */
 function TryoutEntryRuntime({
+  children,
   content,
   value,
 }: {
+  children: ReactNode;
   content: Promise<TryoutRuntimeContent> | null;
   value: TryoutInternalSetView;
 }) {
   if (value.runtimeState.kind === "none") {
     return null;
+  }
+  if (value.runtimeState.kind === "review") {
+    return (
+      <Suspense fallback={null}>
+        {children ?? <TryoutContentRefresh />}
+      </Suspense>
+    );
   }
 
   return (
@@ -209,6 +222,9 @@ function TryoutEntryRuntimeContent({
   if (value.runtimeState.kind === "none") {
     return null;
   }
+  if (value.runtimeState.kind === "review") {
+    return <TryoutContentRefresh />;
+  }
   if (!content) {
     return <TryoutContentRefresh />;
   }
@@ -217,17 +233,10 @@ function TryoutEntryRuntimeContent({
   if (resolvedContent.questions.length === 0) {
     return <TryoutContentRefresh />;
   }
-  if (
-    value.runtimeState.kind === "review" &&
-    resolvedContent.answers.length === 0
-  ) {
-    return <TryoutContentRefresh />;
-  }
 
   return (
     <TryoutRuntime
       value={{
-        answers: resolvedContent.answers,
         expired: value.runtimeState.kind !== "active",
         questions: resolvedContent.questions,
         returnHref: getTryoutAttemptHref(
