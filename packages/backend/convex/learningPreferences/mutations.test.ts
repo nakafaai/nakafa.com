@@ -1,10 +1,16 @@
-import { api, internal } from "@repo/backend/convex/_generated/api";
-import { getLearningProgramCatalogInputs } from "@repo/backend/convex/learningPrograms/catalog";
+import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import {
+  activateProgramSnapshot,
+  makeProgramSnapshotData,
+} from "@repo/backend/test/program-snapshot";
 import { activateTryoutStartSource } from "@repo/backend/test/tryout-source";
+import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
+import { Effect, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const NOW = 1_798_752_000_000;
@@ -118,51 +124,6 @@ describe("learningPreferences", () => {
     ).resolves.toBeNull();
   });
 
-  it("reads an existing school curriculum profile before a preference row exists", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
-    );
-
-    await syncPrograms(t);
-    await t.mutation(async (ctx) => {
-      const program = await ctx.db
-        .query("learningPrograms")
-        .withIndex("by_key", (q) => q.eq("key", "merdeka"))
-        .unique();
-
-      expect(program).not.toBeNull();
-
-      if (!program) {
-        return;
-      }
-
-      await ctx.db.insert("learningProfiles", {
-        interests: ["school-curriculum"],
-        programId: program._id,
-        updatedAt: NOW,
-        userId: identity.userId,
-      });
-    });
-
-    await expect(
-      t
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
-        .query(api.learningPreferences.queries.getCurrent, { locale: "id" })
-    ).resolves.toMatchObject({
-      preferredCurriculumProgramKey: "merdeka",
-      program: {
-        countryCode: "ID",
-        key: "merdeka",
-        publicSlug: "merdeka",
-        title: "Kurikulum Merdeka",
-      },
-    });
-  });
-
   it("rejects non-curriculum program keys", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
@@ -188,12 +149,15 @@ describe("learningPreferences", () => {
   });
 });
 
-/** Syncs the source-owned learning program catalog into the test database. */
+/** Activates the reviewed program copy as one signed snapshot. */
 async function syncPrograms(
   t: ReturnType<typeof createConvexTestWithBetterAuth>
 ) {
-  await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
-    programs: getLearningProgramCatalogInputs(),
-    syncedAt: NOW,
-  });
+  const programs = await Effect.runPromise(
+    Effect.forEach(LEARNING_PROGRAM_CATALOG, (program) =>
+      Schema.decodeUnknown(LearningProgramSchema)(program)
+    )
+  );
+  const data = await Effect.runPromise(makeProgramSnapshotData(programs));
+  await activateProgramSnapshot(t, data);
 }

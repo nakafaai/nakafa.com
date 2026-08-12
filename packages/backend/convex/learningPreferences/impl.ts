@@ -8,6 +8,10 @@ import type {
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { readTryoutCatalogRowByIdentity } from "@repo/backend/convex/tryouts/catalog/row";
+import type {
+  LearningInterest,
+  LearningProgramKind,
+} from "@repo/contents/_types/program/schema";
 import { Effect } from "effect";
 
 type PreferenceCtx = MutationCtx | QueryCtx;
@@ -112,6 +116,57 @@ export async function upsertPreferredCurriculumProgram({
 
   await ctx.db.patch(current._id, {
     preferredCurriculumProgramKey: programKey,
+    updatedAt: now,
+  });
+
+  return current._id;
+}
+
+/** Creates or updates the current user's canonical learning selection. */
+export async function upsertLearningSelection({
+  ctx,
+  interest,
+  now,
+  programKey,
+  programKind,
+  userId,
+}: {
+  ctx: MutationCtx;
+  interest: LearningInterest;
+  now: number;
+  programKey: string;
+  programKind: LearningProgramKind;
+  userId: Id<"users">;
+}) {
+  const current = await getLearningPreferenceByUserId(ctx, userId);
+  const curriculumPreference =
+    programKind === "school-curriculum"
+      ? { preferredCurriculumProgramKey: programKey }
+      : {};
+
+  if (!current) {
+    return await ctx.db.insert("learningPreferences", {
+      learningInterest: interest,
+      primaryProgramKey: programKey,
+      ...curriculumPreference,
+      updatedAt: now,
+      userId,
+    });
+  }
+
+  if (
+    current.learningInterest === interest &&
+    current.primaryProgramKey === programKey &&
+    (programKind !== "school-curriculum" ||
+      current.preferredCurriculumProgramKey === programKey)
+  ) {
+    return current._id;
+  }
+
+  await ctx.db.patch(current._id, {
+    learningInterest: interest,
+    primaryProgramKey: programKey,
+    ...curriculumPreference,
     updatedAt: now,
   });
 

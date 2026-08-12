@@ -133,6 +133,7 @@ export const makeProgramSnapshotData = Effect.fn(
 ) {
   const catalog = yield* Effect.forEach(programs, makeProgramSnapshotRow);
   const curriculumRoutes = programs
+    .filter((program) => program.navigation.model === "curriculum-tree")
     .flatMap((program) =>
       ContentLocaleSchema.literals.map((locale) =>
         technicalCurriculum(program, locale)

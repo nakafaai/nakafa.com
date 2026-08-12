@@ -1,5 +1,8 @@
 import { mutation } from "@repo/backend/convex/functions";
-import { upsertPreferredCurriculumProgram } from "@repo/backend/convex/learningPreferences/impl";
+import {
+  upsertLearningSelection,
+  upsertPreferredCurriculumProgram,
+} from "@repo/backend/convex/learningPreferences/impl";
 import {
   createInitialLearningPlanItems,
   getLearningProgramByKey,
@@ -13,7 +16,19 @@ import {
   learningInterestValidator,
   learningStageValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import {
+  requireSelectableProgram,
+  toLearningProgramSummary as toSignedProgramSummary,
+} from "@repo/backend/convex/learningPrograms/selection";
+import {
+  activeLearningSelectionValidator,
+  learningInterestValidator as signedLearningInterestValidator,
+} from "@repo/backend/convex/learningPrograms/spec";
+import {
+  getUnknownErrorMessage,
+  readConvexErrorData,
+  runConvexProgram,
+} from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
@@ -22,6 +37,77 @@ import {
   type LearningProgramKind,
 } from "@repo/contents/_types/program/schema";
 import { ConvexError, v } from "convex/values";
+import { Clock, Effect, Schema } from "effect";
+
+const learningSelectionIoFailedCode = "LEARNING_SELECTION_IO_FAILED";
+const unauthenticatedCode = "UNAUTHENTICATED";
+
+/** Expected authentication or persistence failure for a learning selection. */
+class LearningSelectionIoError extends Schema.TaggedError<LearningSelectionIoError>()(
+  "LearningSelectionIoError",
+  {
+    code: Schema.Literal(learningSelectionIoFailedCode, unauthenticatedCode),
+    message: Schema.String,
+  }
+) {}
+
+/** Preserves expected auth failures and tags unknown boundary failures. */
+function toLearningSelectionBoundaryError(error: unknown) {
+  const known = readConvexErrorData(error);
+  const message = known?.message ?? getUnknownErrorMessage(error);
+
+  return new LearningSelectionIoError({
+    code:
+      known?.code === unauthenticatedCode || message === "Unauthenticated"
+        ? unauthenticatedCode
+        : learningSelectionIoFailedCode,
+    message,
+  });
+}
+
+/** Saves one signed learner program without generating a synthetic plan. */
+export const selectProgram = mutation({
+  args: {
+    interest: signedLearningInterestValidator,
+    locale: localeValidator,
+    programKey: v.string(),
+  },
+  returns: activeLearningSelectionValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const user = yield* Effect.tryPromise({
+          catch: toLearningSelectionBoundaryError,
+          try: () => requireAuth(ctx),
+        });
+        const program = yield* requireSelectableProgram(
+          ctx,
+          args.locale,
+          args.programKey,
+          args.interest
+        );
+        const now = yield* Clock.currentTimeMillis;
+
+        yield* Effect.tryPromise({
+          catch: toLearningSelectionBoundaryError,
+          try: () =>
+            upsertLearningSelection({
+              ctx,
+              interest: args.interest,
+              now,
+              programKey: program.key,
+              programKind: program.kind,
+              userId: user.appUser._id,
+            }),
+        });
+
+        return {
+          interest: args.interest,
+          program: toSignedProgramSummary(program, args.locale),
+        };
+      })
+    ),
+});
 
 /** Selects the user's active learning interests and creates a first graph-backed plan. */
 export const selectLearningProgram = mutation({

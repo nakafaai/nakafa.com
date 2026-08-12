@@ -1,24 +1,79 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
-import {
-  hasLearningProgramCoverageForLocale,
-  isLearningProgramSelectable,
-  toLearningProgramSummary,
-} from "@repo/backend/convex/learningPrograms/impl";
+import { getLearningPreferenceByUserId } from "@repo/backend/convex/learningPreferences/impl";
+import { toLearningProgramSummary } from "@repo/backend/convex/learningPrograms/impl";
 import { loadLearningPlanTarget } from "@repo/backend/convex/learningPrograms/planTarget";
 import {
   activeLearningProfileValidator,
   learningProgramSummaryValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
+import {
+  isLearningProgramSelectable as isSignedProgramSelectable,
+  listSignedPrograms,
+  readSignedProgram,
+  toLearningProgramSummary as toSignedProgramSummary,
+} from "@repo/backend/convex/learningPrograms/selection";
+import {
+  activeLearningSelectionValidator,
+  programMatchesInterest,
+} from "@repo/backend/convex/learningPrograms/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const PROGRAM_LIMIT = 50;
 const PLAN_ITEM_LIMIT = 20;
+
+/** Returns the current user's canonical learning selection. */
+export const getActiveSelection = query({
+  args: {
+    locale: localeValidator,
+  },
+  returns: activeLearningSelectionValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const user = yield* Effect.promise(() =>
+          getOptionalAppUserForRead(ctx)
+        );
+
+        if (!user) {
+          return null;
+        }
+
+        const preference = yield* Effect.promise(() =>
+          getLearningPreferenceByUserId(ctx, user.appUser._id)
+        );
+
+        if (!(preference?.learningInterest && preference.primaryProgramKey)) {
+          return null;
+        }
+
+        const program = yield* readSignedProgram(
+          ctx,
+          args.locale,
+          preference.primaryProgramKey
+        );
+
+        if (
+          !(
+            program &&
+            isSignedProgramSelectable(program) &&
+            programMatchesInterest(program.kind, preference.learningInterest)
+          )
+        ) {
+          return null;
+        }
+
+        return {
+          interest: preference.learningInterest,
+          program: toSignedProgramSummary(program, args.locale),
+        };
+      })
+    ),
+});
 
 /** Selects the stable plan facts plus either stored or current route facts. */
 function toPlanItemView(
@@ -65,42 +120,22 @@ const loadPlanItemViews = Effect.fn("learningPrograms.loadPlanItemViews")(
   }
 );
 
-/** Lists selectable learning programs from the Convex catalog. */
+/** Lists selectable learning programs from the authenticated Aksara snapshot. */
 export const listSelectablePrograms = query({
   args: {
-    locale: v.optional(localeValidator),
+    locale: localeValidator,
   },
   returns: v.array(learningProgramSummaryValidator),
-  handler: async (ctx, args) => {
-    const programs = await ctx.db
-      .query("learningPrograms")
-      .withIndex("by_displayOrder")
-      .take(PROGRAM_LIMIT);
-    const selectablePrograms = programs.filter(isLearningProgramSelectable);
-
-    if (!args.locale) {
-      return selectablePrograms.map((program) =>
-        toLearningProgramSummary(program)
-      );
-    }
-
-    const programsWithCoverage: typeof selectablePrograms = [];
-
-    for (const program of selectablePrograms) {
-      if (
-        await hasLearningProgramCoverageForLocale(ctx, {
-          locale: args.locale,
-          programId: program._id,
-        })
-      ) {
-        programsWithCoverage.push(program);
-      }
-    }
-
-    return programsWithCoverage.map((program) =>
-      toLearningProgramSummary(program, args.locale)
-    );
-  },
+  handler: (ctx, args) =>
+    runConvexProgram(
+      listSignedPrograms(ctx, args.locale).pipe(
+        Effect.map((programs) =>
+          programs
+            .filter(isSignedProgramSelectable)
+            .map((program) => toSignedProgramSummary(program, args.locale))
+        )
+      )
+    ),
 });
 
 /** Returns the current user's active profile and first learning plan items. */

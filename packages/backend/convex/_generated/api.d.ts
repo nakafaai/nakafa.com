@@ -449,13 +449,16 @@ import type * as learningPreferences_mutations from "../learningPreferences/muta
 import type * as learningPreferences_program from "../learningPreferences/program.js";
 import type * as learningPreferences_queries from "../learningPreferences/queries.js";
 import type * as learningPrograms_catalog from "../learningPrograms/catalog.js";
+import type * as learningPrograms_cutover from "../learningPrograms/cutover.js";
 import type * as learningPrograms_impl from "../learningPrograms/impl.js";
 import type * as learningPrograms_mutations from "../learningPrograms/mutations.js";
 import type * as learningPrograms_omitted from "../learningPrograms/omitted.js";
 import type * as learningPrograms_planTarget from "../learningPrograms/planTarget.js";
 import type * as learningPrograms_queries from "../learningPrograms/queries.js";
 import type * as learningPrograms_reconcile from "../learningPrograms/reconcile.js";
+import type * as learningPrograms_selection from "../learningPrograms/selection.js";
 import type * as learningPrograms_sources from "../learningPrograms/sources.js";
+import type * as learningPrograms_spec from "../learningPrograms/spec.js";
 import type * as learningPrograms_sync from "../learningPrograms/sync.js";
 import type * as lib_attempts from "../lib/attempts.js";
 import type * as lib_effect from "../lib/effect.js";
@@ -1055,13 +1058,16 @@ declare const fullApi: ApiFromModules<{
   "learningPreferences/program": typeof learningPreferences_program;
   "learningPreferences/queries": typeof learningPreferences_queries;
   "learningPrograms/catalog": typeof learningPrograms_catalog;
+  "learningPrograms/cutover": typeof learningPrograms_cutover;
   "learningPrograms/impl": typeof learningPrograms_impl;
   "learningPrograms/mutations": typeof learningPrograms_mutations;
   "learningPrograms/omitted": typeof learningPrograms_omitted;
   "learningPrograms/planTarget": typeof learningPrograms_planTarget;
   "learningPrograms/queries": typeof learningPrograms_queries;
   "learningPrograms/reconcile": typeof learningPrograms_reconcile;
+  "learningPrograms/selection": typeof learningPrograms_selection;
   "learningPrograms/sources": typeof learningPrograms_sources;
+  "learningPrograms/spec": typeof learningPrograms_spec;
   "learningPrograms/sync": typeof learningPrograms_sync;
   "lib/attempts": typeof lib_attempts;
   "lib/effect": typeof lib_effect;
@@ -1242,6 +1248,7 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   betterAuth: import("@repo/backend/convex/betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
+  migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;

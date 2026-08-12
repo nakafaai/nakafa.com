@@ -49,7 +49,7 @@ describe("learningPrograms", () => {
     );
     const programs = await t.query(
       api.learningPrograms.queries.listSelectablePrograms,
-      {}
+      { locale: "id" }
     );
     const sourceCount = await t.query(async (ctx) => {
       const program = await ctx.db
