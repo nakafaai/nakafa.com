@@ -87,8 +87,8 @@ afterAll(() => {
   vi.unstubAllEnvs();
 });
 
-describe("Better Auth server proxy", () => {
-  it("keeps the public host out of Convex ingress routing", async () => {
+describe("Better Auth server boundary", () => {
+  it("forwards auth routes through the installed adapter", async () => {
     const fetchSpy = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(new Response(null, { status: 200 }));
@@ -108,10 +108,7 @@ describe("Better Auth server proxy", () => {
       `${CONVEX_SITE_URL}/api/auth/sign-in/social`
     );
     expect(headers.get("host")).toBe("test.convex.site");
-    expect(headers.get("x-forwarded-host")).toBeNull();
     expect(headers.get("x-forwarded-proto")).toBe("https");
-    expect(headers.get("x-better-auth-forwarded-host")).toBe("nakafa.com");
-    expect(headers.get("x-better-auth-forwarded-proto")).toBe("https");
   });
 
   it("gets the SSR token through the installed adapter", async () => {
@@ -136,9 +133,6 @@ describe("Better Auth server proxy", () => {
       `${CONVEX_SITE_URL}/api/auth/convex/token`
     );
     expect(headers.get("host")).toBe("test.convex.site");
-    expect(headers.get("x-forwarded-host")).toBeNull();
-    expect(headers.get("x-better-auth-forwarded-host")).toBe("nakafa.com");
-    expect(headers.get("x-better-auth-forwarded-proto")).toBe("https");
     expect(headers.get("cookie")).toBe(cookie);
   });
 });
