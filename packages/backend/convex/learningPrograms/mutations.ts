@@ -1,5 +1,5 @@
 import { mutation } from "@repo/backend/convex/functions";
-import { upsertLearningSelection } from "@repo/backend/convex/learningPreferences/impl";
+import { saveLearningSelection } from "@repo/backend/convex/learningPreferences/impl";
 import {
   createInitialLearningPlanItems,
   getLearningProgramByKey,
@@ -36,28 +36,28 @@ import {
 import { ConvexError, v } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
 
-const learningSelectionIoFailedCode = "LEARNING_SELECTION_IO_FAILED";
+const learningSelectionAuthFailedCode = "LEARNING_SELECTION_AUTH_FAILED";
 const unauthenticatedCode = "UNAUTHENTICATED";
 
-/** Expected authentication or persistence failure for a learning selection. */
-class LearningSelectionIoError extends Schema.TaggedError<LearningSelectionIoError>()(
-  "LearningSelectionIoError",
+/** Expected authentication failure for a learning selection. */
+class LearningSelectionAuthError extends Schema.TaggedError<LearningSelectionAuthError>()(
+  "LearningSelectionAuthError",
   {
-    code: Schema.Literal(learningSelectionIoFailedCode, unauthenticatedCode),
+    code: Schema.Literal(learningSelectionAuthFailedCode, unauthenticatedCode),
     message: Schema.String,
   }
 ) {}
 
 /** Preserves expected auth failures and tags unknown boundary failures. */
-function toLearningSelectionBoundaryError(error: unknown) {
+function toLearningSelectionAuthError(error: unknown) {
   const known = readConvexErrorData(error);
   const message = known?.message ?? getUnknownErrorMessage(error);
 
-  return new LearningSelectionIoError({
+  return new LearningSelectionAuthError({
     code:
       known?.code === unauthenticatedCode || message === "Unauthenticated"
         ? unauthenticatedCode
-        : learningSelectionIoFailedCode,
+        : learningSelectionAuthFailedCode,
     message,
   });
 }
@@ -74,7 +74,7 @@ export const selectProgram = mutation({
     runConvexProgram(
       Effect.gen(function* () {
         const user = yield* Effect.tryPromise({
-          catch: toLearningSelectionBoundaryError,
+          catch: toLearningSelectionAuthError,
           try: () => requireAuth(ctx),
         });
         const program = yield* requireSelectableProgram(
@@ -85,17 +85,13 @@ export const selectProgram = mutation({
         );
         const now = yield* Clock.currentTimeMillis;
 
-        yield* Effect.tryPromise({
-          catch: toLearningSelectionBoundaryError,
-          try: () =>
-            upsertLearningSelection({
-              ctx,
-              interest: args.interest,
-              now,
-              programKey: program.key,
-              programKind: program.kind,
-              userId: user.appUser._id,
-            }),
+        yield* saveLearningSelection({
+          ctx,
+          interest: args.interest,
+          now,
+          programKey: program.key,
+          programKind: program.kind,
+          userId: user.appUser._id,
         });
 
         return {
@@ -215,14 +211,16 @@ export const selectLearningProgram = mutation({
     );
     await ctx.db.patch(profileId, { activePlanId: planId, updatedAt: now });
 
-    await upsertLearningSelection({
-      ctx,
-      interest: primaryInterest,
-      now,
-      programKey: program.key,
-      programKind: program.kind,
-      userId: user.appUser._id,
-    });
+    await runConvexProgram(
+      saveLearningSelection({
+        ctx,
+        interest: primaryInterest,
+        now,
+        programKey: program.key,
+        programKind: program.kind,
+        userId: user.appUser._id,
+      })
+    );
 
     const planItems = await ctx.db
       .query("learningPlanItems")

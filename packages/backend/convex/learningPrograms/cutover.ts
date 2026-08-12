@@ -1,11 +1,16 @@
 import { Migrations } from "@convex-dev/migrations";
+import type { LearningProgram } from "@nakafa/aksara-contracts/program/spec";
 import { components } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { internalQuery } from "@repo/backend/convex/_generated/server";
+import {
+  internalQuery,
+  type MutationCtx,
+  type QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
-  getLearningPreferenceByUserId,
-  upsertLearningSelection,
+  readLearningPreferenceByUserId,
+  saveLearningSelection,
 } from "@repo/backend/convex/learningPreferences/impl";
 import {
   isLearningProgramSelectable,
@@ -13,9 +18,13 @@ import {
   readSignedProgram,
 } from "@repo/backend/convex/learningPrograms/selection";
 import { programMatchesInterest } from "@repo/backend/convex/learningPrograms/spec";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import {
+  getUnknownErrorMessage,
+  runConvexProgram,
+} from "@repo/backend/convex/lib/effect";
 import type { LearningInterest } from "@repo/contents/_types/program/schema";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
+import { Clock, Effect, Schema } from "effect";
 
 const cutover = new Migrations(components.migrations, {
   defaultBatchSize: 50,
@@ -25,47 +34,91 @@ const cutover = new Migrations(components.migrations, {
 const CUTOVER_AUDIT_LIMIT = 1000;
 const DEFAULT_EXAM_PROGRAM_KEY = "snbt";
 const DEFAULT_SCHOOL_PROGRAM_KEY = "merdeka";
+const learningSelectionAuditLimitCode = "LEARNING_SELECTION_AUDIT_LIMIT";
+const learningSelectionMigrationIoFailedCode =
+  "LEARNING_SELECTION_MIGRATION_IO_FAILED";
+const learningSelectionMigrationUnresolvedCode =
+  "LEARNING_SELECTION_MIGRATION_UNRESOLVED";
+
+interface ResolvedLearningSelection {
+  readonly interest: LearningInterest;
+  readonly program: LearningProgram;
+}
+
+/** Expected migration or audit failure at the legacy cutover boundary. */
+class LearningSelectionMigrationError extends Schema.TaggedError<LearningSelectionMigrationError>()(
+  "LearningSelectionMigrationError",
+  {
+    code: Schema.Literal(
+      learningSelectionAuditLimitCode,
+      learningSelectionMigrationIoFailedCode,
+      learningSelectionMigrationUnresolvedCode
+    ),
+    message: Schema.String,
+  }
+) {}
+
+/** Maps unknown legacy database failures into the migration error channel. */
+function toLearningSelectionMigrationIoError(error: unknown) {
+  return new LearningSelectionMigrationError({
+    code: learningSelectionMigrationIoFailedCode,
+    message: getUnknownErrorMessage(error),
+  });
+}
 
 /** Moves the durable learner choice out of generated profile and plan tables. */
 export const migrateLearningSelections = cutover.define({
   table: "learningProfiles",
-  migrateOne: async (ctx, profile) => {
-    const preference = await getLearningPreferenceByUserId(ctx, profile.userId);
-    const legacyProgram = await ctx.db.get(profile.programId);
-    const [canonicalSelection, legacySelection] = await Promise.all([
-      readCanonicalSelection(ctx, preference),
-      readLegacySelection(ctx, profile, legacyProgram, preference),
-    ]);
+  migrateOne: (ctx, profile) =>
+    runConvexProgram(migrateLearningSelection(ctx, profile)),
+});
 
-    if (
-      canonicalSelection &&
-      preference &&
-      shouldPreserveCanonicalSelection({
-        canonicalSelection,
-        legacySelection,
-        preference,
-        profile,
-      })
-    ) {
-      return;
-    }
+/** Migrates one legacy profile through a single composed Effect runtime. */
+const migrateLearningSelection = Effect.fn(
+  "learningPrograms.migrateLearningSelection"
+)(function* (ctx: MutationCtx, profile: Doc<"learningProfiles">) {
+  const preference = yield* readLearningPreferenceByUserId(ctx, profile.userId);
+  const legacyProgram = yield* Effect.tryPromise({
+    catch: toLearningSelectionMigrationIoError,
+    try: () => ctx.db.get(profile.programId),
+  });
+  const canonicalSelection = yield* readCanonicalSelection(ctx, preference);
+  const legacySelection = yield* readLegacySelection(
+    ctx,
+    profile,
+    legacyProgram,
+    preference
+  );
 
-    if (!legacySelection) {
-      throw new ConvexError({
-        code: "LEARNING_SELECTION_MIGRATION_UNRESOLVED",
-        message: "A legacy learning profile has no valid signed program.",
-      });
-    }
+  if (
+    canonicalSelection &&
+    preference &&
+    shouldPreserveCanonicalSelection({
+      canonicalSelection,
+      legacySelection,
+      preference,
+      profile,
+    })
+  ) {
+    return;
+  }
 
-    await upsertLearningSelection({
-      ctx,
-      interest: legacySelection.interest,
-      now: Date.now(),
-      programKey: legacySelection.program.key,
-      programKind: legacySelection.program.kind,
-      userId: profile.userId,
+  if (!legacySelection) {
+    return yield* new LearningSelectionMigrationError({
+      code: learningSelectionMigrationUnresolvedCode,
+      message: "A legacy learning profile has no valid signed program.",
     });
-  },
+  }
+
+  const now = yield* Clock.currentTimeMillis;
+  yield* saveLearningSelection({
+    ctx,
+    interest: legacySelection.interest,
+    now,
+    programKey: legacySelection.program.key,
+    programKind: legacySelection.program.kind,
+    userId: profile.userId,
+  });
 });
 
 /** Proves every legacy profile has one valid canonical signed selection. */
@@ -78,62 +131,78 @@ export const auditLearningSelections = internalQuery({
     selectionRows: v.number(),
     unresolvedProfiles: v.number(),
   }),
-  handler: async (ctx) => {
-    const [preferences, profiles, programs] = await Promise.all([
-      ctx.db.query("learningPreferences").take(CUTOVER_AUDIT_LIMIT + 1),
-      ctx.db.query("learningProfiles").take(CUTOVER_AUDIT_LIMIT + 1),
-      runConvexProgram(listSignedPrograms(ctx, "id")),
-    ]);
+  handler: (ctx) => runConvexProgram(auditLearningSelectionRows(ctx)),
+});
 
-    if (
-      preferences.length > CUTOVER_AUDIT_LIMIT ||
-      profiles.length > CUTOVER_AUDIT_LIMIT
-    ) {
-      throw new ConvexError({
-        code: "LEARNING_SELECTION_AUDIT_LIMIT",
-        message: `Learning selection audit exceeds ${CUTOVER_AUDIT_LIMIT} rows.`,
-      });
+/** Audits the bounded legacy and canonical rows in one composed program. */
+const auditLearningSelectionRows = Effect.fn(
+  "learningPrograms.auditLearningSelectionRows"
+)(function* (ctx: QueryCtx) {
+  const [preferences, profiles, programs] = yield* Effect.all(
+    [
+      Effect.tryPromise({
+        catch: toLearningSelectionMigrationIoError,
+        try: () =>
+          ctx.db.query("learningPreferences").take(CUTOVER_AUDIT_LIMIT + 1),
+      }),
+      Effect.tryPromise({
+        catch: toLearningSelectionMigrationIoError,
+        try: () =>
+          ctx.db.query("learningProfiles").take(CUTOVER_AUDIT_LIMIT + 1),
+      }),
+      listSignedPrograms(ctx, "id"),
+    ],
+    { concurrency: "unbounded" }
+  );
+
+  if (
+    preferences.length > CUTOVER_AUDIT_LIMIT ||
+    profiles.length > CUTOVER_AUDIT_LIMIT
+  ) {
+    return yield* new LearningSelectionMigrationError({
+      code: learningSelectionAuditLimitCode,
+      message: `Learning selection audit exceeds ${CUTOVER_AUDIT_LIMIT} rows.`,
+    });
+  }
+
+  const programsByKey = new Map<string, (typeof programs)[number]>(
+    programs.map((program) => [program.key, program])
+  );
+  const preferencesByUserId = new Map(
+    preferences.map((preference) => [preference.userId, preference])
+  );
+  const selectionRows = preferences.filter(
+    (preference) =>
+      preference.learningInterest !== undefined &&
+      preference.primaryProgramKey !== undefined
+  );
+  const isValidSelection = (preference: Doc<"learningPreferences">) => {
+    if (!(preference.learningInterest && preference.primaryProgramKey)) {
+      return false;
     }
 
-    const programsByKey = new Map<string, (typeof programs)[number]>(
-      programs.map((program) => [program.key, program])
-    );
-    const preferencesByUserId = new Map(
-      preferences.map((preference) => [preference.userId, preference])
-    );
-    const selectionRows = preferences.filter(
-      (preference) =>
-        preference.learningInterest !== undefined &&
-        preference.primaryProgramKey !== undefined
-    );
-    const isValidSelection = (preference: Doc<"learningPreferences">) => {
-      if (!(preference.learningInterest && preference.primaryProgramKey)) {
-        return false;
-      }
+    const program = programsByKey.get(preference.primaryProgramKey);
 
-      const program = programsByKey.get(preference.primaryProgramKey);
+    return Boolean(
+      program &&
+        isLearningProgramSelectable(program) &&
+        programMatchesInterest(program.kind, preference.learningInterest)
+    );
+  };
+  const unresolvedProfiles = profiles.filter((profile) => {
+    const preference = preferencesByUserId.get(profile.userId);
+    return !(preference && isValidSelection(preference));
+  });
 
-      return Boolean(
-        program &&
-          isLearningProgramSelectable(program) &&
-          programMatchesInterest(program.kind, preference.learningInterest)
-      );
-    };
-    const unresolvedProfiles = profiles.filter((profile) => {
-      const preference = preferencesByUserId.get(profile.userId);
-      return !(preference && isValidSelection(preference));
-    });
-
-    return {
-      invalidSelections: selectionRows.filter(
-        (preference) => !isValidSelection(preference)
-      ).length,
-      legacyProfiles: profiles.length,
-      migratedProfiles: profiles.length - unresolvedProfiles.length,
-      selectionRows: selectionRows.length,
-      unresolvedProfiles: unresolvedProfiles.length,
-    };
-  },
+  return {
+    invalidSelections: selectionRows.filter(
+      (preference) => !isValidSelection(preference)
+    ).length,
+    legacyProfiles: profiles.length,
+    migratedProfiles: profiles.length - unresolvedProfiles.length,
+    selectionRows: selectionRows.length,
+    unresolvedProfiles: unresolvedProfiles.length,
+  };
 });
 
 /** Orders grounded legacy keys for one candidate interest. */
@@ -161,16 +230,17 @@ function getCandidateProgramKeys({
 }
 
 /** Reads one already-valid canonical selection without rewriting it. */
-async function readCanonicalSelection(
-  ctx: Parameters<typeof getLearningPreferenceByUserId>[0],
-  preference: Doc<"learningPreferences"> | null
-) {
+const readCanonicalSelection = Effect.fn(
+  "learningPrograms.readCanonicalSelection"
+)(function* (ctx: MutationCtx, preference: Doc<"learningPreferences"> | null) {
   if (!(preference?.learningInterest && preference.primaryProgramKey)) {
     return null;
   }
 
-  const program = await runConvexProgram(
-    readSignedProgram(ctx, "id", preference.primaryProgramKey)
+  const program = yield* readSignedProgram(
+    ctx,
+    "id",
+    preference.primaryProgramKey
   );
 
   if (
@@ -184,32 +254,38 @@ async function readCanonicalSelection(
   }
 
   return { interest: preference.learningInterest, program };
-}
+});
 
 /** Resolves every legacy interest shape against its selected program first. */
-async function readLegacySelection(
-  ctx: Parameters<typeof getLearningPreferenceByUserId>[0],
-  profile: Doc<"learningProfiles">,
-  legacyProgram: Doc<"learningPrograms"> | null,
-  preference: Doc<"learningPreferences"> | null
-) {
-  const interests = orderLegacyInterests(profile.interests, legacyProgram);
+const readLegacySelection = Effect.fn("learningPrograms.readLegacySelection")(
+  function* (
+    ctx: MutationCtx,
+    profile: Doc<"learningProfiles">,
+    legacyProgram: Doc<"learningPrograms"> | null,
+    preference: Doc<"learningPreferences"> | null
+  ) {
+    const interests = orderLegacyInterests(profile.interests, legacyProgram);
 
-  for (const interest of interests) {
-    const candidateKeys = getCandidateProgramKeys({
-      interest,
-      legacyProgramKey: legacyProgram?.key,
-      preference,
-    });
-    const program = await readFirstValidProgram(ctx, interest, candidateKeys);
+    for (const interest of interests) {
+      const candidateKeys = getCandidateProgramKeys({
+        interest,
+        legacyProgramKey: legacyProgram?.key,
+        preference,
+      });
+      const program = yield* readFirstValidProgram(
+        ctx,
+        interest,
+        candidateKeys
+      );
 
-    if (program) {
-      return { interest, program };
+      if (program) {
+        return { interest, program };
+      }
     }
-  }
 
-  return null;
-}
+    return null;
+  }
+);
 
 /** Prioritizes interests compatible with the program the learner selected. */
 function orderLegacyInterests(
@@ -239,10 +315,8 @@ function shouldPreserveCanonicalSelection({
   preference,
   profile,
 }: {
-  canonicalSelection: NonNullable<
-    Awaited<ReturnType<typeof readCanonicalSelection>>
-  >;
-  legacySelection: Awaited<ReturnType<typeof readLegacySelection>>;
+  canonicalSelection: ResolvedLearningSelection;
+  legacySelection: ResolvedLearningSelection | null;
   preference: Doc<"learningPreferences">;
   profile: Doc<"learningProfiles">;
 }) {
@@ -261,15 +335,15 @@ function shouldPreserveCanonicalSelection({
 }
 
 /** Returns the first candidate that exists and matches the signed catalog. */
-async function readFirstValidProgram(
-  ctx: Parameters<typeof getLearningPreferenceByUserId>[0],
+const readFirstValidProgram = Effect.fn(
+  "learningPrograms.readFirstValidProgram"
+)(function* (
+  ctx: MutationCtx,
   interest: LearningInterest,
   candidateKeys: readonly string[]
 ) {
   for (const candidateKey of candidateKeys) {
-    const program = await runConvexProgram(
-      readSignedProgram(ctx, "id", candidateKey)
-    );
+    const program = yield* readSignedProgram(ctx, "id", candidateKey);
 
     if (
       program &&
@@ -281,4 +355,4 @@ async function readFirstValidProgram(
   }
 
   return null;
-}
+});

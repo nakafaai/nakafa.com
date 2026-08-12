@@ -1,7 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
-import { getLearningPreferenceByUserId } from "@repo/backend/convex/learningPreferences/impl";
+import { readLearningPreferenceByUserId } from "@repo/backend/convex/learningPreferences/impl";
 import { toLearningProgramSummary } from "@repo/backend/convex/learningPrograms/impl";
 import { loadLearningPlanTarget } from "@repo/backend/convex/learningPrograms/planTarget";
 import {
@@ -43,8 +43,9 @@ export const getActiveSelection = query({
           return null;
         }
 
-        const preference = yield* Effect.promise(() =>
-          getLearningPreferenceByUserId(ctx, user.appUser._id)
+        const preference = yield* readLearningPreferenceByUserId(
+          ctx,
+          user.appUser._id
         );
 
         if (!(preference?.learningInterest && preference.primaryProgramKey)) {

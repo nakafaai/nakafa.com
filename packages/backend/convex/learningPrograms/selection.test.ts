@@ -147,6 +147,41 @@ describe("learningPrograms/selection", () => {
     ).rejects.toThrow("LEARNING_PROGRAM_INTEREST_MISMATCH");
   });
 
+  it("reports duplicate preference rows through the typed persistence contract", async () => {
+    const target = createConvexTestWithBetterAuth();
+    const data = await Effect.runPromise(
+      makeProgramSnapshotData([
+        makeProgram(1, "merdeka", "school-curriculum", "partial"),
+      ])
+    );
+    await activateProgramSnapshot(target, data);
+    const identity = await target.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+    await target.mutation(async (ctx) => {
+      await ctx.db.insert("learningPreferences", {
+        updatedAt: NOW,
+        userId: identity.userId,
+      });
+      await ctx.db.insert("learningPreferences", {
+        updatedAt: NOW + 1,
+        userId: identity.userId,
+      });
+    });
+    const authed = target.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await expect(
+      authed.mutation(api.learningPrograms.mutations.selectProgram, {
+        interest: "school-curriculum",
+        locale: "id",
+        programKey: "merdeka",
+      })
+    ).rejects.toThrow("LEARNING_PREFERENCE_PERSISTENCE_FAILED");
+  });
+
   it("fails closed when no signed program snapshot is active", async () => {
     const target = convexTest(schema, convexModules);
 
