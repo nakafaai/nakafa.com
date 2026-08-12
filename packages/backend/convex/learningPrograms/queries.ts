@@ -48,9 +48,13 @@ export const getActiveSelection = query({
           ctx,
           user.appUser._id
         );
+        yield* requireLearningSelectionCutoverComplete(
+          ctx,
+          user.appUser._id,
+          preference
+        );
 
         if (!(preference?.learningInterest && preference.primaryProgramKey)) {
-          yield* requireLearningSelectionCutoverComplete(ctx, user.appUser._id);
           return null;
         }
 
@@ -67,7 +71,6 @@ export const getActiveSelection = query({
             programMatchesInterest(program.kind, preference.learningInterest)
           )
         ) {
-          yield* requireLearningSelectionCutoverComplete(ctx, user.appUser._id);
           return null;
         }
 

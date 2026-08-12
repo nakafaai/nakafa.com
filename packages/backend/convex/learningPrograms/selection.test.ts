@@ -151,6 +151,119 @@ describe("learningPrograms/selection", () => {
     ).rejects.toThrow("LEARNING_SELECTION_CUTOVER_REQUIRED");
   });
 
+  it("allows reselection after a migrated signed program is retired", async () => {
+    const target = createConvexTestWithBetterAuth();
+    const data = await Effect.runPromise(
+      makeProgramSnapshotData([
+        makeProgram(1, "merdeka", "school-curriculum", "archived"),
+      ])
+    );
+    await activateProgramSnapshot(target, data);
+    const identity = await target.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+    await target.mutation(async (ctx) => {
+      const programId = await ctx.db.insert("learningPrograms", {
+        defaultCoverageStatus: "partial",
+        displayOrder: 1,
+        iconKey: "school",
+        key: "merdeka",
+        kind: "school-curriculum",
+        navigation: { levels: ["track"], model: "curriculum-tree" },
+        providerKind: "nakafa",
+        providerName: "Retained cutover fixture",
+        syncedAt: NOW,
+        translations: {
+          en: { publicSlug: "merdeka", title: "Merdeka" },
+          id: { publicSlug: "merdeka", title: "Merdeka" },
+        },
+        updatedAt: NOW,
+        versionLabel: "Legacy",
+      });
+      await ctx.db.insert("learningProfiles", {
+        interests: ["school-curriculum"],
+        programId,
+        programKey: "merdeka",
+        updatedAt: NOW,
+        userId: identity.userId,
+      });
+      await ctx.db.insert("learningPreferences", {
+        learningInterest: "school-curriculum",
+        primaryProgramKey: "merdeka",
+        selectionUpdatedAt: NOW,
+        updatedAt: NOW,
+        userId: identity.userId,
+      });
+    });
+    const authed = target.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await expect(
+      authed.query(api.learningPrograms.queries.getActiveSelection, {
+        locale: "id",
+      })
+    ).resolves.toBeNull();
+  });
+
+  it("fails closed when a retained profile has a newer conflicting write", async () => {
+    const target = createConvexTestWithBetterAuth();
+    const data = await Effect.runPromise(
+      makeProgramSnapshotData([
+        makeProgram(1, "merdeka", "school-curriculum", "partial"),
+        makeProgram(2, "snbt", "admission-exam", "partial"),
+      ])
+    );
+    await activateProgramSnapshot(target, data);
+    const identity = await target.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+    await target.mutation(async (ctx) => {
+      const programId = await ctx.db.insert("learningPrograms", {
+        defaultCoverageStatus: "partial",
+        displayOrder: 2,
+        iconKey: "assessment",
+        key: "snbt",
+        kind: "admission-exam",
+        navigation: { levels: ["set"], model: "exam-domain-set" },
+        providerKind: "nakafa",
+        providerName: "Retained cutover fixture",
+        syncedAt: NOW + 1,
+        translations: {
+          en: { publicSlug: "snbt", title: "SNBT" },
+          id: { publicSlug: "snbt", title: "SNBT" },
+        },
+        updatedAt: NOW + 1,
+        versionLabel: "Legacy",
+      });
+      await ctx.db.insert("learningProfiles", {
+        interests: ["exam-prep"],
+        programId,
+        programKey: "snbt",
+        updatedAt: NOW + 1,
+        userId: identity.userId,
+      });
+      await ctx.db.insert("learningPreferences", {
+        learningInterest: "school-curriculum",
+        primaryProgramKey: "merdeka",
+        selectionUpdatedAt: NOW,
+        updatedAt: NOW,
+        userId: identity.userId,
+      });
+    });
+    const authed = target.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await expect(
+      authed.query(api.learningPrograms.queries.getActiveSelection, {
+        locale: "id",
+      })
+    ).rejects.toThrow("LEARNING_SELECTION_CUTOVER_REQUIRED");
+  });
+
   it("refreshes the timestamp when a user explicitly reselects a program", async () => {
     const target = createConvexTestWithBetterAuth();
     const data = await Effect.runPromise(
