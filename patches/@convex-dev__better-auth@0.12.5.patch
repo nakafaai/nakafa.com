@@ -1,26 +1,117 @@
 diff --git a/dist/nextjs/index.js b/dist/nextjs/index.js
-index e9d357fac1f073aa61c0cdeac36fd4ebb00fe583..d235e3bbf785e67827ca388255c6e5d416fa2760 100644
+index e9d357f..b28f84e 100644
 --- a/dist/nextjs/index.js
 +++ b/dist/nextjs/index.js
-@@ -31,9 +31,12 @@ const handler = async (request, siteUrl) => {
+@@ -23,6 +23,23 @@ const parseConvexSiteUrl = (url) => {
+     }
+     return url;
+ };
++// Convex ingress routes on `x-forwarded-host`, so tunnel the public origin
++// through component-owned headers until the request reaches Better Auth.
++const tunnelPublicOrigin = (headers, host, protocol) => {
++    headers.delete("x-forwarded-host");
++    if (host) {
++        headers.set("x-better-auth-forwarded-host", host);
++    }
++    else {
++        headers.delete("x-better-auth-forwarded-host");
++    }
++    if (protocol) {
++        headers.set("x-better-auth-forwarded-proto", protocol);
++    }
++    else {
++        headers.delete("x-better-auth-forwarded-proto");
++    }
++};
+ const handler = async (request, siteUrl) => {
+     const requestUrl = new URL(request.url);
+     const nextUrl = `${siteUrl}${requestUrl.pathname}${requestUrl.search}`;
+@@ -31,12 +48,11 @@ const handler = async (request, siteUrl) => {
      headers.delete("transfer-encoding");
      headers.delete("content-length");
      headers.delete("connection");
-+    // Convex's edge resolves the deployment from `x-forwarded-host`, so an app
-+    // domain here routes to nothing; the component restores it from
-+    // `x-better-auth-forwarded-host` instead.
-+    headers.delete("x-forwarded-host");
++    const protocol = requestUrl.protocol.replace(/:$/, "");
++    tunnelPublicOrigin(headers, requestUrl.host, protocol);
      headers.set("accept-encoding", "application/json");
      headers.set("host", new URL(siteUrl).host);
 -    headers.set("x-forwarded-host", requestUrl.host);
-     headers.set("x-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
-     headers.set("x-better-auth-forwarded-host", requestUrl.host);
-     headers.set("x-better-auth-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
+-    headers.set("x-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
+-    headers.set("x-better-auth-forwarded-host", requestUrl.host);
+-    headers.set("x-better-auth-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
++    headers.set("x-forwarded-proto", protocol);
+     const init = {
+         headers,
+         method: request.method,
+@@ -62,8 +78,11 @@ export const convexBetterAuthNextJs = (opts) => {
+     const cachedGetToken = cache(async ({ forceRefresh } = {}) => {
+         const headers = await (await import("next/headers.js")).headers();
+         const mutableHeaders = new Headers(headers);
++        const publicHost = mutableHeaders.get("x-forwarded-host") ?? mutableHeaders.get("host");
++        const publicProtocol = mutableHeaders.get("x-forwarded-proto");
+         mutableHeaders.delete("content-length");
+         mutableHeaders.delete("transfer-encoding");
++        tunnelPublicOrigin(mutableHeaders, publicHost, publicProtocol);
+         mutableHeaders.set("accept-encoding", "identity");
+         return getToken(siteUrl, mutableHeaders, { ...opts, forceRefresh });
+     });
+diff --git a/src/client/create-client.test.ts b/src/client/create-client.test.ts
+index 548bdf4..939bdcb 100644
+--- a/src/client/create-client.test.ts
++++ b/src/client/create-client.test.ts
+@@ -109,7 +109,7 @@ describe("createClient route registration", () => {
+     expect(createAuth).toHaveBeenCalledTimes(2);
+   });
+ 
+-  it("restores preserved forwarded host headers before calling auth.handler", async () => {
++  it("restores preserved forwarded origin headers before calling auth.handler", async () => {
+     const client = createClient(component);
+     const http = httpRouter();
+     const handler = vi.fn(async (_request: Request) => new Response("ok"));
+@@ -134,9 +134,10 @@ describe("createClient route registration", () => {
+       new Request("https://adjective-animal-123.convex.site/api/auth/test", {
+         method: "GET",
+         headers: {
++          cookie: "better-auth.session_token=session-cookie",
+           host: "deployment.convex.site",
+           "x-forwarded-host": "deployment.convex.site",
+-          "x-forwarded-proto": "https",
++          "x-forwarded-proto": "http",
+           "x-better-auth-forwarded-host": "app.example.com",
+           "x-better-auth-forwarded-proto": "https",
+         },
+@@ -145,8 +146,13 @@ describe("createClient route registration", () => {
+ 
+     const forwardedRequest = handler.mock.calls[0]?.[0];
+     expect(forwardedRequest).toBeInstanceOf(Request);
+-    expect(forwardedRequest.headers.get("x-forwarded-host")).toBe("app.example.com");
++    expect(forwardedRequest.headers.get("x-forwarded-host")).toBe(
++      "app.example.com"
++    );
+     expect(forwardedRequest.headers.get("x-forwarded-proto")).toBe("https");
++    expect(forwardedRequest.headers.get("cookie")).toBe(
++      "better-auth.session_token=session-cookie"
++    );
+   });
+ 
+   it("registerRoutesLazy resolves trustedOrigins lazily when needed", async () => {
 diff --git a/src/nextjs/index.test.ts b/src/nextjs/index.test.ts
-index 325617029d91d0646973114e413b3d1ce8559bfd..21e705027b8c4e3b04dfa814c0bd62350435ccde 100644
+index 3256170..0468f4d 100644
 --- a/src/nextjs/index.test.ts
 +++ b/src/nextjs/index.test.ts
-@@ -69,12 +69,30 @@ describe("convexBetterAuthNextJs handler", () => {
+@@ -1,6 +1,12 @@
+ import { afterEach, describe, expect, it, vi } from "vitest";
+ import { convexBetterAuthNextJs } from "./index.js";
+ 
++const getRequestHeaders = vi.hoisted(() => vi.fn());
++
++vi.mock("next/headers.js", () => ({
++  headers: getRequestHeaders,
++}));
++
+ const SITE_URL = "https://test.convex.site";
+ const CONVEX_URL = "https://test.convex.cloud";
+ 
+@@ -69,12 +75,30 @@ describe("convexBetterAuthNextJs handler", () => {
      await handler.POST(request);
      const headers = headersOf(fetchSpy);
      expect(headers.get("host")).toBe(new URL(SITE_URL).host);
@@ -30,8 +121,7 @@ index 325617029d91d0646973114e413b3d1ce8559bfd..21e705027b8c4e3b04dfa814c0bd6235
      expect(headers.get("x-better-auth-forwarded-host")).toBe("app.example.com");
      expect(headers.get("x-better-auth-forwarded-proto")).toBe("https");
    });
--
-+
+ 
 +  it("drops an inbound x-forwarded-host instead of forwarding it", async () => {
 +    const { handler, fetchSpy } = setup();
 +    const request = new Request(
@@ -53,21 +143,107 @@ index 325617029d91d0646973114e413b3d1ce8559bfd..21e705027b8c4e3b04dfa814c0bd6235
    it("buffers POST body and forwards as ArrayBuffer", async () => {
      const { handler, fetchSpy } = setup();
      const body = JSON.stringify({ email: "test@example.com" });
+@@ -107,3 +131,41 @@ describe("convexBetterAuthNextJs handler", () => {
+     expect(initOf(fetchSpy).body).toBeUndefined();
+   });
+ });
++
++describe("convexBetterAuthNextJs getToken", () => {
++  afterEach(() => {
++    vi.restoreAllMocks();
++    getRequestHeaders.mockReset();
++  });
++
++  it("tunnels the public origin without exposing it to Convex ingress", async () => {
++    const cookie = "better-auth.session_token=session-cookie";
++    getRequestHeaders.mockResolvedValue(
++      new Headers({
++        cookie,
++        host: "render.internal.example.com",
++        "x-forwarded-host": "app.example.com",
++        "x-forwarded-proto": "https",
++      })
++    );
++    const fetchSpy = vi
++      .spyOn(globalThis, "fetch")
++      .mockResolvedValue(Response.json({ token: "server-token" }));
++    const auth = convexBetterAuthNextJs({
++      convexUrl: CONVEX_URL,
++      convexSiteUrl: SITE_URL,
++    });
++
++    await expect(auth.getToken()).resolves.toBe("server-token");
++
++    const headers = headersOf(fetchSpy);
++    expect(String(fetchSpy.mock.calls[0]?.[0])).toBe(
++      `${SITE_URL}/api/auth/convex/token`
++    );
++    expect(headers.get("host")).toBe("test.convex.site");
++    expect(headers.get("x-forwarded-host")).toBeNull();
++    expect(headers.get("x-better-auth-forwarded-host")).toBe("app.example.com");
++    expect(headers.get("x-better-auth-forwarded-proto")).toBe("https");
++    expect(headers.get("cookie")).toBe(cookie);
++  });
++});
 diff --git a/src/nextjs/index.ts b/src/nextjs/index.ts
-index 1eef064afd063e134be1dabc362979c88f297f45..3742097ec2f5e1ee2904a7c47bbfd249dbd4ee5c 100644
+index 1eef064..ebd158b 100644
 --- a/src/nextjs/index.ts
 +++ b/src/nextjs/index.ts
-@@ -49,9 +49,12 @@ const handler = async (request: Request, siteUrl: string) => {
+@@ -40,6 +40,28 @@ const parseConvexSiteUrl = (url: string) => {
+   return url;
+ };
+ 
++// Convex ingress routes on `x-forwarded-host`, so tunnel the public origin
++// through component-owned headers until the request reaches Better Auth.
++const tunnelPublicOrigin = (
++  headers: Headers,
++  host: string | null,
++  protocol: string | null
++) => {
++  headers.delete("x-forwarded-host");
++
++  if (host) {
++    headers.set("x-better-auth-forwarded-host", host);
++  } else {
++    headers.delete("x-better-auth-forwarded-host");
++  }
++
++  if (protocol) {
++    headers.set("x-better-auth-forwarded-proto", protocol);
++  } else {
++    headers.delete("x-better-auth-forwarded-proto");
++  }
++};
++
+ const handler = async (request: Request, siteUrl: string) => {
+   const requestUrl = new URL(request.url);
+   const nextUrl = `${siteUrl}${requestUrl.pathname}${requestUrl.search}`;
+@@ -49,12 +71,11 @@ const handler = async (request: Request, siteUrl: string) => {
    headers.delete("transfer-encoding");
    headers.delete("content-length");
    headers.delete("connection");
-+  // Convex's edge resolves the deployment from `x-forwarded-host`, so an app
-+  // domain here routes to nothing; the component restores it from
-+  // `x-better-auth-forwarded-host` instead.
-+  headers.delete("x-forwarded-host");
++  const protocol = requestUrl.protocol.replace(/:$/, "");
++  tunnelPublicOrigin(headers, requestUrl.host, protocol);
    headers.set("accept-encoding", "application/json");
    headers.set("host", new URL(siteUrl).host);
 -  headers.set("x-forwarded-host", requestUrl.host);
-   headers.set("x-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
-   headers.set("x-better-auth-forwarded-host", requestUrl.host);
-   headers.set("x-better-auth-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
+-  headers.set("x-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
+-  headers.set("x-better-auth-forwarded-host", requestUrl.host);
+-  headers.set("x-better-auth-forwarded-proto", requestUrl.protocol.replace(/:$/, ""));
++  headers.set("x-forwarded-proto", protocol);
+ 
+   const init: RequestInit = {
+     headers,
+@@ -98,8 +119,12 @@ export const convexBetterAuthNextJs = (
+     async ({ forceRefresh }: { forceRefresh?: boolean } = {}) => {
+       const headers = await (await import("next/headers.js")).headers();
+       const mutableHeaders = new Headers(headers);
++      const publicHost =
++        mutableHeaders.get("x-forwarded-host") ?? mutableHeaders.get("host");
++      const publicProtocol = mutableHeaders.get("x-forwarded-proto");
+       mutableHeaders.delete("content-length");
+       mutableHeaders.delete("transfer-encoding");
++      tunnelPublicOrigin(mutableHeaders, publicHost, publicProtocol);
+       mutableHeaders.set("accept-encoding", "identity");
+       return getToken(siteUrl, mutableHeaders, { ...opts, forceRefresh });
+     }

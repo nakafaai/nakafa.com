@@ -1,5 +1,11 @@
 // @vitest-environment node
 
+import "next/dist/server/node-environment-baseline";
+
+import { workAsyncStorage } from "next/dist/server/app-render/work-async-storage.external";
+import { workUnitAsyncStorage } from "next/dist/server/app-render/work-unit-async-storage.external";
+import { createRequestStore } from "next/dist/server/async-storage/request-store";
+import { createWorkStore } from "next/dist/server/async-storage/work-store";
 import {
   afterAll,
   afterEach,
@@ -13,6 +19,55 @@ import {
 const CONVEX_SITE_URL = "https://test.convex.site";
 
 let handler: typeof import("./server")["handler"];
+let getToken: typeof import("./server")["getToken"];
+
+const runWithRequestHeaders = (headers: Headers) => {
+  const requestStore = createRequestStore({
+    fallbackParams: null,
+    headers,
+    hmrRefreshHash: undefined,
+    implicitTags: { expirationsByCacheKind: new Map(), tags: [] },
+    isHmrRefresh: false,
+    onUpdateCookies: undefined,
+    phase: "render",
+    previewProps: undefined,
+    resumeDataCache: null,
+    rootParams: {},
+    serverComponentsHmrCache: undefined,
+    url: { pathname: "/test" },
+  });
+  const workStore = createWorkStore({
+    buildId: "test-build",
+    deploymentId: "test-deployment",
+    page: "/test/page",
+    previouslyRevalidatedTags: [],
+    renderOpts: {
+      assetPrefix: "",
+      cacheComponents: true,
+      cacheLifeProfiles: {
+        default: { expire: 31_536_000, revalidate: 900, stale: 300 },
+      },
+      experimental: {
+        authInterrupts: false,
+        isRoutePPREnabled: false,
+        useCacheTimeout: 50,
+      },
+      isBuildTimePrerendering: false,
+      isDebugDynamicAccesses: false,
+      isDraftMode: false,
+      onAfterTaskError: undefined,
+      onClose: () => undefined,
+      staticPageGenerationTimeout: 60,
+      supportsDynamicResponse: true,
+      validationLevel: "warning",
+      waitUntil: undefined,
+    },
+  });
+
+  return workAsyncStorage.run(workStore, () =>
+    workUnitAsyncStorage.run(requestStore, getToken)
+  );
+};
 
 beforeAll(async () => {
   vi.stubEnv("INTERNAL_CONTENT_API_KEY", "test-content-key");
@@ -21,7 +76,7 @@ beforeAll(async () => {
   vi.stubEnv("NEXT_PUBLIC_MCP_URL", "https://test.example.com/mcp");
   vi.stubEnv("SITE_URL", "https://nakafa.com");
 
-  ({ handler } = await import("./server"));
+  ({ getToken, handler } = await import("./server"));
 });
 
 afterEach(() => {
@@ -59,24 +114,31 @@ describe("Better Auth server proxy", () => {
     expect(headers.get("x-better-auth-forwarded-proto")).toBe("https");
   });
 
-  it("reads the current Better Auth token through the server boundary", async () => {
-    const componentGetToken = vi.fn().mockResolvedValue("test-token");
+  it("gets the SSR token through the installed adapter", async () => {
+    const cookie = "better-auth.session_token=session-cookie";
+    const requestHeaders = new Headers({
+      cookie,
+      host: "render.internal.example.com",
+      "x-forwarded-host": "nakafa.com",
+      "x-forwarded-proto": "https",
+    });
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(Response.json({ token: "test-token" }));
 
-    vi.resetModules();
-    vi.doMock("@convex-dev/better-auth/nextjs", () => ({
-      convexBetterAuthNextJs: () => ({
-        fetchAuthQuery: vi.fn(),
-        getToken: componentGetToken,
-        handler: { GET: vi.fn(), POST: vi.fn() },
-        preloadAuthQuery: vi.fn(),
-      }),
-    }));
+    await expect(runWithRequestHeaders(requestHeaders)).resolves.toBe(
+      "test-token"
+    );
+    const [, init] = fetchSpy.mock.calls[0] ?? [];
+    const headers = new Headers(init?.headers);
 
-    const { getToken } = await import("./server");
-
-    await expect(getToken()).resolves.toBe("test-token");
-    expect(componentGetToken).toHaveBeenCalledOnce();
-
-    vi.doUnmock("@convex-dev/better-auth/nextjs");
+    expect(String(fetchSpy.mock.calls[0]?.[0])).toBe(
+      `${CONVEX_SITE_URL}/api/auth/convex/token`
+    );
+    expect(headers.get("host")).toBe("test.convex.site");
+    expect(headers.get("x-forwarded-host")).toBeNull();
+    expect(headers.get("x-better-auth-forwarded-host")).toBe("nakafa.com");
+    expect(headers.get("x-better-auth-forwarded-proto")).toBe("https");
+    expect(headers.get("cookie")).toBe(cookie);
   });
 });
