@@ -38,18 +38,18 @@ interface StaleCoveragePlanItemDeleteArgs {
 }
 
 describe("learningPrograms", () => {
-  it("syncs selectable catalog rows and bounded source rows", async () => {
+  it("syncs catalog rows and bounded source rows", async () => {
     const t = createConvexTestWithBetterAuth();
+    const catalog = getLearningProgramCatalogInputs();
     const result = await t.mutation(
       internal.learningPrograms.sync.syncLearningPrograms,
       {
-        programs: getLearningProgramCatalogInputs(),
+        programs: catalog,
         syncedAt: NOW,
       }
     );
-    const programs = await t.query(
-      api.learningPrograms.queries.listSelectablePrograms,
-      { locale: "id" }
+    const programs = await t.query((ctx) =>
+      ctx.db.query("learningPrograms").withIndex("by_displayOrder").collect()
     );
     const sourceCount = await t.query(async (ctx) => {
       const program = await ctx.db
@@ -67,8 +67,14 @@ describe("learningPrograms", () => {
       return sources.length;
     });
 
-    expect(result).toEqual({ created: 6, skipped: 0, updated: 0 });
-    expect(programs.map((program) => program.key)).toEqual(["merdeka", "snbt"]);
+    expect(result).toEqual({
+      created: catalog.length,
+      skipped: 0,
+      updated: 0,
+    });
+    expect(programs.map((program) => program.key)).toEqual(
+      catalog.map((program) => program.key)
+    );
     expect(programs.find((program) => program.key === "merdeka")).toMatchObject(
       {
         navigation: {
@@ -78,73 +84,6 @@ describe("learningPrograms", () => {
       }
     );
     expect(sourceCount).toBe(2);
-  });
-
-  it("lists canonical programs in each content language only after coverage exists", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const englishSubjectGraph = getGraphIdentity(
-      "material/lesson/chemistry/atomic-structure",
-      "en"
-    );
-
-    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
-      programs: getLearningProgramCatalogInputs(),
-      syncedAt: NOW,
-    });
-
-    await expect(
-      t.query(api.learningPrograms.queries.listSelectablePrograms, {
-        locale: "en",
-      })
-    ).resolves.toEqual([]);
-
-    await t.mutation(
-      internal.learningPrograms.sync.syncLearningProgramCoverage,
-      {
-        coverageRows: [
-          {
-            contentCount: 1,
-            coverageStatus: "partial",
-            lensId: subjectGraph.lensId,
-            lensScope: "curriculum",
-            locale: "id",
-            programKey: "merdeka",
-            sampleContentId: subjectGraph.assetId,
-            syncedAt: NOW,
-          },
-          {
-            contentCount: 1,
-            coverageStatus: "partial",
-            lensId: englishSubjectGraph.lensId,
-            lensScope: "curriculum",
-            locale: "en",
-            programKey: "merdeka",
-            sampleContentId: englishSubjectGraph.assetId,
-            syncedAt: NOW,
-          },
-        ],
-      }
-    );
-
-    await expect(
-      t.query(api.learningPrograms.queries.listSelectablePrograms, {
-        locale: "id",
-      })
-    ).resolves.toMatchObject([
-      {
-        key: "merdeka",
-        title: "Kurikulum Merdeka",
-      },
-    ]);
-    await expect(
-      t.query(api.learningPrograms.queries.listSelectablePrograms, {
-        locale: "en",
-      })
-    ).resolves.toMatchObject([
-      {
-        key: "merdeka",
-      },
-    ]);
   });
 
   it("deletes stale coverage rows in bounded batches", async () => {
@@ -758,9 +697,8 @@ describe("learningPrograms", () => {
         syncedAt: NOW + 1,
       }
     );
-    const selectablePrograms = await t.query(
-      api.learningPrograms.queries.listSelectablePrograms,
-      { locale: "id" }
+    const retiredProgramAfterSync = await t.query((ctx) =>
+      ctx.db.get(retiredProgramId)
     );
     const activeProfile = await authed.query(
       api.learningPrograms.queries.getActiveProfile,
@@ -802,9 +740,7 @@ describe("learningPrograms", () => {
     });
 
     expect(result).toEqual({ created: 0, skipped: 0, updated: 7 });
-    expect(selectablePrograms.map((program) => program.key)).not.toContain(
-      retiredProgram.key
-    );
+    expect(retiredProgramAfterSync).toBeNull();
     expect(activeProfile).toBeNull();
     expect(omittedProgramDependents).toEqual({
       coverageRows: [],

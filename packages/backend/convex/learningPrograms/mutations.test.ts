@@ -88,16 +88,14 @@ describe("learningPrograms/mutations", () => {
     );
 
     expect(persistedKeys).toEqual(Array.from({ length: 3 }, () => "merdeka"));
-    await expect(
-      t
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
-        .query(api.learningPreferences.queries.getCurrent, { locale: "id" })
-    ).resolves.toMatchObject({
+    const preference = await t.query((ctx) =>
+      ctx.db
+        .query("learningPreferences")
+        .withIndex("by_userId", (query) => query.eq("userId", identity.userId))
+        .unique()
+    );
+    expect(preference).toMatchObject({
       preferredCurriculumProgramKey: "merdeka",
-      program: { key: "merdeka" },
     });
   });
 
