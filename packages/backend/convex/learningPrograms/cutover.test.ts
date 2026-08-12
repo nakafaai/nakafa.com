@@ -118,9 +118,9 @@ describe("learningPrograms/cutover", () => {
       invalidSelections: 0,
       legacyProfiles: 7,
       missingSelectionTimestamps: 0,
-      migratedProfiles: 2,
+      migratedProfiles: 1,
       selectionRows: 2,
-      unresolvedProfiles: 5,
+      unresolvedProfiles: 6,
     });
 
     await t.action((ctx) =>
@@ -245,6 +245,97 @@ describe("learningPrograms/cutover", () => {
       preferredCurriculumProgramKey: "cambridge-international",
       primaryProgramKey: "merdeka",
       selectionUpdatedAt: NOW,
+    });
+  });
+
+  it("detects and remigrates a newer legacy selection", async () => {
+    const data = await Effect.runPromise(
+      makeProgramSnapshotData([
+        makeSelectableProgram(1, "merdeka", "school-curriculum"),
+        makeSelectableProgram(2, "snbt", "admission-exam"),
+      ])
+    );
+    const t = convexTest(schema, convexModules);
+    migrationsTest.register(t);
+    await activateProgramSnapshot(t, data);
+    const { examProgramId, userId } = await t.mutation(async (ctx) => {
+      const schoolProgramId = await insertLegacyProgram(
+        ctx,
+        "merdeka",
+        "school-curriculum"
+      );
+      const insertedExamProgramId = await insertLegacyProgram(
+        ctx,
+        "snbt",
+        "admission-exam"
+      );
+      const insertedUserId = await insertLegacyProfile(ctx, {
+        interest: "school-curriculum",
+        programId: schoolProgramId,
+        suffix: "stale-client",
+      });
+
+      return {
+        examProgramId: insertedExamProgramId,
+        userId: insertedUserId,
+      };
+    });
+
+    await t.action((ctx) =>
+      runToCompletion(
+        ctx,
+        components.migrations,
+        internal.learningPrograms.cutover.migrateLearningSelections,
+        { cursor: null }
+      )
+    );
+
+    await t.mutation(async (ctx) => {
+      const profile = await ctx.db
+        .query("learningProfiles")
+        .withIndex("by_userId", (index) => index.eq("userId", userId))
+        .unique();
+
+      if (!profile) {
+        throw new Error("Expected one legacy learning profile.");
+      }
+
+      await ctx.db.patch(profile._id, {
+        interests: ["exam-prep"],
+        programId: examProgramId,
+        programKey: "snbt",
+        updatedAt: NOW + 1,
+      });
+    });
+
+    await expect(
+      t.query(internal.learningPrograms.cutover.auditLearningSelections, {})
+    ).resolves.toMatchObject({
+      migratedProfiles: 0,
+      unresolvedProfiles: 1,
+    });
+
+    await t.action((ctx) =>
+      runToCompletion(
+        ctx,
+        components.migrations,
+        internal.learningPrograms.cutover.migrateLearningSelections,
+        { cursor: null }
+      )
+    );
+
+    await expect(
+      t.query(internal.learningPrograms.cutover.auditLearningSelections, {})
+    ).resolves.toMatchObject({
+      migratedProfiles: 1,
+      unresolvedProfiles: 0,
+    });
+    await expect(
+      t.query((ctx) => ctx.db.query("learningPreferences").unique())
+    ).resolves.toMatchObject({
+      learningInterest: "exam-prep",
+      primaryProgramKey: "snbt",
+      selectionUpdatedAt: NOW + 1,
     });
   });
 

@@ -188,13 +188,25 @@ const auditLearningSelectionRows = Effect.fn(
         programMatchesInterest(program.kind, preference.learningInterest)
     );
   };
-  const unresolvedProfiles = profiles.filter((profile) => {
-    const preference = preferencesByUserId.get(profile.userId);
-    return !(
-      preference?.selectionUpdatedAt !== undefined &&
-      isValidSelection(preference)
-    );
-  });
+  const migratedProfiles = yield* Effect.forEach(
+    profiles,
+    (profile) =>
+      Effect.tryPromise({
+        catch: toLearningSelectionMigrationIoError,
+        try: () => ctx.db.get(profile.programId),
+      }).pipe(
+        Effect.map((legacyProgram) =>
+          isLearningSelectionMigrated({
+            legacyProgram,
+            preference: preferencesByUserId.get(profile.userId) ?? null,
+            profile,
+            programs,
+          })
+        )
+      ),
+    { concurrency: "unbounded" }
+  );
+  const migratedProfileCount = migratedProfiles.filter(Boolean).length;
 
   return {
     invalidSelections: selectionRows.filter(
@@ -202,9 +214,9 @@ const auditLearningSelectionRows = Effect.fn(
     ).length,
     legacyProfiles: profiles.length,
     missingSelectionTimestamps,
-    migratedProfiles: profiles.length - unresolvedProfiles.length,
+    migratedProfiles: migratedProfileCount,
     selectionRows: selectionRows.length,
-    unresolvedProfiles: unresolvedProfiles.length,
+    unresolvedProfiles: profiles.length - migratedProfileCount,
   };
 });
 
@@ -308,6 +320,37 @@ function orderLegacyInterests(
       (interest) => !programMatchesInterest(legacyProgram.kind, interest)
     ),
   ];
+}
+
+/** Proves the canonical row is at least as current as its legacy source. */
+function isLearningSelectionMigrated({
+  legacyProgram,
+  preference,
+  profile,
+  programs,
+}: {
+  legacyProgram: Doc<"learningPrograms"> | null;
+  preference: Doc<"learningPreferences"> | null;
+  profile: Doc<"learningProfiles">;
+  programs: readonly LearningProgram[];
+}) {
+  if (preference?.selectionUpdatedAt === undefined) {
+    return false;
+  }
+
+  const canonicalSelection = readCanonicalSelection(preference, programs);
+  if (!canonicalSelection) {
+    return false;
+  }
+
+  const legacySelection = readLegacySelection(profile, legacyProgram, programs);
+
+  return shouldPreserveCanonicalSelection({
+    canonicalSelection,
+    legacySelection,
+    preference,
+    profile,
+  });
 }
 
 /** Keeps a matching timestamped selection or a newer canonical write. */
