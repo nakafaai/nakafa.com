@@ -32,6 +32,8 @@ const cutover = new Migrations(components.migrations, {
 
 const CUTOVER_AUDIT_LIMIT = 1000;
 const learningSelectionAuditLimitCode = "LEARNING_SELECTION_AUDIT_LIMIT";
+const learningSelectionDuplicatePreferenceCode =
+  "LEARNING_SELECTION_DUPLICATE_PREFERENCE";
 const learningSelectionMigrationIoFailedCode =
   "LEARNING_SELECTION_MIGRATION_IO_FAILED";
 const learningSelectionMigrationUnresolvedCode =
@@ -48,6 +50,7 @@ class LearningSelectionMigrationError extends Schema.TaggedError<LearningSelecti
   {
     code: Schema.Literal(
       learningSelectionAuditLimitCode,
+      learningSelectionDuplicatePreferenceCode,
       learningSelectionMigrationIoFailedCode,
       learningSelectionMigrationUnresolvedCode
     ),
@@ -164,6 +167,18 @@ const auditLearningSelectionRows = Effect.fn(
   const programsByKey = new Map<string, (typeof programs)[number]>(
     programs.map((program) => [program.key, program])
   );
+  const preferenceUserIds = new Set<string>();
+  for (const preference of preferences) {
+    if (preferenceUserIds.has(preference.userId)) {
+      return yield* new LearningSelectionMigrationError({
+        code: learningSelectionDuplicatePreferenceCode,
+        message: "A learner has multiple learning preference rows.",
+      });
+    }
+
+    preferenceUserIds.add(preference.userId);
+  }
+
   const preferencesByUserId = new Map(
     preferences.map((preference) => [preference.userId, preference])
   );
@@ -366,7 +381,10 @@ function shouldPreserveCanonicalSelection({
   profile: Doc<"learningProfiles">;
 }) {
   if (!legacySelection) {
-    return true;
+    return (
+      preference.selectionUpdatedAt !== undefined &&
+      preference.selectionUpdatedAt >= profile.updatedAt
+    );
   }
 
   if (

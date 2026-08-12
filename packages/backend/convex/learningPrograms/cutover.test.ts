@@ -159,45 +159,21 @@ describe("learningPrograms/cutover", () => {
     });
 
     expect(
-      selections.sort(
-        (left, right) => left.user?.localeCompare(right.user ?? "") ?? 0
-      )
+      selections
+        .sort((left, right) => left.user?.localeCompare(right.user ?? "") ?? 0)
+        .map((selection) => [
+          selection.user,
+          selection.learningInterest,
+          selection.primaryProgramKey,
+        ])
     ).toEqual([
-      {
-        learningInterest: "exam-prep",
-        primaryProgramKey: "snbt",
-        user: "current-exam",
-      },
-      {
-        learningInterest: "school-curriculum",
-        primaryProgramKey: "merdeka",
-        user: "current-school",
-      },
-      {
-        learningInterest: "school-curriculum",
-        primaryProgramKey: "merdeka",
-        user: "multi-interest-school",
-      },
-      {
-        learningInterest: "assessment-prep",
-        primaryProgramKey: "snbt",
-        user: "newer-canonical",
-      },
-      {
-        learningInterest: "school-curriculum",
-        primaryProgramKey: "merdeka",
-        user: "newer-legacy",
-      },
-      {
-        learningInterest: "assessment-prep",
-        primaryProgramKey: "snbt",
-        user: "orphan-assessment",
-      },
-      {
-        learningInterest: "school-curriculum",
-        primaryProgramKey: "merdeka",
-        user: "orphan-school",
-      },
+      ["current-exam", "exam-prep", "snbt"],
+      ["current-school", "school-curriculum", "merdeka"],
+      ["multi-interest-school", "school-curriculum", "merdeka"],
+      ["newer-canonical", "assessment-prep", "snbt"],
+      ["newer-legacy", "school-curriculum", "merdeka"],
+      ["orphan-assessment", "assessment-prep", "snbt"],
+      ["orphan-school", "school-curriculum", "merdeka"],
     ]);
   });
 
@@ -339,7 +315,7 @@ describe("learningPrograms/cutover", () => {
     });
   });
 
-  it("fails when missing legacy evidence has multiple valid programs", async () => {
+  it("rejects newer unresolved evidence and duplicate preference owners", async () => {
     const first = makeSelectableProgram(1, "first", "school-curriculum");
     const second = makeSelectableProgram(2, "second", "school-curriculum");
     const data = await Effect.runPromise(
@@ -356,12 +332,23 @@ describe("learningPrograms/cutover", () => {
         "school-curriculum"
       );
       await insertLegacyProfile(ctx, {
+        canonicalSelection: {
+          interest: "school-curriculum",
+          programKey: "first",
+          selectionUpdatedAt: NOW,
+          updatedAt: NOW,
+        },
         interest: "school-curriculum",
+        profileUpdatedAt: NOW + 1,
         programId: deletedProgramId,
         suffix: "ambiguous",
       });
       await ctx.db.delete(deletedProgramId);
     });
+
+    await expect(
+      t.query(internal.learningPrograms.cutover.auditLearningSelections, {})
+    ).resolves.toMatchObject({ migratedProfiles: 0, unresolvedProfiles: 1 });
 
     await expect(
       t.action((ctx) =>
@@ -373,6 +360,41 @@ describe("learningPrograms/cutover", () => {
         )
       )
     ).rejects.toThrow("LEARNING_SELECTION_MIGRATION_UNRESOLVED");
+
+    const duplicate = convexTest(schema, convexModules);
+    await activateProgramSnapshot(duplicate, data);
+    await duplicate.mutation(async (ctx) => {
+      const programId = await insertLegacyProgram(
+        ctx,
+        "first",
+        "school-curriculum"
+      );
+      const userId = await insertLegacyProfile(ctx, {
+        canonicalSelection: {
+          interest: "school-curriculum",
+          programKey: "first",
+          selectionUpdatedAt: NOW,
+          updatedAt: NOW,
+        },
+        interest: "school-curriculum",
+        programId,
+        suffix: "duplicate",
+      });
+      await ctx.db.insert("learningPreferences", {
+        learningInterest: "school-curriculum",
+        primaryProgramKey: "first",
+        selectionUpdatedAt: NOW,
+        updatedAt: NOW,
+        userId,
+      });
+    });
+
+    await expect(
+      duplicate.query(
+        internal.learningPrograms.cutover.auditLearningSelections,
+        {}
+      )
+    ).rejects.toThrow("LEARNING_SELECTION_DUPLICATE_PREFERENCE");
   });
 });
 
