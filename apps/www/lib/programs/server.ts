@@ -5,36 +5,36 @@ import { fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import type {
-  ActiveLearningProfile,
+  ActiveLearningSelection,
   LearningProgramCatalog,
 } from "@/components/programs/contract";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { filterOnboardingPrograms } from "@/lib/programs/catalog";
 
-/** Expected failure while reading the current user's learning profile. */
-class ActiveLearningProfileReadError extends Schema.TaggedError<ActiveLearningProfileReadError>()(
-  "ActiveLearningProfileReadError",
+/** Expected failure while reading the current user's learning selection. */
+class ActiveLearningSelectionReadError extends Schema.TaggedError<ActiveLearningSelectionReadError>()(
+  "ActiveLearningSelectionReadError",
   {
     cause: Schema.Unknown,
     message: Schema.String,
   }
 ) {}
 
-/** Reads the authenticated user's learning profile through the Convex query seam. */
-const readActiveLearningProfile = Effect.fn(
-  "www.learningPrograms.activeProfile"
-)(function* (token: string, locale?: Locale) {
-  const args = locale === undefined ? {} : { locale };
-
+/** Reads the authenticated user's canonical learning selection. */
+const readActiveLearningSelection = Effect.fn(
+  "www.learningPrograms.activeSelection"
+)(function* (token: string, locale: Locale) {
   return yield* Effect.tryPromise({
     try: () =>
-      fetchQuery(api.learningPrograms.queries.getActiveProfile, args, {
-        token,
-      }),
+      fetchQuery(
+        api.learningPrograms.queries.getActiveSelection,
+        { locale },
+        { token }
+      ),
     catch: (cause) =>
-      new ActiveLearningProfileReadError({
+      new ActiveLearningSelectionReadError({
         cause,
-        message: "Unable to read active learning profile.",
+        message: "Unable to read active learning selection.",
       }),
   });
 });
@@ -59,7 +59,7 @@ async function getLearningProgramCatalog(
   });
 }
 
-/** Reads programs that are ready to start a learner's first plan. */
+/** Reads programs that are ready for learner selection. */
 export async function getLearningProgramOnboardingCatalog(
   locale: Locale
 ): Promise<LearningProgramCatalog> {
@@ -68,10 +68,10 @@ export async function getLearningProgramOnboardingCatalog(
   return filterOnboardingPrograms(catalog);
 }
 
-/** Reads the active learning profile for the authenticated request token. */
-export async function getActiveLearningProfile(
+/** Reads the active learning selection for the authenticated request token. */
+export async function getActiveLearningSelection(
   token: string,
-  locale?: Locale
-): Promise<ActiveLearningProfile> {
-  return await Effect.runPromise(readActiveLearningProfile(token, locale));
+  locale: Locale
+): Promise<ActiveLearningSelection> {
+  return await Effect.runPromise(readActiveLearningSelection(token, locale));
 }

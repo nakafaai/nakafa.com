@@ -66,11 +66,11 @@ describe("components/programs/onboarding/model", () => {
     const examSelection = resolveFocusSelection(programs, examFocus);
 
     expect(schoolSelection).toMatchObject({
-      interests: ["school-curriculum"],
+      interest: "school-curriculum",
       program: { key: "merdeka" },
     });
     expect(examSelection).toMatchObject({
-      interests: ["exam-prep"],
+      interest: "exam-prep",
       program: { key: "snbt" },
     });
   });
@@ -91,7 +91,7 @@ describe("components/programs/onboarding/model", () => {
     expect(hasOnboardingChoices([])).toBe(false);
   });
 
-  it("shows only roles that can continue and restores returning profile focus", () => {
+  it("shows only roles that can continue and restores returning selection focus", () => {
     const schoolOnlyCatalog = programs.filter(
       (program) => program.kind === "school-curriculum"
     );
@@ -104,11 +104,9 @@ describe("components/programs/onboarding/model", () => {
     ]);
     expect(
       getInitialFocusKey({
-        activeProfile: {
-          interests: ["exam-prep"],
-          planItems: [],
+        activeSelection: {
+          interest: "exam-prep",
           program: programs[1],
-          stage: undefined,
         },
         programs,
         role: "student",
@@ -116,14 +114,12 @@ describe("components/programs/onboarding/model", () => {
     ).toBe("student-exam");
     expect(
       getInitialFocusKey({
-        activeProfile: {
-          interests: ["exam-prep"],
-          planItems: [],
+        activeSelection: {
+          interest: "exam-prep",
           program: {
             ...programs[0],
             key: "retired-learning-path",
           },
-          stage: undefined,
         },
         programs,
         role: "teacher",
@@ -131,7 +127,7 @@ describe("components/programs/onboarding/model", () => {
     ).toBe("");
     expect(
       getInitialFocusKey({
-        activeProfile: null,
+        activeSelection: null,
         programs,
         role: "student",
       })

@@ -9,11 +9,11 @@ import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { shouldRequireLearningProgramOnboarding } from "@/lib/programs/catalog";
 import {
-  getActiveLearningProfile,
+  getActiveLearningSelection,
   getLearningProgramOnboardingCatalog,
 } from "@/lib/programs/server";
 
-/** Routes authenticated users into their active learning plan. */
+/** Routes authenticated users through canonical learning selection. */
 export default function Page(props: PageProps<"/[locale]/home">) {
   return (
     <Suspense fallback={null}>
@@ -39,11 +39,11 @@ async function AuthenticatedHome({
     return null;
   }
 
-  const learningProfile = await getActiveLearningProfile(token, locale);
-  if (!learningProfile) {
+  const learningSelection = await getActiveLearningSelection(token, locale);
+  if (!learningSelection) {
     const programs = await getLearningProgramOnboardingCatalog(locale);
 
-    if (shouldRequireLearningProgramOnboarding(learningProfile, programs)) {
+    if (shouldRequireLearningProgramOnboarding(learningSelection, programs)) {
       redirect({ href: "/onboarding/role", locale });
       return null;
     }

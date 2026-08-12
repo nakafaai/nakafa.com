@@ -38,6 +38,7 @@
   "dependencies": {
     "@convex-dev/aggregate": "^0.2.2",
     "@convex-dev/better-auth": "^0.12.5",
+    "@convex-dev/migrations": "0.3.6",
     "@convex-dev/resend": "^0.2.6",
     "@convex-dev/workflow": "^0.4.4",
     "@convex-dev/workpool": "^0.4.9",

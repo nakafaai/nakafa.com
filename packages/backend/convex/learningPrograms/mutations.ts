@@ -1,5 +1,5 @@
 import { mutation } from "@repo/backend/convex/functions";
-import { upsertPreferredCurriculumProgram } from "@repo/backend/convex/learningPreferences/impl";
+import { saveLearningSelection } from "@repo/backend/convex/learningPreferences/impl";
 import {
   createInitialLearningPlanItems,
   getLearningProgramByKey,
@@ -13,7 +13,19 @@ import {
   learningInterestValidator,
   learningStageValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import {
+  requireSelectableProgram,
+  toLearningProgramSummary as toSignedProgramSummary,
+} from "@repo/backend/convex/learningPrograms/selection";
+import {
+  activeLearningSelectionValidator,
+  learningInterestValidator as signedLearningInterestValidator,
+} from "@repo/backend/convex/learningPrograms/spec";
+import {
+  getUnknownErrorMessage,
+  readConvexErrorData,
+  runConvexProgram,
+} from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
@@ -22,6 +34,74 @@ import {
   type LearningProgramKind,
 } from "@repo/contents/_types/program/schema";
 import { ConvexError, v } from "convex/values";
+import { Clock, Effect, Schema } from "effect";
+
+const learningSelectionAuthFailedCode = "LEARNING_SELECTION_AUTH_FAILED";
+const unauthenticatedCode = "UNAUTHENTICATED";
+
+/** Expected authentication failure for a learning selection. */
+class LearningSelectionAuthError extends Schema.TaggedError<LearningSelectionAuthError>()(
+  "LearningSelectionAuthError",
+  {
+    code: Schema.Literal(learningSelectionAuthFailedCode, unauthenticatedCode),
+    message: Schema.String,
+  }
+) {}
+
+/** Preserves expected auth failures and tags unknown boundary failures. */
+function toLearningSelectionAuthError(error: unknown) {
+  const known = readConvexErrorData(error);
+  const message = known?.message ?? getUnknownErrorMessage(error);
+
+  return new LearningSelectionAuthError({
+    code:
+      known?.code === unauthenticatedCode || message === "Unauthenticated"
+        ? unauthenticatedCode
+        : learningSelectionAuthFailedCode,
+    message,
+  });
+}
+
+/** Saves one signed learner program without generating a synthetic plan. */
+export const selectProgram = mutation({
+  args: {
+    interest: signedLearningInterestValidator,
+    locale: localeValidator,
+    programKey: v.string(),
+  },
+  returns: activeLearningSelectionValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const user = yield* Effect.tryPromise({
+          catch: toLearningSelectionAuthError,
+          try: () => requireAuth(ctx),
+        });
+        const program = yield* requireSelectableProgram(
+          ctx,
+          args.locale,
+          args.programKey,
+          args.interest
+        );
+        const now = yield* Clock.currentTimeMillis;
+
+        yield* saveLearningSelection({
+          ctx,
+          interest: args.interest,
+          now,
+          programKey: program.key,
+          programKind: program.kind,
+          replaceCurriculumPreference: true,
+          userId: user.appUser._id,
+        });
+
+        return {
+          interest: args.interest,
+          program: toSignedProgramSummary(program, args.locale),
+        };
+      })
+    ),
+});
 
 /** Selects the user's active learning interests and creates a first graph-backed plan. */
 export const selectLearningProgram = mutation({
@@ -58,7 +138,9 @@ export const selectLearningProgram = mutation({
       });
     }
 
-    if (!programMatchesInterests(program.kind, interests)) {
+    const primaryInterest = getPrimaryInterest(program.kind, interests);
+
+    if (!primaryInterest) {
       throw new ConvexError({
         code: "LEARNING_PROGRAM_INTEREST_MISMATCH",
         message: "Selected program does not match the selected interests.",
@@ -130,15 +212,6 @@ export const selectLearningProgram = mutation({
     );
     await ctx.db.patch(profileId, { activePlanId: planId, updatedAt: now });
 
-    if (program.kind === "school-curriculum") {
-      await upsertPreferredCurriculumProgram({
-        ctx,
-        now,
-        programKey: program.key,
-        userId: user.appUser._id,
-      });
-    }
-
     const planItems = await ctx.db
       .query("learningPlanItems")
       .withIndex("by_planId_and_position", (q) => q.eq("planId", planId))
@@ -166,12 +239,12 @@ function getUniqueInterests(interests: readonly LearningInterest[]) {
   return Array.from(new Set(interests));
 }
 
-/** Checks that the selected primary program belongs to at least one interest. */
-function programMatchesInterests(
+/** Resolves the first selected interest owned by the primary program. */
+function getPrimaryInterest(
   programKind: LearningProgramKind,
   interests: readonly LearningInterest[]
 ) {
-  return interests.some((interest) =>
+  return interests.find((interest) =>
     LEARNING_INTEREST_PROGRAM_KIND_MATCHES[interest].some(
       (kind) => kind === programKind
     )

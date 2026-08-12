@@ -43,39 +43,4 @@ describe("learningPreferences/program", () => {
       t.query((ctx) => runConvexProgram(listCurriculumPrograms(ctx, "en")))
     ).rejects.toThrow("Curriculum program catalog exceeds 50 rows.");
   });
-
-  it("rejects a source preference list beyond its bounded UI contract", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      for (let index = 1; index <= 51; index += 1) {
-        await ctx.db.insert("learningPrograms", {
-          defaultCoverageStatus: "planned",
-          displayOrder: index,
-          iconKey: "school",
-          key: `technical-program-${index}`,
-          kind: "school-curriculum",
-          navigation: { levels: ["track"], model: "curriculum-tree" },
-          providerKind: "nakafa",
-          providerName: "Nakafa protocol tests",
-          syncedAt: index,
-          translations: {
-            en: {
-              publicSlug: `technical-program-${index}`,
-              title: `Technical Program ${index}`,
-            },
-            id: {
-              publicSlug: `program-teknis-${index}`,
-              title: `Program Teknis ${index}`,
-            },
-          },
-          updatedAt: index,
-          versionLabel: "Technical protocol version",
-        });
-      }
-    });
-
-    await expect(
-      t.query((ctx) => runConvexProgram(listCurriculumPrograms(ctx, "en")))
-    ).rejects.toThrow("Curriculum program catalog exceeds 50 rows.");
-  });
 });

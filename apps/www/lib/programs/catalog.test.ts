@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type {
-  ActiveLearningProfile,
+  ActiveLearningSelection,
   LearningProgramCatalog,
 } from "@/components/programs/contract";
 import {
@@ -8,9 +8,8 @@ import {
   shouldRequireLearningProgramOnboarding,
 } from "@/lib/programs/catalog";
 
-const activeProfile = {
-  interests: ["school-curriculum"],
-  planItems: [],
+const activeSelection = {
+  interest: "school-curriculum",
   program: {
     coverageStatus: "available",
     displayOrder: 10,
@@ -24,8 +23,7 @@ const activeProfile = {
     title: "Ready curriculum",
     versionLabel: "2026",
   },
-  stage: undefined,
-} satisfies NonNullable<ActiveLearningProfile>;
+} satisfies NonNullable<ActiveLearningSelection>;
 
 const catalog = [
   {
@@ -87,10 +85,10 @@ describe("programs/catalog", () => {
     ).toBe(false);
   });
 
-  it("requires first-run onboarding only when a missing profile can be created", () => {
+  it("requires first-run onboarding only when a selection is missing", () => {
     expect(shouldRequireLearningProgramOnboarding(null, catalog)).toBe(true);
-    expect(shouldRequireLearningProgramOnboarding(activeProfile, catalog)).toBe(
-      false
-    );
+    expect(
+      shouldRequireLearningProgramOnboarding(activeSelection, catalog)
+    ).toBe(false);
   });
 });

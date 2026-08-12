@@ -1,20 +1,17 @@
 import type { LearningProgram } from "@nakafa/aksara-contracts/program/spec";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { PROGRAM_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/program/limits";
-import { loadProgramOwner } from "@repo/backend/convex/contentRelease/program/owner";
-import { verifyProgram } from "@repo/backend/convex/contentRelease/program/verify";
 import {
   getLearningPreferenceByUserId,
   upsertPreferredCurriculumProgram,
 } from "@repo/backend/convex/learningPreferences/impl";
 import {
-  getLearningProgramByKey,
-  toLearningProgramSummary,
-} from "@repo/backend/convex/learningPrograms/impl";
+  listSignedPrograms,
+  readSignedProgram,
+} from "@repo/backend/convex/learningPrograms/selection";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { Clock, Effect, Schema } from "effect";
@@ -51,12 +48,13 @@ function toPreferenceIoError(error: unknown) {
   });
 }
 
-/** Converts a verified Aksara program into one localized selector option. */
-function toPublishedProgramOption(
+/** Converts one verified Aksara program into a localized selector option. */
+function toCurriculumProgramOption(
   program: LearningProgram,
   locale: Locale
 ): CurriculumProgramOption {
   const translation = program.translations[locale];
+
   return {
     ...(program.provider.homeCountry
       ? { countryCode: program.provider.homeCountry }
@@ -67,123 +65,39 @@ function toPublishedProgramOption(
   };
 }
 
-/** Converts a source-backed program into one localized selector option. */
-function toSourceProgramOption(
-  program: Doc<"learningPrograms">,
-  locale: Locale
-): CurriculumProgramOption {
-  const summary = toLearningProgramSummary(program, locale);
-  return {
-    ...(program.providerHomeCountry
-      ? { countryCode: program.providerHomeCountry }
-      : {}),
-    key: summary.key,
-    publicSlug: summary.publicSlug,
-    title: summary.title,
-  };
-}
-
-/** Reads one source-owned program while Aksara does not own the catalog. */
-const readSourceProgram = Effect.fn("learningPreferences.readSourceProgram")(
-  function* (ctx: QueryCtx | MutationCtx, programKey: string) {
-    return yield* Effect.tryPromise({
-      catch: toPreferenceIoError,
-      try: () => getLearningProgramByKey(ctx, programKey),
-    });
-  }
-);
-
-/** Reads one localized school curriculum from the exclusive current owner. */
+/** Reads one localized school curriculum from the signed active snapshot. */
 export const readCurriculumProgram = Effect.fn(
   "learningPreferences.readCurriculumProgram"
 )(function* (ctx: QueryCtx | MutationCtx, locale: Locale, programKey: string) {
-  const owner = yield* loadProgramOwner(ctx, locale);
-  if (owner.managed && owner.selected) {
-    const snapshotId = owner.selected.snapshotId;
-    const stored = yield* Effect.tryPromise({
-      catch: toPreferenceIoError,
-      try: () =>
-        ctx.db
-          .query("programCatalog")
-          .withIndex("by_snapshotId_and_programKey", (index) =>
-            index.eq("snapshotId", snapshotId).eq("programKey", programKey)
-          )
-          .unique(),
-    });
-    if (!stored) {
-      return null;
-    }
-    const program = yield* verifyProgram(stored, snapshotId);
-    return program.kind === "school-curriculum"
-      ? toPublishedProgramOption(program, locale)
-      : null;
-  }
-  const program = yield* readSourceProgram(ctx, programKey);
+  const program = yield* readSignedProgram(ctx, locale, programKey);
+
   if (program?.kind !== "school-curriculum") {
     return null;
   }
-  return toSourceProgramOption(program, locale);
+
+  return toCurriculumProgramOption(program, locale);
 });
 
-/** Lists curriculum programs from the exclusive published or source owner. */
+/** Lists every school curriculum from the signed active snapshot. */
 export const listCurriculumPrograms = Effect.fn(
   "learningPreferences.listCurriculumPrograms"
 )(function* (ctx: QueryCtx, locale: Locale) {
-  const owner = yield* loadProgramOwner(ctx, locale);
-  if (owner.managed && owner.selected) {
-    const snapshotId = owner.selected.snapshotId;
-    const rows = yield* Effect.tryPromise({
-      catch: toPreferenceIoError,
-      try: () =>
-        ctx.db
-          .query("programCatalog")
-          .withIndex("by_snapshotId_and_displayOrder_and_programKey", (index) =>
-            index.eq("snapshotId", snapshotId)
-          )
-          .take(PROGRAM_CATALOG_LIMIT + 1),
-    });
-    if (rows.length > PROGRAM_CATALOG_LIMIT) {
-      return yield* new CurriculumPreferenceError({
-        code: curriculumPreferenceIoFailedCode,
-        message: `Program catalog exceeds ${PROGRAM_CATALOG_LIMIT} rows.`,
-      });
-    }
-    const programs = yield* Effect.forEach(rows, (row) =>
-      verifyProgram(row, snapshotId)
-    );
-    const curricula = programs.filter(
-      (program) => program.kind === "school-curriculum"
-    );
-    if (curricula.length > CURRICULUM_PROGRAM_LIMIT) {
-      return yield* new CurriculumPreferenceError({
-        code: curriculumPreferenceIoFailedCode,
-        message: `Curriculum program catalog exceeds ${CURRICULUM_PROGRAM_LIMIT} rows.`,
-      });
-    }
-    return curricula.map((program) =>
-      toPublishedProgramOption(program, locale)
-    );
-  }
-  const rows = yield* Effect.tryPromise({
-    catch: toPreferenceIoError,
-    try: () =>
-      ctx.db
-        .query("learningPrograms")
-        .withIndex("by_kind_and_displayOrder", (index) =>
-          index.eq("kind", "school-curriculum")
-        )
-        .take(CURRICULUM_PROGRAM_LIMIT + 1),
-  });
-  if (rows.length > CURRICULUM_PROGRAM_LIMIT) {
+  const programs = yield* listSignedPrograms(ctx, locale);
+  const curricula = programs.filter(
+    (program) => program.kind === "school-curriculum"
+  );
+
+  if (curricula.length > CURRICULUM_PROGRAM_LIMIT) {
     return yield* new CurriculumPreferenceError({
       code: curriculumPreferenceIoFailedCode,
       message: `Curriculum program catalog exceeds ${CURRICULUM_PROGRAM_LIMIT} rows.`,
     });
   }
-  return rows.map((program) => toSourceProgramOption(program, locale));
+
+  return curricula.map((program) => toCurriculumProgramOption(program, locale));
 });
 
-/** Resolves the learner's saved program against the current catalog owner. */
+/** Resolves the learner's explicit preference against the signed catalog. */
 export const readCurrentCurriculumProgram = Effect.fn(
   "learningPreferences.readCurrentCurriculumProgram"
 )(function* (ctx: QueryCtx, locale: Locale, userId: Id<"users">) {
@@ -191,50 +105,28 @@ export const readCurrentCurriculumProgram = Effect.fn(
     catch: toPreferenceIoError,
     try: () => getLearningPreferenceByUserId(ctx, userId),
   });
-  if (preference?.preferredCurriculumProgramKey) {
-    const program = yield* readCurriculumProgram(
-      ctx,
-      locale,
-      preference.preferredCurriculumProgramKey
-    );
-    if (program) {
-      return {
-        preferredCurriculumProgramKey: preference.preferredCurriculumProgramKey,
-        program,
-      };
-    }
-  }
-  const profile = yield* Effect.tryPromise({
-    catch: toPreferenceIoError,
-    try: () =>
-      ctx.db
-        .query("learningProfiles")
-        .withIndex("by_userId", (index) => index.eq("userId", userId))
-        .unique(),
-  });
-  if (!profile) {
+
+  if (!preference?.preferredCurriculumProgramKey) {
     return null;
   }
-  const profileProgramKey =
-    profile.programKey ??
-    (yield* Effect.tryPromise({
-      catch: toPreferenceIoError,
-      try: () => ctx.db.get(profile.programId),
-    }).pipe(Effect.map((program) => program?.key)));
-  if (!profileProgramKey) {
-    return null;
-  }
-  const program = yield* readCurriculumProgram(ctx, locale, profileProgramKey);
+
+  const program = yield* readCurriculumProgram(
+    ctx,
+    locale,
+    preference.preferredCurriculumProgramKey
+  );
+
   if (!program) {
     return null;
   }
+
   return {
-    preferredCurriculumProgramKey: profileProgramKey,
+    preferredCurriculumProgramKey: preference.preferredCurriculumProgramKey,
     program,
   };
 });
 
-/** Saves one verified curriculum preference under the current catalog owner. */
+/** Saves one verified curriculum preference under signed Aksara ownership. */
 export const saveCurriculumProgram = Effect.fn(
   "learningPreferences.saveCurriculumProgram"
 )(function* (
@@ -244,12 +136,14 @@ export const saveCurriculumProgram = Effect.fn(
   userId: Id<"users">
 ) {
   const program = yield* readCurriculumProgram(ctx, locale, programKey);
+
   if (!program) {
     return yield* new CurriculumPreferenceError({
       code: curriculumProgramNotFoundCode,
       message: "Curriculum program not found.",
     });
   }
+
   const now = yield* Clock.currentTimeMillis;
   yield* Effect.tryPromise({
     catch: toPreferenceIoError,
@@ -261,6 +155,7 @@ export const saveCurriculumProgram = Effect.fn(
         userId,
       }),
   });
+
   return {
     preferredCurriculumProgramKey: program.key,
     program,

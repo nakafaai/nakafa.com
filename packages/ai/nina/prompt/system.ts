@@ -65,7 +65,7 @@ export function createNinaSystemPrompt({
       slug: learningPage.slug,
       verified: learningPage.verified,
     },
-    learningProfile: user.learningProfile,
+    learningSelection: user.learningSelection,
     nina: page.nina,
     url: learningPage.url,
     userLocation: user.location,

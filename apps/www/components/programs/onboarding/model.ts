@@ -1,6 +1,6 @@
 import { Option, Schema } from "effect";
 import type {
-  ActiveLearningProfile,
+  ActiveLearningSelection,
   LearningProgramCatalog,
 } from "@/components/programs/contract";
 import {
@@ -60,30 +60,30 @@ export function getFocusOptionForKey(
 
 /** Finds the focus card that best matches a returning user's active profile. */
 export function getInitialFocusKey({
-  activeProfile,
+  activeSelection,
   programs,
   role,
 }: {
-  activeProfile: ActiveLearningProfile;
+  activeSelection: ActiveLearningSelection;
   programs: readonly ProgramOption[];
   role: OnboardingRole;
 }): OnboardingFocusKey | "" {
-  if (!activeProfile) {
+  if (!activeSelection) {
     return "";
   }
 
   const options = getFocusOptionsForRole(role, programs);
   const programMatch = options.find((option) => {
     const selection = resolveFocusSelection(programs, option);
-    return selection?.program.key === activeProfile.program.key;
+    return selection?.program.key === activeSelection.program.key;
   });
 
   if (programMatch) {
     return programMatch.key;
   }
 
-  const interestMatch = options.find((option) =>
-    activeProfile.interests.some((interest) => interest === option.interest)
+  const interestMatch = options.find(
+    (option) => activeSelection.interest === option.interest
   );
 
   return interestMatch?.key ?? "";
@@ -103,7 +103,7 @@ export function resolveFocusSelection(
   }
 
   return {
-    interests: [focus.interest],
+    interest: focus.interest,
     program,
   };
 }
