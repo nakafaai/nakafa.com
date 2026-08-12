@@ -6,7 +6,9 @@ import { Label } from "@repo/design-system/components/ui/label";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
+import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/choice-variant";
 import {
+  getTryoutPreviewChoiceVariant,
   getTryoutReviewedChoiceVariant,
   getTryoutSelectableChoiceVariant,
 } from "@/lib/tryout/choice-variant";
@@ -43,24 +45,27 @@ export function TryoutSelectableChoice({
   );
 }
 
-interface TryoutRevealedChoiceProps extends TryoutSelectableChoiceProps {
-  isCorrect: boolean | undefined;
+interface TryoutPreviewChoiceProps extends TryoutSelectableChoiceProps {
+  appearance: TryoutPreviewChoiceAppearance;
 }
 
-/** Renders one selectable preview choice with correctness revealed. */
-export function TryoutRevealedChoice({
+/** Keeps one stable preview choice while its correctness appearance changes. */
+export function TryoutPreviewChoice({
+  appearance,
   checked,
   disabled,
   id,
-  isCorrect,
   label,
   onSelect,
-}: TryoutRevealedChoiceProps) {
+}: TryoutPreviewChoiceProps) {
   return (
     <TryoutChoiceFrame
       id={id}
       label={label}
-      variant={getTryoutReviewedChoiceVariant({ checked, isCorrect })}
+      variant={getTryoutPreviewChoiceVariant({
+        appearance,
+        checked,
+      })}
     >
       <TryoutChoiceCheckbox
         checked={checked}
