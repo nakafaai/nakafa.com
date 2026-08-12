@@ -7,13 +7,18 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { PROGRAM_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/program/limits";
 import { loadProgramOwner } from "@repo/backend/convex/contentRelease/program/owner";
 import { verifyProgram } from "@repo/backend/convex/contentRelease/program/verify";
-import { programMatchesInterest } from "@repo/backend/convex/learningPrograms/spec";
+import {
+  type learningProgramSummaryValidator,
+  programMatchesInterest,
+} from "@repo/backend/convex/learningPrograms/spec";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { LearningInterest } from "@repo/contents/_types/program/schema";
+import type { Infer } from "convex/values";
 import { Effect, Schema } from "effect";
 
 type ProgramCtx = MutationCtx | QueryCtx;
+type LearningProgramSummary = Infer<typeof learningProgramSummaryValidator>;
 
 const programCatalogIoFailedCode = "LEARNING_PROGRAM_CATALOG_IO_FAILED";
 const programInterestMismatchCode = "LEARNING_PROGRAM_INTEREST_MISMATCH";
@@ -62,7 +67,7 @@ export function isLearningProgramSelectable(program: LearningProgram) {
 export function toLearningProgramSummary(
   program: LearningProgram,
   locale: Locale
-) {
+): LearningProgramSummary {
   const translation = program.translations[locale];
 
   return {

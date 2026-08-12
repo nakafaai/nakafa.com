@@ -8,27 +8,15 @@ import { LocaleSchema } from "@repo/contents/_types/content";
 import {
   CoverageStatusSchema,
   LearningInterestSchema,
-  LearningPlanItemStatusSchema,
   LearningProgramKeySchema,
   LearningProgramKindSchema,
-  LearningStageSchema,
 } from "@repo/contents/_types/program/schema";
 import type { UIMessageStreamWriter } from "ai";
 import { Schema } from "effect";
 
-/** Program and plan context agents can use without Convex document coupling. */
-export const AgentLearningProfileSchema = Schema.Struct({
-  interests: Schema.Array(LearningInterestSchema),
-  planItems: Schema.Array(
-    Schema.Struct({
-      content_id: Schema.String,
-      lensId: Schema.String,
-      position: Schema.Number,
-      route: Schema.optional(Schema.String),
-      status: LearningPlanItemStatusSchema,
-      title: Schema.optional(Schema.String),
-    }).pipe(Schema.mutable)
-  ),
+/** Canonical learner interest and signed program context available to agents. */
+export const AgentLearningSelectionSchema = Schema.Struct({
+  interest: LearningInterestSchema,
   program: Schema.Struct({
     coverageStatus: CoverageStatusSchema,
     key: LearningProgramKeySchema,
@@ -36,17 +24,16 @@ export const AgentLearningProfileSchema = Schema.Struct({
     title: Schema.String,
     versionLabel: Schema.String,
   }).pipe(Schema.mutable),
-  stage: Schema.optional(LearningStageSchema),
 }).pipe(Schema.mutable);
 
-export type AgentLearningProfile = Schema.Schema.Type<
-  typeof AgentLearningProfileSchema
+export type AgentLearningSelection = Schema.Schema.Type<
+  typeof AgentLearningSelectionSchema
 >;
 
 /** Per-turn context shared by Nina and specialist agents after harness arbitration. */
 export const AgentContextSchema = Schema.Struct({
   currentDate: Schema.String,
-  learningProfile: Schema.optional(AgentLearningProfileSchema),
+  learningSelection: Schema.optional(AgentLearningSelectionSchema),
   needsPageFetch: Schema.Boolean,
   nina: Schema.optional(NinaContextPackSchema),
   slug: Schema.String,

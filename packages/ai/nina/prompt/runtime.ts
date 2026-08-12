@@ -1,7 +1,7 @@
 import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
 import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt/system";
-import { formatLearningProfilePromptContext } from "@repo/ai/prompt/learning-profile";
-import { AgentLearningProfileSchema } from "@repo/ai/types/agents";
+import { formatLearningSelectionPromptContext } from "@repo/ai/prompt/learning-selection";
+import { AgentLearningSelectionSchema } from "@repo/ai/types/agents";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { Schema } from "effect";
 
@@ -13,7 +13,7 @@ export const RuntimePromptContextSchema = Schema.Struct({
     slug: Schema.String,
     verified: Schema.Boolean,
   }).pipe(Schema.mutable),
-  learningProfile: Schema.optional(AgentLearningProfileSchema),
+  learningSelection: Schema.optional(AgentLearningSelectionSchema),
   nina: NinaContextPackSchema,
   url: Schema.String,
   userLocation: Schema.Struct({
@@ -29,11 +29,11 @@ export type RuntimePromptContext = Schema.Schema.Type<
   typeof RuntimePromptContextSchema
 >;
 
-/** Formats verified page, location, Nina context, and learning profile facts. */
+/** Formats verified page, location, Nina context, and learning selection facts. */
 export function formatRuntimePrompt({
   currentDate,
   currentPage,
-  learningProfile,
+  learningSelection,
   nina,
   url,
   userLocation,
@@ -57,6 +57,6 @@ export function formatRuntimePrompt({
 
       ${formatNinaContextPackPrompt(nina)}
 
-      ${formatLearningProfilePromptContext(learningProfile)}
+      ${formatLearningSelectionPromptContext(learningSelection)}
     `;
 }

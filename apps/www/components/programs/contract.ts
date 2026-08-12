@@ -4,6 +4,6 @@ import type { FunctionReturnType } from "convex/server";
 export type LearningProgramCatalog = FunctionReturnType<
   typeof api.learningPrograms.queries.listSelectablePrograms
 >;
-export type ActiveLearningProfile = FunctionReturnType<
-  typeof api.learningPrograms.queries.getActiveProfile
+export type ActiveLearningSelection = FunctionReturnType<
+  typeof api.learningPrograms.queries.getActiveSelection
 >;

@@ -20,7 +20,7 @@ import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type {
-  ActiveLearningProfile,
+  ActiveLearningSelection,
   LearningProgramCatalog,
 } from "@/components/programs/contract";
 import { OnboardingChoice } from "@/components/programs/onboarding/choice";
@@ -44,10 +44,10 @@ import { useUser } from "@/lib/context/use-user";
 
 /** Saves the selected learning focus for the latest reactive onboarding role. */
 export function FocusStepForm({
-  activeProfile,
+  activeSelection,
   programs,
 }: {
-  activeProfile: ActiveLearningProfile;
+  activeSelection: ActiveLearningSelection;
   programs: LearningProgramCatalog;
 }) {
   const { isUserPending, role } = useUser((state) => ({
@@ -56,7 +56,7 @@ export function FocusStepForm({
   }));
   const options = role ? getFocusOptionsForRole(role, programs) : [];
   const initialFocusKey = role
-    ? getInitialFocusKey({ activeProfile, programs, role })
+    ? getInitialFocusKey({ activeSelection, programs, role })
     : "";
 
   if (isUserPending) {
@@ -101,7 +101,7 @@ function FocusStepFormBody({
   const router = useRouter();
   const updateRole = useUpdateUserRoleMutation();
   const selectProgram = useMutation(
-    api.learningPrograms.mutations.selectLearningProgram
+    api.learningPrograms.mutations.selectProgram
   );
   const form = useForm({
     defaultValues: {
@@ -125,15 +125,15 @@ function FocusStepFormBody({
           /** Writes the locale-scoped learning-program choice through Convex after form validation. */
           selectProgram: (formValue) =>
             selectProgram({
-              interests: formValue.interests,
+              interest: formValue.interest,
               locale,
-              primaryProgramKey: formValue.primaryProgramKey,
+              programKey: formValue.programKey,
             }),
           updateRole,
           value: {
             focusKey: option.key,
-            interests: selection.interests,
-            primaryProgramKey: selection.program.key,
+            interest: selection.interest,
+            programKey: selection.program.key,
             role: selectedRole,
           },
         })
