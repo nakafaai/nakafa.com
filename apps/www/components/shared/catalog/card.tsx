@@ -36,7 +36,7 @@ export function CatalogCard({
         </CardTitle>
         {badge ? (
           <CardAction>
-            <Badge variant="secondary">{badge}</Badge>
+            <Badge variant="outline">{badge}</Badge>
           </CardAction>
         ) : null}
       </CardHeader>
