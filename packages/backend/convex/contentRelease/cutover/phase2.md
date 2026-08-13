@@ -99,7 +99,7 @@ is satisfied.
 ## Physical table deletion
 
 - Delete all 16 empty legacy tables listed by `LEGACY_INVENTORY`.
-- Delete the six empty retired tables listed by `RETIRED_PROGRAM_INVENTORY`:
+- Delete the six empty retired tables listed by `RETIRED_PROGRAM_TABLES`:
   `learningProgramCoverage`, `learningProgramSources`, `learningPrograms`,
   `learningPlanItems`, `learningPlans`, and `learningProfiles`.
 - Delete `contentCutoverActivity` and `contentCutoverState` after their rows are
