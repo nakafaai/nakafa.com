@@ -12,12 +12,12 @@ import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { FooterAction } from "@/components/marketing/shared/footer-action";
 import { FooterArt } from "@/components/marketing/shared/footer-art";
-import { articlesMenu } from "@/components/sidebar/data/articles";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import {
   getSubjectMenuHref,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
+import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
 const highSchoolSubjects =
   subjectMenu.find((subject) => subject.title === "high-school")?.items || [];
@@ -26,13 +26,16 @@ const highSchoolSubjects =
  * Composes the shared marketing footer from product, policy, and social links
  * without owning route generation itself.
  */
-export function Footer() {
+export function Footer({
+  articleNavigation,
+}: {
+  articleNavigation: readonly ArticleNavigationItem[];
+}) {
   const t = useTranslations("About");
   const tLegal = useTranslations("Legal");
   const tSubject = useTranslations("Subject");
   const tHoly = useTranslations("Holy");
   const tCommon = useTranslations("Common");
-  const tArticles = useTranslations("Articles");
   const tMarketing = useTranslations("Marketing");
   const locale = useLocale();
 
@@ -75,12 +78,9 @@ export function Footer() {
                 {tCommon("articles")}
               </span>
               <ul className="flex flex-col gap-2">
-                {articlesMenu.map((article) => (
-                  <li key={article.title}>
-                    <LinkItem
-                      href={article.href}
-                      label={tArticles(article.title)}
-                    />
+                {articleNavigation.map((article) => (
+                  <li key={article.category}>
+                    <LinkItem href={article.href} label={article.title} />
                   </li>
                 ))}
               </ul>

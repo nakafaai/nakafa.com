@@ -7,14 +7,17 @@ import { DeferredAiSheet } from "@/components/ai/deferred-sheet";
 import { DeferredSearchCommand } from "@/components/shared/deferred-search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
+import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
 /**
  * Renders the persistent app shell for the main student area.
  */
 export function AppShell({
+  articleNavigation,
   children,
   locked = false,
 }: {
+  articleNavigation: readonly ArticleNavigationItem[];
   children: ReactNode;
   locked?: boolean;
 }) {
@@ -22,11 +25,14 @@ export function AppShell({
     <SidebarProvider locked={locked}>
       <SidebarInset>
         <Header />
-        <DeferredSearchCommand />
+        <DeferredSearchCommand articleNavigation={articleNavigation} />
         <DeferredAiSheet />
         <div className="relative">{children}</div>
       </SidebarInset>
-      <AppSidebar containerClassName="order-first" />
+      <AppSidebar
+        articleNavigation={articleNavigation}
+        containerClassName="order-first"
+      />
     </SidebarProvider>
   );
 }

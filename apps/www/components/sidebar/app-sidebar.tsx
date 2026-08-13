@@ -12,8 +12,14 @@ import { NavExplore } from "@/components/sidebar/nav-explore";
 import { NavForYou } from "@/components/sidebar/nav-for-you";
 import { NavUser } from "@/components/sidebar/nav-user";
 import { SearchMenu } from "@/components/sidebar/search-menu";
+import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
-export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  articleNavigation,
+  ...props
+}: ComponentProps<typeof Sidebar> & {
+  articleNavigation: readonly ArticleNavigationItem[];
+}) {
   return (
     <Sidebar className={cn("z-20", props.className)} side="left" {...props}>
       <SidebarHeader className="border-b">
@@ -22,7 +28,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavForYou />
-        <NavExplore />
+        <NavExplore articleNavigation={articleNavigation} />
       </SidebarContent>
       <SidebarFooter className="border-t">
         <SidebarMenu>

@@ -14,15 +14,19 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { articlesMenu } from "@/components/sidebar/data/articles";
+import { getArticleCategoryIcon } from "@/components/articles/category";
 import { holyMenu } from "@/components/sidebar/data/holy";
+import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
 /**
  * Renders the public exploration links that stay useful for every viewer type.
  */
-export function NavExplore() {
+export function NavExplore({
+  articleNavigation,
+}: {
+  articleNavigation: readonly ArticleNavigationItem[];
+}) {
   const pathname = usePathname();
-  const tArticles = useTranslations("Articles");
   const tCommon = useTranslations("Common");
   const tHoly = useTranslations("Holy");
   const items = [
@@ -31,10 +35,10 @@ export function NavExplore() {
       icon: item.icon,
       label: tHoly(item.title),
     })),
-    ...articlesMenu.map((item) => ({
+    ...articleNavigation.map((item) => ({
       href: item.href,
-      icon: item.icon,
-      label: tArticles(item.title),
+      icon: getArticleCategoryIcon(item.category),
+      label: item.title,
     })),
   ];
 

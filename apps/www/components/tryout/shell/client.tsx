@@ -6,9 +6,16 @@ import { useSearchParams } from "next/navigation";
 import { type ReactNode, useState } from "react";
 import { AppShell } from "@/components/sidebar/app-shell";
 import { readTryoutAttemptCapability } from "@/components/tryout/route/path";
+import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
 /** Locks the app shell only for the exact attempt in the current URL. */
-export function TryoutShell({ children }: { children: ReactNode }) {
+export function TryoutShell({
+  articleNavigation,
+  children,
+}: {
+  articleNavigation: readonly ArticleNavigationItem[];
+  children: ReactNode;
+}) {
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const capability = readTryoutAttemptCapability(searchParams);
@@ -17,11 +24,17 @@ export function TryoutShell({ children }: { children: ReactNode }) {
   const shouldLoadAttempt = !isLoading && isAuthenticated && Boolean(attemptId);
 
   if (!(shouldLoadAttempt && attemptId)) {
-    return <AppShell>{children}</AppShell>;
+    return (
+      <AppShell articleNavigation={articleNavigation}>{children}</AppShell>
+    );
   }
 
   return (
-    <AttemptBoundTryoutShell attemptId={attemptId} key={attemptId}>
+    <AttemptBoundTryoutShell
+      articleNavigation={articleNavigation}
+      attemptId={attemptId}
+      key={attemptId}
+    >
       {children}
     </AttemptBoundTryoutShell>
   );
@@ -29,9 +42,11 @@ export function TryoutShell({ children }: { children: ReactNode }) {
 
 /** Keeps only an active attempt lock subscribed and preserves the shell while loading. */
 function AttemptBoundTryoutShell({
+  articleNavigation,
   attemptId,
   children,
 }: {
+  articleNavigation: readonly ArticleNavigationItem[];
   attemptId: string;
   children: ReactNode;
 }) {
@@ -46,7 +61,10 @@ function AttemptBoundTryoutShell({
   }
 
   return (
-    <AppShell locked={isTerminal ? false : (locked ?? true)}>
+    <AppShell
+      articleNavigation={articleNavigation}
+      locked={isTerminal ? false : (locked ?? true)}
+    >
       {children}
     </AppShell>
   );

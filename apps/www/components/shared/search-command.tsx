@@ -31,13 +31,14 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
+import { getArticleCategoryIcon } from "@/components/articles/category";
 import { SearchExcerpt } from "@/components/shared/search-excerpt";
-import { articlesMenu } from "@/components/sidebar/data/articles";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import {
   getSubjectMenuHref,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
+import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import {
   type ContentSearchResultItem,
   useSearchQuery,
@@ -76,7 +77,11 @@ interface SearchCommandGroup {
 /**
  * Renders the global command menu used across the main app shell.
  */
-export function SearchCommand() {
+export function SearchCommand({
+  articleNavigation,
+}: {
+  articleNavigation: readonly ArticleNavigationItem[];
+}) {
   const { open, setOpen } = useSearch((state) => ({
     open: state.open,
     setOpen: state.setOpen,
@@ -92,18 +97,22 @@ export function SearchCommand() {
   return (
     <CommandDialog onOpenChange={setOpen} open={open}>
       <CommandDialogPopup>
-        <SearchMain />
+        <SearchMain articleNavigation={articleNavigation} />
       </CommandDialogPopup>
     </CommandDialog>
   );
 }
 
 /** Coordinates debounced Convex content search inside the command dialog. */
-function SearchMain() {
+function SearchMain({
+  articleNavigation,
+}: {
+  articleNavigation: readonly ArticleNavigationItem[];
+}) {
   const t = useTranslations("Utils");
   const query = useSearch((state) => state.query);
   const setQuery = useSearch((state) => state.setQuery);
-  const defaultGroups = useDefaultSearchGroups();
+  const defaultGroups = useDefaultSearchGroups(articleNavigation);
   const sectionLabels = useSearchSectionLabels();
   const [debouncedSearch] = useDebouncedValue(query, DEBOUNCE_TIME);
   const currentSearch = query.trim();
@@ -284,7 +293,9 @@ function SearchListItem({
 }
 
 /** Builds localized default navigation groups shown before content search runs. */
-function useDefaultSearchGroups(): SearchCommandGroup[] {
+function useDefaultSearchGroups(
+  articleNavigation: readonly ArticleNavigationItem[]
+): SearchCommandGroup[] {
   const tSubject = useTranslations("Subject");
   const tArticles = useTranslations("Articles");
   const tHoly = useTranslations("Holy");
@@ -314,18 +325,14 @@ function useDefaultSearchGroups(): SearchCommandGroup[] {
   return [
     ...subjectGroups,
     {
-      items: articlesMenu.map((item) => {
-        const label = tArticles(item.title);
-
-        return {
-          href: item.href,
-          icon: item.icon,
-          key: item.href,
-          label,
-          type: "navigation" as const,
-          value: `${tArticles("articles")} ${label} ${item.href}`,
-        };
-      }),
+      items: articleNavigation.map((item) => ({
+        href: item.href,
+        icon: getArticleCategoryIcon(item.category),
+        key: item.href,
+        label: item.title,
+        type: "navigation" as const,
+        value: `${tArticles("articles")} ${item.title} ${item.href}`,
+      })),
       value: tArticles("articles"),
     },
     {
