@@ -80,7 +80,6 @@ Reset and clean commands are dry-run unless `--force` is present:
 pnpm --filter @repo/backend sync:clean
 pnpm --filter @repo/backend sync:reset
 pnpm --filter @repo/backend sync:reset:analytics
-pnpm --filter @repo/backend sync:reset:audio
 ```
 
 Production variants use the `sync:prod:*` scripts. Do not run them without an
@@ -90,8 +89,8 @@ verification. `--authors` extends a full reset to authors.
 The full reset deletes only rebuildable local content projections. It preserves
 signed publication state, learning-program identity, views, recents, try-out
 access, entitlements, attempts, progress, placements, responses, scores,
-calibration runs, IRT scales, and free-attempt claims. Audio and analytics have
-separate explicit reset commands.
+calibration runs, IRT scales, and free-attempt claims. Analytics has a separate
+explicit reset command.
 
 ## Customer verification
 

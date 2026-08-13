@@ -203,14 +203,7 @@ describe("contentSync/mutations/curriculum", () => {
           q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
-      const audioSource = await ctx.db
-        .query("audioContentSources")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", SECTION_CONTENT_ID)
-        )
-        .unique();
-
-      return { audioSource, authorLinks, route, search, section };
+      return { authorLinks, route, search, section };
     });
 
     expect(created).toEqual({
@@ -245,12 +238,6 @@ describe("contentSync/mutations/curriculum", () => {
       materialDomain: "mathematics",
       route: SECTION_SLUG,
       title: "New Subject Title",
-    });
-    expect(snapshot.audioSource).toMatchObject({
-      contentHash: "same-subject-hash",
-      content_id: SECTION_CONTENT_ID,
-      contentType: "material",
-      route: SECTION_SLUG,
     });
   });
 
@@ -289,7 +276,6 @@ describe("contentSync/mutations/curriculum", () => {
 
   it("deletes stale curriculum lessons and skips IDs that already disappeared", async () => {
     const t = convexTest(schema, convexModules);
-    const detachedSectionId = `${SECTION_CONTENT_ID}:catalog`;
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("authors", { name: "Ada", username: "ada" });
@@ -326,17 +312,6 @@ describe("contentSync/mutations/curriculum", () => {
         );
       }
 
-      const audioSource = await ctx.db
-        .query("audioContentSources")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", SECTION_CONTENT_ID)
-        )
-        .unique();
-
-      if (!audioSource) {
-        throw new Error("Expected synced curriculum lesson audio source.");
-      }
-
       const missingId = await ctx.db.insert("curriculumLessons", {
         body: "Missing body",
         contentHash: "missing-hash",
@@ -350,10 +325,6 @@ describe("contentSync/mutations/curriculum", () => {
         title: "Missing",
         topic: "metadata-topic",
         topicId: topic._id,
-      });
-      await ctx.db.patch("audioContentSources", audioSource._id, {
-        assetId: detachedSectionId,
-        content_id: detachedSectionId,
       });
       await ctx.db.delete("curriculumLessons", missingId);
 
@@ -384,19 +355,11 @@ describe("contentSync/mutations/curriculum", () => {
           q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
-      const audioSource = await ctx.db
-        .query("audioContentSources")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", detachedSectionId)
-        )
-        .unique();
-
-      return { audioSource, authorLinks, route, search, section };
+      return { authorLinks, route, search, section };
     });
 
     expect(result).toEqual({ deleted: 1 });
     expect(snapshot).toEqual({
-      audioSource: null,
       authorLinks: [],
       route: null,
       search: null,
@@ -474,14 +437,7 @@ describe("contentSync/mutations/curriculum", () => {
           q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
-      const sectionAudio = await ctx.db
-        .query("audioContentSources")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", SECTION_CONTENT_ID)
-        )
-        .unique();
-
-      if (!(topicRoute && sectionRoute && sectionSearch && sectionAudio)) {
+      if (!(topicRoute && sectionRoute && sectionSearch)) {
         throw new Error("Expected synced subject projections.");
       }
 
@@ -494,10 +450,6 @@ describe("contentSync/mutations/curriculum", () => {
         content_id: detachedSectionId,
       });
       await ctx.db.patch("contentSearch", sectionSearch._id, {
-        assetId: detachedSectionId,
-        content_id: detachedSectionId,
-      });
-      await ctx.db.patch("audioContentSources", sectionAudio._id, {
         assetId: detachedSectionId,
         content_id: detachedSectionId,
       });
@@ -558,19 +510,11 @@ describe("contentSync/mutations/curriculum", () => {
           q.eq("content_id", detachedSectionId)
         )
         .unique();
-      const audioSource = await ctx.db
-        .query("audioContentSources")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", detachedSectionId)
-        )
-        .unique();
-
-      return { audioSource, route, search, section, topic, topicRoute };
+      return { route, search, section, topic, topicRoute };
     });
 
     expect(result).toEqual({ deleted: 1 });
     expect(snapshot).toEqual({
-      audioSource: null,
       route: null,
       search: null,
       section: null,

@@ -65,9 +65,6 @@ export const contentCountTables = [
   { field: "authors", tableName: "authors" },
   { field: "contentAuthors", tableName: "contentAuthors" },
   { field: "articleReferences", tableName: "articleReferences" },
-  { field: "audioContentSources", tableName: "audioContentSources" },
-  { field: "contentAudios", tableName: "contentAudios" },
-  { field: "audioGenerationQueue", tableName: "audioGenerationQueue" },
 ] as const;
 
 /** Table names accepted by the paginated count query. */

@@ -1,6 +1,5 @@
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import { resetAnalytics } from "@repo/backend/scripts/sync-content/cleanup/analytics";
-import { resetAudio } from "@repo/backend/scripts/sync-content/cleanup/audio";
 import { clean } from "@repo/backend/scripts/sync-content/cleanup/clean";
 import { reset } from "@repo/backend/scripts/sync-content/cleanup/reset";
 import { log, logError } from "@repo/backend/scripts/sync-content/cli/logging";
@@ -99,9 +98,6 @@ const printUsage = (): void => {
   log(
     "  sync:reset:analytics  - Delete analytics queues, leases, and popularity projections"
   );
-  log(
-    "  sync:reset:audio      - Delete audio source, generated audio, and audio queue rows"
-  );
   log("\nProduction commands:");
   log("  sync:prod             - Full sync to production");
   log("  sync:prod:incremental - Incremental sync to production");
@@ -113,7 +109,6 @@ const printUsage = (): void => {
   log(
     "  sync:prod:reset:analytics - Delete analytics queues, leases, and popularity projections in production"
   );
-  log("  sync:prod:reset:audio - Delete audio read models in production");
   log("\nOptions:");
   log(
     `  --locale ${locales.join("|")}  - Sync specific locale only (not incremental)`
@@ -235,9 +230,6 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       return;
     case "reset-analytics":
       yield* resetAnalytics(config, options);
-      return;
-    case "reset-audio":
-      yield* resetAudio(config, options);
       return;
     default:
       logError(`Unknown command: ${type}`);

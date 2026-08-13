@@ -38,9 +38,6 @@ export const GRAPH_IDENTITY_TARGETS = [
   "learningPopularityViewerSignals",
   "learningPopularitySignals",
   "learningPopularityCounters",
-  "audioContentSources",
-  "audioGenerationQueue",
-  "contentAudios",
 ] as const;
 
 /** One page returned by the bounded Convex inspection queries. */

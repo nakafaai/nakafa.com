@@ -43,17 +43,6 @@ export const devtoolsKeys = () =>
     },
   });
 
-/** Validates the ElevenLabs environment contract where speech synthesis starts. */
-export const elevenLabsKeys = () =>
-  createEnv({
-    server: {
-      ELEVENLABS_API_KEY: secretSchema,
-    },
-    runtimeEnv: {
-      ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
-    },
-  });
-
 /** Validates the Firecrawl environment contract where web search starts. */
 export const firecrawlKeys = () =>
   createEnv({

@@ -170,7 +170,6 @@ jobs:
           AUTH_GOOGLE_SECRET=agent-docs-disabled
           BETTER_AUTH_SECRET=agent-docs-inert-secret-00000000
           CONTENT_RUNTIME_TOKEN=$CONTENT_RUNTIME_TOKEN
-          ELEVENLABS_API_KEY=agent-docs-disabled
           FIRECRAWL_API_KEY=agent-docs-disabled
           INTERNAL_CONTENT_API_KEY=$INTERNAL_CONTENT_API_KEY
           JWKS=[]

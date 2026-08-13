@@ -1,5 +1,3 @@
-import { updateContentAudioHash } from "@repo/backend/convex/audioStudies/contentAudios/impl";
-import { syncAudioContentSource } from "@repo/backend/convex/audioStudies/helpers/sources";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
@@ -13,7 +11,6 @@ import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   localeValidator,
   materialValidator,
@@ -162,7 +159,7 @@ export const bulkSyncCurriculumLessons = internalMutation({
     sections: v.array(syncedCurriculumLessonValidator),
   },
   returns: syncSectionSummaryValidator,
-  /** Applies one bounded curriculum lesson sync batch to runtime, search, author, and audio rows. */
+  /** Applies one bounded curriculum lesson sync batch to runtime and its projections. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "bulkSyncCurriculumLessons",
@@ -240,18 +237,6 @@ export const bulkSyncCurriculumLessons = internalMutation({
         title: section.title,
       });
 
-      if (existingSection) {
-        await syncAudioContentSource(ctx, {
-          ...graph,
-          content_id: graph.assetId,
-          contentType: "material",
-          contentHash: section.contentHash,
-          locale: section.locale,
-          route: section.slug,
-          syncedAt: now,
-        });
-      }
-
       const nextValues = {
         body: section.body,
         contentHash: section.contentHash,
@@ -277,13 +262,6 @@ export const bulkSyncCurriculumLessons = internalMutation({
           syncedAt: now,
         });
 
-        await runConvexProgram(
-          updateContentAudioHash(ctx, {
-            content_id: graph.assetId,
-            newHash: section.contentHash,
-          })
-        );
-
         authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
           existingSection._id,
@@ -300,16 +278,6 @@ export const bulkSyncCurriculumLessons = internalMutation({
         ...nextValues,
         locale: section.locale,
         slug: section.slug,
-        syncedAt: now,
-      });
-
-      await syncAudioContentSource(ctx, {
-        ...graph,
-        content_id: graph.assetId,
-        contentType: "material",
-        contentHash: section.contentHash,
-        locale: section.locale,
-        route: section.slug,
         syncedAt: now,
       });
 

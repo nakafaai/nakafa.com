@@ -1,6 +1,5 @@
 import articleContentsSchema from "@repo/backend/convex/articleContents/schema";
 import assessmentsSchema from "@repo/backend/convex/assessments/tables/schema";
-import audioStudiesSchema from "@repo/backend/convex/audioStudies/schema";
 import authDeletionSchema from "@repo/backend/convex/auth/deletion/schema";
 import authorsSchema from "@repo/backend/convex/authors/schema";
 import bookmarksSchema from "@repo/backend/convex/bookmarks/schema";
@@ -47,7 +46,6 @@ export default defineSchema(
     ...articleContentsSchema,
     ...curriculumTopicsSchema,
     ...curriculumLessonsSchema,
-    ...audioStudiesSchema,
     ...creditsSchema,
     ...irtSchema,
     ...learningPreferencesSchema,

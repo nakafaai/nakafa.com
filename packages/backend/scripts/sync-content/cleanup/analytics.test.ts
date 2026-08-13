@@ -32,12 +32,9 @@ const config = {
 const emptyCounts = {
   articleReferences: 0,
   articles: 0,
-  audioContentSources: 0,
-  audioGenerationQueue: 0,
   authors: 0,
   contentAnalyticsPartitions: 0,
   contentAuthors: 0,
-  contentAudios: 0,
   contentRouteCounts: 0,
   contentRoutePages: 0,
   contentRoutes: 0,

@@ -1,6 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { deleteAudioContentSourceByRoute } from "@repo/backend/convex/audioStudies/helpers/sources";
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
@@ -217,7 +216,7 @@ export async function deleteContentProjectionsBySourcePath(
   await deleteContentRoutesBySourcePath(ctx, source);
 }
 
-/** Delete one curriculum lesson together with its sync-managed author links. */
+/** Delete one curriculum lesson together with its sync-managed projections. */
 export async function deleteCurriculumLesson(
   ctx: MutationCtx,
   sectionId: Id<"curriculumLessons">
@@ -232,12 +231,5 @@ export async function deleteCurriculumLesson(
   }
 
   await deleteContentAuthorLinks(ctx, sectionId, "material");
-  if (section) {
-    await deleteAudioContentSourceByRoute(ctx, {
-      contentType: "material",
-      locale: section.locale,
-      route: section.slug,
-    });
-  }
   await ctx.db.delete("curriculumLessons", sectionId);
 }

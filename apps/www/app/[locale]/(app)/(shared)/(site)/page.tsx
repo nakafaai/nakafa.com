@@ -106,7 +106,6 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
   const faqItems = [
     { question: tFaq("q1"), answer: tFaq("a1") },
     { question: tFaq("q2"), answer: tFaq("a2") },
-    { question: tFaq("q3"), answer: tFaq("a3") },
     { question: tFaq("q4"), answer: tFaq("a4") },
     { question: tFaq("q5"), answer: tFaq("a5") },
     { question: tFaq("q6"), answer: tFaq("a6") },

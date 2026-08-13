@@ -1,9 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/contract/types";
-import {
-  GRAPH_IDENTITY_TARGETS,
-  getDataIntegrity,
-} from "@repo/backend/scripts/sync-content/convex/inspection";
+import { getDataIntegrity } from "@repo/backend/scripts/sync-content/convex/inspection";
 import type { FunctionReference } from "convex/server";
 import { getFunctionName } from "convex/server";
 import { Effect } from "effect";
@@ -31,16 +28,6 @@ afterEach(() => {
 });
 
 describe("sync-content inspection", () => {
-  it("includes graph-backed audio tables in the verification target list", () => {
-    expect(GRAPH_IDENTITY_TARGETS).toEqual(
-      expect.arrayContaining([
-        "audioContentSources",
-        "audioGenerationQueue",
-        "contentAudios",
-      ])
-    );
-  });
-
   it("reports articles without references", async () => {
     const articlePath = getFunctionName(
       internal.contentSync.queries.integrity.listIntegrityArticlesPage

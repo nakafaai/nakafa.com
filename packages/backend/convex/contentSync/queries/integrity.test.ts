@@ -1,10 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  audioModelElevenV3,
-  audioStatusPending,
-} from "@repo/backend/convex/lib/validators/audio";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
@@ -21,18 +17,12 @@ const GRAPH_ANALYTICS_INTEGRITY_TARGETS = [
   "learningPopularitySignals",
   "learningPopularityCounters",
 ] as const;
-const GRAPH_AUDIO_INTEGRITY_TARGETS = [
-  "audioContentSources",
-  "audioGenerationQueue",
-  "contentAudios",
-] as const;
 const GRAPH_INTEGRITY_TARGETS = [
   "contentRoutes",
   "contentSearch",
   "contentRoutePages",
   "messageParts",
   ...GRAPH_ANALYTICS_INTEGRITY_TARGETS,
-  ...GRAPH_AUDIO_INTEGRITY_TARGETS,
 ] as const;
 const canonicalContext = {
   contextKey: "canonical",
@@ -252,37 +242,6 @@ describe("contentSync/queries/integrity", () => {
       });
     }
   });
-
-  it("accepts audio rows that store graph identity", async () => {
-    const t = convexTest(schema, convexModules);
-    const graph = articleGraphWithContentId(articleGraph().assetId);
-
-    await t.mutation(async (ctx) => {
-      await insertAudioRows(ctx, graph);
-    });
-
-    for (const target of GRAPH_AUDIO_INTEGRITY_TARGETS) {
-      await expectCleanGraphIdentityIntegrity(t, target);
-    }
-  });
-
-  it("reports audio rows whose graph content_id differs from assetId", async () => {
-    const t = convexTest(schema, convexModules);
-    const graph = articleGraphWithContentId(`${articleGraph().assetId}:stale`);
-
-    await t.mutation(async (ctx) => {
-      await insertAudioRows(ctx, graph);
-    });
-
-    for (const target of GRAPH_AUDIO_INTEGRITY_TARGETS) {
-      await expectMismatchedGraphIdentityIntegrity(t, target, {
-        assetId: graph.assetId,
-        content_id: graph.content_id,
-        kind: target,
-        route: ARTICLE_ROUTE,
-      });
-    }
-  });
 });
 
 type GraphIntegrityTarget = (typeof GRAPH_INTEGRITY_TARGETS)[number];
@@ -435,38 +394,6 @@ async function insertAnalyticsRows(
   });
 }
 
-/** Inserts one row in each graph-backed audio table. */
-async function insertAudioRows(
-  ctx: MutationCtx,
-  graph: ReturnType<typeof articleGraphWithContentId>
-) {
-  const identity = audioIdentity(graph);
-
-  await ctx.db.insert("audioContentSources", {
-    ...identity,
-    contentHash: "audio-source-hash",
-    syncedAt: NOW,
-  });
-  await ctx.db.insert("audioGenerationQueue", {
-    ...identity,
-    maxRetries: 3,
-    priorityScore: 10,
-    requestedAt: NOW,
-    retryCount: 0,
-    status: "pending",
-    updatedAt: NOW,
-  });
-  await ctx.db.insert("contentAudios", {
-    ...identity,
-    contentHash: "audio-content-hash",
-    generationAttempts: 0,
-    model: audioModelElevenV3,
-    status: audioStatusPending,
-    updatedAt: NOW,
-    voiceId: "voice-integrity",
-  });
-}
-
 /** Inserts the minimal chat/message ownership rows required for one persisted part. */
 async function insertAssistantMessage(ctx: MutationCtx) {
   const userId = await ctx.db.insert("users", {
@@ -510,16 +437,6 @@ function articleGraphWithContentId(contentId: string) {
   return {
     ...articleGraph(),
     content_id: contentId,
-  };
-}
-
-/** Builds graph identity fields for article audio table fixtures. */
-function audioIdentity(graph: ReturnType<typeof articleGraphWithContentId>) {
-  return {
-    ...graph,
-    contentType: "article" as const,
-    locale: "id" as const,
-    route: ARTICLE_ROUTE,
   };
 }
 

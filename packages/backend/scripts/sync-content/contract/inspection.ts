@@ -19,11 +19,8 @@ const ContentIdSchema = Schema.Union(
 export const ContentCountsSchema = Schema.Struct({
   articleReferences: Schema.Number,
   articles: Schema.Number,
-  audioContentSources: Schema.Number,
-  audioGenerationQueue: Schema.Number,
   authors: Schema.Number,
   contentAnalyticsPartitions: Schema.Number,
-  contentAudios: Schema.Number,
   contentAuthors: Schema.Number,
   contentRouteCounts: Schema.Number,
   contentRoutePages: Schema.Number,

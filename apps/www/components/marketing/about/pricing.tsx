@@ -56,7 +56,6 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
     t("pro-feature-1"),
     t("pro-feature-2"),
     t("pro-feature-3"),
-    t("pro-feature-4"),
     t("pro-feature-5"),
   ];
 
