@@ -21,8 +21,10 @@ is satisfied.
    `contentRelease/cutover/readers:accept`. It must re-prove all 21 markers and
    persist `readerCutoverAcceptedAt` on the existing quiescent checkpoint. Phase
    1 has no writer for this field, so an earlier drain is impossible.
-5. Invoke `contentRelease/cutover/legacy:drainLegacy` until it returns exactly
-   12,854 deletions and phase `legacy-drained`.
+5. Invoke `contentRelease/cutover/legacy:drainLegacy` until it reaches phase
+   `legacy-drained`. Sum `deleted` across every bounded action receipt and
+   accept only exactly 12,854 total deletions. The terminal proof independently
+   requires the same durable cumulative count.
 6. Authenticate all 1,680 retained artifacts and freeze the old mutable pointer:
 
    ```sh

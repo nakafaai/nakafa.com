@@ -9,11 +9,25 @@ hash difference. Never repair, skip, or reinterpret a failed gate.
 
 ## Deploy and quiesce
 
-1. Run the final production dry run and confirm it removes the audio functions
+1. While the old audio schema and cleanup path are still deployed, prove the
+   three audio tables and global file storage are empty:
+
+   ```sh
+   pnpm --filter @repo/backend exec convex data audioContentSources --prod --limit 1
+   pnpm --filter @repo/backend exec convex data contentAudios --prod --limit 1
+   pnpm --filter @repo/backend exec convex data audioGenerationQueue --prod --limit 1
+   pnpm --filter @repo/backend exec convex data _storage --prod --limit 1
+   ```
+
+   Accept only `There are no documents in this table.` for all four reads. This
+   is a hard precondition because Phase 1 removes the old audio row and storage
+   cleanup path. The private pre-cutover backup must preserve the same empty
+   inventories.
+2. Run the final production dry run and confirm it removes the audio functions
    and tables, adds only the temporary cutover and retained-history schema, and
    preserves every legacy content table.
-2. Deploy Phase 1.
-3. Invoke the legacy drain once. This first call performs the full read-only
+3. Deploy Phase 1.
+4. Invoke the legacy drain once. This first call performs the full read-only
    audit, initializes the durable writer guard, returns phase `quiescent`, and
    deletes no legacy row.
 
