@@ -5,13 +5,12 @@ import {
 } from "@nakafa/aksara-contracts/projection/material";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
 import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
-import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import { verifyEffectiveMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { Effect, Schema } from "effect";
 
 /** Stable signed material identity requested by an application surface. */
@@ -78,24 +77,12 @@ export const readMaterialIdentity = Effect.fn(
     };
   }
 
-  const [{ projection, projectionJson }, resolved] = yield* Effect.all([
-    verifyMaterial(row),
-    resolvePublicProjection(
-      ctx,
-      identity.contentKey,
-      input.locale,
-      owner.active.sequence
-    ),
-  ]);
+  const { projection } = yield* verifyEffectiveMaterial(
+    ctx,
+    row,
+    owner.active.sequence
+  );
   if (
-    resolved?.family !== "material" ||
-    resolved.projectionHash !== row.projectionHash ||
-    resolved.projectionJson !== projectionJson ||
-    resolved.publicPath !== row.publicPath ||
-    resolved.releaseId !== row.releaseId ||
-    resolved.rendererDomain !== row.rendererDomain ||
-    resolved.sequence !== row.sequence ||
-    resolved.sourcePath !== row.sourcePath ||
     projection.materialKey !== identity.materialKey ||
     projection.sectionKey !== identity.sectionKey
   ) {

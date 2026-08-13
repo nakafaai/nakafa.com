@@ -4,7 +4,7 @@ import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verif
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
-import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import { verifyEffectiveMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { authenticateQuranSearchHit } from "@repo/backend/convex/contentRelease/quran/verify";
 import {
   type ContentReferenceCandidate,
@@ -97,20 +97,20 @@ const readMaterialReference = Effect.fn("contentRelease.readMaterialReference")(
       { readonly family: "material" }
     >["row"]
   ) {
-    const owner = yield* requireMaterialOwner(ctx, row);
-    if (!owner) {
+    const verified = yield* verifyReferenceMaterial(ctx, row);
+    if (!verified) {
       return null;
     }
-    const { projection } = yield* verifyMaterial(row);
+    const { projection, resolved } = verified;
     return buildContentSearchDocument({
       ...projection.graph,
-      contentHash: row.projectionHash,
+      contentHash: resolved.projectionHash,
       description: projection.metadata.description,
       locale: projection.locale,
       route: projection.publicPath,
       section: "material",
       sourcePath: projection.contentKey,
-      syncedAt: row.sequence,
+      syncedAt: resolved.sequence,
       text: projection.metadata.title,
       title: projection.metadata.title,
     });
@@ -127,11 +127,11 @@ const readMaterialTopicReference = Effect.fn(
     { readonly family: "materialTopic" }
   >["row"]
 ) {
-  const owner = yield* requireMaterialOwner(ctx, row);
-  if (!owner) {
+  const verified = yield* verifyReferenceMaterial(ctx, row);
+  if (!verified) {
     return null;
   }
-  const { projection } = yield* verifyMaterial(row);
+  const { projection, resolved } = verified;
   const topic = yield* deriveMaterialTopicReference(projection);
   if (row.topicAssetId !== topic.graph.assetId) {
     return yield* releaseFail(
@@ -141,12 +141,12 @@ const readMaterialTopicReference = Effect.fn(
   }
   return buildContentSearchDocument({
     ...topic.graph,
-    contentHash: row.projectionHash,
+    contentHash: resolved.projectionHash,
     locale: topic.locale,
     route: topic.publicPath,
     section: "material",
     sourcePath: topic.publicPath,
-    syncedAt: row.sequence,
+    syncedAt: resolved.sequence,
     text: topic.title,
     title: topic.title,
   });
@@ -202,9 +202,9 @@ const readTryoutReference = Effect.fn("contentRelease.readTryoutReference")(
   }
 );
 
-/** Requires the selected material row to belong to the active read model. */
-const requireMaterialOwner = Effect.fn(
-  "contentRelease.requireReferenceMaterialOwner"
+/** Authenticates the selected material row at the active publication sequence. */
+const verifyReferenceMaterial = Effect.fn(
+  "contentRelease.verifyReferenceMaterial"
 )(function* (
   ctx: QueryCtx,
   row: Extract<
@@ -216,16 +216,7 @@ const requireMaterialOwner = Effect.fn(
   if (!(owner.active && owner.managed)) {
     return null;
   }
-  if (
-    row.releaseId !== owner.active.releaseId ||
-    row.sequence !== owner.active.sequence
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Active material ${row.contentKey}/${row.locale} belongs to another release.`
-    );
-  }
-  return owner.active;
+  return yield* verifyEffectiveMaterial(ctx, row, owner.active.sequence);
 });
 
 /** Narrows the internal search document to the public reference contract. */

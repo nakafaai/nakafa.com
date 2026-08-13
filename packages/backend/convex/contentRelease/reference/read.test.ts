@@ -10,6 +10,7 @@ import {
 } from "@repo/backend/test/content-runtime";
 import {
   activateMaterialCatalog,
+  advanceMaterialCatalog,
   insertMaterialProjection,
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material-catalog";
@@ -102,6 +103,45 @@ describe("contentRelease/reference/read", () => {
         route: topic.publicPath,
         section: "material",
         title: topic.title,
+      });
+    }
+  });
+
+  it("resolves inherited material lessons and topics at the active sequence", async () => {
+    const target = convexTest(schema, convexModules);
+    const material = makeMaterialProjection("en", 1);
+    const topic = await Effect.runPromise(
+      deriveMaterialTopicReference(material)
+    );
+    await activateMaterialCatalog(target);
+    await advanceMaterialCatalog(target);
+
+    for (const expected of [
+      {
+        contentId: material.graph.assetId,
+        route: material.publicPath,
+        title: material.metadata.title,
+      },
+      {
+        contentId: topic.graph.assetId,
+        route: topic.publicPath,
+        title: topic.title,
+      },
+    ]) {
+      await expect(
+        target.query((ctx) =>
+          runConvexProgram(
+            readContentReference(ctx, {
+              contentId: expected.contentId,
+              kind: "content",
+            })
+          )
+        )
+      ).resolves.toMatchObject({
+        content_id: expected.contentId,
+        route: expected.route,
+        section: "material",
+        title: expected.title,
       });
     }
   });
