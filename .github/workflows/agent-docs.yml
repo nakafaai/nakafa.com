@@ -91,10 +91,8 @@ jobs:
 
           if [ ! -f "$output" ] || [ -L "$output" ] || \
             [ "$(stat -c '%a' "$output")" != "600" ] || \
-            [ "$(wc -l < "$output")" -ne 3 ] || \
-            ! grep -Exq 'AGENT_DOCS_CONTENT_STATE_HASH=[a-f0-9]{64}' "$output" || \
-            ! grep -Exq 'AGENT_DOCS_ROUTE_GENERATION_HASH=[a-f0-9]{64}' "$output" || \
-            ! grep -Exq 'AGENT_DOCS_SITEMAP_GENERATION_HASH=[a-f0-9]{64}' "$output"; then
+            [ "$(wc -l < "$output")" -ne 1 ] || \
+            ! grep -Exq 'AGENT_DOCS_CONTENT_STATE_HASH=[a-f0-9]{64}' "$output"; then
             echo "Invalid production runtime generation output." >&2
             exit 1
           fi
@@ -109,7 +107,7 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/agent-docs-content-cache
-          key: agent-docs-content-${{ env.AGENT_DOCS_CONTENT_CACHE_VERSION }}-${{ env.AGENT_DOCS_CONTENT_STATE_HASH }}-${{ env.AGENT_DOCS_ROUTE_GENERATION_HASH }}-${{ env.AGENT_DOCS_SITEMAP_GENERATION_HASH }}-${{ env.AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT }}
+          key: agent-docs-content-${{ env.AGENT_DOCS_CONTENT_CACHE_VERSION }}-${{ env.AGENT_DOCS_CONTENT_STATE_HASH }}-${{ env.AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT }}
 
       - name: Export encrypted signed content snapshot
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && steps.signed-content-cache.outputs.cache-hit != 'true'
@@ -232,9 +230,7 @@ jobs:
         if: failure() && steps.production_build.outcome == 'failure'
         env:
           AGENT_DOCS_CONTENT_STATE_HASH: ""
-          AGENT_DOCS_ROUTE_GENERATION_HASH: ""
           AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT: ""
-          AGENT_DOCS_SITEMAP_GENERATION_HASH: ""
           CONTENT_RUNTIME_TOKEN: ""
           CONVEX_SITE_URL: ""
           CONVEX_URL: ""

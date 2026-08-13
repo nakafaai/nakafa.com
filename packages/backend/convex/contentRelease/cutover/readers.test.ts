@@ -1,0 +1,181 @@
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { writeArticle } from "@repo/backend/convex/contentRelease/article/write";
+import { acceptReaderCutover } from "@repo/backend/convex/contentRelease/cutover/readers";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import schema from "@repo/backend/convex/schema";
+import { convexModules } from "@repo/backend/convex/test.setup";
+import { finalizeRetainedTryoutHistory } from "@repo/backend/convex/tryouts/history/finalize";
+import {
+  TEST_ARTICLE_PROJECTION,
+  TEST_ARTICLE_PROJECTION_JSON,
+} from "@repo/backend/test/content-runtime";
+import {
+  insertRuntimeBinding,
+  insertRuntimeKey,
+  insertRuntimeVersion,
+} from "@repo/backend/test/runtime-head";
+import {
+  prepareRetainedTryoutHistory,
+  provideHistoryTestTrust,
+  seedRetainedTryoutHistory,
+} from "@repo/backend/test/tryout-history";
+import { convexTest } from "convex-test";
+import { describe, expect, it } from "vitest";
+
+const SHA256_PREFIX = /^sha256:/;
+
+describe("contentRelease/cutover/readers", () => {
+  it("accepts exact retained history once and preserves the first checkpoint", async () => {
+    const t = convexTest(schema, convexModules);
+    const result = await t.mutation(async (ctx) => {
+      const fixture = await prepareReaderCutover(ctx);
+
+      const first = await runConvexProgram(
+        provideHistoryTestTrust(acceptReaderCutover(ctx, fixture.plan, 1))
+      );
+      const second = await runConvexProgram(
+        provideHistoryTestTrust(acceptReaderCutover(ctx, fixture.plan, 1))
+      );
+      const state = await ctx.db
+        .query("contentCutoverState")
+        .withIndex("by_key", (index) => index.eq("key", "phase1"))
+        .unique();
+      return { first, second, state };
+    });
+
+    expect(result.first).toEqual({
+      acceptedAt: expect.any(Number),
+      articleAssets: 1,
+      history: {
+        attempts: 2,
+        catalogRows: 2,
+        frozenPlacements: 2,
+        markers: 2,
+        placementRows: 2,
+        progressRows: 1,
+        snapshotId: expect.stringMatching(SHA256_PREFIX),
+      },
+    });
+    expect(result.second).toEqual(result.first);
+    expect(result.state?.readerCutoverAcceptedAt).toBe(result.first.acceptedAt);
+    expect(result.state?.updatedAt).toBe(result.first.acceptedAt);
+  });
+
+  it("rejects acceptance when one completion marker is missing", async () => {
+    const t = convexTest(schema, convexModules);
+    const plan = await t.mutation(async (ctx) => {
+      const fixture = await prepareReaderCutover(ctx);
+      return fixture.plan;
+    });
+    await t.mutation(async (ctx) => {
+      const marker = await ctx.db.query("tryoutAttemptHistory").first();
+      if (!marker) {
+        throw new Error("Expected a retained history marker fixture.");
+      }
+      await ctx.db.delete("tryoutAttemptHistory", marker._id);
+    });
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          provideHistoryTestTrust(acceptReaderCutover(ctx, plan, 1))
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_HISTORY_NOT_READY" },
+    });
+
+    const state = await t.query((ctx) =>
+      ctx.db.query("contentCutoverState").first()
+    );
+    expect(state?.readerCutoverAcceptedAt).toBeUndefined();
+  });
+});
+
+async function prepareReaderCutover(ctx: MutationCtx) {
+  const fixture = await seedRetainedTryoutHistory(ctx);
+  await insertReaderArticle(ctx);
+  await prepareRetainedTryoutHistory(ctx, fixture);
+  await runConvexProgram(
+    provideHistoryTestTrust(finalizeRetainedTryoutHistory(ctx, fixture.plan))
+  );
+  const state = await ctx.db.query("contentState").unique();
+  if (!(state?.activeReleaseId && state.activeSequence !== undefined)) {
+    throw new Error("Expected one active retained-history release.");
+  }
+  await insertQuiescentCheckpoint(
+    ctx,
+    state.activeReleaseId,
+    state.activeSequence
+  );
+  return fixture;
+}
+
+async function insertReaderArticle(ctx: MutationCtx) {
+  const state = await ctx.db.query("contentState").unique();
+  if (!(state?.activeReleaseId && state.activeSequence !== undefined)) {
+    throw new Error("Expected one active retained-history release.");
+  }
+  const activeSequence = state.activeSequence;
+  const projection = TEST_ARTICLE_PROJECTION;
+  await insertRuntimeKey(ctx, projection.contentKey, {
+    headSequence: activeSequence,
+    projectionJson: TEST_ARTICLE_PROJECTION_JSON,
+  });
+  await insertRuntimeVersion(ctx, "public", projection.contentKey, {
+    headReleaseId: state.activeReleaseId,
+    headSequence: activeSequence,
+    projectionJson: TEST_ARTICLE_PROJECTION_JSON,
+    publicPath: projection.publicPath,
+    rendererDomain: "politics",
+    sourcePath: `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`,
+  });
+  await insertRuntimeBinding(ctx, projection.contentKey, {
+    bindingReleaseId: state.activeReleaseId,
+    bindingSequence: activeSequence,
+    locale: projection.locale,
+    publicPath: projection.publicPath,
+  });
+  const head = await ctx.db
+    .query("contentHeads")
+    .withIndex("by_contentKey_and_locale_and_sequence", (index) =>
+      index
+        .eq("contentKey", projection.contentKey)
+        .eq("locale", projection.locale)
+        .eq("sequence", activeSequence)
+    )
+    .unique();
+  if (!head) {
+    throw new Error("Expected one retained reader article head.");
+  }
+  await runConvexProgram(writeArticle(ctx, head, projection));
+  const article = await ctx.db.query("articleCatalog").unique();
+  if (!article) {
+    throw new Error("Expected one retained reader article.");
+  }
+}
+
+async function insertQuiescentCheckpoint(
+  ctx: MutationCtx,
+  activeReleaseId: string,
+  activeSequence: number
+) {
+  await ctx.db.insert("contentCutoverState", {
+    auditedActiveReleaseId: activeReleaseId,
+    auditedActiveSequence: activeSequence,
+    auditedAt: 1,
+    auditedLegacyWriteVersion: 0,
+    auditedNextSequence: activeSequence + 1,
+    currentDeleted: 0,
+    currentTableDeleted: 0,
+    currentTableIndex: 0,
+    currentTablePreserved: 0,
+    inventoryVersion: "production-2026-08-13",
+    key: "phase1",
+    legacyDeleted: 0,
+    legacyTableDeleted: 0,
+    legacyTableIndex: 0,
+    phase: "quiescent",
+    updatedAt: 1,
+  });
+}
