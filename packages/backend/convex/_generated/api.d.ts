@@ -522,9 +522,6 @@ import type * as tryouts_queries_attemptPage from "../tryouts/queries/attemptPag
 import type * as tryouts_queries_catalog from "../tryouts/queries/catalog.js";
 import type * as tryouts_queries_catalogModel from "../tryouts/queries/catalogModel.js";
 import type * as tryouts_queries_history from "../tryouts/queries/history.js";
-import type * as tryouts_queries_retained from "../tryouts/queries/retained.js";
-import type * as tryouts_queries_retained_page from "../tryouts/queries/retained/page.js";
-import type * as tryouts_queries_retained_snapshot from "../tryouts/queries/retained/snapshot.js";
 import type * as tryouts_queries_runtime from "../tryouts/queries/runtime.js";
 import type * as tryouts_queries_sets from "../tryouts/queries/sets.js";
 import type * as tryouts_questions from "../tryouts/questions.js";
@@ -1106,9 +1103,6 @@ declare const fullApi: ApiFromModules<{
   "tryouts/queries/catalog": typeof tryouts_queries_catalog;
   "tryouts/queries/catalogModel": typeof tryouts_queries_catalogModel;
   "tryouts/queries/history": typeof tryouts_queries_history;
-  "tryouts/queries/retained": typeof tryouts_queries_retained;
-  "tryouts/queries/retained/page": typeof tryouts_queries_retained_page;
-  "tryouts/queries/retained/snapshot": typeof tryouts_queries_retained_snapshot;
   "tryouts/queries/runtime": typeof tryouts_queries_runtime;
   "tryouts/queries/sets": typeof tryouts_queries_sets;
   "tryouts/questions": typeof tryouts_questions;

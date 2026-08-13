@@ -1,19 +1,14 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   decodeTryoutSetIdentity,
   tryoutSetIdentityValidator,
 } from "@repo/backend/convex/tryouts/route";
 import { tryRuntimePromise } from "@repo/backend/convex/tryouts/runtime/error";
-import {
-  readAttemptHistoryPage,
-  readAttemptHistoryPageBySet,
-} from "@repo/backend/convex/tryouts/runtime/lookup";
+import { readAttemptHistoryPageBySet } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
 import { loadAttemptScoreResult } from "@repo/backend/convex/tryouts/score/result";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
@@ -36,50 +31,11 @@ const historyRowValidator = v.object({
   status: tryoutStatusValidator,
 });
 
-type HistoryRequest =
-  | {
-      readonly kind: "path";
-      readonly path: {
-        readonly locale: TryoutSetIdentity["locale"];
-        readonly publicPath: string;
-      };
-    }
-  | {
-      readonly identity: TryoutSetIdentity;
-      readonly kind: "set";
-    };
-
-/** Selects the deployed path reader or the exact logical-identity reader. */
-const readHistoryAttempts = Effect.fn("tryouts.queries.history.readAttempts")(
-  function* (
-    ctx: QueryCtx,
-    request: HistoryRequest,
-    userId: Id<"users">,
-    pagination: PaginationOptions
-  ) {
-    if (request.kind === "path") {
-      return yield* readAttemptHistoryPage(
-        ctx,
-        request.path,
-        userId,
-        pagination
-      );
-    }
-
-    return yield* readAttemptHistoryPageBySet(
-      ctx,
-      request.identity,
-      userId,
-      pagination
-    );
-  }
-);
-
 /** Loads and projects one bounded history page for the current app user. */
 const readHistoryPage = Effect.fn("tryouts.queries.history.readPage")(
   function* (
     ctx: QueryCtx,
-    request: HistoryRequest,
+    identity: TryoutSetIdentity,
     paginationOpts: PaginationOptions
   ) {
     const { appUser } = yield* tryRuntimePromise(() => requireAuth(ctx));
@@ -91,9 +47,9 @@ const readHistoryPage = Effect.fn("tryouts.queries.history.readPage")(
       ),
       numItems: Math.min(paginationOpts.numItems, MAX_HISTORY_ROWS_READ),
     };
-    const history = yield* readHistoryAttempts(
+    const history = yield* readAttemptHistoryPageBySet(
       ctx,
-      request,
+      identity,
       appUser._id,
       pagination
     );
@@ -117,27 +73,6 @@ const readHistoryPage = Effect.fn("tryouts.queries.history.readPage")(
   }
 );
 
-/** Keeps the deployed public-path history contract for active browser tabs. */
-export const list = query({
-  args: {
-    locale: localeValidator,
-    paginationOpts: paginationOptsValidator,
-    publicPath: v.string(),
-  },
-  returns: paginationResultValidator(historyRowValidator),
-  handler: (ctx, args) =>
-    runConvexProgram(
-      readHistoryPage(
-        ctx,
-        {
-          kind: "path",
-          path: { locale: args.locale, publicPath: args.publicPath },
-        },
-        args.paginationOpts
-      )
-    ),
-});
-
 /** Returns bounded score history through one immutable signed set identity. */
 export const bySet = query({
   args: {
@@ -150,11 +85,7 @@ export const bySet = query({
     return runConvexProgram(
       decodeTryoutSetIdentity(identity).pipe(
         Effect.flatMap((decodedIdentity) =>
-          readHistoryPage(
-            ctx,
-            { identity: decodedIdentity, kind: "set" },
-            paginationOpts
-          )
+          readHistoryPage(ctx, decodedIdentity, paginationOpts)
         )
       )
     );
