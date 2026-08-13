@@ -144,6 +144,8 @@ export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
           searchByIndex.assetId !== searchStored.assetId) ||
         searchByIndex.identity !== searchStored.identity ||
         searchByIndex.locale !== searchStored.locale ||
+        (searchByIndex.publicPath !== undefined &&
+          searchByIndex.publicPath !== searchStored.publicPath) ||
         searchByIndex.rowHash !== searchStored.rowHash ||
         searchByIndex.surahNumber !== searchStored.surahNumber ||
         searchByIndex.text !== searchStored.text

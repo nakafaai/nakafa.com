@@ -8,6 +8,7 @@ import {
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
 import type { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
+import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import {
   deleteMaterial,
   writeMaterial,
@@ -76,9 +77,11 @@ describe("contentRelease/material/write", () => {
     const [stored] = await t.run((ctx) =>
       ctx.db.query("materialCatalog").take(2)
     );
+    const topic = await runConvexProgram(deriveMaterialTopicReference(updated));
     expect(stored).toMatchObject({
       projectionJson: canonicalizeMaterialProjection(updated),
       sequence: 2,
+      topicAssetId: topic.graph.assetId,
     });
     expect(stored).not.toHaveProperty("description");
     expect(stored).not.toHaveProperty("title");

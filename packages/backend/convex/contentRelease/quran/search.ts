@@ -28,6 +28,7 @@ export const authenticateQuranSearchHit = Effect.fn(
       identity: hit.identity,
       index: hit.index,
       locale: hit.locale,
+      publicPath: hit.publicPath,
       rowHash: hit.rowHash,
       snapshotId: hit.snapshotId,
       surahNumber: hit.surahNumber,
@@ -46,6 +47,7 @@ export const authenticateQuranSearchHit = Effect.fn(
     (hit.assetId !== undefined && facts.assetId !== hit.assetId) ||
     facts.identity !== hit.identity ||
     facts.locale !== hit.locale ||
+    (hit.publicPath !== undefined && facts.publicPath !== hit.publicPath) ||
     facts.surahNumber !== hit.surahNumber ||
     facts.text !== hit.text ||
     signed.index !== hit.index ||

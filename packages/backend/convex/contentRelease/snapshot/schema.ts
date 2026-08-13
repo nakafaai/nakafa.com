@@ -182,12 +182,15 @@ const tables = {
     identity: v.string(),
     index: v.number(),
     locale: localeValidator,
+    /** Additive Phase 1 field tightened after exact authenticated backfill. */
+    publicPath: v.optional(v.string()),
     rowHash: v.string(),
     snapshotId: v.string(),
     surahNumber: v.number(),
     text: v.string(),
   })
     .index("by_snapshotId_and_index", ["snapshotId", "index"])
+    .index("by_snapshotId_and_assetId", ["snapshotId", "assetId"])
     .index("by_snapshotId_and_locale_and_index", [
       "snapshotId",
       "locale",
@@ -197,6 +200,11 @@ const tables = {
       "snapshotId",
       "locale",
       "assetId",
+    ])
+    .index("by_snapshotId_and_locale_and_publicPath", [
+      "snapshotId",
+      "locale",
+      "publicPath",
     ])
     .index("by_snapshotId_and_identity", ["snapshotId", "identity"])
     .searchIndex("search_text", {
@@ -220,6 +228,7 @@ const tables = {
     snapshotId: v.string(),
   })
     .index("by_snapshotId_and_index", ["snapshotId", "index"])
+    .index("by_snapshotId_and_assetId", ["snapshotId", "assetId"])
     .index("by_snapshotId_and_identity", ["snapshotId", "identity"])
     .index("by_snapshotId_and_locale_and_assetId", [
       "snapshotId",

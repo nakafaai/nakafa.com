@@ -59,6 +59,7 @@ export function quranSearchFacts(payload: QuranSearch) {
     assetId: payload.graph.assetId,
     identity: quranSearchIdentity(payload.locale, payload.surahNumber),
     locale: payload.locale,
+    publicPath: payload.route,
     surahNumber: payload.surahNumber,
     text: payload.text,
   };

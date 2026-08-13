@@ -23,7 +23,10 @@ const tables = {
     rendererDomain: rendererDomainValidator,
     sequence: v.number(),
     sourcePath: v.string(),
+    topicAssetId: v.optional(v.string()),
   })
+    .index("by_assetId", ["assetId"])
+    .index("by_topicAssetId_and_assetId", ["topicAssetId", "assetId"])
     .index("by_contentKey_and_locale", ["contentKey", "locale"])
     .index("by_locale_and_contentKey", ["locale", "contentKey"])
     .index("by_locale_and_assetId", ["locale", "assetId"])
