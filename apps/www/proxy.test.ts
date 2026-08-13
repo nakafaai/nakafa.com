@@ -93,7 +93,9 @@ vi.mock("@/lib/routing/public/migration", () => ({
 
 describe("proxy", () => {
   beforeEach(() => {
-    runtimeMocks.readTryout.mockReset().mockReturnValue(Effect.succeed(null));
+    runtimeMocks.readTryout
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ exists: false }));
     runtimeMocks.readProgramPath
       .mockReset()
       .mockReturnValue(Effect.succeed({ managed: false, route: null }));
@@ -266,7 +268,9 @@ describe("proxy", () => {
 
   it("hard-rejects a missing public try-out set before page rendering", async () => {
     const path = "/en/try-out/indonesia/snbt/2027/missing-set";
-    runtimeMocks.readTryout.mockReturnValueOnce(Effect.succeed(null));
+    runtimeMocks.readTryout.mockReturnValueOnce(
+      Effect.succeed({ exists: false })
+    );
 
     const response = await requestProxy(path);
 
@@ -275,11 +279,8 @@ describe("proxy", () => {
       "http://localhost:3000/_not-found/en"
     );
     expect(runtimeMocks.readTryout).toHaveBeenCalledWith(expect.anything(), {
-      input: {
-        kind: "route",
-        locale: "en",
-        publicPath: "try-out/indonesia/snbt/2027/missing-set",
-      },
+      locale: "en",
+      publicPath: "try-out/indonesia/snbt/2027/missing-set",
     });
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
   });
