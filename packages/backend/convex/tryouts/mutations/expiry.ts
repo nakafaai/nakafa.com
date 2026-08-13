@@ -1,5 +1,6 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { ensureTryoutLifecycleWritable } from "@repo/backend/convex/contentRelease/cutover/tryouts";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { tryRuntimePromise } from "@repo/backend/convex/tryouts/runtime/error";
@@ -47,6 +48,7 @@ export const attempt = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await runConvexProgram(ensureTryoutLifecycleWritable(ctx));
     const attemptRow = await ctx.db.get(args.attemptId);
     const now = Date.now();
 
@@ -67,6 +69,7 @@ export const section = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await runConvexProgram(ensureTryoutLifecycleWritable(ctx));
     const sectionRow = await ctx.db.get(args.sectionAttemptId);
     const now = Date.now();
 
@@ -110,6 +113,7 @@ export const sweep = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
+    await runConvexProgram(ensureTryoutLifecycleWritable(ctx));
     await runConvexProgram(startExpiryReconciliation(ctx, Date.now()));
     return null;
   },
@@ -129,6 +133,7 @@ export const reconcileAttempts = internalMutation({
   args: { before: v.number() },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await runConvexProgram(ensureTryoutLifecycleWritable(ctx));
     await runConvexProgram(reconcileMissedAttemptExpiries(ctx, args.before));
     return null;
   },
@@ -181,6 +186,7 @@ export const reconcileSections = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await runConvexProgram(ensureTryoutLifecycleWritable(ctx));
     await runConvexProgram(
       reconcileMissedSectionExpiries(ctx, {
         before: args.before,

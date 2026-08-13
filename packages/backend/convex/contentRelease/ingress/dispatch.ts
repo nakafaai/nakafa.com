@@ -12,6 +12,7 @@ import {
   internalAction,
 } from "@repo/backend/convex/_generated/server";
 import type { ReleaseError } from "@repo/backend/convex/contentRelease/error";
+import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { readCurrentPublication } from "@repo/backend/convex/contentRelease/ingress/current";
 import { decodePublicationBody } from "@repo/backend/convex/contentRelease/ingress/decode";
 import {
@@ -27,6 +28,7 @@ import {
 } from "@repo/backend/convex/contentRelease/ingress/response";
 import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/stage";
 import { runConvexActionProgram } from "@repo/backend/convex/lib/effect";
+import { makeFunctionReference } from "convex/server";
 import { type Infer, v } from "convex/values";
 import { Effect, Either } from "effect";
 
@@ -34,6 +36,11 @@ const dispatchInputValidator = v.object({
   byteLength: v.number(),
   source: v.string(),
 });
+const publicationGuardReference = makeFunctionReference<
+  "query",
+  Record<string, never>,
+  null
+>("contentRelease/cutover/state:publicationGuard");
 
 /** Complete bounded evidence accepted by the Node publication dispatcher. */
 export type DispatchInput = Infer<typeof dispatchInputValidator>;
@@ -111,7 +118,10 @@ export const dispatchPublication = Effect.fn(
   if (Either.isLeft(decoded)) {
     return yield* publicationFailure(predecodeFailure(decoded.left));
   }
-  return yield* performRequest(ctx, decoded.right, activeKeyId).pipe(
+  return yield* callInternal(() =>
+    ctx.runQuery(publicationGuardReference, {})
+  ).pipe(
+    Effect.andThen(performRequest(ctx, decoded.right, activeKeyId)),
     Effect.flatMap((response) => publicationSuccess(response)),
     Effect.catchTag("ReleaseError", (error) =>
       encodeRequestFailure(ctx, decoded.right, error)

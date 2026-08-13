@@ -108,6 +108,45 @@ function insertItem(ctx: MutationCtx) {
 }
 
 describe("contentRelease/cleanup", () => {
+  it("rejects cleanup after the cutover checkpoint is initialized", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRelease(ctx);
+      await insertArtifact(ctx, 0);
+      await ctx.db.insert("contentCutoverState", {
+        auditedActiveReleaseId: "active-release",
+        auditedActiveSequence: 1,
+        auditedAt: NOW,
+        auditedLegacyWriteVersion: 0,
+        auditedNextSequence: 2,
+        currentDeleted: 0,
+        currentTableDeleted: 0,
+        currentTableIndex: 0,
+        currentTablePreserved: 0,
+        inventoryVersion: "production-2026-08-13",
+        key: "phase1",
+        legacyDeleted: 0,
+        legacyTableDeleted: 0,
+        legacyTableIndex: 0,
+        phase: "quiescent",
+        updatedAt: NOW,
+      });
+    });
+
+    await expect(
+      t.mutation(cleanup, { releaseId: RELEASE.releaseId })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+    const unchanged = await t.run(async (ctx) => ({
+      artifacts: await ctx.db.query("contentArtifacts").take(2),
+      releases: await ctx.db.query("contentReleases").take(2),
+    }));
+    expect(unchanged.artifacts).toEqual([
+      expect.objectContaining({ retainUntil: 0 }),
+    ]);
+    expect(unchanged.releases).toHaveLength(1);
+    expect(unchanged.releases[0]).not.toHaveProperty("cleanupAt");
+  });
+
   it("deletes expired unreachable artifacts in resumable bounded pages", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -153,6 +192,39 @@ describe("contentRelease/cleanup", () => {
       });
       await insertHead(ctx);
       await insertItem(ctx);
+    });
+
+    await expect(
+      t.mutation(cleanup, { releaseId: RELEASE.releaseId })
+    ).resolves.toEqual({
+      complete: true,
+      deletedArtifacts: 0,
+      releaseId: RELEASE.releaseId,
+    });
+    await expect(
+      t.run((ctx) => ctx.db.query("contentArtifacts").unique())
+    ).resolves.toMatchObject({ artifactHash: TEST_ARTIFACT_HASH });
+  });
+
+  it("retains artifacts referenced only by immutable tryout history", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRelease(ctx);
+      await ctx.db.insert("contentArtifacts", {
+        artifactHash: TEST_ARTIFACT_HASH,
+        artifactJson: "{}",
+        createdAt: NOW,
+        retainUntil: 0,
+      });
+      await ctx.db.insert("tryoutHistoryRows", {
+        answerArtifactHash: `sha256:${"a".repeat(64)}`,
+        index: 54,
+        questionArtifactHash: TEST_ARTIFACT_HASH,
+        rowHash: TEST_DIGEST,
+        rowJson: "{}",
+        rowKind: "placement",
+        snapshotId: TEST_DIGEST,
+      });
     });
 
     await expect(
