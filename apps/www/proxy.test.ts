@@ -48,6 +48,9 @@ const previewMocks = vi.hoisted(() => ({
   internal: vi.fn(),
   route: vi.fn(),
 }));
+const migrationMocks = vi.hoisted(() => ({
+  readRedirect: vi.fn(),
+}));
 
 vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
@@ -84,6 +87,9 @@ vi.mock("@/lib/content/published/active", () => ({
 vi.mock("@/lib/content/program/path", () => ({
   readPublishedProgramPath: runtimeMocks.readProgramPath,
 }));
+vi.mock("@/lib/routing/public/migration", () => ({
+  readPublicUrlMigrationRedirect: migrationMocks.readRedirect,
+}));
 
 describe("proxy", () => {
   beforeEach(() => {
@@ -106,6 +112,9 @@ describe("proxy", () => {
     previewMocks.configured.mockReset().mockReturnValue(false);
     previewMocks.internal.mockReset().mockReturnValue(Effect.succeed(false));
     previewMocks.route.mockReset().mockReturnValue(Effect.succeed(false));
+    migrationMocks.readRedirect
+      .mockReset()
+      .mockReturnValue(Effect.succeed(null));
     mockLocaleRouting.localeMiddleware.mockClear();
   });
 
@@ -127,6 +136,29 @@ describe("proxy", () => {
     expect(response.headers.get("location")).toBe(
       "http://localhost:3000/en/search"
     );
+  });
+
+  it("permanently redirects an authenticated retired material URL", async () => {
+    migrationMocks.readRedirect.mockReturnValueOnce(
+      Effect.succeed(
+        "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
+      )
+    );
+
+    const response = await requestProxy(
+      "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle?utm=test"
+    );
+
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling?utm=test"
+    );
+    expect(migrationMocks.readRedirect).toHaveBeenCalledWith({
+      method: "GET",
+      pathname:
+        "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
+    });
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
   });
 
   it("runs only unsupported root files through the locale proxy", () => {

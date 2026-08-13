@@ -21,6 +21,7 @@ import {
   isLocaleBypassPath,
   isUnsupportedRootFilePath,
 } from "@/lib/routing/bypass";
+import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
@@ -94,6 +95,19 @@ export async function proxy(request: NextRequest) {
 
   if (routeDecision.kind === "rewrite-markdown") {
     return rewriteToLlmsMdx(request, routeDecision.localizedRoute);
+  }
+
+  const urlMigrationRedirect = await Effect.runPromise(
+    readPublicUrlMigrationRedirect({
+      method: request.method,
+      pathname,
+    })
+  );
+  if (urlMigrationRedirect) {
+    const redirectUrl = new URL(request.url);
+    redirectUrl.pathname = urlMigrationRedirect;
+
+    return NextResponse.redirect(redirectUrl, 308);
   }
 
   const sourceBackedRouteRejection = await Effect.runPromise(
