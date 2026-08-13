@@ -68,7 +68,10 @@ export const verifyArticleProjection = Effect.fn(
 export const verifyArticle = Effect.fn("contentRelease.verifyArticle")(
   function* (ctx: QueryCtx, row: ArticleRow, activeSequence: number) {
     const verified = yield* verifyArticleProjection(ctx, row, activeSequence);
-    if (verified.projection.graph.assetId !== row.assetId) {
+    if (
+      row.assetId !== undefined &&
+      verified.projection.graph.assetId !== row.assetId
+    ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Active article ${row.contentKey}/${row.locale} lost its stored asset identity.`
