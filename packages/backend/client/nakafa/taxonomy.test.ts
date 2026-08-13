@@ -62,6 +62,12 @@ describe("readNakafaTaxonomy", () => {
     expect(calledRuntimeQueries()).toContain(
       getFunctionName(api.contentRelease.tryout.taxonomy)
     );
+    expect(
+      calledRuntimeQueries().filter(
+        (name) =>
+          name === getFunctionName(api.contentRelease.runtime.active.read)
+      )
+    ).toHaveLength(4);
   });
 
   it("fails closed when an article or material family is unmanaged", async () => {
@@ -175,6 +181,35 @@ describe("readNakafaTaxonomy", () => {
       },
     });
   });
+
+  it("fails closed when the active release changes during assembly", async () => {
+    let activeReadCount = 0;
+    runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
+      if (
+        getFunctionName(query) ===
+        getFunctionName(api.contentRelease.runtime.active.read)
+      ) {
+        activeReadCount += 1;
+        return Promise.resolve({
+          releaseId: activeReadCount === 1 ? "release-current" : "release-next",
+        });
+      }
+
+      return readRuntimeFixture(convexUrl, query, args);
+    });
+
+    await expect(
+      Effect.runPromise(
+        Effect.either(readNakafaTaxonomy("https://example.convex.cloud", "id"))
+      )
+    ).resolves.toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "NakafaAgentDataReadError",
+        message: "Unable to complete one release-pinned Nakafa content read.",
+      },
+    });
+  });
 });
 
 /** Builds one authenticated article category page fixture. */
@@ -207,6 +242,13 @@ function readRuntimeFixture(
   query: FunctionReference<"query">,
   _args: unknown
 ) {
+  if (
+    getFunctionName(query) ===
+    getFunctionName(api.contentRelease.runtime.active.read)
+  ) {
+    return Promise.resolve({ releaseId: "release-current" });
+  }
+
   if (
     getFunctionName(query) === getFunctionName(api.contentRelease.quran.surahs)
   ) {
