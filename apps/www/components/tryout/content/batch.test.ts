@@ -46,6 +46,14 @@ describe("try-out signed content batches", () => {
     ).resolves.toEqual(new TryoutContentBatchOrderError());
   });
 
+  it("fails when one rendered batch is missing", async () => {
+    const plan = planTryoutContentBatches(["question-1"], ["answer-1"]);
+
+    await expect(
+      Effect.runPromise(restoreTryoutContentOrder(plan, []).pipe(Effect.flip))
+    ).resolves.toEqual(new TryoutContentBatchOrderError());
+  });
+
   it("fails when the immutable selector count no longer matches the batches", async () => {
     const plan = planTryoutContentBatches(["question-1"], ["answer-1"]);
 
