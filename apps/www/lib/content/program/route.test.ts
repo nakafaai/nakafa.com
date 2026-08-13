@@ -100,6 +100,12 @@ describe("published program route", () => {
     expect(cacheMock).toHaveBeenCalledOnce();
   });
 
+  it("fails when a requested signed route fixture does not exist", () => {
+    expect(() => readTestPublishedRoute("curriculum/missing")).toThrow(
+      "Missing published route fixture: en/curriculum/missing"
+    );
+  });
+
   it("rejects an unmanaged family", async () => {
     runtimeQueryMock.mockResolvedValueOnce(
       routeResponse({

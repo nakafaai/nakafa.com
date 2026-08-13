@@ -4,16 +4,16 @@ import { syncArticles } from "@repo/backend/convex/contentRelease/article/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import {
+  insertCompletedRelease,
+  insertReleaseItem,
+  selectActiveRelease,
+} from "@repo/backend/test/content-read-model";
 import { testArticleProjection } from "@repo/backend/test/content-runtime";
 import {
   insertTestState,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
-import {
-  insertCompletedRelease,
-  insertReleaseItem,
-  selectActiveRelease,
-} from "@repo/backend/test/content-sync";
 import {
   insertRuntimeBinding,
   insertRuntimeVersion,

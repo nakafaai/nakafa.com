@@ -73,15 +73,13 @@ export function formatTaxonomy(result: NakafaAgentTaxonomy) {
     - Sections: ${result.sections.join(", ")}
     - Tools: ${result.tools.join(", ")}
 
+    ## Articles
+    - Categories: ${result.articles.categories.join(", ")}
+
     ## Counts
     ${result.content_counts
       .map((item) => `- ${item.locale}: ${item.count}`)
       .join("\n")}
-
-    ## Subject
-    - Categories: ${result.subject.categories.join(", ")}
-    - Grades: ${result.subject.grades.join(", ")}
-    - Materials: ${result.subject.materials.join(", ")}
 
     ## Try Out
     - Countries: ${result.tryout.countries.map(formatTaxonomyOption).join(", ")}

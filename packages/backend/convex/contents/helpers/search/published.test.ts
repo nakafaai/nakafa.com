@@ -10,7 +10,6 @@ import {
 import {
   activateMaterialCatalog,
   MATERIAL_IDENTITY,
-  selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
@@ -118,17 +117,12 @@ describe("readPublishedSearchDocuments", () => {
     );
   });
 
-  it("browses every exact material owner beyond the full-family window", async () => {
+  it("browses current materials in stable public-path order", async () => {
     const t = createConvexTestWithBetterAuth();
-    const unowned = Array.from({ length: 40 }, (_, index) =>
+    const projections = Array.from({ length: 40 }, (_, index) =>
       makeMaterialProjection("en", 1, index + 1)
     );
-    const first = makeMaterialProjection("en", 1, 998);
-    const second = makeMaterialProjection("en", 2, 999);
-    const projections = [...unowned, first, second];
     await activateMaterialCatalog(t, projections);
-    await selectExactMaterial(t, first);
-    await selectExactMaterial(t, second);
     await t.mutation(async (ctx) => {
       for (const projection of projections) {
         await insertRuntimeIndex(ctx, projection.contentKey, {
@@ -147,21 +141,6 @@ describe("readPublishedSearchDocuments", () => {
         searchSequence: MATERIAL_IDENTITY.sequence,
       });
     });
-    const formerWindow = await t.run((ctx) =>
-      ctx.db
-        .query("contentIndex")
-        .withIndex("by_locale_and_family_and_publicPath", (index) =>
-          index.eq("locale", "en").eq("family", "material")
-        )
-        .take(32)
-    );
-    expect(
-      formerWindow.some(({ contentKey }) => contentKey === first.contentKey)
-    ).toBe(false);
-    expect(
-      formerWindow.some(({ contentKey }) => contentKey === second.contentKey)
-    ).toBe(false);
-
     const documents = await t.query(async (ctx) => {
       const owner = await runConvexProgram(loadSearchOwner(ctx));
       if (!owner) {
@@ -185,9 +164,10 @@ describe("readPublishedSearchDocuments", () => {
       );
     });
 
-    expect(documents.map(({ route }) => route)).toEqual([
-      first.publicPath,
-      second.publicPath,
-    ]);
+    const expected = projections
+      .map(({ publicPath }) => publicPath)
+      .sort()
+      .slice(0, 2);
+    expect(documents.map(({ route }) => route)).toEqual(expected);
   });
 });

@@ -1,6 +1,6 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { formatLearningSelectionPromptContext } from "@repo/ai/prompt/learning-selection";
 import type { AgentLearningSelection } from "@repo/ai/types/agents";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 
 const selection: AgentLearningSelection = {

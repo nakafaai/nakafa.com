@@ -29,7 +29,7 @@ beforeEach(() => {
 });
 
 describe("readNakafaTaxonomy", () => {
-  it("assembles taxonomy from constants and signed publication counts", async () => {
+  it("assembles taxonomy from signed publications", async () => {
     const taxonomy = await Effect.runPromise(
       readNakafaTaxonomy("https://example.convex.cloud", "id")
     );
@@ -45,11 +45,14 @@ describe("readNakafaTaxonomy", () => {
       { count: 121, locale: "id" },
     ]);
     expect(taxonomy.tools).toContain("nakafa_get_quran_reference");
-    expect(taxonomy.subject.materials).toContain("mathematics");
+    expect(taxonomy.articles.categories).toEqual(["politics"]);
     expect(taxonomy.tryout).toEqual({
       countries: [{ id: "indonesia", label: "Indonesia" }],
       exams: [{ id: "snbt", label: "SNBT" }],
     });
+    expect(calledRuntimeQueries()).toContain(
+      getFunctionName(api.contentRelease.article.categories)
+    );
     expect(calledRuntimeQueries()).toContain(
       getFunctionName(api.contentRelease.article.sitemapBuckets)
     );
@@ -58,12 +61,6 @@ describe("readNakafaTaxonomy", () => {
     );
     expect(calledRuntimeQueries()).toContain(
       getFunctionName(api.contentRelease.tryout.taxonomy)
-    );
-    expect(calledRuntimeQueries()).not.toContain(
-      getFunctionName(api.contents.queries.runtime.listContentRouteCounts)
-    );
-    expect(calledRuntimeQueries()).not.toContain(
-      getFunctionName(api.contents.queries.runtime.listContentRoutesByPrefix)
     );
   });
 
@@ -96,7 +93,113 @@ describe("readNakafaTaxonomy", () => {
       });
     }
   });
+
+  it("pins every article category page to one signed release", async () => {
+    runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
+      if (
+        getFunctionName(query) !==
+        getFunctionName(api.contentRelease.article.categories)
+      ) {
+        return readRuntimeFixture(convexUrl, query, args);
+      }
+      const categoryArgs = args as {
+        expectedManifestHash: string | null;
+        expectedReleaseId: string | null;
+        paginationOpts: { cursor: string | null };
+      };
+      if (categoryArgs.paginationOpts.cursor === null) {
+        expect(categoryArgs.expectedManifestHash).toBeNull();
+        expect(categoryArgs.expectedReleaseId).toBeNull();
+        return Promise.resolve(categoryPage(["politics"], false, "next"));
+      }
+
+      expect(categoryArgs).toMatchObject({
+        expectedManifestHash: `sha256:${"a".repeat(64)}`,
+        expectedReleaseId: "article-release",
+        paginationOpts: { cursor: "next" },
+      });
+      return Promise.resolve(categoryPage(["science"], true, ""));
+    });
+
+    const taxonomy = await Effect.runPromise(
+      readNakafaTaxonomy("https://example.convex.cloud", "id")
+    );
+
+    expect(taxonomy.articles.categories).toEqual(["politics", "science"]);
+  });
+
+  it("fails closed when signed article taxonomy is stale", async () => {
+    runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
+      if (
+        getFunctionName(query) ===
+        getFunctionName(api.contentRelease.article.categories)
+      ) {
+        return Promise.resolve({
+          ...categoryPage(["politics"], true, ""),
+          stale: true,
+        });
+      }
+      return readRuntimeFixture(convexUrl, query, args);
+    });
+
+    await expect(
+      Effect.runPromise(
+        Effect.either(readNakafaTaxonomy("https://example.convex.cloud", "id"))
+      )
+    ).resolves.toMatchObject({
+      _tag: "Left",
+      left: { _tag: "NakafaAgentDataReadError" },
+    });
+  });
+
+  it("fails closed when an article category page loses its cursor", async () => {
+    runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
+      if (
+        getFunctionName(query) ===
+        getFunctionName(api.contentRelease.article.categories)
+      ) {
+        return Promise.resolve(categoryPage(["politics"], false, ""));
+      }
+      return readRuntimeFixture(convexUrl, query, args);
+    });
+
+    await expect(
+      Effect.runPromise(
+        Effect.either(readNakafaTaxonomy("https://example.convex.cloud", "id"))
+      )
+    ).resolves.toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "NakafaAgentDataReadError",
+        cause: "Signed article taxonomy for id lost its continuation cursor.",
+      },
+    });
+  });
 });
+
+/** Builds one authenticated article category page fixture. */
+function categoryPage(
+  categories: readonly string[],
+  isDone: boolean,
+  continueCursor: string
+) {
+  return {
+    activeManifestHash: `sha256:${"a".repeat(64)}`,
+    activeReleaseId: "article-release",
+    managed: true,
+    result: {
+      continueCursor,
+      isDone,
+      page: categories.map((category) => ({
+        category,
+        rendererDomain: category,
+        title: category,
+      })),
+    },
+    sourceRevision: "c".repeat(40),
+    stale: false,
+  };
+}
 
 /** Routes generated Convex query refs to taxonomy reader fixtures. */
 function readRuntimeFixture(
@@ -121,6 +224,13 @@ function readRuntimeFixture(
 
   if (
     getFunctionName(query) ===
+    getFunctionName(api.contentRelease.article.categories)
+  ) {
+    return Promise.resolve(categoryPage(["politics"], true, ""));
+  }
+
+  if (
+    getFunctionName(query) ===
     getFunctionName(api.contentRelease.article.sitemapBuckets)
   ) {
     return Promise.resolve({
@@ -139,7 +249,6 @@ function readRuntimeFixture(
       buckets: ["0"],
       managed: true,
       materialCount: 2,
-      sourceClaimCount: 0,
     });
   }
 

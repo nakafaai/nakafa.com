@@ -1,7 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { readExactMaterialSnapshot } from "@repo/backend/convex/contentRelease/material/exact";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
 import { resolveSearchProjection } from "@repo/backend/convex/contentRelease/search/verify";
@@ -10,10 +9,7 @@ import {
   type ContentSearchDocument,
   interleaveSearchGroups,
 } from "@repo/backend/convex/contents/helpers/search/groups";
-import {
-  matchesContentSearchQuery,
-  rankContentSearchDocuments,
-} from "@repo/backend/convex/contents/helpers/search/rank";
+import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { getExactRouteQuery } from "@repo/backend/convex/contents/helpers/search/terms";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
@@ -36,13 +32,13 @@ export function getPublishedSearchFamilies(
   }
   const families: PublishedFamily[] = [];
   if (
-    owner.readyFamilies.includes("article") &&
+    owner.families.includes("article") &&
     (section === undefined || section === "articles")
   ) {
     families.push("article");
   }
   if (
-    owner.materialReady &&
+    owner.families.includes("material") &&
     (section === undefined || section === "material")
   ) {
     families.push("material");
@@ -61,22 +57,10 @@ export const readPublishedSearchDocuments = Effect.fn(
   owner: PublishedSearchOwner,
   families: readonly PublishedFamily[]
 ) {
-  const exactMaterialRows = yield* loadExactMaterialSearchRows(
-    ctx,
-    args.locale,
-    owner,
-    families
-  );
   if (queryTexts.length === 0) {
     const groups = yield* Effect.all(
       families.map((family) =>
-        browseFamily(
-          ctx,
-          args.locale,
-          family,
-          NAKAFA_AGENT_SEARCH_WINDOW,
-          exactMaterialRows
-        )
+        browseFamily(ctx, args.locale, family, NAKAFA_AGENT_SEARCH_WINDOW)
       ),
       { concurrency: "unbounded" }
     );
@@ -95,8 +79,7 @@ export const readPublishedSearchDocuments = Effect.fn(
         args.locale,
         families,
         queryText,
-        NAKAFA_AGENT_SEARCH_WINDOW,
-        exactMaterialRows
+        NAKAFA_AGENT_SEARCH_WINDOW
       ).pipe(Effect.map((rows) => ({ queryText, rows })))
     ),
     { concurrency: "unbounded" }
@@ -130,43 +113,6 @@ export const readPublishedSearchDocuments = Effect.fn(
   );
 });
 
-/** Loads search rows for the bounded active exact material projection. */
-const loadExactMaterialSearchRows = Effect.fn(
-  "contents.search.loadExactMaterialRows"
-)(function* (
-  ctx: QueryCtx,
-  locale: ContentSearchInput["locale"],
-  owner: PublishedSearchOwner,
-  families: readonly PublishedFamily[]
-) {
-  if (!families.includes("material") || owner.families.includes("material")) {
-    return null;
-  }
-  const snapshot = yield* readExactMaterialSnapshot(ctx, owner, locale);
-  const rows = yield* Effect.forEach(snapshot.materials, ({ row }) =>
-    Effect.gen(function* () {
-      const indexed = yield* Effect.promise(() =>
-        ctx.db
-          .query("contentIndex")
-          .withIndex("by_contentKey_and_locale", (index) =>
-            index.eq("contentKey", row.contentKey).eq("locale", row.locale)
-          )
-          .unique()
-      );
-      if (!indexed) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Exact material search entry ${row.contentKey}/${row.locale} is missing.`
-        );
-      }
-      return indexed;
-    })
-  );
-  return rows.sort((left, right) =>
-    left.publicPath.localeCompare(right.publicPath)
-  );
-});
-
 /** Reads one fixed raw candidate window across active published families. */
 const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
   function* (
@@ -174,21 +120,12 @@ const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
     locale: ContentSearchInput["locale"],
     families: readonly PublishedFamily[],
     queryText: string,
-    scanLimit: number,
-    exactMaterialRows: readonly Doc<"contentIndex">[] | null
+    scanLimit: number
   ) {
     const route = getExactRouteQuery(locale, queryText);
     const groups = yield* Effect.all(
       families.map((family) =>
-        searchFamily(
-          ctx,
-          locale,
-          family,
-          route,
-          queryText,
-          scanLimit,
-          exactMaterialRows
-        )
+        searchFamily(ctx, locale, family, route, queryText, scanLimit)
       ),
       { concurrency: "unbounded" }
     );
@@ -204,23 +141,10 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
     family: PublishedFamily,
     route: null | string,
     queryText: string,
-    scanLimit: number,
-    exactMaterialRows: readonly Doc<"contentIndex">[] | null
+    scanLimit: number
   ) {
     if (scanLimit <= 0) {
       return [];
-    }
-    if (family === "material" && exactMaterialRows) {
-      const exact = route
-        ? exactMaterialRows.find((row) => row.publicPath === route)
-        : undefined;
-      const hits = exactMaterialRows.filter((row) =>
-        matchesContentSearchQuery(row.text, queryText)
-      );
-      const rows = exact
-        ? [exact, ...hits.filter((row) => row._id !== exact._id)]
-        : hits;
-      return rows.slice(0, scanLimit);
     }
     const exact = route
       ? yield* Effect.promise(() =>
@@ -259,14 +183,10 @@ const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
     ctx: QueryCtx,
     locale: ContentSearchInput["locale"],
     family: PublishedFamily,
-    scanLimit: number,
-    exactMaterialRows: readonly Doc<"contentIndex">[] | null
+    scanLimit: number
   ) {
     if (scanLimit <= 0) {
       return [];
-    }
-    if (family === "material" && exactMaterialRows) {
-      return exactMaterialRows.slice(0, scanLimit);
     }
     const rows = yield* Effect.promise(() =>
       ctx.db

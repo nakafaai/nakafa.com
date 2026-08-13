@@ -10,7 +10,6 @@ import {
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { validateMaterialProjectionRoute } from "@repo/backend/convex/contentRelease/material/collision";
 import {
   loadExactVersion,
   loadRouteBinding,
@@ -112,7 +111,7 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
     sourceHash: artifact.payload.sourceHash,
     sourcePath: change.sourcePath,
   } satisfies WithoutSystemFields<Doc<"contentHeads">>;
-  return { projection, version };
+  return version;
 });
 
 /** Compares every persisted immutable head field without system metadata. */
@@ -144,10 +143,7 @@ export const writeUpsert = Effect.fn("contentRelease.writeUpsert")(function* (
   ctx: MutationCtx,
   row: Doc<"contentItems">
 ) {
-  const { projection, version } = yield* upsertVersion(ctx, row);
-  if (projection.kind === "subject-lesson") {
-    yield* validateMaterialProjectionRoute(ctx, projection);
-  }
+  const version = yield* upsertVersion(ctx, row);
   const existing = yield* loadExactVersion(
     ctx,
     row.contentKey,

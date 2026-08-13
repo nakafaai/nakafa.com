@@ -3,6 +3,7 @@ import { read } from "@repo/ai/agents/nakafa/tools/read";
 import {
   createNakafaTestService,
   createWriter,
+  makeSnbtSetRef,
 } from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
@@ -23,6 +24,9 @@ const ARTICLE_URL = NakafaAgentContentRefInputSchema.make(
 const MISSING_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
   readNakafaContentRefFixture("en", "articles/politics/missing", "articles")
     .content_id
+);
+const TRYOUT_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
+  makeSnbtSetRef("en", "try-out/indonesia/snbt/2027/set-2", "set-2").content_id
 );
 
 describe("nakafa read tool", () => {
@@ -78,6 +82,24 @@ describe("nakafa read tool", () => {
       read({
         input: { content_ref: MISSING_CONTENT_ID },
         toolCallId: "read-2",
+        writer,
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
+    );
+
+    expect(output).toBe("Nakafa content was not found.");
+    expect(parts.at(-1)).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({ kind: "content", status: "error" }),
+      })
+    );
+  });
+
+  it("does not read try-out references without markdown", async () => {
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      read({
+        input: { content_ref: TRYOUT_CONTENT_ID },
+        toolCallId: "read-tryout",
         writer,
       }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );

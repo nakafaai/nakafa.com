@@ -97,11 +97,6 @@ describe("Nakafa formatter", () => {
         surah_count: 114,
       },
       sections: ["articles", "material", "quran"],
-      subject: {
-        categories: ["high-school"],
-        grades: ["10"],
-        materials: ["chemistry"],
-      },
       tryout: {
         countries: [{ id: "indonesia", label: "Indonesia" }],
         exams: [{ id: "snbt", label: "SNBT" }],
@@ -112,6 +107,6 @@ describe("Nakafa formatter", () => {
     expect(text).toContain("# Nakafa Taxonomy");
     expect(text).toContain("indonesia (Indonesia)");
     expect(text).toContain("snbt (SNBT)");
-    expect(text).toContain("chemistry");
+    expect(text).toContain("science");
   });
 });

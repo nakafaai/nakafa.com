@@ -4,7 +4,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
-import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
+import { verifyArticleProjection } from "@repo/backend/convex/contentRelease/article/verify";
 import { AUDITED_ARTICLE_COUNT } from "@repo/backend/convex/contentRelease/cutover/inventory";
 import { persistReferenceProof } from "@repo/backend/convex/contentRelease/cutover/referenceProofs";
 import { referenceProofReceiptValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
@@ -45,7 +45,11 @@ const authenticateArticleAssets = Effect.fn(
   const routeIdentities = new Set<string>();
   const authenticated: AuthenticatedArticleAsset[] = [];
   for (const article of articles) {
-    const verified = yield* verifyArticle(ctx, article, activeSequence);
+    const verified = yield* verifyArticleProjection(
+      ctx,
+      article,
+      activeSequence
+    );
     const assetId = verified.projection.graph.assetId;
     const contentIdentity = `${article.locale}\0${article.contentKey}`;
     const routeIdentity = `${article.locale}\0${article.publicPath}`;

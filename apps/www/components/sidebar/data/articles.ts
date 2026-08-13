@@ -1,14 +1,10 @@
-import { getCategoryIcon } from "@repo/contents/_lib/articles/icons";
+import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
+import { getArticleCategoryIcon } from "@/components/articles/category";
 
-const data = [
+export const articlesMenu = [
   {
     title: "politics",
-    icon: getCategoryIcon("politics"),
+    icon: getArticleCategoryIcon(ArticleCategorySchema.make("politics")),
     href: "/articles/politics",
   },
 ] as const;
-
-export const articlesMenu = data.map((item) => ({
-  ...item,
-  icon: getCategoryIcon(item.title),
-}));

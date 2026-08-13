@@ -123,58 +123,6 @@ const cleanupPopularityIdentity = Effect.fn(
   return signals.length > 0;
 });
 
-/** Deletes one bounded batch of generated learning-plan data. */
-const cleanupLearningPlans = Effect.fn("auth.cleanup.cleanupLearningPlans")(
-  function* (ctx: MutationCtx, userId: Id<"users">) {
-    const items = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("learningPlanItems")
-        .withIndex("by_userId", (query) => query.eq("userId", userId))
-        .take(HISTORY_BATCH_SIZE)
-    );
-
-    for (const item of items) {
-      yield* tryUserCleanup(() => ctx.db.delete("learningPlanItems", item._id));
-    }
-
-    if (items.length > 0) {
-      return true;
-    }
-
-    const plans = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("learningPlans")
-        .withIndex("by_userId_and_status", (query) =>
-          query.eq("userId", userId)
-        )
-        .take(SMALL_BATCH_SIZE)
-    );
-
-    for (const plan of plans) {
-      yield* tryUserCleanup(() => ctx.db.delete("learningPlans", plan._id));
-    }
-
-    if (plans.length > 0) {
-      return true;
-    }
-
-    const profiles = yield* tryUserCleanup(() =>
-      ctx.db
-        .query("learningProfiles")
-        .withIndex("by_userId", (query) => query.eq("userId", userId))
-        .take(SMALL_BATCH_SIZE)
-    );
-
-    for (const profile of profiles) {
-      yield* tryUserCleanup(() =>
-        ctx.db.delete("learningProfiles", profile._id)
-      );
-    }
-
-    return profiles.length > 0;
-  }
-);
-
 /** Deletes one bounded batch of personal learning and credit data. */
 export const cleanupUserLearningData = Effect.fn(
   "auth.cleanup.cleanupUserLearningData"
@@ -187,9 +135,5 @@ export const cleanupUserLearningData = Effect.fn(
     return true;
   }
 
-  if (yield* cleanupPopularityIdentity(ctx, userId)) {
-    return true;
-  }
-
-  return yield* cleanupLearningPlans(ctx, userId);
+  return yield* cleanupPopularityIdentity(ctx, userId);
 });

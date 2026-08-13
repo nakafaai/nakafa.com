@@ -25,18 +25,19 @@ describe("readNakafaRuntimeQuery", () => {
   });
 
   it("returns generated query results from the shared Convex runtime client", async () => {
-    const args: FunctionArgs<
-      typeof api.contents.queries.runtime.getContentRoute
-    > = {
-      locale: "en",
-      route: "articles/example",
+    const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
+      input: {
+        kind: "route",
+        locale: "en",
+        publicPath: "articles/example",
+      },
     };
     runtimeMocks.runtimeQuery.mockResolvedValueOnce(null);
 
     const result = await Effect.runPromise(
       readNakafaRuntimeQuery(
         "https://example.convex.cloud",
-        api.contents.queries.runtime.getContentRoute,
+        api.contentRelease.reference.read,
         args
       )
     );
@@ -44,21 +45,22 @@ describe("readNakafaRuntimeQuery", () => {
     expect(result).toBeNull();
     expect(runtimeMocks.runtimeQuery).toHaveBeenCalledWith(
       "https://example.convex.cloud",
-      api.contents.queries.runtime.getContentRoute,
+      api.contentRelease.reference.read,
       args
     );
   });
 
   it("maps runtime client failures into Nakafa read errors", async () => {
-    const args: FunctionArgs<
-      typeof api.contents.queries.runtime.getContentRoute
-    > = {
-      locale: "en",
-      route: "articles/example",
+    const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
+      input: {
+        kind: "route",
+        locale: "en",
+        publicPath: "articles/example",
+      },
     };
     const runtimeError = new ConvexRuntimeQueryError({
       networkCodes: [],
-      query: "contents/queries/runtime:getContentRoute",
+      query: "contentRelease/reference:read",
       reason: "client",
     });
     runtimeMocks.runtimeQuery.mockRejectedValueOnce(runtimeError);
@@ -67,7 +69,7 @@ describe("readNakafaRuntimeQuery", () => {
       Effect.either(
         readNakafaRuntimeQuery(
           "https://example.convex.cloud",
-          api.contents.queries.runtime.getContentRoute,
+          api.contentRelease.reference.read,
           args
         )
       )
@@ -77,21 +79,22 @@ describe("readNakafaRuntimeQuery", () => {
 
     if (result._tag === "Left") {
       expect(result.left).toBeInstanceOf(NakafaAgentDataReadError);
-      expect(result.left.message).toContain("getContentRoute");
+      expect(result.left.message).toContain("contentRelease/reference:read");
       expect(result.left.cause).toBe(runtimeError.message);
     }
   });
 
   it("preserves classified runtime diagnostics", async () => {
-    const args: FunctionArgs<
-      typeof api.contents.queries.runtime.getContentRoute
-    > = {
-      locale: "en",
-      route: "articles/example",
+    const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
+      input: {
+        kind: "route",
+        locale: "en",
+        publicPath: "articles/example",
+      },
     };
     const runtimeError = new ConvexRuntimeQueryError({
       networkCodes: ["EPIPE"],
-      query: "contents/queries/runtime:getContentRoute",
+      query: "contentRelease/reference:read",
       reason: "transport",
     });
     runtimeMocks.runtimeQuery.mockRejectedValueOnce(runtimeError);
@@ -100,7 +103,7 @@ describe("readNakafaRuntimeQuery", () => {
       Effect.either(
         readNakafaRuntimeQuery(
           "https://example.convex.cloud",
-          api.contents.queries.runtime.getContentRoute,
+          api.contentRelease.reference.read,
           args
         )
       )
@@ -110,7 +113,7 @@ describe("readNakafaRuntimeQuery", () => {
       left: {
         cause: runtimeError.message,
         message:
-          "Unable to read Nakafa runtime content query: contents/queries/runtime:getContentRoute.",
+          "Unable to read Nakafa runtime content query: contentRelease/reference:read.",
       },
     });
   });

@@ -1,3 +1,4 @@
+import type { LearningProgramKindSchema } from "@nakafa/aksara-contracts/program/spec";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { TryoutCountry } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -9,13 +10,11 @@ import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owne
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { readTryoutCatalogRowByIdentity } from "@repo/backend/convex/tryouts/catalog/row";
-import type {
-  LearningInterest,
-  LearningProgramKind,
-} from "@repo/contents/_types/program/schema";
+import type { LearningInterest } from "@repo/contents/_types/learner/preferences";
 import { Effect, Schema } from "effect";
 
 type PreferenceCtx = MutationCtx | QueryCtx;
+type LearningProgramKind = typeof LearningProgramKindSchema.Type;
 const learningPreferencePersistenceFailedCode =
   "LEARNING_PREFERENCE_PERSISTENCE_FAILED";
 

@@ -1,10 +1,6 @@
+import type { ProgramNavigationLevel } from "@nakafa/aksara-contracts/program/spec";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
-import type { ProgramNavigationLevel } from "@repo/contents/_types/program/schema";
-import type {
-  Grade,
-  Material,
-  SubjectCategory,
-} from "@repo/contents/_types/taxonomy";
+import type { Grade, Material } from "@repo/contents/_types/taxonomy";
 
 /**
  * Base SEO data extracted from content metadata
@@ -28,7 +24,6 @@ export interface ContentSEOData {
 export type SEOContext =
   | {
       type: "material-lesson";
-      category: SubjectCategory;
       grade: Grade;
       material: Material;
       chapter?: string;

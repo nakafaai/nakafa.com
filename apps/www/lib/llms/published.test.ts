@@ -1,6 +1,5 @@
 // @vitest-environment node
 
-import { readFile } from "node:fs/promises";
 import {
   GitCommitShaSchema,
   ReleaseIdSchema,
@@ -29,12 +28,11 @@ const readArticleMock = vi.hoisted(() => vi.fn());
 const readMaterialMock = vi.hoisted(() => vi.fn());
 const liveRenderer = await Effect.runPromise(rendererManifest);
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
-const functionRoot = new URL(
-  "../../../../packages/contents/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx",
-  import.meta.url
-);
-const functionSource = await readFile(functionRoot, "utf8");
-const rawMdx = functionSource.slice(functionSource.indexOf("\n\n") + 2);
+const rawMdx = `## What is a Function?
+
+A function maps one input to exactly one output.
+
+<FunctionMachine />`;
 const materialData = {
   activeReleaseId: ReleaseIdSchema.make("release-function-concept"),
   artifact: {

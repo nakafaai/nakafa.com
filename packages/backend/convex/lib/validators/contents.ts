@@ -1,4 +1,4 @@
-import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
+import { NAKAFA_AGENT_SECTIONS } from "@repo/contents/_lib/agent/constants";
 import {
   ARTICLE_CATEGORIES,
   GRADES,
@@ -15,7 +15,7 @@ export const localeValidator = literals(...SUPPORTED_CONTENT_LOCALES);
 export type Locale = Infer<typeof localeValidator>;
 
 /** Public Nakafa content sections exposed to agents and search. */
-export const nakafaSectionValidator = literals(...NAKAFA_CONTENT_SECTIONS);
+export const nakafaSectionValidator = literals(...NAKAFA_AGENT_SECTIONS);
 export type NakafaSection = Infer<typeof nakafaSectionValidator>;
 
 /** Content families used by runtime tables and analytics events. */

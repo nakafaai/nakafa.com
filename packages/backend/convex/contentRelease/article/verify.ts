@@ -13,54 +13,68 @@ type ArticleRow = Doc<"articleCatalog">;
 type CategoryRow = Doc<"articleCategories">;
 
 /** Authenticates one active article row against its immutable projection. */
+export const verifyArticleProjection = Effect.fn(
+  "contentRelease.verifyArticleProjection"
+)(function* (ctx: QueryCtx, row: ArticleRow, activeSequence: number) {
+  const resolved = yield* resolvePublicProjection(
+    ctx,
+    row.contentKey,
+    row.locale,
+    activeSequence
+  );
+  if (
+    resolved?.family !== "article" ||
+    resolved.projectionHash !== row.projectionHash ||
+    resolved.publicPath !== row.publicPath ||
+    resolved.releaseId !== row.releaseId ||
+    resolved.rendererDomain !== row.rendererDomain ||
+    resolved.sequence !== row.sequence
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Active article ${row.contentKey}/${row.locale} is stale.`
+    );
+  }
+  const projection = yield* decodeProjectionJson(resolved.projectionJson);
+  if (
+    projection.kind !== "article" ||
+    projection.category !== row.category ||
+    projection.categoryTitle !== row.categoryTitle ||
+    projection.metadata.date !== row.date
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Active article ${row.contentKey}/${row.locale} changed catalog metadata.`
+    );
+  }
+  return {
+    projection,
+    resolved: {
+      contentKey: resolved.contentKey,
+      family: projection.kind,
+      locale: resolved.locale,
+      projectionHash: resolved.projectionHash,
+      projectionJson: resolved.projectionJson,
+      publicPath: resolved.publicPath,
+      releaseId: resolved.releaseId,
+      rendererDomain: resolved.rendererDomain,
+      sequence: resolved.sequence,
+      sourcePath: resolved.sourcePath,
+    },
+  };
+});
+
+/** Requires the storage-derived identity used by current article readers. */
 export const verifyArticle = Effect.fn("contentRelease.verifyArticle")(
   function* (ctx: QueryCtx, row: ArticleRow, activeSequence: number) {
-    const resolved = yield* resolvePublicProjection(
-      ctx,
-      row.contentKey,
-      row.locale,
-      activeSequence
-    );
-    if (
-      resolved?.family !== "article" ||
-      resolved.projectionHash !== row.projectionHash ||
-      resolved.publicPath !== row.publicPath ||
-      resolved.releaseId !== row.releaseId ||
-      resolved.rendererDomain !== row.rendererDomain ||
-      resolved.sequence !== row.sequence
-    ) {
+    const verified = yield* verifyArticleProjection(ctx, row, activeSequence);
+    if (verified.projection.graph.assetId !== row.assetId) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Active article ${row.contentKey}/${row.locale} is stale.`
+        `Active article ${row.contentKey}/${row.locale} lost its stored asset identity.`
       );
     }
-    const projection = yield* decodeProjectionJson(resolved.projectionJson);
-    if (
-      projection.kind !== "article" ||
-      projection.category !== row.category ||
-      projection.categoryTitle !== row.categoryTitle ||
-      projection.metadata.date !== row.date
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Active article ${row.contentKey}/${row.locale} changed catalog metadata.`
-      );
-    }
-    return {
-      projection,
-      resolved: {
-        contentKey: resolved.contentKey,
-        family: projection.kind,
-        locale: resolved.locale,
-        projectionHash: resolved.projectionHash,
-        projectionJson: resolved.projectionJson,
-        publicPath: resolved.publicPath,
-        releaseId: resolved.releaseId,
-        rendererDomain: resolved.rendererDomain,
-        sequence: resolved.sequence,
-        sourcePath: resolved.sourcePath,
-      },
-    };
+    return verified;
   }
 );
 

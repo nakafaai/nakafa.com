@@ -8,7 +8,6 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
-import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
 import { Effect } from "effect";
 
 /** Resolves one public route from the exact active publication sequence. */
@@ -24,7 +23,6 @@ export const resolveActiveRoute = Effect.fn(
   if (!active) {
     return {
       active,
-      familyManaged: false,
       managed: false,
       projection: null,
     };
@@ -36,22 +34,12 @@ export const resolveActiveRoute = Effect.fn(
     publicPath,
     active.sequence
   );
-  const owner = binding?.contentKey
-    ? yield* loadContentOwner(ctx, binding.contentKey, locale, active.sequence)
-    : null;
-  if (owner && owner.family !== family) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Route ${locale}/${publicPath} changed its ${family} ownership family.`
-    );
-  }
-  const familyManaged = families.result.includes(family);
-  const managed = familyManaged || owner?.managed === true;
+  const managed = families.result.includes(family);
   if (!managed) {
-    return { active, familyManaged, managed, projection: null };
+    return { active, managed, projection: null };
   }
   if (!binding || binding.operation === "delete") {
-    return { active, familyManaged, managed, projection: null };
+    return { active, managed, projection: null };
   }
   if (!binding.contentKey) {
     return yield* releaseFail(
@@ -76,5 +64,5 @@ export const resolveActiveRoute = Effect.fn(
     );
   }
 
-  return { active, familyManaged, managed, projection };
+  return { active, managed, projection };
 });

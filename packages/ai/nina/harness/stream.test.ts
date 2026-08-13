@@ -1,3 +1,4 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { createNakafaTestService } from "@repo/ai/agents/nakafa/tools/test";
@@ -9,7 +10,6 @@ import {
 } from "@repo/ai/nina/harness/stream";
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { Cause, Effect, Exit, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

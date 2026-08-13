@@ -122,7 +122,7 @@ function toPublicContentRef(
     learningObjectId: ref.learningObjectId,
     lensId: ref.lensId,
     locale: ref.locale,
-    markdown_url: ref.markdown_url,
+    ...("markdown_url" in ref ? { markdown_url: ref.markdown_url } : {}),
     route: ref.route,
     section: ref.section,
     url: ref.url,
@@ -136,7 +136,8 @@ const toRecentlyViewedSubject = Effect.fn(
   const route = yield* loadContentTarget(ctx, {
     contentId: row.content_id,
     locale: row.locale,
-    section: row.section,
+    publicPath: row.route,
+    section: "material",
   }).pipe(Effect.mapError(toRecentLearningIoError));
 
   if (

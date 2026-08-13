@@ -1,14 +1,12 @@
 import {
-  getMaterialLookupInput,
+  getContentReferenceInput,
   resolveNakafaContentRef,
 } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
-import { LocaleSchema } from "@repo/contents/_types/content";
 import { type FunctionReference, getFunctionName } from "convex/server";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
@@ -23,51 +21,39 @@ vi.mock("@repo/backend/client/runtime", () => ({
     }),
 }));
 
-const ContentIdArgsSchema = Schema.Struct({
-  contentId: Schema.String,
-});
-const RouteArgsSchema = Schema.Struct({
-  locale: LocaleSchema,
-  route: Schema.String,
-});
-
 const convexUrl = "https://example.convex.cloud";
 const articleRoute = "articles/politics/example";
 const articleRef = readNakafaContentRefFixture("en", articleRoute, "articles");
-const detachedArticleRef = createDetachedArticleRef();
-const materialProjection = makeMaterialProjection("en", 1);
+const material = makeMaterialProjection("en", 1);
 
 beforeEach(() => {
   runtimeMocks.runtimeQuery.mockReset();
-  runtimeMocks.runtimeQuery.mockImplementation(readRuntimeFixture);
+  runtimeMocks.runtimeQuery.mockImplementation(readReferenceFixture);
 });
 
 describe("resolveNakafaContentRef", () => {
-  it("normalizes material graph IDs and public URLs into owner lookups", () => {
-    expect(getMaterialLookupInput(materialProjection.graph.assetId)).toEqual(
+  it("normalizes graph IDs and canonical public URLs into one current input", () => {
+    expect(getContentReferenceInput(material.graph.assetId)).toEqual(
       Option.some({
-        contentId: materialProjection.graph.assetId,
+        contentId: material.graph.assetId,
         kind: "content",
       })
     );
     expect(
-      getMaterialLookupInput(
-        `https://nakafa.com/${materialProjection.locale}/${materialProjection.publicPath}`
+      getContentReferenceInput(
+        `https://nakafa.com/${material.locale}/${material.publicPath}`
       )
     ).toEqual(
       Option.some({
         kind: "route",
-        locale: materialProjection.locale,
-        publicPath: materialProjection.publicPath,
+        locale: material.locale,
+        publicPath: material.publicPath,
       })
     );
-    expect(getMaterialLookupInput("not-content")).toEqual(Option.none());
-    expect(
-      getMaterialLookupInput("https://nakafa.com/en/articles/example")
-    ).toEqual(Option.none());
+    expect(getContentReferenceInput("not-content")).toEqual(Option.none());
   });
 
-  it("resolves graph content IDs and resource URIs through the route catalog", async () => {
+  it("resolves graph content IDs and resource URIs through the current seam", async () => {
     const graphRef = await Effect.runPromise(
       resolveNakafaContentRef(convexUrl, articleRef.content_id)
     );
@@ -83,15 +69,7 @@ describe("resolveNakafaContentRef", () => {
     expect(runtimeMocks.runtimeQuery).toHaveBeenCalledTimes(2);
   });
 
-  it("preserves graph fields returned by the route catalog", async () => {
-    const ref = await Effect.runPromise(
-      resolveNakafaContentRef(convexUrl, detachedArticleRef.content_id)
-    );
-
-    expect(Option.getOrUndefined(ref)).toStrictEqual(detachedArticleRef);
-  });
-
-  it("resolves canonical public URLs through the route catalog", async () => {
+  it("resolves canonical public URLs through the current seam", async () => {
     const ref = await Effect.runPromise(
       resolveNakafaContentRef(
         convexUrl,
@@ -99,18 +77,21 @@ describe("resolveNakafaContentRef", () => {
       )
     );
 
-    expect(Option.getOrUndefined(ref)).toStrictEqual(detachedArticleRef);
+    expect(Option.getOrUndefined(ref)).toStrictEqual(articleRef);
     expect(runtimeMocks.runtimeQuery).toHaveBeenCalledWith(
       convexUrl,
-      api.contents.queries.runtime.getContentRoute,
+      api.contentRelease.reference.read,
       {
-        locale: "en",
-        route: articleRoute,
+        input: {
+          kind: "route",
+          locale: "en",
+          publicPath: articleRoute,
+        },
       }
     );
   });
 
-  it("rejects bare route refs at the Convex-backed runtime seam", async () => {
+  it("rejects bare route refs without querying Convex", async () => {
     const localizedRoute = await Effect.runPromise(
       resolveNakafaContentRef(convexUrl, `en/${articleRoute}`)
     );
@@ -124,83 +105,24 @@ describe("resolveNakafaContentRef", () => {
   });
 });
 
-/** Routes generated Convex query refs to content-ref resolver fixtures. */
-function readRuntimeFixture(
+/** Returns one current reference fixture through the sole query Interface. */
+function readReferenceFixture(
   _convexUrl: string,
   query: FunctionReference<"query">,
-  args: unknown
+  args: {
+    readonly input?: {
+      readonly contentId?: string;
+      readonly publicPath?: string;
+    };
+  }
 ) {
   if (
-    getFunctionName(query) ===
-    getFunctionName(api.contents.queries.runtime.getContentRouteByContentId)
+    getFunctionName(query) !==
+    getFunctionName(api.contentRelease.reference.read)
   ) {
-    return Promise.resolve(readContentRouteByContentId(args));
+    return Promise.reject(new Error("Unhandled content reference query."));
   }
-
-  if (
-    getFunctionName(query) ===
-    getFunctionName(api.contents.queries.runtime.getContentRoute)
-  ) {
-    return Promise.resolve(readContentRoute(args));
-  }
-
-  return Promise.reject(new Error("Unhandled content-ref query fixture."));
-}
-
-/** Builds one route lookup fixture from a graph asset ID. */
-function readContentRouteByContentId(args: unknown) {
-  const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
-
-  if (input.contentId === articleRef.content_id) {
-    return {
-      ...articleRef,
-      title: "Article",
-    };
-  }
-
-  if (input.contentId === detachedArticleRef.content_id) {
-    return {
-      ...detachedArticleRef,
-      title: "Detached article",
-    };
-  }
-
-  return null;
-}
-
-function readContentRoute(args: unknown) {
-  const input = Schema.decodeUnknownSync(RouteArgsSchema)(args);
-
-  if (
-    input.locale === detachedArticleRef.locale &&
-    input.route === articleRoute
-  ) {
-    return {
-      ...detachedArticleRef,
-      title: "Detached article",
-    };
-  }
-
-  return null;
-}
-
-/** Creates a graph ref whose IDs intentionally do not derive from its route. */
-function createDetachedArticleRef() {
-  const ref = createNakafaContentRefFromGraphProjection({
-    alignmentId: "alignment:catalog:article:example",
-    assetId: "asset:en:catalog:article:example",
-    conceptId: "concept:catalog:article:example",
-    content_id: "asset:en:catalog:article:example",
-    learningObjectId: "lo:catalog:article:example",
-    lensId: "lens:catalog:article:example",
-    locale: "en",
-    route: articleRoute,
-    section: "articles",
-  });
-
-  if (Option.isNone(ref)) {
-    throw new Error("Detached article test ref must be valid.");
-  }
-
-  return ref.value;
+  const matchesContent = args.input?.contentId === articleRef.content_id;
+  const matchesRoute = args.input?.publicPath === articleRef.route;
+  return Promise.resolve(matchesContent || matchesRoute ? articleRef : null);
 }

@@ -9,6 +9,7 @@ import {
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { insertReleaseItem } from "@repo/backend/test/content-read-model";
 import {
   TEST_DIGEST,
   testRendererJson,
@@ -18,7 +19,6 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
-import { insertReleaseItem } from "@repo/backend/test/content-sync";
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -323,91 +323,6 @@ describe("contentRelease/activate", () => {
     expect(restarted.jobs).toHaveLength(2);
     expect(restarted.jobs.at(-1)?.state).toEqual({ kind: "pending" });
     expect(restarted.release?.syncGeneration).toBe(2);
-  });
-
-  it("resumes an owner projection added after completed activation", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(seedVerifiedPair);
-    await t.mutation(activate, {
-      manifestHash: CANDIDATE.manifestHash,
-      releaseId: CANDIDATE.releaseId,
-      rendererJson: testRendererJson(),
-    });
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-    await t.mutation(async (ctx) => {
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        expect.fail("Expected one active content state.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        materialOwnerManifestHash: undefined,
-        materialOwnerReleaseId: undefined,
-        materialOwnerSequence: undefined,
-      });
-    });
-
-    await t.mutation(activate, {
-      manifestHash: CANDIDATE.manifestHash,
-      releaseId: CANDIDATE.releaseId,
-      rendererJson: testRendererJson(),
-    });
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-
-    await expect(
-      t.run((ctx) => ctx.db.query("contentState").unique())
-    ).resolves.toMatchObject({
-      materialOwnerManifestHash: CANDIDATE.manifestHash,
-      materialOwnerReleaseId: CANDIDATE.releaseId,
-      materialOwnerSequence: CANDIDATE.sequence,
-    });
-  });
-
-  it("rejects cumulative exact material overflow before moving the pointer", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await seedVerifiedPair(ctx);
-      const release = await ctx.db
-        .query("contentReleases")
-        .withIndex("by_releaseId", (index) =>
-          index.eq("releaseId", CANDIDATE.releaseId)
-        )
-        .unique();
-      if (!release) {
-        expect.fail("Expected one candidate release.");
-      }
-      await ctx.db.patch("contentReleases", release._id, {
-        resultFamilies: ["article"],
-      });
-      for (let index = 0; index < 64; index += 1) {
-        await ctx.db.insert("materialOwners", {
-          contentKey: `material/lesson/test/stored-${index}`,
-          locale: "en",
-          releaseId: "release-prior",
-          sequence: 0,
-        });
-      }
-      await ctx.db.insert("contentOwners", {
-        contentKey: "material/lesson/test/next",
-        family: "material",
-        locale: "en",
-        managed: true,
-        releaseId: CANDIDATE.releaseId,
-        sequence: CANDIDATE.sequence,
-      });
-    });
-
-    await expect(
-      t.mutation(activate, {
-        manifestHash: CANDIDATE.manifestHash,
-        releaseId: CANDIDATE.releaseId,
-        rendererJson: testRendererJson(),
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_LIMIT" },
-    });
-    const state = await t.run((ctx) => ctx.db.query("contentState").unique());
-    expect(state?.activeReleaseId).toBeUndefined();
-    expect(state?.candidateReleaseId).toBe(CANDIDATE.releaseId);
   });
 
   it("rejects renderer drift and a stale active base", async () => {

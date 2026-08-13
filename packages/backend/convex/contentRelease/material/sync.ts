@@ -3,10 +3,6 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import {
-  finalizeExactMaterialOwners,
-  syncExactMaterialOwner,
-} from "@repo/backend/convex/contentRelease/material/exact";
 import { MATERIAL_BASELINE_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
 import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import {
@@ -73,7 +69,6 @@ const baselineMaterials = Effect.fn("contentRelease.baselineMaterials")(
         key.locale,
         active.sequence
       );
-      yield* syncExactMaterialOwner(ctx, key.contentKey, key.locale, active);
     }
     return {
       cursor: stored.isDone ? undefined : stored.continueCursor,
@@ -126,24 +121,9 @@ export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
       state.materialReleaseId,
       state.materialSequence,
     ];
-    const materialOwnerIdentity = [
-      state.materialOwnerManifestHash,
-      state.materialOwnerReleaseId,
-      state.materialOwnerSequence,
-    ];
-    yield* Effect.all([
-      requireCompleteIdentity("Material", materialIdentity),
-      requireCompleteIdentity("Material owner", materialOwnerIdentity),
-    ]);
+    yield* requireCompleteIdentity("Material", materialIdentity);
     const hasMaterialBaseline = hasCompleteIdentity(materialIdentity);
-    const hasOwnerBaseline = hasCompleteIdentity(materialOwnerIdentity);
-    const hasRequiredBaseline =
-      hasMaterialBaseline &&
-      (hasOwnerBaseline || release.resultFamilies.includes("material"));
-    const rebuildOwners =
-      release.baseFamilies.includes("material") &&
-      !release.resultFamilies.includes("material");
-    const needsBaseline = !hasRequiredBaseline || rebuildOwners;
+    const needsBaseline = !hasMaterialBaseline;
     let cursor: string | undefined;
     let done: boolean;
     let nextIndex = release.materialIndex ?? -1;
@@ -197,13 +177,9 @@ export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
       })
     );
     if (done) {
-      yield* finalizeExactMaterialOwners(ctx, release);
       yield* Effect.promise(() =>
         ctx.db.patch("contentState", state._id, {
           materialManifestHash: signed.manifestHash,
-          materialOwnerManifestHash: signed.manifestHash,
-          materialOwnerReleaseId: releaseId,
-          materialOwnerSequence: release.sequence,
           materialReleaseId: releaseId,
           materialSequence: release.sequence,
           updatedAt: now,

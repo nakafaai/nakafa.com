@@ -91,9 +91,7 @@ export const exportSignedRuntime = Effect.fn(
     const identity = {
       cacheVersion: config.cacheVersion,
       contentStateHash: config.contentStateHash,
-      routeGenerationHash: config.routeGenerationHash,
       runtimeSchemaFingerprint: config.runtimeSchemaFingerprint,
-      sitemapGenerationHash: config.sitemapGenerationHash,
     };
     yield* fileSystem.writeFileString(
       `${snapshotRoot}/tables.txt`,

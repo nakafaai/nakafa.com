@@ -5,8 +5,7 @@ import {
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/material/owner";
-import { readVisibleMaterial } from "@repo/backend/convex/contentRelease/material/route";
+import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { Effect } from "effect";
 
@@ -24,9 +23,9 @@ export const readMaterialPartition = Effect.fn(
       `Material discovery bucket ${bucket} is invalid.`
     );
   }
-  const owner = yield* loadMaterialCatalogOwner(ctx);
+  const owner = yield* loadMaterialOwner(ctx, locale);
   const activeReleaseId = owner.active?.releaseId ?? null;
-  if (!(owner.active && owner.ready)) {
+  if (!(owner.active && owner.managed)) {
     return {
       activeReleaseId,
       kind: "unmanaged",
@@ -70,15 +69,9 @@ export const readMaterialPartition = Effect.fn(
       `Material discovery bucket ${locale}/${bucket} has mismatched counts.`
     );
   }
-  const materials = owner.familyManaged
-    ? yield* Effect.forEach(rows, (row) =>
-        verifyMaterial(row).pipe(
-          Effect.map((verified) => ({ ...verified, row }))
-        )
-      )
-    : (yield* Effect.forEach(rows, (row) =>
-        readVisibleMaterial(ctx, row, false)
-      )).filter((material) => material !== null);
+  const materials = yield* Effect.forEach(rows, (row) =>
+    verifyMaterial(row).pipe(Effect.map((verified) => ({ ...verified, row })))
+  );
   return materials.length === 0
     ? ({
         activeReleaseId,

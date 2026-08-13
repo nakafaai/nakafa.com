@@ -1,3 +1,8 @@
+import {
+  LearningProgramKeySchema,
+  LearningProgramKindSchema,
+  ProgramCoverageSchema,
+} from "@nakafa/aksara-contracts/program/spec";
 import type { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import { SourceReferenceSchema } from "@repo/ai/lib/source";
@@ -5,12 +10,7 @@ import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { PromptUserRoleSchema } from "@repo/ai/types/roles";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import {
-  CoverageStatusSchema,
-  LearningInterestSchema,
-  LearningProgramKeySchema,
-  LearningProgramKindSchema,
-} from "@repo/contents/_types/program/schema";
+import { LearningInterestSchema } from "@repo/contents/_types/learner/preferences";
 import type { UIMessageStreamWriter } from "ai";
 import { Schema } from "effect";
 
@@ -18,7 +18,7 @@ import { Schema } from "effect";
 export const AgentLearningSelectionSchema = Schema.Struct({
   interest: LearningInterestSchema,
   program: Schema.Struct({
-    coverageStatus: CoverageStatusSchema,
+    coverageStatus: ProgramCoverageSchema,
     key: LearningProgramKeySchema,
     kind: LearningProgramKindSchema,
     title: Schema.String,

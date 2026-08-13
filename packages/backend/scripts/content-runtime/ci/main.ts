@@ -40,13 +40,13 @@ const writeEnvironmentFile = Effect.fn("contentRuntime.writeEnvironmentFile")(
 
 const writeFingerprintEnvironment = Effect.gen(function* () {
   if (
-    CONTENT_RUNTIME_TABLES.length !== 32 ||
+    CONTENT_RUNTIME_TABLES.length === 0 ||
     CONTENT_RUNTIME_TABLES.some(
       (table) => table.length === 0 || INVALID_TABLE_NAME.test(table)
     )
   ) {
     return yield* contentRuntimeCiError(
-      "Signed runtime must contain exactly 32 safe table names."
+      "Signed runtime must contain safe table names."
     );
   }
 

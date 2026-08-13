@@ -93,13 +93,6 @@ describe("learningPrograms/selection", () => {
       })
     ).resolves.toEqual(selected);
     await expect(
-      target.query(async (ctx) => ({
-        items: await ctx.db.query("learningPlanItems").take(1),
-        plans: await ctx.db.query("learningPlans").take(1),
-        profiles: await ctx.db.query("learningProfiles").take(1),
-      }))
-    ).resolves.toEqual({ items: [], plans: [], profiles: [] });
-    await expect(
       target.query((ctx) => ctx.db.query("learningPreferences").unique())
     ).resolves.toMatchObject({
       learningInterest: "school-curriculum",
@@ -109,49 +102,7 @@ describe("learningPrograms/selection", () => {
     });
   });
 
-  it("fails closed when a retained profile has no canonical selection", async () => {
-    const target = createConvexTestWithBetterAuth();
-    const identity = await target.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
-    );
-    await target.mutation(async (ctx) => {
-      const programId = await ctx.db.insert("learningPrograms", {
-        defaultCoverageStatus: "partial",
-        displayOrder: 1,
-        iconKey: "school",
-        key: "merdeka",
-        kind: "school-curriculum",
-        navigation: { levels: ["track"], model: "curriculum-tree" },
-        providerKind: "nakafa",
-        providerName: "Retained cutover fixture",
-        syncedAt: NOW,
-        translations: {
-          en: { publicSlug: "merdeka", title: "Merdeka" },
-          id: { publicSlug: "merdeka", title: "Merdeka" },
-        },
-        updatedAt: NOW,
-        versionLabel: "Legacy",
-      });
-      await ctx.db.insert("learningProfiles", {
-        interests: ["school-curriculum"],
-        programId,
-        updatedAt: NOW,
-        userId: identity.userId,
-      });
-    });
-    const authed = target.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    await expect(
-      authed.query(api.learningPrograms.queries.getActiveSelection, {
-        locale: "id",
-      })
-    ).rejects.toThrow("LEARNING_SELECTION_CUTOVER_REQUIRED");
-  });
-
-  it("allows reselection after a migrated signed program is retired", async () => {
+  it("returns no selection after its signed program is retired", async () => {
     const target = createConvexTestWithBetterAuth();
     const data = await Effect.runPromise(
       makeProgramSnapshotData([
@@ -163,30 +114,6 @@ describe("learningPrograms/selection", () => {
       seedAuthenticatedUser(ctx, { now: NOW })
     );
     await target.mutation(async (ctx) => {
-      const programId = await ctx.db.insert("learningPrograms", {
-        defaultCoverageStatus: "partial",
-        displayOrder: 1,
-        iconKey: "school",
-        key: "merdeka",
-        kind: "school-curriculum",
-        navigation: { levels: ["track"], model: "curriculum-tree" },
-        providerKind: "nakafa",
-        providerName: "Retained cutover fixture",
-        syncedAt: NOW,
-        translations: {
-          en: { publicSlug: "merdeka", title: "Merdeka" },
-          id: { publicSlug: "merdeka", title: "Merdeka" },
-        },
-        updatedAt: NOW,
-        versionLabel: "Legacy",
-      });
-      await ctx.db.insert("learningProfiles", {
-        interests: ["school-curriculum"],
-        programId,
-        programKey: "merdeka",
-        updatedAt: NOW,
-        userId: identity.userId,
-      });
       await ctx.db.insert("learningPreferences", {
         learningInterest: "school-curriculum",
         primaryProgramKey: "merdeka",
@@ -205,62 +132,6 @@ describe("learningPrograms/selection", () => {
         locale: "id",
       })
     ).resolves.toBeNull();
-  });
-
-  it("fails closed when the first retained interest has a newer write", async () => {
-    const target = createConvexTestWithBetterAuth();
-    const data = await Effect.runPromise(
-      makeProgramSnapshotData([
-        makeProgram(1, "snbt", "admission-exam", "partial"),
-      ])
-    );
-    await activateProgramSnapshot(target, data);
-    const identity = await target.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
-    );
-    await target.mutation(async (ctx) => {
-      const programId = await ctx.db.insert("learningPrograms", {
-        defaultCoverageStatus: "partial",
-        displayOrder: 2,
-        iconKey: "assessment",
-        key: "snbt",
-        kind: "admission-exam",
-        navigation: { levels: ["set"], model: "exam-domain-set" },
-        providerKind: "nakafa",
-        providerName: "Retained cutover fixture",
-        syncedAt: NOW + 1,
-        translations: {
-          en: { publicSlug: "snbt", title: "SNBT" },
-          id: { publicSlug: "snbt", title: "SNBT" },
-        },
-        updatedAt: NOW + 1,
-        versionLabel: "Legacy",
-      });
-      await ctx.db.insert("learningProfiles", {
-        interests: ["exam-prep", "assessment-prep"],
-        programId,
-        programKey: "snbt",
-        updatedAt: NOW + 1,
-        userId: identity.userId,
-      });
-      await ctx.db.insert("learningPreferences", {
-        learningInterest: "assessment-prep",
-        primaryProgramKey: "snbt",
-        selectionUpdatedAt: NOW,
-        updatedAt: NOW,
-        userId: identity.userId,
-      });
-    });
-    const authed = target.withIdentity({
-      sessionId: identity.sessionId,
-      subject: identity.authUserId,
-    });
-
-    await expect(
-      authed.query(api.learningPrograms.queries.getActiveSelection, {
-        locale: "id",
-      })
-    ).rejects.toThrow("LEARNING_SELECTION_CUTOVER_REQUIRED");
   });
 
   it("refreshes the timestamp when a user explicitly reselects a program", async () => {

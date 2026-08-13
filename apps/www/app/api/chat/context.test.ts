@@ -1,8 +1,8 @@
 // @vitest-environment node
 
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaContextSnapshot } from "@repo/ai/nina/memory/pack";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveNinaLearningSession } from "@/app/api/chat/context";

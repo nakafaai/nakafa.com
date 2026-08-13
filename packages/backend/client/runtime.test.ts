@@ -52,12 +52,15 @@ vi.mock("convex/browser", () => ({
   },
 }));
 
-const query = api.contents.queries.runtime.getContentRoute;
+const query = api.contentRelease.reference.read;
 const args: FunctionArgs<typeof query> = {
-  locale: "en",
-  route: "articles/example",
+  input: {
+    kind: "route",
+    locale: "en",
+    publicPath: "articles/example",
+  },
 };
-const queryName = "contents/queries/runtime:getContentRoute";
+const queryName = "contentRelease/reference:read";
 const runtimeUrl = "https://example.convex.cloud";
 
 const runWithTestClock = <Value, Error>(program: Effect.Effect<Value, Error>) =>

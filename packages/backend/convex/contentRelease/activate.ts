@@ -6,7 +6,6 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { validateExactMaterialOwnerScope } from "@repo/backend/convex/contentRelease/material/exact";
 import {
   loadRelease,
   loadState,
@@ -78,7 +77,6 @@ const completedRetry = Effect.fn("contentRelease.completedActivationRetry")(
       );
     }
     const signed = yield* decodeReleaseJson(release.releaseJson);
-    yield* validateExactMaterialOwnerScope(ctx, release);
     const receipt = yield* completedReceipt(release, signed);
     yield* retainActivatedTryoutBundle(ctx, release, signed, Date.now());
     return receipt;
@@ -159,7 +157,6 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
         `Recovery ${recovery.releaseId} does not invert candidate ${releaseId}.`
       );
     }
-    yield* validateExactMaterialOwnerScope(ctx, release);
     yield* stagedEvidence(release, signed);
     yield* stagedEvidence(recovery, recoverySigned);
     const receipt = yield* publicationReceipt(release, signed);
@@ -232,7 +229,6 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
         `Recovery ${releaseId} is not the exact retained inverse.`
       );
     }
-    yield* validateExactMaterialOwnerScope(ctx, release);
     yield* stagedEvidence(release, signed);
     const receipt = yield* publicationReceipt(release, signed);
     const now = Date.now();

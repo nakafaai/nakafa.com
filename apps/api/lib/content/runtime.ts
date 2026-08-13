@@ -3,38 +3,28 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { NakafaAgentContentIdSchema } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/utilities/locales";
 import { locales } from "@repo/utilities/locales";
-import type {
-  FunctionArgs,
-  FunctionReference,
-  FunctionReturnType,
-} from "convex/server";
+import type { FunctionArgs, FunctionReference } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { env } from "@/env";
-import {
-  readPublishedMaterialApiItem,
-  readPublishedMaterialGraphRoute,
-} from "@/lib/content/material";
+import { readPublishedApiItem } from "@/lib/content/published";
 
-type RuntimeContentRoutePage = FunctionReturnType<
-  typeof api.contents.queries.runtime.listContentRoutesByPrefix
->;
-type RuntimeContentSection = FunctionArgs<
-  typeof api.contents.queries.runtime.listContentRoutesByPrefix
->["section"];
 type ArticleApiPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.listArticleApiContentPage
+  typeof api.contentRelease.article.apiPage
 >;
 type MaterialApiPageArgs = FunctionArgs<
   typeof api.contentRelease.material.apiPage
 >;
-type MaterialApiRouteArgs = FunctionArgs<
-  typeof api.contentRelease.material.apiRoute
->;
-type ContentRouteByContentIdArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.getContentRouteByContentId
->;
 
-const PAGE_SIZE = 100;
+interface PublishedApiPage {
+  readonly activeReleaseId: string;
+  readonly continueCursor: string;
+  readonly isDone: boolean;
+  readonly page: ReadonlyArray<{
+    readonly locale: Locale;
+    readonly publicPath: string;
+  }>;
+}
+
 const INITIAL_CURSOR: string | null = null;
 const API_PAGE_SIZE_MIN = 1;
 const API_PAGE_SIZE_MAX = 100;
@@ -52,17 +42,17 @@ class ApiContentRuntimeReadError extends Schema.TaggedError<ApiContentRuntimeRea
   }
 ) {}
 
-/** Maps one signed material failure into the public API runtime contract. */
-function mapPublishedMaterialError(cause: unknown) {
+/** Maps one signed publication failure into the public API runtime contract. */
+function mapPublishedContentError(cause: unknown) {
   return new ApiContentRuntimeReadError({
     cause,
-    message: "Unable to read signed material content for the public API.",
+    message: "Unable to read signed content for the public API.",
   });
 }
 
-/** Rejects a source fallback when ownership changed between runtime reads. */
+/** Rejects a response when ownership changed between runtime reads. */
 const verifyApiReleasePin = Effect.fn("api.content.verifyReleasePin")(
-  function* (expectedActiveReleaseId: string | null) {
+  function* (expectedActiveReleaseId: string) {
     const active = yield* readApiRuntimeQuery(
       api.contentRelease.runtime.active.read,
       {}
@@ -133,146 +123,52 @@ export function parseApiContentId(contentId: string) {
 
 /** Reads one page of article content rows from Convex. */
 export function getArticleApiContentPage(args: ArticleApiPageArgs) {
-  return readApiRuntimeQuery(
-    api.contents.queries.runtime.listArticleApiContentPage,
-    args
+  return hydratePublishedApiPage(
+    readApiRuntimeQuery(api.contentRelease.article.apiPage, args),
+    "article"
   );
 }
 
 /** Reads one page of material content rows from Convex. */
 export function getMaterialApiContentPage(args: MaterialApiPageArgs) {
-  return readApiRuntimeQuery(api.contentRelease.material.apiPage, args).pipe(
-    Effect.flatMap((result) =>
-      Effect.gen(function* () {
-        const page = yield* Effect.forEach(
-          result.page,
-          (entry) => {
-            if (entry.kind === "source") {
-              return Effect.succeed(entry.item);
-            }
-            if (result.activeReleaseId === null) {
-              return Effect.fail(
-                new ApiContentRuntimeReadError({
-                  cause: "missing active release",
-                  message:
-                    "Published material API entry has no active release.",
-                })
-              );
-            }
-            return readPublishedMaterialApiItem({
-              activeReleaseId: result.activeReleaseId,
-              locale: entry.locale,
-              publicPath: entry.publicPath,
-            }).pipe(Effect.mapError(mapPublishedMaterialError));
-          },
-          { concurrency: 4 }
-        );
-        yield* verifyApiReleasePin(result.activeReleaseId);
-        return {
-          continueCursor: result.continueCursor,
-          isDone: result.isDone,
-          page,
-        };
-      })
-    )
+  return hydratePublishedApiPage(
+    readApiRuntimeQuery(api.contentRelease.material.apiPage, args),
+    "material"
   );
 }
 
-/** Reads one ownership-aware route by stable graph content ID. */
-export function getApiContentRouteByContentId(
-  args: ContentRouteByContentIdArgs
-) {
-  const materialInput: MaterialApiRouteArgs = {
-    input: { contentId: args.contentId, kind: "content" },
-  };
-  return readApiRuntimeQuery(
-    api.contentRelease.material.apiRoute,
-    materialInput
-  ).pipe(
-    Effect.flatMap((material) => {
-      if (!material.managed) {
-        return Effect.gen(function* () {
-          const route = yield* readApiRuntimeQuery(
-            api.contents.queries.runtime.getContentRouteByContentId,
-            args
-          );
-          yield* verifyApiReleasePin(material.activeReleaseId);
-          return route;
-        });
-      }
-      if (!material.route) {
-        return Effect.succeed(null);
-      }
-      if (material.activeReleaseId === null || material.syncedAt === null) {
-        return Effect.fail(
-          new ApiContentRuntimeReadError({
-            cause: "incomplete exact material identity",
-            message: "Published material graph route is incomplete.",
-          })
-        );
-      }
-      return readPublishedMaterialGraphRoute({
-        activeReleaseId: material.activeReleaseId,
-        locale: material.route.locale,
-        publicPath: material.route.publicPath,
-        syncedAt: material.syncedAt,
-      }).pipe(Effect.mapError(mapPublishedMaterialError));
-    })
-  );
-}
-
-/** Lists one bounded static API params page for one synced content section. */
-export async function listApiStaticParams({
-  prefix,
-  section,
-}: {
-  prefix: string;
-  section: RuntimeContentSection;
-}) {
-  const params: Array<{ locale: Locale; slug: string[] }> = [];
-  const localePages = await Effect.runPromise(
-    Effect.forEach(
-      locales,
-      (locale) =>
-        getContentRoutePage({ locale, prefix, section }).pipe(
-          Effect.map((routePage) => ({ locale, routePage }))
-        ),
-      { concurrency: "unbounded" }
-    )
-  );
-
-  for (const { locale, routePage } of localePages) {
-    for (const route of routePage.page) {
-      params.push({
-        locale,
-        slug: route.route.slice(prefix.length).split("/").filter(Boolean),
-      });
-    }
+/** Hydrates one signed partner page and proves its release stayed active. */
+const hydratePublishedApiPage = Effect.fn("api.content.hydratePublishedPage")(
+  function* (
+    readPage: Effect.Effect<PublishedApiPage, ApiContentRuntimeReadError>,
+    family: "article" | "material"
+  ) {
+    const result = yield* readPage;
+    const page = yield* Effect.forEach(
+      result.page,
+      (entry) =>
+        readPublishedApiItem({
+          activeReleaseId: result.activeReleaseId,
+          family,
+          locale: entry.locale,
+          publicPath: entry.publicPath,
+        }).pipe(Effect.mapError(mapPublishedContentError)),
+      { concurrency: 4 }
+    );
+    yield* verifyApiReleasePin(result.activeReleaseId);
+    return {
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+      page,
+    };
   }
+);
 
-  return params;
-}
-
-/** Reads one bounded route page matching a locale, section, and prefix. */
-function getContentRoutePage({
-  locale,
-  prefix,
-  section,
-}: {
-  locale: Locale;
-  prefix: string;
-  section: RuntimeContentSection;
-}): Effect.Effect<RuntimeContentRoutePage, ApiContentRuntimeReadError> {
-  return readApiRuntimeQuery(
-    api.contents.queries.runtime.listContentRoutesByPrefix,
-    {
-      cursor: INITIAL_CURSOR,
-      limit: PAGE_SIZE,
-      locale,
-      prefix,
-      section,
-    }
-  );
+/** Reads one current signed summary by stable graph content ID. */
+export function getApiContentRouteByContentId(args: { contentId: string }) {
+  return readApiRuntimeQuery(api.contentRelease.reference.read, {
+    input: { contentId: args.contentId, kind: "content" },
+  });
 }
 
 /** Reads one public Convex runtime query through the official client. */

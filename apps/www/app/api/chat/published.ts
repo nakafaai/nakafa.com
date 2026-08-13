@@ -1,7 +1,7 @@
 import "server-only";
 
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaLearningSessionInput } from "@repo/ai/nina/memory/pack";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { readMaterialContextHint } from "@repo/contents/_types/route/material/context";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect, Schema } from "effect";

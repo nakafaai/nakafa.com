@@ -4,7 +4,6 @@ import * as route from "./route";
 
 const runtimeMocks = vi.hoisted(() => ({
   getArticleApiContentPage: vi.fn(),
-  listApiStaticParams: vi.fn(),
 }));
 const loggingMocks = vi.hoisted(() => ({
   logError: vi.fn(),
@@ -27,7 +26,6 @@ vi.mock("@/lib/content/runtime", async (importOriginal) => {
   return {
     ...actual,
     getArticleApiContentPage: runtimeMocks.getArticleApiContentPage,
-    listApiStaticParams: runtimeMocks.listApiStaticParams,
   };
 });
 
@@ -44,15 +42,8 @@ describe("article content API route", () => {
     vi.clearAllMocks();
   });
 
-  it("generates static params from the Convex route catalog", async () => {
-    const params = [{ locale: "en", slug: ["politics"] }];
-    runtimeMocks.listApiStaticParams.mockResolvedValue(params);
-
-    await expect(route.generateStaticParams()).resolves.toEqual(params);
-    expect(runtimeMocks.listApiStaticParams).toHaveBeenCalledWith({
-      prefix: "articles/",
-      section: "articles",
-    });
+  it("reads every article page at request time", () => {
+    expect(route.dynamic).toBe("force-dynamic");
   });
 
   it("returns the pagination envelope for default article requests", async () => {

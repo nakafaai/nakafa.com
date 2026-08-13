@@ -22,9 +22,7 @@ const hasDisallowedDeployKeyCharacter = (value: string) =>
 export interface CacheIdentity {
   readonly cacheVersion: string;
   readonly contentStateHash: string;
-  readonly routeGenerationHash: string;
   readonly runtimeSchemaFingerprint: string;
-  readonly sitemapGenerationHash: string;
 }
 
 export interface ProductionConfig {
@@ -88,14 +86,8 @@ const readCacheIdentity = Effect.gen(function* () {
   const values = yield* Config.all({
     cacheVersion: Config.nonEmptyString("AGENT_DOCS_CONTENT_CACHE_VERSION"),
     contentStateHash: Config.nonEmptyString("AGENT_DOCS_CONTENT_STATE_HASH"),
-    routeGenerationHash: Config.nonEmptyString(
-      "AGENT_DOCS_ROUTE_GENERATION_HASH"
-    ),
     runtimeSchemaFingerprint: Config.nonEmptyString(
       "AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT"
-    ),
-    sitemapGenerationHash: Config.nonEmptyString(
-      "AGENT_DOCS_SITEMAP_GENERATION_HASH"
     ),
   });
 
@@ -109,25 +101,14 @@ const readCacheIdentity = Effect.gen(function* () {
     "AGENT_DOCS_CONTENT_STATE_HASH",
     values.contentStateHash
   );
-  const routeGenerationHash = yield* validateHex(
-    "AGENT_DOCS_ROUTE_GENERATION_HASH",
-    values.routeGenerationHash
-  );
   const runtimeSchemaFingerprint = yield* validateHex(
     "AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT",
     values.runtimeSchemaFingerprint
   );
-  const sitemapGenerationHash = yield* validateHex(
-    "AGENT_DOCS_SITEMAP_GENERATION_HASH",
-    values.sitemapGenerationHash
-  );
-
   return {
     cacheVersion: values.cacheVersion,
     contentStateHash,
-    routeGenerationHash,
     runtimeSchemaFingerprint,
-    sitemapGenerationHash,
   } satisfies CacheIdentity;
 });
 

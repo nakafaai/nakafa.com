@@ -17,8 +17,8 @@ const cacheMocks = vi.hoisted(() => ({
 }));
 const mockGetTranslations = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentRoute: routeMocks.read,
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: routeMocks.read,
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -45,8 +45,6 @@ beforeEach(() => {
 
   routeMocks.read.mockReturnValue(
     Effect.succeed({
-      authors: [{ name: "Nakafa" }],
-      date: new Date("2025-01-02").getTime(),
       description: "Runtime description",
       title: "Runtime title",
     })
@@ -64,26 +62,26 @@ beforeEach(() => {
   });
 });
 
-describe("route catalog metadata", () => {
-  it("reads complete metadata from the runtime catalog", async () => {
+describe("current content reference metadata", () => {
+  it("reads complete metadata from the current signed reference", async () => {
     await expect(
       Effect.runPromise(getMetadataFromSlug("en", ["quran", "1"]))
     ).resolves.toEqual({
       authors: [{ name: "Nakafa" }],
-      date: "2025-01-02T00:00:00.000Z",
+      date: "",
       description: "Runtime description",
       title: "Runtime title",
     });
   });
 
-  it("uses translated defaults when the catalog has no row", async () => {
+  it("uses translated defaults when the current reference has no row", async () => {
     routeMocks.read.mockReturnValueOnce(Effect.succeed(null));
     await expect(
       Effect.runPromise(getMetadataFromSlug("id", ["quran", "missing"]))
     ).resolves.toEqual(translatedDefaults);
   });
 
-  it("preserves typed route-catalog read failures", async () => {
+  it("preserves typed current-reference read failures", async () => {
     routeMocks.read.mockReturnValueOnce(
       Effect.fail(
         new NakafaAgentDataReadError({
@@ -100,11 +98,9 @@ describe("route catalog metadata", () => {
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
   });
 
-  it("fills sparse runtime metadata from translations", async () => {
+  it("fills sparse current metadata from translations", async () => {
     routeMocks.read.mockReturnValueOnce(
       Effect.succeed({
-        authors: [{ name: "Nakafa" }],
-        date: undefined,
         description: undefined,
         title: "",
       })

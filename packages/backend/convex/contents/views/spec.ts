@@ -1,23 +1,25 @@
 import { learningContextInputValidator } from "@repo/backend/convex/contents/context";
 import { graphContentIdValidator } from "@repo/backend/convex/contents/graph";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
-import {
-  localeValidator,
-  nakafaSectionValidator,
-} from "@repo/backend/convex/lib/validators/contents";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { type Infer, v } from "convex/values";
 import { Schema } from "effect";
 
 export const contentViewIoFailedCode = "CONTENT_VIEW_IO_FAILED";
-export const contentViewRouteCollisionCode = "CONTENT_VIEW_ROUTE_COLLISION";
+
+/** Current content families accepted by durable engagement history. */
+export const contentViewSectionValidator = v.union(
+  v.literal("articles"),
+  v.literal("material")
+);
 
 export const recordContentViewArgs = {
   contentId: graphContentIdValidator,
   context: v.optional(learningContextInputValidator),
   deviceId: v.string(),
   locale: localeValidator,
-  publicPath: v.optional(v.string()),
-  section: v.optional(nakafaSectionValidator),
+  publicPath: v.string(),
+  section: contentViewSectionValidator,
 };
 
 export const recordContentViewArgsValidator = v.object(recordContentViewArgs);
@@ -41,15 +43,6 @@ export class ContentViewIoError extends Schema.TaggedError<ContentViewIoError>()
   "ContentViewIoError",
   {
     code: Schema.Literal(contentViewIoFailedCode),
-    message: Schema.String,
-  }
-) {}
-
-/** Raised when published route shards exceed the bounded sync overlap. */
-export class ContentViewRouteCollisionError extends Schema.TaggedError<ContentViewRouteCollisionError>()(
-  "ContentViewRouteCollisionError",
-  {
-    code: Schema.Literal(contentViewRouteCollisionCode),
     message: Schema.String,
   }
 ) {}

@@ -40,7 +40,6 @@ const runtimeMocks = vi.hoisted(() => ({
   readActive: vi.fn(),
   readActiveIdentity: vi.fn(),
   hasArticleCategory: vi.fn(),
-  readContent: vi.fn(),
   readProgramPath: vi.fn(),
   readTryout: vi.fn(),
 }));
@@ -70,9 +69,8 @@ vi.mock("@/lib/content/preview/route", () => ({
   matchesPreviewRoute: previewMocks.route,
 }));
 
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeContentRoute: runtimeMocks.readContent,
-  getRuntimeTryoutRoute: runtimeMocks.readTryout,
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: runtimeMocks.readTryout,
 }));
 vi.mock("@/lib/content/article/category", () => ({
   hasPublishedArticleCategory: runtimeMocks.hasArticleCategory,
@@ -89,12 +87,7 @@ vi.mock("@/lib/content/program/path", () => ({
 
 describe("proxy", () => {
   beforeEach(() => {
-    runtimeMocks.readContent
-      .mockReset()
-      .mockReturnValue(Effect.succeed({ route: "fixture" }));
-    runtimeMocks.readTryout
-      .mockReset()
-      .mockReturnValue(Effect.succeed({ exists: false }));
+    runtimeMocks.readTryout.mockReset().mockReturnValue(Effect.succeed(null));
     runtimeMocks.readProgramPath
       .mockReset()
       .mockReturnValue(Effect.succeed({ managed: false, route: null }));
@@ -126,18 +119,14 @@ describe("proxy", () => {
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ["/en/search/", "http://localhost:3000/en/search"],
-    [
-      "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle?utm=test",
-      "http://localhost:3000/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling?utm=test",
-    ],
-  ])("redirects %s to its canonical URL", async (path, expected) => {
-    const response = await requestProxy(path);
+  it("redirects trailing slashes to the canonical URL", async () => {
+    const response = await requestProxy("/en/search/");
 
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
     expect(response.status).toBe(308);
-    expect(response.headers.get("location")).toBe(expected);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/en/search"
+    );
   });
 
   it("runs only unsupported root files through the locale proxy", () => {
@@ -245,9 +234,7 @@ describe("proxy", () => {
 
   it("hard-rejects a missing public try-out set before page rendering", async () => {
     const path = "/en/try-out/indonesia/snbt/2027/missing-set";
-    runtimeMocks.readTryout.mockReturnValueOnce(
-      Effect.succeed({ exists: false })
-    );
+    runtimeMocks.readTryout.mockReturnValueOnce(Effect.succeed(null));
 
     const response = await requestProxy(path);
 
@@ -255,9 +242,12 @@ describe("proxy", () => {
     expect(response.headers.get("x-middleware-rewrite")).toBe(
       "http://localhost:3000/_not-found/en"
     );
-    expect(runtimeMocks.readTryout).toHaveBeenCalledWith({
-      locale: "en",
-      publicPath: "try-out/indonesia/snbt/2027/missing-set",
+    expect(runtimeMocks.readTryout).toHaveBeenCalledWith(expect.anything(), {
+      input: {
+        kind: "route",
+        locale: "en",
+        publicPath: "try-out/indonesia/snbt/2027/missing-set",
+      },
     });
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
   });
@@ -391,7 +381,6 @@ describe("proxy", () => {
       const response = await requestProxy(path);
 
       expectLocaleProxy(response);
-      expect(runtimeMocks.readContent).not.toHaveBeenCalled();
       if (kind === "curriculum-context") {
         expect(runtimeMocks.readProgramPath).toHaveBeenCalledWith(
           locale,
@@ -446,7 +435,6 @@ describe("proxy", () => {
   ])("delegates $kind", async ({ init, path }) => {
     const response = await requestProxy(path, init);
 
-    expect(runtimeMocks.readContent).not.toHaveBeenCalled();
     expectLocaleProxy(response);
   });
 });

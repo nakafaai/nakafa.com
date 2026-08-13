@@ -1,6 +1,4 @@
-import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
-import { isSamePublicRouteIdentity } from "@/lib/routing/locale/identity";
 
 type AlternateLanguagePath = Partial<{
   [Key in (typeof routing.locales)[number] | "x-default"]: string;
@@ -63,34 +61,6 @@ export function createLocalizedAlternates(
     },
     ...typeAlternates,
   };
-}
-
-/** Builds hreflang alternates from projected public route rows. */
-export function createProjectedRouteAlternates(
-  route: PublicRoute,
-  routes: readonly PublicRoute[],
-  options: Omit<LocalizedAlternatesOptions, "languages"> = {}
-) {
-  const languages: AlternateLanguagePath = {};
-
-  for (const locale of routing.locales) {
-    const alternate = routes.find(
-      (candidate) =>
-        candidate.locale === locale &&
-        isSamePublicRouteIdentity(route, candidate)
-    );
-
-    if (alternate) {
-      languages[locale] = `/${locale}/${alternate.publicPath}`;
-    }
-  }
-  languages["x-default"] =
-    languages[routing.defaultLocale] ?? `/${route.locale}/${route.publicPath}`;
-
-  return createLocalizedAlternates(`/${route.locale}/${route.publicPath}`, {
-    ...options,
-    languages,
-  });
 }
 
 /** Builds hreflang alternates from already-resolved localized counterparts. */

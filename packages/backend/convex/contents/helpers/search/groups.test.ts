@@ -3,20 +3,13 @@ import {
   appendSearchGroups,
   interleaveSearchGroups,
 } from "@repo/backend/convex/contents/helpers/search/groups";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import { testArticleGraph } from "@repo/backend/test/content-release";
 import { describe, expect, it } from "vitest";
 
 /** Builds one complete search document for deterministic group tests. */
 function createDocument(slug: string) {
   const route = `articles/science/${slug}`;
-  const identity = createLearningGraphIdentityFromRoute({
-    locale: "en",
-    route,
-  });
-
-  if (!identity) {
-    expect.fail(`Expected graph identity for ${route}.`);
-  }
+  const identity = testArticleGraph(slug);
 
   return buildContentSearchDocument({
     ...identity,

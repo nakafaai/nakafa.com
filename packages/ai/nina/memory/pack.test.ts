@@ -1,8 +1,8 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   type NinaLearningSessionInput,
   openNinaLearningSession,
 } from "@repo/ai/nina/memory/pack";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 
