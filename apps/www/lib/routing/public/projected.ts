@@ -89,8 +89,9 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   ) {
     return null;
   }
-  const reference = yield* readRuntimeQuery(api.contentRelease.reference.read, {
-    input: { kind: "route", locale, publicPath },
+  const route = yield* readRuntimeQuery(api.tryouts.queries.catalog.getRoute, {
+    locale,
+    publicPath,
   });
-  return reference ? null : locale;
+  return route.exists ? null : locale;
 });
