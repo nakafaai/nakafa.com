@@ -9,8 +9,13 @@ hash difference. Never repair, skip, or reinterpret a failed gate.
 
 ## Deploy and quiesce
 
-1. While the old audio schema and cleanup path are still deployed, prove the
-   three audio tables and global file storage are empty:
+1. Resolve the exact provenance of the currently deployed production functions
+   and schema before comparing them with this branch. Stop if the live function
+   set cannot be tied to an audited deployment. Production may already omit the
+   legacy audio functions and declarations, but that absence is never evidence
+   that the remaining Phase 1 changes were deployed.
+2. Prove the three audio tables and global file storage are empty, including
+   undeclared physical tables that remain visible through the data CLI:
 
    ```sh
    pnpm --filter @repo/backend exec convex data audioContentSources --prod --limit 1
@@ -23,11 +28,14 @@ hash difference. Never repair, skip, or reinterpret a failed gate.
    is a hard precondition because Phase 1 removes the old audio row and storage
    cleanup path. The private pre-cutover backup must preserve the same empty
    inventories.
-2. Run the final production dry run and confirm it removes the audio functions
-   and tables, adds only the temporary cutover and retained-history schema, and
-   preserves every legacy content table.
-3. Deploy Phase 1.
-4. Invoke the legacy drain once. This first call performs the full read-only
+3. Run the final production dry run. Confirm the target function set contains
+   no legacy audio function and the target schema declares no legacy audio
+   table. If production already omits them, the dry run must leave them absent
+   rather than report a removal. Confirm it adds only the reviewed temporary
+   cutover and retained-history schema plus the 18 additive reference indexes,
+   and preserves every legacy content table.
+4. Deploy Phase 1.
+5. Invoke the legacy drain once. This first call performs the full read-only
    audit, initializes the durable writer guard, returns phase `quiescent`, and
    deletes no legacy row.
 
