@@ -27,9 +27,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Main packages: `packages/backend`, `packages/design-system`, `packages/contents`, `packages/ai`, `packages/testing`
 - App-local alias: `@/*`
 - Cross-package alias: `@repo/*`
-- Aksara owns authored content and publication for every explicitly activated
-  scope. During the migration, `packages/contents/` still contains source for
-  unactivated scopes plus copies awaiting coordinated deletion after cutover.
+- Aksara exclusively owns authored content and signed publication for every
+  content scope. `packages/contents/` contains only live Nakafa product,
+  formatting, route-context, learner, and agent contracts.
 
 ## Package Ownership
 
@@ -37,12 +37,12 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
   `@repo/testing/node`, React workspaces use `@repo/testing/react`, and each
   workspace keeps only its local aliases, setup, projects, and coverage policy.
 - `packages/utilities` is for generic cross-domain primitives only. Do not put Nakafa content-domain constants, taxonomy, schemas, MDX/content metadata, or content-specific helpers there.
-- For scopes still owned locally, content taxonomy constants and domain types live in `packages/contents/_types/taxonomy.ts`; callers import them directly from that module.
-- Local content schema modules may derive Effect schemas from taxonomy values, but they must not re-export taxonomy constants or domain types.
-- Aksara contracts and signed snapshots are authoritative for activated content
-  scopes. Filesystem copies for those scopes are deletion work, not editable or
-  publishable source. Do not create a second source of truth across both
-  repositories.
+- Nakafa product presentation constants and domain types may live in
+  `packages/contents`, but authored inventory must always come from an
+  authenticated current Aksara publication.
+- Aksara contracts and signed snapshots are authoritative for every content
+  scope. Do not add filesystem content copies, local publication writers, or a
+  second source of truth.
 
 ## Effect-Native Standard
 
@@ -55,7 +55,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - `Effect.runPromise`, `Effect.runSync`, and `Effect.runPromiseExit` are allowed only at framework, CLI, script main, test, or React/Next event boundaries. Never run an Effect inside services, domain modules, projection modules, or helper chains; compose the program instead.
 - Effectful work includes filesystem IO, HTTP/network calls, database/client calls, dynamic imports, async orchestration, shared caches, environment/config reads, logging, schema decoding failures, and expected domain failures.
 - App code is not exempt. In `apps/*`, Server Actions, Route Handlers, Server Components that load data, client event handlers that call mutations, scripts, dynamic imports, and analytics/logging boundaries must compose Effect programs and call a runner only at the React, Next.js, CLI, or browser event boundary.
-- Do not start a non-fast-path Effect runtime inside a statically prerendered Server Component before Next.js has request data or uncached data. Installed Effect creates fibers through `unsafeRunPromiseExit()` -> `unsafeFork()` -> `FiberId.unsafeMake()`, and `fiberId` reads current time for `startTimeMillis`; Next.js Cache Components reject that during static prerender. For SSG-only MDX/content dynamic imports, use the framework Promise boundary directly and document the exception with `https://nextjs.org/docs/messages/next-prerender-current-time`.
+- Do not start a non-fast-path Effect runtime inside a statically prerendered Server Component before Next.js has request data or uncached data. Installed Effect creates fibers through `unsafeRunPromiseExit()` -> `unsafeFork()` -> `FiberId.unsafeMake()`, and `fiberId` reads current time for `startTimeMillis`; Next.js Cache Components reject that during static prerender. When the framework itself owns request-less static work, use its Promise boundary directly and document the exception with `https://nextjs.org/docs/messages/next-prerender-current-time`.
 - Private pure helpers are allowed only for tiny deterministic transformations after inputs have been decoded or validated by Schema and when they cannot fail, perform IO, access dependencies, mutate shared state, or create source-of-truth contracts.
 - Pure helpers must not be exported as the primary domain API when the operation can fail, validates source data, builds public routes, syncs read models, reads config, depends on multiple registries, or crosses module boundaries.
 - If existing architecture is not Effect-native at an effectful seam, fix the seam directly instead of adding wrappers, compatibility patches, or shallow pass-through adapters.
@@ -272,7 +272,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Use `query`, `mutation`, `action`, and internal variants appropriately; do not expose sensitive logic publicly.
 - Keep Convex route files focused on registered Convex functions. Move domain implementation details into capability folders such as `checkout/impl.ts`, `redeem/spec.ts`, or `integrity/internal.ts`; do not create prefix-suffixed files like `public.impl.ts` or `mutations.impl.ts`.
 - Use the Confect spec/impl split as structural inspiration, adapted to Convex routing with folder-owned `spec.ts`, `impl.ts`, and `internal.ts` files instead of prefix-suffixed filenames.
-- Prefer one clear capability token per Convex folder or filename. CamelCase domain terms such as `assistantResponses` or `contentAudios` are acceptable when they name one established concept; ambiguous generic names or compound prefix/suffix filenames are not.
+- Prefer one clear capability token per Convex folder or filename. CamelCase domain terms such as `assistantResponses` are acceptable when they name one established concept; ambiguous generic names or compound prefix/suffix filenames are not.
 - Prefer direct imports from the owning module. Do not add new barrel re-exports or compatibility routes when callers can import the concrete capability directly.
 - Name Convex files by the capability they expose, not by generic lifecycle labels. Use names such as `reset`, `integrity`, `checkout`, `redeem`, or `assistantResponses`; avoid vague one-off names such as `maintenance` unless the module is a permanent, domain-specific maintenance surface.
 - When a Convex migration, backfill, or repair function is no longer needed, verify dev and prod data first, then remove both the function and its tests so no legacy repair path remains.
@@ -307,7 +307,8 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - `NumberLine` and `LineEquation` require explicit imports from the design system.
 - Keep list formatting simple with hyphen bullets.
 - Leave blank lines between prose paragraphs and math blocks.
-- `packages/contents/_lib/module.ts` intentionally follows Next.js' documented variable dynamic-import pattern for locale MDX. Keep its narrow React Doctor override; do not replace it with a manual import map.
+- Authored MDX lives only in Aksara. Nakafa renderer changes must preserve the
+  reviewed component contracts consumed by Aksara publications.
 
 ## Git And Final Verification
 
