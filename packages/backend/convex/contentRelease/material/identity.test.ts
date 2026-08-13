@@ -5,6 +5,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   activateMaterialCatalog,
+  advanceMaterialCatalog,
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
@@ -29,6 +30,22 @@ describe("contentRelease/material/identity", () => {
       )
     ).resolves.toEqual({
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
+      managed: true,
+      publicPath: projection.publicPath,
+    });
+  });
+
+  it("resolves an inherited material through its effective active head", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(target);
+    await advanceMaterialCatalog(target);
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(readMaterialIdentity(ctx, identity))
+      )
+    ).resolves.toEqual({
+      activeReleaseId: "release-next",
       managed: true,
       publicPath: projection.publicPath,
     });
