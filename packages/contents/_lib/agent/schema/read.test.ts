@@ -1,4 +1,8 @@
-import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import {
+  NakafaAgentContentRefInputSchema,
+  NakafaAgentMarkdownSchema,
+} from "@repo/contents/_lib/agent/schema/read";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -38,5 +42,25 @@ describe("NakafaAgentContentRefInputSchema", () => {
         "nakafa://content/en%2Fquran%2F1"
       )
     ).toThrow("Expected a Nakafa graph content ID");
+  });
+});
+
+describe("NakafaAgentMarkdownSchema", () => {
+  it("requires the focused-read markdown URL", () => {
+    const { markdown_url: _markdownUrl, ...reference } =
+      readNakafaContentRefFixture(
+        "en",
+        "articles/politics/example",
+        "articles"
+      );
+
+    expect(() =>
+      Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)({
+        ...reference,
+        description: "Example article.",
+        text: "Article text.",
+        title: "Example",
+      })
+    ).toThrow();
   });
 });

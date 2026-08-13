@@ -99,19 +99,6 @@ export const NakafaAgentTaxonomySchema = Schema.Struct({
   sections: Schema.Array(NakafaAgentSectionSchema)
     .pipe(Schema.mutable)
     .annotations({ description: "Supported top-level content sections." }),
-  subject: Schema.Struct({
-    categories: Schema.Array(Schema.String)
-      .pipe(Schema.mutable)
-      .annotations({ description: "Supported subject categories." }),
-    grades: Schema.Array(Schema.String)
-      .pipe(Schema.mutable)
-      .annotations({ description: "Supported grade segments." }),
-    materials: Schema.Array(Schema.String)
-      .pipe(Schema.mutable)
-      .annotations({ description: "Supported material lessons." }),
-  })
-    .pipe(Schema.mutable)
-    .annotations({ description: "Subject taxonomy." }),
   tools: Schema.Array(Schema.String)
     .pipe(Schema.mutable)
     .annotations({ description: "Public MCP tools exposed by Nakafa." }),

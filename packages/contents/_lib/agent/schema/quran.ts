@@ -1,4 +1,4 @@
-import { NakafaAgentContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
+import { NakafaAgentReadableContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { Schema } from "effect";
@@ -51,25 +51,26 @@ const NakafaAgentQuranVerseSchema = Schema.Struct({
   .annotations({ description: "Nakafa Quran verse reference." });
 
 /** Runtime schema for Quran reference output. */
-export const NakafaAgentQuranReferenceSchema = NakafaAgentContentRefSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      name: Schema.String.annotations({
-        description: "Source-authenticated transliterated surah name.",
-      }),
-      revelation: Schema.String.annotations({
-        description: "Source-authenticated revelation place.",
-      }),
-      translation: Schema.String.annotations({
-        description: "Source-authenticated surah name translation.",
-      }),
-      verses: Schema.Array(NakafaAgentQuranVerseSchema)
-        .pipe(Schema.minItems(1), Schema.mutable)
-        .annotations({ description: "Bounded Quran verses." }),
-    })
-  ),
-  Schema.mutable
-).annotations({ description: "Nakafa Quran reference result." });
+export const NakafaAgentQuranReferenceSchema =
+  NakafaAgentReadableContentRefSchema.pipe(
+    Schema.extend(
+      Schema.Struct({
+        name: Schema.String.annotations({
+          description: "Source-authenticated transliterated surah name.",
+        }),
+        revelation: Schema.String.annotations({
+          description: "Source-authenticated revelation place.",
+        }),
+        translation: Schema.String.annotations({
+          description: "Source-authenticated surah name translation.",
+        }),
+        verses: Schema.Array(NakafaAgentQuranVerseSchema)
+          .pipe(Schema.minItems(1), Schema.mutable)
+          .annotations({ description: "Bounded Quran verses." }),
+      })
+    ),
+    Schema.mutable
+  ).annotations({ description: "Nakafa Quran reference result." });
 
 export type NakafaAgentQuranReferenceOptions = Schema.Schema.Encoded<
   typeof NakafaAgentQuranReferenceOptionsSchema

@@ -30,7 +30,6 @@ describe("NakafaAgentTaxonomySchema", () => {
         locales: ["en", "id"],
         quran: { surah_count: 114 },
         sections: ["articles", "material", "quran"],
-        subject: { categories: [], grades: [], materials: [] },
         tools: [],
       })
     ).toThrow("Expected a valid URL.");

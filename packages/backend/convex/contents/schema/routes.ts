@@ -1,13 +1,7 @@
-import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
 import {
   graphContentIdValidator,
   learningGraphIdentityValidator,
 } from "@repo/backend/convex/contents/graph";
-import { storedPublicRouteValidator } from "@repo/backend/convex/contents/publicRoutes/spec";
-import {
-  publicRouteSitemapCountValidator,
-  publicRouteSitemapPageValidator,
-} from "@repo/backend/convex/contents/sitemap/spec";
 import {
   localeValidator,
   materialValidator,
@@ -17,7 +11,104 @@ import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
+const LEGACY_CONTENT_ROUTE_KINDS = [
+  "article",
+  "curriculum-topic",
+  "curriculum-lesson",
+  "tryout-country",
+  "tryout-exam",
+  "tryout-track",
+  "tryout-set",
+  "tryout-section",
+  "quran-surah",
+] as const;
+
+const LEGACY_PUBLIC_ROUTE_KINDS = [
+  "article-category",
+  "curriculum-context",
+  "subject-lesson",
+  "subject-topic",
+] as const;
+
+const LEGACY_NAVIGATION_ICON_KEYS = [
+  "advanced",
+  "assessment",
+  "certificate",
+  "course",
+  "diploma",
+  "early-years",
+  "global-education",
+  "grade-1",
+  "grade-2",
+  "grade-3",
+  "grade-4",
+  "grade-5",
+  "grade-6",
+  "grade-7",
+  "grade-8",
+  "grade-9",
+  "grade-10",
+  "grade-11",
+  "grade-12",
+  "high-school",
+  "mathematics",
+  "middle-school",
+  "primary-school",
+  "science",
+  "school",
+  "state",
+  "standards",
+] as const;
+
+const LEGACY_NAVIGATION_LEVELS = [
+  "class",
+  "course",
+  "domain",
+  "lesson",
+  "phase",
+  "section",
+  "stage",
+  "set",
+  "subject",
+  "topic",
+  "track",
+  "unit",
+] as const;
+
+const contentRouteKindValidator = literals(...LEGACY_CONTENT_ROUTE_KINDS);
+const publicRouteKindValidator = literals(...LEGACY_PUBLIC_ROUTE_KINDS);
+const navigationIconKeyValidator = literals(...LEGACY_NAVIGATION_ICON_KEYS);
+const navigationLevelValidator = literals(...LEGACY_NAVIGATION_LEVELS);
+
+/** Exact retired route row shape retained only until the production drain. */
+const storedPublicRouteValidator = v.object({
+  canonicalPath: v.optional(v.string()),
+  description: v.optional(v.string()),
+  displayGroupIconKey: v.optional(navigationIconKeyValidator),
+  displayGroupTitle: v.optional(v.string()),
+  iconKey: v.optional(navigationIconKeyValidator),
+  kind: publicRouteKindValidator,
+  level: v.optional(navigationLevelValidator),
+  locale: localeValidator,
+  materialCardDescription: v.optional(v.string()),
+  materialCardTitle: v.optional(v.string()),
+  materialContextNodeKey: v.optional(v.string()),
+  materialContextParentPath: v.optional(v.string()),
+  materialContextPublicPath: v.optional(v.string()),
+  materialDomain: v.optional(materialValidator),
+  materialKey: v.optional(v.string()),
+  nodeKey: v.optional(v.string()),
+  order: v.optional(v.number()),
+  parentPath: v.optional(v.string()),
+  programKey: v.optional(v.string()),
+  publicPath: v.string(),
+  sectionKey: v.optional(v.string()),
+  sitemap: v.boolean(),
+  sourcePath: v.optional(v.string()),
+  title: v.string(),
+  contentHash: v.string(),
+  syncShard: v.number(),
+});
 
 const contentRoutePageItemValidator = v.object({
   ...learningGraphIdentityValidator.fields,
@@ -126,14 +217,21 @@ const tables = {
     .index("by_locale_and_section", ["locale", "section"]),
 
   /** Locale totals used to discover bounded public sitemap pages. */
-  publicRouteSitemapCounts: defineTable(
-    publicRouteSitemapCountValidator.fields
-  ).index("by_locale", ["locale"]),
+  publicRouteSitemapCounts: defineTable({
+    count: v.number(),
+    hash: v.string(),
+    locale: localeValidator,
+    pageCount: v.number(),
+    syncedAt: v.number(),
+  }).index("by_locale", ["locale"]),
 
   /** Immutable exact paths keyed by locale, generation, and page. */
-  publicRouteSitemapPages: defineTable(
-    publicRouteSitemapPageValidator.fields
-  ).index("by_locale_and_syncedAt_and_page", ["locale", "syncedAt", "page"]),
+  publicRouteSitemapPages: defineTable({
+    locale: localeValidator,
+    page: v.number(),
+    paths: v.array(v.string()),
+    syncedAt: v.number(),
+  }).index("by_locale_and_syncedAt_and_page", ["locale", "syncedAt", "page"]),
 
   /** Durable public routes shared by app, SEO, assistant, and navigation. */
   publicRoutes: defineTable(storedPublicRouteValidator.fields)
