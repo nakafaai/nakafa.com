@@ -23,6 +23,8 @@ export const RETAINED_FROZEN_PLACEMENT_COUNT =
 export const RETAINED_PROGRESS_COUNT = retainedTryoutHistoryPlan.progressCount;
 export const AUDITED_CONTENT_RELEASE_COUNT = 26;
 export const AUDITED_ARTICLE_COUNT = 14;
+export const AUDITED_MATERIAL_COUNT = 766;
+export const AUDITED_MATERIAL_TOPIC_COUNT = 72;
 export const AUDITED_QURAN_SEARCH_COUNT = 228;
 export const AUDITED_TRYOUT_CATALOG_COUNT = 108;
 
@@ -65,7 +67,11 @@ export const CURRENT_INVENTORY = [
   },
   { batchSize: 50, expected: 2, table: "articleCategories" },
   { batchSize: 50, expected: 14, table: "articleBuckets" },
-  { batchSize: 8, expected: 766, table: "materialCatalog" },
+  {
+    batchSize: 8,
+    expected: AUDITED_MATERIAL_COUNT,
+    table: "materialCatalog",
+  },
   { batchSize: 50, expected: 745, table: "materialBuckets" },
   { batchSize: 20, expected: 840, table: "contentBindings" },
   {

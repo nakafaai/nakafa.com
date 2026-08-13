@@ -15,7 +15,7 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "1d9588804c37bee07622fcf5a44f4470aa1bbf04ca6e1631ec9e51a6633c4b4e";
+  "36341e82e40b4e8ad80a68fc8ec194facfbf76e1422db64bbd9fc1234cd521f9";
 
 describe("content runtime tables", () => {
   it("derives the complete copy set and applies the active pointer last", () => {

@@ -1,3 +1,4 @@
+import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -28,6 +29,46 @@ export const audioWorkflowAuditValidator = v.object({
   ),
 });
 
+/** Durable evidence from one isolated authenticated reference proof. */
+export const referenceProofReceiptValidator = v.object({
+  count: v.number(),
+  provedAt: v.number(),
+});
+
+/** Durable cursor for the transaction-bounded Quran reference proof. */
+export const quranReferenceProgressValidator = v.object({
+  afterIndex: v.number(),
+  checked: v.number(),
+  snapshotId: v.string(),
+});
+
+const activeMaterialTopicValidator = v.object({
+  locale: localeValidator,
+  publicPath: v.string(),
+  title: v.string(),
+  topicAlignmentId: v.string(),
+  topicAssetId: v.string(),
+  topicConceptId: v.string(),
+  topicLearningObjectId: v.string(),
+  topicLensId: v.string(),
+});
+
+/** Durable cursor for bounded material topic staging and ordered proof. */
+export const materialReferenceProgressValidator = v.union(
+  v.object({
+    afterAssetId: v.string(),
+    checked: v.number(),
+    phase: v.literal("stage"),
+  }),
+  v.object({
+    activeTopic: v.optional(activeMaterialTopicValidator),
+    checked: v.number(),
+    cursor: v.union(v.string(), v.null()),
+    phase: v.literal("prove"),
+    topics: v.number(),
+  })
+);
+
 const tables = {
   /** Monotonic legacy-write token used to close the preflight lock race. */
   contentCutoverActivity: defineTable({
@@ -44,6 +85,7 @@ const tables = {
    * rows would be an unsafe rollback.
    */
   contentCutoverState: defineTable({
+    articleReferenceProof: v.optional(referenceProofReceiptValidator),
     audioWorkflowAudit: v.optional(audioWorkflowAuditValidator),
     audioWorkflowAuditedAt: v.optional(v.number()),
     audioWorkflowCleanedAt: v.optional(v.number()),
@@ -65,8 +107,14 @@ const tables = {
     legacyTableIndex: v.number(),
     phase: cutoverPhaseValidator,
     provedAt: v.optional(v.number()),
+    materialReferenceProof: v.optional(referenceProofReceiptValidator),
+    materialReferenceProgress: v.optional(materialReferenceProgressValidator),
+    materialTopicReferenceProof: v.optional(referenceProofReceiptValidator),
+    quranReferenceProof: v.optional(referenceProofReceiptValidator),
+    quranReferenceProgress: v.optional(quranReferenceProgressValidator),
     /** Written only by the later deployment that owns the live reader cutover. */
     readerCutoverAcceptedAt: v.optional(v.number()),
+    tryoutReferenceProof: v.optional(referenceProofReceiptValidator),
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
 };
