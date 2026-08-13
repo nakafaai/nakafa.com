@@ -25,6 +25,7 @@ export const verifyTryoutCatalog = Effect.fn(
   }
   const facts = tryoutCatalogFacts(decoded.record);
   if (
+    (row.assetId !== undefined && facts.assetId !== row.assetId) ||
     facts.identity !== row.identity ||
     facts.kind !== row.kind ||
     facts.locale !== row.locale ||

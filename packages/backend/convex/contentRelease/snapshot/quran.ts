@@ -140,6 +140,8 @@ export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
       if (
         !(searchByIndex && searchByIdentity) ||
         searchByIndex._id !== searchByIdentity._id ||
+        (searchByIndex.assetId !== undefined &&
+          searchByIndex.assetId !== searchStored.assetId) ||
         searchByIndex.identity !== searchStored.identity ||
         searchByIndex.locale !== searchStored.locale ||
         searchByIndex.rowHash !== searchStored.rowHash ||

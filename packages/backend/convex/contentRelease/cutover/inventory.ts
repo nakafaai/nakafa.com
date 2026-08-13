@@ -23,6 +23,8 @@ export const RETAINED_FROZEN_PLACEMENT_COUNT =
 export const RETAINED_PROGRESS_COUNT = retainedTryoutHistoryPlan.progressCount;
 export const AUDITED_CONTENT_RELEASE_COUNT = 26;
 export const AUDITED_ARTICLE_COUNT = 14;
+export const AUDITED_QURAN_SEARCH_COUNT = 228;
+export const AUDITED_TRYOUT_CATALOG_COUNT = 108;
 
 export interface InventoryEntry<TableName extends TableNames = TableNames> {
   readonly batchSize: number;
@@ -77,8 +79,16 @@ export const CURRENT_INVENTORY = [
   { batchSize: 20, expected: 390, table: "curriculumRoutes" },
   { batchSize: 50, expected: 52, table: "programBuckets" },
   { batchSize: 20, expected: 1428, table: "quranRows" },
-  { batchSize: 20, expected: 228, table: "quranSearch" },
-  { batchSize: 20, expected: 108, table: "tryoutCatalog" },
+  {
+    batchSize: 20,
+    expected: AUDITED_QURAN_SEARCH_COUNT,
+    table: "quranSearch",
+  },
+  {
+    batchSize: 20,
+    expected: AUDITED_TRYOUT_CATALOG_COUNT,
+    table: "tryoutCatalog",
+  },
   { batchSize: 20, expected: 1680, table: "tryoutPlacements" },
   { batchSize: 50, expected: 18, table: "contentOwners" },
   { batchSize: 50, expected: 0, table: "materialOwners" },

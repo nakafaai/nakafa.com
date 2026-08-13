@@ -24,6 +24,7 @@ export const authenticateQuranSearchHit = Effect.fn(
   yield* ensureDocumentSize(
     `Quran search row ${hit.identity}`,
     {
+      assetId: hit.assetId,
       identity: hit.identity,
       index: hit.index,
       locale: hit.locale,
@@ -42,6 +43,7 @@ export const authenticateQuranSearchHit = Effect.fn(
   );
   const facts = quranSearchFacts(signed.payload);
   if (
+    (hit.assetId !== undefined && facts.assetId !== hit.assetId) ||
     facts.identity !== hit.identity ||
     facts.locale !== hit.locale ||
     facts.surahNumber !== hit.surahNumber ||

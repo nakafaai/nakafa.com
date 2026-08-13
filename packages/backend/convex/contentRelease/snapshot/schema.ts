@@ -177,6 +177,8 @@ const tables = {
 
   /** Full-text index projection resolved back to one signed Quran row. */
   quranSearch: defineTable({
+    /** Additive Phase 1 field tightened after exact authenticated backfill. */
+    assetId: v.optional(v.string()),
     identity: v.string(),
     index: v.number(),
     locale: localeValidator,
@@ -191,6 +193,11 @@ const tables = {
       "locale",
       "index",
     ])
+    .index("by_snapshotId_and_locale_and_assetId", [
+      "snapshotId",
+      "locale",
+      "assetId",
+    ])
     .index("by_snapshotId_and_identity", ["snapshotId", "identity"])
     .searchIndex("search_text", {
       searchField: "text",
@@ -199,6 +206,8 @@ const tables = {
 
   /** Immutable localized try-out hierarchy selected by one snapshot. */
   tryoutCatalog: defineTable({
+    /** Additive Phase 1 field tightened after exact authenticated backfill. */
+    assetId: v.optional(v.string()),
     identity: v.string(),
     index: v.number(),
     kind: v.string(),
@@ -212,6 +221,11 @@ const tables = {
   })
     .index("by_snapshotId_and_index", ["snapshotId", "index"])
     .index("by_snapshotId_and_identity", ["snapshotId", "identity"])
+    .index("by_snapshotId_and_locale_and_assetId", [
+      "snapshotId",
+      "locale",
+      "assetId",
+    ])
     .index("by_snapshotId_and_locale_and_publicPath", [
       "snapshotId",
       "locale",

@@ -60,6 +60,7 @@ describe("contentRelease/snapshot/tryout", () => {
       }))
     ).resolves.toMatchObject({
       catalog: {
+        assetId: "asset:en:tryout:technical:country",
         identity: tryoutCatalogIdentity(catalog.record.row),
         kind: "country",
       },
@@ -113,6 +114,48 @@ describe("contentRelease/snapshot/tryout", () => {
       t.mutation((ctx) =>
         runConvexProgram(
           stageTryoutCatalog(ctx, snapshotId, 1, catalog, rowJson)
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
+  });
+
+  it("accepts an unstaged asset identity and rejects a changed one", async () => {
+    const catalog = makeTryoutCatalogRow();
+    const rowJson = canonicalizeContentSnapshotRow(catalog);
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      runConvexProgram(stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson))
+    );
+    await t.mutation(async (ctx) => {
+      const stored = await ctx.db.query("tryoutCatalog").unique();
+      if (!stored) {
+        throw new Error("Expected one technical try-out catalog row.");
+      }
+      await ctx.db.patch("tryoutCatalog", stored._id, {
+        assetId: undefined,
+      });
+    });
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson)
+        )
+      )
+    ).resolves.toBe(true);
+    await t.mutation(async (ctx) => {
+      const stored = await ctx.db.query("tryoutCatalog").unique();
+      if (!stored) {
+        throw new Error("Expected one technical try-out catalog row.");
+      }
+      await ctx.db.patch("tryoutCatalog", stored._id, {
+        assetId: "asset:en:tryout:technical:tampered",
+      });
+    });
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson)
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });

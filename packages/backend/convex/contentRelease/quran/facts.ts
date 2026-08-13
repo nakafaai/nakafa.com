@@ -56,6 +56,7 @@ export function quranRowFacts(record: QuranSnapshotRow): QuranRowFacts {
 /** Derives one searchable projection from an authenticated search payload. */
 export function quranSearchFacts(payload: QuranSearch) {
   return {
+    assetId: payload.graph.assetId,
     identity: quranSearchIdentity(payload.locale, payload.surahNumber),
     locale: payload.locale,
     surahNumber: payload.surahNumber,
