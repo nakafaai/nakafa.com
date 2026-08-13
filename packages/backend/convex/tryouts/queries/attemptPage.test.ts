@@ -78,7 +78,7 @@ describe("tryouts/queries/attemptPage", () => {
     });
     expect(active).toMatchObject({
       attemptId: started.attemptId,
-      content: { answers: [], kind: "signed" },
+      content: { answers: [], kind: "signed", runtime: "current" },
       initialState: {
         attempt: { status: "in-progress" },
         runtime: { questions: expect.any(Array) },
@@ -137,6 +137,7 @@ describe("tryouts/queries/attemptPage", () => {
         answers: expect.any(Array),
         kind: "signed",
         questions: expect.any(Array),
+        runtime: "current",
       },
       initialState: {
         attempt: {
@@ -378,7 +379,7 @@ describe("tryouts/queries/attemptPage", () => {
     ).resolves.toMatchObject({
       activeSectionPublicPath: sectionPublicPath,
       activeSetPublicPath: setPublicPath,
-      content: { answers: [], kind: "signed" },
+      content: { answers: [], kind: "signed", runtime: "current" },
       initialState: {
         attempt: { attemptId: started.attemptId },
         runtime: { questions: expect.any(Array) },

@@ -1,9 +1,11 @@
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { readTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
+import { projectStoredTryoutContent } from "@repo/backend/convex/tryouts/history/selectors";
 import type {
-  TryoutAnswerSelector,
-  TryoutQuestionSelector,
+  TryoutCurrentAnswerSelector,
+  TryoutCurrentQuestionSelector,
   TryoutSectionContentAccess,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import { Effect, Schema } from "effect";
@@ -57,6 +59,7 @@ export const loadTryoutSignedContent = Effect.fn(
   return yield* projectTryoutSignedContent({
     access: input.access,
     attempt: input.attempt,
+    ctx: input.ctx,
     locale: input.locale,
     placements,
     totalQuestions: input.totalQuestions,
@@ -69,6 +72,7 @@ export const projectTryoutSignedContent = Effect.fn(
 )(function* (input: {
   readonly access: { readonly answers: boolean; readonly questions: boolean };
   readonly attempt: TryoutAttempt;
+  readonly ctx: QueryCtx;
   readonly locale: ContentLocale;
   readonly placements: readonly TryoutPlacement[];
   readonly totalQuestions: number;
@@ -84,7 +88,23 @@ export const projectTryoutSignedContent = Effect.fn(
     );
   }
 
-  const content: Extract<TryoutSectionContentAccess, { kind: "signed" }> = {
+  const history = yield* readTryoutAttemptHistory(input.ctx, input.attempt);
+  if (history) {
+    if (input.attempt.appLocale !== input.locale) {
+      return yield* selectorIntegrity(
+        "Retained try-out attempt has not completed its app-locale migration."
+      );
+    }
+    return yield* projectStoredTryoutContent({
+      access: input.access,
+      appLocale: input.attempt.appLocale,
+      attempt: input.attempt,
+      ctx: input.ctx,
+      placements: input.placements,
+    });
+  }
+
+  const content: Extract<TryoutSectionContentAccess, { runtime: "current" }> = {
     answers: input.access.answers
       ? yield* Effect.forEach(input.placements, (placement) =>
           makeAnswerSelector(
@@ -104,6 +124,7 @@ export const projectTryoutSignedContent = Effect.fn(
         input.attempt.snapshotReleaseId
       )
     ),
+    runtime: "current",
   };
   return content;
 });
@@ -125,7 +146,7 @@ function makeQuestionSelector(
     return selectorIntegrity("Signed try-out question selector is incomplete.");
   }
 
-  const selector: TryoutQuestionSelector = {
+  const selector: TryoutCurrentQuestionSelector = {
     artifactHash: placement.questionArtifactHash,
     contentHash: placement.contentHash,
     contentKey: placement.questionContentKey,
@@ -151,7 +172,7 @@ function makeAnswerSelector(
     return selectorIntegrity("Signed try-out answer selector is incomplete.");
   }
 
-  const selector: TryoutAnswerSelector = {
+  const selector: TryoutCurrentAnswerSelector = {
     artifactHash: placement.answerArtifactHash,
     contentHash: placement.contentHash,
     contentKey: placement.answerContentKey,

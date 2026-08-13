@@ -41,6 +41,7 @@ describe("tryouts/runtime/access", () => {
       answers: [],
       kind: "signed",
       questions: [seeded.signedContent.question],
+      runtime: "current",
     });
   });
 
@@ -72,6 +73,7 @@ describe("tryouts/runtime/access", () => {
       answers: [seeded.signedContent.answer],
       kind: "signed",
       questions: [seeded.signedContent.question],
+      runtime: "current",
     });
   });
 

@@ -98,6 +98,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
     const content = yield* projectTryoutSignedContent({
       access: loaded.access,
       attempt,
+      ctx,
       locale: attempt.locale,
       placements: loaded.placements,
       totalQuestions: section.totalQuestions,

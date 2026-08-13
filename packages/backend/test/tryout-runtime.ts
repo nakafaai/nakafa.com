@@ -8,8 +8,8 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import type {
-  TryoutAnswerSelector,
-  TryoutQuestionSelector,
+  TryoutCurrentAnswerSelector,
+  TryoutCurrentQuestionSelector,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
 import {
@@ -173,7 +173,7 @@ export async function seedTryoutContentAccessState(
     tryoutAttemptId: attemptId,
   });
 
-  const answer: TryoutAnswerSelector = {
+  const answer: TryoutCurrentAnswerSelector = {
     artifactHash: placementRow.answerArtifactHash,
     contentHash: placementRow.contentHash,
     contentKey: placementRow.answerContentKey,
@@ -185,7 +185,7 @@ export async function seedTryoutContentAccessState(
     sourcePath: placementRow.questionSourcePath,
     sourceRevision: placementRow.sourceRevision,
   };
-  const question: TryoutQuestionSelector = {
+  const question: TryoutCurrentQuestionSelector = {
     artifactHash: placementRow.questionArtifactHash,
     contentHash: placementRow.contentHash,
     contentKey: placementRow.questionContentKey,
