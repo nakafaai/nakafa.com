@@ -165,10 +165,13 @@ import type * as contentRelease_cutover_freeze from "../contentRelease/cutover/f
 import type * as contentRelease_cutover_history from "../contentRelease/cutover/history.js";
 import type * as contentRelease_cutover_inventory from "../contentRelease/cutover/inventory.js";
 import type * as contentRelease_cutover_legacy from "../contentRelease/cutover/legacy.js";
+import type * as contentRelease_cutover_materialAssets from "../contentRelease/cutover/materialAssets.js";
+import type * as contentRelease_cutover_materialTopics from "../contentRelease/cutover/materialTopics.js";
 import type * as contentRelease_cutover_proof from "../contentRelease/cutover/proof.js";
 import type * as contentRelease_cutover_proofState from "../contentRelease/cutover/proofState.js";
 import type * as contentRelease_cutover_quiescence from "../contentRelease/cutover/quiescence.js";
 import type * as contentRelease_cutover_quranAssets from "../contentRelease/cutover/quranAssets.js";
+import type * as contentRelease_cutover_referenceProofs from "../contentRelease/cutover/referenceProofs.js";
 import type * as contentRelease_cutover_retention from "../contentRelease/cutover/retention.js";
 import type * as contentRelease_cutover_scan from "../contentRelease/cutover/scan.js";
 import type * as contentRelease_cutover_state from "../contentRelease/cutover/state.js";
@@ -224,6 +227,7 @@ import type * as contentRelease_material_source from "../contentRelease/material
 import type * as contentRelease_material_spec from "../contentRelease/material/spec.js";
 import type * as contentRelease_material_state from "../contentRelease/material/state.js";
 import type * as contentRelease_material_sync from "../contentRelease/material/sync.js";
+import type * as contentRelease_material_topic from "../contentRelease/material/topic.js";
 import type * as contentRelease_material_verify from "../contentRelease/material/verify.js";
 import type * as contentRelease_material_write from "../contentRelease/material/write.js";
 import type * as contentRelease_model from "../contentRelease/model.js";
@@ -791,10 +795,13 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/cutover/history": typeof contentRelease_cutover_history;
   "contentRelease/cutover/inventory": typeof contentRelease_cutover_inventory;
   "contentRelease/cutover/legacy": typeof contentRelease_cutover_legacy;
+  "contentRelease/cutover/materialAssets": typeof contentRelease_cutover_materialAssets;
+  "contentRelease/cutover/materialTopics": typeof contentRelease_cutover_materialTopics;
   "contentRelease/cutover/proof": typeof contentRelease_cutover_proof;
   "contentRelease/cutover/proofState": typeof contentRelease_cutover_proofState;
   "contentRelease/cutover/quiescence": typeof contentRelease_cutover_quiescence;
   "contentRelease/cutover/quranAssets": typeof contentRelease_cutover_quranAssets;
+  "contentRelease/cutover/referenceProofs": typeof contentRelease_cutover_referenceProofs;
   "contentRelease/cutover/retention": typeof contentRelease_cutover_retention;
   "contentRelease/cutover/scan": typeof contentRelease_cutover_scan;
   "contentRelease/cutover/state": typeof contentRelease_cutover_state;
@@ -850,6 +857,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material/spec": typeof contentRelease_material_spec;
   "contentRelease/material/state": typeof contentRelease_material_state;
   "contentRelease/material/sync": typeof contentRelease_material_sync;
+  "contentRelease/material/topic": typeof contentRelease_material_topic;
   "contentRelease/material/verify": typeof contentRelease_material_verify;
   "contentRelease/material/write": typeof contentRelease_material_write;
   "contentRelease/model": typeof contentRelease_model;
