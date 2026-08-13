@@ -172,8 +172,8 @@ import type * as contentRelease_cutover_proof from "../contentRelease/cutover/pr
 import type * as contentRelease_cutover_proofState from "../contentRelease/cutover/proofState.js";
 import type * as contentRelease_cutover_quiescence from "../contentRelease/cutover/quiescence.js";
 import type * as contentRelease_cutover_quranAssets from "../contentRelease/cutover/quranAssets.js";
-import type * as contentRelease_cutover_referenceProofs from "../contentRelease/cutover/referenceProofs.js";
 import type * as contentRelease_cutover_readers from "../contentRelease/cutover/readers.js";
+import type * as contentRelease_cutover_referenceProofs from "../contentRelease/cutover/referenceProofs.js";
 import type * as contentRelease_cutover_retention from "../contentRelease/cutover/retention.js";
 import type * as contentRelease_cutover_retiredPrograms from "../contentRelease/cutover/retiredPrograms.js";
 import type * as contentRelease_cutover_scan from "../contentRelease/cutover/scan.js";
@@ -356,7 +356,6 @@ import type * as contents_helpers_search_excerpt from "../contents/helpers/searc
 import type * as contents_helpers_search_groups from "../contents/helpers/search/groups.js";
 import type * as contents_helpers_search_input from "../contents/helpers/search/input.js";
 import type * as contents_helpers_search_published from "../contents/helpers/search/published.js";
-import type * as contents_helpers_search_quran_authenticate from "../contents/helpers/search/quran/authenticate.js";
 import type * as contents_helpers_search_quran_candidates from "../contents/helpers/search/quran/candidates.js";
 import type * as contents_helpers_search_quran_read from "../contents/helpers/search/quran/read.js";
 import type * as contents_helpers_search_rank from "../contents/helpers/search/rank.js";
@@ -757,8 +756,8 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/cutover/proofState": typeof contentRelease_cutover_proofState;
   "contentRelease/cutover/quiescence": typeof contentRelease_cutover_quiescence;
   "contentRelease/cutover/quranAssets": typeof contentRelease_cutover_quranAssets;
-  "contentRelease/cutover/referenceProofs": typeof contentRelease_cutover_referenceProofs;
   "contentRelease/cutover/readers": typeof contentRelease_cutover_readers;
+  "contentRelease/cutover/referenceProofs": typeof contentRelease_cutover_referenceProofs;
   "contentRelease/cutover/retention": typeof contentRelease_cutover_retention;
   "contentRelease/cutover/retiredPrograms": typeof contentRelease_cutover_retiredPrograms;
   "contentRelease/cutover/scan": typeof contentRelease_cutover_scan;
@@ -941,7 +940,6 @@ declare const fullApi: ApiFromModules<{
   "contents/helpers/search/groups": typeof contents_helpers_search_groups;
   "contents/helpers/search/input": typeof contents_helpers_search_input;
   "contents/helpers/search/published": typeof contents_helpers_search_published;
-  "contents/helpers/search/quran/authenticate": typeof contents_helpers_search_quran_authenticate;
   "contents/helpers/search/quran/candidates": typeof contents_helpers_search_quran_candidates;
   "contents/helpers/search/quran/read": typeof contents_helpers_search_quran_read;
   "contents/helpers/search/rank": typeof contents_helpers_search_rank;

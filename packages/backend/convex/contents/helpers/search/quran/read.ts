@@ -9,10 +9,10 @@ import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/f
 import { QURAN_SEARCH_RESULT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
+import { authenticateQuranSearchHit } from "@repo/backend/convex/contentRelease/quran/verify";
 import { validateSearchQuery } from "@repo/backend/convex/contentRelease/search/input";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import { interleaveSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
-import { authenticateQuranSearchHit } from "@repo/backend/convex/contents/helpers/search/quran/authenticate";
 import { readTextCandidates } from "@repo/backend/convex/contents/helpers/search/quran/candidates";
 import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";

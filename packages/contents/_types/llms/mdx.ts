@@ -54,11 +54,6 @@ export const projectMdxForAgentMarkdown = Effect.fn(
   });
 });
 
-/** Formats raw authored MDX text when a caller intentionally chooses fallback. */
-export function preserveMdxSourceForAgentMarkdown(body: string) {
-  return cleanAgentMarkdown(body);
-}
-
 /** Parses authored MDX into the root tree shape consumed by the projection renderer. */
 function parseMdxTree(body: string) {
   return Effect.try({

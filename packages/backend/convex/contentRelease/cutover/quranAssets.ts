@@ -7,7 +7,7 @@ import { requireCutoverPhase } from "@repo/backend/convex/contentRelease/cutover
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
-import { authenticateQuranSearchHit } from "@repo/backend/convex/contentRelease/quran/search";
+import { authenticateQuranSearchHit } from "@repo/backend/convex/contentRelease/quran/verify";
 import { loadActiveSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";

@@ -140,7 +140,7 @@ describe("published llms markdown", () => {
     expect(text).not.toContain("Source:");
   });
 
-  it("preserves real source when semantic projection cannot parse it", async () => {
+  it("fails closed when semantic projection cannot parse the source", async () => {
     const incompleteMdx = `${rawMdx}\n{`;
     readMaterialMock.mockReturnValueOnce(
       Effect.succeed({
@@ -154,13 +154,13 @@ describe("published llms markdown", () => {
         },
       })
     );
-    const text = await getCachedPublishedText({
-      activeReleaseId: materialData.activeReleaseId,
-      family: "material",
-      locale: "en",
-      publicPath: previewProjection.publicPath,
-    });
-
-    expect(text).toContain("What is a Function?");
+    await expect(
+      getCachedPublishedText({
+        activeReleaseId: materialData.activeReleaseId,
+        family: "material",
+        locale: "en",
+        publicPath: previewProjection.publicPath,
+      })
+    ).rejects.toThrow("Unexpected end of file in expression");
   });
 });
