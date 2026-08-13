@@ -38,6 +38,7 @@ describe("triggers/contents/legacy", () => {
         legacyTableDeleted: 0,
         legacyTableIndex: 0,
         phase: "audited",
+        readerCutoverAcceptedAt: 1,
         updatedAt: 1,
       })
     );

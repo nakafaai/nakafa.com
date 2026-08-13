@@ -14,7 +14,10 @@ import {
   type LegacyTableName,
 } from "@repo/backend/convex/contentRelease/cutover/inventory";
 import { cutoverPhaseValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
-import { requireCutoverPhase } from "@repo/backend/convex/contentRelease/cutover/state";
+import {
+  requireCutoverPhase,
+  requireReaderCutoverCheckpoint,
+} from "@repo/backend/convex/contentRelease/cutover/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import {
@@ -166,6 +169,7 @@ export const deleteLegacyPage = Effect.fn(
     "draining-legacy",
     "legacy-drained",
   ]);
+  yield* requireReaderCutoverCheckpoint(state);
   if (state.phase === "legacy-drained") {
     return drainPageResult({
       complete: true,

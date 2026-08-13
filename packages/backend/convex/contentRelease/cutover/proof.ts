@@ -204,6 +204,7 @@ const validateRetentionFacts = Effect.fn(
     cutover.currentTableIndex !== CURRENT_INVENTORY.length + 2 ||
     cutover.currentTablePreserved !== 0 ||
     cutover.currentCursor !== undefined ||
+    cutover.readerCutoverAcceptedAt === undefined ||
     facts.snapshots.length !== 1 ||
     facts.snapshots[0]?.family !== "tryout" ||
     facts.snapshots[0].snapshotId !== RETAINED_TRYOUT_SNAPSHOT_ID ||

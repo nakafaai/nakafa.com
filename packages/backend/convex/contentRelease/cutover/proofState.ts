@@ -21,7 +21,10 @@ import {
   RETAINED_TRYOUT_SNAPSHOT_ID,
 } from "@repo/backend/convex/contentRelease/cutover/inventory";
 import { audioWorkflowAuditValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
-import { requireCutoverPhase } from "@repo/backend/convex/contentRelease/cutover/state";
+import {
+  requireCutoverPhase,
+  requireReaderCutoverCheckpoint,
+} from "@repo/backend/convex/contentRelease/cutover/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
@@ -62,6 +65,7 @@ export interface RetentionFacts {
     legacyTableDeleted: number;
     legacyTableIndex: number;
     phase: string;
+    readerCutoverAcceptedAt?: number;
   };
   readonly cutoverCount: number;
   readonly snapshots: { family: string; snapshotId: string }[];
@@ -115,6 +119,7 @@ export const retentionFacts = internalQuery({
         legacyTableDeleted: v.number(),
         legacyTableIndex: v.number(),
         phase: v.string(),
+        readerCutoverAcceptedAt: v.optional(v.number()),
       })
     ),
     cutoverCount: v.number(),
@@ -173,6 +178,7 @@ const readRetentionFacts = Effect.fn(
           legacyTableDeleted: cutover.legacyTableDeleted,
           legacyTableIndex: cutover.legacyTableIndex,
           phase: cutover.phase,
+          readerCutoverAcceptedAt: cutover.readerCutoverAcceptedAt,
         }
       : null,
     cutoverCount: cutoverRows.length,
@@ -188,6 +194,7 @@ export const recordProofCompletion = Effect.fn(
   "contentRelease.cutover.recordProofCompletion"
 )(function* (ctx: MutationCtx, receipt: CutoverProofReceipt) {
   const cutover = yield* requireCutoverPhase(ctx, ["complete", "proved"]);
+  yield* requireReaderCutoverCheckpoint(cutover);
   yield* requireAudioWorkflowCleanupCheckpoint({
     audit: cutover.audioWorkflowAudit,
     auditedAt: cutover.audioWorkflowAuditedAt,

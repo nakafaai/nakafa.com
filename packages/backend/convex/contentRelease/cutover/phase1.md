@@ -48,19 +48,10 @@ pnpm --filter @repo/backend exec convex run contentRelease/cutover/audio:checkpo
 
 The shared Workflow component remains because other product domains use it.
 
-## Drain legacy rows
-
-Run the bounded legacy drain until it returns `complete: true`,
-`deleted: 12854`, and phase `legacy-drained` across the accumulated
-receipts:
-
-```sh
-pnpm --filter @repo/backend exec convex run contentRelease/cutover/legacy:drainLegacy '{}' --prod
-```
-
 ## Preserve retained attempt history
 
-Copy the app locale into the additive current field:
+While the checkpoint remains `quiescent`, copy the app locale into the
+additive current field:
 
 ```sh
 pnpm --filter @repo/backend exec convex run tryouts/history/locale:migrate '{"target":"attempt"}' --prod
@@ -92,27 +83,16 @@ Accept only 21 markers, 21 attempts, 10 progress rows, 1,720 frozen
 placements, the exact retained snapshot ID, and the exact 15 and 6 release
 split.
 
-## Freeze and prove
+## Stop at the reader boundary
 
-Authenticate all 1,680 retained artifacts and freeze the old mutable pointer:
+Do not invoke the legacy drain again, freeze the publication pointer, or drain
+any current signed table in this deployment. The Phase 1 schema contains an
+optional `readerCutoverAcceptedAt` checkpoint, but this source deliberately
+contains no operation that can write it. Every destructive page and the final
+proof reject the missing checkpoint.
 
-```sh
-pnpm --filter @repo/backend exec convex run contentRelease/cutover/freeze:freeze '{}' --prod
-```
-
-Run the bounded current-store drain until the accumulated receipts return
-`complete: true`, `deleted: 22954`, and phase `complete`:
-
-```sh
-pnpm --filter @repo/backend exec convex run contentRelease/cutover/current:drainCurrent '{}' --prod
-```
-
-Run the terminal proof:
-
-```sh
-pnpm --filter @repo/backend exec convex run contentRelease/cutover/proof:proof '{}' --prod
-```
-
-Accept only the exact receipt and durable phase `proved`. Phase 2 must follow
-`phase2.md`; no current genesis, strict schema, or temporary-row retirement
-may run before this proof succeeds.
+The next deployment must first route retained set pages, retained section
+pages, and protected artifact reads through the authenticated history tables.
+It must also remove every legacy application and agent-doc reader. Only that
+deployment may expose the bounded reader-acceptance mutation described in
+`phase2.md`.

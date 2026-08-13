@@ -7,6 +7,7 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { authenticateRetainedTryoutHistory } from "@repo/backend/convex/tryouts/history/authentication";
 import {
   historyLocaleReceiptValidator,
+  historyStagingPhases,
   historyWrite,
   type RetainedTryoutHistoryPlan,
   retainedTryoutHistoryPlan,
@@ -56,7 +57,7 @@ export const migrate = internalMutation({
   handler: (ctx, args) =>
     runConvexProgram(
       Effect.gen(function* () {
-        yield* requireCutoverPhase(ctx, ["legacy-drained"]);
+        yield* requireCutoverPhase(ctx, historyStagingPhases);
         return yield* migrateAppLocale(
           ctx,
           retainedTryoutHistoryPlan,

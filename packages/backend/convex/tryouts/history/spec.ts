@@ -51,6 +51,14 @@ export const retainedTryoutHistoryPlan = {
     "sha256:0a43a4125fc4886f90b5a509405178bfb8762ad3c7f72be80614fce2671b5162",
 } satisfies RetainedTryoutHistoryPlan;
 
+/** Phases where immutable history may be staged before any source drain. */
+export const historyStagingPhases = [
+  "quiescent",
+  "audited",
+  "draining-legacy",
+  "legacy-drained",
+] as const;
+
 /** Typed, fail-closed error for the one retained history cutover. */
 export class TryoutHistoryError extends Schema.TaggedError<TryoutHistoryError>()(
   "TryoutHistoryError",

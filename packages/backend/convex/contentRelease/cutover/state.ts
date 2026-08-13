@@ -39,6 +39,22 @@ export const requireCutoverPhase = Effect.fn(
   return state;
 });
 
+/** Blocks destructive drains until the deployed reader cutover is accepted. */
+export const requireReaderCutoverCheckpoint = Effect.fn(
+  "contentRelease.cutover.requireReaderCutoverCheckpoint"
+)(function* (state: { readonly readerCutoverAcceptedAt?: number }) {
+  if (
+    state.readerCutoverAcceptedAt === undefined ||
+    !Number.isSafeInteger(state.readerCutoverAcceptedAt) ||
+    state.readerCutoverAcceptedAt <= 0
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      "The retained-history and legacy reader cutover has not been accepted."
+    );
+  }
+});
+
 /** Blocks every old publication writer after cutover initialization. */
 export const ensurePublicationWritable = Effect.fn(
   "contentRelease.cutover.ensurePublicationWritable"

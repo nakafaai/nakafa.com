@@ -1,31 +1,57 @@
 # Strict Phase 2 deletion ledger
 
-Phase 2 may start only after `contentRelease/cutover/proof:proof` returns its
-exact receipt and `contentCutoverState.phase` is `proved`. The retained-history
-tables remain until their independent zero-reference gate is satisfied.
+Phase 2 reader cutover may start only after the Phase 1 runbook has created all
+21 authenticated history markers while `contentCutoverState.phase` remains
+`quiescent`. Destructive draining may start only after the deployed reader
+cutover writes the otherwise unreachable `readerCutoverAcceptedAt` checkpoint.
+The retained-history tables remain until their independent zero-reference gate
+is satisfied.
 
 ## Coordinated transition
 
 1. Keep the private production backup until every Phase 2 proof is complete.
-2. Deploy the current signed application and the Phase 2 backend that contains
-   no legacy content writer, reader, route, sync, repair, local-content audio
-   path, or fallback. Remove the publication guards from the sole current
-   signed Aksara ingress in this deployment because no legacy publication
-   writer remains, while retaining the independent try-out and application
-   maintenance guards backed by the `proved` checkpoint.
-3. Keep `contentCutoverState` in `proved` while verifying that the deployed app
-   no longer calls any legacy function.
-4. Publish the clean six-scope current genesis through the protected Aksara
+2. Deploy the additive reader cutover before deleting any source row. Retained
+   set pages, section pages, and protected artifact reads must select the
+   attempt-owned history marker first and read only authenticated history rows.
+   Remove every legacy application and agent-doc reader in the same deployment.
+3. Run current publication, retained in-progress attempt, completed-attempt
+   review, protected artifact, agent-doc, and browser acceptance against that
+   deployment. No fallback or current-history union is accepted.
+4. Only the reader-cutover deployment may expose
+   `contentRelease/cutover/readers:accept`. It must re-prove all 21 markers and
+   persist `readerCutoverAcceptedAt` on the existing quiescent checkpoint. Phase
+   1 has no writer for this field, so an earlier drain is impossible.
+5. Invoke `contentRelease/cutover/legacy:drainLegacy` until it returns exactly
+   12,854 deletions and phase `legacy-drained`.
+6. Authenticate all 1,680 retained artifacts and freeze the old mutable pointer:
+
+   ```sh
+   pnpm --filter @repo/backend exec convex run contentRelease/cutover/freeze:freeze '{}' --prod
+   ```
+
+7. Run `contentRelease/cutover/current:drainCurrent` until its accumulated
+   receipts return exactly 22,954 deletions and phase `complete`, then run:
+
+   ```sh
+   pnpm --filter @repo/backend exec convex run contentRelease/cutover/proof:proof '{}' --prod
+   ```
+
+   Accept only the exact receipt and durable phase `proved`.
+8. Deploy the strict current application and backend with no legacy content
+   writer, reader, route, sync, repair, local-content audio path, or fallback.
+   Remove publication guards from the sole current Aksara ingress while keeping
+   the separate try-out and application maintenance guard backed by `proved`.
+9. Publish the clean six-scope current genesis through the protected Aksara
    release workflow and prove the exact active pointer and signed catalogs.
-5. Run application, retained-history, and signed-publication acceptance while
+10. Run application, retained-history, and signed-publication acceptance while
    the `proved` checkpoint still blocks try-out and application writes.
-6. Deploy the strict current schema while preserving the maintenance guard.
-7. Delete the single `contentCutoverState` and `contentCutoverActivity`
+11. Deploy the strict current schema while preserving the maintenance guard.
+12. Delete the single `contentCutoverState` and `contentCutoverActivity`
    documents through the Phase 2 bounded retire mutation only after genesis
    and application acceptance succeed.
-8. Verify both temporary tables are empty, then deploy the guard retirement
+13. Verify both temporary tables are empty, then deploy the guard retirement
    and remove every temporary seam below as one coordinated boundary.
-9. Physically delete every empty undeclared legacy and cutover table from the
+14. Physically delete every empty undeclared legacy and cutover table from the
    production deployment, then prove that no table or scheduled function
    remains.
 
@@ -48,6 +74,8 @@ tables remain until their independent zero-reference gate is satisfied.
   expiry, progress, and account-cleanup mutations.
 - Delete the temporary runtime-cache exclusions for
   `contentCutoverActivity` and `contentCutoverState`.
+- Delete the reader-acceptance mutation and `readerCutoverAcceptedAt` field
+  after the terminal proof and current-genesis acceptance are complete.
 - Delete migration-only `tryouts/history/copy.ts`, `locale.ts`, and
   `finalize.ts`, plus the write-only history-row operation after their exact
   production functions are no longer referenced.

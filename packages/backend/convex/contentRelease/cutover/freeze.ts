@@ -17,7 +17,10 @@ import {
 } from "@repo/backend/convex/contentRelease/cutover/inventory";
 import { countAuditedTable } from "@repo/backend/convex/contentRelease/cutover/scan";
 import type { cutoverPhaseValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
-import { requireCutoverPhase } from "@repo/backend/convex/contentRelease/cutover/state";
+import {
+  requireCutoverPhase,
+  requireReaderCutoverCheckpoint,
+} from "@repo/backend/convex/contentRelease/cutover/state";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { internalMutation } from "@repo/backend/convex/functions";
@@ -141,6 +144,7 @@ const armFreeze = Effect.fn("contentRelease.cutover.armFreeze")(function* (
   if (cutover.phase !== "legacy-drained") {
     return null;
   }
+  yield* requireReaderCutoverCheckpoint(cutover);
   yield* verifyAuditedPointer(ctx, cutover);
   yield* proveLegacyTablesEmpty(ctx);
   yield* Effect.promise(() =>
@@ -178,6 +182,7 @@ export const freezeProgram = Effect.fn("contentRelease.cutover.freeze")(
     if (cutover.phase !== "freeze-armed") {
       return yield* proveFrozenState(ctx, plan);
     }
+    yield* requireReaderCutoverCheckpoint(cutover);
     const state = yield* verifyAuditedPointer(ctx, cutover);
     const proof = yield* proveFreezeHistory(ctx, plan).pipe(
       Effect.mapError((error) => freezeError(error.message))

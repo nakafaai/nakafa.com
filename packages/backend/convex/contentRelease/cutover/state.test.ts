@@ -1,3 +1,4 @@
+import { requireReaderCutoverCheckpoint } from "@repo/backend/convex/contentRelease/cutover/state";
 import { ensureState } from "@repo/backend/convex/contentRelease/model";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -13,6 +14,28 @@ const resumeReadModels = makeFunctionReference<
 >("contentRelease/models:resume");
 
 describe("contentRelease/cutover/state", () => {
+  it("keeps every destructive drain unreachable before reader acceptance", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.mutation(() => runConvexProgram(requireReaderCutoverCheckpoint({})))
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+        message: expect.stringContaining(
+          "reader cutover has not been accepted"
+        ),
+      },
+    });
+    await expect(
+      t.mutation(() =>
+        runConvexProgram(
+          requireReaderCutoverCheckpoint({ readerCutoverAcceptedAt: 1 })
+        )
+      )
+    ).resolves.toBeNull();
+  });
+
   it("blocks singleton recreation as soon as the cutover is initialized", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>

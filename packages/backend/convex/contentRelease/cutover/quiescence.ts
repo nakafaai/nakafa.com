@@ -16,6 +16,7 @@ import { cutoverPhaseValidator } from "@repo/backend/convex/contentRelease/cutov
 import {
   loadCutoverState,
   requireCutoverPhase,
+  requireReaderCutoverCheckpoint,
 } from "@repo/backend/convex/contentRelease/cutover/state";
 import {
   ReleaseError,
@@ -143,6 +144,7 @@ const acceptAuditProgram = Effect.fn("contentRelease.cutover.acceptAudit")(
       auditedAt: state.audioWorkflowAuditedAt,
       cleanedAt: state.audioWorkflowCleanedAt,
     });
+    yield* requireReaderCutoverCheckpoint(state);
     const legacyWriteVersion = yield* readLegacyWriteVersion(ctx);
     if (legacyWriteVersion !== state.auditedLegacyWriteVersion) {
       return yield* stateFailure(

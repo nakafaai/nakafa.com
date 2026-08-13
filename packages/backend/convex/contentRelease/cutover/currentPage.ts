@@ -8,7 +8,10 @@ import {
   RETENTION_INVENTORY,
 } from "@repo/backend/convex/contentRelease/cutover/inventory";
 import { cutoverPhaseValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
-import { requireCutoverPhase } from "@repo/backend/convex/contentRelease/cutover/state";
+import {
+  requireCutoverPhase,
+  requireReaderCutoverCheckpoint,
+} from "@repo/backend/convex/contentRelease/cutover/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -53,6 +56,7 @@ export const deleteCurrentPage = Effect.fn(
     "complete",
     "proved",
   ]);
+  yield* requireReaderCutoverCheckpoint(state);
   if (state.phase === "complete" || state.phase === "proved") {
     return completedResult();
   }

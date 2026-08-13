@@ -17,6 +17,25 @@ const hashes = Array.from(
 );
 
 describe("contentRelease/cutover/currentPage", () => {
+  it("cannot drain current rows before the retained reader is accepted", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => seedArtifactDrain(ctx, false));
+
+    await expect(
+      t.mutation((ctx) => runConvexProgram(deleteCurrentPage(ctx, 4, 5)))
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+        message: expect.stringContaining(
+          "reader cutover has not been accepted"
+        ),
+      },
+    });
+    await expect(
+      t.run((ctx) => ctx.db.query("contentArtifacts").take(6))
+    ).resolves.toHaveLength(5);
+  });
+
   it("deletes only unreferenced artifacts across exact retry pages", async () => {
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation(seedArtifactDrain);
@@ -100,7 +119,7 @@ describe("contentRelease/cutover/currentPage", () => {
   });
 });
 
-async function seedArtifactDrain(ctx: MutationCtx) {
+async function seedArtifactDrain(ctx: MutationCtx, readerAccepted = true) {
   for (const [index, artifactHash] of hashes.entries()) {
     await ctx.db.insert("contentArtifacts", {
       artifactHash,
@@ -149,6 +168,7 @@ async function seedArtifactDrain(ctx: MutationCtx) {
     legacyTableDeleted: 0,
     legacyTableIndex: 16,
     phase: "frozen",
+    ...(readerAccepted ? { readerCutoverAcceptedAt: 1 } : {}),
     updatedAt: 1,
   });
   return userId;
@@ -206,6 +226,7 @@ async function seedSnapshotDrain(ctx: MutationCtx) {
     legacyTableDeleted: 0,
     legacyTableIndex: 16,
     phase: "draining-current",
+    readerCutoverAcceptedAt: 1,
     updatedAt: 1,
   });
   return userId;

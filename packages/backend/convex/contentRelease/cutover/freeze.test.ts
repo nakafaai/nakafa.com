@@ -117,6 +117,7 @@ async function insertCutoverState(
     legacyTableDeleted: 0,
     legacyTableIndex: 16,
     phase,
+    readerCutoverAcceptedAt: 1,
     updatedAt: 1,
   });
 }

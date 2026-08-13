@@ -7,6 +7,7 @@ import {
   historyCopyReceiptValidator,
   historyFail,
   historyRead,
+  historyStagingPhases,
   type RetainedTryoutHistoryPlan,
   retainedTryoutHistoryPlan,
 } from "@repo/backend/convex/tryouts/history/spec";
@@ -138,7 +139,7 @@ export const copy = internalMutation({
   handler: (ctx, args) =>
     runConvexProgram(
       Effect.gen(function* () {
-        yield* requireCutoverPhase(ctx, ["legacy-drained"]);
+        yield* requireCutoverPhase(ctx, historyStagingPhases);
         return yield* copyHistoryRows(
           ctx,
           retainedTryoutHistoryPlan,

@@ -11,6 +11,7 @@ import {
   historyFail,
   historyRead,
   historyReadinessValidator,
+  historyStagingPhases,
   historyWrite,
   type RetainedTryoutHistoryPlan,
   retainedTryoutHistoryPlan,
@@ -122,7 +123,7 @@ export const finalize = internalMutation({
   handler: (ctx) =>
     runConvexProgram(
       Effect.gen(function* () {
-        yield* requireCutoverPhase(ctx, ["legacy-drained"]);
+        yield* requireCutoverPhase(ctx, historyStagingPhases);
         return yield* finalizeRetainedTryoutHistory(
           ctx,
           retainedTryoutHistoryPlan

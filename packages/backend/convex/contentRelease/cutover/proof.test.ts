@@ -175,6 +175,7 @@ function retentionFacts() {
       legacyTableDeleted: 0,
       legacyTableIndex: LEGACY_INVENTORY.length,
       phase: "complete",
+      readerCutoverAcceptedAt: 1,
     },
     cutoverCount: 1,
     snapshots: [{ family: "tryout", snapshotId: RETAINED_TRYOUT_SNAPSHOT_ID }],
@@ -202,6 +203,7 @@ async function insertCompleteCutover(ctx: MutationCtx) {
     legacyTableDeleted: 0,
     legacyTableIndex: LEGACY_INVENTORY.length,
     phase: "complete",
+    readerCutoverAcceptedAt: 1,
     updatedAt: 3,
   });
 }

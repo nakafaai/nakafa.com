@@ -12,6 +12,27 @@ const TEST_INVENTORY = [
 ] as const;
 
 describe("contentRelease/cutover/legacy", () => {
+  it("cannot delete legacy rows before the reader cutover is accepted", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => seedLegacyDrain(ctx, false));
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(deleteLegacyPage(ctx, TEST_INVENTORY))
+      )
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+        message: expect.stringContaining(
+          "reader cutover has not been accepted"
+        ),
+      },
+    });
+    await expect(
+      t.run((ctx) => ctx.db.query("authors").take(3))
+    ).resolves.toHaveLength(2);
+  });
+
   it("resumes exact bounded pages and preserves unrelated durable rows", async () => {
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation(seedLegacyDrain);
@@ -65,7 +86,7 @@ describe("contentRelease/cutover/legacy", () => {
   });
 });
 
-async function seedLegacyDrain(ctx: MutationCtx) {
+async function seedLegacyDrain(ctx: MutationCtx, readerAccepted = true) {
   await ctx.db.insert("authors", { name: "First", username: "first" });
   await ctx.db.insert("authors", { name: "Second", username: "second" });
   const userId = await ctx.db.insert("users", {
@@ -92,6 +113,7 @@ async function seedLegacyDrain(ctx: MutationCtx) {
     legacyTableDeleted: 0,
     legacyTableIndex: 0,
     phase: "audited",
+    ...(readerAccepted ? { readerCutoverAcceptedAt: 1 } : {}),
     updatedAt: 1,
   });
   return userId;

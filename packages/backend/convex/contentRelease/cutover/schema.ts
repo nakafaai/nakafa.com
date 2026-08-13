@@ -65,6 +65,8 @@ const tables = {
     legacyTableIndex: v.number(),
     phase: cutoverPhaseValidator,
     provedAt: v.optional(v.number()),
+    /** Written only by the later deployment that owns the live reader cutover. */
+    readerCutoverAcceptedAt: v.optional(v.number()),
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
 };
