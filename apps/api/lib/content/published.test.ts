@@ -3,10 +3,10 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ApiPublishedContentReadError,
-  readPublishedApiItem,
+  readPublishedApiItems,
 } from "@/lib/content/published";
 
-const readPublicContentMock = vi.hoisted(() => vi.fn());
+const readPublicContentBatchMock = vi.hoisted(() => vi.fn());
 const baseProjection = makeMaterialProjection("en", 1);
 const projection = {
   ...baseProjection,
@@ -24,82 +24,94 @@ const input = {
 };
 
 vi.mock("@repo/backend/client/content/public", () => ({
-  readPublicContentEvidence: readPublicContentMock,
+  readPublicContentEvidenceBatch: readPublicContentBatchMock,
 }));
 
 describe("published API content", () => {
   beforeEach(() => {
-    readPublicContentMock.mockReset();
+    readPublicContentBatchMock.mockReset();
   });
 
   it("maps a signed material into the established partner item", async () => {
-    readPublicContentMock.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: input.activeReleaseId,
-        artifact: { payload: { rawMdx: "## Signed body" } },
-        delivery: "public",
-        projection,
-      })
+    readPublicContentBatchMock.mockReturnValue(
+      Effect.succeed([
+        {
+          activeReleaseId: input.activeReleaseId,
+          artifact: { payload: { rawMdx: "## Signed body" } },
+          delivery: "public",
+          projection,
+        },
+      ])
     );
 
     await expect(
-      Effect.runPromise(readPublishedApiItem(input))
-    ).resolves.toEqual({
-      ...projection.graph,
-      locale: "en",
-      metadata: {
-        authors: projection.metadata.authors,
-        date: projection.metadata.date,
-        description: projection.metadata.description,
-        subject: projection.metadata.subject,
-        title: projection.metadata.title,
+      Effect.runPromise(readPublishedApiItems([input]))
+    ).resolves.toEqual([
+      {
+        ...projection.graph,
+        locale: "en",
+        metadata: {
+          authors: projection.metadata.authors,
+          date: projection.metadata.date,
+          description: projection.metadata.description,
+          subject: projection.metadata.subject,
+          title: projection.metadata.title,
+        },
+        raw: "## Signed body",
+        slug: projection.contentKey,
+        sourcePath: projection.contentKey,
+        url: `https://nakafa.com/en/${projection.publicPath}`,
       },
-      raw: "## Signed body",
-      slug: projection.contentKey,
-      sourcePath: projection.contentKey,
-      url: `https://nakafa.com/en/${projection.publicPath}`,
-    });
-    expect(readPublicContentMock).toHaveBeenCalledWith(
+    ]);
+    expect(readPublicContentBatchMock).toHaveBeenCalledWith(
       {
         siteUrl: "https://test.convex.site",
         token: "test-runtime-token",
       },
-      { locale: "en", publicPath: projection.publicPath }
+      [{ locale: "en", publicPath: projection.publicPath }]
     );
   });
 
   it("accepts an article projection through the same current Interface", async () => {
     const articleProjection = { ...projection, kind: "article" };
-    readPublicContentMock.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: input.activeReleaseId,
-        artifact: { payload: { rawMdx: "## Article" } },
-        delivery: "public",
-        projection: articleProjection,
-      })
+    readPublicContentBatchMock.mockReturnValue(
+      Effect.succeed([
+        {
+          activeReleaseId: input.activeReleaseId,
+          artifact: { payload: { rawMdx: "## Article" } },
+          delivery: "public",
+          projection: articleProjection,
+        },
+      ])
     );
 
     await expect(
-      Effect.runPromise(readPublishedApiItem({ ...input, family: "article" }))
-    ).resolves.toMatchObject({
-      raw: "## Article",
-      slug: projection.contentKey,
-    });
+      Effect.runPromise(
+        readPublishedApiItems([{ ...input, family: "article" }])
+      )
+    ).resolves.toMatchObject([
+      {
+        raw: "## Article",
+        slug: projection.contentKey,
+      },
+    ]);
   });
 
   it("omits absent optional metadata", async () => {
-    readPublicContentMock.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: input.activeReleaseId,
-        artifact: { payload: { rawMdx: "## Signed body" } },
-        delivery: "public",
-        projection: baseProjection,
-      })
+    readPublicContentBatchMock.mockReturnValue(
+      Effect.succeed([
+        {
+          activeReleaseId: input.activeReleaseId,
+          artifact: { payload: { rawMdx: "## Signed body" } },
+          delivery: "public",
+          projection: baseProjection,
+        },
+      ])
     );
 
-    const item = await Effect.runPromise(readPublishedApiItem(input));
+    const [item] = await Effect.runPromise(readPublishedApiItems([input]));
 
-    expect(item.metadata).toEqual({
+    expect(item?.metadata).toEqual({
       authors: baseProjection.metadata.authors,
       date: baseProjection.metadata.date,
       title: baseProjection.metadata.title,
@@ -108,10 +120,10 @@ describe("published API content", () => {
 
   it("maps signed-read and current-identity failures to one typed error", async () => {
     const failure = new Error("signature mismatch");
-    readPublicContentMock.mockReturnValueOnce(Effect.fail(failure));
+    readPublicContentBatchMock.mockReturnValueOnce(Effect.fail(failure));
 
     await expect(
-      Effect.runPromise(readPublishedApiItem(input).pipe(Effect.flip))
+      Effect.runPromise(readPublishedApiItems([input]).pipe(Effect.flip))
     ).resolves.toEqual(
       new ApiPublishedContentReadError({
         cause: failure,
@@ -119,21 +131,36 @@ describe("published API content", () => {
       })
     );
 
-    readPublicContentMock.mockReturnValueOnce(
-      Effect.succeed({
-        activeReleaseId: "release-next",
-        artifact: { payload: { rawMdx: "" } },
-        delivery: "public",
-        projection,
-      })
+    readPublicContentBatchMock.mockReturnValueOnce(
+      Effect.succeed([
+        {
+          activeReleaseId: "release-next",
+          artifact: { payload: { rawMdx: "" } },
+          delivery: "public",
+          projection,
+        },
+      ])
     );
 
     await expect(
-      Effect.runPromise(readPublishedApiItem(input).pipe(Effect.flip))
+      Effect.runPromise(readPublishedApiItems([input]).pipe(Effect.flip))
     ).resolves.toEqual(
       new ApiPublishedContentReadError({
         cause:
           "Signed content changed its release, family, or public identity.",
+        message: "Unable to read signed public content for the public API.",
+      })
+    );
+  });
+
+  it("rejects a response that loses its ordered batch item", async () => {
+    readPublicContentBatchMock.mockReturnValue(Effect.succeed([]));
+
+    await expect(
+      Effect.runPromise(readPublishedApiItems([input]).pipe(Effect.flip))
+    ).resolves.toEqual(
+      new ApiPublishedContentReadError({
+        cause: "Signed content batch lost its ordered item.",
         message: "Unable to read signed public content for the public API.",
       })
     );

@@ -15,7 +15,7 @@ const runtimeClientMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),
 }));
 const publishedContentMocks = vi.hoisted(() => ({
-  readPublishedApiItem: vi.fn(),
+  readPublishedApiItems: vi.fn(),
 }));
 
 vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
@@ -94,8 +94,8 @@ describe("API content runtime", () => {
           page: [{ locale: args.locale, publicPath: `${family}/published` }],
         })
         .mockResolvedValueOnce({ releaseId: "release-test" });
-      publishedContentMocks.readPublishedApiItem.mockReturnValue(
-        Effect.succeed(publishedItem)
+      publishedContentMocks.readPublishedApiItems.mockReturnValue(
+        Effect.succeed([publishedItem])
       );
 
       await expect(Effect.runPromise(read(args))).resolves.toEqual({
@@ -103,12 +103,14 @@ describe("API content runtime", () => {
         isDone: true,
         page: [publishedItem],
       });
-      expect(publishedContentMocks.readPublishedApiItem).toHaveBeenCalledWith({
-        activeReleaseId: "release-test",
-        family,
-        locale: args.locale,
-        publicPath: `${family}/published`,
-      });
+      expect(publishedContentMocks.readPublishedApiItems).toHaveBeenCalledWith([
+        {
+          activeReleaseId: "release-test",
+          family,
+          locale: args.locale,
+          publicPath: `${family}/published`,
+        },
+      ]);
       expect(runtimeClientMocks.runtimeQuery).toHaveBeenNthCalledWith(
         1,
         "https://test.convex.cloud",
@@ -117,6 +119,71 @@ describe("API content runtime", () => {
       );
     }
   );
+
+  it("chunks by eight and runs at most four batch reads concurrently", async () => {
+    const locale = "en";
+    const entries = Array.from({ length: 33 }, (_, index) => ({
+      locale,
+      publicPath: `articles/politics/article-${index}`,
+    }));
+    const releaseBatch: (() => void)[] = [];
+    let activeBatches = 0;
+    let maximumActiveBatches = 0;
+    runtimeClientMocks.runtimeQuery
+      .mockResolvedValueOnce({
+        activeReleaseId: "release-test",
+        continueCursor: "next",
+        isDone: false,
+        page: entries,
+      })
+      .mockResolvedValueOnce({ releaseId: "release-test" });
+    publishedContentMocks.readPublishedApiItems.mockImplementation(
+      (items: readonly { readonly publicPath: string }[]) =>
+        Effect.async((resume) => {
+          activeBatches += 1;
+          maximumActiveBatches = Math.max(maximumActiveBatches, activeBatches);
+          releaseBatch.push(() => {
+            activeBatches -= 1;
+            resume(
+              Effect.succeed(
+                items.map(({ publicPath }) => ({ slug: publicPath }))
+              )
+            );
+          });
+        })
+    );
+
+    const running = Effect.runPromise(
+      getArticleApiContentPage({
+        cursor: null,
+        limit: 33,
+        locale: "en",
+        prefix: "articles/politics",
+      })
+    );
+
+    await vi.waitFor(() => expect(releaseBatch).toHaveLength(4));
+    expect(maximumActiveBatches).toBe(4);
+    releaseBatch.shift()?.();
+    await vi.waitFor(() =>
+      expect(publishedContentMocks.readPublishedApiItems).toHaveBeenCalledTimes(
+        5
+      )
+    );
+    for (const release of releaseBatch.splice(0)) {
+      release();
+    }
+    const result = await running;
+    expect(
+      publishedContentMocks.readPublishedApiItems.mock.calls.map(
+        ([items]) => items.length
+      )
+    ).toEqual([8, 8, 8, 8, 1]);
+    expect(result.page.map(({ slug }) => slug)).toEqual(
+      entries.map(({ publicPath }) => publicPath)
+    );
+    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledTimes(2);
+  });
 
   it.each([{ releaseId: "release-after" }, null])(
     "rejects a page when its signed release changes or disappears",
@@ -152,7 +219,7 @@ describe("API content runtime", () => {
       isDone: true,
       page: [{ locale: "en", publicPath: "articles/politics/test" }],
     });
-    publishedContentMocks.readPublishedApiItem.mockReturnValue(
+    publishedContentMocks.readPublishedApiItems.mockReturnValue(
       Effect.fail(new Error("signature mismatch"))
     );
 

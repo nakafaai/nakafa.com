@@ -137,7 +137,10 @@ const validateIncomingMaterialTarget = Effect.fn(
     return null;
   }
   const { projection, row } = resolved.material;
-  if (projection.graph.assetId !== input.contentId) {
+  if (
+    projection.graph.assetId !== input.contentId ||
+    projection.publicPath !== input.publicPath
+  ) {
     return null;
   }
   return yield* toMaterialTarget(projection, row.sourcePath);
@@ -183,7 +186,10 @@ const validateIncomingArticleTarget = Effect.fn(
     row,
     owner.active.sequence
   ).pipe(Effect.mapError(toContentViewIoError));
-  if (projection.graph.assetId !== input.contentId) {
+  if (
+    projection.graph.assetId !== input.contentId ||
+    projection.publicPath !== input.publicPath
+  ) {
     return null;
   }
   return toArticleTarget(projection, resolved.sourcePath);

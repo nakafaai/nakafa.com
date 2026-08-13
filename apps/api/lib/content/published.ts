@@ -1,6 +1,6 @@
 import "server-only";
 
-import { readPublicContentEvidence } from "@repo/backend/client/content/public";
+import { readPublicContentEvidenceBatch } from "@repo/backend/client/content/public";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
@@ -33,19 +33,13 @@ function publishedReadError(cause: unknown) {
   });
 }
 
-/** Reads and verifies one exact article or material from the signed runtime. */
-const readPublishedContent = Effect.fn("ApiContent.readPublishedContent")(
-  function* (input: PublishedContentInput) {
-    const found = yield* readPublicContentEvidence(
-      {
-        siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
-        token: env.CONTENT_RUNTIME_TOKEN,
-      },
-      {
-        locale: input.locale,
-        publicPath: input.publicPath,
-      }
-    ).pipe(Effect.mapError(publishedReadError));
+type PublishedEvidence = Effect.Effect.Success<
+  ReturnType<typeof readPublicContentEvidenceBatch>
+>[number];
+
+/** Requires one verified item to retain its page-owned public identity. */
+const verifyPublishedIdentity = Effect.fn("ApiContent.verifyPublishedIdentity")(
+  function* (input: PublishedContentInput, found: PublishedEvidence) {
     const expectedKind =
       input.family === "article" ? "article" : "subject-lesson";
     if (
@@ -58,18 +52,12 @@ const readPublishedContent = Effect.fn("ApiContent.readPublishedContent")(
         "Signed content changed its release, family, or public identity."
       );
     }
-    return {
-      artifact: found.artifact,
-      projection: found.projection,
-    };
+    return found;
   }
 );
 
-/** Builds one established partner item from current signed public content. */
-export const readPublishedApiItem = Effect.fn(
-  "ApiContent.readPublishedApiItem"
-)(function* (input: PublishedContentInput) {
-  const found = yield* readPublishedContent(input);
+/** Maps verified signed evidence into the established partner item. */
+function makePublishedApiItem(found: PublishedEvidence) {
   const projection = found.projection;
   return {
     ...projection.graph,
@@ -91,4 +79,26 @@ export const readPublishedApiItem = Effect.fn(
     sourcePath: projection.contentKey,
     url: `${NAKAFA_CONTENT_BASE_URL}/${projection.locale}/${projection.publicPath}`,
   };
+}
+
+/** Builds one ordered partner batch from current signed public evidence. */
+export const readPublishedApiItems = Effect.fn(
+  "ApiContent.readPublishedApiItems"
+)(function* (inputs: readonly PublishedContentInput[]) {
+  const foundItems = yield* readPublicContentEvidenceBatch(
+    {
+      siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+      token: env.CONTENT_RUNTIME_TOKEN,
+    },
+    inputs.map(({ locale, publicPath }) => ({ locale, publicPath }))
+  ).pipe(Effect.mapError(publishedReadError));
+  return yield* Effect.forEach(inputs, (input, index) => {
+    const found = foundItems[index];
+    if (!found) {
+      return publishedReadError("Signed content batch lost its ordered item.");
+    }
+    return verifyPublishedIdentity(input, found).pipe(
+      Effect.map(makePublishedApiItem)
+    );
+  });
 });

@@ -186,6 +186,7 @@ import type * as contentRelease_envelope from "../contentRelease/envelope.js";
 import type * as contentRelease_error from "../contentRelease/error.js";
 import type * as contentRelease_heads from "../contentRelease/heads.js";
 import type * as contentRelease_http_body from "../contentRelease/http/body.js";
+import type * as contentRelease_http_runtime_batch from "../contentRelease/http/runtime/batch.js";
 import type * as contentRelease_http_runtime_history from "../contentRelease/http/runtime/history.js";
 import type * as contentRelease_http_runtime_protected from "../contentRelease/http/runtime/protected.js";
 import type * as contentRelease_http_runtime_public from "../contentRelease/http/runtime/public.js";
@@ -299,6 +300,7 @@ import type * as contentRelease_runtime_origin from "../contentRelease/runtime/o
 import type * as contentRelease_runtime_pin from "../contentRelease/runtime/pin.js";
 import type * as contentRelease_runtime_protected_dispatch from "../contentRelease/runtime/protected/dispatch.js";
 import type * as contentRelease_runtime_protected_internal from "../contentRelease/runtime/protected/internal.js";
+import type * as contentRelease_runtime_public_batch from "../contentRelease/runtime/public/batch.js";
 import type * as contentRelease_runtime_public_dispatch from "../contentRelease/runtime/public/dispatch.js";
 import type * as contentRelease_runtime_public_internal from "../contentRelease/runtime/public/internal.js";
 import type * as contentRelease_runtime_result from "../contentRelease/runtime/result.js";
@@ -769,6 +771,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/error": typeof contentRelease_error;
   "contentRelease/heads": typeof contentRelease_heads;
   "contentRelease/http/body": typeof contentRelease_http_body;
+  "contentRelease/http/runtime/batch": typeof contentRelease_http_runtime_batch;
   "contentRelease/http/runtime/history": typeof contentRelease_http_runtime_history;
   "contentRelease/http/runtime/protected": typeof contentRelease_http_runtime_protected;
   "contentRelease/http/runtime/public": typeof contentRelease_http_runtime_public;
@@ -882,6 +885,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/runtime/pin": typeof contentRelease_runtime_pin;
   "contentRelease/runtime/protected/dispatch": typeof contentRelease_runtime_protected_dispatch;
   "contentRelease/runtime/protected/internal": typeof contentRelease_runtime_protected_internal;
+  "contentRelease/runtime/public/batch": typeof contentRelease_runtime_public_batch;
   "contentRelease/runtime/public/dispatch": typeof contentRelease_runtime_public_dispatch;
   "contentRelease/runtime/public/internal": typeof contentRelease_runtime_public_internal;
   "contentRelease/runtime/result": typeof contentRelease_runtime_result;

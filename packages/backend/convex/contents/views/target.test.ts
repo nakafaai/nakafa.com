@@ -26,6 +26,7 @@ import {
   testArticleProjection,
 } from "@repo/backend/test/content-runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
+import { insertRuntimeBinding } from "@repo/backend/test/runtime-head";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -220,6 +221,22 @@ describe("contents/views/target", () => {
         contentId: projection.graph.assetId,
         locale: projection.locale,
         publicPath: `${projection.parentPath}/missing`,
+        section: "articles",
+      })
+    ).resolves.toBeNull();
+
+    const aliasPath = PublicPathSchema.make("articles/politics/legacy-alias");
+    await target.mutation((ctx) =>
+      insertRuntimeBinding(ctx, projection.contentKey, {
+        locale: projection.locale,
+        publicPath: aliasPath,
+      })
+    );
+    await expect(
+      validateIncomingTarget(target, {
+        contentId: projection.graph.assetId,
+        locale: projection.locale,
+        publicPath: aliasPath,
         section: "articles",
       })
     ).resolves.toBeNull();

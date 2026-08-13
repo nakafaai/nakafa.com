@@ -1,12 +1,13 @@
 import { readConvexRuntimeQuery } from "@repo/backend/client/runtime";
+import { PUBLIC_CONTENT_RUNTIME_BATCH_SIZE } from "@repo/backend/content/batch";
 import { api } from "@repo/backend/convex/_generated/api";
 import { NakafaAgentContentIdSchema } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/utilities/locales";
 import { locales } from "@repo/utilities/locales";
 import type { FunctionArgs, FunctionReference } from "convex/server";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Array as EffectArray, Option, Schema } from "effect";
 import { env } from "@/env";
-import { readPublishedApiItem } from "@/lib/content/published";
+import { readPublishedApiItems } from "@/lib/content/published";
 
 type ArticleApiPageArgs = FunctionArgs<
   typeof api.contentRelease.article.apiPage
@@ -19,10 +20,10 @@ interface PublishedApiPage {
   readonly activeReleaseId: string;
   readonly continueCursor: string;
   readonly isDone: boolean;
-  readonly page: ReadonlyArray<{
+  readonly page: readonly {
     readonly locale: Locale;
     readonly publicPath: string;
-  }>;
+  }[];
 }
 
 const INITIAL_CURSOR: string | null = null;
@@ -144,22 +145,28 @@ const hydratePublishedApiPage = Effect.fn("api.content.hydratePublishedPage")(
     family: "article" | "material"
   ) {
     const result = yield* readPage;
-    const page = yield* Effect.forEach(
+    const chunks = EffectArray.chunksOf(
       result.page,
-      (entry) =>
-        readPublishedApiItem({
-          activeReleaseId: result.activeReleaseId,
-          family,
-          locale: entry.locale,
-          publicPath: entry.publicPath,
-        }).pipe(Effect.mapError(mapPublishedContentError)),
+      PUBLIC_CONTENT_RUNTIME_BATCH_SIZE
+    );
+    const pageChunks = yield* Effect.forEach(
+      chunks,
+      (entries) =>
+        readPublishedApiItems(
+          entries.map((entry) => ({
+            activeReleaseId: result.activeReleaseId,
+            family,
+            locale: entry.locale,
+            publicPath: entry.publicPath,
+          }))
+        ).pipe(Effect.mapError(mapPublishedContentError)),
       { concurrency: 4 }
     );
     yield* verifyApiReleasePin(result.activeReleaseId);
     return {
       continueCursor: result.continueCursor,
       isDone: result.isDone,
-      page,
+      page: EffectArray.flatten(pageChunks),
     };
   }
 );

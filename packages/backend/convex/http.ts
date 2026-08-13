@@ -5,6 +5,7 @@ import {
   isForumAttachmentUploadPath,
   registerForumAttachmentUploadRoute,
 } from "@repo/backend/convex/classes/forums/attachments/route";
+import { registerPublicContentRuntimeBatchRoute } from "@repo/backend/convex/contentRelease/http/runtime/batch";
 import { registerRetainedProtectedContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/history";
 import { registerProtectedContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/protected";
 import { registerPublicContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/public";
@@ -61,6 +62,7 @@ registerForumAttachmentUploadRoute(app);
 registerContentReleaseRoutes(app);
 
 // Register server-authenticated executable content reads.
+registerPublicContentRuntimeBatchRoute(app);
 registerPublicContentRuntimeRoute(app);
 registerProtectedContentRuntimeRoute(app);
 registerRetainedProtectedContentRuntimeRoute(app);
