@@ -17,6 +17,7 @@ import {
   getSubjectMenuHref,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
+import { getPublishedTrustLesson } from "@/lib/content/material/trust";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
@@ -80,10 +81,11 @@ export default async function Page() {
  * navigation data that powers the app entry points.
  */
 async function MarketingHomePageContent({ locale }: { locale: Locale }) {
-  const [tMetadata, tSubject, tFaq] = await Promise.all([
+  const [tMetadata, tSubject, tFaq, trustLesson] = await Promise.all([
     getTranslations({ locale, namespace: "Metadata" }),
     getTranslations({ locale, namespace: "Subject" }),
     getTranslations({ locale, namespace: "Faq" }),
+    getPublishedTrustLesson(locale),
   ]);
 
   const collectionItems = [
@@ -138,7 +140,10 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         <Logos />
         <Features locale={locale} />
         <Curricula locale={locale} />
-        <Trust locale={locale} />
+        <Trust
+          lessonHref={trustLesson.lessonHref}
+          sourceHref={trustLesson.sourceHref}
+        />
         <Pricing />
         <Schools />
         <Faq />

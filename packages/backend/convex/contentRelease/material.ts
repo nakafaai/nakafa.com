@@ -3,6 +3,7 @@ import {
   readLatestMaterials,
   readMaterialBucket,
 } from "@repo/backend/convex/contentRelease/material/discovery";
+import { readMaterialIdentity } from "@repo/backend/convex/contentRelease/material/identity";
 import { readMaterialModel } from "@repo/backend/convex/contentRelease/material/model";
 import { readMaterialPage } from "@repo/backend/convex/contentRelease/material/page";
 import {
@@ -40,6 +41,12 @@ const materialPageValidator = v.object({
   result: paginationResultValidator(v.string()),
   sourceRevision: v.union(v.string(), v.null()),
   stale: v.boolean(),
+});
+
+const materialIdentityValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
+  managed: v.boolean(),
+  publicPath: v.union(v.string(), v.null()),
 });
 
 const materialSummaryValidator = v.object({
@@ -109,6 +116,18 @@ export const latest = query({
   returns: materialDiscoveryValidator,
   handler: (ctx, { limit, locale }) =>
     runConvexProgram(readLatestMaterials(ctx, locale, limit)),
+});
+
+/** Resolves one active signed material by its stable source identity. */
+export const identity = query({
+  args: {
+    contentKey: v.string(),
+    expectedMaterialKey: v.string(),
+    expectedSectionKey: v.string(),
+    locale: localeValidator,
+  },
+  returns: materialIdentityValidator,
+  handler: (ctx, args) => runConvexProgram(readMaterialIdentity(ctx, args)),
 });
 
 /** Resolves one complete active material shell model by localized path. */

@@ -20,7 +20,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
-import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
@@ -29,19 +28,9 @@ import {
   type TrustLessonExcerpt,
 } from "./trust-source";
 
-const TRUST_LESSON_PATHS = {
-  en: "subjects/mathematics/exponential-logarithm/basic-concept",
-  id: "materi/matematika/eksponen-dan-logaritma/konsep-eksponen",
-} satisfies Record<Locale, string>;
-
 /** Applies the existing marketing accent to one intentional phrase. */
 function renderAccent(chunks: ReactNode) {
   return <mark>{chunks}</mark>;
-}
-
-/** Resolves the reviewed public identity of the trust-section lesson. */
-function readTrustLessonHref(locale: Locale) {
-  return `/${locale}/${TRUST_LESSON_PATHS[locale]}`;
 }
 
 /** Renders the learner-facing side with Nakafa's shared MDX components. */
@@ -213,10 +202,14 @@ function TrustComparison({
 }
 
 /** Renders the source-backed trust chapter on the marketing homepage. */
-export function Trust({ locale }: { locale: Locale }) {
+export function Trust({
+  lessonHref,
+  sourceHref,
+}: {
+  lessonHref: string;
+  sourceHref: string;
+}) {
   const t = useTranslations("TrustSection");
-  const lessonHref = readTrustLessonHref(locale);
-  const sourceHref = `${lessonHref}.md`;
   const excerpt: TrustLessonExcerpt = {
     definition: t("lesson-definition"),
     definitionHeading: t("lesson-definition-heading"),
