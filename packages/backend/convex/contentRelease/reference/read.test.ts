@@ -1,3 +1,4 @@
+import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { readContentReference } from "@repo/backend/convex/contentRelease/reference/read";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -7,7 +8,11 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content-runtime";
-import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
+import {
+  activateMaterialCatalog,
+  insertMaterialProjection,
+  MATERIAL_IDENTITY,
+} from "@repo/backend/test/material-catalog";
 import { makeQuranSearch } from "@repo/backend/test/quran-rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
 import {
@@ -16,6 +21,7 @@ import {
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout-snapshot";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("contentRelease/reference/read", () => {
@@ -67,6 +73,35 @@ describe("contentRelease/reference/read", () => {
         route: material.publicPath,
         section: "material",
         title: material.metadata.title,
+      });
+    }
+  });
+
+  it("resolves one material topic through its signed lesson representative", async () => {
+    const target = convexTest(schema, convexModules);
+    const material = makeMaterialProjection("en", 1);
+    const topic = await Effect.runPromise(
+      deriveMaterialTopicReference(material)
+    );
+    await activateMaterialCatalog(target, [material]);
+
+    for (const input of [
+      {
+        kind: "route" as const,
+        locale: topic.locale,
+        publicPath: topic.publicPath,
+      },
+      { contentId: topic.graph.assetId, kind: "content" as const },
+    ]) {
+      await expect(
+        target.query((ctx) =>
+          runConvexProgram(readContentReference(ctx, input))
+        )
+      ).resolves.toMatchObject({
+        content_id: topic.graph.assetId,
+        route: topic.publicPath,
+        section: "material",
+        title: topic.title,
       });
     }
   });
@@ -138,5 +173,53 @@ describe("contentRelease/reference/read", () => {
         )
       )
     ).resolves.toBeNull();
+  });
+
+  it("does not authenticate an unrelated try-out catalog", async () => {
+    const target = convexTest(schema, convexModules);
+    const material = makeMaterialProjection("en", 1);
+    await target.mutation(async (ctx) => {
+      await activateTryoutSnapshot(ctx, {
+        catalog: [
+          makeTryoutCatalogRow("en").record.row,
+          makeTryoutCatalogRow("id").record.row,
+        ],
+        placements: [
+          makeTryoutPlacementRow("en").record.row,
+          makeTryoutPlacementRow("id").record.row,
+        ],
+      });
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one active signed publication.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        materialManifestHash: MATERIAL_IDENTITY.manifestHash,
+        materialReleaseId: MATERIAL_IDENTITY.releaseId,
+        materialSequence: MATERIAL_IDENTITY.sequence,
+      });
+      await insertMaterialProjection(ctx, material);
+      const unrelated = await ctx.db.query("tryoutCatalog").first();
+      if (!unrelated) {
+        throw new Error("Expected one unrelated try-out row.");
+      }
+      await ctx.db.patch("tryoutCatalog", unrelated._id, {
+        rowJson: "invalid-unrelated-row",
+      });
+    });
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          readContentReference(ctx, {
+            contentId: material.graph.assetId,
+            kind: "content",
+          })
+        )
+      )
+    ).resolves.toMatchObject({
+      content_id: material.graph.assetId,
+      section: "material",
+    });
   });
 });

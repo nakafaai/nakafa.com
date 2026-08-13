@@ -1,86 +1,78 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
-import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
-import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
 import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
-import {
-  ReleaseError,
-  releaseFail,
-} from "@repo/backend/convex/contentRelease/error";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
+import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
-import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
-import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
-import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
+import { authenticateQuranSearchHit } from "@repo/backend/convex/contentRelease/quran/verify";
+import {
+  type ContentReferenceCandidate,
+  selectContentReferenceCandidate,
+} from "@repo/backend/convex/contentRelease/reference/candidates";
 import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
-import { findTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import type { ContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/groups";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
-const QURAN_SURAH_COUNT = 114;
-
-/** Resolves one current semantic identity across every active signed family. */
+/** Resolves one current semantic identity through exact signed family indexes. */
 export const readContentReference = Effect.fn(
   "contentRelease.readContentReference"
 )(function* (ctx: QueryCtx, input: ContentReferenceInput) {
-  const results = yield* Effect.all(
-    {
-      article: readArticleReference(ctx, input),
-      material: readMaterialReference(ctx, input),
-      quran: readQuranReference(ctx, input),
-      tryout: readTryoutReference(ctx, input),
-    },
-    { concurrency: "unbounded" }
-  );
-  const matches = Object.values(results).filter(
-    (result): result is ContentSearchDocument => result !== null
-  );
-  if (matches.length > 1) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Current content identity resolves more than one signed family."
-    );
-  }
-  const match = matches[0];
-  if (!match) {
+  const candidate = yield* selectContentReferenceCandidate(ctx, input);
+  if (!candidate) {
     return null;
   }
-  return {
-    alignmentId: match.alignmentId,
-    assetId: match.assetId,
-    conceptId: match.conceptId,
-    content_id: match.content_id,
-    description: match.description,
-    learningObjectId: match.learningObjectId,
-    lensId: match.lensId,
-    locale: match.locale,
-    markdown_url: match.markdown_url,
-    route: match.route,
-    section: match.section,
-    title: match.title,
-    url: match.url,
-  };
+  const document = yield* verifyCandidate(ctx, candidate);
+  return document ? toContentReference(document) : null;
 });
 
-/** Reads one exact active article through its authenticated catalog row. */
+/** Authenticates only the one family selected by exact indexed facts. */
+const verifyCandidate = Effect.fn("contentRelease.verifyReferenceCandidate")(
+  function* (ctx: QueryCtx, candidate: ContentReferenceCandidate) {
+    switch (candidate.family) {
+      case "article":
+        return yield* readArticleReference(ctx, candidate.row);
+      case "material":
+        return yield* readMaterialReference(ctx, candidate.row);
+      case "materialTopic":
+        return yield* readMaterialTopicReference(ctx, candidate.row);
+      case "quran":
+        return yield* readQuranReference(
+          ctx,
+          candidate.snapshotId,
+          candidate.row
+        );
+      case "tryout":
+        return yield* readTryoutReference(candidate.snapshotId, candidate.row);
+      default:
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          "Current content reference selected an unknown family."
+        );
+    }
+  }
+);
+
+/** Authenticates one active article and projects its public reference. */
 const readArticleReference = Effect.fn("contentRelease.readArticleReference")(
-  function* (ctx: QueryCtx, input: ContentReferenceInput) {
-    const rows = yield* readArticleRows(ctx, input);
-    if (rows.length > 1) {
-      return yield* identityCollision("article");
-    }
-    const row = rows[0];
-    if (!row) {
-      return null;
-    }
+  function* (
+    ctx: QueryCtx,
+    row: Extract<
+      ContentReferenceCandidate,
+      { readonly family: "article" }
+    >["row"]
+  ) {
     const owner = yield* loadArticleOwner(ctx, row.locale);
     if (!(owner.active && owner.managed)) {
       return null;
     }
-    const verified = yield* verifyArticle(ctx, row, owner.active.sequence);
-    const { projection, resolved } = verified;
+    const { projection, resolved } = yield* verifyArticle(
+      ctx,
+      row,
+      owner.active.sequence
+    );
     return buildContentSearchDocument({
       ...projection.graph,
       contentHash: resolved.projectionHash,
@@ -96,43 +88,17 @@ const readArticleReference = Effect.fn("contentRelease.readArticleReference")(
   }
 );
 
-/** Selects article candidates through locale-bound current indexes. */
-function readArticleRows(ctx: QueryCtx, input: ContentReferenceInput) {
-  if (input.kind === "route") {
-    return Effect.promise(() =>
-      ctx.db
-        .query("articleCatalog")
-        .withIndex("by_locale_and_publicPath", (index) =>
-          index.eq("locale", input.locale).eq("publicPath", input.publicPath)
-        )
-        .take(2)
-    );
-  }
-  return Effect.forEach(ContentLocaleSchema.literals, (locale) =>
-    Effect.promise(() =>
-      ctx.db
-        .query("articleCatalog")
-        .withIndex("by_locale_and_assetId", (index) =>
-          index.eq("locale", locale).eq("assetId", input.contentId)
-        )
-        .take(2)
-    )
-  ).pipe(Effect.map((groups) => groups.flat()));
-}
-
-/** Reads one exact active material through its authenticated catalog row. */
+/** Authenticates one active material lesson and its publication owner. */
 const readMaterialReference = Effect.fn("contentRelease.readMaterialReference")(
-  function* (ctx: QueryCtx, input: ContentReferenceInput) {
-    const rows = yield* readMaterialRows(ctx, input);
-    if (rows.length > 1) {
-      return yield* identityCollision("material");
-    }
-    const row = rows[0];
-    if (!row) {
-      return null;
-    }
-    const owner = yield* loadMaterialOwner(ctx, row.locale);
-    if (!(owner.active && owner.managed)) {
+  function* (
+    ctx: QueryCtx,
+    row: Extract<
+      ContentReferenceCandidate,
+      { readonly family: "material" }
+    >["row"]
+  ) {
+    const owner = yield* requireMaterialOwner(ctx, row);
+    if (!owner) {
       return null;
     }
     const { projection } = yield* verifyMaterial(row);
@@ -151,53 +117,49 @@ const readMaterialReference = Effect.fn("contentRelease.readMaterialReference")(
   }
 );
 
-/** Selects material candidates through locale-bound current indexes. */
-function readMaterialRows(ctx: QueryCtx, input: ContentReferenceInput) {
-  if (input.kind === "route") {
-    return Effect.promise(() =>
-      ctx.db
-        .query("materialCatalog")
-        .withIndex("by_locale_and_publicPath", (index) =>
-          index.eq("locale", input.locale).eq("publicPath", input.publicPath)
-        )
-        .take(2)
+/** Authenticates one material topic through its indexed lesson representative. */
+const readMaterialTopicReference = Effect.fn(
+  "contentRelease.readMaterialTopicReference"
+)(function* (
+  ctx: QueryCtx,
+  row: Extract<
+    ContentReferenceCandidate,
+    { readonly family: "materialTopic" }
+  >["row"]
+) {
+  const owner = yield* requireMaterialOwner(ctx, row);
+  if (!owner) {
+    return null;
+  }
+  const { projection } = yield* verifyMaterial(row);
+  const topic = yield* deriveMaterialTopicReference(projection);
+  if (row.topicAssetId !== topic.graph.assetId) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Material topic ${topic.graph.assetId} lost its indexed identity.`
     );
   }
-  return Effect.forEach(ContentLocaleSchema.literals, (locale) =>
-    Effect.promise(() =>
-      ctx.db
-        .query("materialCatalog")
-        .withIndex("by_locale_and_assetId", (index) =>
-          index.eq("locale", locale).eq("assetId", input.contentId)
-        )
-        .take(2)
-    )
-  ).pipe(Effect.map((groups) => groups.flat()));
-}
+  return buildContentSearchDocument({
+    ...topic.graph,
+    contentHash: row.projectionHash,
+    locale: topic.locale,
+    route: topic.publicPath,
+    section: "material",
+    sourcePath: topic.publicPath,
+    syncedAt: row.sequence,
+    text: topic.title,
+    title: topic.title,
+  });
+});
 
-/** Resolves one Quran route or graph asset through its active signed row. */
+/** Authenticates one Quran search projection and its immutable signed row. */
 const readQuranReference = Effect.fn("contentRelease.readQuranReference")(
-  function* (ctx: QueryCtx, input: ContentReferenceInput) {
-    const identity = yield* findQuranIdentity(input);
-    if (!identity) {
-      return null;
-    }
-    const owner = yield* loadQuranOwner(ctx);
-    if (owner.snapshotId === null) {
-      return null;
-    }
-    const signed = yield* readQuranRow(
-      ctx,
-      owner.snapshotId,
-      quranSearchIdentity(identity.locale, identity.surahNumber),
-      QuranSearchRowSchema
-    );
-    if (
-      input.kind === "content" &&
-      signed.payload.graph.assetId !== input.contentId
-    ) {
-      return null;
-    }
+  function* (
+    ctx: QueryCtx,
+    snapshotId: string,
+    row: Extract<ContentReferenceCandidate, { readonly family: "quran" }>["row"]
+  ) {
+    const signed = yield* authenticateQuranSearchHit(ctx, snapshotId, row);
     return buildContentSearchDocument({
       ...signed.payload.graph,
       contentHash: signed.rowHash,
@@ -212,94 +174,75 @@ const readQuranReference = Effect.fn("contentRelease.readQuranReference")(
   }
 );
 
-/** Finds the sole current Quran route matching one semantic identity. */
-const findQuranIdentity = Effect.fn("contentRelease.findQuranIdentity")(
-  function* (input: ContentReferenceInput) {
-    const locales =
-      input.kind === "route" ? [input.locale] : ContentLocaleSchema.literals;
-    for (const locale of locales) {
-      for (
-        let surahNumber = 1;
-        surahNumber <= QURAN_SURAH_COUNT;
-        surahNumber += 1
-      ) {
-        const route = `quran/${surahNumber}`;
-        if (input.kind === "route") {
-          if (input.publicPath === route) {
-            return { locale, surahNumber };
-          }
-          continue;
-        }
-        const graph = yield* makeLearningGraphIdentity({
-          concept: ["quran", "surah", String(surahNumber)],
-          learningObject: ["quran-surah", String(surahNumber)],
-          lens: ["quran"],
-          locale,
-        }).pipe(
-          Effect.mapError(
-            () =>
-              new ReleaseError({
-                code: "CONTENT_RELEASE_INTEGRITY",
-                message: `Current Quran identity is invalid for ${locale}/${surahNumber}.`,
-              })
-          )
-        );
-        if (graph.assetId === input.contentId) {
-          return { locale, surahNumber };
-        }
-      }
-    }
-    return null;
-  }
-);
-
-/** Resolves one exact public try-out entry from its active signed hierarchy. */
+/** Authenticates one exact public try-out catalog row. */
 const readTryoutReference = Effect.fn("contentRelease.readTryoutReference")(
-  function* (ctx: QueryCtx, input: ContentReferenceInput) {
-    const locales =
-      input.kind === "route" ? [input.locale] : ContentLocaleSchema.literals;
-    const catalogs = yield* Effect.forEach(locales, (locale) =>
-      findTryoutCatalog(ctx, locale)
-    );
-    const matches = catalogs.flatMap((catalog) => {
-      if (Option.isNone(catalog)) {
-        return [];
-      }
-      return catalog.value.entries.filter(({ row }) => {
-        if (row.publicPath === undefined) {
-          return false;
-        }
-        return input.kind === "route"
-          ? row.publicPath === input.publicPath
-          : row.graph.assetId === input.contentId;
-      });
-    });
-    if (matches.length > 1) {
-      return yield* identityCollision("try-out");
-    }
-    const entry = matches[0];
-    if (!entry?.row.publicPath) {
+  function* (
+    snapshotId: string,
+    stored: Extract<
+      ContentReferenceCandidate,
+      { readonly family: "tryout" }
+    >["row"]
+  ) {
+    const row = yield* verifyTryoutCatalog(stored, snapshotId);
+    if (!row.publicPath) {
       return null;
     }
     return buildContentSearchDocument({
-      ...entry.row.graph,
-      contentHash: entry.rowHash,
-      description: entry.row.description,
-      locale: entry.row.locale,
-      route: entry.row.publicPath,
+      ...row.graph,
+      contentHash: stored.rowHash,
+      description: row.description,
+      locale: row.locale,
+      route: row.publicPath,
       section: "tryout",
-      sourcePath: entry.row.publicPath,
-      syncedAt: entry.index,
+      sourcePath: row.publicPath,
+      syncedAt: stored.index,
       text: "",
-      title: entry.row.title,
+      title: row.title,
     });
   }
 );
 
-/** Produces one typed exact-identity collision failure. */
-function identityCollision(family: string) {
-  return releaseFail(
-    "CONTENT_RELEASE_INTEGRITY",
-    `Current ${family} identity resolves multiple catalog rows.`
-  );
+/** Requires the selected material row to belong to the active read model. */
+const requireMaterialOwner = Effect.fn(
+  "contentRelease.requireReferenceMaterialOwner"
+)(function* (
+  ctx: QueryCtx,
+  row: Extract<
+    ContentReferenceCandidate,
+    { readonly family: "material" | "materialTopic" }
+  >["row"]
+) {
+  const owner = yield* loadMaterialOwner(ctx, row.locale);
+  if (!(owner.active && owner.managed)) {
+    return null;
+  }
+  if (
+    row.releaseId !== owner.active.releaseId ||
+    row.sequence !== owner.active.sequence
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Active material ${row.contentKey}/${row.locale} belongs to another release.`
+    );
+  }
+  return owner.active;
+});
+
+/** Narrows the internal search document to the public reference contract. */
+function toContentReference(match: ContentSearchDocument) {
+  return {
+    alignmentId: match.alignmentId,
+    assetId: match.assetId,
+    conceptId: match.conceptId,
+    content_id: match.content_id,
+    description: match.description,
+    learningObjectId: match.learningObjectId,
+    lensId: match.lensId,
+    locale: match.locale,
+    markdown_url: match.markdown_url,
+    route: match.route,
+    section: match.section,
+    title: match.title,
+    url: match.url,
+  };
 }

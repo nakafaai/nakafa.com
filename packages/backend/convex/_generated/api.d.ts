@@ -282,6 +282,7 @@ import type * as contentRelease_quran_view from "../contentRelease/quran/view.js
 import type * as contentRelease_receipt from "../contentRelease/receipt.js";
 import type * as contentRelease_recovery from "../contentRelease/recovery.js";
 import type * as contentRelease_reference from "../contentRelease/reference.js";
+import type * as contentRelease_reference_candidates from "../contentRelease/reference/candidates.js";
 import type * as contentRelease_reference_read from "../contentRelease/reference/read.js";
 import type * as contentRelease_reference_spec from "../contentRelease/reference/spec.js";
 import type * as contentRelease_renderer from "../contentRelease/renderer.js";
@@ -864,6 +865,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/receipt": typeof contentRelease_receipt;
   "contentRelease/recovery": typeof contentRelease_recovery;
   "contentRelease/reference": typeof contentRelease_reference;
+  "contentRelease/reference/candidates": typeof contentRelease_reference_candidates;
   "contentRelease/reference/read": typeof contentRelease_reference_read;
   "contentRelease/reference/spec": typeof contentRelease_reference_spec;
   "contentRelease/renderer": typeof contentRelease_renderer;
