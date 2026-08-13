@@ -1,4 +1,8 @@
-import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  type MaterialLessonProjection,
+  MaterialLessonProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/material";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getDefaultPopularityWindow } from "@repo/backend/convex/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
@@ -37,8 +41,7 @@ function createTrendingConvexTest() {
 async function insertMaterialCounter(
   ctx: MutationCtx,
   projection: MaterialLessonProjection,
-  score: number,
-  route: string = projection.publicPath
+  score: number
 ) {
   const counterId = await ctx.db.insert("learningPopularityCounters", {
     ...projection.graph,
@@ -47,7 +50,7 @@ async function insertMaterialCounter(
     description: "Stale copied description",
     locale: projection.locale,
     materialDomain: "biology",
-    route,
+    route: projection.publicPath,
     score,
     section: "material",
     scopeMode: "global",
@@ -111,19 +114,23 @@ describe("contents/queries/trending", () => {
     expect(results[0]).not.toHaveProperty("slug");
   });
 
-  it("pages past a stale ranking to fill the requested result limit", async () => {
-    const stale = makeMaterialProjection("en", 1, 30);
-    const current = makeMaterialProjection("en", 2, 31);
+  it("pages past a missing ranking and preserves a renamed material", async () => {
+    const missing = makeMaterialProjection("en", 1, 30);
+    const previous = makeMaterialProjection("en", 2, 31);
+    const current = MaterialLessonProjectionSchema.make({
+      ...previous,
+      parentPath: PublicPathSchema.make(
+        "subjects/mathematics/renamed-technical-topic"
+      ),
+      publicPath: PublicPathSchema.make(
+        "subjects/mathematics/renamed-technical-topic/section-2"
+      ),
+    });
     const target = createTrendingConvexTest();
-    await activateMaterialCatalog(target, [stale, current]);
+    await activateMaterialCatalog(target, [current]);
     await target.mutation(async (ctx) => {
-      await insertMaterialCounter(
-        ctx,
-        stale,
-        100,
-        "subjects/mathematics/missing/stale-route"
-      );
-      await insertMaterialCounter(ctx, current, 10);
+      await insertMaterialCounter(ctx, missing, 100);
+      await insertMaterialCounter(ctx, previous, 10);
     });
 
     const results = await target.query(getTrendingSubjects, {

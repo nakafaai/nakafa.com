@@ -15,7 +15,7 @@ import {
 } from "@repo/backend/convex/contents/trending/spec";
 import {
   type ContentViewTarget,
-  loadContentTarget,
+  hydrateDurableContentTarget,
 } from "@repo/backend/convex/contents/views/target";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import type { TrendingSubject } from "@repo/backend/convex/lib/validators/trending";
@@ -110,10 +110,9 @@ const loadRankedPopularityCounters = Effect.fn(
 const loadCurrentTrendingRoute = Effect.fn(
   "contents.trending.loadCurrentTrendingRoute"
 )(function* (ctx: QueryCtx, row: Doc<"learningPopularityCounters">) {
-  const route = yield* loadContentTarget(ctx, {
+  const route = yield* hydrateDurableContentTarget(ctx, {
     contentId: row.content_id,
     locale: row.locale,
-    publicPath: row.route,
     section: "material",
   }).pipe(Effect.mapError(toTrendingSubjectIoError));
 

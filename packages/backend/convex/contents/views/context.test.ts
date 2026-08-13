@@ -20,7 +20,7 @@ import {
 import { stageProgramRow } from "@repo/backend/convex/contentRelease/snapshot/program";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import { resolveLearningContext } from "@repo/backend/convex/contents/views/context";
-import { loadContentTarget } from "@repo/backend/convex/contents/views/target";
+import { validateIncomingContentTarget } from "@repo/backend/convex/contents/views/target";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -165,7 +165,7 @@ function readContext(
   return target.query((ctx) =>
     runConvexProgram(
       Effect.gen(function* () {
-        const material = yield* loadContentTarget(ctx, {
+        const material = yield* validateIncomingContentTarget(ctx, {
           contentId: projection.graph.assetId,
           locale: projection.locale,
           publicPath: projection.publicPath,

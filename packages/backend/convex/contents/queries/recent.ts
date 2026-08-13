@@ -4,7 +4,7 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { toLearningContextQuery } from "@repo/backend/convex/contents/context";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { resolveLearningContext } from "@repo/backend/convex/contents/views/context";
-import { loadContentTarget } from "@repo/backend/convex/contents/views/target";
+import { hydrateDurableContentTarget } from "@repo/backend/convex/contents/views/target";
 import {
   getUnknownErrorMessage,
   runConvexProgram,
@@ -133,10 +133,9 @@ function toPublicContentRef(
 const toRecentlyViewedSubject = Effect.fn(
   "contents.recent.toRecentlyViewedSubject"
 )(function* (ctx: QueryCtx, row: Doc<"userLearningRecents">) {
-  const route = yield* loadContentTarget(ctx, {
+  const route = yield* hydrateDurableContentTarget(ctx, {
     contentId: row.content_id,
     locale: row.locale,
-    publicPath: row.route,
     section: "material",
   }).pipe(Effect.mapError(toRecentLearningIoError));
 

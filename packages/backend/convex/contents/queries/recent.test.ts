@@ -1,4 +1,8 @@
-import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  type MaterialLessonProjection,
+  MaterialLessonProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -43,9 +47,18 @@ async function insertMaterialRecent(
 }
 
 describe("contents/queries/recent", () => {
-  it("hydrates a recent card from the current signed material", async () => {
+  it("hydrates a recent card through a signed material route rename", async () => {
     const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
+    const current = MaterialLessonProjectionSchema.make({
+      ...FUNCTION_MATERIAL,
+      parentPath: PublicPathSchema.make(
+        "subjects/mathematics/functions-and-relations"
+      ),
+      publicPath: PublicPathSchema.make(
+        "subjects/mathematics/functions-and-relations/function-concept"
+      ),
+    });
+    await activateMaterialCatalog(t, [current]);
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -69,13 +82,13 @@ describe("contents/queries/recent", () => {
       expect.objectContaining({
         assetId: FUNCTION_MATERIAL.graph.assetId,
         content_id: FUNCTION_MATERIAL.graph.assetId,
-        description: FUNCTION_MATERIAL.metadata.description,
-        href: `/${FUNCTION_MATERIAL.publicPath}`,
+        description: current.metadata.description,
+        href: `/${current.publicPath}`,
         lastViewedAt: NOW,
         materialDomain: "mathematics",
-        route: FUNCTION_MATERIAL.publicPath,
-        title: FUNCTION_MATERIAL.metadata.title,
-        url: `https://nakafa.com/en/${FUNCTION_MATERIAL.publicPath}`,
+        route: current.publicPath,
+        title: current.metadata.title,
+        url: `https://nakafa.com/en/${current.publicPath}`,
       }),
     ]);
     expect(results[0]).not.toHaveProperty("id");

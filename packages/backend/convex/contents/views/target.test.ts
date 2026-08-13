@@ -7,9 +7,11 @@ import {
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
 import {
-  type ContentViewTargetInput,
+  type DurableContentViewTargetInput,
   decodeMaterialDomain,
-  loadContentTarget,
+  hydrateDurableContentTarget,
+  type IncomingContentViewTargetInput,
+  validateIncomingContentTarget,
 } from "@repo/backend/convex/contents/views/target";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -28,12 +30,24 @@ import { convexTest, type TestConvex } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
-/** Runs one target lookup through the production Effect boundary. */
-function readTarget(
+/** Runs one incoming-route validation through the production Effect boundary. */
+function validateIncomingTarget(
   target: TestConvex<typeof schema>,
-  input: ContentViewTargetInput
+  input: IncomingContentViewTargetInput
 ) {
-  return target.query((ctx) => runConvexProgram(loadContentTarget(ctx, input)));
+  return target.query((ctx) =>
+    runConvexProgram(validateIncomingContentTarget(ctx, input))
+  );
+}
+
+/** Runs one durable-identity hydration through the production Effect boundary. */
+function hydrateDurableTarget(
+  target: TestConvex<typeof schema>,
+  input: DurableContentViewTargetInput
+) {
+  return target.query((ctx) =>
+    runConvexProgram(hydrateDurableContentTarget(ctx, input))
+  );
 }
 
 describe("contents/views/target", () => {
@@ -52,7 +66,7 @@ describe("contents/views/target", () => {
     const target = convexTest(schema, convexModules);
 
     await expect(
-      readTarget(target, {
+      validateIncomingTarget(target, {
         contentId: "asset:en:article:politics:missing",
         locale: "en",
         publicPath: "articles/politics/missing",
@@ -62,7 +76,7 @@ describe("contents/views/target", () => {
       data: { code: "CONTENT_VIEW_IO_FAILED" },
     });
     await expect(
-      readTarget(target, {
+      validateIncomingTarget(target, {
         contentId: "asset:en:material:mathematics:missing",
         locale: "en",
         publicPath: "subjects/mathematics/missing",
@@ -76,7 +90,7 @@ describe("contents/views/target", () => {
   it("resolves active materials by signed path and stable asset identity", async () => {
     const target = convexTest(schema, convexModules);
     await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
-    const result = await readTarget(target, {
+    const result = await validateIncomingTarget(target, {
       contentId: FUNCTION_MATERIAL.graph.assetId,
       locale: FUNCTION_MATERIAL.locale,
       publicPath: FUNCTION_MATERIAL.publicPath,
@@ -94,12 +108,46 @@ describe("contents/views/target", () => {
     });
   });
 
+  it("hydrates a renamed material by asset ID while rejecting its stale incoming route", async () => {
+    const target = convexTest(schema, convexModules);
+    const current = MaterialLessonProjectionSchema.make({
+      ...FUNCTION_MATERIAL,
+      parentPath: PublicPathSchema.make(
+        "subjects/mathematics/functions-and-relations"
+      ),
+      publicPath: PublicPathSchema.make(
+        "subjects/mathematics/functions-and-relations/function-concept"
+      ),
+    });
+    await activateMaterialCatalog(target, [current]);
+
+    await expect(
+      hydrateDurableTarget(target, {
+        contentId: FUNCTION_MATERIAL.graph.assetId,
+        locale: FUNCTION_MATERIAL.locale,
+        section: "material",
+      })
+    ).resolves.toMatchObject({
+      content_id: FUNCTION_MATERIAL.graph.assetId,
+      route: current.publicPath,
+      sourcePath: expect.stringContaining(FUNCTION_MATERIAL.contentKey),
+    });
+    await expect(
+      validateIncomingTarget(target, {
+        contentId: FUNCTION_MATERIAL.graph.assetId,
+        locale: FUNCTION_MATERIAL.locale,
+        publicPath: FUNCTION_MATERIAL.publicPath,
+        section: "material",
+      })
+    ).resolves.toBeNull();
+  });
+
   it("returns null for missing or mismatched current material bindings", async () => {
     const target = convexTest(schema, convexModules);
     await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
 
     await expect(
-      readTarget(target, {
+      validateIncomingTarget(target, {
         contentId: `${FUNCTION_MATERIAL.graph.assetId}:stale`,
         locale: FUNCTION_MATERIAL.locale,
         publicPath: FUNCTION_MATERIAL.publicPath,
@@ -107,7 +155,7 @@ describe("contents/views/target", () => {
       })
     ).resolves.toBeNull();
     await expect(
-      readTarget(target, {
+      validateIncomingTarget(target, {
         contentId: FUNCTION_MATERIAL.graph.assetId,
         locale: FUNCTION_MATERIAL.locale,
         publicPath: `${FUNCTION_MATERIAL.parentPath}/missing`,
@@ -124,7 +172,7 @@ describe("contents/views/target", () => {
     );
 
     await expect(
-      readTarget(target, {
+      validateIncomingTarget(target, {
         contentId: projection.graph.assetId,
         locale: projection.locale,
         publicPath: projection.publicPath,
@@ -138,6 +186,18 @@ describe("contents/views/target", () => {
       sourcePath: `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`,
       title: projection.metadata.title,
     });
+    await expect(
+      hydrateDurableTarget(target, {
+        contentId: projection.graph.assetId,
+        locale: projection.locale,
+        section: "articles",
+      })
+    ).resolves.toMatchObject({
+      contentKey: projection.contentKey,
+      content_id: projection.graph.assetId,
+      route: projection.publicPath,
+      section: "articles",
+    });
   });
 
   it("returns null for missing or mismatched current article bindings", async () => {
@@ -148,7 +208,7 @@ describe("contents/views/target", () => {
     );
 
     await expect(
-      readTarget(target, {
+      validateIncomingTarget(target, {
         contentId: `${projection.graph.assetId}:stale`,
         locale: projection.locale,
         publicPath: projection.publicPath,
@@ -156,7 +216,7 @@ describe("contents/views/target", () => {
       })
     ).resolves.toBeNull();
     await expect(
-      readTarget(target, {
+      validateIncomingTarget(target, {
         contentId: projection.graph.assetId,
         locale: projection.locale,
         publicPath: `${projection.parentPath}/missing`,
@@ -183,7 +243,7 @@ describe("contents/views/target", () => {
     await activateMaterialCatalog(target, [projection]);
 
     await expect(
-      readTarget(target, {
+      validateIncomingTarget(target, {
         contentId: projection.graph.assetId,
         locale: projection.locale,
         publicPath: projection.publicPath,
