@@ -1,6 +1,7 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { writeArticle } from "@repo/backend/convex/contentRelease/article/write";
 import { acceptReaderCutover } from "@repo/backend/convex/contentRelease/cutover/readers";
+import type { ReferenceProofCounts } from "@repo/backend/convex/contentRelease/cutover/referenceProofs";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -23,6 +24,13 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const SHA256_PREFIX = /^sha256:/;
+const TEST_REFERENCE_PROOF_COUNTS = {
+  article: 1,
+  material: 0,
+  materialTopic: 0,
+  quran: 0,
+  tryout: 0,
+} satisfies ReferenceProofCounts;
 
 describe("contentRelease/cutover/readers", () => {
   it("accepts exact retained history once and preserves the first checkpoint", async () => {
@@ -31,10 +39,14 @@ describe("contentRelease/cutover/readers", () => {
       const fixture = await prepareReaderCutover(ctx);
 
       const first = await runConvexProgram(
-        provideHistoryTestTrust(acceptReaderCutover(ctx, fixture.plan, 1))
+        provideHistoryTestTrust(
+          acceptReaderCutover(ctx, fixture.plan, TEST_REFERENCE_PROOF_COUNTS)
+        )
       );
       const second = await runConvexProgram(
-        provideHistoryTestTrust(acceptReaderCutover(ctx, fixture.plan, 1))
+        provideHistoryTestTrust(
+          acceptReaderCutover(ctx, fixture.plan, TEST_REFERENCE_PROOF_COUNTS)
+        )
       );
       const state = await ctx.db
         .query("contentCutoverState")
@@ -45,7 +57,6 @@ describe("contentRelease/cutover/readers", () => {
 
     expect(result.first).toEqual({
       acceptedAt: expect.any(Number),
-      articleAssets: 1,
       history: {
         attempts: 2,
         catalogRows: 2,
@@ -55,6 +66,7 @@ describe("contentRelease/cutover/readers", () => {
         progressRows: 1,
         snapshotId: expect.stringMatching(SHA256_PREFIX),
       },
+      referenceProofs: TEST_REFERENCE_PROOF_COUNTS,
     });
     expect(result.second).toEqual(result.first);
     expect(result.state?.readerCutoverAcceptedAt).toBe(result.first.acceptedAt);
@@ -78,11 +90,45 @@ describe("contentRelease/cutover/readers", () => {
     await expect(
       t.mutation((ctx) =>
         runConvexProgram(
-          provideHistoryTestTrust(acceptReaderCutover(ctx, plan, 1))
+          provideHistoryTestTrust(
+            acceptReaderCutover(ctx, plan, TEST_REFERENCE_PROOF_COUNTS)
+          )
         )
       )
     ).rejects.toMatchObject({
       data: { code: "TRYOUT_HISTORY_NOT_READY" },
+    });
+
+    const state = await t.query((ctx) =>
+      ctx.db.query("contentCutoverState").first()
+    );
+    expect(state?.readerCutoverAcceptedAt).toBeUndefined();
+  });
+
+  it("rejects acceptance when one signed reference proof is missing", async () => {
+    const t = convexTest(schema, convexModules);
+    const plan = await t.mutation(async (ctx) => {
+      const fixture = await prepareReaderCutover(ctx);
+      const state = await ctx.db.query("contentCutoverState").unique();
+      if (!state) {
+        throw new Error("Expected one reader cutover checkpoint.");
+      }
+      await ctx.db.patch("contentCutoverState", state._id, {
+        materialTopicReferenceProof: undefined,
+      });
+      return fixture.plan;
+    });
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          provideHistoryTestTrust(
+            acceptReaderCutover(ctx, plan, TEST_REFERENCE_PROOF_COUNTS)
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
 
     const state = await t.query((ctx) =>
@@ -161,6 +207,7 @@ async function insertQuiescentCheckpoint(
   activeSequence: number
 ) {
   await ctx.db.insert("contentCutoverState", {
+    articleReferenceProof: { count: 1, provedAt: 1 },
     auditedActiveReleaseId: activeReleaseId,
     auditedActiveSequence: activeSequence,
     auditedAt: 1,
@@ -175,7 +222,11 @@ async function insertQuiescentCheckpoint(
     legacyDeleted: 0,
     legacyTableDeleted: 0,
     legacyTableIndex: 0,
+    materialReferenceProof: { count: 0, provedAt: 1 },
+    materialTopicReferenceProof: { count: 0, provedAt: 1 },
     phase: "quiescent",
+    quranReferenceProof: { count: 0, provedAt: 1 },
+    tryoutReferenceProof: { count: 0, provedAt: 1 },
     updatedAt: 1,
   });
 }

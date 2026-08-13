@@ -1,9 +1,18 @@
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { proveArticleAssetIdsComplete } from "@repo/backend/convex/contentRelease/cutover/articleAssets";
 import { proveFreezeHistory } from "@repo/backend/convex/contentRelease/cutover/history";
-import { AUDITED_ARTICLE_COUNT } from "@repo/backend/convex/contentRelease/cutover/inventory";
+import {
+  AUDITED_ARTICLE_COUNT,
+  AUDITED_MATERIAL_COUNT,
+  AUDITED_MATERIAL_TOPIC_COUNT,
+  AUDITED_QURAN_SEARCH_COUNT,
+  AUDITED_TRYOUT_CATALOG_COUNT,
+} from "@repo/backend/convex/contentRelease/cutover/inventory";
+import {
+  type ReferenceProofCounts,
+  requireReferenceProofs,
+} from "@repo/backend/convex/contentRelease/cutover/referenceProofs";
 import {
   requireCutoverPhase,
   requireReaderCutoverCheckpoint,
@@ -20,9 +29,23 @@ import { Effect } from "effect";
 
 const readerCutoverAcceptanceValidator = v.object({
   acceptedAt: v.number(),
-  articleAssets: v.number(),
   history: historyReadinessValidator,
+  referenceProofs: v.object({
+    article: v.number(),
+    material: v.number(),
+    materialTopic: v.number(),
+    quran: v.number(),
+    tryout: v.number(),
+  }),
 });
+
+const productionReferenceProofCounts = {
+  article: AUDITED_ARTICLE_COUNT,
+  material: AUDITED_MATERIAL_COUNT,
+  materialTopic: AUDITED_MATERIAL_TOPIC_COUNT,
+  quran: AUDITED_QURAN_SEARCH_COUNT,
+  tryout: AUDITED_TRYOUT_CATALOG_COUNT,
+};
 
 /** Proves retained readers are safe before unlocking destructive drains. */
 export const acceptReaderCutover = Effect.fn(
@@ -30,22 +53,18 @@ export const acceptReaderCutover = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   plan: RetainedTryoutHistoryPlan,
-  expectedArticleCount: number
+  expectedReferenceProofs: ReferenceProofCounts
 ) {
   const state = yield* requireCutoverPhase(ctx, ["quiescent"]);
-  const [articleAssets, history] = yield* Effect.all([
-    proveArticleAssetIdsComplete(
-      ctx,
-      expectedArticleCount,
-      state.auditedActiveSequence
-    ),
+  const [history, referenceProofs] = yield* Effect.all([
     proveFreezeHistory(ctx, plan),
+    requireReferenceProofs(ctx, expectedReferenceProofs),
   ]);
   const existingAcceptedAt = state.readerCutoverAcceptedAt;
 
   if (existingAcceptedAt !== undefined) {
     yield* requireReaderCutoverCheckpoint(state);
-    return { acceptedAt: existingAcceptedAt, articleAssets, history };
+    return { acceptedAt: existingAcceptedAt, history, referenceProofs };
   }
 
   const acceptedAt = Date.now();
@@ -55,7 +74,7 @@ export const acceptReaderCutover = Effect.fn(
       updatedAt: acceptedAt,
     })
   );
-  return { acceptedAt, articleAssets, history };
+  return { acceptedAt, history, referenceProofs };
 });
 
 /** Sole reader-deployment writer for the otherwise unreachable checkpoint. */
@@ -67,7 +86,7 @@ export const accept = internalMutation({
       acceptReaderCutover(
         ctx,
         retainedTryoutHistoryPlan,
-        AUDITED_ARTICLE_COUNT
+        productionReferenceProofCounts
       ).pipe(
         Effect.provideService(
           ContentVerificationKeyResolver,
