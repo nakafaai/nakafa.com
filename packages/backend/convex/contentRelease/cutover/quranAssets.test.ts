@@ -5,75 +5,86 @@ import {
 } from "@nakafa/aksara-contracts/quran/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
-  proveQuranAssetIdsComplete,
-  stageQuranAssetIds,
+  checkpointQuranReferencePage,
+  QURAN_REFERENCE_PAGE_LIMIT,
+  QURAN_REFERENCE_READ_CEILING,
 } from "@repo/backend/convex/contentRelease/cutover/quranAssets";
+import {
+  TRANSACTION_READ_HEADROOM,
+  TRANSACTION_READ_LIMIT,
+} from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeQuranSearch } from "@repo/backend/test/quran-rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 describe("contentRelease/cutover/quranAssets", () => {
-  it("stages exact authenticated Quran asset identities idempotently", async () => {
+  it("reserves two full read-headroom blocks at enforced row ceilings", () => {
+    expect(QURAN_REFERENCE_READ_CEILING).toBe(7_969_170);
+    expect(QURAN_REFERENCE_READ_CEILING).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - 2 * TRANSACTION_READ_HEADROOM
+    );
+  });
+
+  it("stages and proves the exact Quran inventory in bounded pages", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await activateQuranSnapshot(ctx, makeCompleteQuranSearch());
       const rows = await ctx.db.query("quranSearch").collect();
       for (const row of rows) {
-        await ctx.db.patch("quranSearch", row._id, { assetId: undefined });
+        await ctx.db.patch("quranSearch", row._id, {
+          assetId: undefined,
+          publicPath: undefined,
+        });
       }
       await insertQuiescentCheckpoint(ctx);
     });
 
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(proveQuranAssetIdsComplete(ctx, QURAN_SEARCH_COUNT))
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-    const first = await t.mutation((ctx) =>
-      runConvexProgram(stageQuranAssetIds(ctx, QURAN_SEARCH_COUNT))
+    const receipts = await completeQuranCheckpoint(t, QURAN_SEARCH_COUNT);
+    const repeated = await t.mutation((ctx) =>
+      runConvexProgram(checkpointQuranReferencePage(ctx, QURAN_SEARCH_COUNT))
     );
-    const second = await t.mutation((ctx) =>
-      runConvexProgram(stageQuranAssetIds(ctx, QURAN_SEARCH_COUNT))
-    );
-    const proved = await t.query((ctx) =>
-      runConvexProgram(proveQuranAssetIdsComplete(ctx, QURAN_SEARCH_COUNT))
-    );
-    const indexed = await t.run(async (ctx) => {
-      const row = await ctx.db.query("quranSearch").first();
-      if (!row?.assetId) {
-        throw new Error("Expected one staged Quran asset identity.");
-      }
-      return ctx.db
-        .query("quranSearch")
-        .withIndex("by_snapshotId_and_locale_and_assetId", (index) =>
-          index
-            .eq("snapshotId", row.snapshotId)
-            .eq("locale", row.locale)
-            .eq("assetId", row.assetId)
-        )
-        .unique();
-    });
+    const stored = await t.run(async (ctx) => ({
+      checkpoint: await ctx.db.query("contentCutoverState").unique(),
+      rows: await ctx.db.query("quranSearch").collect(),
+    }));
 
-    expect(first).toEqual({
-      complete: true,
-      total: QURAN_SEARCH_COUNT,
-      unchanged: 0,
-      updated: QURAN_SEARCH_COUNT,
+    expect(receipts).toHaveLength(
+      QURAN_SEARCH_COUNT / QURAN_REFERENCE_PAGE_LIMIT
+    );
+    expect(receipts[0]).toMatchObject({
+      checked: QURAN_REFERENCE_PAGE_LIMIT,
+      complete: false,
+      processed: QURAN_REFERENCE_PAGE_LIMIT,
+      staged: QURAN_REFERENCE_PAGE_LIMIT,
     });
-    expect(second).toEqual({
+    expect(receipts.at(-1)).toEqual({
+      checked: QURAN_SEARCH_COUNT,
       complete: true,
-      total: QURAN_SEARCH_COUNT,
-      unchanged: QURAN_SEARCH_COUNT,
-      updated: 0,
+      nextIndex: null,
+      processed: QURAN_REFERENCE_PAGE_LIMIT,
+      staged: QURAN_REFERENCE_PAGE_LIMIT,
     });
-    expect(proved).toBe(QURAN_SEARCH_COUNT);
-    expect(indexed?.assetId).toBeDefined();
+    expect(repeated).toEqual({
+      checked: QURAN_SEARCH_COUNT,
+      complete: true,
+      nextIndex: null,
+      processed: 0,
+      staged: 0,
+    });
+    expect(stored.checkpoint?.quranReferenceProgress).toBeUndefined();
+    expect(stored.checkpoint?.quranReferenceProof?.count).toBe(
+      QURAN_SEARCH_COUNT
+    );
+    expect(
+      stored.rows.every(
+        ({ assetId, publicPath }) => assetId !== undefined && publicPath
+      )
+    ).toBe(true);
   });
 
   it("rejects a stored identity that differs from its signed Quran row", async () => {
@@ -92,7 +103,56 @@ describe("contentRelease/cutover/quranAssets", () => {
 
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(stageQuranAssetIds(ctx, QURAN_SEARCH_COUNT))
+        runConvexProgram(checkpointQuranReferencePage(ctx, QURAN_SEARCH_COUNT))
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects a stored route that differs from its signed Quran row", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateQuranSnapshot(ctx, makeCompleteQuranSearch());
+      const row = await ctx.db.query("quranSearch").first();
+      if (!row) {
+        throw new Error("Expected one Quran search row.");
+      }
+      await ctx.db.patch("quranSearch", row._id, {
+        publicPath: "quran/tampered",
+      });
+      await insertQuiescentCheckpoint(ctx);
+    });
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(checkpointQuranReferencePage(ctx, QURAN_SEARCH_COUNT))
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects duplicate authenticated Quran asset identities", async () => {
+    const rows = makeCompleteQuranSearch();
+    const first = rows[0];
+    const second = rows[1];
+    if (!(first && second)) {
+      throw new Error("Expected two Quran search rows.");
+    }
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateQuranSnapshot(ctx, [
+        first,
+        { ...second, graph: { ...second.graph, assetId: first.graph.assetId } },
+        ...rows.slice(2),
+      ]);
+      await insertQuiescentCheckpoint(ctx);
+    });
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(checkpointQuranReferencePage(ctx, QURAN_SEARCH_COUNT))
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
@@ -108,6 +168,23 @@ function makeCompleteQuranSearch() {
   ).flatMap((surahNumber) =>
     QURAN_LOCALES.map((locale) => makeQuranSearch(locale, surahNumber))
   );
+}
+
+async function completeQuranCheckpoint(
+  target: TestConvex<typeof schema>,
+  expectedCount: number
+) {
+  let receipt = await target.mutation((ctx) =>
+    runConvexProgram(checkpointQuranReferencePage(ctx, expectedCount))
+  );
+  const receipts = [receipt];
+  while (!receipt.complete) {
+    receipt = await target.mutation((ctx) =>
+      runConvexProgram(checkpointQuranReferencePage(ctx, expectedCount))
+    );
+    receipts.push(receipt);
+  }
+  return receipts;
 }
 
 async function insertQuiescentCheckpoint(ctx: MutationCtx) {
