@@ -54,6 +54,16 @@ export const LEGACY_INVENTORY = [
   { batchSize: 8, expected: 1056, table: "contentSearch" },
 ] as const satisfies readonly InventoryEntry[];
 
+/** Synthetic learning-plan tables removed by the signed selection cutover. */
+export const RETIRED_PROGRAM_INVENTORY = [
+  { batchSize: 1, expected: 0, table: "learningProgramCoverage" },
+  { batchSize: 1, expected: 0, table: "learningProgramSources" },
+  { batchSize: 1, expected: 0, table: "learningPrograms" },
+  { batchSize: 1, expected: 0, table: "learningPlanItems" },
+  { batchSize: 1, expected: 0, table: "learningPlans" },
+  { batchSize: 1, expected: 0, table: "learningProfiles" },
+] as const satisfies readonly InventoryEntry[];
+
 /** Exact mutable signed-store inventory measured before the freeze. */
 export const CURRENT_INVENTORY = [
   { batchSize: 50, expected: 4140, table: "contentKeys" },

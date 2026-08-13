@@ -23,6 +23,7 @@ import {
   proofReceiptValidator,
   type RetentionFacts,
 } from "@repo/backend/convex/contentRelease/cutover/proofState";
+import { requireRetiredProgramZeroReceipt } from "@repo/backend/convex/contentRelease/cutover/retiredPrograms";
 import { countAuditedTable } from "@repo/backend/convex/contentRelease/cutover/scan";
 import {
   type ReleaseError,
@@ -185,6 +186,7 @@ const validateRetentionFacts = Effect.fn(
       auditedAt: cutover.audioWorkflowAuditedAt,
       cleanedAt: cutover.audioWorkflowCleanedAt,
     });
+    yield* requireRetiredProgramZeroReceipt(cutover.retiredProgramZeroReceipt);
   }
   if (
     facts.activityCount !== 1 ||

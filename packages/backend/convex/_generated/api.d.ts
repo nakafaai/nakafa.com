@@ -173,6 +173,7 @@ import type * as contentRelease_cutover_quiescence from "../contentRelease/cutov
 import type * as contentRelease_cutover_quranAssets from "../contentRelease/cutover/quranAssets.js";
 import type * as contentRelease_cutover_referenceProofs from "../contentRelease/cutover/referenceProofs.js";
 import type * as contentRelease_cutover_retention from "../contentRelease/cutover/retention.js";
+import type * as contentRelease_cutover_retiredPrograms from "../contentRelease/cutover/retiredPrograms.js";
 import type * as contentRelease_cutover_scan from "../contentRelease/cutover/scan.js";
 import type * as contentRelease_cutover_state from "../contentRelease/cutover/state.js";
 import type * as contentRelease_cutover_tryoutAssets from "../contentRelease/cutover/tryoutAssets.js";
@@ -803,6 +804,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/cutover/quranAssets": typeof contentRelease_cutover_quranAssets;
   "contentRelease/cutover/referenceProofs": typeof contentRelease_cutover_referenceProofs;
   "contentRelease/cutover/retention": typeof contentRelease_cutover_retention;
+  "contentRelease/cutover/retiredPrograms": typeof contentRelease_cutover_retiredPrograms;
   "contentRelease/cutover/scan": typeof contentRelease_cutover_scan;
   "contentRelease/cutover/state": typeof contentRelease_cutover_state;
   "contentRelease/cutover/tryoutAssets": typeof contentRelease_cutover_tryoutAssets;

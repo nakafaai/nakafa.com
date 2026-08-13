@@ -12,6 +12,10 @@ import {
   AUDITED_ACTIVE_RELEASE_ID,
   CUTOVER_INVENTORY_VERSION,
 } from "@repo/backend/convex/contentRelease/cutover/inventory";
+import {
+  proveRetiredProgramTablesEmpty,
+  requireRetiredProgramZeroReceipt,
+} from "@repo/backend/convex/contentRelease/cutover/retiredPrograms";
 import { cutoverPhaseValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
 import {
   loadCutoverState,
@@ -79,6 +83,9 @@ export const initializeProgram = Effect.fn("contentRelease.cutover.initialize")(
           "The durable cutover was initialized from another legacy-write token."
         );
       }
+      yield* requireRetiredProgramZeroReceipt(
+        existing.retiredProgramZeroReceipt
+      );
       return null;
     }
     const activityRow = yield* loadLegacyWriteActivity(ctx);
@@ -88,6 +95,8 @@ export const initializeProgram = Effect.fn("contentRelease.cutover.initialize")(
         "A legacy writer committed after the production inventory audit."
       );
     }
+    const retiredProgramZeroReceipt =
+      yield* proveRetiredProgramTablesEmpty(ctx);
     const facts = yield* verifyQuiescentInventory(ctx);
     const activeReleaseId = facts.activeReleaseId;
     const activeSequence = facts.activeSequence;
@@ -128,6 +137,7 @@ export const initializeProgram = Effect.fn("contentRelease.cutover.initialize")(
         legacyTableDeleted: 0,
         legacyTableIndex: 0,
         phase: "quiescent",
+        retiredProgramZeroReceipt,
         updatedAt: now,
       })
     );
@@ -139,6 +149,7 @@ export const initializeProgram = Effect.fn("contentRelease.cutover.initialize")(
 const acceptAuditProgram = Effect.fn("contentRelease.cutover.acceptAudit")(
   function* (ctx: MutationCtx) {
     const state = yield* requireCutoverPhase(ctx, ["quiescent"]);
+    yield* requireRetiredProgramZeroReceipt(state.retiredProgramZeroReceipt);
     yield* requireAudioWorkflowCleanupCheckpoint({
       audit: state.audioWorkflowAudit,
       auditedAt: state.audioWorkflowAuditedAt,

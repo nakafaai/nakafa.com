@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { deleteLegacyPage } from "@repo/backend/convex/contentRelease/cutover/legacy";
+import { getLearningProgramCatalogInputs } from "@repo/backend/convex/learningPrograms/catalog";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -57,6 +58,17 @@ describe("triggers/contents/legacy", () => {
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_STATE" },
     });
+    await expect(
+      t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+        programs: getLearningProgramCatalogInputs().slice(0, 1),
+        syncedAt: 2,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
+    });
+    await expect(
+      t.query((ctx) => ctx.db.query("learningPrograms").take(1))
+    ).resolves.toEqual([]);
     await expect(
       t.mutation((ctx) =>
         runConvexProgram(

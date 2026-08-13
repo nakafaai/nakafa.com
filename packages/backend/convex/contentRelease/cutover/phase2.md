@@ -51,14 +51,15 @@ is satisfied.
 10. Run application, retained-history, and signed-publication acceptance while
    the `proved` checkpoint still blocks try-out and application writes.
 11. Deploy the strict current schema while preserving the maintenance guard.
-12. Delete the single `contentCutoverState` and `contentCutoverActivity`
-   documents through the Phase 2 bounded retire mutation only after genesis
-   and application acceptance succeed.
-13. Verify both temporary tables are empty, then deploy the guard retirement
-   and remove every temporary seam below as one coordinated boundary.
-14. Physically delete every empty undeclared legacy and cutover table from the
-   production deployment, then prove that no table or scheduled function
-   remains.
+12. Physically delete every empty undeclared legacy table and all six retired
+   learning-program tables only after the strict schema is deployed. Prove that
+   no removed table or scheduled function remains.
+13. Delete the single `contentCutoverState` and `contentCutoverActivity`
+   documents through the Phase 2 bounded retire mutation only after genesis,
+   application acceptance, and physical legacy-table deletion succeed.
+14. Verify both temporary tables are empty, then deploy the guard retirement
+   and remove every temporary seam below as one coordinated boundary. Finally,
+   physically delete both empty cutover tables.
 
 ## Code deletion
 
@@ -81,6 +82,8 @@ is satisfied.
   `contentCutoverActivity` and `contentCutoverState`.
 - Delete the reader-acceptance mutation and `readerCutoverAcceptedAt` field
   after the terminal proof and current-genesis acceptance are complete.
+- Delete the retired learning-program zero receipt and its six-table inventory
+  only after the terminal proof and physical table deletion are complete.
 - Delete migration-only `tryouts/history/copy.ts`, `locale.ts`, and
   `finalize.ts`, plus the write-only history-row operation after their exact
   production functions are no longer referenced.
@@ -96,10 +99,13 @@ is satisfied.
 ## Physical table deletion
 
 - Delete all 16 empty legacy tables listed by `LEGACY_INVENTORY`.
+- Delete the six empty retired tables listed by `RETIRED_PROGRAM_INVENTORY`:
+  `learningProgramCoverage`, `learningProgramSources`, `learningPrograms`,
+  `learningPlanItems`, `learningPlans`, and `learningProfiles`.
 - Delete `contentCutoverActivity` and `contentCutoverState` after their rows are
   zero and their schema declarations are gone.
 - Remove `ELEVENLABS_API_KEY` and `ENABLE_AUDIO_GENERATION` from every Convex
   and Vercel environment after the deployed source and scheduler proof have no
   consumer.
-- Preserve current analytics and application-state tables that have live
-  consumers.
+- Preserve every other current analytics and application-state table that has
+  live consumers.

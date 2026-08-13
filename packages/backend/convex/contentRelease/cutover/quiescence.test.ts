@@ -1,5 +1,6 @@
 import { CUTOVER_INVENTORY_VERSION } from "@repo/backend/convex/contentRelease/cutover/inventory";
 import { initializeProgram } from "@repo/backend/convex/contentRelease/cutover/quiescence";
+import { RETIRED_PROGRAM_ZERO_RECEIPT } from "@repo/backend/convex/contentRelease/cutover/retiredPrograms";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -34,6 +35,39 @@ describe("contentRelease/cutover/quiescence", () => {
     ).resolves.toEqual([]);
   });
 
+  it("rejects an idempotent retry without the six-table zero receipt", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      ctx.db.insert("contentCutoverState", {
+        auditedActiveReleaseId: "active-release",
+        auditedActiveSequence: 1,
+        auditedAt: 1,
+        auditedLegacyWriteVersion: 0,
+        auditedNextSequence: 2,
+        currentDeleted: 0,
+        currentTableDeleted: 0,
+        currentTableIndex: 0,
+        currentTablePreserved: 0,
+        inventoryVersion: CUTOVER_INVENTORY_VERSION,
+        key: "phase1",
+        legacyDeleted: 0,
+        legacyTableDeleted: 0,
+        legacyTableIndex: 0,
+        phase: "quiescent",
+        updatedAt: 1,
+      })
+    );
+
+    await expect(
+      t.mutation((ctx) => runConvexProgram(initializeProgram(ctx, 0)))
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: expect.stringContaining("zero receipt is missing"),
+      },
+    });
+  });
+
   it("does not accept the inventory before the audio journal is clean", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -53,6 +87,7 @@ describe("contentRelease/cutover/quiescence", () => {
         legacyTableDeleted: 0,
         legacyTableIndex: 0,
         phase: "quiescent",
+        retiredProgramZeroReceipt: RETIRED_PROGRAM_ZERO_RECEIPT,
         updatedAt: 1,
       });
     });

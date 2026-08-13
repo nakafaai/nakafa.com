@@ -20,7 +20,14 @@ import {
   RETAINED_TRYOUT_RELEASES,
   RETAINED_TRYOUT_SNAPSHOT_ID,
 } from "@repo/backend/convex/contentRelease/cutover/inventory";
-import { audioWorkflowAuditValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
+import {
+  type RetiredProgramZeroReceipt,
+  requireRetiredProgramZeroReceipt,
+} from "@repo/backend/convex/contentRelease/cutover/retiredPrograms";
+import {
+  audioWorkflowAuditValidator,
+  retiredProgramZeroReceiptValidator,
+} from "@repo/backend/convex/contentRelease/cutover/schema";
 import {
   requireCutoverPhase,
   requireReaderCutoverCheckpoint,
@@ -66,6 +73,7 @@ export interface RetentionFacts {
     legacyTableIndex: number;
     phase: string;
     readerCutoverAcceptedAt?: number;
+    retiredProgramZeroReceipt?: RetiredProgramZeroReceipt;
   };
   readonly cutoverCount: number;
   readonly snapshots: { family: string; snapshotId: string }[];
@@ -120,6 +128,9 @@ export const retentionFacts = internalQuery({
         legacyTableIndex: v.number(),
         phase: v.string(),
         readerCutoverAcceptedAt: v.optional(v.number()),
+        retiredProgramZeroReceipt: v.optional(
+          retiredProgramZeroReceiptValidator
+        ),
       })
     ),
     cutoverCount: v.number(),
@@ -179,6 +190,7 @@ const readRetentionFacts = Effect.fn(
           legacyTableIndex: cutover.legacyTableIndex,
           phase: cutover.phase,
           readerCutoverAcceptedAt: cutover.readerCutoverAcceptedAt,
+          retiredProgramZeroReceipt: cutover.retiredProgramZeroReceipt,
         }
       : null,
     cutoverCount: cutoverRows.length,
@@ -200,6 +212,7 @@ export const recordProofCompletion = Effect.fn(
     auditedAt: cutover.audioWorkflowAuditedAt,
     cleanedAt: cutover.audioWorkflowCleanedAt,
   });
+  yield* requireRetiredProgramZeroReceipt(cutover.retiredProgramZeroReceipt);
   if (
     receipt.artifacts !== RETAINED_ARTIFACT_COUNT ||
     receipt.attempts !== RETAINED_ATTEMPT_COUNT ||

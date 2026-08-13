@@ -28,7 +28,11 @@ import {
   type CutoverProofEvidenceService,
   proofProgram,
 } from "@repo/backend/convex/contentRelease/cutover/proof";
-import type { CutoverProofReceipt } from "@repo/backend/convex/contentRelease/cutover/proofState";
+import type {
+  CutoverProofReceipt,
+  RetentionFacts,
+} from "@repo/backend/convex/contentRelease/cutover/proofState";
+import { RETIRED_PROGRAM_ZERO_RECEIPT } from "@repo/backend/convex/contentRelease/cutover/retiredPrograms";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { runConvexActionProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -112,12 +116,39 @@ describe("contentRelease/cutover/proof", () => {
     expect(state).toMatchObject({ phase: "complete" });
     expect(state).not.toHaveProperty("provedAt");
   });
+
+  it("does not record proof without the retired-program zero receipt", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(insertCompleteCutover);
+
+    await expect(
+      t.action((ctx) =>
+        runConvexActionProgram(
+          proofProgram().pipe(
+            Effect.provideService(
+              CutoverProofEvidence,
+              makeProofEvidence(ctx, [], undefined, false)
+            )
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: expect.stringContaining("zero receipt is missing"),
+      },
+    });
+    await expect(
+      t.run((ctx) => ctx.db.query("contentCutoverState").unique())
+    ).resolves.toMatchObject({ phase: "complete" });
+  });
 });
 
 function makeProofEvidence(
   ctx: ActionCtx,
   counted: AuditTableName[],
-  repopulated?: AuditTableName
+  repopulated?: AuditTableName,
+  includeRetiredProgramReceipt = true
 ) {
   return {
     authenticateArtifacts: () =>
@@ -144,13 +175,14 @@ function makeProofEvidence(
         progressRows: RETAINED_PROGRESS_COUNT,
         snapshotId: RETAINED_TRYOUT_SNAPSHOT_ID,
       }),
-    readRetention: () => Effect.succeed(retentionFacts()),
+    readRetention: () =>
+      Effect.succeed(retentionFacts(includeRetiredProgramReceipt)),
     record: (receipt) =>
       callInternal(() => ctx.runMutation(recordProofReference, receipt)),
   } satisfies CutoverProofEvidenceService;
 }
 
-function retentionFacts() {
+function retentionFacts(includeRetiredProgramReceipt: boolean): RetentionFacts {
   return {
     activity: { version: 7 },
     activityCount: 1,
@@ -176,6 +208,9 @@ function retentionFacts() {
       legacyTableIndex: LEGACY_INVENTORY.length,
       phase: "complete",
       readerCutoverAcceptedAt: 1,
+      ...(includeRetiredProgramReceipt
+        ? { retiredProgramZeroReceipt: RETIRED_PROGRAM_ZERO_RECEIPT }
+        : {}),
     },
     cutoverCount: 1,
     snapshots: [{ family: "tryout", snapshotId: RETAINED_TRYOUT_SNAPSHOT_ID }],
@@ -204,6 +239,7 @@ async function insertCompleteCutover(ctx: MutationCtx) {
     legacyTableIndex: LEGACY_INVENTORY.length,
     phase: "complete",
     readerCutoverAcceptedAt: 1,
+    retiredProgramZeroReceipt: RETIRED_PROGRAM_ZERO_RECEIPT,
     updatedAt: 3,
   });
 }

@@ -14,20 +14,30 @@ hash difference. Never repair, skip, or reinterpret a failed gate.
    set cannot be tied to an audited deployment. Production may already omit the
    legacy audio functions and declarations, but that absence is never evidence
    that the remaining Phase 1 changes were deployed.
-2. Prove the three audio tables and global file storage are empty, including
-   undeclared physical tables that remain visible through the data CLI:
+2. Prove the three audio tables, all six retired synthetic learning-program
+   tables, and global file storage are empty, including undeclared physical
+   tables that remain visible through the data CLI:
 
    ```sh
    pnpm --filter @repo/backend exec convex data audioContentSources --prod --limit 1
    pnpm --filter @repo/backend exec convex data contentAudios --prod --limit 1
    pnpm --filter @repo/backend exec convex data audioGenerationQueue --prod --limit 1
+   pnpm --filter @repo/backend exec convex data learningProgramCoverage --prod --limit 1
+   pnpm --filter @repo/backend exec convex data learningProgramSources --prod --limit 1
+   pnpm --filter @repo/backend exec convex data learningPrograms --prod --limit 1
+   pnpm --filter @repo/backend exec convex data learningPlanItems --prod --limit 1
+   pnpm --filter @repo/backend exec convex data learningPlans --prod --limit 1
+   pnpm --filter @repo/backend exec convex data learningProfiles --prod --limit 1
    pnpm --filter @repo/backend exec convex data _storage --prod --limit 1
    ```
 
-   Accept only `There are no documents in this table.` for all four reads. This
+   Accept only `There are no documents in this table.` for all ten reads. This
    is a hard precondition because Phase 1 removes the old audio row and storage
-   cleanup path. The private pre-cutover backup must preserve the same empty
-   inventories.
+   cleanup path, while Phase 2 removes the synthetic learning-plan schema and
+   account-cleanup path. The private pre-cutover backup must preserve the same
+   empty inventories. The quiescence initialization transaction repeats all
+   six program-table zero reads, persists their versioned zero receipt, and
+   closes the writer guard before any destructive drain begins.
 3. Run the final production dry run. Confirm the target function set contains
    no legacy audio function and the target schema declares no legacy audio
    table. If production already omits them, the dry run must leave them absent

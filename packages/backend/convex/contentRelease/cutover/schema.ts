@@ -29,6 +29,19 @@ export const audioWorkflowAuditValidator = v.object({
   ),
 });
 
+export const RETIRED_PROGRAM_ZERO_RECEIPT_VERSION =
+  "retired-learning-program-zero-v1";
+
+export const retiredProgramZeroReceiptValidator = v.object({
+  learningPlanItems: v.literal(0),
+  learningPlans: v.literal(0),
+  learningProfiles: v.literal(0),
+  learningProgramCoverage: v.literal(0),
+  learningProgramSources: v.literal(0),
+  learningPrograms: v.literal(0),
+  version: v.literal(RETIRED_PROGRAM_ZERO_RECEIPT_VERSION),
+});
+
 /** Durable evidence from one isolated authenticated reference proof. */
 export const referenceProofReceiptValidator = v.object({
   count: v.number(),
@@ -114,6 +127,7 @@ const tables = {
     quranReferenceProgress: v.optional(quranReferenceProgressValidator),
     /** Written only by the later deployment that owns the live reader cutover. */
     readerCutoverAcceptedAt: v.optional(v.number()),
+    retiredProgramZeroReceipt: v.optional(retiredProgramZeroReceiptValidator),
     tryoutReferenceProof: v.optional(referenceProofReceiptValidator),
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
