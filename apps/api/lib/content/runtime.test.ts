@@ -3,7 +3,7 @@ import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  getApiContentRouteByContentId,
+  getApiContentReferenceByContentId,
   getArticleApiContentPage,
   getMaterialApiContentPage,
   parseApiContentId,
@@ -174,7 +174,7 @@ describe("API content runtime", () => {
 
     await expect(
       Effect.runPromise(
-        getApiContentRouteByContentId({ contentId: row.contentId })
+        getApiContentReferenceByContentId({ contentId: row.contentId })
       )
     ).resolves.toEqual(row);
     expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(

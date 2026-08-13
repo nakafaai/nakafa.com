@@ -164,8 +164,8 @@ const hydratePublishedApiPage = Effect.fn("api.content.hydratePublishedPage")(
   }
 );
 
-/** Reads one current signed summary by stable graph content ID. */
-export function getApiContentRouteByContentId(args: { contentId: string }) {
+/** Reads one current signed reference by stable graph content ID. */
+export function getApiContentReferenceByContentId(args: { contentId: string }) {
   return readApiRuntimeQuery(api.contentRelease.reference.read, {
     input: { contentId: args.contentId, kind: "content" },
   });
