@@ -11,7 +11,7 @@ import {
 import routeSchema from "@repo/backend/convex/contents/schema/routes";
 import {
   localeValidator,
-  materialValidator,
+  materialDomainValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
@@ -89,7 +89,7 @@ const tables = {
     description: v.optional(v.string()),
     insertedAt: v.number(),
     locale: localeValidator,
-    materialDomain: v.optional(materialValidator),
+    materialDomain: v.optional(materialDomainValidator),
     partition: v.number(),
     route: v.string(),
     section: nakafaSectionValidator,
@@ -115,7 +115,7 @@ const tables = {
     description: v.optional(v.string()),
     lastViewedAt: v.number(),
     locale: localeValidator,
-    materialDomain: v.optional(materialValidator),
+    materialDomain: v.optional(materialDomainValidator),
     route: v.string(),
     section: nakafaSectionValidator,
     sourcePath: v.string(),
@@ -179,7 +179,7 @@ const tables = {
     content_id: graphContentIdValidator,
     description: v.optional(v.string()),
     locale: localeValidator,
-    materialDomain: v.optional(materialValidator),
+    materialDomain: v.optional(materialDomainValidator),
     route: v.string(),
     section: nakafaSectionValidator,
     scopeMode: learningPopularityScopeValidator,
@@ -217,7 +217,7 @@ const tables = {
     content_id: graphContentIdValidator,
     description: v.optional(v.string()),
     locale: localeValidator,
-    materialDomain: v.optional(materialValidator),
+    materialDomain: v.optional(materialDomainValidator),
     route: v.string(),
     score: v.number(),
     section: nakafaSectionValidator,

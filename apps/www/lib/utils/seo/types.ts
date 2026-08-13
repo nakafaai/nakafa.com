@@ -1,6 +1,9 @@
 import type { ProgramNavigationLevel } from "@nakafa/aksara-contracts/program/spec";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
-import type { Grade, Material } from "@repo/contents/_types/taxonomy";
+import type {
+  Grade,
+  PresentedMaterialDomain,
+} from "@repo/contents/_types/taxonomy";
 
 /**
  * Base SEO data extracted from content metadata
@@ -25,7 +28,7 @@ export type SEOContext =
   | {
       type: "material-lesson";
       grade: Grade;
-      material: Material;
+      material: PresentedMaterialDomain;
       chapter?: string;
       data: ContentSEOData;
     }

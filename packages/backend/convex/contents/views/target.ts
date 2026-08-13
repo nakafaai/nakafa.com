@@ -1,3 +1,8 @@
+import {
+  type MaterialDomain,
+  MaterialDomainSchema,
+} from "@nakafa/aksara-contracts/material/domain";
+import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
 import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
@@ -10,11 +15,10 @@ import {
 } from "@repo/backend/convex/contents/views/spec";
 import {
   localeValidator,
-  materialValidator,
+  materialDomainValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { readMaterialDomain } from "@repo/contents/_types/material/identity";
 import { type Infer, v } from "convex/values";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const contentViewTargetValidator = v.object({
   ...learningGraphIdentityValidator.fields,
@@ -23,7 +27,7 @@ const contentViewTargetValidator = v.object({
   description: v.optional(v.string()),
   kind: v.union(v.literal("article"), v.literal("curriculum-lesson")),
   locale: localeValidator,
-  materialDomain: v.optional(materialValidator),
+  materialDomain: v.optional(materialDomainValidator),
   materialKey: v.optional(v.string()),
   parentPath: v.optional(v.string()),
   route: v.string(),
@@ -32,14 +36,35 @@ const contentViewTargetValidator = v.object({
   title: v.string(),
 });
 
+type StoredContentViewTarget = Infer<typeof contentViewTargetValidator>;
+
 /** Current verified route facts used by views, recents, and popularity. */
-export type ContentViewTarget = Infer<typeof contentViewTargetValidator>;
+export type ContentViewTarget = Omit<
+  StoredContentViewTarget,
+  "materialDomain"
+> & {
+  readonly materialDomain?: MaterialDomain;
+};
 
 /** Stable current identity required to resolve a content-view target. */
 export type ContentViewTargetInput = Pick<
   RecordContentViewArgs,
   "contentId" | "locale" | "publicPath" | "section"
 >;
+
+/** Reads the Aksara-owned domain from one authenticated material key. */
+export const decodeMaterialDomain = Effect.fn(
+  "contents.views.decodeMaterialDomain"
+)(function* (materialKeyInput: unknown) {
+  const materialKey = yield* Schema.decodeUnknown(MaterialKeySchema)(
+    materialKeyInput
+  ).pipe(Effect.mapError(toContentViewIoError));
+  const [, materialDomainInput] = materialKey.split(".");
+
+  return yield* Schema.decodeUnknown(MaterialDomainSchema)(
+    materialDomainInput
+  ).pipe(Effect.mapError(toContentViewIoError));
+});
 
 /** Resolves one current material from its exact signed public route. */
 const readMaterialTarget = Effect.fn("contents.views.readMaterialTarget")(
@@ -58,13 +83,10 @@ const readMaterialTarget = Effect.fn("contents.views.readMaterialTarget")(
       return null;
     }
     const { projection, row } = resolved.material;
-    const materialDomain = readMaterialDomain(projection.materialKey);
-    if (
-      projection.graph.assetId !== input.contentId ||
-      materialDomain === undefined
-    ) {
+    if (projection.graph.assetId !== input.contentId) {
       return null;
     }
+    const materialDomain = yield* decodeMaterialDomain(projection.materialKey);
     return {
       ...projection.graph,
       contentKey: projection.contentKey,

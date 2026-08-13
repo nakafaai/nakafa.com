@@ -2,11 +2,11 @@ import { NAKAFA_AGENT_SECTIONS } from "@repo/contents/_lib/agent/constants";
 import {
   ARTICLE_CATEGORIES,
   GRADES,
+  PRESENTED_MATERIAL_DOMAINS,
   SUBJECT_CATEGORIES,
-  SUBJECT_MATERIALS,
 } from "@repo/contents/_types/taxonomy";
 import { locales } from "@repo/utilities/locales";
-import type { Infer } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /** Supported content languages for Convex validators. */
@@ -32,5 +32,8 @@ export type SubjectCategory = Infer<typeof subjectCategoryValidator>;
 export const gradeValidator = literals(...GRADES);
 export type Grade = Infer<typeof gradeValidator>;
 
-export const materialValidator = literals(...SUBJECT_MATERIALS);
-export type Material = Infer<typeof materialValidator>;
+/** Material domains authenticated by Aksara before analytics storage. */
+export const materialDomainValidator = v.string();
+
+/** Exact retired material union retained only for deployed legacy schemas. */
+export const materialValidator = literals(...PRESENTED_MATERIAL_DOMAINS);

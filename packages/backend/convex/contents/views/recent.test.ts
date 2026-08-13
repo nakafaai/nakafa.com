@@ -1,3 +1,4 @@
+import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createCanonicalLearningContext,
@@ -25,7 +26,7 @@ const target = {
   description: projection.metadata.description,
   kind: "curriculum-lesson",
   locale: projection.locale,
-  materialDomain: "mathematics",
+  materialDomain: MaterialDomainSchema.make("mathematics"),
   materialKey: projection.materialKey,
   parentPath: projection.parentPath,
   route: projection.publicPath,

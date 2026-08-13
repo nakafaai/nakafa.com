@@ -1,6 +1,6 @@
 import { BulbIcon, PiIcon } from "@hugeicons/core-free-icons";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import { SUBJECT_MATERIALS } from "@repo/contents/_types/taxonomy";
+import { PRESENTED_MATERIAL_DOMAINS } from "@repo/contents/_types/taxonomy";
 import { describe, expect, it } from "vitest";
 
 describe("getMaterialIcon", () => {
@@ -9,7 +9,7 @@ describe("getMaterialIcon", () => {
   });
 
   it("resolves every known material domain without the fallback icon", () => {
-    for (const material of SUBJECT_MATERIALS) {
+    for (const material of PRESENTED_MATERIAL_DOMAINS) {
       expect(getMaterialIcon(material)).not.toBe(BulbIcon);
     }
   });

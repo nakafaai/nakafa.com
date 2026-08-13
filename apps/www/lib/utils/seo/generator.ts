@@ -1,5 +1,8 @@
 import { getGradeNonNumeric } from "@repo/contents/_lib/curriculum/grade";
-import type { Grade, Material } from "@repo/contents/_types/taxonomy";
+import type {
+  Grade,
+  PresentedMaterialDomain,
+} from "@repo/contents/_types/taxonomy";
 import { Effect, Option } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
@@ -72,7 +75,7 @@ const formatGradeForDisplay = Effect.fn("SEO.formatGradeForDisplay")(
  * Translates material name from Subject namespace.
  */
 const translateSubjectMaterial = Effect.fn("SEO.translateSubjectMaterial")(
-  (material: Material, locale: Locale) =>
+  (material: PresentedMaterialDomain, locale: Locale) =>
     Effect.gen(function* () {
       const tSubject = yield* fetchSubjectTranslations(locale);
       return tSubject(material);

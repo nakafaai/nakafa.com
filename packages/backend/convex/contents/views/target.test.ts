@@ -8,6 +8,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/material";
 import {
   type ContentViewTargetInput,
+  decodeMaterialDomain,
   loadContentTarget,
 } from "@repo/backend/convex/contents/views/target";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -24,6 +25,7 @@ import {
 } from "@repo/backend/test/content-runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { convexTest, type TestConvex } from "convex-test";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Runs one target lookup through the production Effect boundary. */
@@ -35,6 +37,17 @@ function readTarget(
 }
 
 describe("contents/views/target", () => {
+  it("fails with the typed view error for an invalid material domain", async () => {
+    await expect(
+      Effect.runPromise(
+        Effect.flip(decodeMaterialDomain("lesson.Invalid.technical-topic"))
+      )
+    ).resolves.toMatchObject({
+      _tag: "ContentViewIoError",
+      code: "CONTENT_VIEW_IO_FAILED",
+    });
+  });
+
   it("fails closed before current signed ownership is available", async () => {
     const target = convexTest(schema, convexModules);
 
@@ -152,7 +165,7 @@ describe("contents/views/target", () => {
     ).resolves.toBeNull();
   });
 
-  it("rejects active material taxonomy outside the application registry", async () => {
+  it("accepts a signed Aksara domain outside the presentation registry", async () => {
     const target = convexTest(schema, convexModules);
     const registered = makeMaterialProjection("en", 1);
     const projection = MaterialLessonProjectionSchema.make({
@@ -176,6 +189,13 @@ describe("contents/views/target", () => {
         publicPath: projection.publicPath,
         section: "material",
       })
-    ).resolves.toBeNull();
+    ).resolves.toMatchObject({
+      contentKey: projection.contentKey,
+      content_id: projection.graph.assetId,
+      materialDomain: "test",
+      materialKey: projection.materialKey,
+      route: projection.publicPath,
+      section: "material",
+    });
   });
 });
