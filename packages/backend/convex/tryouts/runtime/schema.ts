@@ -2,6 +2,7 @@ import { rendererDomainValidator } from "@repo/backend/convex/contentRelease/spe
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/convex/tryouts/access/source";
+import tryoutHistorySchema from "@repo/backend/convex/tryouts/history/schema";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import {
@@ -46,6 +47,7 @@ export const tryoutBundleSchema = {
 
 const tables = {
   ...tryoutBundleSchema,
+  ...tryoutHistorySchema,
   tryoutAttempts: defineTable({
     userId: v.id("users"),
     tryoutSnapshotId: v.string(),
@@ -57,6 +59,7 @@ const tables = {
     examKey: tryoutRouteKeyValidator,
     trackKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
+    appLocale: v.optional(localeValidator),
     locale: localeValidator,
     scaleVersionId: v.optional(v.id("irtScaleVersions")),
     accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
@@ -119,6 +122,7 @@ const tables = {
     examKey: tryoutRouteKeyValidator,
     trackKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
+    appLocale: v.optional(localeValidator),
     locale: localeValidator,
     attemptNumber: v.number(),
     publishedScore: v.union(v.number(), v.null()),

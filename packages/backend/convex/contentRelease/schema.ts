@@ -1,5 +1,6 @@
 import { vWorkflowId } from "@convex-dev/workflow";
 import articleSchema from "@repo/backend/convex/contentRelease/article/schema";
+import cutoverSchema from "@repo/backend/convex/contentRelease/cutover/schema";
 import materialSchema from "@repo/backend/convex/contentRelease/material/schema";
 import { proofFailureValidator } from "@repo/backend/convex/contentRelease/proof/spec";
 import scopeSchema from "@repo/backend/convex/contentRelease/scope/schema";
@@ -136,6 +137,7 @@ const tables = {
 
   ...articleSchema,
   ...materialSchema,
+  ...cutoverSchema,
 
   /** Immutable route versions resolved before access policy enforcement. */
   contentBindings: defineTable({
