@@ -73,8 +73,70 @@ pnpm --filter @repo/backend exec convex run contentRelease/cutover/articleAssets
 
 Accept only `complete: true`, `total: 14`, and a combined `updated` plus
 `unchanged` count of 14. Repeating the command must return 14 unchanged rows.
-The reader deployment re-authenticates these identities before accepting its
-cutover checkpoint.
+
+## Stage and prove signed material references
+
+Backfill the storage-derived topic asset on all 766 authenticated material
+lessons, then prove every lesson and topic index in durable pages. Invoke the
+checkpoint until it returns `complete: true`:
+
+```sh
+pnpm --filter @repo/backend exec convex run contentRelease/cutover/materialAssets:checkpoint '{}' --prod
+```
+
+Each transaction processes at most three material rows. The staging phase may
+read at most four 16 KiB rows, and the proof phase may read at most 18 16 KiB
+rows across its page and exact index checks, for a 294,912-byte ceiling. Accept
+only monotonically increasing staging and proof counts, a terminal `checked:
+766`, exactly 72 localized topic identities, and both count-766 lesson and
+count-72 topic proof receipts. Repeating the terminal command must return
+`complete: true` with zero processed or staged rows.
+
+## Stage signed snapshot reference identities
+
+Backfill and prove the exact 228 Quran asset IDs and public paths from their
+authenticated signed search rows. Invoke the bounded checkpoint repeatedly
+until it returns `complete: true`:
+
+```sh
+pnpm --filter @repo/backend exec convex run contentRelease/cutover/quranAssets:checkpoint '{}' --prod
+```
+
+Each Quran transaction processes at most three rows and durably advances its
+signed snapshot cursor. Accept only monotonically increasing `checked` counts,
+`processed` between 0 and 3, and a terminal `checked: 228`. Repeating the
+terminal command must return `complete: true`, `checked: 228`, and zero
+processed or staged rows.
+
+Then backfill the exact 108 try-out asset IDs from their authenticated signed
+catalog rows:
+
+```sh
+pnpm --filter @repo/backend exec convex run contentRelease/cutover/tryoutAssets:stage '{}' --prod
+```
+
+Accept only `complete: true`, `total: 108`, and an `updated` plus `unchanged`
+sum of 108. Repeating the command must report all 108 rows unchanged.
+
+## Prove all reference indexes in isolated transactions
+
+Authenticate each remaining family and store its typed proof receipt
+separately. The material and Quran checkpoints above already store their
+isolated receipts, so this step never combines those inventories in one Convex
+transaction:
+
+```sh
+pnpm --filter @repo/backend exec convex run contentRelease/cutover/articleAssets:prove '{}' --prod
+pnpm --filter @repo/backend exec convex run contentRelease/cutover/tryoutAssets:prove '{}' --prod
+```
+
+Accept only article and try-out receipts with counts 14 and 108. Together with
+the completed material lesson count-766, material topic count-72, and Quran
+count-228 receipts, the checkpoint must hold exactly five reference receipts
+across four families. Every proof authenticates its complete active inventory,
+rejects duplicate signed asset or route identities, and proves every permanent
+reference index resolves the exact source row. The quiescent publication guard
+remains active for the lifetime of these receipts.
 
 ## Preserve retained attempt history
 
@@ -123,4 +185,6 @@ The next deployment must first route retained set pages, retained section
 pages, and protected artifact reads through the authenticated history tables.
 It must also remove every legacy application and agent-doc reader. Only that
 deployment may expose the bounded reader-acceptance mutation described in
-`phase2.md`.
+`phase2.md`. That mutation validates all five durable reference receipts across
+four families and the unchanged audited publication identity without reopening
+the large source inventories in one transaction.

@@ -18,9 +18,12 @@ is satisfied.
    review, protected artifact, agent-doc, and browser acceptance against that
    deployment. No fallback or current-history union is accepted.
 4. Only the reader-cutover deployment may expose
-   `contentRelease/cutover/readers:accept`. It must re-prove all 21 markers and
-   persist `readerCutoverAcceptedAt` on the existing quiescent checkpoint. Phase
-   1 has no writer for this field, so an earlier drain is impossible.
+   `contentRelease/cutover/readers:accept`. It must re-prove all 21 markers,
+   require the exact Phase 1 article, material lesson, material topic, Quran,
+   and try-out proof receipts, and verify the audited publication identity is
+   unchanged before it persists `readerCutoverAcceptedAt` on the existing
+   quiescent checkpoint. Phase 1 has no writer for this field, so an earlier
+   drain is impossible.
 5. Invoke `contentRelease/cutover/legacy:drainLegacy` until it reaches phase
    `legacy-drained`. Sum `deleted` across every bounded action receipt and
    accept only exactly 12,854 total deletions. The terminal proof independently
