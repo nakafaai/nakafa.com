@@ -164,6 +164,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     );
   }
   const entry = {
+    assetId: projection.graph.assetId,
     bucket,
     category: projection.category,
     categoryTitle: projection.categoryTitle,

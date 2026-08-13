@@ -62,6 +62,20 @@ pnpm --filter @repo/backend exec convex run contentRelease/cutover/audio:checkpo
 
 The shared Workflow component remains because other product domains use it.
 
+## Stage signed article identities
+
+Backfill the exact 14 active article asset IDs from their authenticated signed
+projections:
+
+```sh
+pnpm --filter @repo/backend exec convex run contentRelease/cutover/articleAssets:stage '{}' --prod
+```
+
+Accept only `complete: true`, `total: 14`, and a combined `updated` plus
+`unchanged` count of 14. Repeating the command must return 14 unchanged rows.
+The reader deployment re-authenticates these identities before accepting its
+cutover checkpoint.
+
 ## Preserve retained attempt history
 
 While the checkpoint remains `quiescent`, copy the app locale into the

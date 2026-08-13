@@ -22,6 +22,7 @@ export const RETAINED_FROZEN_PLACEMENT_COUNT =
   retainedTryoutHistoryPlan.frozenPlacementCount;
 export const RETAINED_PROGRESS_COUNT = retainedTryoutHistoryPlan.progressCount;
 export const AUDITED_CONTENT_RELEASE_COUNT = 26;
+export const AUDITED_ARTICLE_COUNT = 14;
 
 export interface InventoryEntry<TableName extends TableNames = TableNames> {
   readonly batchSize: number;
@@ -55,7 +56,11 @@ export const CURRENT_INVENTORY = [
   { batchSize: 50, expected: 780, table: "contentPaths" },
   { batchSize: 8, expected: 4206, table: "contentHeads" },
   { batchSize: 20, expected: 780, table: "contentIndex" },
-  { batchSize: 50, expected: 14, table: "articleCatalog" },
+  {
+    batchSize: 50,
+    expected: AUDITED_ARTICLE_COUNT,
+    table: "articleCatalog",
+  },
   { batchSize: 50, expected: 2, table: "articleCategories" },
   { batchSize: 50, expected: 14, table: "articleBuckets" },
   { batchSize: 8, expected: 766, table: "materialCatalog" },

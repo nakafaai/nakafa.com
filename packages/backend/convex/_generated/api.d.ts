@@ -151,6 +151,7 @@ import type * as contentRelease_compact_owners from "../contentRelease/compact/o
 import type * as contentRelease_compact_rows from "../contentRelease/compact/rows.js";
 import type * as contentRelease_compact_state from "../contentRelease/compact/state.js";
 import type * as contentRelease_cursor from "../contentRelease/cursor.js";
+import type * as contentRelease_cutover_articleAssets from "../contentRelease/cutover/articleAssets.js";
 import type * as contentRelease_cutover_artifacts from "../contentRelease/cutover/artifacts.js";
 import type * as contentRelease_cutover_audio from "../contentRelease/cutover/audio.js";
 import type * as contentRelease_cutover_audioComponent from "../contentRelease/cutover/audioComponent.js";
@@ -774,6 +775,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/compact/rows": typeof contentRelease_compact_rows;
   "contentRelease/compact/state": typeof contentRelease_compact_state;
   "contentRelease/cursor": typeof contentRelease_cursor;
+  "contentRelease/cutover/articleAssets": typeof contentRelease_cutover_articleAssets;
   "contentRelease/cutover/artifacts": typeof contentRelease_cutover_artifacts;
   "contentRelease/cutover/audio": typeof contentRelease_cutover_audio;
   "contentRelease/cutover/audioComponent": typeof contentRelease_cutover_audioComponent;
