@@ -57,6 +57,7 @@ describe("contentRelease/quran/facts", () => {
       assetId: "asset:id:quran:quran-surah:1",
       identity: "search:id:1",
       locale: "id",
+      publicPath: "quran/1",
       surahNumber: 1,
       text: "pencarian teknis",
     });
