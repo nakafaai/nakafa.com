@@ -3,11 +3,10 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import {
-  internalMutation,
-  internalQuery,
-} from "@repo/backend/convex/_generated/server";
+import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { AUDITED_TRYOUT_CATALOG_COUNT } from "@repo/backend/convex/contentRelease/cutover/inventory";
+import { persistReferenceProof } from "@repo/backend/convex/contentRelease/cutover/referenceProofs";
+import { referenceProofReceiptValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
 import { requireCutoverPhase } from "@repo/backend/convex/contentRelease/cutover/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
@@ -16,16 +15,19 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const tryoutAssetProofValidator = v.object({
-  complete: v.literal(true),
-  total: v.number(),
-});
-
 const tryoutAssetReceiptValidator = v.object({
   complete: v.literal(true),
   total: v.number(),
   unchanged: v.number(),
   updated: v.number(),
+});
+
+/** Authenticates try-out indexes and stores one isolated durable receipt. */
+export const checkpointTryoutAssetIds = Effect.fn(
+  "contentRelease.cutover.checkpointTryoutAssetIds"
+)(function* (ctx: MutationCtx, expectedCount: number) {
+  const count = yield* proveTryoutAssetIdsComplete(ctx, expectedCount);
+  return yield* persistReferenceProof(ctx, "tryout", count, expectedCount);
 });
 
 type ReadCtx = MutationCtx | QueryCtx;
@@ -63,7 +65,8 @@ const authenticateTryoutAssets = Effect.fn(
     );
   }
 
-  const identities = new Set<string>();
+  const assetIdentities = new Set<string>();
+  const routeIdentities = new Set<string>();
   const authenticated: AuthenticatedTryoutAsset[] = [];
   for (const row of rows) {
     if (row.snapshotId !== selected.snapshotId) {
@@ -73,13 +76,21 @@ const authenticateTryoutAssets = Effect.fn(
     }
     const signed = yield* verifyTryoutCatalog(row, selected.snapshotId);
     const assetId = signed.graph.assetId;
-    const identity = `${row.locale}\0${assetId}`;
-    if (identities.has(identity)) {
+    if (assetIdentities.has(assetId)) {
       return yield* tryoutAssetFailure(
         `Try-out asset ${row.locale}/${assetId} is not unique.`
       );
     }
-    identities.add(identity);
+    assetIdentities.add(assetId);
+    if (signed.publicPath !== undefined) {
+      const routeIdentity = `${row.locale}\0${signed.publicPath}`;
+      if (routeIdentities.has(routeIdentity)) {
+        return yield* tryoutAssetFailure(
+          `Try-out route ${row.locale}/${signed.publicPath} is not unique.`
+        );
+      }
+      routeIdentities.add(routeIdentity);
+    }
     authenticated.push({ assetId, row });
   }
   return authenticated;
@@ -97,21 +108,37 @@ export const proveTryoutAssetIdsComplete = Effect.fn(
         `Try-out catalog row ${row.identity} has no exact stored asset ID.`
       );
     }
-    const indexed = yield* Effect.promise(() =>
+    const assetRow = yield* Effect.promise(() =>
       ctx.db
         .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_locale_and_assetId", (index) =>
-          index
-            .eq("snapshotId", row.snapshotId)
-            .eq("locale", row.locale)
-            .eq("assetId", assetId)
+        .withIndex("by_snapshotId_and_assetId", (index) =>
+          index.eq("snapshotId", row.snapshotId).eq("assetId", assetId)
         )
         .unique()
     );
-    if (indexed?._id !== row._id) {
+    if (assetRow?._id !== row._id) {
       return yield* tryoutAssetFailure(
         `Try-out asset ${row.locale}/${assetId} does not resolve exactly.`
       );
+    }
+    const publicPath = row.publicPath;
+    if (publicPath !== undefined) {
+      const routeRow = yield* Effect.promise(() =>
+        ctx.db
+          .query("tryoutCatalog")
+          .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
+            index
+              .eq("snapshotId", row.snapshotId)
+              .eq("locale", row.locale)
+              .eq("publicPath", publicPath)
+          )
+          .unique()
+      );
+      if (routeRow?._id !== row._id) {
+        return yield* tryoutAssetFailure(
+          `Try-out route ${row.locale}/${publicPath} does not resolve exactly.`
+        );
+      }
     }
   }
   return authenticated.length;
@@ -156,15 +183,13 @@ export const stage = internalMutation({
     runConvexProgram(stageTryoutAssetIds(ctx, AUDITED_TRYOUT_CATALOG_COUNT)),
 });
 
-/** Read-only acceptance proof for the staged try-out asset identities. */
-export const prove = internalQuery({
+/** Stores the exact try-out reference proof in its own transaction. */
+export const prove = internalMutation({
   args: {},
-  returns: tryoutAssetProofValidator,
+  returns: referenceProofReceiptValidator,
   handler: (ctx) =>
     runConvexProgram(
-      proveTryoutAssetIdsComplete(ctx, AUDITED_TRYOUT_CATALOG_COUNT).pipe(
-        Effect.map((total) => ({ complete: true as const, total }))
-      )
+      checkpointTryoutAssetIds(ctx, AUDITED_TRYOUT_CATALOG_COUNT)
     ),
 });
 

@@ -1,5 +1,6 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  checkpointArticleAssetIds,
   proveArticleAssetIdsComplete,
   stageArticleAssetIds,
 } from "@repo/backend/convex/contentRelease/cutover/articleAssets";
@@ -28,19 +29,38 @@ describe("contentRelease/cutover/articleAssets", () => {
       const proved = await runConvexProgram(
         proveArticleAssetIdsComplete(ctx, 2, TEST_RUNTIME_RELEASE.sequence)
       );
+      const receipt = await runConvexProgram(checkpointArticleAssetIds(ctx, 2));
       const stored = await ctx.db.query("articleCatalog").collect();
       const selected = stored[0];
-      const indexed = selected?.assetId
+      const asset = selected?.assetId
         ? await ctx.db
             .query("articleCatalog")
-            .withIndex("by_locale_and_assetId", (index) =>
-              index
-                .eq("locale", selected.locale)
-                .eq("assetId", selected.assetId)
+            .withIndex("by_assetId", (index) =>
+              index.eq("assetId", selected.assetId)
             )
             .unique()
         : null;
-      return { first, indexed, proved, second, stored };
+      const route = selected
+        ? await ctx.db
+            .query("articleCatalog")
+            .withIndex("by_locale_and_publicPath", (index) =>
+              index
+                .eq("locale", selected.locale)
+                .eq("publicPath", selected.publicPath)
+            )
+            .unique()
+        : null;
+      const checkpoint = await ctx.db.query("contentCutoverState").unique();
+      return {
+        asset,
+        checkpoint,
+        first,
+        proved,
+        receipt,
+        route,
+        second,
+        stored,
+      };
     });
 
     expect(result.first).toEqual({
@@ -56,10 +76,13 @@ describe("contentRelease/cutover/articleAssets", () => {
       updated: 0,
     });
     expect(result.proved).toBe(2);
+    expect(result.receipt.count).toBe(2);
+    expect(result.checkpoint?.articleReferenceProof).toEqual(result.receipt);
     expect(result.stored.every(({ assetId }) => assetId !== undefined)).toBe(
       true
     );
-    expect(result.indexed?.assetId).toBe(result.stored[0]?.assetId);
+    expect(result.asset?._id).toBe(result.stored[0]?._id);
+    expect(result.route?._id).toBe(result.stored[0]?._id);
   });
 
   it("rejects a stored identity that differs from its signed projection", async () => {
@@ -78,6 +101,30 @@ describe("contentRelease/cutover/articleAssets", () => {
 
     await expect(
       t.mutation((ctx) => runConvexProgram(stageArticleAssetIds(ctx, 1)))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects duplicate authenticated article asset identities", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeArticles(ctx, 1);
+      const article = await ctx.db.query("articleCatalog").unique();
+      if (!article) {
+        throw new Error("Expected one article catalog row.");
+      }
+      const { _creationTime: _, _id: __, ...duplicate } = article;
+      await ctx.db.insert("articleCatalog", duplicate);
+      await insertQuiescentCheckpoint(ctx);
+    });
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          proveArticleAssetIdsComplete(ctx, 2, TEST_RUNTIME_RELEASE.sequence)
+        )
+      )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });

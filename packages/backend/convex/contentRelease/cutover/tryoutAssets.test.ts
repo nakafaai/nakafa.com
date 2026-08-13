@@ -1,5 +1,6 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  checkpointTryoutAssetIds,
   proveTryoutAssetIdsComplete,
   stageTryoutAssetIds,
 } from "@repo/backend/convex/contentRelease/cutover/tryoutAssets";
@@ -44,20 +45,33 @@ describe("contentRelease/cutover/tryoutAssets", () => {
     const proved = await t.query((ctx) =>
       runConvexProgram(proveTryoutAssetIdsComplete(ctx, TRYOUT_CATALOG_COUNT))
     );
+    const receipt = await t.mutation((ctx) =>
+      runConvexProgram(checkpointTryoutAssetIds(ctx, TRYOUT_CATALOG_COUNT))
+    );
     const indexed = await t.run(async (ctx) => {
       const row = await ctx.db.query("tryoutCatalog").first();
-      if (!row?.assetId) {
-        throw new Error("Expected one staged try-out asset identity.");
+      const assetId = row?.assetId;
+      const publicPath = row?.publicPath;
+      if (!(row && assetId && publicPath)) {
+        throw new Error("Expected one staged try-out reference identity.");
       }
-      return ctx.db
+      const asset = await ctx.db
         .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_locale_and_assetId", (index) =>
+        .withIndex("by_snapshotId_and_assetId", (index) =>
+          index.eq("snapshotId", row.snapshotId).eq("assetId", assetId)
+        )
+        .unique();
+      const route = await ctx.db
+        .query("tryoutCatalog")
+        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
           index
             .eq("snapshotId", row.snapshotId)
             .eq("locale", row.locale)
-            .eq("assetId", row.assetId)
+            .eq("publicPath", publicPath)
         )
         .unique();
+      const checkpoint = await ctx.db.query("contentCutoverState").unique();
+      return { asset, checkpoint, route, row };
     });
 
     expect(first).toEqual({
@@ -73,7 +87,10 @@ describe("contentRelease/cutover/tryoutAssets", () => {
       updated: 0,
     });
     expect(proved).toBe(TRYOUT_CATALOG_COUNT);
-    expect(indexed?.assetId).toBeDefined();
+    expect(receipt.count).toBe(TRYOUT_CATALOG_COUNT);
+    expect(indexed.checkpoint?.tryoutReferenceProof).toEqual(receipt);
+    expect(indexed.asset?._id).toBe(indexed.row._id);
+    expect(indexed.route?._id).toBe(indexed.row._id);
   });
 
   it("rejects a stored identity that differs from its signed try-out row", async () => {
@@ -93,6 +110,36 @@ describe("contentRelease/cutover/tryoutAssets", () => {
     await expect(
       t.mutation((ctx) =>
         runConvexProgram(stageTryoutAssetIds(ctx, TRYOUT_CATALOG_COUNT))
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects duplicate authenticated try-out asset identities", async () => {
+    const first = makeTryoutCatalogRow("en").record.row;
+    const second = makeTryoutCatalogRow("id").record.row;
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateTryoutSnapshot(ctx, {
+        catalog: [
+          first,
+          {
+            ...second,
+            graph: { ...second.graph, assetId: first.graph.assetId },
+          },
+        ],
+        placements: [
+          makeTryoutPlacementRow("en").record.row,
+          makeTryoutPlacementRow("id").record.row,
+        ],
+      });
+      await insertQuiescentCheckpoint(ctx);
+    });
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(proveTryoutAssetIdsComplete(ctx, TRYOUT_CATALOG_COUNT))
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
