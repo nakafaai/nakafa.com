@@ -1,4 +1,8 @@
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
 import { AUDITED_ARTICLE_COUNT } from "@repo/backend/convex/contentRelease/cutover/inventory";
@@ -15,11 +19,16 @@ const articleAssetReceiptValidator = v.object({
   updated: v.number(),
 });
 
-/** Authenticates and persists every active article's signed graph asset ID. */
-export const stageArticleAssetIds = Effect.fn(
-  "contentRelease.cutover.stageArticleAssetIds"
-)(function* (ctx: MutationCtx, expectedCount: number) {
-  const state = yield* requireCutoverPhase(ctx, ["quiescent"]);
+type ReadCtx = MutationCtx | QueryCtx;
+interface AuthenticatedArticleAsset {
+  readonly article: Doc<"articleCatalog">;
+  readonly assetId: string;
+}
+
+/** Authenticates the exact active article inventory and unique graph facts. */
+const authenticateArticleAssets = Effect.fn(
+  "contentRelease.cutover.authenticateArticleAssets"
+)(function* (ctx: ReadCtx, expectedCount: number, activeSequence: number) {
   const articles = yield* Effect.promise(() =>
     ctx.db.query("articleCatalog").take(expectedCount + 1)
   );
@@ -32,14 +41,9 @@ export const stageArticleAssetIds = Effect.fn(
   const assetIdentities = new Set<string>();
   const contentIdentities = new Set<string>();
   const routeIdentities = new Set<string>();
-  let unchanged = 0;
-  let updated = 0;
+  const authenticated: AuthenticatedArticleAsset[] = [];
   for (const article of articles) {
-    const verified = yield* verifyArticle(
-      ctx,
-      article,
-      state.auditedActiveSequence
-    );
+    const verified = yield* verifyArticle(ctx, article, activeSequence);
     const assetId = verified.projection.graph.assetId;
     const assetIdentity = `${article.locale}\0${assetId}`;
     const contentIdentity = `${article.locale}\0${article.contentKey}`;
@@ -62,7 +66,43 @@ export const stageArticleAssetIds = Effect.fn(
     assetIdentities.add(assetIdentity);
     contentIdentities.add(contentIdentity);
     routeIdentities.add(routeIdentity);
+    authenticated.push({ article, assetId });
+  }
+  return authenticated;
+});
 
+/** Proves every staged row stores its exact authenticated graph asset ID. */
+export const proveArticleAssetIdsComplete = Effect.fn(
+  "contentRelease.cutover.proveArticleAssetIdsComplete"
+)(function* (ctx: ReadCtx, expectedCount: number, activeSequence: number) {
+  const authenticated = yield* authenticateArticleAssets(
+    ctx,
+    expectedCount,
+    activeSequence
+  );
+  for (const { article, assetId } of authenticated) {
+    if (article.assetId !== assetId) {
+      return yield* articleAssetFailure(
+        `Article ${article.contentKey}/${article.locale} has no exact stored asset ID.`
+      );
+    }
+  }
+  return authenticated.length;
+});
+
+/** Authenticates and persists every active article's signed graph asset ID. */
+export const stageArticleAssetIds = Effect.fn(
+  "contentRelease.cutover.stageArticleAssetIds"
+)(function* (ctx: MutationCtx, expectedCount: number) {
+  const state = yield* requireCutoverPhase(ctx, ["quiescent"]);
+  const authenticated = yield* authenticateArticleAssets(
+    ctx,
+    expectedCount,
+    state.auditedActiveSequence
+  );
+  let unchanged = 0;
+  let updated = 0;
+  for (const { article, assetId } of authenticated) {
     if (article.assetId !== undefined) {
       if (article.assetId !== assetId) {
         return yield* articleAssetFailure(
@@ -80,7 +120,7 @@ export const stageArticleAssetIds = Effect.fn(
 
   return {
     complete: true as const,
-    total: articles.length,
+    total: authenticated.length,
     unchanged,
     updated,
   };

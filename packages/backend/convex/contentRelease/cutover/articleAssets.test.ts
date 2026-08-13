@@ -1,5 +1,8 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { stageArticleAssetIds } from "@repo/backend/convex/contentRelease/cutover/articleAssets";
+import {
+  proveArticleAssetIdsComplete,
+  stageArticleAssetIds,
+} from "@repo/backend/convex/contentRelease/cutover/articleAssets";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -22,6 +25,9 @@ describe("contentRelease/cutover/articleAssets", () => {
       await insertQuiescentCheckpoint(ctx);
       const first = await runConvexProgram(stageArticleAssetIds(ctx, 2));
       const second = await runConvexProgram(stageArticleAssetIds(ctx, 2));
+      const proved = await runConvexProgram(
+        proveArticleAssetIdsComplete(ctx, 2, TEST_RUNTIME_RELEASE.sequence)
+      );
       const stored = await ctx.db.query("articleCatalog").collect();
       const selected = stored[0];
       const indexed = selected?.assetId
@@ -34,7 +40,7 @@ describe("contentRelease/cutover/articleAssets", () => {
             )
             .unique()
         : null;
-      return { first, indexed, second, stored };
+      return { first, indexed, proved, second, stored };
     });
 
     expect(result.first).toEqual({
@@ -49,6 +55,7 @@ describe("contentRelease/cutover/articleAssets", () => {
       unchanged: 2,
       updated: 0,
     });
+    expect(result.proved).toBe(2);
     expect(result.stored.every(({ assetId }) => assetId !== undefined)).toBe(
       true
     );
