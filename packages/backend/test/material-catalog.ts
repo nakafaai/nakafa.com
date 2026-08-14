@@ -39,6 +39,12 @@ const NEXT_MATERIAL_IDENTITY = {
   sequence: 2,
 } satisfies TestIdentity;
 
+export const INHERITED_MATERIAL_IDENTITY = {
+  manifestHash: Sha256HashSchema.make(`sha256:${"4".repeat(64)}`),
+  releaseId: ReleaseIdSchema.make("release-inherited"),
+  sequence: 3,
+} satisfies TestIdentity;
+
 /** Inserts one projection into the immutable head and active material model. */
 export async function insertMaterialProjection(
   ctx: MutationCtx,
@@ -131,6 +137,44 @@ export async function advanceMaterialCatalog(
       materialReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
       materialSequence: NEXT_MATERIAL_IDENTITY.sequence,
       nextSequence: 3,
+    });
+  });
+}
+
+/** Activates material rows inherited from two earlier physical generations. */
+export async function activateInheritedMaterialCatalog(
+  target: TestConvex<typeof schema>
+) {
+  await activateMaterialCatalog(target);
+  await advanceMaterialCatalog(target);
+  await target.mutation(async (ctx) => {
+    await insertMaterialProjection(
+      ctx,
+      makeMaterialProjection("en", 1),
+      NEXT_MATERIAL_IDENTITY
+    );
+    await insertZeroRelease(ctx, {
+      ...INHERITED_MATERIAL_IDENTITY,
+      base: NEXT_MATERIAL_IDENTITY,
+      ownership: { base: ["material"], result: ["material"] },
+      role: "candidate",
+      status: "completed",
+    });
+    const state = await ctx.db.query("contentState").unique();
+    if (!state) {
+      throw new Error("Expected one active content state.");
+    }
+    await ctx.db.patch("contentState", state._id, {
+      activeManifestHash: INHERITED_MATERIAL_IDENTITY.manifestHash,
+      activeReleaseId: INHERITED_MATERIAL_IDENTITY.releaseId,
+      activeSequence: INHERITED_MATERIAL_IDENTITY.sequence,
+      materialManifestHash: INHERITED_MATERIAL_IDENTITY.manifestHash,
+      materialOwnerManifestHash: INHERITED_MATERIAL_IDENTITY.manifestHash,
+      materialOwnerReleaseId: INHERITED_MATERIAL_IDENTITY.releaseId,
+      materialOwnerSequence: INHERITED_MATERIAL_IDENTITY.sequence,
+      materialReleaseId: INHERITED_MATERIAL_IDENTITY.releaseId,
+      materialSequence: INHERITED_MATERIAL_IDENTITY.sequence,
+      nextSequence: INHERITED_MATERIAL_IDENTITY.sequence + 1,
     });
   });
 }

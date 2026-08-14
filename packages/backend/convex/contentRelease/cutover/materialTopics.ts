@@ -8,15 +8,19 @@ import {
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
-import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import { verifyEffectiveMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { Effect } from "effect";
 
 export const MATERIAL_REFERENCE_DOCUMENT_READ_CEILING =
   READ_MODEL_DOCUMENT_LIMIT;
 export const MATERIAL_REFERENCE_PAGE_LIMIT = 3;
+export const MATERIAL_EFFECTIVE_PROJECTION_ROW_READ_LIMIT = 4;
+export const MATERIAL_STAGE_ROW_READ_LIMIT =
+  MATERIAL_REFERENCE_PAGE_LIMIT +
+  1 +
+  MATERIAL_REFERENCE_PAGE_LIMIT * MATERIAL_EFFECTIVE_PROJECTION_ROW_READ_LIMIT;
 export const MATERIAL_STAGE_READ_CEILING =
-  (MATERIAL_REFERENCE_PAGE_LIMIT + 1) *
-  MATERIAL_REFERENCE_DOCUMENT_READ_CEILING;
+  MATERIAL_STAGE_ROW_READ_LIMIT * MATERIAL_REFERENCE_DOCUMENT_READ_CEILING;
 
 /** Stages one bounded page of authenticated material topic identities. */
 export const stageMaterialTopicPage = Effect.fn(
@@ -51,8 +55,7 @@ export const stageMaterialTopicPage = Effect.fn(
 
   let staged = 0;
   for (const row of page) {
-    yield* requireAuditedMaterialRow(row, state);
-    const { projection } = yield* verifyMaterial(row);
+    const { projection } = yield* requireAuditedMaterialRow(ctx, row, state);
     const topic = yield* deriveMaterialTopicReference(projection);
     const topicAssetId = topic.graph.assetId;
     if (row.topicAssetId !== undefined && row.topicAssetId !== topicAssetId) {
@@ -124,15 +127,12 @@ export const requireAuditedMaterialOwner = Effect.fn(
 
 export const requireAuditedMaterialRow = Effect.fn(
   "contentRelease.cutover.requireAuditedMaterialRow"
-)(function* (row: Doc<"materialCatalog">, state: Doc<"contentCutoverState">) {
-  if (
-    row.releaseId !== state.auditedActiveReleaseId ||
-    row.sequence !== state.auditedActiveSequence
-  ) {
-    return yield* materialTopicFailure(
-      `Material ${row.contentKey}/${row.locale} belongs to another release.`
-    );
-  }
+)(function* (
+  ctx: MutationCtx,
+  row: Doc<"materialCatalog">,
+  state: Doc<"contentCutoverState">
+) {
+  return yield* verifyEffectiveMaterial(ctx, row, state.auditedActiveSequence);
 });
 
 function readMaterialPage(ctx: MutationCtx, afterAssetId?: string) {

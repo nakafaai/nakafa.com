@@ -1,7 +1,9 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  MATERIAL_EFFECTIVE_PROJECTION_ROW_READ_LIMIT,
   MATERIAL_REFERENCE_PAGE_LIMIT,
   MATERIAL_STAGE_READ_CEILING,
+  MATERIAL_STAGE_ROW_READ_LIMIT,
   stageMaterialTopicPage,
 } from "@repo/backend/convex/contentRelease/cutover/materialTopics";
 import {
@@ -23,7 +25,13 @@ const PAGED_MATERIAL_COUNT = MATERIAL_REFERENCE_PAGE_LIMIT + 1;
 
 describe("contentRelease/cutover/materialTopics", () => {
   it("keeps one page below the reserved transaction read budget", () => {
-    expect(MATERIAL_STAGE_READ_CEILING).toBe(65_536);
+    expect(MATERIAL_STAGE_ROW_READ_LIMIT).toBe(
+      MATERIAL_REFERENCE_PAGE_LIMIT +
+        1 +
+        MATERIAL_REFERENCE_PAGE_LIMIT *
+          MATERIAL_EFFECTIVE_PROJECTION_ROW_READ_LIMIT
+    );
+    expect(MATERIAL_STAGE_READ_CEILING).toBe(262_144);
     expect(MATERIAL_STAGE_READ_CEILING).toBeLessThanOrEqual(
       TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
     );
