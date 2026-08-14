@@ -371,8 +371,15 @@ describe("content runtime proved maintenance", () => {
       ],
     });
     const wrongStepCount = checkpoint.audioWorkflowAudit.workflows.map(
-      (workflow, index) =>
-        index === 0 ? { ...workflow, steps: workflow.steps - 1 } : workflow
+      (workflow, index) => {
+        if (index === 0) {
+          return { ...workflow, steps: workflow.steps - 1 };
+        }
+        if (index === 1) {
+          return { ...workflow, steps: workflow.steps + 1 };
+        }
+        return workflow;
+      }
     );
     await expectMaintenanceFailure({
       ...input,
@@ -389,7 +396,6 @@ describe("content runtime proved maintenance", () => {
   });
 
   it.each([
-    ["zero audit timestamp", { auditedAt: 0 }],
     ["audit after freeze", { auditedAt: 21 }],
     ["freeze after proof", { frozenAt: 31 }],
     ["updated time drift", { updatedAt: 29 }],
@@ -408,6 +414,31 @@ describe("content runtime proved maintenance", () => {
     await expectMaintenanceFailure({
       ...input,
       contentCutoverState: [{ ...checkpoint, ...patch }],
+    });
+  });
+
+  it("rejects zero checkpoint and activity timestamps", async () => {
+    const input = makeMaintenance();
+    const checkpoint = input.contentCutoverState[0];
+    const activity = input.contentCutoverActivity[0];
+    if (!(checkpoint && activity)) {
+      throw new Error("Expected maintenance row fixtures.");
+    }
+    await expectMaintenanceFailure({
+      ...input,
+      contentCutoverState: [
+        {
+          ...checkpoint,
+          articleReferenceProof: {
+            ...checkpoint.articleReferenceProof,
+            provedAt: 0,
+          },
+        },
+      ],
+    });
+    await expectMaintenanceFailure({
+      ...input,
+      contentCutoverActivity: [{ ...activity, updatedAt: 0 }],
     });
   });
 
