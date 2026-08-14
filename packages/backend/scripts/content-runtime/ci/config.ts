@@ -25,13 +25,6 @@ export interface CacheIdentity {
   readonly runtimeSchemaFingerprint: string;
 }
 
-export type ContentRuntimeMode = "proved-maintenance" | "published";
-
-export interface RuntimeGenerationIdentity {
-  readonly runtimeGenerationHash: string;
-  readonly runtimeMode: ContentRuntimeMode;
-}
-
 export interface ProductionConfig {
   readonly deployKey: Redacted.Redacted;
   readonly runnerTemp: string;
@@ -41,13 +34,7 @@ export interface ProductionIdentityConfig
   extends ProductionConfig,
     CacheIdentity {}
 
-export interface ProductionGenerationConfig
-  extends ProductionConfig,
-    RuntimeGenerationIdentity {}
-
-export interface ExportConfig
-  extends ProductionIdentityConfig,
-    RuntimeGenerationIdentity {
+export interface ExportConfig extends ProductionIdentityConfig {
   readonly cacheKey: Redacted.Redacted;
   readonly exportLimit: number;
 }
@@ -125,31 +112,6 @@ const readCacheIdentity = Effect.gen(function* () {
   } satisfies CacheIdentity;
 });
 
-const readRuntimeGenerationIdentity = Effect.gen(function* () {
-  const values = yield* Config.all({
-    runtimeGenerationHash: Config.nonEmptyString(
-      "AGENT_DOCS_RUNTIME_GENERATION_HASH"
-    ),
-    runtimeMode: Config.nonEmptyString("AGENT_DOCS_CONTENT_RUNTIME_MODE"),
-  });
-  if (
-    values.runtimeMode !== "published" &&
-    values.runtimeMode !== "proved-maintenance"
-  ) {
-    return yield* contentRuntimeCiError(
-      "AGENT_DOCS_CONTENT_RUNTIME_MODE is invalid."
-    );
-  }
-
-  return {
-    runtimeGenerationHash: yield* validateHex(
-      "AGENT_DOCS_RUNTIME_GENERATION_HASH",
-      values.runtimeGenerationHash
-    ),
-    runtimeMode: values.runtimeMode,
-  } satisfies RuntimeGenerationIdentity;
-});
-
 export const readProductionConfig = Effect.gen(function* () {
   const deployKey = yield* Config.redacted("CONVEX_DEPLOY_KEY");
   const runnerTemp = yield* Config.nonEmptyString("RUNNER_TEMP");
@@ -165,16 +127,8 @@ export const readProductionIdentityConfig = Effect.gen(function* () {
   return { ...production, ...identity } satisfies ProductionIdentityConfig;
 });
 
-export const readProductionGenerationConfig = Effect.gen(function* () {
-  const production = yield* readProductionConfig;
-  const generation = yield* readRuntimeGenerationIdentity;
-
-  return { ...production, ...generation } satisfies ProductionGenerationConfig;
-});
-
 export const readExportConfig = Effect.gen(function* () {
   const productionIdentity = yield* readProductionIdentityConfig;
-  const generation = yield* readRuntimeGenerationIdentity;
   const cacheKey = yield* Config.redacted("AGENT_DOCS_CONTENT_CACHE_KEY");
   const exportLimit = yield* Config.integer(
     "CONTENT_RUNTIME_EXPORT_LIMIT"
@@ -190,16 +144,7 @@ export const readExportConfig = Effect.gen(function* () {
       "CONTENT_RUNTIME_EXPORT_LIMIT must be a positive safe integer."
     );
   }
-  if (
-    generation.runtimeMode !== "published" ||
-    generation.runtimeGenerationHash !== productionIdentity.contentStateHash
-  ) {
-    return yield* contentRuntimeCiError(
-      "Signed runtime export requires the published generation identity."
-    );
-  }
-
-  return { ...productionIdentity, ...generation, cacheKey, exportLimit };
+  return { ...productionIdentity, cacheKey, exportLimit };
 });
 
 export const readImportConfig = Effect.gen(function* () {

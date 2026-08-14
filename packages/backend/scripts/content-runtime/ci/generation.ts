@@ -1,7 +1,7 @@
 import { FileSystem } from "@effect/platform";
 import { Effect, Redacted } from "effect";
 import { runConvexData } from "./command";
-import type { ProductionConfig, RuntimeGenerationIdentity } from "./config";
+import type { CacheIdentity, ProductionConfig } from "./config";
 import { contentRuntimeCiError } from "./error";
 import {
   decodeJsonRows,
@@ -9,88 +9,52 @@ import {
   type JsonObject,
   stripConvexSystemFields,
 } from "./json";
-import { verifyProvedMaintenance } from "./maintenance";
 
-interface PublishedRuntimeGenerations {
+export interface RuntimeGenerations {
   readonly contentStateHash: string;
-  readonly mode: "published";
-  readonly runtimeGenerationHash: string;
 }
-
-interface MaintenanceRuntimeGenerations {
-  readonly mode: "proved-maintenance";
-  readonly runtimeGenerationHash: string;
-}
-
-export type RuntimeGenerations =
-  | MaintenanceRuntimeGenerations
-  | PublishedRuntimeGenerations;
 
 /** Proves the production generation did not change during the CI run. */
 export const verifyRuntimeGenerations = (
-  expected: RuntimeGenerationIdentity,
+  expected: CacheIdentity,
   actual: RuntimeGenerations
 ) => {
-  if (
-    expected.runtimeMode === actual.mode &&
-    expected.runtimeGenerationHash === actual.runtimeGenerationHash
-  ) {
+  if (expected.contentStateHash === actual.contentStateHash) {
     return Effect.void;
   }
 
   return Effect.fail(
     contentRuntimeCiError(
-      "Production content generation changed during runtime verification."
+      "Production signed content pointer changed during runtime verification."
     )
   );
 };
 
-/** Selects the normal signed pointer or the exact proved-maintenance receipt. */
+/** Builds the sole mutable generation identity from the signed pointer row. */
 export const buildRuntimeGenerations = Effect.fn(
   "contentRuntime.buildGenerations"
-)(function* (
-  contentState: readonly JsonObject[],
-  contentCutoverState: readonly JsonObject[] = [],
-  contentCutoverActivity: readonly JsonObject[] = []
-) {
-  if (contentState.length > 1) {
+)(function* (contentState: readonly JsonObject[]) {
+  if (contentState.length !== 1) {
     return yield* contentRuntimeCiError(
-      "Production contentState must contain at most one row."
+      "Production contentState must contain exactly one row."
     );
   }
 
   const activePointer = contentState[0];
-  if (activePointer) {
-    const contentStateHash = yield* hashCanonicalJson(
-      stripConvexSystemFields(activePointer)
+  if (!activePointer) {
+    return yield* contentRuntimeCiError(
+      "Production contentState must contain exactly one row."
     );
-    return {
-      contentStateHash,
-      mode: "published",
-      runtimeGenerationHash: contentStateHash,
-    } satisfies RuntimeGenerations;
   }
 
-  const maintenance = yield* verifyProvedMaintenance({
-    contentCutoverActivity,
-    contentCutoverState,
-    contentState,
-  });
   return {
-    mode: "proved-maintenance",
-    runtimeGenerationHash: yield* hashCanonicalJson({
-      contentCutoverActivity: maintenance.contentCutoverActivity.map(
-        stripConvexSystemFields
-      ),
-      contentCutoverState: maintenance.contentCutoverState.map(
-        stripConvexSystemFields
-      ),
-      contentState: [],
-    }),
+    contentStateHash: yield* hashCanonicalJson(
+      stripConvexSystemFields(activePointer)
+    ),
   } satisfies RuntimeGenerations;
 });
 
-/** Reads the current publication or proved-maintenance generation. */
+/** Reads the exact current signed pointer from production. */
 export const readProductionGenerations = Effect.fn(
   "contentRuntime.readProductionGenerations"
 )(function* (config: ProductionConfig) {
@@ -114,47 +78,8 @@ export const readProductionGenerations = Effect.fn(
   const contentState = yield* fileSystem
     .readFileString(contentStatePath)
     .pipe(Effect.flatMap(decodeJsonRows));
-  if (contentState.length > 0) {
-    return yield* buildRuntimeGenerations(contentState);
-  }
-
-  const cutoverStatePath = `${tempRoot}/content-cutover-state.json`;
-  const cutoverActivityPath = `${tempRoot}/content-cutover-activity.json`;
-  yield* runConvexData({
-    deployKey,
-    limit: 2,
-    logPath: `${tempRoot}/content-cutover-state.log`,
-    outputPath: cutoverStatePath,
-    table: "contentCutoverState",
-  });
-  yield* runConvexData({
-    deployKey,
-    limit: 2,
-    logPath: `${tempRoot}/content-cutover-activity.log`,
-    outputPath: cutoverActivityPath,
-    table: "contentCutoverActivity",
-  });
-
-  const [contentCutoverState, contentCutoverActivity] = yield* Effect.all([
-    fileSystem
-      .readFileString(cutoverStatePath)
-      .pipe(Effect.flatMap(decodeJsonRows)),
-    fileSystem
-      .readFileString(cutoverActivityPath)
-      .pipe(Effect.flatMap(decodeJsonRows)),
-  ]);
-  return yield* buildRuntimeGenerations(
-    contentState,
-    contentCutoverState,
-    contentCutoverActivity
-  );
+  return yield* buildRuntimeGenerations(contentState);
 });
 
 export const formatGenerationEnvironment = (generations: RuntimeGenerations) =>
-  [
-    `AGENT_DOCS_CONTENT_RUNTIME_MODE=${generations.mode}`,
-    `AGENT_DOCS_RUNTIME_GENERATION_HASH=${generations.runtimeGenerationHash}`,
-    ...(generations.mode === "published"
-      ? [`AGENT_DOCS_CONTENT_STATE_HASH=${generations.contentStateHash}`]
-      : []),
-  ].join("\n");
+  `AGENT_DOCS_CONTENT_STATE_HASH=${generations.contentStateHash}`;

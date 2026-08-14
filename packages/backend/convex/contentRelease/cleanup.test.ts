@@ -108,29 +108,11 @@ function insertItem(ctx: MutationCtx) {
 }
 
 describe("contentRelease/cleanup", () => {
-  it("allows current cleanup while the proved cutover checkpoint remains", async () => {
+  it("deletes an expired artifact from the current release runtime", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertRelease(ctx);
       await insertArtifact(ctx, 0);
-      await ctx.db.insert("contentCutoverState", {
-        auditedActiveReleaseId: "active-release",
-        auditedActiveSequence: 1,
-        auditedAt: NOW,
-        auditedLegacyWriteVersion: 0,
-        auditedNextSequence: 2,
-        currentDeleted: 0,
-        currentTableDeleted: 0,
-        currentTableIndex: 0,
-        currentTablePreserved: 0,
-        inventoryVersion: "production-2026-08-13",
-        key: "phase1",
-        legacyDeleted: 0,
-        legacyTableDeleted: 0,
-        legacyTableIndex: 0,
-        phase: "quiescent",
-        updatedAt: NOW,
-      });
     });
 
     await expect(

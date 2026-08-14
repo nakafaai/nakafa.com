@@ -4,6 +4,13 @@
 
 Accepted for PR #198.
 
+The `learningProfiles` and `learningPrograms` storage assumptions below are
+historical. The signed Aksara transition in
+[ADR 0003](./0003-tryout.md) retired the `learningProfiles` and
+`learningPrograms` tables. The `learningPreferences` capability remains the
+durable user-preference owner, while current program selection validates and
+resolves programs from the authenticated Aksara publication.
+
 ## Context
 
 Nakafa needs a fast curriculum selector and a settings profile control that remember a signed-in user's default school curriculum. The public curriculum pages still need to work for anonymous users and SEO, and an explicit URL such as `/id/kurikulum/merdeka` must keep showing that curriculum instead of redirecting to a personalized default.

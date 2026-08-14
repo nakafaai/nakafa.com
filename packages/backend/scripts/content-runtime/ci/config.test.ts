@@ -2,7 +2,6 @@ import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   clearContentRuntimeSecrets,
   readExportConfig,
-  readProductionGenerationConfig,
   validateProductionDeployKey,
 } from "@repo/backend/scripts/content-runtime/ci/config";
 import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content-runtime/tables";
@@ -67,60 +66,22 @@ describe("content runtime CI config", () => {
     expect(process.env.CONTENT_RUNTIME_UNRELATED).toBe("preserved-value");
   });
 
-  it.each(["published", "proved-maintenance"])(
-    "reads the %s production generation identity",
-    async (runtimeMode) => {
-      const runtimeGenerationHash = "1".repeat(64);
-      stubProductionGeneration(runtimeMode, runtimeGenerationHash);
-
-      await expect(
-        Effect.runPromise(readProductionGenerationConfig)
-      ).resolves.toMatchObject({ runtimeGenerationHash, runtimeMode });
-    }
-  );
-
-  it("rejects an invalid runtime mode and generation hash", async () => {
-    stubProductionGeneration("invalid", "1".repeat(64));
-    await expect(
-      Effect.runPromise(readProductionGenerationConfig.pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
-
-    stubProductionGeneration("published", "not-a-hash");
-    await expect(
-      Effect.runPromise(readProductionGenerationConfig.pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
-  });
-
-  it("permits cache export only for the matching published identity", async () => {
+  it("reads the exact signed runtime export identity", async () => {
     const contentStateHash = "1".repeat(64);
-    stubProductionGeneration("proved-maintenance", contentStateHash);
+    stubProductionConfig();
     stubCacheIdentity(contentStateHash);
-    await expect(
-      Effect.runPromise(readExportConfig.pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
-
-    stubProductionGeneration("published", "2".repeat(64));
-    await expect(
-      Effect.runPromise(readExportConfig.pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
-
-    stubProductionGeneration("published", contentStateHash);
     await expect(Effect.runPromise(readExportConfig)).resolves.toMatchObject({
       contentStateHash,
-      runtimeGenerationHash: contentStateHash,
-      runtimeMode: "published",
     });
   });
 });
 
-function stubProductionGeneration(runtimeMode: string, hash: string) {
+function stubProductionConfig() {
   vi.stubEnv(
     "CONVEX_DEPLOY_KEY",
     `prod:${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}|test-secret`
   );
   vi.stubEnv("RUNNER_TEMP", "/tmp");
-  vi.stubEnv("AGENT_DOCS_CONTENT_RUNTIME_MODE", runtimeMode);
-  vi.stubEnv("AGENT_DOCS_RUNTIME_GENERATION_HASH", hash);
 }
 
 function stubCacheIdentity(contentStateHash: string) {

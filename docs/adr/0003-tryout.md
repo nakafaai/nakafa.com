@@ -5,7 +5,8 @@
 Accepted. Amended on 2026-07-08 to insert the canonical try-out track layer,
 on 2026-07-22 to define freemium attempt access, and on 2026-08-04 to make
 Aksara signed publication the only authored try-out source. Amended on
-2026-08-10 to define transactional response and scoring integrity.
+2026-08-10 to define transactional response and scoring integrity. Amended on
+2026-08-14 to record the completed physical retirement of superseded storage.
 
 ## Context
 
@@ -150,6 +151,32 @@ passes acceptance. Drain rows through one temporary bounded internal operation,
 prove every retired table empty, then remove both the operation and schemas in
 the final deployment. Do not retain permanent cleanup functions for retired
 table names.
+
+### Completed Physical Retirement
+
+On production deployment `dapper-antelope-269`, an authenticated Convex
+Dashboard operator deleted the following 27 superseded physical tables between
+`2026-08-14T16:00:03.363Z` and `2026-08-14T16:05:00.981Z`:
+
+- Legacy content: `articleReferences`, `contentAuthors`, `articleContents`,
+  `authors`, `curriculumLessons`, `curriculumTopics`, `quranVerses`,
+  `quranSurahs`, `contentRoutes`, `contentRoutePages`, `contentRouteCounts`,
+  `publicRouteSitemapCounts`, `publicRouteSitemapPages`, `publicRoutes`,
+  `publicRouteSyncState`, and `contentSearch`.
+- Retired learning plans: `learningProgramCoverage`,
+  `learningProgramSources`, `learningPrograms`, `learningPlanItems`,
+  `learningPlans`, and `learningProfiles`.
+- Retired audio generation: `audioContentSources`, `contentAudios`, and
+  `audioGenerationQueue`.
+- Retired signed ownership: `contentOwners` and `materialOwners`.
+
+Immediately before each deletion, the table was independently reproved
+undeclared and empty, and its Dashboard page also reported it empty. After the
+final deletion, the production table inventory reported `remaining=0` for all
+27 names. Public WWW, API, and MCP acceptance remained HTTP 200, and the latest
+1,000 Convex events contained zero failures or errors. This section records
+historical completion evidence only; it is not a reusable migration inventory
+or runtime compatibility contract.
 
 ## Consequences
 
