@@ -10,7 +10,7 @@ import type { ExportConfig } from "./config";
 import { contentRuntimeCiError } from "./error";
 import {
   readProductionGenerations,
-  verifyRuntimeGenerations,
+  verifyStableRuntimeExport,
 } from "./generation";
 import { decodeJsonRows } from "./json";
 import {
@@ -109,7 +109,7 @@ export const exportSignedRuntime = Effect.fn(
       { mode: 0o600 }
     );
 
-    yield* verifyRuntimeGenerations(
+    yield* verifyStableRuntimeExport(
       config,
       yield* readProductionGenerations(config)
     );

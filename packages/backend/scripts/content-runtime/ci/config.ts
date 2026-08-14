@@ -25,16 +25,20 @@ export interface CacheIdentity {
   readonly runtimeSchemaFingerprint: string;
 }
 
+export interface RuntimeSelectionIdentity {
+  readonly runtimeSelectionHash: string;
+}
+
 export interface ProductionConfig {
   readonly deployKey: Redacted.Redacted;
   readonly runnerTemp: string;
 }
 
-export interface ProductionIdentityConfig
+export interface ProductionSelectionConfig
   extends ProductionConfig,
-    CacheIdentity {}
+    RuntimeSelectionIdentity {}
 
-export interface ExportConfig extends ProductionIdentityConfig {
+export interface ExportConfig extends ProductionConfig, CacheIdentity {
   readonly cacheKey: Redacted.Redacted;
   readonly exportLimit: number;
 }
@@ -112,6 +116,18 @@ const readCacheIdentity = Effect.gen(function* () {
   } satisfies CacheIdentity;
 });
 
+const readRuntimeSelectionIdentity = Effect.gen(function* () {
+  const runtimeSelectionHash = yield* Config.nonEmptyString(
+    "AGENT_DOCS_RUNTIME_SELECTION_HASH"
+  ).pipe(
+    Effect.flatMap((value) =>
+      validateHex("AGENT_DOCS_RUNTIME_SELECTION_HASH", value)
+    )
+  );
+
+  return { runtimeSelectionHash } satisfies RuntimeSelectionIdentity;
+});
+
 export const readProductionConfig = Effect.gen(function* () {
   const deployKey = yield* Config.redacted("CONVEX_DEPLOY_KEY");
   const runnerTemp = yield* Config.nonEmptyString("RUNNER_TEMP");
@@ -120,15 +136,19 @@ export const readProductionConfig = Effect.gen(function* () {
   return { deployKey, runnerTemp } satisfies ProductionConfig;
 });
 
-export const readProductionIdentityConfig = Effect.gen(function* () {
+export const readProductionSelectionConfig = Effect.gen(function* () {
   const production = yield* readProductionConfig;
-  const identity = yield* readCacheIdentity;
+  const selectionIdentity = yield* readRuntimeSelectionIdentity;
 
-  return { ...production, ...identity } satisfies ProductionIdentityConfig;
+  return {
+    ...production,
+    ...selectionIdentity,
+  } satisfies ProductionSelectionConfig;
 });
 
 export const readExportConfig = Effect.gen(function* () {
-  const productionIdentity = yield* readProductionIdentityConfig;
+  const production = yield* readProductionConfig;
+  const cacheIdentity = yield* readCacheIdentity;
   const cacheKey = yield* Config.redacted("AGENT_DOCS_CONTENT_CACHE_KEY");
   const exportLimit = yield* Config.integer(
     "CONTENT_RUNTIME_EXPORT_LIMIT"
@@ -144,7 +164,7 @@ export const readExportConfig = Effect.gen(function* () {
       "CONTENT_RUNTIME_EXPORT_LIMIT must be a positive safe integer."
     );
   }
-  return { ...productionIdentity, cacheKey, exportLimit };
+  return { ...production, ...cacheIdentity, cacheKey, exportLimit };
 });
 
 export const readImportConfig = Effect.gen(function* () {
