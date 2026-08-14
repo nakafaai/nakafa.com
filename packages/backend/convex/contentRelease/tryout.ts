@@ -1,5 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { readTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import {
   readTryoutSitemapCount,
@@ -40,35 +40,35 @@ const tryoutTaxonomyValidator = v.object({
 
 /** Returns the verified active try-out hierarchy for one locale. */
 export const catalog = query({
-  args: { locale: localeValidator },
+  args: { appLocale: appLocaleValidator },
   returns: tryoutCatalogValidator,
-  handler: (ctx, { locale }) =>
-    runConvexProgram(readTryoutCatalog(ctx, locale)),
+  handler: (ctx, { appLocale }) =>
+    runConvexProgram(readTryoutCatalog(ctx, appLocale)),
 });
 
 /** Returns the bounded sitemap inventory for one active try-out locale. */
 export const sitemapCount = query({
-  args: { locale: localeValidator },
+  args: { appLocale: appLocaleValidator },
   returns: tryoutSitemapCountValidator,
-  handler: (ctx, { locale }) =>
-    runConvexProgram(readTryoutSitemapCount(ctx, locale)),
+  handler: (ctx, { appLocale }) =>
+    runConvexProgram(readTryoutSitemapCount(ctx, appLocale)),
 });
 
 /** Returns one exact verified try-out sitemap page. */
 export const sitemapPage = query({
   args: {
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     page: v.number(),
   },
   returns: tryoutSitemapPageValidator,
-  handler: (ctx, { locale, page }) =>
-    runConvexProgram(readTryoutSitemapPage(ctx, locale, page)),
+  handler: (ctx, { appLocale, page }) =>
+    runConvexProgram(readTryoutSitemapPage(ctx, appLocale, page)),
 });
 
 /** Returns signed localized Tryout options and their public route count. */
 export const taxonomy = query({
-  args: { locale: localeValidator },
+  args: { appLocale: appLocaleValidator },
   returns: tryoutTaxonomyValidator,
-  handler: (ctx, { locale }) =>
-    runConvexProgram(readTryoutTaxonomy(ctx, locale)),
+  handler: (ctx, { appLocale }) =>
+    runConvexProgram(readTryoutTaxonomy(ctx, appLocale)),
 });

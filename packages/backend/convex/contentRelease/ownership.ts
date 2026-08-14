@@ -1,8 +1,8 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { resolveActiveRoute } from "@repo/backend/convex/contentRelease/scope/route";
 import {
+  appLocaleValidator,
   contentFamilyValidator,
-  localeValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type { Infer } from "convex/values";
@@ -57,14 +57,17 @@ function toRouteResult(
 export const resolve = query({
   args: {
     family: contentFamilyValidator,
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     publicPath: v.string(),
   },
   returns: routeResultValidator,
   handler: (ctx, args) =>
     runConvexProgram(
-      resolveActiveRoute(ctx, args.family, args.locale, args.publicPath).pipe(
-        Effect.map(toRouteResult)
-      )
+      resolveActiveRoute(
+        ctx,
+        args.family,
+        args.appLocale,
+        args.publicPath
+      ).pipe(Effect.map(toRouteResult))
     ),
 });

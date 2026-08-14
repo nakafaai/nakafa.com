@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -10,7 +11,7 @@ export const readPublishedTryoutSitemapCount = Effect.fn(
   "www.tryouts.readSitemapCount"
 )(function* (locale: Locale) {
   return yield* readRuntimeQuery(api.contentRelease.tryout.sitemapCount, {
-    locale,
+    appLocale: AppLocaleSchema.make(locale),
   });
 });
 
@@ -19,7 +20,7 @@ export const readPublishedTryoutSitemap = Effect.fn(
   "www.tryouts.readSitemapPage"
 )(function* (locale: Locale, page: number) {
   return yield* readRuntimeQuery(api.contentRelease.tryout.sitemapPage, {
-    locale,
+    appLocale: AppLocaleSchema.make(locale),
     page,
   });
 });

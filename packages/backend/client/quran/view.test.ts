@@ -25,16 +25,16 @@ const surah = {
 type QuranViewResult = FunctionReturnType<typeof api.contentRelease.quran.view>;
 
 describe("signed Quran view decoder", () => {
-  it("preserves each validator-derived locale projection", async () => {
+  it("preserves each validator-derived app-locale projection", async () => {
     const english = await Effect.runPromise(
       decodePublishedQuranView(englishViewResult(), {
-        locale: "en",
+        appLocale: "en",
         surahNumber: 1,
       })
     );
     const indonesian = await Effect.runPromise(
       decodePublishedQuranView(indonesianViewResult(), {
-        locale: "id",
+        appLocale: "id",
         surahNumber: 1,
       })
     );
@@ -59,7 +59,7 @@ describe("signed Quran view decoder", () => {
           {
             activeManifestHash: null,
             activeReleaseId: null,
-            locale: "en",
+            appLocale: "en",
             managed: false,
             nextSurah: null,
             previousSurah: null,
@@ -68,14 +68,14 @@ describe("signed Quran view decoder", () => {
             surah: null,
             verses: [],
           },
-          { locale: "en", surahNumber: 1 }
+          { appLocale: "en", surahNumber: 1 }
         )
       )
     );
     const inconsistent = await Effect.runPromise(
       Effect.either(
         decodePublishedQuranView(englishViewResult(), {
-          locale: "en",
+          appLocale: "en",
           surahNumber: 2,
         })
       )
@@ -86,7 +86,7 @@ describe("signed Quran view decoder", () => {
   });
 });
 
-/** Builds the source and metadata shared by locale-specific view fixtures. */
+/** Builds source and metadata shared by app-locale view fixtures. */
 function viewBase() {
   return {
     ...source,
@@ -104,7 +104,7 @@ function viewBase() {
 function englishViewResult(): QuranViewResult {
   return {
     ...viewBase(),
-    locale: "en",
+    appLocale: "en",
     verses: [
       {
         arabic: "بِسْمِ اللّٰهِ",
@@ -119,7 +119,7 @@ function englishViewResult(): QuranViewResult {
 function indonesianViewResult(): QuranViewResult {
   return {
     ...viewBase(),
-    locale: "id",
+    appLocale: "id",
     verses: [
       {
         arabic: "بِسْمِ اللّٰهِ",

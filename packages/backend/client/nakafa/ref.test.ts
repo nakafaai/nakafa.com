@@ -41,12 +41,12 @@ describe("resolveNakafaContentRef", () => {
     );
     expect(
       getContentReferenceInput(
-        `https://nakafa.com/${material.locale}/${material.publicPath}`
+        `https://nakafa.com/${material.appLocale}/${material.publicPath}`
       )
     ).toEqual(
       Option.some({
+        appLocale: material.appLocale,
         kind: "route",
-        locale: material.locale,
         publicPath: material.publicPath,
       })
     );
@@ -83,8 +83,8 @@ describe("resolveNakafaContentRef", () => {
       api.contentRelease.reference.read,
       {
         input: {
+          appLocale: "en",
           kind: "route",
-          locale: "en",
           publicPath: articleRoute,
         },
       }

@@ -1,7 +1,8 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 
 type AlternateLanguagePath = Partial<{
-  [Key in (typeof routing.locales)[number] | "x-default"]: string;
+  [Key in AppLocaleCode | "x-default"]: string;
 }>;
 type AlternateTypePath = Readonly<{ [mediaType: string]: string }>;
 
@@ -11,7 +12,7 @@ interface LocalizedAlternatesOptions {
 }
 
 interface ResolvedAlternateRoute {
-  readonly locale: (typeof routing.locales)[number];
+  readonly appLocale: AppLocaleCode;
   readonly publicPath: string;
 }
 
@@ -72,13 +73,14 @@ export function createResolvedRouteAlternates(
   const languages: AlternateLanguagePath = {};
 
   for (const alternate of alternates) {
-    languages[alternate.locale] =
-      `/${alternate.locale}/${alternate.publicPath}`;
+    languages[alternate.appLocale] =
+      `/${alternate.appLocale}/${alternate.publicPath}`;
   }
   languages["x-default"] =
-    languages[routing.defaultLocale] ?? `/${route.locale}/${route.publicPath}`;
+    languages[routing.defaultLocale] ??
+    `/${route.appLocale}/${route.publicPath}`;
 
-  return createLocalizedAlternates(`/${route.locale}/${route.publicPath}`, {
+  return createLocalizedAlternates(`/${route.appLocale}/${route.publicPath}`, {
     ...options,
     languages,
   });

@@ -1,3 +1,4 @@
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type LearningProgram,
   LearningProgramKeySchema,
@@ -202,9 +203,9 @@ function makePreferenceProgram(
       homeCountry: countryCode,
     },
     recommendedCountry: countryCode,
-    translations: {
-      en: { publicSlug, title },
-      id: { publicSlug, title },
-    },
+    translations: [
+      { appLocale: ActiveAppLocaleSchema.make("en"), publicSlug, title },
+      { appLocale: ActiveAppLocaleSchema.make("id"), publicSlug, title },
+    ],
   });
 }

@@ -14,7 +14,7 @@ export const addProgramBucketRoute = Effect.fn(
   ctx: MutationCtx,
   snapshotId: string,
   index: number,
-  locale: Doc<"programBuckets">["locale"],
+  appLocale: Doc<"programBuckets">["appLocale"],
   bucket: string
 ) {
   if (!isProjectionBucket(bucket)) {
@@ -26,10 +26,10 @@ export const addProgramBucketRoute = Effect.fn(
   const existing = yield* Effect.promise(() =>
     ctx.db
       .query("programBuckets")
-      .withIndex("by_snapshotId_and_locale_and_bucket", (query) =>
+      .withIndex("by_snapshotId_and_appLocale_and_bucket", (query) =>
         query
           .eq("snapshotId", snapshotId)
-          .eq("locale", locale)
+          .eq("appLocale", appLocale)
           .eq("bucket", bucket)
       )
       .unique()
@@ -38,7 +38,7 @@ export const addProgramBucketRoute = Effect.fn(
   if (routeCount > CONTENT_BUCKET_SIZE) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
-      `Program sitemap bucket ${locale}/${bucket} exceeds ${CONTENT_BUCKET_SIZE} routes.`
+      `Program sitemap bucket ${appLocale}/${bucket} exceeds ${CONTENT_BUCKET_SIZE} routes.`
     );
   }
   if (existing) {
@@ -49,9 +49,9 @@ export const addProgramBucketRoute = Effect.fn(
   }
   yield* Effect.promise(() =>
     ctx.db.insert("programBuckets", {
+      appLocale,
       bucket,
       index,
-      locale,
       routeCount,
       snapshotId,
     })

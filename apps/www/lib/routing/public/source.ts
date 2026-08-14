@@ -1,3 +1,4 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   ArticleCategorySchema,
   ArticleSlugSchema,
@@ -31,7 +32,7 @@ export const readSourceBackedHtmlRouteRejection = Effect.fn(
     return rejectedPublicRouteLocale;
   }
 
-  return yield* readMissingHtmlContentLocale({ method, pathname });
+  return yield* readMissingHtmlRouteLocale({ method, pathname });
 });
 
 /**
@@ -75,7 +76,7 @@ function readRejectedPublicRouteLocale(pathname: string) {
  * impossible shapes here prevents Next streamed not-found responses from
  * looking like successful soft 404s to agents and crawlers.
  */
-function readMissingHtmlContentLocale({
+function readMissingHtmlRouteLocale({
   method,
   pathname,
 }: {
@@ -160,7 +161,11 @@ function readMissingArticleHtmlLocale({
 
   const publicPath = `articles/${category}/${slug}`;
   return Effect.gen(function* () {
-    const previewOwnsRoute = yield* matchesPreviewRoute({ locale, publicPath });
+    const appLocale = AppLocaleSchema.make(locale);
+    const previewOwnsRoute = yield* matchesPreviewRoute({
+      appLocale,
+      publicPath,
+    });
     if (previewOwnsRoute) {
       return null;
     }
@@ -168,8 +173,8 @@ function readMissingArticleHtmlLocale({
     const identity = yield* readActiveContentIdentity();
     const ownership = yield* readActiveContentRoute({
       activeReleaseId: identity?.releaseId ?? null,
+      appLocale,
       family: "article",
-      locale,
       publicPath,
     });
     if (ownership.kind === "found") {

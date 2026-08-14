@@ -1,7 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { compactArtifacts } from "@repo/backend/convex/contentRelease/compact/artifacts";
-import { compactOwners } from "@repo/backend/convex/contentRelease/compact/owners";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   loadRouteBinding,
@@ -48,11 +47,16 @@ const compactHead = Effect.fn("contentRelease.compactHead")(function* (
   from: number,
   floor: number
 ) {
-  const anchor = yield* loadVersion(ctx, row.contentKey, row.locale, floor);
+  const anchor = yield* loadVersion(
+    ctx,
+    row.contentKey,
+    row.artifactLocale,
+    floor
+  );
   if (!anchor) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Content ${row.contentKey}/${row.locale} lost its compaction anchor.`
+      `Content ${row.contentKey}/${row.artifactLocale} lost its compaction anchor.`
     );
   }
   let deleted = 0;
@@ -67,7 +71,7 @@ const compactHead = Effect.fn("contentRelease.compactHead")(function* (
   const prior = yield* loadVersion(
     ctx,
     row.contentKey,
-    row.locale,
+    row.artifactLocale,
     row.sequence - 1
   );
   if (prior && prior.sequence < from && prior._id !== anchor._id) {
@@ -90,14 +94,14 @@ const compactBinding = Effect.fn("contentRelease.compactBinding")(function* (
 ) {
   const anchor = yield* loadRouteBinding(
     ctx,
-    row.locale,
+    row.appLocale,
     row.publicPath,
     floor
   );
   if (!anchor) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Route ${row.locale}/${row.publicPath} lost its compaction anchor.`
+      `Route ${row.appLocale}/${row.publicPath} lost its compaction anchor.`
     );
   }
   let deleted = 0;
@@ -107,7 +111,7 @@ const compactBinding = Effect.fn("contentRelease.compactBinding")(function* (
   }
   const prior = yield* loadRouteBinding(
     ctx,
-    row.locale,
+    row.appLocale,
     row.publicPath,
     row.sequence - 1
   );
@@ -264,9 +268,6 @@ export const compactRows = Effect.fn("contentRelease.compactRows")(function* (
 ) {
   if (phase === "heads") {
     return yield* compactHeads(ctx, from, floor, cursor);
-  }
-  if (phase === "owners") {
-    return yield* compactOwners(ctx, from, floor, cursor);
   }
   if (phase === "bindings") {
     return yield* compactBindings(ctx, from, floor, cursor);

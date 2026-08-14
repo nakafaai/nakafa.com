@@ -18,8 +18,8 @@ async function readEnglishBucket(
   const buckets = await target.run((ctx) =>
     ctx.db
       .query("programBuckets")
-      .withIndex("by_snapshotId_and_locale_and_bucket", (query) =>
-        query.eq("snapshotId", snapshotId).eq("locale", "en")
+      .withIndex("by_snapshotId_and_appLocale_and_bucket", (query) =>
+        query.eq("snapshotId", snapshotId).eq("appLocale", "en")
       )
       .take(2)
   );
@@ -68,16 +68,16 @@ describe("contentRelease/program/partition", () => {
       )
     ).resolves.toMatchObject({
       kind: "found",
-      routes: [{ locale: "en", sitemap: true }],
+      routes: [{ appLocale: "en", sitemap: true }],
     });
 
     await target.mutation(async (ctx) => {
       const count = await ctx.db
         .query("programBuckets")
-        .withIndex("by_snapshotId_and_locale_and_bucket", (query) =>
+        .withIndex("by_snapshotId_and_appLocale_and_bucket", (query) =>
           query
             .eq("snapshotId", data.snapshotId)
-            .eq("locale", "en")
+            .eq("appLocale", "en")
             .eq("bucket", bucket)
         )
         .unique();

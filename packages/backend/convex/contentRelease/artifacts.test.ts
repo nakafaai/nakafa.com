@@ -49,7 +49,7 @@ function insertDeleteItem(ctx: MutationCtx) {
     itemBatchHash: TEST_ARTIFACT_HASH,
     itemBatchIndex: 0,
     itemJson: testDeleteJson({ contentKey: "test:head-0" }),
-    locale: "en",
+    artifactLocale: "en",
     projectionJson: testProjectionJson(),
     projectionReady: true,
     releaseId: TEST_RELEASE_ID,

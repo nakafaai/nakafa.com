@@ -14,7 +14,7 @@ export const readMaterialPartition = Effect.fn(
   "contentRelease.readMaterialPartition"
 )(function* (
   ctx: QueryCtx,
-  locale: Doc<"materialCatalog">["locale"],
+  appLocale: Doc<"materialCatalog">["appLocale"],
   bucket: string
 ) {
   if (!isProjectionBucket(bucket)) {
@@ -23,7 +23,7 @@ export const readMaterialPartition = Effect.fn(
       `Material discovery bucket ${bucket} is invalid.`
     );
   }
-  const owner = yield* loadMaterialOwner(ctx, locale);
+  const owner = yield* loadMaterialOwner(ctx, appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.active && owner.managed)) {
     return {
@@ -37,8 +37,8 @@ export const readMaterialPartition = Effect.fn(
   const count = yield* Effect.promise(() =>
     ctx.db
       .query("materialBuckets")
-      .withIndex("by_locale_and_bucket", (index) =>
-        index.eq("locale", locale).eq("bucket", bucket)
+      .withIndex("by_appLocale_and_bucket", (index) =>
+        index.eq("appLocale", appLocale).eq("bucket", bucket)
       )
       .unique()
   );
@@ -54,8 +54,8 @@ export const readMaterialPartition = Effect.fn(
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_locale_and_bucket_and_publicPath", (index) =>
-        index.eq("locale", locale).eq("bucket", bucket)
+      .withIndex("by_appLocale_and_bucket_and_publicPath", (index) =>
+        index.eq("appLocale", appLocale).eq("bucket", bucket)
       )
       .take(CONTENT_BUCKET_SIZE + 1)
   );
@@ -66,7 +66,7 @@ export const readMaterialPartition = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Material discovery bucket ${locale}/${bucket} has mismatched counts.`
+      `Material discovery bucket ${appLocale}/${bucket} has mismatched counts.`
     );
   }
   const materials = yield* Effect.forEach(rows, (row) =>

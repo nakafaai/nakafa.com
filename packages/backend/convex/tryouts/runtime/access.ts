@@ -4,6 +4,7 @@ import {
   getTryoutSectionContentAccess,
   type TryoutSectionContentAccess,
 } from "@repo/backend/convex/tryouts/runtime/content";
+import { readAttemptSetIdentity } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { loadTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
 import { Effect, Schema } from "effect";
 
@@ -28,7 +29,7 @@ export const readOwnedTryoutSectionContent = Effect.fn(
   ctx: QueryCtx,
   input: {
     readonly attempt: Doc<"tryoutAttempts">;
-    readonly locale: Doc<"tryoutAttempts">["locale"];
+    readonly appLocale: Doc<"tryoutAttempts">["appLocale"];
     readonly sectionKey: Doc<"tryoutSectionAttempts">["sectionKey"];
   }
 ) {
@@ -54,11 +55,18 @@ export const readOwnedTryoutSectionContent = Effect.fn(
     return noContentAccess;
   }
 
+  const identity = readAttemptSetIdentity(input.attempt);
+  if (identity.locale !== input.appLocale) {
+    return yield* new TryoutContentReadError({
+      code: "TRYOUT_CONTENT_INTEGRITY",
+      message: "Try-out content locale differs from its attempt.",
+    });
+  }
   return yield* loadTryoutSignedContent({
-    access,
+    answers: access.answers,
     attempt: input.attempt,
     ctx,
-    locale: input.locale,
+    appLocale: identity.locale,
     sectionKey: requestedSection.sectionKey,
     snapshotReleaseId: input.attempt.snapshotReleaseId,
     snapshotId: input.attempt.tryoutSnapshotId,

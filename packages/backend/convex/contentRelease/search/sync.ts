@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/convex/contentRelease/model";
 import {
   decodeArtifactJson,
+  decodeItemJson,
   decodeProjectionJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import {
@@ -42,7 +43,7 @@ const loadSearchArtifact = Effect.fn("contentRelease.loadSearchArtifact")(
     if (
       artifact.artifactHash !== artifactHash ||
       artifact.payload.contentKey !== head.contentKey ||
-      artifact.payload.locale !== head.locale
+      artifact.payload.artifactLocale !== head.artifactLocale
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -62,16 +63,29 @@ const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (
   const projection = yield* resolvePublicProjection(
     ctx,
     row.contentKey,
-    row.locale,
+    row.artifactLocale,
     activeSequence
   );
   if (!projection) {
-    return yield* deleteSearchEntry(ctx, row.contentKey, row.locale);
+    const item = yield* decodeItemJson(row.itemJson);
+    if (
+      item.change.contentKey !== row.contentKey ||
+      item.change.artifactLocale !== row.artifactLocale
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Search item ${row.releaseId}/${row.index} lost its signed identity.`
+      );
+    }
+    if (item.change.family === "question") {
+      return;
+    }
+    return yield* deleteSearchEntry(ctx, row.contentKey, row.artifactLocale);
   }
   const head = yield* loadVersion(
     ctx,
     row.contentKey,
-    row.locale,
+    row.artifactLocale,
     activeSequence
   );
   if (
@@ -81,7 +95,7 @@ const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active search head ${row.contentKey}/${row.locale} is incomplete.`
+      `Active search head ${row.contentKey}/${row.artifactLocale} is incomplete.`
     );
   }
   const [artifact, decoded] = yield* Effect.all([

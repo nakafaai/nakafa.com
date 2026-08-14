@@ -20,8 +20,8 @@ type RuntimeAction = Pick<RuntimeTest, "action">;
 
 const foundRequest = JSON.parse(publicRuntimeRequest());
 const missingRequest = {
+  appLocale: "en",
   delivery: "public",
-  locale: "en",
   publicPath: "test/missing",
 };
 

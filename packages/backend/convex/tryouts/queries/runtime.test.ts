@@ -22,7 +22,6 @@ const setRoute = {
   setKey: TRYOUT_START_SET,
   trackKey: TRYOUT_START_TRACK,
 };
-
 describe("tryouts/queries/runtime", () => {
   it("keeps exact live state compact and skips score reads while active", async () => {
     vi.setSystemTime(new Date(TRYOUT_START_NOW));

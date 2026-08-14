@@ -1,17 +1,16 @@
-import type {
-  QuranRuntimeVerse,
-  QuranSearchRow,
-  QuranSurahRow,
-} from "@nakafa/aksara-contracts/quran/spec";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
-  quranLocaleValidator,
+  quranAppLocaleValidator,
   quranSourceFields,
 } from "@repo/backend/convex/contentRelease/quran/spec";
 import {
   loadQuranSurah,
   readQuranSurahVerses,
 } from "@repo/backend/convex/contentRelease/quran/surah";
+import { readQuranTranslation } from "@repo/backend/convex/contentRelease/quran/translation";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
@@ -38,17 +37,16 @@ const quranDocumentVerseValidator = v.object({
   translation: quranDocumentTranslationValidator,
 });
 
-/** Exact locale-specific Quran document returned to the public content API. */
+/** Exact app-locale Quran document returned to the public content API. */
 export const quranDocumentValidator = v.object({
   ...quranSourceFields,
-  locale: quranLocaleValidator,
+  appLocale: quranAppLocaleValidator,
   surah: v.union(quranDocumentSurahValidator, v.null()),
   verses: v.array(quranDocumentVerseValidator),
 });
 
 type QuranDocument = Infer<typeof quranDocumentValidator>;
 type QuranDocumentSurah = NonNullable<QuranDocument["surah"]>;
-type QuranDocumentVerse = QuranDocument["verses"][number];
 
 /** Projects complete public surah metadata without signed envelope fields. */
 function projectSurah(surah: QuranSurahRow): QuranDocumentSurah {
@@ -61,30 +59,26 @@ function projectSurah(surah: QuranSurahRow): QuranDocumentSurah {
   };
 }
 
-/** Projects one API verse in the requested locale without tafsir or metadata. */
-function projectVerse(
-  verse: QuranRuntimeVerse,
-  locale: QuranSearchRow["locale"]
-): QuranDocumentVerse {
-  return {
-    arabic: verse.text.arabic,
-    number: verse.number,
-    translation: verse.translation[locale],
-  };
-}
+/** Projects one API verse in the requested app locale without extra fields. */
+const projectVerse = Effect.fn("contentRelease.projectQuranDocumentVerse")(
+  function* (verse: QuranRuntimeVerse, appLocale: AppLocaleCode) {
+    const translation = yield* readQuranTranslation(verse, appLocale);
+    return {
+      arabic: verse.text.arabic,
+      number: verse.number,
+      translation,
+    };
+  }
+);
 
 /** Returns the narrow signed Quran document used by the public content API. */
 export const readQuranDocument = Effect.fn("contentRelease.readQuranDocument")(
-  function* (
-    ctx: QueryCtx,
-    locale: QuranSearchRow["locale"],
-    sourceSurah: number
-  ) {
+  function* (ctx: QueryCtx, appLocale: AppLocaleCode, sourceSurah: number) {
     const loaded = yield* loadQuranSurah(ctx, sourceSurah);
     if (loaded.surah === null || loaded.owner.snapshotId === null) {
       return {
         ...loaded.owner,
-        locale,
+        appLocale,
         surah: null,
         verses: [],
       };
@@ -96,11 +90,14 @@ export const readQuranDocument = Effect.fn("contentRelease.readQuranDocument")(
       loaded.surah.row.payload.numberOfVerses
     );
 
+    const projectedVerses = yield* Effect.forEach(verses, (verse) =>
+      projectVerse(verse, appLocale)
+    );
     return {
       ...loaded.owner,
-      locale,
+      appLocale,
       surah: projectSurah(loaded.surah.row.payload),
-      verses: verses.map((verse) => projectVerse(verse, locale)),
+      verses: projectedVerses,
     };
   }
 );

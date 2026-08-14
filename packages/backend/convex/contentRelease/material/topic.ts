@@ -10,7 +10,7 @@ export const deriveMaterialTopicReference = Effect.fn(
   const [kind, domain, topic, ...extra] = projection.materialKey.split(".");
   if (kind !== "lesson" || !domain || !topic || extra.length > 0) {
     return yield* materialTopicFailure(
-      `Material ${projection.contentKey}/${projection.locale} has an invalid topic key.`
+      `Material ${projection.contentKey}/${projection.appLocale} has an invalid topic key.`
     );
   }
 
@@ -18,18 +18,18 @@ export const deriveMaterialTopicReference = Effect.fn(
     concept: ["material", "lesson", domain, topic],
     learningObject: ["material-topic", domain, topic],
     lens: ["material", "lesson", domain],
-    locale: projection.locale,
+    appLocale: projection.appLocale,
   }).pipe(
     Effect.catchTag("LearningGraphIdentityError", () =>
       materialTopicFailure(
-        `Material ${projection.contentKey}/${projection.locale} has an invalid topic graph.`
+        `Material ${projection.contentKey}/${projection.appLocale} has an invalid topic graph.`
       )
     )
   );
 
   return {
     graph,
-    locale: projection.locale,
+    appLocale: projection.appLocale,
     publicPath: projection.parentPath,
     title: projection.topicTitle,
   };

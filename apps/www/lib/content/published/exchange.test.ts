@@ -27,7 +27,8 @@ const liveRenderer = vi.hoisted(() => ({
   rendererContractVersion: "1.0.0",
 }));
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
-const locale: PublishedContentInput["locale"] = "en";
+const appLocale: PublishedContentInput["appLocale"] =
+  previewProjection.appLocale;
 
 interface FoundFixture {
   readonly activeReleaseId: ReturnType<typeof ReleaseIdSchema.make>;
@@ -63,11 +64,11 @@ const found: FoundFixture = {
 };
 const input = {
   activeReleaseId: found.activeReleaseId,
-  locale,
+  appLocale,
   publicPath: previewProjection.publicPath,
 };
 const routeInput = {
-  locale: input.locale,
+  appLocale: input.appLocale,
   publicPath: input.publicPath,
 };
 
@@ -114,7 +115,7 @@ describe("published content exchange", () => {
         token: "runtime-token",
       },
       {
-        locale: input.locale,
+        appLocale: input.appLocale,
         publicPath: input.publicPath,
       },
       liveRenderer
@@ -157,8 +158,8 @@ describe("published content exchange", () => {
       Effect.fail(
         new ContentRuntimeMissingError({
           request: {
+            appLocale: input.appLocale,
             delivery: "public",
-            locale: input.locale,
             publicPath: input.publicPath,
           },
         })
@@ -170,7 +171,7 @@ describe("published content exchange", () => {
     ).resolves.toMatchObject({
       _tag: "ContentRuntimeMissingError",
       request: {
-        locale: input.locale,
+        appLocale: input.appLocale,
         publicPath: input.publicPath,
       },
     });

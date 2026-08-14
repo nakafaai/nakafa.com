@@ -1,4 +1,4 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   CONTENT_SITEMAP_ROUTE_PAGE_SIZE,
@@ -25,7 +25,7 @@ function listTryoutSitemapPaths(catalog: TryoutCatalog) {
 /** Reads the bounded sitemap inventory for one active try-out locale. */
 export const readTryoutSitemapCount = Effect.fn(
   "contentRelease.readTryoutSitemapCount"
-)(function* (ctx: QueryCtx, locale: ContentLocale) {
+)(function* (ctx: QueryCtx, locale: AppLocaleCode) {
   const catalog = yield* loadTryoutCatalog(ctx, locale);
   return {
     pageCount: Math.ceil(catalog.routeCount / CONTENT_SITEMAP_ROUTE_PAGE_SIZE),
@@ -36,7 +36,7 @@ export const readTryoutSitemapCount = Effect.fn(
 /** Reads one exact bounded page of verified public try-out paths. */
 export const readTryoutSitemapPage = Effect.fn(
   "contentRelease.readTryoutSitemapPage"
-)(function* (ctx: QueryCtx, locale: ContentLocale, page: number) {
+)(function* (ctx: QueryCtx, locale: AppLocaleCode, page: number) {
   if (!Number.isSafeInteger(page) || page < 0) {
     return null;
   }

@@ -14,7 +14,7 @@ const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
 const digest = `sha256:${"a".repeat(64)}`;
 const request = {
-  locale: "en",
+  appLocale: "en",
   selectors: [
     {
       artifactHash: digest,

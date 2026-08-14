@@ -1,15 +1,19 @@
+import type {
+  TryoutSection,
+  TryoutSet,
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import {
-  makeTryoutCatalogRecord,
-  makeTryoutPlacementRecord,
-} from "@nakafa/aksara-contracts/tryout/row-hash";
+  deliveryLanguageForSection,
+  questionArtifactLocaleForSection,
+} from "@nakafa/aksara-contracts/tryout/language";
 import {
-  TryoutContentHashSchema,
   type TryoutPlacement,
   TryoutPlacementSchema,
-  type TryoutSection,
-  type TryoutSet,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/placement";
+import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
+import { TryoutContentHashSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
 import {
   TEST_MANIFEST_HASH,
@@ -47,6 +51,7 @@ export function makeSignedTryoutSection(
 
       return Schema.decodeUnknownSync(TryoutPlacementSchema)({
         answerArtifactHash: testTextHash(`${questionRoot}:answer`),
+        answerArtifactLocale: section.appLocale,
         answerContentKey: `${questionRoot}/answer`,
         choices: [
           {
@@ -58,9 +63,17 @@ export function makeSignedTryoutSection(
         ],
         contentHash: options.contentHash ?? TRYOUT_TEST_CONTENT_HASH,
         countryKey: section.countryKey,
+        deliveryLanguage: deliveryLanguageForSection(
+          section.sectionKey,
+          section.appLocale
+        ),
         examKey: section.examKey,
-        locale: section.locale,
+        appLocale: section.appLocale,
         questionArtifactHash: testTextHash(`${questionRoot}:question`),
+        questionArtifactLocale: questionArtifactLocaleForSection(
+          section.sectionKey,
+          section.appLocale
+        ),
         questionContentKey: `${questionRoot}/question`,
         questionOrder,
         questionSourcePath: `packages/corpus/${questionRoot}`,
@@ -69,7 +82,6 @@ export function makeSignedTryoutSection(
         sectionKey: section.sectionKey,
         setKey: section.setKey,
         sourceRevision,
-        title: questionOrder === 1 ? "Question" : `Question ${questionOrder}`,
         trackKey: section.trackKey,
       });
     }

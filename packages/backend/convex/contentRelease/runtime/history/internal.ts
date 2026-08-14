@@ -2,7 +2,7 @@ import {
   StoredProtectedRuntimeFoundSchema,
   type StoredProtectedRuntimeRequest,
   StoredProtectedRuntimeRequestSchema,
-} from "@nakafa/aksara-history/history/decode";
+} from "@nakafa/aksara-contracts/history/decode";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
@@ -74,7 +74,6 @@ const loadAttempt = Effect.fn("contentRelease.loadRetainedRuntimeAttempt")(
     }
     if (
       attempt.appLocale !== request.appLocale ||
-      attempt.locale !== request.appLocale ||
       attempt.tryoutSnapshotId !== request.snapshotId ||
       attempt.snapshotReleaseId !== request.snapshotReleaseId
     ) {

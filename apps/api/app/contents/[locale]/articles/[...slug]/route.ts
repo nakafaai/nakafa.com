@@ -43,7 +43,7 @@ export async function GET(
   return Effect.runPromise(
     getArticleApiContentPage({
       ...pageParams,
-      locale: validLocale,
+      appLocale: validLocale,
       prefix,
     }).pipe(
       Effect.map((data): Response => NextResponse.json(data)),

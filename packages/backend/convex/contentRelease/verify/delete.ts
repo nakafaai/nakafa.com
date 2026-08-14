@@ -20,7 +20,7 @@ const checkDeletedRoute = Effect.fn("contentRelease.checkDeletedRoute")(
     const prior = yield* loadVersion(
       ctx,
       row.contentKey,
-      row.locale,
+      row.artifactLocale,
       row.priorSequence
     );
     if (!prior?.projectionJson || prior.operation === "delete") {
@@ -33,11 +33,13 @@ const checkDeletedRoute = Effect.fn("contentRelease.checkDeletedRoute")(
     const owner = yield* Effect.promise(() =>
       ctx.db
         .query("contentBindings")
-        .withIndex("by_locale_and_publicPath_and_sequence_and_index", (query) =>
-          query
-            .eq("locale", row.locale)
-            .eq("publicPath", projection.publicPath)
-            .lte("sequence", row.sequence)
+        .withIndex(
+          "by_appLocale_and_publicPath_and_sequence_and_index",
+          (query) =>
+            query
+              .eq("appLocale", projection.appLocale)
+              .eq("publicPath", projection.publicPath)
+              .lte("sequence", row.sequence)
         )
         .order("desc")
         .first()
@@ -51,7 +53,7 @@ const checkDeletedRoute = Effect.fn("contentRelease.checkDeletedRoute")(
     }
     return yield* releaseFail(
       "CONTENT_RELEASE_ROUTE",
-      `Deleted content ${row.contentKey}/${row.locale} still owns a route.`
+      `Deleted content ${row.contentKey}/${row.artifactLocale} still owns a route.`
     );
   }
 );
@@ -65,7 +67,7 @@ export const writeDelete = Effect.fn("contentRelease.writeDelete")(function* (
   if (
     item.change.operation !== "delete" ||
     item.change.contentKey !== row.contentKey ||
-    item.change.locale !== row.locale
+    item.change.artifactLocale !== row.artifactLocale
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -75,7 +77,7 @@ export const writeDelete = Effect.fn("contentRelease.writeDelete")(function* (
   const existing = yield* loadExactVersion(
     ctx,
     row.contentKey,
-    row.locale,
+    row.artifactLocale,
     row.sequence
   );
   if (existing) {
@@ -87,7 +89,7 @@ export const writeDelete = Effect.fn("contentRelease.writeDelete")(function* (
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
-        `Content version ${row.contentKey}/${row.locale}/${row.sequence} conflicts.`
+        `Content version ${row.contentKey}/${row.artifactLocale}/${row.sequence} conflicts.`
       );
     }
     return;
@@ -98,7 +100,7 @@ export const writeDelete = Effect.fn("contentRelease.writeDelete")(function* (
       contentKey: row.contentKey,
       family: item.change.family,
       index: row.index,
-      locale: row.locale,
+      artifactLocale: row.artifactLocale,
       operation: "delete",
       releaseId: row.releaseId,
       sequence: row.sequence,

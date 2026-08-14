@@ -33,10 +33,10 @@ describe("published try-out sitemap", () => {
       Effect.runPromise(readPublishedTryoutSitemap("en", 0))
     ).resolves.toEqual({ paths: ["try-out/alpha", "try-out/zeta"] });
     expect(runtimeQueryMock).toHaveBeenNthCalledWith(1, expect.anything(), {
-      locale: "en",
+      appLocale: "en",
     });
     expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
-      locale: "en",
+      appLocale: "en",
       page: 0,
     });
   });

@@ -5,6 +5,7 @@ import {
   getTryoutSectionContentAccess,
   noTryoutSectionContentAccess,
 } from "@repo/backend/convex/tryouts/runtime/content";
+import { readAttemptSetIdentity } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { loadSectionPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { loadSectionResponseIndex } from "@repo/backend/convex/tryouts/runtime/response";
 import { projectTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
@@ -15,23 +16,23 @@ type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
 type TryoutResponse = Doc<"tryoutResponses">;
 
 /** Projects the public state shared by attempt and runtime responses. */
-const readCurrentSection = Effect.fn("tryouts.runtime.readCurrentSection")(
-  function* (section: Doc<"tryoutSectionAttempts">) {
-    return {
-      answeredCount: section.answeredCount,
-      completedAt: section.completedAt,
-      endReason: section.endReason,
-      expiresAt: section.expiresAt,
-      score: yield* getSectionScoreResult(section),
-      sectionKey: section.sectionKey,
-      startedAt: section.startedAt,
-      status: section.status,
-      totalQuestions: section.totalQuestions,
-    };
-  }
-);
+export const readCurrentSection = Effect.fn(
+  "tryouts.runtime.readCurrentSection"
+)(function* (section: Doc<"tryoutSectionAttempts">) {
+  return {
+    answeredCount: section.answeredCount,
+    completedAt: section.completedAt,
+    endReason: section.endReason,
+    expiresAt: section.expiresAt,
+    score: yield* getSectionScoreResult(section),
+    sectionKey: section.sectionKey,
+    startedAt: section.startedAt,
+    status: section.status,
+    totalQuestions: section.totalQuestions,
+  };
+});
 
-/** Loads one bounded section graph for current runtime state and content. */
+/** Loads one bounded section graph for the exact-attempt runtime contract. */
 const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
   ctx: QueryCtx,
   attempt: Doc<"tryoutAttempts">,
@@ -69,11 +70,12 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
       return { content: noTryoutSectionContentAccess, runtime: null };
     }
 
+    const identity = readAttemptSetIdentity(attempt);
     const content = yield* projectTryoutSignedContent({
-      access: loaded.access,
+      answers: loaded.access.answers,
       attempt,
       ctx,
-      locale: attempt.locale,
+      appLocale: identity.locale,
       placements: loaded.placements,
       totalQuestions: section.totalQuestions,
     });
@@ -86,7 +88,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
           loaded.placements,
           loaded.responses,
           loaded.access
-        ).map(({ title: _title, ...question }) => question),
+        ),
         section: loaded.currentSection,
       },
     };
@@ -126,7 +128,6 @@ function projectRuntimeQuestions(
         : null,
       sourcePath: placement.sourcePath,
       sourceRevision: placement.sourceRevision,
-      title: placement.title,
     };
   });
 }

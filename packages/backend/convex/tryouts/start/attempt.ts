@@ -96,7 +96,7 @@ function buildAttemptValues(
     ...values,
     countryKey: signedSet.countryKey,
     examKey: signedSet.examKey,
-    locale: signedSet.locale,
+    appLocale: input.args.locale,
     scoringStrategy: signedSet.scoringStrategy,
     sectionSnapshots: input.source.snapshot.sections.map(({ section }) => ({
       publicPath: section.row.publicPath,

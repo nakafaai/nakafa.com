@@ -2,7 +2,6 @@ import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agen
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
 import {
   NakafaAgentContentRefSchema,
-  NakafaAgentContentSummarySchema,
   NakafaAgentSectionSchema,
 } from "@repo/contents/_lib/agent/schema/ref";
 import {
@@ -17,7 +16,15 @@ import { Schema } from "effect";
 const LocaleSchema = Schema.Literal(...locales);
 const StatusSchema = Schema.Literal("loading", "done", "error");
 
-const ContentSummarySchema = NakafaAgentContentSummarySchema;
+const ContentPreviewSchema = NakafaAgentContentRefSchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      description: Schema.optional(Schema.String),
+      title: Schema.String,
+    })
+  ),
+  Schema.mutable
+);
 const SearchInputSchema = NakafaAgentSearchOptionsSchema;
 const SearchResultSchema = NakafaAgentSearchResultSchema;
 const ReadInputSchema = NakafaAgentReadOptionsSchema;
@@ -84,7 +91,7 @@ const NakafaContentLoadingSchema = Schema.Struct(
 
 const NakafaContentDoneSchema = Schema.Struct({
   ...nakafaContentLoadingFields,
-  result: ContentSummarySchema,
+  result: ContentPreviewSchema,
   status: Schema.Literal("done"),
 }).pipe(Schema.mutable);
 

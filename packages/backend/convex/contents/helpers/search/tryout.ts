@@ -48,7 +48,7 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
 
   const documents = [...catalog.value.entries]
     .sort((left, right) => left.index - right.index)
-    .flatMap(toTryoutSearchDocument);
+    .flatMap((entry) => toTryoutSearchDocument(entry, args.locale));
   if (queryTexts.length === 0) {
     return documents.slice(0, scanLimit);
   }
@@ -65,7 +65,8 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
 
 /** Builds one public search document and excludes internal-entry sections. */
 function toTryoutSearchDocument(
-  entry: TryoutCatalogEntry
+  entry: TryoutCatalogEntry,
+  locale: ContentSearchInput["locale"]
 ): ContentSearchDocument[] {
   const { row } = entry;
   if (row.publicPath === undefined) {
@@ -77,7 +78,7 @@ function toTryoutSearchDocument(
       ...row.graph,
       contentHash: entry.rowHash,
       description: row.description,
-      locale: row.locale,
+      locale,
       route: row.publicPath,
       section: "tryout",
       sourcePath: row.publicPath,

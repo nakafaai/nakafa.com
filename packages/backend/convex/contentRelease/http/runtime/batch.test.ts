@@ -20,8 +20,8 @@ const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
 const foundRequest = JSON.parse(publicRuntimeRequest());
 const missingRequest = {
+  appLocale: "en",
   delivery: "public",
-  locale: "en",
   publicPath: "test/missing",
 };
 

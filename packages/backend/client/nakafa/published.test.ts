@@ -48,7 +48,7 @@ describe("Nakafa signed public reader", () => {
     );
 
     expect(readMock).toHaveBeenCalledWith(target, {
-      locale: projection.locale,
+      appLocale: projection.appLocale,
       publicPath: projection.publicPath,
     });
     if (Option.isNone(result)) {
@@ -59,6 +59,9 @@ describe("Nakafa signed public reader", () => {
       text: `# ${projection.metadata.title}\n\n## Current body`,
       title: projection.metadata.title,
     });
+    if (section === "material") {
+      expect(result.value).not.toHaveProperty("description");
+    }
   });
 
   it.each([
@@ -124,7 +127,7 @@ function currentRef(
   const ref = createNakafaContentRefFromGraphProjection({
     ...projection.graph,
     content_id: projection.graph.assetId,
-    locale: projection.locale,
+    locale: projection.appLocale,
     route: projection.publicPath,
     section,
   });

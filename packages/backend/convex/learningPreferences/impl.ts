@@ -1,6 +1,7 @@
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { LearningProgramKindSchema } from "@nakafa/aksara-contracts/program/spec";
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type { TryoutCountry } from "@nakafa/aksara-contracts/tryout/spec";
+import type { TryoutCountry } from "@nakafa/aksara-contracts/tryout/catalog";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
@@ -74,10 +75,10 @@ export const readActiveTryoutCountry = Effect.fn(
   args: { readonly countryKey: string; readonly locale: Locale }
 ) {
   const owner = yield* loadTryoutOwner(ctx);
-  const identity = tryoutCatalogIdentity({
+  const identity = tryoutCatalogNodeIdentity({
+    appLocale: ActiveAppLocaleSchema.make(args.locale),
     countryKey: args.countryKey,
     kind: "country",
-    locale: args.locale,
   });
   const country = yield* readTryoutCatalogRowByIdentity(
     ctx,

@@ -58,12 +58,12 @@ function insertHead(ctx: MutationCtx) {
     delivery: "public",
     family: "material",
     index: 0,
-    locale: "en",
+    artifactLocale: "en",
     operation: "upsert",
     projectionHash: TEST_DIGEST,
     projectionJson: testProjectionJson({
       contentKey: "test:retained-head",
-      publicPath: "test/retained-head",
+      publicPath: "subjects/test/retained-head",
     }),
     releaseId: "release-history",
     rendererDomain: "mathematics",
@@ -89,12 +89,12 @@ function insertItem(ctx: MutationCtx) {
       contentKey: "test:retained-item",
       releaseId: "release-history",
     }),
-    locale: "en",
+    artifactLocale: "en",
     projectionBatchHash: TEST_DIGEST,
     projectionBatchIndex: 0,
     projectionJson: testProjectionJson({
       contentKey: "test:retained-item",
-      publicPath: "test/retained-item",
+      publicPath: "subjects/test/retained-item",
     }),
     projectionReady: true,
     releaseId: "release-history",
@@ -108,7 +108,7 @@ function insertItem(ctx: MutationCtx) {
 }
 
 describe("contentRelease/cleanup", () => {
-  it("rejects cleanup after the cutover checkpoint is initialized", async () => {
+  it("allows current cleanup while the proved cutover checkpoint remains", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertRelease(ctx);
@@ -135,16 +135,18 @@ describe("contentRelease/cleanup", () => {
 
     await expect(
       t.mutation(cleanup, { releaseId: RELEASE.releaseId })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-    const unchanged = await t.run(async (ctx) => ({
+    ).resolves.toEqual({
+      complete: true,
+      deletedArtifacts: 1,
+      releaseId: RELEASE.releaseId,
+    });
+    const cleaned = await t.run(async (ctx) => ({
       artifacts: await ctx.db.query("contentArtifacts").take(2),
       releases: await ctx.db.query("contentReleases").take(2),
     }));
-    expect(unchanged.artifacts).toEqual([
-      expect.objectContaining({ retainUntil: 0 }),
-    ]);
-    expect(unchanged.releases).toHaveLength(1);
-    expect(unchanged.releases[0]).not.toHaveProperty("cleanupAt");
+    expect(cleaned.artifacts).toEqual([]);
+    expect(cleaned.releases).toHaveLength(1);
+    expect(cleaned.releases[0]).toHaveProperty("cleanupAt");
   });
 
   it("deletes expired unreachable artifacts in resumable bounded pages", async () => {

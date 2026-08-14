@@ -28,7 +28,6 @@ import { cn } from "@repo/design-system/lib/utils";
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { format } from "date-fns";
-import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { TryoutScoreCard } from "@/components/tryout/score/card";
@@ -95,7 +94,7 @@ function TryoutAttemptHistory({
 }: {
   value: {
     attempts: readonly ScoredHistoryRow[];
-    locale: Locale;
+    locale: HistoryIdentity["locale"];
     loadMore: (numItems: number) => void;
     onChoose: (attemptId: HistoryRow["attemptId"]) => void;
     selectedAttemptId: HistoryRow["attemptId"];

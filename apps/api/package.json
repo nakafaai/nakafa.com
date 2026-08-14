@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.12.5",
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.12.0/nakafa-aksara-contracts-0.12.0.tgz",
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",

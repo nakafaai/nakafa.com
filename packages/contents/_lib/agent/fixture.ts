@@ -1,4 +1,5 @@
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type {
   NakafaAgentContentRef,
@@ -33,7 +34,7 @@ export function readNakafaContentRefFixture(
       concept: ["fixture", section, ...routeSegments],
       learningObject: ["fixture", section, ...routeSegments],
       lens: ["fixture", section],
-      locale,
+      appLocale: AppLocaleSchema.make(locale),
     })
   );
 

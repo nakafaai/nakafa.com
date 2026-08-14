@@ -3,10 +3,6 @@ import {
   toNakafaQuranDataReadError,
 } from "@repo/backend/client/nakafa/decode";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
-import {
-  readNakafaReleasePin,
-  verifyNakafaReleasePin,
-} from "@repo/backend/client/nakafa/release";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/decode";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
@@ -53,7 +49,6 @@ export function readNakafaTaxonomy(
   locale: Locale = defaultLocale
 ) {
   return Effect.gen(function* () {
-    const activeReleaseId = yield* readNakafaReleasePin(convexUrl);
     const [articleCategories, signedInventory, quranResult] = yield* Effect.all(
       [
         readSignedArticleCategories(convexUrl, locale),
@@ -68,7 +63,6 @@ export function readNakafaTaxonomy(
       ...item,
       count: item.count + quran.surahs.length,
     }));
-    yield* verifyNakafaReleasePin(convexUrl, activeReleaseId);
 
     return yield* decodeNakafaTaxonomy({
       articles: {
@@ -108,9 +102,9 @@ function readSignedArticleCategoryPages(
     const result: ArticleCategoryPage = yield* readSignedArticleCategoryPage(
       convexUrl,
       {
+        appLocale: locale,
         expectedManifestHash: position.expectedManifestHash,
         expectedReleaseId: position.expectedReleaseId,
-        locale,
         paginationOpts: {
           cursor: position.cursor,
           numItems: PROJECTION_PAGE_LIMIT,
@@ -199,15 +193,15 @@ const readLocaleSignedInventory = Effect.fn(
     readNakafaRuntimeQuery(
       convexUrl,
       api.contentRelease.article.sitemapBuckets,
-      { locale }
+      { appLocale: locale }
     ),
     readNakafaRuntimeQuery(
       convexUrl,
       api.contentRelease.material.sitemapBuckets,
-      { locale }
+      { appLocale: locale }
     ),
     readNakafaRuntimeQuery(convexUrl, api.contentRelease.tryout.taxonomy, {
-      locale,
+      appLocale: locale,
     }),
   ]);
   if (!articles.managed) {

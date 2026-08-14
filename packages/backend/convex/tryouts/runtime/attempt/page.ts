@@ -1,3 +1,4 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
@@ -26,7 +27,7 @@ import { Effect } from "effect";
 type TryoutAttempt = Doc<"tryoutAttempts">;
 
 interface AttemptPath {
-  readonly locale: "en" | "id";
+  readonly locale: AppLocaleCode;
   readonly publicPath: string;
 }
 
@@ -98,7 +99,8 @@ const readAttemptSetSelection = Effect.fn("tryouts.attempt.readSetSelection")(
   ) {
     yield* loadVerifiedSnapshot(ctx, "tryout", attempt.tryoutSnapshotId);
     const selection = yield* readTryoutSetSelection(ctx, {
-      ...args,
+      appLocale: args.locale,
+      publicPath: args.publicPath,
       snapshotId: attempt.tryoutSnapshotId,
     });
     if (!(selection && matchesAttemptSelection(attempt, identity, selection))) {
@@ -120,7 +122,14 @@ function matchesAttemptSelection(
   if (
     !set ||
     selection.sets.length !== 1 ||
-    !matchesAttemptIdentity(identity, set) ||
+    set.appLocale !== identity.locale ||
+    !matchesAttemptIdentity(identity, {
+      countryKey: set.countryKey,
+      examKey: set.examKey,
+      locale: identity.locale,
+      setKey: set.setKey,
+      trackKey: set.trackKey,
+    }) ||
     tryoutCatalogIdentity(set) !== attempt.setIdentity ||
     set.publicPath !== attempt.setPublicPath ||
     set.questionCount !== attempt.totalQuestions ||

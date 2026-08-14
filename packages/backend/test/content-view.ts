@@ -30,7 +30,7 @@ export function makeArticleViewArgs(
   return {
     contentId,
     deviceId,
-    locale: ARTICLE_VIEW_PROJECTION.locale,
+    locale: "en",
     publicPath: ARTICLE_VIEW_ROUTE,
     section: "articles",
   };
@@ -41,10 +41,10 @@ export async function insertContentViewArticle(ctx: MutationCtx) {
   await insertRuntimeArticles(ctx, 1, () => ARTICLE_VIEW_PROJECTION);
   const row = await ctx.db
     .query("articleCatalog")
-    .withIndex("by_contentKey_and_locale", (query) =>
+    .withIndex("by_contentKey_and_appLocale", (query) =>
       query
         .eq("contentKey", ARTICLE_VIEW_PROJECTION.contentKey)
-        .eq("locale", ARTICLE_VIEW_PROJECTION.locale)
+        .eq("appLocale", ARTICLE_VIEW_PROJECTION.appLocale)
     )
     .unique();
   if (!row) {

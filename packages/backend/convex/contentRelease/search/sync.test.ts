@@ -39,7 +39,7 @@ async function insertPublicHead(
   index: number,
   plainText: string
 ) {
-  const publicPath = `test/sync-${index}`;
+  const publicPath = `subjects/test/sync-${index}`;
   await insertRuntimeVersion(ctx, "public", contentKey, {
     artifactHash: `sha256:${(identity.sequence * 32 + index)
       .toString(16)
@@ -135,7 +135,7 @@ describe("contentRelease/search/sync", () => {
         contentKey: "test:change-1",
         family: "material",
         index: 1,
-        locale: "en",
+        artifactLocale: "en",
         operation: "delete",
         releaseId: NEXT.releaseId,
         sequence: NEXT.sequence,
@@ -145,9 +145,9 @@ describe("contentRelease/search/sync", () => {
         headSequence: NEXT.sequence,
         projectionJson: testProjectionJson({
           contentKey: "test:change-2",
-          publicPath: "test/sync-2",
+          publicPath: "subjects/test/sync-2",
         }),
-        publicPath: "test/sync-2",
+        publicPath: "subjects/test/sync-2",
       });
       await selectActiveRelease(ctx, NEXT);
     });

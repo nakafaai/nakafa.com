@@ -41,7 +41,13 @@ async function insertArticle(
 ) {
   const projection = testArticleProjection(index, date);
   const projectionJson = canonicalizeArticleProjection(projection);
-  await insertReleaseItem(ctx, identity, projection.contentKey, index);
+  await insertReleaseItem(
+    ctx,
+    identity,
+    projection.contentKey,
+    index,
+    "article"
+  );
   await insertRuntimeVersion(ctx, "public", projection.contentKey, {
     headReleaseId: identity.releaseId,
     headSequence: identity.sequence,
@@ -128,13 +134,19 @@ describe("contentRelease/article/sync", () => {
       await insertArticle(ctx, NEXT, 0, "2026-08-01");
       for (const index of [1, 2]) {
         const projection = testArticleProjection(index);
-        await insertReleaseItem(ctx, NEXT, projection.contentKey, index);
+        await insertReleaseItem(
+          ctx,
+          NEXT,
+          projection.contentKey,
+          index,
+          "article"
+        );
       }
       await ctx.db.insert("contentHeads", {
+        artifactLocale: "en",
         contentKey: testArticleProjection(1).contentKey,
         family: "article",
         index: 1,
-        locale: "en",
         operation: "delete",
         releaseId: NEXT.releaseId,
         sequence: NEXT.sequence,
@@ -181,7 +193,8 @@ describe("contentRelease/article/sync", () => {
         ctx,
         BASE,
         testArticleProjection(0).contentKey,
-        1
+        1,
+        "article"
       );
     });
     await expect(

@@ -15,6 +15,7 @@ import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.h
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
+import type { Locale } from "@repo/contents/_types/content";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -41,6 +42,7 @@ function createTrendingConvexTest() {
 async function insertMaterialCounter(
   ctx: MutationCtx,
   projection: MaterialLessonProjection,
+  locale: Locale,
   score: number
 ) {
   const counterId = await ctx.db.insert("learningPopularityCounters", {
@@ -48,7 +50,7 @@ async function insertMaterialCounter(
     ...canonicalContext,
     content_id: projection.graph.assetId,
     description: "Stale copied description",
-    locale: projection.locale,
+    locale,
     materialDomain: "biology",
     route: projection.publicPath,
     score,
@@ -74,9 +76,9 @@ describe("contents/queries/trending", () => {
     const target = createTrendingConvexTest();
     await activateMaterialCatalog(target, [first, second, ignoredLocale]);
     await target.mutation(async (ctx) => {
-      await insertMaterialCounter(ctx, first, 7);
-      await insertMaterialCounter(ctx, second, 10);
-      await insertMaterialCounter(ctx, ignoredLocale, 100);
+      await insertMaterialCounter(ctx, first, "en", 7);
+      await insertMaterialCounter(ctx, second, "en", 10);
+      await insertMaterialCounter(ctx, ignoredLocale, "id", 100);
     });
 
     const results = await target.query(getTrendingSubjects, {
@@ -129,8 +131,8 @@ describe("contents/queries/trending", () => {
     const target = createTrendingConvexTest();
     await activateMaterialCatalog(target, [current]);
     await target.mutation(async (ctx) => {
-      await insertMaterialCounter(ctx, missing, 100);
-      await insertMaterialCounter(ctx, previous, 10);
+      await insertMaterialCounter(ctx, missing, "en", 100);
+      await insertMaterialCounter(ctx, previous, "en", 10);
     });
 
     const results = await target.query(getTrendingSubjects, {

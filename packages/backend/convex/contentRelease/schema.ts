@@ -3,15 +3,15 @@ import articleSchema from "@repo/backend/convex/contentRelease/article/schema";
 import cutoverSchema from "@repo/backend/convex/contentRelease/cutover/schema";
 import materialSchema from "@repo/backend/convex/contentRelease/material/schema";
 import { proofFailureValidator } from "@repo/backend/convex/contentRelease/proof/spec";
-import scopeSchema from "@repo/backend/convex/contentRelease/scope/schema";
 import snapshotSchema from "@repo/backend/convex/contentRelease/snapshot/schema";
 import {
+  appLocaleValidator,
+  artifactLocaleValidator,
   bindingOperationValidator,
   compactionPhaseValidator,
   contentFamilyValidator,
   deliveryValidator,
   headOperationValidator,
-  localeValidator,
   releaseRoleValidator,
   releaseStatusValidator,
   rendererDomainValidator,
@@ -45,51 +45,51 @@ const tables = {
 
   /** Permanent canonical identities used for bounded catalog pagination. */
   contentKeys: defineTable({
+    artifactLocale: artifactLocaleValidator,
     contentKey: v.string(),
     createdSequence: v.number(),
     family: contentFamilyValidator,
-    locale: localeValidator,
   })
-    .index("by_contentKey_and_locale", ["contentKey", "locale"])
-    .index("by_createdSequence_and_contentKey_and_locale", [
+    .index("by_contentKey_and_artifactLocale", ["contentKey", "artifactLocale"])
+    .index("by_createdSequence_and_contentKey_and_artifactLocale", [
       "createdSequence",
       "contentKey",
-      "locale",
+      "artifactLocale",
     ])
-    .index("by_family_and_contentKey_and_locale", [
+    .index("by_family_and_contentKey_and_artifactLocale", [
       "family",
       "contentKey",
-      "locale",
+      "artifactLocale",
     ])
-    .index("by_family_and_locale_and_createdSequence_and_contentKey", [
+    .index("by_family_and_artifactLocale_and_createdSequence_and_contentKey", [
       "family",
-      "locale",
+      "artifactLocale",
       "createdSequence",
       "contentKey",
     ]),
 
   /** Permanent public-route identities used for bounded MVCC validation. */
   contentPaths: defineTable({
+    appLocale: appLocaleValidator,
     createdSequence: v.number(),
-    locale: localeValidator,
     publicPath: v.string(),
   })
-    .index("by_locale_and_publicPath", ["locale", "publicPath"])
-    .index("by_createdSequence_and_locale_and_publicPath", [
+    .index("by_appLocale_and_publicPath", ["appLocale", "publicPath"])
+    .index("by_createdSequence_and_appLocale_and_publicPath", [
       "createdSequence",
-      "locale",
+      "appLocale",
       "publicPath",
     ]),
 
   /** Immutable content versions selected by the active release sequence. */
   contentHeads: defineTable({
     artifactHash: v.optional(v.string()),
+    artifactLocale: artifactLocaleValidator,
     compilerConfigHash: v.optional(v.string()),
     contentKey: v.string(),
     delivery: v.optional(deliveryValidator),
     family: contentFamilyValidator,
     index: v.number(),
-    locale: localeValidator,
     operation: headOperationValidator,
     projectionHash: v.optional(v.string()),
     projectionJson: v.optional(v.string()),
@@ -99,40 +99,40 @@ const tables = {
     sourceHash: v.optional(v.string()),
     sourcePath: v.optional(v.string()),
   })
-    .index("by_contentKey_and_locale_and_sequence", [
+    .index("by_contentKey_and_artifactLocale_and_sequence", [
       "contentKey",
-      "locale",
+      "artifactLocale",
       "sequence",
     ])
     .index("by_releaseId_and_index", ["releaseId", "index"])
-    .index("by_releaseId_and_contentKey_and_locale", [
+    .index("by_releaseId_and_contentKey_and_artifactLocale", [
       "releaseId",
       "contentKey",
-      "locale",
+      "artifactLocale",
     ])
     .index("by_artifactHash_and_sequence", ["artifactHash", "sequence"])
     .index("by_sequence", ["sequence"]),
 
   /** One active public search row per locale-specific content identity. */
   contentIndex: defineTable({
+    appLocale: appLocaleValidator,
     contentKey: v.string(),
     family: contentFamilyValidator,
-    locale: localeValidator,
     projectionHash: v.string(),
     publicPath: v.string(),
     releaseId: v.string(),
     sequence: v.number(),
     text: v.string(),
   })
-    .index("by_contentKey_and_locale", ["contentKey", "locale"])
-    .index("by_locale_and_family_and_publicPath", [
-      "locale",
+    .index("by_contentKey_and_appLocale", ["contentKey", "appLocale"])
+    .index("by_appLocale_and_family_and_publicPath", [
+      "appLocale",
       "family",
       "publicPath",
     ])
     .searchIndex("search_text", {
       searchField: "text",
-      filterFields: ["family", "locale"],
+      filterFields: ["family", "appLocale"],
     }),
 
   ...articleSchema,
@@ -141,28 +141,28 @@ const tables = {
 
   /** Immutable route versions resolved before access policy enforcement. */
   contentBindings: defineTable({
+    appLocale: appLocaleValidator,
     batchHash: v.string(),
     batchIndex: v.number(),
     contentKey: v.optional(v.string()),
     index: v.number(),
-    locale: localeValidator,
     operation: bindingOperationValidator,
     publicPath: v.string(),
     releaseId: v.string(),
     routeJson: v.string(),
     sequence: v.number(),
   })
-    .index("by_locale_and_publicPath_and_sequence_and_index", [
-      "locale",
+    .index("by_appLocale_and_publicPath_and_sequence_and_index", [
+      "appLocale",
       "publicPath",
       "sequence",
       "index",
     ])
     .index("by_releaseId_and_index", ["releaseId", "index"])
     .index("by_releaseId_and_batchIndex", ["releaseId", "batchIndex"])
-    .index("by_releaseId_and_locale_and_publicPath", [
+    .index("by_releaseId_and_appLocale_and_publicPath", [
       "releaseId",
-      "locale",
+      "appLocale",
       "publicPath",
     ])
     .index("by_sequence", ["sequence"]),
@@ -212,6 +212,7 @@ const tables = {
   /** Ordered release changes with immutable prior-version references. */
   contentItems: defineTable({
     artifactHash: v.optional(v.string()),
+    artifactLocale: artifactLocaleValidator,
     artifactBatchHash: v.optional(v.string()),
     artifactBatchIndex: v.optional(v.number()),
     artifactReady: v.boolean(),
@@ -220,7 +221,6 @@ const tables = {
     itemBatchHash: v.string(),
     itemBatchIndex: v.number(),
     itemJson: v.string(),
-    locale: localeValidator,
     priorSequence: v.optional(v.number()),
     projectionBatchHash: v.optional(v.string()),
     projectionBatchIndex: v.optional(v.number()),
@@ -232,10 +232,10 @@ const tables = {
     stagedAt: v.number(),
   })
     .index("by_releaseId_and_index", ["releaseId", "index"])
-    .index("by_releaseId_and_contentKey_and_locale", [
+    .index("by_releaseId_and_contentKey_and_artifactLocale", [
       "releaseId",
       "contentKey",
-      "locale",
+      "artifactLocale",
     ])
     .index("by_releaseId_and_itemBatchIndex", ["releaseId", "itemBatchIndex"])
     .index("by_releaseId_and_artifactBatchIndex", [
@@ -249,7 +249,6 @@ const tables = {
     .index("by_artifactHash", ["artifactHash"])
     .index("by_sequence", ["sequence"]),
 
-  ...scopeSchema,
   ...snapshotSchema,
 
   /** Singleton identities selecting active, candidate, and recovery sequences. */
@@ -271,9 +270,6 @@ const tables = {
     compactedFloor: v.optional(v.number()),
     key: v.literal("primary"),
     materialManifestHash: v.optional(v.string()),
-    materialOwnerManifestHash: v.optional(v.string()),
-    materialOwnerReleaseId: v.optional(v.string()),
-    materialOwnerSequence: v.optional(v.number()),
     materialReleaseId: v.optional(v.string()),
     materialSequence: v.optional(v.number()),
     nextSequence: v.number(),

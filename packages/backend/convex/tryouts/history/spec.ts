@@ -1,4 +1,4 @@
-import { type Infer, v } from "convex/values";
+import { v } from "convex/values";
 import { Effect, Schema } from "effect";
 
 interface RetainedTryoutRelease {
@@ -102,17 +102,3 @@ export const historyMarkerProofValidator = v.object({
   ),
   snapshotId: v.string(),
 });
-
-/** Observed and authenticated retained history used by freeze and proof. */
-export const terminalHistoryProofValidator = v.object({
-  artifacts: v.number(),
-  attempts: v.number(),
-  bundles: v.number(),
-  catalogRows: v.number(),
-  frozenPlacements: v.number(),
-  markers: v.number(),
-  placementRows: v.number(),
-  progressRows: v.number(),
-  snapshotId: v.string(),
-});
-export type TerminalHistoryProof = Infer<typeof terminalHistoryProofValidator>;

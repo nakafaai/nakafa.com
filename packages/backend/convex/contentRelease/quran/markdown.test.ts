@@ -14,7 +14,7 @@ describe("contentRelease/quran/markdown", () => {
     await expect(
       t.query((ctx) => runConvexProgram(readQuranMarkdown(ctx, "id", 1)))
     ).resolves.toMatchObject({
-      locale: "id",
+      appLocale: "id",
       managed: false,
       surah: null,
       toVerse: 0,
@@ -22,7 +22,7 @@ describe("contentRelease/quran/markdown", () => {
     });
   });
 
-  it("projects only locale-specific fields rendered in markdown", async () => {
+  it("projects only app-locale fields rendered in markdown", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       activateQuranSnapshot(ctx, [

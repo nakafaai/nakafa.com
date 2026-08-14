@@ -32,15 +32,15 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const routeArgs = {
-  locale: "en",
+  appLocale: "en",
   publicPath: TEST_RUNTIME_PATH,
-} satisfies { readonly locale: "en" | "id"; readonly publicPath: string };
+} satisfies { readonly appLocale: "en" | "id"; readonly publicPath: string };
 const readPublic = internal.contentRelease.runtime.public.internal.read;
 const readPublicBatch = makeFunctionReference<
   "query",
   {
     readonly requests: ReadonlyArray<{
-      readonly locale: "en" | "id";
+      readonly appLocale: "en" | "id";
       readonly publicPath: string;
     }>;
   },
@@ -55,7 +55,7 @@ describe("contentRelease/runtime/public/internal", () => {
       await insertRuntimeHead(ctx, "public", "test:public");
     });
     const missingRoute = {
-      locale: "en",
+      appLocale: "en",
       publicPath: "test/missing",
     } satisfies typeof routeArgs;
     const requests = [
@@ -117,7 +117,7 @@ describe("contentRelease/runtime/public/internal", () => {
     });
 
     const found = await t.query(readPublic, {
-      locale: "en",
+      appLocale: "en",
       publicPath: TEST_ARTICLE_PATH,
     });
 
@@ -143,7 +143,7 @@ describe("contentRelease/runtime/public/internal", () => {
 
     await expect(
       t.query(readPublic, {
-        locale: "en",
+        appLocale: "en",
         publicPath: FUNCTION_MATERIAL_PATH,
       })
     ).resolves.toMatchObject({
@@ -191,7 +191,7 @@ describe("contentRelease/runtime/public/internal", () => {
       await insertRuntimeHead(ctx, "public", "test:drift", {
         projectionJson: testProjectionJson({
           contentKey: "test:drift",
-          publicPath: "test/different",
+          publicPath: "subjects/test/different",
         }),
       });
     });
@@ -243,18 +243,23 @@ describe("contentRelease/runtime/public/internal", () => {
         bindingSequence: 1,
         headReleaseId: "release-sequence-1",
         headSequence: 1,
-        publicPath: "test/old",
+        publicPath: "subjects/test/old",
       });
       await insertRuntimeVersion(ctx, "public", "test:renamed", {
         artifactHash: `sha256:${"2".repeat(64)}`,
         publicPath: TEST_RUNTIME_PATH,
       });
-      await insertRuntimeBinding(ctx, null, { publicPath: "test/old" });
+      await insertRuntimeBinding(ctx, null, {
+        publicPath: "subjects/test/old",
+      });
       await insertRuntimeBinding(ctx, "test:renamed");
     });
 
     await expect(
-      t.query(readPublic, { locale: "en", publicPath: "test/old" })
+      t.query(readPublic, {
+        appLocale: "en",
+        publicPath: "subjects/test/old",
+      })
     ).resolves.toBeNull();
     await expect(t.query(readPublic, routeArgs)).resolves.toMatchObject({
       delivery: "public",

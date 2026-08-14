@@ -16,7 +16,7 @@ export const readArticlePartition = Effect.fn(
   "contentRelease.readArticlePartition"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadArticleOwner>[1],
+  appLocale: Parameters<typeof loadArticleOwner>[1],
   bucket: string
 ) {
   if (!isProjectionBucket(bucket)) {
@@ -26,7 +26,7 @@ export const readArticlePartition = Effect.fn(
     );
   }
 
-  const owner = yield* loadArticleOwner(ctx, locale);
+  const owner = yield* loadArticleOwner(ctx, appLocale);
   if (!(owner.managed && owner.active)) {
     return { kind: "unmanaged" as const };
   }
@@ -35,24 +35,24 @@ export const readArticlePartition = Effect.fn(
     Effect.promise(() =>
       ctx.db
         .query("articleBuckets")
-        .withIndex("by_locale_and_bucket", (index) =>
-          index.eq("locale", locale).eq("bucket", bucket)
+        .withIndex("by_appLocale_and_bucket", (index) =>
+          index.eq("appLocale", appLocale).eq("bucket", bucket)
         )
         .unique()
     ),
     Effect.promise(() =>
       ctx.db
         .query("articleCatalog")
-        .withIndex("by_locale_and_bucket_and_publicPath", (index) =>
-          index.eq("locale", locale).eq("bucket", bucket)
+        .withIndex("by_appLocale_and_bucket_and_publicPath", (index) =>
+          index.eq("appLocale", appLocale).eq("bucket", bucket)
         )
         .take(CONTENT_BUCKET_SIZE + 1)
     ),
     Effect.promise(() =>
       ctx.db
         .query("articleCategories")
-        .withIndex("by_locale_and_bucket_and_category", (index) =>
-          index.eq("locale", locale).eq("bucket", bucket)
+        .withIndex("by_appLocale_and_bucket_and_category", (index) =>
+          index.eq("appLocale", appLocale).eq("bucket", bucket)
         )
         .take(CONTENT_BUCKET_SIZE + 1)
     ),
@@ -67,7 +67,7 @@ export const readArticlePartition = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Article partition ${locale}/${bucket} does not match its committed count.`
+      `Article partition ${appLocale}/${bucket} does not match its committed count.`
     );
   }
 

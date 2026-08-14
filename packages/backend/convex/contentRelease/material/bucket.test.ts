@@ -18,7 +18,7 @@ describe("contentRelease/material/bucket", () => {
     );
     await expect(
       target.run((ctx) => ctx.db.query("materialBuckets").unique())
-    ).resolves.toMatchObject({ bucket: "abc", count: 2, locale: "en" });
+    ).resolves.toMatchObject({ appLocale: "en", bucket: "abc", count: 2 });
 
     await target.mutation((ctx) =>
       runConvexProgram(adjustMaterialBucket(ctx, "en", "abc", -1))
@@ -53,7 +53,7 @@ describe("contentRelease/material/bucket", () => {
       ctx.db.insert("materialBuckets", {
         bucket: "abc",
         count: CONTENT_BUCKET_SIZE,
-        locale: "en",
+        appLocale: "en",
       })
     );
     await expect(

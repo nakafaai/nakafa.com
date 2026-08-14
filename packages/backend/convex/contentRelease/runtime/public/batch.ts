@@ -25,7 +25,7 @@ const publicBatchReadReference = makeFunctionReference<
   {
     readonly requests: readonly Pick<
       PublicContentRuntimeRequest,
-      "locale" | "publicPath"
+      "appLocale" | "publicPath"
     >[];
   },
   readonly PublicRuntimeRow[]
@@ -70,8 +70,8 @@ const resolvePublicRuntimeBatch = Effect.fn(
     catch: () => new PublicRuntimeBatchReadError(),
     try: () =>
       ctx.runQuery(publicBatchReadReference, {
-        requests: requests.map(({ locale, publicPath }) => ({
-          locale,
+        requests: requests.map(({ appLocale, publicPath }) => ({
+          appLocale,
           publicPath,
         })),
       }),

@@ -2,12 +2,13 @@ import {
   CorpusSourcePathSchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   CurriculumNodeKeySchema,
   type CurriculumRoute,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
-import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/row-hash";
+import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import {
@@ -58,10 +59,10 @@ const CONTEXT_INPUT = {
 /** Creates one curriculum subject that owns the material card list. */
 function subjectRoute(): CurriculumRoute {
   return CurriculumRouteSchema.make({
+    appLocale: AppLocaleSchema.make("en"),
     iconKey: "science",
     kind: "curriculum-context",
     level: "subject",
-    locale: "en",
     nodeKey: "test-subject",
     order: 1,
     parentPath: ROOT_PATH,
@@ -80,10 +81,10 @@ function groupRoute(
   nodeKey = GROUP_KEY
 ): CurriculumRoute {
   return CurriculumRouteSchema.make({
+    appLocale: AppLocaleSchema.make("en"),
     iconKey: "science",
     kind: "curriculum-context",
     level: "topic",
-    locale: "en",
     materialCardDescription: "Technical card description.",
     materialCardTitle: "Technical Group",
     nodeKey,
@@ -104,11 +105,11 @@ function mappingRoute(
 ): CurriculumRoute {
   const publicPath = PublicPathSchema.make(`${GROUP_PATH}/mapping-${index}`);
   return CurriculumRouteSchema.make({
+    appLocale: AppLocaleSchema.make("en"),
     canonicalPath,
     iconKey: "science",
     kind: "curriculum-context",
     level: "lesson",
-    locale: "en",
     materialContextNodeKey: GROUP_KEY,
     materialContextParentPath: SUBJECT_PATH,
     materialContextPublicPath: GROUP_PATH,

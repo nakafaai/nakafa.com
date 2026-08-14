@@ -121,7 +121,7 @@ export async function stageDeleteFixture(
 ) {
   const article = family === "article";
   const contentKey = article ? TEST_ARTICLE_KEY : "test:deleted";
-  const publicPath = article ? TEST_ARTICLE_PATH : "test/deleted";
+  const publicPath = article ? TEST_ARTICLE_PATH : "subjects/test/deleted";
   const projectionJson = article
     ? TEST_ARTICLE_PROJECTION_JSON
     : testProjectionJson({ contentKey, publicPath });

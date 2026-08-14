@@ -14,7 +14,7 @@ import {
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 
 const identity = {
-  locale: previewProjection.locale,
+  appLocale: previewProjection.appLocale,
   publicPath: previewProjection.publicPath,
 };
 

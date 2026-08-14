@@ -56,8 +56,8 @@ describe("contentRelease/quran/interpretation", () => {
         runConvexProgram(readQuranInterpretation(ctx, "id", snapshotId, 1, 7))
       )
     ).resolves.toMatchObject({
+      appLocale: "id",
       interpretation: "Tafsir teknis 7",
-      locale: "id",
       managed: true,
       snapshotId,
       surahNumber: 1,

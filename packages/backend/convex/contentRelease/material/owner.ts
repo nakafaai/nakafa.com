@@ -14,11 +14,14 @@ type ActiveIdentity = Exclude<
 /** Requires the active material read model to match its publication identity. */
 export const requireMaterialState = Effect.fn(
   "contentRelease.requireMaterialState"
-)(function* (active: ActiveIdentity, locale: Doc<"contentKeys">["locale"]) {
+)(function* (
+  active: ActiveIdentity,
+  appLocale: Doc<"contentPaths">["appLocale"]
+) {
   if (!hasMaterialReadModel(active)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
-      `Materials for ${locale} in active release ${active.releaseId} are still synchronizing.`
+      `Materials for ${appLocale} in active release ${active.releaseId} are still synchronizing.`
     );
   }
 });
@@ -45,12 +48,12 @@ export const loadMaterialCatalogOwner = Effect.fn(
 
 /** Loads material ownership only after its active read model is complete. */
 export const loadMaterialOwner = Effect.fn("contentRelease.loadMaterialOwner")(
-  function* (ctx: QueryCtx, locale: Doc<"contentKeys">["locale"]) {
+  function* (ctx: QueryCtx, appLocale: Doc<"contentPaths">["appLocale"]) {
     const owner = yield* loadMaterialCatalogOwner(ctx);
     if (!(owner.active && owner.managed)) {
       return { active: owner.active, managed: false };
     }
-    yield* requireMaterialState(owner.active, locale);
+    yield* requireMaterialState(owner.active, appLocale);
     return { active: owner.active, managed: true };
   }
 );

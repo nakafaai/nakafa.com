@@ -1,15 +1,24 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import {
+  type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
+  TryoutCatalogRowSchema,
+  type TryoutSet,
+} from "@nakafa/aksara-contracts/tryout/catalog";
 import {
   tryoutCatalogIdentity,
+  tryoutCatalogNodeIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
-import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/spec";
+import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import type {
-  TryoutCurrentAnswerSelector,
-  TryoutCurrentQuestionSelector,
+  TryoutAnswerSelector,
+  TryoutQuestionSelector,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
 import {
@@ -29,6 +38,7 @@ import {
   TRYOUT_SECTION_PATH,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
+import { Schema } from "effect";
 
 /** Returns the coherent terminal reason for one fixture status. */
 function getEndReason(
@@ -77,30 +87,47 @@ export async function seedTryoutContentAccessState(
   });
   const attemptTerminal = args.attemptStatus !== "in-progress";
   const sectionTerminal = args.sectionStatus !== "in-progress";
-  const fixtureLocale: ContentLocale = "id";
+  const fixtureLocale: ActiveAppLocaleCode = "id";
   const signedSection = makeSignedTryoutSection(section);
   const signedSource = makeSignedTryoutSource(set, [signedSection]);
   const signedPlacement = signedSection.signed.placements[0];
   if (!signedPlacement) {
     throw new Error("Expected one signed try-out placement fixture.");
   }
+  const englishSet = Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+    ...signedSource.snapshot.set.row,
+    appLocale: "en",
+  });
+  const englishSection = Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+    ...signedSection.signed.section.row,
+    appLocale: "en",
+  });
+  const englishPlacements = signedSection.signed.placements.map(({ row }) =>
+    Schema.decodeUnknownSync(TryoutPlacementSchema)({
+      ...row,
+      answerArtifactLocale: "en",
+      appLocale: "en",
+      deliveryLanguage: "en",
+      questionArtifactLocale: "en",
+    })
+  );
   const snapshotId = await activateTryoutSnapshot(ctx, {
     catalog: [
       signedSource.snapshot.set.row,
-      { ...signedSource.snapshot.set.row, locale: "en" },
+      englishSet,
       signedSection.signed.section.row,
-      { ...signedSection.signed.section.row, locale: "en" },
+      englishSection,
     ],
-    placements: signedSection.signed.placements.flatMap(({ row }) => [
-      row,
-      { ...row, locale: "en" },
-    ]),
+    placements: [
+      ...signedSection.signed.placements.map(({ row }) => row),
+      ...englishPlacements,
+    ],
   });
-  const setIdentity = tryoutCatalogIdentity({
+  const setIdentity = tryoutCatalogNodeIdentity({
+    appLocale: AppLocaleSchema.make("id"),
     countryKey: "indonesia",
     examKey: "snbt",
     kind: "set",
-    locale: "id",
     setKey: "set-1",
     trackKey: "2027",
   });
@@ -128,7 +155,7 @@ export async function seedTryoutContentAccessState(
     userId: identity.userId,
     countryKey: "indonesia",
     examKey: "snbt",
-    locale: fixtureLocale,
+    appLocale: fixtureLocale,
     setIdentity,
     setKey: "set-1",
     setPublicPath: signedSource.snapshot.set.row.publicPath,
@@ -169,28 +196,27 @@ export async function seedTryoutContentAccessState(
     sectionKey: placementRow.sectionKey,
     sourcePath: placementRow.questionSourcePath,
     sourceRevision: placementRow.sourceRevision,
-    title: placementRow.title,
     tryoutAttemptId: attemptId,
   });
 
-  const answer: TryoutCurrentAnswerSelector = {
+  const answer: TryoutAnswerSelector = {
+    appLocale: fixtureLocale,
     artifactHash: placementRow.answerArtifactHash,
     contentHash: placementRow.contentHash,
     contentKey: placementRow.answerContentKey,
     delivery: "entitled",
-    locale: fixtureLocale,
     questionOrder: placementRow.questionOrder,
     snapshotId,
     snapshotReleaseId: TEST_RELEASE_ID,
     sourcePath: placementRow.questionSourcePath,
     sourceRevision: placementRow.sourceRevision,
   };
-  const question: TryoutCurrentQuestionSelector = {
+  const question: TryoutQuestionSelector = {
+    appLocale: fixtureLocale,
     artifactHash: placementRow.questionArtifactHash,
     contentHash: placementRow.contentHash,
     contentKey: placementRow.questionContentKey,
     delivery: "authenticated",
-    locale: fixtureLocale,
     questionOrder: placementRow.questionOrder,
     snapshotId,
     snapshotReleaseId: TEST_RELEASE_ID,
@@ -270,7 +296,9 @@ export async function insertTryoutAttempt(
     userId: args.userId,
     countryKey: args.set.countryKey,
     examKey: args.set.examKey,
-    locale: args.set.locale,
+    appLocale: Schema.decodeUnknownSync(ActiveAppLocaleCodeSchema)(
+      args.set.appLocale
+    ),
     setIdentity,
     setKey: args.set.setKey,
     snapshotReleaseId: args.snapshotReleaseId ?? TEST_RELEASE_ID,
@@ -299,11 +327,11 @@ export async function insertTryoutSectionAttempt(
     expiresAt: args.expiresAt ?? TRYOUT_TEST_NOW + 1_800_000,
     lastActivityAt: TRYOUT_TEST_NOW - 10_000,
     sectionKey: args.sectionKey ?? TRYOUT_SECTION_KEY,
-    sectionIdentity: tryoutCatalogIdentity({
+    sectionIdentity: tryoutCatalogNodeIdentity({
+      appLocale: AppLocaleSchema.make("id"),
       countryKey: "indonesia",
       examKey: "snbt",
       kind: "section",
-      locale: "id",
       sectionKey: args.sectionKey ?? TRYOUT_SECTION_KEY,
       setKey: "set-1",
       trackKey: "2027",
@@ -341,7 +369,6 @@ export function insertTryoutAttemptPlacement(
     sectionKey: placement.sectionKey,
     sourcePath: placement.sourcePath,
     sourceRevision: placement.sourceRevision,
-    title: placement.title,
     tryoutAttemptId: args.tryoutAttemptId,
   });
 }
@@ -354,11 +381,11 @@ export async function insertIrtScaleItem(
     scaleVersionId: Id<"irtScaleVersions">;
   }
 ) {
-  const sectionIdentity = tryoutCatalogIdentity({
+  const sectionIdentity = tryoutCatalogNodeIdentity({
+    appLocale: args.placement.row.appLocale,
     countryKey: args.placement.row.countryKey,
     examKey: args.placement.row.examKey,
     kind: "section",
-    locale: args.placement.row.locale,
     sectionKey: args.placement.row.sectionKey,
     setKey: args.placement.row.setKey,
     trackKey: args.placement.row.trackKey,

@@ -18,8 +18,8 @@ const projection = {
 };
 const input = {
   activeReleaseId: "release-test",
+  appLocale: projection.appLocale,
   family: "material" as const,
-  locale: projection.locale,
   publicPath: projection.publicPath,
 };
 
@@ -68,7 +68,7 @@ describe("published API content", () => {
         siteUrl: "https://test.convex.site",
         token: "test-runtime-token",
       },
-      [{ locale: "en", publicPath: projection.publicPath }]
+      [{ appLocale: "en", publicPath: projection.publicPath }]
     );
   });
 

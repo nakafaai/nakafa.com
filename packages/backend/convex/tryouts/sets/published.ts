@@ -1,5 +1,6 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -92,7 +93,7 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
       return null;
     }
     const progress = user
-      ? yield* loadProgress(ctx, found.sets, user)
+      ? yield* loadProgress(ctx, found.sets, identity.locale, user)
       : new Map<string, Progress>();
     return found.sets.map((set) => ({
       progress: progress.get(tryoutCatalogIdentity(set)) ?? null,
@@ -105,11 +106,12 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
 const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
   ctx: QueryCtx,
   sets: readonly TryoutSet[],
+  appLocale: AppLocaleCode,
   user: User
 ) {
   const entries = yield* Effect.forEach(
     sets,
-    (set) => loadSetProgress(ctx, set, user),
+    (set) => loadSetProgress(ctx, set, appLocale, user),
     { concurrency: "unbounded" }
   );
   const byIdentity = new Map<string, Progress>();
@@ -130,19 +132,24 @@ const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
 
 /** Reads at most one user progress row for one exact authored route. */
 const loadSetProgress = Effect.fn("tryouts.sets.loadPublishedSetProgress")(
-  function* (ctx: QueryCtx, set: TryoutSet, user: User) {
+  function* (
+    ctx: QueryCtx,
+    set: TryoutSet,
+    appLocale: AppLocaleCode,
+    user: User
+  ) {
     const rows = yield* Effect.promise(() =>
       ctx.db
         .query("tryoutSetProgress")
         .withIndex(
-          "by_userId_countryKey_examKey_trackKey_locale_setKey",
+          "by_userId_countryKey_examKey_trackKey_appLocale_setKey",
           (query) =>
             query
               .eq("userId", user._id)
               .eq("countryKey", set.countryKey)
               .eq("examKey", set.examKey)
               .eq("trackKey", set.trackKey)
-              .eq("locale", set.locale)
+              .eq("appLocale", appLocale)
               .eq("setKey", set.setKey)
         )
         .take(TRYOUT_PROGRESS_IDENTITY_LIMIT)

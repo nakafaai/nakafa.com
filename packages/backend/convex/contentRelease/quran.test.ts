@@ -21,26 +21,26 @@ describe("contentRelease/quran", () => {
     ).resolves.toMatchObject({ managed: false, rowJson: [] });
     await expect(
       t.query(api.contentRelease.quran.document, {
-        locale: "en",
+        appLocale: "en",
         surahNumber: 1,
       })
     ).resolves.toMatchObject({ managed: false, surah: null, verses: [] });
     await expect(
       t.query(api.contentRelease.quran.markdown, {
-        locale: "id",
+        appLocale: "id",
         surahNumber: 1,
       })
     ).resolves.toMatchObject({ managed: false, surah: null, verses: [] });
     await expect(
       t.query(api.contentRelease.quran.view, {
-        locale: "id",
+        appLocale: "id",
         surahNumber: 1,
       })
     ).resolves.toMatchObject({ managed: false, surah: null, verses: [] });
     await expect(
       t.query(api.contentRelease.quran.interpretation, {
+        appLocale: "id",
         expectedSnapshotId: `sha256:${"0".repeat(64)}`,
-        locale: "id",
         surahNumber: 1,
         verseNumber: 1,
       })
@@ -49,8 +49,8 @@ describe("contentRelease/quran", () => {
     });
     await expect(
       t.query(api.contentRelease.quran.reference, {
+        appLocale: "id",
         fromVerse: 1,
-        locale: "id",
         surahNumber: 1,
       })
     ).resolves.toMatchObject({ fromVerse: 1, managed: false, toVerse: 1 });
@@ -63,20 +63,20 @@ describe("contentRelease/quran", () => {
       t.query(api.contentRelease.quran.attribution, {}),
       t.query(api.contentRelease.quran.surahs, {}),
       t.query(api.contentRelease.quran.document, {
-        locale: "en",
+        appLocale: "en",
         surahNumber: 1,
       }),
       t.query(api.contentRelease.quran.markdown, {
-        locale: "id",
+        appLocale: "id",
         surahNumber: 1,
       }),
       t.query(api.contentRelease.quran.view, {
-        locale: "id",
+        appLocale: "id",
         surahNumber: 1,
       }),
       t.query(api.contentRelease.quran.reference, {
+        appLocale: "id",
         fromVerse: 1,
-        locale: "id",
         surahNumber: 1,
       }),
     ]);
@@ -92,8 +92,8 @@ describe("contentRelease/quran", () => {
     }
     await expect(
       t.query(api.contentRelease.quran.interpretation, {
+        appLocale: "id",
         expectedSnapshotId: `sha256:${"0".repeat(64)}`,
-        locale: "id",
         surahNumber: 1,
         verseNumber: 1,
       })

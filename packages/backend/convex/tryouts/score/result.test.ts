@@ -35,7 +35,7 @@ describe("tryouts/score/result", () => {
         examKey: "snbt",
         expiresAt: NOW + 3_600_000,
         lastActivityAt: NOW,
-        locale: "id",
+        appLocale: "id",
         scoreStatus: "official",
         scoringStrategy: "raw",
         sectionSnapshots: [],

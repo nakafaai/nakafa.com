@@ -28,7 +28,7 @@ type QuranInterpretationResult = FunctionReturnType<
 const activeInterpretation: QuranInterpretationResult = {
   ...source,
   interpretation: "Tafsir ayat tujuh.",
-  locale: "id",
+  appLocale: "id",
   surahNumber: 1,
   verseNumber: 7,
 };
@@ -37,7 +37,7 @@ describe("signed Quran interpretation decoder", () => {
   it("preserves one exact active tafsir", async () => {
     const interpretation = await Effect.runPromise(
       decodePublishedQuranInterpretation(activeInterpretation, {
-        locale: "id",
+        appLocale: "id",
         snapshotId: source.snapshotId,
         surahNumber: 1,
         verseNumber: 7,
@@ -46,7 +46,7 @@ describe("signed Quran interpretation decoder", () => {
 
     expect(interpretation).toMatchObject({
       interpretation: "Tafsir ayat tujuh.",
-      locale: "id",
+      appLocale: "id",
       surahNumber: 1,
       verseNumber: 7,
     } satisfies Partial<PublishedQuranInterpretation>);
@@ -57,7 +57,7 @@ describe("signed Quran interpretation decoder", () => {
       activeManifestHash: null,
       activeReleaseId: null,
       interpretation: null,
-      locale: "id",
+      appLocale: "id",
       managed: false,
       snapshotId: null,
       sourceRevision: null,
@@ -81,7 +81,7 @@ describe("signed Quran interpretation decoder", () => {
       const decoded = await Effect.runPromise(
         Effect.either(
           decodePublishedQuranInterpretation(result, {
-            locale: "id",
+            appLocale: "id",
             snapshotId: source.snapshotId,
             surahNumber: 1,
             verseNumber: 7,

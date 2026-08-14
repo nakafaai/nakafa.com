@@ -21,7 +21,7 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
     if (projection.kind !== "subject-lesson") {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Active material ${row.contentKey}/${row.locale} has a non-material projection.`
+        `Active material ${row.contentKey}/${row.appLocale} has a non-material projection.`
       );
     }
     const projectionJson = canonicalizeMaterialProjection(projection);
@@ -36,7 +36,7 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
       projection.graph.assetId !== row.assetId ||
       projection.metadata.date !== row.date ||
       projection.contentKey !== row.contentKey ||
-      projection.locale !== row.locale ||
+      projection.appLocale !== row.appLocale ||
       projection.materialKey !== row.materialKey ||
       projection.order !== row.order ||
       projection.parentPath !== row.parentPath ||
@@ -44,7 +44,7 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Active material ${row.contentKey}/${row.locale} changed catalog metadata.`
+        `Active material ${row.contentKey}/${row.appLocale} changed catalog metadata.`
       );
     }
     return { projection, projectionJson };
@@ -55,10 +55,13 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
 export const verifyEffectiveMaterial = Effect.fn(
   "contentRelease.verifyEffectiveMaterial"
 )(function* (ctx: ReadCtx, row: MaterialRow, activeSequence: number) {
-  const [{ projection, projectionJson }, resolved] = yield* Effect.all([
-    verifyMaterial(row),
-    resolvePublicProjection(ctx, row.contentKey, row.locale, activeSequence),
-  ]);
+  const { projection, projectionJson } = yield* verifyMaterial(row);
+  const resolved = yield* resolvePublicProjection(
+    ctx,
+    row.contentKey,
+    projection.artifactLocale,
+    activeSequence
+  );
   if (
     resolved?.family !== "material" ||
     resolved.projectionHash !== row.projectionHash ||
@@ -71,7 +74,7 @@ export const verifyEffectiveMaterial = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active material ${row.contentKey}/${row.locale} disagrees with its effective publication.`
+      `Active material ${row.contentKey}/${row.appLocale} disagrees with its effective publication.`
     );
   }
   return { projection, resolved };

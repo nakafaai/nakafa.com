@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -37,12 +38,13 @@ export const readPublishedMaterialContext = Effect.fn(
   context: MaterialContextIdentity,
   expectedActiveReleaseId?: ContentReleasePin
 ) {
+  const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(api.contentRelease.program.context, {
     ...(expectedActiveReleaseId === undefined
       ? {}
       : { expectedActiveReleaseId }),
     contentKey: material.contentKey,
-    locale,
+    appLocale,
     materialKey: material.materialKey,
     nodeKey: context.nodeKey,
     parentPath: material.parentPath,
@@ -51,7 +53,7 @@ export const readPublishedMaterialContext = Effect.fn(
   });
   if (!result.managed) {
     return yield* new PublishedProjectionError({
-      locale,
+      appLocale,
       publicPath: material.publicPath,
     });
   }
@@ -70,7 +72,7 @@ export const readPublishedMaterialContext = Effect.fn(
     result.resolvedCanonicalPath === null
   ) {
     return yield* new PublishedProjectionError({
-      locale,
+      appLocale,
       publicPath: material.publicPath,
     });
   }
@@ -80,11 +82,11 @@ export const readPublishedMaterialContext = Effect.fn(
     decodeCurriculumJson(result.parentJson, locale, "materials"),
   ]);
   if (
-    group.locale !== locale ||
+    group.appLocale !== appLocale ||
     group.nodeKey !== context.nodeKey ||
     group.programKey !== context.programKey ||
     group.parentPath !== parent.publicPath ||
-    mapping.locale !== locale ||
+    mapping.appLocale !== appLocale ||
     mapping.materialContextNodeKey !== group.nodeKey ||
     mapping.materialContextParentPath !== parent.publicPath ||
     mapping.materialContextPublicPath !== group.publicPath ||
@@ -94,12 +96,12 @@ export const readPublishedMaterialContext = Effect.fn(
       result.resolvedCanonicalPath === material.publicPath ||
       result.resolvedCanonicalPath === material.parentPath
     ) ||
-    parent.locale !== locale ||
+    parent.appLocale !== appLocale ||
     parent.programKey !== context.programKey ||
     !(parent.level === "subject" || parent.level === "course")
   ) {
     return yield* new PublishedProjectionError({
-      locale,
+      appLocale,
       publicPath: group.publicPath,
     });
   }

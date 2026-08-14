@@ -44,10 +44,10 @@ export const readMaterialBucket = Effect.fn(
   "contentRelease.readMaterialBucket"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadMaterialOwner>[1],
+  appLocale: Parameters<typeof loadMaterialOwner>[1],
   bucket: string
 ) {
-  const partition = yield* readMaterialPartition(ctx, locale, bucket);
+  const partition = yield* readMaterialPartition(ctx, appLocale, bucket);
   if (partition.kind === "unmanaged") {
     return {
       activeReleaseId: partition.activeReleaseId,
@@ -76,11 +76,11 @@ export const readLatestMaterials = Effect.fn(
   "contentRelease.readLatestMaterials"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadMaterialOwner>[1],
+  appLocale: Parameters<typeof loadMaterialOwner>[1],
   limit: number
 ) {
   yield* validateDiscoveryLimit(limit);
-  const owner = yield* loadMaterialOwner(ctx, locale);
+  const owner = yield* loadMaterialOwner(ctx, appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.active && owner.managed)) {
     return {
@@ -92,8 +92,8 @@ export const readLatestMaterials = Effect.fn(
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_locale_and_date_and_contentKey", (index) =>
-        index.eq("locale", locale)
+      .withIndex("by_appLocale_and_date_and_contentKey", (index) =>
+        index.eq("appLocale", appLocale)
       )
       .order("desc")
       .take(limit)

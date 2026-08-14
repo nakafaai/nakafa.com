@@ -79,7 +79,7 @@ export const selectProgram = mutation({
 
         return {
           interest: args.interest,
-          program: toLearningProgramSummary(program, args.locale),
+          program: yield* toLearningProgramSummary(program, args.locale),
         };
       })
     ),

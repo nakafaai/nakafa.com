@@ -3,7 +3,6 @@ import { read } from "@repo/ai/agents/nakafa/tools/read";
 import {
   createNakafaTestService,
   createWriter,
-  makeSnbtSetRef,
 } from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
@@ -25,8 +24,8 @@ const MISSING_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
   readNakafaContentRefFixture("en", "articles/politics/missing", "articles")
     .content_id
 );
-const TRYOUT_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
-  makeSnbtSetRef("en", "try-out/indonesia/snbt/2027/set-2", "set-2").content_id
+const TRYOUT_URL = NakafaAgentContentRefInputSchema.make(
+  "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-2"
 );
 
 describe("nakafa read tool", () => {
@@ -94,11 +93,11 @@ describe("nakafa read tool", () => {
     );
   });
 
-  it("does not read try-out references without markdown", async () => {
+  it("does not invent a markdown read for tryout references", async () => {
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       read({
-        input: { content_ref: TRYOUT_CONTENT_ID },
+        input: { content_ref: TRYOUT_URL },
         toolCallId: "read-tryout",
         writer,
       }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))

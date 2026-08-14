@@ -37,7 +37,6 @@ const entryStartArgs: FunctionArgs<
   ...startArgs,
   entrySectionKey: SECTION,
 };
-
 describe("tryouts/mutations/attempts", () => {
   it("resumes from the frozen attempt when the current entry key changed", async () => {
     vi.setSystemTime(new Date(NOW));
@@ -153,7 +152,7 @@ describe("tryouts/mutations/attempts", () => {
       countsForCompetition: false,
       countryKey: COUNTRY,
       examKey: EXAM,
-      locale: "id",
+      appLocale: "id",
       scoreStatus: "official",
       setIdentity: seeded.fixture.setIdentity,
       setKey: SET,

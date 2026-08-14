@@ -9,6 +9,11 @@ import {
   PreviewRendererSecretSchema,
 } from "@nakafa/aksara-contracts/preview/auth";
 import { Effect, Option, Redacted, Schema } from "effect";
+import {
+  hasPreviewEnvironment,
+  readPreviewEnvironment,
+  readPreviewRendererEnvironment,
+} from "@/lib/content/preview/environment";
 
 const PreviewTokenSchema = Schema.NonEmptyTrimmedString.pipe(
   Schema.maxLength(4096)
@@ -43,26 +48,6 @@ const PreviewRendererEnvironmentSchema = Schema.Struct({
   secret: PreviewRendererSecretSchema,
   token: PreviewTokenSchema,
 });
-
-/** Reads the one dedicated process-environment boundary without exposing it. */
-function readEnvironment() {
-  return {
-    eventsPath: process.env.AKSARA_PREVIEW_EVENTS_PATH,
-    keyId: process.env.AKSARA_PREVIEW_KEY_ID,
-    manifestPath: process.env.AKSARA_PREVIEW_MANIFEST_PATH,
-    origin: process.env.AKSARA_PREVIEW_ORIGIN,
-    publicKey: process.env.AKSARA_PREVIEW_PUBLIC_KEY,
-    token: process.env.AKSARA_PREVIEW_PROVIDER_TOKEN,
-  };
-}
-
-/** Reads only the ephemeral renderer authentication fields. */
-function readRendererEnvironment() {
-  return {
-    secret: process.env.AKSARA_PREVIEW_RENDERER_SECRET,
-    token: process.env.AKSARA_PREVIEW_RENDERER_TOKEN,
-  };
-}
 
 /** Complete ephemeral connection passed by the Aksara CLI child process. */
 export interface PreviewConfig {
@@ -117,10 +102,7 @@ export const previewUrl = Effect.fn("NakafaContent.previewUrl")(function* (
  * returns true so strict decoding exposes the error instead of falling back.
  */
 export function hasPreviewConfig() {
-  return (
-    process.env.NODE_ENV === "development" &&
-    Object.values(readEnvironment()).some((value) => value !== undefined)
-  );
+  return hasPreviewEnvironment();
 }
 
 /** Reads the complete ephemeral connection only in the development child. */
@@ -130,7 +112,7 @@ export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(
       return Effect.succeed(Option.none<PreviewConfig>());
     }
 
-    const environment = readEnvironment();
+    const environment = readPreviewEnvironment();
     if (Object.values(environment).every((value) => value === undefined)) {
       return Effect.succeed(Option.none<PreviewConfig>());
     }
@@ -165,7 +147,7 @@ export const readPreviewRendererConfig = Effect.fn(
     return Effect.succeed(Option.none<PreviewRendererConfig>());
   }
 
-  const environment = readRendererEnvironment();
+  const environment = readPreviewRendererEnvironment();
   if (Object.values(environment).every((value) => value === undefined)) {
     return Effect.succeed(Option.none<PreviewRendererConfig>());
   }

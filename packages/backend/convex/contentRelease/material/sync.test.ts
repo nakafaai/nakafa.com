@@ -55,7 +55,7 @@ async function insertMaterial(
   }
 ) {
   const contentKey = `test:head-${index}`;
-  const publicPath = `test/head-${index}`;
+  const publicPath = `subjects/test/head-${index}`;
   const projectionJson = testProjectionJson({
     contentKey,
     index,
@@ -67,8 +67,8 @@ async function insertMaterial(
   }
   const key = await ctx.db
     .query("contentKeys")
-    .withIndex("by_contentKey_and_locale", (query) =>
-      query.eq("contentKey", contentKey).eq("locale", "en")
+    .withIndex("by_contentKey_and_artifactLocale", (query) =>
+      query.eq("contentKey", contentKey).eq("artifactLocale", "en")
     )
     .unique();
   if (!key) {
@@ -158,7 +158,7 @@ describe("contentRelease/material/sync", () => {
         contentKey: "test:head-1",
         family: "material",
         index: 1,
-        locale: "en",
+        artifactLocale: "en",
         operation: "delete",
         releaseId: NEXT.releaseId,
         sequence: NEXT.sequence,
@@ -177,13 +177,13 @@ describe("contentRelease/material/sync", () => {
         projectionHash: testTextHash(
           testProjectionJson({
             contentKey: "test:head-0",
-            publicPath: "test/head-0",
+            publicPath: "subjects/test/head-0",
             title: "Updated Material",
           })
         ),
         projectionJson: testProjectionJson({
           contentKey: "test:head-0",
-          publicPath: "test/head-0",
+          publicPath: "subjects/test/head-0",
           title: "Updated Material",
         }),
       },

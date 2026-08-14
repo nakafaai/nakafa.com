@@ -53,7 +53,7 @@ export const nakafaTaxonomy = createPrompt({
   taskContext: `
     # taxonomy Tool
 
-    Read Nakafa taxonomy for supported locales, sections, subject filters, try-out discovery, and public MCP tool names.
+    Read Nakafa taxonomy for supported locales, current article categories, sections, try-out discovery, and public MCP tool names.
   `,
 
   toolUsageGuidelines: `
@@ -63,9 +63,7 @@ export const nakafaTaxonomy = createPrompt({
     - content structure.
     - options.
     - categories.
-    - filters.
-    - materials.
-    - grades.
+    - current article categories.
     - tools.
     - try-out paths.
   `,

@@ -1,3 +1,4 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { verifyStoredTryoutPlacement } from "@repo/backend/convex/tryouts/history/placement";
@@ -7,7 +8,6 @@ import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
-type AppLocale = TryoutAttempt["locale"];
 type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
 type HistoryContent = Extract<
   TryoutSectionContentAccess,
@@ -17,17 +17,12 @@ type HistoryContent = Extract<
 export const projectStoredTryoutContent = Effect.fn(
   "tryouts.history.projectStoredContent"
 )(function* (input: {
-  readonly access: { readonly answers: boolean; readonly questions: boolean };
-  readonly appLocale: AppLocale;
+  readonly answers: boolean;
+  readonly appLocale: AppLocaleCode;
   readonly attempt: TryoutAttempt;
   readonly ctx: QueryCtx;
   readonly placements: readonly TryoutPlacement[];
 }) {
-  if (input.attempt.appLocale !== input.appLocale) {
-    return yield* historySelectorIntegrity(
-      "Retained try-out app locale differs from its migrated attempt."
-    );
-  }
   const selections = yield* Effect.forEach(
     input.placements,
     (placement) =>
@@ -40,7 +35,7 @@ export const projectStoredTryoutContent = Effect.fn(
     { concurrency: 16 }
   );
   const content: HistoryContent = {
-    answers: input.access.answers ? selections.map(({ answer }) => answer) : [],
+    answers: input.answers ? selections.map(({ answer }) => answer) : [],
     attemptId: input.attempt._id,
     kind: "signed",
     questions: selections.map(({ question }) => question),
@@ -53,7 +48,7 @@ export const projectStoredTryoutContent = Effect.fn(
 const loadHistorySelection = Effect.fn("tryouts.history.loadStoredSelector")(
   function* (
     ctx: QueryCtx,
-    appLocale: AppLocale,
+    appLocale: AppLocaleCode,
     attempt: TryoutAttempt,
     placement: TryoutPlacement
   ) {
@@ -86,23 +81,21 @@ const loadHistorySelection = Effect.fn("tryouts.history.loadStoredSelector")(
       sourcePath: verified.questionSourcePath,
       sourceRevision: verified.sourceRevision,
     };
-    const answer: HistoryContent["answers"][number] = {
-      ...common,
-      artifactHash: verified.answerArtifactHash,
-      artifactLocale: verified.artifactLocale,
-      contentKey: verified.answerContentKey,
-      delivery: "entitled",
-    };
-    const question: HistoryContent["questions"][number] = {
-      ...common,
-      artifactHash: verified.questionArtifactHash,
-      artifactLocale: verified.artifactLocale,
-      contentKey: verified.questionContentKey,
-      delivery: "authenticated",
-    };
     return {
-      answer,
-      question,
+      answer: {
+        ...common,
+        artifactHash: verified.answerArtifactHash,
+        artifactLocale: verified.artifactLocale,
+        contentKey: verified.answerContentKey,
+        delivery: "entitled" as const,
+      },
+      question: {
+        ...common,
+        artifactHash: verified.questionArtifactHash,
+        artifactLocale: verified.artifactLocale,
+        contentKey: verified.questionContentKey,
+        delivery: "authenticated" as const,
+      },
     };
   }
 );

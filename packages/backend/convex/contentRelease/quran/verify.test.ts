@@ -1,7 +1,5 @@
-import {
-  QuranSearchRowSchema,
-  QuranSurahRowSchema,
-} from "@nakafa/aksara-contracts/quran/spec";
+import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
@@ -67,7 +65,7 @@ describe("contentRelease/quran/verify", () => {
     );
     await t.mutation(async (ctx) => {
       const row = await loadRow(ctx);
-      await ctx.db.patch("quranRows", row._id, { locale: "id" });
+      await ctx.db.patch("quranRows", row._id, { appLocale: "id" });
     });
 
     await expect(

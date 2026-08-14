@@ -1,8 +1,12 @@
-import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import {
+  type ContentFamily,
+  ContentFamilySchema,
+} from "@nakafa/aksara-contracts/content";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_DIGEST,
   testReleaseJson,
+  testUpsertJson,
 } from "@repo/backend/test/content-release";
 import {
   insertZeroRelease,
@@ -54,16 +58,22 @@ export function insertReleaseItem(
   ctx: MutationCtx,
   identity: TestIdentity,
   contentKey: string,
-  index: number
+  index: number,
+  family: ContentFamily = "material"
 ) {
   return ctx.db.insert("contentItems", {
     artifactReady: false,
+    artifactLocale: "en",
     contentKey,
     index,
     itemBatchHash: TEST_DIGEST,
     itemBatchIndex: 0,
-    itemJson: "{}",
-    locale: "en",
+    itemJson: testUpsertJson({
+      contentKey,
+      family,
+      index,
+      releaseId: identity.releaseId,
+    }),
     projectionReady: false,
     releaseId: identity.releaseId,
     rollbackJson: "{}",

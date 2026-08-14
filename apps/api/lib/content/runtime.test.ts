@@ -64,9 +64,9 @@ describe("API content runtime", () => {
   it.each([
     {
       args: {
+        appLocale: "en" as const,
         cursor: null,
         limit: 10,
-        locale: "en" as const,
         prefix: "articles/politics",
       },
       family: "article" as const,
@@ -74,9 +74,9 @@ describe("API content runtime", () => {
     },
     {
       args: {
+        appLocale: "id" as const,
         cursor: "next",
         limit: 5,
-        locale: "id" as const,
         prefix: "material/lesson/mathematics",
       },
       family: "material" as const,
@@ -91,7 +91,9 @@ describe("API content runtime", () => {
           activeReleaseId: "release-test",
           continueCursor: "",
           isDone: true,
-          page: [{ locale: args.locale, publicPath: `${family}/published` }],
+          page: [
+            { appLocale: args.appLocale, publicPath: `${family}/published` },
+          ],
         })
         .mockResolvedValueOnce({ releaseId: "release-test" });
       publishedContentMocks.readPublishedApiItems.mockReturnValue(
@@ -106,8 +108,8 @@ describe("API content runtime", () => {
       expect(publishedContentMocks.readPublishedApiItems).toHaveBeenCalledWith([
         {
           activeReleaseId: "release-test",
+          appLocale: args.appLocale,
           family,
-          locale: args.locale,
           publicPath: `${family}/published`,
         },
       ]);
@@ -121,9 +123,9 @@ describe("API content runtime", () => {
   );
 
   it("chunks by eight and runs at most four batch reads concurrently", async () => {
-    const locale = "en";
+    const appLocale = "en";
     const entries = Array.from({ length: 33 }, (_, index) => ({
-      locale,
+      appLocale,
       publicPath: `articles/politics/article-${index}`,
     }));
     const releaseBatch: (() => void)[] = [];
@@ -155,9 +157,9 @@ describe("API content runtime", () => {
 
     const running = Effect.runPromise(
       getArticleApiContentPage({
+        appLocale: "en",
         cursor: null,
         limit: 33,
-        locale: "en",
         prefix: "articles/politics",
       })
     );
@@ -200,9 +202,9 @@ describe("API content runtime", () => {
       await expect(
         Effect.runPromise(
           getArticleApiContentPage({
+            appLocale: "en",
             cursor: null,
             limit: 10,
-            locale: "en",
             prefix: "articles/politics",
           })
         )
@@ -217,7 +219,7 @@ describe("API content runtime", () => {
       activeReleaseId: "release-test",
       continueCursor: "",
       isDone: true,
-      page: [{ locale: "en", publicPath: "articles/politics/test" }],
+      page: [{ appLocale: "en", publicPath: "articles/politics/test" }],
     });
     publishedContentMocks.readPublishedApiItems.mockReturnValue(
       Effect.fail(new Error("signature mismatch"))
@@ -226,9 +228,9 @@ describe("API content runtime", () => {
     await expect(
       Effect.runPromise(
         getArticleApiContentPage({
+          appLocale: "en",
           cursor: null,
           limit: 10,
-          locale: "en",
           prefix: "articles/politics",
         })
       )
@@ -263,9 +265,9 @@ describe("API content runtime", () => {
     await expect(
       Effect.runPromise(
         getArticleApiContentPage({
+          appLocale: "en",
           cursor: null,
           limit: 10,
-          locale: "en",
           prefix: "articles/politics",
         })
       )

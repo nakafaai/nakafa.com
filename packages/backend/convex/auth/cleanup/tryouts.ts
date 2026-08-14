@@ -1,9 +1,8 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  toUserCleanupError,
   tryUserCleanup,
-  USER_CLEANUP_FAILED_CODE,
-  UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
 import { ensureTryoutLifecycleWritable } from "@repo/backend/convex/contentRelease/cutover/tryouts";
 import { deleteTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
@@ -85,7 +84,9 @@ const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
       return true;
     }
 
-    yield* deleteTryoutAttemptHistory(ctx, attempt);
+    yield* deleteTryoutAttemptHistory(ctx, attempt).pipe(
+      Effect.mapError(toUserCleanupError)
+    );
     yield* tryUserCleanup(() => ctx.db.delete("tryoutAttempts", attempt._id));
     return true;
   }
@@ -95,13 +96,7 @@ const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
 export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
   function* (ctx: MutationCtx, userId: Id<"users">) {
     yield* ensureTryoutLifecycleWritable(ctx).pipe(
-      Effect.mapError(
-        (error) =>
-          new UserCleanupError({
-            code: USER_CLEANUP_FAILED_CODE,
-            message: error.message,
-          })
-      )
+      Effect.mapError(toUserCleanupError)
     );
     const progress = yield* tryUserCleanup(() =>
       ctx.db

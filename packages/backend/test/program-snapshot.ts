@@ -1,23 +1,23 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
 import {
   CorpusSourcePathSchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
+  ACTIVE_APP_LOCALES,
+  type ActiveAppLocale,
+  ActiveAppLocaleSchema,
+  activeAppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
+import {
   CURRICULUM_NAMESPACES,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
-import { digestProgramRows } from "@nakafa/aksara-contracts/program/row-digest";
+import { digestProgramRows } from "@nakafa/aksara-contracts/program/snapshot/digest";
+import { makeProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import {
   makeCurriculumSnapshotRow,
   makeProgramSnapshotRow,
-} from "@nakafa/aksara-contracts/program/row-hash";
-import { hashProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot/hash";
-import {
-  PROGRAM_SNAPSHOT_FORMAT,
-  type ProgramSnapshotInput,
-  ProgramSnapshotSchema,
-} from "@nakafa/aksara-contracts/program/snapshot/spec";
+} from "@nakafa/aksara-contracts/program/snapshot/row-hash";
 import {
   type LearningProgram,
   LearningProgramKeySchema,
@@ -70,16 +70,18 @@ export function makeTechnicalProgram(
         url: `https://example.test/program-${index}`,
       },
     ],
-    translations: {
-      en: {
+    translations: [
+      {
+        appLocale: ActiveAppLocaleSchema.make("en"),
         publicSlug: `technical-program-${index}`,
         title: `Technical Program ${index}`,
       },
-      id: {
+      {
+        appLocale: ActiveAppLocaleSchema.make("id"),
         publicSlug: `program-teknis-${index}`,
         title: `Program Teknis ${index}`,
       },
-    },
+    ],
     version: { label: "Technical protocol version" },
   });
 }
@@ -87,19 +89,27 @@ export function makeTechnicalProgram(
 /** Builds one locale-specific root for a technical program contract row. */
 function technicalCurriculum(
   program: ReturnType<typeof makeTechnicalProgram>,
-  locale: "en" | "id"
+  appLocale: ActiveAppLocale
 ) {
-  const translation = program.translations[locale];
+  const appLocaleCode = activeAppLocaleCode(appLocale);
+  const translation = program.translations.find(
+    (candidate) => candidate.appLocale === appLocale
+  );
+  if (!translation) {
+    throw new Error(
+      `Technical program ${program.key} is missing ${appLocale} copy.`
+    );
+  }
   return CurriculumRouteSchema.make({
+    appLocale,
     iconKey: program.iconKey,
     kind: "curriculum-context",
     level: "track",
-    locale,
     nodeKey: `${program.key}:root`,
     order: program.displayOrder,
     programKey: program.key,
     publicPath: PublicPathSchema.make(
-      `${CURRICULUM_NAMESPACES[locale]}/${translation.publicSlug}`
+      `${CURRICULUM_NAMESPACES[appLocaleCode]}/${translation.publicSlug}`
     ),
     sitemap: true,
     sourcePath: CorpusSourcePathSchema.make(
@@ -114,8 +124,8 @@ function compareCurriculum(
   left: ReturnType<typeof technicalCurriculum>,
   right: ReturnType<typeof technicalCurriculum>
 ) {
-  const leftKey = `${left.programKey}\0${left.locale}\0${left.publicPath}`;
-  const rightKey = `${right.programKey}\0${right.locale}\0${right.publicPath}`;
+  const leftKey = `${left.programKey}\0${left.appLocale}\0${left.publicPath}`;
+  const rightKey = `${right.programKey}\0${right.appLocale}\0${right.publicPath}`;
   if (leftKey < rightKey) {
     return -1;
   }
@@ -135,8 +145,8 @@ export const makeProgramSnapshotData = Effect.fn(
   const curriculumRoutes = programs
     .filter((program) => program.navigation.model === "curriculum-tree")
     .flatMap((program) =>
-      ContentLocaleSchema.literals.map((locale) =>
-        technicalCurriculum(program, locale)
+      ACTIVE_APP_LOCALES.map((appLocale) =>
+        technicalCurriculum(program, appLocale)
       )
     )
     .sort(compareCurriculum);
@@ -145,16 +155,19 @@ export const makeProgramSnapshotData = Effect.fn(
     makeCurriculumSnapshotRow
   );
   const records = [...catalog, ...curriculum];
-  const evidence = yield* digestProgramRows(Stream.fromIterable(records));
-  const input: ProgramSnapshotInput = {
+  const evidence = yield* digestProgramRows({
+    activeAppLocales: ACTIVE_APP_LOCALES,
+    rows: Stream.fromIterable(records),
+  });
+  const manifest = yield* makeProgramSnapshot({
+    activeAppLocales: ACTIVE_APP_LOCALES,
+    editorialReviewDigest: TEST_MANIFEST_HASH,
     ...evidence,
-    format: PROGRAM_SNAPSHOT_FORMAT,
-    locales: ["en", "id"],
-  };
-  const snapshotId = yield* hashProgramSnapshot(input);
+  });
+  const snapshotId = manifest.snapshotId;
   const snapshot: ContentSnapshotManifest = {
     family: "program",
-    manifest: ProgramSnapshotSchema.make({ ...input, snapshotId }),
+    manifest,
   };
   const catalogRows = catalog.map(
     (record) =>
@@ -176,8 +189,8 @@ export const makeProgramSnapshotData = Effect.fn(
     program: replaceContentSnapshot({
       baseSnapshotId: null,
       resultSnapshotId: snapshotId,
-      rowCount: input.rowCount,
-      rowDigest: input.rowDigest,
+      rowCount: evidence.rowCount,
+      rowDigest: evidence.rowDigest,
     }),
   };
   return {
@@ -251,9 +264,6 @@ export async function activateProgramSnapshot(
       candidateReleaseId: undefined,
       candidateSequence: undefined,
       materialManifestHash: TEST_MANIFEST_HASH,
-      materialOwnerManifestHash: TEST_MANIFEST_HASH,
-      materialOwnerReleaseId: TEST_RELEASE_ID,
-      materialOwnerSequence: 1,
       materialReleaseId: TEST_RELEASE_ID,
       materialSequence: 1,
     });

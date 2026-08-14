@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { StoredProtectedRuntimeRequestSchema } from "@nakafa/aksara-history/history/decode";
+import { StoredProtectedRuntimeRequestSchema } from "@nakafa/aksara-contracts/history/decode";
 import {
   ContentRuntimeVerificationError,
   ContentTransportError,

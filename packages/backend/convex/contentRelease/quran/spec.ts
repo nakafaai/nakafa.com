@@ -1,15 +1,15 @@
-import {
-  QURAN_LOCALES,
-  QURAN_TAFSIR_LOCALES,
-} from "@nakafa/aksara-contracts/quran/spec";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { QuranTafsirLocaleSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-/** Runtime validator for every locale supported by the signed Quran source. */
-export const quranLocaleValidator = literals(...QURAN_LOCALES);
+/** Runtime validator for every application locale supported by Quran reads. */
+export const quranAppLocaleValidator = literals(...APP_LOCALE_CODES);
 
-/** Runtime validator for locales with a complete signed tafsir source. */
-export const quranTafsirLocaleValidator = literals(...QURAN_TAFSIR_LOCALES);
+/** Runtime validator for app locales with a complete signed tafsir source. */
+export const quranTafsirAppLocaleValidator = literals(
+  ...QuranTafsirLocaleSchema.literals
+);
 
 /** Shared active-source fields returned by every signed Quran read. */
 export const quranSourceFields = {

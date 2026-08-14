@@ -49,11 +49,18 @@ function toPreferenceIoError(error: unknown) {
 }
 
 /** Converts one verified Aksara program into a localized selector option. */
-function toCurriculumProgramOption(
-  program: LearningProgram,
-  locale: Locale
-): CurriculumProgramOption {
-  const translation = program.translations[locale];
+const toCurriculumProgramOption = Effect.fn(
+  "learningPreferences.toCurriculumProgramOption"
+)(function* (program: LearningProgram, locale: Locale) {
+  const translation = program.translations.find(
+    (candidate) => candidate.appLocale === locale
+  );
+  if (!translation) {
+    return yield* new CurriculumPreferenceError({
+      code: curriculumPreferenceIoFailedCode,
+      message: `Curriculum program ${program.key} has no ${locale} translation.`,
+    });
+  }
 
   return {
     ...(program.provider.homeCountry
@@ -62,8 +69,8 @@ function toCurriculumProgramOption(
     key: program.key,
     publicSlug: translation.publicSlug,
     title: translation.title,
-  };
-}
+  } satisfies CurriculumProgramOption;
+});
 
 /** Reads one localized school curriculum from the signed active snapshot. */
 export const readCurriculumProgram = Effect.fn(
@@ -75,7 +82,7 @@ export const readCurriculumProgram = Effect.fn(
     return null;
   }
 
-  return toCurriculumProgramOption(program, locale);
+  return yield* toCurriculumProgramOption(program, locale);
 });
 
 /** Lists every school curriculum from the signed active snapshot. */
@@ -94,7 +101,9 @@ export const listCurriculumPrograms = Effect.fn(
     });
   }
 
-  return curricula.map((program) => toCurriculumProgramOption(program, locale));
+  return yield* Effect.forEach(curricula, (program) =>
+    toCurriculumProgramOption(program, locale)
+  );
 });
 
 /** Resolves the learner's explicit preference against the signed catalog. */

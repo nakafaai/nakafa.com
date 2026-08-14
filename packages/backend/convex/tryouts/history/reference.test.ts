@@ -14,7 +14,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 describe("tryouts/history/reference", () => {
-  it("reads and atomically deletes an exact attempt-owned marker", async () => {
+  it("reads and deletes an exact attempt-owned history reference", async () => {
     const t = convexTest(schema, convexModules);
     const state = await t.mutation(async (ctx) => {
       const userId = await insertTryoutUser(ctx, {
@@ -22,35 +22,75 @@ describe("tryouts/history/reference", () => {
         email: "history-reference@example.com",
         name: "History Reference",
       });
-      const snapshotId = `sha256:${"a".repeat(64)}`;
       const attemptId = await insertTryoutAttempt(ctx, {
         sectionSnapshots: [],
-        set: makeTryoutSet(),
-        snapshotId,
+        set: makeTryoutSet({ questionCount: 1 }),
+        snapshotId: `sha256:${"a".repeat(64)}`,
         snapshotReleaseId: "retained-release",
         userId,
       });
       const historyId = await ctx.db.insert("tryoutAttemptHistory", {
         snapshotReleaseId: "retained-release",
         tryoutAttemptId: attemptId,
-        tryoutSnapshotId: snapshotId,
+        tryoutSnapshotId: `sha256:${"a".repeat(64)}`,
       });
       return { attemptId, historyId };
     });
+
+    const before = await t.query(async (ctx) => {
+      const attempt = await ctx.db.get("tryoutAttempts", state.attemptId);
+      if (!attempt) {
+        throw new Error("Expected retained attempt.");
+      }
+      return runConvexProgram(readTryoutAttemptHistory(ctx, attempt));
+    });
+    expect(before?._id).toBe(state.historyId);
 
     await t.mutation(async (ctx) => {
       const attempt = await ctx.db.get("tryoutAttempts", state.attemptId);
       if (!attempt) {
         throw new Error("Expected retained attempt.");
       }
-      const before = await runConvexProgram(
-        readTryoutAttemptHistory(ctx, attempt)
-      );
-      expect(before?._id).toBe(state.historyId);
       await runConvexProgram(deleteTryoutAttemptHistory(ctx, attempt));
     });
     await expect(
       t.query((ctx) => ctx.db.get("tryoutAttemptHistory", state.historyId))
     ).resolves.toBeNull();
+  });
+
+  it("fails closed when a reference drifts from its attempt", async () => {
+    const t = convexTest(schema, convexModules);
+    const attemptId = await t.mutation(async (ctx) => {
+      const userId = await insertTryoutUser(ctx, {
+        authId: "history-reference-drift-user",
+        email: "history-reference-drift@example.com",
+        name: "History Reference Drift",
+      });
+      const id = await insertTryoutAttempt(ctx, {
+        sectionSnapshots: [],
+        set: makeTryoutSet({ questionCount: 1 }),
+        snapshotId: `sha256:${"b".repeat(64)}`,
+        snapshotReleaseId: "expected-release",
+        userId,
+      });
+      await ctx.db.insert("tryoutAttemptHistory", {
+        snapshotReleaseId: "different-release",
+        tryoutAttemptId: id,
+        tryoutSnapshotId: `sha256:${"b".repeat(64)}`,
+      });
+      return id;
+    });
+
+    await expect(
+      t.query(async (ctx) => {
+        const attempt = await ctx.db.get("tryoutAttempts", attemptId);
+        if (!attempt) {
+          throw new Error("Expected retained attempt.");
+        }
+        return runConvexProgram(readTryoutAttemptHistory(ctx, attempt));
+      })
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_HISTORY_REFERENCE_MISMATCH" },
+    });
   });
 });

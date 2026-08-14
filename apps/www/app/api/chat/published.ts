@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaLearningSessionInput } from "@repo/ai/nina/memory/pack";
 import { readMaterialContextHint } from "@repo/contents/_types/route/material/context";
@@ -34,7 +35,7 @@ export const readPublishedNinaMaterial = Effect.fn(
   );
   if (!published.projection) {
     return yield* new PublishedProjectionError({
-      locale: input.locale,
+      appLocale: AppLocaleSchema.make(input.locale),
       publicPath: input.publicPath,
     });
   }
@@ -75,7 +76,7 @@ export const readPublishedNinaMaterial = Effect.fn(
     Effect.mapError(
       () =>
         new PublishedProjectionError({
-          locale: input.locale,
+          appLocale: AppLocaleSchema.make(input.locale),
           publicPath: input.publicPath,
         })
     )

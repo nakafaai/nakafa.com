@@ -276,10 +276,11 @@ describe("content publication Node dispatch", () => {
     expect(result.status).toBe(400);
   });
 
-  it("rejects every decoded operation after the cutover guard is armed", async () => {
+  it("allows current publication reads while the cutover checkpoint remains", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      ctx.db.insert("contentCutoverState", {
+    await t.mutation(async (ctx) => {
+      await insertActiveRelease(ctx, "active-release");
+      await ctx.db.insert("contentCutoverState", {
         auditedActiveReleaseId: "active-release",
         auditedActiveSequence: 1,
         auditedAt: 1,
@@ -296,17 +297,20 @@ describe("content publication Node dispatch", () => {
         legacyTableIndex: 16,
         phase: "freeze-armed",
         updatedAt: 1,
-      })
-    );
+      });
+    });
 
     await expect(
       sendPublication(t, { operation: "current" })
     ).resolves.toMatchObject({
-      failure: {
-        code: "CONTENT_RELEASE_STATE",
-        operation: "current",
+      ok: true,
+      value: {
+        active: {
+          release: {
+            manifest: { releaseId: "active-release" },
+          },
+        },
       },
-      ok: false,
     });
   });
 

@@ -1,7 +1,7 @@
 import {
   type StoredProtectedRuntimeRequest,
   StoredProtectedRuntimeRequestSchema,
-} from "@nakafa/aksara-history/history/decode";
+} from "@nakafa/aksara-contracts/history/decode";
 import type { RetainedRuntimeBatchRow } from "@repo/backend/convex/contentRelease/runtime/history/internal";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -56,23 +56,6 @@ describe("contentRelease/runtime/history/internal", () => {
       }
       await ctx.db.delete("tryoutAttemptHistory", marker._id);
       await ctx.db.patch("tryoutHistoryRows", row._id, { rowJson: "{}" });
-    });
-
-    await expect(t.query(readRetained, fixture.request)).resolves.toBeNull();
-  });
-
-  it("rejects an attempt whose migrated and route locales diverge", async () => {
-    const t = convexTest(schema, convexModules);
-    const fixture = await t.mutation(insertRetainedRuntime);
-    await t.mutation(async (ctx) => {
-      const attemptId = ctx.db.normalizeId(
-        "tryoutAttempts",
-        fixture.request.attemptId
-      );
-      if (!attemptId) {
-        throw new Error("Expected one retained attempt ID.");
-      }
-      await ctx.db.patch("tryoutAttempts", attemptId, { locale: "id" });
     });
 
     await expect(t.query(readRetained, fixture.request)).resolves.toBeNull();

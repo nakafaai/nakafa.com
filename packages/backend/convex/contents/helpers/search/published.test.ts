@@ -1,4 +1,4 @@
-import { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
+import { loadSearchOwner } from "@repo/backend/convex/contentRelease/search/owner";
 import { readPublishedSearchDocuments } from "@repo/backend/convex/contents/helpers/search/published";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
@@ -126,8 +126,8 @@ describe("readPublishedSearchDocuments", () => {
     await t.mutation(async (ctx) => {
       for (const projection of projections) {
         await insertRuntimeIndex(ctx, projection.contentKey, {
+          artifactLocale: projection.artifactLocale,
           headSequence: MATERIAL_IDENTITY.sequence,
-          locale: projection.locale,
           plainText: "bounded published material",
         });
       }

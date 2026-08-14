@@ -43,7 +43,7 @@ export type ContentRuntimeTarget = ContentHttpTarget;
 
 /** Public route identity without its module-owned delivery discriminator. */
 export interface PublicContentRuntimeInput {
-  readonly locale: PublicContentRuntimeRequest["locale"];
+  readonly appLocale: PublicContentRuntimeRequest["appLocale"];
   readonly publicPath: string;
 }
 

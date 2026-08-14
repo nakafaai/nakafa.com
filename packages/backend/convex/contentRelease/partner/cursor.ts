@@ -1,8 +1,8 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
 import {
   ContentKeySchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   ReleaseError,
   releaseFail,
@@ -12,10 +12,10 @@ import { Effect, Schema } from "effect";
 const PARTNER_CURSOR_PREFIX = "content:";
 
 const PartnerCursorSchema = Schema.Struct({
+  appLocale: AppLocaleSchema,
   activeReleaseId: ReleaseIdSchema,
   contentKey: ContentKeySchema,
   family: Schema.Literal("article", "material"),
-  locale: ContentLocaleSchema,
   prefix: Schema.Union(Schema.Literal(""), ContentKeySchema),
 });
 
@@ -38,7 +38,7 @@ export const decodePartnerCursor = Effect.fn(
   const [
     family,
     releaseId,
-    locale,
+    appLocale,
     encodedPrefix,
     encodedContentKey,
     ...extra
@@ -46,7 +46,7 @@ export const decodePartnerCursor = Effect.fn(
   if (
     family === undefined ||
     releaseId === undefined ||
-    locale === undefined ||
+    appLocale === undefined ||
     encodedPrefix === undefined ||
     encodedContentKey === undefined ||
     extra.length > 0
@@ -65,10 +65,10 @@ export const decodePartnerCursor = Effect.fn(
       }),
   });
   return yield* Schema.decodeUnknown(PartnerCursorSchema)({
+    appLocale,
     activeReleaseId: releaseId,
     contentKey: decoded.contentKey,
     family,
-    locale,
     prefix: decoded.prefix,
   }).pipe(
     Effect.mapError(
@@ -85,10 +85,10 @@ export const decodePartnerCursor = Effect.fn(
 export const encodePartnerCursor = Effect.fn(
   "contentRelease.encodePartnerCursor"
 )(function* (input: {
+  readonly appLocale: string;
   readonly activeReleaseId: string;
   readonly contentKey: string;
   readonly family: "article" | "material";
-  readonly locale: string;
   readonly prefix: string;
 }) {
   const cursor = yield* Schema.decodeUnknown(PartnerCursorSchema)(input).pipe(
@@ -100,7 +100,7 @@ export const encodePartnerCursor = Effect.fn(
         })
     )
   );
-  return `${PARTNER_CURSOR_PREFIX}${cursor.family}:${cursor.activeReleaseId}:${cursor.locale}:${encodeURIComponent(cursor.prefix)}:${encodeURIComponent(cursor.contentKey)}`;
+  return `${PARTNER_CURSOR_PREFIX}${cursor.family}:${cursor.activeReleaseId}:${cursor.appLocale}:${encodeURIComponent(cursor.prefix)}:${encodeURIComponent(cursor.contentKey)}`;
 });
 
 /** Produces one typed cursor failure without accepting historical formats. */

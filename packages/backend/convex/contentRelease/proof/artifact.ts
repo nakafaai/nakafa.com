@@ -42,7 +42,7 @@ export const verifyArtifactBatch = Effect.fn(
         if (
           verified.artifactHash !== item.change.artifactHash ||
           verified.payload.contentKey !== item.change.contentKey ||
-          verified.payload.locale !== item.change.locale ||
+          verified.payload.artifactLocale !== item.change.artifactLocale ||
           verified.payload.rendererDomain !== item.change.rendererDomain
         ) {
           return yield* releaseFail(

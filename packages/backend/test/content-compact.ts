@@ -68,7 +68,7 @@ async function insertHead(
     delivery: "public",
     family: "material",
     index,
-    locale: "en",
+    artifactLocale: "en",
     operation: "upsert",
     projectionHash: TEST_DIGEST,
     projectionJson: testProjectionJson({ contentKey, index }),
@@ -93,7 +93,7 @@ async function insertBinding(
     batchIndex: 0,
     contentKey,
     index,
-    locale: "en",
+    appLocale: "en",
     operation: "bind",
     publicPath,
     releaseId: identity.releaseId,
@@ -103,22 +103,6 @@ async function insertBinding(
       publicPath,
       releaseId: identity.releaseId,
     }),
-    sequence: identity.sequence,
-  });
-}
-
-/** Inserts one immutable exact-content ownership version. */
-async function insertOwner(
-  ctx: MutationCtx,
-  identity: TestIdentity,
-  managed: boolean
-) {
-  await ctx.db.insert("contentOwners", {
-    contentKey: "test:owner",
-    family: "material",
-    locale: "en",
-    managed,
-    releaseId: identity.releaseId,
     sequence: identity.sequence,
   });
 }
@@ -167,8 +151,6 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
   await insertBinding(ctx, fourth, "test:route", 0, "test/route");
   await insertBinding(ctx, first, "test:path-anchor", 1, "test/path-anchor");
   await insertBinding(ctx, third, "test:path-anchor", 0, "test/path-anchor");
-  await insertOwner(ctx, first, false);
-  await insertOwner(ctx, third, true);
   const staleHash = `sha256:${"c".repeat(64)}`;
   const retainedHash = `sha256:${"d".repeat(64)}`;
   await insertHead(ctx, fourth, "test:retained", 41, retainedHash);
@@ -186,7 +168,7 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
       contentKey: "test:stale",
       releaseId: first.releaseId,
     }),
-    locale: "en",
+    artifactLocale: "en",
     projectionBatchHash: TEST_DIGEST,
     projectionBatchIndex: 0,
     projectionJson: testProjectionJson({ contentKey: "test:stale" }),

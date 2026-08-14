@@ -38,9 +38,10 @@ function testResolved(
   projection: MaterialLessonProjection = ingressProjection
 ): PublicProjection {
   return {
+    appLocale: projection.appLocale,
+    artifactLocale: projection.artifactLocale,
     contentKey: projection.contentKey,
     family: options?.family ?? "material",
-    locale: projection.locale,
     projectionHash:
       options?.projectionHash ?? hashContentProjection(projection),
     projectionJson:
@@ -91,7 +92,7 @@ describe("contentRelease/material/write", () => {
         deleteMaterial(
           ctx,
           ingressProjection.contentKey,
-          ingressProjection.locale
+          ingressProjection.appLocale
         )
       )
     );
@@ -100,7 +101,7 @@ describe("contentRelease/material/write", () => {
         deleteMaterial(
           ctx,
           ingressProjection.contentKey,
-          ingressProjection.locale
+          ingressProjection.appLocale
         )
       )
     );

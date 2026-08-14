@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
@@ -42,6 +43,7 @@ const selectMaterialRoutes = Effect.fn("NakafaProgram.selectMaterialRoutes")(
     readonly materials: readonly MaterialLessonProjection[];
     readonly publicPath: PublishedCurriculumRoute["publicPath"];
   }) {
+    const appLocale = AppLocaleSchema.make(locale);
     const materialGroup = materials.filter(
       (material) => material.materialKey === materialKey
     );
@@ -66,7 +68,7 @@ const selectMaterialRoutes = Effect.fn("NakafaProgram.selectMaterialRoutes")(
     if (currentParents.size === 1) {
       return materialGroup;
     }
-    return yield* new PublishedProjectionError({ locale, publicPath });
+    return yield* new PublishedProjectionError({ appLocale, publicPath });
   }
 );
 
@@ -86,6 +88,7 @@ export const readPublishedMaterialCards = Effect.fn(
   readonly materials: readonly MaterialLessonProjection[];
   readonly route: PublishedCurriculumRoute;
 }) {
+  const appLocale = AppLocaleSchema.make(locale);
   if (!(route.level === "subject" || route.level === "course")) {
     return [] satisfies MaterialList;
   }
@@ -103,7 +106,7 @@ export const readPublishedMaterialCards = Effect.fn(
       hasMaterialContext = true;
       if (!context.canonicalPath) {
         return yield* new PublishedProjectionError({
-          locale,
+          appLocale,
           publicPath: route.publicPath,
         });
       }
@@ -136,7 +139,7 @@ export const readPublishedMaterialCards = Effect.fn(
     }
     if (!(description && firstItem)) {
       return yield* new PublishedProjectionError({
-        locale,
+        appLocale,
         publicPath: route.publicPath,
       });
     }

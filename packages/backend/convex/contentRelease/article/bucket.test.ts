@@ -52,10 +52,10 @@ describe("contentRelease/article/bucket", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       ctx.db.insert("articleBuckets", {
+        appLocale: "en",
         articleCount: CONTENT_BUCKET_SIZE,
         bucket: "abc",
         categoryCount: 0,
-        locale: "en",
       })
     );
 

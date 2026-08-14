@@ -13,71 +13,56 @@ type ArticleRow = Doc<"articleCatalog">;
 type CategoryRow = Doc<"articleCategories">;
 
 /** Authenticates one active article row against its immutable projection. */
-export const verifyArticleProjection = Effect.fn(
-  "contentRelease.verifyArticleProjection"
-)(function* (ctx: QueryCtx, row: ArticleRow, activeSequence: number) {
-  const resolved = yield* resolvePublicProjection(
-    ctx,
-    row.contentKey,
-    row.locale,
-    activeSequence
-  );
-  if (
-    resolved?.family !== "article" ||
-    resolved.projectionHash !== row.projectionHash ||
-    resolved.publicPath !== row.publicPath ||
-    resolved.releaseId !== row.releaseId ||
-    resolved.rendererDomain !== row.rendererDomain ||
-    resolved.sequence !== row.sequence
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Active article ${row.contentKey}/${row.locale} is stale.`
-    );
-  }
-  const projection = yield* decodeProjectionJson(resolved.projectionJson);
-  if (
-    projection.kind !== "article" ||
-    projection.category !== row.category ||
-    projection.categoryTitle !== row.categoryTitle ||
-    projection.metadata.date !== row.date
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Active article ${row.contentKey}/${row.locale} changed catalog metadata.`
-    );
-  }
-  return {
-    projection,
-    resolved: {
-      contentKey: resolved.contentKey,
-      family: projection.kind,
-      locale: resolved.locale,
-      projectionHash: resolved.projectionHash,
-      projectionJson: resolved.projectionJson,
-      publicPath: resolved.publicPath,
-      releaseId: resolved.releaseId,
-      rendererDomain: resolved.rendererDomain,
-      sequence: resolved.sequence,
-      sourcePath: resolved.sourcePath,
-    },
-  };
-});
-
-/** Requires the storage-derived identity used by current article readers. */
 export const verifyArticle = Effect.fn("contentRelease.verifyArticle")(
   function* (ctx: QueryCtx, row: ArticleRow, activeSequence: number) {
-    const verified = yield* verifyArticleProjection(ctx, row, activeSequence);
+    const resolved = yield* resolvePublicProjection(
+      ctx,
+      row.contentKey,
+      row.appLocale,
+      activeSequence
+    );
     if (
-      row.assetId !== undefined &&
-      verified.projection.graph.assetId !== row.assetId
+      resolved?.family !== "article" ||
+      resolved.projectionHash !== row.projectionHash ||
+      resolved.publicPath !== row.publicPath ||
+      resolved.releaseId !== row.releaseId ||
+      resolved.rendererDomain !== row.rendererDomain ||
+      resolved.sequence !== row.sequence
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Active article ${row.contentKey}/${row.locale} lost its stored asset identity.`
+        `Active article ${row.contentKey}/${row.appLocale} is stale.`
       );
     }
-    return verified;
+    const projection = yield* decodeProjectionJson(resolved.projectionJson);
+    if (
+      projection.kind !== "article" ||
+      projection.graph.assetId !== row.assetId ||
+      projection.category !== row.category ||
+      projection.categoryTitle !== row.categoryTitle ||
+      projection.metadata.date !== row.date
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Active article ${row.contentKey}/${row.appLocale} changed catalog metadata.`
+      );
+    }
+    return {
+      projection,
+      resolved: {
+        appLocale: resolved.appLocale,
+        artifactLocale: resolved.artifactLocale,
+        contentKey: resolved.contentKey,
+        family: projection.kind,
+        projectionHash: resolved.projectionHash,
+        projectionJson: resolved.projectionJson,
+        publicPath: resolved.publicPath,
+        releaseId: resolved.releaseId,
+        rendererDomain: resolved.rendererDomain,
+        sequence: resolved.sequence,
+        sourcePath: resolved.sourcePath,
+      },
+    };
   }
 );
 
@@ -87,17 +72,17 @@ export const verifyCategory = Effect.fn("contentRelease.verifyArticleCategory")(
     const article = yield* Effect.promise(() =>
       ctx.db
         .query("articleCatalog")
-        .withIndex("by_contentKey_and_locale", (index) =>
+        .withIndex("by_contentKey_and_appLocale", (index) =>
           index
             .eq("contentKey", category.contentKey)
-            .eq("locale", category.locale)
+            .eq("appLocale", category.appLocale)
         )
         .unique()
     );
     if (!article) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Article category ${category.locale}/${category.category} lost its representative.`
+        `Article category ${category.appLocale}/${category.category} lost its representative.`
       );
     }
     const verified = yield* verifyArticle(ctx, article, activeSequence);
@@ -111,7 +96,7 @@ export const verifyCategory = Effect.fn("contentRelease.verifyArticleCategory")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Article category ${category.locale}/${category.category} is stale.`
+        `Article category ${category.appLocale}/${category.category} is stale.`
       );
     }
     return {

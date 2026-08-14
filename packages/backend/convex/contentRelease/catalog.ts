@@ -40,16 +40,16 @@ export const contentHead = Effect.fn("contentRelease.contentHead")(function* (
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Content version ${head.contentKey}/${head.locale}/${head.sequence} is incomplete.`
+      `Content version ${head.contentKey}/${head.artifactLocale}/${head.sequence} is incomplete.`
     );
   }
   return yield* Schema.decodeUnknown(ContentHeadSchema)({
     artifactHash: head.artifactHash,
+    artifactLocale: head.artifactLocale,
     compilerConfigHash: head.compilerConfigHash,
     contentKey: head.contentKey,
     delivery: head.delivery,
     family: head.family,
-    locale: head.locale,
     projectionHash: head.projectionHash,
     ...(publicPath === undefined ? {} : { publicPath }),
     rendererDomain: head.rendererDomain,
@@ -60,7 +60,7 @@ export const contentHead = Effect.fn("contentRelease.contentHead")(function* (
       () =>
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Content version ${head.contentKey}/${head.locale}/${head.sequence} violates the content-head contract.`,
+          message: `Content version ${head.contentKey}/${head.artifactLocale}/${head.sequence} violates the content-head contract.`,
         })
     )
   );
@@ -72,22 +72,28 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
     if (!head.projectionJson) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Content ${head.contentKey}/${head.locale} lost its projection.`
+        `Content ${head.contentKey}/${head.artifactLocale} lost its projection.`
       );
     }
     const projection = yield* decodeProjectionJson(head.projectionJson);
     if (familyForProjection(projection) !== head.family) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Content ${head.contentKey}/${head.locale} changed projection family.`
+        `Content ${head.contentKey}/${head.artifactLocale} changed projection family.`
       );
     }
     if (projection.kind === "question-body") {
       return;
     }
+    if (projection.artifactLocale !== head.artifactLocale) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content ${head.contentKey}/${head.artifactLocale} changed projection locale.`
+      );
+    }
     const binding = yield* loadRouteBinding(
       ctx,
-      head.locale,
+      projection.appLocale,
       projection.publicPath,
       activeSequence
     );
@@ -97,7 +103,7 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_ROUTE",
-        `Content ${head.contentKey}/${head.locale} lost its canonical route.`
+        `Content ${head.contentKey}/${head.artifactLocale} lost its canonical route.`
       );
     }
     if (
@@ -106,7 +112,7 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Route for ${head.contentKey}/${head.locale} disagrees at one sequence.`
+        `Route for ${head.contentKey}/${head.artifactLocale} disagrees at one sequence.`
       );
     }
     return projection.publicPath;
@@ -119,17 +125,17 @@ export const resolvePublicProjection = Effect.fn(
 )(function* (
   ctx: ReadCtx,
   contentKey: string,
-  locale: Doc<"contentKeys">["locale"],
+  artifactLocale: Doc<"contentKeys">["artifactLocale"],
   sequence: number
 ) {
-  const head = yield* loadVersion(ctx, contentKey, locale, sequence);
+  const head = yield* loadVersion(ctx, contentKey, artifactLocale, sequence);
   if (!head || head.operation === "delete" || head.delivery !== "public") {
     return null;
   }
   if (!(head.projectionHash && head.projectionJson)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Public content ${contentKey}/${locale} lost its projection.`
+      `Public content ${contentKey}/${artifactLocale} lost its projection.`
     );
   }
   const projection = yield* decodeProjectionJson(head.projectionJson);
@@ -140,7 +146,7 @@ export const resolvePublicProjection = Effect.fn(
   if (publicPath === undefined) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Public content ${contentKey}/${locale} lost its routed projection.`
+      `Public content ${contentKey}/${artifactLocale} lost its routed projection.`
     );
   }
   const projectionHash = yield* hashText(
@@ -150,26 +156,27 @@ export const resolvePublicProjection = Effect.fn(
   if (
     familyForProjection(projection) !== head.family ||
     projection.contentKey !== head.contentKey ||
-    projection.locale !== head.locale ||
+    projection.artifactLocale !== head.artifactLocale ||
     projection.publicPath !== publicPath ||
     projectionHash !== head.projectionHash
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Public content ${contentKey}/${locale} has mismatched projection data.`
+      `Public content ${contentKey}/${artifactLocale} has mismatched projection data.`
     );
   }
   if (!(head.rendererDomain && head.sourcePath)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Public content ${contentKey}/${locale} lost its renderer provenance.`
+      `Public content ${contentKey}/${artifactLocale} lost its renderer provenance.`
     );
   }
 
   return {
+    appLocale: projection.appLocale,
+    artifactLocale: head.artifactLocale,
     contentKey: head.contentKey,
     family: head.family,
-    locale: head.locale,
     projectionHash,
     projectionJson: head.projectionJson,
     publicPath,
@@ -186,10 +193,10 @@ export const resolveContentHead = Effect.fn(
 )(function* (
   ctx: ReadCtx,
   contentKey: string,
-  locale: Doc<"contentKeys">["locale"],
+  artifactLocale: Doc<"contentKeys">["artifactLocale"],
   sequence: number
 ) {
-  const head = yield* loadVersion(ctx, contentKey, locale, sequence);
+  const head = yield* loadVersion(ctx, contentKey, artifactLocale, sequence);
   if (!head || head.operation === "delete") {
     return null;
   }

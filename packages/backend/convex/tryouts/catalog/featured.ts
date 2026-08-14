@@ -1,4 +1,4 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
@@ -27,7 +27,7 @@ export const featuredTryoutValidator = v.object({
 
 /** Selects the first authored question from the canonical try-out hierarchy. */
 export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
-  function* (ctx: QueryCtx, locale: ContentLocale) {
+  function* (ctx: QueryCtx, locale: AppLocaleCode) {
     const catalog = yield* loadTryoutCatalog(ctx, locale);
     const index = yield* indexPublishedCatalog(catalog);
     const section = yield* readFirstVisibleSection(index);
@@ -49,11 +49,11 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     }
 
     const question = {
+      appLocale: locale,
       artifactHash: placement.questionArtifactHash,
       contentHash: placement.contentHash,
       contentKey: placement.questionContentKey,
       delivery: "authenticated",
-      locale,
       questionOrder: placement.questionOrder,
       snapshotReleaseId: catalog.activeReleaseId,
       snapshotId: catalog.snapshotId,

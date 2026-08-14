@@ -1,7 +1,7 @@
 import type {
   StoredProtectedRuntimeRequest,
   StoredProtectedRuntimeSelector,
-} from "@nakafa/aksara-history/history/decode";
+} from "@nakafa/aksara-contracts/history/decode";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";

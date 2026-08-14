@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import {
@@ -38,7 +39,7 @@ const target = {
   token: "runtime-test-token",
 };
 const input = {
-  locale: "en" as const,
+  appLocale: AppLocaleSchema.make("en"),
   publicPath: PublicPathSchema.make("test/head-0"),
 };
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
@@ -111,7 +112,11 @@ describe("public content runtime client", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       endpoint,
       expect.objectContaining({
-        body: JSON.stringify({ delivery: "public", ...input }),
+        body: JSON.stringify({
+          appLocale: input.appLocale,
+          delivery: "public",
+          publicPath: input.publicPath,
+        }),
       })
     );
     expect(verifyContentRuntimeExchange).toHaveBeenCalledOnce();
@@ -120,7 +125,7 @@ describe("public content runtime client", () => {
   it("posts one ordered eight-item batch without singular fallback", async () => {
     const found = foundResponse();
     const inputs = Array.from({ length: 8 }, (_, index) => ({
-      locale: input.locale,
+      appLocale: input.appLocale,
       publicPath: `test/head-${index}`,
     }));
     fetchMock.mockResolvedValue(
@@ -140,7 +145,11 @@ describe("public content runtime client", () => {
       batchEndpoint,
       expect.objectContaining({
         body: JSON.stringify({
-          requests: inputs.map((item) => ({ delivery: "public", ...item })),
+          requests: inputs.map(({ appLocale, publicPath }) => ({
+            appLocale,
+            delivery: "public",
+            publicPath,
+          })),
         }),
       })
     );
@@ -152,7 +161,7 @@ describe("public content runtime client", () => {
 
   it("rejects more than eight requests before making a network call", async () => {
     const inputs = Array.from({ length: 9 }, (_, index) => ({
-      locale: input.locale,
+      appLocale: input.appLocale,
       publicPath: `test/head-${index}`,
     }));
 

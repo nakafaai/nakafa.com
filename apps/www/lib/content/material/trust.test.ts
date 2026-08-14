@@ -46,9 +46,9 @@ describe("published marketing trust lesson", () => {
       {
         contentKey:
           "material/lesson/mathematics/exponential-logarithm/basic-concept",
+        appLocale: "en",
         expectedMaterialKey: "lesson.mathematics.exponential-logarithm",
         expectedSectionKey: "basic-concept",
-        locale: "en",
       }
     );
     expect(cacheMock).toHaveBeenCalledWith("material");
@@ -71,7 +71,7 @@ describe("published marketing trust lesson", () => {
         Effect.runPromise(readPublishedTrustLesson("en").pipe(Effect.flip))
       ).resolves.toMatchObject({
         _tag: "PublishedProjectionError",
-        locale: "en",
+        appLocale: "en",
         publicPath: "marketing/trust",
       });
     }

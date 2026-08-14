@@ -93,7 +93,7 @@ describe("contents/views/target", () => {
     await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
     const result = await validateIncomingTarget(target, {
       contentId: FUNCTION_MATERIAL.graph.assetId,
-      locale: FUNCTION_MATERIAL.locale,
+      locale: "en",
       publicPath: FUNCTION_MATERIAL.publicPath,
       section: "material",
     });
@@ -107,6 +107,28 @@ describe("contents/views/target", () => {
       section: "material",
       sourcePath: expect.stringContaining(FUNCTION_MATERIAL.contentKey),
     });
+  });
+
+  it("returns null for missing or mismatched current material bindings", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+
+    await expect(
+      validateIncomingTarget(target, {
+        contentId: `${FUNCTION_MATERIAL.graph.assetId}:stale`,
+        locale: "en",
+        publicPath: FUNCTION_MATERIAL.publicPath,
+        section: "material",
+      })
+    ).resolves.toBeNull();
+    await expect(
+      validateIncomingTarget(target, {
+        contentId: FUNCTION_MATERIAL.graph.assetId,
+        locale: "en",
+        publicPath: `${FUNCTION_MATERIAL.parentPath}/missing`,
+        section: "material",
+      })
+    ).resolves.toBeNull();
   });
 
   it("hydrates a renamed material by asset ID while rejecting its stale incoming route", async () => {
@@ -125,7 +147,7 @@ describe("contents/views/target", () => {
     await expect(
       hydrateDurableTarget(target, {
         contentId: FUNCTION_MATERIAL.graph.assetId,
-        locale: FUNCTION_MATERIAL.locale,
+        locale: "en",
         section: "material",
       })
     ).resolves.toMatchObject({
@@ -136,30 +158,8 @@ describe("contents/views/target", () => {
     await expect(
       validateIncomingTarget(target, {
         contentId: FUNCTION_MATERIAL.graph.assetId,
-        locale: FUNCTION_MATERIAL.locale,
+        locale: "en",
         publicPath: FUNCTION_MATERIAL.publicPath,
-        section: "material",
-      })
-    ).resolves.toBeNull();
-  });
-
-  it("returns null for missing or mismatched current material bindings", async () => {
-    const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
-
-    await expect(
-      validateIncomingTarget(target, {
-        contentId: `${FUNCTION_MATERIAL.graph.assetId}:stale`,
-        locale: FUNCTION_MATERIAL.locale,
-        publicPath: FUNCTION_MATERIAL.publicPath,
-        section: "material",
-      })
-    ).resolves.toBeNull();
-    await expect(
-      validateIncomingTarget(target, {
-        contentId: FUNCTION_MATERIAL.graph.assetId,
-        locale: FUNCTION_MATERIAL.locale,
-        publicPath: `${FUNCTION_MATERIAL.parentPath}/missing`,
         section: "material",
       })
     ).resolves.toBeNull();
@@ -175,7 +175,7 @@ describe("contents/views/target", () => {
     await expect(
       validateIncomingTarget(target, {
         contentId: projection.graph.assetId,
-        locale: projection.locale,
+        locale: "en",
         publicPath: projection.publicPath,
         section: "articles",
       })
@@ -184,13 +184,13 @@ describe("contents/views/target", () => {
       content_id: projection.graph.assetId,
       route: projection.publicPath,
       section: "articles",
-      sourcePath: `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`,
+      sourcePath: `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`,
       title: projection.metadata.title,
     });
     await expect(
       hydrateDurableTarget(target, {
         contentId: projection.graph.assetId,
-        locale: projection.locale,
+        locale: "en",
         section: "articles",
       })
     ).resolves.toMatchObject({
@@ -211,7 +211,7 @@ describe("contents/views/target", () => {
     await expect(
       validateIncomingTarget(target, {
         contentId: `${projection.graph.assetId}:stale`,
-        locale: projection.locale,
+        locale: "en",
         publicPath: projection.publicPath,
         section: "articles",
       })
@@ -219,7 +219,7 @@ describe("contents/views/target", () => {
     await expect(
       validateIncomingTarget(target, {
         contentId: projection.graph.assetId,
-        locale: projection.locale,
+        locale: "en",
         publicPath: `${projection.parentPath}/missing`,
         section: "articles",
       })
@@ -228,14 +228,14 @@ describe("contents/views/target", () => {
     const aliasPath = PublicPathSchema.make("articles/politics/legacy-alias");
     await target.mutation((ctx) =>
       insertRuntimeBinding(ctx, projection.contentKey, {
-        locale: projection.locale,
+        appLocale: projection.appLocale,
         publicPath: aliasPath,
       })
     );
     await expect(
       validateIncomingTarget(target, {
         contentId: projection.graph.assetId,
-        locale: projection.locale,
+        locale: "en",
         publicPath: aliasPath,
         section: "articles",
       })
@@ -262,7 +262,7 @@ describe("contents/views/target", () => {
     await expect(
       validateIncomingTarget(target, {
         contentId: projection.graph.assetId,
-        locale: projection.locale,
+        locale: "en",
         publicPath: projection.publicPath,
         section: "material",
       })

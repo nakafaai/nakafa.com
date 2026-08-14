@@ -101,9 +101,11 @@ planning layer that can override or contaminate the search query.
 
 ## Contracts
 
-- `packages/contents/_lib/agent` owns `read`, `quran`, `taxonomy`, and
-  `verify`.
-- Convex owns runtime search through `contentSearch`.
+- `packages/contents/_lib/agent` owns shared agent references plus read, Quran,
+  search, taxonomy, and usage contracts.
+- Convex owns unified runtime search over authenticated signed article,
+  material, Quran, and try-out read models. No mutable legacy search table is
+  consulted.
 - Nina and MCP use the same search result contract.
 - Nina stores one UI data envelope: `data-nakafa`.
 - `data-nakafa.kind` decides the renderer: `search`, `content`, `quran`, or

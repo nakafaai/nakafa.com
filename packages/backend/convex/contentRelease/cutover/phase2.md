@@ -51,7 +51,7 @@ is satisfied.
 
    The post-drain proof must repeat that same full terminal authentication.
    Accept only its observed exact receipt and durable phase `proved`.
-8. Deploy the strict current application and backend with no legacy content
+8. Deploy the transitional current application and backend with no legacy content
    writer, reader, route, sync, repair, local-content audio path, or fallback.
    Remove publication guards from the sole current Aksara ingress while keeping
    the separate try-out and application maintenance guard backed by `proved`.
@@ -59,16 +59,45 @@ is satisfied.
    release workflow and prove the exact active pointer and signed catalogs.
 10. Run application, retained-history, and signed-publication acceptance while
    the `proved` checkpoint still blocks try-out and application writes.
-11. Deploy the strict current schema while preserving the maintenance guard.
-12. Physically delete every empty undeclared legacy table and all six retired
-   learning-program tables only after the strict schema is deployed. Prove that
-   no removed table or scheduled function remains.
-13. Delete the single `contentCutoverState` and `contentCutoverActivity`
-   documents through the Phase 2 bounded retire mutation only after genesis,
-   application acceptance, and physical legacy-table deletion succeed.
-14. Verify both temporary tables are empty, then deploy the guard retirement
+11. Retire all 31 legacy locale fields and 1,720 frozen placement titles while
+   the transitional schema still declares them. Accept only 21 attempts, 10
+   progress rows, 1,720 placements, 31 locale removals, and 1,720 title
+   removals. Repeat once and require zero removals on retry:
+
+   ```sh
+   pnpm --filter @repo/backend exec convex run contentRelease/cutover/locale:retire '{}' --prod
+   ```
+
+12. Immediately deploy the strict try-out schema. Delete the field-retirement
+   mutation in that deployment, make `appLocale` required, remove the legacy
+   `locale` fields and index, and remove the frozen placement `title` field.
+   Preserve the proved checkpoint and all maintenance guards.
+13. Physically delete every empty undeclared legacy table and all six retired
+   learning-program tables only after the strict schema is deployed. Use the
+   Convex Dashboard's table-scoped **Delete table** operation because the
+   installed CLI has no table-scoped deletion command. Immediately before each
+   deletion, prove the table is still undeclared and empty. Record the table,
+   production deployment, operator, timestamp, and zero-count evidence. Prove
+   every removed table remains absent after the final deletion.
+14. Set the exact accepted genesis identity from the signed publication receipt,
+   then delete the single `contentCutoverState` and `contentCutoverActivity`
+   documents through the bounded retire mutation:
+
+   ```sh
+   export NAKAFA_GENESIS_RELEASE_ID='<accepted-release-id>'
+   export NAKAFA_GENESIS_MANIFEST_HASH='<accepted-manifest-hash>'
+   NAKAFA_CHECKPOINT_ARGS="$(jq -cn --arg activeReleaseId "$NAKAFA_GENESIS_RELEASE_ID" --arg activeManifestHash "$NAKAFA_GENESIS_MANIFEST_HASH" '{activeReleaseId:$activeReleaseId,activeManifestHash:$activeManifestHash}')"
+   pnpm --filter @repo/backend exec convex run contentRelease/cutover/checkpoint:retire "$NAKAFA_CHECKPOINT_ARGS" --prod
+   unset NAKAFA_CHECKPOINT_ARGS NAKAFA_GENESIS_MANIFEST_HASH NAKAFA_GENESIS_RELEASE_ID
+   ```
+
+   Accept only one checkpoint deletion, one activity deletion, 21 attempts,
+   1,720 placements, and 10 progress rows. Repeat once and require zero row
+   deletions with the same accepted genesis identity.
+15. Verify both temporary tables are empty, then deploy the guard retirement
    and remove every temporary seam below as one coordinated boundary. Finally,
-   physically delete both empty cutover tables.
+   restore the current content-compaction and try-out-expiry crons, physically
+   delete both empty cutover tables, and repeat application acceptance.
 
 ## Code deletion
 
@@ -107,9 +136,14 @@ is satisfied.
 
 ## Physical table deletion
 
-- Delete all 16 empty legacy tables listed by `LEGACY_INVENTORY`.
-- Delete the six empty retired tables listed by `RETIRED_PROGRAM_TABLES`:
-  `learningProgramCoverage`, `learningProgramSources`, `learningPrograms`,
+- Delete these 16 empty legacy tables: `articleReferences`, `contentAuthors`,
+  `articleContents`, `authors`, `curriculumLessons`, `curriculumTopics`,
+  `quranVerses`, `quranSurahs`, `contentRoutes`, `contentRoutePages`,
+  `contentRouteCounts`, `publicRouteSitemapCounts`,
+  `publicRouteSitemapPages`, `publicRoutes`, `publicRouteSyncState`, and
+  `contentSearch`.
+- Delete these six empty retired tables: `learningProgramCoverage`,
+  `learningProgramSources`, `learningPrograms`,
   `learningPlanItems`, `learningPlans`, and `learningProfiles`.
 - Delete `contentCutoverActivity` and `contentCutoverState` after their rows are
   zero and their schema declarations are gone.

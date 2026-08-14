@@ -11,10 +11,15 @@ export const resolveMaterialRoute = Effect.fn(
   "contentRelease.resolveMaterialRoute"
 )(function* (
   ctx: QueryCtx,
-  locale: Doc<"materialCatalog">["locale"],
+  appLocale: Doc<"materialCatalog">["appLocale"],
   publicPath: string
 ) {
-  const route = yield* resolveActiveRoute(ctx, "material", locale, publicPath);
+  const route = yield* resolveActiveRoute(
+    ctx,
+    "material",
+    appLocale,
+    publicPath
+  );
   if (!(route.managed && route.active)) {
     return {
       active: route.active,
@@ -22,7 +27,7 @@ export const resolveMaterialRoute = Effect.fn(
       material: null,
     };
   }
-  yield* requireMaterialState(route.active, locale);
+  yield* requireMaterialState(route.active, appLocale);
   if (!route.projection) {
     return {
       active: route.active,
@@ -33,15 +38,17 @@ export const resolveMaterialRoute = Effect.fn(
   const row = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_contentKey_and_locale", (index) =>
-        index.eq("contentKey", route.projection.contentKey).eq("locale", locale)
+      .withIndex("by_contentKey_and_appLocale", (index) =>
+        index
+          .eq("contentKey", route.projection.contentKey)
+          .eq("appLocale", appLocale)
       )
       .unique()
   );
   if (!row) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active material ${route.projection.contentKey}/${locale} lost its catalog row.`
+      `Active material ${route.projection.contentKey}/${appLocale} lost its catalog row.`
     );
   }
   const verified = yield* verifyMaterial(row);
@@ -53,7 +60,7 @@ export const resolveMaterialRoute = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active material ${route.projection.contentKey}/${locale} disagrees with its published route.`
+      `Active material ${route.projection.contentKey}/${appLocale} disagrees with its published route.`
     );
   }
   return {

@@ -17,7 +17,7 @@ vi.mock("@/lib/content/preview/config", async (importOriginal) => ({
 const target = "http://127.0.0.1:4000/v1/events";
 const configMock = vi.mocked(readPreviewConfig);
 const route = {
-  locale: previewRoute.locale,
+  appLocale: previewRoute.appLocale,
   publicPath: previewRoute.publicPath,
 };
 
@@ -147,13 +147,13 @@ describe("local preview events", () => {
 
   it("forwards only complete schema-validated updates", async () => {
     const pending = JSON.stringify({
-      format: "aksara-local-preview-v1",
+      format: "aksara-local-preview",
       revision: 1,
       route,
       status: "pending",
     });
     const ready = JSON.stringify({
-      format: "aksara-local-preview-v1",
+      format: "aksara-local-preview",
       revision: 2,
       route,
       status: "ready",

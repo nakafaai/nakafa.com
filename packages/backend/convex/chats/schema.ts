@@ -156,7 +156,7 @@ export const nakafaTaxonomyInputValidator = v.object({
 
 export const nakafaContentPreviewValidator = v.object({
   ...contentSearchRefValidator.fields,
-  description: v.string(),
+  description: v.optional(v.string()),
   title: v.string(),
 });
 

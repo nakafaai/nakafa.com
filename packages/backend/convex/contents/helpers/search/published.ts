@@ -2,7 +2,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
-import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
+import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search/owner";
 import { resolveSearchProjection } from "@repo/backend/convex/contentRelease/search/verify";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import {
@@ -69,7 +69,12 @@ export const readPublishedSearchDocuments = Effect.fn(
       NAKAFA_AGENT_SEARCH_WINDOW,
       (row) => row._id
     );
-    const authenticated = yield* authenticateSearchRows(ctx, rows, owner);
+    const authenticated = yield* authenticateSearchRows(
+      ctx,
+      rows,
+      owner,
+      args.locale
+    );
     return authenticated.map(({ document }) => document).slice(0, scanLimit);
   }
   const groups = yield* Effect.all(
@@ -89,7 +94,12 @@ export const readPublishedSearchDocuments = Effect.fn(
     NAKAFA_AGENT_SEARCH_WINDOW,
     (row) => row._id
   );
-  const authenticated = yield* authenticateSearchRows(ctx, rows, owner);
+  const authenticated = yield* authenticateSearchRows(
+    ctx,
+    rows,
+    owner,
+    args.locale
+  );
   const documentsByRow = new Map(
     authenticated.map(({ document, row }) => [row._id, document])
   );
@@ -150,9 +160,9 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
       ? yield* Effect.promise(() =>
           ctx.db
             .query("contentIndex")
-            .withIndex("by_locale_and_family_and_publicPath", (index) =>
+            .withIndex("by_appLocale_and_family_and_publicPath", (index) =>
               index
-                .eq("locale", locale)
+                .eq("appLocale", locale)
                 .eq("family", family)
                 .eq("publicPath", route)
             )
@@ -166,7 +176,7 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
           index
             .search("text", queryText)
             .eq("family", family)
-            .eq("locale", locale)
+            .eq("appLocale", locale)
         )
         .take(scanLimit)
     );
@@ -191,8 +201,8 @@ const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
     const rows = yield* Effect.promise(() =>
       ctx.db
         .query("contentIndex")
-        .withIndex("by_locale_and_family_and_publicPath", (index) =>
-          index.eq("locale", locale).eq("family", family)
+        .withIndex("by_appLocale_and_family_and_publicPath", (index) =>
+          index.eq("appLocale", locale).eq("family", family)
         )
         .take(scanLimit)
     );
@@ -204,12 +214,13 @@ const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
 function authenticateSearchRows(
   ctx: QueryCtx,
   rows: readonly Doc<"contentIndex">[],
-  owner: PublishedSearchOwner
+  owner: PublishedSearchOwner,
+  locale: ContentSearchInput["locale"]
 ) {
   return Effect.forEach(
     rows,
     (row) =>
-      authenticateSearchRow(ctx, row, owner).pipe(
+      authenticateSearchRow(ctx, row, owner, locale).pipe(
         Effect.map((document) => (document ? { document, row } : null))
       ),
     { concurrency: "unbounded" }
@@ -222,8 +233,15 @@ const authenticateSearchRow = Effect.fn(
 )(function* (
   ctx: QueryCtx,
   row: Doc<"contentIndex">,
-  owner: PublishedSearchOwner
+  owner: PublishedSearchOwner,
+  locale: ContentSearchInput["locale"]
 ) {
+  if (row.appLocale !== locale) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Active search entry ${row.contentKey}/${row.appLocale} escaped the requested locale.`
+    );
+  }
   const resolved = yield* resolveSearchProjection(ctx, row, owner);
   if (!resolved) {
     return null;
@@ -232,7 +250,7 @@ const authenticateSearchRow = Effect.fn(
   if (projection.kind === "question-body") {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active search entry ${row.contentKey}/${row.locale} exposes a question body.`
+      `Active search entry ${row.contentKey}/${row.appLocale} exposes a question body.`
     );
   }
   const section = projection.kind === "article" ? "articles" : "material";
@@ -240,7 +258,7 @@ const authenticateSearchRow = Effect.fn(
     ...projection.graph,
     contentHash: row.projectionHash,
     description: projection.metadata.description,
-    locale: projection.locale,
+    locale,
     route: projection.publicPath,
     section,
     sourcePath: resolved.sourcePath,

@@ -1,5 +1,9 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
+import {
+  type AppLocale,
+  AppLocaleSchema,
+  type ArtifactLocale,
+} from "@nakafa/aksara-contracts/locale";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import {
   ContentProjectionSchema,
@@ -26,18 +30,33 @@ import { Schema } from "effect";
 
 /** Optional identities used to shape immutable runtime head fixtures. */
 export interface RuntimeHeadOptions {
+  readonly appLocale?: AppLocale;
   readonly artifactHash?: string;
+  readonly artifactLocale?: ArtifactLocale;
   readonly bindingReleaseId?: string;
   readonly bindingSequence?: number;
   readonly compiledCode?: string;
   readonly headReleaseId?: string;
   readonly headSequence?: number;
-  readonly locale?: ContentLocale;
   readonly plainText?: string;
   readonly projectionJson?: string;
   readonly publicPath?: string;
   readonly rendererDomain?: RendererDomain;
   readonly sourcePath?: string;
+}
+
+/** Builds one material projection that owns the requested runtime route. */
+function runtimeProjectionJson(
+  contentKey: string,
+  options?: Pick<RuntimeHeadOptions, "projectionJson" | "publicPath">
+) {
+  if (options?.projectionJson !== undefined) {
+    return options.projectionJson;
+  }
+  return testProjectionJson({
+    contentKey,
+    publicPath: options?.publicPath ?? TEST_RUNTIME_PATH,
+  });
 }
 
 /** Inserts one complete immutable artifact used by a selected route binding. */
@@ -71,23 +90,21 @@ export async function insertRuntimeVersion(
   contentKey: string,
   options?: RuntimeHeadOptions
 ) {
-  const publicPath = options?.publicPath ?? TEST_RUNTIME_PATH;
   const artifactHash = options?.artifactHash ?? `sha256:${"3".repeat(64)}`;
-  const projectionJson =
-    options?.projectionJson ?? testProjectionJson({ contentKey, publicPath });
+  const projectionJson = runtimeProjectionJson(contentKey, options);
   const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
     JSON.parse(projectionJson)
   );
   const headSequence = options?.headSequence ?? TEST_RUNTIME_RELEASE.sequence;
   const headReleaseId =
     options?.headReleaseId ?? TEST_RUNTIME_RELEASE.releaseId;
-  const locale = options?.locale ?? "en";
+  const artifactLocale = options?.artifactLocale ?? projection.artifactLocale;
   const rendererDomain = options?.rendererDomain ?? "mathematics";
   const sourcePath =
     options?.sourcePath ??
     (contentKey.startsWith("material/")
-      ? `packages/corpus/${contentKey}/${locale}.mdx`
-      : `packages/corpus/material/lesson/test/${contentKey.slice(5)}/${locale}.mdx`);
+      ? `packages/corpus/${contentKey}/${artifactLocale}.mdx`
+      : `packages/corpus/material/lesson/test/${contentKey.slice(5)}/${artifactLocale}.mdx`);
   await ctx.db.insert("contentHeads", {
     artifactHash,
     compilerConfigHash: TEST_DIGEST,
@@ -95,7 +112,7 @@ export async function insertRuntimeVersion(
     delivery,
     family: familyForProjection(projection),
     index: 0,
-    locale,
+    artifactLocale,
     operation: "upsert",
     projectionHash: testTextHash(projectionJson),
     projectionJson,
@@ -114,11 +131,10 @@ export async function insertRuntimeKey(
   contentKey: string,
   options?: Pick<
     RuntimeHeadOptions,
-    "headSequence" | "locale" | "projectionJson"
+    "artifactLocale" | "headSequence" | "projectionJson"
   >
 ) {
-  const projectionJson =
-    options?.projectionJson ?? testProjectionJson({ contentKey });
+  const projectionJson = runtimeProjectionJson(contentKey, options);
   const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
     JSON.parse(projectionJson)
   );
@@ -126,7 +142,7 @@ export async function insertRuntimeKey(
     contentKey,
     createdSequence: options?.headSequence ?? TEST_RUNTIME_RELEASE.sequence,
     family: familyForProjection(projection),
-    locale: options?.locale ?? projection.locale,
+    artifactLocale: options?.artifactLocale ?? projection.artifactLocale,
   });
 }
 
@@ -134,16 +150,19 @@ export async function insertRuntimeKey(
 export async function insertRuntimeIndex(
   ctx: MutationCtx,
   contentKey: string,
-  options?: Pick<RuntimeHeadOptions, "headSequence" | "locale" | "plainText">
+  options?: Pick<
+    RuntimeHeadOptions,
+    "artifactLocale" | "headSequence" | "plainText"
+  >
 ) {
   const sequence = options?.headSequence ?? TEST_RUNTIME_RELEASE.sequence;
-  const locale = options?.locale ?? "en";
+  const artifactLocale = options?.artifactLocale ?? "en";
   const head = await ctx.db
     .query("contentHeads")
-    .withIndex("by_contentKey_and_locale_and_sequence", (index) =>
+    .withIndex("by_contentKey_and_artifactLocale_and_sequence", (index) =>
       index
         .eq("contentKey", contentKey)
-        .eq("locale", locale)
+        .eq("artifactLocale", artifactLocale)
         .eq("sequence", sequence)
     )
     .unique();
@@ -169,11 +188,11 @@ export async function insertRuntimeBinding(
   contentKey: null | string,
   options?: Pick<
     RuntimeHeadOptions,
-    "bindingReleaseId" | "bindingSequence" | "locale" | "publicPath"
+    "appLocale" | "bindingReleaseId" | "bindingSequence" | "publicPath"
   >
 ) {
   const publicPath = options?.publicPath ?? TEST_RUNTIME_PATH;
-  const locale = options?.locale ?? "en";
+  const appLocale = options?.appLocale ?? AppLocaleSchema.make("en");
   const bindingSequence =
     options?.bindingSequence ?? TEST_RUNTIME_RELEASE.sequence;
   const bindingReleaseId =
@@ -184,10 +203,10 @@ export async function insertRuntimeBinding(
       ? await ctx.db
           .query("contentBindings")
           .withIndex(
-            "by_locale_and_publicPath_and_sequence_and_index",
+            "by_appLocale_and_publicPath_and_sequence_and_index",
             (index) =>
               index
-                .eq("locale", locale)
+                .eq("appLocale", appLocale)
                 .eq("publicPath", publicPath)
                 .lt("sequence", bindingSequence)
           )
@@ -200,7 +219,7 @@ export async function insertRuntimeBinding(
     batchIndex: 0,
     ...(ownerKey ? { contentKey: ownerKey } : {}),
     index: 0,
-    locale,
+    appLocale,
     operation,
     publicPath,
     releaseId: bindingReleaseId,
@@ -214,14 +233,14 @@ export async function insertRuntimeBinding(
   });
   const path = await ctx.db
     .query("contentPaths")
-    .withIndex("by_locale_and_publicPath", (index) =>
-      index.eq("locale", locale).eq("publicPath", publicPath)
+    .withIndex("by_appLocale_and_publicPath", (index) =>
+      index.eq("appLocale", appLocale).eq("publicPath", publicPath)
     )
     .unique();
   if (!path) {
     await ctx.db.insert("contentPaths", {
       createdSequence: bindingSequence,
-      locale,
+      appLocale,
       publicPath,
     });
   }
@@ -234,8 +253,22 @@ export async function insertRuntimeHead(
   contentKey: string,
   options?: RuntimeHeadOptions
 ) {
-  await insertRuntimeVersion(ctx, delivery, contentKey, options);
-  await insertRuntimeBinding(ctx, contentKey, options);
+  const projectionJson = runtimeProjectionJson(contentKey, options);
+  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
+    JSON.parse(projectionJson)
+  );
+  if (projection.kind === "question-body") {
+    throw new Error("A public runtime head cannot route a question body.");
+  }
+  const resolved = {
+    ...options,
+    appLocale: options?.appLocale ?? projection.appLocale,
+    artifactLocale: options?.artifactLocale ?? projection.artifactLocale,
+    projectionJson,
+    publicPath: options?.publicPath ?? TEST_RUNTIME_PATH,
+  };
+  await insertRuntimeVersion(ctx, delivery, contentKey, resolved);
+  await insertRuntimeBinding(ctx, contentKey, resolved);
 }
 
 /** Inserts one route whose release and artifact pass real signature checks. */
@@ -252,9 +285,7 @@ export async function insertSignedHead(
     | "sourcePath"
   >
 ) {
-  const projectionJson =
-    options?.projectionJson ??
-    testProjectionJson({ contentKey, publicPath: TEST_RUNTIME_PATH });
+  const projectionJson = runtimeProjectionJson(contentKey, options);
   const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
     JSON.parse(projectionJson)
   );

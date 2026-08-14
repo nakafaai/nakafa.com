@@ -1,7 +1,7 @@
 import "server-only";
 
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
+import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
 import { readPublicContent } from "@repo/backend/client/content/public";
@@ -17,7 +17,7 @@ import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 /** Exact public identity sent to the server-only content runtime seam. */
 export interface PublishedContentRouteInput {
-  readonly locale: ContentLocale;
+  readonly appLocale: AppLocale;
   readonly publicPath: string;
 }
 
@@ -54,7 +54,7 @@ export const readCurrentPublishedContent = Effect.fn(
       }),
   });
   const request = {
-    locale: input.locale,
+    appLocale: input.appLocale,
     publicPath: input.publicPath,
   };
   const liveRenderer = yield* rendererManifest;

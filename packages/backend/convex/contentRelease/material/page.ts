@@ -24,14 +24,14 @@ function emptyPage() {
 export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
   function* (
     ctx: QueryCtx,
-    locale: Doc<"materialCatalog">["locale"],
+    appLocale: Doc<"materialCatalog">["appLocale"],
     expectedManifestHash: null | string,
     expectedReleaseId: null | string,
     paginationOpts: Parameters<typeof validateProjectionPage>[0]
   ) {
     const [options, owner] = yield* Effect.all([
       validateProjectionPage(paginationOpts),
-      loadMaterialOwner(ctx, locale),
+      loadMaterialOwner(ctx, appLocale),
     ]);
     if (options.endCursor !== undefined && options.endCursor !== null) {
       return yield* releaseFail(
@@ -76,8 +76,8 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
     const stored = yield* Effect.promise(() =>
       ctx.db
         .query("materialCatalog")
-        .withIndex("by_locale_and_publicPath", (index) =>
-          index.eq("locale", locale)
+        .withIndex("by_appLocale_and_publicPath", (index) =>
+          index.eq("appLocale", appLocale)
         )
         .paginate(options)
     );

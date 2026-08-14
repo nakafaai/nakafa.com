@@ -126,7 +126,7 @@ describe("public content runtime HTTP route", () => {
       JSON.stringify({
         delivery: "public",
         extra: true,
-        locale: "en",
+        appLocale: "en",
         publicPath: TEST_RUNTIME_PATH,
       }),
       { "content-type": "application/json" },
@@ -158,8 +158,8 @@ describe("public content runtime HTTP route", () => {
       t,
       JSON.stringify({
         delivery: "public",
-        locale: "en",
-        publicPath: "test/missing",
+        appLocale: "en",
+        publicPath: "subjects/test/missing",
       })
     );
 
@@ -193,7 +193,7 @@ describe("public content runtime HTTP route", () => {
     await seedRuntime(t, "public");
     const row = await t.query(
       internal.contentRelease.runtime.public.internal.read,
-      { locale: "en", publicPath: TEST_RUNTIME_PATH }
+      { appLocale: "en", publicPath: TEST_RUNTIME_PATH }
     );
     if (!row) {
       throw new Error("Expected one public runtime row.");
@@ -230,7 +230,7 @@ describe("public content runtime HTTP route", () => {
       t,
       JSON.stringify({
         delivery: "authenticated",
-        locale: "en",
+        appLocale: "en",
         publicPath: TEST_RUNTIME_PATH,
       })
     );

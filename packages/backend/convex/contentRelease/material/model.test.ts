@@ -40,7 +40,7 @@ describe("contentRelease/material/model", () => {
 
     const result = await target.query((ctx) =>
       runConvexProgram(
-        readMaterialModel(ctx, requested.locale, requested.publicPath)
+        readMaterialModel(ctx, requested.appLocale, requested.publicPath)
       )
     );
 
@@ -52,12 +52,12 @@ describe("contentRelease/material/model", () => {
     });
     expect(decodeProjection(result.projectionJson ?? "")).toEqual(requested);
     expect(result.alternateJson.map(decodeProjection)).toMatchObject([
-      { locale: "en", order: 1 },
-      { locale: "id", order: 1 },
+      { appLocale: "en", order: 1 },
+      { appLocale: "id", order: 1 },
     ]);
     expect(result.siblingJson.map(decodeProjection)).toMatchObject([
-      { locale: "en", order: 1 },
-      { locale: "en", order: 2 },
+      { appLocale: "en", order: 1 },
+      { appLocale: "en", order: 2 },
     ]);
   });
 
@@ -83,7 +83,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(ctx, projection.locale, projection.publicPath)
+          readMaterialModel(ctx, projection.appLocale, projection.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -98,9 +98,9 @@ describe("contentRelease/material/model", () => {
     await target.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
-        .withIndex("by_locale_and_publicPath", (index) =>
+        .withIndex("by_appLocale_and_publicPath", (index) =>
           index
-            .eq("locale", requested.locale)
+            .eq("appLocale", requested.appLocale)
             .eq("publicPath", requested.publicPath)
         )
         .unique();
@@ -115,7 +115,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(ctx, requested.locale, requested.publicPath)
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -125,9 +125,9 @@ describe("contentRelease/material/model", () => {
     await target.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
-        .withIndex("by_locale_and_publicPath", (index) =>
+        .withIndex("by_appLocale_and_publicPath", (index) =>
           index
-            .eq("locale", requested.locale)
+            .eq("appLocale", requested.appLocale)
             .eq("publicPath", requested.publicPath)
         )
         .unique();
@@ -142,7 +142,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(ctx, requested.locale, requested.publicPath)
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -171,7 +171,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(ctx, requested.locale, requested.publicPath)
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -191,7 +191,7 @@ describe("contentRelease/material/model", () => {
           bucket: "abc",
           contentKey: projection.contentKey,
           date: projection.metadata.date,
-          locale: projection.locale,
+          appLocale: projection.appLocale,
           materialKey: projection.materialKey,
           order: projection.order,
           parentPath: projection.parentPath,
@@ -202,6 +202,7 @@ describe("contentRelease/material/model", () => {
           rendererDomain: "mathematics",
           sequence: 1,
           sourcePath: "not-read",
+          topicAssetId: projection.graph.assetId,
         });
       }
     });
@@ -209,7 +210,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(ctx, requested.locale, requested.publicPath)
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({

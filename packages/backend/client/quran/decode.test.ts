@@ -61,7 +61,7 @@ describe("signed Quran decoder", () => {
           ),
           toVerse: 3,
         },
-        { locale: "en", surahNumber: 1 }
+        { appLocale: "en", surahNumber: 1 }
       )
     );
 

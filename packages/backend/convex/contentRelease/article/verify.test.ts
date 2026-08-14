@@ -7,16 +7,9 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 describe("contentRelease/article/verify", () => {
-  it("permits an unstaged asset identity but rejects a stored mismatch", async () => {
+  it("accepts the signed asset identity and rejects a stored mismatch", async () => {
     const target = convexTest(schema, convexModules);
     await target.mutation((ctx) => insertRuntimeArticles(ctx, 1));
-    await target.mutation(async (ctx) => {
-      const row = await ctx.db.query("articleCatalog").unique();
-      if (!row) {
-        throw new Error("Expected one active article row.");
-      }
-      await ctx.db.patch("articleCatalog", row._id, { assetId: undefined });
-    });
 
     await expect(
       target.query(async (ctx) => {

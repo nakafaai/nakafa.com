@@ -94,3 +94,6 @@ export function projectTryoutRuntimeContent(input: {
     ),
   };
 }
+
+/** Exact signed question selector authorized by Convex. */
+export type TryoutQuestionSelector = SignedContentAccess["questions"][number];

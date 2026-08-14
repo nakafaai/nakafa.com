@@ -46,23 +46,33 @@ describe("try-out signed content batches", () => {
     ).resolves.toEqual(new TryoutContentBatchOrderError());
   });
 
-  it("fails when one rendered batch is missing", async () => {
-    const plan = planTryoutContentBatches(["question-1"], ["answer-1"]);
-
-    await expect(
-      Effect.runPromise(restoreTryoutContentOrder(plan, []).pipe(Effect.flip))
-    ).resolves.toEqual(new TryoutContentBatchOrderError());
-  });
-
-  it("fails when the immutable selector count no longer matches the batches", async () => {
-    const plan = planTryoutContentBatches(["question-1"], ["answer-1"]);
+  it("fails with a typed error when the rendered batch count changes", async () => {
+    const questions = Array.from(
+      { length: MAX_PROTECTED_RUNTIME_SELECTORS + 1 },
+      (_, index) => `question-${index + 1}`
+    );
+    const plan = planTryoutContentBatches(questions, []);
 
     await expect(
       Effect.runPromise(
-        restoreTryoutContentOrder(
-          { ...plan, selectorCount: plan.selectorCount + 1 },
-          [["rendered:question-1", "rendered:answer-1"]]
-        ).pipe(Effect.flip)
+        restoreTryoutContentOrder(plan, [questions.slice(0, -1)]).pipe(
+          Effect.flip
+        )
+      )
+    ).resolves.toEqual(new TryoutContentBatchOrderError());
+  });
+
+  it("fails with a typed error when the plan count differs from its batches", async () => {
+    const plan = {
+      ...planTryoutContentBatches(["question-1"], []),
+      selectorCount: 2,
+    };
+
+    await expect(
+      Effect.runPromise(
+        restoreTryoutContentOrder(plan, [["rendered:question-1"]]).pipe(
+          Effect.flip
+        )
       )
     ).resolves.toEqual(new TryoutContentBatchOrderError());
   });

@@ -27,7 +27,7 @@ describe("contentRelease/compact", () => {
       await ctx.db.insert("contentIndex", {
         contentKey: "test:compact-0",
         family: "material",
-        locale: "en",
+        appLocale: "en",
         projectionHash: `sha256:${"4".repeat(64)}`,
         publicPath: "test/compact-0",
         releaseId: "release-compact-4",
@@ -53,7 +53,6 @@ describe("contentRelease/compact", () => {
       bindings: await ctx.db.query("contentBindings").collect(),
       heads: await ctx.db.query("contentHeads").collect(),
       items: await ctx.db.query("contentItems").collect(),
-      owners: await ctx.db.query("contentOwners").collect(),
       search: await ctx.db.query("contentIndex").collect(),
       releases: await ctx.db.query("contentReleases").collect(),
       state: await ctx.db.query("contentState").unique(),
@@ -65,7 +64,6 @@ describe("contentRelease/compact", () => {
     ).toMatchObject({ sequence: 3 });
     expect(stored.bindings.map((row) => row.sequence).sort()).toEqual([3, 4]);
     expect(stored.items).toHaveLength(0);
-    expect(stored.owners).toMatchObject([{ managed: true, sequence: 3 }]);
     expect(stored.search).toMatchObject([
       { contentKey: "test:compact-0", sequence: 4 },
     ]);

@@ -4,6 +4,7 @@ import {
   ContentKeySchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   ContentReleaseItemSchema,
   ContentReleaseManifestSchema,
@@ -31,7 +32,7 @@ describe("content proof streams", () => {
         change: {
           contentKey: ContentKeySchema.make(`test:one-pass-${index}`),
           family: "material",
-          locale: "en",
+          artifactLocale: ArtifactLocaleSchema.make("en"),
           operation: "delete",
         },
         index,
@@ -45,7 +46,7 @@ describe("content proof streams", () => {
         snapshot: {
           contentKey: item.change.contentKey,
           family: item.change.family,
-          locale: item.change.locale,
+          artifactLocale: item.change.artifactLocale,
           state: "absent",
         },
       })

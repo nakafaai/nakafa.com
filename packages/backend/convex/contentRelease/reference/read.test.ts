@@ -8,12 +8,7 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content-runtime";
-import {
-  activateMaterialCatalog,
-  advanceMaterialCatalog,
-  insertMaterialProjection,
-  MATERIAL_IDENTITY,
-} from "@repo/backend/test/material-catalog";
+import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { makeQuranSearch } from "@repo/backend/test/quran-rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
 import {
@@ -22,7 +17,6 @@ import {
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout-snapshot";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("contentRelease/reference/read", () => {
@@ -34,7 +28,7 @@ describe("contentRelease/reference/read", () => {
     for (const input of [
       {
         kind: "route" as const,
-        locale: article.locale,
+        appLocale: article.appLocale,
         publicPath: article.publicPath,
       },
       { contentId: article.graph.assetId, kind: "content" as const },
@@ -60,7 +54,7 @@ describe("contentRelease/reference/read", () => {
     for (const input of [
       {
         kind: "route" as const,
-        locale: material.locale,
+        appLocale: material.appLocale,
         publicPath: material.publicPath,
       },
       { contentId: material.graph.assetId, kind: "content" as const },
@@ -78,10 +72,10 @@ describe("contentRelease/reference/read", () => {
     }
   });
 
-  it("resolves one material topic through its signed lesson representative", async () => {
+  it("resolves current signed material topics by route and graph identity", async () => {
     const target = convexTest(schema, convexModules);
     const material = makeMaterialProjection("en", 1);
-    const topic = await Effect.runPromise(
+    const topic = await runConvexProgram(
       deriveMaterialTopicReference(material)
     );
     await activateMaterialCatalog(target, [material]);
@@ -89,7 +83,7 @@ describe("contentRelease/reference/read", () => {
     for (const input of [
       {
         kind: "route" as const,
-        locale: topic.locale,
+        appLocale: topic.appLocale,
         publicPath: topic.publicPath,
       },
       { contentId: topic.graph.assetId, kind: "content" as const },
@@ -107,65 +101,30 @@ describe("contentRelease/reference/read", () => {
     }
   });
 
-  it("resolves inherited material lessons and topics at the active sequence", async () => {
-    const target = convexTest(schema, convexModules);
-    const material = makeMaterialProjection("en", 1);
-    const topic = await Effect.runPromise(
-      deriveMaterialTopicReference(material)
-    );
-    await activateMaterialCatalog(target);
-    await advanceMaterialCatalog(target);
-
-    for (const expected of [
-      {
-        contentId: material.graph.assetId,
-        route: material.publicPath,
-        title: material.metadata.title,
-      },
-      {
-        contentId: topic.graph.assetId,
-        route: topic.publicPath,
-        title: topic.title,
-      },
-    ]) {
-      await expect(
-        target.query((ctx) =>
-          runConvexProgram(
-            readContentReference(ctx, {
-              contentId: expected.contentId,
-              kind: "content",
-            })
-          )
-        )
-      ).resolves.toMatchObject({
-        content_id: expected.contentId,
-        route: expected.route,
-        section: "material",
-        title: expected.title,
-      });
-    }
-  });
-
   it("resolves one active signed Quran identity", async () => {
     const target = convexTest(schema, convexModules);
     const quran = makeQuranSearch("en", 1);
     await target.mutation((ctx) => activateQuranSnapshot(ctx, [quran]));
 
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readContentReference(ctx, {
-            contentId: quran.graph.assetId,
-            kind: "content",
-          })
+    for (const input of [
+      { contentId: quran.graph.assetId, kind: "content" as const },
+      {
+        kind: "route" as const,
+        appLocale: quran.appLocale,
+        publicPath: quran.route,
+      },
+    ]) {
+      await expect(
+        target.query((ctx) =>
+          runConvexProgram(readContentReference(ctx, input))
         )
-      )
-    ).resolves.toMatchObject({
-      content_id: quran.graph.assetId,
-      route: quran.route,
-      section: "quran",
-      title: quran.title,
-    });
+      ).resolves.toMatchObject({
+        content_id: quran.graph.assetId,
+        route: quran.route,
+        section: "quran",
+        title: quran.title,
+      });
+    }
   });
 
   it("resolves one active signed try-out identity", async () => {
@@ -181,22 +140,52 @@ describe("contentRelease/reference/read", () => {
       })
     );
 
+    for (const input of [
+      { contentId: tryout.graph.assetId, kind: "content" as const },
+      {
+        kind: "route" as const,
+        appLocale: "en" as const,
+        publicPath: "try-out/indonesia",
+      },
+    ]) {
+      await expect(
+        target.query((ctx) =>
+          runConvexProgram(readContentReference(ctx, input))
+        )
+      ).resolves.toMatchObject({
+        content_id: tryout.graph.assetId,
+        route: "try-out/indonesia",
+        section: "tryout",
+        title: tryout.title,
+      });
+    }
+  });
+
+  it("rejects a Quran asset index that drifted from its signed row", async () => {
+    const target = convexTest(schema, convexModules);
+    const quran = makeQuranSearch("en", 1);
+    const other = makeQuranSearch("en", 2);
+    await target.mutation((ctx) => activateQuranSnapshot(ctx, [quran]));
+    await target.mutation(async (ctx) => {
+      const search = await ctx.db.query("quranSearch").unique();
+      if (!search) {
+        throw new Error("Expected one Quran search fixture.");
+      }
+      await ctx.db.patch("quranSearch", search._id, {
+        assetId: other.graph.assetId,
+      });
+    });
+
     await expect(
       target.query((ctx) =>
         runConvexProgram(
           readContentReference(ctx, {
-            kind: "route",
-            locale: "en",
-            publicPath: "try-out/indonesia",
+            contentId: other.graph.assetId,
+            kind: "content",
           })
         )
       )
-    ).resolves.toMatchObject({
-      content_id: tryout.graph.assetId,
-      route: "try-out/indonesia",
-      section: "tryout",
-      title: tryout.title,
-    });
+    ).rejects.toThrow("changed its signed projection");
   });
 
   it("returns null when no active signed family owns the identity", async () => {
@@ -207,59 +196,22 @@ describe("contentRelease/reference/read", () => {
         runConvexProgram(
           readContentReference(ctx, {
             kind: "route",
-            locale: "en",
+            appLocale: "en",
             publicPath: "articles/missing/item",
           })
         )
       )
     ).resolves.toBeNull();
-  });
-
-  it("does not authenticate an unrelated try-out catalog", async () => {
-    const target = convexTest(schema, convexModules);
-    const material = makeMaterialProjection("en", 1);
-    await target.mutation(async (ctx) => {
-      await activateTryoutSnapshot(ctx, {
-        catalog: [
-          makeTryoutCatalogRow("en").record.row,
-          makeTryoutCatalogRow("id").record.row,
-        ],
-        placements: [
-          makeTryoutPlacementRow("en").record.row,
-          makeTryoutPlacementRow("id").record.row,
-        ],
-      });
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        throw new Error("Expected one active signed publication.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        materialManifestHash: MATERIAL_IDENTITY.manifestHash,
-        materialReleaseId: MATERIAL_IDENTITY.releaseId,
-        materialSequence: MATERIAL_IDENTITY.sequence,
-      });
-      await insertMaterialProjection(ctx, material);
-      const unrelated = await ctx.db.query("tryoutCatalog").first();
-      if (!unrelated) {
-        throw new Error("Expected one unrelated try-out row.");
-      }
-      await ctx.db.patch("tryoutCatalog", unrelated._id, {
-        rowJson: "invalid-unrelated-row",
-      });
-    });
 
     await expect(
       target.query((ctx) =>
         runConvexProgram(
           readContentReference(ctx, {
-            contentId: material.graph.assetId,
+            contentId: "not-a-current-graph-asset",
             kind: "content",
           })
         )
       )
-    ).resolves.toMatchObject({
-      content_id: material.graph.assetId,
-      section: "material",
-    });
+    ).resolves.toBeNull();
   });
 });

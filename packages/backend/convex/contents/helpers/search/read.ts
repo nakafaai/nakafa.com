@@ -1,5 +1,5 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
+import { loadSearchOwner } from "@repo/backend/convex/contentRelease/search/owner";
 import { interleaveSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
 import {
   getPublishedSearchFamilies,

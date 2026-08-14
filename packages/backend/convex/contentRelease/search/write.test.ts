@@ -32,7 +32,7 @@ function testHead(options?: {
     delivery: options?.delivery ?? "public",
     family: "material",
     index: 0,
-    locale: "en",
+    artifactLocale: "en",
     operation: options?.operation ?? "upsert",
     projectionHash: options?.projectionHash ?? TEST_DIGEST,
     projectionJson: testProjectionJson(),
@@ -50,7 +50,7 @@ function materialProjection() {
     JSON.parse(
       testProjectionJson({
         contentKey: "test:search",
-        publicPath: "test/search",
+        publicPath: "subjects/test/search",
         title: "Search title",
       })
     )
@@ -69,7 +69,7 @@ function questionProjection() {
     ],
     contentKey: `${questionKey}/question`,
     kind: "question-body",
-    locale: "en",
+    artifactLocale: "en",
     metadata: {
       authors: [{ name: "Nakafa" }],
       date: "2026-07-24",
@@ -105,7 +105,7 @@ describe("contentRelease/search/write", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       contentKey: "test:search",
-      publicPath: "test/search",
+      publicPath: "subjects/test/search",
       sequence: 2,
       text: expect.stringContaining("Next"),
     });
@@ -173,10 +173,10 @@ describe("contentRelease/search/write", () => {
     await t.mutation((ctx) => write(ctx, head));
     await t.mutation(async (ctx) => {
       await runConvexProgram(
-        deleteSearchEntry(ctx, head.contentKey, head.locale)
+        deleteSearchEntry(ctx, head.contentKey, head.artifactLocale)
       );
       await runConvexProgram(
-        deleteSearchEntry(ctx, head.contentKey, head.locale)
+        deleteSearchEntry(ctx, head.contentKey, head.artifactLocale)
       );
     });
 

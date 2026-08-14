@@ -78,15 +78,14 @@ export const readSetAttemptPage = Effect.fn(
     request.attemptId,
     auth.appUser._id
   );
-  if (
-    !attempt ||
-    attempt.locale !== request.locale ||
-    attempt.setPublicPath !== request.publicPath
-  ) {
+  if (!attempt || attempt.setPublicPath !== request.publicPath) {
     return null;
   }
 
   const identity = readAttemptSetIdentity(attempt);
+  if (identity.locale !== request.locale) {
+    return null;
+  }
   const { loaded, page, restartTarget } = yield* Effect.all(
     {
       loaded: loadSetAttemptState(ctx, attempt),
@@ -149,7 +148,11 @@ export const readSectionAttemptPage = Effect.fn(
     request.attemptId,
     auth.appUser._id
   );
-  if (!attempt || attempt.locale !== request.locale) {
+  if (!attempt) {
+    return null;
+  }
+  const identity = readAttemptSetIdentity(attempt);
+  if (identity.locale !== request.locale) {
     return null;
   }
   const snapshot = attempt.sectionSnapshots.find(
@@ -159,7 +162,6 @@ export const readSectionAttemptPage = Effect.fn(
     return null;
   }
 
-  const identity = readAttemptSetIdentity(attempt);
   const { destinations, loaded, page } = yield* Effect.all(
     {
       destinations: readTryoutDestinationPaths(ctx, {
@@ -196,7 +198,7 @@ const loadCurrentSetPage = Effect.fn("tryouts.attemptPage.loadCurrentSetPage")(
         loaded: loadSetAttemptState(ctx, attempt),
         page: readAttemptSetPage(
           ctx,
-          { locale: attempt.locale, publicPath: attempt.setPublicPath },
+          { locale: identity.locale, publicPath: attempt.setPublicPath },
           attempt,
           identity
         ),

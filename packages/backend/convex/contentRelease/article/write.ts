@@ -12,20 +12,20 @@ import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
 type ContentHead = WithoutSystemFields<Doc<"contentHeads">>;
-type ContentLocale = Doc<"articleCatalog">["locale"];
+type AppLocale = Doc<"articleCatalog">["appLocale"];
 type ArticleEntry = WithoutSystemFields<Doc<"articleCatalog">>;
 
 /** Loads the sole active article row for one locale-specific content identity. */
 const loadArticle = Effect.fn("contentRelease.loadArticle")(function* (
   ctx: MutationCtx,
   contentKey: string,
-  locale: ContentLocale
+  appLocale: AppLocale
 ) {
   return yield* Effect.promise(() =>
     ctx.db
       .query("articleCatalog")
-      .withIndex("by_contentKey_and_locale", (index) =>
-        index.eq("contentKey", contentKey).eq("locale", locale)
+      .withIndex("by_contentKey_and_appLocale", (index) =>
+        index.eq("contentKey", contentKey).eq("appLocale", appLocale)
       )
       .unique()
   );
@@ -34,14 +34,14 @@ const loadArticle = Effect.fn("contentRelease.loadArticle")(function* (
 /** Loads the sole active localized row for one article category. */
 const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
   ctx: MutationCtx,
-  locale: ContentLocale,
+  appLocale: AppLocale,
   category: string
 ) {
   return yield* Effect.promise(() =>
     ctx.db
       .query("articleCategories")
-      .withIndex("by_locale_and_category", (index) =>
-        index.eq("locale", locale).eq("category", category)
+      .withIndex("by_appLocale_and_category", (index) =>
+        index.eq("appLocale", appLocale).eq("category", category)
       )
       .unique()
   );
@@ -50,10 +50,10 @@ const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
 /** Converts one active article into its category representative row. */
 function categoryRow(article: ArticleEntry) {
   return {
+    appLocale: article.appLocale,
     bucket: article.bucket,
     category: article.category,
     contentKey: article.contentKey,
-    locale: article.locale,
     projectionHash: article.projectionHash,
     releaseId: article.releaseId,
     rendererDomain: article.rendererDomain,
@@ -65,7 +65,11 @@ function categoryRow(article: ArticleEntry) {
 /** Claims one category identity while rejecting contradictions in one release. */
 const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
   function* (ctx: MutationCtx, article: ArticleEntry) {
-    const existing = yield* loadCategory(ctx, article.locale, article.category);
+    const existing = yield* loadCategory(
+      ctx,
+      article.appLocale,
+      article.category
+    );
     if (
       existing?.sequence === article.sequence &&
       (existing.title !== article.categoryTitle ||
@@ -73,7 +77,7 @@ const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Article category ${article.locale}/${article.category} conflicts within release ${article.releaseId}.`
+        `Article category ${article.appLocale}/${article.category} conflicts within release ${article.releaseId}.`
       );
     }
     const row = categoryRow(article);
@@ -86,31 +90,38 @@ const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
       if (existing.bucket !== row.bucket) {
         yield* adjustArticleBucket(
           ctx,
-          existing.locale,
+          existing.appLocale,
           existing.bucket,
           "category",
           -1
         );
-        yield* adjustArticleBucket(ctx, row.locale, row.bucket, "category", 1);
+        yield* adjustArticleBucket(
+          ctx,
+          row.appLocale,
+          row.bucket,
+          "category",
+          1
+        );
       }
       yield* Effect.promise(() =>
         ctx.db.replace("articleCategories", existing._id, row)
       );
       return;
     }
-    yield* adjustArticleBucket(ctx, row.locale, row.bucket, "category", 1);
+    yield* adjustArticleBucket(ctx, row.appLocale, row.bucket, "category", 1);
     yield* Effect.promise(() => ctx.db.insert("articleCategories", row));
   }
 );
 
 /** Rebuilds one category after its selected article moves or disappears. */
 const reconcileCategory = Effect.fn("contentRelease.reconcileArticleCategory")(
-  function* (ctx: MutationCtx, locale: ContentLocale, category: string) {
+  function* (ctx: MutationCtx, appLocale: AppLocale, category: string) {
     const articles = yield* Effect.promise(() =>
       ctx.db
         .query("articleCatalog")
-        .withIndex("by_locale_and_category_and_date_and_contentKey", (index) =>
-          index.eq("locale", locale).eq("category", category)
+        .withIndex(
+          "by_appLocale_and_category_and_date_and_contentKey",
+          (index) => index.eq("appLocale", appLocale).eq("category", category)
         )
         .order("desc")
         .take(1)
@@ -120,11 +131,11 @@ const reconcileCategory = Effect.fn("contentRelease.reconcileArticleCategory")(
       yield* writeCategory(ctx, representative);
       return;
     }
-    const existing = yield* loadCategory(ctx, locale, category);
+    const existing = yield* loadCategory(ctx, appLocale, category);
     if (existing) {
       yield* adjustArticleBucket(
         ctx,
-        existing.locale,
+        existing.appLocale,
         existing.bucket,
         "category",
         -1
@@ -149,28 +160,28 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     !head.projectionHash ||
     !head.rendererDomain ||
     projection.contentKey !== head.contentKey ||
-    projection.locale !== head.locale
+    projection.artifactLocale !== head.artifactLocale
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Article entry ${head.contentKey}/${head.locale} lost its public identity.`
+      `Article entry ${head.contentKey}/${head.artifactLocale} lost its public identity.`
     );
   }
   const bucket = getHashBucket(head.projectionHash);
   if (!bucket) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Article entry ${head.contentKey}/${head.locale} has an invalid projection hash.`
+      `Article entry ${head.contentKey}/${head.artifactLocale} has an invalid projection hash.`
     );
   }
   const entry = {
+    appLocale: projection.appLocale,
     assetId: projection.graph.assetId,
     bucket,
     category: projection.category,
     categoryTitle: projection.categoryTitle,
     contentKey: head.contentKey,
     date: projection.metadata.date,
-    locale: head.locale,
     projectionHash: head.projectionHash,
     publicPath: projection.publicPath,
     releaseId: head.releaseId,
@@ -182,26 +193,42 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     entry,
     READ_MODEL_DOCUMENT_LIMIT
   );
-  const existing = yield* loadArticle(ctx, head.contentKey, head.locale);
+  const existing = yield* loadArticle(
+    ctx,
+    head.contentKey,
+    projection.appLocale
+  );
   if (existing) {
     if (existing.bucket !== entry.bucket) {
       yield* adjustArticleBucket(
         ctx,
-        existing.locale,
+        existing.appLocale,
         existing.bucket,
         "article",
         -1
       );
-      yield* adjustArticleBucket(ctx, entry.locale, entry.bucket, "article", 1);
+      yield* adjustArticleBucket(
+        ctx,
+        entry.appLocale,
+        entry.bucket,
+        "article",
+        1
+      );
     }
     yield* Effect.promise(() =>
       ctx.db.replace("articleCatalog", existing._id, entry)
     );
     if (existing.category !== entry.category) {
-      yield* reconcileCategory(ctx, head.locale, existing.category);
+      yield* reconcileCategory(ctx, projection.appLocale, existing.category);
     }
   } else {
-    yield* adjustArticleBucket(ctx, entry.locale, entry.bucket, "article", 1);
+    yield* adjustArticleBucket(
+      ctx,
+      entry.appLocale,
+      entry.bucket,
+      "article",
+      1
+    );
     yield* Effect.promise(() => ctx.db.insert("articleCatalog", entry));
   }
   yield* writeCategory(ctx, entry);
@@ -209,19 +236,19 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
 
 /** Deletes one active article row and reconciles its former category. */
 export const deleteArticle = Effect.fn("contentRelease.deleteArticle")(
-  function* (ctx: MutationCtx, contentKey: string, locale: ContentLocale) {
-    const existing = yield* loadArticle(ctx, contentKey, locale);
+  function* (ctx: MutationCtx, contentKey: string, appLocale: AppLocale) {
+    const existing = yield* loadArticle(ctx, contentKey, appLocale);
     if (!existing) {
       return;
     }
     yield* adjustArticleBucket(
       ctx,
-      existing.locale,
+      existing.appLocale,
       existing.bucket,
       "article",
       -1
     );
     yield* Effect.promise(() => ctx.db.delete("articleCatalog", existing._id));
-    yield* reconcileCategory(ctx, locale, existing.category);
+    yield* reconcileCategory(ctx, appLocale, existing.category);
   }
 );

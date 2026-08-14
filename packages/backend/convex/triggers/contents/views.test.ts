@@ -37,7 +37,7 @@ describe("triggers/contents/views", () => {
       .mutation(api.contents.mutations.views.recordContentView, {
         contentId: projection.graph.assetId,
         deviceId: "device-1",
-        locale: projection.locale,
+        locale: "en",
         publicPath: projection.publicPath,
         section: "articles",
       });
@@ -62,7 +62,7 @@ describe("triggers/contents/views", () => {
                 is_new_view: true,
                 learning_object_id: projection.graph.learningObjectId,
                 lens_id: projection.graph.lensId,
-                locale: projection.locale,
+                locale: "en",
                 route: projection.publicPath,
               }),
             }),

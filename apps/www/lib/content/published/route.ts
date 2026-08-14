@@ -3,6 +3,10 @@ import "server-only";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
+  type AppLocale,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
   familyForProjection,
   RoutedContentProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/spec";
@@ -51,7 +55,7 @@ const decodeActiveProjection = Effect.fn(
   input: Extract<ContentRouteResult, { readonly kind: "found" }>,
   identity: {
     readonly family: ContentFamily;
-    readonly locale: ContentRouteArgs["locale"];
+    readonly appLocale: AppLocale;
     readonly publicPath: string;
   }
 ) {
@@ -65,7 +69,7 @@ const decodeActiveProjection = Effect.fn(
   ).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
   if (
     familyForProjection(projection) !== identity.family ||
-    projection.locale !== identity.locale ||
+    projection.appLocale !== identity.appLocale ||
     projection.publicPath !== identity.publicPath
   ) {
     return yield* new PublishedProjectionError(identity);
@@ -77,6 +81,7 @@ const decodeActiveProjection = Effect.fn(
 export const readActiveContentRoute = Effect.fn(
   "NakafaContent.readActiveContentRoute"
 )(function* (input: ActiveContentRouteInput) {
+  const appLocale = AppLocaleSchema.make(input.appLocale);
   if (input.activeReleaseId === null) {
     return {
       activeReleaseId: null,
@@ -85,8 +90,8 @@ export const readActiveContentRoute = Effect.fn(
   }
 
   const args = {
+    appLocale,
     family: input.family,
-    locale: input.locale,
     publicPath: input.publicPath,
   };
   const result = yield* readRuntimeQuery(

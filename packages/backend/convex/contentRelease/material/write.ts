@@ -19,19 +19,19 @@ import { Effect } from "effect";
 type PublicProjection = NonNullable<
   Effect.Effect.Success<ReturnType<typeof resolvePublicProjection>>
 >;
-type ContentLocale = Doc<"materialCatalog">["locale"];
+type AppLocale = Doc<"materialCatalog">["appLocale"];
 
 /** Loads the sole active material row for one localized content identity. */
 const loadMaterial = Effect.fn("contentRelease.loadMaterial")(function* (
   ctx: MutationCtx,
   contentKey: string,
-  locale: ContentLocale
+  appLocale: AppLocale
 ) {
   return yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_contentKey_and_locale", (index) =>
-        index.eq("contentKey", contentKey).eq("locale", locale)
+      .withIndex("by_contentKey_and_appLocale", (index) =>
+        index.eq("contentKey", contentKey).eq("appLocale", appLocale)
       )
       .unique()
   );
@@ -50,12 +50,13 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
       !head.rendererDomain ||
       !head.sourcePath ||
       projection.contentKey !== head.contentKey ||
-      projection.locale !== head.locale ||
+      projection.appLocale !== head.appLocale ||
+      projection.artifactLocale !== head.artifactLocale ||
       projection.publicPath !== head.publicPath
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Material entry ${head.contentKey}/${head.locale} lost its public identity.`
+        `Material entry ${head.contentKey}/${head.appLocale} lost its public identity.`
       );
     }
     const projectionJson = canonicalizeMaterialProjection(projection);
@@ -69,23 +70,23 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Material entry ${head.contentKey}/${head.locale} changed its projection.`
+        `Material entry ${head.contentKey}/${head.appLocale} changed its projection.`
       );
     }
     const bucket = getHashBucket(projectionHash);
     if (!bucket) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Material entry ${head.contentKey}/${head.locale} has an invalid projection hash.`
+        `Material entry ${head.contentKey}/${head.appLocale} has an invalid projection hash.`
       );
     }
     const topic = yield* deriveMaterialTopicReference(projection);
     const row = {
+      appLocale: head.appLocale,
       assetId: projection.graph.assetId,
       bucket,
       contentKey: head.contentKey,
       date: projection.metadata.date,
-      locale: head.locale,
       materialKey: projection.materialKey,
       order: projection.order,
       parentPath: projection.parentPath,
@@ -103,30 +104,35 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
       row,
       READ_MODEL_DOCUMENT_LIMIT
     );
-    const existing = yield* loadMaterial(ctx, head.contentKey, head.locale);
+    const existing = yield* loadMaterial(ctx, head.contentKey, head.appLocale);
     if (existing) {
       if (existing.bucket !== row.bucket) {
-        yield* adjustMaterialBucket(ctx, existing.locale, existing.bucket, -1);
-        yield* adjustMaterialBucket(ctx, row.locale, row.bucket, 1);
+        yield* adjustMaterialBucket(
+          ctx,
+          existing.appLocale,
+          existing.bucket,
+          -1
+        );
+        yield* adjustMaterialBucket(ctx, row.appLocale, row.bucket, 1);
       }
       yield* Effect.promise(() =>
         ctx.db.replace("materialCatalog", existing._id, row)
       );
       return;
     }
-    yield* adjustMaterialBucket(ctx, row.locale, row.bucket, 1);
+    yield* adjustMaterialBucket(ctx, row.appLocale, row.bucket, 1);
     yield* Effect.promise(() => ctx.db.insert("materialCatalog", row));
   }
 );
 
 /** Deletes one active localized material row when its head disappears. */
 export const deleteMaterial = Effect.fn("contentRelease.deleteMaterial")(
-  function* (ctx: MutationCtx, contentKey: string, locale: ContentLocale) {
-    const existing = yield* loadMaterial(ctx, contentKey, locale);
+  function* (ctx: MutationCtx, contentKey: string, appLocale: AppLocale) {
+    const existing = yield* loadMaterial(ctx, contentKey, appLocale);
     if (!existing) {
       return;
     }
-    yield* adjustMaterialBucket(ctx, existing.locale, existing.bucket, -1);
+    yield* adjustMaterialBucket(ctx, existing.appLocale, existing.bucket, -1);
     yield* Effect.promise(() => ctx.db.delete("materialCatalog", existing._id));
   }
 );

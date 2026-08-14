@@ -85,9 +85,9 @@ describe("published material catalog", () => {
       stale: false,
     });
     expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+      appLocale: "en",
       expectedManifestHash: null,
       expectedReleaseId: null,
-      locale: "en",
       paginationOpts: { cursor: null, numItems: PROJECTION_PAGE_LIMIT },
     });
   });
@@ -102,9 +102,9 @@ describe("published material catalog", () => {
       sourceRevision,
     });
     expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
+      appLocale: "en",
       expectedManifestHash: manifestHash,
       expectedReleaseId: releaseId,
-      locale: "en",
       paginationOpts: { cursor: "next", numItems: PROJECTION_PAGE_LIMIT },
     });
     expect(cacheMock).toHaveBeenCalledOnce();

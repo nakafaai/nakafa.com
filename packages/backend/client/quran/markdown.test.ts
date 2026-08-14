@@ -21,7 +21,7 @@ describe("signed Quran markdown decoder", () => {
   it("preserves the exact fields rendered by markdown consumers", async () => {
     const markdown = await Effect.runPromise(
       decodePublishedQuranMarkdown(markdownResult(), {
-        locale: "en",
+        appLocale: "en",
         surahNumber: 1,
       })
     );
@@ -39,14 +39,14 @@ describe("signed Quran markdown decoder", () => {
       Effect.either(
         decodePublishedQuranMarkdown(
           { ...markdownResult(), surah: null, verses: [] },
-          { locale: "en", surahNumber: 1 }
+          { appLocale: "en", surahNumber: 1 }
         )
       )
     );
     const mismatched = await Effect.runPromise(
       Effect.either(
         decodePublishedQuranMarkdown(markdownResult(), {
-          locale: "en",
+          appLocale: "en",
           surahNumber: 2,
         })
       )
@@ -68,7 +68,7 @@ describe("signed Quran markdown decoder", () => {
     await expect(
       Effect.runPromise(
         decodePublishedQuranMarkdown(bounded, {
-          locale: "en",
+          appLocale: "en",
           surahNumber: 1,
           verseLimit: 80,
         })
@@ -79,7 +79,7 @@ describe("signed Quran markdown decoder", () => {
         Effect.either(
           decodePublishedQuranMarkdown(
             { ...bounded, toVerse: 81 },
-            { locale: "en", surahNumber: 1, verseLimit: 80 }
+            { appLocale: "en", surahNumber: 1, verseLimit: 80 }
           )
         )
       )
@@ -90,14 +90,14 @@ describe("signed Quran markdown decoder", () => {
   });
 });
 
-/** Builds one complete locale-specific signed markdown response. */
+/** Builds one complete app-locale signed markdown response. */
 function markdownResult(
   numberOfVerses = 1,
   toVerse = numberOfVerses
 ): QuranMarkdownResult {
   return {
     ...source,
-    locale: "en",
+    appLocale: "en",
     surah: {
       name: { translation: "The Opening", transliteration: "Al-Fatihah" },
       number: 1,

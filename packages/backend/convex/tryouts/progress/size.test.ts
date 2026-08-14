@@ -7,11 +7,11 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const compactProgress = Object.freeze({
+  appLocale: "id",
   attemptNumber: 1,
   countryKey: "indonesia",
   examKey: "snbt",
   latestAttemptId: "attempt-id",
-  locale: "id",
   publishedScore: null,
   setIdentity: "id\0set\0indonesia\0snbt\u0417\0set-1\0",
   setKey: "set-1",

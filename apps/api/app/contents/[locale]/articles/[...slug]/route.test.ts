@@ -68,9 +68,9 @@ describe("article content API route", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(page);
     expect(runtimeMocks.getArticleApiContentPage).toHaveBeenCalledWith({
+      appLocale: "en",
       cursor: null,
       limit: 100,
-      locale: "en",
       prefix: "articles/politics",
     });
   });
@@ -99,9 +99,9 @@ describe("article content API route", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(page);
     expect(runtimeMocks.getArticleApiContentPage).toHaveBeenCalledWith({
+      appLocale: "en",
       cursor: "page-1",
       limit: 1,
-      locale: "en",
       prefix: "articles/politics",
     });
   });

@@ -1,4 +1,5 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
@@ -35,7 +36,7 @@ export const readOwnedAttempts = Effect.fn("tryouts.runtime.readOwnedAttempts")(
 );
 
 /** Reads the newest attempt for one user and signed set. */
-const readLatestOwnedAttempt = Effect.fn(
+export const readLatestOwnedAttempt = Effect.fn(
   "tryouts.runtime.readLatestOwnedAttempt"
 )(function* (ctx: QueryCtx, owner: AttemptOwnerIdentity) {
   const attempts = yield* readOwnedAttempts(ctx, owner, 1);
@@ -46,11 +47,11 @@ const readLatestOwnedAttempt = Effect.fn(
 export const readLatestAttempt = Effect.fn("tryouts.runtime.readLatestAttempt")(
   function* (ctx: QueryCtx, identity: TryoutSetIdentity, userId: UserId) {
     return yield* readLatestOwnedAttempt(ctx, {
-      setIdentity: tryoutCatalogIdentity({
+      setIdentity: tryoutCatalogNodeIdentity({
+        appLocale: AppLocaleSchema.make(identity.locale),
         countryKey: identity.countryKey,
         examKey: identity.examKey,
         kind: "set",
-        locale: identity.locale,
         setKey: identity.setKey,
         trackKey: identity.trackKey,
       }),
@@ -66,11 +67,11 @@ export const readLatestAttempt = Effect.fn("tryouts.runtime.readLatestAttempt")(
 export const readLatestProgressAttempt = Effect.fn(
   "tryouts.runtime.readLatestProgressAttempt"
 )(function* (ctx: QueryCtx, identity: TryoutSetIdentity, userId: UserId) {
-  const setIdentity = tryoutCatalogIdentity({
+  const setIdentity = tryoutCatalogNodeIdentity({
+    appLocale: AppLocaleSchema.make(identity.locale),
     countryKey: identity.countryKey,
     examKey: identity.examKey,
     kind: "set",
-    locale: identity.locale,
     setKey: identity.setKey,
     trackKey: identity.trackKey,
   });
@@ -89,9 +90,14 @@ export const readLatestProgressAttempt = Effect.fn(
   const attempt = yield* tryRuntimePromise(() =>
     ctx.db.get(progress.latestAttemptId)
   );
-  if (
-    !(attempt && matchesProgressAttempt(attempt, progress, identity, userId))
-  ) {
+  if (!attempt) {
+    return yield* new TryoutRuntimeError({
+      code: "TRYOUT_PROGRESS_ATTEMPT_MISMATCH",
+      message: "Try-out progress no longer identifies its latest attempt.",
+    });
+  }
+  const matches = matchesProgressAttempt(attempt, progress, identity, userId);
+  if (!matches) {
     return yield* new TryoutRuntimeError({
       code: "TRYOUT_PROGRESS_ATTEMPT_MISMATCH",
       message: "Try-out progress no longer identifies its latest attempt.",
@@ -113,13 +119,11 @@ export const readOwnedAttemptById = Effect.fn(
 });
 
 /** Reads the complete identity persisted on every signed attempt. */
-export function readAttemptSetIdentity(
-  attempt: TryoutAttempt
-): TryoutSetIdentity {
+export function readAttemptSetIdentity(attempt: TryoutAttempt) {
   return {
     countryKey: attempt.countryKey,
     examKey: attempt.examKey,
-    locale: attempt.locale,
+    locale: attempt.appLocale,
     setKey: attempt.setKey,
     trackKey: attempt.trackKey,
   };
@@ -146,10 +150,17 @@ function matchesProgressAttempt(
   identity: TryoutSetIdentity,
   userId: UserId
 ) {
-  if (!matchesAttemptIdentity(progress, identity)) {
+  if (
+    progress.appLocale !== identity.locale ||
+    progress.countryKey !== identity.countryKey ||
+    progress.examKey !== identity.examKey ||
+    progress.setKey !== identity.setKey ||
+    progress.trackKey !== identity.trackKey
+  ) {
     return false;
   }
-  if (!matchesAttemptIdentity(readAttemptSetIdentity(attempt), identity)) {
+  const attemptIdentity = readAttemptSetIdentity(attempt);
+  if (!matchesAttemptIdentity(attemptIdentity, identity)) {
     return false;
   }
   if (
@@ -176,7 +187,14 @@ export const readAttemptHistoryPageBySet = Effect.fn(
   userId: UserId,
   pagination: PaginationOptions
 ) {
-  const setIdentity = tryoutCatalogIdentity({ ...identity, kind: "set" });
+  const setIdentity = tryoutCatalogNodeIdentity({
+    appLocale: AppLocaleSchema.make(identity.locale),
+    countryKey: identity.countryKey,
+    examKey: identity.examKey,
+    kind: "set",
+    setKey: identity.setKey,
+    trackKey: identity.trackKey,
+  });
   return yield* tryRuntimePromise(() =>
     ctx.db
       .query("tryoutAttempts")

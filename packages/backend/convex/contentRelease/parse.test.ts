@@ -1,3 +1,4 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
@@ -36,11 +37,15 @@ import { describe, expect, it } from "vitest";
 /** Creates exact server-derived evidence for strict proof decoding. */
 function testProofJson() {
   return JSON.stringify({
+    activeAppLocales: ACTIVE_APP_LOCALE_CODES,
+    baseActiveAppLocales: null,
+    baseEditorialReviewDigest: null,
     baseManifestHash: null,
     baseReleaseId: null,
     baseResultCount: 0,
     baseResultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     deleteHeads: 0,
+    editorialReviewDigest: TEST_DIGEST,
     itemCount: 1,
     itemsDigest: TEST_DIGEST,
     manifestHash: TEST_MANIFEST_HASH,

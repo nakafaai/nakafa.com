@@ -6,7 +6,7 @@ import { decodePublishedArticle } from "@/lib/content/published/projection";
 import { testArticleProjection } from "@/test/content-article";
 
 const articleIdentity = {
-  locale: "en",
+  appLocale: testArticleProjection.appLocale,
   publicPath: testArticleProjection.publicPath,
 } satisfies Parameters<typeof decodePublishedArticle>[1];
 
@@ -27,7 +27,7 @@ describe("published projection", () => {
       )
     ).resolves.toMatchObject({
       _tag: "PublishedProjectionError",
-      locale: "en",
+      appLocale: testArticleProjection.appLocale,
       publicPath: "articles/politics/other",
     });
 

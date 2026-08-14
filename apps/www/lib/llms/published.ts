@@ -1,10 +1,8 @@
 import "server-only";
 
-import type {
-  ContentFamily,
-  ContentLocale,
-} from "@nakafa/aksara-contracts/content";
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
+import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import { projectMdxForAgentMarkdown } from "@repo/contents/_types/llms/mdx";
 import { Effect } from "effect";
 import { applyPublishedContentCache } from "@/lib/content/cache";
@@ -21,15 +19,15 @@ export interface PublishedMarkdownInput {
   readonly activeReleaseId: Parameters<
     typeof readPublishedArticle
   >[0]["activeReleaseId"];
+  readonly appLocale: AppLocale;
   readonly family: PublishedMarkdownFamily;
-  readonly locale: ContentLocale;
   readonly publicPath: string;
 }
 
 /** Builds agent markdown from reviewed MDX and immutable Git provenance. */
 const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   description,
-  locale,
+  appLocale,
   publicPath,
   rawMdx,
   sourcePath,
@@ -37,7 +35,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   title,
 }: {
   description: string;
-  locale: ContentLocale;
+  appLocale: AppLocale;
   publicPath: string;
   rawMdx: string;
   sourcePath: string;
@@ -57,7 +55,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
       description,
       source,
       title,
-      url: `${BASE_URL}/${locale}/${publicPath}`,
+      url: `${BASE_URL}/${appLocale}/${publicPath}`,
     }),
     body,
   ].join("\n");
@@ -102,7 +100,7 @@ export async function getCachedPublishedText(input: PublishedMarkdownInput) {
   return await Effect.runPromise(
     buildPublishedText({
       description: data.description,
-      locale: input.locale,
+      appLocale: input.appLocale,
       publicPath: data.publicPath,
       rawMdx: data.rawMdx,
       sourcePath: data.sourcePath,

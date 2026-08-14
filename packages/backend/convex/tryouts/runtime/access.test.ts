@@ -31,7 +31,7 @@ describe("tryouts/runtime/access", () => {
       return Effect.runPromise(
         readOwnedTryoutSectionContent(ctx, {
           attempt,
-          locale: "id",
+          appLocale: "id",
           sectionKey: TRYOUT_SECTION_KEY,
         })
       );
@@ -63,7 +63,7 @@ describe("tryouts/runtime/access", () => {
       return Effect.runPromise(
         readOwnedTryoutSectionContent(ctx, {
           attempt,
-          locale: "id",
+          appLocale: "id",
           sectionKey: TRYOUT_SECTION_KEY,
         })
       );
@@ -117,7 +117,7 @@ describe("tryouts/runtime/access", () => {
         return Effect.runPromise(
           readOwnedTryoutSectionContent(ctx, {
             attempt,
-            locale: "id",
+            appLocale: "id",
             sectionKey: TRYOUT_SECTION_KEY,
           })
         );

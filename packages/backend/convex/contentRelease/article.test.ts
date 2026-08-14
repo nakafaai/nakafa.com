@@ -22,7 +22,7 @@ describe("contentRelease/article", () => {
     const categoryPage = await t.query(categories, {
       expectedManifestHash: null,
       expectedReleaseId: null,
-      locale: "en",
+      appLocale: "en",
       paginationOpts: { cursor: null, numItems: 2 },
     });
     expect(categoryPage).toMatchObject({
@@ -42,17 +42,17 @@ describe("contentRelease/article", () => {
       sourceRevision: "a".repeat(40),
     });
     await expect(
-      t.query(category, { category: "politics", locale: "en" })
+      t.query(category, { category: "politics", appLocale: "en" })
     ).resolves.toEqual({ exists: true, managed: true });
     await expect(
-      t.query(category, { category: "public-affairs", locale: "en" })
+      t.query(category, { category: "public-affairs", appLocale: "en" })
     ).resolves.toEqual({ exists: false, managed: true });
 
     const first = await t.query(page, {
       category: "politics",
       expectedManifestHash: null,
       expectedReleaseId: null,
-      locale: "en",
+      appLocale: "en",
       paginationOpts: { cursor: null, numItems: 1 },
     });
     expect(first.result.page).toMatchObject([
@@ -66,7 +66,7 @@ describe("contentRelease/article", () => {
       category: "politics",
       expectedManifestHash: first.activeManifestHash,
       expectedReleaseId: first.activeReleaseId,
-      locale: "en",
+      appLocale: "en",
       paginationOpts: {
         cursor: first.result.continueCursor,
         numItems: 1,
@@ -84,7 +84,7 @@ describe("contentRelease/article", () => {
       empty.query(categories, {
         expectedManifestHash: null,
         expectedReleaseId: null,
-        locale: "en",
+        appLocale: "en",
         paginationOpts: { cursor: null, numItems: 1 },
       })
     ).resolves.toMatchObject({
@@ -94,7 +94,7 @@ describe("contentRelease/article", () => {
       result: { isDone: true, page: [] },
     });
     await expect(
-      empty.query(category, { category: "politics", locale: "en" })
+      empty.query(category, { category: "politics", appLocale: "en" })
     ).resolves.toEqual({ exists: false, managed: false });
 
     const materialOnly = convexTest(schema, convexModules);
@@ -105,7 +105,7 @@ describe("contentRelease/article", () => {
       materialOnly.query(categories, {
         expectedManifestHash: null,
         expectedReleaseId: null,
-        locale: "en",
+        appLocale: "en",
         paginationOpts: { cursor: null, numItems: 1 },
       })
     ).resolves.toMatchObject({
@@ -139,7 +139,7 @@ describe("contentRelease/article", () => {
       pending.query(categories, {
         expectedManifestHash: null,
         expectedReleaseId: null,
-        locale: "en",
+        appLocale: "en",
         paginationOpts: { cursor: null, numItems: 1 },
       })
     ).rejects.toMatchObject({
@@ -150,7 +150,7 @@ describe("contentRelease/article", () => {
         category: "politics",
         expectedManifestHash: null,
         expectedReleaseId: null,
-        locale: "en",
+        appLocale: "en",
         paginationOpts: { cursor: null, numItems: 1 },
       })
     ).rejects.toMatchObject({
@@ -173,7 +173,7 @@ describe("contentRelease/article", () => {
         category: "politics",
         expectedManifestHash: null,
         expectedReleaseId: null,
-        locale: "en",
+        appLocale: "en",
         paginationOpts: { cursor: null, numItems: 1 },
       })
     ).rejects.toMatchObject({
@@ -193,7 +193,7 @@ describe("contentRelease/article", () => {
       missing.query(categories, {
         expectedManifestHash: null,
         expectedReleaseId: null,
-        locale: "en",
+        appLocale: "en",
         paginationOpts: { cursor: null, numItems: 1 },
       })
     ).rejects.toMatchObject({
@@ -209,7 +209,7 @@ describe("contentRelease/article", () => {
         category: "Politics",
         expectedManifestHash: null,
         expectedReleaseId: null,
-        locale: "en",
+        appLocale: "en",
         paginationOpts: { cursor: null, numItems: 1 },
       })
     ).rejects.toMatchObject({
@@ -220,7 +220,7 @@ describe("contentRelease/article", () => {
         category: "politics",
         expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
         expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-        locale: "en",
+        appLocale: "en",
         paginationOpts: { cursor: null, numItems: 1 },
       })
     ).rejects.toMatchObject({
@@ -231,7 +231,7 @@ describe("contentRelease/article", () => {
         category: "politics",
         expectedManifestHash: "wrong",
         expectedReleaseId: "wrong",
-        locale: "en",
+        appLocale: "en",
         paginationOpts: { cursor: "stale", numItems: 1 },
       })
     ).resolves.toMatchObject({

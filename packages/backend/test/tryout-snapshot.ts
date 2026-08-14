@@ -1,5 +1,8 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  ACTIVE_APP_LOCALES,
+  type ActiveAppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
@@ -10,23 +13,25 @@ import {
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
-  compareTryoutCatalog,
-  compareTryoutPlacements,
-} from "@nakafa/aksara-contracts/tryout/identity";
-import {
-  digestTryoutCatalog,
-  digestTryoutPlacements,
-  makeTryoutCatalogRecord,
-  makeTryoutPlacementRecord,
-} from "@nakafa/aksara-contracts/tryout/row-hash";
-import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
-import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,
-  TryoutContentHashSchema,
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import {
+  compareTryoutCatalog,
+  digestTryoutCatalog,
+  makeTryoutCatalogRecord,
+} from "@nakafa/aksara-contracts/tryout/catalog-hash";
+import { compareTryoutPlacements } from "@nakafa/aksara-contracts/tryout/identity";
+import {
   type TryoutPlacement,
   TryoutPlacementSchema,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/placement";
+import {
+  digestTryoutPlacements,
+  makeTryoutPlacementRecord,
+} from "@nakafa/aksara-contracts/tryout/placement-hash";
+import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
+import { TryoutContentHashSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   tryoutCatalogFacts,
@@ -44,7 +49,7 @@ const artifactHash = Sha256HashSchema.make(`sha256:${"8".repeat(64)}`);
 
 /** Creates one hashed technical try-out country row. */
 export function makeTryoutCatalogRow(
-  locale: ContentLocale = "en"
+  appLocale: ActiveAppLocaleCode = "en"
 ): Extract<
   ContentSnapshotRow,
   { readonly family: "tryout"; readonly rowKind: "catalog" }
@@ -54,17 +59,17 @@ export function makeTryoutCatalogRow(
     countryKey: "indonesia",
     graph: {
       alignmentId: "alignment:tryout:technical:country",
-      assetId: `asset:${locale}:tryout:technical:country`,
+      assetId: `asset:${appLocale}:tryout:technical:country`,
       conceptId: "concept:tryout:technical:country",
       learningObjectId: "lo:tryout-technical-country",
       lensId: "lens:tryout:technical",
     },
+    appLocale,
     kind: "country",
-    locale,
     order: 1,
     publicPath: "try-out/indonesia",
     sourceRevision: "technical-revision",
-    title: locale === "en" ? "Technical country" : "Negara teknis",
+    title: appLocale === "en" ? "Technical country" : "Negara teknis",
   });
   return {
     family: "tryout",
@@ -75,7 +80,7 @@ export function makeTryoutCatalogRow(
 
 /** Creates one hashed technical try-out question placement. */
 export function makeTryoutPlacementRow(
-  locale: ContentLocale = "en",
+  appLocale: ActiveAppLocaleCode = "en",
   artifacts?: Pick<
     TryoutPlacement,
     "answerArtifactHash" | "questionArtifactHash"
@@ -86,23 +91,26 @@ export function makeTryoutPlacementRow(
 > {
   const row = Schema.decodeUnknownSync(TryoutPlacementSchema)({
     answerArtifactHash: artifacts?.answerArtifactHash ?? artifactHash,
+    answerArtifactLocale: appLocale,
     answerContentKey:
       "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/answer",
     choices: [
       {
         isCorrect: true,
-        label: locale === "en" ? "Technical choice" : "Pilihan teknis",
+        label: appLocale === "en" ? "Technical choice" : "Pilihan teknis",
         optionKey: "option-1",
         order: 1,
       },
     ],
     contentHash: TryoutContentHashSchema.make(
-      (locale === "en" ? "1" : "2").repeat(64)
+      (appLocale === "en" ? "1" : "2").repeat(64)
     ),
     countryKey: "indonesia",
+    deliveryLanguage: appLocale,
     examKey: "snbt",
-    locale,
+    appLocale,
     questionArtifactHash: artifacts?.questionArtifactHash ?? artifactHash,
+    questionArtifactLocale: appLocale,
     questionContentKey:
       "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question",
     questionOrder: 1,
@@ -113,7 +121,6 @@ export function makeTryoutPlacementRow(
     sectionKey: "quantitative-knowledge",
     setKey: "set-1",
     sourceRevision: "technical-revision",
-    title: locale === "en" ? "Technical question" : "Pertanyaan teknis",
     trackKey: "2027",
   });
   return {
@@ -139,10 +146,10 @@ export const makeTryoutSnapshotManifest = Effect.fn(
     Stream.fromIterable(placements.map(({ record }) => record))
   );
   const manifest = makeTryoutSnapshot({
+    activeAppLocales: ACTIVE_APP_LOCALES,
     catalogDigest: catalogEvidence.digest,
     counts: { country: 2, exam: 0, section: 0, set: 0, track: 0 },
-    format: "tryout-v1",
-    locales: ["en", "id"],
+    editorialReviewDigest: artifactHash,
     placementCount: placementEvidence.count,
     placementDigest: placementEvidence.digest,
     routeCount: 2,
@@ -182,10 +189,10 @@ export async function activateTryoutSnapshot(
   const manifest: ContentSnapshotManifest = {
     family: "tryout",
     manifest: makeTryoutSnapshot({
+      activeAppLocales: ACTIVE_APP_LOCALES,
       catalogDigest: catalogEvidence.digest,
       counts: countCatalog(input.catalog),
-      format: "tryout-v1",
-      locales: ["en", "id"],
+      editorialReviewDigest: artifactHash,
       placementCount: placementEvidence.count,
       placementDigest: placementEvidence.digest,
       routeCount: input.catalog.filter(

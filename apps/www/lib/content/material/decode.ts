@@ -33,7 +33,7 @@ export const decodeMaterialProjection = Effect.fn(
     Effect.mapError(() => makeMaterialProjectionError(identity))
   );
   if (
-    projection.locale !== identity.locale ||
+    projection.appLocale !== identity.appLocale ||
     projection.publicPath !== identity.publicPath
   ) {
     return yield* makeMaterialProjectionError(identity);
@@ -62,7 +62,7 @@ export const verifyMaterialPublication = Effect.fn(
   runtime: MaterialPublicationRead
 ) {
   const identity = {
-    locale: catalog.projection.locale,
+    appLocale: catalog.projection.appLocale,
     publicPath: catalog.projection.publicPath,
   };
   if (runtime.activeReleaseId !== catalog.activeReleaseId) {
@@ -93,7 +93,7 @@ export function isMaterialSibling(
   candidate: MaterialLessonProjection
 ) {
   return (
-    current.locale === candidate.locale &&
+    current.appLocale === candidate.appLocale &&
     current.materialKey === candidate.materialKey &&
     current.parentPath === candidate.parentPath
   );

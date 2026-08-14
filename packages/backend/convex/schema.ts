@@ -1,22 +1,16 @@
-import articleContentsSchema from "@repo/backend/convex/articleContents/schema";
 import assessmentsSchema from "@repo/backend/convex/assessments/tables/schema";
 import authDeletionSchema from "@repo/backend/convex/auth/deletion/schema";
-import authorsSchema from "@repo/backend/convex/authors/schema";
 import bookmarksSchema from "@repo/backend/convex/bookmarks/schema";
 import chatsSchema from "@repo/backend/convex/chats/tables/schema";
 import classesSchema from "@repo/backend/convex/classes/schema";
 import commentsSchema from "@repo/backend/convex/comments/schema";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
-import contentSyncSchema from "@repo/backend/convex/contentSync/schema";
 import contentsSchema from "@repo/backend/convex/contents/schema";
 import creditsSchema from "@repo/backend/convex/credits/schema";
-import curriculumLessonsSchema from "@repo/backend/convex/curriculumLessons/schema";
-import curriculumTopicsSchema from "@repo/backend/convex/curriculumTopics/schema";
 import customersSchema from "@repo/backend/convex/customers/schema";
 import irtSchema from "@repo/backend/convex/irt/schema";
 import learningPreferencesSchema from "@repo/backend/convex/learningPreferences/schema";
 import notificationsSchema from "@repo/backend/convex/notifications/schema";
-import quranSchema from "@repo/backend/convex/quran/schema";
 import schoolsSchema from "@repo/backend/convex/schools/schema";
 import subscriptionsSchema from "@repo/backend/convex/subscriptions/schema";
 import tryoutAccessSchema from "@repo/backend/convex/tryoutAccess/schema";
@@ -31,7 +25,6 @@ export default defineSchema(
     ...chatsSchema,
     ...commentsSchema,
     ...contentReleaseSchema,
-    ...contentSyncSchema,
     ...customersSchema,
     ...subscriptionsSchema,
     ...schoolsSchema,
@@ -40,11 +33,6 @@ export default defineSchema(
     ...notificationsSchema,
     ...bookmarksSchema,
     ...contentsSchema,
-    ...quranSchema,
-    ...authorsSchema,
-    ...articleContentsSchema,
-    ...curriculumTopicsSchema,
-    ...curriculumLessonsSchema,
     ...creditsSchema,
     ...irtSchema,
     ...learningPreferencesSchema,

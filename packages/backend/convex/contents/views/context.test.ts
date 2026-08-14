@@ -2,12 +2,13 @@ import {
   CorpusSourcePathSchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   CurriculumNodeKeySchema,
   type CurriculumRoute,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
-import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/row-hash";
+import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   type MaterialLessonProjection,
@@ -68,7 +69,7 @@ function subjectRoute(): CurriculumRoute {
     iconKey: "science",
     kind: "curriculum-context",
     level: "subject",
-    locale: "en",
+    appLocale: ActiveAppLocaleSchema.make("en"),
     nodeKey: "test-subject",
     order: 1,
     parentPath: ROOT_PATH,
@@ -86,7 +87,7 @@ function groupRoute(): CurriculumRoute {
     iconKey: "science",
     kind: "curriculum-context",
     level: "topic",
-    locale: "en",
+    appLocale: ActiveAppLocaleSchema.make("en"),
     materialCardDescription: "Technical card description.",
     materialCardTitle: "Technical Group",
     nodeKey: GROUP_KEY,
@@ -109,7 +110,7 @@ function mappingRoute(
     iconKey: "science",
     kind: "curriculum-context",
     level: "lesson",
-    locale: "en",
+    appLocale: ActiveAppLocaleSchema.make("en"),
     materialContextNodeKey: GROUP_KEY,
     materialContextParentPath: SUBJECT_PATH,
     materialContextPublicPath: GROUP_PATH,
@@ -167,7 +168,7 @@ function readContext(
       Effect.gen(function* () {
         const material = yield* validateIncomingContentTarget(ctx, {
           contentId: projection.graph.assetId,
-          locale: projection.locale,
+          locale: "en",
           publicPath: projection.publicPath,
           section: "material",
         });

@@ -153,9 +153,9 @@ describe("published program catalog", () => {
       sourceRevision: revision,
     });
     expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
+      appLocale: "en",
       expectedManifestHash: `sha256:${"b".repeat(64)}`,
       expectedReleaseId: "program-release",
-      locale: "en",
       paginationOpts: { cursor: "next", numItems: PROJECTION_PAGE_LIMIT },
     });
     expect(cacheMock).toHaveBeenCalledOnce();

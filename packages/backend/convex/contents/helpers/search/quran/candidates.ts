@@ -1,4 +1,4 @@
-import type { QuranSearchRow } from "@nakafa/aksara-contracts/quran/spec";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -21,7 +21,7 @@ export const readTextCandidates = Effect.fn(
 )(function* (
   ctx: QueryCtx,
   snapshotId: string,
-  locale: QuranSearchRow["locale"],
+  appLocale: AppLocaleCode,
   queries: readonly string[],
   exactIdentities: ReadonlySet<string>,
   exactReadCount: number,
@@ -40,9 +40,13 @@ export const readTextCandidates = Effect.fn(
     states,
     (state, index) => {
       const requested = initialAllocations[index] ?? 1;
-      return searchText(ctx, snapshotId, locale, state.query, requested).pipe(
-        Effect.map((rows) => ({ requested, rows, state }))
-      );
+      return searchText(
+        ctx,
+        snapshotId,
+        appLocale,
+        state.query,
+        requested
+      ).pipe(Effect.map((rows) => ({ requested, rows, state })));
     },
     { concurrency: "unbounded" }
   );
@@ -79,7 +83,7 @@ export const readTextCandidates = Effect.fn(
     const rows = yield* searchText(
       ctx,
       snapshotId,
-      locale,
+      appLocale,
       expansion.state.query,
       expansion.requested
     );
@@ -157,7 +161,7 @@ function getMaximumRequestedRows(
 function searchText(
   ctx: QueryCtx,
   snapshotId: string,
-  locale: QuranSearchRow["locale"],
+  appLocale: AppLocaleCode,
   query: string,
   requested: number
 ) {
@@ -168,7 +172,7 @@ function searchText(
         search
           .search("text", query)
           .eq("snapshotId", snapshotId)
-          .eq("locale", locale)
+          .eq("appLocale", appLocale)
       )
       .take(requested)
   );

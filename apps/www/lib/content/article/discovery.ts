@@ -2,6 +2,7 @@ import "server-only";
 
 import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   ArticleCategorySchema,
   ArticleCategoryTitleSchema,
@@ -22,6 +23,7 @@ type DiscoveryItem = FunctionReturnType<
 /** Decodes one backend-verified discovery row into the article card contract. */
 const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
   function* (item: DiscoveryItem, locale: Locale) {
+    const appLocale = AppLocaleSchema.make(locale);
     const [category, categoryTitle, date, publicPath, slug] = yield* Effect.all(
       [
         Schema.decodeUnknown(ArticleCategorySchema)(item.category),
@@ -34,7 +36,7 @@ const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
       Effect.mapError(
         () =>
           new PublishedProjectionError({
-            locale,
+            appLocale,
             publicPath: item.publicPath,
           })
       )
@@ -57,13 +59,14 @@ const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
 /** Reads one complete published article partition for agent discovery. */
 export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
   function* (locale: Locale, bucket: string) {
+    const appLocale = AppLocaleSchema.make(locale);
     const result = yield* readRuntimeQuery(api.contentRelease.article.bucket, {
+      appLocale,
       bucket,
-      locale,
     });
     if (!result.managed) {
       return yield* new PublishedProjectionError({
-        locale,
+        appLocale,
         publicPath: "articles",
       });
     }
@@ -80,13 +83,14 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
 /** Reads a bounded newest-first article set for feed discovery. */
 export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
   function* (locale: Locale, limit: number) {
+    const appLocale = AppLocaleSchema.make(locale);
     const result = yield* readRuntimeQuery(api.contentRelease.article.latest, {
+      appLocale,
       limit,
-      locale,
     });
     if (!result.managed) {
       return yield* new PublishedProjectionError({
-        locale,
+        appLocale,
         publicPath: "articles",
       });
     }
@@ -101,14 +105,15 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
 export const readPublishedCategoryArticles = Effect.fn(
   "www.articles.readCategory"
 )(function* (locale: Locale, category: string, limit: number) {
+  const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(api.contentRelease.article.listing, {
+    appLocale,
     category,
     limit,
-    locale,
   });
   if (!result.managed) {
     return yield* new PublishedProjectionError({
-      locale,
+      appLocale,
       publicPath: `articles/${category}`,
     });
   }

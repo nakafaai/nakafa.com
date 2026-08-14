@@ -1,8 +1,8 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   featuredTryoutValidator,
   readFeaturedTryout,
@@ -22,7 +22,6 @@ import {
   readPublishedSetPageFromIndex,
   readPublishedTrackPage,
 } from "@repo/backend/convex/tryouts/catalog/published";
-import { readTryoutRoute } from "@repo/backend/convex/tryouts/catalog/route";
 import { readTryoutSetSelection } from "@repo/backend/convex/tryouts/catalog/selection";
 import {
   publicTryoutCountryValidator,
@@ -46,23 +45,11 @@ const sectionPageValidator = v.union(v.null(), v.object(sectionPageFields));
 /** Reads the one signed question demonstrated on the marketing landing page. */
 export const getFeaturedQuestion = query({
   args: {
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
   },
   returns: featuredTryoutValidator,
   handler: (ctx, args) =>
-    runConvexProgram(readFeaturedTryout(ctx, args.locale)),
-});
-
-/** Checks one exact public route against its active signed try-out owner. */
-export const getRoute = query({
-  args: {
-    locale: localeValidator,
-    publicPath: v.string(),
-  },
-  returns: v.object({
-    exists: v.boolean(),
-  }),
-  handler: (ctx, args) => runConvexProgram(readTryoutRoute(ctx, args)),
+    runConvexProgram(readFeaturedTryout(ctx, args.appLocale)),
 });
 
 /** Reads exact SEO copy and localized paths from signed try-out ownership. */
@@ -82,14 +69,16 @@ export const getLocalizedPath = query({
 /** Reads the localized country-first try-out hub page model. */
 export const getHubPage = query({
   args: {
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
   },
   returns: v.object({
     countries: v.array(publicTryoutCountryWithExamCountValidator),
     sourceRevision: v.union(v.string(), v.null()),
   }),
   handler: async (ctx, args) => {
-    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
+    const catalog = await runConvexProgram(
+      loadTryoutCatalog(ctx, args.appLocale)
+    );
     const page = await runConvexProgram(readPublishedHubPage(catalog));
     return { ...page, sourceRevision: catalog.sourceRevision };
   },
@@ -98,7 +87,7 @@ export const getHubPage = query({
 /** Reads one active country page with its active exam family rows. */
 export const getCountryPage = query({
   args: {
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     publicPath: v.string(),
   },
   returns: v.union(
@@ -110,7 +99,9 @@ export const getCountryPage = query({
     })
   ),
   handler: async (ctx, args) => {
-    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
+    const catalog = await runConvexProgram(
+      loadTryoutCatalog(ctx, args.appLocale)
+    );
     const page = await runConvexProgram(
       readPublishedCountryPage(catalog, args.publicPath)
     );
@@ -121,7 +112,7 @@ export const getCountryPage = query({
 /** Reads one active exam page with its active track rows. */
 export const getExamPage = query({
   args: {
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     publicPath: v.string(),
   },
   returns: v.union(
@@ -133,7 +124,9 @@ export const getExamPage = query({
     })
   ),
   handler: async (ctx, args) => {
-    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
+    const catalog = await runConvexProgram(
+      loadTryoutCatalog(ctx, args.appLocale)
+    );
     return await runConvexProgram(
       readPublishedExamPage(catalog, args.publicPath)
     );
@@ -143,7 +136,7 @@ export const getExamPage = query({
 /** Reads one active track page shell for paginated set discovery. */
 export const getTrackPage = query({
   args: {
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     publicPath: v.string(),
   },
   returns: v.union(
@@ -155,7 +148,9 @@ export const getTrackPage = query({
     })
   ),
   handler: async (ctx, args) => {
-    const catalog = await runConvexProgram(loadTryoutCatalog(ctx, args.locale));
+    const catalog = await runConvexProgram(
+      loadTryoutCatalog(ctx, args.appLocale)
+    );
     return await runConvexProgram(
       readPublishedTrackPage(catalog, args.publicPath)
     );
@@ -165,7 +160,7 @@ export const getTrackPage = query({
 /** Reads one try-out set and its ordered sections. */
 export const getSetPage = query({
   args: {
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     publicPath: v.string(),
   },
   returns: v.union(
@@ -197,7 +192,7 @@ export const getSetPage = query({
 /** Reads public metadata for one try-out section. */
 export const getSectionPage = query({
   args: {
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     publicPath: v.string(),
   },
   returns: sectionPageValidator,

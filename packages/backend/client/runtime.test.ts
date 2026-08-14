@@ -55,8 +55,8 @@ vi.mock("convex/browser", () => ({
 const query = api.contentRelease.reference.read;
 const args: FunctionArgs<typeof query> = {
   input: {
+    appLocale: "en",
     kind: "route",
-    locale: "en",
     publicPath: "articles/example",
   },
 };

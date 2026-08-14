@@ -3,16 +3,14 @@ import {
   graphContentIdValidator,
   learningGraphIdentityValidator,
 } from "@repo/backend/convex/contents/graph";
-import { contentSearchDocumentValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import {
   learningPopularityScopeValues,
   learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
-import routeSchema from "@repo/backend/convex/contents/schema/routes";
+import { contentViewSectionValidator } from "@repo/backend/convex/contents/views/spec";
 import {
   localeValidator,
   materialDomainValidator,
-  nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -24,10 +22,6 @@ const learningPopularityWindowValidator = literals(
 const learningPopularityScopeValidator = literals(
   ...learningPopularityScopeValues
 );
-const legacyContentSearchDocumentValidator = v.object({
-  ...contentSearchDocumentValidator.fields,
-  markdown_url: v.string(),
-});
 const tables = {
   /**
    * Durable graph-backed learning engagement history.
@@ -44,7 +38,7 @@ const tables = {
     lastViewedAt: v.number(),
     locale: localeValidator,
     route: v.string(),
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     userId: v.optional(v.id("users")),
   })
     .index("by_userId_and_content_id_and_contextKey", [
@@ -96,7 +90,7 @@ const tables = {
     materialDomain: v.optional(materialDomainValidator),
     partition: v.number(),
     route: v.string(),
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     scopeMode: learningPopularityScopeValidator,
     sourcePath: v.string(),
     title: v.string(),
@@ -121,7 +115,7 @@ const tables = {
     locale: localeValidator,
     materialDomain: v.optional(materialDomainValidator),
     route: v.string(),
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     sourcePath: v.string(),
     title: v.string(),
     userId: v.id("users"),
@@ -155,7 +149,7 @@ const tables = {
     content_id: graphContentIdValidator,
     locale: localeValidator,
     scopeMode: learningPopularityScopeValidator,
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     signalDay: v.number(),
     viewedAt: v.number(),
     viewerKey: v.string(),
@@ -185,7 +179,7 @@ const tables = {
     locale: localeValidator,
     materialDomain: v.optional(materialDomainValidator),
     route: v.string(),
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     scopeMode: learningPopularityScopeValidator,
     signalDay: v.number(),
     sourcePath: v.string(),
@@ -224,7 +218,7 @@ const tables = {
     materialDomain: v.optional(materialDomainValidator),
     route: v.string(),
     score: v.number(),
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     scopeMode: learningPopularityScopeValidator,
     sourcePath: v.string(),
     title: v.string(),
@@ -245,28 +239,6 @@ const tables = {
       "score",
       "content_id",
     ]),
-
-  /** Retained legacy search rows with their exact pre-drain contract. */
-  contentSearch: defineTable(legacyContentSearchDocumentValidator)
-    .index("by_content_id", ["content_id"])
-    .index("by_locale_and_route", ["locale", "route"])
-    .index("by_locale_and_sourcePath", ["locale", "sourcePath"])
-    .index("by_locale_and_title", ["locale", "title"])
-    .index("by_locale_and_section_and_title", ["locale", "section", "title"])
-    .searchIndex("search_title", {
-      searchField: "title",
-      filterFields: ["locale", "section"],
-    })
-    .searchIndex("search_text", {
-      searchField: "text",
-      filterFields: ["locale", "section"],
-    })
-    .searchIndex("search_route", {
-      searchField: "route",
-      filterFields: ["locale", "section"],
-    }),
-
-  ...routeSchema,
 };
 
 export default tables;

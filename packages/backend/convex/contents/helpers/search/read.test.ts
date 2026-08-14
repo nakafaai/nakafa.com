@@ -42,7 +42,7 @@ describe("readContentSearchDocuments", () => {
           ctx,
           {
             limit: 10,
-            locale: projection.locale,
+            locale: "en",
             offset: 0,
             queries: ["release owned searchable article"],
             section: "articles",
@@ -74,8 +74,8 @@ describe("readContentSearchDocuments", () => {
       for (const projection of projections) {
         await insertMaterialProjection(ctx, projection, TEST_RUNTIME_RELEASE);
         await insertRuntimeIndex(ctx, projection.contentKey, {
+          artifactLocale: projection.artifactLocale,
           headSequence: TEST_RUNTIME_RELEASE.sequence,
-          locale: projection.locale,
           plainText: "saturated published material",
         });
       }
@@ -121,8 +121,8 @@ describe("readContentSearchDocuments", () => {
     await activateMaterialCatalog(t, [projection]);
     await t.mutation(async (ctx) => {
       await insertRuntimeIndex(ctx, projection.contentKey, {
+        artifactLocale: projection.artifactLocale,
         headSequence: MATERIAL_IDENTITY.sequence,
-        locale: projection.locale,
         plainText: "current signed material",
       });
       const state = await ctx.db.query("contentState").unique();
@@ -142,7 +142,7 @@ describe("readContentSearchDocuments", () => {
           ctx,
           {
             limit: 1,
-            locale: projection.locale,
+            locale: "en",
             offset: 0,
             queries: [projection.publicPath],
             section: "material",

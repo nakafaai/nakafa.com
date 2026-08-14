@@ -17,13 +17,13 @@ export type QuranMarkdownVerse = QuranMarkdownResult["verses"][number];
 /** Validator-derived Quran metadata used by markdown renderers. */
 export type QuranMarkdownSurah = NonNullable<QuranMarkdownResult["surah"]>;
 
-/** Decodes one active locale-specific Quran markdown projection. */
+/** Decodes one active app-locale Quran markdown projection. */
 export const decodePublishedQuranMarkdown = Effect.fn(
   "NakafaQuran.decodeMarkdown"
 )(function* (
   result: QuranMarkdownResult,
   expected: {
-    readonly locale: QuranMarkdownResult["locale"];
+    readonly appLocale: QuranMarkdownResult["appLocale"];
     readonly surahNumber: number;
     readonly verseLimit?: number;
   }
@@ -40,7 +40,7 @@ export const decodePublishedQuranMarkdown = Effect.fn(
     result.surah.numberOfVerses
   );
   if (
-    result.locale !== expected.locale ||
+    result.appLocale !== expected.appLocale ||
     result.surah.number !== expected.surahNumber ||
     result.toVerse !== expectedToVerse ||
     !hasExactQuranVerseRange(result.verses, 1, expectedToVerse)
@@ -53,7 +53,7 @@ export const decodePublishedQuranMarkdown = Effect.fn(
 
   return {
     ...source,
-    locale: result.locale,
+    appLocale: result.appLocale,
     surah: result.surah,
     toVerse: result.toVerse,
     verses: result.verses,

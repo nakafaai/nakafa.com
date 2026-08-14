@@ -12,12 +12,12 @@ export const readArticleCategory = Effect.fn(
   "contentRelease.readArticleCategory"
 )(function* (
   ctx: QueryCtx,
-  locale: Doc<"articleCategories">["locale"],
+  appLocale: Doc<"articleCategories">["appLocale"],
   source: string
 ) {
   const [category, owner] = yield* Effect.all([
     decodeCategory(source),
-    loadArticleOwner(ctx, locale),
+    loadArticleOwner(ctx, appLocale),
   ]);
   if (!(owner.managed && owner.active)) {
     return { exists: false, managed: false };
@@ -26,8 +26,8 @@ export const readArticleCategory = Effect.fn(
   const row = yield* Effect.promise(() =>
     ctx.db
       .query("articleCategories")
-      .withIndex("by_locale_and_category", (index) =>
-        index.eq("locale", locale).eq("category", category)
+      .withIndex("by_appLocale_and_category", (index) =>
+        index.eq("appLocale", appLocale).eq("category", category)
       )
       .unique()
   );

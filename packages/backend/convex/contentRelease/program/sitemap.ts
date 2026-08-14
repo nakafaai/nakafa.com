@@ -12,23 +12,25 @@ import { Effect } from "effect";
 /** Lists non-empty curriculum sitemap partitions for one active snapshot. */
 export const readProgramBuckets = Effect.fn(
   "contentRelease.readProgramBuckets"
-)(function* (ctx: QueryCtx, locale: Parameters<typeof loadProgramOwner>[1]) {
-  const owner = yield* loadProgramOwner(ctx, locale);
+)(function* (ctx: QueryCtx, appLocale: Parameters<typeof loadProgramOwner>[1]) {
+  const owner = yield* loadProgramOwner(ctx, appLocale);
   if (!(owner.managed && owner.selected)) {
     return { buckets: [], managed: false, routeCount: 0 };
   }
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("programBuckets")
-      .withIndex("by_snapshotId_and_locale_and_bucket", (query) =>
-        query.eq("snapshotId", owner.selected.snapshotId).eq("locale", locale)
+      .withIndex("by_snapshotId_and_appLocale_and_bucket", (query) =>
+        query
+          .eq("snapshotId", owner.selected.snapshotId)
+          .eq("appLocale", appLocale)
       )
       .take(CONTENT_BUCKET_LIMIT + 1)
   );
   if (rows.length > CONTENT_BUCKET_LIMIT) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Program sitemap buckets for ${locale} exceed their fixed partition space.`
+      `Program sitemap buckets for ${appLocale} exceed their fixed partition space.`
     );
   }
   for (const row of rows) {
@@ -39,7 +41,7 @@ export const readProgramBuckets = Effect.fn(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Program sitemap bucket ${locale}/${row.bucket} has invalid counts.`
+        `Program sitemap bucket ${appLocale}/${row.bucket} has invalid counts.`
       );
     }
   }
@@ -55,10 +57,10 @@ export const readProgramSitemap = Effect.fn(
   "contentRelease.readProgramSitemap"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadProgramOwner>[1],
+  appLocale: Parameters<typeof loadProgramOwner>[1],
   bucket: string
 ) {
-  const partition = yield* readProgramPartition(ctx, locale, bucket);
+  const partition = yield* readProgramPartition(ctx, appLocale, bucket);
   if (partition.kind !== "found") {
     return null;
   }

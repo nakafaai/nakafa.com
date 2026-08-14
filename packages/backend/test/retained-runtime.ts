@@ -1,16 +1,15 @@
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   type StoredProtectedRuntimeFound,
   StoredProtectedRuntimeFoundSchema,
   type StoredProtectedRuntimeRequest,
   StoredProtectedRuntimeRequestSchema,
-} from "@nakafa/aksara-history/history/decode";
+} from "@nakafa/aksara-contracts/history/decode";
+import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { retainedTryoutHistoryPlan } from "@repo/backend/convex/tryouts/history/spec";
 import { Effect, Schema } from "effect";
 
 export const RETAINED_RUNTIME_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MCowBQYDK2VwAyEA8CkCLtsNT5jK7aJUHJZDW2xmMLFegNT2t+u6Ejv1igU=
+MCowBQYDK2VwAyEAufsg3tDPQbN5KeLxmNYjy0g8XrKT+BRuDMntKQ7fcf0=
 -----END PUBLIC KEY-----
 `;
 
@@ -18,9 +17,8 @@ export const retainedRuntimeKeyResolver = ContentVerificationKeyResolver.of({
   resolve: () => Effect.succeed(RETAINED_RUNTIME_PUBLIC_KEY),
 });
 
-export const RETAINED_RUNTIME_SNAPSHOT_ID =
-  retainedTryoutHistoryPlan.snapshotId;
-export const RETAINED_RUNTIME_RELEASE_ID = "retained-runtime-test-release";
+const snapshotId = `sha256:${"6".repeat(64)}`;
+const releaseId = "retained-runtime-test-release";
 const retainedRendererDomain = "snbt-general";
 const questionRoot =
   "question-bank/tryout/indonesia/snbt/general-reasoning/set-1/question-1";
@@ -76,7 +74,7 @@ export const RETAINED_RUNTIME_QUESTION = {
       "sha256:89d61668075d8af7b5cec9489dc9ecbe7bcde0665441eb66ef7d0aeecd809273",
   },
   signature:
-    "mrn9hsXM22W-olZlNTiDt1wBJtgVI0MJdntVy9NBnSDdvfict7lfcPnWX1CPdFCLeuqCE6f99THbalQA_6gdDA",
+    "U-bC4UxkZXrurLP2yYLZZYtNa6dn6rDOnn-PvEJlwS8Rs-tIS6UvWFSKhXwNUk5WxTJjt9ClM7N-38iLv6ALBg",
 };
 
 export const RETAINED_RUNTIME_ANSWER = {
@@ -92,7 +90,7 @@ export const RETAINED_RUNTIME_ANSWER = {
       "sha256:da81c1dd1410c406cf7558552af5221698b1df34f3f0bbc16b4e383112e814c3",
   },
   signature:
-    "Ka5-H6Vwp52HtbgT9yEfPYfhrMXtG_rVkZtTt5fgPo60sj7Zls83CgBwoChAymzF2_tKQPc_z1z8c_zLfBoQDg",
+    "RUX3TuMRuyKFgU7O3RcyS9kzNVi-NQVS1bycNWZL63PXvjsmLXcjJ7DNHBYV8IUstcHkHbX5yNgb6W9jt0JyCQ",
 };
 
 export const RETAINED_RUNTIME_RELEASE = {
@@ -109,7 +107,7 @@ export const RETAINED_RUNTIME_RELEASE = {
     origin: { kind: "git", sha: "a".repeat(40) },
     projectionCount: 0,
     projectionDigest: `sha256:${"2".repeat(64)}`,
-    releaseId: RETAINED_RUNTIME_RELEASE_ID,
+    releaseId,
     rendererContractVersion: "1.0.0",
     rendererManifestHash: RETAINED_RUNTIME_RENDERER.hash,
     resultCount: 0,
@@ -140,7 +138,7 @@ export const RETAINED_RUNTIME_RELEASE = {
       tryout: {
         baseSnapshotId: null,
         mode: "replace",
-        resultSnapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
+        resultSnapshotId: snapshotId,
         rowCount: 1,
         rowDigest: `sha256:${"7".repeat(64)}`,
       },
@@ -148,12 +146,12 @@ export const RETAINED_RUNTIME_RELEASE = {
     upsertCount: 0,
   },
   manifestHash:
-    "sha256:b88717c38bfe73b9c2405965cadf71334fe5d750952b36d76678025a6f63ef35",
+    "sha256:72ab3f8ddc5ba2ed4694ef6b71f0f32c0d246b475e32286f6198606db2008c6c",
   signature:
-    "JvlUtfXXK7CWN5hziGDqxTpdnBQmuwle4lCKZHD--q_BDU8t1mQ6s4lTojbcAmeyJoNNIoXNiu_fMIH9Bx_cAA",
+    "C4lz2tmzKvXo6I4HC7XZ_rFXhfYt1bhbSxMfWHAv8wliurYNUDoIr-sQi0GbKr0s15qrNBODPBH4wGjAwbtQAQ",
 };
 
-export const RETAINED_RUNTIME_PLACEMENT = {
+const retainedPlacement = {
   answerArtifactHash: RETAINED_RUNTIME_ANSWER.artifactHash,
   answerContentKey: RETAINED_RUNTIME_ANSWER.payload.contentKey,
   choices: [
@@ -176,18 +174,8 @@ export const RETAINED_RUNTIME_PLACEMENT = {
   title: "Question 1",
   trackKey: "2027",
 };
-export const RETAINED_RUNTIME_PLACEMENT_HASH =
+const retainedPlacementHash =
   "sha256:2e0183f410950cb7e755ce3c99153ae73887f5bd995e4f7326bca89f9479cbb9";
-
-/** Fixed authenticated envelope shared by retained-reader tests. */
-export const RETAINED_RUNTIME_PLACEMENT_ROW = {
-  family: "tryout",
-  record: {
-    row: RETAINED_RUNTIME_PLACEMENT,
-    rowHash: RETAINED_RUNTIME_PLACEMENT_HASH,
-  },
-  rowKind: "placement",
-};
 
 /** Builds one found response from fixed synthetic immutable history bytes. */
 export function retainedRuntimeFound(
@@ -200,15 +188,15 @@ export function retainedRuntimeFound(
       {
         artifact: RETAINED_RUNTIME_QUESTION,
         delivery: "authenticated",
-        sourcePath: `${RETAINED_RUNTIME_PLACEMENT.questionSourcePath}/question.en.mdx`,
+        sourcePath: `${retainedPlacement.questionSourcePath}/question.en.mdx`,
       },
     ],
     kind: "found",
     release: RETAINED_RUNTIME_RELEASE,
     rendererManifest: RETAINED_RUNTIME_RENDERER,
-    snapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
+    snapshotId,
     snapshotManifestHash: RETAINED_RUNTIME_RELEASE.manifestHash,
-    snapshotReleaseId: RETAINED_RUNTIME_RELEASE_ID,
+    snapshotReleaseId: releaseId,
   });
 }
 
@@ -239,62 +227,64 @@ export async function insertRetainedRuntime(
     examKey: "snbt",
     expiresAt: 10,
     lastActivityAt: 1,
-    locale: appLocale,
     scoreStatus: "official",
     scoringStrategy: "raw",
     sectionSnapshots: [],
     setIdentity: "retained-set",
     setKey: "set-1",
     setPublicPath: "try-out/indonesia/snbt/2027/set-1",
-    snapshotReleaseId: RETAINED_RUNTIME_RELEASE_ID,
+    snapshotReleaseId: releaseId,
     startedAt: 1,
     status: "in-progress",
     totalCorrect: 0,
     totalQuestions: 1,
     trackKey: "2027",
-    tryoutSnapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
+    tryoutSnapshotId: snapshotId,
     userId,
   });
   await ctx.db.insert("tryoutAttemptHistory", {
-    snapshotReleaseId: RETAINED_RUNTIME_RELEASE_ID,
+    snapshotReleaseId: releaseId,
     tryoutAttemptId: attemptId,
-    tryoutSnapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
+    tryoutSnapshotId: snapshotId,
   });
   await ctx.db.insert("tryoutHistoryRows", {
-    answerArtifactHash: RETAINED_RUNTIME_PLACEMENT.answerArtifactHash,
-    index: 54,
-    questionArtifactHash: RETAINED_RUNTIME_PLACEMENT.questionArtifactHash,
-    rowHash: RETAINED_RUNTIME_PLACEMENT_HASH,
-    rowJson: JSON.stringify(RETAINED_RUNTIME_PLACEMENT_ROW),
+    answerArtifactHash: retainedPlacement.answerArtifactHash,
+    index: 0,
+    questionArtifactHash: retainedPlacement.questionArtifactHash,
+    rowHash: retainedPlacementHash,
+    rowJson: JSON.stringify({
+      family: "tryout",
+      record: { row: retainedPlacement, rowHash: retainedPlacementHash },
+      rowKind: "placement",
+    }),
     rowKind: "placement",
-    snapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
+    snapshotId,
   });
   await ctx.db.insert("tryoutAttemptPlacements", {
-    answerArtifactHash: RETAINED_RUNTIME_PLACEMENT.answerArtifactHash,
-    answerContentKey: RETAINED_RUNTIME_PLACEMENT.answerContentKey,
-    choiceSnapshots: RETAINED_RUNTIME_PLACEMENT.choices,
-    contentHash: RETAINED_RUNTIME_PLACEMENT.contentHash,
+    answerArtifactHash: retainedPlacement.answerArtifactHash,
+    answerContentKey: retainedPlacement.answerContentKey,
+    choiceSnapshots: retainedPlacement.choices,
+    contentHash: retainedPlacement.contentHash,
     placementIdentity: "retained-placement",
-    placementRowHash: RETAINED_RUNTIME_PLACEMENT_HASH,
-    questionArtifactHash: RETAINED_RUNTIME_PLACEMENT.questionArtifactHash,
-    questionContentKey: RETAINED_RUNTIME_PLACEMENT.questionContentKey,
-    questionOrder: RETAINED_RUNTIME_PLACEMENT.questionOrder,
+    placementRowHash: retainedPlacementHash,
+    questionArtifactHash: retainedPlacement.questionArtifactHash,
+    questionContentKey: retainedPlacement.questionContentKey,
+    questionOrder: retainedPlacement.questionOrder,
     rendererDomain: retainedRendererDomain,
     sectionIdentity: "retained-section",
-    sectionKey: RETAINED_RUNTIME_PLACEMENT.sectionKey,
-    sourcePath: RETAINED_RUNTIME_PLACEMENT.questionSourcePath,
-    sourceRevision: RETAINED_RUNTIME_PLACEMENT.sourceRevision,
-    title: RETAINED_RUNTIME_PLACEMENT.title,
+    sectionKey: retainedPlacement.sectionKey,
+    sourcePath: retainedPlacement.questionSourcePath,
+    sourceRevision: retainedPlacement.sourceRevision,
     tryoutAttemptId: attemptId,
   });
   await ctx.db.insert("tryoutBundles", {
     createdAt: 1,
     index: 0,
     manifestHash: RETAINED_RUNTIME_RELEASE.manifestHash,
-    releaseId: RETAINED_RUNTIME_RELEASE_ID,
+    releaseId,
     releaseJson: JSON.stringify(RETAINED_RUNTIME_RELEASE),
     rendererJson: JSON.stringify(RETAINED_RUNTIME_RENDERER),
-    snapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
+    snapshotId,
   });
   for (const artifact of [RETAINED_RUNTIME_QUESTION, RETAINED_RUNTIME_ANSWER]) {
     await ctx.db.insert("contentArtifacts", {
@@ -316,8 +306,8 @@ export async function insertRetainedRuntime(
           delivery: "authenticated",
         },
       ],
-      snapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
-      snapshotReleaseId: RETAINED_RUNTIME_RELEASE_ID,
+      snapshotId,
+      snapshotReleaseId: releaseId,
     }),
   };
 }

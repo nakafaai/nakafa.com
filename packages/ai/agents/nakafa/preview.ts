@@ -7,7 +7,9 @@ import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxon
 export function previewRead(result: NakafaAgentMarkdown) {
   return {
     ...previewContentRef(result),
-    description: result.description,
+    ...(result.description === undefined
+      ? {}
+      : { description: result.description }),
     title: result.title,
   };
 }

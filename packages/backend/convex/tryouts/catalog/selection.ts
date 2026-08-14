@@ -1,8 +1,12 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type {
   TryoutSection,
   TryoutSet,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import {
+  tryoutCatalogIdentity,
+  tryoutCatalogNodeIdentity,
+} from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -32,7 +36,7 @@ export const readTryoutSetSelection = Effect.fn(
 )(function* (
   ctx: QueryCtx,
   input: {
-    readonly locale: "en" | "id";
+    readonly appLocale: AppLocaleCode;
     readonly publicPath: string;
     readonly snapshotId: string;
   }
@@ -48,11 +52,11 @@ export const readTryoutSetSelection = Effect.fn(
 
   let set: TryoutSet | null = selected.kind === "set" ? selected : null;
   if (!set) {
-    const setIdentity = tryoutCatalogIdentity({
+    const setIdentity = tryoutCatalogNodeIdentity({
+      appLocale: selected.appLocale,
       countryKey: selected.countryKey,
       examKey: selected.examKey,
       kind: "set",
-      locale: selected.locale,
       setKey: selected.setKey,
       trackKey: selected.trackKey,
     });
@@ -68,22 +72,22 @@ export const readTryoutSetSelection = Effect.fn(
   }
 
   const parentIdentities = {
-    country: tryoutCatalogIdentity({
+    country: tryoutCatalogNodeIdentity({
+      appLocale: set.appLocale,
       countryKey: set.countryKey,
       kind: "country",
-      locale: set.locale,
     }),
-    exam: tryoutCatalogIdentity({
+    exam: tryoutCatalogNodeIdentity({
+      appLocale: set.appLocale,
       countryKey: set.countryKey,
       examKey: set.examKey,
       kind: "exam",
-      locale: set.locale,
     }),
-    track: tryoutCatalogIdentity({
+    track: tryoutCatalogNodeIdentity({
+      appLocale: set.appLocale,
       countryKey: set.countryKey,
       examKey: set.examKey,
       kind: "track",
-      locale: set.locale,
       trackKey: set.trackKey,
     }),
   };

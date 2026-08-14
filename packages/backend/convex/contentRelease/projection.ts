@@ -1,6 +1,7 @@
 import {
   type ContentProjection,
   familyForProjection,
+  projectionArtifactLocale,
 } from "@nakafa/aksara-contracts/projection/spec";
 import { StageProjectionBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
 import {
@@ -84,18 +85,19 @@ const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
     ctx,
     releaseId,
     projection.contentKey,
-    projection.locale
+    projectionArtifactLocale(projection)
   );
+  const artifactLocale = projectionArtifactLocale(projection);
   if (!item) {
     return yield* releaseFail(
       "CONTENT_RELEASE_MISSING",
-      `Projection ${projection.contentKey}/${projection.locale} has no staged item.`
+      `Projection ${projection.contentKey}/${artifactLocale} has no staged item.`
     );
   }
   if (item.projectionReady) {
     return yield* releaseFail(
       "CONTENT_RELEASE_CONFLICT",
-      `Projection ${projection.contentKey}/${projection.locale} was already staged in another batch.`
+      `Projection ${projection.contentKey}/${artifactLocale} was already staged in another batch.`
     );
   }
   const decodedItem = yield* decodeItemJson(item.itemJson);
@@ -105,7 +107,7 @@ const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Projection ${projection.contentKey}/${projection.locale} does not match its staged upsert.`
+      `Projection ${projection.contentKey}/${artifactLocale} does not match its staged upsert.`
     );
   }
   const itemPatch = {
@@ -150,7 +152,10 @@ export const stageProjectionProgram = Effect.fn(
   }));
   const values = entries.map(({ projectionJson }) => projectionJson);
   const identities = new Set(
-    projections.map(({ contentKey, locale }) => `${contentKey}\0${locale}`)
+    projections.map(
+      (projection) =>
+        `${projection.contentKey}\0${projectionArtifactLocale(projection)}`
+    )
   );
   if (identities.size !== projections.length) {
     return yield* releaseFail(

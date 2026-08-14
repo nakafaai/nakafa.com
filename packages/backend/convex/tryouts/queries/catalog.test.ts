@@ -1,4 +1,4 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -21,7 +21,7 @@ const examPath = `${countryPath}/${TRYOUT_START_EXAM}`;
 const trackPath = `${examPath}/${TRYOUT_START_TRACK}`;
 const setPath = `${trackPath}/${TRYOUT_START_SET}`;
 const sectionPath = `${setPath}/${TRYOUT_START_SECTION}`;
-const locales: readonly ContentLocale[] = ["en", "id"];
+const locales: readonly ActiveAppLocaleCode[] = ["en", "id"];
 
 describe("tryouts/queries/catalog", () => {
   it("serves the complete signed hierarchy without filesystem catalog rows", async () => {
@@ -29,34 +29,34 @@ describe("tryouts/queries/catalog", () => {
     await t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"));
 
     const hub = await t.query(api.tryouts.queries.catalog.getHubPage, {
-      locale: "id",
+      appLocale: "id",
     });
     const country = await t.query(api.tryouts.queries.catalog.getCountryPage, {
-      locale: "id",
+      appLocale: "id",
       publicPath: countryPath,
     });
     const exam = await t.query(api.tryouts.queries.catalog.getExamPage, {
-      locale: "id",
+      appLocale: "id",
       publicPath: examPath,
     });
     const track = await t.query(api.tryouts.queries.catalog.getTrackPage, {
-      locale: "id",
+      appLocale: "id",
       publicPath: trackPath,
     });
     const set = await t.query(api.tryouts.queries.catalog.getSetPage, {
-      locale: "id",
+      appLocale: "id",
       publicPath: setPath,
     });
     const section = await t.query(api.tryouts.queries.catalog.getSectionPage, {
-      locale: "id",
+      appLocale: "id",
       publicPath: sectionPath,
     });
     const localizedPath = await t.query(
       api.tryouts.queries.catalog.getLocalizedPath,
       {
-        currentLocale: "id",
-        locale: "en",
+        currentAppLocale: "id",
         publicPath: sectionPath,
+        targetAppLocale: "en",
       }
     );
 
@@ -109,7 +109,7 @@ describe("tryouts/queries/catalog", () => {
 
     await expect(
       t.query(api.tryouts.queries.catalog.getSetPage, {
-        locale: "id",
+        appLocale: "id",
         publicPath: setPath,
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
@@ -121,15 +121,15 @@ describe("tryouts/queries/catalog", () => {
 
     const [track, set, section] = await Promise.all([
       t.query(api.tryouts.queries.catalog.getTrackPage, {
-        locale: "id",
+        appLocale: "id",
         publicPath: `${examPath}/missing`,
       }),
       t.query(api.tryouts.queries.catalog.getSetPage, {
-        locale: "id",
+        appLocale: "id",
         publicPath: `${trackPath}/missing`,
       }),
       t.query(api.tryouts.queries.catalog.getSectionPage, {
-        locale: "id",
+        appLocale: "id",
         publicPath: `${setPath}/missing`,
       }),
     ]);
@@ -153,7 +153,7 @@ describe("tryouts/queries/catalog", () => {
     );
 
     const page = await t.query(api.tryouts.queries.catalog.getSetPage, {
-      locale: "id",
+      appLocale: "id",
       publicPath: setPath,
     });
 

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -9,8 +10,9 @@ import { readRuntimeQuery } from "@/lib/content/runtime/query";
 export const readPublishedProgramBuckets = Effect.fn(
   "www.programs.readSitemapBuckets"
 )(function* (locale: Locale) {
+  const appLocale = AppLocaleSchema.make(locale);
   return yield* readRuntimeQuery(api.contentRelease.program.sitemapBuckets, {
-    locale,
+    appLocale,
   });
 });
 
@@ -18,8 +20,9 @@ export const readPublishedProgramBuckets = Effect.fn(
 export const readPublishedProgramSitemap = Effect.fn(
   "www.programs.readSitemapPage"
 )(function* (locale: Locale, bucket: string) {
+  const appLocale = AppLocaleSchema.make(locale);
   return yield* readRuntimeQuery(api.contentRelease.program.sitemapPage, {
+    appLocale,
     bucket,
-    locale,
   });
 });
